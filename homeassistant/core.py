@@ -82,7 +82,11 @@ from .exceptions import (
 from .helpers.aiohttp_compat import restore_original_aiohttp_cancel_behavior
 from .helpers.json import json_dumps
 from .util import dt as dt_util, location, ulid as ulid_util
-from .util.async_ import run_callback_threadsafe, shutdown_run_callback_threadsafe
+from .util.async_ import (
+    cancelling,
+    run_callback_threadsafe,
+    shutdown_run_callback_threadsafe,
+)
 from .util.read_only_dict import ReadOnlyDict
 from .util.timeout import TimeoutManager
 from .util.unit_system import (
@@ -174,7 +178,7 @@ def valid_domain(domain: str) -> bool:
     return VALID_DOMAIN.match(domain) is not None
 
 
-@functools.lru_cache(64)
+@functools.lru_cache(512)
 def valid_entity_id(entity_id: str) -> bool:
     """Test if an entity ID is a valid format.
 
@@ -678,7 +682,11 @@ class HomeAssistant:
         start_time: float | None = None
         current_task = asyncio.current_task()
 
-        while tasks := [task for task in self._tasks if task is not current_task]:
+        while tasks := [
+            task
+            for task in self._tasks
+            if task is not current_task and not cancelling(task)
+        ]:
             await self._await_and_log_pending(tasks)
 
             if start_time is None:
@@ -791,7 +799,7 @@ class HomeAssistant:
         # while we are awaiting canceled tasks to get their result
         # which will result in the set size changing during iteration
         for task in list(running_tasks):
-            if task.done():
+            if task.done() or cancelling(task):
                 # Since we made a copy we need to check
                 # to see if the task finished while we
                 # were awaiting another task
