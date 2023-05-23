@@ -6,7 +6,7 @@ import logging
 from typing import Any
 
 from aioairzone_cloud.cloudapi import AirzoneCloudApi
-from aioairzone_cloud.exceptions import AirzoneCloudError, TooManyRequests
+from aioairzone_cloud.exceptions import AirzoneCloudError
 import async_timeout
 
 from homeassistant.core import HomeAssistant
@@ -38,8 +38,6 @@ class AirzoneUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         async with async_timeout.timeout(AIOAIRZONE_CLOUD_TIMEOUT_SEC):
             try:
                 await self.airzone.update()
-            except TooManyRequests:
-                _LOGGER.error("Too many API requests")
             except AirzoneCloudError as error:
                 raise UpdateFailed(error) from error
             return self.airzone.data()

@@ -2,7 +2,7 @@
 
 from unittest.mock import patch
 
-from aioairzone_cloud.exceptions import AirzoneCloudError, TooManyRequests
+from aioairzone_cloud.exceptions import AirzoneCloudError
 
 from homeassistant.components.airzone_cloud.const import DOMAIN
 from homeassistant.components.airzone_cloud.coordinator import SCAN_INTERVAL
@@ -59,21 +59,6 @@ async def test_coordinator_client_connector_error(hass: HomeAssistant) -> None:
         mock_installation.reset_mock()
         mock_installations.reset_mock()
         mock_webserver.reset_mock()
-
-        mock_device_status.side_effect = TooManyRequests
-        async_fire_time_changed(hass, utcnow() + SCAN_INTERVAL)
-        await hass.async_block_till_done()
-
-        mock_device_status.assert_called()
-        mock_installation.assert_not_called()
-        mock_installations.assert_not_called()
-        mock_webserver.assert_called_once()
-
-        mock_device_status.reset_mock()
-        mock_webserver.reset_mock()
-
-        state = hass.states.get("sensor.salon_temperature")
-        assert state.state == "20.0"
 
         mock_device_status.side_effect = AirzoneCloudError
         async_fire_time_changed(hass, utcnow() + SCAN_INTERVAL)
