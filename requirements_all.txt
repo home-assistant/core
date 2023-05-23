@@ -965,7 +965,7 @@ ical==4.5.1
 icmplib==3.0
 
 # homeassistant.components.network
-ifaddr==0.1.7
+ifaddr==0.2.0
 
 # homeassistant.components.iglo
 iglo==1.2.7
@@ -1626,7 +1626,7 @@ pyeverlights==0.1.0
 pyevilgenius==2.0.0
 
 # homeassistant.components.ezviz
-pyezviz==0.2.0.9
+pyezviz==0.2.0.12
 
 # homeassistant.components.fibaro
 pyfibaro==0.7.1
@@ -2095,7 +2095,7 @@ python-miio==0.5.12
 python-mpd2==3.0.5
 
 # homeassistant.components.mystrom
-python-mystrom==1.1.2
+python-mystrom==2.2.0
 
 # homeassistant.components.nest
 python-nest==4.2.0
