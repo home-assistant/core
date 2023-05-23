@@ -587,7 +587,7 @@ class SensorEntity(Entity):
                     f"state class {state_class} unit {unit_of_measurement} and "
                     f"suggested precision {suggested_precision} thus indicating it "
                     f"has a numeric value; however, it has the non-numeric value: "
-                    f"{value} ({type(value)})"
+                    f"'{value}' ({type(value)})"
                 ) from err
         else:
             numerical_value = value
