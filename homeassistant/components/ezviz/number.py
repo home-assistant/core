@@ -50,7 +50,6 @@ async def async_setup_entry(
 class EzvizSensor(EzvizEntity, NumberEntity):
     """Representation of a EZVIZ number entity."""
 
-    coordinator: EzvizDataUpdateCoordinator
     _attr_has_entity_name = True
 
     def __init__(
