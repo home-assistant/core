@@ -2101,7 +2101,7 @@ python-mystrom==1.1.2
 python-nest==4.2.0
 
 # homeassistant.components.opensky
-python-opensky==0.0.6
+python-opensky==0.0.7
 
 # homeassistant.components.otbr
 # homeassistant.components.thread
