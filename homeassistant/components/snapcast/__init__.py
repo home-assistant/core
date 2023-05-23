@@ -28,7 +28,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         ) from ex
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = HomeAssistantSnapcast(
-        hass, server, f"{host}:{port}"
+        hass, server, f"{host}:{port}", entry.entry_id
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

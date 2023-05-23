@@ -80,10 +80,12 @@ async def async_setup_entry(
     hpid = f"{host}:{port}"
 
     groups: list[MediaPlayerEntity] = [
-        SnapcastGroupDevice(group, hpid) for group in snapcast_server.groups
+        SnapcastGroupDevice(group, hpid, config_entry.entry_id)
+        for group in snapcast_server.groups
     ]
     clients: list[MediaPlayerEntity] = [
-        SnapcastClientDevice(client, hpid) for client in snapcast_server.clients
+        SnapcastClientDevice(client, hpid, config_entry.entry_id)
+        for client in snapcast_server.clients
     ]
     async_add_entities(clients + groups)
     hass.data[DOMAIN][
@@ -148,19 +150,17 @@ class SnapcastGroupDevice(MediaPlayerEntity):
         | MediaPlayerEntityFeature.SELECT_SOURCE
     )
 
-    def __init__(self, group, uid_part):
+    def __init__(self, group, uid_part, entry_id):
         """Initialize the Snapcast group device."""
         self._attr_available = True
         self._group = group
-        self._entry_id = None
+        self._entry_id = entry_id
         self._uid = f"{GROUP_PREFIX}{uid_part}_{self._group.identifier}"
 
     async def async_added_to_hass(self) -> None:
         """Subscribe to group events."""
         self._group.set_callback(self.schedule_update_ha_state)
-        if self.registry_entry:
-            self._entry_id = self.registry_entry.config_entry_id
-            self.hass.data[DOMAIN][self._entry_id].groups.append(self)
+        self.hass.data[DOMAIN][self._entry_id].groups.append(self)
 
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect group object when removed."""
@@ -257,19 +257,17 @@ class SnapcastClientDevice(MediaPlayerEntity):
         | MediaPlayerEntityFeature.SELECT_SOURCE
     )
 
-    def __init__(self, client, uid_part):
+    def __init__(self, client, uid_part, entry_id):
         """Initialize the Snapcast client device."""
         self._attr_available = True
         self._client = client
         self._uid = f"{CLIENT_PREFIX}{uid_part}_{self._client.identifier}"
-        self._entry_id = None
+        self._entry_id = entry_id
 
     async def async_added_to_hass(self) -> None:
         """Subscribe to client events."""
         self._client.set_callback(self.schedule_update_ha_state)
-        if self.registry_entry:
-            self._entry_id = self.registry_entry.config_entry_id
-            self.hass.data[DOMAIN][self._entry_id].clients.append(self)
+        self.hass.data[DOMAIN][self._entry_id].clients.append(self)
 
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect client object when removed."""

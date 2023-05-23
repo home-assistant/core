@@ -22,7 +22,11 @@ class HomeAssistantSnapcast:
     hass: HomeAssistant
 
     def __init__(
-        self, hass: HomeAssistant, server: snapcast.control.Snapserver, hpid: str
+        self,
+        hass: HomeAssistant,
+        server: snapcast.control.Snapserver,
+        hpid: str,
+        entry_id: str,
     ) -> None:
         """Initialize the HomeAssistantSnapcast object.
 
@@ -34,6 +38,8 @@ class HomeAssistantSnapcast:
             Snapcast server
         hpid : str
             host and port
+        entry_id: str
+            ConfigEntry entry_id
 
         Returns
         -------
@@ -43,6 +49,7 @@ class HomeAssistantSnapcast:
         self.hass: HomeAssistant = hass
         self.server: snapcast.control.Snapserver = server
         self.hpid: str = hpid
+        self._entry_id = entry_id
         self.clients: list[SnapcastClientDevice] = []
         self.groups: list[SnapcastGroupDevice] = []
         self.hass_async_add_entities: AddEntitiesCallback
@@ -75,7 +82,7 @@ class HomeAssistantSnapcast:
                 groups.append(hass_groups[group.identifier])
                 hass_groups[group.identifier].async_schedule_update_ha_state()
             else:
-                new_groups.append(SnapcastGroupDevice(group, self.hpid))
+                new_groups.append(SnapcastGroupDevice(group, self.hpid, self._entry_id))
         new_clients: list[MediaPlayerEntity] = []
         clients: list[MediaPlayerEntity] = []
         hass_clients = {c.identifier: c for c in self.clients}
@@ -84,7 +91,9 @@ class HomeAssistantSnapcast:
                 clients.append(hass_clients[client.identifier])
                 hass_clients[client.identifier].async_schedule_update_ha_state()
             else:
-                new_clients.append(SnapcastClientDevice(client, self.hpid))
+                new_clients.append(
+                    SnapcastClientDevice(client, self.hpid, self._entry_id)
+                )
         del_entities: list[MediaPlayerEntity] = [
             x for x in self.groups if x not in groups
         ]
@@ -128,5 +137,5 @@ class HomeAssistantSnapcast:
         """
         if not self.hass_async_add_entities:
             return
-        clients = [SnapcastClientDevice(client, self.hpid)]
+        clients = [SnapcastClientDevice(client, self.hpid, self._entry_id)]
         self.hass_async_add_entities(clients)
