@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, patch
 
 from aioimaplib import AioImapException
 import pytest
+import voluptuous as vol
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.imap.const import (
@@ -395,6 +396,54 @@ async def test_key_options_in_options_form(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
     assert result2["type"] == data_entry_flow.FlowResultType.FORM
     assert result2["errors"] == {"base": "already_configured"}
+
+
+@pytest.mark.parametrize(
+    ("advanced_options", "assert_result"),
+    [
+        ({"max_message_size": "8192"}, data_entry_flow.FlowResultType.CREATE_ENTRY),
+        ({"max_message_size": "1024"}, data_entry_flow.FlowResultType.FORM),
+        ({"max_message_size": "65536"}, data_entry_flow.FlowResultType.FORM),
+    ],
+)
+async def test_advanced_options_form(
+    hass: HomeAssistant,
+    advanced_options: dict[str, str],
+    assert_result: data_entry_flow.FlowResultType,
+) -> None:
+    """Test we show the advanced options."""
+
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG)
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+
+    result = await hass.config_entries.options.async_init(
+        entry.entry_id,
+        context={"source": config_entries.SOURCE_USER, "show_advanced_options": True},
+    )
+
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    new_config = MOCK_OPTIONS.copy()
+    new_config.update(advanced_options)
+
+    try:
+        with patch(
+            "homeassistant.components.imap.config_flow.connect_to_server"
+        ) as mock_client:
+            mock_client.return_value.search.return_value = ("OK", [b""])
+            # Option update should fail if FlowResultType.FORM is expected
+            result2 = await hass.config_entries.options.async_configure(
+                result["flow_id"], new_config
+            )
+            assert result2["type"] == assert_result
+            # Check if entry was updated
+            for key, value in new_config.items():
+                assert str(entry.data[key]) == value
+    except vol.MultipleInvalid:
+        # Check if form was expected with these options
+        assert assert_result == data_entry_flow.FlowResultType.FORM
 
 
 async def test_import_flow_success(hass: HomeAssistant) -> None:
