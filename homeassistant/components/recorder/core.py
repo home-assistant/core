@@ -691,8 +691,8 @@ class Recorder(threading.Thread):
 
     def _add_to_session(self, session: Session, obj: object) -> None:
         """Add an object to the session."""
-        self._event_session_has_pending_writes = True
         session.add(obj)
+        self._event_session_has_pending_writes = True
 
     def _run(self) -> None:
         """Start processing events to save."""
@@ -1048,8 +1048,8 @@ class Recorder(threading.Thread):
             # No matching attributes found, save them in the DB
             dbevent_data = EventData(shared_data=shared_data, hash=hash_)
             event_data_manager.add_pending(dbevent_data)
-            dbevent.event_data_rel = dbevent_data
             self._add_to_session(session, dbevent_data)
+            dbevent.event_data_rel = dbevent_data
 
         self._add_to_session(session, dbevent)
 
@@ -1121,8 +1121,8 @@ class Recorder(threading.Thread):
             # No matching attributes found, save them in the DB
             dbstate_attributes = StateAttributes(shared_attrs=shared_attrs, hash=hash_)
             state_attributes_manager.add_pending(dbstate_attributes)
-            dbstate.state_attributes = dbstate_attributes
             self._add_to_session(session, dbstate_attributes)
+            dbstate.state_attributes = dbstate_attributes
 
         self._add_to_session(session, dbstate)
 
