@@ -223,7 +223,7 @@ async def test_airzone_create_climates(hass: HomeAssistant) -> None:
     assert state.attributes.get(ATTR_TARGET_TEMP_STEP) == API_TEMPERATURE_STEP
     assert state.attributes.get(ATTR_TEMPERATURE) == 22.8
 
-    HVAC_MOCK_CHANGED = HVAC_MOCK.copy()
+    HVAC_MOCK_CHANGED = {**HVAC_MOCK}
     HVAC_MOCK_CHANGED[API_SYSTEMS][0][API_DATA][0][API_MAX_TEMP] = 25
     HVAC_MOCK_CHANGED[API_SYSTEMS][0][API_DATA][0][API_MIN_TEMP] = 10
 
