@@ -1,6 +1,7 @@
 """Entity classes for the Airzone Cloud integration."""
 from __future__ import annotations
 
+from abc import ABC, abstractmethod
 from typing import Any
 
 from aioairzone_cloud.const import AZD_NAME, AZD_SYSTEM_ID, AZD_ZONES
@@ -13,12 +14,12 @@ from .const import DOMAIN, MANUFACTURER
 from .coordinator import AirzoneUpdateCoordinator
 
 
-class AirzoneEntity(CoordinatorEntity[AirzoneUpdateCoordinator]):
+class AirzoneEntity(CoordinatorEntity[AirzoneUpdateCoordinator], ABC):
     """Define an Airzone Cloud entity."""
 
+    @abstractmethod
     def get_airzone_value(self, key: str) -> Any:
         """Return Airzone Cloud entity value by key."""
-        raise NotImplementedError()
 
 
 class AirzoneZoneEntity(AirzoneEntity):
