@@ -28,10 +28,10 @@
     "select": {
       "grille_angles": {
         "state": {
-          "90deg": "90º",
-          "50deg": "50º",
-          "45deg": "45º",
-          "40deg": "40º"
+          "90deg": "90°",
+          "50deg": "50°",
+          "45deg": "45°",
+          "40deg": "40°"
         }
       },
       "sleep_times": {
