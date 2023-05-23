@@ -7,8 +7,11 @@ import pytest
 
 from homeassistant import config_entries, setup
 from homeassistant.components.nextbus.const import (
+    CONF_AGENCY,
     CONF_AGENCY_NAME,
+    CONF_ROUTE,
     CONF_ROUTE_NAME,
+    CONF_STOP,
     CONF_STOP_NAME,
     DOMAIN,
 )
@@ -52,7 +55,34 @@ def mock_nextbus_lists(mock_nextbus: MagicMock) -> MagicMock:
     return instance
 
 
-async def test_form(
+async def test_import_config(
+    hass: HomeAssistant, mock_setup_entry: MagicMock, mock_nextbus_lists: MagicMock
+) -> None:
+    """Test we get the form."""
+    await setup.async_setup_component(hass, "persistent_notification", {})
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_IMPORT},
+        data={
+            CONF_AGENCY: "sf-muni",
+            CONF_ROUTE: "F",
+            CONF_STOP: "5650",
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result.get("type") == "create_entry"
+    assert result.get("data") == {
+        "agency": "sf-muni",
+        "route": "F",
+        "stop": "5650",
+        "name": "sf-muni F",
+    }
+
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_user_config(
     hass: HomeAssistant, mock_setup_entry: MagicMock, mock_nextbus_lists: MagicMock
 ) -> None:
     """Test we get the form."""
