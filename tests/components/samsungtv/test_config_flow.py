@@ -1,5 +1,4 @@
 """Tests for Samsung TV config flow."""
-import socket
 from unittest.mock import ANY, AsyncMock, Mock, call, patch
 
 import pytest
@@ -28,13 +27,9 @@ from homeassistant.components.samsungtv.const import (
     DEFAULT_MANUFACTURER,
     DOMAIN,
     LEGACY_PORT,
-    METHOD_ENCRYPTED_WEBSOCKET,
-    METHOD_LEGACY,
-    METHOD_WEBSOCKET,
     RESULT_AUTH_MISSING,
     RESULT_CANNOT_CONNECT,
     RESULT_NOT_SUPPORTED,
-    RESULT_UNKNOWN_HOST,
     TIMEOUT_REQUEST,
     TIMEOUT_WEBSOCKET,
 )
@@ -61,7 +56,6 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.setup import async_setup_component
 
 from .const import (
-    MOCK_CONFIG_ENCRYPTED_WS,
     MOCK_ENTRYDATA_ENCRYPTED_WS,
     MOCK_ENTRYDATA_WS,
     MOCK_SSDP_DATA_MAIN_TV_AGENT_ST,
@@ -905,136 +899,6 @@ async def test_ssdp_already_configured(hass: HomeAssistant) -> None:
 
         # check updated device info
         assert entry.unique_id == "123"
-
-
-@pytest.mark.usefixtures("remote")
-async def test_import_legacy(hass: HomeAssistant) -> None:
-    """Test importing from yaml with hostname."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_IMPORT},
-        data=MOCK_IMPORT_DATA,
-    )
-    await hass.async_block_till_done()
-    assert result["type"] == "create_entry"
-    assert result["title"] == "fake"
-    assert result["data"][CONF_HOST] == "fake_host"
-    assert result["data"][CONF_NAME] == "fake"
-    assert result["data"][CONF_MANUFACTURER] == "Samsung"
-    assert result["result"].unique_id is None
-
-    entries = hass.config_entries.async_entries(DOMAIN)
-    assert len(entries) == 1
-    assert entries[0].data[CONF_METHOD] == METHOD_LEGACY
-    assert entries[0].data[CONF_PORT] == LEGACY_PORT
-
-
-@pytest.mark.usefixtures("remote", "remotews", "rest_api_failing")
-async def test_import_legacy_without_name(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock
-) -> None:
-    """Test importing from yaml without a name."""
-    with patch(
-        "homeassistant.components.samsungtv.bridge.SamsungTVEncryptedWSAsyncRemote.start_listening",
-        side_effect=WebSocketProtocolError("Boom"),
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data=MOCK_IMPORT_DATA_WITHOUT_NAME,
-        )
-        await hass.async_block_till_done()
-    assert result["type"] == "create_entry"
-    assert result["title"] == "fake_host"
-    assert result["data"][CONF_HOST] == "fake_host"
-    assert result["data"][CONF_MANUFACTURER] == "Samsung"
-    assert result["result"].unique_id is None
-
-    mock_setup_entry.assert_called_once()
-    entries = hass.config_entries.async_entries(DOMAIN)
-    assert len(entries) == 1
-    # METHOD / PORT failed during import
-    # They will get checked/set on setup
-    assert CONF_METHOD not in entries[0].data
-    assert CONF_PORT not in entries[0].data
-
-
-@pytest.mark.usefixtures("remotews", "rest_api")
-async def test_import_websocket(hass: HomeAssistant) -> None:
-    """Test importing from yaml with hostname."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_IMPORT},
-        data=MOCK_IMPORT_WSDATA,
-    )
-    await hass.async_block_till_done()
-    assert result["type"] == "create_entry"
-    assert result["title"] == "fake"
-    assert result["data"][CONF_METHOD] == METHOD_WEBSOCKET
-    assert result["data"][CONF_PORT] == 8002
-    assert result["data"][CONF_HOST] == "fake_host"
-    assert result["data"][CONF_NAME] == "fake"
-    assert result["data"][CONF_MANUFACTURER] == "Samsung"
-    assert result["result"].unique_id is None
-
-
-@pytest.mark.usefixtures("remoteencws")
-async def test_import_websocket_encrypted(hass: HomeAssistant) -> None:
-    """Test importing from yaml with hostname."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_IMPORT},
-        data=MOCK_CONFIG_ENCRYPTED_WS,
-    )
-    await hass.async_block_till_done()
-
-    assert result["type"] == "create_entry"
-    assert result["title"] == "fake"
-    assert result["data"][CONF_METHOD] == METHOD_ENCRYPTED_WEBSOCKET
-    assert result["data"][CONF_PORT] == 8000
-    assert result["data"][CONF_HOST] == "fake_host"
-    assert result["data"][CONF_NAME] == "fake"
-    assert result["data"][CONF_MANUFACTURER] == "Samsung"
-    assert result["result"].unique_id is None
-
-
-@pytest.mark.usefixtures("remotews", "rest_api")
-async def test_import_websocket_without_port(hass: HomeAssistant) -> None:
-    """Test importing from yaml with hostname by no port."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_IMPORT},
-        data=MOCK_IMPORT_WSDATA,
-    )
-    await hass.async_block_till_done()
-    assert result["type"] == "create_entry"
-    assert result["title"] == "fake"
-    assert result["data"][CONF_HOST] == "fake_host"
-    assert result["data"][CONF_NAME] == "fake"
-    assert result["data"][CONF_MANUFACTURER] == "Samsung"
-    assert result["result"].unique_id is None
-
-    entries = hass.config_entries.async_entries(DOMAIN)
-    assert len(entries) == 1
-    assert entries[0].data[CONF_METHOD] == METHOD_WEBSOCKET
-    assert entries[0].data[CONF_PORT] == 8002
-
-
-@pytest.mark.usefixtures("remotews")
-async def test_import_unknown_host(hass: HomeAssistant) -> None:
-    """Test importing from yaml with hostname that does not resolve."""
-    with patch(
-        "homeassistant.components.samsungtv.config_flow.socket.gethostbyname",
-        side_effect=socket.gaierror,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data=MOCK_IMPORT_DATA,
-        )
-    await hass.async_block_till_done()
-    assert result["type"] == "abort"
-    assert result["reason"] == RESULT_UNKNOWN_HOST
 
 
 @pytest.mark.usefixtures("remotews", "rest_api_non_ssl_only", "remoteencws_failing")
