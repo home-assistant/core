@@ -18,11 +18,15 @@ from homeassistant.helpers.selector import (
     SelectSelector,
     SelectSelectorConfig,
     SelectSelectorMode,
+    TextSelector,
+    TextSelectorConfig,
+    TextSelectorType,
 )
 from homeassistant.util.ssl import SSLCipherList
 
 from .const import (
     CONF_CHARSET,
+    CONF_CUSTOM_EVENT_DATA_TEMPLATE,
     CONF_FOLDER,
     CONF_MAX_MESSAGE_SIZE,
     CONF_SEARCH,
@@ -42,6 +46,9 @@ CIPHER_SELECTOR = SelectSelector(
         mode=SelectSelectorMode.DROPDOWN,
         translation_key=CONF_SSL_CIPHER_LIST,
     )
+)
+TEMPLATE_SELECTOR = TextSelector(
+    TextSelectorConfig(type=TextSelectorType.TEXT, multiline=True)
 )
 
 CONFIG_SCHEMA = vol.Schema(
@@ -69,10 +76,11 @@ OPTIONS_SCHEMA = vol.Schema(
 )
 
 OPTIONS_SCHEMA_ADVANCED = {
+    vol.Optional(CONF_CUSTOM_EVENT_DATA_TEMPLATE): TEMPLATE_SELECTOR,
     vol.Optional(CONF_MAX_MESSAGE_SIZE, default=DEFAULT_MAX_MESSAGE_SIZE): vol.All(
         cv.positive_int,
         vol.Range(min=DEFAULT_MAX_MESSAGE_SIZE, max=MAX_MESSAGE_SIZE_LIMIT),
-    )
+    ),
 }
 
 
