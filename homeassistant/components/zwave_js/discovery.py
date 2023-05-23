@@ -976,19 +976,19 @@ def async_discover_single_value(
             continue
 
         # check device_class_basic
-        if not check_device_class(
+        if value.node.device_class and not check_device_class(
             value.node.device_class.basic, schema.device_class_basic
         ):
             continue
 
         # check device_class_generic
-        if not check_device_class(
+        if value.node.device_class and not check_device_class(
             value.node.device_class.generic, schema.device_class_generic
         ):
             continue
 
         # check device_class_specific
-        if not check_device_class(
+        if value.node.device_class and not check_device_class(
             value.node.device_class.specific, schema.device_class_specific
         ):
             continue
