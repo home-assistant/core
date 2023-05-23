@@ -1389,18 +1389,14 @@ async def test_update_missing_mac_unique_id_added_from_dhcp(
     """Test missing mac and unique id added."""
     entry = MockConfigEntry(domain=DOMAIN, data=MOCK_OLD_ENTRY, unique_id=None)
     entry.add_to_hass(hass)
-    with patch(
-        "homeassistant.components.samsungtv.async_setup",
-        return_value=True,
-    ) as mock_setup:
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_DHCP},
-            data=MOCK_DHCP_DATA,
-        )
-        await hass.async_block_till_done()
-        assert len(mock_setup.mock_calls) == 1
-        assert len(mock_setup_entry.mock_calls) == 1
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_DHCP},
+        data=MOCK_DHCP_DATA,
+    )
+    await hass.async_block_till_done()
+    assert len(mock_setup_entry.mock_calls) == 1
 
     assert result["type"] == "abort"
     assert result["reason"] == "already_configured"
@@ -1415,18 +1411,15 @@ async def test_update_missing_mac_unique_id_added_from_zeroconf(
     """Test missing mac and unique id added."""
     entry = MockConfigEntry(domain=DOMAIN, data=MOCK_OLD_ENTRY, unique_id=None)
     entry.add_to_hass(hass)
-    with patch(
-        "homeassistant.components.samsungtv.async_setup",
-        return_value=True,
-    ) as mock_setup:
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_ZEROCONF},
-            data=MOCK_ZEROCONF_DATA,
-        )
-        await hass.async_block_till_done()
-        assert len(mock_setup.mock_calls) == 1
-        assert len(mock_setup_entry.mock_calls) == 1
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=MOCK_ZEROCONF_DATA,
+    )
+    await hass.async_block_till_done()
+    assert len(mock_setup_entry.mock_calls) == 1
+
     assert result["type"] == "abort"
     assert result["reason"] == "already_configured"
     assert entry.data[CONF_MAC] == "aa:bb:zz:ee:rr:oo"
@@ -1444,18 +1437,14 @@ async def test_update_missing_model_added_from_ssdp(
         unique_id=None,
     )
     entry.add_to_hass(hass)
-    with patch(
-        "homeassistant.components.samsungtv.async_setup",
-        return_value=True,
-    ) as mock_setup:
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_SSDP},
-            data=MOCK_SSDP_DATA,
-        )
-        await hass.async_block_till_done()
-        assert len(mock_setup.mock_calls) == 1
-        assert len(mock_setup_entry.mock_calls) == 1
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_SSDP},
+        data=MOCK_SSDP_DATA,
+    )
+    await hass.async_block_till_done()
+    assert len(mock_setup_entry.mock_calls) == 1
 
     assert result["type"] == "abort"
     assert result["reason"] == "already_configured"
@@ -1469,18 +1458,14 @@ async def test_update_missing_mac_unique_id_ssdp_location_added_from_ssdp(
     """Test missing mac, ssdp_location, and unique id added via ssdp."""
     entry = MockConfigEntry(domain=DOMAIN, data=MOCK_OLD_ENTRY, unique_id=None)
     entry.add_to_hass(hass)
-    with patch(
-        "homeassistant.components.samsungtv.async_setup",
-        return_value=True,
-    ) as mock_setup:
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_SSDP},
-            data=MOCK_SSDP_DATA,
-        )
-        await hass.async_block_till_done()
-        assert len(mock_setup.mock_calls) == 1
-        assert len(mock_setup_entry.mock_calls) == 1
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_SSDP},
+        data=MOCK_SSDP_DATA,
+    )
+    await hass.async_block_till_done()
+    assert len(mock_setup_entry.mock_calls) == 1
 
     assert result["type"] == "abort"
     assert result["reason"] == "already_configured"
@@ -1529,18 +1514,14 @@ async def test_update_missing_mac_unique_id_added_ssdp_location_updated_from_ssd
         unique_id=None,
     )
     entry.add_to_hass(hass)
-    with patch(
-        "homeassistant.components.samsungtv.async_setup",
-        return_value=True,
-    ) as mock_setup:
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_SSDP},
-            data=MOCK_SSDP_DATA,
-        )
-        await hass.async_block_till_done()
-        assert len(mock_setup.mock_calls) == 1
-        assert len(mock_setup_entry.mock_calls) == 1
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_SSDP},
+        data=MOCK_SSDP_DATA,
+    )
+    await hass.async_block_till_done()
+    assert len(mock_setup_entry.mock_calls) == 1
 
     assert result["type"] == "abort"
     assert result["reason"] == "already_configured"
@@ -1566,18 +1547,14 @@ async def test_update_missing_mac_unique_id_added_ssdp_location_rendering_st_upd
         unique_id=None,
     )
     entry.add_to_hass(hass)
-    with patch(
-        "homeassistant.components.samsungtv.async_setup",
-        return_value=True,
-    ) as mock_setup:
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_SSDP},
-            data=MOCK_SSDP_DATA_RENDERING_CONTROL_ST,
-        )
-        await hass.async_block_till_done()
-        assert len(mock_setup.mock_calls) == 1
-        assert len(mock_setup_entry.mock_calls) == 1
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_SSDP},
+        data=MOCK_SSDP_DATA_RENDERING_CONTROL_ST,
+    )
+    await hass.async_block_till_done()
+    assert len(mock_setup_entry.mock_calls) == 1
 
     assert result["type"] == "abort"
     assert result["reason"] == "already_configured"
@@ -1605,18 +1582,14 @@ async def test_update_missing_mac_unique_id_added_ssdp_location_main_tv_agent_st
         unique_id=None,
     )
     entry.add_to_hass(hass)
-    with patch(
-        "homeassistant.components.samsungtv.async_setup",
-        return_value=True,
-    ) as mock_setup:
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_SSDP},
-            data=MOCK_SSDP_DATA_MAIN_TV_AGENT_ST,
-        )
-        await hass.async_block_till_done()
-        assert len(mock_setup.mock_calls) == 1
-        assert len(mock_setup_entry.mock_calls) == 1
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_SSDP},
+        data=MOCK_SSDP_DATA_MAIN_TV_AGENT_ST,
+    )
+    await hass.async_block_till_done()
+    assert len(mock_setup_entry.mock_calls) == 1
 
     assert result["type"] == "abort"
     assert result["reason"] == "already_configured"
@@ -1644,18 +1617,14 @@ async def test_update_ssdp_location_rendering_st_updated_from_ssdp(
         unique_id="be9554b9-c9fb-41f4-8920-22da015376a4",
     )
     entry.add_to_hass(hass)
-    with patch(
-        "homeassistant.components.samsungtv.async_setup",
-        return_value=True,
-    ) as mock_setup:
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_SSDP},
-            data=MOCK_SSDP_DATA_RENDERING_CONTROL_ST,
-        )
-        await hass.async_block_till_done()
-        assert len(mock_setup.mock_calls) == 1
-        assert len(mock_setup_entry.mock_calls) == 1
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_SSDP},
+        data=MOCK_SSDP_DATA_RENDERING_CONTROL_ST,
+    )
+    await hass.async_block_till_done()
+    assert len(mock_setup_entry.mock_calls) == 1
 
     assert result["type"] == "abort"
     assert result["reason"] == "already_configured"
@@ -1679,18 +1648,14 @@ async def test_update_main_tv_ssdp_location_rendering_st_updated_from_ssdp(
         unique_id="be9554b9-c9fb-41f4-8920-22da015376a4",
     )
     entry.add_to_hass(hass)
-    with patch(
-        "homeassistant.components.samsungtv.async_setup",
-        return_value=True,
-    ) as mock_setup:
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_SSDP},
-            data=MOCK_SSDP_DATA_MAIN_TV_AGENT_ST,
-        )
-        await hass.async_block_till_done()
-        assert len(mock_setup.mock_calls) == 1
-        assert len(mock_setup_entry.mock_calls) == 1
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_SSDP},
+        data=MOCK_SSDP_DATA_MAIN_TV_AGENT_ST,
+    )
+    await hass.async_block_till_done()
+    assert len(mock_setup_entry.mock_calls) == 1
 
     assert result["type"] == "abort"
     assert result["reason"] == "already_configured"
@@ -1714,18 +1679,15 @@ async def test_update_missing_mac_added_unique_id_preserved_from_zeroconf(
         unique_id="0d1cef00-00dc-1000-9c80-4844f7b172de",
     )
     entry.add_to_hass(hass)
-    with patch(
-        "homeassistant.components.samsungtv.async_setup",
-        return_value=True,
-    ) as mock_setup:
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_ZEROCONF},
-            data=MOCK_ZEROCONF_DATA,
-        )
-        await hass.async_block_till_done()
-        assert len(mock_setup.mock_calls) == 1
-        assert len(mock_setup_entry.mock_calls) == 1
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=MOCK_ZEROCONF_DATA,
+    )
+    await hass.async_block_till_done()
+    assert len(mock_setup_entry.mock_calls) == 1
+
     assert result["type"] == "abort"
     assert result["reason"] == "already_configured"
     assert entry.data[CONF_MAC] == "aa:bb:zz:ee:rr:oo"
@@ -1743,20 +1705,17 @@ async def test_update_legacy_missing_mac_from_dhcp(
         unique_id="0d1cef00-00dc-1000-9c80-4844f7b172de",
     )
     entry.add_to_hass(hass)
-    with patch(
-        "homeassistant.components.samsungtv.async_setup",
-        return_value=True,
-    ) as mock_setup:
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_DHCP},
-            data=dhcp.DhcpServiceInfo(
-                ip=EXISTING_IP, macaddress="aa:bb:cc:dd:ee:ff", hostname="fake_hostname"
-            ),
-        )
-        await hass.async_block_till_done()
-        assert len(mock_setup.mock_calls) == 1
-        assert len(mock_setup_entry.mock_calls) == 1
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_DHCP},
+        data=dhcp.DhcpServiceInfo(
+            ip=EXISTING_IP, macaddress="aa:bb:cc:dd:ee:ff", hostname="fake_hostname"
+        ),
+    )
+    await hass.async_block_till_done()
+    assert len(mock_setup_entry.mock_calls) == 1
+
     assert result["type"] == "abort"
     assert result["reason"] == "already_configured"
     assert entry.data[CONF_MAC] == "aa:bb:cc:dd:ee:ff"
@@ -1780,10 +1739,7 @@ async def test_update_legacy_missing_mac_from_dhcp_no_unique_id(
     ), patch(
         "homeassistant.components.samsungtv.bridge.SamsungTVEncryptedWSAsyncRemote.start_listening",
         side_effect=WebSocketProtocolError("Boom"),
-    ), patch(
-        "homeassistant.components.samsungtv.async_setup",
-        return_value=True,
-    ) as mock_setup:
+    ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},
@@ -1792,8 +1748,8 @@ async def test_update_legacy_missing_mac_from_dhcp_no_unique_id(
             ),
         )
         await hass.async_block_till_done()
-        assert len(mock_setup.mock_calls) == 1
         assert len(mock_setup_entry.mock_calls) == 1
+
     assert result["type"] == "abort"
     assert result["reason"] == "not_supported"
     assert entry.data[CONF_MAC] == "aa:bb:cc:dd:ee:ff"
@@ -1811,18 +1767,14 @@ async def test_update_ssdp_location_unique_id_added_from_ssdp(
         unique_id=None,
     )
     entry.add_to_hass(hass)
-    with patch(
-        "homeassistant.components.samsungtv.async_setup",
-        return_value=True,
-    ) as mock_setup:
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_SSDP},
-            data=MOCK_SSDP_DATA,
-        )
-        await hass.async_block_till_done()
-        assert len(mock_setup.mock_calls) == 1
-        assert len(mock_setup_entry.mock_calls) == 1
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_SSDP},
+        data=MOCK_SSDP_DATA,
+    )
+    await hass.async_block_till_done()
+    assert len(mock_setup_entry.mock_calls) == 1
 
     assert result["type"] == "abort"
     assert result["reason"] == "already_configured"
@@ -1843,18 +1795,14 @@ async def test_update_ssdp_location_unique_id_added_from_ssdp_with_rendering_con
         unique_id=None,
     )
     entry.add_to_hass(hass)
-    with patch(
-        "homeassistant.components.samsungtv.async_setup",
-        return_value=True,
-    ) as mock_setup:
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_SSDP},
-            data=MOCK_SSDP_DATA_RENDERING_CONTROL_ST,
-        )
-        await hass.async_block_till_done()
-        assert len(mock_setup.mock_calls) == 1
-        assert len(mock_setup_entry.mock_calls) == 1
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_SSDP},
+        data=MOCK_SSDP_DATA_RENDERING_CONTROL_ST,
+    )
+    await hass.async_block_till_done()
+    assert len(mock_setup_entry.mock_calls) == 1
 
     assert result["type"] == "abort"
     assert result["reason"] == "already_configured"
@@ -2060,18 +2008,14 @@ async def test_update_incorrect_udn_matching_upnp_udn_unique_id_added_from_ssdp(
         unique_id="0d1cef00-00dc-1000-9c80-4844f7b172de",
     )
     entry.add_to_hass(hass)
-    with patch(
-        "homeassistant.components.samsungtv.async_setup",
-        return_value=True,
-    ) as mock_setup:
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_SSDP},
-            data=MOCK_SSDP_DATA,
-        )
-        await hass.async_block_till_done()
-        assert len(mock_setup.mock_calls) == 1
-        assert len(mock_setup_entry.mock_calls) == 1
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_SSDP},
+        data=MOCK_SSDP_DATA,
+    )
+    await hass.async_block_till_done()
+    assert len(mock_setup_entry.mock_calls) == 1
 
     assert result["type"] == "abort"
     assert result["reason"] == "already_configured"
@@ -2090,18 +2034,14 @@ async def test_update_incorrect_udn_matching_mac_unique_id_added_from_ssdp(
         unique_id=None,
     )
     entry.add_to_hass(hass)
-    with patch(
-        "homeassistant.components.samsungtv.async_setup",
-        return_value=True,
-    ) as mock_setup:
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_SSDP},
-            data=MOCK_SSDP_DATA,
-        )
-        await hass.async_block_till_done()
-        assert len(mock_setup.mock_calls) == 1
-        assert len(mock_setup_entry.mock_calls) == 1
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_SSDP},
+        data=MOCK_SSDP_DATA,
+    )
+    await hass.async_block_till_done()
+    assert len(mock_setup_entry.mock_calls) == 1
 
     assert result["type"] == "abort"
     assert result["reason"] == "already_configured"
@@ -2121,18 +2061,14 @@ async def test_update_incorrect_udn_matching_mac_from_dhcp(
         unique_id="0d1cef00-00dc-1000-9c80-4844f7b172de",
     )
     entry.add_to_hass(hass)
-    with patch(
-        "homeassistant.components.samsungtv.async_setup",
-        return_value=True,
-    ) as mock_setup:
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_DHCP},
-            data=MOCK_DHCP_DATA,
-        )
-        await hass.async_block_till_done()
-        assert len(mock_setup.mock_calls) == 1
-        assert len(mock_setup_entry.mock_calls) == 1
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_DHCP},
+        data=MOCK_DHCP_DATA,
+    )
+    await hass.async_block_till_done()
+    assert len(mock_setup_entry.mock_calls) == 1
 
     assert result["type"] == "abort"
     assert result["reason"] == "already_configured"
@@ -2152,18 +2088,14 @@ async def test_no_update_incorrect_udn_not_matching_mac_from_dhcp(
         unique_id="0d1cef00-00dc-1000-9c80-4844f7b172de",
     )
     entry.add_to_hass(hass)
-    with patch(
-        "homeassistant.components.samsungtv.async_setup",
-        return_value=True,
-    ) as mock_setup:
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_DHCP},
-            data=MOCK_DHCP_DATA,
-        )
-        await hass.async_block_till_done()
-        assert len(mock_setup.mock_calls) == 0
-        assert len(mock_setup_entry.mock_calls) == 0
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_DHCP},
+        data=MOCK_DHCP_DATA,
+    )
+    await hass.async_block_till_done()
+    assert len(mock_setup_entry.mock_calls) == 0
 
     assert result["type"] == "form"
     assert result["step_id"] == "confirm"
