@@ -9,8 +9,6 @@ from aioairzone.const import (
     API_ON,
     API_SET_POINT,
     API_SPEED,
-    AZD_ABS_TEMP_MAX,
-    AZD_ABS_TEMP_MIN,
     AZD_ACTION,
     AZD_HUMIDITY,
     AZD_MASTER,
@@ -21,6 +19,8 @@ from aioairzone.const import (
     AZD_SPEED,
     AZD_SPEEDS,
     AZD_TEMP,
+    AZD_TEMP_MAX,
+    AZD_TEMP_MIN,
     AZD_TEMP_SET,
     AZD_TEMP_UNIT,
     AZD_ZONES,
@@ -124,8 +124,6 @@ class AirzoneClimate(AirzoneZoneEntity, ClimateEntity):
         self._attr_unique_id = f"{self._attr_unique_id}_{system_zone_id}"
         self._attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
         self._attr_target_temperature_step = API_TEMPERATURE_STEP
-        self._attr_max_temp = self.get_airzone_value(AZD_ABS_TEMP_MAX)
-        self._attr_min_temp = self.get_airzone_value(AZD_ABS_TEMP_MIN)
         self._attr_temperature_unit = TEMP_UNIT_LIB_TO_HASS[
             self.get_airzone_value(AZD_TEMP_UNIT)
         ]
@@ -226,6 +224,8 @@ class AirzoneClimate(AirzoneZoneEntity, ClimateEntity):
             ]
         else:
             self._attr_hvac_mode = HVACMode.OFF
+        self._attr_max_temp = self.get_airzone_value(AZD_TEMP_MAX)
+        self._attr_min_temp = self.get_airzone_value(AZD_TEMP_MIN)
         self._attr_target_temperature = self.get_airzone_value(AZD_TEMP_SET)
         if self.supported_features & ClimateEntityFeature.FAN_MODE:
             self._attr_fan_mode = self._speeds.get(self.get_airzone_value(AZD_SPEED))
