@@ -38,12 +38,11 @@ class AirzoneZoneEntity(AirzoneEntity):
         self.zone_id = zone_id
 
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, f"{entry.entry_id}_{zone_id}")},
+            identifiers={(DOMAIN, f"{entry.unique_id}_{zone_id}")},
             manufacturer=MANUFACTURER,
             name=zone_data[AZD_NAME],
-            via_device=(DOMAIN, f"{entry.entry_id}_{self.system_id}"),
+            via_device=(DOMAIN, f"{entry.unique_id}_{self.system_id}"),
         )
-        self._attr_unique_id = entry.unique_id or entry.entry_id
 
     def get_airzone_value(self, key: str) -> Any:
         """Return zone value by key."""

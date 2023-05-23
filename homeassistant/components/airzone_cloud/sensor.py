@@ -91,7 +91,7 @@ class AirzoneZoneSensor(AirzoneZoneEntity, AirzoneSensor):
         super().__init__(coordinator, entry, zone_id, zone_data)
 
         self._attr_name = f"{zone_data[AZD_NAME]} {description.name}"
-        self._attr_unique_id = f"{entry.entry_id}_{zone_id}_{description.key}"
+        self._attr_unique_id = f"{entry.unique_id}_{zone_id}_{description.key}"
         self.entity_description = description
 
         self._async_update_attrs()
