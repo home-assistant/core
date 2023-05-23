@@ -10,7 +10,6 @@ from aioairzone_cloud.const import (
     API_CONFIG,
     API_CONNECTION_DATE,
     API_DEVICE_ID,
-    API_DEVICE_TYPE,
     API_DEVICES,
     API_DISCONNECTION_DATE,
     API_FAH,
@@ -36,7 +35,6 @@ from aioairzone_cloud.const import (
     API_ZONE_NUMBER,
 )
 from aioairzone_cloud.device import Device
-from aioairzone_cloud.webserver import WebServer
 
 from homeassistant.components.airzone_cloud import DOMAIN
 from homeassistant.const import CONF_ID, CONF_PASSWORD, CONF_USERNAME
@@ -118,39 +116,6 @@ GET_WEBSERVER_MOCK = {
     },
 }
 
-GET_WEBSERVER_MOCK_DEVICES = GET_WEBSERVER_MOCK | {
-    API_DEVICES: [
-        {
-            API_DEVICE_ID: "system1",
-            API_DEVICE_TYPE: API_AZ_SYSTEM,
-            API_CONFIG: {
-                API_SYSTEM_NUMBER: 1,
-            },
-            API_IS_CONNECTED: True,
-        },
-        {
-            API_DEVICE_ID: "zone1",
-            API_NAME: "Salon",
-            API_DEVICE_TYPE: API_AZ_ZONE,
-            API_CONFIG: {
-                API_SYSTEM_NUMBER: 1,
-                API_ZONE_NUMBER: 1,
-            },
-            API_IS_CONNECTED: True,
-        },
-        {
-            API_DEVICE_ID: "zone2",
-            API_NAME: "Dormitorio",
-            API_DEVICE_TYPE: API_AZ_ZONE,
-            API_CONFIG: {
-                API_SYSTEM_NUMBER: 1,
-                API_ZONE_NUMBER: 2,
-            },
-            API_IS_CONNECTED: True,
-        },
-    ],
-}
-
 
 def mock_get_device_status(device: Device) -> dict[str, Any]:
     """Mock API device status."""
@@ -178,15 +143,6 @@ def mock_get_device_status(device: Device) -> dict[str, Any]:
     }
 
 
-def mock_get_webserver(webserver: WebServer, devices: bool) -> dict[str, Any]:
-    """Mock API webserver status."""
-
-    if devices:
-        return GET_WEBSERVER_MOCK_DEVICES
-
-    return GET_WEBSERVER_MOCK
-
-
 async def async_init_integration(
     hass: HomeAssistant,
 ) -> None:
@@ -210,7 +166,7 @@ async def async_init_integration(
         return_value=GET_INSTALLATIONS_MOCK,
     ), patch(
         "homeassistant.components.airzone_cloud.AirzoneCloudApi.api_get_webserver",
-        side_effect=mock_get_webserver,
+        return_value=GET_WEBSERVER_MOCK,
     ), patch(
         "homeassistant.components.airzone_cloud.AirzoneCloudApi.login",
         return_value=None,
