@@ -106,6 +106,7 @@ PLATFORMS = [
     Platform.TEXT,
     Platform.UPDATE,
     Platform.VACUUM,
+    Platform.WATER_HEATER,
 ]
 
 RELOADABLE_PLATFORMS = [
@@ -129,4 +130,5 @@ RELOADABLE_PLATFORMS = [
     Platform.TEXT,
     Platform.UPDATE,
     Platform.VACUUM,
+    Platform.WATER_HEATER,
 ]
