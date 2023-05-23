@@ -51,6 +51,38 @@ ptz:
           max: 9
           step: 1
           mode: box
+set_alarm_detection_sensibility:
+  name: Detection sensitivity
+  description: Sets the detection sensibility level.
+  target:
+    entity:
+      integration: ezviz
+      domain: camera
+  fields:
+    level:
+      name: Sensitivity Level
+      description: "Sensibility level (1-6) for type 0 (Normal camera)
+        or (1-100) for type 3 (PIR sensor camera)."
+      required: true
+      example: 3
+      default: 3
+      selector:
+        number:
+          min: 1
+          max: 100
+          step: 1
+          mode: box
+    type_value:
+      name: Detection type
+      description: "Type of detection. Options : 0 - Camera or 3 - PIR Sensor Camera"
+      required: true
+      example: "0"
+      default: "0"
+      selector:
+        select:
+          options:
+            - "0"
+            - "3"
 sound_alarm:
   name: Sound Alarm
   description: Sounds the alarm on your camera.
