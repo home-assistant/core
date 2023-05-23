@@ -23,9 +23,8 @@ class PlugwiseSelectDescriptionMixin:
     """Mixin values for Plugwise Select entities."""
 
     command: Callable[[Smile, str, str], Awaitable[Any]]
-    options_key: str
     value_fn: Callable[[DeviceData], str]
-    values_fn: Callable[[DeviceData], list[str]]
+    options_fn: Callable[[DeviceData], list[str]]
 
 
 @dataclass
