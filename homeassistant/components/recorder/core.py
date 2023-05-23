@@ -691,8 +691,8 @@ class Recorder(threading.Thread):
 
     def _add_to_session(self, session: Session, obj: object) -> None:
         """Add an object to the session."""
-        session.add(obj)
         self._event_session_has_pending_writes = True
+        session.add(obj)
 
     def _run(self) -> None:
         """Start processing events to save."""
