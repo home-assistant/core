@@ -330,6 +330,7 @@ omit =
     homeassistant/components/ezviz/entity.py
     homeassistant/components/ezviz/sensor.py
     homeassistant/components/ezviz/switch.py
+    homeassistant/components/ezviz/update.py
     homeassistant/components/faa_delays/__init__.py
     homeassistant/components/faa_delays/binary_sensor.py
     homeassistant/components/familyhub/camera.py
@@ -1535,6 +1536,8 @@ omit =
     homeassistant/components/zwave_me/sensor.py
     homeassistant/components/zwave_me/siren.py
     homeassistant/components/zwave_me/switch.py
+    homeassistant/components/electrasmart/climate.py
+    homeassistant/components/electrasmart/__init__.py
 
 [report]
 # Regexes for lines to exclude from consideration

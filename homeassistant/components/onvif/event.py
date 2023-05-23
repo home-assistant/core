@@ -7,7 +7,7 @@ import datetime as dt
 
 from aiohttp.web import Request
 from httpx import RemoteProtocolError, RequestError, TransportError
-from onvif import ONVIFCamera, ONVIFService
+from onvif import ONVIFCamera
 from onvif.client import (
     NotificationManager,
     PullPointManager as ONVIFPullPointManager,
@@ -240,7 +240,6 @@ class PullPointManager:
         self._hass = event_manager.hass
         self._name = event_manager.name
 
-        self._pullpoint_service: ONVIFService = None
         self._pullpoint_manager: ONVIFPullPointManager | None = None
 
         self._cancel_pull_messages: CALLBACK_TYPE | None = None
@@ -317,7 +316,6 @@ class PullPointManager:
         self._pullpoint_manager = await self._device.create_pullpoint_manager(
             SUBSCRIPTION_TIME, self._event_manager.async_mark_events_stale
         )
-        self._pullpoint_service = self._pullpoint_manager.get_service()
         await self._pullpoint_manager.set_synchronization_point()
 
     async def _async_unsubscribe_pullpoint(self) -> None:
@@ -342,7 +340,7 @@ class PullPointManager:
         """Pull messages from device."""
         if self._pullpoint_manager is None:
             return
-        assert self._pullpoint_service is not None, "PullPoint service does not exist"
+        service = self._pullpoint_manager.get_service()
         LOGGER.debug(
             "%s: Pulling PullPoint messages timeout=%s limit=%s",
             self._name,
@@ -353,7 +351,7 @@ class PullPointManager:
         response = None
         try:
             if self._hass.is_running:
-                response = await self._pullpoint_service.PullMessages(
+                response = await service.PullMessages(
                     {
                         "MessageLimit": PULLPOINT_MESSAGE_LIMIT,
                         "Timeout": PULLPOINT_POLL_TIME,
@@ -445,7 +443,7 @@ class PullPointManager:
         self.async_cancel_pull_messages()
         if self.state != PullPointManagerState.STARTED:
             return
-        if self._pullpoint_service:
+        if self._pullpoint_manager:
             when = delay if delay is not None else PULLPOINT_COOLDOWN_TIME
             self._cancel_pull_messages = async_call_later(
                 self._hass, when, self._pull_messages_job

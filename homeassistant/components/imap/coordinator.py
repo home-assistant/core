@@ -20,15 +20,18 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryError
+from homeassistant.helpers.json import json_bytes
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util.ssl import SSLCipherList, client_context
 
 from .const import (
     CONF_CHARSET,
     CONF_FOLDER,
+    CONF_MAX_MESSAGE_SIZE,
     CONF_SEARCH,
     CONF_SERVER,
     CONF_SSL_CIPHER_LIST,
+    DEFAULT_MAX_MESSAGE_SIZE,
     DOMAIN,
 )
 from .errors import InvalidAuth, InvalidFolder
@@ -38,6 +41,7 @@ _LOGGER = logging.getLogger(__name__)
 BACKOFF_TIME = 10
 
 EVENT_IMAP = "imap_content"
+MAX_EVENT_DATA_BYTES = 32168
 
 
 async def connect_to_server(data: Mapping[str, Any]) -> IMAP4_SSL:
@@ -177,11 +181,26 @@ class ImapDataUpdateCoordinator(DataUpdateCoordinator[int | None]):
                 "search": self.config_entry.data[CONF_SEARCH],
                 "folder": self.config_entry.data[CONF_FOLDER],
                 "date": message.date,
-                "text": message.text[:2048],
+                "text": message.text[
+                    : self.config_entry.data.get(
+                        CONF_MAX_MESSAGE_SIZE, DEFAULT_MAX_MESSAGE_SIZE
+                    )
+                ],
                 "sender": message.sender,
                 "subject": message.subject,
                 "headers": message.headers,
             }
+            if (size := len(json_bytes(data))) > MAX_EVENT_DATA_BYTES:
+                _LOGGER.warning(
+                    "Custom imap_content event skipped, size (%s) exceeds "
+                    "the maximal event size (%s), sender: %s, subject: %s",
+                    size,
+                    MAX_EVENT_DATA_BYTES,
+                    message.sender,
+                    message.subject,
+                )
+                return
+
             self.hass.bus.fire(EVENT_IMAP, data)
             _LOGGER.debug(
                 "Message processed, sender: %s, subject: %s",
