@@ -114,9 +114,6 @@ class SQLConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             db_url = user_input.get(CONF_DB_URL)
             query = user_input[CONF_QUERY]
             column = user_input[CONF_COLUMN_NAME]
-            uom = user_input.get(CONF_UNIT_OF_MEASUREMENT)
-            value_template = user_input.get(CONF_VALUE_TEMPLATE)
-            name = user_input[CONF_NAME]
             db_url_for_validation = None
 
             try:
@@ -133,22 +130,23 @@ class SQLConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except ValueError:
                 errors["query"] = "query_invalid"
 
-            add_db_url = (
-                {CONF_DB_URL: db_url} if db_url == db_url_for_validation else {}
-            )
+            options = {
+                CONF_QUERY: query,
+                CONF_COLUMN_NAME: column,
+                CONF_NAME: user_input[CONF_NAME],
+            }
+            if uom := user_input.get(CONF_UNIT_OF_MEASUREMENT):
+                options[CONF_UNIT_OF_MEASUREMENT] = uom
+            if value_template := user_input.get(CONF_VALUE_TEMPLATE):
+                options[CONF_VALUE_TEMPLATE] = value_template
+            if db_url_for_validation != get_instance(self.hass).db_url:
+                options[CONF_DB_URL] = db_url_for_validation
 
             if not errors:
                 return self.async_create_entry(
-                    title=name,
+                    title=user_input[CONF_NAME],
                     data={},
-                    options={
-                        **add_db_url,
-                        CONF_QUERY: query,
-                        CONF_COLUMN_NAME: column,
-                        CONF_UNIT_OF_MEASUREMENT: uom,
-                        CONF_VALUE_TEMPLATE: value_template,
-                        CONF_NAME: name,
-                    },
+                    options=options,
                 )
 
         return self.async_show_form(
@@ -196,13 +194,21 @@ class SQLOptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
                     db_url_for_validation,
                     recorder_db,
                 )
-                if db_url and db_url_for_validation == recorder_db:
-                    user_input.pop(CONF_DB_URL)
+
+                options = {
+                    CONF_QUERY: query,
+                    CONF_COLUMN_NAME: column,
+                    CONF_NAME: name,
+                }
+                if uom := user_input.get(CONF_UNIT_OF_MEASUREMENT):
+                    options[CONF_UNIT_OF_MEASUREMENT] = uom
+                if value_template := user_input.get(CONF_VALUE_TEMPLATE):
+                    options[CONF_VALUE_TEMPLATE] = value_template
+                if db_url_for_validation != get_instance(self.hass).db_url:
+                    options[CONF_DB_URL] = db_url_for_validation
+
                 return self.async_create_entry(
-                    data={
-                        CONF_NAME: name,
-                        **user_input,
-                    },
+                    data=options,
                 )
 
         return self.async_show_form(

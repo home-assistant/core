@@ -6,6 +6,7 @@ from pprint import pformat
 from typing import Any
 from urllib.parse import urlparse
 
+from onvif.util import is_auth_error, stringify_onvif_error
 import voluptuous as vol
 from wsdiscovery.discovery import ThreadedWSDiscovery as WSDiscovery
 from wsdiscovery.scope import Scope
@@ -33,14 +34,15 @@ from homeassistant.helpers import device_registry as dr
 
 from .const import (
     CONF_DEVICE_ID,
+    CONF_ENABLE_WEBHOOKS,
     DEFAULT_ARGUMENTS,
+    DEFAULT_ENABLE_WEBHOOKS,
     DEFAULT_PORT,
     DOMAIN,
     GET_CAPABILITIES_EXCEPTIONS,
     LOGGER,
 )
 from .device import get_device
-from .util import is_auth_error, stringify_onvif_error
 
 CONF_MANUAL_INPUT = "Manually configure ONVIF device"
 
@@ -142,10 +144,14 @@ class OnvifFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 hass.async_create_task(hass.config_entries.async_reload(entry_id))
                 return self.async_abort(reason="reauth_successful")
 
+        username = (user_input or {}).get(CONF_USERNAME) or entry.data[CONF_USERNAME]
         return self.async_show_form(
             step_id="reauth_confirm",
             data_schema=vol.Schema(
-                {vol.Required(CONF_USERNAME): str, vol.Required(CONF_PASSWORD): str}
+                {
+                    vol.Required(CONF_USERNAME, default=username): str,
+                    vol.Required(CONF_PASSWORD): str,
+                }
             ),
             errors=errors,
             description_placeholders=description_placeholders,
@@ -383,6 +389,12 @@ class OnvifOptionsFlowHandler(config_entries.OptionsFlow):
                 CONF_USE_WALLCLOCK_AS_TIMESTAMPS,
                 self.config_entry.options.get(CONF_USE_WALLCLOCK_AS_TIMESTAMPS, False),
             )
+            self.options[CONF_ENABLE_WEBHOOKS] = user_input.get(
+                CONF_ENABLE_WEBHOOKS,
+                self.config_entry.options.get(
+                    CONF_ENABLE_WEBHOOKS, DEFAULT_ENABLE_WEBHOOKS
+                ),
+            )
             return self.async_create_entry(title="", data=self.options)
 
         advanced_options = {}
@@ -411,6 +423,12 @@ class OnvifOptionsFlowHandler(config_entries.OptionsFlow):
                             CONF_RTSP_TRANSPORT, next(iter(RTSP_TRANSPORTS))
                         ),
                     ): vol.In(RTSP_TRANSPORTS),
+                    vol.Optional(
+                        CONF_ENABLE_WEBHOOKS,
+                        default=self.config_entry.options.get(
+                            CONF_ENABLE_WEBHOOKS, DEFAULT_ENABLE_WEBHOOKS
+                        ),
+                    ): bool,
                     **advanced_options,
                 }
             ),
