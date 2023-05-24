@@ -51,8 +51,11 @@ from .const import (
     DOMAIN,
     LOGGER,
 )
-from .triggers.turn_off import async_get_turn_off_trigger
-from .triggers.turn_on import async_get_turn_on_trigger
+from .triggers.turn_on_off import (
+    PLATFORM_TYPE_TURN_OFF,
+    PLATFORM_TYPE_TURN_ON,
+    async_get_turn_on_off_triggers,
+)
 
 SOURCES = {"TV": "KEY_TV", "HDMI": "KEY_HDMI"}
 
@@ -374,12 +377,18 @@ class SamsungTVDevice(MediaPlayerEntity):
         if (entry := self.registry_entry) and entry.device_id:
             self.async_on_remove(
                 self._turn_on.async_register(
-                    self.hass, async_get_turn_on_trigger(entry.device_id)
+                    self.hass,
+                    async_get_turn_on_off_triggers(
+                        entry.device_id, PLATFORM_TYPE_TURN_ON
+                    )[0],
                 ),
             )
             self.async_on_remove(
                 self._turn_off.async_register(
-                    self.hass, async_get_turn_off_trigger(entry.device_id)
+                    self.hass,
+                    async_get_turn_on_off_triggers(
+                        entry.device_id, PLATFORM_TYPE_TURN_OFF
+                    )[0],
                 ),
             )
 

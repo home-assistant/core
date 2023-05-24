@@ -12,11 +12,12 @@ from homeassistant.helpers.trigger import (
 )
 from homeassistant.helpers.typing import ConfigType
 
-from .triggers import turn_off, turn_on
+from .triggers import turn_on_off
 
 TRIGGERS = {
-    "turn_on": turn_on,
-    "turn_off": turn_off,
+    # Not sure what to do here
+    "turn_on": turn_on_off,
+    "turn_off": turn_on_off,
 }
 
 
@@ -25,6 +26,7 @@ def _get_trigger_platform(config: ConfigType) -> TriggerProtocol:
     platform_split = config[CONF_PLATFORM].split(".", maxsplit=1)
     if len(platform_split) < 2 or platform_split[1] not in TRIGGERS:
         raise ValueError(f"Unknown Samsung TV trigger platform {config[CONF_PLATFORM]}")
+    # Not sure what to do here too
     return cast(TriggerProtocol, TRIGGERS[platform_split[1]])
 
 

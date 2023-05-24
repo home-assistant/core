@@ -1,4 +1,4 @@
-"""Samsung TV device turn off trigger."""
+"""Samsung TV device turn on and turn off triggers."""
 from __future__ import annotations
 
 import voluptuous as vol
@@ -26,15 +26,18 @@ from ..helpers import (
     async_get_device_id_from_entity_id,
 )
 
-# Platform type should be <DOMAIN>.<SUBMODULE_NAME>
-PLATFORM_TYPE = f"{DOMAIN}.{__name__.rsplit('.', maxsplit=1)[-1]}"
-
+TRIGGER_TYPE_TURN_ON = "turn_on"
 TRIGGER_TYPE_TURN_OFF = "turn_off"
+
+PLATFORM_TYPE_TURN_ON = f"{DOMAIN}.{TRIGGER_TYPE_TURN_ON}"
+PLATFORM_TYPE_TURN_OFF = f"{DOMAIN}.{TRIGGER_TYPE_TURN_OFF}"
 
 TRIGGER_SCHEMA = vol.All(
     cv.TRIGGER_BASE_SCHEMA.extend(
         {
-            vol.Required(CONF_PLATFORM): PLATFORM_TYPE,
+            vol.Required(CONF_PLATFORM): vol.In(
+                PLATFORM_TYPE_TURN_ON, PLATFORM_TYPE_TURN_OFF
+            ),
             vol.Optional(ATTR_DEVICE_ID): vol.All(cv.ensure_list, [cv.string]),
             vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
         },
@@ -43,15 +46,27 @@ TRIGGER_SCHEMA = vol.All(
 )
 
 
-def async_get_turn_off_trigger(device_id: str) -> dict[str, str]:
-    """Return data for a turn off trigger."""
+def async_get_turn_on_off_triggers(
+    device_id: str, platform_type: str | None = None
+) -> list[dict[str, str]]:
+    """Return data for turn on and turn off triggers."""
 
-    return {
-        CONF_PLATFORM: "device",
-        CONF_DEVICE_ID: device_id,
-        CONF_DOMAIN: DOMAIN,
-        CONF_TYPE: PLATFORM_TYPE,
-    }
+    if platform_type is None:
+        platforms = [PLATFORM_TYPE_TURN_ON, PLATFORM_TYPE_TURN_OFF]
+    else:
+        platforms = [platform_type]
+
+    triggers = []
+    for platform in platforms:
+        triggers.append(
+            {
+                CONF_PLATFORM: "device",
+                CONF_DEVICE_ID: device_id,
+                CONF_DOMAIN: DOMAIN,
+                CONF_TYPE: platform,
+            }
+        )
+    return triggers
 
 
 async def async_attach_trigger(
@@ -60,7 +75,7 @@ async def async_attach_trigger(
     action: TriggerActionType,
     trigger_info: TriggerInfo,
     *,
-    platform_type: str = PLATFORM_TYPE,
+    platform_type: str,
 ) -> CALLBACK_TYPE | None:
     """Attach a trigger."""
     device_ids = set()
@@ -82,19 +97,21 @@ async def async_attach_trigger(
     for device_id in device_ids:
         device = async_get_device_entry_by_device_id(hass, device_id)
         device_name = device.name_by_user or device.name
+        # Example: extracts "turn off" from "samsungtv.turn_off"
+        trigger_name = platform_type.split(".")[1].replace("_", " ")
 
         variables = {
             **trigger_data,
             CONF_PLATFORM: platform_type,
             ATTR_DEVICE_ID: device_id,
-            "description": f"Samsung turn off trigger for {device_name}",
+            "description": f"Samsung {trigger_name} trigger for {device_name}",
         }
 
-        turn_off_trigger = async_get_turn_off_trigger(device_id)
+        trigger = async_get_turn_on_off_triggers(device_id, platform_type)[0]
 
         unsubs.append(
             PluggableAction.async_attach_trigger(
-                hass, turn_off_trigger, action, {"trigger": variables}
+                hass, trigger, action, {"trigger": variables}
             )
         )
 
