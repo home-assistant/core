@@ -31,7 +31,7 @@ class PlugwiseEntityDescriptionMixin:
     native_min_value_fn: Callable[[ActuatorData], float]
     native_step_key_fn: Callable[[ActuatorData], float]
     native_value_fn: Callable[[ActuatorData], float]
-    actuator_fn: Callable[[DeviceData], ActuatorData]
+    actuator_fn: Callable[[DeviceData], ActuatorData | None]
 
 
 @dataclass
