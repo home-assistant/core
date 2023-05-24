@@ -24,7 +24,7 @@ from .entity import PlugwiseEntity
 
 @dataclass
 class PlugwiseEntityDescriptionMixin:
-    """Mixin values for Plugwse entities."""
+    """Mixin values for Plugwise entities."""
 
     command: Callable[[Smile, str, float], Awaitable[None]]
     native_max_value_fn: Callable[[ActuatorData], float]
