@@ -101,7 +101,7 @@ class PlugwiseNumberEntity(PlugwiseEntity, NumberEntity):
     @property
     def native_max_value(self) -> float:
         """Return the setpoint max. value."""
-        return self.entity_description.native_max_value_fn(self._number)
+        return self.entity_description.native_max_value_fn(self._actuator)
 
     @property
     def native_min_value(self) -> float:
