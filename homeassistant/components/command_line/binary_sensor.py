@@ -70,7 +70,7 @@ async def async_setup_platform(
             translation_key="deprecated_yaml_binary_sensor",
         )
     if discovery_info:
-        binary_sensor_config = discovery_info["config"]
+        binary_sensor_config = discovery_info
 
     name: str = binary_sensor_config.get(CONF_NAME, DEFAULT_NAME)
     command: str = binary_sensor_config[CONF_COMMAND]

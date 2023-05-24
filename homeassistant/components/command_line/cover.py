@@ -14,6 +14,7 @@ from homeassistant.const import (
     CONF_COMMAND_STOP,
     CONF_COVERS,
     CONF_FRIENDLY_NAME,
+    CONF_NAME,
     CONF_UNIQUE_ID,
     CONF_VALUE_TEMPLATE,
 )
@@ -23,6 +24,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.util import slugify
 
 from .const import CONF_COMMAND_TIMEOUT, DEFAULT_TIMEOUT, DOMAIN
 from .utils import call_shell_with_timeout, check_output_or_log
@@ -57,9 +59,7 @@ async def async_setup_platform(
 
     covers = []
     if discovery_info:
-        devices: dict[str, Any] = {
-            discovery_info["object_id"]: discovery_info["config"]
-        }
+        entities: dict[str, Any] = {slugify(discovery_info[CONF_NAME]): discovery_info}
     else:
         async_create_issue(
             hass,
@@ -70,16 +70,21 @@ async def async_setup_platform(
             severity=IssueSeverity.WARNING,
             translation_key="deprecated_yaml_cover",
         )
-        devices = config.get(CONF_COVERS, {})
+        entities = config.get(CONF_COVERS, {})
 
-    for device_name, device_config in devices.items():
+    for device_name, device_config in entities.items():
         value_template: Template | None = device_config.get(CONF_VALUE_TEMPLATE)
         if value_template is not None:
             value_template.hass = hass
 
+        if name := device_config.get(
+            CONF_FRIENDLY_NAME
+        ):  # Backward compatibility. Can be removed after deprecation
+            device_config[CONF_NAME] = name
+
         covers.append(
             CommandCover(
-                device_config.get(CONF_FRIENDLY_NAME, device_name),
+                device_config.get(CONF_NAME, device_name),
                 device_config[CONF_COMMAND_OPEN],
                 device_config[CONF_COMMAND_CLOSE],
                 device_config[CONF_COMMAND_STOP],

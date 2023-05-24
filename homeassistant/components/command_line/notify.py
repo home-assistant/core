@@ -45,7 +45,7 @@ def get_service(
             translation_key="deprecated_yaml_notify",
         )
     if discovery_info:
-        notify_config = discovery_info["config"]
+        notify_config = discovery_info
     command: str = notify_config[CONF_COMMAND]
     timeout: int = notify_config[CONF_COMMAND_TIMEOUT]
 

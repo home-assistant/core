@@ -69,7 +69,8 @@ async def test_state_value_platform_yaml(hass: HomeAssistant) -> None:
                                 "command_close": f"echo 1 > {path}",
                                 "command_stop": f"echo 0 > {path}",
                                 "value_template": "{{ value }}",
-                            }
+                                "friendly_name": "Test",
+                            },
                         },
                     },
                 ]
@@ -92,19 +93,22 @@ async def test_state_value_platform_yaml(hass: HomeAssistant) -> None:
         assert entity_state.state == "open"
 
 
-@pytest.mark.parametrize(
-    "get_config",
-    [{"command_line": {"covers": {"test": {}}}}],
-)
-async def test_no_poll_when_cover_has_no_command_state(
-    hass: HomeAssistant, load_yaml_integration: None
-) -> None:
+async def test_no_poll_when_cover_has_no_command_state(hass: HomeAssistant) -> None:
     """Test that the cover does not polls when there's no state command."""
 
     with patch(
         "homeassistant.components.command_line.utils.subprocess.check_output",
         return_value=b"50\n",
     ) as check_output:
+        assert await setup.async_setup_component(
+            hass,
+            COVER_DOMAIN,
+            {
+                COVER_DOMAIN: [
+                    {"platform": "command_line", "covers": {"test": {}}},
+                ]
+            },
+        )
         async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
         await hass.async_block_till_done()
         assert not check_output.called
@@ -112,7 +116,18 @@ async def test_no_poll_when_cover_has_no_command_state(
 
 @pytest.mark.parametrize(
     "get_config",
-    [{"command_line": {"covers": {"test": {"command_state": "echo state"}}}}],
+    [
+        {
+            "command_line": {
+                "cover": [
+                    {
+                        "command_state": "echo state",
+                        "name": "Test",
+                    },
+                ]
+            }
+        }
+    ],
 )
 async def test_poll_when_cover_has_command_state(
     hass: HomeAssistant, load_yaml_integration: None
@@ -142,15 +157,16 @@ async def test_state_value(hass: HomeAssistant) -> None:
             DOMAIN,
             {
                 "command_line": {
-                    "covers": {
-                        "test": {
+                    "cover": [
+                        {
                             "command_state": f"cat {path}",
                             "command_open": f"echo 1 > {path}",
                             "command_close": f"echo 1 > {path}",
                             "command_stop": f"echo 0 > {path}",
                             "value_template": "{{ value }}",
+                            "name": "Test",
                         }
-                    }
+                    ]
                 }
             },
         )
@@ -196,12 +212,13 @@ async def test_state_value(hass: HomeAssistant) -> None:
     [
         {
             "command_line": {
-                "covers": {
-                    "test": {
+                "cover": [
+                    {
                         "command_state": "echo open",
                         "value_template": "{{ value }}",
+                        "name": "Test",
                     }
-                }
+                ]
             }
         }
     ],
@@ -231,7 +248,18 @@ async def test_reload(hass: HomeAssistant, load_yaml_integration: None) -> None:
 
 @pytest.mark.parametrize(
     "get_config",
-    [{"command_line": {"covers": {"test": {"command_open": "exit 1"}}}}],
+    [
+        {
+            "command_line": {
+                "cover": [
+                    {
+                        "command_open": "exit 1",
+                        "name": "Test",
+                    }
+                ]
+            }
+        }
+    ],
 )
 async def test_move_cover_failure(
     caplog: pytest.LogCaptureFixture, hass: HomeAssistant, load_yaml_integration: None
@@ -250,26 +278,29 @@ async def test_move_cover_failure(
     [
         {
             "command_line": {
-                "covers": {
-                    "unique": {
+                "cover": [
+                    {
                         "command_open": "echo open",
                         "command_close": "echo close",
                         "command_stop": "echo stop",
                         "unique_id": "unique",
+                        "name": "Test",
                     },
-                    "not_unique_1": {
+                    {
                         "command_open": "echo open",
                         "command_close": "echo close",
                         "command_stop": "echo stop",
                         "unique_id": "not-so-unique-anymore",
+                        "name": "Test2",
                     },
-                    "not_unique_2": {
+                    {
                         "command_open": "echo open",
                         "command_close": "echo close",
                         "command_stop": "echo stop",
                         "unique_id": "not-so-unique-anymore",
+                        "name": "Test3",
                     },
-                }
+                ]
             }
         }
     ],

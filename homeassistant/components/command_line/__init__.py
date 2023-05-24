@@ -10,14 +10,18 @@ import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA as BINARY_SENSOR_DEVICE_CLASSES_SCHEMA,
+    DOMAIN as BINARY_SENSOR_DOMAIN,
 )
+from homeassistant.components.cover import DOMAIN as COVER_DOMAIN
+from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
 from homeassistant.components.sensor import (
     CONF_STATE_CLASS,
     DEVICE_CLASSES_SCHEMA as SENSOR_DEVICE_CLASSES_SCHEMA,
+    DOMAIN as SENSOR_DOMAIN,
     STATE_CLASSES_SCHEMA as SENSOR_STATE_CLASSES_SCHEMA,
 )
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import (
-    CONF_BINARY_SENSORS,
     CONF_COMMAND,
     CONF_COMMAND_CLOSE,
     CONF_COMMAND_OFF,
@@ -25,15 +29,11 @@ from homeassistant.const import (
     CONF_COMMAND_OPEN,
     CONF_COMMAND_STATE,
     CONF_COMMAND_STOP,
-    CONF_COVERS,
     CONF_DEVICE_CLASS,
-    CONF_FRIENDLY_NAME,
-    CONF_ICON_TEMPLATE,
+    CONF_ICON,
     CONF_NAME,
     CONF_PAYLOAD_OFF,
     CONF_PAYLOAD_ON,
-    CONF_SENSORS,
-    CONF_SWITCHES,
     CONF_UNIQUE_ID,
     CONF_UNIT_OF_MEASUREMENT,
     CONF_VALUE_TEMPLATE,
@@ -55,11 +55,11 @@ SENSOR_DEFAULT_NAME = "Command Sensor"
 CONF_NOTIFIERS = "notifiers"
 
 PLATFORM_MAPPING = {
-    CONF_BINARY_SENSORS: Platform.BINARY_SENSOR,
-    CONF_COVERS: Platform.COVER,
-    CONF_NOTIFIERS: Platform.NOTIFY,
-    CONF_SENSORS: Platform.SENSOR,
-    CONF_SWITCHES: Platform.SWITCH,
+    BINARY_SENSOR_DOMAIN: Platform.BINARY_SENSOR,
+    COVER_DOMAIN: Platform.COVER,
+    NOTIFY_DOMAIN: Platform.NOTIFY,
+    SENSOR_DOMAIN: Platform.SENSOR,
+    SWITCH_DOMAIN: Platform.SWITCH,
 }
 
 _LOGGER = logging.getLogger(__name__)
@@ -82,7 +82,7 @@ COVER_SCHEMA = vol.Schema(
         vol.Optional(CONF_COMMAND_OPEN, default="true"): cv.string,
         vol.Optional(CONF_COMMAND_STATE): cv.string,
         vol.Optional(CONF_COMMAND_STOP, default="true"): cv.string,
-        vol.Optional(CONF_FRIENDLY_NAME): cv.string,
+        vol.Required(CONF_NAME): cv.string,
         vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
         vol.Optional(CONF_COMMAND_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
         vol.Optional(CONF_UNIQUE_ID): cv.string,
@@ -113,22 +113,22 @@ SWITCH_SCHEMA = vol.Schema(
         vol.Optional(CONF_COMMAND_OFF, default="true"): cv.string,
         vol.Optional(CONF_COMMAND_ON, default="true"): cv.string,
         vol.Optional(CONF_COMMAND_STATE): cv.string,
-        vol.Optional(CONF_FRIENDLY_NAME): cv.string,
+        vol.Required(CONF_NAME): cv.string,
         vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
-        vol.Optional(CONF_ICON_TEMPLATE): cv.template,
+        vol.Optional(CONF_ICON): cv.template,
         vol.Optional(CONF_COMMAND_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
         vol.Optional(CONF_UNIQUE_ID): cv.string,
     }
 )
 COMBINED_SCHEMA = vol.Schema(
     {
-        vol.Optional(CONF_BINARY_SENSORS): cv.schema_with_slug_keys(
-            BINARY_SENSOR_SCHEMA
+        vol.Optional(BINARY_SENSOR_DOMAIN): vol.All(
+            cv.ensure_list, [BINARY_SENSOR_SCHEMA]
         ),
-        vol.Optional(CONF_COVERS): cv.schema_with_slug_keys(COVER_SCHEMA),
-        vol.Optional(CONF_NOTIFIERS): cv.schema_with_slug_keys(NOTIFY_SCHEMA),
-        vol.Optional(CONF_SENSORS): cv.schema_with_slug_keys(SENSOR_SCHEMA),
-        vol.Optional(CONF_SWITCHES): cv.schema_with_slug_keys(SWITCH_SCHEMA),
+        vol.Optional(COVER_DOMAIN): vol.All(cv.ensure_list, [COVER_SCHEMA]),
+        vol.Optional(NOTIFY_DOMAIN): vol.All(cv.ensure_list, [NOTIFY_SCHEMA]),
+        vol.Optional(SENSOR_DOMAIN): vol.All(cv.ensure_list, [SENSOR_SCHEMA]),
+        vol.Optional(SWITCH_DOMAIN): vol.All(cv.ensure_list, [SWITCH_SCHEMA]),
     }
 )
 CONFIG_SCHEMA = vol.Schema(
@@ -136,11 +136,11 @@ CONFIG_SCHEMA = vol.Schema(
         vol.Optional(DOMAIN): vol.All(
             COMBINED_SCHEMA,
             cv.has_at_least_one_key(
-                CONF_BINARY_SENSORS,
-                CONF_COVERS,
-                CONF_NOTIFIERS,
-                CONF_SENSORS,
-                CONF_SWITCHES,
+                BINARY_SENSOR_DOMAIN,
+                COVER_DOMAIN,
+                NOTIFY_DOMAIN,
+                SENSOR_DOMAIN,
+                SWITCH_DOMAIN,
             ),
         )
     },
@@ -150,7 +150,7 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Command Line from yaml config."""
-    command_line_config: dict[str, dict[str, Any]] = config.get(DOMAIN, {})
+    command_line_config: dict[str, list[dict[str, Any]]] = config.get(DOMAIN, {})
     if not command_line_config:
         return True
 
@@ -160,12 +160,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     platforms: list[Platform] = []
     for platform, configs in command_line_config.items():
         platforms.append(PLATFORM_MAPPING[platform])
-        for object_id, object_config in configs.items():
-            platform_config = {"object_id": object_id, "config": object_config}
-            if PLATFORM_MAPPING[platform] == Platform.NOTIFY and (
-                add_name := object_config.get(CONF_NAME)
-            ):
-                platform_config[CONF_NAME] = add_name
+        for platform_config in configs:
             _LOGGER.debug(
                 "Loading config %s for platform %s",
                 platform_config,

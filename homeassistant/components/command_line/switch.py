@@ -30,6 +30,7 @@ from homeassistant.helpers.issue_registry import IssueSeverity, async_create_iss
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.template_entity import ManualTriggerEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.util import slugify
 
 from .const import CONF_COMMAND_TIMEOUT, DEFAULT_TIMEOUT, DOMAIN
 from .utils import call_shell_with_timeout, check_output_or_log
@@ -63,9 +64,7 @@ async def async_setup_platform(
     """Find and return switches controlled by shell commands."""
 
     if discovery_info:
-        devices: dict[str, Any] = {
-            discovery_info["object_id"]: discovery_info["config"]
-        }
+        entities: dict[str, Any] = {slugify(discovery_info[CONF_NAME]): discovery_info}
     else:
         async_create_issue(
             hass,
@@ -76,15 +75,25 @@ async def async_setup_platform(
             severity=IssueSeverity.WARNING,
             translation_key="deprecated_yaml_switch",
         )
-        devices = config.get(CONF_SWITCHES, {})
+        entities = config.get(CONF_SWITCHES, {})
 
     switches = []
 
-    for object_id, device_config in devices.items():
+    for object_id, device_config in entities.items():
+        if name := device_config.get(
+            CONF_FRIENDLY_NAME
+        ):  # Backward compatibility. Can be removed after deprecation
+            device_config[CONF_NAME] = name
+
+        if icon := device_config.get(
+            CONF_ICON_TEMPLATE
+        ):  # Backward compatibility. Can be removed after deprecation
+            device_config[CONF_ICON] = icon
+
         trigger_entity_config = {
             CONF_UNIQUE_ID: device_config.get(CONF_UNIQUE_ID),
-            CONF_NAME: Template(device_config.get(CONF_FRIENDLY_NAME, object_id), hass),
-            CONF_ICON: device_config.get(CONF_ICON_TEMPLATE),
+            CONF_NAME: Template(device_config.get(CONF_NAME, object_id), hass),
+            CONF_ICON: device_config.get(CONF_ICON),
         }
 
         value_template: Template | None = device_config.get(CONF_VALUE_TEMPLATE)

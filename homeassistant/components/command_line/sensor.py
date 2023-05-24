@@ -75,7 +75,7 @@ async def async_setup_platform(
             translation_key="deprecated_yaml_sensor",
         )
     if discovery_info:
-        sensor_config = discovery_info["config"]
+        sensor_config = discovery_info
 
     name: str = sensor_config[CONF_NAME]
     command: str = sensor_config[CONF_COMMAND]

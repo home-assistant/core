@@ -39,7 +39,12 @@ async def test_setup_platform_yaml(hass: HomeAssistant) -> None:
     [
         {
             "command_line": {
-                "notifiers": {"test2": {"command": "exit 0", "name": "Test2"}}
+                "notify": [
+                    {
+                        "command": "exit 0",
+                        "name": "Test2",
+                    }
+                ]
             }
         }
     ],
@@ -51,12 +56,18 @@ async def test_setup_integration_yaml(
     assert hass.services.has_service(NOTIFY_DOMAIN, "test2")
 
 
-@pytest.mark.parametrize(
-    "get_config",
-    [{"command_line": {"notifiers": {}}}],
-)
-async def test_bad_config(hass: HomeAssistant, load_yaml_integration: None) -> None:
+async def test_bad_config(hass: HomeAssistant) -> None:
     """Test set up the platform with bad/missing configuration."""
+    assert await setup.async_setup_component(
+        hass,
+        NOTIFY_DOMAIN,
+        {
+            NOTIFY_DOMAIN: [
+                {"platform": "command_line"},
+            ]
+        },
+    )
+    await hass.async_block_till_done()
     assert not hass.services.has_service(NOTIFY_DOMAIN, "test")
 
 
@@ -70,12 +81,12 @@ async def test_command_line_output(hass: HomeAssistant) -> None:
             DOMAIN,
             {
                 "command_line": {
-                    "notifiers": {
-                        "test3": {
+                    "notify": [
+                        {
                             "command": f"cat > {filename}",
                             "name": "Test3",
                         }
-                    }
+                    ]
                 }
             },
         )
@@ -96,7 +107,12 @@ async def test_command_line_output(hass: HomeAssistant) -> None:
     [
         {
             "command_line": {
-                "notifiers": {"test4": {"command": "exit 1", "name": "Test4"}}
+                "notify": [
+                    {
+                        "command": "exit 1",
+                        "name": "Test4",
+                    }
+                ]
             }
         }
     ],
@@ -118,13 +134,13 @@ async def test_error_for_none_zero_exit_code(
     [
         {
             "command_line": {
-                "notifiers": {
-                    "test": {
+                "notify": [
+                    {
                         "command": "sleep 10000",
                         "command_timeout": 0.0000001,
                         "name": "Test5",
                     }
-                }
+                ]
             }
         }
     ],
@@ -144,7 +160,12 @@ async def test_timeout(
     [
         {
             "command_line": {
-                "notifiers": {"test6": {"command": "exit 0", "name": "Test6"}}
+                "notify": [
+                    {
+                        "command": "exit 0",
+                        "name": "Test6",
+                    }
+                ]
             }
         }
     ],

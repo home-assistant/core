@@ -19,44 +19,44 @@ async def get_config_to_integration_load() -> dict[str, Any]:
 
     return {
         "command_line": {
-            "binary_sensors": {
-                "bs_1": {
+            "binary_sensor": [
+                {
                     "name": "Test",
                     "command": "echo 1",
                     "payload_on": "1",
                     "payload_off": "0",
                     "command_timeout": 15,
                 }
-            },
-            "covers": {
-                "cover_1": {
-                    "friendly_name": "Test",
+            ],
+            "cover": [
+                {
+                    "name": "Test",
                     "command_state": "echo 1",
                     "command_timeout": 15,
                 }
-            },
-            "notifiers": {
-                "notifier_1": {
+            ],
+            "notify": [
+                {
                     "name": "Test",
                     "command": "echo 1",
                     "command_timeout": 15,
                 }
-            },
-            "sensors": {
-                "sensor_1": {
+            ],
+            "sensor": [
+                {
                     "name": "Test",
                     "command": "echo 5",
                     "unit_of_measurement": "in",
                     "command_timeout": 15,
                 }
-            },
-            "switches": {
-                "switch_1": {
-                    "friendly_name": "Test",
+            ],
+            "switch": [
+                {
+                    "name": "Test",
                     "command_state": "echo 1",
                     "command_timeout": 15,
                 }
-            },
+            ],
         }
     }
 
