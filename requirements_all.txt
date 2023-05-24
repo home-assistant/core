@@ -869,7 +869,7 @@ h2==4.1.0
 
 # homeassistant.components.generic
 # homeassistant.components.stream
-ha-av==10.0.0
+ha-av==10.1.0
 
 # homeassistant.components.ffmpeg
 ha-ffmpeg==3.1.0
@@ -2275,7 +2275,7 @@ rjpl==0.3.6
 rocketchat-API==0.6.1
 
 # homeassistant.components.roku
-rokuecp==0.17.1
+rokuecp==0.18.0
 
 # homeassistant.components.roomba
 roombapy==1.6.8
@@ -2399,7 +2399,7 @@ solax==0.3.0
 somfy-mylink-synergy==1.0.6
 
 # homeassistant.components.sonos
-sonos-websocket==0.1.1
+sonos-websocket==0.1.2
 
 # homeassistant.components.marytts
 speak2mary==1.4.0
