@@ -1226,7 +1226,7 @@ pyfronius==0.7.1
 pyfttt==0.3
 
 # homeassistant.components.hvv_departures
-pygti==0.9.3
+pygti==0.9.4
 
 # homeassistant.components.version
 pyhaversion==22.8.0
