@@ -55,7 +55,6 @@ NUMBER_TYPES = (
         native_value_fn=lambda data: data["setpoint"],
         actuator_fn=lambda data: data.get("maximum_boiler_temperature", {}),
     ),
-    # Placeholder upcoming number entity: max_dhw_temperature
 )
 
 
