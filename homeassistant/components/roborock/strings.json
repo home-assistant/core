@@ -27,6 +27,20 @@
     }
   },
   "entity": {
+    "sensor": {
+      "main_brush_time_left": {
+        "name": "Main brush time left"
+      },
+      "side_brush_time_left": {
+        "name": "Side brush time left"
+      },
+      "filter_time_left": {
+        "name": "Filter time left"
+      },
+      "sensor_time_left": {
+        "name": "Sensor time left"
+      }
+    },
     "select": {
       "mop_mode": {
         "name": "Mop mode",

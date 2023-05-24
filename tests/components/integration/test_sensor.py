@@ -1,7 +1,7 @@
 """The tests for the integration sensor platform."""
 from datetime import timedelta
-from unittest.mock import patch
 
+from freezegun import freeze_time
 import pytest
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
@@ -36,7 +36,7 @@ async def test_state(hass: HomeAssistant, method) -> None:
     }
 
     now = dt_util.utcnow()
-    with patch("homeassistant.util.dt.utcnow", return_value=now):
+    with freeze_time(now):
         assert await async_setup_component(hass, "sensor", config)
 
         entity_id = config["sensor"]["source"]
@@ -51,7 +51,7 @@ async def test_state(hass: HomeAssistant, method) -> None:
     assert "device_class" not in state.attributes
 
     now += timedelta(seconds=3600)
-    with patch("homeassistant.util.dt.utcnow", return_value=now):
+    with freeze_time(now):
         hass.states.async_set(
             entity_id,
             1,
@@ -75,7 +75,7 @@ async def test_state(hass: HomeAssistant, method) -> None:
 
     # 1 hour after last update, power sensor is unavailable
     now += timedelta(seconds=3600)
-    with patch("homeassistant.util.dt.utcnow", return_value=now):
+    with freeze_time(now):
         hass.states.async_set(
             entity_id,
             STATE_UNAVAILABLE,
@@ -92,7 +92,7 @@ async def test_state(hass: HomeAssistant, method) -> None:
 
     # 1 hour after last update, power sensor is back to normal at 2 KiloWatts and stays for 1 hour += 2kWh
     now += timedelta(seconds=3600)
-    with patch("homeassistant.util.dt.utcnow", return_value=now):
+    with freeze_time(now):
         hass.states.async_set(
             entity_id,
             2,
@@ -111,7 +111,7 @@ async def test_state(hass: HomeAssistant, method) -> None:
     )
 
     now += timedelta(seconds=3600)
-    with patch("homeassistant.util.dt.utcnow", return_value=now):
+    with freeze_time(now):
         hass.states.async_set(
             entity_id,
             2,
@@ -220,7 +220,7 @@ async def test_trapezoidal(hass: HomeAssistant) -> None:
     # Testing a power sensor with non-monotonic intervals and values
     for time, value in [(20, 10), (30, 30), (40, 5), (50, 0)]:
         now = dt_util.utcnow() + timedelta(minutes=time)
-        with patch("homeassistant.util.dt.utcnow", return_value=now):
+        with freeze_time(now):
             hass.states.async_set(
                 entity_id,
                 value,
@@ -260,7 +260,7 @@ async def test_left(hass: HomeAssistant) -> None:
     # Testing a power sensor with non-monotonic intervals and values
     for time, value in [(20, 10), (30, 30), (40, 5), (50, 0)]:
         now = dt_util.utcnow() + timedelta(minutes=time)
-        with patch("homeassistant.util.dt.utcnow", return_value=now):
+        with freeze_time(now):
             hass.states.async_set(
                 entity_id,
                 value,
@@ -300,7 +300,7 @@ async def test_right(hass: HomeAssistant) -> None:
     # Testing a power sensor with non-monotonic intervals and values
     for time, value in [(20, 10), (30, 30), (40, 5), (50, 0)]:
         now = dt_util.utcnow() + timedelta(minutes=time)
-        with patch("homeassistant.util.dt.utcnow", return_value=now):
+        with freeze_time(now):
             hass.states.async_set(
                 entity_id,
                 value,
@@ -336,7 +336,7 @@ async def test_prefix(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     now = dt_util.utcnow() + timedelta(seconds=3600)
-    with patch("homeassistant.util.dt.utcnow", return_value=now):
+    with freeze_time(now):
         hass.states.async_set(
             entity_id,
             1000,
@@ -375,7 +375,7 @@ async def test_suffix(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     now = dt_util.utcnow() + timedelta(seconds=10)
-    with patch("homeassistant.util.dt.utcnow", return_value=now):
+    with freeze_time(now):
         hass.states.async_set(
             entity_id,
             1000,
@@ -411,7 +411,7 @@ async def test_suffix_2(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     now = dt_util.utcnow() + timedelta(hours=1)
-    with patch("homeassistant.util.dt.utcnow", return_value=now):
+    with freeze_time(now):
         hass.states.async_set(
             entity_id,
             1000,
@@ -556,7 +556,7 @@ async def test_calc_errors(hass: HomeAssistant, method) -> None:
     # Moving from an unknown state to a value is a calc error and should
     # not change the value of the Reimann sensor, unless the method used is "right".
     now += timedelta(seconds=3600)
-    with patch("homeassistant.util.dt.utcnow", return_value=now):
+    with freeze_time(now):
         hass.states.async_set(entity_id, 0, {"device_class": None})
         await hass.async_block_till_done()
     await hass.async_block_till_done()
@@ -568,7 +568,7 @@ async def test_calc_errors(hass: HomeAssistant, method) -> None:
     # With the source sensor updated successfully, the Reimann sensor
     # should have a zero (known) value.
     now += timedelta(seconds=3600)
-    with patch("homeassistant.util.dt.utcnow", return_value=now):
+    with freeze_time(now):
         hass.states.async_set(entity_id, 1, {"device_class": None})
         await hass.async_block_till_done()
     await hass.async_block_till_done()
