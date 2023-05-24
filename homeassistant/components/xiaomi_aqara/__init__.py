@@ -354,7 +354,7 @@ class XiaomiDevice(Entity):
 
     def push_data(self, data: dict[str, Any], raw_data: dict[Any, Any]) -> None:
         """Push from Hub running in another thread."""
-        self.hass.loop.call_soon(self.async_push_data, data, raw_data)
+        self.hass.loop.call_soon_threadsafe(self.async_push_data, data, raw_data)
 
     @callback
     def async_push_data(self, data: dict[str, Any], raw_data: dict[Any, Any]) -> None:
