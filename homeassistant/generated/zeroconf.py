@@ -334,6 +334,11 @@ ZEROCONF = {
             },
         },
     ],
+    "_bangolufsen._tcp.local.": [
+        {
+            "domain": "bangolufsen",
+        },
+    ],
     "_bbxsrv._tcp.local.": [
         {
             "domain": "blebox",

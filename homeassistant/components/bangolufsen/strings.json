@@ -1,0 +1,156 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::single_instance_allowed%]",
+      "api_exception": "An error occurred while initializing the device. Try waiting or restarting the device.",
+      "max_retry_error": "Unable to connect to the device at the address. Please check if the IP address is correct.",
+      "new_connection_error": "Unable to detect a device at the address. Please check if the IP address is correct.",
+      "value_error": "[%key:common::config_flow::error::invalid_host%]"
+    },
+    "flow_title": "{name}",
+    "step": {
+      "confirm": {
+        "data": {
+          "default_volume": "Default volume",
+          "max_volume": "Max volume",
+          "volume_step": "Volume step"
+        },
+        "description": "Confirm the configuration of the {model}-{serial_number} @ {host}."
+      },
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::ip%]",
+          "model": "Device model"
+        },
+        "description": "Manually configure your Bang & Olufsen device."
+      }
+    }
+  },
+  "device_automation": {
+    "trigger_type": {
+      "Bluetooth_shortPress": "Short press of Bluetooth",
+      "Bluetooth_longPress": "Long press of Bluetooth",
+      "Control/Blue_KeyPress": "Press of Beoremote One Control: Blue",
+      "Control/Blue_KeyRelease": "Release of Beoremote One Control: Blue",
+      "Control/Digit0_KeyPress": "Press of Beoremote One Control: 0",
+      "Control/Digit0_KeyRelease": "Release of Beoremote One Control: 0",
+      "Control/Digit1_KeyPress": "Press of Beoremote One Control: 1",
+      "Control/Digit1_KeyRelease": "Release of Beoremote One Control: 1",
+      "Control/Digit2_KeyPress": "Press of Beoremote One Control: 2",
+      "Control/Digit2_KeyRelease": "Release of Beoremote One Control: 2",
+      "Control/Digit3_KeyPress": "Press of Beoremote One Control: 3",
+      "Control/Digit3_KeyRelease": "Release of Beoremote One Control: 3",
+      "Control/Digit4_KeyPress": "Press of Beoremote One Control: 4",
+      "Control/Digit4_KeyRelease": "Release of Beoremote One Control: 4",
+      "Control/Digit5_KeyPress": "Press of Beoremote One Control: 5",
+      "Control/Digit5_KeyRelease": "Release of Beoremote One Control: 5",
+      "Control/Digit6_KeyPress": "Press of Beoremote One Control: 6",
+      "Control/Digit6_KeyRelease": "Release of Beoremote One Control: 6",
+      "Control/Digit7_KeyPress": "Press of Beoremote One Control: 7",
+      "Control/Digit7_KeyRelease": "Release of Beoremote One Control: 7",
+      "Control/Digit8_KeyPress": "Press of Beoremote One Control: 8",
+      "Control/Digit8_KeyRelease": "Release of Beoremote One Control: 8",
+      "Control/Digit9_KeyPress": "Press of Beoremote One Control: 9",
+      "Control/Digit9_KeyRelease": "Release of Beoremote One Control: 9",
+      "Control/Down_KeyPress": "Press of Beoremote One Control: Down",
+      "Control/Down_KeyRelease": "Release of Beoremote One Control: Down",
+      "Control/Green_KeyPress": "Press of Beoremote One Control: Green",
+      "Control/Green_KeyRelease": "Release of Beoremote One Control: Green",
+      "Control/Left_KeyPress": "Press of Beoremote One Control: Left",
+      "Control/Left_KeyRelease": "Release of Beoremote One Control: Left",
+      "Control/Play_KeyPress": "Press of Beoremote One Control: Play",
+      "Control/Play_KeyRelease": "Release of Beoremote One Control: Play",
+      "Control/Red_KeyPress": "Press of Beoremote One Control: Red",
+      "Control/Red_KeyRelease": "Release of Beoremote One Control: Red",
+      "Control/Rewind_KeyPress": "Press of Beoremote One Control Rewind",
+      "Control/Rewind_KeyRelease": "Release of Beoremote One Control Rewind",
+      "Control/Right_KeyPress": "Press of Beoremote One Control: Right",
+      "Control/Right_KeyRelease": "Release of Beoremote One Control: Right",
+      "Control/Select_KeyPress": "Press of Beoremote One Control: Select",
+      "Control/Select_KeyRelease": "Release of Beoremote One Control: Select",
+      "Control/Stop_KeyPress": "Press of Beoremote One Control: Stop",
+      "Control/Stop_KeyRelease": "Release of Beoremote One Control: Stop",
+      "Control/Up_KeyPress": "Press of Beoremote One Control: Up",
+      "Control/Up_KeyRelease": "Release of Beoremote One Control: Up",
+      "Control/Wind_KeyPress": "Press of Beoremote One Control Wind",
+      "Control/Wind_KeyRelease": "Release of Beoremote One Control Wind",
+      "Control/Yellow_KeyPress": "Press of Beoremote One Control: Yellow",
+      "Control/Yellow_KeyRelease": "Release of Beoremote One Control: Yellow",
+      "Light/Blue_KeyPress": "Press of Beoremote One Light: Blue",
+      "Light/Blue_KeyRelease": "Release of Beoremote One Light: Blue",
+      "Light/Digit0_KeyPress": "Press of Beoremote One Light: 0",
+      "Light/Digit0_KeyRelease": "Release of Beoremote One Light: 0",
+      "Light/Digit1_KeyPress": "Press of Beoremote One Light: 1",
+      "Light/Digit1_KeyRelease": "Release of Beoremote One Light: 1",
+      "Light/Digit2_KeyPress": "Press of Beoremote One Light: 2",
+      "Light/Digit2_KeyRelease": "Release of Beoremote One Light: 2",
+      "Light/Digit3_KeyPress": "Press of Beoremote One Light: 3",
+      "Light/Digit3_KeyRelease": "Release of Beoremote One Light: 3",
+      "Light/Digit4_KeyPress": "Press of Beoremote One Light: 4",
+      "Light/Digit4_KeyRelease": "Release of Beoremote One Light: 4",
+      "Light/Digit5_KeyPress": "Press of Beoremote One Light: 5",
+      "Light/Digit5_KeyRelease": "Release of Beoremote One Light: 5",
+      "Light/Digit6_KeyPress": "Press of Beoremote One Light: 6",
+      "Light/Digit6_KeyRelease": "Release of Beoremote One Light: 6",
+      "Light/Digit7_KeyPress": "Press of Beoremote One Light: 7",
+      "Light/Digit7_KeyRelease": "Release of Beoremote One Light: 7",
+      "Light/Digit8_KeyPress": "Press of Beoremote One Light: 8",
+      "Light/Digit8_KeyRelease": "Release of Beoremote One Light: 8",
+      "Light/Digit9_KeyPress": "Press of Beoremote One Light: 9",
+      "Light/Digit9_KeyRelease": "Release of Beoremote One Light: 9",
+      "Light/Down_KeyPress": "Press of Beoremote One Light: Down",
+      "Light/Down_KeyRelease": "Release of Beoremote One Light: Down",
+      "Light/Green_KeyPress": "Press of Beoremote One Light: Green",
+      "Light/Green_KeyRelease": "Release of Beoremote One Light: Green",
+      "Light/Left_KeyPress": "Press of Beoremote One Light: Left",
+      "Light/Left_KeyRelease": "Release of Beoremote One Light: Left",
+      "Light/Play_KeyPress": "Press of Beoremote One Light: Play",
+      "Light/Play_KeyRelease": "Release of Beoremote One Light: Play",
+      "Light/Red_KeyPress": "Press of Beoremote One Light: Red",
+      "Light/Red_KeyRelease": "Release of Beoremote One Light: Red",
+      "Light/Rewind_KeyPress": "Press of Beoremote One Light Rewind",
+      "Light/Rewind_KeyRelease": "Release of Beoremote One Light Rewind",
+      "Light/Right_KeyPress": "Press of Beoremote One Light: Right",
+      "Light/Right_KeyRelease": "Release of Beoremote One Light: Right",
+      "Light/Select_KeyPress": " Press of Beoremote One Light: Select",
+      "Light/Select_KeyRelease": " Release of Beoremote One Light: Select",
+      "Light/Stop_KeyPress": "Press of Beoremote One Light: Stop",
+      "Light/Stop_KeyRelease": "Release of Beoremote One Light: Stop",
+      "Light/Up_KeyPress": "Press of Beoremote One Light: Up",
+      "Light/Up_KeyRelease": "Release of Beoremote One Light: Up",
+      "Light/Wind_KeyPress": "Press of Beoremote One Light Wind",
+      "Light/Wind_KeyRelease": "Release of Beoremote One Light Wind",
+      "Light/Yellow_KeyPress": "Press of Beoremote One Light: Yellow",
+      "Light/Yellow_KeyRelease": "Release of Beoremote One Light: Yellow",
+      "Microphone_shortPress": "Short press of Microphone",
+      "Next_shortPress": "Short press of Next",
+      "PlayPause_shortPress": "Short press of Play/Pause",
+      "PlayPause_longPress": "Long press of Play/Pause",
+      "Preset1_shortPress": "Short press of Favourite 1",
+      "Preset2_shortPress": "Short press of Favourite 2",
+      "Preset3_shortPress": "Short press of Favourite 3",
+      "Preset4_shortPress": "Short press of Favourite 4",
+      "Previous_shortPress": "Short press of Previous"
+    }
+  },
+  "options": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::single_instance_allowed%]",
+      "api_exception": "An error occurred while initializing the device. Try waiting or restarting the device.",
+      "max_retry_error": "Unable to connect to the device at the address. Please check if the IP address is correct.",
+      "new_connection_error": "Unable to detect a device at the address. Please check if the IP address is correct.",
+      "value_error": "[%key:common::config_flow::error::invalid_host%]"
+    },
+    "step": {
+      "init": {
+        "data": {
+          "default_volume": "Default volume",
+          "max_volume": "Max volume",
+          "name": "[%key:common::config_flow::data::name%]",
+          "volume_step": "Volume step"
+        },
+        "description": "Adjust settings."
+      }
+    }
+  }
+}
