@@ -30,5 +30,11 @@
       "unknown": "[%key:common::config_flow::error::unknown%]",
       "api_ratelimit": "API Ratelimit exceeded"
     }
+  },
+  "entity": {
+    "sensor": {
+      "carbon_intensity": { "name": "CO2 intensity" },
+      "fossil_fuel_percentage": { "name": "Grid fossil fuel percentage" }
+    }
   }
 }

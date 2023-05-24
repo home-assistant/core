@@ -20,7 +20,7 @@ from . import data_entry_flow, loader
 from .backports.enum import StrEnum
 from .components import persistent_notification
 from .const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP, Platform
-from .core import CALLBACK_TYPE, CoreState, Event, HomeAssistant, callback
+from .core import CALLBACK_TYPE, CoreState, Event, HassJob, HomeAssistant, callback
 from .data_entry_flow import FlowResult
 from .exceptions import (
     ConfigEntryAuthFailed,
@@ -294,10 +294,10 @@ class ConfigEntry:
         self.disabled_by = disabled_by
 
         # Supports unload
-        self.supports_unload = False
+        self.supports_unload: bool | None = None
 
         # Supports remove device
-        self.supports_remove_device = False
+        self.supports_remove_device: bool | None = None
 
         # Listeners to call on update
         self.update_listeners: list[
@@ -310,8 +310,10 @@ class ConfigEntry:
         # Function to cancel a scheduled retry
         self._async_cancel_retry_setup: Callable[[], Any] | None = None
 
-        # Hold list for functions to call on unload.
-        self._on_unload: list[CALLBACK_TYPE] | None = None
+        # Hold list for actions to call on unload.
+        self._on_unload: list[
+            Callable[[], Coroutine[Any, Any, None] | None]
+        ] | None = None
 
         # Reload lock to prevent conflicting reloads
         self.reload_lock = asyncio.Lock()
@@ -338,10 +340,12 @@ class ConfigEntry:
         if self.domain == integration.domain:
             self.async_set_state(hass, ConfigEntryState.SETUP_IN_PROGRESS, None)
 
-        self.supports_unload = await support_entry_unload(hass, self.domain)
-        self.supports_remove_device = await support_remove_from_device(
-            hass, self.domain
-        )
+        if self.supports_unload is None:
+            self.supports_unload = await support_entry_unload(hass, self.domain)
+        if self.supports_remove_device is None:
+            self.supports_remove_device = await support_remove_from_device(
+                hass, self.domain
+            )
 
         try:
             component = integration.get_component()
@@ -395,7 +399,7 @@ class ConfigEntry:
                 self.domain,
                 error_reason,
             )
-            await self._async_process_on_unload()
+            await self._async_process_on_unload(hass)
             result = False
         except ConfigEntryAuthFailed as ex:
             message = str(ex)
@@ -410,7 +414,7 @@ class ConfigEntry:
                 self.domain,
                 auth_message,
             )
-            await self._async_process_on_unload()
+            await self._async_process_on_unload(hass)
             self.async_start_reauth(hass)
             result = False
         except ConfigEntryNotReady as ex:
@@ -461,7 +465,7 @@ class ConfigEntry:
                     EVENT_HOMEASSISTANT_STARTED, setup_again
                 )
 
-            await self._async_process_on_unload()
+            await self._async_process_on_unload(hass)
             return
         # pylint: disable-next=broad-except
         except (asyncio.CancelledError, SystemExit, Exception):
@@ -544,7 +548,7 @@ class ConfigEntry:
             if result and integration.domain == self.domain:
                 self.async_set_state(hass, ConfigEntryState.NOT_LOADED, None)
 
-            await self._async_process_on_unload()
+            await self._async_process_on_unload(hass)
 
             return result
         except Exception as ex:  # pylint: disable=broad-except
@@ -674,17 +678,20 @@ class ConfigEntry:
         }
 
     @callback
-    def async_on_unload(self, func: CALLBACK_TYPE) -> None:
+    def async_on_unload(
+        self, func: Callable[[], Coroutine[Any, Any, None] | None]
+    ) -> None:
         """Add a function to call when config entry is unloaded."""
         if self._on_unload is None:
             self._on_unload = []
         self._on_unload.append(func)
 
-    async def _async_process_on_unload(self) -> None:
+    async def _async_process_on_unload(self, hass: HomeAssistant) -> None:
         """Process the on_unload callbacks and wait for pending tasks."""
         if self._on_unload is not None:
             while self._on_unload:
-                self._on_unload.pop()()
+                if job := self._on_unload.pop()():
+                    self._tasks.add(hass.async_create_task(job))
 
         if not self._tasks and not self._background_tasks:
             return
@@ -1351,26 +1358,6 @@ class ConfigEntries:
             self.hass, SIGNAL_CONFIG_ENTRY_CHANGED, change_type, entry
         )
 
-    @callback
-    def async_setup_platforms(
-        self, entry: ConfigEntry, platforms: Iterable[Platform | str]
-    ) -> None:
-        """Forward the setup of an entry to platforms."""
-        report(
-            (
-                "called async_setup_platforms instead of awaiting"
-                " async_forward_entry_setups; this will fail in version 2023.3"
-            ),
-            # Raise this to warning once all core integrations have been migrated
-            level=logging.WARNING,
-            error_if_core=False,
-        )
-        for platform in platforms:
-            self.hass.async_create_task(
-                self.async_forward_entry_setup(entry, platform),
-                f"config entry forward setup {entry.title} {entry.domain} {entry.entry_id} {platform}",
-            )
-
     async def async_forward_entry_setups(
         self, entry: ConfigEntry, platforms: Iterable[Platform | str]
     ) -> None:
@@ -1965,7 +1952,9 @@ class EntityRegistryDisabledHandler:
             self._remove_call_later()
 
         self._remove_call_later = async_call_later(
-            self.hass, RELOAD_AFTER_UPDATE_DELAY, self._handle_reload
+            self.hass,
+            RELOAD_AFTER_UPDATE_DELAY,
+            HassJob(self._handle_reload, cancel_on_shutdown=True),
         )
 
     async def _handle_reload(self, _now: Any) -> None:

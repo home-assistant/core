@@ -9,7 +9,7 @@ import uuid
 from todoist_api_python.api_async import TodoistAPIAsync
 from todoist_api_python.endpoints import get_sync_url
 from todoist_api_python.headers import create_headers
-from todoist_api_python.models import Label, Task
+from todoist_api_python.models import Due, Label, Task
 import voluptuous as vol
 
 from homeassistant.components.calendar import (
@@ -17,8 +17,8 @@ from homeassistant.components.calendar import (
     CalendarEntity,
     CalendarEvent,
 )
-from homeassistant.const import CONF_ID, CONF_NAME, CONF_TOKEN
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.const import CONF_ID, CONF_NAME, CONF_TOKEN, EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import Event, HomeAssistant, ServiceCall, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -122,6 +122,11 @@ async def async_setup_platform(
     coordinator = TodoistCoordinator(hass, _LOGGER, SCAN_INTERVAL, api)
     await coordinator.async_config_entry_first_refresh()
 
+    async def _shutdown_coordinator(_: Event) -> None:
+        await coordinator.async_shutdown()
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _shutdown_coordinator)
+
     # Setup devices:
     # Grab all projects.
     projects = await api.get_projects()
@@ -170,7 +175,7 @@ async def async_setup_platform(
             )
         )
 
-    async_add_entities(project_devices)
+    async_add_entities(project_devices, update_before_add=True)
 
     session = async_get_clientsession(hass)
 
@@ -299,6 +304,12 @@ class TodoistProjectEntity(CoordinatorEntity[TodoistCoordinator], CalendarEntity
             str(data[CONF_ID]) if data.get(CONF_ID) is not None else None
         )
 
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self.data.update()
+        super()._handle_coordinator_update()
+
     @property
     def event(self) -> CalendarEvent | None:
         """Return the next upcoming event."""
@@ -312,11 +323,7 @@ class TodoistProjectEntity(CoordinatorEntity[TodoistCoordinator], CalendarEntity
     async def async_update(self) -> None:
         """Update all Todoist Calendars."""
         await super().async_update()
-        await self.data.async_update()
-        # Set Todoist-specific data that can't easily be grabbed
-        self._cal_data["all_tasks"] = [
-            task[SUMMARY] for task in self.data.all_project_tasks
-        ]
+        self.data.update()
 
     async def async_get_events(
         self,
@@ -337,7 +344,7 @@ class TodoistProjectEntity(CoordinatorEntity[TodoistCoordinator], CalendarEntity
         return {
             DUE_TODAY: self.data.event[DUE_TODAY],
             OVERDUE: self.data.event[OVERDUE],
-            ALL_TASKS: self._cal_data[ALL_TASKS],
+            ALL_TASKS: [task[SUMMARY] for task in self.data.all_project_tasks],
             PRIORITY: self.data.event[PRIORITY],
             LABELS: self.data.event[LABELS],
         }
@@ -446,7 +453,7 @@ class TodoistProjectData:
             LABELS: [],
             OVERDUE: False,
             PRIORITY: data.priority,
-            START: dt.utcnow(),
+            START: dt.now(),
             SUMMARY: data.content,
         }
 
@@ -590,28 +597,22 @@ class TodoistProjectData:
         for task in project_task_data:
             if task.due is None:
                 continue
-            due_date = dt.parse_datetime(
-                task.due.datetime if task.due.datetime else task.due.date
-            )
-            if not due_date:
+            start = get_start(task.due)
+            if start is None:
                 continue
-            due_date = dt.as_utc(due_date)
-            if start_date < due_date < end_date:
-                due_date_value: datetime | date = due_date
-                midnight = dt.start_of_local_day(due_date)
-                if due_date == midnight:
-                    # If the due date has no time data, return just the date so that it
-                    # will render correctly as an all day event on a calendar.
-                    due_date_value = due_date.date()
-                event = CalendarEvent(
-                    summary=task.content,
-                    start=due_date_value,
-                    end=due_date_value + timedelta(days=1),
-                )
-                events.append(event)
+            event = CalendarEvent(
+                summary=task.content,
+                start=start,
+                end=start + timedelta(days=1),
+            )
+            if event.start_datetime_local >= end_date:
+                continue
+            if event.end_datetime_local < start_date:
+                continue
+            events.append(event)
         return events
 
-    async def async_update(self) -> None:
+    def update(self) -> None:
         """Get the latest data."""
         tasks = self._coordinator.data
         if self._id is None:
@@ -663,3 +664,15 @@ class TodoistProjectData:
             return
         self.event = event
         _LOGGER.debug("Updated %s", self._name)
+
+
+def get_start(due: Due) -> datetime | date | None:
+    """Return the task due date as a start date or date time."""
+    if due.datetime:
+        start = dt.parse_datetime(due.datetime)
+        if not start:
+            return None
+        return dt.as_local(start)
+    if due.date:
+        return dt.parse_date(due.date)
+    return None

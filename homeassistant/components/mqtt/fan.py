@@ -11,6 +11,7 @@ import voluptuous as vol
 
 from homeassistant.components import fan
 from homeassistant.components.fan import (
+    ATTR_DIRECTION,
     ATTR_OSCILLATING,
     ATTR_PERCENTAGE,
     ATTR_PRESET_MODE,
@@ -56,6 +57,7 @@ from .mixins import (
     warn_for_legacy_schema,
 )
 from .models import (
+    MessageCallbackType,
     MqttCommandTemplate,
     MqttValueTemplate,
     PublishPayloadType,
@@ -64,6 +66,10 @@ from .models import (
 )
 from .util import get_mqtt_data, valid_publish_topic, valid_subscribe_topic
 
+CONF_DIRECTION_STATE_TOPIC = "direction_state_topic"
+CONF_DIRECTION_COMMAND_TOPIC = "direction_command_topic"
+CONF_DIRECTION_VALUE_TEMPLATE = "direction_value_template"
+CONF_DIRECTION_COMMAND_TEMPLATE = "direction_command_template"
 CONF_PERCENTAGE_STATE_TOPIC = "percentage_state_topic"
 CONF_PERCENTAGE_COMMAND_TOPIC = "percentage_command_topic"
 CONF_PERCENTAGE_VALUE_TEMPLATE = "percentage_value_template"
@@ -128,6 +134,10 @@ _PLATFORM_SCHEMA_BASE = MQTT_RW_SCHEMA.extend(
     {
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_COMMAND_TEMPLATE): cv.template,
+        vol.Optional(CONF_DIRECTION_COMMAND_TOPIC): valid_publish_topic,
+        vol.Optional(CONF_DIRECTION_COMMAND_TEMPLATE): cv.template,
+        vol.Optional(CONF_DIRECTION_STATE_TOPIC): valid_subscribe_topic,
+        vol.Optional(CONF_DIRECTION_VALUE_TEMPLATE): cv.template,
         vol.Optional(CONF_OSCILLATION_COMMAND_TOPIC): valid_publish_topic,
         vol.Optional(CONF_OSCILLATION_COMMAND_TEMPLATE): cv.template,
         vol.Optional(CONF_OSCILLATION_STATE_TOPIC): valid_subscribe_topic,
@@ -225,6 +235,7 @@ class MqttFan(MqttEntity, FanEntity):
     _feature_preset_mode: bool
     _topic: dict[str, Any]
     _optimistic: bool
+    _optimistic_direction: bool
     _optimistic_oscillation: bool
     _optimistic_percentage: bool
     _optimistic_preset_mode: bool
@@ -260,6 +271,8 @@ class MqttFan(MqttEntity, FanEntity):
             for key in (
                 CONF_STATE_TOPIC,
                 CONF_COMMAND_TOPIC,
+                CONF_DIRECTION_STATE_TOPIC,
+                CONF_DIRECTION_COMMAND_TOPIC,
                 CONF_PERCENTAGE_STATE_TOPIC,
                 CONF_PERCENTAGE_COMMAND_TOPIC,
                 CONF_PRESET_MODE_STATE_TOPIC,
@@ -292,6 +305,9 @@ class MqttFan(MqttEntity, FanEntity):
 
         optimistic = config[CONF_OPTIMISTIC]
         self._optimistic = optimistic or self._topic[CONF_STATE_TOPIC] is None
+        self._optimistic_direction = (
+            optimistic or self._topic[CONF_DIRECTION_STATE_TOPIC] is None
+        )
         self._optimistic_oscillation = (
             optimistic or self._topic[CONF_OSCILLATION_STATE_TOPIC] is None
         )
@@ -307,6 +323,10 @@ class MqttFan(MqttEntity, FanEntity):
             self._topic[CONF_OSCILLATION_COMMAND_TOPIC] is not None
             and FanEntityFeature.OSCILLATE
         )
+        self._attr_supported_features |= (
+            self._topic[CONF_DIRECTION_COMMAND_TOPIC] is not None
+            and FanEntityFeature.DIRECTION
+        )
         if self._feature_percentage:
             self._attr_supported_features |= FanEntityFeature.SET_SPEED
         if self._feature_preset_mode:
@@ -314,6 +334,7 @@ class MqttFan(MqttEntity, FanEntity):
 
         command_templates: dict[str, Template | None] = {
             CONF_STATE: config.get(CONF_COMMAND_TEMPLATE),
+            ATTR_DIRECTION: config.get(CONF_DIRECTION_COMMAND_TEMPLATE),
             ATTR_PERCENTAGE: config.get(CONF_PERCENTAGE_COMMAND_TEMPLATE),
             ATTR_PRESET_MODE: config.get(CONF_PRESET_MODE_COMMAND_TEMPLATE),
             ATTR_OSCILLATING: config.get(CONF_OSCILLATION_COMMAND_TEMPLATE),
@@ -327,6 +348,7 @@ class MqttFan(MqttEntity, FanEntity):
         self._value_templates = {}
         value_templates: dict[str, Template | None] = {
             CONF_STATE: config.get(CONF_STATE_VALUE_TEMPLATE),
+            ATTR_DIRECTION: config.get(CONF_DIRECTION_VALUE_TEMPLATE),
             ATTR_PERCENTAGE: config.get(CONF_PERCENTAGE_VALUE_TEMPLATE),
             ATTR_PRESET_MODE: config.get(CONF_PRESET_MODE_VALUE_TEMPLATE),
             ATTR_OSCILLATING: config.get(CONF_OSCILLATION_VALUE_TEMPLATE),
@@ -340,6 +362,17 @@ class MqttFan(MqttEntity, FanEntity):
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         topics: dict[str, Any] = {}
+
+        def add_subscribe_topic(topic: str, msg_callback: MessageCallbackType) -> bool:
+            """Add a topic to subscribe to."""
+            if has_topic := self._topic[topic] is not None:
+                topics[topic] = {
+                    "topic": self._topic[topic],
+                    "msg_callback": msg_callback,
+                    "qos": self._config[CONF_QOS],
+                    "encoding": self._config[CONF_ENCODING] or None,
+                }
+            return has_topic
 
         @callback
         @log_messages(self.hass, self.entity_id)
@@ -357,13 +390,7 @@ class MqttFan(MqttEntity, FanEntity):
                 self._attr_is_on = None
             get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
-        if self._topic[CONF_STATE_TOPIC] is not None:
-            topics[CONF_STATE_TOPIC] = {
-                "topic": self._topic[CONF_STATE_TOPIC],
-                "msg_callback": state_received,
-                "qos": self._config[CONF_QOS],
-                "encoding": self._config[CONF_ENCODING] or None,
-            }
+        add_subscribe_topic(CONF_STATE_TOPIC, state_received)
 
         @callback
         @log_messages(self.hass, self.entity_id)
@@ -408,14 +435,7 @@ class MqttFan(MqttEntity, FanEntity):
             self._attr_percentage = percentage
             get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
-        if self._topic[CONF_PERCENTAGE_STATE_TOPIC] is not None:
-            topics[CONF_PERCENTAGE_STATE_TOPIC] = {
-                "topic": self._topic[CONF_PERCENTAGE_STATE_TOPIC],
-                "msg_callback": percentage_received,
-                "qos": self._config[CONF_QOS],
-                "encoding": self._config[CONF_ENCODING] or None,
-            }
-            self._attr_percentage = None
+        add_subscribe_topic(CONF_PERCENTAGE_STATE_TOPIC, percentage_received)
 
         @callback
         @log_messages(self.hass, self.entity_id)
@@ -441,14 +461,7 @@ class MqttFan(MqttEntity, FanEntity):
             self._attr_preset_mode = preset_mode
             get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
-        if self._topic[CONF_PRESET_MODE_STATE_TOPIC] is not None:
-            topics[CONF_PRESET_MODE_STATE_TOPIC] = {
-                "topic": self._topic[CONF_PRESET_MODE_STATE_TOPIC],
-                "msg_callback": preset_mode_received,
-                "qos": self._config[CONF_QOS],
-                "encoding": self._config[CONF_ENCODING] or None,
-            }
-            self._attr_preset_mode = None
+        add_subscribe_topic(CONF_PRESET_MODE_STATE_TOPIC, preset_mode_received)
 
         @callback
         @log_messages(self.hass, self.entity_id)
@@ -464,14 +477,21 @@ class MqttFan(MqttEntity, FanEntity):
                 self._attr_oscillating = False
             get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
-        if self._topic[CONF_OSCILLATION_STATE_TOPIC] is not None:
-            topics[CONF_OSCILLATION_STATE_TOPIC] = {
-                "topic": self._topic[CONF_OSCILLATION_STATE_TOPIC],
-                "msg_callback": oscillation_received,
-                "qos": self._config[CONF_QOS],
-                "encoding": self._config[CONF_ENCODING] or None,
-            }
+        if add_subscribe_topic(CONF_OSCILLATION_STATE_TOPIC, oscillation_received):
             self._attr_oscillating = False
+
+        @callback
+        @log_messages(self.hass, self.entity_id)
+        def direction_received(msg: ReceiveMessage) -> None:
+            """Handle new received MQTT message for the direction."""
+            direction = self._value_templates[ATTR_DIRECTION](msg.payload)
+            if not direction:
+                _LOGGER.debug("Ignoring empty direction from '%s'", msg.topic)
+                return
+            self._attr_current_direction = str(direction)
+            get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
+
+        add_subscribe_topic(CONF_DIRECTION_STATE_TOPIC, direction_received)
 
         self._sub_state = subscription.async_prepare_subscribe_topics(
             self.hass, self._sub_state, topics
@@ -601,4 +621,23 @@ class MqttFan(MqttEntity, FanEntity):
 
         if self._optimistic_oscillation:
             self._attr_oscillating = oscillating
+            self.async_write_ha_state()
+
+    async def async_set_direction(self, direction: str) -> None:
+        """Set direction.
+
+        This method is a coroutine.
+        """
+        mqtt_payload = self._command_templates[ATTR_DIRECTION](direction)
+
+        await self.async_publish(
+            self._topic[CONF_DIRECTION_COMMAND_TOPIC],
+            mqtt_payload,
+            self._config[CONF_QOS],
+            self._config[CONF_RETAIN],
+            self._config[CONF_ENCODING],
+        )
+
+        if self._optimistic_direction:
+            self._attr_current_direction = direction
             self.async_write_ha_state()

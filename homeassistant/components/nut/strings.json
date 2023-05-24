@@ -34,6 +34,36 @@
       }
     }
   },
+  "device_automation": {
+    "action_type": {
+      "beeper_disable": "Disable UPS beeper/buzzer",
+      "beeper_enable": "Enable UPS beeper/buzzer",
+      "beeper_mute": "Temporarily mute UPS beeper/buzzer",
+      "beeper_toggle": "Toggle UPS beeper/buzzer",
+      "bypass_start": "Put the UPS in bypass mode",
+      "bypass_stop": "Take the UPS out of bypass mode",
+      "calibrate_start": "Start runtime calibration",
+      "calibrate_stop": "Stop runtime calibration",
+      "load_off": "Turn off the load immediately",
+      "load_on": "Turn on the load immediately",
+      "reset_input_minmax": "Reset minimum and maximum input voltage status",
+      "reset_watchdog": "Reset watchdog timer (forced reboot of load)",
+      "shutdown_reboot": "Shut down the load briefly while rebooting the UPS",
+      "shutdown_reboot_graceful": "After a delay, shut down the load briefly while rebooting the UPS",
+      "shutdown_return": "Turn off the load possibly after a delay and return when power is back",
+      "shutdown_stayoff": "Turn off the load possibly after a delay and remain off even if power returns",
+      "shutdown_stop": "Stop a shutdown in progress",
+      "test_battery_start": "Start a battery test",
+      "test_battery_start_deep": "Start a deep battery test",
+      "test_battery_start_quick": "Start a quick battery test",
+      "test_battery_stop": "Stop the battery test",
+      "test_failure_start": "Start a simulated power failure",
+      "test_failure_stop": "Stop simulating a power failure",
+      "test_panel_start": "Start testing the UPS panel",
+      "test_panel_stop": "Stop a UPS panel test",
+      "test_system_start": "Start a system test"
+    }
+  },
   "entity": {
     "sensor": {
       "ambient_humidity": { "name": "Ambient humidity" },

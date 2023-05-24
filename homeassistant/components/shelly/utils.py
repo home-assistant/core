@@ -19,6 +19,7 @@ from homeassistant.helpers.device_registry import (
     async_get as dr_async_get,
     format_mac,
 )
+from homeassistant.helpers.entity import DEVICE_CLASS_NAME, DeviceClassName
 from homeassistant.helpers.entity_registry import async_get as er_async_get
 from homeassistant.helpers.typing import EventType
 from homeassistant.util.dt import utcnow
@@ -72,12 +73,16 @@ def get_number_of_channels(device: BlockDevice, block: Block) -> int:
 def get_block_entity_name(
     device: BlockDevice,
     block: Block | None,
-    description: str | None = None,
+    description: str | DeviceClassName | None = None,
 ) -> str:
     """Naming for block based switch and sensors."""
     channel_name = get_block_channel_name(device, block)
 
     if description:
+        # It's not possible to do string manipulations on DEVICE_CLASS_NAME
+        # the assert satisfies the type checker and will catch attempts
+        # to use DEVICE_CLASS_NAME as description.
+        assert description is not DEVICE_CLASS_NAME
         return f"{channel_name} {description.lower()}"
 
     return channel_name
@@ -301,12 +306,16 @@ def get_rpc_channel_name(device: RpcDevice, key: str) -> str:
 
 
 def get_rpc_entity_name(
-    device: RpcDevice, key: str, description: str | None = None
+    device: RpcDevice, key: str, description: str | DeviceClassName | None = None
 ) -> str:
     """Naming for RPC based switch and sensors."""
     channel_name = get_rpc_channel_name(device, key)
 
     if description:
+        # It's not possible to do string manipulations on DEVICE_CLASS_NAME
+        # the assert satisfies the type checker and will catch attempts
+        # to use DEVICE_CLASS_NAME as description.
+        assert description is not DEVICE_CLASS_NAME
         return f"{channel_name} {description.lower()}"
 
     return channel_name

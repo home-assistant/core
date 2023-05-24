@@ -1,6 +1,11 @@
 """Adds config flow for Trafikverket Weather integration."""
 from __future__ import annotations
 
+from pytrafikverket.exceptions import (
+    InvalidAuthentication,
+    MultipleWeatherStationsFound,
+    NoWeatherStationFound,
+)
 from pytrafikverket.trafikverket_weather import TrafikverketWeather
 import voluptuous as vol
 
@@ -20,15 +25,11 @@ class TVWeatherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     entry: config_entries.ConfigEntry
 
-    async def validate_input(self, sensor_api: str, station: str) -> str:
+    async def validate_input(self, sensor_api: str, station: str) -> None:
         """Validate input from user input."""
         web_session = async_get_clientsession(self.hass)
         weather_api = TrafikverketWeather(web_session, sensor_api)
-        try:
-            await weather_api.async_get_weather(station)
-        except ValueError as err:
-            return str(err)
-        return "connected"
+        await weather_api.async_get_weather(station)
 
     async def async_step_user(
         self, user_input: dict[str, str] | None = None
@@ -41,8 +42,17 @@ class TVWeatherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             api_key = user_input[CONF_API_KEY]
             station = user_input[CONF_STATION]
 
-            validate = await self.validate_input(api_key, station)
-            if validate == "connected":
+            try:
+                await self.validate_input(api_key, station)
+            except InvalidAuthentication:
+                errors["base"] = "invalid_auth"
+            except NoWeatherStationFound:
+                errors["base"] = "invalid_station"
+            except MultipleWeatherStationsFound:
+                errors["base"] = "more_stations"
+            except Exception:  # pylint: disable=broad-exception-caught
+                errors["base"] = "cannot_connect"
+            else:
                 return self.async_create_entry(
                     title=name,
                     data={
@@ -50,14 +60,6 @@ class TVWeatherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         CONF_STATION: station,
                     },
                 )
-            if validate == "Source: Security, message: Invalid authentication":
-                errors["base"] = "invalid_auth"
-            elif validate == "Could not find a weather station with the specified name":
-                errors["base"] = "invalid_station"
-            elif validate == "Found multiple weather stations with the specified name":
-                errors["base"] = "more_stations"
-            else:
-                errors["base"] = "cannot_connect"
 
         return self.async_show_form(
             step_id="user",

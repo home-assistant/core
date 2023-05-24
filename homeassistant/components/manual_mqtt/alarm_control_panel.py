@@ -187,13 +187,19 @@ PLATFORM_SCHEMA = vol.Schema(
 )
 
 
-def setup_platform(
+async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
     add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the manual MQTT alarm platform."""
+    # Make sure MQTT integration is enabled and the client is available
+    # We cannot count on dependencies as the alarm_control_panel platform setup
+    # also will be triggered when mqtt is loading the `alarm_control_panel` platform
+    if not await mqtt.async_wait_for_mqtt_client(hass):
+        _LOGGER.error("MQTT integration is not available")
+        return
     add_entities(
         [
             ManualMQTTAlarm(

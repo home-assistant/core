@@ -131,7 +131,9 @@ async def async_poe_port_control_fn(
     """Control poe state."""
     mac, _, index = obj_id.partition("_")
     device = api.devices[mac]
-    state = "auto" if target else "off"
+    port = api.ports[obj_id]
+    on_state = "auto" if port.raw["poe_caps"] != 8 else "passthrough"
+    state = on_state if target else "off"
     await api.request(DeviceSetPoePortModeRequest.create(device, int(index), state))
 
 

@@ -16,5 +16,5 @@
   "dependencies": ["bluetooth_adapters"],
   "documentation": "https://www.home-assistant.io/integrations/xiaomi_ble",
   "iot_class": "local_push",
-  "requirements": ["xiaomi-ble==0.16.4"]
+  "requirements": ["xiaomi-ble==0.17.0"]
 }

@@ -335,8 +335,8 @@ UOM_FRIENDLY_NAME = {
     "18": UnitOfLength.FEET,
     "19": UnitOfTime.HOURS,
     "20": UnitOfTime.HOURS,
-    "21": "%AH",
-    "22": "%RH",
+    "21": PERCENTAGE,
+    "22": PERCENTAGE,
     "23": UnitOfPressure.INHG,
     "24": UnitOfVolumetricFlux.INCHES_PER_HOUR,
     UOM_INDEX: UOM_INDEX,  # Index type. Use "node.formatted" for value

@@ -9,7 +9,6 @@ from typing import Any, Final
 
 import orjson
 
-from homeassistant.core import Event, State
 from homeassistant.util.file import write_utf8_file, write_utf8_file_atomic
 from homeassistant.util.json import (  # pylint: disable=unused-import # noqa: F401
     JSON_DECODE_EXCEPTIONS,
@@ -189,6 +188,11 @@ def find_paths_unserializable_data(
 
     This method is slow! Only use for error handling.
     """
+    from homeassistant.core import (  # pylint: disable=import-outside-toplevel
+        Event,
+        State,
+    )
+
     to_process = deque([(bad_data, "$")])
     invalid = {}
 

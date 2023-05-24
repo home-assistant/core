@@ -8,6 +8,7 @@ from chip.clusters import Objects as clusters
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
+    CoverDeviceClass,
     CoverEntity,
     CoverEntityDescription,
     CoverEntityFeature,
@@ -24,6 +25,12 @@ from .models import MatterDiscoverySchema
 
 # The MASK used for extracting bits 0 to 1 of the byte.
 OPERATIONAL_STATUS_MASK = 0b11
+
+# map Matter window cover types to HA device class
+TYPE_MAP = {
+    clusters.WindowCovering.Enums.Type.kAwning: CoverDeviceClass.AWNING,
+    clusters.WindowCovering.Enums.Type.kDrapery: CoverDeviceClass.CURTAIN,
+}
 
 
 class OperationalStatus(IntEnum):
@@ -57,20 +64,6 @@ class MatterCover(MatterEntity, CoverEntity):
     )
 
     @property
-    def current_cover_position(self) -> int:
-        """Return the current position of cover."""
-        if self._attr_current_cover_position:
-            current_position = self._attr_current_cover_position
-        else:
-            current_position = self.get_matter_attribute_value(
-                clusters.WindowCovering.Attributes.CurrentPositionLiftPercentage
-            )
-
-        assert current_position is not None
-
-        return current_position
-
-    @property
     def is_closed(self) -> bool:
         """Return true if cover is closed, else False."""
         return self.current_cover_position == 0
@@ -91,7 +84,8 @@ class MatterCover(MatterEntity, CoverEntity):
         """Set the cover to a specific position."""
         position = kwargs[ATTR_POSITION]
         await self.send_device_command(
-            clusters.WindowCovering.Commands.GoToLiftValue(position)
+            # value needs to be inverted and is sent in 100ths
+            clusters.WindowCovering.Commands.GoToLiftPercentage((100 - position) * 100)
         )
 
     async def send_device_command(self, command: Any) -> None:
@@ -129,14 +123,24 @@ class MatterCover(MatterEntity, CoverEntity):
                 self._attr_is_opening = False
                 self._attr_is_closing = False
 
-        self._attr_current_cover_position = self.get_matter_attribute_value(
+        # current position is inverted in matter (100 is closed, 0 is open)
+        current_cover_position = self.get_matter_attribute_value(
             clusters.WindowCovering.Attributes.CurrentPositionLiftPercentage
         )
+        self._attr_current_cover_position = 100 - current_cover_position
+
         LOGGER.debug(
-            "Current position: %s for %s",
-            self._attr_current_cover_position,
+            "Current position for %s - raw: %s - corrected: %s",
             self.entity_id,
+            current_cover_position,
+            self.current_cover_position,
         )
+
+        # map matter type to HA deviceclass
+        device_type: clusters.WindowCovering.Enums.Type = (
+            self.get_matter_attribute_value(clusters.WindowCovering.Attributes.Type)
+        )
+        self._attr_device_class = TYPE_MAP.get(device_type, CoverDeviceClass.AWNING)
 
 
 # Discovery schema(s) to map Matter Attributes to HA entities
@@ -149,5 +153,5 @@ DISCOVERY_SCHEMAS = [
             clusters.WindowCovering.Attributes.CurrentPositionLiftPercentage,
             clusters.WindowCovering.Attributes.OperationalStatus,
         ),
-    ),
+    )
 ]

@@ -46,10 +46,25 @@
     },
     "flow_title": "{name}"
   },
+  "entity": {
+    "binary_sensor": {
+      "assist_in_progress": {
+        "name": "[%key:component::assist_pipeline::entity::binary_sensor::assist_in_progress::name%]"
+      }
+    },
+    "select": {
+      "pipeline": {
+        "name": "[%key:component::assist_pipeline::entity::select::pipeline::name%]",
+        "state": {
+          "preferred": "[%key:component::assist_pipeline::entity::select::pipeline::state::preferred%]"
+        }
+      }
+    }
+  },
   "issues": {
     "ble_firmware_outdated": {
       "title": "Update {name} with ESPHome {version} or later",
-      "description": "To improve Bluetooth reliability and performance, we highly recommend updating {name} with ESPHome {version} or later. When updating the device to ESPHome {version}, it is recommended to use a serial cable instead of an over-the-air update to take advantage of the new partition scheme."
+      "description": "To improve Bluetooth reliability and performance, we highly recommend updating {name} with ESPHome {version} or later. When updating the device from ESPHome earlier than 2022.12.0, it is recommended to use a serial cable instead of an over-the-air update to take advantage of the new partition scheme."
     },
     "api_password_deprecated": {
       "title": "API Password deprecated on {name}",

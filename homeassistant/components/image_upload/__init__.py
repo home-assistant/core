@@ -44,7 +44,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     image_dir = pathlib.Path(hass.config.path("image"))
     hass.data[DOMAIN] = storage_collection = ImageStorageCollection(hass, image_dir)
     await storage_collection.async_load()
-    collection.StorageCollectionWebsocket(
+    collection.DictStorageCollectionWebsocket(
         storage_collection,
         "image",
         "image",
@@ -57,7 +57,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-class ImageStorageCollection(collection.StorageCollection):
+class ImageStorageCollection(collection.DictStorageCollection):
     """Image collection stored in storage."""
 
     CREATE_SCHEMA = vol.Schema(CREATE_FIELDS)
@@ -67,7 +67,6 @@ class ImageStorageCollection(collection.StorageCollection):
         """Initialize media storage collection."""
         super().__init__(
             Store(hass, STORAGE_VERSION, STORAGE_KEY),
-            logging.getLogger(f"{__name__}.storage_collection"),
         )
         self.async_add_listener(self._change_listener)
         self.image_dir = image_dir
@@ -126,11 +125,11 @@ class ImageStorageCollection(collection.StorageCollection):
 
     async def _update_data(
         self,
-        data: dict[str, Any],
+        item: dict[str, Any],
         update_data: dict[str, Any],
     ) -> dict[str, Any]:
         """Return a new updated data object."""
-        return {**data, **self.UPDATE_SCHEMA(update_data)}
+        return {**item, **self.UPDATE_SCHEMA(update_data)}
 
     async def _change_listener(
         self,

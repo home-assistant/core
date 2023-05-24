@@ -317,7 +317,7 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"{DOMAIN}_{self._base_unique_id}_remove_entity_on_ready_node",
+                f"{DOMAIN}_{self._base_unique_id}_remove_entity_on_interview_started",
                 self.async_remove,
             )
         )

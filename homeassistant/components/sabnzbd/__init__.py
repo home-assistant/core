@@ -237,7 +237,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         except SabnzbdApiException as err:
             _LOGGER.error(err)
 
-    async_track_time_interval(hass, async_update_sabnzbd, UPDATE_INTERVAL)
+    entry.async_on_unload(
+        async_track_time_interval(hass, async_update_sabnzbd, UPDATE_INTERVAL)
+    )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

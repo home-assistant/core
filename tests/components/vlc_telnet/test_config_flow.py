@@ -250,6 +250,7 @@ async def test_hassio_flow(hass: HomeAssistant) -> None:
             },
             name="VLC",
             slug="vlc",
+            uuid="1234",
         )
 
         result = await hass.config_entries.flow.async_init(
@@ -286,7 +287,7 @@ async def test_hassio_already_configured(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_HASSIO},
-        data=HassioServiceInfo(config=entry_data, name="VLC", slug="vlc"),
+        data=HassioServiceInfo(config=entry_data, name="VLC", slug="vlc", uuid="1234"),
     )
     await hass.async_block_till_done()
 
@@ -330,6 +331,7 @@ async def test_hassio_errors(
                 },
                 name="VLC",
                 slug="vlc",
+                uuid="1234",
             ),
         )
         await hass.async_block_till_done()

@@ -2,8 +2,9 @@
 
 from typing import Any
 
-from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN, LockEntity
+from homeassistant.components.lock import LockEntity
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -24,10 +25,10 @@ async def async_setup_entry(
     def async_add_insteon_lock_entities(discovery_info=None):
         """Add the Insteon entities for the platform."""
         async_add_insteon_entities(
-            hass, LOCK_DOMAIN, InsteonLockEntity, async_add_entities, discovery_info
+            hass, Platform.LOCK, InsteonLockEntity, async_add_entities, discovery_info
         )
 
-    signal = f"{SIGNAL_ADD_ENTITIES}_{LOCK_DOMAIN}"
+    signal = f"{SIGNAL_ADD_ENTITIES}_{Platform.LOCK}"
     async_dispatcher_connect(hass, signal, async_add_insteon_lock_entities)
     async_add_insteon_lock_entities()
 

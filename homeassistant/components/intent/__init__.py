@@ -140,16 +140,18 @@ class GetStateIntentHandler(intent.IntentHandler):
                 area=area,
                 domains=domains,
                 device_classes=device_classes,
+                assistant=intent_obj.assistant,
             )
         )
 
         _LOGGER.debug(
-            "Found %s state(s) that matched: name=%s, area=%s, domains=%s, device_classes=%s",
+            "Found %s state(s) that matched: name=%s, area=%s, domains=%s, device_classes=%s, assistant=%s",
             len(states),
             name,
             area,
             domains,
             device_classes,
+            intent_obj.assistant,
         )
 
         # Create response

@@ -75,6 +75,8 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, host.stop)
     )
 
+    starting = True
+
     async def async_device_config_update() -> None:
         """Update the host state cache and renew the ONVIF-subscription."""
         async with async_timeout.timeout(host.api.timeout):
@@ -96,9 +98,19 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         async with async_timeout.timeout(host.api.timeout):
             try:
                 return await host.api.check_new_firmware()
-            except ReolinkError as err:
+            except (ReolinkError, asyncio.exceptions.CancelledError) as err:
+                if starting:
+                    _LOGGER.debug(
+                        "Error checking Reolink firmware update at startup "
+                        "from %s, possibly internet access is blocked",
+                        host.api.nvr_name,
+                    )
+                    return False
+
                 raise UpdateFailed(
-                    f"Error checking Reolink firmware update {host.api.nvr_name}"
+                    f"Error checking Reolink firmware update from {host.api.nvr_name}, "
+                    "if the camera is blocked from accessing the internet, "
+                    "disable the update entity"
                 ) from err
 
     device_coordinator = DataUpdateCoordinator(
@@ -120,7 +132,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         # If camera WAN blocked, firmware check fails, do not prevent setup
         await asyncio.gather(
             device_coordinator.async_config_entry_first_refresh(),
-            firmware_coordinator.async_refresh(),
+            firmware_coordinator.async_config_entry_first_refresh(),
         )
     except ConfigEntryNotReady:
         await host.stop()
@@ -138,6 +150,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         config_entry.add_update_listener(entry_update_listener)
     )
 
+    starting = False
     return True
 
 

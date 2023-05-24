@@ -126,7 +126,7 @@ class SIABaseEntity(RestoreEntity):
         then update the availability and schedule the next unavailability check.
         """
         _LOGGER.debug("Received event: %s", sia_event)
-        if int(sia_event.ri) not in (self.zone, SIA_HUB_ZONE):
+        if (int(sia_event.ri) if sia_event.ri else 0) not in (self.zone, SIA_HUB_ZONE):
             return
 
         relevant_event = self.update_state(sia_event)

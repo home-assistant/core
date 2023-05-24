@@ -899,6 +899,48 @@ async def test_discovery_match_by_service_data_uuid_when_format_changes(
         mock_config_flow.reset_mock()
 
 
+async def test_discovery_match_by_service_data_uuid_bthome(
+    hass: HomeAssistant, mock_bleak_scanner_start: MagicMock, macos_adapter: None
+) -> None:
+    """Test bluetooth discovery match by service_data_uuid for bthome."""
+    mock_bt = [
+        {
+            "domain": "bthome",
+            "service_data_uuid": "0000fcd2-0000-1000-8000-00805f9b34fb",
+        },
+    ]
+    with patch(
+        "homeassistant.components.bluetooth.async_get_bluetooth", return_value=mock_bt
+    ):
+        await async_setup_with_default_adapter(hass)
+
+    with patch.object(hass.config_entries.flow, "async_init") as mock_config_flow:
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+
+        assert len(mock_bleak_scanner_start.mock_calls) == 1
+
+        device = generate_ble_device("44:44:33:11:23:45", "Shelly Button")
+        button_adv = generate_advertisement_data(
+            local_name="Shelly Button",
+            service_uuids=[],
+            manufacturer_data={},
+            service_data={"0000fcd2-0000-1000-8000-00805f9b34fb": b"@\x00k\x01d:\x01"},
+        )
+        # 1st discovery should generate a flow because the service data uuid matches
+        inject_advertisement(hass, device, button_adv)
+        await hass.async_block_till_done()
+        assert len(mock_config_flow.mock_calls) == 1
+        mock_config_flow.reset_mock()
+
+        # 2nd discovery should not generate a flow because the
+        # we already saw an advertisement with the service_data_uuid
+        inject_advertisement(hass, device, button_adv)
+        await hass.async_block_till_done()
+        assert len(mock_config_flow.mock_calls) == 0
+        mock_config_flow.reset_mock()
+
+
 async def test_discovery_match_first_by_service_uuid_and_then_manufacturer_id(
     hass: HomeAssistant, mock_bleak_scanner_start: MagicMock, macos_adapter: None
 ) -> None:

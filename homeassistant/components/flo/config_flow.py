@@ -9,7 +9,9 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN, LOGGER
 
-DATA_SCHEMA = vol.Schema({vol.Required("username"): str, vol.Required("password"): str})
+DATA_SCHEMA = vol.Schema(
+    {vol.Required(CONF_USERNAME): str, vol.Required(CONF_PASSWORD): str}
+)
 
 
 async def validate_input(hass: core.HomeAssistant, data):
@@ -20,17 +22,10 @@ async def validate_input(hass: core.HomeAssistant, data):
 
     session = async_get_clientsession(hass)
     try:
-        api = await async_get_api(
-            data[CONF_USERNAME], data[CONF_PASSWORD], session=session
-        )
+        await async_get_api(data[CONF_USERNAME], data[CONF_PASSWORD], session=session)
     except RequestError as request_error:
         LOGGER.error("Error connecting to the Flo API: %s", request_error)
         raise CannotConnect from request_error
-
-    user_info = await api.user.get_info()
-    a_location_id = user_info["locations"][0]["id"]
-    location_info = await api.location.get_info(a_location_id)
-    return {"title": location_info["nickname"]}
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -45,8 +40,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(user_input[CONF_USERNAME])
             self._abort_if_unique_id_configured()
             try:
-                info = await validate_input(self.hass, user_input)
-                return self.async_create_entry(title=info["title"], data=user_input)
+                await validate_input(self.hass, user_input)
+                return self.async_create_entry(
+                    title=user_input[CONF_USERNAME], data=user_input
+                )
             except CannotConnect:
                 errors["base"] = "cannot_connect"
 

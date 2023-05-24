@@ -39,7 +39,7 @@ BIG_QUERY_RECENT_HOURS = 24
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
+@dataclass(slots=True)
 class LogbookLiveStream:
     """Track a logbook live stream."""
 
@@ -221,8 +221,6 @@ async def _async_events_consumer(
     event_processor: EventProcessor,
 ) -> None:
     """Stream events from the queue."""
-    event_processor.switch_to_live()
-
     while True:
         events: list[Event] = [await stream_queue.get()]
         # If the event is older than the last db
@@ -430,6 +428,7 @@ async def ws_event_stream(
         event_processor,
         partial=False,
     )
+    event_processor.switch_to_live()
 
 
 def _ws_formatted_get_events(

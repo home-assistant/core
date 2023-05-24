@@ -4,12 +4,12 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable
+from functools import partial
 from typing import Any
 
 from aiolifx import products
 from aiolifx.aiolifx import Light
 from aiolifx.message import Message
-import async_timeout
 from awesomeversion import AwesomeVersion
 
 from homeassistant.components.light import (
@@ -28,7 +28,13 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 import homeassistant.util.color as color_util
 
-from .const import _LOGGER, DOMAIN, INFRARED_BRIGHTNESS_VALUES_MAP, OVERALL_TIMEOUT
+from .const import (
+    _LOGGER,
+    DEFAULT_ATTEMPTS,
+    DOMAIN,
+    INFRARED_BRIGHTNESS_VALUES_MAP,
+    OVERALL_TIMEOUT,
+)
 
 FIX_MAC_FW = AwesomeVersion("3.70")
 
@@ -177,21 +183,61 @@ def mac_matches_serial_number(mac_addr: str, serial_number: str) -> bool:
 
 
 async def async_execute_lifx(method: Callable) -> Message:
-    """Execute a lifx coroutine and wait for a response."""
-    future: asyncio.Future[Message] = asyncio.Future()
+    """Execute a lifx callback method and wait for a response."""
+    return (
+        await async_multi_execute_lifx_with_retries(
+            [method], DEFAULT_ATTEMPTS, OVERALL_TIMEOUT
+        )
+    )[0]
 
-    def _callback(bulb: Light, message: Message) -> None:
-        if not future.done():
-            # The future will get canceled out from under
-            # us by async_timeout when we hit the OVERALL_TIMEOUT
+
+async def async_multi_execute_lifx_with_retries(
+    methods: list[Callable], attempts: int, overall_timeout: int
+) -> list[Message]:
+    """Execute multiple lifx callback methods with retries and wait for a response.
+
+    This functional will the overall timeout by the number of attempts and
+    wait for each method to return a result. If we don't get a result
+    within the split timeout, we will send all methods that did not generate
+    a response again.
+
+    If we don't get a result after all attempts, we will raise an
+    asyncio.TimeoutError exception.
+    """
+    loop = asyncio.get_running_loop()
+    futures: list[asyncio.Future] = [loop.create_future() for _ in methods]
+
+    def _callback(
+        bulb: Light, message: Message | None, future: asyncio.Future[Message]
+    ) -> None:
+        if message and not future.done():
             future.set_result(message)
 
-    method(callb=_callback)
-    result = None
+    timeout_per_attempt = overall_timeout / attempts
 
-    async with async_timeout.timeout(OVERALL_TIMEOUT):
-        result = await future
+    for _ in range(attempts):
+        for idx, method in enumerate(methods):
+            future = futures[idx]
+            if not future.done():
+                method(callb=partial(_callback, future=future))
 
-    if result is None:
-        raise asyncio.TimeoutError("No response from LIFX bulb")
-    return result
+        _, pending = await asyncio.wait(futures, timeout=timeout_per_attempt)
+        if not pending:
+            break
+
+    results: list[Message] = []
+    failed: list[str] = []
+    for idx, future in enumerate(futures):
+        if not future.done() or not (result := future.result()):
+            method = methods[idx]
+            failed.append(str(getattr(method, "__name__", method)))
+        else:
+            results.append(result)
+
+    if failed:
+        failed_methods = ", ".join(failed)
+        raise asyncio.TimeoutError(
+            f"{failed_methods} timed out after {attempts} attempts"
+        )
+
+    return results

@@ -89,14 +89,8 @@ class AladdinDevice(CoverEntity):
             await self._acc.get_doors(self._serial)
             self._attr_available = True
 
-        except session_manager.ConnectionError:
+        except (session_manager.ConnectionError, session_manager.InvalidPasswordError):
             self._attr_available = False
-
-        except session_manager.InvalidPasswordError:
-            self._attr_available = False
-            await self.hass.async_create_task(
-                self.hass.config_entries.async_reload(self._entry_id)
-            )
 
     @property
     def is_closed(self) -> bool | None:

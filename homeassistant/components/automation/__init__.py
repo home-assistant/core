@@ -659,7 +659,7 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
         )
 
 
-@dataclass
+@dataclass(slots=True)
 class AutomationEntityConfig:
     """Container for prepared automation entity configuration."""
 

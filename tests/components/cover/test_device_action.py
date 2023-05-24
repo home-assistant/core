@@ -224,9 +224,9 @@ async def test_get_action_capabilities_set_pos(
     actions = await async_get_device_automations(
         hass, DeviceAutomationType.ACTION, device_entry.id
     )
-    assert len(actions) == 1  # set_position
+    assert len(actions) == 4  # set_position, open, close, stop
     action_types = {action["type"] for action in actions}
-    assert action_types == {"set_position"}
+    assert action_types == {"set_position", "open", "close", "stop"}
     for action in actions:
         capabilities = await async_get_device_automation_capabilities(
             hass, DeviceAutomationType.ACTION, action
@@ -275,9 +275,15 @@ async def test_get_action_capabilities_set_tilt_pos(
     actions = await async_get_device_automations(
         hass, DeviceAutomationType.ACTION, device_entry.id
     )
-    assert len(actions) == 3
+    assert len(actions) == 5
     action_types = {action["type"] for action in actions}
-    assert action_types == {"open", "close", "set_tilt_position"}
+    assert action_types == {
+        "open",
+        "close",
+        "set_tilt_position",
+        "open_tilt",
+        "close_tilt",
+    }
     for action in actions:
         capabilities = await async_get_device_automation_capabilities(
             hass, DeviceAutomationType.ACTION, action

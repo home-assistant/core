@@ -134,7 +134,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     await hass.async_add_executor_job(build_client)
 
-    coordinators: dict[str, dict[str, dict[int, DataUpdateCoordinator]]] = {}
+    coordinators: dict[
+        str, dict[str, dict[int, DataUpdateCoordinator[dict[str, Any] | None]]]
+    ] = {}
     hass.data[DOMAIN][COORDINATORS] = coordinators
 
     # Create a coordinator for each vm/container

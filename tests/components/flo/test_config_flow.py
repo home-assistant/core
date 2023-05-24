@@ -31,7 +31,7 @@ async def test_form(hass: HomeAssistant, aioclient_mock_fixture) -> None:
         )
 
         assert result2["type"] == "create_entry"
-        assert result2["title"] == "Home"
+        assert result2["title"] == TEST_USER_ID
         assert result2["data"] == {"username": TEST_USER_ID, "password": TEST_PASSWORD}
         await hass.async_block_till_done()
         assert len(mock_setup_entry.mock_calls) == 1

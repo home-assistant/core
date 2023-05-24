@@ -97,7 +97,7 @@ class EventDataManager(BaseLRUTableManager[EventData]):
         with session.no_autoflush:
             for hashs_chunk in chunked(hashes, SQLITE_MAX_BIND_VARS):
                 for data_id, shared_data in execute_stmt_lambda_element(
-                    session, get_shared_event_datas(hashs_chunk)
+                    session, get_shared_event_datas(hashs_chunk), orm_rows=False
                 ):
                     results[shared_data] = self._id_map[shared_data] = cast(
                         int, data_id

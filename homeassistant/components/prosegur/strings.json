@@ -8,6 +8,11 @@
           "country": "Country"
         }
       },
+      "choose_contract": {
+        "data": {
+          "contract": "Contract"
+        }
+      },
       "reauth_confirm": {
         "data": {
           "description": "Re-authenticate with Prosegur account.",

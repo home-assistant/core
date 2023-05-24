@@ -69,6 +69,7 @@ CONF_SULPHUR_DIOXIDE = "sulphur_dioxide"
 CONF_TEMPERATURE = "temperature"
 CONF_VALUE = "value"
 CONF_VOLATILE_ORGANIC_COMPOUNDS = "volatile_organic_compounds"
+CONF_VOLATILE_ORGANIC_COMPOUNDS_PARTS = "volatile_organic_compounds_parts"
 CONF_VOLTAGE = "voltage"
 CONF_VOLUME = "volume"
 CONF_WATER = "water"
@@ -118,6 +119,9 @@ ENTITY_TRIGGERS = {
     SensorDeviceClass.TEMPERATURE: [{CONF_TYPE: CONF_TEMPERATURE}],
     SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS: [
         {CONF_TYPE: CONF_VOLATILE_ORGANIC_COMPOUNDS}
+    ],
+    SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS_PARTS: [
+        {CONF_TYPE: CONF_VOLATILE_ORGANIC_COMPOUNDS_PARTS}
     ],
     SensorDeviceClass.VOLTAGE: [{CONF_TYPE: CONF_VOLTAGE}],
     SensorDeviceClass.VOLUME: [{CONF_TYPE: CONF_VOLUME}],
@@ -173,6 +177,7 @@ TRIGGER_SCHEMA = vol.All(
                     CONF_SULPHUR_DIOXIDE,
                     CONF_TEMPERATURE,
                     CONF_VOLATILE_ORGANIC_COMPOUNDS,
+                    CONF_VOLATILE_ORGANIC_COMPOUNDS_PARTS,
                     CONF_VOLTAGE,
                     CONF_VOLUME,
                     CONF_WATER,

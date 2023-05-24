@@ -27,11 +27,9 @@ _R = TypeVar("_R")
 _P = ParamSpec("_P")
 
 INFO_URL_SKY_CONNECT = (
-    "https://skyconnect.home-assistant.io/procedures/enable-multiprotocol/#limitations"
+    "https://skyconnect.home-assistant.io/multiprotocol-channel-missmatch"
 )
-INFO_URL_YELLOW = (
-    "https://yellow.home-assistant.io/guides/enable-multiprotocol/#limitations"
-)
+INFO_URL_YELLOW = "https://yellow.home-assistant.io/multiprotocol-channel-missmatch"
 
 INSECURE_NETWORK_KEYS = (
     # Thread web UI default

@@ -29,6 +29,14 @@ ENTRY_CONFIG = {
     CONF_UNIT_OF_MEASUREMENT: "MiB",
 }
 
+ENTRY_CONFIG_WITH_VALUE_TEMPLATE = {
+    CONF_NAME: "Get Value",
+    CONF_QUERY: "SELECT 5 as value",
+    CONF_COLUMN_NAME: "value",
+    CONF_UNIT_OF_MEASUREMENT: "MiB",
+    CONF_VALUE_TEMPLATE: "{{ value }}",
+}
+
 ENTRY_CONFIG_INVALID_QUERY = {
     CONF_NAME: "Get Value",
     CONF_QUERY: "UPDATE 5 as value",
@@ -38,6 +46,19 @@ ENTRY_CONFIG_INVALID_QUERY = {
 
 ENTRY_CONFIG_INVALID_QUERY_OPT = {
     CONF_QUERY: "UPDATE 5 as value",
+    CONF_COLUMN_NAME: "size",
+    CONF_UNIT_OF_MEASUREMENT: "MiB",
+}
+
+ENTRY_CONFIG_INVALID_COLUMN_NAME = {
+    CONF_NAME: "Get Value",
+    CONF_QUERY: "SELECT 5 as value",
+    CONF_COLUMN_NAME: "size",
+    CONF_UNIT_OF_MEASUREMENT: "MiB",
+}
+
+ENTRY_CONFIG_INVALID_COLUMN_NAME_OPT = {
+    CONF_QUERY: "SELECT 5 as value",
     CONF_COLUMN_NAME: "size",
     CONF_UNIT_OF_MEASUREMENT: "MiB",
 }
@@ -62,6 +83,41 @@ YAML_CONFIG = {
         CONF_STATE_CLASS: SensorStateClass.MEASUREMENT,
     }
 }
+
+YAML_CONFIG_FULL_TABLE_SCAN = {
+    "sql": {
+        CONF_NAME: "Get entity_id",
+        CONF_QUERY: "SELECT entity_id from states",
+        CONF_COLUMN_NAME: "entity_id",
+        CONF_UNIQUE_ID: "entity_id_12345",
+    }
+}
+
+
+YAML_CONFIG_FULL_TABLE_SCAN_NO_UNIQUE_ID = {
+    "sql": {
+        CONF_NAME: "Get entity_id",
+        CONF_QUERY: "SELECT entity_id from states",
+        CONF_COLUMN_NAME: "entity_id",
+    }
+}
+
+YAML_CONFIG_FULL_TABLE_SCAN_WITH_MULTIPLE_COLUMNS = {
+    "sql": {
+        CONF_NAME: "Get entity_id",
+        CONF_QUERY: "SELECT entity_id,state_id from states",
+        CONF_COLUMN_NAME: "entity_id",
+    }
+}
+
+YAML_CONFIG_WITH_VIEW_THAT_CONTAINS_ENTITY_ID = {
+    "sql": {
+        CONF_NAME: "Get entity_id",
+        CONF_QUERY: "SELECT value from view_sensor_db_unique_entity_ids;",
+        CONF_COLUMN_NAME: "value",
+    }
+}
+
 
 YAML_CONFIG_BINARY = {
     "sql": {

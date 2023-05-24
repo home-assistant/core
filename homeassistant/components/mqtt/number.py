@@ -97,7 +97,7 @@ _PLATFORM_SCHEMA_BASE = MQTT_RW_SCHEMA.extend(
         vol.Optional(CONF_STEP, default=DEFAULT_STEP): vol.All(
             vol.Coerce(float), vol.Range(min=1e-3)
         ),
-        vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
+        vol.Optional(CONF_UNIT_OF_MEASUREMENT): vol.Any(cv.string, None),
         vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
     },
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)

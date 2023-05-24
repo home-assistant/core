@@ -290,15 +290,6 @@ def remoteencws_fixture() -> Mock:
         yield remoteencws
 
 
-@pytest.fixture(name="delay")
-def delay_fixture() -> Mock:
-    """Patch the delay script function."""
-    with patch(
-        "homeassistant.components.samsungtv.media_player.Script.async_run"
-    ) as delay:
-        yield delay
-
-
 @pytest.fixture
 def mock_now() -> datetime:
     """Fixture for dtutil.now."""

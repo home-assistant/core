@@ -219,7 +219,7 @@ class RestoreStateData:
             self.hass,
             _async_dump_states,
             STATE_DUMP_INTERVAL,
-            "RestoreStateData dump states",
+            name="RestoreStateData dump states",
         )
 
         async def _async_dump_states_at_stop(*_: Any) -> None:

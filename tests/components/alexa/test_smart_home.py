@@ -39,6 +39,7 @@ def events(hass: HomeAssistant) -> list[Event]:
 @pytest.fixture
 async def mock_camera(hass: HomeAssistant) -> None:
     """Initialize a demo camera platform."""
+    assert await async_setup_component(hass, "homeassistant", {})
     assert await async_setup_component(
         hass, "camera", {camera.DOMAIN: {"platform": "demo"}}
     )

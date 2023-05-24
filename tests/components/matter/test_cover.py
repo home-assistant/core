@@ -103,7 +103,7 @@ async def test_cover(
     assert matter_client.send_device_command.call_args == call(
         node_id=window_covering.node_id,
         endpoint_id=1,
-        command=clusters.WindowCovering.Commands.GoToLiftValue(50),
+        command=clusters.WindowCovering.Commands.GoToLiftPercentage(5000),
     )
     matter_client.send_device_command.reset_mock()
 
@@ -121,7 +121,7 @@ async def test_cover(
 
     state = hass.states.get("cover.longan_link_wncv_da01")
     assert state
-    assert state.state == STATE_CLOSED
+    assert state.state == STATE_OPEN
 
     set_node_attribute(window_covering, 1, 258, 8, 50)
     set_node_attribute(window_covering, 1, 258, 10, 1)
@@ -137,5 +137,5 @@ async def test_cover(
 
     state = hass.states.get("cover.longan_link_wncv_da01")
     assert state
-    assert state.attributes["current_position"] == 100
-    assert state.state == STATE_OPEN
+    assert state.attributes["current_position"] == 0
+    assert state.state == STATE_CLOSED

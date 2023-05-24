@@ -20,6 +20,7 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
+    STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant
 
@@ -914,3 +915,39 @@ async def test_dehumidifier(
         "property": "mode",
     }
     assert args["value"] == int(HumidityControlMode.DEHUMIDIFY)
+
+    # Test setting value to None
+    event = Event(
+        type="value updated",
+        data={
+            "source": "node",
+            "event": "value updated",
+            "nodeId": 68,
+            "args": {
+                "commandClassName": "Humidity Control Mode",
+                "commandClass": CommandClass.HUMIDITY_CONTROL_MODE,
+                "endpoint": 0,
+                "property": "mode",
+                "propertyName": "mode",
+                "newValue": None,
+                "prevValue": int(HumidityControlMode.OFF),
+            },
+        },
+    )
+    node.receive_event(event)
+
+    state = hass.states.get(HUMIDIFIER_ADC_T3000_ENTITY)
+
+    assert state
+    assert state.state == STATE_UNKNOWN
+
+    client.async_send_command.reset_mock()
+
+    await hass.services.async_call(
+        HUMIDIFIER_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: HUMIDIFIER_ADC_T3000_ENTITY},
+        blocking=True,
+    )
+
+    assert len(client.async_send_command.call_args_list) == 0

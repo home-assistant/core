@@ -768,6 +768,7 @@ class RpcSensor(ShellyRpcAttributeEntity, SensorEntity):
         return self.attribute_value
 
 
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
 class BlockSleepingSensor(ShellySleepingBlockAttributeEntity, SensorEntity):
     """Represent a block sleeping sensor."""
 
@@ -808,6 +809,7 @@ class BlockSleepingSensor(ShellySleepingBlockAttributeEntity, SensorEntity):
         return self.last_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
 
 
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
 class RpcSleepingSensor(ShellySleepingRpcAttributeEntity, SensorEntity):
     """Represent a RPC sleeping sensor."""
 

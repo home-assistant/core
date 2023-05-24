@@ -39,9 +39,9 @@ from homeassistant.helpers.event import async_call_later, async_track_time_inter
 
 from .core import discovery, helpers
 from .core.const import (
-    CHANNEL_COLOR,
-    CHANNEL_LEVEL,
-    CHANNEL_ON_OFF,
+    CLUSTER_HANDLER_COLOR,
+    CLUSTER_HANDLER_LEVEL,
+    CLUSTER_HANDLER_ON_OFF,
     CONF_ALWAYS_PREFER_XY_COLOR_MODE,
     CONF_DEFAULT_LIGHT_TRANSITION,
     CONF_ENABLE_ENHANCED_LIGHT_TRANSITION,
@@ -113,7 +113,7 @@ class BaseLight(LogMixin, light.LightEntity):
     """Operations common to all light entities."""
 
     _FORCE_ON = False
-    _DEFAULT_MIN_TRANSITION_TIME = 0
+    _DEFAULT_MIN_TRANSITION_TIME: float = 0
 
     def __init__(self, *args, **kwargs):
         """Initialize the light."""
@@ -130,13 +130,18 @@ class BaseLight(LogMixin, light.LightEntity):
         self._zha_config_enhanced_light_transition: bool = False
         self._zha_config_enable_light_transitioning_flag: bool = True
         self._zha_config_always_prefer_xy_color_mode: bool = True
-        self._on_off_channel = None
-        self._level_channel = None
-        self._color_channel = None
-        self._identify_channel = None
+        self._on_off_cluster_handler = None
+        self._level_cluster_handler = None
+        self._color_cluster_handler = None
+        self._identify_cluster_handler = None
         self._transitioning_individual: bool = False
         self._transitioning_group: bool = False
         self._transition_listener: Callable[[], None] | None = None
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Disconnect entity object when removed."""
+        self._async_unsub_transition_listener()
+        await super().async_will_remove_from_hass()
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
@@ -176,9 +181,7 @@ class BaseLight(LogMixin, light.LightEntity):
         """Turn the entity on."""
         transition = kwargs.get(light.ATTR_TRANSITION)
         duration = (
-            transition * 10
-            if transition is not None
-            else self._zha_config_transition * 10
+            transition if transition is not None else self._zha_config_transition
         ) or (
             # if 0 is passed in some devices still need the minimum default
             self._DEFAULT_MIN_TRANSITION_TIME
@@ -193,7 +196,8 @@ class BaseLight(LogMixin, light.LightEntity):
         execute_if_off_supported = (
             self._GROUP_SUPPORTS_EXECUTE_IF_OFF
             if isinstance(self, LightGroup)
-            else self._color_channel and self._color_channel.execute_if_off_supported
+            else self._color_cluster_handler
+            and self._color_cluster_handler.execute_if_off_supported
         )
 
         set_transition_flag = (
@@ -204,7 +208,7 @@ class BaseLight(LogMixin, light.LightEntity):
         ) and self._zha_config_enable_light_transitioning_flag
         transition_time = (
             (
-                duration / 10 + DEFAULT_EXTRA_TRANSITION_DELAY_SHORT
+                duration + DEFAULT_EXTRA_TRANSITION_DELAY_SHORT
                 if (
                     (brightness is not None or transition is not None)
                     and brightness_supported(self._attr_supported_color_modes)
@@ -289,9 +293,9 @@ class BaseLight(LogMixin, light.LightEntity):
             # If the light is currently off, we first need to turn it on at a low
             # brightness level with no transition.
             # After that, we set it to the desired color/temperature with no transition.
-            result = await self._level_channel.move_to_level_with_on_off(
+            result = await self._level_cluster_handler.move_to_level_with_on_off(
                 level=DEFAULT_MIN_BRIGHTNESS,
-                transition_time=self._DEFAULT_MIN_TRANSITION_TIME,
+                transition_time=int(10 * self._DEFAULT_MIN_TRANSITION_TIME),
             )
             t_log["move_to_level_with_on_off"] = result
             if isinstance(result, Exception) or result[1] is not Status.SUCCESS:
@@ -329,9 +333,9 @@ class BaseLight(LogMixin, light.LightEntity):
             and not new_color_provided_while_off
             and brightness_supported(self._attr_supported_color_modes)
         ):
-            result = await self._level_channel.move_to_level_with_on_off(
+            result = await self._level_cluster_handler.move_to_level_with_on_off(
                 level=level,
-                transition_time=duration,
+                transition_time=int(10 * duration),
             )
             t_log["move_to_level_with_on_off"] = result
             if isinstance(result, Exception) or result[1] is not Status.SUCCESS:
@@ -353,7 +357,7 @@ class BaseLight(LogMixin, light.LightEntity):
             # since some lights don't always turn on with move_to_level_with_on_off,
             # we should call the on command on the on_off cluster
             # if brightness is not 0.
-            result = await self._on_off_channel.on()
+            result = await self._on_off_cluster_handler.on()
             t_log["on_off"] = result
             if isinstance(result, Exception) or result[1] is not Status.SUCCESS:
                 # 'On' call failed, but as brightness may still transition
@@ -383,8 +387,8 @@ class BaseLight(LogMixin, light.LightEntity):
         if new_color_provided_while_off:
             # The light is has the correct color, so we can now transition
             # it to the correct brightness level.
-            result = await self._level_channel.move_to_level(
-                level=level, transition_time=duration
+            result = await self._level_cluster_handler.move_to_level(
+                level=level, transition_time=int(10 * duration)
             )
             t_log["move_to_level_if_color"] = result
             if isinstance(result, Exception) or result[1] is not Status.SUCCESS:
@@ -400,7 +404,7 @@ class BaseLight(LogMixin, light.LightEntity):
         self.async_transition_start_timer(transition_time)
 
         if effect == light.EFFECT_COLORLOOP:
-            result = await self._color_channel.color_loop_set(
+            result = await self._color_cluster_handler.color_loop_set(
                 update_flags=(
                     Color.ColorLoopUpdateFlags.Action
                     | Color.ColorLoopUpdateFlags.Direction
@@ -417,7 +421,7 @@ class BaseLight(LogMixin, light.LightEntity):
             self._attr_effect == light.EFFECT_COLORLOOP
             and effect != light.EFFECT_COLORLOOP
         ):
-            result = await self._color_channel.color_loop_set(
+            result = await self._color_cluster_handler.color_loop_set(
                 update_flags=Color.ColorLoopUpdateFlags.Action,
                 action=Color.ColorLoopAction.Deactivate,
                 direction=Color.ColorLoopDirection.Decrement,
@@ -428,7 +432,7 @@ class BaseLight(LogMixin, light.LightEntity):
             self._attr_effect = None
 
         if flash is not None:
-            result = await self._identify_channel.trigger_effect(
+            result = await self._identify_cluster_handler.trigger_effect(
                 effect_id=FLASH_EFFECTS[flash],
                 effect_variant=Identify.EffectVariant.Default,
             )
@@ -457,12 +461,14 @@ class BaseLight(LogMixin, light.LightEntity):
         # is not none looks odd here, but it will override built in bulb
         # transition times if we pass 0 in here
         if transition is not None and supports_level:
-            result = await self._level_channel.move_to_level_with_on_off(
+            result = await self._level_cluster_handler.move_to_level_with_on_off(
                 level=0,
-                transition_time=(transition * 10 or self._DEFAULT_MIN_TRANSITION_TIME),
+                transition_time=int(
+                    10 * (transition or self._DEFAULT_MIN_TRANSITION_TIME)
+                ),
             )
         else:
-            result = await self._on_off_channel.off()
+            result = await self._on_off_cluster_handler.off()
 
         # Pause parsing attribute reports until transition is complete
         if self._zha_config_enable_light_transitioning_flag:
@@ -503,9 +509,9 @@ class BaseLight(LogMixin, light.LightEntity):
         )
 
         if temperature is not None:
-            result = await self._color_channel.move_to_color_temp(
+            result = await self._color_cluster_handler.move_to_color_temp(
                 color_temp_mireds=temperature,
-                transition_time=transition_time,
+                transition_time=int(10 * transition_time),
             )
             t_log["move_to_color_temp"] = result
             if isinstance(result, Exception) or result[1] is not Status.SUCCESS:
@@ -518,19 +524,19 @@ class BaseLight(LogMixin, light.LightEntity):
         if hs_color is not None:
             if (
                 not isinstance(self, LightGroup)
-                and self._color_channel.enhanced_hue_supported
+                and self._color_cluster_handler.enhanced_hue_supported
             ):
-                result = await self._color_channel.enhanced_move_to_hue_and_saturation(
+                result = await self._color_cluster_handler.enhanced_move_to_hue_and_saturation(
                     enhanced_hue=int(hs_color[0] * 65535 / 360),
                     saturation=int(hs_color[1] * 2.54),
-                    transition_time=transition_time,
+                    transition_time=int(10 * transition_time),
                 )
                 t_log["enhanced_move_to_hue_and_saturation"] = result
             else:
-                result = await self._color_channel.move_to_hue_and_saturation(
+                result = await self._color_cluster_handler.move_to_hue_and_saturation(
                     hue=int(hs_color[0] * 254 / 360),
                     saturation=int(hs_color[1] * 2.54),
-                    transition_time=transition_time,
+                    transition_time=int(10 * transition_time),
                 )
                 t_log["move_to_hue_and_saturation"] = result
             if isinstance(result, Exception) or result[1] is not Status.SUCCESS:
@@ -542,10 +548,10 @@ class BaseLight(LogMixin, light.LightEntity):
             xy_color = None  # don't set xy_color if it is also present
 
         if xy_color is not None:
-            result = await self._color_channel.move_to_color(
+            result = await self._color_cluster_handler.move_to_color(
                 color_x=int(xy_color[0] * 65535),
                 color_y=int(xy_color[1] * 65535),
-                transition_time=transition_time,
+                transition_time=int(10 * transition_time),
             )
             t_log["move_to_color"] = result
             if isinstance(result, Exception) or result[1] is not Status.SUCCESS:
@@ -574,8 +580,7 @@ class BaseLight(LogMixin, light.LightEntity):
                 SIGNAL_LIGHT_GROUP_TRANSITION_START,
                 {"entity_ids": self._entity_ids},
             )
-        if self._transition_listener is not None:
-            self._transition_listener()
+        self._async_unsub_transition_listener()
 
     @callback
     def async_transition_start_timer(self, transition_time) -> None:
@@ -596,13 +601,18 @@ class BaseLight(LogMixin, light.LightEntity):
         )
 
     @callback
+    def _async_unsub_transition_listener(self) -> None:
+        """Unsubscribe transition listener."""
+        if self._transition_listener:
+            self._transition_listener()
+            self._transition_listener = None
+
+    @callback
     def async_transition_complete(self, _=None) -> None:
         """Set _transitioning_individual to False and write HA state."""
         self.debug("transition complete - future attribute reports will write HA state")
         self._transitioning_individual = False
-        if self._transition_listener:
-            self._transition_listener()
-            self._transition_listener = None
+        self._async_unsub_transition_listener()
         self.async_write_ha_state()
         if isinstance(self, LightGroup):
             async_dispatcher_send(
@@ -620,24 +630,30 @@ class BaseLight(LogMixin, light.LightEntity):
                 )
 
 
-@STRICT_MATCH(channel_names=CHANNEL_ON_OFF, aux_channels={CHANNEL_COLOR, CHANNEL_LEVEL})
+@STRICT_MATCH(
+    cluster_handler_names=CLUSTER_HANDLER_ON_OFF,
+    aux_cluster_handlers={CLUSTER_HANDLER_COLOR, CLUSTER_HANDLER_LEVEL},
+)
 class Light(BaseLight, ZhaEntity):
     """Representation of a ZHA or ZLL light."""
 
+    _attr_name: str = "Light"
     _attr_supported_color_modes: set[ColorMode]
     _REFRESH_INTERVAL = (45, 75)
 
-    def __init__(self, unique_id, zha_device: ZHADevice, channels, **kwargs) -> None:
+    def __init__(
+        self, unique_id, zha_device: ZHADevice, cluster_handlers, **kwargs
+    ) -> None:
         """Initialize the ZHA light."""
-        super().__init__(unique_id, zha_device, channels, **kwargs)
-        self._on_off_channel = self.cluster_channels[CHANNEL_ON_OFF]
-        self._attr_state = bool(self._on_off_channel.on_off)
-        self._level_channel = self.cluster_channels.get(CHANNEL_LEVEL)
-        self._color_channel = self.cluster_channels.get(CHANNEL_COLOR)
-        self._identify_channel = self.zha_device.channels.identify_ch
-        if self._color_channel:
-            self._attr_min_mireds: int = self._color_channel.min_mireds
-            self._attr_max_mireds: int = self._color_channel.max_mireds
+        super().__init__(unique_id, zha_device, cluster_handlers, **kwargs)
+        self._on_off_cluster_handler = self.cluster_handlers[CLUSTER_HANDLER_ON_OFF]
+        self._attr_state = bool(self._on_off_cluster_handler.on_off)
+        self._level_cluster_handler = self.cluster_handlers.get(CLUSTER_HANDLER_LEVEL)
+        self._color_cluster_handler = self.cluster_handlers.get(CLUSTER_HANDLER_COLOR)
+        self._identify_cluster_handler = zha_device.identify_ch
+        if self._color_cluster_handler:
+            self._attr_min_mireds: int = self._color_cluster_handler.min_mireds
+            self._attr_max_mireds: int = self._color_cluster_handler.max_mireds
         self._cancel_refresh_handle: CALLBACK_TYPE | None = None
         effect_list = []
 
@@ -649,44 +665,48 @@ class Light(BaseLight, ZhaEntity):
         )
 
         self._attr_supported_color_modes = {ColorMode.ONOFF}
-        if self._level_channel:
+        if self._level_cluster_handler:
             self._attr_supported_color_modes.add(ColorMode.BRIGHTNESS)
             self._attr_supported_features |= light.LightEntityFeature.TRANSITION
-            self._attr_brightness = self._level_channel.current_level
+            self._attr_brightness = self._level_cluster_handler.current_level
 
-        if self._color_channel:
-            if self._color_channel.color_temp_supported:
+        if self._color_cluster_handler:
+            if self._color_cluster_handler.color_temp_supported:
                 self._attr_supported_color_modes.add(ColorMode.COLOR_TEMP)
-                self._attr_color_temp = self._color_channel.color_temperature
+                self._attr_color_temp = self._color_cluster_handler.color_temperature
 
-            if self._color_channel.xy_supported and (
+            if self._color_cluster_handler.xy_supported and (
                 self._zha_config_always_prefer_xy_color_mode
-                or not self._color_channel.hs_supported
+                or not self._color_cluster_handler.hs_supported
             ):
                 self._attr_supported_color_modes.add(ColorMode.XY)
-                curr_x = self._color_channel.current_x
-                curr_y = self._color_channel.current_y
+                curr_x = self._color_cluster_handler.current_x
+                curr_y = self._color_cluster_handler.current_y
                 if curr_x is not None and curr_y is not None:
                     self._attr_xy_color = (curr_x / 65535, curr_y / 65535)
                 else:
                     self._attr_xy_color = (0, 0)
 
             if (
-                self._color_channel.hs_supported
+                self._color_cluster_handler.hs_supported
                 and not self._zha_config_always_prefer_xy_color_mode
             ):
                 self._attr_supported_color_modes.add(ColorMode.HS)
                 if (
-                    self._color_channel.enhanced_hue_supported
-                    and self._color_channel.enhanced_current_hue is not None
+                    self._color_cluster_handler.enhanced_hue_supported
+                    and self._color_cluster_handler.enhanced_current_hue is not None
                 ):
-                    curr_hue = self._color_channel.enhanced_current_hue * 65535 / 360
-                elif self._color_channel.current_hue is not None:
-                    curr_hue = self._color_channel.current_hue * 254 / 360
+                    curr_hue = (
+                        self._color_cluster_handler.enhanced_current_hue * 65535 / 360
+                    )
+                elif self._color_cluster_handler.current_hue is not None:
+                    curr_hue = self._color_cluster_handler.current_hue * 254 / 360
                 else:
                     curr_hue = 0
 
-                if (curr_saturation := self._color_channel.current_saturation) is None:
+                if (
+                    curr_saturation := self._color_cluster_handler.current_saturation
+                ) is None:
                     curr_saturation = 0
 
                 self._attr_hs_color = (
@@ -694,10 +714,10 @@ class Light(BaseLight, ZhaEntity):
                     int(curr_saturation * 2.54),
                 )
 
-            if self._color_channel.color_loop_supported:
+            if self._color_cluster_handler.color_loop_supported:
                 self._attr_supported_features |= light.LightEntityFeature.EFFECT
                 effect_list.append(light.EFFECT_COLORLOOP)
-                if self._color_channel.color_loop_active == 1:
+                if self._color_cluster_handler.color_loop_active == 1:
                     self._attr_effect = light.EFFECT_COLORLOOP
         self._attr_supported_color_modes = filter_supported_color_modes(
             self._attr_supported_color_modes
@@ -705,13 +725,16 @@ class Light(BaseLight, ZhaEntity):
         if len(self._attr_supported_color_modes) == 1:
             self._attr_color_mode = next(iter(self._attr_supported_color_modes))
         else:  # Light supports color_temp + hs, determine which mode the light is in
-            assert self._color_channel
-            if self._color_channel.color_mode == Color.ColorMode.Color_temperature:
+            assert self._color_cluster_handler
+            if (
+                self._color_cluster_handler.color_mode
+                == Color.ColorMode.Color_temperature
+            ):
                 self._attr_color_mode = ColorMode.COLOR_TEMP
             else:
                 self._attr_color_mode = ColorMode.XY
 
-        if self._identify_channel:
+        if self._identify_cluster_handler:
             self._attr_supported_features |= light.LightEntityFeature.FLASH
 
         if effect_list:
@@ -755,11 +778,11 @@ class Light(BaseLight, ZhaEntity):
         """Run when about to be added to hass."""
         await super().async_added_to_hass()
         self.async_accept_signal(
-            self._on_off_channel, SIGNAL_ATTR_UPDATED, self.async_set_state
+            self._on_off_cluster_handler, SIGNAL_ATTR_UPDATED, self.async_set_state
         )
-        if self._level_channel:
+        if self._level_cluster_handler:
             self.async_accept_signal(
-                self._level_channel, SIGNAL_SET_LEVEL, self.set_level
+                self._level_cluster_handler, SIGNAL_SET_LEVEL, self.set_level
             )
         refresh_interval = random.randint(*(x * 60 for x in self._REFRESH_INTERVAL))
         self._cancel_refresh_handle = async_track_time_interval(
@@ -844,8 +867,8 @@ class Light(BaseLight, ZhaEntity):
             return
         self.debug("polling current state")
 
-        if self._on_off_channel:
-            state = await self._on_off_channel.get_attribute_value(
+        if self._on_off_cluster_handler:
+            state = await self._on_off_cluster_handler.get_attribute_value(
                 "on_off", from_cache=False
             )
             # check if transition started whilst waiting for polled state
@@ -858,8 +881,8 @@ class Light(BaseLight, ZhaEntity):
                     self._off_with_transition = False
                     self._off_brightness = None
 
-        if self._level_channel:
-            level = await self._level_channel.get_attribute_value(
+        if self._level_cluster_handler:
+            level = await self._level_cluster_handler.get_attribute_value(
                 "current_level", from_cache=False
             )
             # check if transition started whilst waiting for polled state
@@ -868,7 +891,7 @@ class Light(BaseLight, ZhaEntity):
             if level is not None:
                 self._attr_brightness = level
 
-        if self._color_channel:
+        if self._color_cluster_handler:
             attributes = [
                 "color_mode",
                 "current_x",
@@ -876,23 +899,23 @@ class Light(BaseLight, ZhaEntity):
             ]
             if (
                 not self._zha_config_always_prefer_xy_color_mode
-                and self._color_channel.enhanced_hue_supported
+                and self._color_cluster_handler.enhanced_hue_supported
             ):
                 attributes.append("enhanced_current_hue")
                 attributes.append("current_saturation")
             if (
-                self._color_channel.hs_supported
-                and not self._color_channel.enhanced_hue_supported
+                self._color_cluster_handler.hs_supported
+                and not self._color_cluster_handler.enhanced_hue_supported
                 and not self._zha_config_always_prefer_xy_color_mode
             ):
                 attributes.append("current_hue")
                 attributes.append("current_saturation")
-            if self._color_channel.color_temp_supported:
+            if self._color_cluster_handler.color_temp_supported:
                 attributes.append("color_temperature")
-            if self._color_channel.color_loop_supported:
+            if self._color_cluster_handler.color_loop_supported:
                 attributes.append("color_loop_active")
 
-            results = await self._color_channel.get_attributes(
+            results = await self._color_cluster_handler.get_attributes(
                 attributes, from_cache=False, only_cache=False
             )
 
@@ -915,7 +938,7 @@ class Light(BaseLight, ZhaEntity):
                     and not self._zha_config_always_prefer_xy_color_mode
                 ):
                     self._attr_color_mode = ColorMode.HS
-                    if self._color_channel.enhanced_hue_supported:
+                    if self._color_cluster_handler.enhanced_hue_supported:
                         current_hue = results.get("enhanced_current_hue")
                     else:
                         current_hue = results.get("current_hue")
@@ -923,7 +946,7 @@ class Light(BaseLight, ZhaEntity):
                     if current_hue is not None and current_saturation is not None:
                         self._attr_hs_color = (
                             int(current_hue * 360 / 65535)
-                            if self._color_channel.enhanced_hue_supported
+                            if self._color_cluster_handler.enhanced_hue_supported
                             else int(current_hue * 360 / 254),
                             int(current_saturation / 2.54),
                         )
@@ -1036,36 +1059,41 @@ class Light(BaseLight, ZhaEntity):
 
 
 @STRICT_MATCH(
-    channel_names=CHANNEL_ON_OFF,
-    aux_channels={CHANNEL_COLOR, CHANNEL_LEVEL},
+    cluster_handler_names=CLUSTER_HANDLER_ON_OFF,
+    aux_cluster_handlers={CLUSTER_HANDLER_COLOR, CLUSTER_HANDLER_LEVEL},
     manufacturers={"Philips", "Signify Netherlands B.V."},
 )
 class HueLight(Light):
     """Representation of a HUE light which does not report attributes."""
 
+    _attr_name: str = "Light"
     _REFRESH_INTERVAL = (3, 5)
 
 
 @STRICT_MATCH(
-    channel_names=CHANNEL_ON_OFF,
-    aux_channels={CHANNEL_COLOR, CHANNEL_LEVEL},
+    cluster_handler_names=CLUSTER_HANDLER_ON_OFF,
+    aux_cluster_handlers={CLUSTER_HANDLER_COLOR, CLUSTER_HANDLER_LEVEL},
     manufacturers={"Jasco", "Quotra-Vision", "eWeLight", "eWeLink"},
 )
 class ForceOnLight(Light):
     """Representation of a light which does not respect move_to_level_with_on_off."""
 
+    _attr_name: str = "Light"
     _FORCE_ON = True
 
 
 @STRICT_MATCH(
-    channel_names=CHANNEL_ON_OFF,
-    aux_channels={CHANNEL_COLOR, CHANNEL_LEVEL},
+    cluster_handler_names=CLUSTER_HANDLER_ON_OFF,
+    aux_cluster_handlers={CLUSTER_HANDLER_COLOR, CLUSTER_HANDLER_LEVEL},
     manufacturers=DEFAULT_MIN_TRANSITION_MANUFACTURERS,
 )
 class MinTransitionLight(Light):
     """Representation of a light which does not react to any "move to" calls with 0 as a transition."""
 
-    _DEFAULT_MIN_TRANSITION_TIME = 1
+    _attr_name: str = "Light"
+
+    # Transitions are counted in 1/10th of a second increments, so this is the smallest
+    _DEFAULT_MIN_TRANSITION_TIME = 0.1
 
 
 @GROUP_MATCH()
@@ -1085,27 +1113,31 @@ class LightGroup(BaseLight, ZhaGroupEntity):
         group = self.zha_device.gateway.get_group(self._group_id)
 
         self._GROUP_SUPPORTS_EXECUTE_IF_OFF = True  # pylint: disable=invalid-name
-        # Check all group members to see if they support execute_if_off.
-        # If at least one member has a color cluster and doesn't support it,
-        # it's not used.
+
         for member in group.members:
-            for pool in member.device.channels.pools:
-                for channel in pool.all_channels.values():
+            # Ensure we do not send group commands that violate the minimum transition
+            # time of any members.
+            if member.device.manufacturer in DEFAULT_MIN_TRANSITION_MANUFACTURERS:
+                self._DEFAULT_MIN_TRANSITION_TIME = (  # pylint: disable=invalid-name
+                    MinTransitionLight._DEFAULT_MIN_TRANSITION_TIME
+                )
+
+            # Check all group members to see if they support execute_if_off.
+            # If at least one member has a color cluster and doesn't support it,
+            # it's not used.
+            for endpoint in member.device._endpoints.values():
+                for cluster_handler in endpoint.all_cluster_handlers.values():
                     if (
-                        channel.name == CHANNEL_COLOR
-                        and not channel.execute_if_off_supported
+                        cluster_handler.name == CLUSTER_HANDLER_COLOR
+                        and not cluster_handler.execute_if_off_supported
                     ):
                         self._GROUP_SUPPORTS_EXECUTE_IF_OFF = False
                         break
 
-        self._DEFAULT_MIN_TRANSITION_TIME = any(  # pylint: disable=invalid-name
-            member.device.manufacturer in DEFAULT_MIN_TRANSITION_MANUFACTURERS
-            for member in group.members
-        )
-        self._on_off_channel = group.endpoint[OnOff.cluster_id]
-        self._level_channel = group.endpoint[LevelControl.cluster_id]
-        self._color_channel = group.endpoint[Color.cluster_id]
-        self._identify_channel = group.endpoint[Identify.cluster_id]
+        self._on_off_cluster_handler = group.endpoint[OnOff.cluster_id]
+        self._level_cluster_handler = group.endpoint[LevelControl.cluster_id]
+        self._color_cluster_handler = group.endpoint[Color.cluster_id]
+        self._identify_cluster_handler = group.endpoint[Identify.cluster_id]
         self._debounced_member_refresh: Debouncer | None = None
         self._zha_config_transition = async_get_zha_config_value(
             zha_device.gateway.config_entry,
@@ -1154,6 +1186,7 @@ class LightGroup(BaseLight, ZhaGroupEntity):
                 function=self._force_member_updates,
             )
             self._debounced_member_refresh = force_refresh_debouncer
+            self.async_on_remove(force_refresh_debouncer.async_cancel)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""

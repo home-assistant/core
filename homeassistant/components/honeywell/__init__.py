@@ -67,8 +67,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         asyncio.TimeoutError,
     ) as ex:
         raise ConfigEntryNotReady(
-            "Failed to initialize the Honeywell client: "
-            "Connection error: maybe you have exceeded the API rate limit?"
+            "Failed to initialize the Honeywell client: Connection error"
         ) from ex
 
     loc_id = config_entry.data.get(CONF_LOC_ID)

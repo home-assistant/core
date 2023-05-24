@@ -305,6 +305,12 @@ SSDP = {
         {
             "st": "urn:schemas-upnp-org:device:InternetGatewayDevice:2",
         },
+        {
+            "nt": "urn:schemas-upnp-org:device:InternetGatewayDevice:1",
+        },
+        {
+            "nt": "urn:schemas-upnp-org:device:InternetGatewayDevice:2",
+        },
     ],
     "webostv": [
         {

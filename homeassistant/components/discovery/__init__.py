@@ -1,7 +1,7 @@
 """Starts a service to scan in intervals for new devices."""
 from __future__ import annotations
 
-from datetime import timedelta
+from datetime import datetime, timedelta
 import json
 import logging
 from typing import NamedTuple
@@ -12,7 +12,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.components import zeroconf
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import Event, HassJob, HomeAssistant, callback
 from homeassistant.helpers import discovery_flow
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_discover, async_load_platform
@@ -202,7 +202,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 hass, service_details.component, service_details.platform, info, config
             )
 
-    async def scan_devices(now):
+    async def scan_devices(now: datetime) -> None:
         """Scan for devices."""
         try:
             results = await hass.async_add_executor_job(
@@ -215,13 +215,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             logger.error("Network is unreachable")
 
         async_track_point_in_utc_time(
-            hass, scan_devices, dt_util.utcnow() + SCAN_INTERVAL
+            hass, scan_devices_job, dt_util.utcnow() + SCAN_INTERVAL
         )
 
     @callback
-    def schedule_first(event):
+    def schedule_first(event: Event) -> None:
         """Schedule the first discovery when Home Assistant starts up."""
-        async_track_point_in_utc_time(hass, scan_devices, dt_util.utcnow())
+        async_track_point_in_utc_time(hass, scan_devices_job, dt_util.utcnow())
+
+    scan_devices_job = HassJob(scan_devices, cancel_on_shutdown=True)
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, schedule_first)
 

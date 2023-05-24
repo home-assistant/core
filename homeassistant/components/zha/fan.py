@@ -28,7 +28,12 @@ from homeassistant.util.percentage import (
 )
 
 from .core import discovery
-from .core.const import CHANNEL_FAN, DATA_ZHA, SIGNAL_ADD_ENTITIES, SIGNAL_ATTR_UPDATED
+from .core.const import (
+    CLUSTER_HANDLER_FAN,
+    DATA_ZHA,
+    SIGNAL_ADD_ENTITIES,
+    SIGNAL_ATTR_UPDATED,
+)
 from .core.registries import ZHA_ENTITIES
 from .entity import ZhaEntity, ZhaGroupEntity
 
@@ -124,50 +129,54 @@ class BaseFan(FanEntity):
 
     @callback
     def async_set_state(self, attr_id, attr_name, value):
-        """Handle state update from channel."""
+        """Handle state update from cluster handler."""
 
 
-@STRICT_MATCH(channel_names=CHANNEL_FAN)
+@STRICT_MATCH(cluster_handler_names=CLUSTER_HANDLER_FAN)
 class ZhaFan(BaseFan, ZhaEntity):
     """Representation of a ZHA fan."""
 
-    def __init__(self, unique_id, zha_device, channels, **kwargs):
+    _attr_name: str = "Fan"
+
+    def __init__(self, unique_id, zha_device, cluster_handlers, **kwargs):
         """Init this sensor."""
-        super().__init__(unique_id, zha_device, channels, **kwargs)
-        self._fan_channel = self.cluster_channels.get(CHANNEL_FAN)
+        super().__init__(unique_id, zha_device, cluster_handlers, **kwargs)
+        self._fan_cluster_handler = self.cluster_handlers.get(CLUSTER_HANDLER_FAN)
 
     async def async_added_to_hass(self) -> None:
         """Run when about to be added to hass."""
         await super().async_added_to_hass()
         self.async_accept_signal(
-            self._fan_channel, SIGNAL_ATTR_UPDATED, self.async_set_state
+            self._fan_cluster_handler, SIGNAL_ATTR_UPDATED, self.async_set_state
         )
 
     @property
     def percentage(self) -> int | None:
         """Return the current speed percentage."""
         if (
-            self._fan_channel.fan_mode is None
-            or self._fan_channel.fan_mode > SPEED_RANGE[1]
+            self._fan_cluster_handler.fan_mode is None
+            or self._fan_cluster_handler.fan_mode > SPEED_RANGE[1]
         ):
             return None
-        if self._fan_channel.fan_mode == 0:
+        if self._fan_cluster_handler.fan_mode == 0:
             return 0
-        return ranged_value_to_percentage(SPEED_RANGE, self._fan_channel.fan_mode)
+        return ranged_value_to_percentage(
+            SPEED_RANGE, self._fan_cluster_handler.fan_mode
+        )
 
     @property
     def preset_mode(self) -> str | None:
         """Return the current preset mode."""
-        return PRESET_MODES_TO_NAME.get(self._fan_channel.fan_mode)
+        return PRESET_MODES_TO_NAME.get(self._fan_cluster_handler.fan_mode)
 
     @callback
     def async_set_state(self, attr_id, attr_name, value):
-        """Handle state update from channel."""
+        """Handle state update from cluster handler."""
         self.async_write_ha_state()
 
     async def _async_set_fan_mode(self, fan_mode: int) -> None:
         """Set the fan mode for the fan."""
-        await self._fan_channel.async_set_speed(fan_mode)
+        await self._fan_cluster_handler.async_set_speed(fan_mode)
         self.async_set_state(0, "fan_mode", fan_mode)
 
 
@@ -182,7 +191,7 @@ class FanGroup(BaseFan, ZhaGroupEntity):
         super().__init__(entity_ids, unique_id, group_id, zha_device, **kwargs)
         self._available: bool = False
         group = self.zha_device.gateway.get_group(self._group_id)
-        self._fan_channel = group.endpoint[hvac.Fan.cluster_id]
+        self._fan_cluster_handler = group.endpoint[hvac.Fan.cluster_id]
         self._percentage = None
         self._preset_mode = None
 
@@ -199,7 +208,7 @@ class FanGroup(BaseFan, ZhaGroupEntity):
     async def _async_set_fan_mode(self, fan_mode: int) -> None:
         """Set the fan mode for the group."""
         try:
-            await self._fan_channel.write_attributes({"fan_mode": fan_mode})
+            await self._fan_cluster_handler.write_attributes({"fan_mode": fan_mode})
         except ZigbeeException as ex:
             self.error("Could not set fan mode: %s", ex)
         self.async_set_state(0, "fan_mode", fan_mode)
@@ -250,22 +259,24 @@ IKEA_PRESET_MODES = list(IKEA_NAME_TO_PRESET_MODE)
 
 
 @MULTI_MATCH(
-    channel_names="ikea_airpurifier",
+    cluster_handler_names="ikea_airpurifier",
     models={"STARKVIND Air purifier", "STARKVIND Air purifier table"},
 )
 class IkeaFan(BaseFan, ZhaEntity):
     """Representation of a ZHA fan."""
 
-    def __init__(self, unique_id, zha_device, channels, **kwargs):
+    _attr_name: str = "IKEA fan"
+
+    def __init__(self, unique_id, zha_device, cluster_handlers, **kwargs):
         """Init this sensor."""
-        super().__init__(unique_id, zha_device, channels, **kwargs)
-        self._fan_channel = self.cluster_channels.get("ikea_airpurifier")
+        super().__init__(unique_id, zha_device, cluster_handlers, **kwargs)
+        self._fan_cluster_handler = self.cluster_handlers.get("ikea_airpurifier")
 
     async def async_added_to_hass(self) -> None:
         """Run when about to be added to hass."""
         await super().async_added_to_hass()
         self.async_accept_signal(
-            self._fan_channel, SIGNAL_ATTR_UPDATED, self.async_set_state
+            self._fan_cluster_handler, SIGNAL_ATTR_UPDATED, self.async_set_state
         )
 
     @property
@@ -296,18 +307,20 @@ class IkeaFan(BaseFan, ZhaEntity):
     def percentage(self) -> int | None:
         """Return the current speed percentage."""
         if (
-            self._fan_channel.fan_mode is None
-            or self._fan_channel.fan_mode > IKEA_SPEED_RANGE[1]
+            self._fan_cluster_handler.fan_mode is None
+            or self._fan_cluster_handler.fan_mode > IKEA_SPEED_RANGE[1]
         ):
             return None
-        if self._fan_channel.fan_mode == 0:
+        if self._fan_cluster_handler.fan_mode == 0:
             return 0
-        return ranged_value_to_percentage(IKEA_SPEED_RANGE, self._fan_channel.fan_mode)
+        return ranged_value_to_percentage(
+            IKEA_SPEED_RANGE, self._fan_cluster_handler.fan_mode
+        )
 
     @property
     def preset_mode(self) -> str | None:
         """Return the current preset mode."""
-        return IKEA_PRESET_MODES_TO_NAME.get(self._fan_channel.fan_mode)
+        return IKEA_PRESET_MODES_TO_NAME.get(self._fan_cluster_handler.fan_mode)
 
     async def async_turn_on(
         self,
@@ -328,10 +341,10 @@ class IkeaFan(BaseFan, ZhaEntity):
 
     @callback
     def async_set_state(self, attr_id, attr_name, value):
-        """Handle state update from channel."""
+        """Handle state update from cluster handler."""
         self.async_write_ha_state()
 
     async def _async_set_fan_mode(self, fan_mode: int) -> None:
         """Set the fan mode for the fan."""
-        await self._fan_channel.async_set_speed(fan_mode)
+        await self._fan_cluster_handler.async_set_speed(fan_mode)
         self.async_set_state(0, "fan_mode", fan_mode)

@@ -571,6 +571,34 @@ async def test_service_calls(
         "password": "123456",
     }
 
+    await hass.services.async_call(
+        "hassio",
+        "backup_full",
+        {
+            "location": "backup_share",
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert aioclient_mock.call_count == 17
+    assert aioclient_mock.mock_calls[-1][2] == {
+        "location": "backup_share",
+    }
+
+    await hass.services.async_call(
+        "hassio",
+        "backup_full",
+        {
+            "location": "/backup",
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert aioclient_mock.call_count == 18
+    assert aioclient_mock.mock_calls[-1][2] == {
+        "location": None,
+    }
+
 
 async def test_service_calls_core(
     hassio_env, hass: HomeAssistant, aioclient_mock: AiohttpClientMocker

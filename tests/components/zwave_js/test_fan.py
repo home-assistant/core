@@ -13,6 +13,7 @@ from homeassistant.components.fan import (
     ATTR_PRESET_MODE,
     ATTR_PRESET_MODES,
     DOMAIN as FAN_DOMAIN,
+    SERVICE_SET_PERCENTAGE,
     SERVICE_SET_PRESET_MODE,
     FanEntityFeature,
     NotValidPresetModeError,
@@ -42,7 +43,35 @@ async def test_generic_fan(
     state = hass.states.get(entity_id)
 
     assert state
-    assert state.state == "off"
+    assert state.state == STATE_OFF
+
+    # Test turn on no speed
+    await hass.services.async_call(
+        "fan",
+        "turn_on",
+        {"entity_id": entity_id},
+        blocking=True,
+    )
+
+    assert len(client.async_send_command.call_args_list) == 1
+    args = client.async_send_command.call_args[0][0]
+    assert args["command"] == "node.set_value"
+    assert args["nodeId"] == 17
+    assert args["valueId"] == {
+        "commandClass": 38,
+        "endpoint": 0,
+        "property": "targetValue",
+    }
+    assert args["value"] == 255
+
+    client.async_send_command.reset_mock()
+
+    # Due to optimistic updates, the state should be on even though the Z-Wave state
+    # hasn't been updated yet
+    state = hass.states.get(entity_id)
+
+    assert state
+    assert state.state == STATE_ON
 
     # Test turn on setting speed
     await hass.services.async_call(
@@ -73,27 +102,6 @@ async def test_generic_fan(
             {"entity_id": entity_id, "percentage": "bad"},
             blocking=True,
         )
-
-    client.async_send_command.reset_mock()
-
-    # Test turn on no speed
-    await hass.services.async_call(
-        "fan",
-        "turn_on",
-        {"entity_id": entity_id},
-        blocking=True,
-    )
-
-    assert len(client.async_send_command.call_args_list) == 1
-    args = client.async_send_command.call_args[0][0]
-    assert args["command"] == "node.set_value"
-    assert args["nodeId"] == 17
-    assert args["valueId"] == {
-        "commandClass": 38,
-        "endpoint": 0,
-        "property": "targetValue",
-    }
-    assert args["value"] == 255
 
     client.async_send_command.reset_mock()
 
@@ -139,7 +147,7 @@ async def test_generic_fan(
     node.receive_event(event)
 
     state = hass.states.get(entity_id)
-    assert state.state == "on"
+    assert state.state == STATE_ON
     assert state.attributes[ATTR_PERCENTAGE] == 100
 
     client.async_send_command.reset_mock()
@@ -164,8 +172,52 @@ async def test_generic_fan(
     node.receive_event(event)
 
     state = hass.states.get(entity_id)
-    assert state.state == "off"
+    assert state.state == STATE_OFF
     assert state.attributes[ATTR_PERCENTAGE] == 0
+
+    client.async_send_command.reset_mock()
+
+    # Test setting percentage to 0
+    await hass.services.async_call(
+        "fan",
+        SERVICE_SET_PERCENTAGE,
+        {"entity_id": entity_id, "percentage": 0},
+        blocking=True,
+    )
+
+    assert len(client.async_send_command.call_args_list) == 1
+    args = client.async_send_command.call_args[0][0]
+    assert args["command"] == "node.set_value"
+    assert args["nodeId"] == 17
+    assert args["valueId"] == {
+        "commandClass": 38,
+        "endpoint": 0,
+        "property": "targetValue",
+    }
+    assert args["value"] == 0
+
+    # Test value is None
+    event = Event(
+        type="value updated",
+        data={
+            "source": "node",
+            "event": "value updated",
+            "nodeId": 17,
+            "args": {
+                "commandClassName": "Multilevel Switch",
+                "commandClass": 38,
+                "endpoint": 0,
+                "property": "currentValue",
+                "newValue": None,
+                "prevValue": 0,
+                "propertyName": "currentValue",
+            },
+        },
+    )
+    node.receive_event(event)
+
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_UNKNOWN
 
 
 async def test_configurable_speeds_fan(
@@ -360,6 +412,29 @@ async def test_ge_12730_fan(hass: HomeAssistant, client, ge_12730, integration) 
     state = hass.states.get(entity_id)
     assert state.attributes[ATTR_PERCENTAGE_STEP] == pytest.approx(33.3333, rel=1e-3)
     assert state.attributes[ATTR_PRESET_MODES] == []
+
+    # Test value is None
+    event = Event(
+        type="value updated",
+        data={
+            "source": "node",
+            "event": "value updated",
+            "nodeId": node_id,
+            "args": {
+                "commandClassName": "Multilevel Switch",
+                "commandClass": 38,
+                "endpoint": 0,
+                "property": "currentValue",
+                "newValue": None,
+                "prevValue": 0,
+                "propertyName": "currentValue",
+            },
+        },
+    )
+    node.receive_event(event)
+
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_UNKNOWN
 
 
 async def test_inovelli_lzw36(

@@ -62,7 +62,20 @@ def mock_get_setting_values(mock_plenticore_client: ApiClient) -> list:
                     "id": "Battery:MinHomeComsumption",
                 }
             ),
-        ]
+        ],
+        "scb:network": [
+            SettingsData(
+                {
+                    "min": "1",
+                    "default": None,
+                    "access": "readwrite",
+                    "unit": None,
+                    "id": "Hostname",
+                    "type": "string",
+                    "max": "63",
+                }
+            )
+        ],
     }
 
     # this values are always retrieved by the integration on startup
@@ -112,7 +125,22 @@ async def test_setup_no_entries(
 ) -> None:
     """Test that no entries are setup if Plenticore does not provide data."""
 
-    mock_plenticore_client.get_settings.return_value = []
+    # remove all settings except hostname which is used during setup
+    mock_plenticore_client.get_settings.return_value = {
+        "scb:network": [
+            SettingsData(
+                {
+                    "min": "1",
+                    "default": None,
+                    "access": "readwrite",
+                    "unit": None,
+                    "id": "Hostname",
+                    "type": "string",
+                    "max": "63",
+                }
+            )
+        ],
+    }
 
     mock_config_entry.add_to_hass(hass)
 

@@ -231,7 +231,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-@dataclass
+@dataclass(slots=True)
 class ScriptEntityConfig:
     """Container for prepared script entity configuration."""
 

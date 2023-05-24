@@ -98,6 +98,15 @@ SWITCH_ENTITIES = (
         value=lambda api, ch: api.ptz_guard_enabled(ch),
         method=lambda api, ch, value: api.set_ptz_guard(ch, enable=value),
     ),
+    ReolinkSwitchEntityDescription(
+        key="doorbell_button_sound",
+        name="Doorbell button sound",
+        icon="mdi:volume-high",
+        entity_category=EntityCategory.CONFIG,
+        supported=lambda api, ch: api.supported(ch, "doorbell_button_sound"),
+        value=lambda api, ch: api.doorbell_button_sound(ch),
+        method=lambda api, ch, value: api.set_volume(ch, doorbell_button_sound=value),
+    ),
 )
 
 NVR_SWITCH_ENTITIES = (

@@ -104,7 +104,7 @@ DISCOVERY_SCHEMAS = [
             device_class=BinarySensorDeviceClass.BATTERY,
             name="Battery Status",
             measurement_to_ha=lambda x: x
-            != clusters.PowerSource.Enums.BatChargeLevel.kOk,
+            != clusters.PowerSource.Enums.BatChargeLevelEnum.kOk,
         ),
         entity_class=MatterBinarySensor,
         required_attributes=(clusters.PowerSource.Attributes.BatChargeLevel,),

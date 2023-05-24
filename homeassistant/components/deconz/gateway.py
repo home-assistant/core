@@ -235,9 +235,15 @@ class DeconzGateway:
     ) -> None:
         """Handle signals of config entry being updated.
 
-        This is a static method because a class method (bound method), cannot be used with weak references.
-        Causes for this is either discovery updating host address or config entry options changing.
+        This is a static method because a class method (bound method),
+        cannot be used with weak references.
+        Causes for this is either discovery updating host address or
+        config entry options changing.
         """
+        if entry.entry_id not in hass.data[DECONZ_DOMAIN]:
+            # A race condition can occur if multiple config entries are
+            # unloaded in parallel
+            return
         gateway = get_gateway_from_config_entry(hass, entry)
 
         if gateway.api.host != gateway.host:

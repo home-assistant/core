@@ -53,22 +53,5 @@
       "last_heartbeat": "Last Heartbeat Time",
       "websocket_status": "Event Socket Status"
     }
-  },
-  "issues": {
-    "deprecated_service": {
-      "title": "The {deprecated_service} service will be removed",
-      "fix_flow": {
-        "step": {
-          "confirm": {
-            "title": "The {deprecated_service} service will be removed",
-            "description": "Update any automations or scripts that use this service to instead use the `{alternate_service}` service with a target entity ID of `{alternate_target}`."
-          },
-          "deprecated_yaml": {
-            "title": "The ISY/IoX YAML configuration is being removed",
-            "description": "Configuring Universal Devices ISY/IoX using YAML is being removed.\n\nYour existing YAML configuration has been imported into the UI automatically.\n\nRemove the `isy994` YAML configuration from your configuration.yaml file and restart Home Assistant to fix this issue."
-          }
-        }
-      }
-    }
   }
 }

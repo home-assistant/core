@@ -4,10 +4,10 @@
       "user": {
         "data": {
           "url": "[%key:common::config_flow::data::url%]",
-          "admin_username": "Admin [%key:common::config_flow::data::username%]",
-          "admin_password": "Admin [%key:common::config_flow::data::password%]",
-          "surveillance_username": "Surveillance [%key:common::config_flow::data::username%]",
-          "surveillance_password": "Surveillance [%key:common::config_flow::data::password%]"
+          "admin_username": "Admin username",
+          "admin_password": "Admin password",
+          "surveillance_username": "Surveillance username",
+          "surveillance_password": "Surveillance password"
         }
       },
       "hassio_confirm": {

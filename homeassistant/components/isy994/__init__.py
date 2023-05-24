@@ -25,21 +25,15 @@ from homeassistant.helpers import aiohttp_client, config_validation as cv
 import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
-from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     _LOGGER,
     CONF_IGNORE_STRING,
     CONF_NETWORK,
-    CONF_RESTORE_LIGHT_STATE,
     CONF_SENSOR_STRING,
     CONF_TLS_VER,
-    CONF_VAR_SENSOR_STRING,
     DEFAULT_IGNORE_STRING,
-    DEFAULT_RESTORE_LIGHT_STATE,
     DEFAULT_SENSOR_STRING,
-    DEFAULT_VAR_SENSOR_STRING,
     DOMAIN,
     ISY_CONF_FIRMWARE,
     ISY_CONF_MODEL,
@@ -49,96 +43,22 @@ from .const import (
     SCHEME_HTTP,
     SCHEME_HTTPS,
 )
-from .helpers import _categorize_nodes, _categorize_programs, _categorize_variables
+from .helpers import _categorize_nodes, _categorize_programs
 from .models import IsyData
 from .services import async_setup_services, async_unload_services
 from .util import _async_cleanup_registry_entries
 
 CONFIG_SCHEMA = vol.Schema(
-    vol.All(
-        cv.deprecated(DOMAIN),
-        {
-            DOMAIN: vol.Schema(
-                {
-                    vol.Required(CONF_HOST): cv.url,
-                    vol.Required(CONF_USERNAME): cv.string,
-                    vol.Required(CONF_PASSWORD): cv.string,
-                    vol.Optional(CONF_TLS_VER): vol.Coerce(float),
-                    vol.Optional(
-                        CONF_IGNORE_STRING, default=DEFAULT_IGNORE_STRING
-                    ): cv.string,
-                    vol.Optional(
-                        CONF_SENSOR_STRING, default=DEFAULT_SENSOR_STRING
-                    ): cv.string,
-                    vol.Optional(
-                        CONF_VAR_SENSOR_STRING, default=DEFAULT_VAR_SENSOR_STRING
-                    ): cv.string,
-                    vol.Required(
-                        CONF_RESTORE_LIGHT_STATE, default=DEFAULT_RESTORE_LIGHT_STATE
-                    ): bool,
-                },
-            )
-        },
-    ),
+    cv.deprecated(DOMAIN),
     extra=vol.ALLOW_EXTRA,
 )
-
-
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the isy994 integration from YAML."""
-    isy_config: ConfigType | None = config.get(DOMAIN)
-    hass.data.setdefault(DOMAIN, {})
-
-    if not isy_config:
-        return True
-
-    async_create_issue(
-        hass,
-        DOMAIN,
-        "deprecated_yaml",
-        breaks_in_ha_version="2023.5.0",
-        is_fixable=False,
-        severity=IssueSeverity.WARNING,
-        translation_key="deprecated_yaml",
-    )
-
-    # Only import if we haven't before.
-    config_entry = _async_find_matching_config_entry(hass)
-    if not config_entry:
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": config_entries.SOURCE_IMPORT},
-                data=dict(isy_config),
-            )
-        )
-        return True
-
-    # Update the entry based on the YAML configuration, in case it changed.
-    hass.config_entries.async_update_entry(config_entry, data=dict(isy_config))
-    return True
-
-
-@callback
-def _async_find_matching_config_entry(
-    hass: HomeAssistant,
-) -> config_entries.ConfigEntry | None:
-    for entry in hass.config_entries.async_entries(DOMAIN):
-        if entry.source == config_entries.SOURCE_IMPORT:
-            return entry
-    return None
 
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: config_entries.ConfigEntry
 ) -> bool:
     """Set up the ISY 994 integration."""
-    # As there currently is no way to import options from yaml
-    # when setting up a config entry, we fallback to adding
-    # the options to the config entry and pull them out here if
-    # they are missing from the options
-    _async_import_options_from_data_if_missing(hass, entry)
-
+    hass.data.setdefault(DOMAIN, {})
     isy_data = hass.data[DOMAIN][entry.entry_id] = IsyData()
 
     isy_config = entry.data
@@ -153,9 +73,6 @@ async def async_setup_entry(
     tls_version = isy_config.get(CONF_TLS_VER)
     ignore_identifier = isy_options.get(CONF_IGNORE_STRING, DEFAULT_IGNORE_STRING)
     sensor_identifier = isy_options.get(CONF_SENSOR_STRING, DEFAULT_SENSOR_STRING)
-    variable_identifier = isy_options.get(
-        CONF_VAR_SENSOR_STRING, DEFAULT_VAR_SENSOR_STRING
-    )
 
     if host.scheme == SCHEME_HTTP:
         https = False
@@ -210,9 +127,7 @@ async def async_setup_entry(
 
     _categorize_nodes(isy_data, isy.nodes, ignore_identifier, sensor_identifier)
     _categorize_programs(isy_data, isy.programs)
-    # Categorize variables call to be removed with variable sensors in 2023.5.0
-    _categorize_variables(isy_data, isy.variables, variable_identifier)
-    # Gather ISY Variables to be added. Identifier used to enable by default.
+    # Gather ISY Variables to be added.
     if isy.variables.children:
         isy_data.devices[CONF_VARIABLES] = _create_service_device_info(
             isy, name=CONF_VARIABLES.title(), unique_id=CONF_VARIABLES
@@ -266,25 +181,6 @@ async def _async_update_listener(
 ) -> None:
     """Handle options update."""
     await hass.config_entries.async_reload(entry.entry_id)
-
-
-@callback
-def _async_import_options_from_data_if_missing(
-    hass: HomeAssistant, entry: config_entries.ConfigEntry
-) -> None:
-    options = dict(entry.options)
-    modified = False
-    for importable_option in (
-        CONF_IGNORE_STRING,
-        CONF_SENSOR_STRING,
-        CONF_RESTORE_LIGHT_STATE,
-    ):
-        if importable_option not in entry.options and importable_option in entry.data:
-            options[importable_option] = entry.data[importable_option]
-            modified = True
-
-    if modified:
-        hass.config_entries.async_update_entry(entry, options=options)
 
 
 @callback

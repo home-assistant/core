@@ -32,6 +32,7 @@ from .const import (  # noqa: F401
     INTEGRATION_PLATFORM_EXCLUDE_ATTRIBUTES,
     INTEGRATION_PLATFORMS_LOAD_IN_RECORDER_THREAD,
     SQLITE_URL_PREFIX,
+    SupportedDialect,
 )
 from .core import Recorder
 from .services import async_register_services

@@ -2,18 +2,19 @@
 
 from unittest.mock import patch
 
+import pytest
+from voluptuous_serialize import convert
+
 from homeassistant import config_entries, data_entry_flow
-from homeassistant.components import usb
+from homeassistant.components import dhcp, usb
 from homeassistant.components.insteon.config_flow import (
-    HUB1,
-    HUB2,
-    MODEM_TYPE,
-    PLM,
     STEP_ADD_OVERRIDE,
     STEP_ADD_X10,
     STEP_CHANGE_HUB_CONFIG,
     STEP_CHANGE_PLM_CONFIG,
+    STEP_HUB_V1,
     STEP_HUB_V2,
+    STEP_PLM,
     STEP_REMOVE_OVERRIDE,
     STEP_REMOVE_X10,
 )
@@ -40,6 +41,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 
 from .const import (
+    MOCK_DEVICE,
     MOCK_HOSTNAME,
     MOCK_IMPORT_CONFIG_PLM,
     MOCK_IMPORT_MINIMUM_HUB_V1,
@@ -52,14 +54,35 @@ from .const import (
     PATCH_ASYNC_SETUP,
     PATCH_ASYNC_SETUP_ENTRY,
     PATCH_CONNECTION,
+    PATCH_CONNECTION_CLOSE,
+    PATCH_DEVICES,
+    PATCH_USB_LIST,
 )
+from .mock_devices import MockDevices
 
 from tests.common import MockConfigEntry
+
+USB_PORTS = {"/dev/ttyUSB0": "/dev/ttyUSB0", MOCK_DEVICE: MOCK_DEVICE}
 
 
 async def mock_successful_connection(*args, **kwargs):
     """Return a successful connection."""
     return True
+
+
+async def mock_usb_list(hass: HomeAssistant):
+    """Return a mock list of USB devices."""
+    return USB_PORTS
+
+
+@pytest.fixture(autouse=True)
+def patch_usb_list():
+    """Only setup the lock and required base platforms to speed up tests."""
+    with patch(
+        PATCH_USB_LIST,
+        mock_usb_list,
+    ):
+        yield
 
 
 async def mock_failed_connection(*args, **kwargs):
@@ -72,12 +95,11 @@ async def _init_form(hass, modem_type):
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
-    assert result["errors"] == {}
+    assert result["type"] == data_entry_flow.FlowResultType.MENU
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {MODEM_TYPE: modem_type},
+        {"next_step_id": modem_type},
     )
     return result2
 
@@ -99,7 +121,7 @@ async def _device_form(hass, flow_id, connection, user_input):
 async def test_form_select_modem(hass: HomeAssistant) -> None:
     """Test we get a modem form."""
 
-    result = await _init_form(hass, HUB2)
+    result = await _init_form(hass, STEP_HUB_V2)
     assert result["step_id"] == STEP_HUB_V2
     assert result["type"] == "form"
 
@@ -127,7 +149,7 @@ async def test_fail_on_existing(hass: HomeAssistant) -> None:
 async def test_form_select_plm(hass: HomeAssistant) -> None:
     """Test we set up the PLM correctly."""
 
-    result = await _init_form(hass, PLM)
+    result = await _init_form(hass, STEP_PLM)
 
     result2, mock_setup, mock_setup_entry = await _device_form(
         hass, result["flow_id"], mock_successful_connection, MOCK_USER_INPUT_PLM
@@ -142,7 +164,7 @@ async def test_form_select_plm(hass: HomeAssistant) -> None:
 async def test_form_select_hub_v1(hass: HomeAssistant) -> None:
     """Test we set up the Hub v1 correctly."""
 
-    result = await _init_form(hass, HUB1)
+    result = await _init_form(hass, STEP_HUB_V1)
 
     result2, mock_setup, mock_setup_entry = await _device_form(
         hass, result["flow_id"], mock_successful_connection, MOCK_USER_INPUT_HUB_V1
@@ -160,7 +182,7 @@ async def test_form_select_hub_v1(hass: HomeAssistant) -> None:
 async def test_form_select_hub_v2(hass: HomeAssistant) -> None:
     """Test we set up the Hub v2 correctly."""
 
-    result = await _init_form(hass, HUB2)
+    result = await _init_form(hass, STEP_HUB_V2)
 
     result2, mock_setup, mock_setup_entry = await _device_form(
         hass, result["flow_id"], mock_successful_connection, MOCK_USER_INPUT_HUB_V2
@@ -175,10 +197,32 @@ async def test_form_select_hub_v2(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+async def test_form_discovery_dhcp(hass: HomeAssistant) -> None:
+    """Test the discovery of the Hub via DHCP."""
+    discovery_info = dhcp.DhcpServiceInfo("1.2.3.4", "", "aa:bb:cc:dd:ee:ff")
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_DHCP}, data=discovery_info
+    )
+    assert result["type"] == data_entry_flow.FlowResultType.MENU
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"next_step_id": STEP_HUB_V2},
+    )
+    assert result2["type"] == data_entry_flow.FlowResultType.FORM
+    schema = convert(result2["data_schema"])
+    found_host = False
+    for field in schema:
+        if field["name"] == CONF_HOST:
+            assert field["default"] == "1.2.3.4"
+            found_host = True
+    assert found_host
+
+
 async def test_failed_connection_plm(hass: HomeAssistant) -> None:
     """Test a failed connection with the PLM."""
 
-    result = await _init_form(hass, PLM)
+    result = await _init_form(hass, STEP_PLM)
 
     result2, _, _ = await _device_form(
         hass, result["flow_id"], mock_failed_connection, MOCK_USER_INPUT_PLM
@@ -190,7 +234,7 @@ async def test_failed_connection_plm(hass: HomeAssistant) -> None:
 async def test_failed_connection_hub(hass: HomeAssistant) -> None:
     """Test a failed connection with a Hub."""
 
-    result = await _init_form(hass, HUB2)
+    result = await _init_form(hass, STEP_HUB_V2)
 
     result2, _, _ = await _device_form(
         hass, result["flow_id"], mock_failed_connection, MOCK_USER_INPUT_HUB_V2
@@ -228,12 +272,12 @@ async def _options_init_form(hass, entry_id, step):
     with patch(PATCH_ASYNC_SETUP_ENTRY, return_value=True):
         result = await hass.config_entries.options.async_init(entry_id)
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] == data_entry_flow.FlowResultType.MENU
     assert result["step_id"] == "init"
 
     result2 = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        {step: True},
+        {"next_step_id": step},
     )
     return result2
 
@@ -307,10 +351,18 @@ async def test_import_failed_connection(hass: HomeAssistant) -> None:
     assert result["reason"] == "cannot_connect"
 
 
-async def _options_form(hass, flow_id, user_input):
+async def _options_form(
+    hass, flow_id, user_input, connection=mock_successful_connection
+):
     """Test an options form."""
-
-    with patch(PATCH_ASYNC_SETUP_ENTRY, return_value=True) as mock_setup_entry:
+    mock_devices = MockDevices(connected=True)
+    await mock_devices.async_load()
+    mock_devices.modem = mock_devices["AA.AA.AA"]
+    with patch(PATCH_CONNECTION, new=connection), patch(
+        PATCH_ASYNC_SETUP_ENTRY, return_value=True
+    ) as mock_setup_entry, patch(PATCH_DEVICES, mock_devices), patch(
+        PATCH_CONNECTION_CLOSE
+    ):
         result = await hass.config_entries.options.async_configure(flow_id, user_input)
         return result, mock_setup_entry
 
@@ -336,10 +388,37 @@ async def test_options_change_hub_config(hass: HomeAssistant) -> None:
         CONF_PASSWORD: "new password",
     }
     result, _ = await _options_form(hass, result["flow_id"], user_input)
-
     assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert config_entry.options == {}
     assert config_entry.data == {**user_input, CONF_HUB_VERSION: 2}
+
+
+async def test_options_change_hub_bad_config(hass: HomeAssistant) -> None:
+    """Test changing Hub v2 with bad config."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        entry_id="abcde12345",
+        data={**MOCK_USER_INPUT_HUB_V2, CONF_HUB_VERSION: 2},
+        options={},
+    )
+
+    config_entry.add_to_hass(hass)
+    result = await _options_init_form(
+        hass, config_entry.entry_id, STEP_CHANGE_HUB_CONFIG
+    )
+
+    user_input = {
+        CONF_HOST: "2.3.4.5",
+        CONF_PORT: 9999,
+        CONF_USERNAME: "new username",
+        CONF_PASSWORD: "new password",
+    }
+    result, _ = await _options_form(
+        hass, result["flow_id"], user_input, mock_failed_connection
+    )
+
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["errors"]["base"] == "cannot_connect"
 
 
 async def test_options_change_plm_config(hass: HomeAssistant) -> None:
@@ -356,12 +435,37 @@ async def test_options_change_plm_config(hass: HomeAssistant) -> None:
         hass, config_entry.entry_id, STEP_CHANGE_PLM_CONFIG
     )
 
-    user_input = {CONF_DEVICE: "/dev/some_other_device"}
+    user_input = {CONF_DEVICE: "/dev/ttyUSB0"}
     result, _ = await _options_form(hass, result["flow_id"], user_input)
 
     assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert config_entry.options == {}
     assert config_entry.data == user_input
+
+
+async def test_options_change_plm_bad_config(hass: HomeAssistant) -> None:
+    """Test changing PLM config."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        entry_id="abcde12345",
+        data=MOCK_USER_INPUT_PLM,
+        options={},
+    )
+
+    config_entry.add_to_hass(hass)
+    result = await _options_init_form(
+        hass, config_entry.entry_id, STEP_CHANGE_PLM_CONFIG
+    )
+
+    user_input = {CONF_DEVICE: "/dev/ttyUSB0"}
+    result, _ = await _options_form(
+        hass, result["flow_id"], user_input, mock_failed_connection
+    )
+
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
+
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["errors"]["base"] == "cannot_connect"
 
 
 async def test_options_add_device_override(hass: HomeAssistant) -> None:
@@ -581,28 +685,6 @@ async def test_options_remove_x10_device_with_override(hass: HomeAssistant) -> N
     assert len(config_entry.options[CONF_OVERRIDE]) == 1
 
 
-async def test_options_dup_selection(hass: HomeAssistant) -> None:
-    """Test if a duplicate selection was made in options."""
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        entry_id="abcde12345",
-        data={**MOCK_USER_INPUT_HUB_V2, CONF_HUB_VERSION: 2},
-        options={},
-    )
-    config_entry.add_to_hass(hass)
-    result = await hass.config_entries.options.async_init(config_entry.entry_id)
-
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
-    assert result["step_id"] == "init"
-
-    result2 = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        {STEP_ADD_OVERRIDE: True, STEP_ADD_X10: True},
-    )
-    assert result2["type"] == data_entry_flow.FlowResultType.FORM
-    assert result2["errors"] == {"base": "select_single"}
-
-
 async def test_options_override_bad_data(hass: HomeAssistant) -> None:
     """Test for bad data in a device override."""
 
@@ -644,9 +726,7 @@ async def test_discovery_via_usb(hass: HomeAssistant) -> None:
     assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "confirm_usb"
 
-    with patch("homeassistant.components.insteon.config_flow.async_connect"), patch(
-        "homeassistant.components.insteon.async_setup_entry", return_value=True
-    ):
+    with patch(PATCH_CONNECTION), patch(PATCH_ASYNC_SETUP, return_value=True):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={}
         )

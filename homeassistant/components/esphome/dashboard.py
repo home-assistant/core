@@ -10,7 +10,8 @@ from awesomeversion import AwesomeVersion
 from esphome_dashboard_api import ConfiguredDevice, ESPHomeDashboardAPI
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -31,13 +32,13 @@ async def async_set_dashboard_info(
     """Set the dashboard info."""
     url = f"http://{host}:{port}"
 
-    # Do nothing if we already have this data.
-    if (
-        (cur_dashboard := hass.data.get(KEY_DASHBOARD))
-        and cur_dashboard.addon_slug == addon_slug
-        and cur_dashboard.url == url
-    ):
-        return
+    if cur_dashboard := async_get_dashboard(hass):
+        if cur_dashboard.addon_slug == addon_slug and cur_dashboard.url == url:
+            # Do nothing if we already have this data.
+            return
+        # Clear and make way for new dashboard
+        await cur_dashboard.async_shutdown()
+        del hass.data[KEY_DASHBOARD]
 
     dashboard = ESPHomeDashboard(hass, addon_slug, url, async_get_clientsession(hass))
     try:
@@ -47,6 +48,11 @@ async def async_set_dashboard_info(
         return
 
     hass.data[KEY_DASHBOARD] = dashboard
+
+    async def on_hass_stop(_: Event) -> None:
+        await dashboard.async_shutdown()
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, on_hass_stop)
 
     reloads = [
         hass.config_entries.async_reload(entry.entry_id)

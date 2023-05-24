@@ -8,6 +8,13 @@ from homeassistant.components.cloud import const, prefs
 
 from . import mock_cloud, mock_cloud_prefs
 
+# Prevent TTS cache from being created
+from tests.components.tts.conftest import (  # noqa: F401, pylint: disable=unused-import
+    init_cache_dir_side_effect,
+    mock_get_cache_files,
+    mock_init_cache_dir,
+)
+
 
 @pytest.fixture(autouse=True)
 def mock_user_data():

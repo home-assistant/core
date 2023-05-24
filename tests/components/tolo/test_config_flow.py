@@ -34,7 +34,7 @@ async def test_user_with_timed_out_host(hass: HomeAssistant, toloclient: Mock) -
     )
 
     assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == SOURCE_USER
+    assert result["step_id"] == "user"
     assert result["errors"] == {"base": "cannot_connect"}
 
 
@@ -45,7 +45,7 @@ async def test_user_walkthrough(hass: HomeAssistant, toloclient: Mock) -> None:
     )
 
     assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == SOURCE_USER
+    assert result["step_id"] == "user"
 
     toloclient().get_status_info.side_effect = lambda *args, **kwargs: None
 
@@ -55,7 +55,7 @@ async def test_user_walkthrough(hass: HomeAssistant, toloclient: Mock) -> None:
     )
 
     assert result2["type"] == FlowResultType.FORM
-    assert result2["step_id"] == SOURCE_USER
+    assert result2["step_id"] == "user"
     assert result2["errors"] == {"base": "cannot_connect"}
 
     toloclient().get_status_info.side_effect = lambda *args, **kwargs: object()

@@ -95,6 +95,7 @@ HA_OPMODES_HVAC = {
     HVACMode.COOL: 2,
     HVACMode.AUTO: 3,
     HVACMode.FAN_ONLY: 6,
+    HVACMode.DRY: 8,
 }
 
 TARGET_TEMP_ACTIONS = (

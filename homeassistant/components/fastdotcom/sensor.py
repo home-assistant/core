@@ -24,6 +24,7 @@ async def async_setup_platform(
     async_add_entities([SpeedtestSensor(hass.data[FASTDOTCOM_DOMAIN])])
 
 
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
 class SpeedtestSensor(RestoreEntity, SensorEntity):
     """Implementation of a FAst.com sensor."""
 

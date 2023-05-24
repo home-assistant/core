@@ -35,7 +35,7 @@
         "data_description": {
           "round": "[%key:component::derivative::config::step::user::data_description::round%]",
           "time_window": "[%key:component::derivative::config::step::user::data_description::time_window%]",
-          "unit_prefix": "[%key:component::derivative::config::step::user::data_description::unit_prefix%]."
+          "unit_prefix": "[%key:component::derivative::config::step::user::data_description::unit_prefix%]"
         }
       }
     }

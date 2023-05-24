@@ -179,7 +179,7 @@ async def test_scenes_unauthorized_loads_platforms(
     smartthings_mock.subscriptions.return_value = subscriptions
 
     with patch.object(hass.config_entries, "async_forward_entry_setup") as forward_mock:
-        assert await smartthings.async_setup_entry(hass, config_entry)
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
         # Assert platforms loaded
         await hass.async_block_till_done()
         assert forward_mock.call_count == len(PLATFORMS)
@@ -211,7 +211,7 @@ async def test_config_entry_loads_platforms(
     smartthings_mock.subscriptions.return_value = subscriptions
 
     with patch.object(hass.config_entries, "async_forward_entry_setup") as forward_mock:
-        assert await smartthings.async_setup_entry(hass, config_entry)
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
         # Assert platforms loaded
         await hass.async_block_till_done()
         assert forward_mock.call_count == len(PLATFORMS)
@@ -243,7 +243,7 @@ async def test_config_entry_loads_unconnected_cloud(
     ]
     smartthings_mock.subscriptions.return_value = subscriptions
     with patch.object(hass.config_entries, "async_forward_entry_setup") as forward_mock:
-        assert await smartthings.async_setup_entry(hass, config_entry)
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
         assert forward_mock.call_count == len(PLATFORMS)
 
@@ -480,6 +480,8 @@ async def test_event_handler_dispatches_updated_devices(
     assert devices[3].status.attributes["lock"].value == "locked"
     assert devices[3].status.attributes["lock"].data == {"codeId": "1"}
 
+    broker.disconnect()
+
 
 async def test_event_handler_ignores_other_installed_app(
     hass: HomeAssistant, config_entry, device_factory, event_request_factory
@@ -501,6 +503,8 @@ async def test_event_handler_ignores_other_installed_app(
     await hass.async_block_till_done()
 
     assert not called
+
+    broker.disconnect()
 
 
 async def test_event_handler_fires_button_events(
@@ -542,3 +546,5 @@ async def test_event_handler_fires_button_events(
     await hass.async_block_till_done()
 
     assert called
+
+    broker.disconnect()

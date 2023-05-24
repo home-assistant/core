@@ -122,7 +122,7 @@ def _filter_color_modes(
 
     Excluding all values that don't have the requested features.
     """
-    return [mode for mode in supported if mode & features]
+    return [mode for mode in supported if (mode & features) == features]
 
 
 class EsphomeLight(EsphomeEntity[LightInfo, LightState], LightEntity):

@@ -4,7 +4,9 @@ from __future__ import annotations
 import logging
 
 from homewizard_energy import HomeWizardEnergy
-from homewizard_energy.errors import DisabledError, RequestError
+from homewizard_energy.const import SUPPORTS_IDENTIFY, SUPPORTS_STATE, SUPPORTS_SYSTEM
+from homewizard_energy.errors import DisabledError, RequestError, UnsupportedError
+from homewizard_energy.models import Device
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -21,6 +23,8 @@ class HWEnergyDeviceUpdateCoordinator(DataUpdateCoordinator[DeviceResponseEntry]
 
     api: HomeWizardEnergy
     api_disabled: bool = False
+
+    _unsupported_error: bool = False
 
     def __init__(
         self,
@@ -39,12 +43,24 @@ class HWEnergyDeviceUpdateCoordinator(DataUpdateCoordinator[DeviceResponseEntry]
             data = DeviceResponseEntry(
                 device=await self.api.device(),
                 data=await self.api.data(),
-                features=await self.api.features(),
-                state=await self.api.state(),
             )
 
-            if data.features.has_system:
-                data.system = await self.api.system()
+            try:
+                if self.supports_state(data.device):
+                    data.state = await self.api.state()
+
+                if self.supports_system(data.device):
+                    data.system = await self.api.system()
+
+            except UnsupportedError as ex:
+                # Old firmware, ignore
+                if not self._unsupported_error:
+                    self._unsupported_error = True
+                    _LOGGER.warning(
+                        "%s is running an outdated firmware version (%s). Contact HomeWizard support to update your device",
+                        self.entry.title,
+                        ex,
+                    )
 
         except RequestError as ex:
             raise UpdateFailed(ex) from ex
@@ -61,4 +77,27 @@ class HWEnergyDeviceUpdateCoordinator(DataUpdateCoordinator[DeviceResponseEntry]
 
         self.api_disabled = False
 
+        self.data = data
         return data
+
+    def supports_state(self, device: Device | None = None) -> bool:
+        """Return True if the device supports state."""
+
+        if device is None:
+            device = self.data.device
+
+        return device.product_type in SUPPORTS_STATE
+
+    def supports_system(self, device: Device | None = None) -> bool:
+        """Return True if the device supports system."""
+        if device is None:
+            device = self.data.device
+
+        return device.product_type in SUPPORTS_SYSTEM
+
+    def supports_identify(self, device: Device | None = None) -> bool:
+        """Return True if the device supports identify."""
+        if device is None:
+            device = self.data.device
+
+        return device.product_type in SUPPORTS_IDENTIFY

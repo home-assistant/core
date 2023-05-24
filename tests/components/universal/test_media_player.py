@@ -1105,6 +1105,7 @@ async def test_state_template(hass: HomeAssistant) -> None:
 
 async def test_browse_media(hass: HomeAssistant) -> None:
     """Test browse media."""
+    await async_setup_component(hass, "homeassistant", {})
     await async_setup_component(
         hass, "media_player", {"media_player": {"platform": "demo"}}
     )
@@ -1135,6 +1136,7 @@ async def test_browse_media(hass: HomeAssistant) -> None:
 
 async def test_browse_media_override(hass: HomeAssistant) -> None:
     """Test browse media override."""
+    await async_setup_component(hass, "homeassistant", {})
     await async_setup_component(
         hass, "media_player", {"media_player": {"platform": "demo"}}
     )

@@ -32,7 +32,7 @@ class IssueSeverity(StrEnum):
     WARNING = "warning"
 
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass(slots=True, frozen=True)
 class IssueEntry:
     """Issue Registry Entry."""
 

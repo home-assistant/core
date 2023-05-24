@@ -12,7 +12,7 @@ import time
 from typing import Any, TypedDict, cast, overload
 
 import ciso8601
-from fnvhash import fnv1a_32
+from fnv_hash_fast import fnv1a_32
 from sqlalchemy import (
     JSON,
     BigInteger,

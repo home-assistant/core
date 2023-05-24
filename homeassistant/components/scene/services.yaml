@@ -29,7 +29,7 @@ apply:
       name: Entities state
       description: The entities and the state that they need to be.
       required: true
-      example:
+      example: |
         light.kitchen: "on"
         light.ceiling:
           state: "on"
@@ -60,7 +60,7 @@ create:
     entities:
       name: Entities state
       description: The entities to control with the scene.
-      example:
+      example: |
         light.tv_back_light: "on"
         light.ceiling:
           state: "on"
@@ -70,7 +70,7 @@ create:
     snapshot_entities:
       name: Snapshot entities
       description: The entities of which a snapshot is to be taken
-      example:
+      example: |
         - light.ceiling
         - light.kitchen
       selector:

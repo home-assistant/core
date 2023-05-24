@@ -576,6 +576,7 @@ async def test_flow_hassio_discovery(hass: HomeAssistant) -> None:
             },
             name="Mock Addon",
             slug="deconz",
+            uuid="1234",
         ),
         context={"source": SOURCE_HASSIO},
     )
@@ -628,6 +629,7 @@ async def test_hassio_discovery_update_configuration(
                 },
                 name="Mock Addon",
                 slug="deconz",
+                uuid="1234",
             ),
             context={"source": SOURCE_HASSIO},
         )
@@ -658,6 +660,7 @@ async def test_hassio_discovery_dont_update_configuration(
             },
             name="Mock Addon",
             slug="deconz",
+            uuid="1234",
         ),
         context={"source": SOURCE_HASSIO},
     )

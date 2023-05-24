@@ -324,7 +324,7 @@ async def test_unsupported_create_event_service(hass: HomeAssistant) -> None:
                 "end_date_time": "2022-04-01T06:00:00",
             },
             vol.error.MultipleInvalid,
-            "Expected positive event duration",
+            "Expected minimum event duration",
         ),
         (
             {
@@ -332,7 +332,7 @@ async def test_unsupported_create_event_service(hass: HomeAssistant) -> None:
                 "end_date": "2022-04-01",
             },
             vol.error.MultipleInvalid,
-            "Expected positive event duration",
+            "Expected minimum event duration",
         ),
         (
             {
@@ -340,7 +340,7 @@ async def test_unsupported_create_event_service(hass: HomeAssistant) -> None:
                 "end_date": "2022-04-01",
             },
             vol.error.MultipleInvalid,
-            "Expected positive event duration",
+            "Expected minimum event duration",
         ),
     ],
     ids=[

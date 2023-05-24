@@ -5,7 +5,7 @@ from pylast import Track
 import pytest
 
 from homeassistant.components import sensor
-from homeassistant.components.lastfm.sensor import STATE_NOT_SCROBBLING
+from homeassistant.components.lastfm.const import STATE_NOT_SCROBBLING
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -24,6 +24,7 @@ class MockUser:
     def __init__(self, now_playing_result):
         """Initialize the mock."""
         self._now_playing_result = now_playing_result
+        self.name = "test"
 
     def get_playcount(self):
         """Get mock play count."""
@@ -48,7 +49,9 @@ class MockUser:
 @pytest.fixture(name="lastfm_network")
 def lastfm_network_fixture():
     """Create fixture for LastFMNetwork."""
-    with patch("pylast.LastFMNetwork") as lastfm_network:
+    with patch(
+        "homeassistant.components.lastfm.sensor.LastFMNetwork"
+    ) as lastfm_network:
         yield lastfm_network
 
 

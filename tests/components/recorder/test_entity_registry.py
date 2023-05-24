@@ -60,7 +60,9 @@ def test_rename_entity_without_collision(
     hass.block_till_done()
 
     zero, four, states = record_states(hass)
-    hist = history.get_significant_states(hass, zero, four)
+    hist = history.get_significant_states(
+        hass, zero, four, list(set(states) | {"sensor.test99", "sensor.test1"})
+    )
 
     assert_dict_of_states_equal_without_context_and_last_changed(states, hist)
 
@@ -71,13 +73,20 @@ def test_rename_entity_without_collision(
     hass.add_job(rename_entry)
     wait_recording_done(hass)
 
-    hist = history.get_significant_states(hass, zero, four)
+    hist = history.get_significant_states(
+        hass, zero, four, list(set(states) | {"sensor.test99", "sensor.test1"})
+    )
     states["sensor.test99"] = states.pop("sensor.test1")
     assert_dict_of_states_equal_without_context_and_last_changed(states, hist)
 
     hass.states.set("sensor.test99", "post_migrate")
     wait_recording_done(hass)
-    new_hist = history.get_significant_states(hass, zero, dt_util.utcnow())
+    new_hist = history.get_significant_states(
+        hass,
+        zero,
+        dt_util.utcnow(),
+        list(set(states) | {"sensor.test99", "sensor.test1"}),
+    )
     assert not new_hist.get("sensor.test1")
     assert new_hist["sensor.test99"][-1].state == "post_migrate"
 
@@ -207,7 +216,9 @@ def test_rename_entity_collision(
     hass.block_till_done()
 
     zero, four, states = record_states(hass)
-    hist = history.get_significant_states(hass, zero, four)
+    hist = history.get_significant_states(
+        hass, zero, four, list(set(states) | {"sensor.test99", "sensor.test1"})
+    )
     assert_dict_of_states_equal_without_context_and_last_changed(states, hist)
     assert len(hist["sensor.test1"]) == 3
 
@@ -225,7 +236,9 @@ def test_rename_entity_collision(
     wait_recording_done(hass)
 
     # History is not migrated on collision
-    hist = history.get_significant_states(hass, zero, four)
+    hist = history.get_significant_states(
+        hass, zero, four, list(set(states) | {"sensor.test99", "sensor.test1"})
+    )
     assert len(hist["sensor.test1"]) == 3
     assert len(hist["sensor.test99"]) == 2
 
@@ -234,7 +247,12 @@ def test_rename_entity_collision(
 
     hass.states.set("sensor.test99", "post_migrate")
     wait_recording_done(hass)
-    new_hist = history.get_significant_states(hass, zero, dt_util.utcnow())
+    new_hist = history.get_significant_states(
+        hass,
+        zero,
+        dt_util.utcnow(),
+        list(set(states) | {"sensor.test99", "sensor.test1"}),
+    )
     assert new_hist["sensor.test99"][-1].state == "post_migrate"
     assert len(hist["sensor.test99"]) == 2
 

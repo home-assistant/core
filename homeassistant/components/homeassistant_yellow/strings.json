@@ -11,8 +11,30 @@
       "addon_installed_other_device": {
         "title": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::step::addon_installed_other_device::title%]"
       },
+      "hardware_settings": {
+        "title": "Configure hardware settings",
+        "data": {
+          "disk_led": "Disk LED",
+          "heartbeat_led": "Heartbeat LED",
+          "power_led": "Power LED"
+        }
+      },
       "install_addon": {
         "title": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::step::install_addon::title%]"
+      },
+      "main_menu": {
+        "menu_options": {
+          "hardware_settings": "[%key:component::homeassistant_yellow::options::step::hardware_settings::title%]",
+          "multipan_settings": "Configure IEEE 802.15.4 radio multiprotocol support"
+        }
+      },
+      "reboot_menu": {
+        "title": "Reboot required",
+        "description": "The settings have changed, but the new settings will not take effect until the system is rebooted",
+        "menu_options": {
+          "reboot_later": "Reboot manually later",
+          "reboot_now": "Reboot now"
+        }
       },
       "show_revert_guide": {
         "title": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::step::show_revert_guide::title%]",
@@ -31,6 +53,8 @@
       "addon_set_config_failed": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::abort::addon_set_config_failed%]",
       "addon_start_failed": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::abort::addon_start_failed%]",
       "not_hassio": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::abort::not_hassio%]",
+      "read_hw_settings_error": "Failed to read hardware settings",
+      "write_hw_settings_error": "Failed to write hardware settings",
       "zha_migration_failed": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::abort::zha_migration_failed%]"
     },
     "progress": {

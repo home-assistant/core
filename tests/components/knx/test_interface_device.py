@@ -23,20 +23,20 @@ async def test_diagnostic_entities(
 
     for entity_id in [
         "sensor.knx_interface_individual_address",
-        "sensor.knx_interface_connected_since",
+        "sensor.knx_interface_connection_established",
         "sensor.knx_interface_connection_type",
-        "sensor.knx_interface_telegrams_incoming",
-        "sensor.knx_interface_telegrams_incoming_error",
-        "sensor.knx_interface_telegrams_outgoing",
-        "sensor.knx_interface_telegrams_outgoing_error",
+        "sensor.knx_interface_incoming_telegrams",
+        "sensor.knx_interface_incoming_telegram_errors",
+        "sensor.knx_interface_outgoing_telegrams",
+        "sensor.knx_interface_outgoing_telegram_errors",
         "sensor.knx_interface_telegrams",
     ]:
         entity = entity_registry.async_get(entity_id)
         assert entity.entity_category is EntityCategory.DIAGNOSTIC
 
     for entity_id in [
-        "sensor.knx_interface_telegrams_incoming",
-        "sensor.knx_interface_telegrams_outgoing",
+        "sensor.knx_interface_incoming_telegrams",
+        "sensor.knx_interface_outgoing_telegrams",
     ]:
         entity = entity_registry.async_get(entity_id)
         assert entity.disabled is True
@@ -57,8 +57,8 @@ async def test_diagnostic_entities(
         ("sensor.knx_interface_individual_address", "0.0.0"),
         ("sensor.knx_interface_connection_type", "Tunnel TCP"),
         # skipping connected_since timestamp
-        ("sensor.knx_interface_telegrams_incoming_error", "1"),
-        ("sensor.knx_interface_telegrams_outgoing_error", "2"),
+        ("sensor.knx_interface_incoming_telegram_errors", "1"),
+        ("sensor.knx_interface_outgoing_telegram_errors", "2"),
         ("sensor.knx_interface_telegrams", "31"),
     ]:
         assert hass.states.get(entity_id).state == test_state
@@ -88,8 +88,8 @@ async def test_diagnostic_entities(
         ("sensor.knx_interface_individual_address", "1.1.1"),
         ("sensor.knx_interface_connection_type", "Tunnel UDP"),
         # skipping connected_since timestamp
-        ("sensor.knx_interface_telegrams_incoming_error", "0"),
-        ("sensor.knx_interface_telegrams_outgoing_error", "0"),
+        ("sensor.knx_interface_incoming_telegram_errors", "0"),
+        ("sensor.knx_interface_outgoing_telegram_errors", "0"),
         ("sensor.knx_interface_telegrams", "0"),
     ]:
         assert hass.states.get(entity_id).state == test_state
@@ -105,7 +105,7 @@ async def test_removed_entity(
         knx.xknx.connection_manager, "unregister_connection_state_changed_cb"
     ) as unregister_mock:
         entity_registry.async_update_entity(
-            "sensor.knx_interface_connected_since",
+            "sensor.knx_interface_connection_established",
             disabled_by=er.RegistryEntryDisabler.USER,
         )
         await hass.async_block_till_done()

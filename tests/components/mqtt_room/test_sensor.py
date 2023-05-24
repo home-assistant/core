@@ -3,6 +3,8 @@ import datetime
 import json
 from unittest.mock import patch
 
+import pytest
+
 from homeassistant.components.mqtt import CONF_QOS, CONF_STATE_TOPIC, DEFAULT_QOS
 import homeassistant.components.sensor as sensor
 from homeassistant.const import (
@@ -54,6 +56,28 @@ async def assert_distance(hass, distance):
     """Test the assertion of a distance state."""
     state = hass.states.get(SENSOR_STATE)
     assert state.attributes.get("distance") == distance
+
+
+async def test_no_mqtt(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -> None:
+    """Test no mqtt available."""
+    assert await async_setup_component(
+        hass,
+        sensor.DOMAIN,
+        {
+            sensor.DOMAIN: {
+                CONF_PLATFORM: "mqtt_room",
+                CONF_NAME: NAME,
+                CONF_DEVICE_ID: DEVICE_ID,
+                CONF_STATE_TOPIC: "room_presence",
+                CONF_QOS: DEFAULT_QOS,
+                CONF_TIMEOUT: 5,
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    state = hass.states.get(SENSOR_STATE)
+    assert state is None
+    assert "MQTT integration is not available" in caplog.text
 
 
 async def test_room_update(hass: HomeAssistant, mqtt_mock: MqttMockHAClient) -> None:

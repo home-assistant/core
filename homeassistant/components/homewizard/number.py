@@ -20,7 +20,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up numbers for device."""
     coordinator: HWEnergyDeviceUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
-    if coordinator.data.state:
+    if coordinator.supports_state():
         async_add_entities([HWEnergyNumberEntity(coordinator, entry)])
 
 

@@ -106,7 +106,7 @@ class MatterLock(MatterEntity, LockEntity):
             LOGGER.debug("Door state: %s for %s", door_state, self.entity_id)
 
             self._attr_is_jammed = (
-                door_state is clusters.DoorLock.Enums.DlDoorState.kDoorJammed
+                door_state is clusters.DoorLock.Enums.DoorStateEnum.kDoorJammed
             )
 
 

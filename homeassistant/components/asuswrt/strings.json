@@ -11,7 +11,7 @@
           "password": "[%key:common::config_flow::data::password%]",
           "ssh_key": "Path to your SSH key file (instead of password)",
           "protocol": "Communication protocol to use",
-          "port": "[%key:common::config_flow::data::port%] (leave empty for protocol default)",
+          "port": "Port (leave empty for protocol default)",
           "mode": "[%key:common::config_flow::data::mode%]"
         }
       }

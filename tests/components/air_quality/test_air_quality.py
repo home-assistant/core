@@ -1,4 +1,6 @@
 """The tests for the Air Quality component."""
+import pytest
+
 from homeassistant.components.air_quality import ATTR_N2O, ATTR_OZONE, ATTR_PM_10
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
@@ -7,6 +9,12 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
+
+
+@pytest.fixture(autouse=True)
+async def setup_homeassistant(hass: HomeAssistant):
+    """Set up the homeassistant integration."""
+    await async_setup_component(hass, "homeassistant", {})
 
 
 async def test_state(hass: HomeAssistant) -> None:

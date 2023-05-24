@@ -93,7 +93,7 @@ class _PyJWTWithVerify(PyJWT):
         # nothing slips through.
         assert "exp" in payload, "exp claim is required"
         assert "iat" in payload, "iat claim is required"
-        self._validate_claims(  # type: ignore[no-untyped-call]
+        self._validate_claims(
             payload=payload,
             options=merged_options,
             issuer=issuer,
@@ -102,7 +102,7 @@ class _PyJWTWithVerify(PyJWT):
         return payload
 
 
-_jwt = _PyJWTWithVerify()  # type: ignore[no-untyped-call]
+_jwt = _PyJWTWithVerify()
 verify_and_decode = _jwt.verify_and_decode
 unverified_hs256_token_decode = lru_cache(maxsize=JWT_TOKEN_CACHE_SIZE)(
     partial(

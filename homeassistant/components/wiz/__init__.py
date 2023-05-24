@@ -51,7 +51,9 @@ async def async_setup(hass: HomeAssistant, hass_config: ConfigType) -> bool:
         )
 
     hass.async_create_background_task(_async_discovery(), "wiz-discovery")
-    async_track_time_interval(hass, _async_discovery, DISCOVERY_INTERVAL)
+    async_track_time_interval(
+        hass, _async_discovery, DISCOVERY_INTERVAL, cancel_on_shutdown=True
+    )
     return True
 
 

@@ -2,6 +2,7 @@
   "domain": "workday",
   "name": "Workday",
   "codeowners": ["@fabaff", "@gjohansson-ST"],
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/workday",
   "iot_class": "local_polling",
   "loggers": [

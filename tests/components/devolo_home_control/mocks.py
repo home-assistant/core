@@ -115,6 +115,8 @@ class DeviceMock(Zwave):
         self.brand = "devolo"
         self.name = "Test Device"
         self.uid = "Test"
+        self.device_model_uid = "Test"
+        self.device_type = "Test"
         self.settings_property = {"general_device_settings": SettingsMock()}
         self.href = "https://www.mydevolo.com"
 
@@ -252,6 +254,9 @@ class HomeControlMock(HomeControl):
         """Initialize the mock."""
         self.devices = {}
         self.publisher = MagicMock()
+        self.gateway = MagicMock()
+        self.gateway.local_connection = True
+        self.gateway.firmware_version = "8.94.0"
 
     def websocket_disconnect(self, event: str = "") -> None:
         """Mock disconnect of the websocket."""

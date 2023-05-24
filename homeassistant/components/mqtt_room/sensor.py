@@ -68,6 +68,12 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up MQTT room Sensor."""
+    # Make sure MQTT integration is enabled and the client is available
+    # We cannot count on dependencies as the sensor platform setup
+    # also will be triggered when mqtt is loading the `sensor` platform
+    if not await mqtt.async_wait_for_mqtt_client(hass):
+        _LOGGER.error("MQTT integration is not available")
+        return
     async_add_entities(
         [
             MQTTRoomSensor(

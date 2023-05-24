@@ -22,6 +22,7 @@ from .const import (
     SERVICE_SET_DEFAULT_LEVEL,
     SERVICE_SET_LEVEL,
 )
+from .const import EVENT_LOGGING_CHANGED  # noqa: F401
 from .helpers import (
     LoggerDomainConfig,
     LoggerSettings,

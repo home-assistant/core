@@ -21,7 +21,7 @@ async def test_diagnostics(
         "data": {
             "device": {
                 "product_name": "P1 Meter",
-                "product_type": "HWE-P1",
+                "product_type": "HWE-SKT",
                 "serial": REDACTED,
                 "api_version": "v1",
                 "firmware_version": "2.11",

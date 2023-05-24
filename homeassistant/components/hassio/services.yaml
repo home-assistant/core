@@ -88,6 +88,12 @@ backup_full:
       default: true
       selector:
         boolean:
+    location:
+      name: Location
+      description: Name of a backup network storage to put backup (or /backup)
+      example: my_backup_mount
+      selector:
+        backup_location:
 
 backup_partial:
   name: Create a partial backup.
@@ -128,6 +134,12 @@ backup_partial:
       default: true
       selector:
         boolean:
+    location:
+      name: Location
+      description: Name of a backup network storage to put backup (or /backup)
+      example: my_backup_mount
+      selector:
+        backup_location:
 
 restore_full:
   name: Restore from full backup.

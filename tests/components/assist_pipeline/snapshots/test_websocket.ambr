@@ -1,0 +1,302 @@
+# serializer version: 1
+# name: test_audio_pipeline
+  dict({
+    'language': 'en',
+    'pipeline': <ANY>,
+    'runner_data': dict({
+      'stt_binary_handler_id': 1,
+      'timeout': 30,
+    }),
+  })
+# ---
+# name: test_audio_pipeline.1
+  dict({
+    'engine': 'test',
+    'metadata': dict({
+      'bit_rate': 16,
+      'channel': 1,
+      'codec': 'pcm',
+      'format': 'wav',
+      'language': 'en-US',
+      'sample_rate': 16000,
+    }),
+  })
+# ---
+# name: test_audio_pipeline.2
+  dict({
+    'stt_output': dict({
+      'text': 'test transcript',
+    }),
+  })
+# ---
+# name: test_audio_pipeline.3
+  dict({
+    'engine': 'homeassistant',
+    'intent_input': 'test transcript',
+    'language': 'en',
+  })
+# ---
+# name: test_audio_pipeline.4
+  dict({
+    'intent_output': dict({
+      'conversation_id': None,
+      'response': dict({
+        'card': dict({
+        }),
+        'data': dict({
+          'code': 'no_intent_match',
+        }),
+        'language': 'en',
+        'response_type': 'error',
+        'speech': dict({
+          'plain': dict({
+            'extra_data': None,
+            'speech': "Sorry, I couldn't understand that",
+          }),
+        }),
+      }),
+    }),
+  })
+# ---
+# name: test_audio_pipeline.5
+  dict({
+    'engine': 'test',
+    'language': 'en-US',
+    'tts_input': "Sorry, I couldn't understand that",
+    'voice': 'james_earl_jones',
+  })
+# ---
+# name: test_audio_pipeline.6
+  dict({
+    'tts_output': dict({
+      'media_id': "media-source://tts/test?message=Sorry,+I+couldn't+understand+that&language=en-US&voice=james_earl_jones",
+      'mime_type': 'audio/mpeg',
+      'url': '/api/tts_proxy/dae2cdcb27a1d1c3b07ba2c7db91480f9d4bfd8f_en-us_031e2ec052_test.mp3',
+    }),
+  })
+# ---
+# name: test_audio_pipeline_debug
+  dict({
+    'language': 'en',
+    'pipeline': <ANY>,
+    'runner_data': dict({
+      'stt_binary_handler_id': 1,
+      'timeout': 30,
+    }),
+  })
+# ---
+# name: test_audio_pipeline_debug.1
+  dict({
+    'engine': 'test',
+    'metadata': dict({
+      'bit_rate': 16,
+      'channel': 1,
+      'codec': 'pcm',
+      'format': 'wav',
+      'language': 'en-US',
+      'sample_rate': 16000,
+    }),
+  })
+# ---
+# name: test_audio_pipeline_debug.2
+  dict({
+    'stt_output': dict({
+      'text': 'test transcript',
+    }),
+  })
+# ---
+# name: test_audio_pipeline_debug.3
+  dict({
+    'engine': 'homeassistant',
+    'intent_input': 'test transcript',
+    'language': 'en',
+  })
+# ---
+# name: test_audio_pipeline_debug.4
+  dict({
+    'intent_output': dict({
+      'conversation_id': None,
+      'response': dict({
+        'card': dict({
+        }),
+        'data': dict({
+          'code': 'no_intent_match',
+        }),
+        'language': 'en',
+        'response_type': 'error',
+        'speech': dict({
+          'plain': dict({
+            'extra_data': None,
+            'speech': "Sorry, I couldn't understand that",
+          }),
+        }),
+      }),
+    }),
+  })
+# ---
+# name: test_audio_pipeline_debug.5
+  dict({
+    'engine': 'test',
+    'language': 'en-US',
+    'tts_input': "Sorry, I couldn't understand that",
+    'voice': 'james_earl_jones',
+  })
+# ---
+# name: test_audio_pipeline_debug.6
+  dict({
+    'tts_output': dict({
+      'media_id': "media-source://tts/test?message=Sorry,+I+couldn't+understand+that&language=en-US&voice=james_earl_jones",
+      'mime_type': 'audio/mpeg',
+      'url': '/api/tts_proxy/dae2cdcb27a1d1c3b07ba2c7db91480f9d4bfd8f_en-us_031e2ec052_test.mp3',
+    }),
+  })
+# ---
+# name: test_intent_failed
+  dict({
+    'language': 'en',
+    'pipeline': <ANY>,
+    'runner_data': dict({
+      'stt_binary_handler_id': None,
+      'timeout': 30,
+    }),
+  })
+# ---
+# name: test_intent_failed.1
+  dict({
+    'engine': 'homeassistant',
+    'intent_input': 'Are the lights on?',
+    'language': 'en',
+  })
+# ---
+# name: test_intent_timeout
+  dict({
+    'language': 'en',
+    'pipeline': <ANY>,
+    'runner_data': dict({
+      'stt_binary_handler_id': None,
+      'timeout': 0.1,
+    }),
+  })
+# ---
+# name: test_intent_timeout.1
+  dict({
+    'engine': 'homeassistant',
+    'intent_input': 'Are the lights on?',
+    'language': 'en',
+  })
+# ---
+# name: test_intent_timeout.2
+  dict({
+    'code': 'timeout',
+    'message': 'Timeout running pipeline',
+  })
+# ---
+# name: test_stt_provider_missing
+  dict({
+    'language': 'en',
+    'pipeline': 'en',
+    'runner_data': dict({
+      'stt_binary_handler_id': 1,
+      'timeout': 30,
+    }),
+  })
+# ---
+# name: test_stt_provider_missing.1
+  dict({
+    'engine': 'default',
+    'metadata': dict({
+      'bit_rate': 16,
+      'channel': 1,
+      'codec': 'pcm',
+      'format': 'wav',
+      'language': 'en',
+      'sample_rate': 16000,
+    }),
+  })
+# ---
+# name: test_stt_stream_failed
+  dict({
+    'language': 'en',
+    'pipeline': <ANY>,
+    'runner_data': dict({
+      'stt_binary_handler_id': 1,
+      'timeout': 30,
+    }),
+  })
+# ---
+# name: test_stt_stream_failed.1
+  dict({
+    'engine': 'test',
+    'metadata': dict({
+      'bit_rate': 16,
+      'channel': 1,
+      'codec': 'pcm',
+      'format': 'wav',
+      'language': 'en-US',
+      'sample_rate': 16000,
+    }),
+  })
+# ---
+# name: test_text_only_pipeline
+  dict({
+    'language': 'en',
+    'pipeline': <ANY>,
+    'runner_data': dict({
+      'stt_binary_handler_id': None,
+      'timeout': 30,
+    }),
+  })
+# ---
+# name: test_text_only_pipeline.1
+  dict({
+    'engine': 'homeassistant',
+    'intent_input': 'Are the lights on?',
+    'language': 'en',
+  })
+# ---
+# name: test_text_only_pipeline.2
+  dict({
+    'intent_output': dict({
+      'conversation_id': None,
+      'response': dict({
+        'card': dict({
+        }),
+        'data': dict({
+          'code': 'no_intent_match',
+        }),
+        'language': 'en',
+        'response_type': 'error',
+        'speech': dict({
+          'plain': dict({
+            'extra_data': None,
+            'speech': "Sorry, I couldn't understand that",
+          }),
+        }),
+      }),
+    }),
+  })
+# ---
+# name: test_text_pipeline_timeout
+  dict({
+    'code': 'timeout',
+    'message': 'Timeout running pipeline',
+  })
+# ---
+# name: test_tts_failed
+  dict({
+    'language': 'en',
+    'pipeline': <ANY>,
+    'runner_data': dict({
+      'stt_binary_handler_id': None,
+      'timeout': 30,
+    }),
+  })
+# ---
+# name: test_tts_failed.1
+  dict({
+    'engine': 'test',
+    'language': 'en-US',
+    'tts_input': 'Lights are on.',
+    'voice': 'james_earl_jones',
+  })
+# ---

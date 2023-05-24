@@ -7,6 +7,8 @@
 # Developer note:
 # vscode devcontainer: use the following to access USB device:
 # "runArgs": ["-e", "GIT_EDITOR=code --wait", "--device=/dev/ttyUSB0"],
+# and add the following to the end of script/bootstrap:
+# sudo chmod 777 /dev/ttyUSB0
 
 import logging
 

@@ -111,6 +111,7 @@ class EufyLifeRealTimeWeightSensorEntity(EufyLifeSensorEntity):
         return UnitOfMass.KILOGRAMS
 
 
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
 class EufyLifeWeightSensorEntity(RestoreEntity, EufyLifeSensorEntity):
     """Representation of an EufyLife weight sensor."""
 
@@ -171,6 +172,7 @@ class EufyLifeWeightSensorEntity(RestoreEntity, EufyLifeSensorEntity):
         )
 
 
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
 class EufyLifeHeartRateSensorEntity(RestoreEntity, EufyLifeSensorEntity):
     """Representation of an EufyLife heart rate sensor."""
 

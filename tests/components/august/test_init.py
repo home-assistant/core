@@ -77,12 +77,42 @@ async def test_august_is_offline(hass: HomeAssistant) -> None:
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
+async def test_august_late_auth_failure(hass: HomeAssistant) -> None:
+    """Test we can detect a late auth failure."""
+    aiohttp_client_response_exception = ClientResponseError(None, None, status=401)
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=_mock_get_config()[DOMAIN],
+        title="August august",
+    )
+    config_entry.add_to_hass(hass)
+
+    with patch(
+        "yalexs.authenticator_async.AuthenticatorAsync.async_authenticate",
+        side_effect=AugustApiAIOHTTPError(
+            "This should bubble up as its user consumable",
+            aiohttp_client_response_exception,
+        ),
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.SETUP_ERROR
+    flows = hass.config_entries.flow.async_progress()
+
+    assert flows[0]["step_id"] == "reauth_validate"
+
+
 async def test_unlock_throws_august_api_http_error(hass: HomeAssistant) -> None:
     """Test unlock throws correct error on http error."""
     mocked_lock_detail = await _mock_operative_august_lock_detail(hass)
+    aiohttp_client_response_exception = ClientResponseError(None, None, status=400)
 
     def _unlock_return_activities_side_effect(access_token, device_id):
-        raise AugustApiAIOHTTPError("This should bubble up as its user consumable")
+        raise AugustApiAIOHTTPError(
+            "This should bubble up as its user consumable",
+            aiohttp_client_response_exception,
+        )
 
     await _create_august_with_devices(
         hass,
@@ -106,9 +136,13 @@ async def test_unlock_throws_august_api_http_error(hass: HomeAssistant) -> None:
 async def test_lock_throws_august_api_http_error(hass: HomeAssistant) -> None:
     """Test lock throws correct error on http error."""
     mocked_lock_detail = await _mock_operative_august_lock_detail(hass)
+    aiohttp_client_response_exception = ClientResponseError(None, None, status=400)
 
     def _lock_return_activities_side_effect(access_token, device_id):
-        raise AugustApiAIOHTTPError("This should bubble up as its user consumable")
+        raise AugustApiAIOHTTPError(
+            "This should bubble up as its user consumable",
+            aiohttp_client_response_exception,
+        )
 
     await _create_august_with_devices(
         hass,

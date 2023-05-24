@@ -85,7 +85,9 @@ async def test_setup_one_feed(hass: HomeAssistant) -> None:
         assert await async_setup_component(hass, feedreader.DOMAIN, VALID_CONFIG_1)
         await hass.async_block_till_done()
 
-        track_method.assert_called_once_with(hass, mock.ANY, DEFAULT_SCAN_INTERVAL)
+        track_method.assert_called_once_with(
+            hass, mock.ANY, DEFAULT_SCAN_INTERVAL, cancel_on_shutdown=True
+        )
 
 
 async def test_setup_scan_interval(hass: HomeAssistant) -> None:
@@ -96,7 +98,9 @@ async def test_setup_scan_interval(hass: HomeAssistant) -> None:
         assert await async_setup_component(hass, feedreader.DOMAIN, VALID_CONFIG_2)
         await hass.async_block_till_done()
 
-        track_method.assert_called_once_with(hass, mock.ANY, timedelta(seconds=60))
+        track_method.assert_called_once_with(
+            hass, mock.ANY, timedelta(seconds=60), cancel_on_shutdown=True
+        )
 
 
 async def test_setup_max_entries(hass: HomeAssistant) -> None:

@@ -125,7 +125,7 @@ _PLATFORM_SCHEMA_BASE = MQTT_RW_SCHEMA.extend(
         vol.Optional(
             CONF_DEVICE_CLASS, default=HumidifierDeviceClass.HUMIDIFIER
         ): vol.In(
-            [HumidifierDeviceClass.HUMIDIFIER, HumidifierDeviceClass.DEHUMIDIFIER]
+            [HumidifierDeviceClass.HUMIDIFIER, HumidifierDeviceClass.DEHUMIDIFIER, None]
         ),
         vol.Optional(CONF_MODE_COMMAND_TEMPLATE): cv.template,
         vol.Optional(CONF_MODE_STATE_TOPIC): valid_subscribe_topic,

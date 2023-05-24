@@ -116,6 +116,13 @@ class JewishCalendarBinarySensor(BinarySensorEntity):
         await super().async_added_to_hass()
         self._schedule_update()
 
+    async def async_will_remove_from_hass(self) -> None:
+        """Run when entity will be removed from hass."""
+        if self._update_unsub:
+            self._update_unsub()
+            self._update_unsub = None
+        return await super().async_will_remove_from_hass()
+
     @callback
     def _update(self, now: datetime | None = None) -> None:
         """Update the state of the sensor."""

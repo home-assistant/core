@@ -14,6 +14,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.json import ExtendedJSONEncoder
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.util.limited_size_dict import LimitedSizeDict
 
 from . import websocket_api
 from .const import (
@@ -24,7 +25,6 @@ from .const import (
     DEFAULT_STORED_TRACES,
 )
 from .models import ActionTrace, BaseTrace, RestoredTrace
-from .utils import LimitedSizeDict
 
 _LOGGER = logging.getLogger(__name__)
 

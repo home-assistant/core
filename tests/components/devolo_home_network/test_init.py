@@ -4,10 +4,16 @@ from unittest.mock import patch
 from devolo_plc_api.exceptions.device import DeviceNotFound
 import pytest
 
+from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR
+from homeassistant.components.button import DOMAIN as BUTTON
+from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER
 from homeassistant.components.devolo_home_network.const import DOMAIN
+from homeassistant.components.sensor import DOMAIN as SENSOR
+from homeassistant.components.switch import DOMAIN as SWITCH
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_IP_ADDRESS, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import async_get_platforms
 
 from . import configure_integration
 from .const import IP
@@ -73,3 +79,28 @@ async def test_hass_stop(hass: HomeAssistant, mock_device: MockDevice) -> None:
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
     await hass.async_block_till_done()
     mock_device.async_disconnect.assert_called_once()
+
+
+@pytest.mark.parametrize(
+    ("device", "expected_platforms"),
+    [
+        ["mock_device", (BINARY_SENSOR, BUTTON, DEVICE_TRACKER, SENSOR, SWITCH)],
+        ["mock_repeater_device", (BUTTON, DEVICE_TRACKER, SENSOR, SWITCH)],
+        ["mock_nonwifi_device", (BINARY_SENSOR, BUTTON, SENSOR, SWITCH)],
+    ],
+)
+async def test_platforms(
+    hass: HomeAssistant,
+    device: str,
+    expected_platforms: set[str],
+    request: pytest.FixtureRequest,
+) -> None:
+    """Test platform assembly."""
+    request.getfixturevalue(device)
+    entry = configure_integration(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    platforms = [platform.domain for platform in async_get_platforms(hass, DOMAIN)]
+    assert len(platforms) == len(expected_platforms)
+    assert all(platform in platforms for platform in expected_platforms)

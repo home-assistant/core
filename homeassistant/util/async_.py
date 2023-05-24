@@ -1,7 +1,7 @@
 """Asyncio utilities."""
 from __future__ import annotations
 
-from asyncio import Semaphore, gather, get_running_loop
+from asyncio import Future, Semaphore, gather, get_running_loop
 from asyncio.events import AbstractEventLoop
 from collections.abc import Awaitable, Callable
 import concurrent.futures
@@ -18,6 +18,13 @@ _SHUTDOWN_RUN_CALLBACK_THREADSAFE = "_shutdown_run_callback_threadsafe"
 _T = TypeVar("_T")
 _R = TypeVar("_R")
 _P = ParamSpec("_P")
+
+
+def cancelling(task: Future[Any]) -> bool:
+    """Return True if task is done or cancelling."""
+    # https://docs.python.org/3/library/asyncio-task.html#asyncio.Task.cancelling
+    # is new in Python 3.11
+    return bool((cancelling_ := getattr(task, "cancelling", None)) and cancelling_())
 
 
 def run_callback_threadsafe(

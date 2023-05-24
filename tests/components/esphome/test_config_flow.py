@@ -813,6 +813,7 @@ async def test_discovery_hassio(hass: HomeAssistant, mock_dashboard) -> None:
             },
             name="ESPHome",
             slug="mock-slug",
+            uuid="1234",
         ),
         context={"source": config_entries.SOURCE_HASSIO},
     )
