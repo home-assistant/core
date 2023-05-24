@@ -72,9 +72,7 @@ class RitualsSwitchEntity(DiffuserEntity, SwitchEntity):
         description: RitualsSwitchEntityDescription,
     ) -> None:
         """Initialize the diffuser switch."""
-        super().__init__(coordinator)
-        self.entity_description = description
-        self._attr_unique_id = f"{coordinator.diffuser.hublot}-{description.key}"
+        super().__init__(coordinator, description)
         self._attr_name = coordinator.diffuser.name
         self._attr_is_on = description.is_on_fn(coordinator.diffuser)
 

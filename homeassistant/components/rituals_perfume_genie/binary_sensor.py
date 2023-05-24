@@ -77,9 +77,7 @@ class RitualsBinarySensorEntity(DiffuserEntity, BinarySensorEntity):
         description: RitualsBinarySensorEntityDescription,
     ) -> None:
         """Initialize Rituals binary sensor entity."""
-        super().__init__(coordinator)
-        self.entity_description = description
-        self._attr_unique_id = f"{coordinator.diffuser.hublot}-{description.key}"
+        super().__init__(coordinator, description)
         self._attr_name = f"{coordinator.diffuser.name} {description.name}"
 
     @property

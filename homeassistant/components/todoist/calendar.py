@@ -18,7 +18,7 @@ from homeassistant.components.calendar import (
     CalendarEvent,
 )
 from homeassistant.const import CONF_ID, CONF_NAME, CONF_TOKEN, EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import Event, HomeAssistant, ServiceCall
+from homeassistant.core import Event, HomeAssistant, ServiceCall, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -175,7 +175,7 @@ async def async_setup_platform(
             )
         )
 
-    async_add_entities(project_devices)
+    async_add_entities(project_devices, update_before_add=True)
 
     session = async_get_clientsession(hass)
 
@@ -304,6 +304,12 @@ class TodoistProjectEntity(CoordinatorEntity[TodoistCoordinator], CalendarEntity
             str(data[CONF_ID]) if data.get(CONF_ID) is not None else None
         )
 
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self.data.update()
+        super()._handle_coordinator_update()
+
     @property
     def event(self) -> CalendarEvent | None:
         """Return the next upcoming event."""
@@ -317,11 +323,7 @@ class TodoistProjectEntity(CoordinatorEntity[TodoistCoordinator], CalendarEntity
     async def async_update(self) -> None:
         """Update all Todoist Calendars."""
         await super().async_update()
-        await self.data.async_update()
-        # Set Todoist-specific data that can't easily be grabbed
-        self._cal_data["all_tasks"] = [
-            task[SUMMARY] for task in self.data.all_project_tasks
-        ]
+        self.data.update()
 
     async def async_get_events(
         self,
@@ -342,7 +344,7 @@ class TodoistProjectEntity(CoordinatorEntity[TodoistCoordinator], CalendarEntity
         return {
             DUE_TODAY: self.data.event[DUE_TODAY],
             OVERDUE: self.data.event[OVERDUE],
-            ALL_TASKS: self._cal_data[ALL_TASKS],
+            ALL_TASKS: [task[SUMMARY] for task in self.data.all_project_tasks],
             PRIORITY: self.data.event[PRIORITY],
             LABELS: self.data.event[LABELS],
         }
@@ -610,7 +612,7 @@ class TodoistProjectData:
             events.append(event)
         return events
 
-    async def async_update(self) -> None:
+    def update(self) -> None:
         """Get the latest data."""
         tasks = self._coordinator.data
         if self._id is None:
