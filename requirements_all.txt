@@ -115,6 +115,9 @@ aio_georss_gdacs==0.8
 # homeassistant.components.airq
 aioairq==0.2.4
 
+# homeassistant.components.airzone_cloud
+aioairzone-cloud==0.1.2
+
 # homeassistant.components.airzone
 aioairzone==0.5.6
 
@@ -965,7 +968,7 @@ ical==4.5.1
 icmplib==3.0
 
 # homeassistant.components.network
-ifaddr==0.1.7
+ifaddr==0.2.0
 
 # homeassistant.components.iglo
 iglo==1.2.7
@@ -2086,7 +2089,7 @@ python-kasa==0.5.1
 # python-lirc==1.2.3
 
 # homeassistant.components.matter
-python-matter-server==3.2.0
+python-matter-server==3.4.1
 
 # homeassistant.components.xiaomi_miio
 python-miio==0.5.12
@@ -2123,7 +2126,7 @@ python-smarttub==0.0.33
 python-songpal==0.15.2
 
 # homeassistant.components.tado
-python-tado==0.12.0
+python-tado==0.15.0
 
 # homeassistant.components.telegram_bot
 python-telegram-bot==13.1

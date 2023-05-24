@@ -32,6 +32,7 @@ FLOWS = {
         "airvisual",
         "airvisual_pro",
         "airzone",
+        "airzone_cloud",
         "aladdin_connect",
         "alarmdecoder",
         "amberelectric",
