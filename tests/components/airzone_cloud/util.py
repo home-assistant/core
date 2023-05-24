@@ -151,7 +151,7 @@ async def async_init_integration(
     config_entry = MockConfigEntry(
         data=CONFIG,
         domain=DOMAIN,
-        unique_id="airzone_cloud_unique_id",
+        unique_id=CONFIG[CONF_ID],
     )
     config_entry.add_to_hass(hass)
 
