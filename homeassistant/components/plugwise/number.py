@@ -31,7 +31,7 @@ class PlugwiseEntityDescriptionMixin:
     native_min_value_fn: Callable[[ActuatorData], float]
     native_step_key_fn: Callable[[ActuatorData], float]
     native_value_fn: Callable[[ActuatorData], float]
-    number_fn: Callable[[DeviceData], ActuatorData]
+    actuator_fn: Callable[[DeviceData], ActuatorData]
 
 
 @dataclass
@@ -53,7 +53,7 @@ NUMBER_TYPES = (
         native_min_value_fn=lambda data: data["lower_bound"],
         native_step_key_fn=lambda data: data["resolution"],
         native_value_fn=lambda data: data["setpoint"],
-        number_fn=lambda data: data["maximum_boiler_temperature"],
+        actuator_fn=lambda data: data.get("maximum_boiler_temperature", {}),
     ),
     # Placeholder upcoming number entity: max_dhw_temperature
 )
@@ -73,9 +73,7 @@ async def async_setup_entry(
     entities: list[PlugwiseNumberEntity] = []
     for device_id, device in coordinator.data.devices.items():
         for description in NUMBER_TYPES:
-            if (
-                number := description.number_fn(device)
-            ) is not None and "setpoint" in number:
+            if (actuator := description.actuator_fn(device)) and "setpoint" in actuator:
                 entities.append(
                     PlugwiseNumberEntity(coordinator, device_id, description)
                 )
@@ -99,7 +97,7 @@ class PlugwiseNumberEntity(PlugwiseEntity, NumberEntity):
         self.entity_description = description
         self._attr_unique_id = f"{device_id}-{description.key}"
         self._attr_mode = NumberMode.BOX
-        self._number = description.number_fn(self.device)
+        self._number = description.actuator_fn(self.device)
 
     @property
     def native_max_value(self) -> float:
