@@ -6,6 +6,7 @@ from typing import Any
 
 from aioairzone_cloud.const import (
     API_STAT_AP_MAC,
+    API_STAT_SSID,
     AZD_WIFI_MAC,
     RAW_DEVICES_STATUS,
     RAW_INSTALLATIONS,
@@ -21,7 +22,14 @@ from .const import DOMAIN
 from .coordinator import AirzoneUpdateCoordinator
 
 TO_REDACT_API = [
+    "_id",
+    "city",
+    "group_id",
+    "location_id",
+    "pin",
+    "user_id",
     API_STAT_AP_MAC,
+    API_STAT_SSID,
 ]
 
 TO_REDACT_CONFIG = [
