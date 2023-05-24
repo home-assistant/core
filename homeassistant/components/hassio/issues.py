@@ -85,6 +85,7 @@ UNHEALTHY_REASONS = {
 
 # Keys (type + context) of issues that when found should be made into a repair
 ISSUE_KEYS_FOR_REPAIRS = {
+    "issue_mount_mount_failed",
     "issue_system_multiple_data_disks",
     "issue_system_reboot_required",
 }

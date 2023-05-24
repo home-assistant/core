@@ -3,10 +3,13 @@ from unittest.mock import patch
 
 from aioairzone.common import OperationMode
 from aioairzone.const import (
+    API_COOL_SET_POINT,
     API_DATA,
+    API_HEAT_SET_POINT,
     API_MODE,
     API_ON,
     API_SET_POINT,
+    API_SPEED,
     API_SYSTEM_ID,
     API_ZONE_ID,
 )
@@ -17,13 +20,22 @@ from homeassistant.components.airzone.const import API_TEMPERATURE_STEP
 from homeassistant.components.climate import (
     ATTR_CURRENT_HUMIDITY,
     ATTR_CURRENT_TEMPERATURE,
+    ATTR_FAN_MODE,
+    ATTR_FAN_MODES,
     ATTR_HVAC_ACTION,
     ATTR_HVAC_MODE,
     ATTR_HVAC_MODES,
     ATTR_MAX_TEMP,
     ATTR_MIN_TEMP,
+    ATTR_TARGET_TEMP_HIGH,
+    ATTR_TARGET_TEMP_LOW,
     ATTR_TARGET_TEMP_STEP,
     DOMAIN as CLIMATE_DOMAIN,
+    FAN_AUTO,
+    FAN_HIGH,
+    FAN_LOW,
+    FAN_MEDIUM,
+    SERVICE_SET_FAN_MODE,
     SERVICE_SET_HVAC_MODE,
     SERVICE_SET_TEMPERATURE,
     HVACAction,
@@ -50,6 +62,8 @@ async def test_airzone_create_climates(hass: HomeAssistant) -> None:
     assert state.state == HVACMode.OFF
     assert state.attributes.get(ATTR_CURRENT_HUMIDITY) == 36
     assert state.attributes.get(ATTR_CURRENT_TEMPERATURE) == 21.2
+    assert state.attributes.get(ATTR_FAN_MODE) is None
+    assert state.attributes.get(ATTR_FAN_MODES) is None
     assert state.attributes.get(ATTR_HVAC_ACTION) == HVACAction.OFF
     assert state.attributes.get(ATTR_HVAC_MODES) == [
         HVACMode.OFF,
@@ -67,6 +81,8 @@ async def test_airzone_create_climates(hass: HomeAssistant) -> None:
     assert state.state == HVACMode.HEAT
     assert state.attributes.get(ATTR_CURRENT_HUMIDITY) == 35
     assert state.attributes.get(ATTR_CURRENT_TEMPERATURE) == 20.8
+    assert state.attributes.get(ATTR_FAN_MODE) is None
+    assert state.attributes.get(ATTR_FAN_MODES) is None
     assert state.attributes.get(ATTR_HVAC_ACTION) == HVACAction.IDLE
     assert state.attributes.get(ATTR_HVAC_MODES) == [
         HVACMode.OFF,
@@ -84,6 +100,8 @@ async def test_airzone_create_climates(hass: HomeAssistant) -> None:
     assert state.state == HVACMode.OFF
     assert state.attributes.get(ATTR_CURRENT_HUMIDITY) == 40
     assert state.attributes.get(ATTR_CURRENT_TEMPERATURE) == 20.5
+    assert state.attributes.get(ATTR_FAN_MODE) is None
+    assert state.attributes.get(ATTR_FAN_MODES) is None
     assert state.attributes.get(ATTR_HVAC_ACTION) == HVACAction.OFF
     assert state.attributes.get(ATTR_HVAC_MODES) == [
         HVACMode.OFF,
@@ -101,6 +119,12 @@ async def test_airzone_create_climates(hass: HomeAssistant) -> None:
     assert state.state == HVACMode.HEAT
     assert state.attributes.get(ATTR_CURRENT_HUMIDITY) == 39
     assert state.attributes.get(ATTR_CURRENT_TEMPERATURE) == 21.1
+    assert state.attributes.get(ATTR_FAN_MODE) == FAN_AUTO
+    assert state.attributes.get(ATTR_FAN_MODES) == [
+        FAN_AUTO,
+        FAN_LOW,
+        FAN_HIGH,
+    ]
     assert state.attributes.get(ATTR_HVAC_ACTION) == HVACAction.HEATING
     assert state.attributes.get(ATTR_HVAC_MODES) == [
         HVACMode.OFF,
@@ -118,6 +142,13 @@ async def test_airzone_create_climates(hass: HomeAssistant) -> None:
     assert state.state == HVACMode.OFF
     assert state.attributes.get(ATTR_CURRENT_HUMIDITY) == 34
     assert state.attributes.get(ATTR_CURRENT_TEMPERATURE) == 19.6
+    assert state.attributes.get(ATTR_FAN_MODE) == FAN_AUTO
+    assert state.attributes.get(ATTR_FAN_MODES) == [
+        FAN_AUTO,
+        FAN_LOW,
+        FAN_MEDIUM,
+        FAN_HIGH,
+    ]
     assert state.attributes.get(ATTR_HVAC_ACTION) == HVACAction.OFF
     assert state.attributes.get(ATTR_HVAC_MODES) == [
         HVACMode.OFF,
@@ -135,6 +166,14 @@ async def test_airzone_create_climates(hass: HomeAssistant) -> None:
     assert state.state == HVACMode.OFF
     assert state.attributes.get(ATTR_CURRENT_HUMIDITY) == 62
     assert state.attributes.get(ATTR_CURRENT_TEMPERATURE) == 22.3
+    assert state.attributes.get(ATTR_FAN_MODE) == FAN_AUTO
+    assert state.attributes.get(ATTR_FAN_MODES) == [
+        FAN_AUTO,
+        FAN_LOW,
+        FAN_MEDIUM,
+        "75%",
+        FAN_HIGH,
+    ]
     assert state.attributes.get(ATTR_HVAC_ACTION) == HVACAction.OFF
     assert state.attributes.get(ATTR_HVAC_MODES) == [
         HVACMode.HEAT_COOL,
@@ -149,6 +188,15 @@ async def test_airzone_create_climates(hass: HomeAssistant) -> None:
     assert state.state == HVACMode.HEAT_COOL
     assert state.attributes.get(ATTR_CURRENT_HUMIDITY) is None
     assert state.attributes.get(ATTR_CURRENT_TEMPERATURE) == 21.7
+    assert state.attributes.get(ATTR_FAN_MODE) == "40%"
+    assert state.attributes.get(ATTR_FAN_MODES) == [
+        FAN_AUTO,
+        FAN_LOW,
+        "40%",
+        FAN_MEDIUM,
+        "80%",
+        FAN_HIGH,
+    ]
     assert state.attributes.get(ATTR_HVAC_ACTION) == HVACAction.COOLING
     assert state.attributes.get(ATTR_HVAC_MODES) == [
         HVACMode.FAN_ONLY,
@@ -363,6 +411,39 @@ async def test_airzone_climate_set_hvac_slave_error(hass: HomeAssistant) -> None
     assert state.state == HVACMode.OFF
 
 
+async def test_airzone_climate_set_fan_mode(hass: HomeAssistant) -> None:
+    """Test setting the target temperature."""
+
+    HVAC_MOCK = {
+        API_DATA: [
+            {
+                API_SYSTEM_ID: 1,
+                API_ZONE_ID: 1,
+                API_SPEED: 2,
+            }
+        ]
+    }
+
+    await async_init_integration(hass)
+
+    with patch(
+        "homeassistant.components.airzone.AirzoneLocalApi.put_hvac",
+        return_value=HVAC_MOCK,
+    ):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_FAN_MODE,
+            {
+                ATTR_ENTITY_ID: "climate.salon",
+                ATTR_FAN_MODE: FAN_MEDIUM,
+            },
+            blocking=True,
+        )
+
+    state = hass.states.get("climate.salon")
+    assert state.attributes.get(ATTR_FAN_MODE) == FAN_MEDIUM
+
+
 async def test_airzone_climate_set_temp(hass: HomeAssistant) -> None:
     """Test setting the target temperature."""
 
@@ -417,3 +498,39 @@ async def test_airzone_climate_set_temp_error(hass: HomeAssistant) -> None:
 
     state = hass.states.get("climate.dorm_2")
     assert state.attributes.get(ATTR_TEMPERATURE) == 19.5
+
+
+async def test_airzone_climate_set_temp_range(hass: HomeAssistant) -> None:
+    """Test setting the target temperature range."""
+
+    HVAC_MOCK = {
+        API_DATA: [
+            {
+                API_SYSTEM_ID: 3,
+                API_ZONE_ID: 1,
+                API_COOL_SET_POINT: 68.0,
+                API_HEAT_SET_POINT: 77.0,
+            }
+        ]
+    }
+
+    await async_init_integration(hass)
+
+    with patch(
+        "homeassistant.components.airzone.AirzoneLocalApi.put_hvac",
+        return_value=HVAC_MOCK,
+    ):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_TEMPERATURE,
+            {
+                ATTR_ENTITY_ID: "climate.dkn_plus",
+                ATTR_TARGET_TEMP_HIGH: 25.0,
+                ATTR_TARGET_TEMP_LOW: 20.0,
+            },
+            blocking=True,
+        )
+
+    state = hass.states.get("climate.dkn_plus")
+    assert state.attributes.get(ATTR_TARGET_TEMP_HIGH) == 25.0
+    assert state.attributes.get(ATTR_TARGET_TEMP_LOW) == 20.0

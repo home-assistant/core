@@ -1,7 +1,8 @@
 {
   "config": {
     "abort": {
-      "incorrect_province": "Incorrect subdivision from yaml import"
+      "incorrect_province": "Incorrect subdivision from yaml import",
+      "already_configured": "Workday has already been setup with chosen configuration"
     },
     "step": {
       "user": {
@@ -11,6 +12,7 @@
         }
       },
       "options": {
+        "description": "Set workday options for {name}",
         "data": {
           "excludes": "Excludes",
           "days_offset": "Offset",
@@ -31,8 +33,7 @@
     },
     "error": {
       "add_holiday_error": "Incorrect format on date (YYYY-MM-DD)",
-      "remove_holiday_error": "Incorrect format on date (YYYY-MM-DD) or holiday name not found",
-      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+      "remove_holiday_error": "Incorrect format on date (YYYY-MM-DD) or holiday name not found"
     }
   },
   "options": {
@@ -59,7 +60,7 @@
     "error": {
       "add_holiday_error": "Incorrect format on date (YYYY-MM-DD)",
       "remove_holiday_error": "Incorrect format on date (YYYY-MM-DD) or holiday name not found",
-      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+      "already_configured": "Service with this configuration already exist"
     }
   },
   "issues": {

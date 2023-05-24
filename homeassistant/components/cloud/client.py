@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+from datetime import datetime
 from http import HTTPStatus
 import logging
 from pathlib import Path
@@ -95,7 +96,9 @@ class CloudClient(Interface):
         if self._alexa_config is None:
             async with self._alexa_config_init_lock:
                 if self._alexa_config is not None:
-                    return self._alexa_config
+                    # This is reachable if the config was set while we waited
+                    # for the lock
+                    return self._alexa_config  # type: ignore[unreachable]
 
                 cloud_user = await self._prefs.get_cloud_user()
 
@@ -136,7 +139,7 @@ class CloudClient(Interface):
         """When cloud is connected."""
         is_new_user = await self.prefs.async_set_username(self.cloud.username)
 
-        async def enable_alexa(_):
+        async def enable_alexa(_: Any) -> None:
             """Enable Alexa."""
             aconf = await self.get_alexa_config()
             try:
@@ -156,7 +159,7 @@ class CloudClient(Interface):
 
         enable_alexa_job = HassJob(enable_alexa, cancel_on_shutdown=True)
 
-        async def enable_google(_):
+        async def enable_google(_: datetime) -> None:
             """Enable Google."""
             gconf = await self.get_google_config()
 
@@ -210,7 +213,7 @@ class CloudClient(Interface):
         """Process cloud alexa message to client."""
         cloud_user = await self._prefs.get_cloud_user()
         aconfig = await self.get_alexa_config()
-        return await alexa_smart_home.async_handle_message(
+        return await alexa_smart_home.async_handle_message(  # type: ignore[no-any-return, no-untyped-call]
             self._hass,
             aconfig,
             payload,
@@ -223,9 +226,11 @@ class CloudClient(Interface):
         gconf = await self.get_google_config()
 
         if not self._prefs.google_enabled:
-            return ga.api_disabled_response(payload, gconf.agent_user_id)
+            return ga.api_disabled_response(  # type: ignore[no-any-return, no-untyped-call]
+                payload, gconf.agent_user_id
+            )
 
-        return await ga.async_handle_message(
+        return await ga.async_handle_message(  # type: ignore[no-any-return, no-untyped-call]
             self._hass, gconf, gconf.cloud_user, payload, google_assistant.SOURCE_CLOUD
         )
 

@@ -134,7 +134,6 @@ class TwitchSensor(SensorEntity):
         self._channel = channel
         self._enable_user_auth = client.has_required_auth(AuthType.USER, OAUTH_SCOPES)
         self._attr_name = channel.display_name
-        self.entity_id = f"sensor.lastfm_{channel.display_name}"
         self._attr_unique_id = channel.id
 
     async def async_update(self) -> None:
