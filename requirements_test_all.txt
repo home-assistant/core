@@ -1735,7 +1735,7 @@ solax==0.3.0
 somfy-mylink-synergy==1.0.6
 
 # homeassistant.components.sonos
-sonos-websocket==0.1.1
+sonos-websocket==0.1.2
 
 # homeassistant.components.marytts
 speak2mary==1.4.0
