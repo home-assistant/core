@@ -28,6 +28,6 @@ class HydrawiseEntity(CoordinatorEntity[HydrawiseDataUpdateCoordinator]):
         self._attr_name = f"{self.data['name']} {description.name}"
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         return {"identifier": self.data.get("relay")}

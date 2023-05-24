@@ -53,7 +53,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-def _show_failure_notification(hass: HomeAssistant, error: str):
+def _show_failure_notification(hass: HomeAssistant, error: str) -> None:
     persistent_notification.create(
         hass,
         f"Error: {error}<br />You will need to restart hass after fixing.",
