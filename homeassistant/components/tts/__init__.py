@@ -491,23 +491,18 @@ class SpeechManager:
         ):
             raise HomeAssistantError(f"Language '{language}' not supported")
 
-        # Options
-        if (default_options := engine_instance.default_options) and options:
-            merged_options = dict(default_options)
-            merged_options.update(options)
-            options = merged_options
-        if not options:
-            options = None if default_options is None else dict(default_options)
+        # Update default options with provided options
+        merged_options = dict(engine_instance.default_options)
+        merged_options.update(options or {})
 
-        if options is not None:
-            supported_options = engine_instance.supported_options or []
-            invalid_opts = [
-                opt_name for opt_name in options if opt_name not in supported_options
-            ]
-            if invalid_opts:
-                raise HomeAssistantError(f"Invalid options found: {invalid_opts}")
+        supported_options = engine_instance.supported_options or []
+        invalid_opts = [
+            opt_name for opt_name in merged_options if opt_name not in supported_options
+        ]
+        if invalid_opts:
+            raise HomeAssistantError(f"Invalid options found: {invalid_opts}")
 
-        return language, options
+        return language, merged_options
 
     async def async_get_url_path(
         self,
