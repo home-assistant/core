@@ -18,7 +18,7 @@ def async_register(
     register.async_register_info(system_health_info, "/config/cloud")
 
 
-async def system_health_info(hass: HomeAssistant) -> dict:
+async def system_health_info(hass: HomeAssistant) -> dict[str, Any]:
     """Get info for the info page."""
     cloud: Cloud[CloudClient] = hass.data[DOMAIN]
     client = cloud.client

@@ -31,7 +31,7 @@ SUPPORT_LANGUAGES = list(TTS_VOICES)
 _LOGGER = logging.getLogger(__name__)
 
 
-def validate_lang(value: Any) -> Any:
+def validate_lang(value: dict[str, Any]) -> dict[str, Any]:
     """Validate chosen gender or language."""
     if (lang := value.get(CONF_LANG)) is None:
         return value
