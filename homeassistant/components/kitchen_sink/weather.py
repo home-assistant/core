@@ -125,13 +125,13 @@ async def async_setup_entry(
                     [ATTR_CONDITION_RAINY, 0.2, 21, 12, 100],
                 ],
                 [
-                    [ATTR_CONDITION_RAINY, 1, 22, 15, 60],
-                    [ATTR_CONDITION_RAINY, 5, 19, 8, 30],
-                    [ATTR_CONDITION_RAINY, 0, 15, 9, 10],
-                    [ATTR_CONDITION_RAINY, 0, 12, 6, 0],
-                    [ATTR_CONDITION_RAINY, 2, 14, 7, 20],
-                    [ATTR_CONDITION_RAINY, 15, 18, 7, 0],
-                    [ATTR_CONDITION_RAINY, 0.2, 21, 12, 100],
+                    [ATTR_CONDITION_CLOUDY, 1, 22, 15, 60],
+                    [ATTR_CONDITION_CLOUDY, 5, 19, 8, 30],
+                    [ATTR_CONDITION_CLOUDY, 0, 15, 9, 10],
+                    [ATTR_CONDITION_CLOUDY, 0, 12, 6, 0],
+                    [ATTR_CONDITION_CLOUDY, 2, 14, 7, 20],
+                    [ATTR_CONDITION_CLOUDY, 15, 18, 7, 0],
+                    [ATTR_CONDITION_CLOUDY, 0.2, 21, 12, 100],
                 ],
                 [
                     [ATTR_CONDITION_RAINY, 1, 22, 15, 60, True],
@@ -141,6 +141,36 @@ async def async_setup_entry(
                     [ATTR_CONDITION_PARTLYCLOUDY, 2, 14, 7, 20, True],
                     [ATTR_CONDITION_RAINY, 15, 18, 7, 0, True],
                     [ATTR_CONDITION_FOG, 0.2, 21, 12, 100, True],
+                ],
+            ),
+            DemoWeather(  # Bi-daily not working as "is_daytime" not set
+                "East",
+                "Sunshine",
+                21.6414,
+                92,
+                1099,
+                0.5,
+                UnitOfTemperature.CELSIUS,
+                UnitOfPressure.HPA,
+                UnitOfSpeed.METERS_PER_SECOND,
+                [
+                    [ATTR_CONDITION_RAINY, 1, 22, 15, 60],
+                    [ATTR_CONDITION_RAINY, 5, 19, 8, 30],
+                    [ATTR_CONDITION_RAINY, 0, 15, 9, 10],
+                    [ATTR_CONDITION_RAINY, 0, 12, 6, 0],
+                    [ATTR_CONDITION_RAINY, 2, 14, 7, 20],
+                    [ATTR_CONDITION_RAINY, 15, 18, 7, 0],
+                    [ATTR_CONDITION_RAINY, 0.2, 21, 12, 100],
+                ],
+                None,
+                [
+                    [ATTR_CONDITION_RAINY, 1, 22, 15, 60],
+                    [ATTR_CONDITION_RAINY, 5, 19, 8, 30],
+                    [ATTR_CONDITION_CLOUDY, 0, 15, 9, 10],
+                    [ATTR_CONDITION_SUNNY, 0, 12, 6, 0],
+                    [ATTR_CONDITION_PARTLYCLOUDY, 2, 14, 7, 20],
+                    [ATTR_CONDITION_RAINY, 15, 18, 7, 0],
+                    [ATTR_CONDITION_FOG, 0.2, 21, 12, 100],
                 ],
             ),
         ]
@@ -169,8 +199,8 @@ class DemoWeather(WeatherEntity):
         forecast_twice_daily: list[list] | None,
     ) -> None:
         """Initialize the Demo weather."""
-        self._attr_name = f"Demo Weather {name}"
-        self._attr_unique_id = f"demo-weather-{name.lower()}"
+        self._attr_name = f"Test Weather {name}"
+        self._attr_unique_id = f"test-weather-{name.lower()}"
         self._condition = condition
         self._native_temperature = temperature
         self._native_temperature_unit = temperature_unit
