@@ -8,6 +8,7 @@ from statistics import mean
 from unittest.mock import patch
 
 from freezegun import freeze_time
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant import loader
@@ -156,7 +157,8 @@ def test_compile_hourly_statistics(
         "state_class": "measurement",
         "unit_of_measurement": state_unit,
     }
-    four, states = record_states(hass, zero, "sensor.test1", attributes)
+    with freeze_time(zero) as freezer:
+        four, states = record_states(hass, freezer, zero, "sensor.test1", attributes)
     hist = history.get_significant_states(
         hass, zero, four, hass.states.async_entity_ids()
     )
@@ -550,7 +552,8 @@ def test_compile_hourly_statistics_purged_state_changes(
         "state_class": "measurement",
         "unit_of_measurement": state_unit,
     }
-    four, states = record_states(hass, zero, "sensor.test1", attributes)
+    with freeze_time(zero) as freezer:
+        four, states = record_states(hass, freezer, zero, "sensor.test1", attributes)
     hist = history.get_significant_states(
         hass, zero, four, hass.states.async_entity_ids()
     )
@@ -612,31 +615,32 @@ def test_compile_hourly_statistics_wrong_unit(
     hass = hass_recorder()
     setup_component(hass, "sensor", {})
     wait_recording_done(hass)  # Wait for the sensor recorder platform to be added
-    four, states = record_states(hass, zero, "sensor.test1", attributes)
+    with freeze_time(zero) as freezer:
+        four, states = record_states(hass, freezer, zero, "sensor.test1", attributes)
 
-    attributes_tmp = dict(attributes)
-    attributes_tmp["unit_of_measurement"] = "invalid"
-    _, _states = record_states(hass, zero, "sensor.test2", attributes_tmp)
-    states = {**states, **_states}
-    attributes_tmp.pop("unit_of_measurement")
-    _, _states = record_states(hass, zero, "sensor.test3", attributes_tmp)
-    states = {**states, **_states}
+        attributes_tmp = dict(attributes)
+        attributes_tmp["unit_of_measurement"] = "invalid"
+        _, _states = record_states(hass, freezer, zero, "sensor.test2", attributes_tmp)
+        states = {**states, **_states}
+        attributes_tmp.pop("unit_of_measurement")
+        _, _states = record_states(hass, freezer, zero, "sensor.test3", attributes_tmp)
+        states = {**states, **_states}
 
-    attributes_tmp = dict(attributes)
-    attributes_tmp["state_class"] = "invalid"
-    _, _states = record_states(hass, zero, "sensor.test4", attributes_tmp)
-    states = {**states, **_states}
-    attributes_tmp.pop("state_class")
-    _, _states = record_states(hass, zero, "sensor.test5", attributes_tmp)
-    states = {**states, **_states}
+        attributes_tmp = dict(attributes)
+        attributes_tmp["state_class"] = "invalid"
+        _, _states = record_states(hass, freezer, zero, "sensor.test4", attributes_tmp)
+        states = {**states, **_states}
+        attributes_tmp.pop("state_class")
+        _, _states = record_states(hass, freezer, zero, "sensor.test5", attributes_tmp)
+        states = {**states, **_states}
 
-    attributes_tmp = dict(attributes)
-    attributes_tmp["device_class"] = "invalid"
-    _, _states = record_states(hass, zero, "sensor.test6", attributes_tmp)
-    states = {**states, **_states}
-    attributes_tmp.pop("device_class")
-    _, _states = record_states(hass, zero, "sensor.test7", attributes_tmp)
-    states = {**states, **_states}
+        attributes_tmp = dict(attributes)
+        attributes_tmp["device_class"] = "invalid"
+        _, _states = record_states(hass, freezer, zero, "sensor.test6", attributes_tmp)
+        states = {**states, **_states}
+        attributes_tmp.pop("device_class")
+        _, _states = record_states(hass, freezer, zero, "sensor.test7", attributes_tmp)
+        states = {**states, **_states}
 
     hist = history.get_significant_states(
         hass, zero, four, hass.states.async_entity_ids()
@@ -832,10 +836,10 @@ async def test_compile_hourly_sum_statistics_amount(
         "last_reset": None,
     }
     seq = [10, 15, 20, 10, 30, 40, 50, 60, 70]
-
-    four, eight, states = await hass.async_add_executor_job(
-        record_meter_states, hass, period0, "sensor.test1", attributes, seq
-    )
+    with freeze_time(period0) as freezer:
+        four, eight, states = await hass.async_add_executor_job(
+            record_meter_states, hass, freezer, period0, "sensor.test1", attributes, seq
+        )
     await async_wait_recording_done(hass)
     hist = history.get_significant_states(
         hass,
@@ -1018,28 +1022,28 @@ def test_compile_hourly_sum_statistics_amount_reset_every_state_change(
     assert seq[0] != seq[-1]
 
     states = {"sensor.test1": []}
+    with freeze_time(zero) as freezer:
+        # Insert states for a 1st statistics period
+        one = zero
+        for i in range(len(seq)):
+            one = one + timedelta(seconds=5)
+            attributes = dict(attributes)
+            attributes["last_reset"] = dt_util.as_local(one).isoformat()
+            _states = record_meter_state(
+                hass, freezer, one, "sensor.test1", attributes, seq[i : i + 1]
+            )
+            states["sensor.test1"].extend(_states["sensor.test1"])
 
-    # Insert states for a 1st statistics period
-    one = zero
-    for i in range(len(seq)):
-        one = one + timedelta(seconds=5)
-        attributes = dict(attributes)
-        attributes["last_reset"] = dt_util.as_local(one).isoformat()
-        _states = record_meter_state(
-            hass, one, "sensor.test1", attributes, seq[i : i + 1]
-        )
-        states["sensor.test1"].extend(_states["sensor.test1"])
-
-    # Insert states for a 2nd statistics period
-    two = zero + timedelta(minutes=5)
-    for i in range(len(seq)):
-        two = two + timedelta(seconds=5)
-        attributes = dict(attributes)
-        attributes["last_reset"] = dt_util.as_local(two).isoformat()
-        _states = record_meter_state(
-            hass, two, "sensor.test1", attributes, seq[i : i + 1]
-        )
-        states["sensor.test1"].extend(_states["sensor.test1"])
+        # Insert states for a 2nd statistics period
+        two = zero + timedelta(minutes=5)
+        for i in range(len(seq)):
+            two = two + timedelta(seconds=5)
+            attributes = dict(attributes)
+            attributes["last_reset"] = dt_util.as_local(two).isoformat()
+            _states = record_meter_state(
+                hass, freezer, two, "sensor.test1", attributes, seq[i : i + 1]
+            )
+            states["sensor.test1"].extend(_states["sensor.test1"])
 
     hist = history.get_significant_states(
         hass,
@@ -1137,17 +1141,18 @@ def test_compile_hourly_sum_statistics_amount_invalid_last_reset(
     states = {"sensor.test1": []}
 
     # Insert states
-    one = zero
-    for i in range(len(seq)):
-        one = one + timedelta(seconds=5)
-        attributes = dict(attributes)
-        attributes["last_reset"] = dt_util.as_local(one).isoformat()
-        if i == 3:
-            attributes["last_reset"] = "festivus"  # not a valid time
-        _states = record_meter_state(
-            hass, one, "sensor.test1", attributes, seq[i : i + 1]
-        )
-        states["sensor.test1"].extend(_states["sensor.test1"])
+    with freeze_time(zero) as freezer:
+        one = zero
+        for i in range(len(seq)):
+            one = one + timedelta(seconds=5)
+            attributes = dict(attributes)
+            attributes["last_reset"] = dt_util.as_local(one).isoformat()
+            if i == 3:
+                attributes["last_reset"] = "festivus"  # not a valid time
+            _states = record_meter_state(
+                hass, freezer, one, "sensor.test1", attributes, seq[i : i + 1]
+            )
+            states["sensor.test1"].extend(_states["sensor.test1"])
 
     hist = history.get_significant_states(
         hass,
@@ -1233,15 +1238,16 @@ def test_compile_hourly_sum_statistics_nan_inf_state(
     seq = [10, math.nan, 15, 15, 20, math.inf, 20, 10]
 
     states = {"sensor.test1": []}
-    one = zero
-    for i in range(len(seq)):
-        one = one + timedelta(seconds=5)
-        attributes = dict(attributes)
-        attributes["last_reset"] = dt_util.as_local(one).isoformat()
-        _states = record_meter_state(
-            hass, one, "sensor.test1", attributes, seq[i : i + 1]
-        )
-        states["sensor.test1"].extend(_states["sensor.test1"])
+    with freeze_time(zero) as freezer:
+        one = zero
+        for i in range(len(seq)):
+            one = one + timedelta(seconds=5)
+            attributes = dict(attributes)
+            attributes["last_reset"] = dt_util.as_local(one).isoformat()
+            _states = record_meter_state(
+                hass, freezer, one, "sensor.test1", attributes, seq[i : i + 1]
+            )
+            states["sensor.test1"].extend(_states["sensor.test1"])
 
     hist = history.get_significant_states(
         hass,
@@ -1381,10 +1387,13 @@ def test_compile_hourly_sum_statistics_negative_state(
         states[entity_id].append(state)
         offending_state = 6
     one = zero
-    for i in range(len(seq)):
-        one = one + timedelta(seconds=5)
-        _states = record_meter_state(hass, one, entity_id, attributes, seq[i : i + 1])
-        states[entity_id].extend(_states[entity_id])
+    with freeze_time(zero) as freezer:
+        for i in range(len(seq)):
+            one = one + timedelta(seconds=5)
+            _states = record_meter_state(
+                hass, freezer, one, entity_id, attributes, seq[i : i + 1]
+            )
+            states[entity_id].extend(_states[entity_id])
 
     hist = history.get_significant_states(
         hass,
@@ -1476,10 +1485,10 @@ def test_compile_hourly_sum_statistics_total_no_reset(
         "unit_of_measurement": state_unit,
     }
     seq = [10, 15, 20, 10, 30, 40, 50, 60, 70]
-
-    four, eight, states = record_meter_states(
-        hass, period0, "sensor.test1", attributes, seq
-    )
+    with freeze_time(period0) as freezer:
+        four, eight, states = record_meter_states(
+            hass, freezer, period0, "sensor.test1", attributes, seq
+        )
     wait_recording_done(hass)
     hist = history.get_significant_states(
         hass,
@@ -1588,10 +1597,10 @@ def test_compile_hourly_sum_statistics_total_increasing(
         "unit_of_measurement": state_unit,
     }
     seq = [10, 15, 20, 10, 30, 40, 50, 60, 70]
-
-    four, eight, states = record_meter_states(
-        hass, period0, "sensor.test1", attributes, seq
-    )
+    with freeze_time(period0) as freezer:
+        four, eight, states = record_meter_states(
+            hass, freezer, period0, "sensor.test1", attributes, seq
+        )
     wait_recording_done(hass)
     hist = history.get_significant_states(
         hass,
@@ -1698,10 +1707,10 @@ def test_compile_hourly_sum_statistics_total_increasing_small_dip(
         "unit_of_measurement": state_unit,
     }
     seq = [10, 15, 20, 19, 30, 40, 39, 60, 70]
-
-    four, eight, states = record_meter_states(
-        hass, period0, "sensor.test1", attributes, seq
-    )
+    with freeze_time(period0) as freezer:
+        four, eight, states = record_meter_states(
+            hass, freezer, period0, "sensor.test1", attributes, seq
+        )
     wait_recording_done(hass)
     hist = history.get_significant_states(
         hass,
@@ -1806,12 +1815,17 @@ def test_compile_hourly_energy_statistics_unsupported(
     seq2 = [110, 120, 130, 0, 30, 45, 55, 65, 75]
     seq3 = [0, 0, 5, 10, 30, 50, 60, 80, 90]
 
-    four, eight, states = record_meter_states(
-        hass, period0, "sensor.test1", sns1_attr, seq1
-    )
-    _, _, _states = record_meter_states(hass, period0, "sensor.test2", sns2_attr, seq2)
-    states = {**states, **_states}
-    _, _, _states = record_meter_states(hass, period0, "sensor.test3", sns3_attr, seq3)
+    with freeze_time(period0) as freezer:
+        four, eight, states = record_meter_states(
+            hass, freezer, period0, "sensor.test1", sns1_attr, seq1
+        )
+        _, _, _states = record_meter_states(
+            hass, freezer, period0, "sensor.test2", sns2_attr, seq2
+        )
+        states = {**states, **_states}
+        _, _, _states = record_meter_states(
+            hass, freezer, period0, "sensor.test3", sns3_attr, seq3
+        )
     states = {**states, **_states}
     wait_recording_done(hass)
 
@@ -1904,12 +1918,17 @@ def test_compile_hourly_energy_statistics_multiple(
     seq2 = [110, 120, 130, 0, 30, 45, 55, 65, 75]
     seq3 = [0, 0, 5, 10, 30, 50, 60, 80, 90]
 
-    four, eight, states = record_meter_states(
-        hass, period0, "sensor.test1", sns1_attr, seq1
-    )
-    _, _, _states = record_meter_states(hass, period0, "sensor.test2", sns2_attr, seq2)
-    states = {**states, **_states}
-    _, _, _states = record_meter_states(hass, period0, "sensor.test3", sns3_attr, seq3)
+    with freeze_time(period0) as freezer:
+        four, eight, states = record_meter_states(
+            hass, freezer, period0, "sensor.test1", sns1_attr, seq1
+        )
+        _, _, _states = record_meter_states(
+            hass, freezer, period0, "sensor.test2", sns2_attr, seq2
+        )
+        states = {**states, **_states}
+        _, _, _states = record_meter_states(
+            hass, freezer, period0, "sensor.test3", sns3_attr, seq3
+        )
     states = {**states, **_states}
     wait_recording_done(hass)
     hist = history.get_significant_states(
@@ -2104,7 +2123,8 @@ def test_compile_hourly_statistics_unchanged(
         "state_class": "measurement",
         "unit_of_measurement": state_unit,
     }
-    four, states = record_states(hass, zero, "sensor.test1", attributes)
+    with freeze_time(zero) as freezer:
+        four, states = record_states(hass, freezer, zero, "sensor.test1", attributes)
     hist = history.get_significant_states(
         hass, zero, four, hass.states.async_entity_ids()
     )
@@ -2214,7 +2234,8 @@ def test_compile_hourly_statistics_unavailable(
     four, states = record_states_partially_unavailable(
         hass, zero, "sensor.test1", attributes
     )
-    _, _states = record_states(hass, zero, "sensor.test2", attributes)
+    with freeze_time(zero) as freezer:
+        _, _states = record_states(hass, freezer, zero, "sensor.test2", attributes)
     states = {**states, **_states}
     hist = history.get_significant_states(
         hass, zero, four, hass.states.async_entity_ids()
@@ -2430,16 +2451,17 @@ def test_compile_hourly_statistics_changing_units_1(
         "state_class": "measurement",
         "unit_of_measurement": state_unit,
     }
-    four, states = record_states(hass, zero, "sensor.test1", attributes)
-    attributes["unit_of_measurement"] = state_unit2
-    four, _states = record_states(
-        hass, zero + timedelta(minutes=5), "sensor.test1", attributes
-    )
-    states["sensor.test1"] += _states["sensor.test1"]
-    four, _states = record_states(
-        hass, zero + timedelta(minutes=10), "sensor.test1", attributes
-    )
-    states["sensor.test1"] += _states["sensor.test1"]
+    with freeze_time(zero) as freezer:
+        four, states = record_states(hass, freezer, zero, "sensor.test1", attributes)
+        attributes["unit_of_measurement"] = state_unit2
+        four, _states = record_states(
+            hass, freezer, zero + timedelta(minutes=5), "sensor.test1", attributes
+        )
+        states["sensor.test1"] += _states["sensor.test1"]
+        four, _states = record_states(
+            hass, freezer, zero + timedelta(minutes=10), "sensor.test1", attributes
+        )
+        states["sensor.test1"] += _states["sensor.test1"]
     hist = history.get_significant_states(
         hass, zero, four, hass.states.async_entity_ids()
     )
@@ -2555,12 +2577,13 @@ def test_compile_hourly_statistics_changing_units_2(
         "state_class": "measurement",
         "unit_of_measurement": state_unit,
     }
-    four, states = record_states(hass, zero, "sensor.test1", attributes)
-    attributes["unit_of_measurement"] = "cats"
-    four, _states = record_states(
-        hass, zero + timedelta(minutes=5), "sensor.test1", attributes
-    )
-    states["sensor.test1"] += _states["sensor.test1"]
+    with freeze_time(zero) as freezer:
+        four, states = record_states(hass, freezer, zero, "sensor.test1", attributes)
+        attributes["unit_of_measurement"] = "cats"
+        four, _states = record_states(
+            hass, freezer, zero + timedelta(minutes=5), "sensor.test1", attributes
+        )
+        states["sensor.test1"] += _states["sensor.test1"]
     hist = history.get_significant_states(
         hass, zero, four, hass.states.async_entity_ids()
     )
@@ -2630,16 +2653,17 @@ def test_compile_hourly_statistics_changing_units_3(
         "state_class": "measurement",
         "unit_of_measurement": state_unit,
     }
-    four, states = record_states(hass, zero, "sensor.test1", attributes)
-    four, _states = record_states(
-        hass, zero + timedelta(minutes=5), "sensor.test1", attributes
-    )
-    states["sensor.test1"] += _states["sensor.test1"]
-    attributes["unit_of_measurement"] = "cats"
-    four, _states = record_states(
-        hass, zero + timedelta(minutes=10), "sensor.test1", attributes
-    )
-    states["sensor.test1"] += _states["sensor.test1"]
+    with freeze_time(zero) as freezer:
+        four, states = record_states(hass, freezer, zero, "sensor.test1", attributes)
+        four, _states = record_states(
+            hass, freezer, zero + timedelta(minutes=5), "sensor.test1", attributes
+        )
+        states["sensor.test1"] += _states["sensor.test1"]
+        attributes["unit_of_measurement"] = "cats"
+        four, _states = record_states(
+            hass, freezer, zero + timedelta(minutes=10), "sensor.test1", attributes
+        )
+        states["sensor.test1"] += _states["sensor.test1"]
     hist = history.get_significant_states(
         hass, zero, four, hass.states.async_entity_ids()
     )
@@ -2747,10 +2771,16 @@ def test_compile_hourly_statistics_convert_units_1(
         "state_class": "measurement",
         "unit_of_measurement": state_unit_1,
     }
-    four, states = record_states(hass, zero, "sensor.test1", attributes)
-    four, _states = record_states(
-        hass, zero + timedelta(minutes=5), "sensor.test1", attributes, seq=[0, 1, None]
-    )
+    with freeze_time(zero) as freezer:
+        four, states = record_states(hass, freezer, zero, "sensor.test1", attributes)
+        four, _states = record_states(
+            hass,
+            freezer,
+            zero + timedelta(minutes=5),
+            "sensor.test1",
+            attributes,
+            seq=[0, 1, None],
+        )
     states["sensor.test1"] += _states["sensor.test1"]
 
     do_adhoc_statistics(hass, start=zero)
@@ -2786,9 +2816,10 @@ def test_compile_hourly_statistics_convert_units_1(
     }
 
     attributes["unit_of_measurement"] = state_unit_2
-    four, _states = record_states(
-        hass, zero + timedelta(minutes=10), "sensor.test1", attributes
-    )
+    with freeze_time(four) as freezer:
+        four, _states = record_states(
+            hass, freezer, zero + timedelta(minutes=10), "sensor.test1", attributes
+        )
     states["sensor.test1"] += _states["sensor.test1"]
     hist = history.get_significant_states(
         hass, zero, four, hass.states.async_entity_ids()
@@ -2884,15 +2915,16 @@ def test_compile_hourly_statistics_equivalent_units_1(
         "state_class": "measurement",
         "unit_of_measurement": state_unit,
     }
-    four, states = record_states(hass, zero, "sensor.test1", attributes)
-    attributes["unit_of_measurement"] = state_unit2
-    four, _states = record_states(
-        hass, zero + timedelta(minutes=5), "sensor.test1", attributes
-    )
-    states["sensor.test1"] += _states["sensor.test1"]
-    four, _states = record_states(
-        hass, zero + timedelta(minutes=10), "sensor.test1", attributes
-    )
+    with freeze_time(zero) as freezer:
+        four, states = record_states(hass, freezer, zero, "sensor.test1", attributes)
+        attributes["unit_of_measurement"] = state_unit2
+        four, _states = record_states(
+            hass, freezer, zero + timedelta(minutes=5), "sensor.test1", attributes
+        )
+        states["sensor.test1"] += _states["sensor.test1"]
+        four, _states = record_states(
+            hass, freezer, zero + timedelta(minutes=10), "sensor.test1", attributes
+        )
     states["sensor.test1"] += _states["sensor.test1"]
     hist = history.get_significant_states(
         hass, zero, four, hass.states.async_entity_ids()
@@ -3004,11 +3036,12 @@ def test_compile_hourly_statistics_equivalent_units_2(
         "state_class": "measurement",
         "unit_of_measurement": state_unit,
     }
-    four, states = record_states(hass, zero, "sensor.test1", attributes)
-    attributes["unit_of_measurement"] = state_unit2
-    four, _states = record_states(
-        hass, zero + timedelta(minutes=5), "sensor.test1", attributes
-    )
+    with freeze_time(zero) as freezer:
+        four, states = record_states(hass, freezer, zero, "sensor.test1", attributes)
+        attributes["unit_of_measurement"] = state_unit2
+        four, _states = record_states(
+            hass, freezer, zero + timedelta(minutes=5), "sensor.test1", attributes
+        )
     states["sensor.test1"] += _states["sensor.test1"]
     hist = history.get_significant_states(
         hass, zero, four, hass.states.async_entity_ids()
@@ -3094,7 +3127,8 @@ def test_compile_hourly_statistics_changing_device_class_1(
         "state_class": "measurement",
         "unit_of_measurement": state_unit,
     }
-    four, states = record_states(hass, zero, "sensor.test1", attributes)
+    with freeze_time(zero) as freezer:
+        four, states = record_states(hass, freezer, zero, "sensor.test1", attributes)
 
     do_adhoc_statistics(hass, start=zero)
     wait_recording_done(hass)
@@ -3130,13 +3164,14 @@ def test_compile_hourly_statistics_changing_device_class_1(
 
     # Update device class and record additional states in the original UoM
     attributes["device_class"] = device_class
-    four, _states = record_states(
-        hass, zero + timedelta(minutes=5), "sensor.test1", attributes
-    )
-    states["sensor.test1"] += _states["sensor.test1"]
-    four, _states = record_states(
-        hass, zero + timedelta(minutes=10), "sensor.test1", attributes
-    )
+    with freeze_time(zero) as freezer:
+        four, _states = record_states(
+            hass, freezer, zero + timedelta(minutes=5), "sensor.test1", attributes
+        )
+        states["sensor.test1"] += _states["sensor.test1"]
+        four, _states = record_states(
+            hass, freezer, zero + timedelta(minutes=10), "sensor.test1", attributes
+        )
     states["sensor.test1"] += _states["sensor.test1"]
     hist = history.get_significant_states(
         hass, zero, four, hass.states.async_entity_ids()
@@ -3187,13 +3222,14 @@ def test_compile_hourly_statistics_changing_device_class_1(
 
     # Update device class and record additional states in a different UoM
     attributes["unit_of_measurement"] = statistic_unit
-    four, _states = record_states(
-        hass, zero + timedelta(minutes=15), "sensor.test1", attributes
-    )
-    states["sensor.test1"] += _states["sensor.test1"]
-    four, _states = record_states(
-        hass, zero + timedelta(minutes=20), "sensor.test1", attributes
-    )
+    with freeze_time(zero) as freezer:
+        four, _states = record_states(
+            hass, freezer, zero + timedelta(minutes=15), "sensor.test1", attributes
+        )
+        states["sensor.test1"] += _states["sensor.test1"]
+        four, _states = record_states(
+            hass, freezer, zero + timedelta(minutes=20), "sensor.test1", attributes
+        )
     states["sensor.test1"] += _states["sensor.test1"]
     hist = history.get_significant_states(
         hass, zero, four, hass.states.async_entity_ids()
@@ -3298,7 +3334,8 @@ def test_compile_hourly_statistics_changing_device_class_2(
         "state_class": "measurement",
         "unit_of_measurement": state_unit,
     }
-    four, states = record_states(hass, zero, "sensor.test1", attributes)
+    with freeze_time(zero) as freezer:
+        four, states = record_states(hass, freezer, zero, "sensor.test1", attributes)
 
     do_adhoc_statistics(hass, start=zero)
     wait_recording_done(hass)
@@ -3334,13 +3371,14 @@ def test_compile_hourly_statistics_changing_device_class_2(
 
     # Remove device class and record additional states
     attributes.pop("device_class")
-    four, _states = record_states(
-        hass, zero + timedelta(minutes=5), "sensor.test1", attributes
-    )
-    states["sensor.test1"] += _states["sensor.test1"]
-    four, _states = record_states(
-        hass, zero + timedelta(minutes=10), "sensor.test1", attributes
-    )
+    with freeze_time(zero) as freezer:
+        four, _states = record_states(
+            hass, freezer, zero + timedelta(minutes=5), "sensor.test1", attributes
+        )
+        states["sensor.test1"] += _states["sensor.test1"]
+        four, _states = record_states(
+            hass, freezer, zero + timedelta(minutes=10), "sensor.test1", attributes
+        )
     states["sensor.test1"] += _states["sensor.test1"]
     hist = history.get_significant_states(
         hass, zero, four, hass.states.async_entity_ids()
@@ -3435,7 +3473,10 @@ def test_compile_hourly_statistics_changing_state_class(
         "state_class": "total_increasing",
         "unit_of_measurement": state_unit,
     }
-    four, states = record_states(hass, period0, "sensor.test1", attributes_1)
+    with freeze_time(period0) as freezer:
+        four, states = record_states(
+            hass, freezer, period0, "sensor.test1", attributes_1
+        )
     do_adhoc_statistics(hass, start=period0)
     wait_recording_done(hass)
     statistic_ids = list_statistic_ids(hass)
@@ -3467,7 +3508,10 @@ def test_compile_hourly_statistics_changing_state_class(
     }
 
     # Add more states, with changed state class
-    four, _states = record_states(hass, period1, "sensor.test1", attributes_2)
+    with freeze_time(period1) as freezer:
+        four, _states = record_states(
+            hass, freezer, period1, "sensor.test1", attributes_2
+        )
     states["sensor.test1"] += _states["sensor.test1"]
     hist = history.get_significant_states(
         hass, period0, four, hass.states.async_entity_ids()
@@ -3606,55 +3650,69 @@ def test_compile_statistics_hourly_daily_monthly_summary(
         "sensor.test4": None,
     }
     start = zero
-    for i in range(24):
-        seq = [-10, 15, 30]
-        # test1 has same value in every period
-        four, _states = record_states(hass, start, "sensor.test1", attributes, seq)
-        states["sensor.test1"] += _states["sensor.test1"]
-        last_state = last_states["sensor.test1"]
-        expected_minima["sensor.test1"].append(_min(seq, last_state))
-        expected_maxima["sensor.test1"].append(_max(seq, last_state))
-        expected_averages["sensor.test1"].append(_weighted_average(seq, i, last_state))
-        last_states["sensor.test1"] = seq[-1]
-        # test2 values change: min/max at the last state
-        seq = [-10 * (i + 1), 15 * (i + 1), 30 * (i + 1)]
-        four, _states = record_states(hass, start, "sensor.test2", attributes, seq)
-        states["sensor.test2"] += _states["sensor.test2"]
-        last_state = last_states["sensor.test2"]
-        expected_minima["sensor.test2"].append(_min(seq, last_state))
-        expected_maxima["sensor.test2"].append(_max(seq, last_state))
-        expected_averages["sensor.test2"].append(_weighted_average(seq, i, last_state))
-        last_states["sensor.test2"] = seq[-1]
-        # test3 values change: min/max at the first state
-        seq = [-10 * (23 - i + 1), 15 * (23 - i + 1), 30 * (23 - i + 1)]
-        four, _states = record_states(hass, start, "sensor.test3", attributes, seq)
-        states["sensor.test3"] += _states["sensor.test3"]
-        last_state = last_states["sensor.test3"]
-        expected_minima["sensor.test3"].append(_min(seq, last_state))
-        expected_maxima["sensor.test3"].append(_max(seq, last_state))
-        expected_averages["sensor.test3"].append(_weighted_average(seq, i, last_state))
-        last_states["sensor.test3"] = seq[-1]
-        # test4 values grow
-        seq = [i, i + 0.5, i + 0.75]
-        start_meter = start
-        for j in range(len(seq)):
-            _states = record_meter_state(
-                hass,
-                start_meter,
-                "sensor.test4",
-                sum_attributes,
-                seq[j : j + 1],
+    with freeze_time(start) as freezer:
+        for i in range(24):
+            seq = [-10, 15, 30]
+            # test1 has same value in every period
+            four, _states = record_states(
+                hass, freezer, start, "sensor.test1", attributes, seq
             )
-            start_meter += timedelta(minutes=1)
-            states["sensor.test4"] += _states["sensor.test4"]
-        last_state = last_states["sensor.test4"]
-        expected_states["sensor.test4"].append(seq[-1])
-        expected_sums["sensor.test4"].append(
-            _sum(seq, last_state, expected_sums["sensor.test4"])
-        )
-        last_states["sensor.test4"] = seq[-1]
+            states["sensor.test1"] += _states["sensor.test1"]
+            last_state = last_states["sensor.test1"]
+            expected_minima["sensor.test1"].append(_min(seq, last_state))
+            expected_maxima["sensor.test1"].append(_max(seq, last_state))
+            expected_averages["sensor.test1"].append(
+                _weighted_average(seq, i, last_state)
+            )
+            last_states["sensor.test1"] = seq[-1]
+            # test2 values change: min/max at the last state
+            seq = [-10 * (i + 1), 15 * (i + 1), 30 * (i + 1)]
+            four, _states = record_states(
+                hass, freezer, start, "sensor.test2", attributes, seq
+            )
+            states["sensor.test2"] += _states["sensor.test2"]
+            last_state = last_states["sensor.test2"]
+            expected_minima["sensor.test2"].append(_min(seq, last_state))
+            expected_maxima["sensor.test2"].append(_max(seq, last_state))
+            expected_averages["sensor.test2"].append(
+                _weighted_average(seq, i, last_state)
+            )
+            last_states["sensor.test2"] = seq[-1]
+            # test3 values change: min/max at the first state
+            seq = [-10 * (23 - i + 1), 15 * (23 - i + 1), 30 * (23 - i + 1)]
+            four, _states = record_states(
+                hass, freezer, start, "sensor.test3", attributes, seq
+            )
+            states["sensor.test3"] += _states["sensor.test3"]
+            last_state = last_states["sensor.test3"]
+            expected_minima["sensor.test3"].append(_min(seq, last_state))
+            expected_maxima["sensor.test3"].append(_max(seq, last_state))
+            expected_averages["sensor.test3"].append(
+                _weighted_average(seq, i, last_state)
+            )
+            last_states["sensor.test3"] = seq[-1]
+            # test4 values grow
+            seq = [i, i + 0.5, i + 0.75]
+            start_meter = start
+            for j in range(len(seq)):
+                _states = record_meter_state(
+                    hass,
+                    freezer,
+                    start_meter,
+                    "sensor.test4",
+                    sum_attributes,
+                    seq[j : j + 1],
+                )
+                start_meter += timedelta(minutes=1)
+                states["sensor.test4"] += _states["sensor.test4"]
+            last_state = last_states["sensor.test4"]
+            expected_states["sensor.test4"].append(seq[-1])
+            expected_sums["sensor.test4"].append(
+                _sum(seq, last_state, expected_sums["sensor.test4"])
+            )
+            last_states["sensor.test4"] = seq[-1]
 
-        start += timedelta(minutes=5)
+            start += timedelta(minutes=5)
     hist = history.get_significant_states(
         hass,
         zero - timedelta.resolution,
@@ -3949,7 +4007,14 @@ def test_compile_statistics_hourly_daily_monthly_summary(
     assert "Error while processing event StatisticsTask" not in caplog.text
 
 
-def record_states(hass, zero, entity_id, attributes, seq=None):
+def record_states(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    zero: datetime,
+    entity_id: str,
+    attributes,
+    seq=None,
+):
     """Record some test states.
 
     We inject a bunch of state updates for measurement sensors.
@@ -3970,20 +4035,14 @@ def record_states(hass, zero, entity_id, attributes, seq=None):
     four = three + timedelta(seconds=10 * 5)
 
     states = {entity_id: []}
-    with freeze_time(one) as freezer:
-        states[entity_id].append(
-            set_state(entity_id, str(seq[0]), attributes=attributes)
-        )
+    freezer.move_to(one)
+    states[entity_id].append(set_state(entity_id, str(seq[0]), attributes=attributes))
 
-        freezer.move_to(two)
-        states[entity_id].append(
-            set_state(entity_id, str(seq[1]), attributes=attributes)
-        )
+    freezer.move_to(two)
+    states[entity_id].append(set_state(entity_id, str(seq[1]), attributes=attributes))
 
-        freezer.move_to(three)
-        states[entity_id].append(
-            set_state(entity_id, str(seq[2]), attributes=attributes)
-        )
+    freezer.move_to(three)
+    states[entity_id].append(set_state(entity_id, str(seq[2]), attributes=attributes))
 
     return four, states
 
@@ -4971,7 +5030,14 @@ async def test_validate_statistics_other_domain(
     await assert_validation_result(client, {})
 
 
-def record_meter_states(hass, zero, entity_id, _attributes, seq):
+def record_meter_states(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    zero: datetime,
+    entity_id: str,
+    _attributes,
+    seq,
+):
     """Record some test states.
 
     We inject a bunch of state updates for meter sensors.
@@ -4996,41 +5062,49 @@ def record_meter_states(hass, zero, entity_id, _attributes, seq):
         attributes["last_reset"] = zero.isoformat()
 
     states = {entity_id: []}
-    with freeze_time(zero) as freezer:
-        states[entity_id].append(set_state(entity_id, seq[0], attributes=attributes))
+    freezer.move_to(zero)
 
-        freezer.move_to(one)
-        states[entity_id].append(set_state(entity_id, seq[1], attributes=attributes))
+    states[entity_id].append(set_state(entity_id, seq[0], attributes=attributes))
 
-        freezer.move_to(two)
-        states[entity_id].append(set_state(entity_id, seq[2], attributes=attributes))
+    freezer.move_to(one)
+    states[entity_id].append(set_state(entity_id, seq[1], attributes=attributes))
 
-        freezer.move_to(three)
-        states[entity_id].append(set_state(entity_id, seq[3], attributes=attributes))
+    freezer.move_to(two)
+    states[entity_id].append(set_state(entity_id, seq[2], attributes=attributes))
 
-        attributes = dict(_attributes)
-        if "last_reset" in _attributes:
-            attributes["last_reset"] = four.isoformat()
+    freezer.move_to(three)
+    states[entity_id].append(set_state(entity_id, seq[3], attributes=attributes))
 
-        freezer.move_to(four)
-        states[entity_id].append(set_state(entity_id, seq[4], attributes=attributes))
+    attributes = dict(_attributes)
+    if "last_reset" in _attributes:
+        attributes["last_reset"] = four.isoformat()
 
-        freezer.move_to(five)
-        states[entity_id].append(set_state(entity_id, seq[5], attributes=attributes))
+    freezer.move_to(four)
+    states[entity_id].append(set_state(entity_id, seq[4], attributes=attributes))
 
-        freezer.move_to(six)
-        states[entity_id].append(set_state(entity_id, seq[6], attributes=attributes))
+    freezer.move_to(five)
+    states[entity_id].append(set_state(entity_id, seq[5], attributes=attributes))
 
-        freezer.move_to(seven)
-        states[entity_id].append(set_state(entity_id, seq[7], attributes=attributes))
+    freezer.move_to(six)
+    states[entity_id].append(set_state(entity_id, seq[6], attributes=attributes))
 
-        freezer.move_to(eight)
-        states[entity_id].append(set_state(entity_id, seq[8], attributes=attributes))
+    freezer.move_to(seven)
+    states[entity_id].append(set_state(entity_id, seq[7], attributes=attributes))
+
+    freezer.move_to(eight)
+    states[entity_id].append(set_state(entity_id, seq[8], attributes=attributes))
 
     return four, eight, states
 
 
-def record_meter_state(hass, zero, entity_id, attributes, seq):
+def record_meter_state(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    zero: datetime,
+    entity_id: str,
+    attributes,
+    seq,
+):
     """Record test state.
 
     We inject a state update for meter sensor.
@@ -5043,8 +5117,8 @@ def record_meter_state(hass, zero, entity_id, attributes, seq):
         return hass.states.get(entity_id)
 
     states = {entity_id: []}
-    with freeze_time(zero):
-        states[entity_id].append(set_state(entity_id, seq[0], attributes=attributes))
+    freezer.move_to(zero)
+    states[entity_id].append(set_state(entity_id, seq[0], attributes=attributes))
 
     return states
 
