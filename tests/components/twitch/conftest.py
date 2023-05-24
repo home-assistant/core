@@ -5,7 +5,6 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
-from twitchAPI.types import AuthScope
 
 from homeassistant.components.application_credentials import (
     ClientCredential,
@@ -24,9 +23,10 @@ ComponentSetup = Callable[[TwitchMock | None], Awaitable[None]]
 CLIENT_ID = "1234"
 CLIENT_SECRET = "5678"
 TITLE = "Test"
-SCOPES = [str(AuthScope.USER_READ_SUBSCRIPTIONS), str(AuthScope.USER_READ_FOLLOWS)]
+SCOPES = ["user:read:subscriptions", "user:read:follows"]
 
 TWITCH_TOKEN_URI = "https://id.twitch.tv/oauth2/token"
+TWITCH_AUTHORIZE_URI = "https://id.twitch.tv/oauth2/authorize"
 
 
 @pytest.fixture(name="scopes")

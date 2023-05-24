@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 import logging
+import time
 from typing import Any
 
 from twitchAPI.helper import first
@@ -138,12 +139,17 @@ class OAuth2FlowHandler(
         for entry in self._async_current_entries():
             if entry.data[CONF_CLIENT_ID] == import_config[CONF_CLIENT_ID]:
                 return self.async_abort(reason="already_configured")
+        scopes = [scope.value for scope in OAUTH_SCOPES]
         return self.async_create_entry(
             title="",
             data={
                 "auth_implementation": DOMAIN,
-                CONF_CLIENT_ID: import_config[CONF_CLIENT_ID],
-                CONF_CLIENT_SECRET: import_config[CONF_CLIENT_SECRET],
+                "token": {
+                    CONF_CLIENT_ID: import_config[CONF_CLIENT_ID],
+                    CONF_CLIENT_SECRET: import_config[CONF_CLIENT_SECRET],
+                    "expires_at": time.time(),
+                    "scope": " ".join(scopes),
+                },
             },
             options={CONF_CHANNELS: import_config[CONF_CHANNELS]},
         )

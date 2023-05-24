@@ -70,7 +70,7 @@ async def async_setup_platform(
         hass,
         DOMAIN,
         ClientCredential(
-            config[CONF_CLIENT_ID], config[CONF_CLIENT_SECRET], name="Twitch"
+            config[CONF_CLIENT_ID], config[CONF_CLIENT_SECRET], name=DOMAIN
         ),
     )
 

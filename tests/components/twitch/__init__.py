@@ -4,7 +4,7 @@ from collections.abc import AsyncGenerator
 from dataclasses import dataclass
 from typing import Any, Optional
 
-from twitchAPI.object import TwitchUser
+from twitchAPI.object import FollowedChannelsResult, TwitchUser
 from twitchAPI.twitch import (
     InvalidTokenException,
     MissingScopeException,
@@ -129,6 +129,10 @@ class TwitchMock:
     ) -> None:
         """Set user authentication."""
         pass
+
+    async def get_followed_channels(self, user_id: str) -> FollowedChannelsResult:
+        """Get followed channels."""
+        return TwitchUserFollowResultMock([])
 
     async def get_streams(
         self, user_id: list[str], first: int
