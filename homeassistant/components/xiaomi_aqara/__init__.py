@@ -2,6 +2,7 @@
 import asyncio
 from datetime import timedelta
 import logging
+from typing import Any
 
 import voluptuous as vol
 from xiaomi_gateway import AsyncXiaomiGatewayMulticast, XiaomiGateway
@@ -351,9 +352,13 @@ class XiaomiDevice(Entity):
             return True
         return False
 
+    def push_data(self, data: dict[str, Any], raw_data: dict[Any, Any]) -> None:
+        """Push from Hub running in another thread."""
+        self.hass.loop.call_soon(self.async_push_data, data, raw_data)
+
     @callback
-    def push_data(self, data, raw_data):
-        """Push from Hub."""
+    def async_push_data(self, data: dict[str, Any], raw_data: dict[Any, Any]) -> None:
+        """Push from Hub handled in the event loop."""
         _LOGGER.debug("PUSH >> %s: %s", self, data)
         was_unavailable = self._async_track_unavailable()
         is_data = self.parse_data(data, raw_data)

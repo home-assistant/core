@@ -3,7 +3,9 @@ from unittest.mock import patch
 
 from aioairzone.common import OperationMode
 from aioairzone.const import (
+    API_COOL_SET_POINT,
     API_DATA,
+    API_HEAT_SET_POINT,
     API_MODE,
     API_ON,
     API_SET_POINT,
@@ -25,6 +27,8 @@ from homeassistant.components.climate import (
     ATTR_HVAC_MODES,
     ATTR_MAX_TEMP,
     ATTR_MIN_TEMP,
+    ATTR_TARGET_TEMP_HIGH,
+    ATTR_TARGET_TEMP_LOW,
     ATTR_TARGET_TEMP_STEP,
     DOMAIN as CLIMATE_DOMAIN,
     FAN_AUTO,
@@ -494,3 +498,39 @@ async def test_airzone_climate_set_temp_error(hass: HomeAssistant) -> None:
 
     state = hass.states.get("climate.dorm_2")
     assert state.attributes.get(ATTR_TEMPERATURE) == 19.5
+
+
+async def test_airzone_climate_set_temp_range(hass: HomeAssistant) -> None:
+    """Test setting the target temperature range."""
+
+    HVAC_MOCK = {
+        API_DATA: [
+            {
+                API_SYSTEM_ID: 3,
+                API_ZONE_ID: 1,
+                API_COOL_SET_POINT: 68.0,
+                API_HEAT_SET_POINT: 77.0,
+            }
+        ]
+    }
+
+    await async_init_integration(hass)
+
+    with patch(
+        "homeassistant.components.airzone.AirzoneLocalApi.put_hvac",
+        return_value=HVAC_MOCK,
+    ):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_TEMPERATURE,
+            {
+                ATTR_ENTITY_ID: "climate.dkn_plus",
+                ATTR_TARGET_TEMP_HIGH: 25.0,
+                ATTR_TARGET_TEMP_LOW: 20.0,
+            },
+            blocking=True,
+        )
+
+    state = hass.states.get("climate.dkn_plus")
+    assert state.attributes.get(ATTR_TARGET_TEMP_HIGH) == 25.0
+    assert state.attributes.get(ATTR_TARGET_TEMP_LOW) == 20.0
