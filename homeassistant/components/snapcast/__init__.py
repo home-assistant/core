@@ -27,7 +27,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             f"Could not connect to Snapcast server at {host}:{port}"
         ) from ex
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = HomeAssistantSnapcast(server)
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = HomeAssistantSnapcast(
+        hass, server, f"{host}:{port}", entry.entry_id
+    )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -37,5 +39,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        hass.data[DOMAIN].pop(entry.entry_id)
+        snapcast_data = hass.data[DOMAIN].pop(entry.entry_id)
+        # disconnect from server
+        await snapcast_data.disconnect()
     return unload_ok
