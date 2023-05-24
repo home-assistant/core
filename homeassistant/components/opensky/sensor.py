@@ -88,7 +88,7 @@ def setup_platform(
                 config.get(CONF_NAME, DOMAIN),
                 opensky,
                 bounding_box,
-                config.get(CONF_ALTITUDE),
+                config[CONF_ALTITUDE],
             )
         ],
         True,
@@ -108,10 +108,10 @@ class OpenSkySensor(SensorEntity):
         name: str,
         opensky: OpenSky,
         bounding_box: BoundingBox,
-        altitude: float | None,
+        altitude: float,
     ) -> None:
         """Initialize the sensor."""
-        self._altitude = altitude or 0
+        self._altitude = altitude
         self._state = 0
         self._hass = hass
         self._name = name
