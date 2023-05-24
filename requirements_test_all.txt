@@ -1099,7 +1099,7 @@ pyMetEireann==2021.8.0
 
 # homeassistant.components.met
 # homeassistant.components.norway_air
-pyMetno==0.9.0
+pyMetno==0.10.0
 
 # homeassistant.components.rfxtrx
 pyRFXtrx==0.30.1
