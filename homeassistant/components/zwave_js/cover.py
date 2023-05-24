@@ -97,22 +97,15 @@ class CoverPositionMixin(ZWaveBaseEntity, CoverEntity):
 
     def percent_to_zwave_position(self, value: int) -> int:
         """Convert position in 0-100 scale to closed_value-open_value scale."""
-        if value > self._fully_closed_position:
-            return max(
-                1,
-                round((value / 100) * self._position_range)
-                + self._fully_closed_position,
-            )
-        return self._fully_closed_position
+        return (
+            round(max(min(1, (value / 100)), 0) * self._position_range)
+            + self._fully_closed_position
+        )
 
     def zwave_to_percent_position(self, value: int) -> int:
         """Convert closed_value-open_value scale to position in 0-100 scale."""
         return round(
-            (
-                (cast(int, self.info.primary_value.value) - self._fully_closed_position)
-                / self._position_range
-            )
-            * 100
+            ((value - self._fully_closed_position) / self._position_range) * 100
         )
 
     @property
@@ -205,15 +198,14 @@ class CoverTiltMixin(ZWaveBaseEntity, CoverEntity):
 
     def percent_to_zwave_tilt(self, value: int) -> int:
         """Convert position in 0-100 scale to closed_value-open_value scale."""
-        if value > self._fully_closed_tilt:
-            return round((value / 100) * self._tilt_range) + self._fully_closed_tilt
-        return self._fully_closed_tilt
+        return (
+            round(max(min(1, (value / 100)), 0) * self._tilt_range)
+            + self._fully_closed_tilt
+        )
 
     def zwave_to_percent_tilt(self, value: int) -> int:
         """Convert closed_value-open_value scale to position in 0-100 scale."""
-        if value > self._fully_closed_tilt:
-            return round(((value - self._fully_closed_tilt) / self._tilt_range) * 100)
-        return self._fully_closed_tilt
+        return round(((value - self._fully_closed_tilt) / self._tilt_range) * 100)
 
     @property
     def _fully_open_tilt(self) -> int:
