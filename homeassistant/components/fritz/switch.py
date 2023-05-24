@@ -256,10 +256,9 @@ async def async_setup_entry(
     )
 
 
-class FritzBoxBaseCoordinatorSwitch(CoordinatorEntity, SwitchEntity):
+class FritzBoxBaseCoordinatorSwitch(CoordinatorEntity[AvmWrapper], SwitchEntity):
     """Fritz switch coordinator base class."""
 
-    coordinator: AvmWrapper
     entity_description: SwitchEntityDescription
     _attr_has_entity_name = True
 

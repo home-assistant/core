@@ -135,7 +135,7 @@ async def test_setup_existing_cloud_user(
 
 async def test_on_connect(hass: HomeAssistant, mock_cloud_fixture) -> None:
     """Test cloud on connect triggers."""
-    cl: Cloud = hass.data["cloud"]
+    cl: Cloud[cloud.client.CloudClient] = hass.data["cloud"]
 
     assert len(cl.iot._on_connect) == 4
 
