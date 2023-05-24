@@ -37,7 +37,7 @@ async def async_setup_entry(
         if info.platform_hint == "notification idle":
             entities.append(ZWaveNotificationIdleButton(config_entry, driver, info))
         else:
-            async_add_entities([ZwaveBooleanNodeButton(config_entry, driver, info)])
+            entities.append(ZwaveBooleanNodeButton(config_entry, driver, info))
 
         async_add_entities(entities)
 
