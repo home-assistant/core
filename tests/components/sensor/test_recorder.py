@@ -3576,6 +3576,7 @@ def test_compile_hourly_statistics_changing_state_class(
     assert "Error while processing event StatisticsTask" not in caplog.text
 
 
+@pytest.mark.timeout(25)
 def test_compile_statistics_hourly_daily_monthly_summary(
     hass_recorder: Callable[..., HomeAssistant], caplog: pytest.LogCaptureFixture
 ) -> None:
