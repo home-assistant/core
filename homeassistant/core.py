@@ -25,7 +25,6 @@ import os
 import pathlib
 import re
 import threading
-import time
 from time import monotonic
 from typing import (
     TYPE_CHECKING,
@@ -1621,24 +1620,10 @@ class StateMachine:
         if same_state and same_attr:
             return
 
-        if context is None:
-            # Its much faster to convert a timestamp to a utc datetime object
-            # than converting a utc datetime object to a timestamp since cpython
-            # does not fast path for handling the UTC timezone and has to do
-            # multiple local timezone conversions.
-            #
-            # from_timestamp implementation:
-            # https://github.com/python/cpython/blob/c90a862cdcf55dc1753c6466e5fa4a467a13ae24/Modules/_datetimemodule.c#L2936
-            #
-            # timestamp implementation:
-            # https://github.com/python/cpython/blob/c90a862cdcf55dc1753c6466e5fa4a467a13ae24/Modules/_datetimemodule.c#L6387
-            # https://github.com/python/cpython/blob/c90a862cdcf55dc1753c6466e5fa4a467a13ae24/Modules/_datetimemodule.c#L6323
-            timestamp = time.time()
-            now = dt_util.utc_from_timestamp(timestamp)
-            context = Context(id=ulid_util.ulid_at_time(timestamp))
-        else:
-            now = dt_util.utcnow()
+        now = dt_util.utcnow()
 
+        if context is None:
+            context = Context(id=ulid_util.ulid_at_time(dt_util.utc_to_timestamp(now)))
         state = State(
             entity_id,
             new_state,
