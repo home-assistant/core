@@ -6,7 +6,11 @@ UserConfig = dict[str, Any]
 
 def invert_dict(source_dict: dict[Any, Any]) -> dict[Any, Any]:
     """Invert keys and values in a dict."""
-    return {value: key for key, value in source_dict.items()}
+    result = {value: key for key, value in source_dict.items()}
+    if len(result) != len(source_dict):
+        raise ValueError("Duplicate values found in source dict, cannot safely invert")
+
+    return result
 
 
 def listify(maybe_list: Any) -> list[Any]:
