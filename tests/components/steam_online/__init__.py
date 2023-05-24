@@ -2,6 +2,7 @@
 import random
 import string
 from unittest.mock import patch
+import urllib.parse
 
 import steam
 
@@ -75,7 +76,7 @@ class MockedInterface(dict):
 
     def GetPlayerSummaries(self, steamids: str | list[str]) -> dict:
         """Get player summaries."""
-        assert len(str(steamids).replace("'", "%27")) <= MAX_LENGTH_STEAM_IDS
+        assert len(urllib.parse.quote(str(steamids))) <= MAX_LENGTH_STEAM_IDS
         return {
             "response": {
                 "players": {
