@@ -34,28 +34,28 @@
       "mold_pollen": {
         "state_attributes": {
           "level": {
-            "name": "Level"
+            "name": "[%key:component::accuweather::entity::sensor::grass_pollen::state_attributes::level::name%]"
           }
         }
       },
       "ragweed_pollen": {
         "state_attributes": {
           "level": {
-            "name": "Level"
+            "name": "[%key:component::accuweather::entity::sensor::grass_pollen::state_attributes::level::name%]"
           }
         }
       },
       "tree_pollen": {
         "state_attributes": {
           "level": {
-            "name": "Level"
+            "name": "[%key:component::accuweather::entity::sensor::grass_pollen::state_attributes::level::name%]"
           }
         }
       },
       "uv_index": {
         "state_attributes": {
           "level": {
-            "name": "Level"
+            "name": "[%key:component::accuweather::entity::sensor::grass_pollen::state_attributes::level::name%]"
           }
         }
       }
