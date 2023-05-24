@@ -316,7 +316,7 @@ SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
         icon="mdi:gauge",
         name="Pressure tendency",
         translation_key="pressure_tendency",
-        value_fn=lambda data: cast(str, data["LocalizedText"]).lower(),
+        value_fn=lambda data: cast(str, data["LocalizedText"]),
     ),
     AccuWeatherSensorDescription(
         key="UVIndex",
