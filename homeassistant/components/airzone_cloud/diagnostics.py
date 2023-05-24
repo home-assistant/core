@@ -1,7 +1,7 @@
 """Support for the Airzone Cloud diagnostics."""
 from __future__ import annotations
 
-from collections.abc import Iterable, Mapping
+from collections.abc import Mapping
 from typing import Any
 
 from aioairzone_cloud.const import (
