@@ -23,13 +23,14 @@ from tests.common import (
     mock_integration,
     mock_platform,
 )
-from tests.components.tts.conftest import (  # noqa: F401, pylint: disable=unused-import
-    init_cache_dir_side_effect,
-    mock_get_cache_files,
-    mock_init_cache_dir,
-)
 
 _TRANSCRIPT = "test transcript"
+
+
+@pytest.fixture(autouse=True)
+def mock_tts_cache_dir_autouse(mock_tts_cache_dir):
+    """Mock the TTS cache dir with empty dir."""
+    return mock_tts_cache_dir
 
 
 class BaseProvider:
@@ -190,9 +191,6 @@ async def init_supporting_components(
     mock_stt_provider_entity: MockSttProviderEntity,
     mock_tts_provider: MockTTSProvider,
     config_flow_fixture,
-    init_cache_dir_side_effect,  # noqa: F811
-    mock_get_cache_files,  # noqa: F811
-    mock_init_cache_dir,  # noqa: F811
 ):
     """Initialize relevant components with empty configs."""
 
