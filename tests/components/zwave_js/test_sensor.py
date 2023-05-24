@@ -46,7 +46,6 @@ from .common import (
     ENERGY_SENSOR,
     HUMIDITY_SENSOR,
     ID_LOCK_CONFIG_PARAMETER_SENSOR,
-    INDICATOR_SENSOR,
     METER_ENERGY_SENSOR,
     NOTIFICATION_MOTION_SENSOR,
     POWER_SENSOR,
@@ -216,18 +215,6 @@ async def test_disabled_notification_sensor(
     state = hass.states.get(NOTIFICATION_MOTION_SENSOR)
     assert state
     assert state.state == STATE_UNKNOWN
-
-
-async def test_disabled_indcator_sensor(
-    hass: HomeAssistant, climate_radio_thermostat_ct100_plus, integration
-) -> None:
-    """Test sensor is created from Indicator CC and is disabled."""
-    ent_reg = er.async_get(hass)
-    entity_entry = ent_reg.async_get(INDICATOR_SENSOR)
-
-    assert entity_entry
-    assert entity_entry.disabled
-    assert entity_entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
 
 
 async def test_config_parameter_sensor(
