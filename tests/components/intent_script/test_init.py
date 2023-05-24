@@ -169,3 +169,21 @@ async def test_reload(hass: HomeAssistant) -> None:
 
     assert intents.get("NewIntent1") is None
     assert intents.get("NewIntent2")
+
+    yaml_path = get_fixture_path("configuration_no_entry.yaml", "intent_script")
+
+    with patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_RELOAD,
+            {},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+    assert len(intents) == 1
+
+    # absence of intent_script from the configuration.yaml should be ignored, and not be processed.
+    # Thus, no changes.
+    assert intents.get("NewIntent1") is None
+    assert intents.get("NewIntent2")

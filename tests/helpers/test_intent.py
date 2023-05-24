@@ -226,3 +226,13 @@ def test_async_remove(hass: HomeAssistant) -> None:
     intent.async_remove(hass, "test_intent")
 
     assert "test_intent" not in hass.data[intent.DATA_KEY]
+
+
+def test_async_remove_no_existing(hass: HomeAssistant) -> None:
+    """Test the removal of a non-existing intent from Home Assistant's data."""
+    handler = MagicMock()
+    handler.intent_type = "test_intent"
+
+    intent.async_remove(hass, "test_intent")
+
+    assert "test_intent" not in hass.data[intent.DATA_KEY]
