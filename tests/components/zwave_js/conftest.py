@@ -367,7 +367,7 @@ def climate_adc_t3000_state_fixture():
 
 @pytest.fixture(name="climate_danfoss_lc_13_state", scope="session")
 def climate_danfoss_lc_13_state_fixture():
-    """Load the climate Danfoss (LC-13) electronic radiator thermostat node state fixture data."""
+    """Load Danfoss (LC-13) electronic radiator thermostat node state fixture data."""
     return json.loads(load_fixture("zwave_js/climate_danfoss_lc_13_state.json"))
 
 
@@ -524,7 +524,7 @@ def climate_radio_thermostat_ct101_multiple_temp_units_state_fixture():
     scope="session",
 )
 def climate_radio_thermostat_ct100_mode_and_setpoint_on_different_endpoints_state_fixture():
-    """Load the climate device with mode and setpoint on different endpoints node state fixture data."""
+    """Load climate device w/ mode+setpoint on diff endpoints node state fixture data."""
     return json.loads(
         load_fixture(
             "zwave_js/climate_radio_thermostat_ct100_mode_and_setpoint_on_different_endpoints_state.json"
@@ -606,6 +606,18 @@ def lock_home_connect_620_state_fixture():
     return json.loads(load_fixture("zwave_js/lock_home_connect_620_state.json"))
 
 
+@pytest.fixture(name="switch_zooz_zen72_state", scope="session")
+def switch_zooz_zen72_state_fixture():
+    """Load the Zooz Zen72 switch node state fixture data."""
+    return json.loads(load_fixture("zwave_js/switch_zooz_zen72_state.json"))
+
+
+@pytest.fixture(name="indicator_test_state", scope="session")
+def indicator_test_state_fixture():
+    """Load the indicator CC test node state fixture data."""
+    return json.loads(load_fixture("zwave_js/indicator_test_state.json"))
+
+
 # model fixtures
 
 
@@ -614,7 +626,6 @@ def mock_client_fixture(
     controller_state, controller_node_state, version_state, log_config_state
 ):
     """Mock a client."""
-
     with patch(
         "homeassistant.components.zwave_js.ZwaveClient", autospec=True
     ) as client_class:
@@ -724,7 +735,7 @@ def climate_radio_thermostat_ct100_plus_fixture(
 def climate_radio_thermostat_ct100_plus_different_endpoints_fixture(
     client, climate_radio_thermostat_ct100_plus_different_endpoints_state
 ):
-    """Mock a climate radio thermostat ct100 plus node with values on different endpoints."""
+    """Mock climate radio thermostat ct100 plus node w/ values on diff endpoints."""
     node = Node(
         client,
         copy.deepcopy(climate_radio_thermostat_ct100_plus_different_endpoints_state),
@@ -775,7 +786,7 @@ def climate_adc_t3000_missing_mode_fixture(client, climate_adc_t3000_state):
 
 @pytest.fixture(name="climate_adc_t3000_missing_fan_mode_states")
 def climate_adc_t3000_missing_fan_mode_states_fixture(client, climate_adc_t3000_state):
-    """Mock a climate ADC-T3000 node with missing 'states' metadata on Thermostat Fan Mode."""
+    """Mock ADC-T3000 node w/ missing 'states' metadata on Thermostat Fan Mode."""
     data = copy.deepcopy(climate_adc_t3000_state)
     data["name"] = f"{data['name']} missing fan mode states"
     for value in data["values"]:
@@ -1146,5 +1157,21 @@ def express_controls_ezmultipli_fixture(client, express_controls_ezmultipli_stat
 def lock_home_connect_620_fixture(client, lock_home_connect_620_state):
     """Mock a Home Connect 620 lock node."""
     node = Node(client, copy.deepcopy(lock_home_connect_620_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="switch_zooz_zen72")
+def switch_zooz_zen72_fixture(client, switch_zooz_zen72_state):
+    """Mock a Zooz Zen72 switch node."""
+    node = Node(client, copy.deepcopy(switch_zooz_zen72_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="indicator_test")
+def indicator_test_fixture(client, indicator_test_state):
+    """Mock a indicator CC test node."""
+    node = Node(client, copy.deepcopy(indicator_test_state))
     client.driver.controller.nodes[node.node_id] = node
     return node
