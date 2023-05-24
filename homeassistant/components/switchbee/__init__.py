@@ -99,6 +99,7 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
         dev_reg = dr.async_get(hass)
         websession = async_get_clientsession(hass, verify_ssl=False)
         old_unique_id = config_entry.unique_id
+        assert isinstance(old_unique_id, str)
         api = await get_api_object(
             config_entry.data[CONF_HOST],
             config_entry.data[CONF_USERNAME],
@@ -110,7 +111,6 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
         @callback
         def update_unique_id(entity_entry: er.RegistryEntry) -> dict[str, str] | None:
             """Update unique ID of entity entry."""
-            assert isinstance(old_unique_id, str)
             if match := re.match(
                 rf"(?:{old_unique_id})-(?P<id>\d+)", entity_entry.unique_id
             ):
