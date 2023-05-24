@@ -96,7 +96,7 @@ class PlugwiseNumberEntity(PlugwiseEntity, NumberEntity):
         self.entity_description = description
         self._attr_unique_id = f"{device_id}-{description.key}"
         self._attr_mode = NumberMode.BOX
-        self._number = description.actuator_fn(self.device)
+        self._actuator = description.actuator_fn(self.device)
 
     @property
     def native_max_value(self) -> float:
