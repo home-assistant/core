@@ -283,6 +283,7 @@ voluptuous = "vol"
 "homeassistant.helpers.config_validation" = "cv"
 "homeassistant.helpers.device_registry" = "dr"
 "homeassistant.helpers.entity_registry" = "er"
+"homeassistant.helpers.folder_registry" = "fr"
 "homeassistant.helpers.issue_registry" = "ir"
 
 [tool.ruff.flake8-pytest-style]
