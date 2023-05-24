@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from roborock.typing import DeviceProp
+from roborock.roborock_typing import DeviceProp
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -21,7 +21,6 @@ from homeassistant.util import slugify
 from .const import DOMAIN
 from .coordinator import RoborockDataUpdateCoordinator
 from .device import RoborockCoordinatedEntity
-from .models import RoborockHassDeviceInfo
 
 
 @dataclass
@@ -84,18 +83,16 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Roborock vacuum sensors."""
-    coordinator: RoborockDataUpdateCoordinator = hass.data[DOMAIN][
+    coordinators: dict[str, RoborockDataUpdateCoordinator] = hass.data[DOMAIN][
         config_entry.entry_id
     ]
-
     async_add_entities(
         RoborockSensorEntity(
             f"{description.key}_{slugify(device_id)}",
-            device_info,
             coordinator,
             description,
         )
-        for device_id, device_info in coordinator.devices_info.items()
+        for device_id, coordinator in coordinators.items()
         for description in CONSUMABLE_SENSORS
     )
 
@@ -108,15 +105,14 @@ class RoborockSensorEntity(RoborockCoordinatedEntity, SensorEntity):
     def __init__(
         self,
         unique_id: str,
-        device_info: RoborockHassDeviceInfo,
         coordinator: RoborockDataUpdateCoordinator,
         description: RoborockSensorDescription,
     ) -> None:
         """Initialize the entity."""
-        super().__init__(unique_id, device_info, coordinator)
+        super().__init__(unique_id, coordinator)
         self.entity_description = description
 
     @property
     def native_value(self) -> StateType:
         """Return the value reported by the sensor."""
-        return self.entity_description.value_fn(self.coordinator.data[self._device_id])
+        return self.entity_description.value_fn(self.coordinator.device_info.props)
