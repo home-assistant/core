@@ -77,9 +77,6 @@ async def test_flow_user_invalid_username(hass: HomeAssistant) -> None:
         assert result["step_id"] == "user"
         assert result["errors"]["base"] == "invalid_account"
 
-
-async def test_flow_user_unknown(hass: HomeAssistant) -> None:
-    """Test user initialized flow with unknown error."""
     with patch_fetch_user(thrown_error=Exception()):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=CONF_USER_DATA
@@ -88,9 +85,6 @@ async def test_flow_user_unknown(hass: HomeAssistant) -> None:
         assert result["step_id"] == "user"
         assert result["errors"]["base"] == "unknown"
 
-
-async def test_flow_user_unknown_lastfm(hass: HomeAssistant) -> None:
-    """Test user initialized flow with unknown error from lastfm."""
     with patch_fetch_user(
         thrown_error=WSError("network", "status", "Something strange")
     ):
@@ -100,6 +94,8 @@ async def test_flow_user_unknown_lastfm(hass: HomeAssistant) -> None:
         assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["step_id"] == "user"
         assert result["errors"]["base"] == "unknown"
+
+    await test_full_user_flow(hass)
 
 
 async def test_flow_friends_invalid_username(hass: HomeAssistant) -> None:
@@ -164,7 +160,8 @@ async def test_import_flow_already_exist(hass: HomeAssistant) -> None:
 
     MockConfigEntry(
         domain=DOMAIN,
-        data={CONF_API_KEY: API_KEY, CONF_USERS: ["test"]},
+        data={},
+        options={CONF_API_KEY: API_KEY, CONF_USERS: ["test"]},
     ).add_to_hass(hass)
 
     with patch_fetch_user():

@@ -154,7 +154,7 @@ class LastFmConfigFlowHandler(ConfigFlow, domain=DOMAIN):
     async def async_step_import(self, import_config: ConfigType) -> FlowResult:
         """Import config from yaml."""
         for entry in self._async_current_entries():
-            if entry.data[CONF_API_KEY] == import_config[CONF_API_KEY]:
+            if entry.options[CONF_API_KEY] == import_config[CONF_API_KEY]:
                 return self.async_abort(reason="already_configured")
         users, _ = validate_lastfm_users(
             import_config[CONF_API_KEY], import_config[CONF_USERS]
