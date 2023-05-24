@@ -56,7 +56,7 @@ async def test_get_triggers(
             "entity_id": f"{MP_DOMAIN}.kodi_5678",
             "metadata": {"secondary": False},
         }
-        for trigger in ["turn_off", "turn_on", "keypress"]
+        for trigger in ["turn_off", "turn_on"]
     ]
 
     # Test triggers are either kodi specific triggers or media_player entity triggers
@@ -108,23 +108,6 @@ async def test_if_fires_on_state_change(
                         "data_template": {
                             "some": (
                                 "turn_off - {{ trigger.entity_id }} - {{ trigger.id}}"
-                            )
-                        },
-                    },
-                },
-                {
-                    "trigger": {
-                        "platform": "device",
-                        "domain": DOMAIN,
-                        "device_id": "",
-                        "entity_id": kodi_media_player,
-                        "type": "keypress",
-                    },
-                    "action": {
-                        "service": "test.automation",
-                        "data_template": {
-                            "some": (
-                                "keypress - {{ trigger.entity_id }} - {{ trigger.id}}"
                             )
                         },
                     },
