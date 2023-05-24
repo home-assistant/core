@@ -392,6 +392,7 @@ class ZWaveWindowCovering(CoverPositionMixin, CoverTiltMixin):
                     value.property_key_name.removesuffix(f" {NO_POSITION_SUFFIX}")
                 )
         self._attr_name = self.generate_name(additional_info=additional_info)
+        self._attr_device_class = CoverDeviceClass.WINDOW
 
     @property
     def is_closed(self) -> bool | None:
