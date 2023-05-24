@@ -321,6 +321,19 @@ class ControllerEvents:
 
     async def async_on_node_added(self, node: ZwaveNode) -> None:
         """Handle node added event."""
+        # Remove stale entities that may exist from a previous interview when an
+        # interview is started.
+        base_unique_id = get_valueless_base_unique_id(self.driver_events.driver, node)
+        self.config_entry.async_on_unload(
+            node.on(
+                "interview started",
+                lambda _: async_dispatcher_send(
+                    self.hass,
+                    f"{DOMAIN}_{base_unique_id}_remove_entity_on_interview_started",
+                ),
+            )
+        )
+
         # No need for a ping button or node status sensor for controller nodes
         if not node.is_controller_node:
             # Create a node status sensor for each device
@@ -455,7 +468,6 @@ class NodeEvents:
     async def async_on_node_ready(self, node: ZwaveNode) -> None:
         """Handle node ready event."""
         LOGGER.debug("Processing node %s", node)
-        driver = self.controller_events.driver_events.driver
         # register (or update) node in device registry
         device = self.controller_events.register_node_in_dev_reg(node)
         # We only want to create the defaultdict once, even on reinterviews
@@ -464,15 +476,6 @@ class NodeEvents:
 
         # Remove any old value ids if this is a reinterview.
         self.controller_events.discovered_value_ids.pop(device.id, None)
-        # Remove stale entities that may exist from a previous interview.
-        async_dispatcher_send(
-            self.hass,
-            (
-                f"{DOMAIN}_"
-                f"{get_valueless_base_unique_id(driver, node)}_"
-                "remove_entity_on_ready_node"
-            ),
-        )
 
         value_updates_disc_info: dict[str, ZwaveDiscoveryInfo] = {}
 
