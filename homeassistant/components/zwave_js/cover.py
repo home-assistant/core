@@ -250,30 +250,18 @@ class CoverTiltMixin(ZWaveBaseEntity, CoverEntity):
             self.percent_to_zwave_tilt(kwargs[ATTR_TILT_POSITION]),
         )
 
-    @property
-    def open_cover_tilt_position(self) -> int:
-        """Return position to open cover tilt."""
-        raise NotImplementedError()
-
-    @property
-    def close_cover_tilt_position(self) -> int:
-        """Return position to close cover tilt."""
-        raise NotImplementedError()
-
     async def async_open_cover_tilt(self, **kwargs: Any) -> None:
         """Open the cover tilt."""
         assert self._target_tilt_value
         await self.info.node.async_set_value(
-            self._target_tilt_value,
-            self.open_cover_tilt_position,
+            self._target_tilt_value, self._fully_open_tilt
         )
 
     async def async_close_cover_tilt(self, **kwargs: Any) -> None:
         """Close the cover tilt."""
         assert self._target_tilt_value
         await self.info.node.async_set_value(
-            self._target_tilt_value,
-            self.close_cover_tilt_position,
+            self._target_tilt_value, self._fully_closed_tilt
         )
 
 
@@ -328,16 +316,6 @@ class ZWaveTiltCover(ZWaveMultilevelSwitchCover, CoverTiltMixin):
             template.current_tilt_value(self.info.platform_data),
             template.target_tilt_value(self.info.platform_data),
         )
-
-    @property
-    def open_cover_tilt_position(self) -> int:
-        """Return position to open cover tilt."""
-        return 99
-
-    @property
-    def close_cover_tilt_position(self) -> int:
-        """Return position to close cover tilt."""
-        return 0
 
 
 class ZwaveMotorizedBarrier(ZWaveBaseEntity, CoverEntity):
