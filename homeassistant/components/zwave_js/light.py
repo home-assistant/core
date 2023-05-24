@@ -353,6 +353,9 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
         await self.info.node.async_set_value(
             self._target_brightness, zwave_brightness, zwave_transition
         )
+        # We do an optimistic state update when setting to a previous value
+        # to avoid waiting for the value to be updated from the device which is
+        # typically delayed and causes a confusing UX.
         if (
             zwave_brightness == SET_TO_PREVIOUS_VALUE
             and self.info.primary_value.command_class == CommandClass.SWITCH_MULTILEVEL

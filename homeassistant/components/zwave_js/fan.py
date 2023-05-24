@@ -119,6 +119,9 @@ class ZwaveFan(ZWaveBaseEntity, FanEntity):
                     "`percentage` or `preset_mode` must be provided"
                 )
             # If this is a Multilevel Switch CC value, we do an optimistic state update
+            # when setting to a previous value to avoid waiting for the value to be
+            # updated from the device which is typically delayed and causes a confusing
+            # UX.
             await self.info.node.async_set_value(
                 self._target_value, SET_TO_PREVIOUS_VALUE
             )
