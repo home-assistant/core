@@ -278,7 +278,7 @@ class CoverTiltMixin(ZWaveBaseEntity, CoverEntity):
             self._target_tilt_value, self._fully_closed_tilt
         )
 
-    async def async_stop_cover(self, **kwargs: Any) -> None:
+    async def async_stop_cover_tilt(self, **kwargs: Any) -> None:
         """Stop the cover tilt."""
         assert self._stop_tilt_value
         # Stop the tilt, will stop regardless of the actual direction of travel.
@@ -399,6 +399,7 @@ class ZWaveWindowCovering(CoverPositionMixin, CoverTiltMixin):
         """Return if the cover is closed."""
         if (closed := super().is_closed) is not None:
             return closed
+        assert self._current_tilt_value
         return self._current_tilt_value.value in (
             SlatStates.CLOSED_1,
             SlatStates.CLOSED_2,
