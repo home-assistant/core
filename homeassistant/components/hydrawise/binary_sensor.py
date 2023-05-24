@@ -69,16 +69,15 @@ def setup_platform(
         )
 
     # create a sensor for each zone
-    entities.extend(
-        [
-            HydrawiseBinarySensor(
-                data=zone, coordinator=coordinator, description=description
+    for zone in hydrawise.relays:
+        for description in BINARY_SENSOR_TYPES:
+            if description.key not in monitored_conditions:
+                continue
+            entities.append(
+                HydrawiseBinarySensor(
+                    data=zone, coordinator=coordinator, description=description
+                )
             )
-            for zone in hydrawise.relays
-            for description in BINARY_SENSOR_TYPES
-            if description.key in monitored_conditions
-        ]
-    )
 
     add_entities(entities, True)
 
@@ -91,8 +90,8 @@ class HydrawiseBinarySensor(HydrawiseEntity, BinarySensorEntity):
         """Get the latest data and updates the state."""
         LOGGER.debug("Updating Hydrawise binary sensor: %s", self.name)
         if self.entity_description.key == "status":
-            self._attr_is_on = self.api.status == "All good!"
+            self._attr_is_on = self.coordinator.api.status == "All good!"
         elif self.entity_description.key == "is_watering":
-            relay_data = self.api.relays[self.data["relay"] - 1]
+            relay_data = self.coordinator.api.relays[self.data["relay"] - 1]
             self._attr_is_on = relay_data["timestr"] == "Now"
         super()._handle_coordinator_update()

@@ -66,7 +66,7 @@ def setup_platform(
     coordinator: HydrawiseDataUpdateCoordinator = hass.data[DOMAIN]
     hydrawise: Hydrawiser = coordinator.api
     monitored_conditions = config[CONF_MONITORED_CONDITIONS]
-    default_watering_timer = config[CONF_WATERING_TIME]
+    default_watering_timer: int = config[CONF_WATERING_TIME]
 
     entities = [
         HydrawiseSwitch(
@@ -92,7 +92,7 @@ class HydrawiseSwitch(HydrawiseEntity, SwitchEntity):
         data: dict[str, Any],
         coordinator: DataUpdateCoordinator,
         description: SwitchEntityDescription,
-        default_watering_timer,
+        default_watering_timer: int,
     ) -> None:
         """Initialize a switch for Hydrawise device."""
         super().__init__(data=data, coordinator=coordinator, description=description)
@@ -102,27 +102,26 @@ class HydrawiseSwitch(HydrawiseEntity, SwitchEntity):
         """Turn the device on."""
         relay_data = self.data["relay"] - 1
         if self.entity_description.key == "manual_watering":
-            self.api.run_zone(self._default_watering_timer, relay_data)
+            self.coordinator.api.run_zone(self._default_watering_timer, relay_data)
         elif self.entity_description.key == "auto_watering":
-            self.api.suspend_zone(0, relay_data)
+            self.coordinator.api.suspend_zone(0, relay_data)
 
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         relay_data = self.data["relay"] - 1
         if self.entity_description.key == "manual_watering":
-            self.api.run_zone(0, relay_data)
+            self.coordinator.api.run_zone(0, relay_data)
         elif self.entity_description.key == "auto_watering":
-            self.api.suspend_zone(365, relay_data)
+            self.coordinator.api.suspend_zone(365, relay_data)
 
     @callback
     def _handle_coordinator_update(self) -> None:
         """Update device state."""
         relay_data = self.data["relay"] - 1
         LOGGER.debug("Updating Hydrawise switch: %s", self.name)
+        timestr = self.coordinator.api.relays[relay_data]["timestr"]
         if self.entity_description.key == "manual_watering":
-            self._attr_is_on = self.api.relays[relay_data]["timestr"] == "Now"
+            self._attr_is_on = timestr == "Now"
         elif self.entity_description.key == "auto_watering":
-            self._attr_is_on = (self.api.relays[relay_data]["timestr"] != "") and (
-                self.api.relays[relay_data]["timestr"] != "Now"
-            )
+            self._attr_is_on = timestr not in {"", "Now"}
         super()._handle_coordinator_update()

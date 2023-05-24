@@ -12,7 +12,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .const import DOMAIN, LOGGER
 
 
-class HydrawiseDataUpdateCoordinator(DataUpdateCoordinator):
+class HydrawiseDataUpdateCoordinator(DataUpdateCoordinator[None]):
     """The Hydrawise Data Update Coordinator."""
 
     def __init__(
@@ -22,7 +22,7 @@ class HydrawiseDataUpdateCoordinator(DataUpdateCoordinator):
         super().__init__(hass, LOGGER, name=DOMAIN, update_interval=scan_interval)
         self.api = api
 
-    async def _async_update_data(self):
+    async def _async_update_data(self) -> None:
         """Fetch the latest data from Hydrawise."""
         result = await self.hass.async_add_executor_job(self.api.update_controller_info)
         if not result:

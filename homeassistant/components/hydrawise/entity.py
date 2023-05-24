@@ -24,7 +24,6 @@ class HydrawiseEntity(CoordinatorEntity):
         """Initialize the Hydrawise entity."""
         super().__init__(coordinator=coordinator)
         self.data = data
-        self.api = self.coordinator.api
         self.entity_description = description
         self._attr_name = f"{self.data['name']} {description.name}"
 
