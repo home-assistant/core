@@ -1,7 +1,7 @@
 """Config flow for Steam integration."""
 from __future__ import annotations
 
-from collections.abc import Generator, Mapping
+from collections.abc import Iterator, Mapping
 from typing import Any
 
 import steam
@@ -14,6 +14,9 @@ from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 
 from .const import CONF_ACCOUNT, CONF_ACCOUNTS, DOMAIN, LOGGER, PLACEHOLDERS
+
+# To avoid too long request URIs, the amount of ids to request is limited
+MAX_IDS_TO_REQUEST = 275
 
 
 def validate_input(user_input: dict[str, str]) -> dict[str, str | int]:
@@ -108,9 +111,9 @@ class SteamFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
 
-def _batch_ids(ids: list[str]) -> Generator:
-    for i in range(0, len(ids), 275):
-        yield ids[i : i + 275]
+def _batch_ids(ids: list[str]) -> Iterator[list[str]]:
+    for i in range(0, len(ids), MAX_IDS_TO_REQUEST):
+        yield ids[i : i + MAX_IDS_TO_REQUEST]
 
 
 class SteamOptionsFlowHandler(config_entries.OptionsFlow):
@@ -173,14 +176,13 @@ class SteamOptionsFlowHandler(config_entries.OptionsFlow):
         try:
             friends = interface.GetFriendList(steamid=self.entry.data[CONF_ACCOUNT])
             _users_str = [user["steamid"] for user in friends["friendslist"]["friends"]]
-            id_batches = list(_batch_ids(_users_str))
-            names = []
-            for id_batch in id_batches:
-                names.extend(
-                    interface.GetPlayerSummaries(steamids=id_batch)["response"][
-                        "players"
-                    ]["player"]
-                )
-            return names
         except steam.api.HTTPError:
             return []
+        names = []
+        for id_batch in _batch_ids(_users_str):
+            names.extend(
+                interface.GetPlayerSummaries(steamids=id_batch)["response"]["players"][
+                    "player"
+                ]
+            )
+        return names

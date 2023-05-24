@@ -32,6 +32,8 @@ CONF_OPTIONS_2 = {
     }
 }
 
+MAX_LENGTH_STEAM_IDS = 8071
+
 
 def create_entry(hass: HomeAssistant) -> MockConfigEntry:
     """Add config entry in Home Assistant."""
@@ -64,16 +66,16 @@ class MockedInterface(dict):
 
     def GetFriendList(self, steamid: str) -> dict:
         """Get friend list."""
-        fake_friends = []
+        fake_friends = [{"steamid": ACCOUNT_2}]
         for _i in range(0, 400):
             fake_friends.append(
                 {"steamid": "".join(random.choices(string.digits, k=len(ACCOUNT_1)))}
             )
-        return {"friendslist": {"friends": [{"steamid": ACCOUNT_2}, *fake_friends]}}
+        return {"friendslist": {"friends": fake_friends}}
 
     def GetPlayerSummaries(self, steamids: str | list[str]) -> dict:
         """Get player summaries."""
-        assert len(str(steamids).replace("'", "%27")) <= 8071
+        assert len(str(steamids).replace("'", "%27")) <= MAX_LENGTH_STEAM_IDS
         return {
             "response": {
                 "players": {
