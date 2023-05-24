@@ -363,12 +363,18 @@ DISCOVERY_SCHEMAS = [
         product_type={0x0301, 0x0302},
         primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
         data_template=CoverTiltDataTemplate(
-            tilt_value_id=ZwaveValueID(
+            current_tilt_value_id=ZwaveValueID(
                 property_="fibaro",
                 command_class=CommandClass.MANUFACTURER_PROPRIETARY,
                 endpoint=0,
                 property_key="venetianBlindsTilt",
-            )
+            ),
+            target_tilt_value_id=ZwaveValueID(
+                property_="fibaro",
+                command_class=CommandClass.MANUFACTURER_PROPRIETARY,
+                endpoint=0,
+                property_key="venetianBlindsTilt",
+            ),
         ),
         required_values=[
             ZWaveValueDiscoverySchema(
@@ -854,7 +860,7 @@ DISCOVERY_SCHEMAS = [
     # window coverings
     ZWaveDiscoverySchema(
         platform=Platform.COVER,
-        hint="cover",
+        hint="multilevel_switch",
         device_class_generic={"Multilevel Switch"},
         device_class_specific={
             "Motor Control Class A",
