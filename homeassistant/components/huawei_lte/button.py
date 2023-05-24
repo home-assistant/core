@@ -62,11 +62,14 @@ class BaseButton(HuaweiLteBaseEntityWithDevice, ButtonEntity):
         raise NotImplementedError
 
 
+BUTTON_KEY_CLEAR_TRAFFIC_STATISTICS = "clear_traffic_statistics"
+
+
 class ClearTrafficStatisticsButton(BaseButton):
     """Huawei LTE clear traffic statistics button."""
 
     entity_description = ButtonEntityDescription(
-        key="clear_traffic_statistics",
+        key=BUTTON_KEY_CLEAR_TRAFFIC_STATISTICS,
         name="Clear traffic statistics",
         entity_category=EntityCategory.CONFIG,
     )
@@ -76,11 +79,14 @@ class ClearTrafficStatisticsButton(BaseButton):
         return self.router.client.monitoring.set_clear_traffic()
 
 
+BUTTON_KEY_RESTART = "restart"
+
+
 class RestartButton(BaseButton):
     """Huawei LTE restart button."""
 
     entity_description = ButtonEntityDescription(
-        key="restart",
+        key=BUTTON_KEY_RESTART,
         name="Restart",
         device_class=ButtonDeviceClass.RESTART,
         entity_category=EntityCategory.CONFIG,
