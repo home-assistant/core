@@ -8,11 +8,13 @@
   "appPort": ["8123:8123"],
   "runArgs": ["-e", "GIT_EDITOR=code --wait"],
   "extensions": [
-    "ms-python.vscode-pylance",
+    "ms-python.python",
     "visualstudioexptteam.vscodeintellicode",
     "redhat.vscode-yaml",
     "esbenp.prettier-vscode",
-    "GitHub.vscode-pull-request-github"
+    "GitHub.vscode-pull-request-github",
+    "ms-python.pylint",
+    "ms-python.black-formatter"
   ],
   // Please keep this file in sync with settings in home-assistant/.vscode/settings.default.json
   "settings": {
@@ -24,7 +26,10 @@
     "python.linting.pydocstylePath": "/usr/local/bin/pydocstyle",
     "python.linting.mypyPath": "/usr/local/bin/mypy",
     "python.linting.pylintPath": "/usr/local/bin/pylint",
-    "python.formatting.provider": "black",
+    "python.formatting.provider": "none",
+    "[python]": {
+      "editor.defaultFormatter": "ms-python.black-formatter"
+    },
     "python.testing.pytestArgs": ["--no-cov"],
     "editor.formatOnPaste": false,
     "editor.formatOnSave": true,
