@@ -313,9 +313,9 @@ class TextToSpeechEntity(RestoreEntity):
         return None
 
     @property
-    def default_options(self) -> Mapping[str, Any]:
+    def default_options(self) -> Mapping[str, Any] | None:
         """Return a mapping with the default options."""
-        return {}
+        return None
 
     @callback
     def async_get_supported_voices(self, language: str) -> list[Voice] | None:
@@ -492,7 +492,7 @@ class SpeechManager:
             raise HomeAssistantError(f"Language '{language}' not supported")
 
         # Update default options with provided options
-        merged_options = dict(engine_instance.default_options)
+        merged_options = dict(engine_instance.default_options or {})
         merged_options.update(options or {})
 
         supported_options = engine_instance.supported_options or []

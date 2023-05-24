@@ -235,9 +235,9 @@ class Provider:
         return None
 
     @property
-    def default_options(self) -> Mapping[str, Any]:
+    def default_options(self) -> Mapping[str, Any] | None:
         """Return a mapping with the default options."""
-        return {}
+        return None
 
     def get_tts_audio(
         self, message: str, language: str, options: dict[str, Any]
