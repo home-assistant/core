@@ -121,7 +121,11 @@ class TwitchMock:
         raise TwitchResourceNotFound
 
     async def set_user_authentication(
-        self, token: str, scope: list[AuthScope], validate: bool = True
+        self,
+        token: str,
+        scope: list[AuthScope],
+        refresh_token: str,
+        validate: bool = True,
     ) -> None:
         """Set user authentication."""
         pass

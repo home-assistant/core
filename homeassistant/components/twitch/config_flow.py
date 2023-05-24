@@ -139,7 +139,7 @@ class OAuth2FlowHandler(
             if entry.data[CONF_CLIENT_ID] == import_config[CONF_CLIENT_ID]:
                 return self.async_abort(reason="already_configured")
         return self.async_create_entry(
-            title="test",
+            title="",
             data={
                 "auth_implementation": DOMAIN,
                 CONF_CLIENT_ID: import_config[CONF_CLIENT_ID],
