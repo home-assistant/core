@@ -19,9 +19,9 @@ SCHEDULE_OK = 10
 """When an error occurred, new call after (minutes)."""
 SCHEDULE_NOK = 2
 
-STATE_CONDITION = ["clear", "cloudy", "fog", "rainy", "snowy", "lightning"]
+STATE_CONDITIONS = ["clear", "cloudy", "fog", "rainy", "snowy", "lightning"]
 
-STATE_DETAILED_CONDITION = [
+STATE_DETAILED_CONDITIONS = [
     "clear",
     "partlycloudy",
     "partlycloudy-fog",
@@ -40,7 +40,7 @@ STATE_DETAILED_CONDITION = [
     "lightning",
 ]
 
-STATE_CONDITION_CODE = [
+STATE_CONDITION_CODES = [
     "a",
     "b",
     "j",

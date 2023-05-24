@@ -52,9 +52,9 @@ from .const import (
     CONF_TIMEFRAME,
     DEFAULT_TIMEFRAME,
     DOMAIN,
-    STATE_CONDITION,
-    STATE_CONDITION_CODE,
-    STATE_DETAILED_CONDITION,
+    STATE_CONDITIONS,
+    STATE_CONDITION_CODES,
+    STATE_DETAILED_CONDITIONS,
 )
 from .util import BrData
 
@@ -98,19 +98,19 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key="condition",
         translation_key="condition",
         device_class=SensorDeviceClass.ENUM,
-        options=STATE_CONDITION,
+        options=STATE_CONDITIONS,
     ),
     SensorEntityDescription(
         key="conditioncode",
         translation_key="conditioncode",
         device_class=SensorDeviceClass.ENUM,
-        options=STATE_CONDITION_CODE,
+        options=STATE_CONDITION_CODES,
     ),
     SensorEntityDescription(
         key="conditiondetailed",
         translation_key="conditiondetailed",
         device_class=SensorDeviceClass.ENUM,
-        options=STATE_DETAILED_CONDITION,
+        options=STATE_DETAILED_CONDITIONS,
     ),
     SensorEntityDescription(
         key="conditionexact",
