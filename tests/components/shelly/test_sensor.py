@@ -20,7 +20,7 @@ from . import (
     register_entity,
 )
 
-from tests.common import mock_restore_cache
+from tests.common import mock_restore_cache, mock_restore_cache_with_extra_data
 
 RELAY_BLOCK_ID = 0
 SENSOR_BLOCK_ID = 3
@@ -137,7 +137,15 @@ async def test_block_restored_sleeping_sensor(
     entity_id = register_entity(
         hass, SENSOR_DOMAIN, "test_name_temperature", "sensor_0-temp", entry
     )
-    mock_restore_cache(hass, [State(entity_id, "20.4")])
+    mock_restore_cache_with_extra_data(
+        hass,
+        (
+            (
+                State(entity_id, "20.4"),
+                {"native_value": "20.4", "native_unit_of_measurement": "°C"},
+            ),
+        ),
+    )
     monkeypatch.setattr(mock_block_device, "initialized", False)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
@@ -216,7 +224,15 @@ async def test_block_not_matched_restored_sleeping_sensor(
     entity_id = register_entity(
         hass, SENSOR_DOMAIN, "test_name_temperature", "sensor_0-temp", entry
     )
-    mock_restore_cache(hass, [State(entity_id, "20.4")])
+    mock_restore_cache_with_extra_data(
+        hass,
+        (
+            (
+                State(entity_id, "20.4"),
+                {"native_value": "20.4", "native_unit_of_measurement": "°C"},
+            ),
+        ),
+    )
     monkeypatch.setattr(mock_block_device, "initialized", False)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()

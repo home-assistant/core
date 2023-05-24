@@ -17,7 +17,7 @@ from homeassistant.exceptions import HomeAssistantError
 
 from . import init_integration, register_device, register_entity
 
-from tests.common import mock_restore_cache
+from tests.common import mock_restore_cache_with_extra_data
 
 DEVICE_BLOCK_ID = 4
 
@@ -62,7 +62,9 @@ async def test_block_restored_number(
         entry,
         capabilities,
     )
-    mock_restore_cache(hass, [State(entity_id, "40")])
+    mock_restore_cache_with_extra_data(
+        hass, ((State(entity_id, "40"), {"native_value": "40"}),)
+    )
 
     monkeypatch.setattr(mock_block_device, "initialized", False)
     await hass.config_entries.async_setup(entry.entry_id)
