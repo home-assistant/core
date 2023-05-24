@@ -2,7 +2,8 @@
 from datetime import timedelta
 from math import sin
 import random
-from unittest.mock import patch
+
+from freezegun import freeze_time
 
 from homeassistant.const import UnitOfPower, UnitOfTime
 from homeassistant.core import HomeAssistant
@@ -26,12 +27,11 @@ async def test_state(hass: HomeAssistant) -> None:
 
     entity_id = config["sensor"]["source"]
     base = dt_util.utcnow()
-    with patch("homeassistant.util.dt.utcnow") as now:
-        now.return_value = base
+    with freeze_time(base) as freezer:
         hass.states.async_set(entity_id, 1, {})
         await hass.async_block_till_done()
 
-        now.return_value += timedelta(seconds=3600)
+        freezer.move_to(dt_util.utcnow() + timedelta(seconds=3600))
         hass.states.async_set(entity_id, 1, {}, force_update=True)
         await hass.async_block_till_done()
 
@@ -68,9 +68,9 @@ async def setup_tests(hass, config, times, values, expected_state):
 
     # Testing a energy sensor with non-monotonic intervals and values
     base = dt_util.utcnow()
-    with patch("homeassistant.util.dt.utcnow") as now:
+    with freeze_time(base) as freezer:
         for time, value in zip(times, values):
-            now.return_value = base + timedelta(seconds=time)
+            freezer.move_to(base + timedelta(seconds=time))
             hass.states.async_set(entity_id, value, {}, force_update=True)
             await hass.async_block_till_done()
 
@@ -171,7 +171,7 @@ async def test_data_moving_average_for_discrete_sensor(hass: HomeAssistant) -> N
     base = dt_util.utcnow()
     for time, value in zip(times, temperature_values):
         now = base + timedelta(seconds=time)
-        with patch("homeassistant.util.dt.utcnow", return_value=now):
+        with freeze_time(now):
             hass.states.async_set(entity_id, value, {}, force_update=True)
             await hass.async_block_till_done()
 
@@ -214,7 +214,7 @@ async def test_data_moving_average_for_irregular_times(hass: HomeAssistant) -> N
     base = dt_util.utcnow()
     for time, value in zip(times, temperature_values):
         now = base + timedelta(seconds=time)
-        with patch("homeassistant.util.dt.utcnow", return_value=now):
+        with freeze_time(now):
             hass.states.async_set(entity_id, value, {}, force_update=True)
             await hass.async_block_till_done()
 
@@ -255,7 +255,7 @@ async def test_double_signal_after_delay(hass: HomeAssistant) -> None:
     previous = 0
     for time, value in zip(times, temperature_values):
         now = base + timedelta(seconds=time)
-        with patch("homeassistant.util.dt.utcnow", return_value=now):
+        with freeze_time(now):
             hass.states.async_set(entity_id, value, {}, force_update=True)
             await hass.async_block_till_done()
         state = hass.states.get("sensor.power")
@@ -283,8 +283,7 @@ async def test_prefix(hass: HomeAssistant) -> None:
 
     entity_id = config["sensor"]["source"]
     base = dt_util.utcnow()
-    with patch("homeassistant.util.dt.utcnow") as now:
-        now.return_value = base
+    with freeze_time(base) as freezer:
         hass.states.async_set(
             entity_id,
             1000,
@@ -293,7 +292,7 @@ async def test_prefix(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-        now.return_value += timedelta(seconds=3600)
+        freezer.move_to(dt_util.utcnow() + timedelta(seconds=3600))
         hass.states.async_set(
             entity_id,
             1000,
@@ -327,12 +326,11 @@ async def test_suffix(hass: HomeAssistant) -> None:
 
     entity_id = config["sensor"]["source"]
     base = dt_util.utcnow()
-    with patch("homeassistant.util.dt.utcnow") as now:
-        now.return_value = base
+    with freeze_time(base) as freezer:
         hass.states.async_set(entity_id, 1000, {})
         await hass.async_block_till_done()
 
-        now.return_value += timedelta(seconds=10)
+        freezer.move_to(dt_util.utcnow() + timedelta(seconds=3600))
         hass.states.async_set(entity_id, 1000, {}, force_update=True)
         await hass.async_block_till_done()
 
