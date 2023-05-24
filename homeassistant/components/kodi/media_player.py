@@ -347,6 +347,7 @@ class KodiEntity(MediaPlayerEntity):
             {
                 CONF_TYPE: "keypress",
                 CONF_DEVICE_ID: self._device_id,
+                ATTR_ENTITY_ID: self.entity_id,
                 "sender": sender,
                 "data": data,
             },
