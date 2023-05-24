@@ -122,7 +122,7 @@ async def _async_setup_internal_server(hass: HomeAssistant, entry: ConfigEntry) 
 
         # open media source
         _LOGGER.debug("Starting stream %s", stream_source)
-        player = MediaPlayer(stream_source, decode=False)
+        player = await hass.async_add_executor_job(MediaPlayer, stream_source)
         with contextlib.suppress(AttributeError):
             peer_connection.addTrack(player.audio)
 
