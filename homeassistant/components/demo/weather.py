@@ -105,7 +105,15 @@ def setup_platform(
                     [ATTR_CONDITION_SUNNY, 0.3, -14, -19, 0],
                     [ATTR_CONDITION_SUNNY, 0, -9, -12, 0],
                 ],
-                None,
+                [
+                    [ATTR_CONDITION_SUNNY, 2, -10, -15, 60],
+                    [ATTR_CONDITION_SUNNY, 1, -13, -14, 25],
+                    [ATTR_CONDITION_SUNNY, 0, -18, -22, 70],
+                    [ATTR_CONDITION_SUNNY, 0.1, -23, -23, 90],
+                    [ATTR_CONDITION_SUNNY, 4, -19, -20, 40],
+                    [ATTR_CONDITION_SUNNY, 0.3, -14, -19, 0],
+                    [ATTR_CONDITION_SUNNY, 0, -9, -12, 0],
+                ],
                 None,
             ),
             DemoWeather(
@@ -165,6 +173,7 @@ class DemoWeather(WeatherEntity):
     ) -> None:
         """Initialize the Demo weather."""
         self._attr_name = f"Demo Weather {name}"
+        self._attr_unique_id = f"demo-weather-{name.lower()}"
         self._condition = condition
         self._native_temperature = temperature
         self._native_temperature_unit = temperature_unit
