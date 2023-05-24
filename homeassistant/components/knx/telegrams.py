@@ -35,7 +35,13 @@ class TelegramDict(TypedDict):
 class Telegrams:
     """Class to handle KNX telegrams."""
 
-    def __init__(self, hass: HomeAssistant, xknx: XKNX, project: KNXProject) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        xknx: XKNX,
+        project: KNXProject,
+        log_size: int,
+    ) -> None:
         """Initialize Telegrams class."""
         self.hass = hass
         self.project = project
@@ -46,7 +52,7 @@ class Telegrams:
                 match_for_outgoing=True,
             )
         )
-        self.recent_telegrams: deque[TelegramDict] = deque(maxlen=50)
+        self.recent_telegrams: deque[TelegramDict] = deque(maxlen=log_size)
 
     async def _xknx_telegram_cb(self, telegram: Telegram) -> None:
         """Handle incoming and outgoing telegrams from xknx."""

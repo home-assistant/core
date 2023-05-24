@@ -49,6 +49,7 @@ homeassistant.components.air_quality.*
 homeassistant.components.airly.*
 homeassistant.components.airvisual.*
 homeassistant.components.airzone.*
+homeassistant.components.airzone_cloud.*
 homeassistant.components.aladdin_connect.*
 homeassistant.components.alarm_control_panel.*
 homeassistant.components.alert.*
@@ -86,6 +87,7 @@ homeassistant.components.camera.*
 homeassistant.components.canary.*
 homeassistant.components.clickatell.*
 homeassistant.components.clicksend.*
+homeassistant.components.cloud.*
 homeassistant.components.configurator.*
 homeassistant.components.cover.*
 homeassistant.components.cpuspeed.*
@@ -105,6 +107,7 @@ homeassistant.components.dormakaba_dkey.*
 homeassistant.components.dsmr.*
 homeassistant.components.dunehd.*
 homeassistant.components.efergy.*
+homeassistant.components.electrasmart.*
 homeassistant.components.elgato.*
 homeassistant.components.elkm1.*
 homeassistant.components.emulated_hue.*
