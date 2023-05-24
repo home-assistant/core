@@ -53,7 +53,7 @@ NUMBER_TYPES = (
         native_min_value_fn=lambda data: data["lower_bound"],
         native_step_key_fn=lambda data: data["resolution"],
         native_value_fn=lambda data: data["setpoint"],
-        actuator_fn=lambda data: data.get("maximum_boiler_temperature", {}),
+        actuator_fn=lambda data: data.get("maximum_boiler_temperature"),
     ),
 )
 
