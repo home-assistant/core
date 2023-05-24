@@ -311,16 +311,19 @@ class DemoWeather(WeatherEntity):
 
         forecast_data = []
         for entry in self._forecast_twice_daily:
-            data_dict = Forecast(
-                datetime=reftime.isoformat(),
-                condition=entry[0],
-                precipitation=entry[1],
-                temperature=entry[2],
-                templow=entry[3],
-                precipitation_probability=entry[4],
-                is_daytime=entry[5],
-            )
-            reftime = reftime + timedelta(hours=12)
-            forecast_data.append(data_dict)
+            try:
+                data_dict = Forecast(
+                    datetime=reftime.isoformat(),
+                    condition=entry[0],
+                    precipitation=entry[1],
+                    temperature=entry[2],
+                    templow=entry[3],
+                    precipitation_probability=entry[4],
+                    is_daytime=entry[5],
+                )
+                reftime = reftime + timedelta(hours=12)
+                forecast_data.append(data_dict)
+            except IndexError:
+                continue
 
         return forecast_data
