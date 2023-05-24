@@ -174,6 +174,8 @@ class ReolinkHost:
                         "network_link": "https://my.home-assistant.io/redirect/network/",
                     },
                 )
+            else:
+                ir.async_delete_issue(self._hass, DOMAIN, "webhook_url")
         else:
             _LOGGER.debug(
                 "Camera model %s most likely does not push its initial state"
