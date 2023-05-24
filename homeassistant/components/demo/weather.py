@@ -116,36 +116,6 @@ def setup_platform(
                 ],
                 None,
             ),
-            DemoWeather(
-                "West",
-                "Sunshine",
-                21.6414,
-                92,
-                1099,
-                0.5,
-                UnitOfTemperature.CELSIUS,
-                UnitOfPressure.HPA,
-                UnitOfSpeed.METERS_PER_SECOND,
-                None,
-                [
-                    [ATTR_CONDITION_RAINY, 1, 22, 15, 60],
-                    [ATTR_CONDITION_RAINY, 5, 19, 8, 30],
-                    [ATTR_CONDITION_CLOUDY, 0, 15, 9, 10],
-                    [ATTR_CONDITION_SUNNY, 0, 12, 6, 0],
-                    [ATTR_CONDITION_PARTLYCLOUDY, 2, 14, 7, 20],
-                    [ATTR_CONDITION_RAINY, 15, 18, 7, 0],
-                    [ATTR_CONDITION_FOG, 0.2, 21, 12, 100],
-                ],
-                [
-                    [ATTR_CONDITION_RAINY, 1, 22, 15, 60],
-                    [ATTR_CONDITION_RAINY, 5, 19, 8, 30],
-                    [ATTR_CONDITION_CLOUDY, 0, 15, 9, 10],
-                    [ATTR_CONDITION_SUNNY, 0, 12, 6, 0],
-                    [ATTR_CONDITION_PARTLYCLOUDY, 2, 14, 7, 20],
-                    [ATTR_CONDITION_RAINY, 15, 18, 7, 0],
-                    [ATTR_CONDITION_FOG, 0.2, 21, 12, 100],
-                ],
-            ),
         ]
     )
 
