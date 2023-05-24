@@ -22,6 +22,7 @@ from homeassistant.helpers import collection
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_track_point_in_utc_time
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.restore_state import RestoreEntity
 import homeassistant.helpers.service
 from homeassistant.helpers.storage import Store
@@ -303,6 +304,18 @@ class Timer(collection.CollectionEntity, RestoreEntity):
     @callback
     def async_start(self, duration: timedelta | None = None):
         """Start a timer."""
+        if duration:
+            async_create_issue(
+                self.hass,
+                DOMAIN,
+                "deprecated_duration_in_start",
+                breaks_in_ha_version="2023.8.0",
+                is_fixable=True,
+                is_persistent=True,
+                severity=IssueSeverity.WARNING,
+                translation_key="deprecated_duration_in_start",
+            )
+
         if self._listener:
             self._listener()
             self._listener = None
