@@ -65,7 +65,7 @@ def setup_platform(
     """Set up a sensor for a Hydrawise device."""
     coordinator: HydrawiseDataUpdateCoordinator = hass.data[DOMAIN]
     hydrawise: Hydrawiser = coordinator.api
-    monitored_conditions = config[CONF_MONITORED_CONDITIONS]
+    monitored_conditions: list[str] = config[CONF_MONITORED_CONDITIONS]
     default_watering_timer: int = config[CONF_WATERING_TIME]
 
     entities = [
