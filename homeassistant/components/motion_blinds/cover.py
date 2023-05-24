@@ -274,7 +274,9 @@ class MotionPositionDevice(CoordinatorEntity, CoverEntity):
         ):
             # keep updating the position @self._update_interval_moving until the position does not change.
             self._requesting_position = async_call_later(
-                self.hass, self._update_interval_moving, self.async_scheduled_update_request
+                self.hass,
+                self._update_interval_moving,
+                self.async_scheduled_update_request,
             )
         else:
             self._previous_positions = []
