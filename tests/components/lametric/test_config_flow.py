@@ -6,6 +6,9 @@ from demetriek import (
     LaMetricConnectionError,
     LaMetricConnectionTimeoutError,
     LaMetricError,
+    Notification,
+    NotificationSound,
+    Sound,
 )
 import pytest
 
@@ -238,6 +241,10 @@ async def test_full_manual(
 
     assert len(mock_lametric.device.mock_calls) == 1
     assert len(mock_lametric.notify.mock_calls) == 1
+
+    notification: Notification = mock_lametric.notify.mock_calls[0][2]["notification"]
+    assert notification.model.sound == Sound(sound=NotificationSound.WIN)
+
     assert len(mock_setup_entry.mock_calls) == 1
 
 
