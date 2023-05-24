@@ -36,7 +36,6 @@ from .const import (
     KEY_VERSION,
     MANUFACTURER,
     SERVICE_SET_ABSOLUTE_POSITION,
-    UPDATE_INTERVAL_MOVING,
 )
 from .gateway import device_name
 
@@ -193,10 +192,12 @@ class MotionPositionDevice(CoordinatorEntity, CoverEntity):
         self._api_lock = coordinator.api_lock
         self._requesting_position: CALLBACK_TYPE | None = None
         self._previous_positions = []
+        self._update_interval_moving = 5
 
         if blind.device_type in DEVICE_TYPES_WIFI:
             via_device = ()
             connections = {(dr.CONNECTION_NETWORK_MAC, blind.mac)}
+            self._update_interval_moving = 45
         else:
             via_device = (DOMAIN, blind._gateway.mac)
             connections = {}
@@ -271,16 +272,19 @@ class MotionPositionDevice(CoordinatorEntity, CoverEntity):
             self.current_cover_position == prev_position
             for prev_position in self._previous_positions
         ):
-            # keep updating the position @UPDATE_INTERVAL_MOVING until the position does not change.
+            # keep updating the position @self._update_interval_moving until the position does not change.
             self._requesting_position = async_call_later(
-                self.hass, UPDATE_INTERVAL_MOVING, self.async_scheduled_update_request
+                self.hass, self._update_interval_moving, self.async_scheduled_update_request
             )
         else:
             self._previous_positions = []
             self._requesting_position = None
 
-    async def async_request_position_till_stop(self, delay=UPDATE_INTERVAL_MOVING):
-        """Request the position of the blind every UPDATE_INTERVAL_MOVING seconds until it stops moving."""
+    async def async_request_position_till_stop(self, delay=None):
+        """Request the position of the blind every self._update_interval_moving seconds until it stops moving."""
+        if delay is None:
+            delay = self._update_interval_moving
+
         self._previous_positions = []
         if self.current_cover_position is None:
             return
