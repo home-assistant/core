@@ -7,6 +7,7 @@ import math
 from statistics import mean
 from unittest.mock import patch
 
+from freezegun import freeze_time
 import pytest
 
 from homeassistant import loader
@@ -251,17 +252,13 @@ def test_compile_hourly_statistics_with_some_same_last_updated(
     four = three + timedelta(seconds=10 * 5)
 
     states = {entity_id: []}
-    with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=one
-    ):
+    with freeze_time(one) as freezer:
         states[entity_id].append(
             set_state(entity_id, str(seq[0]), attributes=attributes)
         )
 
-    # Record two states at the exact same time
-    with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=two
-    ):
+        # Record two states at the exact same time
+        freezer.move_to(two)
         states[entity_id].append(
             set_state(entity_id, str(seq[1]), attributes=attributes)
         )
@@ -269,9 +266,7 @@ def test_compile_hourly_statistics_with_some_same_last_updated(
             set_state(entity_id, str(seq[2]), attributes=attributes)
         )
 
-    with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=three
-    ):
+        freezer.move_to(three)
         states[entity_id].append(
             set_state(entity_id, str(seq[3]), attributes=attributes)
         )
@@ -371,9 +366,7 @@ def test_compile_hourly_statistics_with_all_same_last_updated(
     four = three + timedelta(seconds=10 * 5)
 
     states = {entity_id: []}
-    with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=two
-    ):
+    with freeze_time(two):
         states[entity_id].append(
             set_state(entity_id, str(seq[0]), attributes=attributes)
         )
@@ -480,9 +473,7 @@ def test_compile_hourly_statistics_only_state_is_and_end_of_period(
     end = zero + timedelta(minutes=5)
 
     states = {entity_id: []}
-    with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=end
-    ):
+    with freeze_time(end):
         states[entity_id].append(
             set_state(entity_id, str(seq[0]), attributes=attributes)
         )
@@ -568,9 +559,7 @@ def test_compile_hourly_statistics_purged_state_changes(
     mean = min = max = float(hist["sensor.test1"][-1].state)
 
     # Purge all states from the database
-    with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=four
-    ):
+    with freeze_time(four):
         hass.services.call("recorder", "purge", {"keep_days": 0})
         hass.block_till_done()
         wait_recording_done(hass)
@@ -832,7 +821,6 @@ async def test_compile_hourly_sum_statistics_amount(
     period0_end = period1 = period0 + timedelta(minutes=5)
     period1_end = period2 = period0 + timedelta(minutes=10)
     period2_end = period0 + timedelta(minutes=15)
-    client = await hass_ws_client()
     hass.config.units = units
     await async_setup_component(hass, "sensor", {})
     # Wait for the sensor recorder platform to be added
@@ -937,6 +925,8 @@ async def test_compile_hourly_sum_statistics_amount(
     assert "Detected new cycle for sensor.test1, last_reset set to" in caplog.text
     assert "Compiling initial sum statistics for sensor.test1" in caplog.text
     assert "Detected new cycle for sensor.test1, value dropped" not in caplog.text
+
+    client = await hass_ws_client()
 
     # Adjust the inserted statistics
     await client.send_json(
@@ -3551,9 +3541,7 @@ def test_compile_statistics_hourly_daily_monthly_summary(
     zero = zero.replace(
         year=2021, month=9, day=1, hour=5, minute=0, second=0, microsecond=0
     )
-    with patch(
-        "homeassistant.components.recorder.db_schema.dt_util.utcnow", return_value=zero
-    ):
+    with freeze_time(zero):
         hass = hass_recorder()
         # Remove this after dropping the use of the hass_recorder fixture
         hass.config.set_time_zone("America/Regina")
@@ -3982,23 +3970,17 @@ def record_states(hass, zero, entity_id, attributes, seq=None):
     four = three + timedelta(seconds=10 * 5)
 
     states = {entity_id: []}
-    with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=one
-    ):
+    with freeze_time(one) as freezer:
         states[entity_id].append(
             set_state(entity_id, str(seq[0]), attributes=attributes)
         )
 
-    with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=two
-    ):
+        freezer.move_to(two)
         states[entity_id].append(
             set_state(entity_id, str(seq[1]), attributes=attributes)
         )
 
-    with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=three
-    ):
+        freezer.move_to(three)
         states[entity_id].append(
             set_state(entity_id, str(seq[2]), attributes=attributes)
         )
@@ -5014,53 +4996,35 @@ def record_meter_states(hass, zero, entity_id, _attributes, seq):
         attributes["last_reset"] = zero.isoformat()
 
     states = {entity_id: []}
-    with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=zero
-    ):
+    with freeze_time(zero) as freezer:
         states[entity_id].append(set_state(entity_id, seq[0], attributes=attributes))
 
-    with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=one
-    ):
+        freezer.move_to(one)
         states[entity_id].append(set_state(entity_id, seq[1], attributes=attributes))
 
-    with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=two
-    ):
+        freezer.move_to(two)
         states[entity_id].append(set_state(entity_id, seq[2], attributes=attributes))
 
-    with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=three
-    ):
+        freezer.move_to(three)
         states[entity_id].append(set_state(entity_id, seq[3], attributes=attributes))
 
-    attributes = dict(_attributes)
-    if "last_reset" in _attributes:
-        attributes["last_reset"] = four.isoformat()
+        attributes = dict(_attributes)
+        if "last_reset" in _attributes:
+            attributes["last_reset"] = four.isoformat()
 
-    with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=four
-    ):
+        freezer.move_to(four)
         states[entity_id].append(set_state(entity_id, seq[4], attributes=attributes))
 
-    with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=five
-    ):
+        freezer.move_to(five)
         states[entity_id].append(set_state(entity_id, seq[5], attributes=attributes))
 
-    with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=six
-    ):
+        freezer.move_to(six)
         states[entity_id].append(set_state(entity_id, seq[6], attributes=attributes))
 
-    with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=seven
-    ):
+        freezer.move_to(seven)
         states[entity_id].append(set_state(entity_id, seq[7], attributes=attributes))
 
-    with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=eight
-    ):
+        freezer.move_to(eight)
         states[entity_id].append(set_state(entity_id, seq[8], attributes=attributes))
 
     return four, eight, states
@@ -5079,9 +5043,7 @@ def record_meter_state(hass, zero, entity_id, attributes, seq):
         return hass.states.get(entity_id)
 
     states = {entity_id: []}
-    with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=zero
-    ):
+    with freeze_time(zero):
         states[entity_id].append(set_state(entity_id, seq[0], attributes=attributes))
 
     return states
@@ -5105,19 +5067,13 @@ def record_states_partially_unavailable(hass, zero, entity_id, attributes):
     four = three + timedelta(seconds=15 * 5)
 
     states = {entity_id: []}
-    with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=one
-    ):
+    with freeze_time(one) as freezer:
         states[entity_id].append(set_state(entity_id, "10", attributes=attributes))
 
-    with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=two
-    ):
+        freezer.move_to(two)
         states[entity_id].append(set_state(entity_id, "25", attributes=attributes))
 
-    with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=three
-    ):
+        freezer.move_to(three)
         states[entity_id].append(
             set_state(entity_id, STATE_UNAVAILABLE, attributes=attributes)
         )
