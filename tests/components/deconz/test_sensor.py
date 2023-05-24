@@ -470,7 +470,6 @@ TEST_DATA = [
             "state_class": SensorStateClass.MEASUREMENT,
             "attributes": {
                 "state_class": "measurement",
-                "on": True,
                 "unit_of_measurement": "%",
                 "device_class": "moisture",
                 "friendly_name": "Soil Sensor",
