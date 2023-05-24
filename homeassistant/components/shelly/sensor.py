@@ -8,14 +8,15 @@ from typing import Final, cast
 from aioshelly.block_device import Block
 
 from homeassistant.components.sensor import (
+    RestoreSensor,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorExtraStoredData,
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_UNIT_OF_MEASUREMENT,
     CONCENTRATION_PARTS_PER_MILLION,
     DEGREE,
     LIGHT_LUX,
@@ -776,8 +777,7 @@ class RpcSensor(ShellyRpcAttributeEntity, SensorEntity):
         return self.attribute_value
 
 
-# pylint: disable-next=hass-invalid-inheritance # needs fixing
-class BlockSleepingSensor(ShellySleepingBlockAttributeEntity, SensorEntity):
+class BlockSleepingSensor(ShellySleepingBlockAttributeEntity, RestoreSensor):
     """Represent a block sleeping sensor."""
 
     entity_description: BlockSensorDescription
@@ -792,7 +792,13 @@ class BlockSleepingSensor(ShellySleepingBlockAttributeEntity, SensorEntity):
         sensors: Mapping[tuple[str, str], BlockSensorDescription] | None = None,
     ) -> None:
         """Initialize the sleeping sensor."""
+        self.restored_data: SensorExtraStoredData | None = None
         super().__init__(coordinator, block, attribute, description, entry, sensors)
+
+    async def async_added_to_hass(self) -> None:
+        """Handle entity which will be added."""
+        await super().async_added_to_hass()
+        self.restored_data = await self.async_get_last_sensor_data()
 
     @property
     def native_value(self) -> StateType:
@@ -800,10 +806,10 @@ class BlockSleepingSensor(ShellySleepingBlockAttributeEntity, SensorEntity):
         if self.block is not None:
             return self.attribute_value
 
-        if self.last_state is None:
+        if self.restored_data is None:
             return None
 
-        return self.last_state.state
+        return cast(StateType, self.restored_data.native_value)
 
     @property
     def native_unit_of_measurement(self) -> str | None:
@@ -811,10 +817,10 @@ class BlockSleepingSensor(ShellySleepingBlockAttributeEntity, SensorEntity):
         if self.block is not None:
             return self.entity_description.native_unit_of_measurement
 
-        if self.last_state is None:
+        if self.restored_data is None:
             return None
 
-        return self.last_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        return self.restored_data.native_unit_of_measurement
 
 
 # pylint: disable-next=hass-invalid-inheritance # needs fixing

@@ -552,7 +552,7 @@ class ShellyRpcAttributeEntity(ShellyRpcEntity, Entity):
         return self.entity_description.available(self.sub_status)
 
 
-class ShellySleepingBlockAttributeEntity(ShellyBlockAttributeEntity, RestoreEntity):
+class ShellySleepingBlockAttributeEntity(ShellyBlockAttributeEntity):
     """Represent a shelly sleeping block attribute entity."""
 
     # pylint: disable=super-init-not-called
@@ -588,11 +588,6 @@ class ShellySleepingBlockAttributeEntity(ShellyBlockAttributeEntity, RestoreEnti
         elif entry is not None:
             self._attr_unique_id = entry.unique_id
             self._attr_name = cast(str, entry.original_name)
-
-    async def async_added_to_hass(self) -> None:
-        """Handle entity which will be added."""
-        await super().async_added_to_hass()
-        self.last_state = await self.async_get_last_state()
 
     @callback
     def _update_callback(self) -> None:
