@@ -615,6 +615,9 @@ class ZWaveNodeStatusSensor(SensorEntity):
                 self.async_poll_value,
             )
         )
+        # we don't listen for `remove_entity_on_ready_node` signal because this entity
+        # is created when the node is added which occurs before ready. It only needs to
+        # be removed if the node is removed from the network.
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,

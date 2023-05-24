@@ -101,7 +101,7 @@ async def test_disabled_statistics(hass: HomeAssistant, client) -> None:
 
 
 async def test_noop_statistics(hass: HomeAssistant, client) -> None:
-    """Test that we don't make any statistics calls if user hasn't provided preference."""
+    """Test that we don't make statistics calls if user hasn't set preference."""
     entry = MockConfigEntry(domain="zwave_js", data={"url": "ws://test.org"})
     entry.add_to_hass(hass)
 
@@ -1332,7 +1332,7 @@ async def test_node_model_change(
 async def test_disabled_node_status_entity_on_node_replaced(
     hass: HomeAssistant, zp3111_state, zp3111, client, integration
 ) -> None:
-    """Test that when a node replacement event is received the node status sensor is removed."""
+    """Test when node replacement event is received, node status sensor is removed."""
     node_status_entity = "sensor.4_in_1_sensor_node_status"
     state = hass.states.get(node_status_entity)
     assert state

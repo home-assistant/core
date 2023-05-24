@@ -44,10 +44,12 @@ class ZWaveBaseEntity(Entity):
         # Entity class attributes
         self._attr_name = self.generate_name()
         self._attr_unique_id = get_unique_id(driver, self.info.primary_value.value_id)
-        self._attr_entity_registry_enabled_default = (
-            self.info.entity_registry_enabled_default
-        )
-        self._attr_assumed_state = self.info.assumed_state
+        if self.info.entity_registry_enabled_default is False:
+            self._attr_entity_registry_enabled_default = False
+        if self.info.entity_category is not None:
+            self._attr_entity_category = self.info.entity_category
+        if self.info.assumed_state:
+            self._attr_assumed_state = True
         # device is precreated in main handler
         self._attr_device_info = DeviceInfo(
             identifiers={get_device_id(driver, self.info.node)},
@@ -103,7 +105,18 @@ class ZWaveBaseEntity(Entity):
                 (
                     f"{DOMAIN}_"
                     f"{get_valueless_base_unique_id(self.driver, self.info.node)}_"
-                    "remove_entity_on_ready_node"
+                    "remove_entity"
+                ),
+                self.async_remove,
+            )
+        )
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                (
+                    f"{DOMAIN}_"
+                    f"{get_valueless_base_unique_id(self.driver, self.info.node)}_"
+                    "remove_entity_on_interview_started"
                 ),
                 self.async_remove,
             )
