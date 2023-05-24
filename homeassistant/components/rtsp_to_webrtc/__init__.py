@@ -20,7 +20,6 @@ from __future__ import annotations
 
 import asyncio
 import contextlib
-from functools import partial
 import logging
 from typing import Any
 
@@ -123,9 +122,7 @@ async def _async_setup_internal_server(hass: HomeAssistant, entry: ConfigEntry) 
 
         # open media source
         _LOGGER.debug("Starting stream %s", stream_source)
-        player = await hass.async_add_executor_job(
-            partial(MediaPlayer, stream_source, decode=False)
-        )
+        player = await hass.async_add_executor_job(MediaPlayer, stream_source)
         with contextlib.suppress(AttributeError):
             peer_connection.addTrack(player.audio)
 
