@@ -62,7 +62,6 @@ PROVIDES_EXTRA_ATTRIBUTES = (
     "daylight_status",
     "humidity",
     "light_level",
-    "moisture",
     "power",
     "pressure",
     "status",
