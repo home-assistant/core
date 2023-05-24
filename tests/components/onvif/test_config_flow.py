@@ -1,11 +1,13 @@
 """Test ONVIF config flow."""
 from unittest.mock import MagicMock, patch
 
+import pytest
+
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import dhcp
 from homeassistant.components.onvif import DOMAIN, config_flow
 from homeassistant.config_entries import SOURCE_DHCP
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import device_registry as dr
@@ -597,7 +599,8 @@ async def test_flow_manual_entry_wrong_password(hass: HomeAssistant) -> None:
         }
 
 
-async def test_option_flow(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize("option_value", [True, False])
+async def test_option_flow(hass: HomeAssistant, option_value: bool) -> None:
     """Test config flow options."""
     entry, _, _ = await setup_onvif_integration(hass)
 
@@ -613,7 +616,8 @@ async def test_option_flow(hass: HomeAssistant) -> None:
         user_input={
             config_flow.CONF_EXTRA_ARGUMENTS: "",
             config_flow.CONF_RTSP_TRANSPORT: list(config_flow.RTSP_TRANSPORTS)[1],
-            config_flow.CONF_USE_WALLCLOCK_AS_TIMESTAMPS: True,
+            config_flow.CONF_USE_WALLCLOCK_AS_TIMESTAMPS: option_value,
+            config_flow.CONF_ENABLE_WEBHOOKS: option_value,
         },
     )
 
@@ -621,7 +625,8 @@ async def test_option_flow(hass: HomeAssistant) -> None:
     assert result["data"] == {
         config_flow.CONF_EXTRA_ARGUMENTS: "",
         config_flow.CONF_RTSP_TRANSPORT: list(config_flow.RTSP_TRANSPORTS)[1],
-        config_flow.CONF_USE_WALLCLOCK_AS_TIMESTAMPS: True,
+        config_flow.CONF_USE_WALLCLOCK_AS_TIMESTAMPS: option_value,
+        config_flow.CONF_ENABLE_WEBHOOKS: option_value,
     }
 
 
@@ -710,6 +715,14 @@ async def test_discovered_by_dhcp_does_not_update_if_no_matching_entry(
     assert result["reason"] == "no_devices_found"
 
 
+def _get_schema_default(schema, key_name):
+    """Iterate schema to find a key."""
+    for schema_key in schema:
+        if schema_key == key_name:
+            return schema_key.default()
+    raise KeyError(f"{key_name} not found in schema")
+
+
 async def test_form_reauth(hass: HomeAssistant) -> None:
     """Test reauthenticate."""
     entry, _, _ = await setup_onvif_integration(hass)
@@ -721,6 +734,10 @@ async def test_form_reauth(hass: HomeAssistant) -> None:
     )
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
+    assert (
+        _get_schema_default(result["data_schema"].schema, CONF_USERNAME)
+        == entry.data[CONF_USERNAME]
+    )
 
     with patch(
         "homeassistant.components.onvif.config_flow.get_device"

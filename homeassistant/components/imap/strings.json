@@ -39,7 +39,8 @@
       "init": {
         "data": {
           "folder": "[%key:component::imap::config::step::user::data::folder%]",
-          "search": "[%key:component::imap::config::step::user::data::search%]"
+          "search": "[%key:component::imap::config::step::user::data::search%]",
+          "max_message_size": "Max message size (2048 < size < 30000)"
         }
       }
     },

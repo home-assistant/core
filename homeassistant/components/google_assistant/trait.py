@@ -1,6 +1,7 @@
 """Implement the Google Smart Home traits."""
 from __future__ import annotations
 
+from abc import ABC, abstractmethod
 import logging
 from typing import Any, TypeVar
 
@@ -196,15 +197,21 @@ def _next_selected(items: list[str], selected: str | None) -> str | None:
     return items[next_item]
 
 
-class _Trait:
+class _Trait(ABC):
     """Represents a Trait inside Google Assistant skill."""
 
+    name: str
     commands: list[str] = []
 
     @staticmethod
     def might_2fa(domain, features, device_class):
         """Return if the trait might ask for 2FA."""
         return False
+
+    @staticmethod
+    @abstractmethod
+    def supported(domain, features, device_class, attributes):
+        """Test if state is supported."""
 
     def __init__(self, hass, state, config):
         """Initialize a trait for a state."""
