@@ -31,7 +31,7 @@ from tests.common import (
 
 
 @pytest.fixture
-def mock_hass(hass):
+def mock_hass(hass: HomeAssistant) -> HomeAssisant:
     """Home Assistant mock with minimum amount of data set to make it work with auth."""
     return hass
 
