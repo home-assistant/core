@@ -96,13 +96,26 @@ class NextBusFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 reason="Import failed due to no data to migrate",
             )
 
+        await self._update_agency_config_options()
         self.nextbus_config[CONF_AGENCY] = config_input[CONF_AGENCY]
+
+        await self._update_route_config_options(config_input[CONF_AGENCY])
         self.nextbus_config[CONF_ROUTE] = config_input[CONF_ROUTE]
+
+        await self._update_stop_config_options(
+            config_input[CONF_AGENCY], config_input[CONF_ROUTE]
+        )
         self.nextbus_config[CONF_STOP] = config_input[CONF_STOP]
+
         self.nextbus_config[CONF_NAME] = (
             config_input.get(CONF_NAME)
             or f"{config_input[CONF_AGENCY]} {config_input[CONF_ROUTE]}"
         )
+
+        errors = self._validate_config()
+        if errors:
+            _LOGGER.error(errors)
+            return await self.async_step_user()
 
         return self.async_create_entry(
             title=self.nextbus_config[CONF_NAME],
@@ -252,6 +265,7 @@ class NextBusFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         ):
             value = self.nextbus_config.get(field)
             if value and value not in values:
+                _LOGGER.debug("%s not in %s", value, values)
                 errors[field] = "invalid_tag"
 
         return errors
