@@ -434,6 +434,9 @@ TEST_DATA = [
                 "device_class": "humidity",
                 "friendly_name": "Mi temperature 1",
             },
+            "options": {
+                "suggested_display_precision": 1,
+            },
             "websocket_event": {"state": {"humidity": 1000}},
             "next_state": "10.0",
         },
@@ -649,6 +652,9 @@ TEST_DATA = [
                 "unit_of_measurement": "°C",
                 "device_class": "temperature",
                 "friendly_name": "Mi temperature 1",
+            },
+            "options": {
+                "suggested_display_precision": 1,
             },
             "websocket_event": {"state": {"temperature": 1800}},
             "next_state": "18.0",

@@ -1297,6 +1297,7 @@ omit =
     homeassistant/components/touchline/climate.py
     homeassistant/components/tplink_lte/*
     homeassistant/components/tplink_omada/__init__.py
+    homeassistant/components/tplink_omada/binary_sensor.py
     homeassistant/components/tplink_omada/controller.py
     homeassistant/components/tplink_omada/coordinator.py
     homeassistant/components/tplink_omada/entity.py
