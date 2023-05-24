@@ -143,8 +143,6 @@ class ZWaveValueDiscoverySchema(DataclassMustHaveAtLeastOne):
     property_name: set[str] | None = None
     # [optional] the value's property key must match ANY of these values
     property_key: set[str | int | None] | None = None
-    # [optional] the value's property key name must match ANY of these values
-    property_key_name: set[str | None] | None = None
     # [optional] the value's metadata_type must match ANY of these values
     type: set[str] | None = None
     # [optional] the value's states map must include ANY of these key/value pairs
@@ -176,14 +174,10 @@ class ZWaveDiscoverySchema:
     product_type: set[int] | None = None
     # [optional] the node's firmware_version must be within this range
     firmware_version_range: FirmwareVersionRange | None = None
-    # [optional] the node's firmware_version must match ANY of these values
-    firmware_version: set[str] | None = None
-    # [optional] the node's basic device class must match ANY of these values
-    device_class_basic: set[str | int] | None = None
     # [optional] the node's generic device class must match ANY of these values
-    device_class_generic: set[str | int] | None = None
+    device_class_generic: set[str] | None = None
     # [optional] the node's specific device class must match ANY of these values
-    device_class_specific: set[str | int] | None = None
+    device_class_specific: set[str] | None = None
     # [optional] additional values that ALL need to be present
     # on the node for this scheme to pass
     required_values: list[ZWaveValueDiscoverySchema] | None = None
@@ -204,7 +198,6 @@ def get_config_parameter_discovery_schema(
     property_: set[str | int] | None = None,
     property_name: set[str] | None = None,
     property_key: set[str | int | None] | None = None,
-    property_key_name: set[str | None] | None = None,
     **kwargs: Any,
 ) -> ZWaveDiscoverySchema:
     """Return a discovery schema for a config parameter.
@@ -220,7 +213,6 @@ def get_config_parameter_discovery_schema(
             property=property_,
             property_name=property_name,
             property_key=property_key,
-            property_key_name=property_key_name,
             type={ValueType.NUMBER},
         ),
         entity_registry_enabled_default=False,
@@ -928,9 +920,8 @@ def async_discover_node_values(
     """Run discovery on ZWave node and return matching (primary) values."""
     for value in node.values.values():
         # We don't need to rediscover an already processed value_id
-        if value.value_id in discovered_value_ids[device.id]:
-            continue
-        yield from async_discover_single_value(value, device, discovered_value_ids)
+        if value.value_id not in discovered_value_ids[device.id]:
+            yield from async_discover_single_value(value, device, discovered_value_ids)
 
 
 @callback
@@ -940,24 +931,20 @@ def async_discover_single_value(
     """Run discovery on a single ZWave value and return matching schema info."""
     discovered_value_ids[device.id].add(value.value_id)
     for schema in DISCOVERY_SCHEMAS:
-        # check manufacturer_id
+        # check manufacturer_id, product_id, product_type
         if (
-            schema.manufacturer_id is not None
-            and value.node.manufacturer_id not in schema.manufacturer_id
-        ):
-            continue
-
-        # check product_id
-        if (
-            schema.product_id is not None
-            and value.node.product_id not in schema.product_id
-        ):
-            continue
-
-        # check product_type
-        if (
-            schema.product_type is not None
-            and value.node.product_type not in schema.product_type
+            (
+                schema.manufacturer_id is not None
+                and value.node.manufacturer_id not in schema.manufacturer_id
+            )
+            or (
+                schema.product_id is not None
+                and value.node.product_id not in schema.product_id
+            )
+            or (
+                schema.product_type is not None
+                and value.node.product_type not in schema.product_type
+            )
         ):
             continue
 
@@ -973,19 +960,6 @@ def async_discover_single_value(
                 and schema.firmware_version_range.max_ver
                 < AwesomeVersion(value.node.firmware_version)
             )
-        ):
-            continue
-
-        # check firmware_version
-        if (
-            schema.firmware_version is not None
-            and value.node.firmware_version not in schema.firmware_version
-        ):
-            continue
-
-        # check device_class_basic
-        if value.node.device_class and not check_device_class(
-            value.node.device_class.basic, schema.device_class_basic
         ):
             continue
 
@@ -1084,12 +1058,6 @@ def check_value(value: ZwaveValue, schema: ZWaveValueDiscoverySchema) -> bool:
         and value.property_key not in schema.property_key
     ):
         return False
-    # check property_key_name
-    if (
-        schema.property_key_name is not None
-        and value.property_key_name not in schema.property_key_name
-    ):
-        return False
     # check metadata_type
     if schema.type is not None and value.metadata.type not in schema.type:
         return False
@@ -1108,14 +1076,11 @@ def check_value(value: ZwaveValue, schema: ZWaveValueDiscoverySchema) -> bool:
 
 @callback
 def check_device_class(
-    device_class: DeviceClassItem, required_value: set[str | int] | None
+    device_class: DeviceClassItem, required_value: set[str] | None
 ) -> bool:
     """Check if device class id or label matches."""
     if required_value is None:
         return True
-    for val in required_value:
-        if isinstance(val, str) and device_class.label == val:
-            return True
-        if isinstance(val, int) and device_class.key == val:
-            return True
+    if any(device_class.label == val for val in required_value):
+        return True
     return False
