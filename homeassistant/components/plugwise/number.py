@@ -106,7 +106,7 @@ class PlugwiseNumberEntity(PlugwiseEntity, NumberEntity):
     @property
     def native_min_value(self) -> float:
         """Return the setpoint min. value."""
-        return self.entity_description.native_min_value_fn(self._number)
+        return self.entity_description.native_min_value_fn(self._actuator)
 
     @property
     def native_step(self) -> float:
