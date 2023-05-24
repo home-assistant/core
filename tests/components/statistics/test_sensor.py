@@ -7,6 +7,8 @@ import statistics
 from typing import Any
 from unittest.mock import patch
 
+from freezegun import freeze_time
+
 from homeassistant import config as hass_config
 from homeassistant.components.recorder import Recorder
 from homeassistant.components.sensor import (
@@ -380,16 +382,9 @@ async def test_sampling_size_1(hass: HomeAssistant) -> None:
 async def test_age_limit_expiry(hass: HomeAssistant) -> None:
     """Test that values are removed with given max age."""
     now = dt_util.utcnow()
-    mock_data = {
-        "return_time": datetime(now.year + 1, 8, 2, 12, 23, tzinfo=dt_util.UTC)
-    }
+    current_time = datetime(now.year + 1, 8, 2, 12, 23, tzinfo=dt_util.UTC)
 
-    def mock_now():
-        return mock_data["return_time"]
-
-    with patch(
-        "homeassistant.components.statistics.sensor.dt_util.utcnow", new=mock_now
-    ):
+    with freeze_time(current_time) as freezer:
         assert await async_setup_component(
             hass,
             "sensor",
@@ -409,8 +404,9 @@ async def test_age_limit_expiry(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
         for value in VALUES_NUMERIC:
-            mock_data["return_time"] += timedelta(minutes=1)
-            async_fire_time_changed(hass, mock_data["return_time"])
+            current_time += timedelta(minutes=1)
+            freezer.move_to(current_time)
+            async_fire_time_changed(hass, current_time)
             hass.states.async_set(
                 "sensor.test_monitored",
                 str(value),
@@ -429,8 +425,9 @@ async def test_age_limit_expiry(hass: HomeAssistant) -> None:
 
         # Values expire over time. Only two are left
 
-        mock_data["return_time"] += timedelta(minutes=3)
-        async_fire_time_changed(hass, mock_data["return_time"])
+        current_time += timedelta(minutes=3)
+        freezer.move_to(current_time)
+        async_fire_time_changed(hass, current_time)
         await hass.async_block_till_done()
 
         state = hass.states.get("sensor.test")
@@ -442,8 +439,9 @@ async def test_age_limit_expiry(hass: HomeAssistant) -> None:
 
         # Values expire over time. Only one is left
 
-        mock_data["return_time"] += timedelta(minutes=1)
-        async_fire_time_changed(hass, mock_data["return_time"])
+        current_time += timedelta(minutes=1)
+        freezer.move_to(current_time)
+        async_fire_time_changed(hass, current_time)
         await hass.async_block_till_done()
 
         state = hass.states.get("sensor.test")
@@ -455,8 +453,9 @@ async def test_age_limit_expiry(hass: HomeAssistant) -> None:
 
         # Values expire over time. Buffer is empty
 
-        mock_data["return_time"] += timedelta(minutes=1)
-        async_fire_time_changed(hass, mock_data["return_time"])
+        current_time += timedelta(minutes=1)
+        freezer.move_to(current_time)
+        async_fire_time_changed(hass, current_time)
         await hass.async_block_till_done()
 
         state = hass.states.get("sensor.test")
