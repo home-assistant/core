@@ -1,7 +1,8 @@
 """Numeric derivative of data coming from a source sensor over time."""
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from collections import deque
+from datetime import timedelta
 from decimal import Decimal, DecimalException
 import logging
 from typing import TYPE_CHECKING
@@ -148,8 +149,8 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
         self._sensor_source_id = source_entity
         self._round_digits = round_digits
         self._state: float | int | Decimal = 0
-        # List of tuples with (timestamp_start, timestamp_end, derivative)
-        self._state_list: list[tuple[datetime, datetime, Decimal]] = []
+        # deque of tuples with (timestamp_start, timestamp_end, derivative, weight)
+        self._state_que: deque[tuple[float, float, Decimal]] = deque()
 
         self._attr_name = name if name is not None else f"{source_entity} derivative"
         self._attr_extra_state_attributes = {ATTR_SOURCE_ID: source_entity}
@@ -163,7 +164,9 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
             self._attr_native_unit_of_measurement = unit_of_measurement
 
         self._unit_prefix = UNIT_PREFIXES[unit_prefix]
+        self._unit_prefix_decimal = Decimal(self._unit_prefix)
         self._unit_time = UNIT_TIME[unit_time]
+        self._unit_time_decimal = Decimal(self._unit_time)
         self._time_window = time_window.total_seconds()
 
     async def async_added_to_hass(self) -> None:
@@ -198,26 +201,26 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
                     "" if unit is None else unit
                 )
 
+            new_timestamp = new_state.last_updated.timestamp()
+            old_timestamp = old_state.last_updated.timestamp()
+            time_window = self._time_window
+
             # filter out all derivatives older than `time_window` from our window list
-            self._state_list = [
-                (time_start, time_end, state)
-                for time_start, time_end, state in self._state_list
-                if (new_state.last_updated - time_end).total_seconds()
-                < self._time_window
-            ]
+            while self._state_que and (
+                new_timestamp - self._state_que[0][1] > time_window
+            ):
+                # We can stop when we find the first derivative that is not older than `time_window`
+                self._state_que.popleft()
 
             try:
-                elapsed_time = (
-                    new_state.last_updated - old_state.last_updated
-                ).total_seconds()
+                elapsed_time = new_timestamp - old_timestamp
                 delta_value = Decimal(new_state.state) - Decimal(old_state.state)
                 new_derivative = (
                     delta_value
                     / Decimal(elapsed_time)
-                    / Decimal(self._unit_prefix)
-                    * Decimal(self._unit_time)
+                    / self._unit_prefix_decimal
+                    * self._unit_time_decimal
                 )
-
             except ValueError as err:
                 _LOGGER.warning("While calculating derivative: %s", err)
             except DecimalException as err:
@@ -228,29 +231,18 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
                 _LOGGER.error("Could not calculate derivative: %s", err)
 
             # add latest derivative to the window list
-            self._state_list.append(
-                (old_state.last_updated, new_state.last_updated, new_derivative)
-            )
-
-            def calculate_weight(
-                start: datetime, end: datetime, now: datetime
-            ) -> float:
-                window_start = now - timedelta(seconds=self._time_window)
-                if start < window_start:
-                    weight = (end - window_start).total_seconds() / self._time_window
-                else:
-                    weight = (end - start).total_seconds() / self._time_window
-                return weight
+            self._state_que.append((old_timestamp, new_timestamp, new_derivative))
 
             # If outside of time window just report derivative (is the same as modeling it in the window),
             # otherwise take the weighted average with the previous derivatives
-            if elapsed_time > self._time_window:
+            if elapsed_time > time_window:
                 derivative = new_derivative
             else:
                 derivative = Decimal(0)
-                for start, end, value in self._state_list:
-                    weight = calculate_weight(start, end, new_state.last_updated)
-                    derivative = derivative + (value * Decimal(weight))
+                window_start = new_timestamp - time_window
+                for start, end, value in self._state_que:
+                    weight = (end - max(start, window_start)) / time_window
+                    derivative += value * Decimal(weight)
 
             self._state = derivative
             self.async_write_ha_state()
