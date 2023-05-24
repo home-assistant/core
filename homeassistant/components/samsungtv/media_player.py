@@ -105,6 +105,7 @@ class SamsungTVDevice(MediaPlayerEntity):
             CONF_SSDP_RENDERING_CONTROL_LOCATION
         )
         self._turn_on = PluggableAction(self.async_write_ha_state)
+        self._turn_off = PluggableAction(self.async_write_ha_state)
         # Assume that the TV is in Play mode
         self._playing: bool = True
 
