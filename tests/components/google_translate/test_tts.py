@@ -1,6 +1,4 @@
 """The tests for the Google speech platform."""
-import os
-import shutil
 from unittest.mock import patch
 
 from gtts import gTTSError
@@ -18,7 +16,17 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 
 from tests.common import async_mock_service
-from tests.components.tts.conftest import mutagen_mock  # noqa: F401
+
+
+@pytest.fixture(autouse=True)
+def tts_mutagen_mock_fixture_autouse(tts_mutagen_mock):
+    """Mock writing tags."""
+
+
+@pytest.fixture(autouse=True)
+def mock_tts_cache_dir_autouse(mock_tts_cache_dir):
+    """Mock the TTS cache dir with empty dir."""
+    return mock_tts_cache_dir
 
 
 async def get_media_source_url(hass, media_content_id):
@@ -28,15 +36,6 @@ async def get_media_source_url(hass, media_content_id):
 
     resolved = await media_source.async_resolve_media(hass, media_content_id, None)
     return resolved.url
-
-
-@pytest.fixture(autouse=True)
-def cleanup_cache(hass):
-    """Clean up TTS cache."""
-    yield
-    default_tts = hass.config.path(tts.DEFAULT_CACHE_DIR)
-    if os.path.isdir(default_tts):
-        shutil.rmtree(default_tts)
 
 
 @pytest.fixture

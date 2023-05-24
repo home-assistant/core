@@ -134,12 +134,11 @@ class CloudProvider(Provider):
         }
 
     async def async_get_tts_audio(
-        self, message: str, language: str, options: dict[str, Any] | None = None
+        self, message: str, language: str, options: dict[str, Any]
     ) -> TtsAudioType:
         """Load TTS from NabuCasa Cloud."""
         # Process TTS
         try:
-            assert options is not None
             data = await self.cloud.voice.process_tts(
                 text=message,
                 language=language,
