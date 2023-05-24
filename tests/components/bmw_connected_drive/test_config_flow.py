@@ -1,8 +1,10 @@
 """Test the for the BMW Connected Drive config flow."""
+from copy import deepcopy
 from unittest.mock import patch
 
 from bimmer_connected.api.authentication import MyBMWAuthentication
-from httpx import HTTPError
+from bimmer_connected.models import MyBMWAPIError, MyBMWAuthError
+from httpx import RequestError
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.bmw_connected_drive.config_flow import DOMAIN
@@ -10,10 +12,15 @@ from homeassistant.components.bmw_connected_drive.const import (
     CONF_READ_ONLY,
     CONF_REFRESH_TOKEN,
 )
-from homeassistant.const import CONF_USERNAME
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
-from . import FIXTURE_CONFIG_ENTRY, FIXTURE_REFRESH_TOKEN, FIXTURE_USER_INPUT
+from . import (
+    FIXTURE_CONFIG_ENTRY,
+    FIXTURE_GCID,
+    FIXTURE_REFRESH_TOKEN,
+    FIXTURE_USER_INPUT,
+)
 
 from tests.common import MockConfigEntry
 
@@ -24,6 +31,7 @@ FIXTURE_IMPORT_ENTRY = {**FIXTURE_USER_INPUT, CONF_REFRESH_TOKEN: None}
 def login_sideeffect(self: MyBMWAuthentication):
     """Mock logging in and setting a refresh token."""
     self.refresh_token = FIXTURE_REFRESH_TOKEN
+    self.gcid = FIXTURE_GCID
 
 
 async def test_show_form(hass: HomeAssistant) -> None:
@@ -36,15 +44,48 @@ async def test_show_form(hass: HomeAssistant) -> None:
     assert result["step_id"] == "user"
 
 
-async def test_connection_error(hass: HomeAssistant) -> None:
-    """Test we show user form on BMW connected drive connection error."""
-
-    def _mock_get_oauth_token(*args, **kwargs):
-        pass
+async def test_authentication_error(hass: HomeAssistant) -> None:
+    """Test we show user form on MyBMW authentication error."""
 
     with patch(
         "bimmer_connected.api.authentication.MyBMWAuthentication.login",
-        side_effect=HTTPError("login failure"),
+        side_effect=MyBMWAuthError("Login failed"),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_USER},
+            data=FIXTURE_USER_INPUT,
+        )
+
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": "invalid_auth"}
+
+
+async def test_connection_error(hass: HomeAssistant) -> None:
+    """Test we show user form on MyBMW API error."""
+
+    with patch(
+        "bimmer_connected.api.authentication.MyBMWAuthentication.login",
+        side_effect=RequestError("Connection reset"),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_USER},
+            data=FIXTURE_USER_INPUT,
+        )
+
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": "cannot_connect"}
+
+
+async def test_api_error(hass: HomeAssistant) -> None:
+    """Test we show user form on general connection error."""
+
+    with patch(
+        "bimmer_connected.api.authentication.MyBMWAuthentication.login",
+        side_effect=MyBMWAPIError("400 Bad Request"),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -108,5 +149,53 @@ async def test_options_flow_implementation(hass: HomeAssistant) -> None:
         assert result["data"] == {
             CONF_READ_ONLY: True,
         }
+
+        assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_reauth(hass: HomeAssistant) -> None:
+    """Test the reauth form."""
+    with patch(
+        "bimmer_connected.api.authentication.MyBMWAuthentication.login",
+        side_effect=login_sideeffect,
+        autospec=True,
+    ), patch(
+        "homeassistant.components.bmw_connected_drive.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        wrong_password = "wrong"
+
+        config_entry_with_wrong_password = deepcopy(FIXTURE_CONFIG_ENTRY)
+        config_entry_with_wrong_password["data"][CONF_PASSWORD] = wrong_password
+
+        config_entry = MockConfigEntry(**config_entry_with_wrong_password)
+        config_entry.add_to_hass(hass)
+
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        assert config_entry.data == config_entry_with_wrong_password["data"]
+
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={
+                "source": config_entries.SOURCE_REAUTH,
+                "unique_id": config_entry.unique_id,
+                "entry_id": config_entry.entry_id,
+            },
+        )
+
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["step_id"] == "user"
+        assert result["errors"] == {}
+
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], FIXTURE_USER_INPUT
+        )
+        await hass.async_block_till_done()
+
+        assert result2["type"] == data_entry_flow.FlowResultType.ABORT
+        assert result2["reason"] == "reauth_successful"
+        assert config_entry.data == FIXTURE_COMPLETE_ENTRY
 
         assert len(mock_setup_entry.mock_calls) == 1

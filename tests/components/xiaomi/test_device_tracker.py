@@ -9,6 +9,7 @@ from homeassistant.components.device_tracker import DOMAIN
 import homeassistant.components.xiaomi.device_tracker as xiaomi
 from homeassistant.components.xiaomi.device_tracker import get_scanner
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PLATFORM, CONF_USERNAME
+from homeassistant.core import HomeAssistant
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -147,7 +148,7 @@ def mocked_requests(*args, **kwargs):
     "homeassistant.components.xiaomi.device_tracker.XiaomiDeviceScanner",
     return_value=MagicMock(),
 )
-async def test_config(xiaomi_mock, hass):
+async def test_config(xiaomi_mock, hass: HomeAssistant) -> None:
     """Testing minimal configuration."""
     config = {
         DOMAIN: xiaomi.PLATFORM_SCHEMA(
@@ -172,7 +173,7 @@ async def test_config(xiaomi_mock, hass):
     "homeassistant.components.xiaomi.device_tracker.XiaomiDeviceScanner",
     return_value=MagicMock(),
 )
-async def test_config_full(xiaomi_mock, hass):
+async def test_config_full(xiaomi_mock, hass: HomeAssistant) -> None:
     """Testing full configuration."""
     config = {
         DOMAIN: xiaomi.PLATFORM_SCHEMA(
@@ -196,7 +197,7 @@ async def test_config_full(xiaomi_mock, hass):
 
 @patch("requests.get", side_effect=mocked_requests)
 @patch("requests.post", side_effect=mocked_requests)
-async def test_invalid_credential(mock_get, mock_post, hass):
+async def test_invalid_credential(mock_get, mock_post, hass: HomeAssistant) -> None:
     """Testing invalid credential handling."""
     config = {
         DOMAIN: xiaomi.PLATFORM_SCHEMA(
@@ -213,7 +214,7 @@ async def test_invalid_credential(mock_get, mock_post, hass):
 
 @patch("requests.get", side_effect=mocked_requests)
 @patch("requests.post", side_effect=mocked_requests)
-async def test_valid_credential(mock_get, mock_post, hass):
+async def test_valid_credential(mock_get, mock_post, hass: HomeAssistant) -> None:
     """Testing valid refresh."""
     config = {
         DOMAIN: xiaomi.PLATFORM_SCHEMA(
@@ -234,7 +235,7 @@ async def test_valid_credential(mock_get, mock_post, hass):
 
 @patch("requests.get", side_effect=mocked_requests)
 @patch("requests.post", side_effect=mocked_requests)
-async def test_token_timed_out(mock_get, mock_post, hass):
+async def test_token_timed_out(mock_get, mock_post, hass: HomeAssistant) -> None:
     """Testing refresh with a timed out token.
 
     New token is requested and list is downloaded a second time.

@@ -12,7 +12,7 @@ async def test_diagnostics(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     init_integration: MockConfigEntry,
-):
+) -> None:
     """Test diagnostics for config entry."""
     diagnostics_data = json.loads(load_fixture("roku/roku3-diagnostics-data.json"))
 

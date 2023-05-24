@@ -84,7 +84,7 @@ async def test_config_cover(hass: HomeAssistant, mock_modbus) -> None:
     ],
 )
 @pytest.mark.parametrize(
-    "register_words,expected",
+    ("register_words", "expected"),
     [
         (
             [0x00],
@@ -131,7 +131,7 @@ async def test_coil_cover(hass: HomeAssistant, expected, mock_do_cycle) -> None:
     ],
 )
 @pytest.mark.parametrize(
-    "register_words,do_exception, start_expect,end_expect",
+    ("register_words", "do_exception", "start_expect", "end_expect"),
     [
         (
             [0x00],
@@ -168,7 +168,7 @@ async def test_lazy_error_cover(
     ],
 )
 @pytest.mark.parametrize(
-    "register_words,expected",
+    ("register_words", "expected"),
     [
         (
             [0x00],

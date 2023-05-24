@@ -1,4 +1,4 @@
-"""This integration provides support for Stookwijzer Sensor."""
+"""Support for Stookwijzer Sensor."""
 from __future__ import annotations
 
 from datetime import timedelta

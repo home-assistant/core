@@ -8,6 +8,7 @@ from zwave_me_ws import ZWaveMeData
 from homeassistant.components.zwave_me import ZWaveMePlatform
 from homeassistant.const import CONF_TOKEN, CONF_URL
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 
 from tests.common import MockConfigEntry
 
@@ -34,8 +35,8 @@ async def mock_connection(controller):
     ],
 )
 async def test_remove_stale_devices(
-    hass: HomeAssistant, device_registry, identifier, should_exist
-):
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry, identifier, should_exist
+) -> None:
     """Test removing devices with old-format ids."""
 
     config_entry = MockConfigEntry(

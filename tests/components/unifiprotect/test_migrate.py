@@ -23,7 +23,7 @@ from .utils import (
 
 async def test_migrate_reboot_button(
     hass: HomeAssistant, ufp: MockUFPFixture, light: Light
-):
+) -> None:
     """Test migrating unique ID of reboot button."""
 
     light1 = light.copy()
@@ -73,7 +73,9 @@ async def test_migrate_reboot_button(
     assert light.unique_id == f"{light2.mac}_reboot"
 
 
-async def test_migrate_nvr_mac(hass: HomeAssistant, ufp: MockUFPFixture, light: Light):
+async def test_migrate_nvr_mac(
+    hass: HomeAssistant, ufp: MockUFPFixture, light: Light
+) -> None:
     """Test migrating unique ID of NVR to use MAC address."""
 
     light1 = light.copy()
@@ -114,7 +116,7 @@ async def test_migrate_nvr_mac(hass: HomeAssistant, ufp: MockUFPFixture, light: 
 
 async def test_migrate_reboot_button_no_device(
     hass: HomeAssistant, ufp: MockUFPFixture, light: Light
-):
+) -> None:
     """Test migrating unique ID of reboot button if UniFi Protect device ID changed."""
 
     light2_id, _ = generate_random_ids()
@@ -144,7 +146,7 @@ async def test_migrate_reboot_button_no_device(
 
 async def test_migrate_reboot_button_fail(
     hass: HomeAssistant, ufp: MockUFPFixture, light: Light
-):
+) -> None:
     """Test migrating unique ID of reboot button."""
 
     registry = er.async_get(hass)
@@ -177,7 +179,7 @@ async def test_migrate_reboot_button_fail(
 
 async def test_migrate_device_mac_button_fail(
     hass: HomeAssistant, ufp: MockUFPFixture, light: Light
-):
+) -> None:
     """Test migrating unique ID to MAC format."""
 
     registry = er.async_get(hass)
@@ -210,7 +212,7 @@ async def test_migrate_device_mac_button_fail(
 
 async def test_migrate_device_mac_bootstrap_fail(
     hass: HomeAssistant, ufp: MockUFPFixture, light: Light
-):
+) -> None:
     """Test migrating with a network error."""
 
     registry = er.async_get(hass)

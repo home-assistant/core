@@ -16,7 +16,7 @@ from .heartbeat import BroadlinkHeartbeat
 class BroadlinkData:
     """Class for sharing data within the Broadlink integration."""
 
-    devices: dict = field(default_factory=dict)
+    devices: dict[str, BroadlinkDevice] = field(default_factory=dict)
     platforms: dict = field(default_factory=dict)
     heartbeat: BroadlinkHeartbeat | None = None
 
@@ -29,24 +29,25 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a Broadlink device from a config entry."""
-    data = hass.data[DOMAIN]
+    data: BroadlinkData = hass.data[DOMAIN]
 
+    device = BroadlinkDevice(hass, entry)
+    if not await device.async_setup():
+        return False
     if data.heartbeat is None:
         data.heartbeat = BroadlinkHeartbeat(hass)
         hass.async_create_task(data.heartbeat.async_setup())
-
-    device = BroadlinkDevice(hass, entry)
-    return await device.async_setup()
+    return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    data = hass.data[DOMAIN]
+    data: BroadlinkData = hass.data[DOMAIN]
 
     device = data.devices.pop(entry.entry_id)
     result = await device.async_unload()
 
-    if not data.devices:
+    if data.heartbeat and not data.devices:
         await data.heartbeat.async_unload()
         data.heartbeat = None
 

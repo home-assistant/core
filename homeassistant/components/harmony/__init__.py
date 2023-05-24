@@ -5,7 +5,7 @@ from homeassistant.components.remote import ATTR_ACTIVITY, ATTR_DELAY_SECS
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_NAME, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import entity_registry
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import (
@@ -60,7 +60,7 @@ async def _migrate_old_unique_ids(
     names_to_ids = {activity["label"]: activity["id"] for activity in data.activities}
 
     @callback
-    def _async_migrator(entity_entry: entity_registry.RegistryEntry):
+    def _async_migrator(entity_entry: er.RegistryEntry):
         # Old format for switches was {remote_unique_id}-{activity_name}
         # New format is activity_{activity_id}
         parts = entity_entry.unique_id.split("-", 1)
@@ -78,7 +78,7 @@ async def _migrate_old_unique_ids(
 
         return None
 
-    await entity_registry.async_migrate_entries(hass, entry_id, _async_migrator)
+    await er.async_migrate_entries(hass, entry_id, _async_migrator)
 
 
 @callback

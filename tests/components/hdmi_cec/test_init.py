@@ -291,7 +291,7 @@ async def test_service_update_devices(hass: HomeAssistant, create_hdmi_network) 
         ),
     ],
 )
-@pytest.mark.parametrize("direction,key", [("up", 65), ("down", 66)])
+@pytest.mark.parametrize(("direction", "key"), [("up", 65), ("down", 66)])
 async def test_service_volume_x_times(
     hass: HomeAssistant, create_hdmi_network, count, calls, direction, key
 ) -> None:

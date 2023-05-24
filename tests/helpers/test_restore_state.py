@@ -1,5 +1,6 @@
 """The tests for the Restore component."""
 from datetime import datetime, timedelta
+from typing import Any
 from unittest.mock import patch
 
 from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
@@ -348,7 +349,9 @@ async def test_state_saved_on_remove(hass: HomeAssistant) -> None:
     assert set(state.attributes["complicated"]["value"]) == {1, 2, now.isoformat()}
 
 
-async def test_restoring_invalid_entity_id(hass, hass_storage):
+async def test_restoring_invalid_entity_id(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
     """Test restoring invalid entity IDs."""
     entity = RestoreEntity()
     entity.hass = hass

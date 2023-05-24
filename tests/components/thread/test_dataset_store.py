@@ -1,4 +1,6 @@
 """Test the thread dataset store."""
+from typing import Any
+
 import pytest
 from python_otbr_api.tlv_parser import TLVError
 
@@ -15,6 +17,18 @@ DATASET_1_REORDERED = (
     "0E080000000000010000000300000F35060004001FFFE0020811111111222222220708FDAD70BF"
     "E5AA15DD051000112233445566778899AABBCCDDEEFF030E4F70656E54687265616444656D6F04"
     "10445F2B5CA6F2A93A55CE570A70EFEECB0C0402A0F7F801021234"
+)
+
+DATASET_1_BAD_CHANNEL = (
+    "0E080000000000010000000035060004001FFFE0020811111111222222220708FDAD70BF"
+    "E5AA15DD051000112233445566778899AABBCCDDEEFF030E4F70656E54687265616444656D6F01"
+    "0212340410445F2B5CA6F2A93A55CE570A70EFEECB0C0402A0F7F8"
+)
+
+DATASET_1_NO_CHANNEL = (
+    "0E08000000000001000035060004001FFFE0020811111111222222220708FDAD70BF"
+    "E5AA15DD051000112233445566778899AABBCCDDEEFF030E4F70656E54687265616444656D6F01"
+    "0212340410445F2B5CA6F2A93A55CE570A70EFEECB0C0402A0F7F8"
 )
 
 
@@ -81,6 +95,17 @@ async def test_delete_preferred_dataset(hass: HomeAssistant) -> None:
     assert len(store.datasets) == 1
 
 
+async def test_get_dataset(hass: HomeAssistant) -> None:
+    """Test get the preferred dataset."""
+    assert await dataset_store.async_get_dataset(hass, "blah") is None
+
+    await dataset_store.async_add_dataset(hass, "source", DATASET_1)
+    store = await dataset_store.async_get_store(hass)
+    dataset_id = list(store.datasets.values())[0].id
+
+    assert (await dataset_store.async_get_dataset(hass, dataset_id)) == DATASET_1
+
+
 async def test_get_preferred_dataset(hass: HomeAssistant) -> None:
     """Test get the preferred dataset."""
     assert await dataset_store.async_get_preferred_dataset(hass) is None
@@ -96,6 +121,8 @@ async def test_dataset_properties(hass: HomeAssistant) -> None:
         {"source": "Google", "tlv": DATASET_1},
         {"source": "Multipan", "tlv": DATASET_2},
         {"source": "🎅", "tlv": DATASET_3},
+        {"source": "test1", "tlv": DATASET_1_BAD_CHANNEL},
+        {"source": "test2", "tlv": DATASET_1_NO_CHANNEL},
     ]
 
     for dataset in datasets:
@@ -109,24 +136,39 @@ async def test_dataset_properties(hass: HomeAssistant) -> None:
             dataset_2 = dataset
         if dataset.source == "🎅":
             dataset_3 = dataset
+        if dataset.source == "test1":
+            dataset_4 = dataset
+        if dataset.source == "test2":
+            dataset_5 = dataset
 
     dataset = store.async_get(dataset_1.id)
     assert dataset == dataset_1
+    assert dataset.channel == 15
     assert dataset.extended_pan_id == "1111111122222222"
     assert dataset.network_name == "OpenThreadDemo"
     assert dataset.pan_id == "1234"
 
     dataset = store.async_get(dataset_2.id)
     assert dataset == dataset_2
+    assert dataset.channel == 15
     assert dataset.extended_pan_id == "1111111122222222"
     assert dataset.network_name == "HomeAssistant!"
     assert dataset.pan_id == "1234"
 
     dataset = store.async_get(dataset_3.id)
     assert dataset == dataset_3
+    assert dataset.channel == 15
     assert dataset.extended_pan_id == "1111111122222222"
     assert dataset.network_name == "~🐣🐥🐤~"
     assert dataset.pan_id == "1234"
+
+    dataset = store.async_get(dataset_4.id)
+    assert dataset == dataset_4
+    assert dataset.channel is None
+
+    dataset = store.async_get(dataset_5.id)
+    assert dataset == dataset_5
+    assert dataset.channel is None
 
 
 async def test_load_datasets(hass: HomeAssistant) -> None:
@@ -186,7 +228,9 @@ async def test_load_datasets(hass: HomeAssistant) -> None:
     assert dataset_3_store_1 == dataset_3_store_2
 
 
-async def test_loading_datasets_from_storage(hass: HomeAssistant, hass_storage) -> None:
+async def test_loading_datasets_from_storage(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
     """Test loading stored datasets on start."""
     hass_storage[dataset_store.STORAGE_KEY] = {
         "version": dataset_store.STORAGE_VERSION_MAJOR,

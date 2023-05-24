@@ -378,7 +378,7 @@ async def test_duplicate_entity_validator(do_config) -> None:
             CONF_TYPE: SERIAL,
             CONF_BAUDRATE: 9600,
             CONF_BYTESIZE: 8,
-            CONF_METHOD: "rtu",
+            CONF_METHOD: "ascii",
             CONF_PORT: TEST_PORT_SERIAL,
             CONF_PARITY: "E",
             CONF_STOPBITS: 1,
@@ -603,7 +603,7 @@ async def mock_modbus_read_pymodbus_fixture(
     ],
 )
 @pytest.mark.parametrize(
-    "do_return,do_exception,do_expect_state,do_expect_value",
+    ("do_return", "do_exception", "do_expect_state", "do_expect_value"),
     [
         [ReadResult([1]), None, STATE_ON, "1"],
         [IllegalFunctionRequest(0x99), None, STATE_UNAVAILABLE, STATE_UNAVAILABLE],
@@ -704,7 +704,7 @@ async def test_pymodbus_connect_fail(
     caplog.set_level(logging.WARNING)
     ExceptionMessage = "test connect exception"
     mock_pymodbus.connect.side_effect = ModbusException(ExceptionMessage)
-    assert await async_setup_component(hass, DOMAIN, config) is False
+    assert await async_setup_component(hass, DOMAIN, config) is True
     assert ExceptionMessage in caplog.text
 
 
@@ -888,7 +888,7 @@ async def test_integration_reload(
     with mock.patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
         await hass.services.async_call(DOMAIN, SERVICE_RELOAD, blocking=True)
         await hass.async_block_till_done()
-        for i in range(4):
+        for _ in range(4):
             freezer.tick(timedelta(seconds=1))
             async_fire_time_changed(hass)
             await hass.async_block_till_done()

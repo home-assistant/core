@@ -468,6 +468,10 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
                 return
 
             device_value = float(payload)
+            if device_value == 0:
+                _LOGGER.debug("Ignoring zero brightness from '%s'", msg.topic)
+                return
+
             percent_bright = device_value / self._config[CONF_BRIGHTNESS_SCALE]
             self._attr_brightness = min(round(percent_bright * 255), 255)
 
@@ -495,8 +499,12 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
                 self._attr_color_mode = color_mode
             if self._topic[CONF_BRIGHTNESS_STATE_TOPIC] is None:
                 rgb = convert_color(*color)
-                percent_bright = float(color_util.color_RGB_to_hsv(*rgb)[2]) / 100.0
-                self._attr_brightness = min(round(percent_bright * 255), 255)
+                brightness = max(rgb)
+                self._attr_brightness = brightness
+                # Normalize the color to 100% brightness
+                color = tuple(
+                    min(round(channel / brightness * 255), 255) for channel in color
+                )
             return color
 
         @callback

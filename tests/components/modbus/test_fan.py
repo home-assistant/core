@@ -154,7 +154,7 @@ async def test_config_fan(hass: HomeAssistant, mock_modbus) -> None:
     ],
 )
 @pytest.mark.parametrize(
-    "register_words,do_exception,config_addon,expected",
+    ("register_words", "do_exception", "config_addon", "expected"),
     [
         (
             [0x00],

@@ -168,7 +168,7 @@ async def test_config_switch(hass: HomeAssistant, mock_modbus) -> None:
     ],
 )
 @pytest.mark.parametrize(
-    "register_words,do_exception,config_addon,expected",
+    ("register_words", "do_exception", "config_addon", "expected"),
     [
         (
             [0x00],
@@ -226,7 +226,7 @@ async def test_all_switch(hass: HomeAssistant, mock_do_cycle, expected) -> None:
     ],
 )
 @pytest.mark.parametrize(
-    "register_words,do_exception,start_expect,end_expect",
+    ("register_words", "do_exception", "start_expect", "end_expect"),
     [
         (
             [0x00],

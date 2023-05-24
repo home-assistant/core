@@ -13,7 +13,7 @@ from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("controller")
-async def test_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry):
+async def test_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
     """Test being able to unload an entry."""
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
@@ -31,7 +31,7 @@ async def test_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry):
 @pytest.mark.usefixtures("controller")
 async def test_device_identifier_migration(
     hass: HomeAssistant, config_entry: ConfigEntry, device_registry: dr.DeviceRegistry
-):
+) -> None:
     """Test being able to unload an entry."""
     original_identifiers = {(DOMAIN, "module_address", "module_serial")}
     target_identifiers = {(DOMAIN, "module_address")}

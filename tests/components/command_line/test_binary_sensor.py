@@ -9,7 +9,7 @@ from homeassistant import setup
 from homeassistant.components.binary_sensor import DOMAIN
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry
+from homeassistant.helpers import entity_registry as er
 
 
 async def setup_test_entity(hass: HomeAssistant, config_dict: dict[str, Any]) -> None:
@@ -72,7 +72,9 @@ async def test_sensor_off(hass: HomeAssistant) -> None:
     assert entity_state.state == STATE_OFF
 
 
-async def test_unique_id(hass: HomeAssistant) -> None:
+async def test_unique_id(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test unique_id option and if it only creates one binary sensor per id."""
     assert await setup.async_setup_component(
         hass,
@@ -101,18 +103,12 @@ async def test_unique_id(hass: HomeAssistant) -> None:
 
     assert len(hass.states.async_all()) == 2
 
-    ent_reg = entity_registry.async_get(hass)
-
-    assert len(ent_reg.entities) == 2
-    assert (
-        ent_reg.async_get_entity_id("binary_sensor", "command_line", "unique")
-        is not None
+    assert len(entity_registry.entities) == 2
+    assert entity_registry.async_get_entity_id(
+        "binary_sensor", "command_line", "unique"
     )
-    assert (
-        ent_reg.async_get_entity_id(
-            "binary_sensor", "command_line", "not-so-unique-anymore"
-        )
-        is not None
+    assert entity_registry.async_get_entity_id(
+        "binary_sensor", "command_line", "not-so-unique-anymore"
     )
 
 

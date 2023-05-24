@@ -14,6 +14,8 @@ from tests.common import MockConfigEntry
 
 MOCK_CONFIG = {CONF_PORT: 8765}
 
+pytestmark = pytest.mark.usefixtures("mock_setup_entry")
+
 
 @pytest.fixture(name="dummy_tcp_server")
 def mock_dummy_tcp_server():
@@ -69,7 +71,7 @@ def mock_start_server_failed():
         yield server
 
 
-async def test_form(hass, dummy_tcp_server):
+async def test_form(hass: HomeAssistant, dummy_tcp_server) -> None:
     """Test how we get the form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -85,7 +87,7 @@ async def test_form(hass, dummy_tcp_server):
     assert result2["type"] == FlowResultType.CREATE_ENTRY
 
 
-async def test_form_addr_in_use(hass, addr_in_use):
+async def test_form_addr_in_use(hass: HomeAssistant, addr_in_use) -> None:
     """Test how we handle addr_in_use error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -99,7 +101,9 @@ async def test_form_addr_in_use(hass, addr_in_use):
     assert result2["reason"] == "addr_in_use"
 
 
-async def test_form_start_server_failed(hass, start_server_failed):
+async def test_form_start_server_failed(
+    hass: HomeAssistant, start_server_failed
+) -> None:
     """Test how we handle start_server_failed error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}

@@ -150,6 +150,14 @@ class GoogleAssistantConversationAgent(conversation.AbstractConversationAgent):
             "url": "https://www.home-assistant.io/integrations/google_assistant_sdk/",
         }
 
+    @property
+    def supported_languages(self) -> list[str]:
+        """Return a list of supported languages."""
+        language_code = self.entry.options.get(
+            CONF_LANGUAGE_CODE, default_language_code(self.hass)
+        )
+        return [language_code]
+
     async def async_process(
         self, user_input: conversation.ConversationInput
     ) -> conversation.ConversationResult:

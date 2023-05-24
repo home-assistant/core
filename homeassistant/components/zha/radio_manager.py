@@ -40,6 +40,12 @@ AUTOPROBE_RADIOS = (
     RadioType.zigate,
 )
 
+RECOMMENDED_RADIOS = (
+    RadioType.ezsp,
+    RadioType.znp,
+    RadioType.deconz,
+)
+
 CONNECT_DELAY_S = 1.0
 
 MIGRATION_RETRIES = 100

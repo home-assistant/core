@@ -21,7 +21,7 @@ from homeassistant.components.bluetooth.usage import (
 )
 from homeassistant.core import HomeAssistant
 
-from . import _get_manager, generate_advertisement_data
+from . import _get_manager, generate_advertisement_data, generate_ble_device
 
 
 class FakeScanner(BaseHaRemoteScanner):
@@ -108,7 +108,7 @@ def _generate_ble_device_and_adv_data(
 ) -> tuple[BLEDevice, AdvertisementData]:
     """Generate a BLE device with adv data."""
     return (
-        BLEDevice(
+        generate_ble_device(
             mac,
             "any",
             delegate="",

@@ -18,7 +18,9 @@ async def test_extract_frame_integration(
     assert found_frame == mock_integration_frame
 
 
-async def test_extract_frame_integration_with_excluded_integration(caplog):
+async def test_extract_frame_integration_with_excluded_integration(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test extracting the current frame from integration context."""
     correct_frame = Mock(
         filename="/home/dev/homeassistant/components/mdns/light.py",
@@ -55,7 +57,7 @@ async def test_extract_frame_integration_with_excluded_integration(caplog):
     assert found_frame == correct_frame
 
 
-async def test_extract_frame_no_integration(caplog):
+async def test_extract_frame_no_integration(caplog: pytest.LogCaptureFixture) -> None:
     """Test extracting the current frame without integration context."""
     with patch(
         "homeassistant.helpers.frame.extract_stack",
@@ -77,7 +79,7 @@ async def test_extract_frame_no_integration(caplog):
 
 @pytest.mark.usefixtures("mock_integration_frame")
 @patch.object(frame, "_REPORTED_INTEGRATIONS", set())
-async def test_prevent_flooding(caplog):
+async def test_prevent_flooding(caplog: pytest.LogCaptureFixture) -> None:
     """Test to ensure a report is only written once to the log."""
 
     what = "accessed hi instead of hello"
@@ -96,7 +98,9 @@ async def test_prevent_flooding(caplog):
     assert len(frame._REPORTED_INTEGRATIONS) == 1
 
 
-async def test_report_missing_integration_frame(caplog):
+async def test_report_missing_integration_frame(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test reporting when no integration is detected."""
 
     what = "teststring"

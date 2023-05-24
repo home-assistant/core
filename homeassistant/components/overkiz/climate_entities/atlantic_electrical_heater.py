@@ -15,6 +15,7 @@ from homeassistant.components.climate import (
 )
 from homeassistant.const import UnitOfTemperature
 
+from ..const import DOMAIN
 from ..entity import OverkizEntity
 
 PRESET_COMFORT1 = "comfort-1"
@@ -47,6 +48,7 @@ class AtlanticElectricalHeater(OverkizEntity, ClimateEntity):
     _attr_preset_modes = [*PRESET_MODES_TO_OVERKIZ]
     _attr_supported_features = ClimateEntityFeature.PRESET_MODE
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_translation_key = DOMAIN
 
     @property
     def hvac_mode(self) -> HVACMode:

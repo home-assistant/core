@@ -117,7 +117,7 @@ async def test_config_binary_sensor(hass: HomeAssistant, mock_modbus) -> None:
     ],
 )
 @pytest.mark.parametrize(
-    "register_words,do_exception,expected",
+    ("register_words", "do_exception", "expected"),
     [
         (
             [True] * 8,
@@ -188,7 +188,7 @@ async def test_all_binary_sensor(hass: HomeAssistant, expected, mock_do_cycle) -
     ],
 )
 @pytest.mark.parametrize(
-    "register_words,do_exception,start_expect,end_expect",
+    ("register_words", "do_exception", "start_expect", "end_expect"),
     [
         (
             [False * 16],
@@ -347,7 +347,7 @@ async def test_config_slave_binary_sensor(hass: HomeAssistant, mock_modbus) -> N
     ],
 )
 @pytest.mark.parametrize(
-    "config_addon,register_words,expected, slaves",
+    ("config_addon", "register_words", "expected", "slaves"),
     [
         (
             {CONF_SLAVE_COUNT: 1, CONF_UNIQUE_ID: SLAVE_UNIQUE_ID},

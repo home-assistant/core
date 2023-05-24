@@ -131,13 +131,15 @@ async def async_setup_entry(
 class VizioDevice(MediaPlayerEntity):
     """Media Player implementation which performs REST requests to device."""
 
+    _attr_name: str
+
     def __init__(
         self,
         config_entry: ConfigEntry,
         device: VizioAsync,
         name: str,
         device_class: MediaPlayerDeviceClass,
-        apps_coordinator: VizioAppsDataUpdateCoordinator,
+        apps_coordinator: VizioAppsDataUpdateCoordinator | None,
     ) -> None:
         """Initialize Vizio device."""
         self._config_entry = config_entry
@@ -330,17 +332,21 @@ class VizioDevice(MediaPlayerEntity):
             )
         )
 
+        if not self._apps_coordinator:
+            return
+
         # Register callback for app list updates if device is a TV
         @callback
-        def apps_list_update():
+        def apps_list_update() -> None:
             """Update list of all apps."""
+            if not self._apps_coordinator:
+                return
             self._all_apps = self._apps_coordinator.data
             self.async_write_ha_state()
 
-        if self._attr_device_class == MediaPlayerDeviceClass.TV:
-            self.async_on_remove(
-                self._apps_coordinator.async_add_listener(apps_list_update)
-            )
+        self.async_on_remove(
+            self._apps_coordinator.async_add_listener(apps_list_update)
+        )
 
     @property
     def source(self) -> str | None:

@@ -20,6 +20,7 @@ from homeassistant.components.stream.const import (
     HLS_PROVIDER,
 )
 from homeassistant.components.stream.core import Part
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from .common import (
@@ -114,7 +115,9 @@ def make_hint(segment, part):
     return f'#EXT-X-PRELOAD-HINT:TYPE=PART,URI="./segment/{segment}.{part}.m4s"'
 
 
-async def test_ll_hls_stream(hass, hls_stream, stream_worker_sync):
+async def test_ll_hls_stream(
+    hass: HomeAssistant, hls_stream, stream_worker_sync
+) -> None:
     """Test hls stream.
 
     Purposefully not mocking anything here to test full
@@ -249,7 +252,9 @@ async def test_ll_hls_stream(hass, hls_stream, stream_worker_sync):
     assert fail_response.status == HTTPStatus.NOT_FOUND
 
 
-async def test_ll_hls_playlist_view(hass, hls_stream, stream_worker_sync):
+async def test_ll_hls_playlist_view(
+    hass: HomeAssistant, hls_stream, stream_worker_sync
+) -> None:
     """Test rendering the hls playlist with 1 and 2 output segments."""
     await async_setup_component(
         hass,
@@ -318,7 +323,9 @@ async def test_ll_hls_playlist_view(hass, hls_stream, stream_worker_sync):
     await stream.stop()
 
 
-async def test_ll_hls_msn(hass, hls_stream, stream_worker_sync, hls_sync):
+async def test_ll_hls_msn(
+    hass: HomeAssistant, hls_stream, stream_worker_sync, hls_sync
+) -> None:
     """Test that requests using _HLS_msn get held and returned or rejected."""
     await async_setup_component(
         hass,
@@ -382,7 +389,9 @@ async def test_ll_hls_msn(hass, hls_stream, stream_worker_sync, hls_sync):
     stream_worker_sync.resume()
 
 
-async def test_ll_hls_playlist_bad_msn_part(hass, hls_stream, stream_worker_sync):
+async def test_ll_hls_playlist_bad_msn_part(
+    hass: HomeAssistant, hls_stream, stream_worker_sync
+) -> None:
     """Test some playlist requests with invalid _HLS_msn/_HLS_part."""
 
     await async_setup_component(
@@ -450,8 +459,8 @@ async def test_ll_hls_playlist_bad_msn_part(hass, hls_stream, stream_worker_sync
 
 
 async def test_ll_hls_playlist_rollover_part(
-    hass, hls_stream, stream_worker_sync, hls_sync
-):
+    hass: HomeAssistant, hls_stream, stream_worker_sync, hls_sync
+) -> None:
     """Test playlist request rollover."""
 
     await async_setup_component(
@@ -530,7 +539,9 @@ async def test_ll_hls_playlist_rollover_part(
     stream_worker_sync.resume()
 
 
-async def test_ll_hls_playlist_msn_part(hass, hls_stream, stream_worker_sync, hls_sync):
+async def test_ll_hls_playlist_msn_part(
+    hass: HomeAssistant, hls_stream, stream_worker_sync, hls_sync
+) -> None:
     """Test that requests using _HLS_msn and _HLS_part get held and returned."""
 
     await async_setup_component(
@@ -597,7 +608,9 @@ async def test_ll_hls_playlist_msn_part(hass, hls_stream, stream_worker_sync, hl
     stream_worker_sync.resume()
 
 
-async def test_get_part_segments(hass, hls_stream, stream_worker_sync, hls_sync):
+async def test_get_part_segments(
+    hass: HomeAssistant, hls_stream, stream_worker_sync, hls_sync
+) -> None:
     """Test requests for part segments and hinted parts."""
     await async_setup_component(
         hass,

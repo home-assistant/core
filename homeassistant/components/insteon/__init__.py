@@ -1,5 +1,4 @@
 """Support for INSTEON Modems (PLM and Hub)."""
-import asyncio
 from contextlib import suppress
 import logging
 
@@ -25,11 +24,10 @@ from .const import (
     CONF_X10,
     DOMAIN,
     INSTEON_PLATFORMS,
-    ON_OFF_EVENTS,
 )
 from .schemas import convert_yaml_to_config_flow
 from .utils import (
-    add_on_off_event_device,
+    add_insteon_events,
     async_register_services,
     get_device_platforms,
     register_new_device_callback,
@@ -160,8 +158,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     for address in devices:
         device = devices[address]
         platforms = get_device_platforms(device)
-        if ON_OFF_EVENTS in platforms:
-            add_on_off_event_device(hass, device)
+        add_insteon_events(hass, device)
+        if not platforms:
             create_insteon_device(hass, device, entry.entry_id)
 
     _LOGGER.debug("Insteon device count: %s", len(devices))
@@ -173,7 +171,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     api.async_load_api(hass)
     await api.async_register_insteon_frontend(hass)
 
-    asyncio.create_task(async_get_device_config(hass, entry))
+    entry.async_create_background_task(
+        hass, async_get_device_config(hass, entry), "insteon-get-device-config"
+    )
 
     return True
 

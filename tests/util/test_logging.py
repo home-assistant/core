@@ -78,7 +78,9 @@ async def test_migrate_log_handler(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.no_fail_on_log_exception
-async def test_async_create_catching_coro(hass, caplog):
+async def test_async_create_catching_coro(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test exception logging of wrapped coroutine."""
 
     async def job():

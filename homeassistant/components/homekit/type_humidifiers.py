@@ -115,20 +115,12 @@ class HumidifierDehumidifier(HomeAccessory):
             CHAR_CURRENT_HUMIDITY, value=0
         )
 
-        max_humidity = state.attributes.get(ATTR_MAX_HUMIDITY, DEFAULT_MAX_HUMIDITY)
-        max_humidity = round(max_humidity)
-        max_humidity = min(max_humidity, 100)
-
-        min_humidity = state.attributes.get(ATTR_MIN_HUMIDITY, DEFAULT_MIN_HUMIDITY)
-        min_humidity = round(min_humidity)
-        min_humidity = max(min_humidity, 0)
-
         self.char_target_humidity = serv_humidifier_dehumidifier.configure_char(
             self._target_humidity_char_name,
             value=45,
             properties={
-                PROP_MIN_VALUE: min_humidity,
-                PROP_MAX_VALUE: max_humidity,
+                PROP_MIN_VALUE: DEFAULT_MIN_HUMIDITY,
+                PROP_MAX_VALUE: DEFAULT_MAX_HUMIDITY,
                 PROP_MIN_STEP: 1,
             },
         )
@@ -219,7 +211,23 @@ class HumidifierDehumidifier(HomeAccessory):
             )
 
         if self._target_humidity_char_name in char_values:
+            state = self.hass.states.get(self.entity_id)
+            max_humidity = state.attributes.get(ATTR_MAX_HUMIDITY, DEFAULT_MAX_HUMIDITY)
+            max_humidity = round(max_humidity)
+            max_humidity = min(max_humidity, 100)
+
+            min_humidity = state.attributes.get(ATTR_MIN_HUMIDITY, DEFAULT_MIN_HUMIDITY)
+            min_humidity = round(min_humidity)
+            min_humidity = max(min_humidity, 0)
+
             humidity = round(char_values[self._target_humidity_char_name])
+
+            if (humidity < min_humidity) or (humidity > max_humidity):
+                humidity = min(max_humidity, max(min_humidity, humidity))
+                # Update the HomeKit value to the clamped humidity, so the user will get a visual feedback that they
+                # cannot not set to a value below/above the min/max.
+                self.char_target_humidity.set_value(humidity)
+
             self.async_call_service(
                 DOMAIN,
                 SERVICE_SET_HUMIDITY,

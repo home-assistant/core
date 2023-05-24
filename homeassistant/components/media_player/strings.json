@@ -19,15 +19,145 @@
       "changed_states": "{entity_name} changed states"
     }
   },
-  "state": {
+  "entity_component": {
     "_": {
-      "off": "[%key:common::state::off%]",
-      "on": "[%key:common::state::on%]",
-      "playing": "Playing",
-      "paused": "[%key:common::state::paused%]",
-      "idle": "[%key:common::state::idle%]",
-      "standby": "[%key:common::state::standby%]",
-      "buffering": "Buffering"
+      "name": "[%key:component::media_player::title%]",
+      "state": {
+        "off": "[%key:common::state::off%]",
+        "on": "[%key:common::state::on%]",
+        "playing": "Playing",
+        "paused": "[%key:common::state::paused%]",
+        "idle": "[%key:common::state::idle%]",
+        "standby": "[%key:common::state::standby%]",
+        "buffering": "Buffering"
+      },
+      "state_attributes": {
+        "app_id": {
+          "name": "App ID"
+        },
+        "app_name": {
+          "name": "App"
+        },
+        "entity_picture_local": {
+          "name": "Local accessible entity picture"
+        },
+        "groups_members": {
+          "name": "Group members"
+        },
+        "is_volume_muted": {
+          "name": "Muted",
+          "state": {
+            "true": "[%key:common::state::yes%]",
+            "false": "[%key:common::state::no%]"
+          }
+        },
+        "media_album_artist": {
+          "name": "Album artist"
+        },
+        "media_album_name": {
+          "name": "Album"
+        },
+        "media_artist": {
+          "name": "Artist"
+        },
+        "media_channel": {
+          "name": "Channel"
+        },
+        "media_content_id": {
+          "name": "Content ID"
+        },
+        "media_content_type": {
+          "name": "Content type",
+          "state": {
+            "album": "Album",
+            "app": "App",
+            "artist": "Artist",
+            "channel": "Channel",
+            "channels": "Channels",
+            "composer": "Composer",
+            "contributing_artist": "Contributing artist",
+            "episode": "Episode",
+            "game": "Game",
+            "genre": "Genre",
+            "image": "Image",
+            "movie": "Movie",
+            "music": "Music",
+            "playlist": "Playlist",
+            "podcast": "Podcast",
+            "season": "Season",
+            "track": "Track",
+            "tvshow": "TV show",
+            "url": "URL",
+            "video": "Video"
+          }
+        },
+        "media_duration": {
+          "name": "Duration"
+        },
+        "media_episode": {
+          "name": "Episode"
+        },
+        "media_playlist": {
+          "name": "Playlist"
+        },
+        "media_position": {
+          "name": "Position"
+        },
+        "media_position_updated_at": {
+          "name": "Position updated"
+        },
+        "media_title": {
+          "name": "Title"
+        },
+        "media_track": {
+          "name": "Track"
+        },
+        "media_season": {
+          "name": "Season"
+        },
+        "media_series_title": {
+          "name": "Series"
+        },
+        "repeat": {
+          "name": "Repeat",
+          "state": {
+            "all": "All",
+            "off": "Off",
+            "one": "One"
+          }
+        },
+        "shuffle": {
+          "name": "Shuffle",
+          "state": {
+            "true": "[%key:common::state::on%]",
+            "false": "[%key:common::state::off%]"
+          }
+        },
+        "source": {
+          "name": "Source"
+        },
+        "source_list": {
+          "name": "Available sources"
+        },
+        "sound_mode": {
+          "name": "Sound mode"
+        },
+        "sound_mode_list": {
+          "name": "Available sound modes"
+        },
+        "volume_level": {
+          "name": "Volume"
+        }
+      }
+    },
+    "tv": {
+      "name": "TV"
+    },
+    "speaker": {
+      "name": "Speaker"
+    },
+    "receiver": {
+      "name": "Receiver"
     }
   }
 }

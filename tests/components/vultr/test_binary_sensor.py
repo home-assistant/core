@@ -24,7 +24,7 @@ CONFIGS = [
 
 
 @pytest.mark.usefixtures("valid_config")
-def test_binary_sensor(hass: HomeAssistant):
+def test_binary_sensor(hass: HomeAssistant) -> None:
     """Test successful instance."""
     hass_devices = []
 
@@ -81,7 +81,7 @@ def test_invalid_sensor_config() -> None:
 
 
 @pytest.mark.usefixtures("valid_config")
-def test_invalid_sensors(hass: HomeAssistant):
+def test_invalid_sensors(hass: HomeAssistant) -> None:
     """Test the VultrBinarySensor fails."""
     hass_devices = []
 

@@ -2,7 +2,6 @@
 from unittest.mock import patch
 
 import bleak
-from bleak.backends.device import BLEDevice
 import bleak_retry_connector
 import pytest
 
@@ -16,10 +15,14 @@ from homeassistant.components.bluetooth.wrappers import (
 )
 from homeassistant.core import HomeAssistant
 
-from . import _get_manager
+from . import _get_manager, generate_ble_device
 
-MOCK_BLE_DEVICE = BLEDevice(
-    "00:00:00:00:00:00", "any", delegate="", details={"path": "/dev/hci0/device"}
+MOCK_BLE_DEVICE = generate_ble_device(
+    "00:00:00:00:00:00",
+    "any",
+    delegate="",
+    details={"path": "/dev/hci0/device"},
+    rssi=-127,
 )
 
 

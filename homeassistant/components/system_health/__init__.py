@@ -188,7 +188,7 @@ async def handle_info(
     )
 
 
-@dataclasses.dataclass()
+@dataclasses.dataclass(slots=True)
 class SystemHealthRegistration:
     """Helper class to track platform registration."""
 

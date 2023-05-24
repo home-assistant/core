@@ -1,21 +1,66 @@
 {
-  "state": {
+  "title": "Weather",
+  "entity_component": {
     "_": {
-      "clear-night": "Clear, night",
-      "cloudy": "Cloudy",
-      "exceptional": "Exceptional",
-      "fog": "Fog",
-      "hail": "Hail",
-      "lightning": "Lightning",
-      "lightning-rainy": "Lightning, rainy",
-      "partlycloudy": "Partly cloudy",
-      "pouring": "Pouring",
-      "rainy": "Rainy",
-      "snowy": "Snowy",
-      "snowy-rainy": "Snowy, rainy",
-      "sunny": "Sunny",
-      "windy": "Windy",
-      "windy-variant": "Windy"
+      "name": "[%key:component::weather::title%]",
+      "state": {
+        "clear-night": "Clear, night",
+        "cloudy": "Cloudy",
+        "exceptional": "Exceptional",
+        "fog": "Fog",
+        "hail": "Hail",
+        "lightning": "Lightning",
+        "lightning-rainy": "Lightning, rainy",
+        "partlycloudy": "Partly cloudy",
+        "pouring": "Pouring",
+        "rainy": "Rainy",
+        "snowy": "Snowy",
+        "snowy-rainy": "Snowy, rainy",
+        "sunny": "Sunny",
+        "windy": "Windy",
+        "windy-variant": "Windy"
+      },
+      "state_attributes": {
+        "forecast": {
+          "name": "Forecast"
+        },
+        "humidity": {
+          "name": "Humidity"
+        },
+        "ozone": {
+          "name": "Ozone"
+        },
+        "precipitation_unit": {
+          "name": "Precipitation unit"
+        },
+        "pressure": {
+          "name": "Pressure"
+        },
+        "pressure_unit": {
+          "name": "Pressure unit"
+        },
+        "temperature": {
+          "name": "Temperature"
+        },
+        "temperature_unit": {
+          "name": "Temperature unit"
+        },
+        "visibility": {
+          "name": "Visibility"
+        },
+        "visibility_unit": {
+          "name": "Visibility unit"
+        },
+        "wind_bearing": {
+          "name": "Wind bearing"
+        },
+        "wind_speed": {
+          "name": "Wind speed"
+        },
+        "wind_speed_unit": {
+          "name": "Wind speed unit"
+        }
+      }
     }
   }
 }

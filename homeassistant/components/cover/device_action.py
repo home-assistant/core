@@ -18,7 +18,7 @@ from homeassistant.const import (
     SERVICE_STOP_COVER,
 )
 from homeassistant.core import Context, HomeAssistant
-from homeassistant.helpers import entity_registry
+from homeassistant.helpers import entity_registry as er
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import get_supported_features
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
@@ -63,11 +63,11 @@ async def async_get_actions(
     hass: HomeAssistant, device_id: str
 ) -> list[dict[str, str]]:
     """List device actions for Cover devices."""
-    registry = entity_registry.async_get(hass)
+    registry = er.async_get(hass)
     actions = []
 
     # Get all the integrations entities for this device
-    for entry in entity_registry.async_entries_for_device(registry, device_id):
+    for entry in er.async_entries_for_device(registry, device_id):
         if entry.domain != DOMAIN:
             continue
 
@@ -82,21 +82,19 @@ async def async_get_actions(
 
         if supported_features & SUPPORT_SET_POSITION:
             actions.append({**base_action, CONF_TYPE: "set_position"})
-        else:
-            if supported_features & SUPPORT_OPEN:
-                actions.append({**base_action, CONF_TYPE: "open"})
-            if supported_features & SUPPORT_CLOSE:
-                actions.append({**base_action, CONF_TYPE: "close"})
-            if supported_features & SUPPORT_STOP:
-                actions.append({**base_action, CONF_TYPE: "stop"})
+        if supported_features & SUPPORT_OPEN:
+            actions.append({**base_action, CONF_TYPE: "open"})
+        if supported_features & SUPPORT_CLOSE:
+            actions.append({**base_action, CONF_TYPE: "close"})
+        if supported_features & SUPPORT_STOP:
+            actions.append({**base_action, CONF_TYPE: "stop"})
 
         if supported_features & SUPPORT_SET_TILT_POSITION:
             actions.append({**base_action, CONF_TYPE: "set_tilt_position"})
-        else:
-            if supported_features & SUPPORT_OPEN_TILT:
-                actions.append({**base_action, CONF_TYPE: "open_tilt"})
-            if supported_features & SUPPORT_CLOSE_TILT:
-                actions.append({**base_action, CONF_TYPE: "close_tilt"})
+        if supported_features & SUPPORT_OPEN_TILT:
+            actions.append({**base_action, CONF_TYPE: "open_tilt"})
+        if supported_features & SUPPORT_CLOSE_TILT:
+            actions.append({**base_action, CONF_TYPE: "close_tilt"})
 
     return actions
 
