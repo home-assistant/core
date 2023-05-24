@@ -279,6 +279,16 @@ ZEROCONF = {
             "domain": "apple_tv",
         },
     ],
+    "_amzn-alexa._tcp.local.": [
+        {
+            "domain": "roomba",
+            "name": "irobot-*",
+        },
+        {
+            "domain": "roomba",
+            "name": "roomba-*",
+        },
+    ],
     "_androidtvremote2._tcp.local.": [
         {
             "domain": "androidtv_remote",
