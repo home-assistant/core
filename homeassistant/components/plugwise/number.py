@@ -111,7 +111,7 @@ class PlugwiseNumberEntity(PlugwiseEntity, NumberEntity):
     @property
     def native_step(self) -> float:
         """Return the setpoint step value."""
-        return max(self.entity_description.native_step_key_fn(self._number), 1)
+        return max(self.entity_description.native_step_key_fn(self._actuator), 1)
 
     @property
     def native_value(self) -> float:
