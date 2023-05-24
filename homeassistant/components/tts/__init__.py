@@ -313,9 +313,9 @@ class TextToSpeechEntity(RestoreEntity):
         return None
 
     @property
-    def default_options(self) -> Mapping[str, Any] | None:
+    def default_options(self) -> Mapping[str, Any]:
         """Return a mapping with the default options."""
-        return None
+        return {}
 
     @callback
     def async_get_supported_voices(self, language: str) -> list[Voice] | None:
@@ -364,7 +364,7 @@ class TextToSpeechEntity(RestoreEntity):
 
     @final
     async def internal_async_get_tts_audio(
-        self, message: str, language: str, options: dict[str, Any] | None = None
+        self, message: str, language: str, options: dict[str, Any]
     ) -> TtsAudioType:
         """Process an audio stream to TTS service.
 
@@ -377,13 +377,13 @@ class TextToSpeechEntity(RestoreEntity):
         )
 
     def get_tts_audio(
-        self, message: str, language: str, options: dict[str, Any] | None = None
+        self, message: str, language: str, options: dict[str, Any]
     ) -> TtsAudioType:
         """Load tts audio file from the engine."""
         raise NotImplementedError()
 
     async def async_get_tts_audio(
-        self, message: str, language: str, options: dict[str, Any] | None = None
+        self, message: str, language: str, options: dict[str, Any]
     ) -> TtsAudioType:
         """Load tts audio file from the engine.
 
@@ -478,9 +478,9 @@ class SpeechManager:
     def process_options(
         self,
         engine_instance: TextToSpeechEntity | Provider,
-        language: str | None = None,
-        options: dict | None = None,
-    ) -> tuple[str, dict | None]:
+        language: str | None,
+        options: dict | None,
+    ) -> tuple[str, dict[str, Any]]:
         """Validate and process options."""
         # Languages
         language = language or engine_instance.default_language
@@ -602,7 +602,7 @@ class SpeechManager:
         message: str,
         cache: bool,
         language: str,
-        options: dict | None,
+        options: dict[str, Any],
     ) -> str:
         """Receive TTS, store for view in cache and return filename.
 

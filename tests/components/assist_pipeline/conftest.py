@@ -126,7 +126,7 @@ class MockTTSProvider(tts.Provider):
         return ["voice", "age", tts.ATTR_AUDIO_OUTPUT]
 
     def get_tts_audio(
-        self, message: str, language: str, options: dict[str, Any] | None = None
+        self, message: str, language: str, options: dict[str, Any]
     ) -> tts.TtsAudioType:
         """Load TTS data."""
         return ("mp3", b"")

@@ -235,18 +235,18 @@ class Provider:
         return None
 
     @property
-    def default_options(self) -> Mapping[str, Any] | None:
+    def default_options(self) -> Mapping[str, Any]:
         """Return a mapping with the default options."""
-        return None
+        return {}
 
     def get_tts_audio(
-        self, message: str, language: str, options: dict[str, Any] | None = None
+        self, message: str, language: str, options: dict[str, Any]
     ) -> TtsAudioType:
         """Load tts audio file from provider."""
         raise NotImplementedError()
 
     async def async_get_tts_audio(
-        self, message: str, language: str, options: dict[str, Any] | None = None
+        self, message: str, language: str, options: dict[str, Any]
     ) -> TtsAudioType:
         """Load tts audio file from provider.
 
