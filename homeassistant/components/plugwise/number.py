@@ -74,7 +74,7 @@ async def async_setup_entry(
         for description in NUMBER_TYPES:
             if (actuator := description.actuator_fn(device)) and "setpoint" in actuator:
                 entities.append(
-                    PlugwiseNumberEntity(coordinator, device_id, description)
+                    PlugwiseNumberEntity(coordinator, device_id, description, actuator)
                 )
 
     async_add_entities(entities)
@@ -90,33 +90,34 @@ class PlugwiseNumberEntity(PlugwiseEntity, NumberEntity):
         coordinator: PlugwiseDataUpdateCoordinator,
         device_id: str,
         description: PlugwiseNumberEntityDescription,
+        actuator: ActuatorData,
     ) -> None:
         """Initiate Plugwise Number."""
         super().__init__(coordinator, device_id)
+        self.actuator = actuator
         self.entity_description = description
         self._attr_unique_id = f"{device_id}-{description.key}"
         self._attr_mode = NumberMode.BOX
-        self._actuator = description.actuator_fn(self.device)
 
     @property
     def native_max_value(self) -> float:
         """Return the setpoint max. value."""
-        return self.entity_description.native_max_value_fn(self._actuator)
+        return self.entity_description.native_max_value_fn(self.actuator)
 
     @property
     def native_min_value(self) -> float:
         """Return the setpoint min. value."""
-        return self.entity_description.native_min_value_fn(self._actuator)
+        return self.entity_description.native_min_value_fn(self.actuator)
 
     @property
     def native_step(self) -> float:
         """Return the setpoint step value."""
-        return max(self.entity_description.native_step_key_fn(self._actuator), 1)
+        return max(self.entity_description.native_step_key_fn(self.actuator), 1)
 
     @property
     def native_value(self) -> float:
         """Return the present setpoint value."""
-        return self.entity_description.native_value_fn(self._actuator)
+        return self.entity_description.native_value_fn(self.actuator)
 
     async def async_set_native_value(self, value: float) -> None:
         """Change to the new setpoint value."""
