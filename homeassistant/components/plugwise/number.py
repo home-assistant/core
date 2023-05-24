@@ -116,7 +116,7 @@ class PlugwiseNumberEntity(PlugwiseEntity, NumberEntity):
     @property
     def native_value(self) -> float:
         """Return the present setpoint value."""
-        return self.entity_description.native_value_fn(self._number)
+        return self.entity_description.native_value_fn(self._actuator)
 
     async def async_set_native_value(self, value: float) -> None:
         """Change to the new setpoint value."""
