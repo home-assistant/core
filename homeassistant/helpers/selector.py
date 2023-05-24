@@ -341,7 +341,7 @@ class AttributeSelector(Selector[AttributeSelectorConfig]):
 
 
 class BackupLocationSelectorConfig(TypedDict, total=False):
-    """Class to represent an backup location selector config."""
+    """Class to represent a backup location selector config."""
 
 
 @SELECTORS.register("backup_location")
