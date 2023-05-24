@@ -1021,7 +1021,7 @@ class MockProviderBoom(MockProvider):
     """Mock provider that blows up."""
 
     def get_tts_audio(
-        self, message: str, language: str, options: dict[str, Any] | None = None
+        self, message: str, language: str, options: dict[str, Any]
     ) -> tts.TtsAudioType:
         """Load TTS dat."""
         # This should not be called, data should be fetched from cache
@@ -1032,7 +1032,7 @@ class MockEntityBoom(MockTTSEntity):
     """Mock entity that blows up."""
 
     def get_tts_audio(
-        self, message: str, language: str, options: dict[str, Any] | None = None
+        self, message: str, language: str, options: dict[str, Any]
     ) -> tts.TtsAudioType:
         """Load TTS dat."""
         # This should not be called, data should be fetched from cache
@@ -1116,7 +1116,7 @@ class MockProviderEmpty(MockProvider):
     """Mock provider with empty get_tts_audio."""
 
     def get_tts_audio(
-        self, message: str, language: str, options: dict[str, Any] | None = None
+        self, message: str, language: str, options: dict[str, Any]
     ) -> tts.TtsAudioType:
         """Load TTS dat."""
         return (None, None)
@@ -1126,7 +1126,7 @@ class MockEntityEmpty(MockTTSEntity):
     """Mock entity with empty get_tts_audio."""
 
     def get_tts_audio(
-        self, message: str, language: str, options: dict[str, Any] | None = None
+        self, message: str, language: str, options: dict[str, Any]
     ) -> tts.TtsAudioType:
         """Load TTS dat."""
         return (None, None)
@@ -1486,7 +1486,7 @@ async def test_legacy_fetching_in_async(
             return {tts.ATTR_AUDIO_OUTPUT: "mp3"}
 
         async def async_get_tts_audio(
-            self, message: str, language: str, options: dict[str, Any] | None = None
+            self, message: str, language: str, options: dict[str, Any]
         ) -> tts.TtsAudioType:
             return ("mp3", await tts_audio)
 
@@ -1559,7 +1559,7 @@ async def test_fetching_in_async(
             return {tts.ATTR_AUDIO_OUTPUT: "mp3"}
 
         async def async_get_tts_audio(
-            self, message: str, language: str, options: dict[str, Any] | None = None
+            self, message: str, language: str, options: dict[str, Any]
         ) -> tts.TtsAudioType:
             return ("mp3", await tts_audio)
 
