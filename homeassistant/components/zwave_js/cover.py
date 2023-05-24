@@ -286,13 +286,7 @@ class CoverTiltMixin(ZWaveBaseEntity, CoverEntity):
 
 
 class ZWaveMultilevelSwitchCover(CoverPositionMixin):
-    """Representation of a Z-Wave Cover device that uses Multilevel Switch CC."""
-
-    _attr_supported_features = (
-        CoverEntityFeature.OPEN
-        | CoverEntityFeature.CLOSE
-        | CoverEntityFeature.SET_POSITION
-    )
+    """Representation of a Z-Wave Cover that uses Multilevel Switch CC for position."""
 
     def __init__(
         self,
