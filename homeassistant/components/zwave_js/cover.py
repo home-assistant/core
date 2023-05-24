@@ -411,7 +411,7 @@ class ZWaveWindowCovering(CoverPositionMixin, CoverTiltMixin):
         return SlatStates.OPEN
 
     @property
-    def _fully_close_tilt(self) -> int:
+    def _fully_closed_tilt(self) -> int:
         """Return position to close cover tilt."""
         return SlatStates.CLOSED_1
 
