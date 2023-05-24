@@ -1081,7 +1081,6 @@ def check_device_class(
     """Check if device class id or label matches."""
     if required_value is None:
         return True
-    for val in required_value:
-        if device_class.label == val:
-            return True
+    if any(device_class.label == val for val in required_value):
+        return True
     return False
