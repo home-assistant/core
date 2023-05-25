@@ -83,6 +83,10 @@ SET_ABSOLUTE_POSITION_SCHEMA = {
     vol.Optional(ATTR_WIDTH): vol.All(cv.positive_int, vol.Range(max=100)),
 }
 
+UPDATE_DELAY_STOP = 3
+UPDATE_INTERVAL_MOVING = 5
+UPDATE_INTERVAL_MOVING_WIFI = 45
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -192,13 +196,13 @@ class MotionPositionDevice(CoordinatorEntity, CoverEntity):
         self._api_lock = coordinator.api_lock
         self._requesting_position: CALLBACK_TYPE | None = None
         self._previous_positions = []
-        self._update_interval_moving = 5
 
         if blind.device_type in DEVICE_TYPES_WIFI:
+            self._update_interval_moving = UPDATE_INTERVAL_MOVING_WIFI
             via_device = ()
             connections = {(dr.CONNECTION_NETWORK_MAC, blind.mac)}
-            self._update_interval_moving = 45
         else:
+            self._update_interval_moving = UPDATE_INTERVAL_MOVING
             via_device = (DOMAIN, blind._gateway.mac)
             connections = {}
             sw_version = None
@@ -341,7 +345,7 @@ class MotionPositionDevice(CoordinatorEntity, CoverEntity):
         async with self._api_lock:
             await self.hass.async_add_executor_job(self._blind.Stop)
 
-        await self.async_request_position_till_stop(delay=3)
+        await self.async_request_position_till_stop(delay=UPDATE_DELAY_STOP)
 
 
 class MotionTiltDevice(MotionPositionDevice):
@@ -387,7 +391,7 @@ class MotionTiltDevice(MotionPositionDevice):
         async with self._api_lock:
             await self.hass.async_add_executor_job(self._blind.Stop)
 
-        await self.async_request_position_till_stop(delay=3)
+        await self.async_request_position_till_stop(delay=UPDATE_DELAY_STOP)
 
 
 class MotionTiltOnlyDevice(MotionTiltDevice):
@@ -519,4 +523,4 @@ class MotionTDBUDevice(MotionPositionDevice):
         async with self._api_lock:
             await self.hass.async_add_executor_job(self._blind.Stop, self._motor_key)
 
-        await self.async_request_position_till_stop(delay=3)
+        await self.async_request_position_till_stop(delay=UPDATE_DELAY_STOP)
