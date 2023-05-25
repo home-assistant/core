@@ -262,6 +262,7 @@ async def _finish_form(hass: HomeAssistant, flow_id: str) -> None:
     )
     assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "friends"
+    assert not result["errors"]
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input=CONF_FRIENDS_DATA
