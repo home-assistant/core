@@ -17,6 +17,7 @@ from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.dt import utc_from_timestamp
 
@@ -38,21 +39,26 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    add_entities: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Initialize nextbus import from config."""
-    _LOGGER.warning(
-        "The NextBus sensor has been migrated to the config flow. We will now attempt "
-        "to migrate automatically. After migration or in the case of an error, delete"
-        "from your configuration.yaml file"
-    )
-
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=config
+    if DOMAIN in config:
+        async_create_issue(
+            hass,
+            DOMAIN,
+            "deprecated_yaml",
+            is_fixable=False,
+            breaks_in_ha_version="2023.7.0",
+            severity=IssueSeverity.WARNING,
+            translation_key="deprecated_yaml",
         )
-    )
+
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN, context={"source": SOURCE_IMPORT}, data=config
+            )
+        )
 
 
 def validate_value(value_name, value, value_list):

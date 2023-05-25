@@ -1,5 +1,4 @@
 """Config flow to configure the Nextbus integration."""
-from collections.abc import Iterable
 import logging
 
 from py_nextbus import NextBusClient
@@ -8,35 +7,29 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import CONF_NAME
 from homeassistant.data_entry_flow import FlowResult
-
-from .const import (
-    CONF_AGENCY,
-    CONF_AGENCY_NAME,
-    CONF_ROUTE,
-    CONF_ROUTE_NAME,
-    CONF_STOP,
-    CONF_STOP_NAME,
-    DOMAIN,
+from homeassistant.helpers.selector import (
+    SelectOptionDict,
+    SelectSelector,
+    SelectSelectorConfig,
+    SelectSelectorMode,
 )
-from .util import UserConfig, invert_dict
+
+from .const import CONF_AGENCY, CONF_ROUTE, CONF_STOP, DOMAIN
+from .util import UserConfig
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def _agency_schema(agency_names: Iterable[str]) -> vol.Schema:
-    return vol.Schema({vol.Required(CONF_AGENCY_NAME): vol.In(sorted(agency_names))})
-
-
-def _route_schema(route_names: Iterable[str]) -> vol.Schema:
-    return vol.Schema({vol.Required(CONF_ROUTE_NAME): vol.In(sorted(route_names))})
-
-
-def _stop_schema(stop_names: Iterable[str]) -> vol.Schema:
-    return vol.Schema({vol.Required(CONF_STOP_NAME): vol.In(sorted(stop_names))})
-
-
-def _name_schema(default: str) -> vol.Schema:
-    return vol.Schema({vol.Optional(CONF_NAME, default=default): str})
+def _dict_to_select_selector(options: dict[str, str]) -> SelectSelector:
+    return SelectSelector(
+        SelectSelectorConfig(
+            options=[
+                SelectOptionDict(value=key, label=value)
+                for key, value in options.items()
+            ],
+            mode=SelectSelectorMode.DROPDOWN,
+        )
+    )
 
 
 class NextBusFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -57,7 +50,7 @@ class NextBusFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def _update_agency_config_options(self) -> None:
         def job():
             self._agency_tags = {
-                a["title"]: a["tag"] for a in self._client.get_agency_list()["agency"]
+                a["tag"]: a["title"] for a in self._client.get_agency_list()["agency"]
             }
 
         await self.hass.async_add_executor_job(job)
@@ -65,7 +58,7 @@ class NextBusFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def _update_route_config_options(self, agency_tag: str) -> None:
         def job():
             self._route_tags = {
-                a["title"]: a["tag"]
+                a["tag"]: a["title"]
                 for a in self._client.get_route_list(agency_tag)["route"]
             }
 
@@ -76,7 +69,7 @@ class NextBusFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> None:
         def job():
             self._stop_tags = {
-                a["title"]: a["tag"]
+                a["tag"]: a["title"]
                 for a in self._client.get_route_config(
                     route_tag,
                     agency_tag,
@@ -139,9 +132,7 @@ class NextBusFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         await self._update_agency_config_options()
 
         if user_input is not None:
-            agency_name = user_input[CONF_AGENCY_NAME]
-            agency_tag = self._agency_tags[agency_name]
-            self.nextbus_config[CONF_AGENCY] = agency_tag
+            self.nextbus_config[CONF_AGENCY] = user_input[CONF_AGENCY]
             errors.update(self._validate_config())
 
             if not errors:
@@ -149,7 +140,13 @@ class NextBusFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="agency",
-            data_schema=_agency_schema(self._agency_tags.keys()),
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_AGENCY): _dict_to_select_selector(
+                        self._agency_tags
+                    ),
+                }
+            ),
             errors=errors,
         )
 
@@ -167,9 +164,7 @@ class NextBusFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         await self._update_route_config_options(agency_tag)
 
         if user_input is not None:
-            route_name = user_input[CONF_ROUTE_NAME]
-            route_tag = self._route_tags[route_name]
-            self.nextbus_config[CONF_ROUTE] = route_tag
+            self.nextbus_config[CONF_ROUTE] = user_input[CONF_ROUTE]
             errors.update(self._validate_config())
 
             if not errors:
@@ -177,7 +172,13 @@ class NextBusFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="route",
-            data_schema=_route_schema(self._route_tags.keys()),
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_ROUTE): _dict_to_select_selector(
+                        self._route_tags
+                    ),
+                }
+            ),
             errors=errors,
         )
 
@@ -202,9 +203,7 @@ class NextBusFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         await self._update_stop_config_options(agency_tag, route_tag)
 
         if user_input is not None:
-            stop_name = user_input[CONF_STOP_NAME]
-            stop_tag = self._stop_tags[stop_name]
-            self.nextbus_config[CONF_STOP] = stop_tag
+            self.nextbus_config[CONF_STOP] = user_input[CONF_STOP]
             errors.update(self._validate_config())
 
             if not errors:
@@ -212,30 +211,22 @@ class NextBusFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="stop",
-            data_schema=_stop_schema(self._stop_tags.keys()),
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_STOP): _dict_to_select_selector(self._stop_tags),
+                }
+            ),
             errors=errors,
         )
 
     async def async_step_name(
         self,
-        user_input: UserConfig | None = None,
+        _: UserConfig | None = None,
     ) -> FlowResult:
         """Set name."""
-        errors: dict[str, str] = {}
-
-        if user_input is not None:
-            self.nextbus_config.update(user_input)
-            errors.update(self._validate_config())
-
-            if not errors:
-                name = self.nextbus_config[CONF_NAME]
-                return self.async_create_entry(
-                    title=name,
-                    data=self.nextbus_config,
-                )
-
         agency_tag = self.nextbus_config.get(CONF_AGENCY)
         route_tag = self.nextbus_config.get(CONF_ROUTE)
+        stop_tag = self.nextbus_config.get(CONF_STOP)
 
         if not agency_tag:
             # How did we get here? Go back
@@ -245,23 +236,25 @@ class NextBusFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             # How did we get here? Go back
             return await self.async_step_route()
 
-        # Invert tag dict
-        agency_name = invert_dict(self._agency_tags)[agency_tag]
-        route_name = invert_dict(self._route_tags)[route_tag]
+        if not stop_tag:
+            # How did we get here? Go back
+            return await self.async_step_stop()
 
-        default_name = f"{agency_name} {route_name}"
-        return self.async_show_form(
-            step_id="name",
-            data_schema=_name_schema(default_name),
-            errors=errors,
+        agency_name = self._agency_tags[agency_tag]
+        route_name = self._route_tags[route_tag]
+        stop_name = self._stop_tags[stop_tag]
+
+        return self.async_create_entry(
+            title=f"{agency_name} {route_name} {stop_name}",
+            data=self.nextbus_config,
         )
 
     def _validate_config(self) -> dict[str, str]:
         errors: dict[str, str] = {}
         for field, values in (
-            (CONF_AGENCY, self._agency_tags.values()),
-            (CONF_ROUTE, self._route_tags.values()),
-            (CONF_STOP, self._stop_tags.values()),
+            (CONF_AGENCY, self._agency_tags),
+            (CONF_ROUTE, self._route_tags),
+            (CONF_STOP, self._stop_tags),
         ):
             value = self.nextbus_config.get(field)
             if value and value not in values:

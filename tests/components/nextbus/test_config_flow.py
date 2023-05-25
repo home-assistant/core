@@ -9,14 +9,10 @@ from homeassistant import config_entries, setup
 from homeassistant.components.nextbus.config_flow import NextBusFlowHandler
 from homeassistant.components.nextbus.const import (
     CONF_AGENCY,
-    CONF_AGENCY_NAME,
     CONF_ROUTE,
-    CONF_ROUTE_NAME,
     CONF_STOP,
-    CONF_STOP_NAME,
     DOMAIN,
 )
-from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 
 
@@ -167,7 +163,7 @@ async def test_user_config(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_AGENCY_NAME: "San Francisco Muni",
+            CONF_AGENCY: "sf-muni",
         },
     )
     await hass.async_block_till_done()
@@ -179,7 +175,7 @@ async def test_user_config(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_ROUTE_NAME: "F - Market & Wharves",
+            CONF_ROUTE: "F",
         },
     )
     await hass.async_block_till_done()
@@ -192,19 +188,7 @@ async def test_user_config(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_STOP_NAME: "Market St & 7th St",
-        },
-    )
-    await hass.async_block_till_done()
-
-    assert result.get("type") == "form"
-    assert result.get("errors") == {}
-
-    # Provide name
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_NAME: "Test Name",
+            CONF_STOP: "5650",
         },
     )
     await hass.async_block_till_done()
@@ -214,7 +198,6 @@ async def test_user_config(
         "agency": "sf-muni",
         "route": "F",
         "stop": "5650",
-        "name": "Test Name",
     }
 
     assert len(mock_setup_entry.mock_calls) == 1

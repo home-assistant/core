@@ -3,20 +3,7 @@ from typing import Any
 
 import pytest
 
-from homeassistant.components.nextbus.util import invert_dict, listify, maybe_first
-
-
-def test_invert_dict():
-    """Test dictionary inversion."""
-    input = {"key": "value"}
-    assert invert_dict(input) == {"value": "key"}
-
-    input = {"key": "value", "key2": "value"}
-    try:
-        invert_dict(input)
-        pytest.fail()
-    except ValueError:
-        pass
+from homeassistant.components.nextbus.util import listify, maybe_first
 
 
 @pytest.mark.parametrize(

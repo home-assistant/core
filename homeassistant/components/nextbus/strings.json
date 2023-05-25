@@ -4,27 +4,27 @@
     "step": {
       "user": {
         "data": {
-          "agency_name": "Metro agency",
-          "route_name": "Route",
-          "stop_name": "Stop"
+          "agency": "Metro agency",
+          "route": "Route",
+          "stop": "Stop"
         }
       },
       "agency": {
         "title": "Select metro agency",
         "data": {
-          "agency_name": "Metro agency"
+          "agency": "Metro agency"
         }
       },
       "route": {
         "title": "Select route",
         "data": {
-          "route_name": "Route"
+          "route": "Route"
         }
       },
       "stop": {
         "title": "Select stop",
         "data": {
-          "stop_name": "Stop"
+          "stop": "Stop"
         }
       },
       "name": {
@@ -39,6 +39,12 @@
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+    }
+  },
+  "issues": {
+    "deprecated_yaml": {
+      "title": "The NextBus YAML configuration has been deprecated",
+      "description": "Configuring NextBus using YAML has been deprecated.\n\nYour existing YAML configuration has been imported into the UI automatically.\n\nRemove the `nextbus` YAML configuration from your configuration.yaml file and restart Home Assistant to fix this issue."
     }
   }
 }
