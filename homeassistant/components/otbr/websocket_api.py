@@ -80,7 +80,7 @@ async def websocket_create_network(
 
     try:
         await data.create_active_dataset(
-            python_otbr_api.OperationalDataSet(
+            python_otbr_api.ActiveDataSet(
                 channel=channel, network_name="home-assistant"
             )
         )

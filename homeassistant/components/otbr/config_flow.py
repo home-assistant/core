@@ -50,7 +50,7 @@ class OTBRConfigFlow(ConfigFlow, domain=DOMAIN):
                     "not importing TLV with channel %s", thread_dataset_channel
                 )
                 await api.create_active_dataset(
-                    python_otbr_api.OperationalDataSet(
+                    python_otbr_api.ActiveDataSet(
                         channel=allowed_channel if allowed_channel else DEFAULT_CHANNEL,
                         network_name="home-assistant",
                     )
