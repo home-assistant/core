@@ -239,8 +239,6 @@ async def test_meter_data(hass: HomeAssistant) -> None:
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    # print(hass.states.async_entity_ids())
-
     assert hass.states.get("binary_sensor.meter_status") is not None
     assert hass.states.get("binary_sensor.meter_status").state == "on"
     assert config_entry.state == ConfigEntryState.LOADED
