@@ -1,12 +1,27 @@
 {
   "config": {
     "step": {
-      "user": {
-        "description": "[%key:common::config_flow::description::confirm_setup%]"
+      "init": {
+        "title": "EnergyZero configuration",
+        "data": {
+          "gas_modifyer": "Gas Price Modifyer Template (Optional)",
+          "energy_modifyer": "Energy Price Modifyer Template (Optional)"
+        }
       }
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "EnergyZero configuration test",
+        "data": {
+          "gas_modifyer": "Gas Price Modifyer Template (Optional)",
+          "energy_modifyer": "Energy Price Modifyer Template (Optional)"
+        }
+      }
     }
   }
 }

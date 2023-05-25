@@ -36,7 +36,7 @@ class EnergyZeroSensorEntityDescriptionMixin:
 class EnergyZeroSensorEntityDescription(
     SensorEntityDescription, EnergyZeroSensorEntityDescriptionMixin
 ):
-    """Describes a Pure Energie sensor entity."""
+    """Describes a EnergyZero sensor entity."""
 
 
 SENSORS: tuple[EnergyZeroSensorEntityDescription, ...] = (
@@ -46,14 +46,18 @@ SENSORS: tuple[EnergyZeroSensorEntityDescription, ...] = (
         service_type="today_gas",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=f"{CURRENCY_EURO}/{UnitOfVolume.CUBIC_METERS}",
-        value_fn=lambda data: data.gas_today.current_price if data.gas_today else None,
+        value_fn=lambda data: data.gas.current_price if data.gas else None,
     ),
     EnergyZeroSensorEntityDescription(
         key="next_hour_price",
         name="Next hour",
         service_type="today_gas",
         native_unit_of_measurement=f"{CURRENCY_EURO}/{UnitOfVolume.CUBIC_METERS}",
-        value_fn=lambda data: get_gas_price(data, 1),
+        value_fn=lambda data: data.gas.price_at_time(
+            data.gas.utcnow() + timedelta(hours=1)
+        )
+        if data.gas
+        else None,
     ),
     EnergyZeroSensorEntityDescription(
         key="current_hour_price",
@@ -118,23 +122,6 @@ SENSORS: tuple[EnergyZeroSensorEntityDescription, ...] = (
 )
 
 
-def get_gas_price(data: EnergyZeroData, hours: int) -> float | None:
-    """Return the gas value.
-
-    Args:
-        data: The data object.
-        hours: The number of hours to add to the current time.
-
-    Returns:
-        The gas market price value.
-    """
-    if data.gas_today is None:
-        return None
-    return data.gas_today.price_at_time(
-        data.gas_today.utcnow() + timedelta(hours=hours)
-    )
-
-
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
@@ -187,3 +174,15 @@ class EnergyZeroSensorEntity(
     def native_value(self) -> float | datetime | None:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.coordinator.data)
+
+    @property
+    def extra_state_attributes(self) -> dict[str, None | dict[datetime, float]]:
+        """Return the state attributes."""
+        data = self.coordinator.data
+
+        return {
+            "energy": data.energy.prices,
+            "energy_template": self.coordinator.energy_modifyer.template,
+            "gas": data.gas.prices if data.gas is not None else None,
+            "gas_template": self.coordinator.gas_modifyer.template,
+        }

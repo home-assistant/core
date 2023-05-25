@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from datetime import timedelta
-from typing import NamedTuple
+from typing import Literal, NamedTuple
 
 from energyzero import (
     Electricity,
@@ -15,6 +15,7 @@ from energyzero import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.template import Template
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt
 
@@ -24,9 +25,10 @@ from .const import DOMAIN, LOGGER, SCAN_INTERVAL, THRESHOLD_HOUR
 class EnergyZeroData(NamedTuple):
     """Class for defining data in dict."""
 
+    energy: Electricity
     energy_today: Electricity
     energy_tomorrow: Electricity | None
-    gas_today: Gas | None
+    gas: Gas | None
 
 
 class EnergyZeroDataUpdateCoordinator(DataUpdateCoordinator[EnergyZeroData]):
@@ -34,7 +36,12 @@ class EnergyZeroDataUpdateCoordinator(DataUpdateCoordinator[EnergyZeroData]):
 
     config_entry: ConfigEntry
 
-    def __init__(self, hass: HomeAssistant) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        gas_modifyer: Literal,
+        energy_modifyer: Literal,
+    ) -> None:
         """Initialize global EnergyZero data updater."""
         super().__init__(
             hass,
@@ -43,7 +50,13 @@ class EnergyZeroDataUpdateCoordinator(DataUpdateCoordinator[EnergyZeroData]):
             update_interval=SCAN_INTERVAL,
         )
 
-        self.energyzero = EnergyZero(session=async_get_clientsession(hass))
+        self.gas_modifyer = Template(gas_modifyer, hass)
+        self.energy_modifyer = Template(energy_modifyer, hass)
+
+        self.energyzero = EnergyZero(
+            session=async_get_clientsession(hass),
+            incl_btw="false",
+        )
 
     async def _async_update_data(self) -> EnergyZeroData:
         """Fetch data from EnergyZero."""
@@ -74,8 +87,32 @@ class EnergyZeroDataUpdateCoordinator(DataUpdateCoordinator[EnergyZeroData]):
         except EnergyZeroConnectionError as err:
             raise UpdateFailed("Error communicating with EnergyZero API") from err
 
+        energy_today.prices = self._apply_template(
+            self.energy_modifyer, energy_today.prices
+        )
+
+        if energy_tomorrow is not None:
+            energy_tomorrow.prices = self._apply_template(
+                self.energy_modifyer, energy_tomorrow.prices
+            )
+
+        energy_all = Electricity(
+            prices=energy_today.prices
+            | (energy_tomorrow.prices if energy_tomorrow is not None else {})
+        )
+        if gas_today is not None:
+            gas_today.prices = self._apply_template(self.gas_modifyer, gas_today.prices)
+
         return EnergyZeroData(
+            energy=energy_all,
             energy_today=energy_today,
             energy_tomorrow=energy_tomorrow,
-            gas_today=gas_today,
+            gas=gas_today,
         )
+
+    def _apply_template(
+        self, template: Template, prices: dict[str, float]
+    ) -> dict[str, float]:
+        return {
+            key: template.async_render(price=value) for key, value in prices.items()
+        }
