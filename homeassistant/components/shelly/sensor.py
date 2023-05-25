@@ -584,6 +584,14 @@ RPC_SENSORS: Final = {
         state_class=SensorStateClass.TOTAL_INCREASING,
         entity_registry_enabled_default=False,
     ),
+    "illuminance": RpcSensorDescription(
+        key="illuminance",
+        sub_key="lux",
+        name="Illuminance",
+        native_unit_of_measurement=LIGHT_LUX,
+        device_class=SensorDeviceClass.ILLUMINANCE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
     "temperature": RpcSensorDescription(
         key="switch",
         sub_key="temperature",
