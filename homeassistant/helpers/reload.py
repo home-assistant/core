@@ -71,7 +71,7 @@ async def _resetup_platform(
 
     root_config: dict[str, list[ConfigType]] = {integration_platform: []}
 
-    if conf[integration_name]:  # adr0007 new style config
+    if conf.get(integration_name):  # adr0007 new style config
         root_config[integration_platform].append(conf[integration_name])
 
     # Extract only the config for template, ignore the rest.
