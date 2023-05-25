@@ -10,11 +10,11 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_MONITORED_CONDITIONS
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import DOMAIN, LOGGER
 from .coordinator import HydrawiseDataUpdateCoordinator
@@ -26,18 +26,17 @@ BINARY_SENSOR_STATUS = BinarySensorEntityDescription(
     device_class=BinarySensorDeviceClass.CONNECTIVITY,
 )
 
-BINARY_SENSOR_TYPES: tuple[BinarySensorEntityDescription, ...] = (
-    BinarySensorEntityDescription(
-        key="is_watering",
-        name="Watering",
-        device_class=BinarySensorDeviceClass.MOISTURE,
-    ),
+BINARY_SENSOR_IS_WATERING = BinarySensorEntityDescription(
+    key="is_watering",
+    name="Watering",
+    device_class=BinarySensorDeviceClass.MOISTURE,
 )
 
 BINARY_SENSOR_KEYS: list[str] = [
-    desc.key for desc in (BINARY_SENSOR_STATUS, *BINARY_SENSOR_TYPES)
+    desc.key for desc in (BINARY_SENSOR_STATUS, BINARY_SENSOR_IS_WATERING)
 ]
 
+# Deprecated since Home Assistant 2023.7.0
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_MONITORED_CONDITIONS, default=BINARY_SENSOR_KEYS): vol.All(
@@ -47,39 +46,36 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up a sensor for a Hydrawise device."""
-    coordinator: HydrawiseDataUpdateCoordinator = hass.data[DOMAIN]
+    """Set up the Hydrawise binary_sensor platform."""
+    coordinator: HydrawiseDataUpdateCoordinator = hass.data[DOMAIN][
+        config_entry.entry_id
+    ]
     hydrawise: Hydrawiser = coordinator.api
-    monitored_conditions = config[CONF_MONITORED_CONDITIONS]
 
-    entities = []
-    if BINARY_SENSOR_STATUS.key in monitored_conditions:
-        entities.append(
-            HydrawiseBinarySensor(
-                data=hydrawise.current_controller,
-                coordinator=coordinator,
-                description=BINARY_SENSOR_STATUS,
-            )
+    entities = [
+        HydrawiseBinarySensor(
+            data=hydrawise.current_controller,
+            coordinator=coordinator,
+            description=BINARY_SENSOR_STATUS,
         )
+    ]
 
     # create a sensor for each zone
     for zone in hydrawise.relays:
-        for description in BINARY_SENSOR_TYPES:
-            if description.key not in monitored_conditions:
-                continue
-            entities.append(
-                HydrawiseBinarySensor(
-                    data=zone, coordinator=coordinator, description=description
-                )
+        entities.append(
+            HydrawiseBinarySensor(
+                data=zone,
+                coordinator=coordinator,
+                description=BINARY_SENSOR_IS_WATERING,
             )
+        )
 
-    add_entities(entities, True)
+    async_add_entities(entities)
 
 
 class HydrawiseBinarySensor(HydrawiseEntity, BinarySensorEntity):

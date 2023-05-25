@@ -197,6 +197,7 @@ FLOWS = {
         "huisbaasje",
         "hunterdouglas_powerview",
         "hvv_departures",
+        "hydrawise",
         "hyperion",
         "ialarm",
         "iaqualink",
