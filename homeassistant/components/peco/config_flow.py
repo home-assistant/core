@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 from typing import Any
 
 from peco import (
@@ -29,6 +30,8 @@ STEP_SMART_METER_DATA_SCHEMA = vol.Schema(
     }
 )
 
+_LOGGER = logging.getLogger(__name__)
+
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for PECO Outage Counter."""
@@ -46,14 +49,18 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         try:
             await api.meter_check(phone_number)
-        except ValueError:
+        except ValueError as err:
             self.meter_error = {"base": "invalid_phone_number", "type": "error"}
-        except IncompatibleMeterError:
+            _LOGGER.exception(err)
+        except IncompatibleMeterError as err:
             self.meter_error = {"base": "incompatible_meter", "type": "abort"}
-        except UnresponsiveMeterError:
+            _LOGGER.exception(err)
+        except UnresponsiveMeterError as err:
             self.meter_error = {"base": "unresponsive_meter", "type": "error"}
-        except HttpError:
+            _LOGGER.exception(err)
+        except HttpError as err:
             self.meter_error = {"base": "http_error", "type": "error"}
+            _LOGGER.exception(err)
 
         self.hass.async_create_task(
             self.hass.config_entries.flow.async_configure(flow_id=self.flow_id)

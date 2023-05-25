@@ -158,7 +158,7 @@ async def test_bad_json(hass: HomeAssistant, sensor: str) -> None:
     assert config_entry.state == ConfigEntryState.SETUP_RETRY
 
 
-async def test_unresponsive_meter_error(hass: HomeAssistant):
+async def test_unresponsive_meter_error(hass: HomeAssistant) -> None:
     """Test if it raises an error when the meter will not respond."""
 
     config_entry = MockConfigEntry(domain=DOMAIN, data=METER_DATA)
@@ -175,7 +175,7 @@ async def test_unresponsive_meter_error(hass: HomeAssistant):
     assert config_entry.state == ConfigEntryState.SETUP_RETRY
 
 
-async def test_meter_http_error(hass: HomeAssistant):
+async def test_meter_http_error(hass: HomeAssistant) -> None:
     """Test if it raises an error when there is an HTTP error."""
 
     config_entry = MockConfigEntry(domain=DOMAIN, data=METER_DATA)
@@ -192,7 +192,7 @@ async def test_meter_http_error(hass: HomeAssistant):
     assert config_entry.state == ConfigEntryState.SETUP_RETRY
 
 
-async def test_meter_bad_json(hass: HomeAssistant):
+async def test_meter_bad_json(hass: HomeAssistant) -> None:
     """Test if it raises an error when there is bad JSON."""
 
     config_entry = MockConfigEntry(domain=DOMAIN, data=METER_DATA)
@@ -209,7 +209,7 @@ async def test_meter_bad_json(hass: HomeAssistant):
     assert config_entry.state == ConfigEntryState.SETUP_RETRY
 
 
-async def test_meter_timeout(hass: HomeAssistant):
+async def test_meter_timeout(hass: HomeAssistant) -> None:
     """Test if it raises an error when there is a timeout."""
 
     config_entry = MockConfigEntry(domain=DOMAIN, data=METER_DATA)
@@ -226,7 +226,7 @@ async def test_meter_timeout(hass: HomeAssistant):
     assert config_entry.state == ConfigEntryState.SETUP_RETRY
 
 
-async def test_meter_data(hass: HomeAssistant):
+async def test_meter_data(hass: HomeAssistant) -> None:
     """Test if the meter returns the value successfully."""
 
     config_entry = MockConfigEntry(domain=DOMAIN, data=METER_DATA)
@@ -238,6 +238,8 @@ async def test_meter_data(hass: HomeAssistant):
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
+
+    # print(hass.states.async_entity_ids())
 
     assert hass.states.get("binary_sensor.meter_status") is not None
     assert hass.states.get("binary_sensor.meter_status").state == "on"

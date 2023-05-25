@@ -40,9 +40,9 @@ class PecoBinarySensor(
 ):
     """Binary sensor for PECO outage counter."""
 
-    _attr_icon: str = "mdi:gauge"
-    _attr_device_class: str = BinarySensorDeviceClass.POWER
-    _attr_name: str = "Meter Status"
+    _attr_icon = "mdi:gauge"
+    _attr_device_class = BinarySensorDeviceClass.POWER
+    _attr_name = "Meter Status"
 
     def __init__(
         self, coordinator: DataUpdateCoordinator[bool], phone_number: str
