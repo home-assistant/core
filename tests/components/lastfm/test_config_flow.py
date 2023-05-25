@@ -35,7 +35,21 @@ async def test_full_user_flow(hass: HomeAssistant) -> None:
             DOMAIN,
             context={"source": SOURCE_USER},
         )
-        await _finish_form(hass, result["flow_id"])
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=CONF_USER_DATA,
+        )
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert not result["errors"]
+        assert result["step_id"] == "friends"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=CONF_FRIENDS_DATA
+        )
+        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+        assert result["title"] == DEFAULT_NAME
+        assert result["options"] == CONF_DATA
 
 
 @pytest.mark.parametrize(
@@ -64,7 +78,21 @@ async def test_flow_fails(hass: HomeAssistant, error: Exception, message: str) -
         assert result["step_id"] == "user"
         assert result["errors"]["base"] == message
 
-    await _finish_form(hass, result["flow_id"])
+    with patch_fetch_user(), patch_setup_entry():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=CONF_USER_DATA,
+        )
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert not result["errors"]
+        assert result["step_id"] == "friends"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=CONF_FRIENDS_DATA
+        )
+        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+        assert result["title"] == DEFAULT_NAME
+        assert result["options"] == CONF_DATA
 
 
 async def test_flow_friends_invalid_username(hass: HomeAssistant) -> None:
@@ -89,9 +117,17 @@ async def test_flow_friends_invalid_username(hass: HomeAssistant) -> None:
         assert result["step_id"] == "friends"
         assert result["errors"]["base"] == "invalid_account"
 
+    with patch_fetch_user(), patch_setup_entry():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=CONF_FRIENDS_DATA
+        )
+        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+        assert result["title"] == DEFAULT_NAME
+        assert result["options"] == CONF_DATA
+
 
 async def test_flow_friends_no_friends(hass: HomeAssistant) -> None:
-    """Test user initialized flow with invalid username."""
+    """Test options is empty when user has no friends."""
     with patch_fetch_user(has_friends=False), patch_setup_entry():
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -210,6 +246,20 @@ async def test_options_flow_incorrect_username(hass: HomeAssistant) -> None:
         assert result["step_id"] == "init"
         assert result["errors"]["base"] == "invalid_account"
 
+    with patch_fetch_user():
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={CONF_USERS: [USERNAME_1]},
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["data"] == {
+        CONF_API_KEY: API_KEY,
+        CONF_MAIN_USER: USERNAME_1,
+        CONF_USERS: [USERNAME_1],
+    }
+
 
 async def test_options_flow_from_import(hass: HomeAssistant) -> None:
     """Test updating options gained from import."""
@@ -253,21 +303,3 @@ async def test_options_flow_without_friends(hass: HomeAssistant) -> None:
         assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["step_id"] == "init"
         assert len(result["data_schema"].schema[CONF_USERS].config["options"]) == 0
-
-
-async def _finish_form(hass: HomeAssistant, flow_id: str) -> None:
-    with patch_fetch_user(), patch_setup_entry():
-        result = await hass.config_entries.flow.async_configure(
-            flow_id,
-            user_input=CONF_USER_DATA,
-        )
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
-        assert not result["errors"]
-        assert result["step_id"] == "friends"
-
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input=CONF_FRIENDS_DATA
-        )
-        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
-        assert result["title"] == DEFAULT_NAME
-        assert result["options"] == CONF_DATA
