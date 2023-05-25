@@ -4,6 +4,14 @@ from unittest.mock import patch
 
 import pytest
 
+from tests.components.tts.conftest import (  # noqa: F401, pylint: disable=unused-import
+    init_tts_cache_dir_side_effect_fixture,
+    mock_tts_cache_dir_fixture,
+    mock_tts_get_cache_files_fixture,
+    mock_tts_init_cache_dir_fixture,
+    tts_mutagen_mock_fixture,
+)
+
 
 @pytest.fixture(scope="session", autouse=True)
 def patch_zeroconf_multiple_catcher() -> Generator[None, None, None]:

@@ -176,6 +176,7 @@ class FibaroLight(FibaroDevice, LightEntity):
 
     def _update(self):
         """Really update the state."""
+        super().update()
         # Brightness handling
         if brightness_supported(self.supported_color_modes):
             self._attr_brightness = scaleto255(self.fibaro_device.value.int_value())

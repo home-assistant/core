@@ -76,7 +76,7 @@ class BaseProvider:
         return ["voice", "age"]
 
     def get_tts_audio(
-        self, message: str, language: str, options: dict[str, Any] | None = None
+        self, message: str, language: str, options: dict[str, Any]
     ) -> TtsAudioType:
         """Load TTS dat."""
         return ("mp3", b"")

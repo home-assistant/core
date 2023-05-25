@@ -960,7 +960,7 @@ omnilogic==0.4.5
 ondilo==0.2.0
 
 # homeassistant.components.onvif
-onvif-zeep-async==3.1.7
+onvif-zeep-async==3.1.8
 
 # homeassistant.components.opengarage
 open-garage==0.2.0
@@ -1099,7 +1099,7 @@ pyMetEireann==2021.8.0
 
 # homeassistant.components.met
 # homeassistant.components.norway_air
-pyMetno==0.9.0
+pyMetno==0.10.0
 
 # homeassistant.components.rfxtrx
 pyRFXtrx==0.30.1
@@ -1130,7 +1130,7 @@ pyatag==0.3.5.3
 pyatmo==7.5.0
 
 # homeassistant.components.apple_tv
-pyatv==0.11.0
+pyatv==0.12.0
 
 # homeassistant.components.aussie_broadband
 pyaussiebb==0.0.15
@@ -1166,7 +1166,7 @@ pycsspeechtts==1.0.8
 pydaikin==2.9.0
 
 # homeassistant.components.deconz
-pydeconz==111
+pydeconz==112
 
 # homeassistant.components.dexcom
 pydexcom==0.2.3
@@ -1226,7 +1226,7 @@ pyfronius==0.7.1
 pyfttt==0.3
 
 # homeassistant.components.hvv_departures
-pygti==0.9.3
+pygti==0.9.4
 
 # homeassistant.components.version
 pyhaversion==22.8.0
