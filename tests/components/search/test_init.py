@@ -1,4 +1,6 @@
 """Tests for Search integration."""
+import pytest
+
 from homeassistant.components import search
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import (
@@ -10,8 +12,13 @@ from homeassistant.helpers import (
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
-from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa: F401
 from tests.typing import WebSocketGenerator
+
+
+@pytest.fixture(autouse=True, name="stub_blueprint_populate")
+def stub_blueprint_populate_autouse(stub_blueprint_populate):
+    """Stub copying the blueprints to the config folder."""
+
 
 MOCK_ENTITY_SOURCES = {
     "light.platform_config_source": {

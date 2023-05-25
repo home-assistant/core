@@ -72,6 +72,8 @@ async def test_setup_legacy_service(hass: HomeAssistant) -> None:
         },
     }
 
+    await async_setup_component(hass, "homeassistant", {})
+
     with assert_setup_component(1, tts.DOMAIN):
         assert await async_setup_component(hass, tts.DOMAIN, config)
 

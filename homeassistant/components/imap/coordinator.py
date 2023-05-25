@@ -19,16 +19,25 @@ from homeassistant.const import (
     CONTENT_TYPE_TEXT_PLAIN,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryError
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryError,
+    TemplateError,
+)
+from homeassistant.helpers.json import json_bytes
+from homeassistant.helpers.template import Template
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util.ssl import SSLCipherList, client_context
 
 from .const import (
     CONF_CHARSET,
+    CONF_CUSTOM_EVENT_DATA_TEMPLATE,
     CONF_FOLDER,
+    CONF_MAX_MESSAGE_SIZE,
     CONF_SEARCH,
     CONF_SERVER,
     CONF_SSL_CIPHER_LIST,
+    DEFAULT_MAX_MESSAGE_SIZE,
     DOMAIN,
 )
 from .errors import InvalidAuth, InvalidFolder
@@ -38,6 +47,7 @@ _LOGGER = logging.getLogger(__name__)
 BACKOFF_TIME = 10
 
 EVENT_IMAP = "imap_content"
+MAX_EVENT_DATA_BYTES = 32168
 
 
 async def connect_to_server(data: Mapping[str, Any]) -> IMAP4_SSL:
@@ -108,9 +118,9 @@ class ImapMessage:
 
         Will look for text/plain or use text/html if not found.
         """
-        message_text = None
-        message_html = None
-        message_untyped_text = None
+        message_text: str | None = None
+        message_html: str | None = None
+        message_untyped_text: str | None = None
 
         for part in self.email_message.walk():
             if part.get_content_type() == CONTENT_TYPE_TEXT_PLAIN:
@@ -134,23 +144,29 @@ class ImapMessage:
         if message_untyped_text is not None:
             return message_untyped_text
 
-        return self.email_message.get_payload()
+        return str(self.email_message.get_payload())
 
 
 class ImapDataUpdateCoordinator(DataUpdateCoordinator[int | None]):
     """Base class for imap client."""
 
     config_entry: ConfigEntry
+    custom_event_template: Template | None
 
     def __init__(
         self,
         hass: HomeAssistant,
         imap_client: IMAP4_SSL,
+        entry: ConfigEntry,
         update_interval: timedelta | None,
     ) -> None:
         """Initiate imap client."""
         self.imap_client = imap_client
         self._last_message_id: str | None = None
+        self.custom_event_template = None
+        _custom_event_template = entry.data.get(CONF_CUSTOM_EVENT_DATA_TEMPLATE)
+        if _custom_event_template is not None:
+            self.custom_event_template = Template(_custom_event_template, hass=hass)
         super().__init__(
             hass,
             _LOGGER,
@@ -177,14 +193,51 @@ class ImapDataUpdateCoordinator(DataUpdateCoordinator[int | None]):
                 "search": self.config_entry.data[CONF_SEARCH],
                 "folder": self.config_entry.data[CONF_FOLDER],
                 "date": message.date,
-                "text": message.text[:2048],
+                "text": message.text,
                 "sender": message.sender,
                 "subject": message.subject,
                 "headers": message.headers,
             }
+            if self.custom_event_template is not None:
+                try:
+                    data["custom"] = self.custom_event_template.async_render(
+                        data, parse_result=True
+                    )
+                    _LOGGER.debug(
+                        "imap custom template (%s) for msgid %s rendered to: %s",
+                        self.custom_event_template,
+                        last_message_id,
+                        data["custom"],
+                    )
+                except TemplateError as err:
+                    data["custom"] = None
+                    _LOGGER.error(
+                        "Error rendering imap custom template (%s) for msgid %s "
+                        "failed with message: %s",
+                        self.custom_event_template,
+                        last_message_id,
+                        err,
+                    )
+            data["text"] = message.text[
+                : self.config_entry.data.get(
+                    CONF_MAX_MESSAGE_SIZE, DEFAULT_MAX_MESSAGE_SIZE
+                )
+            ]
+            if (size := len(json_bytes(data))) > MAX_EVENT_DATA_BYTES:
+                _LOGGER.warning(
+                    "Custom imap_content event skipped, size (%s) exceeds "
+                    "the maximal event size (%s), sender: %s, subject: %s",
+                    size,
+                    MAX_EVENT_DATA_BYTES,
+                    message.sender,
+                    message.subject,
+                )
+                return
+
             self.hass.bus.fire(EVENT_IMAP, data)
             _LOGGER.debug(
-                "Message processed, sender: %s, subject: %s",
+                "Message with id %s processed, sender: %s, subject: %s",
+                last_message_id,
                 message.sender,
                 message.subject,
             )
@@ -201,7 +254,9 @@ class ImapDataUpdateCoordinator(DataUpdateCoordinator[int | None]):
             raise UpdateFailed(
                 f"Invalid response for search '{self.config_entry.data[CONF_SEARCH]}': {result} / {lines[0]}"
             )
-        count: int = len(message_ids := lines[0].split())
+        if not (count := len(message_ids := lines[0].split())):
+            self._last_message_id = None
+            return 0
         last_message_id = (
             str(message_ids[-1:][0], encoding=self.config_entry.data[CONF_CHARSET])
             if count
@@ -231,7 +286,7 @@ class ImapDataUpdateCoordinator(DataUpdateCoordinator[int | None]):
                     _LOGGER.debug("Error while cleaning up imap connection")
             self.imap_client = None
 
-    async def shutdown(self, *_) -> None:
+    async def shutdown(self, *_: Any) -> None:
         """Close resources."""
         await self._cleanup(log_error=True)
 
@@ -239,9 +294,11 @@ class ImapDataUpdateCoordinator(DataUpdateCoordinator[int | None]):
 class ImapPollingDataUpdateCoordinator(ImapDataUpdateCoordinator):
     """Class for imap client."""
 
-    def __init__(self, hass: HomeAssistant, imap_client: IMAP4_SSL) -> None:
+    def __init__(
+        self, hass: HomeAssistant, imap_client: IMAP4_SSL, entry: ConfigEntry
+    ) -> None:
         """Initiate imap client."""
-        super().__init__(hass, imap_client, timedelta(seconds=10))
+        super().__init__(hass, imap_client, entry, timedelta(seconds=10))
 
     async def _async_update_data(self) -> int | None:
         """Update the number of unread emails."""
@@ -270,9 +327,11 @@ class ImapPollingDataUpdateCoordinator(ImapDataUpdateCoordinator):
 class ImapPushDataUpdateCoordinator(ImapDataUpdateCoordinator):
     """Class for imap client."""
 
-    def __init__(self, hass: HomeAssistant, imap_client: IMAP4_SSL) -> None:
+    def __init__(
+        self, hass: HomeAssistant, imap_client: IMAP4_SSL, entry: ConfigEntry
+    ) -> None:
         """Initiate imap client."""
-        super().__init__(hass, imap_client, None)
+        super().__init__(hass, imap_client, entry, None)
         self._push_wait_task: asyncio.Task[None] | None = None
 
     async def _async_update_data(self) -> int | None:
@@ -336,7 +395,7 @@ class ImapPushDataUpdateCoordinator(ImapDataUpdateCoordinator):
                 await self._cleanup()
                 await asyncio.sleep(BACKOFF_TIME)
 
-    async def shutdown(self, *_) -> None:
+    async def shutdown(self, *_: Any) -> None:
         """Close resources."""
         if self._push_wait_task:
             self._push_wait_task.cancel()

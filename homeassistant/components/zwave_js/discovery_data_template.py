@@ -392,31 +392,46 @@ class NumericSensorDataTemplate(BaseDiscoverySchemaDataTemplate):
 
 @dataclass
 class TiltValueMix:
-    """Mixin data class for the tilt_value."""
+    """Mixin data class for the current_tilt_value and target_tilt_value."""
 
-    tilt_value_id: ZwaveValueID
+    current_tilt_value_id: ZwaveValueID
+    target_tilt_value_id: ZwaveValueID
 
 
 @dataclass
 class CoverTiltDataTemplate(BaseDiscoverySchemaDataTemplate, TiltValueMix):
     """Tilt data template class for Z-Wave Cover entities."""
 
-    def resolve_data(self, value: ZwaveValue) -> dict[str, ZwaveValue | None]:
+    def resolve_data(self, value: ZwaveValue) -> dict[str, ZwaveValue]:
         """Resolve helper class data for a discovered value."""
-        return {"tilt_value": self._get_value_from_id(value.node, self.tilt_value_id)}
+        current_tilt_value = self._get_value_from_id(
+            value.node, self.current_tilt_value_id
+        )
+        assert current_tilt_value
+        target_tilt_value = self._get_value_from_id(
+            value.node, self.target_tilt_value_id
+        )
+        assert target_tilt_value
+        return {
+            "current_tilt_value": current_tilt_value,
+            "target_tilt_value": target_tilt_value,
+        }
 
     def values_to_watch(
         self, resolved_data: dict[str, Any]
     ) -> Iterable[ZwaveValue | None]:
         """Return list of all ZwaveValues resolved by helper that should be watched."""
-        return [resolved_data["tilt_value"]]
+        return [resolved_data["current_tilt_value"], resolved_data["target_tilt_value"]]
 
     @staticmethod
-    def current_tilt_value(
-        resolved_data: dict[str, ZwaveValue | None]
-    ) -> ZwaveValue | None:
+    def current_tilt_value(resolved_data: dict[str, ZwaveValue]) -> ZwaveValue:
         """Get current tilt ZwaveValue from resolved data."""
-        return resolved_data["tilt_value"]
+        return resolved_data["current_tilt_value"]
+
+    @staticmethod
+    def target_tilt_value(resolved_data: dict[str, ZwaveValue]) -> ZwaveValue:
+        """Get target tilt ZwaveValue from resolved data."""
+        return resolved_data["target_tilt_value"]
 
 
 @dataclass
