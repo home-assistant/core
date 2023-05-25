@@ -315,10 +315,17 @@ class BlockSleepingBinarySensor(
         return self.last_state.state == STATE_ON
 
 
-class RpcSleepingBinarySensor(ShellySleepingRpcAttributeEntity, BinarySensorEntity):
+class RpcSleepingBinarySensor(
+    ShellySleepingRpcAttributeEntity, BinarySensorEntity, RestoreEntity
+):
     """Represent a RPC sleeping binary sensor entity."""
 
     entity_description: RpcBinarySensorDescription
+
+    async def async_added_to_hass(self) -> None:
+        """Handle entity which will be added."""
+        await super().async_added_to_hass()
+        self.last_state = await self.async_get_last_state()
 
     @property
     def is_on(self) -> bool | None:

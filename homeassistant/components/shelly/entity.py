@@ -19,7 +19,6 @@ from homeassistant.helpers.entity_registry import (
     async_entries_for_config_entry,
     async_get as er_async_get,
 )
-from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -624,7 +623,7 @@ class ShellySleepingBlockAttributeEntity(ShellyBlockAttributeEntity):
                 return
 
 
-class ShellySleepingRpcAttributeEntity(ShellyRpcAttributeEntity, RestoreEntity):
+class ShellySleepingRpcAttributeEntity(ShellyRpcAttributeEntity):
     """Helper class to represent a sleeping rpc attribute."""
 
     entity_description: RpcEntityDescription
@@ -660,8 +659,3 @@ class ShellySleepingRpcAttributeEntity(ShellyRpcAttributeEntity, RestoreEntity):
             )
         elif entry is not None:
             self._attr_name = cast(str, entry.original_name)
-
-    async def async_added_to_hass(self) -> None:
-        """Handle entity which will be added."""
-        await super().async_added_to_hass()
-        self.last_state = await self.async_get_last_state()

@@ -36,7 +36,7 @@ from homeassistant.helpers.entity_registry import RegistryEntry
 from homeassistant.helpers.typing import StateType
 
 from .const import CONF_SLEEP_PERIOD, SHAIR_MAX_WORK_HOURS
-from .coordinator import ShellyBlockCoordinator
+from .coordinator import ShellyBlockCoordinator, ShellyRpcCoordinator
 from .entity import (
     BlockEntityDescription,
     RestEntityDescription,
@@ -792,8 +792,8 @@ class BlockSleepingSensor(ShellySleepingBlockAttributeEntity, RestoreSensor):
         sensors: Mapping[tuple[str, str], BlockSensorDescription] | None = None,
     ) -> None:
         """Initialize the sleeping sensor."""
-        self.restored_data: SensorExtraStoredData | None = None
         super().__init__(coordinator, block, attribute, description, entry, sensors)
+        self.restored_data: SensorExtraStoredData | None = None
 
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
@@ -823,11 +823,27 @@ class BlockSleepingSensor(ShellySleepingBlockAttributeEntity, RestoreSensor):
         return self.restored_data.native_unit_of_measurement
 
 
-# pylint: disable-next=hass-invalid-inheritance # needs fixing
-class RpcSleepingSensor(ShellySleepingRpcAttributeEntity, SensorEntity):
+class RpcSleepingSensor(ShellySleepingRpcAttributeEntity, RestoreSensor):
     """Represent a RPC sleeping sensor."""
 
     entity_description: RpcSensorDescription
+
+    def __init__(
+        self,
+        coordinator: ShellyRpcCoordinator,
+        key: str,
+        attribute: str,
+        description: RpcEntityDescription,
+        entry: RegistryEntry | None = None,
+    ) -> None:
+        """Initialize the sleeping sensor."""
+        super().__init__(coordinator, key, attribute, description, entry)
+        self.restored_data: SensorExtraStoredData | None = None
+
+    async def async_added_to_hass(self) -> None:
+        """Handle entity which will be added."""
+        await super().async_added_to_hass()
+        self.restored_data = await self.async_get_last_sensor_data()
 
     @property
     def native_value(self) -> StateType:
@@ -835,10 +851,10 @@ class RpcSleepingSensor(ShellySleepingRpcAttributeEntity, SensorEntity):
         if self.coordinator.device.initialized:
             return self.attribute_value
 
-        if self.last_state is None:
+        if self.restored_data is None:
             return None
 
-        return self.last_state.state
+        return cast(StateType, self.restored_data.native_value)
 
     @property
     def native_unit_of_measurement(self) -> str | None:

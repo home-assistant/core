@@ -63,7 +63,7 @@ async def test_block_restored_number(
         capabilities,
     )
     mock_restore_cache_with_extra_data(
-        hass, ((State(entity_id, "40"), {"native_value": "40"}),)
+        hass, ((State(entity_id, ""), {"native_value": "40"}),)
     )
 
     monkeypatch.setattr(mock_block_device, "initialized", False)
