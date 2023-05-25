@@ -11,16 +11,14 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
 )
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import issue_registry as ir
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .connectivity import ObihaiConnection
-from .const import DEFAULT_PASSWORD, DEFAULT_USERNAME, DOMAIN, OBIHAI
+from .const import DEFAULT_PASSWORD, DEFAULT_USERNAME, OBIHAI
 
 SCAN_INTERVAL = timedelta(seconds=5)
 
@@ -31,33 +29,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_PASSWORD, default=DEFAULT_PASSWORD): cv.string,
     }
 )
-
-
-# DEPRECATED
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Set up the Obihai sensor platform."""
-    ir.async_create_issue(
-        hass,
-        DOMAIN,
-        "manual_migration",
-        breaks_in_ha_version="2023.6.0",
-        is_fixable=False,
-        severity=ir.IssueSeverity.WARNING,
-        translation_key="manual_migration",
-    )
-
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data=config,
-        )
-    )
 
 
 async def async_setup_entry(
