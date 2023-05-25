@@ -54,21 +54,7 @@ async def async_setup_platform(
     """Set up the Frontier Silicon platform.
 
     YAML is deprecated, and imported automatically.
-    SSDP discovery is temporarily retained - to be refactor subsequently.
     """
-    if discovery_info is not None:
-        webfsapi_url = await AFSAPI.get_webfsapi_endpoint(
-            discovery_info["ssdp_description"]
-        )
-        afsapi = AFSAPI(webfsapi_url, DEFAULT_PIN)
-
-        name = await afsapi.get_friendly_name()
-        async_add_entities(
-            [AFSAPIDevice(name, afsapi)],
-            True,
-        )
-
-        return
 
     ir.async_create_issue(
         hass,

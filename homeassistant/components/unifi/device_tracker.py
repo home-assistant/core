@@ -19,7 +19,7 @@ from aiounifi.models.event import Event, EventKey
 
 from homeassistant.components.device_tracker import ScannerEntity, SourceType
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import Event as core_Event, HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.dt as dt_util
@@ -54,7 +54,6 @@ CLIENT_CONNECTED_ATTRIBUTES = [
 ]
 
 CLIENT_STATIC_ATTRIBUTES = [
-    "hostname",
     "mac",
     "name",
     "oui",
@@ -175,7 +174,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiTrackerEntityDescription, ...] = (
         supported_fn=lambda controller, obj_id: True,
         unique_id_fn=lambda controller, obj_id: f"{obj_id}-{controller.site}",
         ip_address_fn=lambda api, obj_id: api.clients[obj_id].ip,
-        hostname_fn=lambda api, obj_id: None,
+        hostname_fn=lambda api, obj_id: api.clients[obj_id].hostname,
     ),
     UnifiTrackerEntityDescription[Devices, Device](
         key="Device scanner",
@@ -268,7 +267,7 @@ class UnifiScannerEntity(UnifiEntity[HandlerT, ApiItemT], ScannerEntity):
         return self._attr_unique_id
 
     @callback
-    def _make_disconnected(self, *_) -> None:
+    def _make_disconnected(self, *_: core_Event) -> None:
         """No heart beat by device."""
         self._is_connected = False
         self.async_write_ha_state()

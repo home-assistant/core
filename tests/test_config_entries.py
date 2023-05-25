@@ -40,6 +40,7 @@ from .common import (
     MockModule,
     MockPlatform,
     async_fire_time_changed,
+    mock_config_flow,
     mock_coro,
     mock_entity_platform,
     mock_integration,
@@ -275,7 +276,7 @@ async def test_remove_entry(
         hass: HomeAssistant, entry: config_entries.ConfigEntry
     ) -> bool:
         """Mock setting up entry."""
-        hass.config_entries.async_setup_platforms(entry, ["light"])
+        await hass.config_entries.async_forward_entry_setups(entry, ["light"])
         return True
 
     async def mock_unload_entry(
@@ -2656,7 +2657,7 @@ async def test_async_setup_update_entry(hass: HomeAssistant) -> None:
         (config_entries.SOURCE_ZEROCONF, BaseServiceInfo()),
         (
             config_entries.SOURCE_HASSIO,
-            HassioServiceInfo(config={}, name="Test", slug="test"),
+            HassioServiceInfo(config={}, name="Test", slug="test", uuid="1234"),
         ),
     ),
 )
@@ -3388,6 +3389,98 @@ async def test__async_abort_entries_match(
     assert result["reason"] == reason
 
 
+@pytest.mark.parametrize(
+    ("matchers", "reason"),
+    [
+        ({}, "already_configured"),
+        ({"host": "3.3.3.3"}, "no_match"),
+        ({"vendor": "no_match"}, "no_match"),
+        ({"host": "3.4.5.6"}, "already_configured"),
+        ({"host": "3.4.5.6", "ip": "3.4.5.6"}, "no_match"),
+        ({"host": "3.4.5.6", "ip": "1.2.3.4"}, "already_configured"),
+        ({"host": "3.4.5.6", "ip": "1.2.3.4", "port": 23}, "already_configured"),
+        (
+            {"host": "9.9.9.9", "ip": "6.6.6.6", "port": 12, "vendor": "zoo"},
+            "already_configured",
+        ),
+        ({"vendor": "zoo"}, "already_configured"),
+        ({"ip": "9.9.9.9"}, "already_configured"),
+        ({"ip": "7.7.7.7"}, "no_match"),  # ignored
+        ({"vendor": "data"}, "no_match"),
+        (
+            {"vendor": "options"},
+            "already_configured",
+        ),  # ensure options takes precedence over data
+    ],
+)
+async def test__async_abort_entries_match_options_flow(
+    hass: HomeAssistant,
+    manager: config_entries.ConfigEntries,
+    matchers: dict[str, str],
+    reason: str,
+) -> None:
+    """Test aborting if matching config entries exist."""
+    MockConfigEntry(
+        domain="test_abort", data={"ip": "1.2.3.4", "host": "4.5.6.7", "port": 23}
+    ).add_to_hass(hass)
+    MockConfigEntry(
+        domain="test_abort", data={"ip": "9.9.9.9", "host": "4.5.6.7", "port": 23}
+    ).add_to_hass(hass)
+    MockConfigEntry(
+        domain="test_abort", data={"ip": "1.2.3.4", "host": "3.4.5.6", "port": 23}
+    ).add_to_hass(hass)
+    MockConfigEntry(
+        domain="test_abort",
+        source=config_entries.SOURCE_IGNORE,
+        data={"ip": "7.7.7.7", "host": "4.5.6.7", "port": 23},
+    ).add_to_hass(hass)
+    MockConfigEntry(
+        domain="test_abort",
+        data={"ip": "6.6.6.6", "host": "9.9.9.9", "port": 12},
+        options={"vendor": "zoo"},
+    ).add_to_hass(hass)
+    MockConfigEntry(
+        domain="test_abort",
+        data={"vendor": "data"},
+        options={"vendor": "options"},
+    ).add_to_hass(hass)
+
+    original_entry = MockConfigEntry(domain="test_abort", data={})
+    original_entry.add_to_hass(hass)
+
+    mock_setup_entry = AsyncMock(return_value=True)
+
+    mock_integration(hass, MockModule("test_abort", async_setup_entry=mock_setup_entry))
+    mock_entity_platform(hass, "config_flow.test_abort", None)
+
+    class TestFlow(config_entries.ConfigFlow):
+        """Test flow."""
+
+        @staticmethod
+        @callback
+        def async_get_options_flow(config_entry):
+            """Test options flow."""
+
+            class _OptionsFlow(config_entries.OptionsFlow):
+                """Test flow."""
+
+                async def async_step_init(self, user_input=None):
+                    """Test user step."""
+                    if errors := self._async_abort_entries_match(user_input):
+                        return self.async_abort(reason=errors["base"])
+                    return self.async_abort(reason="no_match")
+
+            return _OptionsFlow()
+
+    with mock_config_flow("test_abort", TestFlow):
+        result = await hass.config_entries.options.async_init(
+            original_entry.entry_id, data=matchers
+        )
+
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == reason
+
+
 async def test_loading_old_data(
     hass: HomeAssistant, hass_storage: dict[str, Any]
 ) -> None:
@@ -3774,7 +3867,7 @@ async def test_task_tracking(hass: HomeAssistant) -> None:
     event = asyncio.Event()
     results = []
 
-    async def test_task():
+    async def test_task() -> None:
         try:
             await event.wait()
             results.append("normal")
@@ -3782,9 +3875,14 @@ async def test_task_tracking(hass: HomeAssistant) -> None:
             results.append("background")
             raise
 
+    async def test_unload() -> None:
+        await event.wait()
+        results.append("on_unload")
+
+    entry.async_on_unload(test_unload)
     entry.async_create_task(hass, test_task())
     entry.async_create_background_task(hass, test_task(), "background-task-name")
     await asyncio.sleep(0)
     hass.loop.call_soon(event.set)
-    await entry._async_process_on_unload()
-    assert results == ["background", "normal"]
+    await entry._async_process_on_unload(hass)
+    assert results == ["on_unload", "background", "normal"]

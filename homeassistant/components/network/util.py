@@ -97,6 +97,7 @@ def _ifaddr_adapter_to_ha(
             ip_addr = ip_address(ip_config.ip[0])
             ip_v6s.append(_ip_v6_from_adapter(ip_config))
         else:
+            assert not isinstance(ip_config.ip, tuple)
             ip_addr = ip_address(ip_config.ip)
             ip_v4s.append(_ip_v4_from_adapter(ip_config))
 
@@ -117,6 +118,7 @@ def _ifaddr_adapter_to_ha(
 
 
 def _ip_v6_from_adapter(ip_config: ifaddr.IP) -> IPv6ConfiguredAddress:
+    assert isinstance(ip_config.ip, tuple)
     return {
         "address": ip_config.ip[0],
         "flowinfo": ip_config.ip[1],
@@ -126,6 +128,7 @@ def _ip_v6_from_adapter(ip_config: ifaddr.IP) -> IPv6ConfiguredAddress:
 
 
 def _ip_v4_from_adapter(ip_config: ifaddr.IP) -> IPv4ConfiguredAddress:
+    assert not isinstance(ip_config.ip, tuple)
     return {
         "address": ip_config.ip,
         "network_prefix": ip_config.network_prefix,

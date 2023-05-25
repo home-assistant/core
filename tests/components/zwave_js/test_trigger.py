@@ -10,11 +10,14 @@ from zwave_js_server.model.node import Node
 from homeassistant.components import automation
 from homeassistant.components.zwave_js import DOMAIN
 from homeassistant.components.zwave_js.helpers import get_device_id
-from homeassistant.components.zwave_js.trigger import async_validate_trigger_config
+from homeassistant.components.zwave_js.trigger import (
+    _get_trigger_platform,
+    async_validate_trigger_config,
+)
 from homeassistant.components.zwave_js.triggers.trigger_helpers import (
     async_bypass_dynamic_config_validation,
 )
-from homeassistant.const import SERVICE_RELOAD
+from homeassistant.const import CONF_PLATFORM, SERVICE_RELOAD
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import async_get as async_get_dev_reg
 from homeassistant.setup import async_setup_component
@@ -601,7 +604,8 @@ async def test_zwave_js_event(
         },
     )
 
-    # Test that `node no event data filter` is triggered and `node event data filter` is not
+    # Test that `node no event data filter` is triggered and `node event data
+    # filter` is not
     event = Event(
         type="interview stage completed",
         data={
@@ -649,7 +653,8 @@ async def test_zwave_js_event(
 
     clear_events()
 
-    # Test that `controller no event data filter` is triggered and `controller event data filter` is not
+    # Test that `controller no event data filter` is triggered and `controller event
+    # data filter` is not
     event = Event(
         type="inclusion started",
         data={
@@ -672,7 +677,8 @@ async def test_zwave_js_event(
 
     clear_events()
 
-    # Test that both `controller no event data filter` and `controller event data filter` are triggered
+    # Test that both `controller no event data filter` and `controller event data
+    # filter`` are triggered
     event = Event(
         type="inclusion started",
         data={
@@ -695,7 +701,8 @@ async def test_zwave_js_event(
 
     clear_events()
 
-    # Test that `driver no event data filter` is triggered and `driver event data filter` is not
+    # Test that `driver no event data filter` is triggered and `driver event data
+    # filter` is not
     event = Event(
         type="logging",
         data={
@@ -711,6 +718,7 @@ async def test_zwave_js_event(
             "multiline": False,
             "timestamp": "time",
             "label": "label",
+            "context": {"source": "config"},
         },
     )
     client.driver.receive_event(event)
@@ -727,7 +735,8 @@ async def test_zwave_js_event(
 
     clear_events()
 
-    # Test that both `driver no event data filter` and `driver event data filter` are triggered
+    # Test that both `driver no event data filter` and `driver event data filter`
+    # are triggered
     event = Event(
         type="logging",
         data={
@@ -743,6 +752,7 @@ async def test_zwave_js_event(
             "multiline": False,
             "timestamp": "time",
             "label": "label",
+            "context": {"source": "config"},
         },
     )
     client.driver.receive_event(event)
@@ -862,7 +872,8 @@ async def test_zwave_js_event_bypass_dynamic_validation(
             },
         )
 
-    # Test that `node no event data filter` is triggered and `node event data filter` is not
+    # Test that `node no event data filter` is triggered and `node event data filter`
+    # is not
     event = Event(
         type="interview stage completed",
         data={
@@ -1092,3 +1103,9 @@ async def test_zwave_js_trigger_config_entry_unloaded(
             "event": "nvm convert progress",
         },
     )
+
+
+def test_get_trigger_platform_failure() -> None:
+    """Test _get_trigger_platform."""
+    with pytest.raises(ValueError):
+        _get_trigger_platform({CONF_PLATFORM: "zwave_js.invalid"})

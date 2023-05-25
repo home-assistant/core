@@ -66,7 +66,7 @@ RANDOM_MICROSECOND_MAX = 500000
 _P = ParamSpec("_P")
 
 
-@dataclass
+@dataclass(slots=True)
 class TrackStates:
     """Class for keeping track of states being tracked.
 
@@ -80,7 +80,7 @@ class TrackStates:
     domains: set[str]
 
 
-@dataclass
+@dataclass(slots=True)
 class TrackTemplate:
     """Class for keeping track of a template with variables.
 
@@ -94,7 +94,7 @@ class TrackTemplate:
     rate_limit: timedelta | None = None
 
 
-@dataclass
+@dataclass(slots=True)
 class TrackTemplateResult:
     """Class for result of template tracking.
 
@@ -1295,7 +1295,12 @@ def async_track_point_in_time(
         """Convert passed in UTC now to local now."""
         hass.async_run_hass_job(job, dt_util.as_local(utc_now))
 
-    return async_track_point_in_utc_time(hass, utc_converter, point_in_time)
+    track_job = HassJob(
+        utc_converter,
+        name=f"{job.name} UTC converter",
+        cancel_on_shutdown=job.cancel_on_shutdown,
+    )
+    return async_track_point_in_utc_time(hass, track_job, point_in_time)
 
 
 track_point_in_time = threaded_listener_factory(async_track_point_in_time)
@@ -1317,6 +1322,7 @@ def async_track_point_in_utc_time(
     # Since this is called once, we accept a HassJob so we can avoid
     # having to figure out how to call the action every time its called.
     cancel_callback: asyncio.TimerHandle | None = None
+    loop = hass.loop
 
     @callback
     def run_action(job: HassJob[[datetime], Coroutine[Any, Any, None] | None]) -> None:
@@ -1330,7 +1336,7 @@ def async_track_point_in_utc_time(
         if (delta := (expected_fire_timestamp - time_tracker_timestamp())) > 0:
             _LOGGER.debug("Called %f seconds too early, rearming", delta)
 
-            cancel_callback = hass.loop.call_later(delta, run_action, job)
+            cancel_callback = loop.call_at(loop.time() + delta, run_action, job)
             return
 
         hass.async_run_hass_job(job, utc_point_in_time)
@@ -1341,11 +1347,11 @@ def async_track_point_in_utc_time(
         else HassJob(action, f"track point in utc time {utc_point_in_time}")
     )
     delta = expected_fire_timestamp - time.time()
-    cancel_callback = hass.loop.call_later(delta, run_action, job)
+    cancel_callback = loop.call_at(loop.time() + delta, run_action, job)
 
     @callback
     def unsub_point_in_time_listener() -> None:
-        """Cancel the call_later."""
+        """Cancel the call_at."""
         assert cancel_callback is not None
         cancel_callback.cancel()
 
@@ -1377,7 +1383,7 @@ def async_call_later(
         if isinstance(action, HassJob)
         else HassJob(action, f"call_later {delay}")
     )
-    cancel_callback = hass.loop.call_later(delay, run_action, job)
+    cancel_callback = hass.loop.call_at(hass.loop.time() + delay, run_action, job)
 
     @callback
     def unsub_call_later_listener() -> None:
@@ -1397,13 +1403,17 @@ def async_track_time_interval(
     hass: HomeAssistant,
     action: Callable[[datetime], Coroutine[Any, Any, None] | None],
     interval: timedelta,
+    *,
     name: str | None = None,
+    cancel_on_shutdown: bool | None = None,
 ) -> CALLBACK_TYPE:
     """Add a listener that fires repetitively at every timedelta interval."""
     remove: CALLBACK_TYPE
     interval_listener_job: HassJob[[datetime], None]
 
-    job = HassJob(action, f"track time interval {interval}")
+    job = HassJob(
+        action, f"track time interval {interval}", cancel_on_shutdown=cancel_on_shutdown
+    )
 
     def next_interval() -> datetime:
         """Return the next interval."""
@@ -1421,11 +1431,13 @@ def async_track_time_interval(
         hass.async_run_hass_job(job, now)
 
     if name:
-        job_name = f"{name}: track time interval {interval}"
+        job_name = f"{name}: track time interval {interval} {action}"
     else:
-        job_name = f"track time interval {interval}"
+        job_name = f"track time interval {interval} {action}"
 
-    interval_listener_job = HassJob(interval_listener, job_name)
+    interval_listener_job = HassJob(
+        interval_listener, job_name, cancel_on_shutdown=cancel_on_shutdown
+    )
     remove = async_track_point_in_utc_time(hass, interval_listener_job, next_interval())
 
     def remove_listener() -> None:
@@ -1547,7 +1559,7 @@ def async_track_utc_time_change(
     """Add a listener that will fire if time matches a pattern."""
     # We do not have to wrap the function with time pattern matching logic
     # if no pattern given
-    if all(val is None for val in (hour, minute, second)):
+    if all(val is None or val == "*" for val in (hour, minute, second)):
         # Previously this relied on EVENT_TIME_FIRED
         # which meant it would not fire right away because
         # the caller would always be misaligned with the call
@@ -1572,23 +1584,30 @@ def async_track_utc_time_change(
         ).replace(microsecond=microsecond)
 
     time_listener: CALLBACK_TYPE | None = None
+    pattern_time_change_listener_job: HassJob[[datetime], Any] | None = None
 
     @callback
     def pattern_time_change_listener(_: datetime) -> None:
         """Listen for matching time_changed events."""
         nonlocal time_listener
+        nonlocal pattern_time_change_listener_job
 
         now = time_tracker_utcnow()
         hass.async_run_hass_job(job, dt_util.as_local(now) if local else now)
+        assert pattern_time_change_listener_job is not None
 
         time_listener = async_track_point_in_utc_time(
             hass,
-            pattern_time_change_listener,
+            pattern_time_change_listener_job,
             calculate_next(now + timedelta(seconds=1)),
         )
 
+    pattern_time_change_listener_job = HassJob(
+        pattern_time_change_listener,
+        f"time change listener {hour}:{minute}:{second} {action}",
+    )
     time_listener = async_track_point_in_utc_time(
-        hass, pattern_time_change_listener, calculate_next(dt_util.utcnow())
+        hass, pattern_time_change_listener_job, calculate_next(dt_util.utcnow())
     )
 
     @callback

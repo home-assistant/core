@@ -2,7 +2,7 @@
 import asyncio
 from http import HTTPStatus
 from typing import Any
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 import aiohttp
 import pytest
@@ -21,6 +21,7 @@ HASSIO_DATA = hassio.HassioServiceInfo(
     config={"host": "core-silabs-multiprotocol", "port": 8081},
     name="Silicon Labs Multiprotocol",
     slug="otbr",
+    uuid="12345",
 )
 
 
@@ -203,7 +204,7 @@ async def test_hassio_discovery_flow(
     assert config_entry.data == expected_data
     assert config_entry.options == {}
     assert config_entry.title == "Open Thread Border Router"
-    assert config_entry.unique_id == otbr.DOMAIN
+    assert config_entry.unique_id == HASSIO_DATA.uuid
 
 
 async def test_hassio_discovery_flow_router_not_setup(
@@ -255,7 +256,7 @@ async def test_hassio_discovery_flow_router_not_setup(
     assert config_entry.data == expected_data
     assert config_entry.options == {}
     assert config_entry.title == "Open Thread Border Router"
-    assert config_entry.unique_id == otbr.DOMAIN
+    assert config_entry.unique_id == HASSIO_DATA.uuid
 
 
 async def test_hassio_discovery_flow_router_not_setup_has_preferred(
@@ -304,7 +305,7 @@ async def test_hassio_discovery_flow_router_not_setup_has_preferred(
     assert config_entry.data == expected_data
     assert config_entry.options == {}
     assert config_entry.title == "Open Thread Border Router"
-    assert config_entry.unique_id == otbr.DOMAIN
+    assert config_entry.unique_id == HASSIO_DATA.uuid
 
 
 async def test_hassio_discovery_flow_router_not_setup_has_preferred_2(
@@ -320,13 +321,22 @@ async def test_hassio_discovery_flow_router_not_setup_has_preferred_2(
     aioclient_mock.post(f"{url}/node/dataset/active", status=HTTPStatus.ACCEPTED)
     aioclient_mock.post(f"{url}/node/state", status=HTTPStatus.OK)
 
+    networksettings = Mock()
+    networksettings.network_info.channel = 15
+
     with patch(
         "homeassistant.components.otbr.config_flow.async_get_preferred_dataset",
         return_value=DATASET_CH16.hex(),
     ), patch(
         "homeassistant.components.otbr.async_setup_entry",
         return_value=True,
-    ) as mock_setup_entry:
+    ) as mock_setup_entry, patch(
+        "homeassistant.components.otbr.util.zha_api.async_get_radio_path",
+        return_value="socket://core-silabs-multiprotocol:9999",
+    ), patch(
+        "homeassistant.components.otbr.util.zha_api.async_get_network_settings",
+        return_value=networksettings,
+    ):
         result = await hass.config_entries.flow.async_init(
             otbr.DOMAIN, context={"source": "hassio"}, data=HASSIO_DATA
         )
@@ -357,7 +367,7 @@ async def test_hassio_discovery_flow_router_not_setup_has_preferred_2(
     assert config_entry.data == expected_data
     assert config_entry.options == {}
     assert config_entry.title == "Open Thread Border Router"
-    assert config_entry.unique_id == otbr.DOMAIN
+    assert config_entry.unique_id == HASSIO_DATA.uuid
 
 
 async def test_hassio_discovery_flow_404(

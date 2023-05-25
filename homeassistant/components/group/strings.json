@@ -169,6 +169,11 @@
         "unlocked": "[%key:common::state::unlocked%]",
         "ok": "[%key:component::binary_sensor::entity_component::problem::state::off%]",
         "problem": "[%key:component::binary_sensor::entity_component::problem::state::on%]"
+      },
+      "state_attributes": {
+        "entity_id": {
+          "name": "Members"
+        }
       }
     }
   }
