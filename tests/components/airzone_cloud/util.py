@@ -12,6 +12,7 @@ from aioairzone_cloud.const import (
     API_DEVICE_ID,
     API_DEVICES,
     API_DISCONNECTION_DATE,
+    API_ERRORS,
     API_FAH,
     API_GROUPS,
     API_HUMIDITY,
@@ -24,10 +25,12 @@ from aioairzone_cloud.const import (
     API_STAT_AP_MAC,
     API_STAT_CHANNEL,
     API_STAT_QUALITY,
+    API_STAT_RSSI,
     API_STAT_SSID,
     API_STATUS,
     API_SYSTEM_NUMBER,
     API_TYPE,
+    API_WARNINGS,
     API_WS_FW,
     API_WS_ID,
     API_WS_IDS,
@@ -111,6 +114,7 @@ GET_WEBSERVER_MOCK = {
     API_STATUS: {
         API_IS_CONNECTED: True,
         API_STAT_QUALITY: 4,
+        API_STAT_RSSI: -56,
         API_CONNECTION_DATE: "2023-05-07T12:55:51.000Z",
         API_DISCONNECTION_DATE: "2023-01-01T22:26:55.376Z",
     },
@@ -122,7 +126,9 @@ def mock_get_device_status(device: Device) -> dict[str, Any]:
 
     if device.get_id() == "system1":
         return {
+            API_ERRORS: [],
             API_IS_CONNECTED: True,
+            API_WARNINGS: [],
         }
     if device.get_id() == "zone2":
         return {
@@ -132,6 +138,7 @@ def mock_get_device_status(device: Device) -> dict[str, Any]:
                 API_FAH: 77,
                 API_CELSIUS: 25,
             },
+            API_WARNINGS: [],
         }
     return {
         API_HUMIDITY: 30,
@@ -140,6 +147,7 @@ def mock_get_device_status(device: Device) -> dict[str, Any]:
             API_FAH: 68,
             API_CELSIUS: 20,
         },
+        API_WARNINGS: [],
     }
 
 
