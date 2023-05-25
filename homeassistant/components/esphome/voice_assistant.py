@@ -158,6 +158,7 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
             return
 
         data_to_send = None
+        error = False
         if event_type == VoiceAssistantEventType.VOICE_ASSISTANT_STT_END:
             assert event.data is not None
             data_to_send = {"text": event.data["stt_output"]["text"]}
@@ -184,9 +185,11 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
                 "message": event.data["message"],
             }
             self._tts_done.set()
-            self.handle_finished()
+            error = True
 
         self.handle_event(event_type, data_to_send)
+        if error:
+            self.handle_finished()
 
     async def _wait_for_speech(
         self,
@@ -252,17 +255,24 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
             if AwesomeVersion(self.device_info.esphome_version) >= VAD_QUALITY_VERSION:
                 segmenter = VoiceCommandSegmenter()
                 chunk_buffer: deque[bytes] = deque(maxlen=100)
-                speech_detected = await self._wait_for_speech(segmenter, chunk_buffer)
-                if not speech_detected:
-                    _LOGGER.debug("No speech detected")
-                    self.handle_finished()
+                try:
+                    async with async_timeout.timeout(pipeline_timeout):
+                        speech_detected = await self._wait_for_speech(
+                            segmenter, chunk_buffer
+                        )
+                        if not speech_detected:
+                            _LOGGER.debug("No speech detected, or cancelled")
+                            self.handle_finished()
+                            return
+                except asyncio.TimeoutError:
                     self.handle_event(
                         VoiceAssistantEventType.VOICE_ASSISTANT_ERROR,
                         {
                             "code": "speech-timeout",
-                            "message": "No speech detected",
+                            "message": "Timed out waiting for speech",
                         },
                     )
+                    self.handle_finished()
                     return
 
                 _LOGGER.debug("Starting pipeline")
@@ -272,7 +282,6 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
                         async for chunk in self._segment_audio(segmenter, chunk_buffer):
                             yield chunk
                     except asyncio.TimeoutError:
-                        self.handle_finished()
                         self.handle_event(
                             VoiceAssistantEventType.VOICE_ASSISTANT_ERROR,
                             {
@@ -280,6 +289,7 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
                                 "message": "No speech detected",
                             },
                         )
+                        self.handle_finished()
 
                 stt_stream = _stream_packets
             else:
