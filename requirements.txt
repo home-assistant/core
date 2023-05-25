@@ -8,7 +8,7 @@ attrs==22.2.0
 atomicwrites-homeassistant==1.4.1
 awesomeversion==22.9.0
 bcrypt==4.0.1
-certifi>=2021.5.30
+certifi>=2022.12.07
 ciso8601==2.3.0
 httpx==0.24.1
 home-assistant-bluetooth==1.10.0
