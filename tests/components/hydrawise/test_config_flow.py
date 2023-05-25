@@ -7,6 +7,7 @@ from requests.exceptions import HTTPError
 
 from homeassistant import config_entries
 from homeassistant.components.hydrawise import DOMAIN
+from homeassistant.const import CONF_API_KEY, CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -65,3 +66,25 @@ async def test_form_no_status(mock_api: MagicMock, hass: HomeAssistant) -> None:
 
     assert result2["type"] == FlowResultType.FORM
     assert result2["errors"] == {"base": "unknown"}
+
+
+@patch("hydrawiser.core.Hydrawiser")
+async def test_flow_import_success(mock_api: MagicMock, hass: HomeAssistant) -> None:
+    """Test that we can import a YAML config."""
+    mock_api.return_value.status = "All good!"
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_IMPORT},
+        data={
+            CONF_API_KEY: "__api_key__",
+            CONF_SCAN_INTERVAL: 120,
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Hydrawise"
+    assert result["data"] == {
+        CONF_API_KEY: "__api_key__",
+        CONF_SCAN_INTERVAL: 120,
+    }
