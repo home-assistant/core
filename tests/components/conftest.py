@@ -35,6 +35,16 @@ def entity_registry_enabled_by_default() -> Generator[None, None, None]:
         yield
 
 
+# Blueprint test fixtures
+@pytest.fixture(name="stub_blueprint_populate")
+def stub_blueprint_populate_fixture():
+    """Stub copying the blueprints to the config folder."""
+    from tests.components.blueprint.common import stub_blueprint_populate_fixture_helper
+
+    yield from stub_blueprint_populate_fixture_helper()
+
+
+# TTS test fixtures
 @pytest.fixture(name="mock_tts_get_cache_files")
 def mock_tts_get_cache_files_fixture():
     """Mock the list TTS cache function."""
