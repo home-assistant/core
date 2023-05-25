@@ -18,11 +18,11 @@ API_VERSION = "v6"
 
 PLATFORMS = [
     Platform.BUTTON,
+    Platform.CAMERA,
     Platform.DEVICE_TRACKER,
+    Platform.NUMBER,
     Platform.SENSOR,
     Platform.SWITCH,
-    Platform.CAMERA,
-    Platform.NUMBER,
 ]
 
 DEFAULT_DEVICE_NAME = "Unknown device"

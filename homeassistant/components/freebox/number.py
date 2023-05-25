@@ -76,15 +76,7 @@ class FreeboxNumber(NumberEntity):
         self._attr_name = f"Freebox {entity_description.name}"
         self._attr_unique_id = f"{router.mac}-{entity_description.key}"
         self._attr_device_info = router.device_info
-        self._attr_entity_category = entity_description.entity_category
-        self._attr_native_min_value = float(entity_description.native_min_value or 0)
-        self._attr_native_max_value = float(entity_description.native_max_value or 100)
-        self._attr_icon = entity_description.icon
-        self._attr_value = None
         self._router = router
-
-        if entity_description.mode:
-            self._attr_mode = entity_description.mode
 
     async def async_set_native_value(self, value: float) -> None:
         """Set the native value of the entity."""
@@ -93,19 +85,6 @@ class FreeboxNumber(NumberEntity):
 
 class FreeboxLCDNumber(FreeboxNumber):
     """Representation of a Freebox number entity."""
-
-    def __init__(
-        self,
-        router: FreeboxRouter,
-        entity_description: FreeboxNumberEntityDescription,
-    ) -> None:
-        """Initialize the switch."""
-        super().__init__(router, entity_description)
-        self._attr_unique_id = f"{router.mac}-{entity_description.key}-lcd"
-
-    def update(self) -> None:
-        """Update the Freebox sensor."""
-        self._attr_value = self._router.lcd_settings.get(self.entity_description.key)
 
     @callback
     def async_update_state(self) -> None:
@@ -142,9 +121,6 @@ class FreeboxLCDNumber(FreeboxNumber):
             self.async_write_ha_state()
         except InsufficientPermissionsError:
             # Send update signal to restore original state
-            self._attr_native_value = self._router.lcd_settings.get(
-                self.entity_description.key
-            )
             self._attr_value = self._router.lcd_settings.get(
                 self.entity_description.key
             )
