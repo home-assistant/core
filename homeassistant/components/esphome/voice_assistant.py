@@ -2,13 +2,15 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import AsyncIterable, Callable
+from collections import deque
+from collections.abc import AsyncIterable, Callable, MutableSequence, Sequence
 import logging
 import socket
 from typing import cast
 
 from aioesphomeapi import VoiceAssistantEventType
 import async_timeout
+from awesomeversion import AwesomeVersion
 
 from homeassistant.components import stt, tts
 from homeassistant.components.assist_pipeline import (
@@ -17,6 +19,7 @@ from homeassistant.components.assist_pipeline import (
     async_pipeline_from_audio_stream,
     select as pipeline_select,
 )
+from homeassistant.components.assist_pipeline.vad import VoiceCommandSegmenter
 from homeassistant.components.media_player import async_process_play_media_url
 from homeassistant.core import Context, HomeAssistant, callback
 
@@ -28,6 +31,8 @@ _LOGGER = logging.getLogger(__name__)
 
 UDP_PORT = 0  # Set to 0 to let the OS pick a free random port
 UDP_MAX_PACKET_SIZE = 1024
+
+VAD_QUALITY_VERSION = AwesomeVersion("2023.6.0-dev")
 
 _VOICE_ASSISTANT_EVENT_TYPES: EsphomeEnumMapper[
     VoiceAssistantEventType, PipelineEventType
@@ -50,7 +55,7 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
     """Receive UDP packets and forward them to the voice assistant."""
 
     started = False
-    queue: asyncio.Queue[bytes] | None = None
+    stopped = False
     transport: asyncio.DatagramTransport | None = None
     remote_addr: tuple[str, int] | None = None
 
@@ -60,6 +65,7 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
         entry_data: RuntimeEntryData,
         handle_event: Callable[[VoiceAssistantEventType, dict[str, str] | None], None],
         handle_finished: Callable[[], None],
+        audio_timeout: float = 2.0,
     ) -> None:
         """Initialize UDP receiver."""
         self.context = Context()
@@ -68,10 +74,11 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
         assert entry_data.device_info is not None
         self.device_info = entry_data.device_info
 
-        self.queue = asyncio.Queue()
+        self.queue: asyncio.Queue[bytes] = asyncio.Queue()
         self.handle_event = handle_event
         self.handle_finished = handle_finished
         self._tts_done = asyncio.Event()
+        self.audio_timeout = audio_timeout
 
     async def start_server(self) -> int:
         """Start accepting connections."""
@@ -80,7 +87,7 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
             """Accept connection."""
             if self.started:
                 raise RuntimeError("Can only start once")
-            if self.queue is None:
+            if self.stopped:
                 raise RuntimeError("No longer accepting connections")
 
             self.started = True
@@ -105,12 +112,11 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
     @callback
     def datagram_received(self, data: bytes, addr: tuple[str, int]) -> None:
         """Handle incoming UDP packet."""
-        if not self.started:
+        if not self.started or self.stopped:
             return
         if self.remote_addr is None:
             self.remote_addr = addr
-        if self.queue is not None:
-            self.queue.put_nowait(data)
+        self.queue.put_nowait(data)
 
     def error_received(self, exc: Exception) -> None:
         """Handle when a send or receive operation raises an OSError.
@@ -123,21 +129,21 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
     @callback
     def stop(self) -> None:
         """Stop the receiver."""
-        if self.queue is not None:
-            self.queue.put_nowait(b"")
+        self.queue.put_nowait(b"")
         self.started = False
+        self.stopped = True
 
     def close(self) -> None:
         """Close the receiver."""
-        if self.queue is not None:
-            self.queue = None
+        self.started = False
+        self.stopped = True
         if self.transport is not None:
             self.transport.close()
 
     async def _iterate_packets(self) -> AsyncIterable[bytes]:
         """Iterate over incoming packets."""
-        if self.queue is None:
-            raise RuntimeError("Already stopped")
+        if not self.started or self.stopped:
+            raise RuntimeError("Not running")
 
         while data := await self.queue.get():
             yield data
@@ -177,9 +183,61 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
                 "code": event.data["code"],
                 "message": event.data["message"],
             }
+            self._tts_done.set()
             self.handle_finished()
 
         self.handle_event(event_type, data_to_send)
+
+    async def _wait_for_speech(
+        self,
+        segmenter: VoiceCommandSegmenter,
+        chunk_buffer: MutableSequence[bytes],
+    ) -> bool:
+        """Buffer audio chunks until speech is detected.
+
+        Returns True if speech was detected, False otherwise.
+        """
+        # Timeout if no audio comes in for a while.
+        async with async_timeout.timeout(self.audio_timeout):
+            chunk = await self.queue.get()
+
+        while chunk:
+            segmenter.process(chunk)
+            if segmenter.in_command:
+                return True
+
+            # Buffer until command starts
+            chunk_buffer.append(chunk)
+
+            async with async_timeout.timeout(self.audio_timeout):
+                chunk = await self.queue.get()
+
+        return False
+
+    async def _segment_audio(
+        self,
+        segmenter: VoiceCommandSegmenter,
+        chunk_buffer: Sequence[bytes],
+    ) -> AsyncIterable[bytes]:
+        """Yield audio chunks until voice command has finished."""
+        # Buffered chunks first
+        for buffered_chunk in chunk_buffer:
+            yield buffered_chunk
+
+        # Timeout if no audio comes in for a while.
+        # This means the caller hung up.
+        async with async_timeout.timeout(self.audio_timeout):
+            chunk = await self.queue.get()
+
+        while chunk:
+            if not segmenter.process(chunk):
+                # Voice command is finished
+                break
+
+            yield chunk
+
+            async with async_timeout.timeout(self.audio_timeout):
+                chunk = await self.queue.get()
 
     async def run_pipeline(
         self,
@@ -190,6 +248,44 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
             tts_audio_output = (
                 "raw" if self.device_info.voice_assistant_version >= 2 else "mp3"
             )
+
+            if AwesomeVersion(self.device_info.esphome_version) >= VAD_QUALITY_VERSION:
+                segmenter = VoiceCommandSegmenter()
+                chunk_buffer: deque[bytes] = deque(maxlen=100)
+                speech_detected = await self._wait_for_speech(segmenter, chunk_buffer)
+                if not speech_detected:
+                    _LOGGER.debug("No speech detected")
+                    self.handle_finished()
+                    self.handle_event(
+                        VoiceAssistantEventType.VOICE_ASSISTANT_ERROR,
+                        {
+                            "code": "speech-timeout",
+                            "message": "No speech detected",
+                        },
+                    )
+                    return
+
+                _LOGGER.debug("Starting pipeline")
+
+                async def _stream_packets() -> AsyncIterable[bytes]:
+                    try:
+                        async for chunk in self._segment_audio(segmenter, chunk_buffer):
+                            yield chunk
+                    except asyncio.TimeoutError:
+                        self.handle_finished()
+                        self.handle_event(
+                            VoiceAssistantEventType.VOICE_ASSISTANT_ERROR,
+                            {
+                                "code": "speech-timeout",
+                                "message": "No speech detected",
+                            },
+                        )
+
+                stt_stream = _stream_packets
+            else:
+                stt_stream = self._iterate_packets
+                _LOGGER.debug("Starting pipeline")
+
             async with async_timeout.timeout(pipeline_timeout):
                 await async_pipeline_from_audio_stream(
                     self.hass,
@@ -203,7 +299,7 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
                         sample_rate=stt.AudioSampleRates.SAMPLERATE_16000,
                         channel=stt.AudioChannels.CHANNEL_MONO,
                     ),
-                    stt_stream=self._iterate_packets(),
+                    stt_stream=stt_stream(),
                     pipeline_id=pipeline_select.get_chosen_pipeline(
                         self.hass, DOMAIN, self.device_info.mac_address
                     ),
@@ -215,6 +311,13 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
 
             _LOGGER.debug("Pipeline finished")
         except asyncio.TimeoutError:
+            self.handle_event(
+                VoiceAssistantEventType.VOICE_ASSISTANT_ERROR,
+                {
+                    "code": "pipeline-timeout",
+                    "message": "Pipeline timeout",
+                },
+            )
             _LOGGER.warning("Pipeline timeout")
         finally:
             self.handle_finished()
