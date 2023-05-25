@@ -45,11 +45,11 @@
   "issues": {
     "deprecated_switches": {
       "title": "The Logitech Harmony switch platform is being removed",
-      "description": "Using the switch platform to change the current activity is now deprecated and will be removed in a future version of Home Assistant.\n\nHarmony has always been a perfect candidate for the select entity in a time when the select entity did not exist. Turning on one activity turns off all others as that is how Harmony was designed. Multiple activities at once was never possible.\n\nPlease adjust any automations or scripts that you may have to use the select entity that is already available to fix this issue."
+      "description": "Using the switch platform to change the current activity is now deprecated and will be removed in a future version of Home Assistant.\n\nPlease adjust any automations or scripts that use switch entities to instead use the remote entity."
     },
     "deprecated_switches_entity": {
       "title": "Deprecated Harmony entity detected in {info}",
-      "description": "Your Harmony entity `{entity}` is being used in `{info}`. A select entity is available and should be used going forward.\n\nPlease adjust `{info}` to fix this issue."
+      "description": "Your Harmony entity `{entity}` is being used in `{info}`. A remote entity is available and should be used going forward.\n\nPlease adjust `{info}` to fix this issue."
     }
   }
 }
