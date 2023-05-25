@@ -98,7 +98,7 @@ async def test_history_during_period(
     assert len(sensor_test_history) == 3
 
     assert sensor_test_history[0]["s"] == "on"
-    assert sensor_test_history[0]["a"] == {}
+    assert "a" not in sensor_test_history[0]  # no_attributes = True
     assert isinstance(sensor_test_history[0]["lu"], float)
     assert "lc" not in sensor_test_history[0]  # skipped if the same a last_updated (lu)
 
@@ -511,17 +511,13 @@ async def test_history_stream_historical_only(
             "start_time": now.timestamp(),
             "states": {
                 "sensor.four": [
-                    {"a": {}, "lu": sensor_four_last_updated.timestamp(), "s": "off"}
+                    {"lu": sensor_four_last_updated.timestamp(), "s": "off"}
                 ],
-                "sensor.one": [
-                    {"a": {}, "lu": sensor_one_last_updated.timestamp(), "s": "on"}
-                ],
+                "sensor.one": [{"lu": sensor_one_last_updated.timestamp(), "s": "on"}],
                 "sensor.three": [
-                    {"a": {}, "lu": sensor_three_last_updated.timestamp(), "s": "off"}
+                    {"lu": sensor_three_last_updated.timestamp(), "s": "off"}
                 ],
-                "sensor.two": [
-                    {"a": {}, "lu": sensor_two_last_updated.timestamp(), "s": "off"}
-                ],
+                "sensor.two": [{"lu": sensor_two_last_updated.timestamp(), "s": "off"}],
             },
         },
         "id": 1,
@@ -858,12 +854,8 @@ async def test_history_stream_live_no_attributes_minimal_response(
             "end_time": first_end_time,
             "start_time": now.timestamp(),
             "states": {
-                "sensor.one": [
-                    {"a": {}, "lu": sensor_one_last_updated.timestamp(), "s": "on"}
-                ],
-                "sensor.two": [
-                    {"a": {}, "lu": sensor_two_last_updated.timestamp(), "s": "off"}
-                ],
+                "sensor.one": [{"lu": sensor_one_last_updated.timestamp(), "s": "on"}],
+                "sensor.two": [{"lu": sensor_two_last_updated.timestamp(), "s": "off"}],
             },
         },
         "id": 1,
@@ -1221,12 +1213,8 @@ async def test_history_stream_live_no_attributes_minimal_response_specific_entit
             "end_time": first_end_time,
             "start_time": now.timestamp(),
             "states": {
-                "sensor.one": [
-                    {"a": {}, "lu": sensor_one_last_updated.timestamp(), "s": "on"}
-                ],
-                "sensor.two": [
-                    {"a": {}, "lu": sensor_two_last_updated.timestamp(), "s": "off"}
-                ],
+                "sensor.one": [{"lu": sensor_one_last_updated.timestamp(), "s": "on"}],
+                "sensor.two": [{"lu": sensor_two_last_updated.timestamp(), "s": "off"}],
             },
         },
         "id": 1,
@@ -1307,12 +1295,8 @@ async def test_history_stream_live_with_future_end_time(
             "end_time": first_end_time,
             "start_time": now.timestamp(),
             "states": {
-                "sensor.one": [
-                    {"a": {}, "lu": sensor_one_last_updated.timestamp(), "s": "on"}
-                ],
-                "sensor.two": [
-                    {"a": {}, "lu": sensor_two_last_updated.timestamp(), "s": "off"}
-                ],
+                "sensor.one": [{"lu": sensor_one_last_updated.timestamp(), "s": "on"}],
+                "sensor.two": [{"lu": sensor_two_last_updated.timestamp(), "s": "off"}],
             },
         },
         "id": 1,
@@ -1506,10 +1490,10 @@ async def test_overflow_queue(
                 "start_time": now.timestamp(),
                 "states": {
                     "sensor.one": [
-                        {"a": {}, "lu": sensor_one_last_updated.timestamp(), "s": "on"}
+                        {"lu": sensor_one_last_updated.timestamp(), "s": "on"}
                     ],
                     "sensor.two": [
-                        {"a": {}, "lu": sensor_two_last_updated.timestamp(), "s": "off"}
+                        {"lu": sensor_two_last_updated.timestamp(), "s": "off"}
                     ],
                 },
             },
@@ -1723,9 +1707,7 @@ async def test_history_stream_for_invalid_entity_ids(
             "end_time": sensor_one_last_updated.timestamp(),
             "start_time": now.timestamp(),
             "states": {
-                "sensor.one": [
-                    {"a": {}, "lu": sensor_one_last_updated.timestamp(), "s": "on"}
-                ],
+                "sensor.one": [{"lu": sensor_one_last_updated.timestamp(), "s": "on"}],
             },
         },
         "id": 1,
@@ -1755,12 +1737,8 @@ async def test_history_stream_for_invalid_entity_ids(
             "end_time": sensor_two_last_updated.timestamp(),
             "start_time": now.timestamp(),
             "states": {
-                "sensor.one": [
-                    {"a": {}, "lu": sensor_one_last_updated.timestamp(), "s": "on"}
-                ],
-                "sensor.two": [
-                    {"a": {}, "lu": sensor_two_last_updated.timestamp(), "s": "off"}
-                ],
+                "sensor.one": [{"lu": sensor_one_last_updated.timestamp(), "s": "on"}],
+                "sensor.two": [{"lu": sensor_two_last_updated.timestamp(), "s": "off"}],
             },
         },
         "id": 2,
@@ -1913,11 +1891,10 @@ async def test_history_stream_historical_only_with_start_time_state_past(
             "start_time": now.timestamp(),
             "states": {
                 "sensor.four": [
-                    {"a": {}, "lu": sensor_four_last_updated.timestamp(), "s": "off"}
+                    {"lu": sensor_four_last_updated.timestamp(), "s": "off"}
                 ],
                 "sensor.one": [
                     {
-                        "a": {},
                         "lu": now.timestamp(),
                         "s": "first",
                     },  # should use start time state
@@ -1925,11 +1902,9 @@ async def test_history_stream_historical_only_with_start_time_state_past(
                     {"lu": sensor_one_last_updated_third.timestamp(), "s": "third"},
                 ],
                 "sensor.three": [
-                    {"a": {}, "lu": sensor_three_last_updated.timestamp(), "s": "off"}
+                    {"lu": sensor_three_last_updated.timestamp(), "s": "off"}
                 ],
-                "sensor.two": [
-                    {"a": {}, "lu": sensor_two_last_updated.timestamp(), "s": "off"}
-                ],
+                "sensor.two": [{"lu": sensor_two_last_updated.timestamp(), "s": "off"}],
             },
         },
         "id": 1,
