@@ -468,6 +468,28 @@ class ZWaveMeterSensor(ZWaveNumericSensor):
 class ZWaveListSensor(ZwaveSensor):
     """Representation of a Z-Wave Numeric sensor with multiple states."""
 
+    def __init__(
+        self,
+        config_entry: ConfigEntry,
+        driver: Driver,
+        info: ZwaveDiscoveryInfo,
+        entity_description: SensorEntityDescription,
+        unit_of_measurement: str | None = None,
+    ) -> None:
+        """Initialize a ZWaveListSensor entity."""
+        super().__init__(
+            config_entry, driver, info, entity_description, unit_of_measurement
+        )
+
+        # Entity class attributes
+        # Notification sensors have the following name mapping (variables are property
+        # keys, name is property)
+        # https://github.com/zwave-js/node-zwave-js/blob/master/packages/config/config/notifications.json
+        self._attr_name = self.generate_name(
+            alternate_value_name=self.info.primary_value.property_name,
+            additional_info=[self.info.primary_value.property_key_name],
+        )
+
     @property
     def device_class(self) -> SensorDeviceClass | None:
         """Return sensor device class."""
@@ -593,6 +615,9 @@ class ZWaveNodeStatusSensor(SensorEntity):
                 self.async_poll_value,
             )
         )
+        # we don't listen for `remove_entity_on_ready_node` signal because this entity
+        # is created when the node is added which occurs before ready. It only needs to
+        # be removed if the node is removed from the network.
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,

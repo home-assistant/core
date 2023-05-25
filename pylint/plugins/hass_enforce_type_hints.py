@@ -2449,7 +2449,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 ),
                 TypeHintMatch(
                     function_name="get_tts_audio",
-                    arg_types={1: "str", 2: "str", 3: "dict[str, Any] | None"},
+                    arg_types={1: "str", 2: "str", 3: "dict[str, Any]"},
                     return_type="TtsAudioType",
                     has_async_counterpart=True,
                 ),
