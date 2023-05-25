@@ -426,6 +426,13 @@ class DefaultAgent(AbstractConversationAgent):
                                 dict,
                             ):
                                 merge_dict(intents_dict, custom_sentences_yaml)
+                            else:
+                                _LOGGER.warning(
+                                    "Could not load custom sentences file language=%s (%s), path=%s",
+                                    language,
+                                    language_variation,
+                                    custom_sentences_file.name,
+                                )
 
                         # Will need to recreate graph
                         intents_changed = True
