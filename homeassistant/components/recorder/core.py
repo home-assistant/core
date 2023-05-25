@@ -1266,27 +1266,6 @@ class Recorder(threading.Thread):
         _LOGGER.debug("Sending keepalive")
         self.event_session.connection().scalar(select(1))
 
-    @callback
-    def _async_event_filter(self, event: Event) -> bool:
-        """Filter events."""
-        if event.event_type in self.exclude_event_types:
-            return False
-
-        if (entity_id := event.data.get(ATTR_ENTITY_ID)) is None:
-            return True
-
-        if isinstance(entity_id, str):
-            return self.entity_filter(entity_id)
-
-        if isinstance(entity_id, list):
-            for eid in entity_id:
-                if self.entity_filter(eid):
-                    return True
-            return False
-
-        # Unknown what it is.
-        return True
-
     async def async_block_till_done(self) -> None:
         """Async version of block_till_done."""
         if self._queue.empty() and not self._event_session_has_pending_writes:
