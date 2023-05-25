@@ -960,7 +960,7 @@ omnilogic==0.4.5
 ondilo==0.2.0
 
 # homeassistant.components.onvif
-onvif-zeep-async==3.1.7
+onvif-zeep-async==3.1.8
 
 # homeassistant.components.opengarage
 open-garage==0.2.0
@@ -1130,7 +1130,7 @@ pyatag==0.3.5.3
 pyatmo==7.5.0
 
 # homeassistant.components.apple_tv
-pyatv==0.11.0
+pyatv==0.12.0
 
 # homeassistant.components.aussie_broadband
 pyaussiebb==0.0.15
@@ -1976,7 +1976,7 @@ yalexs==1.5.1
 yeelight==0.7.10
 
 # homeassistant.components.yolink
-yolink-api==0.2.8
+yolink-api==0.2.9
 
 # homeassistant.components.youless
 youless-api==1.0.1

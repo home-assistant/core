@@ -1322,6 +1322,7 @@ def async_track_point_in_utc_time(
     # Since this is called once, we accept a HassJob so we can avoid
     # having to figure out how to call the action every time its called.
     cancel_callback: asyncio.TimerHandle | None = None
+    loop = hass.loop
 
     @callback
     def run_action(job: HassJob[[datetime], Coroutine[Any, Any, None] | None]) -> None:
@@ -1335,7 +1336,7 @@ def async_track_point_in_utc_time(
         if (delta := (expected_fire_timestamp - time_tracker_timestamp())) > 0:
             _LOGGER.debug("Called %f seconds too early, rearming", delta)
 
-            cancel_callback = hass.loop.call_later(delta, run_action, job)
+            cancel_callback = loop.call_at(loop.time() + delta, run_action, job)
             return
 
         hass.async_run_hass_job(job, utc_point_in_time)
@@ -1346,11 +1347,11 @@ def async_track_point_in_utc_time(
         else HassJob(action, f"track point in utc time {utc_point_in_time}")
     )
     delta = expected_fire_timestamp - time.time()
-    cancel_callback = hass.loop.call_later(delta, run_action, job)
+    cancel_callback = loop.call_at(loop.time() + delta, run_action, job)
 
     @callback
     def unsub_point_in_time_listener() -> None:
-        """Cancel the call_later."""
+        """Cancel the call_at."""
         assert cancel_callback is not None
         cancel_callback.cancel()
 
@@ -1382,7 +1383,7 @@ def async_call_later(
         if isinstance(action, HassJob)
         else HassJob(action, f"call_later {delay}")
     )
-    cancel_callback = hass.loop.call_later(delay, run_action, job)
+    cancel_callback = hass.loop.call_at(hass.loop.time() + delay, run_action, job)
 
     @callback
     def unsub_call_later_listener() -> None:
