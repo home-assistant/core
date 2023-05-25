@@ -234,6 +234,7 @@ FLOWS = {
         "lacrosse_view",
         "lametric",
         "landisgyr_heat_meter",
+        "lastfm",
         "launch_library",
         "laundrify",
         "ld2410_ble",
