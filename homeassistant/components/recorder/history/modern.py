@@ -9,7 +9,6 @@ from typing import Any, cast
 
 from sqlalchemy import (
     CompoundSelect,
-    Integer,
     Select,
     Subquery,
     and_,
@@ -19,7 +18,6 @@ from sqlalchemy import (
     select,
     union_all,
 )
-from sqlalchemy.dialects import postgresql
 from sqlalchemy.engine.row import Row
 from sqlalchemy.orm.session import Session
 
@@ -52,16 +50,6 @@ _FIELD_MAP = {
 }
 
 
-CASTABLE_DOUBLE_TYPE = (
-    # MySQL/MariaDB < 10.4+ does not support casting to DOUBLE so we have to use Integer instead but it doesn't
-    # matter because we don't use the value as its always set to NULL
-    #
-    # sqlalchemy.exc.SAWarning: Datatype DOUBLE does not support CAST on MySQL/MariaDb; the CAST will be skipped.
-    #
-    Integer().with_variant(postgresql.DOUBLE_PRECISION(), "postgresql")
-)
-
-
 def _stmt_and_join_attributes(
     no_attributes: bool, include_last_changed: bool
 ) -> Select:
@@ -79,13 +67,9 @@ def _stmt_and_join_attributes_for_start_state(
 ) -> Select:
     """Return the statement and if StateAttributes should be joined."""
     _select = select(States.metadata_id, States.state)
-    _select = _select.add_columns(
-        literal(value=None).label("last_updated_ts").cast(CASTABLE_DOUBLE_TYPE)
-    )
+    _select = _select.add_columns(literal(value=0).label("last_updated_ts"))
     if include_last_changed:
-        _select = _select.add_columns(
-            literal(value=None).label("last_changed_ts").cast(CASTABLE_DOUBLE_TYPE)
-        )
+        _select = _select.add_columns(literal(value=0).label("last_changed_ts"))
     if not no_attributes:
         _select = _select.add_columns(SHARED_ATTR_OR_LEGACY_ATTRIBUTES)
     return _select
