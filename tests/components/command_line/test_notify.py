@@ -38,14 +38,14 @@ async def test_setup_platform_yaml(hass: HomeAssistant) -> None:
     "get_config",
     [
         {
-            "command_line": {
-                "notify": [
-                    {
+            "command_line": [
+                {
+                    "notify": {
                         "command": "exit 0",
                         "name": "Test2",
                     }
-                ]
-            }
+                }
+            ]
         }
     ],
 )
@@ -80,14 +80,14 @@ async def test_command_line_output(hass: HomeAssistant) -> None:
             hass,
             DOMAIN,
             {
-                "command_line": {
-                    "notify": [
-                        {
+                "command_line": [
+                    {
+                        "notify": {
                             "command": f"cat > {filename}",
                             "name": "Test3",
                         }
-                    ]
-                }
+                    }
+                ]
             },
         )
         await hass.async_block_till_done()
@@ -106,14 +106,14 @@ async def test_command_line_output(hass: HomeAssistant) -> None:
     "get_config",
     [
         {
-            "command_line": {
-                "notify": [
-                    {
+            "command_line": [
+                {
+                    "notify": {
                         "command": "exit 1",
                         "name": "Test4",
                     }
-                ]
-            }
+                }
+            ]
         }
     ],
 )
@@ -133,15 +133,15 @@ async def test_error_for_none_zero_exit_code(
     "get_config",
     [
         {
-            "command_line": {
-                "notify": [
-                    {
+            "command_line": [
+                {
+                    "notify": {
                         "command": "sleep 10000",
                         "command_timeout": 0.0000001,
                         "name": "Test5",
                     }
-                ]
-            }
+                }
+            ]
         }
     ],
 )
@@ -159,14 +159,14 @@ async def test_timeout(
     "get_config",
     [
         {
-            "command_line": {
-                "notify": [
-                    {
+            "command_line": [
+                {
+                    "notify": {
                         "command": "exit 0",
                         "name": "Test6",
                     }
-                ]
-            }
+                }
+            ]
         }
     ],
 )

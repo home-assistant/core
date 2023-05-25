@@ -93,15 +93,15 @@ async def test_state_integration_yaml(hass: HomeAssistant) -> None:
             hass,
             DOMAIN,
             {
-                "command_line": {
-                    "switch": [
-                        {
+                "command_line": [
+                    {
+                        "switch": {
                             "command_on": f"echo 1 > {path}",
                             "command_off": f"echo 0 > {path}",
                             "name": "Test",
                         }
-                    ]
-                }
+                    }
+                ]
             },
         )
         await hass.async_block_till_done()
@@ -119,9 +119,9 @@ async def test_state_value(hass: HomeAssistant) -> None:
             hass,
             DOMAIN,
             {
-                "command_line": {
-                    "switch": [
-                        {
+                "command_line": [
+                    {
+                        "switch": {
                             "command_state": f"cat {path}",
                             "command_on": f"echo 1 > {path}",
                             "command_off": f"echo 0 > {path}",
@@ -131,8 +131,8 @@ async def test_state_value(hass: HomeAssistant) -> None:
                             ),
                             "name": "Test",
                         }
-                    ]
-                }
+                    }
+                ]
             },
         )
         await hass.async_block_till_done()
@@ -177,9 +177,9 @@ async def test_state_json_value(hass: HomeAssistant) -> None:
             hass,
             DOMAIN,
             {
-                "command_line": {
-                    "switch": [
-                        {
+                "command_line": [
+                    {
+                        "switch": {
                             "command_state": f"cat {path}",
                             "command_on": f"echo '{oncmd}' > {path}",
                             "command_off": f"echo '{offcmd}' > {path}",
@@ -190,8 +190,8 @@ async def test_state_json_value(hass: HomeAssistant) -> None:
                             ),
                             "name": "Test",
                         }
-                    ]
-                }
+                    }
+                ]
             },
         )
         await hass.async_block_till_done()
@@ -233,16 +233,16 @@ async def test_state_code(hass: HomeAssistant) -> None:
             hass,
             DOMAIN,
             {
-                "command_line": {
-                    "switch": [
-                        {
+                "command_line": [
+                    {
+                        "switch": {
                             "command_state": f"cat {path}",
                             "command_on": f"echo 1 > {path}",
                             "command_off": f"echo 0 > {path}",
                             "name": "Test",
                         }
-                    ]
-                }
+                    }
+                ]
             },
         )
         await hass.async_block_till_done()
@@ -283,15 +283,15 @@ async def test_assumed_state_should_be_true_if_command_state_is_none(
         hass,
         DOMAIN,
         {
-            "command_line": {
-                "switch": [
-                    {
+            "command_line": [
+                {
+                    "switch": {
                         "command_on": "echo 'on command'",
                         "command_off": "echo 'off command'",
                         "name": "Test",
                     }
-                ]
-            }
+                }
+            ]
         },
     )
     await hass.async_block_till_done()
@@ -310,16 +310,16 @@ async def test_assumed_state_should_absent_if_command_state_present(
         hass,
         DOMAIN,
         {
-            "command_line": {
-                "switch": [
-                    {
+            "command_line": [
+                {
+                    "switch": {
                         "command_on": "echo 'on command'",
                         "command_off": "echo 'off command'",
                         "command_state": "cat {}",
                         "name": "Test",
                     }
-                ]
-            }
+                }
+            ]
         },
     )
     await hass.async_block_till_done()
@@ -335,15 +335,15 @@ async def test_name_is_set_correctly(hass: HomeAssistant) -> None:
         hass,
         DOMAIN,
         {
-            "command_line": {
-                "switch": [
-                    {
+            "command_line": [
+                {
+                    "switch": {
                         "command_on": "echo 'on command'",
                         "command_off": "echo 'off command'",
                         "name": "Test friendly name!",
                     }
-                ]
-            }
+                }
+            ]
         },
     )
     await hass.async_block_till_done()
@@ -361,16 +361,16 @@ async def test_switch_command_state_fail(
         hass,
         DOMAIN,
         {
-            "command_line": {
-                "switch": [
-                    {
+            "command_line": [
+                {
+                    "switch": {
                         "command_on": "exit 0",
                         "command_off": "exit 0'",
                         "command_state": "echo 1",
                         "name": "Test",
                     }
-                ]
-            }
+                }
+            ]
         },
     )
     await hass.async_block_till_done()
@@ -413,16 +413,16 @@ async def test_switch_command_state_code_exceptions(
             hass,
             DOMAIN,
             {
-                "command_line": {
-                    "switch": [
-                        {
+                "command_line": [
+                    {
+                        "switch": {
                             "command_on": "exit 0",
                             "command_off": "exit 0'",
                             "command_state": "echo 1",
                             "name": "Test",
                         }
-                    ]
-                }
+                    }
+                ]
             },
         )
         await hass.async_block_till_done()
@@ -454,17 +454,17 @@ async def test_switch_command_state_value_exceptions(
             hass,
             DOMAIN,
             {
-                "command_line": {
-                    "switch": [
-                        {
+                "command_line": [
+                    {
+                        "switch": {
                             "command_on": "exit 0",
                             "command_off": "exit 0'",
                             "command_state": "echo 1",
                             "value_template": '{{ value=="1" }}',
                             "name": "Test",
                         }
-                    ]
-                }
+                    }
+                ]
             },
         )
         await hass.async_block_till_done()
@@ -509,28 +509,32 @@ async def test_unique_id(
         hass,
         DOMAIN,
         {
-            "command_line": {
-                "switch": [
-                    {
+            "command_line": [
+                {
+                    "switch": {
                         "command_on": "echo on",
                         "command_off": "echo off",
                         "unique_id": "unique",
                         "name": "Test",
-                    },
-                    {
+                    }
+                },
+                {
+                    "switch": {
                         "command_on": "echo on",
                         "command_off": "echo off",
                         "unique_id": "not-so-unique-anymore",
                         "name": "Test2",
-                    },
-                    {
+                    }
+                },
+                {
+                    "switch": {
                         "command_on": "echo on",
                         "command_off": "echo off",
                         "unique_id": "not-so-unique-anymore",
                         "name": "Test3",
                     },
-                ]
-            }
+                },
+            ]
         },
     )
     await hass.async_block_till_done()
@@ -553,14 +557,14 @@ async def test_command_failure(
         hass,
         DOMAIN,
         {
-            "command_line": {
-                "switch": [
-                    {
+            "command_line": [
+                {
+                    "switch": {
                         "command_off": "exit 33",
                         "name": "Test",
                     }
-                ]
-            }
+                }
+            ]
         },
     )
     await hass.async_block_till_done()
@@ -579,9 +583,9 @@ async def test_templating(hass: HomeAssistant) -> None:
             hass,
             DOMAIN,
             {
-                "command_line": {
-                    "switch": [
-                        {
+                "command_line": [
+                    {
+                        "switch": {
                             "command_state": f"cat {path}",
                             "command_on": f"echo 1 > {path}",
                             "command_off": f"echo 0 > {path}",
@@ -590,8 +594,10 @@ async def test_templating(hass: HomeAssistant) -> None:
                                 '{% if this.state=="on" %} mdi:on {% else %} mdi:off {% endif %}'
                             ),
                             "name": "Test",
-                        },
-                        {
+                        }
+                    },
+                    {
+                        "switch": {
                             "command_state": f"cat {path}",
                             "command_on": f"echo 1 > {path}",
                             "command_off": f"echo 0 > {path}",
@@ -601,8 +607,8 @@ async def test_templating(hass: HomeAssistant) -> None:
                             ),
                             "name": "Test2",
                         },
-                    ]
-                }
+                    },
+                ]
             },
         )
         await hass.async_block_till_done()

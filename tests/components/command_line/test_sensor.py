@@ -50,15 +50,15 @@ async def test_setup_platform_yaml(hass: HomeAssistant) -> None:
     "get_config",
     [
         {
-            "command_line": {
-                "sensor": [
-                    {
+            "command_line": [
+                {
+                    "sensor": {
                         "name": "Test",
                         "command": "echo 5",
                         "unit_of_measurement": "in",
                     }
-                ]
-            }
+                }
+            ]
         }
     ],
 )
@@ -78,16 +78,16 @@ async def test_setup_integration_yaml(
     "get_config",
     [
         {
-            "command_line": {
-                "sensor": [
-                    {
+            "command_line": [
+                {
+                    "sensor": {
                         "name": "Test",
                         "command": "echo 50",
                         "unit_of_measurement": "in",
                         "value_template": "{{ value | multiply(0.1) }}",
                     }
-                ]
-            }
+                }
+            ]
         }
     ],
 )
@@ -103,14 +103,14 @@ async def test_template(hass: HomeAssistant, load_yaml_integration: None) -> Non
     "get_config",
     [
         {
-            "command_line": {
-                "sensor": [
-                    {
+            "command_line": [
+                {
+                    "sensor": {
                         "name": "Test",
                         "command": "echo {{ states.sensor.input_sensor.state }}",
                     }
-                ]
-            }
+                }
+            ]
         }
     ],
 )
@@ -139,14 +139,14 @@ async def test_template_render_with_quote(hass: HomeAssistant) -> None:
         hass,
         DOMAIN,
         {
-            "command_line": {
-                "sensor": [
-                    {
+            "command_line": [
+                {
+                    "sensor": {
                         "name": "Test",
                         "command": 'echo "{{ states.sensor.input_sensor.state }}" "3 4"',
                     }
-                ]
-            }
+                }
+            ]
         },
     )
     await hass.async_block_till_done()
@@ -175,14 +175,14 @@ async def test_template_render_with_quote(hass: HomeAssistant) -> None:
     "get_config",
     [
         {
-            "command_line": {
-                "sensor": [
-                    {
+            "command_line": [
+                {
+                    "sensor": {
                         "name": "Test",
                         "command": "echo {{ this template doesn't parse",
                     }
-                ]
-            }
+                }
+            ]
         }
     ],
 )
@@ -204,14 +204,14 @@ async def test_bad_template_render(
     "get_config",
     [
         {
-            "command_line": {
-                "sensor": [
-                    {
+            "command_line": [
+                {
+                    "sensor": {
                         "name": "Test",
                         "command": "asdfasdf",
                     }
-                ]
-            }
+                }
+            ]
         }
     ],
 )
@@ -233,14 +233,14 @@ async def test_bad_command(hass: HomeAssistant, get_config: dict[str, Any]) -> N
     "get_config",
     [
         {
-            "command_line": {
-                "sensor": [
-                    {
+            "command_line": [
+                {
+                    "sensor": {
                         "name": "Test",
                         "command": "exit 33",
                     }
-                ]
-            }
+                }
+            ]
         }
     ],
 )
@@ -262,9 +262,9 @@ async def test_return_code(
     "get_config",
     [
         {
-            "command_line": {
-                "sensor": [
-                    {
+            "command_line": [
+                {
+                    "sensor": {
                         "name": "Test",
                         "command": (
                             'echo { \\"key\\": \\"some_json_value\\", \\"another_key\\": '
@@ -272,8 +272,8 @@ async def test_return_code(
                         ),
                         "json_attributes": ["key", "another_key", "key_three"],
                     }
-                ]
-            }
+                }
+            ]
         }
     ],
 )
@@ -293,9 +293,9 @@ async def test_update_with_json_attrs(
     "get_config",
     [
         {
-            "command_line": {
-                "sensor": [
-                    {
+            "command_line": [
+                {
+                    "sensor": {
                         "name": "Test",
                         "command": (
                             'echo { \\"key\\": \\"some_json_value\\", \\"another_key\\": '
@@ -304,8 +304,8 @@ async def test_update_with_json_attrs(
                         "json_attributes": ["key", "another_key", "key_three"],
                         "value_template": '{{ value_json["key"] }}',
                     }
-                ]
-            }
+                }
+            ]
         }
     ],
 )
@@ -325,15 +325,15 @@ async def test_update_with_json_attrs_and_value_template(
     "get_config",
     [
         {
-            "command_line": {
-                "sensor": [
-                    {
+            "command_line": [
+                {
+                    "sensor": {
                         "name": "Test",
                         "command": "echo",
                         "json_attributes": ["key"],
                     }
-                ]
-            }
+                }
+            ]
         }
     ],
 )
@@ -358,15 +358,15 @@ async def test_update_with_json_attrs_no_data(
     "get_config",
     [
         {
-            "command_line": {
-                "sensor": [
-                    {
+            "command_line": [
+                {
+                    "sensor": {
                         "name": "Test",
                         "command": "echo [1, 2, 3]",
                         "json_attributes": ["key"],
                     }
-                ]
-            }
+                }
+            ]
         }
     ],
 )
@@ -391,15 +391,15 @@ async def test_update_with_json_attrs_not_dict(
     "get_config",
     [
         {
-            "command_line": {
-                "sensor": [
-                    {
+            "command_line": [
+                {
+                    "sensor": {
                         "name": "Test",
                         "command": "echo This is text rather than JSON data.",
                         "json_attributes": ["key"],
                     }
-                ]
-            }
+                }
+            ]
         }
     ],
 )
@@ -424,9 +424,9 @@ async def test_update_with_json_attrs_bad_json(
     "get_config",
     [
         {
-            "command_line": {
-                "sensor": [
-                    {
+            "command_line": [
+                {
+                    "sensor": {
                         "name": "Test",
                         "command": (
                             'echo { \\"key\\": \\"some_json_value\\", \\"another_key\\": '
@@ -439,8 +439,8 @@ async def test_update_with_json_attrs_bad_json(
                             "missing_key",
                         ],
                     }
-                ]
-            }
+                }
+            ]
         }
     ],
 )
@@ -461,9 +461,9 @@ async def test_update_with_missing_json_attrs(
     "get_config",
     [
         {
-            "command_line": {
-                "sensor": [
-                    {
+            "command_line": [
+                {
+                    "sensor": {
                         "name": "Test",
                         "command": (
                             'echo { \\"key\\": \\"some_json_value\\", \\"another_key\\": '
@@ -471,8 +471,8 @@ async def test_update_with_missing_json_attrs(
                         ),
                         "json_attributes": ["key", "another_key"],
                     }
-                ]
-            }
+                }
+            ]
         }
     ],
 )
@@ -492,25 +492,29 @@ async def test_update_with_unnecessary_json_attrs(
     "get_config",
     [
         {
-            "command_line": {
-                "sensor": [
-                    {
+            "command_line": [
+                {
+                    "sensor": {
                         "name": "Test",
                         "unique_id": "unique",
                         "command": "echo 0",
-                    },
-                    {
+                    }
+                },
+                {
+                    "sensor": {
                         "name": "Test",
                         "unique_id": "not-so-unique-anymore",
                         "command": "echo 1",
-                    },
-                    {
+                    }
+                },
+                {
+                    "sensor": {
                         "name": "Test",
                         "unique_id": "not-so-unique-anymore",
                         "command": "echo 2",
                     },
-                ]
-            }
+                },
+            ]
         }
     ],
 )

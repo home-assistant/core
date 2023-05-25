@@ -118,14 +118,14 @@ async def test_no_poll_when_cover_has_no_command_state(hass: HomeAssistant) -> N
     "get_config",
     [
         {
-            "command_line": {
-                "cover": [
-                    {
+            "command_line": [
+                {
+                    "cover": {
                         "command_state": "echo state",
                         "name": "Test",
                     },
-                ]
-            }
+                }
+            ]
         }
     ],
 )
@@ -156,9 +156,9 @@ async def test_state_value(hass: HomeAssistant) -> None:
             hass,
             DOMAIN,
             {
-                "command_line": {
-                    "cover": [
-                        {
+                "command_line": [
+                    {
+                        "cover": {
                             "command_state": f"cat {path}",
                             "command_open": f"echo 1 > {path}",
                             "command_close": f"echo 1 > {path}",
@@ -166,8 +166,8 @@ async def test_state_value(hass: HomeAssistant) -> None:
                             "value_template": "{{ value }}",
                             "name": "Test",
                         }
-                    ]
-                }
+                    }
+                ]
             },
         )
         await hass.async_block_till_done()
@@ -211,15 +211,15 @@ async def test_state_value(hass: HomeAssistant) -> None:
     "get_config",
     [
         {
-            "command_line": {
-                "cover": [
-                    {
+            "command_line": [
+                {
+                    "cover": {
                         "command_state": "echo open",
                         "value_template": "{{ value }}",
                         "name": "Test",
                     }
-                ]
-            }
+                }
+            ]
         }
     ],
 )
@@ -250,14 +250,14 @@ async def test_reload(hass: HomeAssistant, load_yaml_integration: None) -> None:
     "get_config",
     [
         {
-            "command_line": {
-                "cover": [
-                    {
+            "command_line": [
+                {
+                    "cover": {
                         "command_open": "exit 1",
                         "name": "Test",
                     }
-                ]
-            }
+                }
+            ]
         }
     ],
 )
@@ -277,31 +277,35 @@ async def test_move_cover_failure(
     "get_config",
     [
         {
-            "command_line": {
-                "cover": [
-                    {
+            "command_line": [
+                {
+                    "cover": {
                         "command_open": "echo open",
                         "command_close": "echo close",
                         "command_stop": "echo stop",
                         "unique_id": "unique",
                         "name": "Test",
-                    },
-                    {
+                    }
+                },
+                {
+                    "cover": {
                         "command_open": "echo open",
                         "command_close": "echo close",
                         "command_stop": "echo stop",
                         "unique_id": "not-so-unique-anymore",
                         "name": "Test2",
-                    },
-                    {
+                    }
+                },
+                {
+                    "cover": {
                         "command_open": "echo open",
                         "command_close": "echo close",
                         "command_stop": "echo stop",
                         "unique_id": "not-so-unique-anymore",
                         "name": "Test3",
-                    },
-                ]
-            }
+                    }
+                },
+            ]
         }
     ],
 )

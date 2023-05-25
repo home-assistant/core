@@ -122,26 +122,18 @@ SWITCH_SCHEMA = vol.Schema(
 )
 COMBINED_SCHEMA = vol.Schema(
     {
-        vol.Optional(BINARY_SENSOR_DOMAIN): vol.All(
-            cv.ensure_list, [BINARY_SENSOR_SCHEMA]
-        ),
-        vol.Optional(COVER_DOMAIN): vol.All(cv.ensure_list, [COVER_SCHEMA]),
-        vol.Optional(NOTIFY_DOMAIN): vol.All(cv.ensure_list, [NOTIFY_SCHEMA]),
-        vol.Optional(SENSOR_DOMAIN): vol.All(cv.ensure_list, [SENSOR_SCHEMA]),
-        vol.Optional(SWITCH_DOMAIN): vol.All(cv.ensure_list, [SWITCH_SCHEMA]),
+        vol.Optional(BINARY_SENSOR_DOMAIN): BINARY_SENSOR_SCHEMA,
+        vol.Optional(COVER_DOMAIN): COVER_SCHEMA,
+        vol.Optional(NOTIFY_DOMAIN): NOTIFY_SCHEMA,
+        vol.Optional(SENSOR_DOMAIN): SENSOR_SCHEMA,
+        vol.Optional(SWITCH_DOMAIN): SWITCH_SCHEMA,
     }
 )
 CONFIG_SCHEMA = vol.Schema(
     {
         vol.Optional(DOMAIN): vol.All(
-            COMBINED_SCHEMA,
-            cv.has_at_least_one_key(
-                BINARY_SENSOR_DOMAIN,
-                COVER_DOMAIN,
-                NOTIFY_DOMAIN,
-                SENSOR_DOMAIN,
-                SWITCH_DOMAIN,
-            ),
+            cv.ensure_list,
+            [COMBINED_SCHEMA],
         )
     },
     extra=vol.ALLOW_EXTRA,
@@ -150,7 +142,7 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Command Line from yaml config."""
-    command_line_config: dict[str, list[dict[str, Any]]] = config.get(DOMAIN, {})
+    command_line_config: list[dict[str, dict[str, Any]]] = config.get(DOMAIN, {})
     if not command_line_config:
         return True
 
@@ -158,9 +150,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     load_coroutines: list[Coroutine[Any, Any, None]] = []
     platforms: list[Platform] = []
-    for platform, configs in command_line_config.items():
-        platforms.append(PLATFORM_MAPPING[platform])
-        for platform_config in configs:
+    for platform_config in command_line_config:
+        for platform, _config in platform_config.items():
+            platforms.append(PLATFORM_MAPPING[platform])
             _LOGGER.debug(
                 "Loading config %s for platform %s",
                 platform_config,
@@ -171,7 +163,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                     hass,
                     PLATFORM_MAPPING[platform],
                     DOMAIN,
-                    platform_config,
+                    _config,
                     config,
                 )
             )

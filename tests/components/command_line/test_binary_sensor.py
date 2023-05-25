@@ -45,17 +45,17 @@ async def test_setup_platform_yaml(hass: HomeAssistant) -> None:
     "get_config",
     [
         {
-            "command_line": {
-                "binary_sensor": [
-                    {
+            "command_line": [
+                {
+                    "binary_sensor": {
                         "name": "Test",
                         "command": "echo 1",
                         "payload_on": "1",
                         "payload_off": "0",
                         "command_timeout": 15,
                     }
-                ]
-            }
+                }
+            ]
         }
     ],
 )
@@ -74,17 +74,17 @@ async def test_setup_integration_yaml(
     "get_config",
     [
         {
-            "command_line": {
-                "binary_sensor": [
-                    {
+            "command_line": [
+                {
+                    "binary_sensor": {
                         "name": "Test",
                         "command": "echo 10",
                         "payload_on": "1.0",
                         "payload_off": "0",
                         "value_template": "{{ value | multiply(0.1) }}",
                     }
-                ]
-            }
+                }
+            ]
         }
     ],
 )
@@ -100,16 +100,16 @@ async def test_template(hass: HomeAssistant, load_yaml_integration: None) -> Non
     "get_config",
     [
         {
-            "command_line": {
-                "binary_sensor": [
-                    {
+            "command_line": [
+                {
+                    "binary_sensor": {
                         "name": "Test",
                         "command": "echo 0",
                         "payload_on": "1",
                         "payload_off": "0",
                     }
-                ]
-            }
+                }
+            ]
         }
     ],
 )
@@ -125,22 +125,26 @@ async def test_sensor_off(hass: HomeAssistant, load_yaml_integration: None) -> N
     "get_config",
     [
         {
-            "command_line": {
-                "binary_sensor": [
-                    {
+            "command_line": [
+                {
+                    "binary_sensor": {
                         "unique_id": "unique",
                         "command": "echo 0",
-                    },
-                    {
+                    }
+                },
+                {
+                    "binary_sensor": {
                         "unique_id": "not-so-unique-anymore",
                         "command": "echo 1",
-                    },
-                    {
+                    }
+                },
+                {
+                    "binary_sensor": {
                         "unique_id": "not-so-unique-anymore",
                         "command": "echo 2",
-                    },
-                ]
-            }
+                    }
+                },
+            ]
         }
     ],
 )
@@ -164,13 +168,13 @@ async def test_unique_id(
     "get_config",
     [
         {
-            "command_line": {
-                "binary_sensor": [
-                    {
+            "command_line": [
+                {
+                    "binary_sensor": {
                         "command": "exit 33",
                     }
-                ]
-            }
+                }
+            ]
         }
     ],
 )
