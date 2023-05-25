@@ -62,9 +62,14 @@ async def test_block_restored_number(
         entry,
         capabilities,
     )
-    mock_restore_cache_with_extra_data(
-        hass, ((State(entity_id, ""), {"native_value": "40"}),)
-    )
+    extra_data = {
+        "native_max_value": 100,
+        "native_min_value": 0,
+        "native_step": 1,
+        "native_unit_of_measurement": "%",
+        "native_value": "40",
+    }
+    mock_restore_cache_with_extra_data(hass, ((State(entity_id, ""), extra_data),))
 
     monkeypatch.setattr(mock_block_device, "initialized", False)
     await hass.config_entries.async_setup(entry.entry_id)
