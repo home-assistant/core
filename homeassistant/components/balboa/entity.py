@@ -4,7 +4,7 @@ from __future__ import annotations
 from pybalboa import EVENT_UPDATE, SpaClient
 
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
-from homeassistant.helpers.entity import DeviceClassName, DeviceInfo, Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity
 
 from .const import DOMAIN
 
@@ -12,9 +12,7 @@ from .const import DOMAIN
 class BalboaBaseEntity(Entity):
     """Balboa base entity."""
 
-    def __init__(
-        self, client: SpaClient, name: str | DeviceClassName | None = None
-    ) -> None:
+    def __init__(self, client: SpaClient, name: str | None = None) -> None:
         """Initialize the control."""
         mac = client.mac_address
         model = client.model
