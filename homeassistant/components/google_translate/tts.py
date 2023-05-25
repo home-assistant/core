@@ -59,13 +59,13 @@ class GoogleProvider(Provider):
         """Return a list of supported options."""
         return SUPPORT_OPTIONS
 
-    def get_tts_audio(self, message, language, options=None):
+    def get_tts_audio(self, message, language, options):
         """Load TTS from google."""
         tld = self._tld
         if language in MAP_LANG_TLD:
             tld = MAP_LANG_TLD[language].tld
             language = MAP_LANG_TLD[language].lang
-        if options is not None and "tld" in options:
+        if "tld" in options:
             tld = options["tld"]
         tts = gTTS(text=message, lang=language, tld=tld)
         mp3_data = BytesIO()

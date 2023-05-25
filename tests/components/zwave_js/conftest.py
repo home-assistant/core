@@ -946,7 +946,7 @@ def motorized_barrier_cover_fixture(client, gdc_zw062_state):
 
 
 @pytest.fixture(name="iblinds_v2")
-def iblinds_cover_fixture(client, iblinds_v2_state):
+def iblinds_v2_cover_fixture(client, iblinds_v2_state):
     """Mock an iBlinds v2.0 window cover node."""
     node = Node(client, copy.deepcopy(iblinds_v2_state))
     client.driver.controller.nodes[node.node_id] = node
