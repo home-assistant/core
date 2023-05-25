@@ -149,7 +149,7 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
         self._sensor_source_id = source_entity
         self._round_digits = round_digits
         self._state: float | int | Decimal = 0
-        # deque of tuples with (timestamp_start, timestamp_end, derivative, weight)
+        # deque of tuples with (timestamp_start, timestamp_end, derivative)
         self._state_que: deque[tuple[float, float, Decimal]] = deque()
 
         self._attr_name = name if name is not None else f"{source_entity} derivative"
