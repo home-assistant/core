@@ -229,13 +229,13 @@ class AirzoneClimate(AirzoneZoneEntity, ClimateEntity):
         """Update climate attributes."""
         self._attr_current_temperature = self.get_airzone_value(AZD_TEMP)
         self._attr_current_humidity = self.get_airzone_value(AZD_HUMIDITY)
-        self._attr_hvac_action = HVAC_ACTION_LIB_TO_HASS[
+        self._attr_hvac_action = HVAC_ACTION_LIB_TO_HASS.get(
             self.get_airzone_value(AZD_ACTION)
-        ]
+        )
         if self.get_airzone_value(AZD_ON):
-            self._attr_hvac_mode = HVAC_MODE_LIB_TO_HASS[
+            self._attr_hvac_mode = HVAC_MODE_LIB_TO_HASS.get(
                 self.get_airzone_value(AZD_MODE)
-            ]
+            )
         else:
             self._attr_hvac_mode = HVACMode.OFF
         self._attr_max_temp = self.get_airzone_value(AZD_TEMP_MAX)
