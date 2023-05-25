@@ -1,6 +1,4 @@
 """Tests for Microsoft Text-to-Speech."""
-import os
-import shutil
 from unittest.mock import patch
 
 from pycsspeechtts import pycsspeechtts
@@ -32,12 +30,9 @@ async def get_media_source_url(hass: HomeAssistant, media_content_id):
 
 
 @pytest.fixture(autouse=True)
-def cleanup_cache(hass: HomeAssistant):
-    """Clean up TTS cache."""
-    yield
-    default_tts = hass.config.path(tts.DEFAULT_CACHE_DIR)
-    if os.path.isdir(default_tts):
-        shutil.rmtree(default_tts)
+def mock_tts_cache_dir_autouse(mock_tts_cache_dir):
+    """Mock the TTS cache dir with empty dir."""
+    return mock_tts_cache_dir
 
 
 @pytest.fixture

@@ -276,6 +276,7 @@ async def async_setup_entry(
 
 
 @STRICT_MATCH(cluster_handler_names=CLUSTER_HANDLER_ANALOG_OUTPUT)
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
 class ZhaNumber(ZhaEntity, NumberEntity):
     """Representation of a ZHA Number entity."""
 
@@ -376,6 +377,7 @@ class ZhaNumber(ZhaEntity, NumberEntity):
             _LOGGER.debug("read value=%s", value)
 
 
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
 class ZHANumberConfigurationEntity(ZhaEntity, NumberEntity):
     """Representation of a ZHA number configuration entity."""
 
@@ -458,6 +460,7 @@ class ZHANumberConfigurationEntity(ZhaEntity, NumberEntity):
     cluster_handler_names="opple_cluster",
     models={"lumi.motion.ac02", "lumi.motion.agl04"},
 )
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
 class AqaraMotionDetectionInterval(
     ZHANumberConfigurationEntity, id_suffix="detection_interval"
 ):
@@ -470,6 +473,7 @@ class AqaraMotionDetectionInterval(
 
 
 @CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names=CLUSTER_HANDLER_LEVEL)
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
 class OnOffTransitionTimeConfigurationEntity(
     ZHANumberConfigurationEntity, id_suffix="on_off_transition_time"
 ):
@@ -482,6 +486,7 @@ class OnOffTransitionTimeConfigurationEntity(
 
 
 @CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names=CLUSTER_HANDLER_LEVEL)
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
 class OnLevelConfigurationEntity(ZHANumberConfigurationEntity, id_suffix="on_level"):
     """Representation of a ZHA on level configuration entity."""
 
@@ -492,6 +497,7 @@ class OnLevelConfigurationEntity(ZHANumberConfigurationEntity, id_suffix="on_lev
 
 
 @CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names=CLUSTER_HANDLER_LEVEL)
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
 class OnTransitionTimeConfigurationEntity(
     ZHANumberConfigurationEntity, id_suffix="on_transition_time"
 ):
@@ -504,6 +510,7 @@ class OnTransitionTimeConfigurationEntity(
 
 
 @CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names=CLUSTER_HANDLER_LEVEL)
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
 class OffTransitionTimeConfigurationEntity(
     ZHANumberConfigurationEntity, id_suffix="off_transition_time"
 ):
@@ -516,6 +523,7 @@ class OffTransitionTimeConfigurationEntity(
 
 
 @CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names=CLUSTER_HANDLER_LEVEL)
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
 class DefaultMoveRateConfigurationEntity(
     ZHANumberConfigurationEntity, id_suffix="default_move_rate"
 ):
@@ -528,6 +536,7 @@ class DefaultMoveRateConfigurationEntity(
 
 
 @CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names=CLUSTER_HANDLER_LEVEL)
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
 class StartUpCurrentLevelConfigurationEntity(
     ZHANumberConfigurationEntity, id_suffix="start_up_current_level"
 ):
@@ -540,6 +549,7 @@ class StartUpCurrentLevelConfigurationEntity(
 
 
 @CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names=CLUSTER_HANDLER_COLOR)
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
 class StartUpColorTemperatureConfigurationEntity(
     ZHANumberConfigurationEntity, id_suffix="start_up_color_temperature"
 ):
@@ -570,6 +580,7 @@ class StartUpColorTemperatureConfigurationEntity(
         "_TZE200_htnnfasr",
     },
 )
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
 class TimerDurationMinutes(ZHANumberConfigurationEntity, id_suffix="timer_duration"):
     """Representation of a ZHA timer duration configuration entity."""
 
@@ -583,6 +594,7 @@ class TimerDurationMinutes(ZHANumberConfigurationEntity, id_suffix="timer_durati
 
 
 @CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names="ikea_airpurifier")
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
 class FilterLifeTime(ZHANumberConfigurationEntity, id_suffix="filter_life_time"):
     """Representation of a ZHA filter lifetime configuration entity."""
 
@@ -600,6 +612,7 @@ class FilterLifeTime(ZHANumberConfigurationEntity, id_suffix="filter_life_time")
     manufacturers={"TexasInstruments"},
     models={"ti.router"},
 )
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
 class TiRouterTransmitPower(ZHANumberConfigurationEntity, id_suffix="transmit_power"):
     """Representation of a ZHA TI transmit power configuration entity."""
 
@@ -610,6 +623,7 @@ class TiRouterTransmitPower(ZHANumberConfigurationEntity, id_suffix="transmit_po
 
 
 @CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names=CLUSTER_HANDLER_INOVELLI)
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
 class InovelliRemoteDimmingUpSpeed(
     ZHANumberConfigurationEntity, id_suffix="dimming_speed_up_remote"
 ):
@@ -624,6 +638,7 @@ class InovelliRemoteDimmingUpSpeed(
 
 
 @CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names=CLUSTER_HANDLER_INOVELLI)
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
 class InovelliButtonDelay(ZHANumberConfigurationEntity, id_suffix="button_delay"):
     """Inovelli button delay configuration entity."""
 
@@ -636,6 +651,7 @@ class InovelliButtonDelay(ZHANumberConfigurationEntity, id_suffix="button_delay"
 
 
 @CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names=CLUSTER_HANDLER_INOVELLI)
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
 class InovelliLocalDimmingUpSpeed(
     ZHANumberConfigurationEntity, id_suffix="dimming_speed_up_local"
 ):
@@ -650,6 +666,7 @@ class InovelliLocalDimmingUpSpeed(
 
 
 @CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names=CLUSTER_HANDLER_INOVELLI)
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
 class InovelliLocalRampRateOffToOn(
     ZHANumberConfigurationEntity, id_suffix="ramp_rate_off_to_on_local"
 ):
@@ -664,6 +681,7 @@ class InovelliLocalRampRateOffToOn(
 
 
 @CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names=CLUSTER_HANDLER_INOVELLI)
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
 class InovelliRemoteDimmingSpeedOffToOn(
     ZHANumberConfigurationEntity, id_suffix="ramp_rate_off_to_on_remote"
 ):
@@ -678,6 +696,7 @@ class InovelliRemoteDimmingSpeedOffToOn(
 
 
 @CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names=CLUSTER_HANDLER_INOVELLI)
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
 class InovelliRemoteDimmingDownSpeed(
     ZHANumberConfigurationEntity, id_suffix="dimming_speed_down_remote"
 ):
@@ -692,6 +711,7 @@ class InovelliRemoteDimmingDownSpeed(
 
 
 @CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names=CLUSTER_HANDLER_INOVELLI)
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
 class InovelliLocalDimmingDownSpeed(
     ZHANumberConfigurationEntity, id_suffix="dimming_speed_down_local"
 ):
@@ -706,6 +726,7 @@ class InovelliLocalDimmingDownSpeed(
 
 
 @CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names=CLUSTER_HANDLER_INOVELLI)
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
 class InovelliLocalRampRateOnToOff(
     ZHANumberConfigurationEntity, id_suffix="ramp_rate_on_to_off_local"
 ):
@@ -720,6 +741,7 @@ class InovelliLocalRampRateOnToOff(
 
 
 @CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names=CLUSTER_HANDLER_INOVELLI)
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
 class InovelliRemoteDimmingSpeedOnToOff(
     ZHANumberConfigurationEntity, id_suffix="ramp_rate_on_to_off_remote"
 ):
@@ -734,6 +756,7 @@ class InovelliRemoteDimmingSpeedOnToOff(
 
 
 @CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names=CLUSTER_HANDLER_INOVELLI)
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
 class InovelliMinimumLoadDimmingLevel(
     ZHANumberConfigurationEntity, id_suffix="minimum_level"
 ):
@@ -748,6 +771,7 @@ class InovelliMinimumLoadDimmingLevel(
 
 
 @CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names=CLUSTER_HANDLER_INOVELLI)
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
 class InovelliMaximumLoadDimmingLevel(
     ZHANumberConfigurationEntity, id_suffix="maximum_level"
 ):
@@ -762,6 +786,7 @@ class InovelliMaximumLoadDimmingLevel(
 
 
 @CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names=CLUSTER_HANDLER_INOVELLI)
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
 class InovelliAutoShutoffTimer(
     ZHANumberConfigurationEntity, id_suffix="auto_off_timer"
 ):
@@ -776,6 +801,7 @@ class InovelliAutoShutoffTimer(
 
 
 @CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names=CLUSTER_HANDLER_INOVELLI)
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
 class InovelliLoadLevelIndicatorTimeout(
     ZHANumberConfigurationEntity, id_suffix="load_level_indicator_timeout"
 ):
@@ -790,6 +816,7 @@ class InovelliLoadLevelIndicatorTimeout(
 
 
 @CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names=CLUSTER_HANDLER_INOVELLI)
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
 class InovelliDefaultAllLEDOnColor(
     ZHANumberConfigurationEntity, id_suffix="led_color_when_on"
 ):
@@ -804,6 +831,7 @@ class InovelliDefaultAllLEDOnColor(
 
 
 @CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names=CLUSTER_HANDLER_INOVELLI)
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
 class InovelliDefaultAllLEDOffColor(
     ZHANumberConfigurationEntity, id_suffix="led_color_when_off"
 ):
@@ -818,6 +846,7 @@ class InovelliDefaultAllLEDOffColor(
 
 
 @CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names=CLUSTER_HANDLER_INOVELLI)
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
 class InovelliDefaultAllLEDOnIntensity(
     ZHANumberConfigurationEntity, id_suffix="led_intensity_when_on"
 ):
@@ -832,6 +861,7 @@ class InovelliDefaultAllLEDOnIntensity(
 
 
 @CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names=CLUSTER_HANDLER_INOVELLI)
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
 class InovelliDefaultAllLEDOffIntensity(
     ZHANumberConfigurationEntity, id_suffix="led_intensity_when_off"
 ):
@@ -846,6 +876,7 @@ class InovelliDefaultAllLEDOffIntensity(
 
 
 @CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names=CLUSTER_HANDLER_INOVELLI)
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
 class InovelliDoubleTapUpLevel(
     ZHANumberConfigurationEntity, id_suffix="double_tap_up_level"
 ):
@@ -860,6 +891,7 @@ class InovelliDoubleTapUpLevel(
 
 
 @CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names=CLUSTER_HANDLER_INOVELLI)
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
 class InovelliDoubleTapDownLevel(
     ZHANumberConfigurationEntity, id_suffix="double_tap_down_level"
 ):
@@ -876,6 +908,7 @@ class InovelliDoubleTapDownLevel(
 @CONFIG_DIAGNOSTIC_MATCH(
     cluster_handler_names="opple_cluster", models={"aqara.feeder.acn001"}
 )
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
 class AqaraPetFeederServingSize(ZHANumberConfigurationEntity, id_suffix="serving_size"):
     """Aqara pet feeder serving size configuration entity."""
 
@@ -891,6 +924,7 @@ class AqaraPetFeederServingSize(ZHANumberConfigurationEntity, id_suffix="serving
 @CONFIG_DIAGNOSTIC_MATCH(
     cluster_handler_names="opple_cluster", models={"aqara.feeder.acn001"}
 )
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
 class AqaraPetFeederPortionWeight(
     ZHANumberConfigurationEntity, id_suffix="portion_weight"
 ):
@@ -909,6 +943,7 @@ class AqaraPetFeederPortionWeight(
 @CONFIG_DIAGNOSTIC_MATCH(
     cluster_handler_names="opple_cluster", models={"lumi.airrtc.agl001"}
 )
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
 class AqaraThermostatAwayTemp(
     ZHANumberConfigurationEntity, id_suffix="away_preset_temperature"
 ):
