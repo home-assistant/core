@@ -26,6 +26,7 @@ SECTIONS = (
     "core",
     "device_registry",
     "entity_registry",
+    "folder_registry",
     "script",
     "scene",
 )
