@@ -206,6 +206,7 @@ def async_get_text_to_speech_languages(hass: HomeAssistant) -> set[str]:
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up TTS."""
     websocket_api.async_register_command(hass, websocket_list_engines)
+    websocket_api.async_register_command(hass, websocket_get_engine)
     websocket_api.async_register_command(hass, websocket_list_engine_voices)
 
     # Legacy config options
@@ -363,7 +364,7 @@ class TextToSpeechEntity(RestoreEntity):
 
     @final
     async def internal_async_get_tts_audio(
-        self, message: str, language: str, options: dict[str, Any] | None = None
+        self, message: str, language: str, options: dict[str, Any]
     ) -> TtsAudioType:
         """Process an audio stream to TTS service.
 
@@ -376,13 +377,13 @@ class TextToSpeechEntity(RestoreEntity):
         )
 
     def get_tts_audio(
-        self, message: str, language: str, options: dict[str, Any] | None = None
+        self, message: str, language: str, options: dict[str, Any]
     ) -> TtsAudioType:
         """Load tts audio file from the engine."""
         raise NotImplementedError()
 
     async def async_get_tts_audio(
-        self, message: str, language: str, options: dict[str, Any] | None = None
+        self, message: str, language: str, options: dict[str, Any]
     ) -> TtsAudioType:
         """Load tts audio file from the engine.
 
@@ -477,9 +478,9 @@ class SpeechManager:
     def process_options(
         self,
         engine_instance: TextToSpeechEntity | Provider,
-        language: str | None = None,
-        options: dict | None = None,
-    ) -> tuple[str, dict | None]:
+        language: str | None,
+        options: dict | None,
+    ) -> tuple[str, dict[str, Any]]:
         """Validate and process options."""
         # Languages
         language = language or engine_instance.default_language
@@ -490,23 +491,18 @@ class SpeechManager:
         ):
             raise HomeAssistantError(f"Language '{language}' not supported")
 
-        # Options
-        if (default_options := engine_instance.default_options) and options:
-            merged_options = dict(default_options)
-            merged_options.update(options)
-            options = merged_options
-        if not options:
-            options = None if default_options is None else dict(default_options)
+        # Update default options with provided options
+        merged_options = dict(engine_instance.default_options or {})
+        merged_options.update(options or {})
 
-        if options is not None:
-            supported_options = engine_instance.supported_options or []
-            invalid_opts = [
-                opt_name for opt_name in options if opt_name not in supported_options
-            ]
-            if invalid_opts:
-                raise HomeAssistantError(f"Invalid options found: {invalid_opts}")
+        supported_options = engine_instance.supported_options or []
+        invalid_opts = [
+            opt_name for opt_name in merged_options if opt_name not in supported_options
+        ]
+        if invalid_opts:
+            raise HomeAssistantError(f"Invalid options found: {invalid_opts}")
 
-        return language, options
+        return language, merged_options
 
     async def async_get_url_path(
         self,
@@ -601,7 +597,7 @@ class SpeechManager:
         message: str,
         cache: bool,
         language: str,
-        options: dict | None,
+        options: dict[str, Any],
     ) -> str:
         """Receive TTS, store for view in cache and return filename.
 
@@ -966,6 +962,47 @@ def websocket_list_engines(
 
     connection.send_message(
         websocket_api.result_message(msg["id"], {"providers": providers})
+    )
+
+
+@websocket_api.websocket_command(
+    {
+        "type": "tts/engine/get",
+        vol.Required("engine_id"): str,
+    }
+)
+@callback
+def websocket_get_engine(
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
+) -> None:
+    """Get text to speech engine info."""
+    component: EntityComponent[TextToSpeechEntity] = hass.data[DOMAIN]
+    manager: SpeechManager = hass.data[DATA_TTS_MANAGER]
+
+    engine_id = msg["engine_id"]
+    provider_info: dict[str, Any]
+
+    provider: TextToSpeechEntity | Provider | None = next(
+        (entity for entity in component.entities if entity.entity_id == engine_id), None
+    )
+    if not provider:
+        provider = manager.providers.get(engine_id)
+
+    if not provider:
+        connection.send_error(
+            msg["id"],
+            websocket_api.const.ERR_NOT_FOUND,
+            f"tts engine {engine_id} not found",
+        )
+        return
+
+    provider_info = {
+        "engine_id": engine_id,
+        "supported_languages": provider.supported_languages,
+    }
+
+    connection.send_message(
+        websocket_api.result_message(msg["id"], {"provider": provider_info})
     )
 
 

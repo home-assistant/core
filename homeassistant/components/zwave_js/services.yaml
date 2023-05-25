@@ -84,7 +84,7 @@ bulk_set_partial_config_parameters:
     value:
       name: Value
       description: The new value(s) to set for this configuration parameter. Can either be a raw integer value to represent the bulk change or a mapping where the key is the bitmask (either in hex or integer form) and the value is the new value you want to set for that partial parameter.
-      example:
+      example: |
         "0x1": 1
         "0x10": 1
         "0x20": 1
@@ -287,7 +287,7 @@ invoke_cc_api:
     parameters:
       name: Parameters
       description: A list of parameters to pass to the API method. Refer to the Z-Wave JS Command Class API documentation (https://zwave-js.github.io/node-zwave-js/#/api/CCs/index) for parameters.
-      example: [1, 1]
+      example: "[1, 1]"
       required: true
       selector:
         object:
