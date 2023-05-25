@@ -43,6 +43,7 @@ SWITCH_TYPES: tuple[SwitchEntityDescription, ...] = (
 SWITCH_KEYS: list[str] = [desc.key for desc in SWITCH_TYPES]
 
 # Deprecated since Home Assistant 2023.7.0
+# Can be removed completely in 2023.10.0
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_MONITORED_CONDITIONS, default=SWITCH_KEYS): vol.All(

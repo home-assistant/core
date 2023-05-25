@@ -16,12 +16,14 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN, LOGGER, SCAN_INTERVAL
 from .coordinator import HydrawiseDataUpdateCoordinator
 
 # Deprecated since Home Assistant 2023.7.0
+# Can be removed completely in 2023.10.0
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(
@@ -39,6 +41,15 @@ PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.SENSOR, Platform.S
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Hunter Hydrawise component."""
+    async_create_issue(
+        hass,
+        DOMAIN,
+        "deprecated_yaml",
+        breaks_in_ha_version="2023.10.0",
+        is_fixable=False,
+        severity=IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+    )
     if not hass.config_entries.async_entries(DOMAIN) and DOMAIN not in hass.data:
         # No config entry exists and configuration.yaml config exists; trigger the import flow.
         hass.async_create_task(
