@@ -4,31 +4,17 @@ from __future__ import annotations
 from datetime import timedelta
 
 from pyobihai import PyObihai
-import voluptuous as vol
 
-from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA,
-    SensorDeviceClass,
-    SensorEntity,
-)
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .connectivity import ObihaiConnection
-from .const import DEFAULT_PASSWORD, DEFAULT_USERNAME, OBIHAI
+from .const import OBIHAI
 
 SCAN_INTERVAL = timedelta(seconds=5)
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_USERNAME, default=DEFAULT_USERNAME): cv.string,
-        vol.Optional(CONF_PASSWORD, default=DEFAULT_PASSWORD): cv.string,
-    }
-)
 
 
 async def async_setup_entry(
