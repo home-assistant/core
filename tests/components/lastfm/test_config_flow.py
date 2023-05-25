@@ -256,17 +256,18 @@ async def test_options_flow_without_friends(hass: HomeAssistant) -> None:
 
 
 async def _finish_form(hass: HomeAssistant, flow_id: str) -> None:
-    result = await hass.config_entries.flow.async_configure(
-        flow_id,
-        user_input=CONF_USER_DATA,
-    )
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
-    assert result["step_id"] == "friends"
-    assert not result["errors"]
+    with patch_fetch_user(), patch_setup_entry():
+        result = await hass.config_entries.flow.async_configure(
+            flow_id,
+            user_input=CONF_USER_DATA,
+        )
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert not result["errors"]
+        assert result["step_id"] == "friends"
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input=CONF_FRIENDS_DATA
-    )
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
-    assert result["title"] == DEFAULT_NAME
-    assert result["options"] == CONF_DATA
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=CONF_FRIENDS_DATA
+        )
+        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+        assert result["title"] == DEFAULT_NAME
+        assert result["options"] == CONF_DATA
