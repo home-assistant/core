@@ -1,5 +1,6 @@
 """The tests the History component websocket_api."""
 # pylint: disable=protected-access,invalid-name
+import asyncio
 from datetime import timedelta
 from unittest.mock import patch
 
@@ -1842,4 +1843,95 @@ async def test_history_stream_for_invalid_entity_ids(
         "id": 5,
         "type": "result",
         "success": False,
+    }
+
+
+async def test_history_stream_historical_only_with_start_time_state_past(
+    recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test history stream."""
+    await async_setup_component(
+        hass,
+        "history",
+        {},
+    )
+    await async_setup_component(hass, "sensor", {})
+
+    hass.states.async_set("sensor.one", "first", attributes={"any": "attr"})
+    hass.states.get("sensor.one").last_updated
+    await async_recorder_block_till_done(hass)
+
+    await asyncio.sleep(0.00002)
+    now = dt_util.utcnow()
+    await async_recorder_block_till_done(hass)
+    hass.states.async_set("sensor.one", "second", attributes={"any": "attr"})
+    sensor_one_last_updated_second = hass.states.get("sensor.one").last_updated
+
+    await asyncio.sleep(0.00001)
+    hass.states.async_set("sensor.one", "third", attributes={"any": "attr"})
+    sensor_one_last_updated_third = hass.states.get("sensor.one").last_updated
+
+    await async_recorder_block_till_done(hass)
+    hass.states.async_set("sensor.two", "off", attributes={"any": "attr"})
+    sensor_two_last_updated = hass.states.get("sensor.two").last_updated
+    await async_recorder_block_till_done(hass)
+    hass.states.async_set("sensor.three", "off", attributes={"any": "changed"})
+    sensor_three_last_updated = hass.states.get("sensor.three").last_updated
+    await async_recorder_block_till_done(hass)
+    hass.states.async_set("sensor.four", "off", attributes={"any": "again"})
+    sensor_four_last_updated = hass.states.get("sensor.four").last_updated
+    await async_recorder_block_till_done(hass)
+    hass.states.async_set("switch.excluded", "off", attributes={"any": "again"})
+    await async_wait_recording_done(hass)
+
+    end_time = dt_util.utcnow()
+
+    client = await hass_ws_client()
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "history/stream",
+            "entity_ids": ["sensor.one", "sensor.two", "sensor.three", "sensor.four"],
+            "start_time": now.isoformat(),
+            "end_time": end_time.isoformat(),
+            "include_start_time_state": True,
+            "significant_changes_only": False,
+            "no_attributes": True,
+            "minimal_response": True,
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["id"] == 1
+    assert response["type"] == "result"
+
+    response = await client.receive_json()
+
+    assert response == {
+        "event": {
+            "end_time": sensor_four_last_updated.timestamp(),
+            "start_time": now.timestamp(),
+            "states": {
+                "sensor.four": [
+                    {"a": {}, "lu": sensor_four_last_updated.timestamp(), "s": "off"}
+                ],
+                "sensor.one": [
+                    {
+                        "a": {},
+                        "lu": now.timestamp(),
+                        "s": "first",
+                    },  # should use start time state
+                    {"lu": sensor_one_last_updated_second.timestamp(), "s": "second"},
+                    {"lu": sensor_one_last_updated_third.timestamp(), "s": "third"},
+                ],
+                "sensor.three": [
+                    {"a": {}, "lu": sensor_three_last_updated.timestamp(), "s": "off"}
+                ],
+                "sensor.two": [
+                    {"a": {}, "lu": sensor_two_last_updated.timestamp(), "s": "off"}
+                ],
+            },
+        },
+        "id": 1,
+        "type": "event",
     }
