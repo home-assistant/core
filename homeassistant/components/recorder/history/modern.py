@@ -264,6 +264,7 @@ def get_significant_states_with_session(
         entity_id_to_metadata_id,
         minimal_response,
         compressed_state_format,
+        no_attributes=no_attributes,
     )
 
 
@@ -418,6 +419,7 @@ def state_changes_during_period(
                 entity_ids,
                 entity_id_to_metadata_id,
                 descending=descending,
+                no_attributes=no_attributes,
             ),
         )
 
@@ -513,6 +515,7 @@ def get_last_state_changes(
                 None,
                 entity_ids,
                 entity_id_to_metadata_id,
+                no_attributes=False,
             ),
         )
 
@@ -636,6 +639,7 @@ def _sorted_states_to_dict(
     minimal_response: bool = False,
     compressed_state_format: bool = False,
     descending: bool = False,
+    no_attributes: bool = False,
 ) -> MutableMapping[str, list[State | dict[str, Any]]]:
     """Convert SQL results into JSON friendly data structure.
 
@@ -650,7 +654,7 @@ def _sorted_states_to_dict(
     """
     field_map = _FIELD_MAP
     state_class: Callable[
-        [Row, dict[str, dict[str, Any]], float | None, str, str, float | None],
+        [Row, dict[str, dict[str, Any]], float | None, str, str, float | None, bool],
         State | dict[str, Any],
     ]
     if compressed_state_format:
@@ -701,6 +705,7 @@ def _sorted_states_to_dict(
                     entity_id,
                     db_state[state_idx],
                     db_state[last_updated_ts_idx],
+                    False,
                 )
                 for db_state in group
             )
@@ -723,6 +728,7 @@ def _sorted_states_to_dict(
                     entity_id,
                     prev_state,  # type: ignore[arg-type]
                     first_state[last_updated_ts_idx],
+                    no_attributes,
                 )
             )
 
