@@ -136,6 +136,16 @@ class Alert(collection.CollectionEntity, Entity):
 
     def __init__(self, config: ConfigType) -> None:
         """Initialize the alert."""
+        self._update_from_config(config)
+
+        self._next_delay = 0
+        self._firing = False
+        self._ack = False
+        self._cancel: Callable[[], None] | None = None
+        self._send_done_message = False
+        self._unsub: Callable[[], None] | None = None
+
+    def _update_from_config(self, config: ConfigType) -> None:
         self._attr_name = config[CONF_NAME]
         self._alert_state = config[CONF_STATE]
         self._skip_first = config[CONF_SKIP_FIRST]
@@ -148,12 +158,19 @@ class Alert(collection.CollectionEntity, Entity):
         self._can_ack = config[CONF_CAN_ACK]
         self._delay = [timedelta(minutes=val) for val in config[CONF_REPEAT]]
 
-        self._next_delay = 0
-        self._firing = False
-        self._ack = False
-        self._cancel: Callable[[], None] | None = None
-        self._send_done_message = False
-        self._unsub: Callable[[], None] | None = None
+    def _update_with_hass(self) -> None:
+        if self._message_template is not None:
+            self._message_template.hass = self.hass
+        if self._done_message_template is not None:
+            self._done_message_template.hass = self.hass
+        if self._title_template is not None:
+            self._title_template.hass = self.hass
+
+        if self._unsub:
+            self._unsub()
+        self._unsub = async_track_state_change_event(
+            self.hass, [self._watched_entity_id], self.watched_entity_change
+        )
 
     @classmethod
     def from_storage(cls, config: ConfigType) -> Self:
@@ -180,16 +197,7 @@ class Alert(collection.CollectionEntity, Entity):
 
     async def async_added_to_hass(self) -> None:
         """Add hass to templates and register for tracking state changes."""
-        if self._message_template is not None:
-            self._message_template.hass = self.hass
-        if self._done_message_template is not None:
-            self._done_message_template.hass = self.hass
-        if self._title_template is not None:
-            self._title_template.hass = self.hass
-
-        self._unsub = async_track_state_change_event(
-            self.hass, [self._watched_entity_id], self.watched_entity_change
-        )
+        self._update_with_hass()
 
     async def async_will_remove_from_hass(self) -> None:
         """Unsubscribe from tracking watched entity."""
@@ -319,29 +327,7 @@ class Alert(collection.CollectionEntity, Entity):
 
     async def async_update_config(self, config: ConfigType) -> None:
         """Handle when the config is updated."""
-        self._attr_name = config[CONF_NAME]
-        self._alert_state = config[CONF_STATE]
-        self._skip_first = config[CONF_SKIP_FIRST]
-        self._data = config.get(CONF_DATA)
-        self._watched_entity_id = config[CONF_ENTITY_ID]
-        self._message_template = config.get(CONF_ALERT_MESSAGE)
-        self._done_message_template = config.get(CONF_DONE_MESSAGE)
-        self._title_template = config.get(CONF_TITLE)
-        self._notifiers = config[CONF_NOTIFIERS]
-        self._can_ack = config[CONF_CAN_ACK]
-        self._delay = [timedelta(minutes=val) for val in config[CONF_REPEAT]]
-
-        if self._message_template is not None:
-            self._message_template.hass = self.hass
-        if self._done_message_template is not None:
-            self._done_message_template.hass = self.hass
-        if self._title_template is not None:
-            self._title_template.hass = self.hass
-
-        if self._unsub:
-            self._unsub()
-        self._unsub = async_track_state_change_event(
-            self.hass, [self._watched_entity_id], self.watched_entity_change
-        )
+        self._update_from_config(config)
+        self._update_with_hass()
 
         self.async_write_ha_state()
