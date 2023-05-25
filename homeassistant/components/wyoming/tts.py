@@ -94,7 +94,7 @@ class WyomingTtsProvider(tts.TextToSpeechEntity):
         """Return a list of supported voices for a language."""
         return self._voices.get(language)
 
-    async def async_get_tts_audio(self, message, language, options=None):
+    async def async_get_tts_audio(self, message, language, options):
         """Load TTS from UNIX socket."""
         try:
             async with AsyncTcpClient(self.service.host, self.service.port) as client:
@@ -129,7 +129,7 @@ class WyomingTtsProvider(tts.TextToSpeechEntity):
         except (OSError, WyomingError):
             return (None, None)
 
-        if (options is None) or (options[tts.ATTR_AUDIO_OUTPUT] == "wav"):
+        if options[tts.ATTR_AUDIO_OUTPUT] == "wav":
             return ("wav", data)
 
         # Raw output (convert to 16Khz, 16-bit mono)
