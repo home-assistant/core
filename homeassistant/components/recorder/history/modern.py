@@ -174,28 +174,29 @@ def _significant_states_stmt(
         stmt = stmt.outerjoin(
             StateAttributes, States.attributes_id == StateAttributes.attributes_id
         )
-    stmt = stmt.order_by(States.metadata_id, States.last_updated_ts)
     if not include_start_time_state or not run_start_ts:
+        stmt = stmt.order_by(States.metadata_id, States.last_updated_ts)
         return stmt
-    return _select_from_subquery(
-        union_all(
-            _select_from_subquery(
-                _get_start_time_state_stmt(
-                    run_start_ts,
-                    start_time_ts,
-                    single_metadata_id,
-                    metadata_ids,
-                    no_attributes,
-                    include_last_changed,
-                ).subquery(),
+    unioned_subquery = union_all(
+        _select_from_subquery(
+            _get_start_time_state_stmt(
+                run_start_ts,
+                start_time_ts,
+                single_metadata_id,
+                metadata_ids,
                 no_attributes,
                 include_last_changed,
-            ),
-            _select_from_subquery(stmt.subquery(), no_attributes, include_last_changed),
-        ).subquery(),
+            ).subquery(),
+            no_attributes,
+            include_last_changed,
+        ),
+        _select_from_subquery(stmt.subquery(), no_attributes, include_last_changed),
+    ).subquery()
+    return _select_from_subquery(
+        unioned_subquery,
         no_attributes,
         include_last_changed,
-    )
+    ).order_by(unioned_subquery.c.metadata_id, unioned_subquery.c.last_updated_ts)
 
 
 def get_significant_states_with_session(
@@ -758,30 +759,18 @@ def _sorted_states_to_dict(
                 for row in group
                 if (state := row[state_idx]) != prev_state
             )
-        else:
-            # Non-compressed state format returns an ISO formatted string
-            _utc_from_timestamp = dt_util.utc_from_timestamp
-            ent_results.extend(
-                {
-                    attr_state: (prev_state := state),  # noqa: F841
-                    attr_time: _utc_from_timestamp(
-                        row[last_updated_ts_idx]
-                    ).isoformat(),
-                }
-                for row in group
-                if (state := row[state_idx]) != prev_state
-            )
+            continue
 
-        # Some DB engines (seen on postgresql 14.8) will put the unioned
-        # start time state at the end of the list. We want it at the front.
-        if (
-            ent_results
-            and (last_result := ent_results[-1])
-            and type(last_result) is dict  # pylint: disable=unidiomatic-typecheck
-            and last_result[attr_time] is None
-        ):
-            last_result[attr_time] = start_time_ts
-            ent_results.insert(0, ent_results.pop())
+        # Non-compressed state format returns an ISO formatted string
+        _utc_from_timestamp = dt_util.utc_from_timestamp
+        ent_results.extend(
+            {
+                attr_state: (prev_state := state),  # noqa: F841
+                attr_time: _utc_from_timestamp(row[last_updated_ts_idx]).isoformat(),
+            }
+            for row in group
+            if (state := row[state_idx]) != prev_state
+        )
 
     if descending:
         for ent_results in result.values():
