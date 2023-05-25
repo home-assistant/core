@@ -521,7 +521,9 @@ async def async_setup_multi_components(
         )
         for domain in domains
     }
-    results = await asyncio.gather(*futures.values(), return_exceptions=True)
+    results = await asyncio.shield(
+        asyncio.gather(*futures.values(), return_exceptions=True)
+    )
     for idx, domain in enumerate(futures):
         result = results[idx]
         if isinstance(result, BaseException):
