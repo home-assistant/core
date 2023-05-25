@@ -758,18 +758,30 @@ def _sorted_states_to_dict(
                 for row in group
                 if (state := row[state_idx]) != prev_state
             )
-            continue
+        else:
+            # Non-compressed state format returns an ISO formatted string
+            _utc_from_timestamp = dt_util.utc_from_timestamp
+            ent_results.extend(
+                {
+                    attr_state: (prev_state := state),  # noqa: F841
+                    attr_time: _utc_from_timestamp(
+                        row[last_updated_ts_idx]
+                    ).isoformat(),
+                }
+                for row in group
+                if (state := row[state_idx]) != prev_state
+            )
 
-        # Non-compressed state format returns an ISO formatted string
-        _utc_from_timestamp = dt_util.utc_from_timestamp
-        ent_results.extend(
-            {
-                attr_state: (prev_state := state),  # noqa: F841
-                attr_time: _utc_from_timestamp(row[last_updated_ts_idx]).isoformat(),
-            }
-            for row in group
-            if (state := row[state_idx]) != prev_state
-        )
+        # Some DB engines (seen on postgresql 14.8) will put the unioned
+        # start time state at the end of the list. We want it at the front.
+        if (
+            ent_results
+            and (last_result := ent_results[-1])
+            and type(last_result) is dict  # pylint: disable=unidiomatic-typecheck
+            and last_result[attr_time] is None
+        ):
+            last_result[attr_time] = start_time_ts
+            ent_results.insert(0, ent_results.pop())
 
     if descending:
         for ent_results in result.values():
