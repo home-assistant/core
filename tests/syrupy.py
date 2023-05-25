@@ -28,6 +28,7 @@ from homeassistant.helpers import (
     area_registry as ar,
     device_registry as dr,
     entity_registry as er,
+    folder_registry as fr,
     issue_registry as ir,
 )
 
@@ -62,6 +63,10 @@ class EntityRegistryEntrySnapshot(dict):
 
 class FlowResultSnapshot(dict):
     """Tiny wrapper to represent a flow result in snapshots."""
+
+
+class FolderRegistryEntrySnapshot(dict):
+    """Tiny wrapper to represent an folder registry entry in snapshots."""
 
 
 class IssueRegistryItemSnapshot(dict):
@@ -101,6 +106,8 @@ class HomeAssistantSnapshotSerializer(AmberDataSerializer):
             serializable_data = cls._serializable_device_registry_entry(data)
         elif isinstance(data, er.RegistryEntry):
             serializable_data = cls._serializable_entity_registry_entry(data)
+        elif isinstance(data, fr.FolderEntry):
+            serializable_data = cls._serializable_issue_registry_entry(data)
         elif isinstance(data, ir.IssueEntry):
             serializable_data = cls._serializable_issue_registry_entry(data)
         elif isinstance(data, dict) and "flow_id" in data and "handler" in data:
@@ -181,6 +188,13 @@ class HomeAssistantSnapshotSerializer(AmberDataSerializer):
     def _serializable_flow_result(cls, data: FlowResult) -> SerializableData:
         """Prepare a Home Assistant flow result for serialization."""
         return FlowResultSnapshot(data | {"flow_id": ANY})
+
+    @classmethod
+    def _serializable_folder_registry_entry(
+        cls, data: fr.FolderEntry
+    ) -> SerializableData:
+        """Prepare a Home Assistant folder registry entry for serialization."""
+        return FolderRegistryEntrySnapshot(dataclasses.asdict(data))
 
     @classmethod
     def _serializable_issue_registry_entry(
