@@ -32,8 +32,8 @@ async def test_data(hass: HomeAssistant) -> None:
     assert entries
     assert len(entries) == 1
     assert entries[0].state == ConfigEntryState.LOADED
-    assert hass.states.get("cover.test_garage_1_gdo").state == STATE_OPEN
-    assert hass.states.get("cover.test_garage_2_gdo").state == STATE_CLOSED
+    assert hass.states.get("cover.test_garage_1").state == STATE_OPEN
+    assert hass.states.get("cover.test_garage_2").state == STATE_CLOSED
 
 
 async def test_open_cover(hass: HomeAssistant) -> None:
@@ -47,7 +47,7 @@ async def test_open_cover(hass: HomeAssistant) -> None:
         await hass.services.async_call(
             COVER_DOMAIN,
             SERVICE_OPEN_COVER,
-            {ATTR_ENTITY_ID: "cover.test_garage_1_gdo"},
+            {ATTR_ENTITY_ID: "cover.test_garage_1"},
             blocking=True,
         )
 
@@ -66,7 +66,7 @@ async def test_open_cover(hass: HomeAssistant) -> None:
         await hass.services.async_call(
             COVER_DOMAIN,
             SERVICE_OPEN_COVER,
-            {ATTR_ENTITY_ID: "cover.test_garage_2_gdo"},
+            {ATTR_ENTITY_ID: "cover.test_garage_2"},
             blocking=True,
         )
 
@@ -99,7 +99,7 @@ async def test_open_cover(hass: HomeAssistant) -> None:
         async_fire_time_changed(hass, dt.utcnow() + timedelta(seconds=5))
         await hass.async_block_till_done()
 
-    assert hass.states.get("cover.test_garage_2_gdo").state == STATE_OPENING
+    assert hass.states.get("cover.test_garage_2").state == STATE_OPENING
 
 
 async def test_close_cover(hass: HomeAssistant) -> None:
@@ -113,7 +113,7 @@ async def test_close_cover(hass: HomeAssistant) -> None:
         await hass.services.async_call(
             COVER_DOMAIN,
             SERVICE_CLOSE_COVER,
-            {ATTR_ENTITY_ID: "cover.test_garage_2_gdo"},
+            {ATTR_ENTITY_ID: "cover.test_garage_2"},
             blocking=True,
         )
 
@@ -132,7 +132,7 @@ async def test_close_cover(hass: HomeAssistant) -> None:
         await hass.services.async_call(
             COVER_DOMAIN,
             SERVICE_CLOSE_COVER,
-            {ATTR_ENTITY_ID: "cover.test_garage_1_gdo"},
+            {ATTR_ENTITY_ID: "cover.test_garage_1"},
             blocking=True,
         )
 
@@ -165,4 +165,4 @@ async def test_close_cover(hass: HomeAssistant) -> None:
         async_fire_time_changed(hass, dt.utcnow() + timedelta(seconds=5))
         await hass.async_block_till_done()
 
-    assert hass.states.get("cover.test_garage_1_gdo").state == STATE_CLOSING
+    assert hass.states.get("cover.test_garage_1").state == STATE_CLOSING

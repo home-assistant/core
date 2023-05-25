@@ -73,7 +73,6 @@ class LinearCoverEntity(CoordinatorEntity[LinearUpdateCoordinator], CoverEntity)
         self._subdevice = subdevice
         self._attr_device_class = CoverDeviceClass.GARAGE
         self._attr_unique_id = f"{device_id}-{subdevice}"
-        self._attr_name = subdevice
         self._config_entry = config_entry
 
     @property
@@ -87,7 +86,7 @@ class LinearCoverEntity(CoordinatorEntity[LinearUpdateCoordinator], CoverEntity)
         )
 
     @property
-    def is_closed(self) -> bool:  # sourcery skip: remove-unnecessary-cast
+    def is_closed(self) -> bool:
         """Return if cover is closed."""
         return bool(
             self.coordinator.data[self._device_id]["subdevices"][self._subdevice][
@@ -97,7 +96,7 @@ class LinearCoverEntity(CoordinatorEntity[LinearUpdateCoordinator], CoverEntity)
         )
 
     @property
-    def is_opened(self) -> bool:  # sourcery skip: remove-unnecessary-cast
+    def is_opened(self) -> bool:
         """Return if cover is open."""
         return bool(
             self.coordinator.data[self._device_id]["subdevices"][self._subdevice][
@@ -107,7 +106,7 @@ class LinearCoverEntity(CoordinatorEntity[LinearUpdateCoordinator], CoverEntity)
         )
 
     @property
-    def is_opening(self) -> bool:  # sourcery skip: remove-unnecessary-cast
+    def is_opening(self) -> bool:
         """Return if cover is opening."""
         return bool(
             self.coordinator.data[self._device_id]["subdevices"][self._subdevice].get(
@@ -117,7 +116,7 @@ class LinearCoverEntity(CoordinatorEntity[LinearUpdateCoordinator], CoverEntity)
         )
 
     @property
-    def is_closing(self) -> bool:  # sourcery skip: remove-unnecessary-cast
+    def is_closing(self) -> bool:
         """Return if cover is closing."""
         return bool(
             self.coordinator.data[self._device_id]["subdevices"][self._subdevice].get(

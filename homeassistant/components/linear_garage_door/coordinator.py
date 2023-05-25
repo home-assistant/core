@@ -42,7 +42,7 @@ class LinearUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             hass,
             _LOGGER,
             name="Linear Garage Door",
-            update_interval=timedelta(seconds=5),
+            update_interval=timedelta(seconds=60),
         )
 
     async def _async_update_data(self) -> dict[str, Any]:

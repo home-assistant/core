@@ -2,7 +2,7 @@
 
 from unittest.mock import patch
 
-from linear_garage_door.errors import InvalidDeviceIDError, InvalidLoginError
+from linear_garage_door.errors import InvalidLoginError
 
 from homeassistant import config_entries
 from homeassistant.components.linear_garage_door.const import DOMAIN
@@ -133,30 +133,6 @@ async def test_form_invalid_login(hass: HomeAssistant) -> None:
 
     assert result2["type"] == FlowResultType.FORM
     assert result2["errors"] == {"base": "invalid_auth"}
-
-
-async def test_form_invalid_device_id(hass: HomeAssistant) -> None:
-    """Test we handle invalid auth."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_USER, "show_advanced_options": True},
-    )
-
-    with patch(
-        "homeassistant.components.linear_garage_door.config_flow.Linear.login",
-        side_effect=InvalidDeviceIDError,
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                "email": "test-email",
-                "password": "test-password",
-                "device_id": "invalid-device-id",
-            },
-        )
-
-    assert result2["type"] == FlowResultType.FORM
-    assert result2["errors"] == {"base": "invalid_device_id"}
 
 
 async def test_form_exception(hass: HomeAssistant) -> None:

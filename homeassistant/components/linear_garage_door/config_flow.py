@@ -7,7 +7,7 @@ from typing import Any
 import uuid
 
 from linear_garage_door import Linear
-from linear_garage_door.errors import InvalidDeviceIDError, InvalidLoginError
+from linear_garage_door.errors import InvalidLoginError
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -37,7 +37,7 @@ async def validate_input(
 
     hub = Linear()
 
-    device_id = data.get("device_id", str(uuid.uuid4()))
+    device_id = str(uuid.uuid4())
 
     try:
         await hub.login(
@@ -48,8 +48,6 @@ async def validate_input(
         )
     except InvalidLoginError as err:
         raise InvalidAuth from err
-    except InvalidDeviceIDError as err:
-        raise InvalidDeviceID from err
 
     sites = await hub.get_sites()
 
@@ -81,9 +79,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         data_schema = STEP_USER_DATA_SCHEMA
 
-        if self.show_advanced_options:
-            data_schema["device_id"] = str
-
         data_schema = vol.Schema(data_schema)
 
         if user_input is None:
@@ -95,8 +90,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             info = await validate_input(self.hass, user_input)
         except InvalidAuth:
             errors["base"] = "invalid_auth"
-        except InvalidDeviceID:
-            errors["base"] = "invalid_device_id"
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
