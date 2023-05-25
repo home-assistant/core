@@ -8,6 +8,7 @@ from homeassistant.components.number import NumberEntity, NumberEntityDescriptio
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DATA_COORDINATOR, DOMAIN
@@ -67,12 +68,12 @@ class EzvizSensor(EzvizEntity, NumberEntity):
         self.entity_description = description
 
     @property
-    def native_value(self) -> float:
+    def native_value(self) -> float | None:
         """Return the state of the entity."""
         try:
             return float(self.data[self._sensor_name])
         except ValueError:
-            return 0.0
+            return None
 
     def set_native_value(self, value: float) -> None:
         """Set camera detection sensitivity."""
@@ -92,4 +93,6 @@ class EzvizSensor(EzvizEntity, NumberEntity):
                 )
 
         except (HTTPError, PyEzvizError) as err:
-            raise PyEzvizError("Cannot set detection sensitivity level") from err
+            raise HomeAssistantError(
+                f"Cannot set detection sensitivity level on {self.name}"
+            ) from err

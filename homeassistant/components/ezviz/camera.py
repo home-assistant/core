@@ -311,9 +311,9 @@ class EzvizCamera(EzvizEntity, Camera):
         ir.async_create_issue(
             self.hass,
             DOMAIN,
-            "manual_migration",
+            "service_depreciation_detection_sensibility",
             breaks_in_ha_version="2023.8.0",
             is_fixable=False,
             severity=ir.IssueSeverity.WARNING,
-            translation_key="manual_migration",
+            translation_key="service_depreciation_detection_sensibility",
         )
