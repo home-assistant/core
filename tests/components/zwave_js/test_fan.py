@@ -43,7 +43,35 @@ async def test_generic_fan(
     state = hass.states.get(entity_id)
 
     assert state
-    assert state.state == "off"
+    assert state.state == STATE_OFF
+
+    # Test turn on no speed
+    await hass.services.async_call(
+        "fan",
+        "turn_on",
+        {"entity_id": entity_id},
+        blocking=True,
+    )
+
+    assert len(client.async_send_command.call_args_list) == 1
+    args = client.async_send_command.call_args[0][0]
+    assert args["command"] == "node.set_value"
+    assert args["nodeId"] == 17
+    assert args["valueId"] == {
+        "commandClass": 38,
+        "endpoint": 0,
+        "property": "targetValue",
+    }
+    assert args["value"] == 255
+
+    client.async_send_command.reset_mock()
+
+    # Due to optimistic updates, the state should be on even though the Z-Wave state
+    # hasn't been updated yet
+    state = hass.states.get(entity_id)
+
+    assert state
+    assert state.state == STATE_ON
 
     # Test turn on setting speed
     await hass.services.async_call(
@@ -74,27 +102,6 @@ async def test_generic_fan(
             {"entity_id": entity_id, "percentage": "bad"},
             blocking=True,
         )
-
-    client.async_send_command.reset_mock()
-
-    # Test turn on no speed
-    await hass.services.async_call(
-        "fan",
-        "turn_on",
-        {"entity_id": entity_id},
-        blocking=True,
-    )
-
-    assert len(client.async_send_command.call_args_list) == 1
-    args = client.async_send_command.call_args[0][0]
-    assert args["command"] == "node.set_value"
-    assert args["nodeId"] == 17
-    assert args["valueId"] == {
-        "commandClass": 38,
-        "endpoint": 0,
-        "property": "targetValue",
-    }
-    assert args["value"] == 255
 
     client.async_send_command.reset_mock()
 
@@ -140,7 +147,7 @@ async def test_generic_fan(
     node.receive_event(event)
 
     state = hass.states.get(entity_id)
-    assert state.state == "on"
+    assert state.state == STATE_ON
     assert state.attributes[ATTR_PERCENTAGE] == 100
 
     client.async_send_command.reset_mock()
@@ -165,7 +172,7 @@ async def test_generic_fan(
     node.receive_event(event)
 
     state = hass.states.get(entity_id)
-    assert state.state == "off"
+    assert state.state == STATE_OFF
     assert state.attributes[ATTR_PERCENTAGE] == 0
 
     client.async_send_command.reset_mock()
