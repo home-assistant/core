@@ -1,8 +1,8 @@
 """Support for the Microsoft Cognitive Services text-to-speech service."""
-from http.client import HTTPException
 import logging
 
 from pycsspeechtts import pycsspeechtts
+from requests.exceptions import HTTPError
 import voluptuous as vol
 
 from homeassistant.components.tts import CONF_LANG, PLATFORM_SCHEMA, Provider
@@ -121,7 +121,7 @@ class MicrosoftProvider(Provider):
                 contour=self._contour,
                 text=message,
             )
-        except HTTPException as ex:
+        except HTTPError as ex:
             _LOGGER.error("Error occurred for Microsoft TTS: %s", ex)
             return (None, None)
         return ("mp3", data)
