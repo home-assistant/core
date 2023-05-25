@@ -1,8 +1,8 @@
 """Test the PECO Outage Counter config flow."""
 from unittest.mock import patch
 
-import pytest
 from peco import HttpError, IncompatibleMeterError, UnresponsiveMeterError
+import pytest
 from voluptuous.error import MultipleInvalid
 
 from homeassistant import config_entries
