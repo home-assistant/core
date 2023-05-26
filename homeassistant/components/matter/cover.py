@@ -59,9 +59,18 @@ class MatterCover(MatterEntity, CoverEntity):
     entity_description: CoverEntityDescription
 
     @property
-    def is_closed(self) -> bool:
-        """Return true if cover is closed, else False."""
-        return self.current_cover_position == 0
+    def is_closed(self) -> bool | None:
+        """Return true if cover is closed, if there is no position report, return None."""
+        if not self._entity_info.endpoint.has_attribute(
+            None, clusters.WindowCovering.Attributes.CurrentPositionLiftPercentage
+        ):
+            return None
+
+        return (
+            self.current_cover_position == 0
+            if self.current_cover_position is not None
+            else None
+        )
 
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover movement."""
