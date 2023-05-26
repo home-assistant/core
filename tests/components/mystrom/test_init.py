@@ -40,7 +40,7 @@ async def init_integration(hass, platform, device_type, bulb_type="strip"):
             entry_id=ENTRY_ID,
             unique_id="uuid",
             data={CONF_HOST: "1.1.1.1"},
-            title="myStrom",
+            title=DEVICE_NAME,
         )
         config_entry.add_to_hass(hass)
 

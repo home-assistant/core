@@ -11,6 +11,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 DEVICE_MAC = "6001940376EB"
+DEVICE_NAME = "myStrom Device"
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
@@ -36,7 +37,7 @@ async def test_form_combined(hass: HomeAssistant, mock_setup_entry: AsyncMock) -
         await hass.async_block_till_done()
 
         assert result2["type"] == FlowResultType.CREATE_ENTRY
-        assert result2["title"] == DEVICE_MAC
+        assert result2["title"] == DEVICE_NAME
         assert result2["data"] == {"host": "1.1.1.1"}
 
     # test for duplicates
@@ -87,7 +88,7 @@ async def test_form_duplicates(
         await hass.async_block_till_done()
 
         assert result2["type"] == FlowResultType.CREATE_ENTRY
-        assert result2["title"] == DEVICE_MAC
+        assert result2["title"] == DEVICE_NAME
         assert result2["data"] == {"host": "1.1.1.1"}
 
     assert len(mock_session.mock_calls) == 1
@@ -107,7 +108,7 @@ async def test_step_import(hass: HomeAssistant) -> None:
             DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=conf
         )
         assert result["type"] == FlowResultType.CREATE_ENTRY
-        assert result["title"] == DEVICE_MAC
+        assert result["title"] == DEVICE_NAME
         assert result["data"] == {
             CONF_HOST: "1.1.1.1",
         }

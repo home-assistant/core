@@ -54,7 +54,7 @@ async def async_setup_entry(
 
     if device_type == 102:
         device = hass.data[DOMAIN][entry.entry_id].device
-        async_add_entities([MyStromLight(device, info["mac"])])
+        async_add_entities([MyStromLight(device, entry.title, info["mac"])])
 
 
 async def async_setup_platform(
@@ -87,9 +87,10 @@ class MyStromLight(LightEntity):
     _attr_supported_color_modes = {ColorMode.HS}
     _attr_supported_features = LightEntityFeature.EFFECT | LightEntityFeature.FLASH
 
-    def __init__(self, bulb, mac):
+    def __init__(self, bulb, name, mac):
         """Initialize the light."""
         self._bulb = bulb
+        self._name = name
         self._state = None
         self._available = False
         self._brightness = 0
@@ -100,7 +101,7 @@ class MyStromLight(LightEntity):
     @property
     def name(self):
         """Return the display name of this light."""
-        return self._mac
+        return self._name
 
     @property
     def unique_id(self):
