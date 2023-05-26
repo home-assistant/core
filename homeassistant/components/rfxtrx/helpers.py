@@ -18,8 +18,8 @@ def async_get_device_object(hass: HomeAssistant, device_id: str) -> RFXtrxDevice
         raise ValueError(f"Device {device_id} not found")
 
     device_tuple = get_device_tuple_from_identifiers(registry_device.identifiers)
-    if device_tuple is None:
-        raise ValueError(f"Can't find tuple for {device_id}")
+    assert device_tuple
+
     return get_device(
         int(device_tuple[0], 16), int(device_tuple[1], 16), device_tuple[2]
     )
