@@ -29,10 +29,7 @@ from homeassistant.helpers import config_validation as cv, event, template
 from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import async_get_platforms
-from homeassistant.helpers.reload import (
-    async_integration_yaml_config,
-    async_reload_integration_platforms,
-)
+from homeassistant.helpers.reload import async_integration_yaml_config
 from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.typing import ConfigType
 
@@ -579,8 +576,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         # The entry is reloaded:
         # Trigger re-fetching the yaml config at entry setup
         mqtt_data.reload_entry = True
-    # Reload the legacy yaml platform to make entities unavailable
-    await async_reload_integration_platforms(hass, DOMAIN, RELOADABLE_PLATFORMS)
     # Cleanup entity registry hooks
     registry_hooks = mqtt_data.discovery_registry_hooks
     while registry_hooks:
