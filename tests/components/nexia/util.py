@@ -15,6 +15,7 @@ from tests.test_util.aiohttp import mock_aiohttp_client
 async def async_init_integration(
     hass: HomeAssistant,
     skip_setup: bool = False,
+    exception: Exception | None = None,
 ) -> MockConfigEntry:
     """Set up the nexia integration in Home Assistant."""
 
@@ -25,9 +26,18 @@ async def async_init_integration(
         "nexia.home.load_or_create_uuid", return_value=uuid.uuid4()
     ):
         nexia = NexiaHome(mock_session)
-        mock_session.post(
-            nexia.API_MOBILE_SESSION_URL, text=load_fixture(session_fixture)
-        )
+        if exception:
+
+            async def _raise_exception(*args, **kwargs):
+                raise exception
+
+            mock_session.post(
+                nexia.API_MOBILE_SESSION_URL, side_effect=_raise_exception
+            )
+        else:
+            mock_session.post(
+                nexia.API_MOBILE_SESSION_URL, text=load_fixture(session_fixture)
+            )
         mock_session.get(
             nexia.API_MOBILE_HOUSES_URL.format(house_id=123456),
             text=load_fixture(house_fixture),
