@@ -1,9 +1,7 @@
 """Config flow for myStrom integration."""
 from __future__ import annotations
 
-import ipaddress
 import logging
-import re
 from typing import Any
 
 import pymystrom
@@ -27,24 +25,11 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 )
 
 
-def host_valid(host):
-    """Return True if hostname or IP address is valid."""
-    try:
-        if ipaddress.ip_address(host).version == (4 or 6):
-            return True
-    except ValueError:
-        disallowed = re.compile(r"[^a-zA-Z\d\-]")
-        return all(x and not disallowed.search(x) for x in host.split("."))
-
-
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
     """Validate the user input allows us to connect.
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
-
-    if not host_valid(data[CONF_HOST]):
-        raise CannotConnect()
     try:
         info = await pymystrom.get_device_info(data[CONF_HOST])
     except MyStromConnectionError as error:

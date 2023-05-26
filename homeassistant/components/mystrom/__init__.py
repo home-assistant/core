@@ -1,6 +1,7 @@
 """The myStrom integration."""
 from __future__ import annotations
 
+from dataclasses import dataclass
 import logging
 
 import pymystrom
@@ -15,9 +16,17 @@ from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import DOMAIN
 
-PLATFORMS: list[Platform] = [Platform.SWITCH]
+PLATFORMS: list[Platform] = [Platform.SWITCH, Platform.LIGHT]
 
 _LOGGER = logging.getLogger(__name__)
+
+
+@dataclass
+class MyStromData:
+    """Data class for mystrom device data."""
+
+    device: MyStromSwitch | MyStromBulb
+    info: dict
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -46,6 +55,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     else:
         _LOGGER.error("Unsupported myStrom device type: %s", device_type)
         return False
+
+    try:
+        await device.get_state()
+    except MyStromConnectionError as err:
+        _LOGGER.error("No route to myStrom plug: %s", info["ip"])
+        raise ConfigEntryNotReady() from err
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = MyStromData(
         device=device,

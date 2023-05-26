@@ -4,7 +4,6 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from pymystrom.bulb import MyStromBulb
 from pymystrom.exceptions import MyStromConnectionError
 import voluptuous as vol
 
@@ -17,14 +16,13 @@ from homeassistant.components.light import (
     LightEntity,
     LightEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady, PlatformNotReady
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import ATTR_MANUFACTURER, DOMAIN
@@ -51,16 +49,11 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the myStrom entities."""
-    info = hass.data[DOMAIN][entry.entry_id]["info"]
+    info = hass.data[DOMAIN][entry.entry_id].info
     device_type = info["type"]
 
     if device_type == 102:
-        device = hass.data[DOMAIN][entry.entry_id]["device"]
-        try:
-            await device.get_state()
-        except MyStromConnectionError as err:
-            _LOGGER.error("No route to myStrom bulb: %s", info["ip"])
-            raise ConfigEntryNotReady() from err
+        device = hass.data[DOMAIN][entry.entry_id].device
         async_add_entities([MyStromLight(device, info["mac"])])
 
 
@@ -71,22 +64,20 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the myStrom light integration."""
-    host = config.get(CONF_HOST)
-    mac = config.get(CONF_MAC)
-
-    bulb = MyStromBulb(host, mac)
-    try:
-        await bulb.get_state()
-        if bulb.bulb_type not in ["rgblamp", "strip"]:
-            _LOGGER.error(
-                "Device %s (%s) is not a myStrom bulb nor myStrom LED Strip", host, mac
-            )
-            return
-    except MyStromConnectionError as err:
-        _LOGGER.warning("No route to myStrom bulb: %s", host)
-        raise PlatformNotReady() from err
-
-    async_add_entities([MyStromLight(bulb, mac)], True)
+    async_create_issue(
+        hass,
+        DOMAIN,
+        "deprecated_yaml",
+        breaks_in_ha_version="2023.12.0",
+        is_fixable=False,
+        severity=IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+    )
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=config
+        )
+    )
 
 
 class MyStromLight(LightEntity):
@@ -114,7 +105,7 @@ class MyStromLight(LightEntity):
     @property
     def unique_id(self):
         """Return a unique ID."""
-        return format_mac(self._mac)
+        return self._mac
 
     @property
     def brightness(self):
@@ -145,7 +136,7 @@ class MyStromLight(LightEntity):
     def device_info(self) -> DeviceInfo:
         """Return the device info for the light entity."""
         return DeviceInfo(
-            identifiers={(DOMAIN, format_mac(self._mac))},
+            identifiers={(DOMAIN, self._mac)},
             name=self.name,
             manufacturer=ATTR_MANUFACTURER,
             sw_version=self._bulb.firmware,

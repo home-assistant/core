@@ -5,18 +5,16 @@ import logging
 from typing import Any
 
 from pymystrom.exceptions import MyStromConnectionError
-from pymystrom.switch import MyStromSwitch as _MyStromSwitch
 import voluptuous as vol
 
 from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady, PlatformNotReady
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import ATTR_MANUFACTURER, DOMAIN
@@ -37,16 +35,11 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the myStrom entities."""
-    info = hass.data[DOMAIN][entry.entry_id]["info"]
+    info = hass.data[DOMAIN][entry.entry_id].info
     device_type = info["type"]
 
     if device_type in [101, 106, 107]:
-        device = hass.data[DOMAIN][entry.entry_id]["device"]
-        try:
-            await device.get_state()
-        except MyStromConnectionError as err:
-            _LOGGER.error("No route to myStrom plug: %s", info["ip"])
-            raise ConfigEntryNotReady() from err
+        device = hass.data[DOMAIN][entry.entry_id].device
         async_add_entities([MyStromSwitch(device)])
 
 
@@ -57,22 +50,26 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the myStrom switch/plug integration."""
-    host = config.get(CONF_HOST)
-
-    try:
-        plug = _MyStromSwitch(host)
-        await plug.get_state()
-    except MyStromConnectionError as err:
-        _LOGGER.error("No route to myStrom plug: %s", host)
-        raise PlatformNotReady() from err
-
-    async_add_entities([MyStromSwitch(plug)])
+    async_create_issue(
+        hass,
+        DOMAIN,
+        "deprecated_yaml",
+        breaks_in_ha_version="2023.12.0",
+        is_fixable=False,
+        severity=IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+    )
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=config
+        )
+    )
 
 
 class MyStromSwitch(SwitchEntity):
     """Representation of a myStrom switch/plug."""
 
-    def __init__(self, plug):
+    def __init__(self, plug) -> None:
         """Initialize the myStrom switch/plug."""
         self.plug = plug
         self._available = True
@@ -91,7 +88,7 @@ class MyStromSwitch(SwitchEntity):
     @property
     def unique_id(self):
         """Return a unique ID."""
-        return format_mac(self.plug.mac)
+        return self.plug.mac
 
     @property
     def available(self):
@@ -127,7 +124,7 @@ class MyStromSwitch(SwitchEntity):
     def device_info(self) -> DeviceInfo:
         """Return the device info for the light entity."""
         return DeviceInfo(
-            identifiers={(DOMAIN, format_mac(self.plug.mac))},
+            identifiers={(DOMAIN, self.plug.mac)},
             name=self.name,
             manufacturer=ATTR_MANUFACTURER,
             sw_version=self.plug.firmware,

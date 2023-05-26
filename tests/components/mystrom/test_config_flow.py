@@ -30,16 +30,6 @@ async def test_form_combined(hass: HomeAssistant, mock_setup_entry: AsyncMock) -
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "host": "1.1.1.$",
-            },
-        )
-
-        assert result2["type"] == FlowResultType.FORM
-        assert result2["errors"] == {"base": "cannot_connect"}
-
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
                 "host": "1.1.1.1",
             },
         )
