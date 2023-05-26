@@ -397,6 +397,7 @@ async def test_cover_position_aware_tilt(
             tilt_position / 100
         )
 
+
 async def test_cover_full_features(
     hass: HomeAssistant,
     matter_client: MagicMock,
@@ -447,6 +448,15 @@ async def test_cover_full_features(
     state = hass.states.get(entity_id)
     assert state
     assert state.state == STATE_CLOSED
+
+    set_node_attribute(window_covering, 1, 258, 14, 5000)
+    set_node_attribute(window_covering, 1, 258, 15, 5000)
+    set_node_attribute(window_covering, 1, 258, 10, 0b000000)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_OPEN
 
     set_node_attribute(window_covering, 1, 258, 14, 5000)
     set_node_attribute(window_covering, 1, 258, 15, None)
