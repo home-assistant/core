@@ -10,7 +10,7 @@ import voluptuous as vol
 
 from homeassistant.components import dhcp
 from homeassistant.config_entries import ConfigFlow
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 
@@ -135,28 +135,3 @@ class ObihaiFlowHandler(ConfigFlow, domain=DOMAIN):
             )
 
         return await self.async_step_user(user_input=user_input)
-
-    # DEPRECATED
-    async def async_step_import(self, config: dict[str, Any]) -> FlowResult:
-        """Handle a flow initialized by importing a config."""
-
-        try:
-            _ = await self.hass.async_add_executor_job(gethostbyname, config[CONF_HOST])
-        except gaierror:
-            return self.async_abort(reason="cannot_connect")
-
-        if pyobihai := await async_validate_creds(self.hass, config):
-            device_mac = await self.hass.async_add_executor_job(pyobihai.get_device_mac)
-            await self.async_set_unique_id(device_mac)
-            self._abort_if_unique_id_configured()
-
-            return self.async_create_entry(
-                title=config.get(CONF_NAME, config[CONF_HOST]),
-                data={
-                    CONF_HOST: config[CONF_HOST],
-                    CONF_PASSWORD: config[CONF_PASSWORD],
-                    CONF_USERNAME: config[CONF_USERNAME],
-                },
-            )
-
-        return self.async_abort(reason="invalid_auth")
