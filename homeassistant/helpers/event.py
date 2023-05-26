@@ -260,6 +260,24 @@ def async_track_state_change_event(
     return _async_track_state_change_event(hass, entity_ids, action)
 
 
+@callback
+def _async_dispatch_indexed_event(
+    hass: HomeAssistant,
+    event: Event,
+    indexed_key: str,
+    callbacks: dict[str, list[HassJob[[Event], Any]]],
+) -> None:
+    """Dispatch to listeners."""
+    if indexed_key not in callbacks:
+        return
+
+    for job in callbacks[indexed_key][:]:
+        try:
+            hass.async_run_hass_job(job, event)
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.exception("Error while dispatching event for %s", indexed_key)
+
+
 @bind_hass
 def _async_track_state_change_event(
     hass: HomeAssistant,
@@ -276,23 +294,14 @@ def _async_track_state_change_event(
         @callback
         def _async_state_change_filter(event: Event) -> bool:
             """Filter state changes by entity_id."""
-            return event.data.get("entity_id") in entity_callbacks
+            return event.data["entity_id"] in entity_callbacks
 
         @callback
         def _async_state_change_dispatcher(event: Event) -> None:
             """Dispatch state changes by entity_id."""
-            entity_id = event.data.get("entity_id")
-
-            if entity_id not in entity_callbacks:
-                return
-
-            for job in entity_callbacks[entity_id][:]:
-                try:
-                    hass.async_run_hass_job(job, event)
-                except Exception:  # pylint: disable=broad-except
-                    _LOGGER.exception(
-                        "Error while processing state change for %s", entity_id
-                    )
+            _async_dispatch_indexed_event(
+                hass, event, event.data["entity_id"], entity_callbacks
+            )
 
         hass.data[TRACK_STATE_CHANGE_LISTENER] = hass.bus.async_listen(
             EVENT_STATE_CHANGED,
@@ -378,18 +387,7 @@ def async_track_entity_registry_updated_event(
         def _async_entity_registry_updated_dispatcher(event: Event) -> None:
             """Dispatch entity registry updates by entity_id."""
             entity_id = event.data.get("old_entity_id", event.data["entity_id"])
-
-            if entity_id not in entity_callbacks:
-                return
-
-            for job in entity_callbacks[entity_id][:]:
-                try:
-                    hass.async_run_hass_job(job, event)
-                except Exception:  # pylint: disable=broad-except
-                    _LOGGER.exception(
-                        "Error while processing entity registry update for %s",
-                        entity_id,
-                    )
+            _async_dispatch_indexed_event(hass, event, entity_id, entity_callbacks)
 
         hass.data[TRACK_ENTITY_REGISTRY_UPDATED_LISTENER] = hass.bus.async_listen(
             EVENT_ENTITY_REGISTRY_UPDATED,
@@ -445,19 +443,9 @@ def async_track_device_registry_updated_event(
         @callback
         def _async_entity_registry_updated_dispatcher(event: Event) -> None:
             """Dispatch device registry updates by device_id."""
-            device_id = event.data["device_id"]
-
-            if device_id not in device_callbacks:
-                return
-
-            for job in device_callbacks[device_id][:]:
-                try:
-                    hass.async_run_hass_job(job, event)
-                except Exception:  # pylint: disable=broad-except
-                    _LOGGER.exception(
-                        "Error while processing device registry update for %s",
-                        device_id,
-                    )
+            _async_dispatch_indexed_event(
+                hass, event, event.data["device_id"], device_callbacks
+            )
 
         hass.data[TRACK_DEVICE_REGISTRY_UPDATED_LISTENER] = hass.bus.async_listen(
             EVENT_DEVICE_REGISTRY_UPDATED,
