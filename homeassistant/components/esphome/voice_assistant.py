@@ -10,7 +10,6 @@ from typing import cast
 
 from aioesphomeapi import VoiceAssistantEventType
 import async_timeout
-from awesomeversion import AwesomeVersion
 
 from homeassistant.components import stt, tts
 from homeassistant.components.assist_pipeline import (
@@ -31,8 +30,6 @@ _LOGGER = logging.getLogger(__name__)
 
 UDP_PORT = 0  # Set to 0 to let the OS pick a free random port
 UDP_MAX_PACKET_SIZE = 1024
-
-VAD_QUALITY_VERSION = AwesomeVersion("2023.6.0-dev")
 
 _VOICE_ASSISTANT_EVENT_TYPES: EsphomeEnumMapper[
     VoiceAssistantEventType, PipelineEventType
@@ -252,7 +249,7 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
                 "raw" if self.device_info.voice_assistant_version >= 2 else "mp3"
             )
 
-            if AwesomeVersion(self.device_info.esphome_version) >= VAD_QUALITY_VERSION:
+            if self.device_info.voice_assistant_version >= 3:
                 segmenter = VoiceCommandSegmenter()
                 chunk_buffer: deque[bytes] = deque(maxlen=100)
                 try:
