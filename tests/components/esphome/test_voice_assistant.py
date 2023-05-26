@@ -21,41 +21,43 @@ _TEST_MEDIA_ID = "12345"
 
 
 @pytest.fixture
-def voice_assistant_udp_server_v1(
+def voice_assistant_udp_server(
     hass: HomeAssistant,
+) -> VoiceAssistantUDPServer:
+    """Return the UDP server factory."""
+
+    def _voice_assistant_udp_server(entry):
+        entry_data = DomainData.get(hass).get_entry_data(entry)
+
+        server: VoiceAssistantUDPServer = None
+
+        def handle_finished():
+            nonlocal server
+            assert server is not None
+            server.close()
+
+        server = VoiceAssistantUDPServer(hass, entry_data, Mock(), handle_finished)
+        return server
+
+    return _voice_assistant_udp_server
+
+
+@pytest.fixture
+def voice_assistant_udp_server_v1(
+    voice_assistant_udp_server,
     mock_voice_assistant_v1_entry,
 ) -> VoiceAssistantUDPServer:
     """Return the UDP server."""
-    entry_data = DomainData.get(hass).get_entry_data(mock_voice_assistant_v1_entry)
-
-    server: VoiceAssistantUDPServer = None
-
-    def handle_finished():
-        nonlocal server
-        assert server is not None
-        server.close()
-
-    server = VoiceAssistantUDPServer(hass, entry_data, Mock(), handle_finished)
-    return server
+    return voice_assistant_udp_server(entry=mock_voice_assistant_v1_entry)
 
 
 @pytest.fixture
 def voice_assistant_udp_server_v2(
-    hass: HomeAssistant,
+    voice_assistant_udp_server,
     mock_voice_assistant_v2_entry,
 ) -> VoiceAssistantUDPServer:
     """Return the UDP server."""
-    entry_data = DomainData.get(hass).get_entry_data(mock_voice_assistant_v2_entry)
-
-    server: VoiceAssistantUDPServer = None
-
-    def handle_finished():
-        nonlocal server
-        assert server is not None
-        server.close()
-
-    server = VoiceAssistantUDPServer(hass, entry_data, Mock(), handle_finished)
-    return server
+    return voice_assistant_udp_server(entry=mock_voice_assistant_v2_entry)
 
 
 async def test_pipeline_events(
