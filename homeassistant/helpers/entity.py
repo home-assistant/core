@@ -265,6 +265,8 @@ class Entity(ABC):
     # Hold list for functions to call on remove.
     _on_remove: list[CALLBACK_TYPE] | None = None
 
+    _unsub_device_updates: CALLBACK_TYPE | None = None
+
     # Context
     _context: Context | None = None
     _context_set: datetime | None = None
@@ -318,17 +320,50 @@ class Entity(ABC):
             return self.entity_description.has_entity_name
         return False
 
+    def _uses_device_name(self) -> bool:
+        """Return if this entity does not have its own name."""
+
+        if not self.has_entity_name:
+            return False
+        if hasattr(self, "_attr_name"):
+            if not self._attr_name:
+                return True
+            return False
+
+        if name_translation_key := self._name_translation_key():
+            assert self.platform
+            if name_translation_key in self.platform.entity_translations:
+                return False
+
+        if hasattr(self, "entity_description"):
+            if not self.entity_description.name:
+                return True
+            return False
+
+        if not self.name:
+            return True
+
+        return False
+
+    def _name_translation_key(self) -> str | None:
+        """Return translation key for entity name."""
+        if self.translation_key is None:
+            return None
+        assert self.platform
+        return (
+            f"component.{self.platform.platform_name}.entity.{self.platform.domain}"
+            f".{self.translation_key}.name"
+        )
+
     @property
     def name(self) -> str | None:
         """Return the name of the entity."""
         if hasattr(self, "_attr_name"):
             return self._attr_name
-        if self.translation_key is not None and self.has_entity_name:
+        if self.has_entity_name and (
+            name_translation_key := self._name_translation_key()
+        ):
             assert self.platform
-            name_translation_key = (
-                f"component.{self.platform.platform_name}.entity.{self.platform.domain}"
-                f".{self.translation_key}.name"
-            )
             if name_translation_key in self.platform.entity_translations:
                 name: str = self.platform.entity_translations[name_translation_key]
                 return name
@@ -926,6 +961,7 @@ class Entity(ABC):
                     self.hass, self.entity_id, self._async_registry_updated
                 )
             )
+            self._async_subscribe_device_updates()
 
     async def async_internal_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from hass.
@@ -945,6 +981,9 @@ class Entity(ABC):
 
         if data["action"] != "update":
             return
+
+        if "device_id" in data["changes"]:
+            self._async_subscribe_device_updates()
 
         ent_reg = er.async_get(self.hass)
         old = self.registry_entry
@@ -966,6 +1005,42 @@ class Entity(ABC):
         assert self.platform is not None
         self.entity_id = self.registry_entry.entity_id
         await self.platform.async_add_entities([self])
+
+    @callback
+    def _async_subscribe_device_updates(self) -> None:
+        """Subscribe to device registry updates."""
+        assert self.registry_entry
+
+        if self._unsub_device_updates:
+            self._unsub_device_updates()
+            assert self._on_remove is not None
+            self._on_remove.remove(self._unsub_device_updates)
+            self._unsub_device_updates = None
+
+        if (device_id := self.registry_entry.device_id) is None:
+            return
+
+        if not self._uses_device_name():
+            return
+
+        @callback
+        def async_device_registry_updated(event: Event) -> None:
+            """Handle device registry update."""
+            data = event.data
+
+            if data["device_id"] != device_id or data["action"] != "update":
+                return
+
+            if "name" not in data["changes"] and "name_by_user" not in data["changes"]:
+                return
+
+            self.async_write_ha_state()
+
+        self._unsub_device_updates = self.hass.bus.async_listen(
+            dr.EVENT_DEVICE_REGISTRY_UPDATED,
+            async_device_registry_updated,
+        )
+        self.async_on_remove(self._unsub_device_updates)
 
     def __repr__(self) -> str:
         """Return the representation."""
