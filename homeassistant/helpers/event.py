@@ -1303,7 +1303,9 @@ def async_track_point_in_time(
 
 
 track_point_in_time = threaded_listener_factory(async_track_point_in_time)
-_CLOCK_RESOLUTION = time.get_clock_info("monotonic").resolution
+_CLOCK_RESOLUTION = max(
+    time.get_clock_info("monotonic").resolution, time.get_clock_info("time").resolution
+)
 
 
 @callback
