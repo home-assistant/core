@@ -55,7 +55,6 @@ class MyStromSwitch(SwitchEntity):
         """Initialize the myStrom switch/plug."""
         self.plug = plug
         self._attr_name = name
-        self._attr_available = True
         self._attr_unique_id = self.plug.mac
 
     async def async_turn_on(self, **kwargs: Any) -> None:
