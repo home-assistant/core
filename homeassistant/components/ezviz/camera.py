@@ -297,6 +297,16 @@ class EzvizCamera(EzvizEntity, Camera):
                 "Cannot set alarm sound level for on movement detected"
             ) from err
 
+        ir.async_create_issue(
+            self.hass,
+            DOMAIN,
+            "service_depreciation_alarm_sound_level",
+            breaks_in_ha_version="2023.8.0",
+            is_fixable=False,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="service_depreciation_alarm_sound_level",
+        )
+
     def perform_set_alarm_detection_sensibility(
         self, level: int, type_value: int
     ) -> None:
