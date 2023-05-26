@@ -12,6 +12,7 @@ from aioairzone.const import (
     API_SET_POINT,
     API_SPEED,
     AZD_ACTION,
+    AZD_AVAILABLE,
     AZD_COOL_TEMP_SET,
     AZD_DOUBLE_SET_POINT,
     AZD_HEAT_TEMP_SET,
@@ -227,6 +228,7 @@ class AirzoneClimate(AirzoneZoneEntity, ClimateEntity):
     @callback
     def _async_update_attrs(self) -> None:
         """Update climate attributes."""
+        self._attr_available = self.get_airzone_value(AZD_AVAILABLE)
         self._attr_current_temperature = self.get_airzone_value(AZD_TEMP)
         self._attr_current_humidity = self.get_airzone_value(AZD_HUMIDITY)
         self._attr_hvac_action = HVAC_ACTION_LIB_TO_HASS[

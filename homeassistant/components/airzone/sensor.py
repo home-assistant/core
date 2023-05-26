@@ -4,6 +4,7 @@ from __future__ import annotations
 from typing import Any, Final
 
 from aioairzone.const import (
+    AZD_AVAILABLE,
     AZD_HUMIDITY,
     AZD_NAME,
     AZD_TEMP,
@@ -111,6 +112,7 @@ class AirzoneSensor(AirzoneEntity, SensorEntity):
     @callback
     def _async_update_attrs(self) -> None:
         """Update sensor attributes."""
+        self._attr_available = self.get_airzone_value(AZD_AVAILABLE)
         self._attr_native_value = self.get_airzone_value(self.entity_description.key)
 
 

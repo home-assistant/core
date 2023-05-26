@@ -9,6 +9,7 @@ from aioairzone.const import (
     API_COLD_ANGLE,
     API_HEAT_ANGLE,
     API_SLEEP,
+    AZD_AVAILABLE,
     AZD_COLD_ANGLE,
     AZD_HEAT_ANGLE,
     AZD_NAME,
@@ -129,6 +130,7 @@ class AirzoneBaseSelect(AirzoneEntity, SelectEntity):
     @callback
     def _async_update_attrs(self) -> None:
         """Update select attributes."""
+        self._attr_available = self.get_airzone_value(AZD_AVAILABLE)
         self._attr_current_option = self._get_current_option()
 
 
