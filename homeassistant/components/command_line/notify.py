@@ -7,7 +7,11 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.components.notify import PLATFORM_SCHEMA, BaseNotificationService
+from homeassistant.components.notify import (
+    DOMAIN as NOTIFY_DOMAIN,
+    PLATFORM_SCHEMA,
+    BaseNotificationService,
+)
 from homeassistant.const import CONF_COMMAND, CONF_NAME
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -43,7 +47,7 @@ def get_service(
             is_fixable=False,
             severity=IssueSeverity.WARNING,
             translation_key="deprecated_platform_yaml",
-            translation_placeholders={"platform": "Notify"},
+            translation_placeholders={"platform": NOTIFY_DOMAIN},
         )
     if discovery_info:
         notify_config = discovery_info

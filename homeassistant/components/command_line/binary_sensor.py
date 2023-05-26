@@ -7,6 +7,7 @@ import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA,
+    DOMAIN as BINARY_SENSOR_DOMAIN,
     PLATFORM_SCHEMA,
     BinarySensorDeviceClass,
     BinarySensorEntity,
@@ -68,7 +69,7 @@ async def async_setup_platform(
             is_fixable=False,
             severity=IssueSeverity.WARNING,
             translation_key="deprecated_platform_yaml",
-            translation_placeholders={"platform": "Binary Sensor"},
+            translation_placeholders={"platform": BINARY_SENSOR_DOMAIN},
         )
     if discovery_info:
         binary_sensor_config = discovery_info

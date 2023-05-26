@@ -11,6 +11,7 @@ import voluptuous as vol
 from homeassistant.components.sensor import (
     CONF_STATE_CLASS,
     DEVICE_CLASSES_SCHEMA,
+    DOMAIN as SENSOR_DOMAIN,
     PLATFORM_SCHEMA,
     STATE_CLASSES_SCHEMA,
     SensorEntity,
@@ -73,7 +74,7 @@ async def async_setup_platform(
             is_fixable=False,
             severity=IssueSeverity.WARNING,
             translation_key="deprecated_platform_yaml",
-            translation_placeholders={"platform": "Sensor"},
+            translation_placeholders={"platform": SENSOR_DOMAIN},
         )
     if discovery_info:
         sensor_config = discovery_info

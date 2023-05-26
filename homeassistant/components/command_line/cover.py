@@ -6,7 +6,11 @@ from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
 
-from homeassistant.components.cover import PLATFORM_SCHEMA, CoverEntity
+from homeassistant.components.cover import (
+    DOMAIN as COVER_DOMAIN,
+    PLATFORM_SCHEMA,
+    CoverEntity,
+)
 from homeassistant.const import (
     CONF_COMMAND_CLOSE,
     CONF_COMMAND_OPEN,
@@ -69,7 +73,7 @@ async def async_setup_platform(
             is_fixable=False,
             severity=IssueSeverity.WARNING,
             translation_key="deprecated_platform_yaml",
-            translation_placeholders={"platform": "Cover"},
+            translation_placeholders={"platform": COVER_DOMAIN},
         )
         entities = config.get(CONF_COVERS, {})
 

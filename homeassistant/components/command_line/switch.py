@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, Any
 import voluptuous as vol
 
 from homeassistant.components.switch import (
+    DOMAIN as SWITCH_DOMAIN,
     ENTITY_ID_FORMAT,
     PLATFORM_SCHEMA,
     SwitchEntity,
@@ -74,7 +75,7 @@ async def async_setup_platform(
             is_fixable=False,
             severity=IssueSeverity.WARNING,
             translation_key="deprecated_platform_yaml",
-            translation_placeholders={"platform": "Switch"},
+            translation_placeholders={"platform": SWITCH_DOMAIN},
         )
         entities = config.get(CONF_SWITCHES, {})
 
