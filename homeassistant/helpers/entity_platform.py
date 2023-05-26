@@ -125,8 +125,7 @@ class EntityPlatform:
         self.entity_namespace = entity_namespace
         self.config_entry: config_entries.ConfigEntry | None = None
         self.entities: dict[str, Entity] = {}
-        self.component_translations: dict[str, Any] = {}
-        self.platform_translations: dict[str, Any] = {}
+        self.entity_translations: dict[str, Any] = {}
         self._tasks: list[asyncio.Task[None]] = []
         # Stop tracking tasks after setup is completed
         self._setup_complete = False
@@ -280,15 +279,7 @@ class EntityPlatform:
         full_name = f"{self.domain}.{self.platform_name}"
 
         try:
-            self.component_translations = await translation.async_get_translations(
-                hass, hass.config.language, "entity_component", {self.domain}
-            )
-        except Exception as err:  # pylint: disable=broad-exception-caught
-            _LOGGER.debug(
-                "Could not load translations for %s", self.domain, exc_info=err
-            )
-        try:
-            self.platform_translations = await translation.async_get_translations(
+            self.entity_translations = await translation.async_get_translations(
                 hass, hass.config.language, "entity", {self.platform_name}
             )
         except Exception as err:  # pylint: disable=broad-exception-caught

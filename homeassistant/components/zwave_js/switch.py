@@ -41,6 +41,8 @@ async def async_setup_entry(
             entities.append(
                 ZWaveBarrierEventSignalingSwitch(config_entry, driver, info)
             )
+        elif info.platform_hint == "indicator":
+            entities.append(ZWaveIndicatorSwitch(config_entry, driver, info))
         else:
             entities.append(ZWaveSwitch(config_entry, driver, info))
 
@@ -83,6 +85,18 @@ class ZWaveSwitch(ZWaveBaseEntity, SwitchEntity):
         """Turn the switch off."""
         if self._target_value is not None:
             await self.info.node.async_set_value(self._target_value, False)
+
+
+class ZWaveIndicatorSwitch(ZWaveSwitch):
+    """Representation of a Z-Wave Indicator CC switch."""
+
+    def __init__(
+        self, config_entry: ConfigEntry, driver: Driver, info: ZwaveDiscoveryInfo
+    ) -> None:
+        """Initialize the switch."""
+        super().__init__(config_entry, driver, info)
+        self._target_value = self.info.primary_value
+        self._attr_name = self.generate_name(include_value_name=True)
 
 
 class ZWaveBarrierEventSignalingSwitch(ZWaveBaseEntity, SwitchEntity):
