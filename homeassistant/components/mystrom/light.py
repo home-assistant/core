@@ -134,7 +134,7 @@ class MyStromLight(LightEntity):
             self._attr_hs_color = int(color_h), int(color_s)
             self._attr_brightness = int(int(color_v) * 255 / 100)
 
-            self._attr_is_available = True
+            self._attr_available = True
         except MyStromConnectionError:
             _LOGGER.warning("No route to myStrom bulb")
             self._attr_is_available = False
