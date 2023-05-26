@@ -78,8 +78,6 @@ class MyStromLight(LightEntity):
     def __init__(self, bulb, name, mac):
         """Initialize the light."""
         self._bulb = bulb
-        self._color_h = 0
-        self._color_s = 0
         self._attr_name = name
         self._attr_available = True
         self._attr_unique_id = mac
