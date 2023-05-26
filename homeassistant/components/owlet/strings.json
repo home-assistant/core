@@ -20,10 +20,10 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_email": "Entered email address is incorrect",
       "invalid_password": "Entered password is incorrect",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
+      "unknown": "Unknown error occured"
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "Device already configured"
     }
   },
   "options": {
