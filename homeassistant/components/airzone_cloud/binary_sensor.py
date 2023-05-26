@@ -1,4 +1,4 @@
-"""Support for the Airzone sensors."""
+"""Support for the Airzone Cloud binary sensors."""
 from __future__ import annotations
 
 from dataclasses import dataclass
