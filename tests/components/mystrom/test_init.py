@@ -148,7 +148,7 @@ async def test_init_cannot_connect(hass: HomeAssistant) -> None:
 
     with patch("homeassistant.components.mystrom.PLATFORMS", [Platform.SWITCH]), patch(
         "pymystrom.get_device_info",
-        side_effect=AsyncMock(return_value={"type": 103, "mac": DEVICE_MAC}),
+        side_effect=AsyncMock(return_value={"type": 101, "mac": DEVICE_MAC}),
     ), patch(
         "pymystrom.switch.MyStromSwitch.get_state", side_effect=MyStromConnectionError()
     ), patch(
