@@ -48,7 +48,7 @@ async def test_no_covers_platform_yaml(
 
     issue_registry = ir.async_get(hass)
     issue = issue_registry.async_get_issue(DOMAIN, "deprecated_yaml_cover")
-    assert issue.translation_key == "deprecated_yaml_cover"
+    assert issue.translation_key == "deprecated_platform_yaml"
 
 
 async def test_state_value_platform_yaml(hass: HomeAssistant) -> None:

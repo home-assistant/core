@@ -43,7 +43,7 @@ async def test_setup_platform_yaml(hass: HomeAssistant) -> None:
 
     issue_registry = ir.async_get(hass)
     issue = issue_registry.async_get_issue(DOMAIN, "deprecated_yaml_sensor")
-    assert issue.translation_key == "deprecated_yaml_sensor"
+    assert issue.translation_key == "deprecated_platform_yaml"
 
 
 @pytest.mark.parametrize(
