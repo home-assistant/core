@@ -1,7 +1,7 @@
 """The Trello integration."""
 from typing import Any
 
-from trello import Member
+from trello import Member, TrelloClient
 
 from homeassistant.components.sensor import SensorStateClass
 from homeassistant.config_entries import ConfigEntry
@@ -50,7 +50,7 @@ class TrelloEntity(CoordinatorEntity[TrelloDataUpdateCoordinator], Entity):
 class TrelloAdapter:
     """Adapter for Trello lib's client."""
 
-    def __init__(self, client) -> None:
+    def __init__(self, client: TrelloClient) -> None:
         """Initialize with Trello lib client."""
         self.client = client
 
@@ -102,5 +102,5 @@ class TrelloAdapter:
         return user_selected_boards
 
 
-def _is_success(response) -> bool:
+def _is_success(response: dict) -> bool:
     return "200" in response

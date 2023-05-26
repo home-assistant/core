@@ -325,6 +325,7 @@ homeassistant.components.tradfri.*
 homeassistant.components.trafikverket_ferry.*
 homeassistant.components.trafikverket_train.*
 homeassistant.components.trafikverket_weatherstation.*
+homeassistant.components.trello.*
 homeassistant.components.tts.*
 homeassistant.components.twentemilieu.*
 homeassistant.components.unifi.*

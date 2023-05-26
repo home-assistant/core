@@ -16,7 +16,7 @@ class TrelloDataUpdateCoordinator(DataUpdateCoordinator[dict[str, int]]):
     config_entry: ConfigEntry
 
     def __init__(
-        self, hass: HomeAssistant, trello_client: TrelloClient, board_ids
+        self, hass: HomeAssistant, trello_client: TrelloClient, board_ids: list[str]
     ) -> None:
         """Initialize the coordinator."""
         super().__init__(

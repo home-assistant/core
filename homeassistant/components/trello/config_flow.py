@@ -1,6 +1,7 @@
 """Config flow for Trello integration."""
+from typing import Any
 
-from trello import TrelloClient, Unauthorized
+from trello import Member, TrelloClient, Unauthorized
 import voluptuous as vol
 from voluptuous.schema_builder import Schema
 
@@ -51,13 +52,15 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Create the options flow."""
         return OptionsFlowHandler(config_entry)
 
-    async def async_step_user(self, user_input=None) -> FlowResult:
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Prompt user for Trello API credentials.
 
         :param user_input: None initially or users api_key and api_token.
         :return:
         """
-        if _is_first_config_form(user_input):
+        if user_input is None:
             return await self._show_creds_form()
 
         self.api_key = user_input[CONF_API_KEY]
@@ -77,7 +80,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return await self._show_board_form()
 
-    async def async_step_finish(self, user_input=None) -> FlowResult:
+    async def async_step_finish(self, user_input: dict[str, Any]) -> FlowResult:
         """Select desired boards to have card counts of per list.
 
         :param user_input: User's selected boards
@@ -104,19 +107,19 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             CONF_USER_EMAIL: self.user_email,
         }
 
-    async def _show_creds_form(self):
+    async def _show_creds_form(self) -> FlowResult:
         return self.async_show_form(
             step_id="user", data_schema=CREDS_FORM_SCHEMA, last_step=False
         )
 
-    async def _show_board_form(self):
+    async def _show_board_form(self) -> FlowResult:
         return self.async_show_form(
             step_id="finish",
             data_schema=_get_board_select_schema(self.ids_boards),
             last_step=True,
         )
 
-    async def _show_error_creds_form(self, ex: Unauthorized):
+    async def _show_error_creds_form(self, ex: Unauthorized) -> FlowResult:
         LOGGER.error("Unauthorized: %s)", ex)
         return self.async_show_form(
             step_id="user",
@@ -133,7 +136,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self.trello_adapter.get_board_lists, self.ids_boards, board_ids
         )
 
-    async def _get_current_member(self):
+    async def _get_current_member(self) -> Member:
         return await self.hass.async_add_executor_job(self.trello_adapter.get_member)
 
 
@@ -149,14 +152,16 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
         self.ids_boards: dict[str, dict[str, str]] = {}
 
-    async def async_step_init(self, user_input=None) -> FlowResult:
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Select desired boards to have card counts of per list.
 
         :param user_input: None initially or the user's selected boards
         """
         configured_board_ids = self.config_options[CONF_OPTIONS_BOARDS].keys()
 
-        if _is_first_config_form(user_input):
+        if user_input is None:
             self.ids_boards = await self._fetch_all_boards()
 
             return await self._show_board_form(configured_board_ids)
@@ -172,7 +177,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         new_config_options = {CONF_OPTIONS_BOARDS: user_selected_boards}
         return self.async_create_entry(data=new_config_options)
 
-    async def _show_board_form(self, configured_board_ids):
+    async def _show_board_form(self, configured_board_ids: list[str]) -> FlowResult:
         return self.async_show_form(
             step_id="init",
             data_schema=_get_board_select_schema(
@@ -181,15 +186,15 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         )
 
     async def _remove_deselected_boards(
-        self, configured_board_ids, user_selected_board_ids
-    ):
+        self, configured_board_ids: list[str], user_selected_board_ids: list[str]
+    ) -> None:
         for configured_board_id in configured_board_ids:
             if configured_board_id not in user_selected_board_ids:
                 dev_reg = dr.async_get(self.hass)
-                device = dev_reg.async_get_device(
+                if device := dev_reg.async_get_device(
                     identifiers={(DOMAIN, configured_board_id)}
-                )
-                dev_reg.async_remove_device(device.id)
+                ):
+                    dev_reg.async_remove_device(device.id)
 
     async def _fetch_all_boards(self) -> dict[str, dict[str, str]]:
         return await self.hass.async_add_executor_job(self.trello_adapter.get_boards)
@@ -204,14 +209,12 @@ def _create_trello_adapter(api_key: str, api_token: str) -> TrelloAdapter:
     return TrelloAdapter(TrelloClient(api_key=api_key, api_secret=api_token))
 
 
-def _get_board_select_schema(boards: dict[str, dict], default=None) -> Schema:
+def _get_board_select_schema(
+    boards: dict[str, dict], default: list[str] | None = None
+) -> Schema:
     if default is None:
         default = []
     options = {key: value["name"] for key, value in boards.items()}
     return vol.Schema(
         {vol.Required(USER_INPUT_BOARD_IDS, default=default): cv.multi_select(options)}
     )
-
-
-def _is_first_config_form(user_input) -> bool:
-    return user_input is None

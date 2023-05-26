@@ -18,7 +18,12 @@ from .coordinator import TrelloDataUpdateCoordinator
 class TrelloSensor(TrelloEntity, SensorEntity):
     """Representation of a TrelloSensor."""
 
-    def __init__(self, board, _list, coordinator) -> None:
+    def __init__(
+        self,
+        board: dict,
+        _list: dict[str, str],
+        coordinator: TrelloDataUpdateCoordinator,
+    ) -> None:
         """Initialize sensor."""
         super().__init__(coordinator)
         self.board = board
