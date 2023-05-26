@@ -60,9 +60,7 @@ async def test_sensors_charging(hass: HomeAssistant) -> None:
     )
     assert hass.states.get("binary_sensor.owlet_baby_care_sock_sock_off").state == "off"
 
-    assert (
-        hass.states.get("binary_sensor.owlet_baby_care_sock_awake").state == "unknown"
-    )
+    assert hass.states.get("binary_sensor.owlet_baby_care_sock_awake").state == "on"
 
 
 async def test_sensors_awake(hass: HomeAssistant) -> None:

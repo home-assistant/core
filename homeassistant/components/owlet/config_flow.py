@@ -6,7 +6,12 @@ import logging
 from typing import Any
 
 from pyowletapi.api import OwletAPI
-from pyowletapi.exceptions import OwletDevicesError, OwletEmailError, OwletPasswordError
+from pyowletapi.exceptions import (
+    OwletCredentialsError,
+    OwletDevicesError,
+    OwletEmailError,
+    OwletPasswordError,
+)
 from pyowletapi.sock import Sock
 import voluptuous as vol
 
@@ -92,6 +97,8 @@ class OwletConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "invalid_email"
             except OwletPasswordError:
                 errors["base"] = "invalid_password"
+            except OwletCredentialsError:
+                errors["base"] = "invalid_credentials"
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"

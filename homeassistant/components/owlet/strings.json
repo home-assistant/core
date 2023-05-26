@@ -20,10 +20,12 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_email": "Entered email address is incorrect",
       "invalid_password": "Entered password is incorrect",
+      "invalid_credentials": "Entered credentials are incorrect",
       "unknown": "Unknown error occured"
     },
     "abort": {
-      "already_configured": "Device already configured"
+      "already_configured": "Device already configured",
+      "reauth_successful": "Reauthentication successful"
     }
   },
   "options": {

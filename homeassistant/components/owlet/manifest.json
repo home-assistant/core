@@ -7,5 +7,5 @@
   "documentation": "https://www.home-assistant.io/integrations/owlet",
   "homekit": {},
   "iot_class": "cloud_polling",
-  "requirements": ["pyowletapi==2023.5.28"]
+  "requirements": ["pyowletapi==2023.5.30"]
 }
