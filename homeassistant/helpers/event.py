@@ -507,6 +507,24 @@ def _async_dispatch_domain_event(
             )
 
 
+@callback
+def _async_domain_added_filter(
+    hass: HomeAssistant, callbacks: dict[str, list[HassJob[[Event], Any]]], event: Event
+) -> bool:
+    """Filter state changes by entity_id."""
+    return event.data.get("old_state") is None and _async_domain_has_listeners(
+        split_entity_id(event.data["entity_id"])[0], callbacks
+    )
+
+
+@callback
+def _async_domain_added_dispatcher(
+    hass: HomeAssistant, callbacks: dict[str, list[HassJob[[Event], Any]]], event: Event
+) -> None:
+    """Dispatch state changes by entity_id."""
+    _async_dispatch_domain_event(hass, event, callbacks)
+
+
 @bind_hass
 def async_track_state_added_domain(
     hass: HomeAssistant,
@@ -525,48 +543,35 @@ def _async_track_state_added_domain(
     domains: str | Iterable[str],
     action: Callable[[Event], Any],
 ) -> CALLBACK_TYPE:
-    """async_track_state_added_domain without lowercasing."""
-    domain_callbacks: dict[str, list[HassJob[[Event], Any]]] = hass.data.setdefault(
-        TRACK_STATE_ADDED_DOMAIN_CALLBACKS, {}
+    """Track state change events when an entity is added to domains."""
+    return _async_track_event(
+        hass,
+        domains,
+        TRACK_STATE_ADDED_DOMAIN_CALLBACKS,
+        TRACK_STATE_ADDED_DOMAIN_LISTENER,
+        EVENT_STATE_CHANGED,
+        _async_domain_added_dispatcher,
+        _async_domain_added_filter,
+        action,
     )
 
-    if TRACK_STATE_ADDED_DOMAIN_LISTENER not in hass.data:
 
-        @callback
-        def _async_state_change_filter(event: Event) -> bool:
-            """Filter state changes by entity_id."""
-            return event.data.get("old_state") is None and _async_domain_has_listeners(
-                split_entity_id(event.data["entity_id"])[0], domain_callbacks
-            )
+@callback
+def _async_domain_removed_filter(
+    hass: HomeAssistant, callbacks: dict[str, list[HassJob[[Event], Any]]], event: Event
+) -> bool:
+    """Filter state changes by entity_id."""
+    return event.data.get("new_state") is None and _async_domain_has_listeners(
+        split_entity_id(event.data["entity_id"])[0], callbacks
+    )
 
-        @callback
-        def _async_state_change_dispatcher(event: Event) -> None:
-            """Dispatch state changes by entity_id."""
-            _async_dispatch_domain_event(hass, event, domain_callbacks)
 
-        hass.data[TRACK_STATE_ADDED_DOMAIN_LISTENER] = hass.bus.async_listen(
-            EVENT_STATE_CHANGED,
-            _async_state_change_dispatcher,
-            event_filter=_async_state_change_filter,
-        )
-
-    job = HassJob(action, f"track state added domain event {domains}")
-
-    for domain in domains:
-        domain_callbacks.setdefault(domain, []).append(job)
-
-    @callback
-    def remove_listener() -> None:
-        """Remove state change listener."""
-        _async_remove_indexed_listeners(
-            hass,
-            TRACK_STATE_ADDED_DOMAIN_CALLBACKS,
-            TRACK_STATE_ADDED_DOMAIN_LISTENER,
-            domains,
-            job,
-        )
-
-    return remove_listener
+@callback
+def _async_domain_removed_dispatcher(
+    hass: HomeAssistant, callbacks: dict[str, list[HassJob[[Event], Any]]], event: Event
+) -> None:
+    """Dispatch state changes by entity_id."""
+    _async_dispatch_domain_event(hass, event, callbacks)
 
 
 @bind_hass
@@ -576,50 +581,17 @@ def async_track_state_removed_domain(
     action: Callable[[Event], Any],
 ) -> CALLBACK_TYPE:
     """Track state change events when an entity is removed from domains."""
-    if not (domains := _async_string_to_lower_list(domains)):
-        return _remove_empty_listener
 
-    domain_callbacks: dict[str, list[HassJob[[Event], Any]]] = hass.data.setdefault(
-        TRACK_STATE_REMOVED_DOMAIN_CALLBACKS, {}
+    return _async_track_event(
+        hass,
+        domains,
+        TRACK_STATE_REMOVED_DOMAIN_CALLBACKS,
+        TRACK_STATE_REMOVED_DOMAIN_LISTENER,
+        EVENT_STATE_CHANGED,
+        _async_domain_removed_dispatcher,
+        _async_domain_removed_filter,
+        action,
     )
-
-    if TRACK_STATE_REMOVED_DOMAIN_LISTENER not in hass.data:
-
-        @callback
-        def _async_state_change_filter(event: Event) -> bool:
-            """Filter state changes by entity_id."""
-            return event.data.get("new_state") is None and _async_domain_has_listeners(
-                split_entity_id(event.data["entity_id"])[0], domain_callbacks
-            )
-
-        @callback
-        def _async_state_change_dispatcher(event: Event) -> None:
-            """Dispatch state changes by entity_id."""
-            _async_dispatch_domain_event(hass, event, domain_callbacks)
-
-        hass.data[TRACK_STATE_REMOVED_DOMAIN_LISTENER] = hass.bus.async_listen(
-            EVENT_STATE_CHANGED,
-            _async_state_change_dispatcher,
-            event_filter=_async_state_change_filter,
-        )
-
-    job = HassJob(action, f"track state removed domain event {domains}")
-
-    for domain in domains:
-        domain_callbacks.setdefault(domain, []).append(job)
-
-    @callback
-    def remove_listener() -> None:
-        """Remove state change listener."""
-        _async_remove_indexed_listeners(
-            hass,
-            TRACK_STATE_REMOVED_DOMAIN_CALLBACKS,
-            TRACK_STATE_REMOVED_DOMAIN_LISTENER,
-            domains,
-            job,
-        )
-
-    return remove_listener
 
 
 @callback
