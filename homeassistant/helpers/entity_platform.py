@@ -202,7 +202,7 @@ class EntityPlatform:
         if not hasattr(platform, "async_setup_platform") and not hasattr(
             platform, "setup_platform"
         ):
-            self.logger.error(  # Logging this is deprecated (replaced by issue) and can be removed in 2023.8.0
+            self.logger.error(
                 (
                     "The %s platform for the %s integration does not support platform"
                     " setup. Please remove it from your config."
