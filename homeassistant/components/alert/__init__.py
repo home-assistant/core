@@ -330,4 +330,15 @@ class Alert(collection.CollectionEntity, Entity):
         self._update_from_config(config)
         self._update_with_hass()
 
+        watched_state = self.hass.states.get(self._watched_entity_id)
+        if (
+            watched_state is None or watched_state.state != self._alert_state
+        ) and self._firing:
+            self._send_done_message = False
+            await self.end_alerting()
+        if (
+            watched_state is not None and watched_state.state == self._alert_state
+        ) and not self._firing:
+            await self.begin_alerting()
+
         self.async_write_ha_state()

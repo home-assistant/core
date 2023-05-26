@@ -478,6 +478,78 @@ async def test_reload(
     assert last_event.data[notify.ATTR_MESSAGE] == DONE_MESSAGE
 
 
+async def test_reload_activate_deactivate(
+    hass: HomeAssistant, mock_notifier: list[ServiceCall], hass_admin_user: MockUser
+) -> None:
+    """Test reloading the YAML config."""
+    assert await async_setup_component(hass, DOMAIN, TEST_CONFIG)
+    expected_notifications = 0
+    hass.states.async_set(TEST_ENTITY, STATE_OFF)
+
+    await hass.async_block_till_done()
+
+    assert hass.states.get(ENTITY_ID).state == STATE_IDLE
+    assert len(mock_notifier) == expected_notifications
+
+    # Change the watch state to match the current state, and reload. The notification shall fire, and the alert shall turn on
+    config = deepcopy(TEST_CONFIG)
+    config[DOMAIN][NAME][CONF_STATE] = STATE_OFF
+    expected_notifications += 1
+
+    with patch(
+        "homeassistant.config.load_yaml_config_file",
+        autospec=True,
+        return_value=config,
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_RELOAD,
+            blocking=True,
+            context=Context(user_id=hass_admin_user.id),
+        )
+        await hass.async_block_till_done()
+
+    assert len(mock_notifier) == expected_notifications
+    assert hass.states.get(ENTITY_ID).state == STATE_ON
+
+    # Reload one time, same config, while the alert is on. Make sure it does not send a new notification.
+    with patch(
+        "homeassistant.config.load_yaml_config_file",
+        autospec=True,
+        return_value=config,
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_RELOAD,
+            blocking=True,
+            context=Context(user_id=hass_admin_user.id),
+        )
+        await hass.async_block_till_done()
+
+    assert len(mock_notifier) == expected_notifications
+    assert hass.states.get(ENTITY_ID).state == STATE_ON
+
+    # Change the watch state to not matching the current state, and reload. The alert shall turn off, and no notification will fire.
+    config = deepcopy(TEST_CONFIG)
+    config[DOMAIN][NAME][CONF_STATE] = STATE_ON
+
+    with patch(
+        "homeassistant.config.load_yaml_config_file",
+        autospec=True,
+        return_value=config,
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_RELOAD,
+            blocking=True,
+            context=Context(user_id=hass_admin_user.id),
+        )
+        await hass.async_block_till_done()
+
+    assert len(mock_notifier) == expected_notifications
+    assert hass.states.get(ENTITY_ID).state == STATE_IDLE
+
+
 async def test_reload_with_templates(
     hass: HomeAssistant, mock_notifier: list[ServiceCall], hass_admin_user: MockUser
 ) -> None:
