@@ -40,7 +40,7 @@ async def async_setup_entry(
 
     if device_type in [101, 106, 107]:
         device = hass.data[DOMAIN][entry.entry_id].device
-        async_add_entities([MyStromSwitch(device)])
+        async_add_entities([MyStromSwitch(device, entry.title)])
 
 
 async def async_setup_platform(
@@ -69,8 +69,9 @@ async def async_setup_platform(
 class MyStromSwitch(SwitchEntity):
     """Representation of a myStrom switch/plug."""
 
-    def __init__(self, plug) -> None:
+    def __init__(self, plug, name) -> None:
         """Initialize the myStrom switch/plug."""
+        self._name = name
         self.plug = plug
         self._available = True
         self.relay = None
@@ -78,7 +79,7 @@ class MyStromSwitch(SwitchEntity):
     @property
     def name(self):
         """Return the name of the switch."""
-        return self.plug.mac
+        return self._name
 
     @property
     def is_on(self):
