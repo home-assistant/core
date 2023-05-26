@@ -19,7 +19,6 @@ from homeassistant.helpers.device_registry import (
     async_get as dr_async_get,
     format_mac,
 )
-from homeassistant.helpers.entity import DEVICE_CLASS_NAME, DeviceClassName
 from homeassistant.helpers.entity_registry import async_get as er_async_get
 from homeassistant.helpers.typing import EventType
 from homeassistant.util.dt import utcnow
@@ -73,16 +72,12 @@ def get_number_of_channels(device: BlockDevice, block: Block) -> int:
 def get_block_entity_name(
     device: BlockDevice,
     block: Block | None,
-    description: str | DeviceClassName | None = None,
+    description: str | None = None,
 ) -> str:
     """Naming for block based switch and sensors."""
     channel_name = get_block_channel_name(device, block)
 
     if description:
-        # It's not possible to do string manipulations on DEVICE_CLASS_NAME
-        # the assert satisfies the type checker and will catch attempts
-        # to use DEVICE_CLASS_NAME as description.
-        assert description is not DEVICE_CLASS_NAME
         return f"{channel_name} {description.lower()}"
 
     return channel_name
@@ -306,16 +301,12 @@ def get_rpc_channel_name(device: RpcDevice, key: str) -> str:
 
 
 def get_rpc_entity_name(
-    device: RpcDevice, key: str, description: str | DeviceClassName | None = None
+    device: RpcDevice, key: str, description: str | None = None
 ) -> str:
     """Naming for RPC based switch and sensors."""
     channel_name = get_rpc_channel_name(device, key)
 
     if description:
-        # It's not possible to do string manipulations on DEVICE_CLASS_NAME
-        # the assert satisfies the type checker and will catch attempts
-        # to use DEVICE_CLASS_NAME as description.
-        assert description is not DEVICE_CLASS_NAME
         return f"{channel_name} {description.lower()}"
 
     return channel_name
@@ -357,7 +348,7 @@ def is_block_channel_type_light(settings: dict[str, Any], channel: int) -> bool:
 
 def is_rpc_channel_type_light(config: dict[str, Any], channel: int) -> bool:
     """Return true if rpc channel consumption type is set to light."""
-    con_types = config["sys"]["ui_data"].get("consumption_types")
+    con_types = config["sys"].get("ui_data", {}).get("consumption_types")
     return con_types is not None and con_types[channel].lower().startswith("light")
 
 

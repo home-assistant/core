@@ -67,17 +67,20 @@ async def test_notification_idle_button(
 ) -> None:
     """Test Notification idle button."""
     node = multisensor_6
-    state = hass.states.get("button.multisensor_6_idle_cover_status")
+    state = hass.states.get("button.multisensor_6_idle_home_security_cover_status")
     assert state
     assert state.state == "unknown"
-    assert state.attributes["friendly_name"] == "Multisensor 6 Idle Cover status"
+    assert (
+        state.attributes["friendly_name"]
+        == "Multisensor 6 Idle Home Security Cover status"
+    )
 
     # Test successful idle call
     await hass.services.async_call(
         BUTTON_DOMAIN,
         SERVICE_PRESS,
         {
-            ATTR_ENTITY_ID: "button.multisensor_6_idle_cover_status",
+            ATTR_ENTITY_ID: "button.multisensor_6_idle_home_security_cover_status",
         },
         blocking=True,
     )
