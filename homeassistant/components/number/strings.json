@@ -154,5 +154,18 @@
     "wind_speed": {
       "name": "[%key:component::sensor::entity_component::wind_speed::name%]"
     }
+  },
+  "issues": {
+    "platform_integration_no_support": {
+      "title": "Platform support not supported",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "Platform support removal",
+            "description": "The {platform} platform for the {domain} integration does not support platform setup.\n\nPlease remove it from your config and select **submit** to close this issue."
+          }
+        }
+      }
+    }
   }
 }
