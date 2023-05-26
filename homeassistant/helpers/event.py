@@ -414,7 +414,6 @@ def async_track_entity_registry_updated_event(
     return remove_listener
 
 
-@bind_hass
 def async_track_device_registry_updated_event(
     hass: HomeAssistant,
     device_ids: str | Iterable[str],
