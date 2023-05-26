@@ -31,8 +31,6 @@ DEFAULT_NAME = "myStrom bulb"
 EFFECT_RAINBOW = "rainbow"
 EFFECT_SUNRISE = "sunrise"
 
-MYSTROM_EFFECT_LIST = [EFFECT_RAINBOW, EFFECT_SUNRISE]
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
@@ -74,6 +72,7 @@ class MyStromLight(LightEntity):
     _attr_color_mode = ColorMode.HS
     _attr_supported_color_modes = {ColorMode.HS}
     _attr_supported_features = LightEntityFeature.EFFECT | LightEntityFeature.FLASH
+    _attr_effect_list = [EFFECT_RAINBOW, EFFECT_SUNRISE]
 
     def __init__(self, bulb, name, mac):
         """Initialize the light."""
@@ -81,7 +80,6 @@ class MyStromLight(LightEntity):
         self._attr_name = name
         self._attr_available = False
         self._attr_unique_id = mac
-        self._attr_effect_list = MYSTROM_EFFECT_LIST
         self._attr_hs_color = 0, 0
 
     async def async_turn_on(self, **kwargs: Any) -> None:
@@ -93,7 +91,10 @@ class MyStromLight(LightEntity):
             color_h, color_s = kwargs[ATTR_HS_COLOR]
         elif ATTR_BRIGHTNESS in kwargs:
             # Brightness update, keep color
-            color_h, color_s = self._color_h, self._color_s
+            if self.hs_color is not None:
+                color_h, color_s = self.hs_color
+            else:
+                color_h, color_s = 0, 0  # Back to white
         else:
             color_h, color_s = 0, 0  # Back to white
 
