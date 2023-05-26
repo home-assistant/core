@@ -81,12 +81,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
         county = user_input[CONF_COUNTY]
-        phone_number = user_input[CONF_PHONE_NUMBER]
 
-        if phone_number is None:
+        if CONF_PHONE_NUMBER not in user_input:
             return self.async_create_entry(
-                title=user_input[CONF_COUNTY].capitalize(), data=user_input
+                title=f"{user_input[CONF_COUNTY].capitalize()} Outage Count",
+                data=user_input,
             )
+
+        phone_number = user_input[CONF_PHONE_NUMBER]
 
         await self.async_set_unique_id(f"{county}-{phone_number}")
         self._abort_if_unique_id_configured()
