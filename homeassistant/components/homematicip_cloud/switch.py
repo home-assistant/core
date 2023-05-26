@@ -17,6 +17,7 @@ from homematicip.aio.device import (
     AsyncPrintedCircuitBoardSwitch2,
     AsyncPrintedCircuitBoardSwitchBattery,
     AsyncWiredSwitch8,
+    AsyncBrandSwitch2,
 )
 from homematicip.aio.group import AsyncExtendedLinkedSwitchingGroup, AsyncSwitchingGroup
 
@@ -75,6 +76,9 @@ async def async_setup_entry(
             for channel in range(1, 3):
                 entities.append(HomematicipMultiSwitch(hap, device, channel=channel))
         elif isinstance(device, AsyncPrintedCircuitBoardSwitch2):
+            for channel in range(1, 3):
+                entities.append(HomematicipMultiSwitch(hap, device, channel=channel))
+        elif isinstance(device, AsyncBrandSwitch2):
             for channel in range(1, 3):
                 entities.append(HomematicipMultiSwitch(hap, device, channel=channel))
 
