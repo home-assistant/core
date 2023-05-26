@@ -1333,6 +1333,8 @@ def async_track_point_in_utc_time(
     # as measured by utcnow() because asyncio will fire any timer that ready
     # inside the clock resolution window.
     #
+    # https://github.com/python/cpython/blob/3fdb55c48291a459fb1e33edb5140ec0383222df/Lib/asyncio/base_events.py#L1919
+    #
     # That is bad when callbacks have assumptions about the current time.
     #
     # To avoid this problem we add the worst _CLOCK_RESOLUTION to the call_at
