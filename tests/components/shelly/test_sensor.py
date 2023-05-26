@@ -274,6 +274,16 @@ async def test_rpc_sensor(hass: HomeAssistant, mock_rpc_device, monkeypatch) -> 
     assert hass.states.get(entity_id).state == STATE_UNKNOWN
 
 
+async def test_rpc_illuminance_sensor(
+    hass: HomeAssistant, mock_rpc_device, monkeypatch
+) -> None:
+    """Test RPC illuminacne sensor."""
+    entity_id = f"{SENSOR_DOMAIN}.test_name_illuminance"
+    await init_integration(hass, 2)
+
+    assert hass.states.get(entity_id).state == "345"
+
+
 async def test_rpc_sensor_error(
     hass: HomeAssistant, mock_rpc_device, monkeypatch
 ) -> None:
