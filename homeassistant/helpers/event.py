@@ -311,27 +311,6 @@ def _remove_empty_listener() -> None:
     """Remove a listener that does nothing."""
 
 
-@callback
-def _async_remove_indexed_listeners(
-    hass: HomeAssistant,
-    data_key: str,
-    listener_key: str,
-    storage_keys: Iterable[str],
-    job: HassJob[[Event], Any],
-) -> None:
-    """Remove a listener."""
-    callbacks: dict[str, list[HassJob[[Event], Any]]] = hass.data[data_key]
-
-    for storage_key in storage_keys:
-        callbacks[storage_key].remove(job)
-        if len(callbacks[storage_key]) == 0:
-            del callbacks[storage_key]
-
-    if not callbacks:
-        hass.data[listener_key]()
-        del hass.data[listener_key]
-
-
 def _async_track_event(
     hass: HomeAssistant,
     keys: str | Iterable[str],
@@ -372,13 +351,14 @@ def _async_track_event(
     @callback
     def remove_listener() -> None:
         """Remove listener."""
-        _async_remove_indexed_listeners(
-            hass,
-            callbacks_key,
-            listeners_key,
-            keys,
-            job,
-        )
+        for key in keys:
+            callbacks[key].remove(job)
+            if len(callbacks[key]) == 0:
+                del callbacks[key]
+
+        if not callbacks:
+            hass.data[listeners_key]()
+            del hass.data[listeners_key]
 
     return remove_listener
 
