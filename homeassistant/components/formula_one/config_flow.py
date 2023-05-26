@@ -1,4 +1,4 @@
-"""Config flow for Formula 1 integration."""
+"""Config flow for Formula One integration."""
 from __future__ import annotations
 
 from typing import Any
