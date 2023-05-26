@@ -1045,6 +1045,11 @@ def expand_condition_shorthand(value: Any | None) -> Any:
 
 
 # Schemas
+def empty_config_schema(domain: str) -> vol.Schema:
+    """Return a config schema which accepts no configuration parameters."""
+    return vol.Schema({vol.Optional(domain): vol.Schema({})}, extra=vol.ALLOW_EXTRA)
+
+
 PLATFORM_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_PLATFORM): string,
