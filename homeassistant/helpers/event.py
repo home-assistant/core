@@ -267,15 +267,16 @@ def _async_dispatch_entity_id_event(
     event: Event,
 ) -> None:
     """Dispatch to listeners."""
-    indexed_key = event.data["entity_id"]
-    if indexed_key not in callbacks:
+    if not (callbacks_list := callbacks.get(event.data["entity_id"])):
         return
-    for job in callbacks[indexed_key][:]:
+    for job in callbacks_list[:]:
         try:
             hass.async_run_hass_job(job, event)
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception(
-                "Error while dispatching event for %s to %s", indexed_key, job
+                "Error while dispatching event for %s to %s",
+                event.data["entity_id"],
+                job,
             )
 
 
@@ -364,21 +365,26 @@ def _async_track_event(
 
 
 @callback
-def _async_dispatch_old_entity_or_entity_id_event(
+def _async_dispatch_old_entity_id_or_entity_id_event(
     hass: HomeAssistant,
     callbacks: dict[str, list[HassJob[[Event], Any]]],
     event: Event,
 ) -> None:
     """Dispatch to listeners."""
-    indexed_key = event.data.get("old_entity_id", event.data["entity_id"])
-    if indexed_key not in callbacks:
+    if not (
+        callbacks_list := callbacks.get(
+            event.data.get("old_entity_id", event.data["entity_id"])
+        )
+    ):
         return
-    for job in callbacks[indexed_key][:]:
+    for job in callbacks_list[:]:
         try:
             hass.async_run_hass_job(job, event)
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception(
-                "Error while dispatching event for %s to %s", indexed_key, job
+                "Error while dispatching event for %s to %s",
+                event.data.get("old_entity_id", event.data["entity_id"]),
+                job,
             )
 
 
@@ -387,8 +393,7 @@ def _async_entity_registry_updated_filter(
     hass: HomeAssistant, callbacks: dict[str, list[HassJob[[Event], Any]]], event: Event
 ) -> bool:
     """Filter entity registry updates by entity_id."""
-    entity_id = event.data.get("old_entity_id", event.data["entity_id"])
-    return entity_id in callbacks
+    return event.data.get("old_entity_id", event.data["entity_id"]) in callbacks
 
 
 @bind_hass
@@ -409,7 +414,7 @@ def async_track_entity_registry_updated_event(
         TRACK_ENTITY_REGISTRY_UPDATED_CALLBACKS,
         TRACK_ENTITY_REGISTRY_UPDATED_LISTENER,
         EVENT_ENTITY_REGISTRY_UPDATED,
-        _async_dispatch_old_entity_or_entity_id_event,
+        _async_dispatch_old_entity_id_or_entity_id_event,
         _async_entity_registry_updated_filter,
         action,
     )
@@ -430,15 +435,16 @@ def _async_dispatch_device_id_event(
     event: Event,
 ) -> None:
     """Dispatch to listeners."""
-    indexed_key = event.data["device_id"]
-    if indexed_key not in callbacks:
+    if not (callbacks_list := callbacks.get(event.data["device_id"])):
         return
-    for job in callbacks[indexed_key][:]:
+    for job in callbacks_list[:]:
         try:
             hass.async_run_hass_job(job, event)
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception(
-                "Error while dispatching event for %s to %s", indexed_key, job
+                "Error while dispatching event for %s to %s",
+                event.data["device_id"],
+                job,
             )
 
 
@@ -544,7 +550,6 @@ def async_track_state_removed_domain(
     action: Callable[[Event], Any],
 ) -> CALLBACK_TYPE:
     """Track state change events when an entity is removed from domains."""
-
     return _async_track_event(
         hass,
         domains,
