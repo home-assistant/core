@@ -1,4 +1,4 @@
-set_datetime:
+set_value:
   name: Set Date/Time
   description: Set the date/time for a datetime entity.
   target:
