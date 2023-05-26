@@ -98,7 +98,7 @@ class MyStromLight(LightEntity):
             color_h, color_s = 0, 0  # Back to white
 
         try:
-            if not self._attr_is_on:
+            if not self.is_on:
                 await self._bulb.set_on()
             if brightness is not None:
                 await self._bulb.set_color_hsv(
