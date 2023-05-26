@@ -37,7 +37,7 @@ def entity_registry_enabled_by_default() -> Generator[None, None, None]:
 
 # Blueprint test fixtures
 @pytest.fixture(name="stub_blueprint_populate")
-def stub_blueprint_populate_fixture():
+def stub_blueprint_populate_fixture() -> Generator[None, Any, None]:
     """Stub copying the blueprints to the config folder."""
     from tests.components.blueprint.common import stub_blueprint_populate_fixture_helper
 
