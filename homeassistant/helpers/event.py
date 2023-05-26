@@ -479,7 +479,7 @@ def _async_domain_has_listeners(
 
 @callback
 def _async_dispatch_domain_event(
-    hass: HomeAssistant, event: Event, callbacks: dict[str, list[HassJob[[Event], Any]]]
+    hass: HomeAssistant, callbacks: dict[str, list[HassJob[[Event], Any]]], event: Event
 ) -> None:
     """Dispatch domain event listeners."""
     domain = split_entity_id(event.data["entity_id"])[0]
@@ -500,14 +500,6 @@ def _async_domain_added_filter(
     return event.data.get("old_state") is None and _async_domain_has_listeners(
         split_entity_id(event.data["entity_id"])[0], callbacks
     )
-
-
-@callback
-def _async_domain_added_dispatcher(
-    hass: HomeAssistant, callbacks: dict[str, list[HassJob[[Event], Any]]], event: Event
-) -> None:
-    """Dispatch state changes by entity_id."""
-    _async_dispatch_domain_event(hass, event, callbacks)
 
 
 @bind_hass
@@ -535,7 +527,7 @@ def _async_track_state_added_domain(
         TRACK_STATE_ADDED_DOMAIN_CALLBACKS,
         TRACK_STATE_ADDED_DOMAIN_LISTENER,
         EVENT_STATE_CHANGED,
-        _async_domain_added_dispatcher,
+        _async_dispatch_domain_event,
         _async_domain_added_filter,
         action,
     )
@@ -549,14 +541,6 @@ def _async_domain_removed_filter(
     return event.data.get("new_state") is None and _async_domain_has_listeners(
         split_entity_id(event.data["entity_id"])[0], callbacks
     )
-
-
-@callback
-def _async_domain_removed_dispatcher(
-    hass: HomeAssistant, callbacks: dict[str, list[HassJob[[Event], Any]]], event: Event
-) -> None:
-    """Dispatch state changes by entity_id."""
-    _async_dispatch_domain_event(hass, event, callbacks)
 
 
 @bind_hass
@@ -573,7 +557,7 @@ def async_track_state_removed_domain(
         TRACK_STATE_REMOVED_DOMAIN_CALLBACKS,
         TRACK_STATE_REMOVED_DOMAIN_LISTENER,
         EVENT_STATE_CHANGED,
-        _async_domain_removed_dispatcher,
+        _async_dispatch_domain_event,
         _async_domain_removed_filter,
         action,
     )
