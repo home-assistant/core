@@ -229,6 +229,7 @@ class AirzoneClimate(AirzoneZoneEntity, ClimateEntity):
         """Update climate attributes."""
         self._attr_current_temperature = self.get_airzone_value(AZD_TEMP)
         self._attr_current_humidity = self.get_airzone_value(AZD_HUMIDITY)
+        # Use dict.get() to prevent exceptions when the thermostats run out of battery
         self._attr_hvac_action = HVAC_ACTION_LIB_TO_HASS.get(
             self.get_airzone_value(AZD_ACTION)
         )
