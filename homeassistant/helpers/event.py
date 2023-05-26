@@ -278,6 +278,22 @@ def _async_dispatch_indexed_event(
             _LOGGER.exception("Error while dispatching event for %s", indexed_key)
 
 
+@callback
+def _async_state_change_filter(
+    hass: HomeAssistant, callbacks: dict[str, list[HassJob[[Event], Any]]], event: Event
+) -> bool:
+    """Filter state changes by entity_id."""
+    return event.data["entity_id"] in callbacks
+
+
+@callback
+def _async_state_change_dispatcher(
+    hass: HomeAssistant, callbacks: dict[str, list[HassJob[[Event], Any]]], event: Event
+) -> None:
+    """Dispatch state changes by entity_id."""
+    _async_dispatch_indexed_event(hass, event, event.data["entity_id"], callbacks)
+
+
 @bind_hass
 def _async_track_state_change_event(
     hass: HomeAssistant,
@@ -285,47 +301,16 @@ def _async_track_state_change_event(
     action: Callable[[Event], Any],
 ) -> CALLBACK_TYPE:
     """async_track_state_change_event without lowercasing."""
-    entity_callbacks: dict[str, list[HassJob[[Event], Any]]] = hass.data.setdefault(
-        TRACK_STATE_CHANGE_CALLBACKS, {}
+    return _async_track_event(
+        hass,
+        entity_ids,
+        TRACK_STATE_CHANGE_CALLBACKS,
+        TRACK_STATE_CHANGE_LISTENER,
+        EVENT_STATE_CHANGED,
+        _async_state_change_dispatcher,
+        _async_state_change_filter,
+        action,
     )
-
-    if TRACK_STATE_CHANGE_LISTENER not in hass.data:
-
-        @callback
-        def _async_state_change_filter(event: Event) -> bool:
-            """Filter state changes by entity_id."""
-            return event.data["entity_id"] in entity_callbacks
-
-        @callback
-        def _async_state_change_dispatcher(event: Event) -> None:
-            """Dispatch state changes by entity_id."""
-            _async_dispatch_indexed_event(
-                hass, event, event.data["entity_id"], entity_callbacks
-            )
-
-        hass.data[TRACK_STATE_CHANGE_LISTENER] = hass.bus.async_listen(
-            EVENT_STATE_CHANGED,
-            _async_state_change_dispatcher,
-            event_filter=_async_state_change_filter,
-        )
-
-    job = HassJob(action, f"track state change event {entity_ids}")
-
-    for entity_id in entity_ids:
-        entity_callbacks.setdefault(entity_id, []).append(job)
-
-    @callback
-    def remove_listener() -> None:
-        """Remove state change listener."""
-        _async_remove_indexed_listeners(
-            hass,
-            TRACK_STATE_CHANGE_CALLBACKS,
-            TRACK_STATE_CHANGE_LISTENER,
-            entity_ids,
-            job,
-        )
-
-    return remove_listener
 
 
 @callback
