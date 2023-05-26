@@ -1327,6 +1327,17 @@ def async_track_point_in_utc_time(
     )
     loop = hass.loop
     delta = expected_fire_timestamp - time.time()
+    #
+    # Depending on the available clock support (including timer hardware
+    # and the OS kernel) it can happen that we fire a little bit too early
+    # as measured by utcnow() because asyncio will fire any timer that ready
+    # inside the clock resolution window.
+    #
+    # That is bad when callbacks have assumptions about the current time.
+    #
+    # To avoid this problem we add the worst _CLOCK_RESOLUTION to the call_at
+    # which is usually less than a microsecond.
+    #
     cancel_callback = loop.call_at(
         loop.time() + _CLOCK_RESOLUTION + delta,
         hass.async_run_hass_job,
