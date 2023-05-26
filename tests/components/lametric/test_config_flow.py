@@ -904,10 +904,9 @@ async def test_reauth_manual(
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
-@pytest.mark.parametrize("mock_lametric", ["device_sa5.json"], indirect=True)
 async def test_reauth_manual_sky(
     hass: HomeAssistant,
-    mock_lametric: MagicMock,
+    mock_lametric_sky: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test reauth flow with manual entry for LaMetric Sky."""
@@ -941,8 +940,10 @@ async def test_reauth_manual_sky(
         CONF_MAC: "AA:BB:CC:DD:EE:FF",
     }
 
-    assert len(mock_lametric.device.mock_calls) == 1
-    assert len(mock_lametric.notify.mock_calls) == 1
+    assert len(mock_lametric_sky.device.mock_calls) == 1
+    assert len(mock_lametric_sky.notify.mock_calls) == 1
 
-    notification: Notification = mock_lametric.notify.mock_calls[0][2]["notification"]
+    notification: Notification = mock_lametric_sky.notify.mock_calls[0][2][
+        "notification"
+    ]
     assert notification.model.sound is None
