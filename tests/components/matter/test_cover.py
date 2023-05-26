@@ -177,13 +177,6 @@ async def test_cover_lift_only(
         matter_client,
     )
 
-    set_node_attribute(window_covering, 1, 258, 10, 0b000000)
-    await trigger_subscription_callback(hass, matter_client)
-
-    state = hass.states.get(entity_id)
-    assert state
-    assert state.state == "unknown"
-
     set_node_attribute(window_covering, 1, 258, 65529, [0, 1, 2])
     await trigger_subscription_callback(hass, matter_client)
 
@@ -331,13 +324,6 @@ async def test_cover_tilt_only(
         matter_client,
     )
 
-    set_node_attribute(window_covering, 1, 258, 10, 0b000000)
-    await trigger_subscription_callback(hass, matter_client)
-
-    state = hass.states.get(entity_id)
-    assert state
-    assert state.state == "unknown"
-
     set_node_attribute(window_covering, 1, 258, 65529, [0, 1, 2])
     await trigger_subscription_callback(hass, matter_client)
 
@@ -391,7 +377,7 @@ async def test_cover_position_aware_tilt(
     )
     assert state.attributes["supported_features"] & mask == mask
 
-    for tilt_position in (0, 99):
+    for tilt_position in (0, 99, 100):
         set_node_attribute(window_covering, 1, 258, 9, tilt_position)
         set_node_attribute(window_covering, 1, 258, 10, 0b000000)
         await trigger_subscription_callback(hass, matter_client)
@@ -399,16 +385,6 @@ async def test_cover_position_aware_tilt(
         state = hass.states.get(entity_id)
         assert state
         assert state.attributes["current_tilt_position"] == 100 - tilt_position
-        assert state.state == STATE_OPEN
-
-    set_node_attribute(window_covering, 1, 258, 9, 100)
-    set_node_attribute(window_covering, 1, 258, 10, 0b000000)
-    await trigger_subscription_callback(hass, matter_client)
-
-    state = hass.states.get(entity_id)
-    assert state
-    assert state.attributes["current_tilt_position"] == 0
-    assert state.state == STATE_CLOSED
 
 
 async def test_cover_full_features(
@@ -460,44 +436,4 @@ async def test_cover_full_features(
 
     state = hass.states.get(entity_id)
     assert state
-    assert state.state == STATE_OPEN
-
-    set_node_attribute(window_covering, 1, 258, 8, 50)
-    set_node_attribute(window_covering, 1, 258, 9, None)
-    set_node_attribute(window_covering, 1, 258, 10, 0b000000)
-    await trigger_subscription_callback(hass, matter_client)
-    state = hass.states.get(entity_id)
-    assert state
-    assert state.state == "unknown"
-
-    set_node_attribute(window_covering, 1, 258, 8, None)
-    set_node_attribute(window_covering, 1, 258, 9, 50)
-    set_node_attribute(window_covering, 1, 258, 10, 0b000000)
-    await trigger_subscription_callback(hass, matter_client)
-    state = hass.states.get(entity_id)
-    assert state
-    assert state.state == "unknown"
-
-    set_node_attribute(window_covering, 1, 258, 8, 100)
-    set_node_attribute(window_covering, 1, 258, 9, None)
-    set_node_attribute(window_covering, 1, 258, 10, 0b000000)
-    await trigger_subscription_callback(hass, matter_client)
-    state = hass.states.get(entity_id)
-    assert state
-    assert state.state == "unknown"
-
-    set_node_attribute(window_covering, 1, 258, 8, None)
-    set_node_attribute(window_covering, 1, 258, 9, 100)
-    set_node_attribute(window_covering, 1, 258, 10, 0b000000)
-    await trigger_subscription_callback(hass, matter_client)
-    state = hass.states.get(entity_id)
-    assert state
-    assert state.state == "unknown"
-
-    set_node_attribute(window_covering, 1, 258, 8, None)
-    set_node_attribute(window_covering, 1, 258, 9, None)
-    set_node_attribute(window_covering, 1, 258, 10, 0b000000)
-    await trigger_subscription_callback(hass, matter_client)
-    state = hass.states.get(entity_id)
-    assert state
-    assert state.state == "unknown"
+    assert state.state == STATE_CLOSED
