@@ -1,0 +1,36 @@
+{
+  "response": [
+    {
+      "device": {
+        "product_name": "Owlet Baby Monitors",
+        "model": "AY001MTL1",
+        "dsn": "SERIAL_NUMBER",
+        "oem_model": "SS3-OBL-EU",
+        "sw_version": "bc 2.9.7-beta 05/01/19 16:15:18 ID beb2858",
+        "template_id": 48775,
+        "mac": "MAC",
+        "unique_hardware_id": "None",
+        "hwsig": "123-123-123",
+        "lan_ip": "192.0.0.1",
+        "connected_at": "2023-05-23T01:21:29Z",
+        "key": 123456,
+        "lan_enabled": false,
+        "connection_priority": [],
+        "has_properties": true,
+        "product_class": "None",
+        "connection_status": "Online",
+        "lat": "0.0",
+        "lng": "0.0",
+        "locality": "QW12",
+        "device_type": "Wifi",
+        "dealer": "None",
+        "manuf_model": "LBEE5PA1LD-222"
+      }
+    }
+  ],
+  "tokens": {
+    "api_token": "new_api_token",
+    "expiry": 200,
+    "refresh": "new_refresh_token"
+  }
+}

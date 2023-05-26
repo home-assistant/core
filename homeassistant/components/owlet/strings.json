@@ -1,0 +1,39 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Enter login details",
+        "data": {
+          "region": "Region",
+          "username": "Email",
+          "password": "Password"
+        }
+      },
+      "reauth_confirm": {
+        "title": "Reauthentiaction required for Owlet",
+        "data": {
+          "password": "Password"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_email": "Entered email address is incorrect",
+      "invalid_password": "Entered password is incorrect",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Configure options for Owlet",
+        "data": {
+          "pollinterval": "Polling interval in seconds, min 10"
+        }
+      }
+    }
+  }
+}
