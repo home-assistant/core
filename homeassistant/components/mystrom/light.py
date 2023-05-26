@@ -137,4 +137,4 @@ class MyStromLight(LightEntity):
             self._attr_available = True
         except MyStromConnectionError:
             _LOGGER.warning("No route to myStrom bulb")
-            self._attr_is_available = False
+            self._attr_available = False
