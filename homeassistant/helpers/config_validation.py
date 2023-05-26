@@ -866,7 +866,7 @@ def _deprecated_or_removed(
 
             logger_func(warning, *arguments)
             value = config[key]
-            if replacement_key:
+            if replacement_key or option_removed:
                 config.pop(key)
         else:
             value = default
