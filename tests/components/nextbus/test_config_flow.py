@@ -147,6 +147,11 @@ async def test_invalid_user_config(
     result = await flow_handler.async_step_stop()
     assert result.get("step_id") == "route"
 
+    # Name flow step back missing route
+    flow_handler.nextbus_config[CONF_ROUTE] = "F"
+    result = await flow_handler.async_step_name()
+    assert result.get("step_id") == "stop"
+
 
 async def test_user_config(
     hass: HomeAssistant, mock_setup_entry: MagicMock, mock_nextbus_lists: MagicMock
