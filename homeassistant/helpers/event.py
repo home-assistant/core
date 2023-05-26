@@ -36,6 +36,7 @@ from homeassistant.loader import bind_hass
 from homeassistant.util import dt as dt_util
 from homeassistant.util.async_ import run_callback_threadsafe
 
+from .device_registry import EVENT_DEVICE_REGISTRY_UPDATED
 from .entity_registry import EVENT_ENTITY_REGISTRY_UPDATED
 from .ratelimit import KeyedRateLimit
 from .sun import get_astral_event_next
@@ -53,6 +54,9 @@ TRACK_STATE_REMOVED_DOMAIN_LISTENER = "track_state_removed_domain_listener"
 
 TRACK_ENTITY_REGISTRY_UPDATED_CALLBACKS = "track_entity_registry_updated_callbacks"
 TRACK_ENTITY_REGISTRY_UPDATED_LISTENER = "track_entity_registry_updated_listener"
+
+TRACK_DEVICE_REGISTRY_UPDATED_CALLBACKS = "track_device_registry_updated_callbacks"
+TRACK_DEVICE_REGISTRY_UPDATED_LISTENER = "track_device_registry_updated_listener"
 
 _ALL_LISTENER = "all"
 _DOMAINS_LISTENER = "domains"
@@ -406,6 +410,74 @@ def async_track_entity_registry_updated_event(
             TRACK_ENTITY_REGISTRY_UPDATED_CALLBACKS,
             TRACK_ENTITY_REGISTRY_UPDATED_LISTENER,
             entity_ids,
+            job,
+        )
+
+    return remove_listener
+
+
+@bind_hass
+def async_track_device_registry_updated_event(
+    hass: HomeAssistant,
+    device_ids: str | Iterable[str],
+    action: Callable[[Event], Any],
+) -> CALLBACK_TYPE:
+    """Track specific device registry updated events indexed by device_id.
+
+    Similar to async_track_entity_registry_updated_event.
+    """
+    if not device_ids:
+        return _remove_empty_listener
+    if isinstance(device_ids, str):
+        device_ids = [device_ids]
+
+    device_callbacks: dict[str, list[HassJob[[Event], Any]]] = hass.data.setdefault(
+        TRACK_DEVICE_REGISTRY_UPDATED_CALLBACKS, {}
+    )
+
+    if TRACK_DEVICE_REGISTRY_UPDATED_LISTENER not in hass.data:
+
+        @callback
+        def _async_entity_registry_updated_filter(event: Event) -> bool:
+            """Filter device registry updates by device_id."""
+            return event.data["device_id"] in device_callbacks
+
+        @callback
+        def _async_entity_registry_updated_dispatcher(event: Event) -> None:
+            """Dispatch device registry updates by device_id."""
+            device_id = event.data["device_id"]
+
+            if device_id not in device_callbacks:
+                return
+
+            for job in device_callbacks[device_id][:]:
+                try:
+                    hass.async_run_hass_job(job, event)
+                except Exception:  # pylint: disable=broad-except
+                    _LOGGER.exception(
+                        "Error while processing device registry update for %s",
+                        device_id,
+                    )
+
+        hass.data[TRACK_DEVICE_REGISTRY_UPDATED_LISTENER] = hass.bus.async_listen(
+            EVENT_DEVICE_REGISTRY_UPDATED,
+            _async_entity_registry_updated_dispatcher,
+            event_filter=_async_entity_registry_updated_filter,
+        )
+
+    job = HassJob(action, f"track device registry updated event {device_ids}")
+
+    for device_id in device_ids:
+        device_callbacks.setdefault(device_id, []).append(job)
+
+    @callback
+    def remove_listener() -> None:
+        """Remove state change listener."""
+        _async_remove_indexed_listeners(
+            hass,
+            TRACK_DEVICE_REGISTRY_UPDATED_CALLBACKS,
+            TRACK_DEVICE_REGISTRY_UPDATED_LISTENER,
+            device_ids,
             job,
         )
 
