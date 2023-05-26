@@ -96,9 +96,19 @@ class ImapMessage:
             return None
         # In some cases a timezone or comment is added in parenthesis after the date
         # We want to strip that part to avoid parsing errors
-        return datetime.strptime(
-            date_str.split("(")[0].strip(), "%a, %d %b %Y %H:%M:%S %z"
-        )
+        dt_strip = date_str.split("(")[0].strip()
+        mail_dt_tm: datetime
+        try:
+            if "," in date_str:
+                mail_dt_tm = datetime.strptime(dt_strip, "%a, %d %b %Y %H:%M:%S %z")
+            else:
+                mail_dt_tm = datetime.strptime(dt_strip, "%d %b %Y %H:%M:%S %z")
+        except ValueError:
+            _LOGGER.debug(
+                "Parsed date %s is not compliant with rfc2822#section-3.3", date_str
+            )
+            return None
+        return mail_dt_tm
 
     @property
     def sender(self) -> str:
