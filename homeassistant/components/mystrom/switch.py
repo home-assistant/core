@@ -75,6 +75,12 @@ class MyStromSwitch(SwitchEntity):
         self.plug = plug
         self._available = True
         self.relay = None
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self.plug.mac)},
+            name=name,
+            manufacturer=ATTR_MANUFACTURER,
+            sw_version=self.plug.firmware,
+        )
 
     @property
     def name(self):
@@ -120,13 +126,3 @@ class MyStromSwitch(SwitchEntity):
             if self._available:
                 self._available = False
                 _LOGGER.error("No route to myStrom plug")
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device info for the light entity."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, self.plug.mac)},
-            name=self.name,
-            manufacturer=ATTR_MANUFACTURER,
-            sw_version=self.plug.firmware,
-        )

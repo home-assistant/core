@@ -1,7 +1,6 @@
 """The myStrom integration."""
 from __future__ import annotations
 
-from dataclasses import dataclass
 import logging
 
 import pymystrom
@@ -15,18 +14,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import DOMAIN
+from .models import MyStromData
 
 PLATFORMS: list[Platform] = [Platform.SWITCH, Platform.LIGHT]
 
 _LOGGER = logging.getLogger(__name__)
-
-
-@dataclass
-class MyStromData:
-    """Data class for mystrom device data."""
-
-    device: MyStromSwitch | MyStromBulb
-    info: dict
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

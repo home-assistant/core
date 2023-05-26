@@ -97,6 +97,12 @@ class MyStromLight(LightEntity):
         self._color_h = 0
         self._color_s = 0
         self._mac = mac
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, mac)},
+            name=name,
+            manufacturer=ATTR_MANUFACTURER,
+            sw_version=self._bulb.firmware,
+        )
 
     @property
     def name(self):
@@ -132,16 +138,6 @@ class MyStromLight(LightEntity):
     def is_on(self):
         """Return true if light is on."""
         return self._state
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device info for the light entity."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, self._mac)},
-            name=self.name,
-            manufacturer=ATTR_MANUFACTURER,
-            sw_version=self._bulb.firmware,
-        )
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the light."""
