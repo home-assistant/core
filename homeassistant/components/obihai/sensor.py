@@ -93,13 +93,11 @@ class ObihaiServiceSensors(SensorEntity):
     def __init__(self, pyobihai: PyObihai, serial: str, service_name: str) -> None:
         """Initialize monitor sensor."""
         self._service_name = service_name
-        self._attr_native_value = None
         self._attr_name = f"{OBIHAI} {self._service_name}"
         self._pyobihai = pyobihai
         self._attr_unique_id = f"{serial}-{self._service_name}"
-        self._attr_device_class = (
-            SensorDeviceClass.TIMESTAMP if self._service_name == "Last Reboot" else None
-        )
+        if self._service_name == "Last Reboot":
+            self._attr_device_class = SensorDeviceClass.TIMESTAMP
 
     @property
     def icon(self) -> str:
