@@ -281,6 +281,16 @@ class EzvizCamera(EzvizEntity, Camera):
         except HTTPError as err:
             raise HTTPError("Cannot sound alarm") from err
 
+        ir.async_create_issue(
+            self.hass,
+            DOMAIN,
+            "service_depreciation_sound_alarm",
+            breaks_in_ha_version="2023.8.0",
+            is_fixable=False,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="service_depreciation_sound_alarm",
+        )
+
     def perform_wake_device(self) -> None:
         """Basically wakes the camera by querying the device."""
         try:
