@@ -79,7 +79,7 @@ class MyStromLight(LightEntity):
         """Initialize the light."""
         self._bulb = bulb
         self._attr_name = name
-        self._attr_available = True
+        self._attr_available = False
         self._attr_unique_id = mac
         self._attr_effect_list = MYSTROM_EFFECT_LIST
         self._attr_hs_color = 0, 0
