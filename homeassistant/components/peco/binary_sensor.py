@@ -26,9 +26,11 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up binary sensor for PECO."""
-    if "county" in config_entry.data:
+    if "smart_meter" not in hass.data[DOMAIN][config_entry.entry_id]:
         return
-    coordinator: DataUpdateCoordinator[bool] = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator: DataUpdateCoordinator[bool] = hass.data[DOMAIN][config_entry.entry_id][
+        "smart_meter"
+    ]
 
     async_add_entities(
         [PecoBinarySensor(coordinator, phone_number=config_entry.data["phone_number"])]

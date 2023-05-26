@@ -19,14 +19,10 @@ from homeassistant.helpers import config_validation as cv
 
 from .const import CONF_COUNTY, CONF_PHONE_NUMBER, COUNTY_LIST, DOMAIN
 
-STEP_OUTAGE_COUNTER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_COUNTY): vol.In(COUNTY_LIST),
-    }
-)
-STEP_SMART_METER_DATA_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_PHONE_NUMBER): cv.string,
+        vol.Optional(CONF_PHONE_NUMBER): cv.string,
     }
 )
 
@@ -50,16 +46,16 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         try:
             await api.meter_check(phone_number)
         except ValueError as err:
-            self.meter_error = {"base": "invalid_phone_number", "type": "error"}
+            self.meter_error = {"phone_number": "invalid_phone_number", "type": "error"}
             _LOGGER.exception(err)
         except IncompatibleMeterError as err:
-            self.meter_error = {"base": "incompatible_meter", "type": "abort"}
+            self.meter_error = {"phone_number": "incompatible_meter", "type": "abort"}
             _LOGGER.exception(err)
         except UnresponsiveMeterError as err:
-            self.meter_error = {"base": "unresponsive_meter", "type": "error"}
+            self.meter_error = {"phone_number": "unresponsive_meter", "type": "error"}
             _LOGGER.exception(err)
         except HttpError as err:
-            self.meter_error = {"base": "http_error", "type": "error"}
+            self.meter_error = {"phone_number": "http_error", "type": "error"}
             _LOGGER.exception(err)
 
         self.hass.async_create_task(
@@ -70,50 +66,29 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle the initial step."""
-        return self.async_show_menu(
-            step_id="user", menu_options=["outage_counter", "smart_meter"]
-        )
-
-    async def async_step_outage_counter(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """Handle the outage counter step."""
-        if user_input is None:
-            return self.async_show_form(
-                step_id="outage_counter",
-                data_schema=STEP_OUTAGE_COUNTER_DATA_SCHEMA,
-            )
-
-        county = user_input[CONF_COUNTY]
-
-        await self.async_set_unique_id(county)
-        self._abort_if_unique_id_configured()
-
-        return self.async_create_entry(
-            title=f"{county.capitalize()} Outage Count", data=user_input
-        )
-
-    async def async_step_smart_meter(
-        self, user_input: dict[str, str] | None = None
-    ) -> FlowResult:
-        """Handle the smart meter step."""
         if self.meter_verification is True:
-            if "base" in self.meter_error:
-                if self.meter_error["base"] == "invalid_phone_number":
+            if "phone_number" in self.meter_error:
+                if self.meter_error["phone_number"] == "invalid_phone_number":
                     await asyncio.sleep(
                         0.1
                     )  # If I don't have this here, it will be stuck on the loading symbol
             return self.async_show_progress_done(next_step_id="finish_smart_meter")
 
-        if not user_input:
+        if user_input is None:
             return self.async_show_form(
-                step_id="smart_meter",
-                data_schema=STEP_SMART_METER_DATA_SCHEMA,
+                step_id="user",
+                data_schema=STEP_USER_DATA_SCHEMA,
             )
 
+        county = user_input[CONF_COUNTY]
         phone_number = user_input[CONF_PHONE_NUMBER]
 
-        await self.async_set_unique_id(phone_number)
+        if phone_number is None:
+            return self.async_create_entry(
+                title=user_input[CONF_COUNTY].capitalize(), data=user_input
+            )
+
+        await self.async_set_unique_id(f"{county}-{phone_number}")
         self._abort_if_unique_id_configured()
 
         self.meter_verification = True
@@ -128,7 +103,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.meter_data = user_input
 
         return self.async_show_progress(
-            step_id="smart_meter",
+            step_id="user",
             progress_action="verifying_meter",
         )
 
@@ -136,18 +111,18 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle the finish smart meter step."""
-        if "base" in self.meter_error:
+        if "phone_number" in self.meter_error:
             if self.meter_error["type"] == "error":
                 self.meter_verification = False
                 return self.async_show_form(
-                    step_id="smart_meter",
-                    data_schema=STEP_SMART_METER_DATA_SCHEMA,
-                    errors={"base": self.meter_error["base"]},
+                    step_id="user",
+                    data_schema=STEP_USER_DATA_SCHEMA,
+                    errors={"phone_number": self.meter_error["phone_number"]},
                 )
 
-            return self.async_abort(reason=self.meter_error["base"])
+            return self.async_abort(reason=self.meter_error["phone_number"])
 
         return self.async_create_entry(
-            title=f"{self.meter_data[CONF_PHONE_NUMBER]} Smart Meter",
+            title=f"{self.meter_data[CONF_COUNTY].capitalize()} - {self.meter_data[CONF_PHONE_NUMBER]}",
             data=self.meter_data,
         )

@@ -2,20 +2,13 @@
   "config": {
     "step": {
       "user": {
-        "description": "*Outage Counter* - Allows you to get the number of outages in a county or the entire area.\n*Smart Meter* - Allows you to verify that your breaker is receiving power.",
-        "menu_options": {
-          "outage_counter": "Outage Counter",
-          "smart_meter": "Smart Meter"
-        }
-      },
-      "outage_counter": {
         "data": {
-          "county": "County"
-        }
-      },
-      "smart_meter": {
-        "data": {
+          "county": "County",
           "phone_number": "Phone Number"
+        },
+        "data_description": {
+          "county": "County used for outage number retrieval",
+          "phone_number": "Phone number associated with the PECO account"
         }
       }
     },
