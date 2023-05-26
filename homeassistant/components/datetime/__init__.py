@@ -2,15 +2,13 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime, timedelta, timezone, tzinfo
-import functools
+from datetime import datetime, timedelta, timezone
 import logging
 from typing import final
 
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_DATE, ATTR_TIME
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.config_validation import (  # noqa: F401
@@ -23,7 +21,7 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 
-from .const import ATTR_DATETIME, ATTR_TIME_ZONE, DOMAIN, SERVICE_SET_VALUE
+from .const import ATTR_DATETIME, DOMAIN, SERVICE_SET_VALUE
 
 SCAN_INTERVAL = timedelta(seconds=30)
 
@@ -31,19 +29,17 @@ ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
 _LOGGER = logging.getLogger(__name__)
 
-__all__ = ["DOMAIN", "DateTimeEntity", "DateTimeEntityDescription"]
-
-ATTR_OFFSET = "offset"
+__all__ = ["ATTR_DATETIME", "DOMAIN", "DateTimeEntity", "DateTimeEntityDescription"]
 
 
-def _split_date_time(config):
-    """Split date/time components."""
-    datetime_ = config.pop(ATTR_DATETIME, None)
-    config[ATTR_DATE] = datetime_.date()
-    config[ATTR_TIME] = datetime_.time()
-    if (offset := datetime_.utcoffset()) is not None:
-        config[ATTR_OFFSET] = offset
-    return config
+async def _async_set_value(entity: DateTimeEntity, service_call: ServiceCall) -> None:
+    """Service call wrapper to set a new date/time."""
+    value: datetime = service_call.data[ATTR_DATETIME]
+    if value.tzinfo is None:
+        value = value.replace(
+            tzinfo=dt_util.get_time_zone(entity.hass.config.time_zone)
+        )
+    return await entity.async_set_value(value)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -55,61 +51,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     component.async_register_entity_service(
         SERVICE_SET_VALUE,
-        vol.All(
-            vol.Any(
-                vol.All(
-                    vol.Schema(
-                        {
-                            vol.Optional(ATTR_DATE): cv.date,
-                            vol.Optional(ATTR_TIME): cv.time,
-                            vol.Optional(ATTR_TIME_ZONE): cv.time_zone,
-                            **ENTITY_SERVICE_FIELDS,
-                        }
-                    ),
-                    cv.has_at_least_one_key(ATTR_DATE, ATTR_TIME),
-                ),
-                vol.All(
-                    vol.Schema(
-                        {
-                            vol.Required(ATTR_DATETIME): cv.datetime,
-                            **ENTITY_SERVICE_FIELDS,
-                        }
-                    ),
-                    _split_date_time,
-                ),
-            ),
-            cv.has_at_least_one_key(*ENTITY_SERVICE_FIELDS),
-        ),
-        functools.partial(_async_set_value, hass),
+        {
+            vol.Required(ATTR_DATETIME): cv.datetime,
+            **ENTITY_SERVICE_FIELDS,
+        },
+        _async_set_value,
     )
 
     return True
-
-
-async def _async_set_value(
-    hass: HomeAssistant, entity: DateTimeEntity, service_call: ServiceCall
-) -> None:
-    """Service call wrapper to set a new datetime."""
-    date_ = service_call.data.get(ATTR_DATE)
-    time_ = service_call.data.get(ATTR_TIME)
-    if date_ is None or time_ is None:
-        if entity.native_value is None:
-            raise ValueError(
-                f"Entity {entity.entity_id} has no native value to infer missing "
-                "date/time parts"
-            )
-        if not date_:
-            date_ = entity.native_value.date()
-        if not time_:
-            time_ = entity.native_value.time()
-
-    time_zone: tzinfo | None
-    if ATTR_OFFSET in service_call.data:
-        time_zone = timezone(service_call.data[ATTR_OFFSET])
-    else:
-        time_zone_str = service_call.data.get(ATTR_TIME_ZONE, hass.config.time_zone)
-        time_zone = dt_util.get_time_zone(time_zone_str)
-    return await entity.async_set_value(datetime.combine(date_, time_, time_zone))
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
