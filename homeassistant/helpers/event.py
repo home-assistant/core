@@ -1337,7 +1337,6 @@ def async_track_point_in_utc_time(
     @callback
     def unsub_point_in_time_listener() -> None:
         """Cancel the call_at."""
-        assert cancel_callback is not None
         cancel_callback.cancel()
 
     return unsub_point_in_time_listener
