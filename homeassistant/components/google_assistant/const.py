@@ -22,6 +22,7 @@ from homeassistant.components import (
     sensor,
     switch,
     vacuum,
+    water_heater,
 )
 
 DOMAIN = "google_assistant"
@@ -93,6 +94,7 @@ TYPE_THERMOSTAT = f"{PREFIX_TYPES}THERMOSTAT"
 TYPE_TV = f"{PREFIX_TYPES}TV"
 TYPE_WINDOW = f"{PREFIX_TYPES}WINDOW"
 TYPE_VACUUM = f"{PREFIX_TYPES}VACUUM"
+TYPE_WATERHEATER = f"{PREFIX_TYPES}WATERHEATER"
 
 SERVICE_REQUEST_SYNC = "request_sync"
 HOMEGRAPH_URL = "https://homegraph.googleapis.com/"
@@ -147,6 +149,7 @@ DOMAIN_TO_GOOGLE_TYPES = {
     sensor.DOMAIN: TYPE_SENSOR,
     switch.DOMAIN: TYPE_SWITCH,
     vacuum.DOMAIN: TYPE_VACUUM,
+    water_heater.DOMAIN: TYPE_WATERHEATER,
 }
 
 DEVICE_CLASS_TO_GOOGLE_TYPES = {
