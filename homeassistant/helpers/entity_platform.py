@@ -214,8 +214,7 @@ class EntityPlatform:
                 self.hass,
                 self.domain,
                 f"platform_integration_no_support_{self.domain}_{self.platform_name}",
-                is_fixable=True,
-                is_persistent=True,
+                is_fixable=False,
                 severity=IssueSeverity.ERROR,
                 translation_key="platform_integration_no_support",
                 translation_placeholders={
