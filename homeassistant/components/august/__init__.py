@@ -142,6 +142,11 @@ class AugustData(AugustSubscriberMixin):
         self._house_ids: set[str] = set()
         self._pubnub_unsub: CALLBACK_TYPE | None = None
 
+    @property
+    def brand(self) -> str:
+        """Brand of the device."""
+        return self._config_entry.data.get(CONF_BRAND, DEFAULT_BRAND)
+
     async def async_setup(self):
         """Async setup of august device data and activities."""
         token = self._august_gateway.access_token
@@ -194,7 +199,7 @@ class AugustData(AugustSubscriberMixin):
         self._pubnub_unsub = async_create_pubnub(
             user_data["UserID"],
             pubnub,
-            self._config_entry.data.get(CONF_BRAND, DEFAULT_BRAND),
+            self.brand,
         )
 
         if self._locks_by_id:

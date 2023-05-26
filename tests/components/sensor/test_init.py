@@ -1842,7 +1842,7 @@ async def test_non_numeric_validation_error(
 
     assert (
         "thus indicating it has a numeric value; "
-        f"however, it has the non-numeric value: {native_value}"
+        f"however, it has the non-numeric value: '{native_value}'"
     ) in caplog.text
 
 

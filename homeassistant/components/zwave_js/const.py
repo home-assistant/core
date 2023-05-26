@@ -1,4 +1,6 @@
 """Constants for the Z-Wave JS integration."""
+from __future__ import annotations
+
 import logging
 
 from homeassistant.const import APPLICATION_NAME, __version__ as HA_VERSION
