@@ -5,13 +5,8 @@ from typing import Any
 
 from pyezviz import HTTPError, PyEzvizError
 
-from homeassistant.components.siren import (
-    SirenEntity,
-    SirenEntityDescription,
-    SirenEntityFeature,
-)
+from homeassistant.components.siren import SirenEntity, SirenEntityFeature
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -21,13 +16,6 @@ from .coordinator import EzvizDataUpdateCoordinator
 from .entity import EzvizEntity
 
 PARALLEL_UPDATES = 1
-
-SIREN_ENTITY_TYPES = SirenEntityDescription(
-    key="siren",
-    name="Siren",
-    icon="mdi:eye",
-    entity_category=EntityCategory.CONFIG,
-)
 
 
 async def async_setup_entry(
