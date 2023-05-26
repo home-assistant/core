@@ -52,23 +52,21 @@ def _validate_integration(config: Config, integration: Integration) -> None:
 
     init = ast.parse(init_file.read_text())
 
-    no_yaml_support = not _has_function(
+    # No YAML Support
+    if not _has_function(
         init, ast.AsyncFunctionDef, "async_setup"
-    ) and not _has_function(init, ast.FunctionDef, "setup")
-
-    if no_yaml_support:
+    ) and not _has_function(init, ast.FunctionDef, "setup"):
         return
 
-    has_schema = (
+    # No schema
+    if not (
         _has_assignment(init, "CONFIG_SCHEMA")
         or _has_assignment(init, "PLATFORM_SCHEMA")
         or _has_assignment(init, "PLATFORM_SCHEMA_BASE")
         or _has_import(init, "CONFIG_SCHEMA")
         or _has_import(init, "PLATFORM_SCHEMA")
         or _has_import(init, "PLATFORM_SCHEMA_BASE")
-    )
-
-    if has_schema:
+    ):
         return
 
     if config.specific_integrations:
