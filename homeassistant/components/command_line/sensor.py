@@ -72,7 +72,8 @@ async def async_setup_platform(
             breaks_in_ha_version="2023.8.0",
             is_fixable=False,
             severity=IssueSeverity.WARNING,
-            translation_key="deprecated_yaml_sensor",
+            translation_key="deprecated_platform_yaml",
+            translation_placeholders={"platform": "Sensor"},
         )
     if discovery_info:
         sensor_config = discovery_info

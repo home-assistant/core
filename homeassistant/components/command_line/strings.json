@@ -1,24 +1,8 @@
 {
   "issues": {
-    "deprecated_yaml_binary_sensor": {
+    "deprecated_platform_yaml": {
       "title": "Command Line YAML configuration has been deprecated",
-      "description": "Configuring Command Line Binary Sensors using YAML has been deprecated.\n\nConsult the documentation to move your YAML configura to integration key and restart Home Assistant to resolve this issue."
-    },
-    "deprecated_yaml_cover": {
-      "title": "[%key:component::command_line::issues::deprecated_yaml_binary_sensor::title%]",
-      "description": "Configuring Command Line Covers using YAML has been deprecated.\n\nConsult the documentation to move your YAML configura to integration key and restart Home Assistant to resolve this issue."
-    },
-    "deprecated_yaml_notify": {
-      "title": "[%key:component::command_line::issues::deprecated_yaml_binary_sensor::title%]",
-      "description": "Configuring Command Line Notifiers using YAML has been deprecated.\n\nConsult the documentation to move your YAML configura to integration key and restart Home Assistant to resolve this issue."
-    },
-    "deprecated_yaml_sensor": {
-      "title": "[%key:component::command_line::issues::deprecated_yaml_binary_sensor::title%]",
-      "description": "Configuring Command Line Sensors using YAML has been deprecated.\n\nConsult the documentation to move your YAML configura to integration key and restart Home Assistant to resolve this issue."
-    },
-    "deprecated_yaml_switch": {
-      "title": "[%key:component::command_line::issues::deprecated_yaml_binary_sensor::title%]",
-      "description": "Configuring Command Line Switches using YAML has been deprecated.\n\nConsult the documentation to move your YAML configura to integration key and restart Home Assistant to resolve this issue."
+      "description": "Configuring Command Line {platform} using YAML has been deprecated.\n\nConsult the documentation to move your YAML configuration to integration key and restart Home Assistant to resolve this issue."
     }
   }
 }

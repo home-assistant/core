@@ -42,7 +42,8 @@ def get_service(
             breaks_in_ha_version="2023.8.0",
             is_fixable=False,
             severity=IssueSeverity.WARNING,
-            translation_key="deprecated_yaml_notify",
+            translation_key="deprecated_platform_yaml",
+            translation_placeholders={"platform": "Notify"},
         )
     if discovery_info:
         notify_config = discovery_info
