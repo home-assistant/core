@@ -99,16 +99,23 @@ async def _resetup_platform(
         await _async_reconfig_platform(platform, root_config[integration_platform])
         return
 
-    if not root_config[integration_platform]:
-        # if still empty, config might be new adr0007 style.
-        # Note that the 'group' integration has still an old-style config
-        # that conflicts with adr0007, so that's a temporary exception
-        if (integration_name != "group") and conf.get(integration_name):
+    # if still empty, config might be new adr0007 style.
+    if not root_config[integration_platform] and conf.get(integration_name):
+        # If it exists and it's a list, add the list.
+        if isinstance(conf[integration_name], list):
             root_config[integration_platform].append(conf[integration_name])
-        if not root_config[integration_platform]:
-            # No config for this platform
-            # and it's not loaded. Nothing to do.
-            return
+        # If type is dict, compare dict key with the platform to support multi platform type
+        if isinstance(conf[integration_name], dict) and conf[integration_name].get(
+            integration_platform
+        ):
+            root_config[integration_platform].append(
+                conf[integration_name][integration_platform]
+            )
+
+    if not root_config[integration_platform]:
+        # No config for this platform
+        # and it's not loaded. Nothing to do.
+        return
 
     await _async_setup_platform(
         hass, integration_name, integration_platform, root_config[integration_platform]
