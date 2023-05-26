@@ -94,7 +94,7 @@
         "step": {
           "confirm": {
             "title": "Platform support removal",
-            "description": "The {platform} platform for the {domain} integration does not support platform setup.\n\nPlease remove it from your config and select **submit** to close this issue."
+            "description": "The {platform} platform for the {domain} integration does not support platform setup.\n\nPlease remove it from your configuration and restart Home Assistant to close this issue."
           }
         }
       }
