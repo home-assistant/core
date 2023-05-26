@@ -79,6 +79,6 @@ class MyStromSwitch(SwitchEntity):
             self._attr_is_on = self.plug.relay
             self._attr_available = True
         except MyStromConnectionError:
-            if self._attr_available:
+            if self.available:
                 self._attr_available = False
                 _LOGGER.error("No route to myStrom plug")
