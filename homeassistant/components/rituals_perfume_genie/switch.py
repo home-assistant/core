@@ -73,7 +73,6 @@ class RitualsSwitchEntity(DiffuserEntity, SwitchEntity):
     ) -> None:
         """Initialize the diffuser switch."""
         super().__init__(coordinator, description)
-        self._attr_name = coordinator.diffuser.name
         self._attr_is_on = description.is_on_fn(coordinator.diffuser)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
