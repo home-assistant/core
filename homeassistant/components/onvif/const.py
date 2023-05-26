@@ -14,6 +14,8 @@ DEFAULT_ARGUMENTS = "-pred 1"
 
 CONF_DEVICE_ID = "deviceid"
 CONF_SNAPSHOT_AUTH = "snapshot_auth"
+CONF_ENABLE_WEBHOOKS = "enable_webhooks"
+DEFAULT_ENABLE_WEBHOOKS = True
 
 ATTR_PAN = "pan"
 ATTR_TILT = "tilt"
