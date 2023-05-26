@@ -5,8 +5,6 @@ import ast
 
 from .model import Config, Integration
 
-UNIQUE_ID_IGNORE = {"huawei_lte", "mqtt", "adguard"}
-
 
 def _has_assignment(module: ast.Module, name: str) -> bool:
     """Test if the module assigns to a name."""
