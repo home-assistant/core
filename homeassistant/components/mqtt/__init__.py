@@ -371,7 +371,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         conf: ConfigType,
     ) -> None:
         """Forward the config entry setup to the platforms and set up discovery."""
-        reload_manual_setup: bool = False
         # Local import to avoid circular dependencies
         # pylint: disable-next=import-outside-toplevel
         from . import device_automation, tag
@@ -396,19 +395,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             )
         # Setup reload service after all platforms have loaded
         await async_setup_reload_service()
-        # When the entry is reloaded, also reload manual set up items to enable MQTT
-        if mqtt_data.reload_entry:
-            mqtt_data.reload_entry = False
-            reload_manual_setup = True
-
-        # When the entry was disabled before, reload manual set up items to enable
-        # MQTT again
-        if mqtt_data.reload_needed:
-            mqtt_data.reload_needed = False
-            reload_manual_setup = True
-
-        if reload_manual_setup:
-            await async_reload_manual_mqtt_items(hass)
 
     await async_forward_entry_setup_and_setup_discovery(entry, conf)
 
@@ -567,15 +553,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Cleanup listeners
     mqtt_client.cleanup()
 
-    # Trigger reload manual MQTT items at entry setup
-    if (mqtt_entry_status := mqtt_config_entry_enabled(hass)) is False:
-        # The entry is disabled reload legacy manual items when
-        # the entry is enabled again
-        mqtt_data.reload_needed = True
-    elif mqtt_entry_status is True:
-        # The entry is reloaded:
-        # Trigger re-fetching the yaml config at entry setup
-        mqtt_data.reload_entry = True
     # Cleanup entity registry hooks
     registry_hooks = mqtt_data.discovery_registry_hooks
     while registry_hooks:
