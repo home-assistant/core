@@ -71,9 +71,6 @@ async def _resetup_platform(
 
     root_config: dict[str, list[ConfigType]] = {integration_platform: []}
 
-    if conf.get(integration_name):  # adr0007 new style config
-        root_config[integration_platform].append(conf[integration_name])
-
     # Extract only the config for template, ignore the rest.
     for p_type, p_config in config_per_platform(conf, integration_platform):
         if p_type != integration_name:
@@ -103,9 +100,15 @@ async def _resetup_platform(
         return
 
     if not root_config[integration_platform]:
-        # No config for this platform
-        # and it's not loaded. Nothing to do.
-        return
+        # if still empty, config might be new adr0007 style.
+        # Note that the 'group' integration has still an old-style config
+        # that conflicts with adr0007, so that's a temporary exception
+        if (integration_name != "group") and conf.get(integration_name):
+            root_config[integration_platform].append(conf[integration_name])
+        if not root_config[integration_platform]:
+            # No config for this platform
+            # and it's not loaded. Nothing to do.
+            return
 
     await _async_setup_platform(
         hass, integration_name, integration_platform, root_config[integration_platform]
