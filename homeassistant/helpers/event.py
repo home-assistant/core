@@ -263,9 +263,9 @@ def async_track_state_change_event(
 @callback
 def _async_dispatch_indexed_event(
     hass: HomeAssistant,
+    callbacks: dict[str, list[HassJob[[Event], Any]]],
     event: Event,
     indexed_key: str,
-    callbacks: dict[str, list[HassJob[[Event], Any]]],
 ) -> None:
     """Dispatch to listeners."""
     if indexed_key not in callbacks:
@@ -291,7 +291,7 @@ def _async_state_change_dispatcher(
     hass: HomeAssistant, callbacks: dict[str, list[HassJob[[Event], Any]]], event: Event
 ) -> None:
     """Dispatch state changes by entity_id."""
-    _async_dispatch_indexed_event(hass, event, event.data["entity_id"], callbacks)
+    _async_dispatch_indexed_event(hass, callbacks, event, event.data["entity_id"])
 
 
 @bind_hass
@@ -405,7 +405,7 @@ def _async_entity_registry_updated_dispatcher(
 ) -> None:
     """Dispatch entity registry updates by entity_id."""
     entity_id = event.data.get("old_entity_id", event.data["entity_id"])
-    _async_dispatch_indexed_event(hass, event, entity_id, callbacks)
+    _async_dispatch_indexed_event(hass, callbacks, event, entity_id)
 
 
 @bind_hass
@@ -445,7 +445,7 @@ def _async_device_registry_updated_dispatcher(
     hass: HomeAssistant, callbacks: dict[str, list[HassJob[[Event], Any]]], event: Event
 ) -> None:
     """Dispatch device registry updates by device_id."""
-    _async_dispatch_indexed_event(hass, event, event.data["device_id"], callbacks)
+    _async_dispatch_indexed_event(hass, callbacks, event, event.data["device_id"])
 
 
 def async_track_device_registry_updated_event(
