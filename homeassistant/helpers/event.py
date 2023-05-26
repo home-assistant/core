@@ -470,14 +470,6 @@ def async_track_device_registry_updated_event(
 
 
 @callback
-def _async_domain_has_listeners(
-    domain: str, callbacks: dict[str, list[HassJob[[Event], Any]]]
-) -> bool:
-    """Check if the domain has any listeners."""
-    return domain in callbacks or MATCH_ALL in callbacks
-
-
-@callback
 def _async_dispatch_domain_event(
     hass: HomeAssistant, callbacks: dict[str, list[HassJob[[Event], Any]]], event: Event
 ) -> None:
@@ -497,8 +489,11 @@ def _async_domain_added_filter(
     hass: HomeAssistant, callbacks: dict[str, list[HassJob[[Event], Any]]], event: Event
 ) -> bool:
     """Filter state changes by entity_id."""
-    return event.data.get("old_state") is None and _async_domain_has_listeners(
-        split_entity_id(event.data["entity_id"])[0], callbacks
+    if event.data.get("old_state") is not None:
+        return False
+    return (
+        MATCH_ALL in callbacks
+        or split_entity_id(event.data["entity_id"])[0] in callbacks
     )
 
 
@@ -538,8 +533,11 @@ def _async_domain_removed_filter(
     hass: HomeAssistant, callbacks: dict[str, list[HassJob[[Event], Any]]], event: Event
 ) -> bool:
     """Filter state changes by entity_id."""
-    return event.data.get("new_state") is None and _async_domain_has_listeners(
-        split_entity_id(event.data["entity_id"])[0], callbacks
+    if event.data.get("new_state") is not None:
+        return False
+    return (
+        MATCH_ALL in callbacks
+        or split_entity_id(event.data["entity_id"])[0] in callbacks
     )
 
 
