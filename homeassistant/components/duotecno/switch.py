@@ -1,6 +1,8 @@
 """Support for Duotecno switches."""
 from typing import Any
 
+from duotecno.unit import SwitchUnit
+
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -25,6 +27,8 @@ async def async_setup_entry(
 
 class DuotecnoSwitch(DuotecnoEntity, SwitchEntity):
     """Representation of a switch."""
+
+    _unit: SwitchUnit
 
     @property
     def is_on(self) -> bool:
