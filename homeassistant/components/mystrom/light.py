@@ -100,7 +100,6 @@ class MyStromLight(LightEntity):
             sw_version=self._bulb.firmware,
         )
 
-
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the light."""
         brightness = kwargs.get(ATTR_BRIGHTNESS, 255)
