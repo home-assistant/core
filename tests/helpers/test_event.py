@@ -113,7 +113,6 @@ async def test_track_point_in_time_drift_rearm(hass: HomeAssistant) -> None:
     async_fire_time_changed(
         hass,
         datetime(now.year + 1, 5, 24, 21, 59, 00, tzinfo=dt_util.UTC),
-        fire_all=True,
     )
     await hass.async_block_till_done()
     assert len(specific_runs) == 0
@@ -3886,7 +3885,6 @@ async def test_periodic_task_clock_rollback(hass: HomeAssistant) -> None:
     async_fire_time_changed(
         hass,
         datetime(now.year + 1, 5, 24, 22, 0, 0, 999999, tzinfo=dt_util.UTC),
-        fire_all=True,
     )
     await hass.async_block_till_done()
     assert len(specific_runs) == 1
@@ -3894,7 +3892,6 @@ async def test_periodic_task_clock_rollback(hass: HomeAssistant) -> None:
     async_fire_time_changed(
         hass,
         datetime(now.year + 1, 5, 24, 0, 0, 0, 999999, tzinfo=dt_util.UTC),
-        fire_all=True,
     )
     await hass.async_block_till_done()
     assert len(specific_runs) == 1
