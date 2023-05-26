@@ -261,21 +261,22 @@ def async_track_state_change_event(
 
 
 @callback
-def _async_dispatch_indexed_event(
+def _async_dispatch_entity_id_event(
     hass: HomeAssistant,
     callbacks: dict[str, list[HassJob[[Event], Any]]],
     event: Event,
-    indexed_key: str,
 ) -> None:
     """Dispatch to listeners."""
+    indexed_key = event.data["entity_id"]
     if indexed_key not in callbacks:
         return
-
     for job in callbacks[indexed_key][:]:
         try:
             hass.async_run_hass_job(job, event)
         except Exception:  # pylint: disable=broad-except
-            _LOGGER.exception("Error while dispatching event for %s", indexed_key)
+            _LOGGER.exception(
+                "Error while dispatching event for %s to %s", indexed_key, job
+            )
 
 
 @callback
@@ -284,14 +285,6 @@ def _async_state_change_filter(
 ) -> bool:
     """Filter state changes by entity_id."""
     return event.data["entity_id"] in callbacks
-
-
-@callback
-def _async_state_change_dispatcher(
-    hass: HomeAssistant, callbacks: dict[str, list[HassJob[[Event], Any]]], event: Event
-) -> None:
-    """Dispatch state changes by entity_id."""
-    _async_dispatch_indexed_event(hass, callbacks, event, event.data["entity_id"])
 
 
 @bind_hass
@@ -307,7 +300,7 @@ def _async_track_state_change_event(
         TRACK_STATE_CHANGE_CALLBACKS,
         TRACK_STATE_CHANGE_LISTENER,
         EVENT_STATE_CHANGED,
-        _async_state_change_dispatcher,
+        _async_dispatch_entity_id_event,
         _async_state_change_filter,
         action,
     )
@@ -391,21 +384,31 @@ def _async_track_event(
 
 
 @callback
+def _async_dispatch_old_entity_or_entity_id_event(
+    hass: HomeAssistant,
+    callbacks: dict[str, list[HassJob[[Event], Any]]],
+    event: Event,
+) -> None:
+    """Dispatch to listeners."""
+    indexed_key = event.data.get("old_entity_id", event.data["entity_id"])
+    if indexed_key not in callbacks:
+        return
+    for job in callbacks[indexed_key][:]:
+        try:
+            hass.async_run_hass_job(job, event)
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.exception(
+                "Error while dispatching event for %s to %s", indexed_key, job
+            )
+
+
+@callback
 def _async_entity_registry_updated_filter(
     hass: HomeAssistant, callbacks: dict[str, list[HassJob[[Event], Any]]], event: Event
 ) -> bool:
     """Filter entity registry updates by entity_id."""
     entity_id = event.data.get("old_entity_id", event.data["entity_id"])
     return entity_id in callbacks
-
-
-@callback
-def _async_entity_registry_updated_dispatcher(
-    hass: HomeAssistant, callbacks: dict[str, list[HassJob[[Event], Any]]], event: Event
-) -> None:
-    """Dispatch entity registry updates by entity_id."""
-    entity_id = event.data.get("old_entity_id", event.data["entity_id"])
-    _async_dispatch_indexed_event(hass, callbacks, event, entity_id)
 
 
 @bind_hass
@@ -426,7 +429,7 @@ def async_track_entity_registry_updated_event(
         TRACK_ENTITY_REGISTRY_UPDATED_CALLBACKS,
         TRACK_ENTITY_REGISTRY_UPDATED_LISTENER,
         EVENT_ENTITY_REGISTRY_UPDATED,
-        _async_entity_registry_updated_dispatcher,
+        _async_dispatch_old_entity_or_entity_id_event,
         _async_entity_registry_updated_filter,
         action,
     )
@@ -441,11 +444,22 @@ def _async_device_registry_updated_filter(
 
 
 @callback
-def _async_device_registry_updated_dispatcher(
-    hass: HomeAssistant, callbacks: dict[str, list[HassJob[[Event], Any]]], event: Event
+def _async_dispatch_device_id_event(
+    hass: HomeAssistant,
+    callbacks: dict[str, list[HassJob[[Event], Any]]],
+    event: Event,
 ) -> None:
-    """Dispatch device registry updates by device_id."""
-    _async_dispatch_indexed_event(hass, callbacks, event, event.data["device_id"])
+    """Dispatch to listeners."""
+    indexed_key = event.data["device_id"]
+    if indexed_key not in callbacks:
+        return
+    for job in callbacks[indexed_key][:]:
+        try:
+            hass.async_run_hass_job(job, event)
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.exception(
+                "Error while dispatching event for %s to %s", indexed_key, job
+            )
 
 
 def async_track_device_registry_updated_event(
@@ -463,7 +477,7 @@ def async_track_device_registry_updated_event(
         TRACK_DEVICE_REGISTRY_UPDATED_CALLBACKS,
         TRACK_DEVICE_REGISTRY_UPDATED_LISTENER,
         EVENT_DEVICE_REGISTRY_UPDATED,
-        _async_device_registry_updated_dispatcher,
+        _async_dispatch_device_id_event,
         _async_device_registry_updated_filter,
         action,
     )
