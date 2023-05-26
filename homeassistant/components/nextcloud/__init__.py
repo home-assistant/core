@@ -17,11 +17,14 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.helpers import config_validation as cv
 
 from .const import DOMAIN
 from .coordinator import NextcloudDataUpdateCoordinator
 
 PLATFORMS = (Platform.SENSOR, Platform.BINARY_SENSOR)
+
+CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
