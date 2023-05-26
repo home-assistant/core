@@ -79,7 +79,7 @@ class MyStromSwitch(SwitchEntity):
             name=name,
             manufacturer=ATTR_MANUFACTURER,
             sw_version=self.plug.firmware,
-        )    
+        )
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
