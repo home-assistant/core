@@ -1,4 +1,4 @@
-"""The Formula 1 integration."""
+"""The Formula One integration."""
 from __future__ import annotations
 
 from homeassistant.config_entries import ConfigEntry
