@@ -82,7 +82,6 @@ class MyStromLight(LightEntity):
         self._attr_available = True
         self._attr_unique_id = mac
         self._attr_effect_list = MYSTROM_EFFECT_LIST
-        self._attr_is_available = False
         self._attr_hs_color = 0, 0
 
     async def async_turn_on(self, **kwargs: Any) -> None:
