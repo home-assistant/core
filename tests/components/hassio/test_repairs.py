@@ -400,3 +400,102 @@ async def test_supervisor_issue_repair_flow_skip_confirmation(
         str(aioclient_mock.mock_calls[-1][1])
         == "http://127.0.0.1/resolution/suggestion/1235"
     )
+
+
+async def test_mount_failed_repair_flow(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    hass_client: ClientSessionGenerator,
+) -> None:
+    """Test repair flow for mount_failed issue."""
+    issue_registry: ir.IssueRegistry = ir.async_get(hass)
+    mock_resolution_info(
+        aioclient_mock,
+        issues=[
+            {
+                "uuid": "1234",
+                "type": "mount_failed",
+                "context": "mount",
+                "reference": "backup_share",
+                "suggestions": [
+                    {
+                        "uuid": "1235",
+                        "type": "execute_reload",
+                        "context": "mount",
+                        "reference": "backup_share",
+                    },
+                    {
+                        "uuid": "1236",
+                        "type": "execute_remove",
+                        "context": "mount",
+                        "reference": "backup_share",
+                    },
+                ],
+            },
+        ],
+    )
+
+    result = await async_setup_component(hass, "hassio", {})
+    assert result
+
+    repair_issue = issue_registry.async_get_issue(domain="hassio", issue_id="1234")
+    assert repair_issue
+
+    client = await hass_client()
+
+    resp = await client.post(
+        "/api/repairs/issues/fix",
+        json={"handler": "hassio", "issue_id": repair_issue.issue_id},
+    )
+
+    assert resp.status == HTTPStatus.OK
+    data = await resp.json()
+
+    flow_id = data["flow_id"]
+    assert data == {
+        "type": "menu",
+        "flow_id": flow_id,
+        "handler": "hassio",
+        "step_id": "fix_menu",
+        "data_schema": [
+            {
+                "type": "select",
+                "options": [
+                    ["mount_execute_reload", "mount_execute_reload"],
+                    ["mount_execute_remove", "mount_execute_remove"],
+                ],
+                "name": "next_step_id",
+            }
+        ],
+        "menu_options": ["mount_execute_reload", "mount_execute_remove"],
+        "description_placeholders": {
+            "reference": "backup_share",
+            "storage_url": "/config/storage",
+        },
+    }
+
+    resp = await client.post(
+        f"/api/repairs/issues/fix/{flow_id}",
+        json={"next_step_id": "mount_execute_reload"},
+    )
+
+    assert resp.status == HTTPStatus.OK
+    data = await resp.json()
+
+    flow_id = data["flow_id"]
+    assert data == {
+        "version": 1,
+        "type": "create_entry",
+        "flow_id": flow_id,
+        "handler": "hassio",
+        "description": None,
+        "description_placeholders": None,
+    }
+
+    assert not issue_registry.async_get_issue(domain="hassio", issue_id="1234")
+
+    assert aioclient_mock.mock_calls[-1][0] == "post"
+    assert (
+        str(aioclient_mock.mock_calls[-1][1])
+        == "http://127.0.0.1/resolution/suggestion/1235"
+    )

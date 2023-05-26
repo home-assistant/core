@@ -1,0 +1,10 @@
+{
+  "user_preferences": {
+    "user_id": 12345,
+    "military_time_enabled": false,
+    "celsius_enabled": false,
+    "disconnect_alerts_enabled": true,
+    "home_away_alerts_enabled": false,
+    "battery_alerts_enabled": true
+  }
+}
