@@ -74,8 +74,6 @@ async def async_attach_trigger(
     config: ConfigType,
     action: TriggerActionType,
     trigger_info: TriggerInfo,
-    *,
-    platform_type: str,
 ) -> CALLBACK_TYPE | None:
     """Attach a trigger."""
     device_ids = set()
@@ -98,6 +96,7 @@ async def async_attach_trigger(
         device = async_get_device_entry_by_device_id(hass, device_id)
         device_name = device.name_by_user or device.name
         # Example: extracts "turn off" from "samsungtv.turn_off"
+        platform_type = config[CONF_PLATFORM]
         trigger_name = platform_type.split(".")[1].replace("_", " ")
 
         variables = {
