@@ -40,6 +40,7 @@
         "data": {
           "folder": "[%key:component::imap::config::step::user::data::folder%]",
           "search": "[%key:component::imap::config::step::user::data::search%]",
+          "custom_event_data_template": "Template to create custom event data",
           "max_message_size": "Max message size (2048 < size < 30000)"
         }
       }
@@ -50,7 +51,8 @@
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "invalid_charset": "[%key:component::imap::config::error::invalid_charset%]",
       "invalid_folder": "[%key:component::imap::config::error::invalid_folder%]",
-      "invalid_search": "[%key:component::imap::config::error::invalid_search%]"
+      "invalid_search": "[%key:component::imap::config::error::invalid_search%]",
+      "invalid_template": "Invalid template"
     }
   },
   "selector": {

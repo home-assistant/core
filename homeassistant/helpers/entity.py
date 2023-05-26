@@ -52,16 +52,6 @@ DATA_ENTITY_SOURCE = "entity_info"
 SOURCE_CONFIG_ENTRY = "config_entry"
 SOURCE_PLATFORM_CONFIG = "platform_config"
 
-
-class DeviceClassName(Enum):
-    """Singleton to use device class name."""
-
-    _singleton = 0
-
-
-DEVICE_CLASS_NAME = DeviceClassName._singleton  # pylint: disable=protected-access
-
-
 # Used when converting float states to string: limit precision according to machine
 # epsilon to make the string representation readable
 FLOAT_PRECISION = abs(int(math.floor(math.log10(abs(sys.float_info.epsilon))))) - 1
@@ -229,7 +219,7 @@ class EntityDescription:
     force_update: bool = False
     icon: str | None = None
     has_entity_name: bool = False
-    name: str | DeviceClassName | None = None
+    name: str | None = None
     translation_key: str | None = None
     unit_of_measurement: str | None = None
 
@@ -298,7 +288,7 @@ class Entity(ABC):
     _attr_extra_state_attributes: MutableMapping[str, Any]
     _attr_force_update: bool
     _attr_icon: str | None
-    _attr_name: str | DeviceClassName | None
+    _attr_name: str | None
     _attr_should_poll: bool = True
     _attr_state: StateType = STATE_UNKNOWN
     _attr_supported_features: int | None = None
@@ -328,24 +318,10 @@ class Entity(ABC):
             return self.entity_description.has_entity_name
         return False
 
-    def _device_class_name(self) -> str | None:
-        """Return a translated name of the entity based on its device class."""
-        assert self.platform
-        if not self.has_entity_name:
-            return None
-        device_class_key = self.device_class or "_"
-        name_translation_key = (
-            f"component.{self.platform.domain}.entity_component."
-            f"{device_class_key}.name"
-        )
-        return self.platform.component_translations.get(name_translation_key)
-
     @property
     def name(self) -> str | None:
         """Return the name of the entity."""
         if hasattr(self, "_attr_name"):
-            if self._attr_name is DEVICE_CLASS_NAME:
-                return self._device_class_name()
             return self._attr_name
         if self.translation_key is not None and self.has_entity_name:
             assert self.platform
@@ -353,12 +329,10 @@ class Entity(ABC):
                 f"component.{self.platform.platform_name}.entity.{self.platform.domain}"
                 f".{self.translation_key}.name"
             )
-            if name_translation_key in self.platform.platform_translations:
-                name: str = self.platform.platform_translations[name_translation_key]
+            if name_translation_key in self.platform.entity_translations:
+                name: str = self.platform.entity_translations[name_translation_key]
                 return name
         if hasattr(self, "entity_description"):
-            if self.entity_description.name is DEVICE_CLASS_NAME:
-                return self._device_class_name()
             return self.entity_description.name
         return None
 
