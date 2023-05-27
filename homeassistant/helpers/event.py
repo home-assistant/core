@@ -489,9 +489,7 @@ def _async_domain_added_filter(
     hass: HomeAssistant, callbacks: dict[str, list[HassJob[[Event], Any]]], event: Event
 ) -> bool:
     """Filter state changes by entity_id."""
-    if event.data.get("old_state") is not None:
-        return False
-    return (
+    return event.data.get("old_state") is None and (
         MATCH_ALL in callbacks
         or split_entity_id(event.data["entity_id"])[0] in callbacks
     )
@@ -533,9 +531,7 @@ def _async_domain_removed_filter(
     hass: HomeAssistant, callbacks: dict[str, list[HassJob[[Event], Any]]], event: Event
 ) -> bool:
     """Filter state changes by entity_id."""
-    if event.data.get("new_state") is not None:
-        return False
-    return (
+    return event.data.get("new_state") is None and (
         MATCH_ALL in callbacks
         or split_entity_id(event.data["entity_id"])[0] in callbacks
     )
