@@ -140,6 +140,7 @@ COMMAND_PAUSEUNPAUSE = f"{PREFIX_COMMANDS}PauseUnpause"
 COMMAND_BRIGHTNESS_ABSOLUTE = f"{PREFIX_COMMANDS}BrightnessAbsolute"
 COMMAND_COLOR_ABSOLUTE = f"{PREFIX_COMMANDS}ColorAbsolute"
 COMMAND_ACTIVATE_SCENE = f"{PREFIX_COMMANDS}ActivateScene"
+COMMAND_SET_TEMPERATURE = f"{PREFIX_COMMANDS}SetTemperature"
 COMMAND_THERMOSTAT_TEMPERATURE_SETPOINT = (
     f"{PREFIX_COMMANDS}ThermostatTemperatureSetpoint"
 )
@@ -147,7 +148,6 @@ COMMAND_THERMOSTAT_TEMPERATURE_SET_RANGE = (
     f"{PREFIX_COMMANDS}ThermostatTemperatureSetRange"
 )
 COMMAND_THERMOSTAT_SET_MODE = f"{PREFIX_COMMANDS}ThermostatSetMode"
-COMMAND_WATERHEATER_SET_TEMPERATURE = f"{PREFIX_COMMANDS}SetTemperature"
 COMMAND_LOCKUNLOCK = f"{PREFIX_COMMANDS}LockUnlock"
 COMMAND_FANSPEED = f"{PREFIX_COMMANDS}SetFanSpeed"
 COMMAND_FANSPEEDRELATIVE = f"{PREFIX_COMMANDS}SetFanSpeedRelative"
@@ -901,7 +901,7 @@ class TemperatureControlTrait(_Trait):
     name = TRAIT_TEMPERATURE_CONTROL
 
     commands = [
-        COMMAND_WATERHEATER_SET_TEMPERATURE,
+        COMMAND_SET_TEMPERATURE,
     ]
 
     @staticmethod
@@ -989,7 +989,7 @@ class TemperatureControlTrait(_Trait):
             min_temp = self.state.attributes[water_heater.ATTR_MIN_TEMP]
             max_temp = self.state.attributes[water_heater.ATTR_MAX_TEMP]
 
-            if command == COMMAND_WATERHEATER_SET_TEMPERATURE:
+            if command == COMMAND_SET_TEMPERATURE:
                 temp = TemperatureConverter.convert(
                     params["temperature"], UnitOfTemperature.CELSIUS, unit
                 )
