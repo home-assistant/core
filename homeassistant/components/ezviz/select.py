@@ -40,7 +40,6 @@ async def async_setup_entry(
         for entity, value in coordinator.data[camera].items()
         if entity in SELECT_TYPES.key
         if value
-        if SELECT_TYPES.options
     )
 
 
@@ -61,7 +60,6 @@ class EzvizSensor(EzvizEntity, SelectEntity):
         self._sensor_name = entity
         self._attr_unique_id = f"{serial}_{entity}"
         self.entity_description = description
-        self.options: list[str] = description.options  # type: ignore[assignment]
 
     @property
     def current_option(self) -> str | None:
