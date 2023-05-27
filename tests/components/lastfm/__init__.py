@@ -27,14 +27,31 @@ class MockNetwork:
         self.username = username
 
 
+class MockTopTrack:
+    """Mock TopTrack object for pylast."""
+
+    def __init__(self, item: Track) -> None:
+        """Initialize the mock."""
+        self.item = item
+
+
+class MockLastTrack:
+    """Mock LastTrack object for pylast."""
+
+    def __init__(self, track: Track) -> None:
+        """Initialize the mock."""
+        self.track = track
+
+
 class MockUser:
     """Mock User object for pylast."""
 
-    def __init__(self, now_playing_result, error, has_friends, username):
+    def __init__(self, now_playing_result, error, has_friends, username, first_time):
         """Initialize the mock."""
         self._now_playing_result = now_playing_result
         self._thrown_error = error
         self._has_friends = has_friends
+        self._first_time = first_time
         self.name = username
 
     def get_name(self, capitalized: bool) -> str:
@@ -52,11 +69,15 @@ class MockUser:
 
     def get_recent_tracks(self, limit):
         """Get mock recent tracks."""
-        return []
+        if self._first_time:
+            return []
+        return [MockLastTrack(Track("artist", "title", MockNetwork("test")))]
 
     def get_top_tracks(self, limit):
         """Get mock top tracks."""
-        return []
+        if self._first_time:
+            return []
+        return [MockTopTrack(Track("artist", "title", MockNetwork("test")))]
 
     def get_now_playing(self):
         """Get mock now playing."""
@@ -66,7 +87,7 @@ class MockUser:
         """Get mock friends."""
         if self._has_friends is False:
             raise WSError("network", "status", "Page not found")
-        return [MockUser(None, None, True, USERNAME_2)]
+        return [MockUser(None, None, True, USERNAME_2, False)]
 
 
 def patch_fetch_user(
@@ -74,11 +95,14 @@ def patch_fetch_user(
     thrown_error: Exception | None = None,
     has_friends: bool = True,
     username: str = USERNAME_1,
+    first_time_user: bool = False,
 ) -> MockUser:
     """Patch interface."""
     return patch(
         "pylast.User",
-        return_value=MockUser(now_playing, thrown_error, has_friends, username),
+        return_value=MockUser(
+            now_playing, thrown_error, has_friends, username, first_time_user
+        ),
     )
 
 
