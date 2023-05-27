@@ -1,9 +1,7 @@
 {
   "domain": "lawn_mower",
   "name": "Lawn Mower",
-  "codeowners": [
-    "@mikey0000"
-  ],
+  "codeowners": ["@home-assistant/core"],
   "documentation": "https://www.home-assistant.io/integrations/lawn_mower",
   "quality_scale": "internal"
 }

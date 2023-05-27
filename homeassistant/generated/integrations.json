@@ -2915,6 +2915,10 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "lawn_mower": {
+      "integration_type": "hub",
+      "config_flow": false
+    },
     "lcn": {
       "name": "LCN",
       "integration_type": "hub",
@@ -6728,6 +6732,7 @@
     "input_text",
     "integration",
     "islamic_prayer_times",
+    "lawn_mower",
     "local_calendar",
     "local_ip",
     "min_max",

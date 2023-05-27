@@ -1,22 +1,28 @@
 {
-  "config": {
-    "step": {
-      "user": {
-        "description": "New NEW_NAME Sensor",
-        "data": {
-          "entity": "Input sensor",
-          "name": "Name"
-        }
-      }
+  "title": "Lawn mower",
+  "device_automation": {
+    "condition_type": {
+      "is_docked": "{entity_name} is docked",
+      "is_mowing": "{entity_name} is mowing"
+    },
+    "trigger_type": {
+      "mowing": "{entity_name} started mowing",
+      "docked": "{entity_name} docked"
+    },
+    "action_type": {
+      "mow": "Let {entity_name} mow",
+      "dock": "Let {entity_name} return to the dock"
     }
   },
-  "options": {
-    "step": {
-      "init": {
-        "data": {
-          "entity": "[%key:component::NEW_DOMAIN::config::step::user::description%]"
-        }
-      }
+  "state": {
+    "_": {
+      "name": "Lawn mower",
+      "mowing": "Mowing",
+      "docked": "Docked",
+      "error": "Error",
+      "idle": "[%key:common::state::idle%]",
+      "paused": "[%key:common::state::paused%]",
+      "returning": "Returning to dock"
     }
   }
 }

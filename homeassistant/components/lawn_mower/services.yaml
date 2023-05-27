@@ -1,0 +1,36 @@
+# Describes the format for available lawn_mower services
+
+start_mowing:
+  name: Start mowing
+  description: Start the mowing task.
+  target:
+    entity:
+      domain: lawn_mower
+
+dock:
+  name: Dock
+  description: Stop the mowing task and return to its dock.
+  target:
+    entity:
+      domain: lawn_mower
+
+pause:
+  name: Pause
+  description: Pause the mowing task.
+  target:
+    entity:
+      domain: lawn_mower
+
+enable_schedule:
+  name: Enable schedule
+  description: Enable scheduled mowing.
+  target:
+    entity:
+      domain: lawn_mower
+
+disable_schedule:
+  name: Disable schedule
+  description: disable scheduled mowing.
+  target:
+    entity:
+      domain: lawn_mower
