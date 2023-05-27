@@ -167,7 +167,7 @@ class MjpegCamera(Camera):
         try:
             if self._still_image_url:
                 # Fallback to MJPEG stream if still image URL is not available
-                with suppress(httpx.HTTPError):
+                with suppress(asyncio.TimeoutError, httpx.HTTPError):
                     return (
                         await client.get(self._still_image_url, auth=auth, timeout=10)
                     ).content
