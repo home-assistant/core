@@ -2846,7 +2846,7 @@
     "lastfm": {
       "name": "Last.fm",
       "integration_type": "hub",
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "cloud_polling"
     },
     "launch_library": {

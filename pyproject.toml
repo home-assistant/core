@@ -113,6 +113,7 @@ load-plugins = [
     "pylint.extensions.code_style",
     "pylint.extensions.typing",
     "hass_enforce_type_hints",
+    "hass_inheritance",
     "hass_imports",
     "hass_logger",
     "pylint_per_file_ignores",
