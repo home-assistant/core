@@ -915,9 +915,8 @@ class TemperatureControlTrait(_Trait):
     def sync_attributes(self):
         """Return temperature attributes for a sync request."""
         domain = self.state.domain
-        attrs = self.state.attributes
-
         if domain == water_heater.DOMAIN:
+            attrs = self.state.attributes
             return {
                 "temperatureUnitForUX": _google_temp_unit(
                     self.hass.config.units.temperature_unit
@@ -927,7 +926,6 @@ class TemperatureControlTrait(_Trait):
                     "maxThresholdCelsius": attrs[water_heater.ATTR_MAX_TEMP],
                 },
             }
-
         return {
             "temperatureUnitForUX": _google_temp_unit(
                 self.hass.config.units.temperature_unit
@@ -942,29 +940,30 @@ class TemperatureControlTrait(_Trait):
     def query_attributes(self):
         """Return temperature states."""
         response = {}
-        unit = self.hass.config.units.temperature_unit
         domain = self.state.domain
-        attrs = self.state.attributes
-
+        unit = self.hass.config.units.temperature_unit
         if domain == water_heater.DOMAIN:
-            target_temp = round(
-                TemperatureConverter.convert(
-                    float(attrs["temperature"] or 0), unit, UnitOfTemperature.CELSIUS
-                ),
-                1,
-            )
-            current_temp = round(
-                TemperatureConverter.convert(
-                    float(attrs["current_temperature"] or 0),
-                    unit,
-                    UnitOfTemperature.CELSIUS,
-                ),
-                1,
-            )
-            return {
-                "temperatureSetpointCelsius": target_temp,
-                "temperatureAmbientCelsius": current_temp,
-            }
+            target_temp = self.state.attributes[water_heater.ATTR_TEMPERATURE]
+            current_temp = self.state.attributes[water_heater.ATTR_CURRENT_TEMPERATURE]
+            if target_temp not in (STATE_UNKNOWN, STATE_UNAVAILABLE):
+                response["temperatureSetpointCelsius"] = round(
+                    TemperatureConverter.convert(
+                        float(target_temp),
+                        unit,
+                        UnitOfTemperature.CELSIUS,
+                    ),
+                    1,
+                )
+            if current_temp not in (STATE_UNKNOWN, STATE_UNAVAILABLE):
+                response["temperatureAmbientCelsius"] = round(
+                    TemperatureConverter.convert(
+                        float(current_temp),
+                        unit,
+                        UnitOfTemperature.CELSIUS,
+                    ),
+                    1,
+                )
+            return response
 
         current_temp = self.state.state
         if current_temp not in (STATE_UNKNOWN, STATE_UNAVAILABLE):
@@ -983,13 +982,13 @@ class TemperatureControlTrait(_Trait):
         """Execute a temperature point or mode command."""
         # All sent in temperatures are always in Celsius
         domain = self.state.domain
+        unit = self.hass.config.units.temperature_unit
 
-        if domain == water_heater.DOMAIN:
-            unit = self.hass.config.units.temperature_unit
-            min_temp = self.state.attributes[water_heater.ATTR_MIN_TEMP]
-            max_temp = self.state.attributes[water_heater.ATTR_MAX_TEMP]
+        if command == COMMAND_SET_TEMPERATURE:
+            if domain == water_heater.DOMAIN:
+                min_temp = self.state.attributes[water_heater.ATTR_MIN_TEMP]
+                max_temp = self.state.attributes[water_heater.ATTR_MAX_TEMP]
 
-            if command == COMMAND_SET_TEMPERATURE:
                 temp = TemperatureConverter.convert(
                     params["temperature"], UnitOfTemperature.CELSIUS, unit
                 )
@@ -1009,6 +1008,9 @@ class TemperatureControlTrait(_Trait):
                     blocking=not self.config.should_report_state,
                     context=data.context,
                 )
+                return
+
+        raise SmartHomeError(ERR_NOT_SUPPORTED, f"Execute is not supported by {domain}")
 
 
 @register_trait
