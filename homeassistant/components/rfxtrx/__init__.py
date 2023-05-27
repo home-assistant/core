@@ -263,7 +263,9 @@ async def async_setup_internal(hass: HomeAssistant, entry: ConfigEntry) -> None:
             _remove_device(device_id)
 
     entry.async_on_unload(
-        hass.bus.async_listen(dr.EVENT_DEVICE_REGISTRY_UPDATED, _updated_device)
+        hass.bus.async_listen(
+            dr.EVENT_DEVICE_REGISTRY_UPDATED, _updated_device, run_immediately=True
+        )
     )
 
     def _shutdown_rfxtrx(event: Event) -> None:
