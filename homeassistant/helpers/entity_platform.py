@@ -846,7 +846,13 @@ class EntityPlatform:
             return
 
         async with self._process_updates:
-            if self._update_in_parallel:
+            _LOGGER.warning(
+                "Doing updates for %s %s %s",
+                self.platform_name,
+                self.domain,
+                self.entities,
+            )
+            if self._update_in_parallel or len(self.entities) <= 1:
                 # If we know are going to update sequentially, we want to update
                 # to avoid scheduling the coroutines as tasks that will we know
                 # are going to wait on the semaphore lock.
