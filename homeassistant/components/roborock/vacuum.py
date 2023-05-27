@@ -5,6 +5,7 @@ from roborock.code_mappings import RoborockStateCode
 from roborock.roborock_typing import RoborockCommand
 
 from homeassistant.components.vacuum import (
+    ATTR_STATUS,
     STATE_CLEANING,
     STATE_DOCKED,
     STATE_ERROR,
@@ -82,6 +83,7 @@ class RoborockVacuum(RoborockCoordinatedEntity, StateVacuumEntity):
         | VacuumEntityFeature.STATE
         | VacuumEntityFeature.START
     )
+    _attr_translation_key = DOMAIN
 
     def __init__(
         self,
@@ -97,6 +99,13 @@ class RoborockVacuum(RoborockCoordinatedEntity, StateVacuumEntity):
     def state(self) -> str | None:
         """Return the status of the vacuum cleaner."""
         return STATE_CODE_TO_STATE.get(self._device_status.state)
+
+    @property
+    def state_attributes(self) -> dict[str, Any]:
+        """Return the state attributes."""
+        attributes = super().state_attributes
+        attributes[ATTR_STATUS] = self.status
+        return attributes
 
     @property
     def battery_level(self) -> int | None:
