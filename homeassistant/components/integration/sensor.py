@@ -113,10 +113,6 @@ class IntegrationSensorExtraStoredData(SensorExtraStoredData):
                 if restored.get(ATTR_LAST_VALID_STATE)
                 else None
             )
-        except KeyError:
-            # restored is a dict, but does not have all values
-            _LOGGER.error("Could not restore last_valid_state")
-            return None
         except InvalidOperation:
             # last_period is corrupted
             _LOGGER.error("Could not use last_valid_state")
