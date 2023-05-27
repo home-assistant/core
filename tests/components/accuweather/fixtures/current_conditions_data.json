@@ -127,7 +127,7 @@
     }
   },
   "PressureTendency": {
-    "LocalizedText": "Falling",
+    "LocalizedText": "falling",
     "Code": "F"
   },
   "Past24HourTemperatureDeparture": {
