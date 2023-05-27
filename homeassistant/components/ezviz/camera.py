@@ -274,6 +274,16 @@ class EzvizCamera(EzvizEntity, Camera):
         except HTTPError as err:
             raise HTTPError("Cannot perform PTZ") from err
 
+        ir.async_create_issue(
+            self.hass,
+            DOMAIN,
+            "service_depreciation_ptz",
+            breaks_in_ha_version="2023.8.0",
+            is_fixable=False,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="service_depreciation_ptz",
+        )
+
     def perform_sound_alarm(self, enable: int) -> None:
         """Sound the alarm on a camera."""
         try:
