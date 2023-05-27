@@ -2,7 +2,8 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Iterable
+from collections.abc import AsyncIterator
+from contextlib import suppress
 
 import aiohttp
 from aiohttp import web
@@ -58,11 +59,11 @@ async def async_setup_entry(
     )
 
 
-def extract_image_from_mjpeg(stream: Iterable[bytes]) -> bytes | None:
+async def async_extract_image_from_mjpeg(stream: AsyncIterator[bytes]) -> bytes | None:
     """Take in a MJPEG stream object, return the jpg from it."""
     data = b""
 
-    for chunk in stream:
+    async for chunk in stream:
         data += chunk
         jpg_end = data.find(b"\xff\xd9")
 
@@ -154,16 +155,27 @@ class MjpegCamera(Camera):
 
         return None
 
+    def _get_digest_auth(self) -> httpx.DigestAuth:
+        """Return a DigestAuth object."""
+        username = "" if self._username is None else self._username
+        return httpx.DigestAuth(username, self._password)
+
     async def _async_digest_camera_image(self) -> bytes | None:
         """Return a still image response from the camera using digest authentication."""
         client = get_async_client(self.hass, verify_ssl=self._verify_ssl)
-        username = "" if self._username is None else self._username
-        auth = httpx.DigestAuth(username, self._password)
+        auth = self._get_digest_auth()
         try:
+            if self._still_image_url:
+                # Fallback to MJPEG stream if still image URL is not available
+                with suppress(httpx.HTTPError):
+                    return (
+                        await client.get(self._still_image_url, auth=auth, timeout=10)
+                    ).content
+
             async with client.stream(
                 "get", self._mjpeg_url, auth=auth, timeout=10
-            ) as response:
-                return extract_image_from_mjpeg(response.iter_bytes(102400))
+            ) as stream:
+                return await async_extract_image_from_mjpeg(stream.aiter_bytes(102400))
 
         except asyncio.TimeoutError:
             LOGGER.error("Timeout getting camera image from %s", self.name)
@@ -173,13 +185,31 @@ class MjpegCamera(Camera):
 
         return None
 
+    async def _handle_async_mjpeg_digest_stream(
+        self, request: web.Request
+    ) -> web.StreamResponse | None:
+        """Generate an HTTP MJPEG stream from the camera using digest authentication."""
+        async with get_async_client(self.hass, verify_ssl=self._verify_ssl).stream(
+            "get", self._mjpeg_url, auth=self._get_digest_auth(), timeout=10
+        ) as stream:
+            response = web.StreamResponse(headers=stream.headers)
+            await response.prepare(request)
+            # Stream until we are done or client disconnects
+            with suppress(asyncio.TimeoutError, httpx.HTTPError):
+                async for chunk in stream.aiter_bytes(102400):
+                    if not self.hass.is_running:
+                        break
+                    async with async_timeout.timeout(10):
+                        await response.write(chunk)
+        return response
+
     async def handle_async_mjpeg_stream(
         self, request: web.Request
     ) -> web.StreamResponse | None:
         """Generate an HTTP MJPEG stream from the camera."""
-        # aiohttp don't support DigestAuth -> Fallback
+        # aiohttp don't support DigestAuth so we use httpx
         if self._authentication == HTTP_DIGEST_AUTHENTICATION:
-            return await super().handle_async_mjpeg_stream(request)
+            return await self._handle_async_mjpeg_digest_stream(request)
 
         # connect to stream
         websession = async_get_clientsession(self.hass, verify_ssl=self._verify_ssl)
