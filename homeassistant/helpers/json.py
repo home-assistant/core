@@ -6,7 +6,7 @@ from functools import partial
 import json
 import logging
 from pathlib import Path
-from typing import Any, Final
+from typing import TYPE_CHECKING, Any, Final
 
 import orjson
 
@@ -56,6 +56,18 @@ def json_encoder_default(obj: Any) -> Any:
     raise TypeError
 
 
+if TYPE_CHECKING:
+
+    def json_bytes(obj: Any) -> bytes:
+        """Dump json bytes."""
+
+else:
+    json_bytes = partial(
+        orjson.dumps, option=orjson.OPT_NON_STR_KEYS, default=json_encoder_default
+    )
+    """Dump json bytes."""
+
+
 class ExtendedJSONEncoder(JSONEncoder):
     """JSONEncoder that supports Home Assistant objects and falls back to repr(o)."""
 
@@ -98,12 +110,6 @@ def json_bytes_strip_null(data: Any) -> bytes:
     # We work on the processed result so we don't need to worry about
     # Home Assistant extensions which allows encoding sets, tuples, etc.
     return json_bytes(_strip_null(orjson.loads(result)))
-
-
-json_bytes = partial(
-    orjson.dumps, option=orjson.OPT_NON_STR_KEYS, default=json_encoder_default
-)
-"""Dump json bytes."""
 
 
 def json_dumps(data: Any) -> str:
