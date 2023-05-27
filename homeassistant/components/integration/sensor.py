@@ -239,7 +239,7 @@ class IntegrationSensor(RestoreSensor):
             self._last_valid_state = last_sensor_data.last_valid_state
 
         elif (state := await self.async_get_last_state()) is not None:
-            # legacy to be removed on 2023.10 (we are keeping this to avoid utility_meter counter losses)
+            # legacy to be removed on 2023.10 (we are keeping this to avoid losing data during the transition)
             if state.state in [STATE_UNAVAILABLE, STATE_UNKNOWN]:
                 if state.state == STATE_UNAVAILABLE:
                     self._attr_available = False
