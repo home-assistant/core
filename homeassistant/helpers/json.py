@@ -2,6 +2,7 @@
 from collections import deque
 from collections.abc import Callable
 import datetime
+from functools import partial
 import json
 import logging
 from pathlib import Path
@@ -75,13 +76,6 @@ class ExtendedJSONEncoder(JSONEncoder):
             return {"__type": str(type(o)), "repr": repr(o)}
 
 
-def json_bytes(data: Any) -> bytes:
-    """Dump json bytes."""
-    return orjson.dumps(
-        data, option=orjson.OPT_NON_STR_KEYS, default=json_encoder_default
-    )
-
-
 def _strip_null(obj: Any) -> Any:
     """Strip NUL from an object."""
     if isinstance(obj, str):
@@ -106,6 +100,12 @@ def json_bytes_strip_null(data: Any) -> bytes:
     return json_bytes(_strip_null(orjson.loads(result)))
 
 
+json_bytes = partial(
+    orjson.dumps, option=orjson.OPT_NON_STR_KEYS, default=json_encoder_default
+)
+"""Dump json bytes."""
+
+
 def json_dumps(data: Any) -> str:
     """Dump json string.
 
@@ -119,9 +119,7 @@ def json_dumps(data: Any) -> str:
     with option |= orjson.OPT_PASSTHROUGH_DATACLASS and it
     will fallback to as_dict
     """
-    return orjson.dumps(
-        data, option=orjson.OPT_NON_STR_KEYS, default=json_encoder_default
-    ).decode("utf-8")
+    return json_bytes(data).decode("utf-8")
 
 
 def json_dumps_sorted(data: Any) -> str:
