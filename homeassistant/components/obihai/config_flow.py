@@ -136,4 +136,3 @@ class ObihaiFlowHandler(ConfigFlow, domain=DOMAIN):
             )
 
         return await self.async_step_user(user_input=user_input)
-
