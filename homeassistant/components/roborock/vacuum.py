@@ -99,6 +99,11 @@ class RoborockVacuum(RoborockCoordinatedEntity, StateVacuumEntity):
         return STATE_CODE_TO_STATE.get(self._device_status.state)
 
     @property
+    def extra_state_attributes(self) -> dict[str, dict[str, int]]:
+        """Return the extra state attributes of Roborock vacuums."""
+        return {"rooms": self.coordinator.device_info.room_mapping}
+
+    @property
     def battery_level(self) -> int | None:
         """Return the battery level of the vacuum cleaner."""
         return self._device_status.battery

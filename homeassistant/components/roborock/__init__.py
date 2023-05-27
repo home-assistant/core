@@ -65,6 +65,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             device,
             network_info[device_id],
             product_info[device.product_id],
+            home_data.rooms,
         )
     # If one device update fails - we still want to set up other devices
     await asyncio.gather(

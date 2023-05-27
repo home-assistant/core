@@ -13,3 +13,4 @@ class RoborockHassDeviceInfo:
     network_info: NetworkInfo
     product: HomeDataProduct
     props: DeviceProp
+    room_mapping: dict[str, int]

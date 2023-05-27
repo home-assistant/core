@@ -4,7 +4,13 @@ from __future__ import annotations
 from datetime import timedelta
 import logging
 
-from roborock.containers import DeviceData, HomeDataDevice, HomeDataProduct, NetworkInfo
+from roborock.containers import (
+    DeviceData,
+    HomeDataDevice,
+    HomeDataProduct,
+    HomeDataRoom,
+    NetworkInfo,
+)
 from roborock.exceptions import RoborockException
 from roborock.local_api import RoborockLocalClient
 from roborock.roborock_typing import DeviceProp
@@ -29,17 +35,16 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
         device: HomeDataDevice,
         device_networking: NetworkInfo,
         product_info: HomeDataProduct,
+        rooms: list[HomeDataRoom],
     ) -> None:
         """Initialize."""
         super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=SCAN_INTERVAL)
         self.device_info = RoborockHassDeviceInfo(
-            device,
-            device_networking,
-            product_info,
-            DeviceProp(),
+            device, device_networking, product_info, DeviceProp(), {}
         )
         device_info = DeviceData(device, product_info.model, device_networking.ip)
         self.api = RoborockLocalClient(device_info)
+        self.rooms = rooms
 
     async def release(self) -> None:
         """Disconnect from API."""
@@ -53,6 +58,14 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
                 self.device_info.props.update(device_prop)
             else:
                 self.device_info.props = device_prop
+        if not self.device_info.room_mapping:
+            room_mapping = await self.api.get_room_mapping()
+            if room_mapping:
+                room_iot_name = {str(room.id): str(room.name) for room in self.rooms}
+                self.device_info.room_mapping = {
+                    room_iot_name.get(rm.iot_id, "Unknown"): rm.segment_id
+                    for rm in room_mapping
+                }
 
     async def _async_update_data(self) -> DeviceProp:
         """Update data via library."""
