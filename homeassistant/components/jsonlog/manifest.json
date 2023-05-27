@@ -1,0 +1,9 @@
+{
+  "domain": "jsonlog",
+  "name": "JSON Log",
+  "codeowners": ["@janw"],
+  "documentation": "https://www.home-assistant.io/integrations/jsonlog",
+  "integration_type": "system",
+  "quality_scale": "internal",
+  "requirements": ["python-json-logger==2.0.7"]
+}

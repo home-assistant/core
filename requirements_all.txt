@@ -2127,6 +2127,9 @@ python-izone==1.2.9
 # homeassistant.components.joaoapps_join
 python-join-api==0.0.9
 
+# homeassistant.components.jsonlog
+python-json-logger==2.0.7
+
 # homeassistant.components.juicenet
 python-juicenet==1.1.0
 

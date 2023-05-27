@@ -77,6 +77,8 @@ LOGGING_INTEGRATIONS = {
     # Error logging
     "system_log",
     "sentry",
+    # JSON logging
+    "jsonlog",
 }
 FRONTEND_INTEGRATIONS = {
     # Get the frontend up and running as soon as possible so problem

@@ -636,6 +636,8 @@ build.json @home-assistant/supervisor
 /tests/components/jellyfin/ @j-stienstra @ctalkington
 /homeassistant/components/jewish_calendar/ @tsvi
 /tests/components/jewish_calendar/ @tsvi
+/homeassistant/components/jsonlog/ @janw
+/tests/components/jsonlog/ @janw
 /homeassistant/components/juicenet/ @jesserockz
 /tests/components/juicenet/ @jesserockz
 /homeassistant/components/justnimbus/ @kvanzuijlen
