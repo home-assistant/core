@@ -122,7 +122,7 @@ async def test_device_diagnostics_missing_primary_value(
     integration,
     hass_client: ClientSessionGenerator,
 ) -> None:
-    """Test that the device diagnostics handles an entity with a missing primary value."""
+    """Test that device diagnostics handles an entity with a missing primary value."""
     dev_reg = async_get_dev_reg(hass)
     device = dev_reg.async_get_device({get_device_id(client.driver, multisensor_6)})
     assert device

@@ -158,7 +158,7 @@ pyOpenSSL>=23.1.0
 
 # protobuf must be in package constraints for the wheel
 # builder to build binary wheels
-protobuf==4.22.3
+protobuf==4.23.1
 
 # faust-cchardet: Ensure we have a version we can build wheels
 # 2.1.18 is the first version that works with our wheel builder
@@ -179,6 +179,10 @@ pysnmplib==5.0.21
 # pysnmp is no longer maintained and does not work with newer
 # python
 pysnmp==1000000000.0.0
+
+# pyminiaudio 1.58 is missing files in the package
+# https://github.com/irmen/pyminiaudio/issues/67
+miniaudio==1.57
 """
 
 IGNORE_PRE_COMMIT_HOOK_ID = (
