@@ -34,6 +34,7 @@ PLATFORMS_BY_TYPE: dict[str, list] = {
     ATTR_TYPE_CAMERA: [],
     ATTR_TYPE_CLOUD: [
         Platform.BINARY_SENSOR,
+        Platform.BUTTON,
         Platform.CAMERA,
         Platform.NUMBER,
         Platform.SENSOR,
