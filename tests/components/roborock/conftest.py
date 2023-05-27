@@ -25,6 +25,8 @@ def bypass_api_fixture() -> None:
     ), patch(
         "homeassistant.components.roborock.coordinator.RoborockLocalClient.get_prop",
         return_value=PROP,
+    ), patch(
+        "homeassistant.components.roborock.coordinator.RoborockLocalClient.get_room_mapping"
     ):
         yield
 
@@ -58,6 +60,8 @@ async def setup_entry(
     ), patch(
         "homeassistant.components.roborock.coordinator.RoborockLocalClient.get_prop",
         return_value=PROP,
+    ), patch(
+        "homeassistant.components.roborock.coordinator.RoborockLocalClient.get_room_mapping"
     ):
         assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
