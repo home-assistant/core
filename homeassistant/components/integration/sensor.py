@@ -230,7 +230,7 @@ class IntegrationSensor(RestoreSensor):
 
         if (last_sensor_data := await self.async_get_last_sensor_data()) is not None:
             self._state = (
-                None
+                Decimal(str(last_sensor_data.native_value))
                 if last_sensor_data.native_value
                 else last_sensor_data.last_valid_state
             )
