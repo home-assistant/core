@@ -11,7 +11,7 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
 
 from . import MockService
-from .conftest import CLIENT_ID, GOOGLE_AUTH_URI, SCOPES, TITLE
+from .conftest import CLIENT_ID, GOOGLE_AUTH_URI, SCOPES, TITLE, ComponentSetup
 
 from tests.typing import ClientSessionGenerator
 
@@ -169,3 +169,28 @@ async def test_flow_exception(
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
         assert result["type"] == FlowResultType.ABORT
         assert result["reason"] == "unknown"
+
+
+async def test_options_flow(
+    hass: HomeAssistant, setup_integration: ComponentSetup
+) -> None:
+    """Test the full options flow."""
+    await setup_integration()
+    with patch(
+        "homeassistant.components.youtube.config_flow.build", return_value=MockService()
+    ):
+        entry = hass.config_entries.async_entries(DOMAIN)[0]
+        result = await hass.config_entries.options.async_init(entry.entry_id)
+        await hass.async_block_till_done()
+
+        assert result["type"] == FlowResultType.FORM
+        assert result["step_id"] == "init"
+
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={CONF_CHANNELS: ["UC_x5XG1OV2P6uZZ5FSM9Ttw"]},
+        )
+        await hass.async_block_till_done()
+
+        assert result["type"] == FlowResultType.CREATE_ENTRY
+        assert result["data"] == {CONF_CHANNELS: ["UC_x5XG1OV2P6uZZ5FSM9Ttw"]}
