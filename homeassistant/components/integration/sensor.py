@@ -107,15 +107,16 @@ class IntegrationSensorExtraStoredData(SensorExtraStoredData):
 
         source_entity = restored.get(ATTR_SOURCE_ID)
 
-        try:
-            last_valid_state: Decimal | None = (
-                Decimal(restored[ATTR_LAST_VALID_STATE])
-                if restored.get(ATTR_LAST_VALID_STATE)
-                else None
-            )
-        except InvalidOperation:
-            # last_period is corrupted
-            _LOGGER.error("Could not use last_valid_state")
+        if restored.get(ATTR_LAST_VALID_STATE):
+            try:
+                last_valid_state: Decimal | None = Decimal(
+                    restored[ATTR_LAST_VALID_STATE]
+                )
+            except InvalidOperation:
+                # last_period is corrupted
+                _LOGGER.error("Could not use last_valid_state")
+                return None
+        else:
             return None
 
         return cls(
