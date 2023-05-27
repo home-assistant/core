@@ -234,7 +234,11 @@ class IntegrationSensor(RestoreSensor):
             self._attr_native_value = last_sensor_data.native_value
             self._unit_of_measurement = last_sensor_data.native_unit_of_measurement
             self._last_valid_state = last_sensor_data.last_valid_state
-
+            _LOGGER.debug(
+                "Restored state %s and last_valid_state %s",
+                self._state,
+                self._last_valid_state,
+            )
         elif (state := await self.async_get_last_state()) is not None:
             # legacy to be removed on 2023.10 (we are keeping this to avoid losing data during the transition)
             if state.state in [STATE_UNAVAILABLE, STATE_UNKNOWN]:
