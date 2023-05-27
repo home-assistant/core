@@ -700,7 +700,8 @@ async def test_iblinds_v3_cover(
     entity_id = "cover.window_blind_controller_horizontal_slats_angle"
     state = hass.states.get(entity_id)
     assert state
-    assert state.state == STATE_CLOSED
+    # This device has no state because there is no position value
+    assert state.state == STATE_UNKNOWN
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == (
         CoverEntityFeature.CLOSE_TILT
         | CoverEntityFeature.OPEN_TILT

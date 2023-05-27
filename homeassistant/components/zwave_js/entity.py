@@ -1,6 +1,8 @@
 """Generic Z-Wave Entity Class."""
 from __future__ import annotations
 
+from collections.abc import Sequence
+
 from zwave_js_server.const import NodeStatus
 from zwave_js_server.model.driver import Driver
 from zwave_js_server.model.value import Value as ZwaveValue, get_value_id_str
@@ -139,7 +141,7 @@ class ZWaveBaseEntity(Entity):
         self,
         include_value_name: bool = False,
         alternate_value_name: str | None = None,
-        additional_info: list[str | None] | None = None,
+        additional_info: Sequence[str | None] | None = None,
         name_prefix: str | None = None,
     ) -> str:
         """Generate entity name."""

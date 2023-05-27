@@ -145,14 +145,9 @@ class CoverPositionMixin(ZWaveBaseEntity, CoverEntity):
     @property
     def is_closed(self) -> bool | None:
         """Return true if cover is closed."""
-        return self._position_is_closed
-
-    @property
-    def _position_is_closed(self) -> bool | None:
-        """Return true if cover is closed."""
         if not (value := self._current_position_value) or value.value is None:
             return None
-        return bool(value.value == 0)
+        return bool(value.value == self._fully_closed_position)
 
     @property
     def current_cover_position(self) -> int | None:
@@ -393,17 +388,6 @@ class ZWaveWindowCovering(CoverPositionMixin, CoverTiltMixin):
                 )
         self._attr_name = self.generate_name(additional_info=additional_info)
         self._attr_device_class = CoverDeviceClass.WINDOW
-
-    @property
-    def is_closed(self) -> bool | None:
-        """Return if the cover is closed."""
-        if self._position_is_closed is not None:
-            return self._position_is_closed
-        assert self._current_tilt_value
-        return self._current_tilt_value.value in (
-            SlatStates.CLOSED_1,
-            SlatStates.CLOSED_2,
-        )
 
     @property
     def _fully_open_tilt(self) -> int:
