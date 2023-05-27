@@ -228,8 +228,8 @@ async def test_platform_warn_slow_setup(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
         assert mock_call.called
 
-        # mock_calls[0] is the warning message for component setup
-        # mock_calls[4] is the warning message for platform setup
+        # mock_calls[3] is the warning message for component setup
+        # mock_calls[10] is the warning message for platform setup
         timeout, logger_method = mock_call.mock_calls[10][1][:2]
 
         assert timeout - hass.loop.time() == pytest.approx(
