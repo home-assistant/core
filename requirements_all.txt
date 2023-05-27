@@ -923,7 +923,7 @@ hole==0.8.0
 holidays==0.21.13
 
 # homeassistant.components.frontend
-home-assistant-frontend==20230503.3
+home-assistant-frontend==20230526.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2023.4.26
@@ -1124,7 +1124,7 @@ mcstatus==6.0.0
 meater-python==0.0.8
 
 # homeassistant.components.melnor
-melnor-bluetooth==0.0.20
+melnor-bluetooth==0.0.21
 
 # homeassistant.components.message_bird
 messagebird==1.2.0
@@ -2008,7 +2008,7 @@ pysoma==0.0.12
 pyspcwebgw==0.4.0
 
 # homeassistant.components.squeezebox
-pysqueezebox==0.6.1
+pysqueezebox==0.6.3
 
 # homeassistant.components.stiebel_eltron
 pystiebeleltron==0.0.1.dev2
