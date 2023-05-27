@@ -25,6 +25,7 @@ class EzvizButtonEntityDescriptionMixin:
     """Mixin values for EZVIZ button entities."""
 
     method: Callable[[Any, Any, Any], Any]
+    supported_ext: str
 
 
 @dataclass
@@ -37,39 +38,39 @@ class EzvizButtonEntityDescription(
 BUTTON_ENTITIES = (
     EzvizButtonEntityDescription(
         key="ptz_up",
-        entity_registry_enabled_default=False,
         name="PTZ up",
         icon="mdi:pan",
         method=lambda pyezviz_client, serial, run: pyezviz_client.ptz_control(
             "UP", serial, run
         ),
+        supported_ext="154",
     ),
     EzvizButtonEntityDescription(
         key="ptz_down",
-        entity_registry_enabled_default=False,
         name="PTZ down",
         icon="mdi:pan",
         method=lambda pyezviz_client, serial, run: pyezviz_client.ptz_control(
             "DOWN", serial, run
         ),
+        supported_ext="154",
     ),
     EzvizButtonEntityDescription(
         key="ptz_left",
-        entity_registry_enabled_default=False,
         name="PTZ left",
         icon="mdi:pan",
         method=lambda pyezviz_client, serial, run: pyezviz_client.ptz_control(
             "LEFT", serial, run
         ),
+        supported_ext="154",
     ),
     EzvizButtonEntityDescription(
         key="ptz_right",
-        entity_registry_enabled_default=False,
         name="PTZ right",
         icon="mdi:pan",
         method=lambda pyezviz_client, serial, run: pyezviz_client.ptz_control(
             "RIGHT", serial, run
         ),
+        supported_ext="154",
     ),
 )
 
@@ -85,7 +86,10 @@ async def async_setup_entry(
     async_add_entities(
         EzvizButton(coordinator, camera, entity_description)
         for camera in coordinator.data
+        for capibility, value in coordinator.data[camera]["supportExt"].items()
         for entity_description in BUTTON_ENTITIES
+        if capibility == entity_description.supported_ext
+        if value == "1"
     )
 
 
