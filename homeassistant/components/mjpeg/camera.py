@@ -32,6 +32,9 @@ from homeassistant.helpers.httpx_client import get_async_client
 
 from .const import CONF_MJPEG_URL, CONF_STILL_IMAGE_URL, DOMAIN, LOGGER
 
+TIMEOUT = 10
+BUFFER_SIZE = 102400
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -141,7 +144,7 @@ class MjpegCamera(Camera):
 
         websession = async_get_clientsession(self.hass, verify_ssl=self._verify_ssl)
         try:
-            async with async_timeout.timeout(10):
+            async with async_timeout.timeout(TIMEOUT):
                 response = await websession.get(self._still_image_url, auth=self._auth)
 
                 image = await response.read()
@@ -169,13 +172,17 @@ class MjpegCamera(Camera):
                 # Fallback to MJPEG stream if still image URL is not available
                 with suppress(asyncio.TimeoutError, httpx.HTTPError):
                     return (
-                        await client.get(self._still_image_url, auth=auth, timeout=10)
+                        await client.get(
+                            self._still_image_url, auth=auth, timeout=TIMEOUT
+                        )
                     ).content
 
             async with client.stream(
-                "get", self._mjpeg_url, auth=auth, timeout=10
+                "get", self._mjpeg_url, auth=auth, timeout=TIMEOUT
             ) as stream:
-                return await async_extract_image_from_mjpeg(stream.aiter_bytes(102400))
+                return await async_extract_image_from_mjpeg(
+                    stream.aiter_bytes(BUFFER_SIZE)
+                )
 
         except asyncio.TimeoutError:
             LOGGER.error("Timeout getting camera image from %s", self.name)
@@ -190,16 +197,16 @@ class MjpegCamera(Camera):
     ) -> web.StreamResponse | None:
         """Generate an HTTP MJPEG stream from the camera using digest authentication."""
         async with get_async_client(self.hass, verify_ssl=self._verify_ssl).stream(
-            "get", self._mjpeg_url, auth=self._get_digest_auth(), timeout=10
+            "get", self._mjpeg_url, auth=self._get_digest_auth(), timeout=TIMEOUT
         ) as stream:
             response = web.StreamResponse(headers=stream.headers)
             await response.prepare(request)
             # Stream until we are done or client disconnects
             with suppress(asyncio.TimeoutError, httpx.HTTPError):
-                async for chunk in stream.aiter_bytes(102400):
+                async for chunk in stream.aiter_bytes(BUFFER_SIZE):
                     if not self.hass.is_running:
                         break
-                    async with async_timeout.timeout(10):
+                    async with async_timeout.timeout(TIMEOUT):
                         await response.write(chunk)
         return response
 
