@@ -27,6 +27,7 @@ from homeassistant.components import (
     sensor,
     switch,
     vacuum,
+    water_heater,
 )
 from homeassistant.components.alarm_control_panel import AlarmControlPanelEntityFeature
 from homeassistant.components.camera import CameraEntityFeature
@@ -1244,6 +1245,80 @@ async def test_temperature_control(hass: HomeAssistant) -> None:
     with pytest.raises(helpers.SmartHomeError) as err:
         await trt.execute(trait.COMMAND_ONOFF, BASIC_DATA, {"on": False}, {})
     assert err.value.code == const.ERR_NOT_SUPPORTED
+
+
+async def test_temperature_control_water_heater(hass: HomeAssistant) -> None:
+    """Test TemperatureControl trait support for water heater domain."""
+    hass.config.units.temperature_unit = UnitOfTemperature.CELSIUS
+
+    trt = trait.TemperatureControlTrait(
+        hass,
+        State(
+            "water_heater.bla",
+            "attributes",
+            {
+                "min_temp": water_heater.DEFAULT_MIN_TEMP,
+                "max_temp": water_heater.DEFAULT_MAX_TEMP,
+                "temperature": 130,
+                "current_temperature": 120,
+            },
+        ),
+        BASIC_CONFIG,
+    )
+
+    assert trt.sync_attributes() == {
+        "temperatureUnitForUX": "C",
+        "temperatureRange": {"maxThresholdCelsius": 140, "minThresholdCelsius": 110},
+    }
+    assert trt.query_attributes() == {
+        "temperatureSetpointCelsius": 130,
+        "temperatureAmbientCelsius": 120,
+    }
+
+
+async def test_temperature_control_water_heater_set_temperature(
+    hass: HomeAssistant,
+) -> None:
+    """Test TemperatureControl trait support for water heater domain - SetTemperature."""
+    hass.config.units.temperature_unit = UnitOfTemperature.CELSIUS
+
+    trt = trait.TemperatureControlTrait(
+        hass,
+        State(
+            "water_heater.bla",
+            "attributes",
+            {
+                "min_temp": 40,
+                "max_temp": 230,
+                "temperature": 220,
+                "current_temperature": 120,
+            },
+        ),
+        BASIC_CONFIG,
+    )
+
+    assert trt.can_execute(trait.COMMAND_SET_TEMPERATURE, {})
+
+    calls = async_mock_service(
+        hass, water_heater.DOMAIN, water_heater.SERVICE_SET_TEMPERATURE
+    )
+
+    with pytest.raises(helpers.SmartHomeError):
+        await trt.execute(
+            trait.COMMAND_SET_TEMPERATURE,
+            BASIC_DATA,
+            {"temperature": -100},
+            {},
+        )
+
+    await trt.execute(
+        trait.COMMAND_SET_TEMPERATURE,
+        BASIC_DATA,
+        {"temperature": 220},
+        {},
+    )
+    assert len(calls) == 1
+    assert calls[0].data == {ATTR_ENTITY_ID: "water_heater.bla", ATTR_TEMPERATURE: 220}
 
 
 async def test_humidity_setting_humidifier_setpoint(hass: HomeAssistant) -> None:
