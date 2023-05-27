@@ -219,7 +219,7 @@ async def test_restore_unavailable_state(hass: HomeAssistant) -> None:
             "native_value": None,
             "native_unit_of_measurement": "kWh",
             "source_entity": "sensor.power",
-            "last_valid_state": None,
+            "last_valid_state": "None",
         },
     ],
 )
