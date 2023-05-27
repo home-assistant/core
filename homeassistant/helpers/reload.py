@@ -78,6 +78,19 @@ async def _resetup_platform(
 
         root_config[integration_platform].append(p_config)
 
+    # if still empty, config might be new adr0007 style.
+    if not root_config[integration_platform] and conf.get(integration_name):
+        # If it exists and it's a list, this should be new-style config.
+        if isinstance(conf[integration_name], list):
+            # Check if it's a multi-platform config
+            for item in conf[integration_name]:
+                if not item.get(integration_platform):  # Config for current platform
+                    continue
+                root_config[integration_platform].extend(item[integration_platform])
+            # If still  no valid item was found, it's a simple single platform config
+            if not root_config[integration_platform]:
+                root_config[integration_platform].extend(conf[integration_name])
+
     component = integration.get_component()
 
     if hasattr(component, "async_reset_platform"):
@@ -98,19 +111,6 @@ async def _resetup_platform(
     if platform:
         await _async_reconfig_platform(platform, root_config[integration_platform])
         return
-
-    # if still empty, config might be new adr0007 style.
-    if not root_config[integration_platform] and conf.get(integration_name):
-        # If it exists and it's a list, add the list.
-        if isinstance(conf[integration_name], list):
-            root_config[integration_platform].append(conf[integration_name])
-        # If type is dict, compare dict key with the platform to support multi platform type
-        if isinstance(conf[integration_name], dict) and conf[integration_name].get(
-            integration_platform
-        ):
-            root_config[integration_platform].append(
-                conf[integration_name][integration_platform]
-            )
 
     if not root_config[integration_platform]:
         # No config for this platform
