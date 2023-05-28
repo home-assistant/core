@@ -78,10 +78,7 @@ class BaseUnitConverter:
         cls, from_unit: str | None, to_unit: str | None, allow_same_unit: bool = False
     ) -> Callable[[float], float]:
         """Return a function to convert one unit of measurement to another."""
-        if not allow_same_unit and from_unit == to_unit:
-            raise HomeAssistantError("from_unit and to_unit cannot be the same")
-
-        ratio = cls._get_unit_ratio_or_raise(from_unit, to_unit)
+        ratio = cls._get_unit_ratio_or_raise(from_unit, to_unit, allow_same_unit)
 
         def _converter(value: float) -> float:
             return value / ratio
@@ -94,10 +91,7 @@ class BaseUnitConverter:
         cls, from_unit: str | None, to_unit: str | None
     ) -> Callable[[float | None], float | None]:
         """Return a function to convert one unit of measurement to another which allows None."""
-        if from_unit == to_unit:
-            raise HomeAssistantError("from_unit and to_unit cannot be the same")
-
-        ratio = cls._get_unit_ratio_or_raise(from_unit, to_unit)
+        ratio = cls._get_unit_ratio_or_raise(from_unit, to_unit, False)
 
         def _converter_allow_none(value: float | None) -> float | None:
             return None if value is None else value / ratio
@@ -106,9 +100,12 @@ class BaseUnitConverter:
 
     @classmethod
     def _get_unit_ratio_or_raise(
-        cls, from_unit: str | None, to_unit: str | None
+        cls, from_unit: str | None, to_unit: str | None, allow_same_unit: bool = False
     ) -> float:
         """Return the from_ratio and to_ratio for a unit conversion."""
+        if not allow_same_unit and from_unit == to_unit:
+            raise HomeAssistantError("from_unit and to_unit cannot be the same")
+
         try:
             from_ratio = cls._UNIT_CONVERSION[from_unit]
         except KeyError as err:
