@@ -558,10 +558,30 @@ def test_unit_conversion_factory(
     )
 
 
-def test_unit_conversion_factory_raises_same_unit() -> None:
+@pytest.mark.parametrize(
+    ("converter", "value", "from_unit", "expected", "to_unit"),
+    [
+        # Process all items in _CONVERTED_VALUE
+        (converter, value, from_unit, expected, to_unit)
+        for converter, item in _CONVERTED_VALUE.items()
+        for value, from_unit, expected, to_unit in item
+        if from_unit == to_unit
+    ],
+)
+def test_unit_conversion_factory_same_unit(
+    converter: type[BaseUnitConverter],
+    value: float,
+    from_unit: str,
+    expected: float,
+    to_unit: str,
+) -> None:
     """Test conversion to other units."""
     with pytest.raises(HomeAssistantError):
-        SpeedConverter.converter_factory("km/h", "km/h")
+        converter.converter_factory(from_unit, to_unit, allow_same_unit=False)
+
+    assert converter.converter_factory(from_unit, to_unit, allow_same_unit=True)(
+        value
+    ) == pytest.approx(expected)
 
 
 @pytest.mark.parametrize(
