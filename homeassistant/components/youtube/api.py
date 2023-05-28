@@ -1,5 +1,6 @@
 """API for YouTube bound to Home Assistant OAuth."""
 from aiohttp import ClientSession
+from google.auth.exceptions import RefreshError
 from google.oauth2.credentials import Credentials
 from google.oauth2.utils import OAuthClientAuthHandler
 from googleapiclient.discovery import Resource, build
@@ -35,7 +36,11 @@ class AsyncConfigEntryAuth(OAuthClientAuthHandler):
 
     async def get_resource(self) -> Resource:
         """Create executor job to get current resource."""
-        credentials = Credentials(await self.check_and_refresh_token())
+        try:
+            credentials = Credentials(await self.check_and_refresh_token())
+        except RefreshError as ex:
+            self.oauth_session.config_entry.async_start_reauth(self.oauth_session.hass)
+            raise ex
         return await self.hass.async_add_executor_job(self._get_resource, credentials)
 
     def _get_resource(self, credentials: Credentials) -> Resource:
