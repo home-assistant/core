@@ -227,16 +227,10 @@ def _get_statistic_to_display_unit_converter(
 def _get_display_to_statistic_unit_converter(
     display_unit: str | None,
     statistic_unit: str | None,
-) -> Callable[[float], float]:
+) -> Callable[[float], float] | None:
     """Prepare a converter from the display unit to the statistics unit."""
-
-    def no_conversion(val: float) -> float:
-        """Return val."""
-        return val
-
     if (converter := STATISTIC_UNIT_TO_UNIT_CONVERTER.get(statistic_unit)) is None:
-        return no_conversion
-
+        return None
     return converter.converter_factory(from_unit=display_unit, to_unit=statistic_unit)
 
 
@@ -244,19 +238,10 @@ def _get_unit_converter(
     from_unit: str, to_unit: str
 ) -> Callable[[float | None], float | None]:
     """Prepare a converter from a unit to another unit."""
-
-    def convert_units(
-        val: float | None, conv: type[BaseUnitConverter], from_unit: str, to_unit: str
-    ) -> float | None:
-        """Return converted val."""
-        if val is None:
-            return val
-        return conv.convert(val, from_unit=from_unit, to_unit=to_unit)
-
     for conv in STATISTIC_UNIT_TO_UNIT_CONVERTER.values():
         if from_unit in conv.VALID_UNITS and to_unit in conv.VALID_UNITS:
-            return partial(
-                convert_units, conv=conv, from_unit=from_unit, to_unit=to_unit
+            return conv.converter_factory_allow_none(
+                from_unit=from_unit, to_unit=to_unit
             )
     raise HomeAssistantError
 
@@ -2284,10 +2269,10 @@ def adjust_statistics(
             return True
 
         statistic_unit = metadata[statistic_id][1]["unit_of_measurement"]
-        convert = _get_display_to_statistic_unit_converter(
+        if convert := _get_display_to_statistic_unit_converter(
             adjustment_unit, statistic_unit
-        )
-        sum_adjustment = convert(sum_adjustment)
+        ):
+            sum_adjustment = convert(sum_adjustment)
 
         _adjust_sum_statistics(
             session,
