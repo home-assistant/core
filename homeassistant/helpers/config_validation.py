@@ -1046,7 +1046,7 @@ def expand_condition_shorthand(value: Any | None) -> Any:
 
 # Schemas
 def empty_config_schema(domain: str) -> Callable[[dict], dict]:
-    """Return a config schema which logs if thera are configuration parameters."""
+    """Return a config schema which logs if there are configuration parameters."""
 
     module = inspect.getmodule(inspect.stack(context=0)[2].frame)
     if module is not None:
