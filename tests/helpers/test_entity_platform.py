@@ -14,6 +14,7 @@ from homeassistant.helpers import (
     device_registry as dr,
     entity_platform,
     entity_registry as er,
+    issue_registry as ir,
 )
 from homeassistant.helpers.entity import (
     DeviceInfo,
@@ -1458,7 +1459,9 @@ async def test_override_restored_entities(
 
 
 async def test_platform_with_no_setup(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test setting up a platform that does not support setup."""
     entity_platform = MockEntityPlatform(
@@ -1471,6 +1474,12 @@ async def test_platform_with_no_setup(
         "The mock-platform platform for the mock-integration integration does not support platform setup."
         in caplog.text
     )
+    issue = issue_registry.async_get_issue(
+        domain="mock-integration",
+        issue_id="platform_integration_no_support_mock-integration_mock-platform",
+    )
+    assert issue
+    assert issue.translation_key == "platform_integration_no_support"
 
 
 async def test_platforms_sharing_services(hass: HomeAssistant) -> None:
