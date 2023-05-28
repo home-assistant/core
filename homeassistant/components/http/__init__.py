@@ -32,6 +32,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import storage
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.network import NoURLAvailableError, get_url
+from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 from homeassistant.setup import async_start_setup, async_when_setup_or_start
@@ -513,6 +514,19 @@ class HomeAssistantHTTP:
             context.load_cert_chain(cert_pem.name, key_pem.name)
         return context
 
+    def optimize_resources(self) -> None:
+        """Optimize resources."""
+        # aiohttp does a linear search to locate resources to server.
+        # re-sort the resource table to move the cheaper resources to the front
+        # so the frontend loads faster
+        _resource_cost = {
+            web.PlainResource: 2,
+            web.DynamicResource: 10,
+        }
+        self.app.router._resources.sort(  # pylint: disable=protected-access
+            key=lambda resource: _resource_cost.get(type(resource), 0)  # type: ignore[arg-type]
+        )
+
     async def start(self) -> None:
         """Start the aiohttp server."""
         # Aiohttp freezes apps after start so that no changes can be made.
@@ -551,7 +565,14 @@ async def start_http_server_and_save_config(
     hass: HomeAssistant, conf: dict, server: HomeAssistantHTTP
 ) -> None:
     """Startup the http server and save the config."""
+    server.optimize_resources()
     await server.start()
+
+    async def _reoptimize(hass: HomeAssistant) -> None:
+        """Reoptimize resources."""
+        server.optimize_resources()
+
+    async_at_started(hass, _reoptimize)
 
     # If we are set up successful, we store the HTTP settings for safe mode.
     store: storage.Store[dict[str, Any]] = storage.Store(
