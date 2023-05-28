@@ -147,6 +147,8 @@ class OAuth2FlowHandler(
                 "token": {
                     CONF_CLIENT_ID: import_config[CONF_CLIENT_ID],
                     CONF_CLIENT_SECRET: import_config[CONF_CLIENT_SECRET],
+                    "access_token": "",
+                    "refresh_token": "",
                     "expires_at": time.time(),
                     "scope": " ".join(scopes),
                 },

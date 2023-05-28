@@ -76,12 +76,14 @@ class TwitchMock:
         is_gifted: bool = False,
         is_subscribed: bool = False,
         is_following: bool = True,
+        user_found: bool = True,
     ) -> None:
         """Initialize mock."""
         self._is_streaming = is_streaming
         self._is_gifted = is_gifted
         self._is_subscribed = is_subscribed
         self._is_following = is_following
+        self._user_found = user_found
 
     async def _noop(self):
         """Fake function to create task."""
@@ -91,7 +93,10 @@ class TwitchMock:
         self, user_ids: Optional[list[str]] = None, logins: Optional[list[str]] = None
     ) -> AsyncGenerator[TwitchUser, None]:
         """Get list of mock users."""
-        for user in [USER_OBJECT]:
+        users = [USER_OBJECT]
+        if not self._user_found:
+            users = []
+        for user in users:
             yield user
 
     def has_required_auth(

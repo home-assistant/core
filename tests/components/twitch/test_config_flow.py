@@ -7,6 +7,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
 
+from tests.common import MockConfigEntry
 from tests.components.twitch import TwitchMock
 from tests.components.twitch.conftest import CLIENT_ID, SCOPES, TWITCH_AUTHORIZE_URI
 from tests.typing import ClientSessionGenerator
@@ -65,3 +66,80 @@ async def test_full_flow(
     assert result["result"].data["token"]["access_token"] == "mock-access-token"
     assert result["result"].data["token"]["refresh_token"] == "mock-refresh-token"
     assert result["options"] == {CONF_CHANNELS: ["internetofthings"]}
+
+
+async def test_already_configured(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    hass_client_no_auth: ClientSessionGenerator,
+    current_request_with_host: None,
+) -> None:
+    """Test we abort if already configured."""
+    config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+    )
+    state = config_entry_oauth2_flow._encode_jwt(
+        hass,
+        {
+            "flow_id": result["flow_id"],
+            "redirect_uri": "https://example.com/auth/external/callback",
+        },
+    )
+
+    assert result["url"] == (
+        f"{TWITCH_AUTHORIZE_URI}?response_type=code&client_id={CLIENT_ID}"
+        "&redirect_uri=https://example.com/auth/external/callback"
+        f"&state={state}&scope={'+'.join(SCOPES)}"
+    )
+
+    client = await hass_client_no_auth()
+    resp = await client.get(f"/auth/external/callback?code=abcd&state={state}")
+    assert resp.status == 200
+    assert resp.headers["content-type"] == "text/html; charset=utf-8"
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] == FlowResultType.ABORT
+    assert result.get("reason") == "already_configured"
+
+
+async def test_user_not_found(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    current_request_with_host: None,
+) -> None:
+    """Test if the user can't be found."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+    )
+    state = config_entry_oauth2_flow._encode_jwt(
+        hass,
+        {
+            "flow_id": result["flow_id"],
+            "redirect_uri": "https://example.com/auth/external/callback",
+        },
+    )
+
+    assert result["url"] == (
+        f"{TWITCH_AUTHORIZE_URI}?response_type=code&client_id={CLIENT_ID}"
+        "&redirect_uri=https://example.com/auth/external/callback"
+        f"&state={state}&scope={'+'.join(SCOPES)}"
+    )
+
+    client = await hass_client_no_auth()
+    resp = await client.get(f"/auth/external/callback?code=abcd&state={state}")
+    assert resp.status == 200
+    assert resp.headers["content-type"] == "text/html; charset=utf-8"
+
+    with patch(
+        "homeassistant.components.twitch.config_flow.Twitch",
+        return_value=TwitchMock(user_found=False),
+    ):
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+        assert result["type"] == FlowResultType.ABORT
+        assert result.get("reason") == "user_not_found"
