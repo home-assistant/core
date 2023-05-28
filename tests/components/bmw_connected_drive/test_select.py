@@ -125,8 +125,8 @@ async def test_remote_service_exceptions(
         await hass.services.async_call(
             "select",
             "select_option",
-            service_data={"option": "80"},
+            service_data={"option": "16"},
             blocking=True,
-            target={"entity_id": "select.i4_edrive40_target_soc"},
+            target={"entity_id": "select.i4_edrive40_ac_charging_limit"},
         )
     assert RemoteServices.trigger_remote_service.call_count == 1
