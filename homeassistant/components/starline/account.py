@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Any
 
 from starline import StarlineApi, StarlineDevice
@@ -141,7 +141,9 @@ class StarlineAccount:
     def gps_attrs(device: StarlineDevice) -> dict[str, Any]:
         """Attributes for device tracker."""
         return {
-            "updated": datetime.utcfromtimestamp(device.position["ts"]).isoformat(),
+            "updated": datetime.fromtimestamp(device.position["ts"], timezone.utc)
+            .replace(tzinfo=None)
+            .isoformat(),
             "online": device.online,
         }
 

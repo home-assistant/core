@@ -1,7 +1,7 @@
 """Support for RSS/Atom feeds."""
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from logging import getLogger
 from os.path import exists
 import pickle
@@ -196,7 +196,9 @@ class FeedManager:
             self._firstrun = False
         else:
             # Set last entry timestamp as epoch time if not available
-            self._last_entry_timestamp = datetime.utcfromtimestamp(0).timetuple()
+            self._last_entry_timestamp = datetime.fromtimestamp(
+                0, timezone.utc
+            ).timetuple()
         for entry in self._feed.entries:
             if (
                 self._firstrun

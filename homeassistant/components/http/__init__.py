@@ -35,7 +35,7 @@ from homeassistant.helpers.network import NoURLAvailableError, get_url
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 from homeassistant.setup import async_start_setup, async_when_setup_or_start
-from homeassistant.util import ssl as ssl_util
+from homeassistant.util import dt as dt_util, ssl as ssl_util
 from homeassistant.util.json import json_loads
 
 from .auth import async_setup_auth
@@ -491,8 +491,10 @@ class HomeAssistantHTTP:
             .issuer_name(issuer)
             .public_key(key.public_key())
             .serial_number(x509.random_serial_number())
-            .not_valid_before(datetime.datetime.utcnow())
-            .not_valid_after(datetime.datetime.utcnow() + datetime.timedelta(days=30))
+            .not_valid_before(dt_util.utcnow().replace(tzinfo=None))
+            .not_valid_after(
+                dt_util.utcnow().replace(tzinfo=None) + datetime.timedelta(days=30)
+            )
             .add_extension(
                 x509.SubjectAlternativeName([x509.DNSName(host)]),
                 critical=False,

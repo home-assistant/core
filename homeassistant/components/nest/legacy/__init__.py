@@ -1,7 +1,7 @@
 """Support for Nest devices."""
 # mypy: ignore-errors
 
-from datetime import datetime, timedelta
+from datetime import timedelta
 import logging
 import threading
 
@@ -24,6 +24,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
 from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.util import dt as dt_util
 
 from . import local_auth
 from .const import DATA_NEST, DATA_NEST_CONFIG, DOMAIN, SIGNAL_NEST_UPDATE
@@ -196,7 +197,7 @@ async def async_setup_legacy_entry(hass: HomeAssistant, entry: ConfigEntry) -> b
                     )
                     structure.away = AWAY_MODE_AWAY
 
-                    now = datetime.utcnow()
+                    now = dt_util.utcnow().replace(tzinfo=None)
                     trip_id = service.data.get(
                         ATTR_TRIP_ID, f"trip_{int(now.timestamp())}"
                     )

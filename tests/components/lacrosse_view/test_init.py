@@ -92,7 +92,7 @@ async def test_new_token(hass: HomeAssistant) -> None:
     assert len(entries) == 1
     assert entries[0].state == ConfigEntryState.LOADED
 
-    one_hour_after = datetime.utcnow() + timedelta(hours=1)
+    one_hour_after = datetime.now() + timedelta(hours=1)
 
     with patch("lacrosse_view.LaCrosse.login", return_value=True) as login, patch(
         "lacrosse_view.LaCrosse.get_sensors",
@@ -122,7 +122,7 @@ async def test_failed_token(hass: HomeAssistant) -> None:
     assert len(entries) == 1
     assert entries[0].state == ConfigEntryState.LOADED
 
-    one_hour_after = datetime.utcnow() + timedelta(hours=1)
+    one_hour_after = datetime.now() + timedelta(hours=1)
 
     with patch(
         "lacrosse_view.LaCrosse.login", side_effect=LoginError("Test")

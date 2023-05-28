@@ -1,7 +1,7 @@
 """Support for monitoring Repetier Server Sensors."""
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timezone
 import logging
 import time
 
@@ -169,7 +169,9 @@ class RepetierJobEndSensor(RepetierSensor):
         print_time = data["print_time"]
         from_start = data["from_start"]
         time_end = start + round(print_time, 0)
-        self._state = datetime.utcfromtimestamp(time_end)
+        self._state = datetime.fromtimestamp(time_end, datetime.utc).replace(
+            tzinfo=None
+        )
         remaining = print_time - from_start
         remaining_secs = int(round(remaining, 0))
         _LOGGER.debug(
@@ -191,7 +193,7 @@ class RepetierJobStartSensor(RepetierSensor):
         job_name = data["job_name"]
         start = data["start"]
         from_start = data["from_start"]
-        self._state = datetime.utcfromtimestamp(start)
+        self._state = datetime.fromtimestamp(start, timezone.utc).replace(tzinfo=None)
         elapsed_secs = int(round(from_start, 0))
         _LOGGER.debug(
             "Job %s elapsed %s",
