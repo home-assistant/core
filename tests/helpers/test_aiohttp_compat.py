@@ -44,6 +44,7 @@ async def test_handler_cancellation(socket_enabled, unused_tcp_port_factory) -> 
     try:
         async with client.ClientSession(
             timeout=client.ClientTimeout(total=0.1)
+            trust_env=True
         ) as sess:
             with pytest.raises(asyncio.TimeoutError):
                 await sess.get(f"http://127.0.0.1:{port}/")

@@ -138,6 +138,7 @@ def _async_create_clientsession(
         connector=_async_get_connector(hass, verify_ssl),
         json_serialize=json_dumps,
         response_class=HassClientResponse,
+        trust_env=True,
         **kwargs,
     )
     # Prevent packages accidentally overriding our default headers
