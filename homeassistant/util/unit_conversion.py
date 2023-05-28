@@ -385,13 +385,8 @@ class TemperatureConverter(BaseUnitConverter):
             # in _converter_factory because we do not want to wrap
             # it with the None check in this case.
             return lambda value: value
-
         convert = cls._converter_factory(from_unit, to_unit)
-
-        def _converter_allow_none(value: float | None) -> float | None:
-            return None if value is None else convert(value)
-
-        return _converter_allow_none
+        return lambda value: None if value is None else convert(value)
 
     @classmethod
     def _converter_factory(
