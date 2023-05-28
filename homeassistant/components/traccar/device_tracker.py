@@ -333,6 +333,7 @@ class TraccarScanner:
 
     async def import_events(self):
         """Import events from Traccar."""
+        # get_reports_events requires naive UTC datetimes as of 1.0.0
         start_intervel = dt_util.utcnow().replace(tzinfo=None)
         events = await self._api.get_reports_events(
             devices=[device.id for device in self._devices],
