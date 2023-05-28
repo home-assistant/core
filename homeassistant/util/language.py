@@ -60,12 +60,12 @@ def is_language_match(lang_1: str, lang_2: str) -> bool:
         # Exact match
         return True
 
-    if ({lang_1, lang_2} == {"no", "nb"}):
+    if {lang_1, lang_2} == {"no", "nb"}:
         # no = spoken Norwegian
         # nb = written Norwegian (Bokmål)
         return True
 
-    if ({lang_1, lang_2} == {"iw", "he"}):
+    if {lang_1, lang_2} == {"iw", "he"}:
         # he = Hebrew new code
         # iw = Hebrew old code
         return True
