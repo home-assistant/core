@@ -44,6 +44,7 @@ from . import (
 from .device_registry import DeviceRegistry
 from .entity_registry import EntityRegistry, RegistryEntryDisabler, RegistryEntryHider
 from .event import async_call_later, async_track_time_interval
+from .issue_registry import IssueSeverity, async_create_issue
 from .typing import ConfigType, DiscoveryInfoType
 
 if TYPE_CHECKING:
@@ -211,6 +212,19 @@ class EntityPlatform:
                 self.platform_name,
                 self.domain,
             )
+            async_create_issue(
+                self.hass,
+                self.domain,
+                f"platform_integration_no_support_{self.domain}_{self.platform_name}",
+                is_fixable=False,
+                severity=IssueSeverity.ERROR,
+                translation_key="platform_integration_no_support",
+                translation_placeholders={
+                    "domain": self.domain,
+                    "platform": self.platform_name,
+                },
+            )
+
             return
 
         @callback
