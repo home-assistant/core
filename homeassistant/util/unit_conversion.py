@@ -89,7 +89,7 @@ class BaseUnitConverter:
                 UNIT_NOT_RECOGNIZED_TEMPLATE.format(ex.args[0], cls.UNIT_CLASS)
             ) from ex
 
-        return lambda value: (value / from_ratio) * to_ratio
+        return lambda val: (val / from_ratio) * to_ratio
 
     @classmethod
     @lru_cache
@@ -108,10 +108,7 @@ class BaseUnitConverter:
                 UNIT_NOT_RECOGNIZED_TEMPLATE.format(ex.args[0], cls.UNIT_CLASS)
             ) from ex
 
-        def _converter_allow_none(value: float | None) -> float | None:
-            return None if value is None else (value / from_ratio) * to_ratio
-
-        return _converter_allow_none
+        return lambda val: None if val is None else (val / from_ratio) * to_ratio
 
     @classmethod
     @lru_cache
