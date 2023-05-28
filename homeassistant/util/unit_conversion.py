@@ -81,9 +81,10 @@ class BaseUnitConverter:
         if from_unit == to_unit:
             return lambda value: value
 
+        unit_conversion = cls._UNIT_CONVERSION
         try:
-            from_ratio = cls._UNIT_CONVERSION[from_unit]
-            to_ratio = cls._UNIT_CONVERSION[to_unit]
+            from_ratio = unit_conversion[from_unit]
+            to_ratio = unit_conversion[to_unit]
         except KeyError as ex:
             raise HomeAssistantError(
                 UNIT_NOT_RECOGNIZED_TEMPLATE.format(ex.args[0], cls.UNIT_CLASS)
@@ -100,9 +101,10 @@ class BaseUnitConverter:
         if from_unit == to_unit:
             return lambda value: value
 
+        unit_conversion = cls._UNIT_CONVERSION
         try:
-            from_ratio = cls._UNIT_CONVERSION[from_unit]
-            to_ratio = cls._UNIT_CONVERSION[to_unit]
+            from_ratio = unit_conversion[from_unit]
+            to_ratio = unit_conversion[to_unit]
         except KeyError as ex:
             raise HomeAssistantError(
                 UNIT_NOT_RECOGNIZED_TEMPLATE.format(ex.args[0], cls.UNIT_CLASS)
@@ -114,8 +116,10 @@ class BaseUnitConverter:
     @lru_cache
     def get_unit_ratio(cls, from_unit: str | None, to_unit: str | None) -> float:
         """Get unit ratio between units of measurement."""
+        unit_conversion = cls._UNIT_CONVERSION
+
         try:
-            return cls._UNIT_CONVERSION[from_unit] / cls._UNIT_CONVERSION[to_unit]
+            return unit_conversion[from_unit] / unit_conversion[to_unit]
         except KeyError as ex:
             raise HomeAssistantError(
                 UNIT_NOT_RECOGNIZED_TEMPLATE.format(ex.args[0], cls.UNIT_CLASS)
