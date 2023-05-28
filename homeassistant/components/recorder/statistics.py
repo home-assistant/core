@@ -200,7 +200,7 @@ def _get_statistic_to_display_unit_converter(
     statistic_unit: str | None,
     state_unit: str | None,
     requested_units: dict[str, str] | None,
-) -> Callable[[float | None], float | None] | None:
+) -> Callable[[float], float] | None:
     """Prepare a converter from the statistics unit to display unit."""
     if (converter := STATISTIC_UNIT_TO_UNIT_CONVERTER.get(statistic_unit)) is None:
         return None
@@ -219,13 +219,7 @@ def _get_statistic_to_display_unit_converter(
     if display_unit == statistic_unit:
         return None
 
-    convert = partial(converter.convert, from_unit=statistic_unit, to_unit=display_unit)
-
-    def _from_normalized_unit(val: float | None) -> float | None:
-        """Return val."""
-        return None if val is None else convert(val)
-
-    return _from_normalized_unit
+    return partial(converter.convert, from_unit=statistic_unit, to_unit=display_unit)
 
 
 def _get_display_to_statistic_unit_converter(
@@ -1491,7 +1485,10 @@ def statistic_during_period(
     if state := hass.states.get(statistic_id):
         state_unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
     if convert := _get_statistic_to_display_unit_converter(unit, state_unit, units):
-        return {key: convert(value) for key, value in result.items()}
+        return {
+            key: None if value is None else convert(value)
+            for key, value in result.items()
+        }
     return result
 
 
@@ -1575,7 +1572,8 @@ def _augment_result_with_change(
             convert = _get_statistic_to_display_unit_converter(unit, state_unit, units)
 
             if convert is not None:
-                prev_sums[statistic_id] = convert(row.sum)
+                _sum = row.sum
+                prev_sums[statistic_id] = None if _sum is None else convert(_sum)
             else:
                 prev_sums[statistic_id] = row.sum
 
@@ -1952,7 +1950,7 @@ def _fast_build_sum_list(
             {
                 "start": (start_ts := db_state[start_ts_idx]),
                 "end": start_ts + table_duration_seconds,
-                "sum": convert(db_state[sum_idx]),
+                "sum": None if (_sum := db_state[sum_idx]) is None else convert(_sum),
             }
             for db_state in stats_list
         ]
