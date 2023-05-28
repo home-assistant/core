@@ -461,12 +461,12 @@ class TemperatureConverter(BaseUnitConverter):
     @classmethod
     def _kelvin_to_fahrenheit(cls, kelvin: float) -> float:
         """Convert a temperature in Kelvin to Fahrenheit."""
-        return cls._celsius_to_fahrenheit(cls._kelvin_to_celsius(kelvin))
+        return (kelvin - 273.15) * 1.8 + 32.0
 
     @classmethod
     def _fahrenheit_to_kelvin(cls, fahrenheit: float) -> float:
         """Convert a temperature in Fahrenheit to Kelvin."""
-        return cls._celsius_to_kelvin(cls._fahrenheit_to_celsius(fahrenheit))
+        return 273.15 + ((fahrenheit - 32.0) / 1.8)
 
     @classmethod
     def _fahrenheit_to_celsius(cls, fahrenheit: float) -> float:
