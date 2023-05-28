@@ -127,6 +127,11 @@ class BaseUnitConverter:
     ) -> tuple[float, float]:
         """Get the from_ratio and to_ratio  for units."""
         try:
+            return cls._UNIT_CONVERSION[from_unit], cls._UNIT_CONVERSION[to_unit]
+        except KeyError:
+            pass
+
+        try:
             from_ratio = cls._UNIT_CONVERSION[from_unit]
         except KeyError as err:
             raise HomeAssistantError(
