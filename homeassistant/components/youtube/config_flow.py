@@ -47,7 +47,7 @@ class OAuth2FlowHandler(
     _title: str = ""
 
     DOMAIN = DOMAIN
-    
+
     reauth_entry: ConfigEntry | None = None
 
     @staticmethod
