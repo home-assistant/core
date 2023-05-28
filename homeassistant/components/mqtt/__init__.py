@@ -401,16 +401,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_reload_manual_mqtt_items(hass: HomeAssistant) -> None:
-    """Reload manual configured MQTT items."""
-    await hass.services.async_call(
-        DOMAIN,
-        SERVICE_RELOAD,
-        {},
-        blocking=True,
-    )
-
-
 @websocket_api.websocket_command(
     {vol.Required("type"): "mqtt/device/debug_info", vol.Required("device_id"): str}
 )
