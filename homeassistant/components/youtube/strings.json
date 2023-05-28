@@ -19,16 +19,6 @@
       }
     }
   },
-  "options": {
-    "step": {
-      "init": {
-        "description": "Select the channels you want to add.",
-        "data": {
-          "channels": "YouTube channels"
-        }
-      }
-    }
-  },
   "entity": {
     "sensor": {
       "latest_upload": {
