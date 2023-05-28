@@ -542,7 +542,6 @@ def test_unit_conversion(
         (converter, value, from_unit, expected, to_unit)
         for converter, item in _CONVERTED_VALUE.items()
         for value, from_unit, expected, to_unit in item
-        if from_unit != to_unit
     ],
 )
 def test_unit_conversion_factory(
@@ -560,43 +559,18 @@ def test_unit_conversion_factory(
 
 @pytest.mark.parametrize(
     ("converter", "value", "from_unit", "expected", "to_unit"),
-    [
-        # Process all items in _CONVERTED_VALUE
-        (converter, value, from_unit, expected, to_unit)
-        for converter, item in _CONVERTED_VALUE.items()
-        for value, from_unit, expected, to_unit in item
-        if from_unit == to_unit
-    ],
-)
-def test_unit_conversion_factory_same_unit(
-    converter: type[BaseUnitConverter],
-    value: float,
-    from_unit: str,
-    expected: float,
-    to_unit: str,
-) -> None:
-    """Test conversion to same units."""
-    assert converter.converter_factory(from_unit, to_unit)(value) == pytest.approx(
-        expected
-    )
-
-
-@pytest.mark.parametrize(
-    ("converter", "value", "from_unit", "expected", "to_unit"),
     chain(
         [
             # Process all items in _CONVERTED_VALUE
             (converter, value, from_unit, expected, to_unit)
             for converter, item in _CONVERTED_VALUE.items()
             for value, from_unit, expected, to_unit in item
-            if from_unit != to_unit
         ],
         [
             # Process all items in _CONVERTED_VALUE and replace the value with None
             (converter, None, from_unit, None, to_unit)
             for converter, item in _CONVERTED_VALUE.items()
             for value, from_unit, expected, to_unit in item
-            if from_unit != to_unit
         ],
     ),
 )
