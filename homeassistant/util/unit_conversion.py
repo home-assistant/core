@@ -70,32 +70,17 @@ class BaseUnitConverter:
     @classmethod
     def convert(cls, value: float, from_unit: str | None, to_unit: str | None) -> float:
         """Convert one unit of measurement to another."""
-        if from_unit == to_unit:
-            return value
-
-        try:
-            from_ratio = cls._UNIT_CONVERSION[from_unit]
-        except KeyError as err:
-            raise HomeAssistantError(
-                UNIT_NOT_RECOGNIZED_TEMPLATE.format(from_unit, cls.UNIT_CLASS)
-            ) from err
-
-        try:
-            to_ratio = cls._UNIT_CONVERSION[to_unit]
-        except KeyError as err:
-            raise HomeAssistantError(
-                UNIT_NOT_RECOGNIZED_TEMPLATE.format(to_unit, cls.UNIT_CLASS)
-            ) from err
-
-        new_value = value / from_ratio
-        return new_value * to_ratio
+        return cls.converter_factory(from_unit, to_unit, True)(value)
 
     @classmethod
     @lru_cache(maxsize=128)
     def converter_factory(
-        cls, from_unit: str | None, to_unit: str | None
+        cls, from_unit: str | None, to_unit: str | None, allow_same_unit: bool = False
     ) -> Callable[[float], float]:
         """Return a function to convert one unit of measurement to another."""
+        if not allow_same_unit and from_unit == to_unit:
+            raise HomeAssistantError("from_unit and to_unit cannot be the same")
+
         ratio = cls._get_unit_ratio_or_raise(from_unit, to_unit)
 
         def _converter(value: float) -> float:
@@ -109,6 +94,9 @@ class BaseUnitConverter:
         cls, from_unit: str | None, to_unit: str | None
     ) -> Callable[[float | None], float | None]:
         """Return a function to convert one unit of measurement to another which allows None."""
+        if from_unit == to_unit:
+            raise HomeAssistantError("from_unit and to_unit cannot be the same")
+
         ratio = cls._get_unit_ratio_or_raise(from_unit, to_unit)
 
         def _converter_allow_none(value: float | None) -> float | None:
@@ -121,9 +109,6 @@ class BaseUnitConverter:
         cls, from_unit: str | None, to_unit: str | None
     ) -> float:
         """Return the from_ratio and to_ratio for a unit conversion."""
-        if from_unit == to_unit:
-            raise HomeAssistantError("from_unit and to_unit cannot be the same")
-
         try:
             from_ratio = cls._UNIT_CONVERSION[from_unit]
         except KeyError as err:
