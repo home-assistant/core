@@ -229,7 +229,10 @@ def _get_display_to_statistic_unit_converter(
     statistic_unit: str | None,
 ) -> Callable[[float], float] | None:
     """Prepare a converter from the display unit to the statistics unit."""
-    if (converter := STATISTIC_UNIT_TO_UNIT_CONVERTER.get(statistic_unit)) is None:
+    if (
+        display_unit == statistic_unit
+        or (converter := STATISTIC_UNIT_TO_UNIT_CONVERTER.get(statistic_unit)) is None
+    ):
         return None
     return converter.converter_factory(from_unit=display_unit, to_unit=statistic_unit)
 
