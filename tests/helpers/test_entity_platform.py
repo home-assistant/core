@@ -478,12 +478,22 @@ async def test_parallel_updates_sync_platform_updates_in_sequence(
     await hass.async_block_till_done()
 
     handle = list(component._platforms.values())[-1]
+    updating = []
+    peak_update_count = 0
 
     class SyncEntity(MockEntity):
         """Mock entity that has update."""
 
         def update(self):
             pass
+
+        async def async_update_ha_state(self, *args: Any, **kwargs: Any) -> None:
+            nonlocal peak_update_count
+            updating.append(self.entity_id)
+            await asyncio.sleep(0)
+            peak_update_count = max(len(updating), peak_update_count)
+            await asyncio.sleep(0)
+            updating.remove(self.entity_id)
 
     entity1 = SyncEntity()
     entity2 = SyncEntity()
@@ -500,6 +510,7 @@ async def test_parallel_updates_sync_platform_updates_in_sequence(
     assert handle._update_in_sequence is True
 
     await handle._update_entity_states(dt_util.utcnow())
+    assert peak_update_count == 1
 
 
 async def test_raise_error_on_update(hass: HomeAssistant) -> None:
