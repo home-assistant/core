@@ -558,6 +558,12 @@ def test_unit_conversion_factory(
     )
 
 
+def test_unit_conversion_factory_raises_same_unit() -> None:
+    """Test conversion to other units."""
+    with pytest.raises(HomeAssistantError):
+        SpeedConverter.converter_factory("km/h", "km/h")
+
+
 @pytest.mark.parametrize(
     ("converter", "value", "from_unit", "expected", "to_unit"),
     chain(
