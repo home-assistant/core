@@ -223,16 +223,18 @@ async def test_platform_warn_slow_setup(hass: HomeAssistant) -> None:
 
     component = EntityComponent(_LOGGER, DOMAIN, hass)
 
-    with patch.object(hass.loop, "call_later") as mock_call:
+    with patch.object(hass.loop, "call_at") as mock_call:
         await component.async_setup({DOMAIN: {"platform": "platform"}})
         await hass.async_block_till_done()
         assert mock_call.called
 
-        # mock_calls[0] is the warning message for component setup
-        # mock_calls[4] is the warning message for platform setup
-        timeout, logger_method = mock_call.mock_calls[4][1][:2]
+        # mock_calls[3] is the warning message for component setup
+        # mock_calls[10] is the warning message for platform setup
+        timeout, logger_method = mock_call.mock_calls[10][1][:2]
 
-        assert timeout == entity_platform.SLOW_SETUP_WARNING
+        assert timeout - hass.loop.time() == pytest.approx(
+            entity_platform.SLOW_SETUP_WARNING, 0.5
+        )
         assert logger_method == _LOGGER.warning
 
         assert mock_call().cancel.called
