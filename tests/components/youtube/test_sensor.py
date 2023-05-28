@@ -1,9 +1,13 @@
 """Sensor tests for the YouTube integration."""
+from unittest.mock import patch
 
+from google.auth.exceptions import RefreshError
 
+from homeassistant import config_entries
+from homeassistant.components.youtube import COORDINATOR, DOMAIN
 from homeassistant.core import HomeAssistant
 
-from .conftest import ComponentSetup
+from .conftest import TOKEN, ComponentSetup
 
 
 async def test_sensor(hass: HomeAssistant, setup_integration: ComponentSetup) -> None:
@@ -27,3 +31,23 @@ async def test_sensor(hass: HomeAssistant, setup_integration: ComponentSetup) ->
         state.attributes["entity_picture"]
         == "https://yt3.ggpht.com/fca_HuJ99xUxflWdex0XViC3NfctBFreIl8y4i9z411asnGTWY-Ql3MeH_ybA4kNaOjY7kyA=s800-c-k-c0x00ffffff-no-rj"
     )
+
+
+async def test_sensor_reauth_trigger(
+    hass: HomeAssistant, setup_integration: ComponentSetup
+) -> None:
+    """Test reauth is triggered after a refresh error."""
+    await setup_integration()
+
+    with patch(TOKEN, side_effect=RefreshError):
+        entry = hass.config_entries.async_entries(DOMAIN)[0]
+        await hass.data[DOMAIN][entry.entry_id][COORDINATOR].async_refresh()
+        await hass.async_block_till_done()
+
+    flows = hass.config_entries.flow.async_progress()
+
+    assert len(flows) == 1
+    flow = flows[0]
+    assert flow["step_id"] == "reauth_confirm"
+    assert flow["handler"] == DOMAIN
+    assert flow["context"]["source"] == config_entries.SOURCE_REAUTH

@@ -16,7 +16,7 @@ __all__ = [
 ]
 
 
-def setup(hass: HomeAssistant, config: ConfigType) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the MJPEG IP Camera integration."""
     filter_urllib3_logging()
     return True

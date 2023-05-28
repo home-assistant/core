@@ -33,7 +33,7 @@ __all__ = ["REDACTED", "async_redact_data"]
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
+@dataclass(slots=True)
 class DiagnosticsPlatformData:
     """Diagnostic platform data."""
 
@@ -46,7 +46,7 @@ class DiagnosticsPlatformData:
     ] | None
 
 
-@dataclass
+@dataclass(slots=True)
 class DiagnosticsData:
     """Diagnostic data."""
 
