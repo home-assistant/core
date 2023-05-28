@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from functools import lru_cache
-from typing import TYPE_CHECKING, cast
 
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_BILLION,
@@ -92,31 +91,36 @@ class BaseUnitConverter:
         return new_value * to_ratio
 
     @classmethod
+    @lru_cache(maxsize=128)
     def converter_factory(
         cls, from_unit: str | None, to_unit: str | None
     ) -> Callable[[float], float]:
         """Return a function to convert one unit of measurement to another."""
-        converter = cls._converter_factory(from_unit, to_unit, allow_none=False)
-        if TYPE_CHECKING:
-            converter = cast(Callable[[float], float], converter)
-        return converter
+        ratio = cls._get_unit_ratio_or_raise(from_unit, to_unit)
 
-    @classmethod
-    def converter_factory_allow_none(
-        cls, from_unit: str | None, to_unit: str | None
-    ) -> Callable[[float | None], float | None]:
-        """Return a function to convert one unit of measurement to another."""
-        converter = cls._converter_factory(from_unit, to_unit, allow_none=True)
-        if TYPE_CHECKING:
-            converter = cast(Callable[[float | None], float | None], converter)
-        return converter
+        def _converter(value: float) -> float:
+            return value / ratio
+
+        return _converter
 
     @classmethod
     @lru_cache(maxsize=128)
-    def _converter_factory(
-        cls, from_unit: str | None, to_unit: str | None, allow_none: bool = False
-    ) -> Callable:
-        """Return a function to convert one unit of measurement to another."""
+    def converter_factory_allow_none(
+        cls, from_unit: str | None, to_unit: str | None
+    ) -> Callable[[float | None], float | None]:
+        """Return a function to convert one unit of measurement to another which allows None."""
+        ratio = cls._get_unit_ratio_or_raise(from_unit, to_unit)
+
+        def _converter_allow_none(value: float | None) -> float | None:
+            return None if value is None else value / ratio
+
+        return _converter_allow_none
+
+    @classmethod
+    def _get_unit_ratio_or_raise(
+        cls, from_unit: str | None, to_unit: str | None
+    ) -> float:
+        """Return the from_ratio and to_ratio for a unit conversion."""
         if from_unit == to_unit:
             raise ValueError("from_unit and to_unit cannot be the same")
 
@@ -134,17 +138,7 @@ class BaseUnitConverter:
                 UNIT_NOT_RECOGNIZED_TEMPLATE.format(to_unit, cls.UNIT_CLASS)
             ) from err
 
-        if allow_none:
-
-            def _converter_allow_none(value: float | None) -> float | None:
-                return None if value is None else (value / from_ratio) * to_ratio
-
-            return _converter_allow_none
-
-        def _converter(value: float) -> float:
-            return (value / from_ratio) * to_ratio
-
-        return _converter
+        return from_ratio / to_ratio
 
     @classmethod
     def get_unit_ratio(cls, from_unit: str | None, to_unit: str | None) -> float:
