@@ -28,8 +28,6 @@ PLATFORMS = [
     Platform.DEVICE_TRACKER,
     Platform.SENSOR,
     Platform.SWITCH,
-    Platform.COVER,
-    Platform.ALARM_CONTROL_PANEL,
     Platform.CAMERA,
     Platform.BINARY_SENSOR,
 ]
@@ -71,7 +69,6 @@ class Freeboxlabel(StrEnum):
     """Available Freebox label."""
 
     ALARM = "alarm"
-    BSHUTTER = "basic_shutter"
     CAMERA = "camera"
     DWS = "dws"
     IOHOME = "iohome"
@@ -79,7 +76,6 @@ class Freeboxlabel(StrEnum):
     OPENER = "opener"
     PIR = "pir"
     RTS = "rts"
-    SHUTTER = "shutter"
 
 
 CATEGORY_TO_MODEL = {
@@ -88,8 +84,6 @@ CATEGORY_TO_MODEL = {
     "dws": "F-HADWS01A",
     "kfb": "F-HAKFB01A",
     "alarm": "F-MSEC07A",
-    "rts": "RTS",
-    "iohome": "IOHome",
 }
 
 LABEL_TO_STATE = {
@@ -103,12 +97,9 @@ LABEL_TO_STATE = {
 }
 
 HOME_COMPATIBLE_PLATFORMS = [
-    Freeboxlabel.ALARM,
-    Freeboxlabel.BSHUTTER,
     Freeboxlabel.CAMERA,
     Freeboxlabel.DWS,
     Freeboxlabel.KFB,
     Freeboxlabel.OPENER,
     Freeboxlabel.PIR,
-    Freeboxlabel.SHUTTER,
 ]
