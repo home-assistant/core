@@ -80,16 +80,7 @@ class BaseUnitConverter:
         """Return a function to convert one unit of measurement to another."""
         if from_unit == to_unit:
             return lambda value: value
-
-        unit_conversion = cls._UNIT_CONVERSION
-        try:
-            from_ratio = unit_conversion[from_unit]
-            to_ratio = unit_conversion[to_unit]
-        except KeyError as err:
-            raise HomeAssistantError(
-                UNIT_NOT_RECOGNIZED_TEMPLATE.format(err.args[0], cls.UNIT_CLASS)
-            ) from err
-
+        from_ratio, to_ratio = cls._get_from_to_ratio(from_unit, to_unit)
         return lambda val: (val / from_ratio) * to_ratio
 
     @classmethod
@@ -100,26 +91,24 @@ class BaseUnitConverter:
         """Return a function to convert one unit of measurement to another which allows None."""
         if from_unit == to_unit:
             return lambda value: value
-
-        unit_conversion = cls._UNIT_CONVERSION
-        try:
-            from_ratio = unit_conversion[from_unit]
-            to_ratio = unit_conversion[to_unit]
-        except KeyError as err:
-            raise HomeAssistantError(
-                UNIT_NOT_RECOGNIZED_TEMPLATE.format(err.args[0], cls.UNIT_CLASS)
-            ) from err
-
+        from_ratio, to_ratio = cls._get_from_to_ratio(from_unit, to_unit)
         return lambda val: None if val is None else (val / from_ratio) * to_ratio
 
     @classmethod
     @lru_cache
     def get_unit_ratio(cls, from_unit: str | None, to_unit: str | None) -> float:
         """Get unit ratio between units of measurement."""
-        unit_conversion = cls._UNIT_CONVERSION
+        from_ratio, to_ratio = cls._get_from_to_ratio(from_unit, to_unit)
+        return from_ratio / to_ratio
 
+    @classmethod
+    def _get_from_to_ratio(
+        cls, from_unit: str | None, to_unit: str | None
+    ) -> tuple[float, float]:
+        """Get unit ratio between units of measurement."""
+        unit_conversion = cls._UNIT_CONVERSION
         try:
-            return unit_conversion[from_unit] / unit_conversion[to_unit]
+            return unit_conversion[from_unit], unit_conversion[to_unit]
         except KeyError as err:
             raise HomeAssistantError(
                 UNIT_NOT_RECOGNIZED_TEMPLATE.format(err.args[0], cls.UNIT_CLASS)
