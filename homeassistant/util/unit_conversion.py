@@ -78,6 +78,9 @@ class BaseUnitConverter:
         cls, from_unit: str | None, to_unit: str | None
     ) -> Callable[[float], float]:
         """Return a function to convert one unit of measurement to another."""
+        if from_unit == to_unit:
+            return lambda value: value
+
         ratio = cls.get_unit_ratio(from_unit, to_unit)
 
         def _converter(value: float) -> float:
@@ -91,6 +94,9 @@ class BaseUnitConverter:
         cls, from_unit: str | None, to_unit: str | None
     ) -> Callable[[float | None], float | None]:
         """Return a function to convert one unit of measurement to another which allows None."""
+        if from_unit == to_unit:
+            return lambda value: value
+
         ratio = cls.get_unit_ratio(from_unit, to_unit)
 
         def _converter_allow_none(value: float | None) -> float | None:
@@ -102,9 +108,6 @@ class BaseUnitConverter:
     @lru_cache
     def get_unit_ratio(cls, from_unit: str | None, to_unit: str | None) -> float:
         """Get unit ratio between units of measurement."""
-        if from_unit == to_unit:
-            return 1
-
         try:
             from_ratio = cls._UNIT_CONVERSION[from_unit]
         except KeyError as err:
