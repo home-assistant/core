@@ -83,20 +83,6 @@ class BaseUnitConverter:
         if from_unit == to_unit:
             return lambda value: value
 
-        try:
-            from_ratio = cls._UNIT_CONVERSION[from_unit]
-        except KeyError as err:
-            raise HomeAssistantError(
-                UNIT_NOT_RECOGNIZED_TEMPLATE.format(from_unit, cls.UNIT_CLASS)
-            ) from err
-
-        try:
-            to_ratio = cls._UNIT_CONVERSION[to_unit]
-        except KeyError as err:
-            raise HomeAssistantError(
-                UNIT_NOT_RECOGNIZED_TEMPLATE.format(to_unit, cls.UNIT_CLASS)
-            ) from err
-
         from_ratio, to_ratio = cls._get_from_to_ratio(from_unit, to_unit)
 
         def _converter(value: float) -> float:
