@@ -128,24 +128,10 @@ class BaseUnitConverter:
         """Get the from_ratio and to_ratio  for units."""
         try:
             return cls._UNIT_CONVERSION[from_unit], cls._UNIT_CONVERSION[to_unit]
-        except KeyError:
-            pass
-
-        try:
-            from_ratio = cls._UNIT_CONVERSION[from_unit]
-        except KeyError as err:
+        except KeyError as ex:
             raise HomeAssistantError(
-                UNIT_NOT_RECOGNIZED_TEMPLATE.format(from_unit, cls.UNIT_CLASS)
-            ) from err
-
-        try:
-            to_ratio = cls._UNIT_CONVERSION[to_unit]
-        except KeyError as err:
-            raise HomeAssistantError(
-                UNIT_NOT_RECOGNIZED_TEMPLATE.format(to_unit, cls.UNIT_CLASS)
-            ) from err
-
-        return from_ratio, to_ratio
+                UNIT_NOT_RECOGNIZED_TEMPLATE.format(ex.args[0], cls.UNIT_CLASS)
+            ) from ex
 
     @classmethod
     @lru_cache
