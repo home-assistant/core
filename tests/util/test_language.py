@@ -227,6 +227,7 @@ def test_no_nb_prefer_exact_regions() -> None:
         ["en-US", "en-GB", "no-AA", "nb-AA"],
     ) == ["no-AA", "nb-AA"]
 
+
 def test_he_iw_same() -> None:
     """Test that the he/iw are interchangeable."""
     assert language.matches(
