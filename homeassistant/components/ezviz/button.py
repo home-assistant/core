@@ -5,6 +5,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
 
+from pyezviz.constants import SupportExt
 from pyezviz.exceptions import HTTPError, PyEzvizError
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
@@ -43,7 +44,7 @@ BUTTON_ENTITIES = (
         method=lambda pyezviz_client, serial, run: pyezviz_client.ptz_control(
             "UP", serial, run
         ),
-        supported_ext="154",
+        supported_ext=str(SupportExt.SupportPtz.value),
     ),
     EzvizButtonEntityDescription(
         key="ptz_down",
@@ -52,7 +53,7 @@ BUTTON_ENTITIES = (
         method=lambda pyezviz_client, serial, run: pyezviz_client.ptz_control(
             "DOWN", serial, run
         ),
-        supported_ext="154",
+        supported_ext=str(SupportExt.SupportPtz.value),
     ),
     EzvizButtonEntityDescription(
         key="ptz_left",
@@ -61,7 +62,7 @@ BUTTON_ENTITIES = (
         method=lambda pyezviz_client, serial, run: pyezviz_client.ptz_control(
             "LEFT", serial, run
         ),
-        supported_ext="154",
+        supported_ext=str(SupportExt.SupportPtz.value),
     ),
     EzvizButtonEntityDescription(
         key="ptz_right",
@@ -70,7 +71,7 @@ BUTTON_ENTITIES = (
         method=lambda pyezviz_client, serial, run: pyezviz_client.ptz_control(
             "RIGHT", serial, run
         ),
-        supported_ext="154",
+        supported_ext=str(SupportExt.SupportPtz.value),
     ),
 )
 
@@ -82,6 +83,10 @@ async def async_setup_entry(
     coordinator: EzvizDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][
         DATA_COORDINATOR
     ]
+
+    # Add button entities if supportExt value indicates PTZ capbility.
+    # Could be missing or "0" for unsupported.
+    # If present with value of "1" then add button entity.
 
     async_add_entities(
         EzvizButton(coordinator, camera, entity_description)
