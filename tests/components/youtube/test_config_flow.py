@@ -12,7 +12,14 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
 
 from . import MockService
-from .conftest import CLIENT_ID, GOOGLE_AUTH_URI, GOOGLE_TOKEN_URI, SCOPES, TITLE, ComponentSetup
+from .conftest import (
+    CLIENT_ID,
+    GOOGLE_AUTH_URI,
+    GOOGLE_TOKEN_URI,
+    SCOPES,
+    TITLE,
+    ComponentSetup,
+)
 
 from tests.common import MockConfigEntry, load_fixture
 from tests.test_util.aiohttp import AiohttpClientMocker
