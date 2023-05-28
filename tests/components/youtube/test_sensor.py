@@ -1,12 +1,15 @@
 """Sensor tests for the YouTube integration."""
+from datetime import timedelta
 from unittest.mock import patch
 
 from google.auth.exceptions import RefreshError
 
 from homeassistant import config_entries
-from homeassistant.components.youtube import COORDINATOR, DOMAIN
+from homeassistant.components.youtube import DOMAIN
 from homeassistant.core import HomeAssistant
+from homeassistant.util import dt
 
+from ...common import async_fire_time_changed
 from .conftest import TOKEN, ComponentSetup
 
 
@@ -40,8 +43,8 @@ async def test_sensor_reauth_trigger(
     await setup_integration()
 
     with patch(TOKEN, side_effect=RefreshError):
-        entry = hass.config_entries.async_entries(DOMAIN)[0]
-        await hass.data[DOMAIN][entry.entry_id][COORDINATOR].async_refresh()
+        future = dt.utcnow() + timedelta(minutes=15)
+        async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
 
     flows = hass.config_entries.flow.async_progress()
