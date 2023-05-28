@@ -16,7 +16,7 @@ from homeassistant.components.stream.fmp4utils import (
 )
 from homeassistant.util import dt as dt_util
 
-FAKE_TIME = dt_util.utcnow().replace(tzinfo=None)
+FAKE_TIME = dt_util.utcnow()
 
 # Segment with defaults filled in for use in tests
 DefaultSegment = partial(

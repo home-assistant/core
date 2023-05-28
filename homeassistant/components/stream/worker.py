@@ -142,7 +142,7 @@ class StreamMuxer:
         self._part_has_keyframe = False
         self._stream_settings = stream_settings
         self._stream_state = stream_state
-        self._start_time = dt_util.utcnow().replace(tzinfo=None)
+        self._start_time = dt_util.utcnow()
 
     def make_new_av(
         self,

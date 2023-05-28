@@ -485,16 +485,15 @@ class HomeAssistantHTTP:
                 x509.NameAttribute(NameOID.COMMON_NAME, host),
             ]
         )
+        now = dt_util.utcnow()
         cert = (
             x509.CertificateBuilder()
             .subject_name(subject)
             .issuer_name(issuer)
             .public_key(key.public_key())
             .serial_number(x509.random_serial_number())
-            .not_valid_before(dt_util.utcnow().replace(tzinfo=None))
-            .not_valid_after(
-                dt_util.utcnow().replace(tzinfo=None) + datetime.timedelta(days=30)
-            )
+            .not_valid_before(now)
+            .not_valid_after(now + datetime.timedelta(days=30))
             .add_extension(
                 x509.SubjectAlternativeName([x509.DNSName(host)]),
                 critical=False,
