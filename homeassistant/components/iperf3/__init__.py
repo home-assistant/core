@@ -233,6 +233,8 @@ class Iperf3Data:
         except (AttributeError, OSError, ValueError) as error:
             _LOGGER.error("Iperf3 error: %s", error)
             return None
+        finally:
+            del client
 
         if result is not None and hasattr(result, "error") and result.error is not None:
             _LOGGER.error("Iperf3 error: %s", result.error)
