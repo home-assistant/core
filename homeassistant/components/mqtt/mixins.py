@@ -34,10 +34,7 @@ from homeassistant.helpers import (
     device_registry as dr,
     entity_registry as er,
 )
-from homeassistant.helpers.device_registry import (
-    EVENT_DEVICE_REGISTRY_UPDATED,
-    DeviceEntry,
-)
+from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
@@ -49,7 +46,10 @@ from homeassistant.helpers.entity import (
     async_generate_entity_id,
 )
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.event import async_track_entity_registry_updated_event
+from homeassistant.helpers.event import (
+    async_track_device_registry_updated_event,
+    async_track_entity_registry_updated_event,
+)
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.json import json_loads
@@ -680,8 +680,8 @@ class MqttDiscoveryDeviceUpdate(ABC):
         )
         config_entry.async_on_unload(self._entry_unload)
         if device_id is not None:
-            self._remove_device_updated = hass.bus.async_listen(
-                EVENT_DEVICE_REGISTRY_UPDATED, self._async_device_removed
+            self._remove_device_updated = async_track_device_registry_updated_event(
+                hass, device_id, self._async_device_removed
             )
         _LOGGER.info(
             "%s %s has been initialized",
