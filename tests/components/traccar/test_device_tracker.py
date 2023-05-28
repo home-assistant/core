@@ -47,7 +47,7 @@ async def test_import_events_catch_all(hass: HomeAssistant) -> None:
                 "maintenanceId": 1,
                 "deviceId": device["id"],
                 "type": "ignitionOn",
-                "eventTime": dt_util.utcnow().replace(tzinfo=None).isoformat(),
+                "eventTime": dt_util.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ"),
                 "attributes": {},
             }
         ),
@@ -59,7 +59,7 @@ async def test_import_events_catch_all(hass: HomeAssistant) -> None:
                 "maintenanceId": 1,
                 "deviceId": device["id"],
                 "type": "ignitionOff",
-                "eventTime": dt_util.utcnow().replace(tzinfo=None).isoformat(),
+                "eventTime": dt_util.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ"),
                 "attributes": {},
             }
         ),
