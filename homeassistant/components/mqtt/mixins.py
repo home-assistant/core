@@ -1182,19 +1182,16 @@ def async_removed_from_device(
     hass: HomeAssistant, event: Event, mqtt_device_id: str, config_entry_id: str
 ) -> bool:
     """Check if the passed event indicates MQTT was removed from a device."""
-    device_id: str = event.data["device_id"]
-    if event.data["action"] not in ("remove", "update"):
+    action: str = event.data["action"]
+    if action not in ("remove", "update"):
         return False
 
-    if device_id != mqtt_device_id:
-        return False
-
-    if event.data["action"] == "update":
+    if action == "update":
         if "config_entries" not in event.data["changes"]:
             return False
         device_registry = dr.async_get(hass)
         if (
-            device_entry := device_registry.async_get(device_id)
+            device_entry := device_registry.async_get(event.data["device_id"])
         ) and config_entry_id in device_entry.config_entries:
             # Not removed from device
             return False
