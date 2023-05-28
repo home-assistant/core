@@ -85,10 +85,10 @@ class BaseUnitConverter:
         try:
             from_ratio = unit_conversion[from_unit]
             to_ratio = unit_conversion[to_unit]
-        except KeyError as ex:
+        except KeyError as err:
             raise HomeAssistantError(
-                UNIT_NOT_RECOGNIZED_TEMPLATE.format(ex.args[0], cls.UNIT_CLASS)
-            ) from ex
+                UNIT_NOT_RECOGNIZED_TEMPLATE.format(err.args[0], cls.UNIT_CLASS)
+            ) from err
 
         return lambda val: (val / from_ratio) * to_ratio
 
@@ -105,10 +105,10 @@ class BaseUnitConverter:
         try:
             from_ratio = unit_conversion[from_unit]
             to_ratio = unit_conversion[to_unit]
-        except KeyError as ex:
+        except KeyError as err:
             raise HomeAssistantError(
-                UNIT_NOT_RECOGNIZED_TEMPLATE.format(ex.args[0], cls.UNIT_CLASS)
-            ) from ex
+                UNIT_NOT_RECOGNIZED_TEMPLATE.format(err.args[0], cls.UNIT_CLASS)
+            ) from err
 
         return lambda val: None if val is None else (val / from_ratio) * to_ratio
 
@@ -120,10 +120,10 @@ class BaseUnitConverter:
 
         try:
             return unit_conversion[from_unit] / unit_conversion[to_unit]
-        except KeyError as ex:
+        except KeyError as err:
             raise HomeAssistantError(
-                UNIT_NOT_RECOGNIZED_TEMPLATE.format(ex.args[0], cls.UNIT_CLASS)
-            ) from ex
+                UNIT_NOT_RECOGNIZED_TEMPLATE.format(err.args[0], cls.UNIT_CLASS)
+            ) from err
 
 
 class DataRateConverter(BaseUnitConverter):
