@@ -1,6 +1,10 @@
 """Typing Helpers for Home Assistant."""
 from __future__ import annotations
 
+from collections.abc import Callable
+from functools import lru_cache
+from typing import TYPE_CHECKING, cast
+
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_BILLION,
     CONCENTRATION_PARTS_PER_MILLION,
@@ -86,6 +90,61 @@ class BaseUnitConverter:
 
         new_value = value / from_ratio
         return new_value * to_ratio
+
+    @classmethod
+    def converter_factory(
+        cls, from_unit: str | None, to_unit: str | None
+    ) -> Callable[[float], float]:
+        """Return a function to convert one unit of measurement to another."""
+        converter = cls._converter_factory(from_unit, to_unit, allow_none=False)
+        if TYPE_CHECKING:
+            converter = cast(Callable[[float], float], converter)
+        return converter
+
+    @classmethod
+    def converter_factory_allow_none(
+        cls, from_unit: str | None, to_unit: str | None
+    ) -> Callable[[float | None], float | None]:
+        """Return a function to convert one unit of measurement to another."""
+        converter = cls._converter_factory(from_unit, to_unit, allow_none=True)
+        if TYPE_CHECKING:
+            converter = cast(Callable[[float | None], float | None], converter)
+        return converter
+
+    @classmethod
+    @lru_cache(maxsize=128)
+    def _converter_factory(
+        cls, from_unit: str | None, to_unit: str | None, allow_none: bool = False
+    ) -> Callable:
+        """Return a function to convert one unit of measurement to another."""
+        if from_unit == to_unit:
+            raise ValueError("from_unit and to_unit cannot be the same")
+
+        try:
+            from_ratio = cls._UNIT_CONVERSION[from_unit]
+        except KeyError as err:
+            raise HomeAssistantError(
+                UNIT_NOT_RECOGNIZED_TEMPLATE.format(from_unit, cls.UNIT_CLASS)
+            ) from err
+
+        try:
+            to_ratio = cls._UNIT_CONVERSION[to_unit]
+        except KeyError as err:
+            raise HomeAssistantError(
+                UNIT_NOT_RECOGNIZED_TEMPLATE.format(to_unit, cls.UNIT_CLASS)
+            ) from err
+
+        if allow_none:
+
+            def _converter_allow_none(value: float | None) -> float | None:
+                return None if value is None else (value / from_ratio) * to_ratio
+
+            return _converter_allow_none
+
+        def _converter(value: float) -> float:
+            return (value / from_ratio) * to_ratio
+
+        return _converter
 
     @classmethod
     def get_unit_ratio(cls, from_unit: str | None, to_unit: str | None) -> float:

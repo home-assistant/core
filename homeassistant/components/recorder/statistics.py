@@ -219,15 +219,9 @@ def _get_statistic_to_display_unit_converter(
     if display_unit == statistic_unit:
         return None
 
-    convert = converter.convert
-
-    def _from_normalized_unit(val: float | None) -> float | None:
-        """Return val."""
-        if val is None:
-            return val
-        return convert(val, statistic_unit, display_unit)
-
-    return _from_normalized_unit
+    return converter.converter_factory_allow_none(
+        from_unit=statistic_unit, to_unit=display_unit
+    )
 
 
 def _get_display_to_statistic_unit_converter(
@@ -243,7 +237,7 @@ def _get_display_to_statistic_unit_converter(
     if (converter := STATISTIC_UNIT_TO_UNIT_CONVERTER.get(statistic_unit)) is None:
         return no_conversion
 
-    return partial(converter.convert, from_unit=display_unit, to_unit=statistic_unit)
+    return converter.converter_factory(from_unit=display_unit, to_unit=statistic_unit)
 
 
 def _get_unit_converter(
