@@ -31,7 +31,8 @@ from .const import (
 def get_upload_playlist_id(channel_id: str) -> str:
     """Return the playlist id with the uploads of the channel.
 
-    Replacing the UC in the channel id (UCxxxxxxxxxxxx) with UU is the way to do it without extra request (UUxxxxxxxxxxxx).
+    Replacing the UC in the channel id (UCxxxxxxxxxxxx) with UU is
+    the way to do it without extra request (UUxxxxxxxxxxxx).
     """
     return channel_id.replace("UC", "UU", 1)
 
