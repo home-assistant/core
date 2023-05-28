@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import inspect
+from itertools import chain
 
 import pytest
 
@@ -532,6 +533,61 @@ def test_unit_conversion(
 ) -> None:
     """Test conversion to other units."""
     assert converter.convert(value, from_unit, to_unit) == pytest.approx(expected)
+
+
+@pytest.mark.parametrize(
+    ("converter", "value", "from_unit", "expected", "to_unit"),
+    [
+        # Process all items in _CONVERTED_VALUE
+        (converter, value, from_unit, expected, to_unit)
+        for converter, item in _CONVERTED_VALUE.items()
+        for value, from_unit, expected, to_unit in item
+        if from_unit != to_unit
+    ],
+)
+def test_unit_conversion_factory(
+    converter: type[BaseUnitConverter],
+    value: float,
+    from_unit: str,
+    expected: float,
+    to_unit: str,
+) -> None:
+    """Test conversion to other units."""
+    assert converter.converter_factory(from_unit, to_unit)(value) == pytest.approx(
+        expected
+    )
+
+
+@pytest.mark.parametrize(
+    ("converter", "value", "from_unit", "expected", "to_unit"),
+    chain(
+        [
+            # Process all items in _CONVERTED_VALUE
+            (converter, value, from_unit, expected, to_unit)
+            for converter, item in _CONVERTED_VALUE.items()
+            for value, from_unit, expected, to_unit in item
+            if from_unit != to_unit
+        ],
+        [
+            # Process all items in _CONVERTED_VALUE and replace the value with None
+            (converter, None, from_unit, None, to_unit)
+            for converter, item in _CONVERTED_VALUE.items()
+            for value, from_unit, expected, to_unit in item
+            if from_unit != to_unit
+        ],
+    ),
+)
+def test_unit_conversion_factory_allow_none(
+    converter: type[BaseUnitConverter],
+    value: float,
+    from_unit: str,
+    expected: float,
+    to_unit: str,
+) -> None:
+    """Test conversion to other units."""
+    assert converter.converter_factory_allow_none(from_unit, to_unit)(
+        value
+    ) == pytest.approx(expected)
 
 
 @pytest.mark.parametrize(
