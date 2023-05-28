@@ -84,6 +84,19 @@ class BaseUnitConverter:
         return lambda val: (val / from_ratio) * to_ratio
 
     @classmethod
+    def _get_from_to_ratio(
+        cls, from_unit: str | None, to_unit: str | None
+    ) -> tuple[float, float]:
+        """Get unit ratio between units of measurement."""
+        unit_conversion = cls._UNIT_CONVERSION
+        try:
+            return unit_conversion[from_unit], unit_conversion[to_unit]
+        except KeyError as err:
+            raise HomeAssistantError(
+                UNIT_NOT_RECOGNIZED_TEMPLATE.format(err.args[0], cls.UNIT_CLASS)
+            ) from err
+
+    @classmethod
     @lru_cache
     def converter_factory_allow_none(
         cls, from_unit: str | None, to_unit: str | None
@@ -100,19 +113,6 @@ class BaseUnitConverter:
         """Get unit ratio between units of measurement."""
         from_ratio, to_ratio = cls._get_from_to_ratio(from_unit, to_unit)
         return from_ratio / to_ratio
-
-    @classmethod
-    def _get_from_to_ratio(
-        cls, from_unit: str | None, to_unit: str | None
-    ) -> tuple[float, float]:
-        """Get unit ratio between units of measurement."""
-        unit_conversion = cls._UNIT_CONVERSION
-        try:
-            return unit_conversion[from_unit], unit_conversion[to_unit]
-        except KeyError as err:
-            raise HomeAssistantError(
-                UNIT_NOT_RECOGNIZED_TEMPLATE.format(err.args[0], cls.UNIT_CLASS)
-            ) from err
 
 
 class DataRateConverter(BaseUnitConverter):
