@@ -122,7 +122,7 @@ class BaseUnitConverter:
     ) -> float:
         """Return the from_ratio and to_ratio for a unit conversion."""
         if from_unit == to_unit:
-            raise ValueError("from_unit and to_unit cannot be the same")
+            raise HomeAssistantError("from_unit and to_unit cannot be the same")
 
         try:
             from_ratio = cls._UNIT_CONVERSION[from_unit]
