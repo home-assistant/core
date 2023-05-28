@@ -2,6 +2,7 @@
 import asyncio
 from datetime import timedelta
 import logging
+from typing import Any
 from unittest.mock import ANY, Mock, patch
 
 import pytest
@@ -429,12 +430,22 @@ async def test_parallel_updates_async_platform_updates_in_parallel(
     await hass.async_block_till_done()
 
     handle = list(component._platforms.values())[-1]
+    updating = []
+    peak_update_count = 0
 
     class AsyncEntity(MockEntity):
         """Mock entity that has async_update."""
 
         async def async_update(self):
             pass
+
+        async def async_update_ha_state(self, *args: Any, **kwargs: Any) -> None:
+            nonlocal peak_update_count
+            updating.append(self.entity_id)
+            await asyncio.sleep(0)
+            peak_update_count = max(len(updating), peak_update_count)
+            await asyncio.sleep(0)
+            updating.remove(self.entity_id)
 
     entity1 = AsyncEntity()
     entity2 = AsyncEntity()
@@ -449,6 +460,7 @@ async def test_parallel_updates_async_platform_updates_in_parallel(
     assert handle._update_in_sequence is False
 
     await handle._update_entity_states(dt_util.utcnow())
+    assert peak_update_count > 1
 
 
 async def test_parallel_updates_sync_platform_updates_in_sequence(
