@@ -1045,9 +1045,33 @@ def expand_condition_shorthand(value: Any | None) -> Any:
 
 
 # Schemas
-def empty_config_schema(domain: str) -> vol.Schema:
-    """Return a config schema which accepts no configuration parameters."""
-    return vol.Schema({vol.Optional(domain): vol.Schema({})}, extra=vol.ALLOW_EXTRA)
+def empty_config_schema(domain: str) -> Callable[[dict], dict]:
+    """Return a config schema which logs if there are configuration parameters."""
+
+    module = inspect.getmodule(inspect.stack(context=0)[2].frame)
+    if module is not None:
+        module_name = module.__name__
+    else:
+        # If Python is unable to access the sources files, the call stack frame
+        # will be missing information, so let's guard.
+        # https://github.com/home-assistant/core/issues/24982
+        module_name = __name__
+    logger_func = logging.getLogger(module_name).error
+
+    def validator(config: dict) -> dict:
+        if domain in config and config[domain]:
+            logger_func(
+                (
+                    "The %s integration does not support any configuration parameters, "
+                    "got %s. Please remove the configuration parameters from your "
+                    "configuration."
+                ),
+                domain,
+                config[domain],
+            )
+        return config
+
+    return validator
 
 
 PLATFORM_SCHEMA = vol.Schema(
