@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 from typing import Any
 
 from starline import StarlineApi, StarlineDevice
@@ -11,6 +11,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.util import dt as dt_util
 
 from .const import (
     _LOGGER,
@@ -141,7 +142,7 @@ class StarlineAccount:
     def gps_attrs(device: StarlineDevice) -> dict[str, Any]:
         """Attributes for device tracker."""
         return {
-            "updated": datetime.fromtimestamp(device.position["ts"], timezone.utc)
+            "updated": dt_util.utc_from_timestamp(device.position["ts"])
             .replace(tzinfo=None)
             .isoformat(),
             "online": device.online,

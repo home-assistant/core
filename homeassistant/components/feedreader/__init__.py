@@ -1,7 +1,7 @@
 """Support for RSS/Atom feeds."""
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import timedelta
 from logging import getLogger
 from os.path import exists
 import pickle
@@ -17,6 +17,7 @@ from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import track_time_interval
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.util import dt as dt_util
 
 _LOGGER = getLogger(__name__)
 
@@ -196,9 +197,7 @@ class FeedManager:
             self._firstrun = False
         else:
             # Set last entry timestamp as epoch time if not available
-            self._last_entry_timestamp = datetime.fromtimestamp(
-                0, timezone.utc
-            ).timetuple()
+            self._last_entry_timestamp = dt_util.utc_from_timestamp(0).timetuple()
         for entry in self._feed.entries:
             if (
                 self._firstrun
