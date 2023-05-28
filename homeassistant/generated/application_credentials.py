@@ -21,4 +21,5 @@ APPLICATION_CREDENTIALS = [
     "withings",
     "xbox",
     "yolink",
+    "youtube",
 ]

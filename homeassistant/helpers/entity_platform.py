@@ -136,6 +136,7 @@ class EntityPlatform:
         self._process_updates: asyncio.Lock | None = None
 
         self.parallel_updates: asyncio.Semaphore | None = None
+        self._update_in_parallel: bool = True
 
         # Platform is None for the EntityComponent "catch-all" EntityPlatform
         # which powers entity_component.add_entities
@@ -186,6 +187,7 @@ class EntityPlatform:
 
         if parallel_updates is not None:
             self.parallel_updates = asyncio.Semaphore(parallel_updates)
+            self._update_in_parallel = parallel_updates != 1
 
         return self.parallel_updates
 
@@ -288,8 +290,8 @@ class EntityPlatform:
             )
 
         logger.info("Setting up %s", full_name)
-        warn_task = hass.loop.call_later(
-            SLOW_SETUP_WARNING,
+        warn_task = hass.loop.call_at(
+            hass.loop.time() + SLOW_SETUP_WARNING,
             logger.warning,
             "Setup of %s platform %s is taking over %s seconds.",
             self.domain,
@@ -844,13 +846,20 @@ class EntityPlatform:
             return
 
         async with self._process_updates:
-            tasks: list[Coroutine[Any, Any, None]] = []
-            for entity in self.entities.values():
-                if not entity.should_poll:
-                    continue
-                tasks.append(entity.async_update_ha_state(True))
+            if self._update_in_parallel or len(self.entities) <= 1:
+                # If we know are going to update sequentially, we want to update
+                # to avoid scheduling the coroutines as tasks that will we know
+                # are going to wait on the semaphore lock.
+                for entity in list(self.entities.values()):
+                    if entity.should_poll and entity.hass:
+                        await entity.async_update_ha_state(True)
+                return
 
-            if tasks:
+            if tasks := [
+                entity.async_update_ha_state(True)
+                for entity in self.entities.values()
+                if entity.should_poll
+            ]:
                 await asyncio.gather(*tasks)
 
 

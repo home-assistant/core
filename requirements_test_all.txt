@@ -109,7 +109,7 @@ aioairq==0.2.4
 aioairzone-cloud==0.1.6
 
 # homeassistant.components.airzone
-aioairzone==0.5.6
+aioairzone==0.6.1
 
 # homeassistant.components.ambient_station
 aioambient==2023.04.0
@@ -633,6 +633,7 @@ goalzero==0.2.1
 goodwe==0.2.31
 
 # homeassistant.components.google_mail
+# homeassistant.components.youtube
 google-api-python-client==2.71.0
 
 # homeassistant.components.google_pubsub
@@ -790,7 +791,7 @@ justnimbus==0.6.0
 kegtron-ble==0.4.0
 
 # homeassistant.components.knx
-knx_frontend==2023.5.16.204359
+knx_frontend==2023.5.28.94855
 
 # homeassistant.components.konnected
 konnected==1.2.0
@@ -1949,7 +1950,7 @@ xbox-webapi==2.0.11
 xiaomi-ble==0.17.0
 
 # homeassistant.components.knx
-xknx==2.9.0
+xknx==2.10.0
 
 # homeassistant.components.knx
 xknxproject==3.1.0
