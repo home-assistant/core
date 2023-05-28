@@ -1,6 +1,7 @@
 """Config flow for YouTube integration."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 import logging
 from typing import Any
 
@@ -10,6 +11,7 @@ from googleapiclient.errors import HttpError
 from googleapiclient.http import HttpRequest
 import voluptuous as vol
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_entry_oauth2_flow
@@ -32,6 +34,8 @@ class OAuth2FlowHandler(
 
     DOMAIN = DOMAIN
 
+    reauth_entry: ConfigEntry | None = None
+
     @property
     def logger(self) -> logging.Logger:
         """Return logger."""
@@ -46,6 +50,21 @@ class OAuth2FlowHandler(
             "access_type": "offline",
             "prompt": "consent",
         }
+
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+        """Perform reauth upon an API authentication error."""
+        self.reauth_entry = self.hass.config_entries.async_get_entry(
+            self.context["entry_id"]
+        )
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Confirm reauth dialog."""
+        if user_input is None:
+            return self.async_show_form(step_id="reauth_confirm")
+        return await self.async_step_user()
 
     async def async_oauth_create_entry(self, data: dict[str, Any]) -> FlowResult:
         """Create an entry for the flow, or update existing entry."""
@@ -71,10 +90,21 @@ class OAuth2FlowHandler(
         self._title = own_channel["snippet"]["title"]
         self._data = data
 
-        await self.async_set_unique_id(own_channel["id"])
-        self._abort_if_unique_id_configured()
+        if not self.reauth_entry:
+            await self.async_set_unique_id(own_channel["id"])
+            self._abort_if_unique_id_configured()
 
-        return await self.async_step_channels()
+            return await self.async_step_channels()
+
+        if self.reauth_entry.unique_id == own_channel["id"]:
+            self.hass.config_entries.async_update_entry(self.reauth_entry, data=data)
+            await self.hass.config_entries.async_reload(self.reauth_entry.entry_id)
+            return self.async_abort(reason="reauth_successful")
+
+        return self.async_abort(
+            reason="wrong_account",
+            description_placeholders={"title": self._title},
+        )
 
     async def async_step_channels(
         self, user_input: dict[str, Any] | None = None
