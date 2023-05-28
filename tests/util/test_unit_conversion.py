@@ -575,13 +575,10 @@ def test_unit_conversion_factory_same_unit(
     expected: float,
     to_unit: str,
 ) -> None:
-    """Test conversion to other units."""
-    with pytest.raises(HomeAssistantError):
-        converter.converter_factory(from_unit, to_unit, allow_same_unit=False)
-
-    assert converter.converter_factory(from_unit, to_unit, allow_same_unit=True)(
-        value
-    ) == pytest.approx(expected)
+    """Test conversion to same units."""
+    assert converter.converter_factory(from_unit, to_unit)(value) == pytest.approx(
+        expected
+    )
 
 
 @pytest.mark.parametrize(

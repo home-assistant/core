@@ -239,10 +239,12 @@ def _get_display_to_statistic_unit_converter(
 
 def _get_unit_converter(
     from_unit: str, to_unit: str
-) -> Callable[[float | None], float | None]:
+) -> Callable[[float | None], float | None] | None:
     """Prepare a converter from a unit to another unit."""
     for conv in STATISTIC_UNIT_TO_UNIT_CONVERTER.values():
         if from_unit in conv.VALID_UNITS and to_unit in conv.VALID_UNITS:
+            if from_unit == to_unit:
+                return None
             return conv.converter_factory_allow_none(
                 from_unit=from_unit, to_unit=to_unit
             )
@@ -2342,7 +2344,14 @@ def change_statistics_unit(
 
         metadata_id = metadata[0]
 
-        convert = _get_unit_converter(old_unit, new_unit)
+        if not (convert := _get_unit_converter(old_unit, new_unit)):
+            _LOGGER.warning(
+                "Statistics unit of measurement for %s is already %s",
+                statistic_id,
+                new_unit,
+            )
+            return
+
         tables: tuple[type[StatisticsBase], ...] = (
             Statistics,
             StatisticsShortTerm,
