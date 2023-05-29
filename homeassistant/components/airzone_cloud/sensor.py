@@ -182,7 +182,7 @@ class AirzoneWebServerSensor(AirzoneWebServerEntity, AirzoneSensor):
         super().__init__(coordinator, entry, ws_id, ws_data)
 
         self._attr_name = f"{ws_id} {description.name}"
-        self._attr_unique_id = f"{entry.unique_id}_{ws_id}_{description.key}"
+        self._attr_unique_id = f"{ws_id}_{description.key}"
         self.entity_description = description
 
         self._async_update_attrs()
