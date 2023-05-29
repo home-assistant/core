@@ -203,7 +203,6 @@ class ProtectDeviceEntity(Entity):
 
         self._attr_attribution = DEFAULT_ATTRIBUTION
         self._async_set_device_info()
-        self._async_update_device_from_protect(device)
         self._async_get_ufp_enabled: Callable[
             [ProtectAdoptableDeviceModel], bool
         ] | None = None
@@ -214,6 +213,7 @@ class ProtectDeviceEntity(Entity):
         ):
             assert isinstance(self.entity_description, ProtectRequiredKeysMixin)
             self._async_get_ufp_enabled = self.entity_description.get_ufp_enabled
+        self._async_update_device_from_protect(device)
 
     async def async_update(self) -> None:
         """Update the entity.
