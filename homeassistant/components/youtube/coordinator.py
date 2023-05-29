@@ -1,7 +1,6 @@
 """DataUpdateCoordinator for the YouTube integration."""
 from __future__ import annotations
 
-import asyncio
 from datetime import timedelta
 from typing import Any
 
@@ -53,7 +52,6 @@ class YouTubeDataUpdateCoordinator(DataUpdateCoordinator):
         )
 
     async def _async_update_data(self) -> dict[str, Any]:
-        data = {}
         service = await self._auth.get_resource()
         channels = self.config_entry.options[CONF_CHANNELS]
         channel_request: HttpRequest = service.channels().list(
@@ -61,31 +59,35 @@ class YouTubeDataUpdateCoordinator(DataUpdateCoordinator):
         )
         response: dict = await self.hass.async_add_executor_job(channel_request.execute)
 
-        async def _compile_data(channel: dict[str, Any]) -> None:
+        return await self.hass.async_add_executor_job(
+            self._get_channel_data, service, response["items"]
+        )
+
+    def _get_channel_data(
+        self, service: Resource, channels: list[dict[str, Any]]
+    ) -> dict[str, Any]:
+        data: dict[str, Any] = {}
+        for channel in channels:
+            playlist_id = get_upload_playlist_id(channel["id"])
+            response = (
+                service.playlistItems()
+                .list(
+                    part="snippet,contentDetails", playlistId=playlist_id, maxResults=1
+                )
+                .execute()
+            )
+            video = response["items"][0]
             data[channel["id"]] = {
                 ATTR_ID: channel["id"],
                 ATTR_TITLE: channel["snippet"]["title"],
                 ATTR_ICON: channel["snippet"]["thumbnails"]["high"]["url"],
-                ATTR_LATEST_VIDEO: await self._get_latest_video(service, channel["id"]),
+                ATTR_LATEST_VIDEO: {
+                    ATTR_PUBLISHED_AT: video["snippet"]["publishedAt"],
+                    ATTR_TITLE: video["snippet"]["title"],
+                    ATTR_DESCRIPTION: video["snippet"]["description"],
+                    ATTR_THUMBNAIL: video["snippet"]["thumbnails"]["standard"]["url"],
+                    ATTR_VIDEO_ID: video["contentDetails"]["videoId"],
+                },
                 ATTR_SUBSCRIBER_COUNT: int(channel["statistics"]["subscriberCount"]),
             }
-
-        await asyncio.gather(*[_compile_data(channel) for channel in response["items"]])
         return data
-
-    async def _get_latest_video(
-        self, service: Resource, channel_id: str
-    ) -> dict[str, Any]:
-        playlist_id = get_upload_playlist_id(channel_id)
-        job: HttpRequest = service.playlistItems().list(
-            part="snippet,contentDetails", playlistId=playlist_id, maxResults=1
-        )
-        response: dict = await self.hass.async_add_executor_job(job.execute)
-        video = response["items"][0]
-        return {
-            ATTR_PUBLISHED_AT: video["snippet"]["publishedAt"],
-            ATTR_TITLE: video["snippet"]["title"],
-            ATTR_DESCRIPTION: video["snippet"]["description"],
-            ATTR_THUMBNAIL: video["snippet"]["thumbnails"]["standard"]["url"],
-            ATTR_VIDEO_ID: video["contentDetails"]["videoId"],
-        }
