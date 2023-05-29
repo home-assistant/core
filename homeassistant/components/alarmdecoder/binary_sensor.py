@@ -92,7 +92,7 @@ class AlarmDecoderBinarySensor(BinarySensorEntity):
         if zone_rfid is not None:
             self._attr_unique_id = zone_rfid
             if zone_loop is not None:
-                self._attr_unique_id += "_" + str(zone_loop)
+                self._attr_unique_id += f"_{zone_loop}"
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
