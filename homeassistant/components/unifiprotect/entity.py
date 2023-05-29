@@ -191,6 +191,9 @@ class ProtectDeviceEntity(Entity):
         super().__init__()
         self.data: ProtectData = data
         self.device = device
+        self._async_get_ufp_enabled: Callable[
+            [ProtectAdoptableDeviceModel], bool
+        ] | None = None
 
         if description is None:
             self._attr_unique_id = f"{self.device.mac}"
@@ -200,19 +203,11 @@ class ProtectDeviceEntity(Entity):
             self._attr_unique_id = f"{self.device.mac}_{description.key}"
             name = description.name or ""
             self._attr_name = f"{self.device.display_name} {name.title()}"
+            if isinstance(description, ProtectRequiredKeysMixin):
+                self._async_get_ufp_enabled = description.get_ufp_enabled
 
         self._attr_attribution = DEFAULT_ATTRIBUTION
         self._async_set_device_info()
-        self._async_get_ufp_enabled: Callable[
-            [ProtectAdoptableDeviceModel], bool
-        ] | None = None
-        if (
-            hasattr(self, "entity_description")
-            and self.entity_description is not None
-            and hasattr(self.entity_description, "get_ufp_enabled")
-        ):
-            assert isinstance(self.entity_description, ProtectRequiredKeysMixin)
-            self._async_get_ufp_enabled = self.entity_description.get_ufp_enabled
         self._async_update_device_from_protect(device)
 
     async def async_update(self) -> None:
