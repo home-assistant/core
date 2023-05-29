@@ -12,7 +12,6 @@ from homeassistant.components.mqtt.water_heater import (
     MQTT_WATER_HEATER_ATTRIBUTES_BLOCKED,
 )
 from homeassistant.components.water_heater import (
-    ATTR_AWAY_MODE,
     ATTR_CURRENT_TEMPERATURE,
     ATTR_OPERATION_MODE,
     DEFAULT_MAX_TEMP,
@@ -70,10 +69,7 @@ DEFAULT_CONFIG = {
         water_heater.DOMAIN: {
             "name": "test",
             "mode_command_topic": "mode-topic",
-            "away_mode_command_topic": "away-mode-topic",
             "temperature_command_topic": "temperature-topic",
-            "temperature_low_command_topic": "temperature-low-topic",
-            "temperature_high_command_topic": "temperature-high-topic",
         }
     }
 }
@@ -112,7 +108,6 @@ async def test_supported_features(
     support = (
         WaterHeaterEntityFeature.TARGET_TEMPERATURE
         | WaterHeaterEntityFeature.OPERATION_MODE
-        | WaterHeaterEntityFeature.AWAY_MODE
     )
 
     assert state.attributes.get("supported_features") == support
@@ -689,7 +684,6 @@ async def test_unique_id(
 @pytest.mark.parametrize(
     ("topic", "value", "attribute", "attribute_value"),
     [
-        ("away_mode_state_topic", "ON", ATTR_AWAY_MODE, "on"),
         ("current_temperature_topic", "22.1", ATTR_CURRENT_TEMPERATURE, 22.1),
         ("mode_state_topic", "eco", ATTR_OPERATION_MODE, None),
         ("temperature_state_topic", "19.9", ATTR_TEMPERATURE, 19.9),
@@ -929,13 +923,6 @@ async def test_precision_whole(
             {"operation_mode": "electric"},
             "electric",
             "mode_command_template",
-        ),
-        (
-            water_heater.SERVICE_SET_AWAY_MODE,
-            "away_mode_command_topic",
-            {"away_mode": "on"},
-            "ON",
-            None,
         ),
         (
             water_heater.SERVICE_SET_TEMPERATURE,

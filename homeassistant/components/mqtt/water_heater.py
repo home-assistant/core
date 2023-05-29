@@ -11,8 +11,6 @@ import voluptuous as vol
 from homeassistant.components import water_heater
 from homeassistant.components.water_heater import (
     ATTR_OPERATION_MODE,
-    ATTR_TARGET_TEMP_HIGH,
-    ATTR_TARGET_TEMP_LOW,
     DEFAULT_MAX_TEMP,
     DEFAULT_MIN_TEMP,
     STATE_ECO,
@@ -68,9 +66,6 @@ _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "MQTT Water Heater"
 
-CONF_AWAY_MODE_COMMAND_TOPIC = "away_mode_command_topic"
-CONF_AWAY_MODE_STATE_TEMPLATE = "away_mode_state_template"
-CONF_AWAY_MODE_STATE_TOPIC = "away_mode_state_topic"
 CONF_CURRENT_TEMP_TEMPLATE = "current_temperature_template"
 CONF_CURRENT_TEMP_TOPIC = "current_temperature_topic"
 CONF_MODE_COMMAND_TEMPLATE = "mode_command_template"
@@ -81,14 +76,6 @@ CONF_MODE_STATE_TOPIC = "mode_state_topic"
 CONF_PRECISION = "precision"
 CONF_TEMP_COMMAND_TEMPLATE = "temperature_command_template"
 CONF_TEMP_COMMAND_TOPIC = "temperature_command_topic"
-CONF_TEMP_HIGH_COMMAND_TEMPLATE = "temperature_high_command_template"
-CONF_TEMP_HIGH_COMMAND_TOPIC = "temperature_high_command_topic"
-CONF_TEMP_HIGH_STATE_TEMPLATE = "temperature_high_state_template"
-CONF_TEMP_HIGH_STATE_TOPIC = "temperature_high_state_topic"
-CONF_TEMP_LOW_COMMAND_TEMPLATE = "temperature_low_command_template"
-CONF_TEMP_LOW_COMMAND_TOPIC = "temperature_low_command_topic"
-CONF_TEMP_LOW_STATE_TEMPLATE = "temperature_low_state_template"
-CONF_TEMP_LOW_STATE_TOPIC = "temperature_low_state_topic"
 CONF_TEMP_STATE_TEMPLATE = "temperature_state_template"
 CONF_TEMP_STATE_TOPIC = "temperature_state_topic"
 CONF_TEMP_INITIAL = "initial"
@@ -97,12 +84,9 @@ CONF_TEMP_MIN = "min_temp"
 
 MQTT_WATER_HEATER_ATTRIBUTES_BLOCKED = frozenset(
     {
-        water_heater.ATTR_AWAY_MODE,
         water_heater.ATTR_CURRENT_TEMPERATURE,
         water_heater.ATTR_MAX_TEMP,
         water_heater.ATTR_MIN_TEMP,
-        water_heater.ATTR_TARGET_TEMP_HIGH,
-        water_heater.ATTR_TARGET_TEMP_LOW,
         water_heater.ATTR_TEMPERATURE,
         water_heater.ATTR_OPERATION_LIST,
         water_heater.ATTR_OPERATION_MODE,
@@ -110,42 +94,28 @@ MQTT_WATER_HEATER_ATTRIBUTES_BLOCKED = frozenset(
 )
 
 VALUE_TEMPLATE_KEYS = (
-    CONF_AWAY_MODE_STATE_TEMPLATE,
     CONF_CURRENT_TEMP_TEMPLATE,
     CONF_MODE_STATE_TEMPLATE,
-    CONF_TEMP_HIGH_STATE_TEMPLATE,
-    CONF_TEMP_LOW_STATE_TEMPLATE,
     CONF_TEMP_STATE_TEMPLATE,
 )
 
 COMMAND_TEMPLATE_KEYS = {
     CONF_MODE_COMMAND_TEMPLATE,
     CONF_TEMP_COMMAND_TEMPLATE,
-    CONF_TEMP_HIGH_COMMAND_TEMPLATE,
-    CONF_TEMP_LOW_COMMAND_TEMPLATE,
 }
 
 
 TOPIC_KEYS = (
-    CONF_AWAY_MODE_COMMAND_TOPIC,
-    CONF_AWAY_MODE_STATE_TOPIC,
     CONF_CURRENT_TEMP_TOPIC,
     CONF_MODE_COMMAND_TOPIC,
     CONF_MODE_STATE_TOPIC,
     CONF_TEMP_COMMAND_TOPIC,
-    CONF_TEMP_HIGH_COMMAND_TOPIC,
-    CONF_TEMP_HIGH_STATE_TOPIC,
-    CONF_TEMP_LOW_COMMAND_TOPIC,
-    CONF_TEMP_LOW_STATE_TOPIC,
     CONF_TEMP_STATE_TOPIC,
 )
 
 
 _PLATFORM_SCHEMA_BASE = MQTT_BASE_SCHEMA.extend(
     {
-        vol.Optional(CONF_AWAY_MODE_COMMAND_TOPIC): valid_publish_topic,
-        vol.Optional(CONF_AWAY_MODE_STATE_TEMPLATE): cv.template,
-        vol.Optional(CONF_AWAY_MODE_STATE_TOPIC): valid_subscribe_topic,
         vol.Optional(CONF_CURRENT_TEMP_TEMPLATE): cv.template,
         vol.Optional(CONF_CURRENT_TEMP_TOPIC): valid_subscribe_topic,
         vol.Optional(CONF_MODE_COMMAND_TEMPLATE): cv.template,
@@ -177,14 +147,6 @@ _PLATFORM_SCHEMA_BASE = MQTT_BASE_SCHEMA.extend(
         vol.Optional(CONF_TEMP_MAX, default=DEFAULT_MAX_TEMP): vol.Coerce(float),
         vol.Optional(CONF_TEMP_COMMAND_TEMPLATE): cv.template,
         vol.Optional(CONF_TEMP_COMMAND_TOPIC): valid_publish_topic,
-        vol.Optional(CONF_TEMP_HIGH_COMMAND_TEMPLATE): cv.template,
-        vol.Optional(CONF_TEMP_HIGH_COMMAND_TOPIC): valid_publish_topic,
-        vol.Optional(CONF_TEMP_HIGH_STATE_TOPIC): valid_subscribe_topic,
-        vol.Optional(CONF_TEMP_HIGH_STATE_TEMPLATE): cv.template,
-        vol.Optional(CONF_TEMP_LOW_COMMAND_TEMPLATE): cv.template,
-        vol.Optional(CONF_TEMP_LOW_COMMAND_TOPIC): valid_publish_topic,
-        vol.Optional(CONF_TEMP_LOW_STATE_TEMPLATE): cv.template,
-        vol.Optional(CONF_TEMP_LOW_STATE_TOPIC): valid_subscribe_topic,
         vol.Optional(CONF_TEMP_STATE_TEMPLATE): cv.template,
         vol.Optional(CONF_TEMP_STATE_TOPIC): valid_subscribe_topic,
         vol.Optional(CONF_TEMPERATURE_UNIT): cv.temperature_unit,
@@ -250,8 +212,6 @@ class MqttWaterHeater(MqttEntity, WaterHeaterEntity):
     ) -> None:
         """Initialize the water heater device."""
         self._attr_current_operation = None
-        self._attr_target_temperature_high = None
-        self._attr_target_temperature_low = None
         MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
 
     @staticmethod
@@ -275,10 +235,6 @@ class MqttWaterHeater(MqttEntity, WaterHeaterEntity):
 
         if self._topic[CONF_TEMP_STATE_TOPIC] is None or self._optimistic:
             self._attr_target_temperature = config[CONF_TEMP_INITIAL]
-        if self._topic[CONF_TEMP_LOW_STATE_TOPIC] is None or self._optimistic:
-            self._attr_target_temperature_low = config[CONF_TEMP_INITIAL]
-        if self._topic[CONF_TEMP_HIGH_STATE_TOPIC] is None or self._optimistic:
-            self._attr_target_temperature_high = config[CONF_TEMP_INITIAL]
         if self._topic[CONF_MODE_STATE_TOPIC] is None or self._optimistic:
             self._attr_current_operation = STATE_OFF
 
@@ -316,10 +272,6 @@ class MqttWaterHeater(MqttEntity, WaterHeaterEntity):
         ):
             support |= WaterHeaterEntityFeature.OPERATION_MODE
 
-        if (self._topic[CONF_AWAY_MODE_STATE_TOPIC] is not None) or (
-            self._topic[CONF_AWAY_MODE_COMMAND_TOPIC] is not None
-        ):
-            support |= WaterHeaterEntityFeature.AWAY_MODE
         self._attr_supported_features = support
 
     def _prepare_subscribe_topics(self) -> None:
@@ -395,30 +347,6 @@ class MqttWaterHeater(MqttEntity, WaterHeaterEntity):
         )
 
         @callback
-        @log_messages(self.hass, self.entity_id)
-        def handle_temperature_low_received(msg: ReceiveMessage) -> None:
-            """Handle target temperature low coming via MQTT."""
-            handle_temperature_received(
-                msg, CONF_TEMP_LOW_STATE_TEMPLATE, "_attr_target_temperature_low"
-            )
-
-        add_subscription(
-            topics, CONF_TEMP_LOW_STATE_TOPIC, handle_temperature_low_received
-        )
-
-        @callback
-        @log_messages(self.hass, self.entity_id)
-        def handle_temperature_high_received(msg: ReceiveMessage) -> None:
-            """Handle target temperature high coming via MQTT."""
-            handle_temperature_received(
-                msg, CONF_TEMP_HIGH_STATE_TEMPLATE, "_attr_target_temperature_high"
-            )
-
-        add_subscription(
-            topics, CONF_TEMP_HIGH_STATE_TOPIC, handle_temperature_high_received
-        )
-
-        @callback
         def handle_mode_received(
             msg: ReceiveMessage, template_name: str, attr: str, mode_list: str
         ) -> None:
@@ -443,39 +371,6 @@ class MqttWaterHeater(MqttEntity, WaterHeaterEntity):
             )
 
         add_subscription(topics, CONF_MODE_STATE_TOPIC, handle_current_mode_received)
-
-        @callback
-        def handle_onoff_mode_received(
-            msg: ReceiveMessage, template_name: str, attr: str
-        ) -> None:
-            """Handle receiving on/off mode via MQTT."""
-            payload = render_template(msg, template_name)
-            payload_on = self._config[CONF_PAYLOAD_ON]
-            payload_off = self._config[CONF_PAYLOAD_OFF]
-
-            if payload == "True":
-                payload = payload_on
-            elif payload == "False":
-                payload = payload_off
-
-            if payload == payload_on:
-                setattr(self, attr, True)
-            elif payload == payload_off:
-                setattr(self, attr, False)
-            else:
-                _LOGGER.error("Invalid %s mode: %s", attr, payload)
-
-            get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
-
-        @callback
-        @log_messages(self.hass, self.entity_id)
-        def handle_away_mode_received(msg: ReceiveMessage) -> None:
-            """Handle receiving away mode via MQTT."""
-            handle_onoff_mode_received(
-                msg, CONF_AWAY_MODE_STATE_TEMPLATE, "_attr_is_away_mode_on"
-            )
-
-        add_subscription(topics, CONF_AWAY_MODE_STATE_TOPIC, handle_away_mode_received)
 
         self._sub_state = subscription.async_prepare_subscribe_topics(
             self.hass, self._sub_state, topics
@@ -529,22 +424,6 @@ class MqttWaterHeater(MqttEntity, WaterHeaterEntity):
             "_attr_target_temperature",
         )
 
-        changed |= await self._set_temperature_attribute(
-            kwargs.get(ATTR_TARGET_TEMP_LOW),
-            CONF_TEMP_LOW_COMMAND_TOPIC,
-            CONF_TEMP_LOW_COMMAND_TEMPLATE,
-            CONF_TEMP_LOW_STATE_TOPIC,
-            "_attr_target_temperature_low",
-        )
-
-        changed |= await self._set_temperature_attribute(
-            kwargs.get(ATTR_TARGET_TEMP_HIGH),
-            CONF_TEMP_HIGH_COMMAND_TOPIC,
-            CONF_TEMP_HIGH_COMMAND_TEMPLATE,
-            CONF_TEMP_HIGH_STATE_TOPIC,
-            "_attr_target_temperature_high",
-        )
-
         if not changed:
             return
         self.async_write_ha_state()
@@ -557,21 +436,3 @@ class MqttWaterHeater(MqttEntity, WaterHeaterEntity):
         if self._optimistic or self._topic[CONF_MODE_STATE_TOPIC] is None:
             self._attr_current_operation = operation_mode
             self.async_write_ha_state()
-
-    async def _set_away_mode(self, state: bool) -> None:
-        await self._publish(
-            CONF_AWAY_MODE_COMMAND_TOPIC,
-            self._config[CONF_PAYLOAD_ON] if state else self._config[CONF_PAYLOAD_OFF],
-        )
-
-        if self._optimistic or self._topic[CONF_AWAY_MODE_STATE_TOPIC] is None:
-            self._attr_is_away_mode_on = state
-            self.async_write_ha_state()
-
-    async def async_turn_away_mode_on(self) -> None:
-        """Turn away mode on."""
-        await self._set_away_mode(True)
-
-    async def async_turn_away_mode_off(self) -> None:
-        """Turn away mode off."""
-        await self._set_away_mode(False)
