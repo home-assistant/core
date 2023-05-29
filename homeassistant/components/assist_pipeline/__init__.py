@@ -5,6 +5,7 @@ from collections.abc import AsyncIterable
 
 from homeassistant.components import stt
 from homeassistant.core import Context, HomeAssistant
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
@@ -34,6 +35,8 @@ __all__ = (
     "PipelineEvent",
     "PipelineEventType",
 )
+
+CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
