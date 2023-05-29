@@ -10,7 +10,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, LOGGER
 
 
-class DwdWeatherWarningsCoordinator(DataUpdateCoordinator):
+class DwdWeatherWarningsCoordinator(DataUpdateCoordinator[None]):
     """Custom coordinator for the dwd_weather_warnings integration."""
 
     def __init__(self, hass: HomeAssistant, api: DwdWeatherWarningsAPI) -> None:
