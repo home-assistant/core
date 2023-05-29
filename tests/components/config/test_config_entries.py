@@ -969,7 +969,9 @@ async def test_options_flow_with_invalid_data(hass: HomeAssistant, client) -> No
         }
 
 
-async def test_get(hass: HomeAssistant, hass_ws_client: WebSocketGenerator) -> None:
+async def test_get_single(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test that we can get a config entry."""
     assert await async_setup_component(hass, "config", {})
     ws_client = await hass_ws_client(hass)
@@ -982,7 +984,7 @@ async def test_get(hass: HomeAssistant, hass_ws_client: WebSocketGenerator) -> N
 
     await ws_client.send_json_auto_id(
         {
-            "type": "config_entries/get",
+            "type": "config_entries/get_single",
             "entry_id": entry.entry_id,
         }
     )
@@ -1006,7 +1008,7 @@ async def test_get(hass: HomeAssistant, hass_ws_client: WebSocketGenerator) -> N
 
     await ws_client.send_json_auto_id(
         {
-            "type": "config_entries/get",
+            "type": "config_entries/get_single",
             "entry_id": "blah",
         }
     )
@@ -1317,7 +1319,7 @@ async def test_get_matching_entries_ws(
 
     ws_client = await hass_ws_client(hass)
 
-    await ws_client.send_json_auto_id({"type": "config_entries/get_matching"})
+    await ws_client.send_json_auto_id({"type": "config_entries/get"})
     response = await ws_client.receive_json()
     assert response["result"] == [
         {
@@ -1394,7 +1396,7 @@ async def test_get_matching_entries_ws(
 
     await ws_client.send_json_auto_id(
         {
-            "type": "config_entries/get_matching",
+            "type": "config_entries/get",
             "domain": "comp1",
             "type_filter": "hub",
         }
@@ -1419,7 +1421,7 @@ async def test_get_matching_entries_ws(
 
     await ws_client.send_json_auto_id(
         {
-            "type": "config_entries/get_matching",
+            "type": "config_entries/get",
             "type_filter": ["service", "device"],
         }
     )
@@ -1457,7 +1459,7 @@ async def test_get_matching_entries_ws(
 
     await ws_client.send_json_auto_id(
         {
-            "type": "config_entries/get_matching",
+            "type": "config_entries/get",
             "type_filter": "hub",
         }
     )
@@ -1500,7 +1502,7 @@ async def test_get_matching_entries_ws(
     ):
         await ws_client.send_json_auto_id(
             {
-                "type": "config_entries/get_matching",
+                "type": "config_entries/get",
                 "type_filter": "hub",
             }
         )
@@ -1586,7 +1588,7 @@ async def test_get_matching_entries_ws(
     ):
         await ws_client.send_json_auto_id(
             {
-                "type": "config_entries/get_matching",
+                "type": "config_entries/get",
                 "type_filter": ["helper"],
             }
         )
@@ -1602,7 +1604,7 @@ async def test_get_matching_entries_ws(
     ):
         await ws_client.send_json_auto_id(
             {
-                "type": "config_entries/get_matching",
+                "type": "config_entries/get",
                 "type_filter": ["device", "hub", "service"],
             }
         )
