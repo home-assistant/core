@@ -7,9 +7,8 @@ from voluptuous.schema_builder import Schema
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_API_KEY
-from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers import config_validation as cv
 
 from . import TrelloAdapter
 from .const import (
@@ -43,14 +42,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.user_id: str = ""
         self.ids_boards: dict[str, dict[str, str]] = {}
         self.trello_adapter: TrelloAdapter
-
-    @staticmethod
-    @callback
-    def async_get_options_flow(
-        config_entry: config_entries.ConfigEntry,
-    ) -> config_entries.OptionsFlow:
-        """Create the options flow."""
-        return OptionsFlowHandler(config_entry)
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -138,71 +129,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def _get_current_member(self) -> Member:
         return await self.hass.async_add_executor_job(self.trello_adapter.get_member)
-
-
-class OptionsFlowHandler(config_entries.OptionsFlow):
-    """Handle options flow for Trello."""
-
-    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
-        """Initialize options flow."""
-        self.config_options = config_entry.options
-        self.trello_adapter = _create_trello_adapter(
-            config_entry.data[CONF_API_KEY], config_entry.data[CONF_API_TOKEN]
-        )
-
-        self.ids_boards: dict[str, dict[str, str]] = {}
-
-    async def async_step_init(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """Select desired boards to have card counts of per list.
-
-        :param user_input: None initially or the user's selected boards
-        """
-        configured_board_ids = self.config_options[CONF_OPTIONS_BOARDS].keys()
-
-        if user_input is None:
-            self.ids_boards = await self._fetch_all_boards()
-
-            return await self._show_board_form(configured_board_ids)
-
-        await self._remove_deselected_boards(
-            configured_board_ids, user_input[USER_INPUT_BOARD_IDS]
-        )
-
-        user_selected_boards = await self._get_boards_lists(
-            user_input[USER_INPUT_BOARD_IDS]
-        )
-
-        new_config_options = {CONF_OPTIONS_BOARDS: user_selected_boards}
-        return self.async_create_entry(data=new_config_options)
-
-    async def _show_board_form(self, configured_board_ids: list[str]) -> FlowResult:
-        return self.async_show_form(
-            step_id="init",
-            data_schema=_get_board_select_schema(
-                self.ids_boards, list(configured_board_ids)
-            ),
-        )
-
-    async def _remove_deselected_boards(
-        self, configured_board_ids: list[str], user_selected_board_ids: list[str]
-    ) -> None:
-        for configured_board_id in configured_board_ids:
-            if configured_board_id not in user_selected_board_ids:
-                dev_reg = dr.async_get(self.hass)
-                if device := dev_reg.async_get_device(
-                    identifiers={(DOMAIN, configured_board_id)}
-                ):
-                    dev_reg.async_remove_device(device.id)
-
-    async def _fetch_all_boards(self) -> dict[str, dict[str, str]]:
-        return await self.hass.async_add_executor_job(self.trello_adapter.get_boards)
-
-    async def _get_boards_lists(self, board_ids: list[str]) -> dict[str, dict]:
-        return await self.hass.async_add_executor_job(
-            self.trello_adapter.get_board_lists, self.ids_boards, board_ids
-        )
 
 
 def _create_trello_adapter(api_key: str, api_token: str) -> TrelloAdapter:
