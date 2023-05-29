@@ -3769,6 +3769,19 @@ async def test_reload_config_entry(
     """Test manual entities reloaded and set up correctly."""
     await mqtt_mock_entry()
 
+    # set up item through discovery
+    config_discovery = {
+        "name": "test_discovery",
+        "unique_id": "test_discovery_unique456",
+        "state_topic": "test-topic_discovery",
+    }
+    async_fire_mqtt_message(
+        hass, "homeassistant/sensor/bla/config", json.dumps(config_discovery)
+    )
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.test_discovery") is not None
+
     entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
 
     def _check_entities() -> int:
@@ -3791,7 +3804,7 @@ async def test_reload_config_entry(
     assert (state := hass.states.get("sensor.test_manual3")) is not None
     assert state.attributes["friendly_name"] == "test_manual3"
     assert state.state == "manual3_intial"
-    assert _check_entities() == 2
+    assert _check_entities() == 3
 
     # Reload the entry with a new configuration.yaml
     # Mock configuration.yaml was updated
@@ -3827,6 +3840,8 @@ async def test_reload_config_entry(
     assert state.state is STATE_UNKNOWN
     # State of test_manual3 is still loaded but is unavailable
     assert (state := hass.states.get("sensor.test_manual3")) is not None
+    assert state.state is STATE_UNAVAILABLE
+    assert (state := hass.states.get("sensor.test_discovery")) is not None
     assert state.state is STATE_UNAVAILABLE
     # The entity is not loaded anymore
     assert _check_entities() == 2
