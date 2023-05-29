@@ -435,9 +435,9 @@ INFERRED_UNITS = {
     " Watts": UnitOfPower.WATT,
     " Hz": UnitOfFrequency.HERTZ,
     " C": UnitOfTemperature.CELSIUS,
-    # APCUPSd reports "itemp" field (converted to UPS Internal Temperature sensor) with
-    # a trailing "Internal", e.g., "34.6 C Internal". Here we create a fake unit
-    # " C Internal" to handle this case.
+    # APCUPSd reports data for "itemp" field (eventually represented by UPS Internal
+    # Temperature sensor in this integration) with a trailing "Internal", e.g.,
+    # "34.6 C Internal". Here we create a fake unit " C Internal" to handle this case.
     " C Internal": UnitOfTemperature.CELSIUS,
     " Percent Load Capacity": PERCENTAGE,
 }
