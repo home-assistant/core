@@ -3,8 +3,6 @@ from __future__ import annotations
 
 import logging
 
-from apcaccess.status import ALL_UNITS
-
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -427,7 +425,6 @@ SENSORS: dict[str, SensorEntityDescription] = {
     ),
 }
 
-SPECIFIC_UNITS = {"ITEMP": UnitOfTemperature.CELSIUS}
 INFERRED_UNITS = {
     " Minutes": UnitOfTime.MINUTES,
     " Seconds": UnitOfTime.SECONDS,
@@ -438,6 +435,10 @@ INFERRED_UNITS = {
     " Watts": UnitOfPower.WATT,
     " Hz": UnitOfFrequency.HERTZ,
     " C": UnitOfTemperature.CELSIUS,
+    # APCUPSd reports data for "itemp" field (eventually represented by UPS Internal
+    # Temperature sensor in this integration) with a trailing "Internal", e.g.,
+    # "34.6 C Internal". Here we create a fake unit " C Internal" to handle this case.
+    " C Internal": UnitOfTemperature.CELSIUS,
     " Percent Load Capacity": PERCENTAGE,
 }
 
@@ -466,15 +467,16 @@ async def async_setup_entry(
 
 
 def infer_unit(value: str) -> tuple[str, str | None]:
-    """If the value ends with any of the units from ALL_UNITS.
+    """If the value ends with any of the units from supported units.
 
     Split the unit off the end of the value and return the value, unit tuple
     pair. Else return the original value and None as the unit.
     """
 
-    for unit in ALL_UNITS:
+    for unit, ha_unit in INFERRED_UNITS.items():
         if value.endswith(unit):
-            return value.removesuffix(unit), INFERRED_UNITS.get(unit, unit.strip())
+            return value.removesuffix(unit), ha_unit
+
     return value, None
 
 
