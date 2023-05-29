@@ -53,6 +53,7 @@ WEBSERVER_SENSOR_TYPES: Final[tuple[SensorEntityDescription, ...]] = (
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
+        has_entity_name=True,
         key=AZD_WIFI_RSSI,
         name="RSSI",
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
@@ -181,7 +182,6 @@ class AirzoneWebServerSensor(AirzoneWebServerEntity, AirzoneSensor):
         """Initialize."""
         super().__init__(coordinator, entry, ws_id, ws_data)
 
-        self._attr_name = f"{ws_id} {description.name}"
         self._attr_unique_id = f"{ws_id}_{description.key}"
         self.entity_description = description
 
