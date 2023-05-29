@@ -5,7 +5,6 @@ from typing import Any, Final
 
 from aioairzone_cloud.const import (
     AZD_AIDOOS,
-    AZD_CONNECTED,
     AZD_HUMIDITY,
     AZD_NAME,
     AZD_TEMP,
@@ -106,7 +105,6 @@ class AirzoneSensor(AirzoneEntity, SensorEntity):
     @callback
     def _async_update_attrs(self) -> None:
         """Update sensor attributes."""
-        self._attr_available = self.get_airzone_value(AZD_CONNECTED)
         self._attr_native_value = self.get_airzone_value(self.entity_description.key)
 
 
