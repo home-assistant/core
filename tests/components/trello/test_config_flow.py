@@ -67,7 +67,7 @@ async def test_flow_user(hass: HomeAssistant) -> None:
         )
 
     assert init_result["type"] == FlowResultType.FORM
-    assert init_result["step_id"] == "user"
+    assert init_result["step_id"] == "creds"
     assert init_result["last_step"] is False
 
     assert creds_result["step_id"] == "boards"
@@ -106,6 +106,6 @@ async def test_flow_user_unauthorized(hass: HomeAssistant) -> None:
         )
 
     assert creds_result["type"] == FlowResultType.FORM
-    assert creds_result["step_id"] == "user"
+    assert creds_result["step_id"] == "creds"
     assert creds_result["errors"] == {"base": "invalid_auth"}
     assert creds_result["last_step"] is False

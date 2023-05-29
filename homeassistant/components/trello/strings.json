@@ -1,7 +1,8 @@
 {
   "config": {
     "step": {
-      "user": {
+      "user": {},
+      "creds": {
         "data": {
           "api_key": "API Key",
           "api_token": "Token"
