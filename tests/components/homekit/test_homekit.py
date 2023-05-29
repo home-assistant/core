@@ -747,6 +747,7 @@ async def test_homekit_start_with_a_device(
     entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_NAME: "mock_name", CONF_PORT: 12345}
     )
+    assert await async_setup_component(hass, "homeassistant", {})
     assert await async_setup_component(hass, "demo", {"demo": {}})
     await hass.async_block_till_done()
 

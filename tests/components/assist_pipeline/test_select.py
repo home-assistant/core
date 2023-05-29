@@ -47,8 +47,12 @@ async def pipeline_1(
             "name": "Test 1",
             "language": "en-US",
             "conversation_engine": None,
+            "conversation_language": "en-US",
             "tts_engine": None,
+            "tts_language": None,
+            "tts_voice": None,
             "stt_engine": None,
+            "stt_language": None,
         }
     )
 
@@ -63,8 +67,12 @@ async def pipeline_2(
             "name": "Test 2",
             "language": "en-US",
             "conversation_engine": None,
+            "conversation_language": "en-US",
             "tts_engine": None,
+            "tts_language": None,
+            "tts_voice": None,
             "stt_engine": None,
+            "stt_language": None,
         }
     )
 
@@ -84,6 +92,7 @@ async def test_select_entity_changing_pipelines(
     assert state.state == "preferred"
     assert state.attributes["options"] == [
         "preferred",
+        "Home Assistant",
         pipeline_1.name,
         pipeline_2.name,
     ]
@@ -114,4 +123,8 @@ async def test_select_entity_changing_pipelines(
 
     state = hass.states.get("select.assist_pipeline_test_pipeline")
     assert state.state == "preferred"
-    assert state.attributes["options"] == ["preferred", pipeline_1.name]
+    assert state.attributes["options"] == [
+        "preferred",
+        "Home Assistant",
+        pipeline_1.name,
+    ]

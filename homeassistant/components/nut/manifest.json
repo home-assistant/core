@@ -1,7 +1,7 @@
 {
   "domain": "nut",
   "name": "Network UPS Tools (NUT)",
-  "codeowners": ["@bdraco", "@ollo69"],
+  "codeowners": ["@bdraco", "@ollo69", "@pestevez"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/nut",
   "integration_type": "device",

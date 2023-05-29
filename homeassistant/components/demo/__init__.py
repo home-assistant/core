@@ -27,6 +27,7 @@ COMPONENTS_WITH_CONFIG_ENTRY_DEMO_PLATFORM = [
     Platform.CAMERA,
     Platform.CLIMATE,
     Platform.COVER,
+    Platform.DATE,
     Platform.FAN,
     Platform.HUMIDIFIER,
     Platform.LIGHT,
@@ -39,6 +40,7 @@ COMPONENTS_WITH_CONFIG_ENTRY_DEMO_PLATFORM = [
     Platform.STT,
     Platform.SWITCH,
     Platform.TEXT,
+    Platform.TIME,
     Platform.UPDATE,
     Platform.VACUUM,
     Platform.WATER_HEATER,
@@ -181,6 +183,14 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     """Set the config entry up."""
     # Set up demo platforms with config entry
     await hass.config_entries.async_forward_entry_setups(
+        config_entry, COMPONENTS_WITH_CONFIG_ENTRY_DEMO_PLATFORM
+    )
+    return True
+
+
+async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+    """Unload a config entry."""
+    await hass.config_entries.async_unload_platforms(
         config_entry, COMPONENTS_WITH_CONFIG_ENTRY_DEMO_PLATFORM
     )
     return True

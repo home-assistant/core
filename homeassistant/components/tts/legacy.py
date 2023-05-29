@@ -25,7 +25,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PLATFORM,
 )
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import config_per_platform, discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.service import async_set_service_schema
@@ -44,6 +44,7 @@ from .const import (
     CONF_CACHE_DIR,
     CONF_FIELDS,
     CONF_TIME_MEMORY,
+    DATA_TTS_MANAGER,
     DEFAULT_CACHE,
     DEFAULT_CACHE_DIR,
     DEFAULT_TIME_MEMORY,
@@ -51,6 +52,7 @@ from .const import (
     TtsAudioType,
 )
 from .media_source import generate_media_source_id
+from .models import Voice
 
 if TYPE_CHECKING:
     from . import SpeechManager
@@ -111,7 +113,7 @@ async def async_setup_legacy(
     hass: HomeAssistant, config: ConfigType
 ) -> list[Coroutine[Any, Any, None]]:
     """Set up legacy text to speech providers."""
-    tts: SpeechManager = hass.data[DOMAIN]
+    tts: SpeechManager = hass.data[DATA_TTS_MANAGER]
 
     # Load service descriptions from tts/services.yaml
     services_yaml = Path(__file__).parent / "services.yaml"
@@ -227,19 +229,24 @@ class Provider:
         """Return a list of supported options like voice, emotions."""
         return None
 
+    @callback
+    def async_get_supported_voices(self, language: str) -> list[Voice] | None:
+        """Return a list of supported voices for a language."""
+        return None
+
     @property
     def default_options(self) -> Mapping[str, Any] | None:
         """Return a mapping with the default options."""
         return None
 
     def get_tts_audio(
-        self, message: str, language: str, options: dict[str, Any] | None = None
+        self, message: str, language: str, options: dict[str, Any]
     ) -> TtsAudioType:
         """Load tts audio file from provider."""
         raise NotImplementedError()
 
     async def async_get_tts_audio(
-        self, message: str, language: str, options: dict[str, Any] | None = None
+        self, message: str, language: str, options: dict[str, Any]
     ) -> TtsAudioType:
         """Load tts audio file from provider.
 
