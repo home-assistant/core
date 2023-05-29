@@ -54,8 +54,7 @@ class AirzoneAidooEntity(AirzoneEntity):
         """Return Aidoo value by key."""
         value = None
         if aidoo := self.coordinator.data[AZD_AIDOOS].get(self.aidoo_id):
-            if key in aidoo:
-                value = aidoo[key]
+            value = aidoo.get(key)
         return value
 
 
@@ -86,6 +85,5 @@ class AirzoneZoneEntity(AirzoneEntity):
         """Return zone value by key."""
         value = None
         if zone := self.coordinator.data[AZD_ZONES].get(self.zone_id):
-            if key in zone:
-                value = zone[key]
+            value = zone.get(key)
         return value
