@@ -3,7 +3,13 @@ from __future__ import annotations
 
 from typing import Any, Final
 
-from aioairzone_cloud.const import AZD_HUMIDITY, AZD_NAME, AZD_TEMP, AZD_ZONES
+from aioairzone_cloud.const import (
+    AZD_AIDOOS,
+    AZD_HUMIDITY,
+    AZD_NAME,
+    AZD_TEMP,
+    AZD_ZONES,
+)
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -18,7 +24,17 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 from .coordinator import AirzoneUpdateCoordinator
-from .entity import AirzoneEntity, AirzoneZoneEntity
+from .entity import AirzoneAidooEntity, AirzoneEntity, AirzoneZoneEntity
+
+AIDOO_SENSOR_TYPES: Final[tuple[SensorEntityDescription, ...]] = (
+    SensorEntityDescription(
+        device_class=SensorDeviceClass.TEMPERATURE,
+        key=AZD_TEMP,
+        name="Temperature",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+)
 
 ZONE_SENSOR_TYPES: Final[tuple[SensorEntityDescription, ...]] = (
     SensorEntityDescription(
@@ -42,10 +58,26 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Add Airzone Cloud sensors from a config_entry."""
-    coordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator: AirzoneUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
-    sensors = []
-    for zone_id, zone_data in coordinator.data[AZD_ZONES].items():
+    sensors: list[AirzoneSensor] = []
+
+    # Aidoos
+    for aidoo_id, aidoo_data in coordinator.data.get(AZD_AIDOOS, {}).items():
+        for description in AIDOO_SENSOR_TYPES:
+            if description.key in aidoo_data:
+                sensors.append(
+                    AirzoneAidooSensor(
+                        coordinator,
+                        description,
+                        entry,
+                        aidoo_id,
+                        aidoo_data,
+                    )
+                )
+
+    # Zones
+    for zone_id, zone_data in coordinator.data.get(AZD_ZONES, {}).items():
         for description in ZONE_SENSOR_TYPES:
             if description.key in zone_data:
                 sensors.append(
@@ -74,6 +106,27 @@ class AirzoneSensor(AirzoneEntity, SensorEntity):
     def _async_update_attrs(self) -> None:
         """Update sensor attributes."""
         self._attr_native_value = self.get_airzone_value(self.entity_description.key)
+
+
+class AirzoneAidooSensor(AirzoneAidooEntity, AirzoneSensor):
+    """Define an Airzone Cloud Aidoo sensor."""
+
+    def __init__(
+        self,
+        coordinator: AirzoneUpdateCoordinator,
+        description: SensorEntityDescription,
+        entry: ConfigEntry,
+        aidoo_id: str,
+        aidoo_data: dict[str, Any],
+    ) -> None:
+        """Initialize."""
+        super().__init__(coordinator, entry, aidoo_id, aidoo_data)
+
+        self._attr_name = f"{aidoo_data[AZD_NAME]} {description.name}"
+        self._attr_unique_id = f"{entry.unique_id}_{aidoo_id}_{description.key}"
+        self.entity_description = description
+
+        self._async_update_attrs()
 
 
 class AirzoneZoneSensor(AirzoneZoneEntity, AirzoneSensor):
