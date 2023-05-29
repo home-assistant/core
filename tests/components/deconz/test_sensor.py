@@ -24,7 +24,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.util import dt
+from homeassistant.util import dt as dt_util
 
 from .test_gateway import DECONZ_WEB_REQUEST, setup_deconz_integration
 
@@ -423,7 +423,7 @@ TEST_DATA = [
             "entity_id": "sensor.mi_temperature_1",
             "unique_id": "00:15:8d:00:02:45:dc:53-01-0405-humidity",
             "old_unique_id": "00:15:8d:00:02:45:dc:53-01-0405",
-            "state": "35.5",
+            "state": "35.55",
             "entity_category": None,
             "device_class": SensorDeviceClass.HUMIDITY,
             "state_class": SensorStateClass.MEASUREMENT,
@@ -433,6 +433,9 @@ TEST_DATA = [
                 "unit_of_measurement": "%",
                 "device_class": "humidity",
                 "friendly_name": "Mi temperature 1",
+            },
+            "options": {
+                "suggested_display_precision": 1,
             },
             "websocket_event": {"state": {"humidity": 1000}},
             "next_state": "10.0",
@@ -601,7 +604,7 @@ TEST_DATA = [
             "entity_id": "sensor.mi_temperature_1",
             "unique_id": "00:15:8d:00:02:45:dc:53-01-0402-temperature",
             "old_unique_id": "00:15:8d:00:02:45:dc:53-01-0402",
-            "state": "21.8",
+            "state": "21.82",
             "entity_category": None,
             "device_class": SensorDeviceClass.TEMPERATURE,
             "state_class": SensorStateClass.MEASUREMENT,
@@ -611,6 +614,9 @@ TEST_DATA = [
                 "unit_of_measurement": "°C",
                 "device_class": "temperature",
                 "friendly_name": "Mi temperature 1",
+            },
+            "options": {
+                "suggested_display_precision": 1,
             },
             "websocket_event": {"state": {"temperature": 1800}},
             "next_state": "18.0",
@@ -779,7 +785,7 @@ async def test_sensors(
 
         async_fire_time_changed(
             hass,
-            dt.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1),
+            dt_util.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1),
         )
         await hass.async_block_till_done()
 

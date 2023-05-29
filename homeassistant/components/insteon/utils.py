@@ -23,7 +23,9 @@ from pyinsteon.managers.x10_manager import (
     async_x10_all_units_off,
 )
 from pyinsteon.x10_address import create as create_x10_address
+from serial.tools import list_ports
 
+from homeassistant.components import usb
 from homeassistant.const import (
     CONF_ADDRESS,
     CONF_ENTITY_ID,
@@ -414,3 +416,32 @@ def async_add_insteon_devices(
         async_add_insteon_entities(
             hass, platform, entity_type, async_add_entities, discovery_info
         )
+
+
+def get_usb_ports() -> dict[str, str]:
+    """Return a dict of USB ports and their friendly names."""
+    ports = list_ports.comports()
+    port_descriptions = {}
+    for port in ports:
+        vid: str | None = None
+        pid: str | None = None
+        if port.vid is not None and port.pid is not None:
+            usb_device = usb.usb_device_from_port(port)
+            vid = usb_device.vid
+            pid = usb_device.pid
+        dev_path = usb.get_serial_by_id(port.device)
+        human_name = usb.human_readable_device_name(
+            dev_path,
+            port.serial_number,
+            port.manufacturer,
+            port.description,
+            vid,
+            pid,
+        )
+        port_descriptions[dev_path] = human_name
+    return port_descriptions
+
+
+async def async_get_usb_ports(hass: HomeAssistant) -> dict[str, str]:
+    """Return a dict of USB ports and their friendly names."""
+    return await hass.async_add_executor_job(get_usb_ports)

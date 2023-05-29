@@ -26,6 +26,7 @@ MOCK_STATUS: Final = OrderedDict(
         ("LOADPCT", "14.0 Percent"),
         ("BCHARGE", "100.0 Percent"),
         ("TIMELEFT", "51.0 Minutes"),
+        ("ITEMP", "34.6 C Internal"),
         ("MBATTCHG", "5 Percent"),
         ("MINTIMEL", "3 Minutes"),
         ("MAXTIME", "0 Seconds"),

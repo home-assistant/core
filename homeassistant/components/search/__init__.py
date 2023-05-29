@@ -10,12 +10,18 @@ import voluptuous as vol
 from homeassistant.components import automation, group, person, script, websocket_api
 from homeassistant.components.homeassistant import scene
 from homeassistant.core import HomeAssistant, callback, split_entity_id
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    entity_registry as er,
+)
 from homeassistant.helpers.entity import entity_sources as get_entity_sources
 from homeassistant.helpers.typing import ConfigType
 
 DOMAIN = "search"
 _LOGGER = logging.getLogger(__name__)
+
+CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:

@@ -33,7 +33,11 @@ from homeassistant.config_entries import (
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HassJob, HomeAssistant, callback as hass_callback
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr, discovery_flow
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    discovery_flow,
+)
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.issue_registry import (
@@ -118,6 +122,8 @@ __all__ = [
 _LOGGER = logging.getLogger(__name__)
 
 RECOMMENDED_MIN_HAOS_VERSION = AwesomeVersion("9.0.dev0")
+
+CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 
 async def _async_get_adapter_from_address(
