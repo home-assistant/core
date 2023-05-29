@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, Any
 import voluptuous as vol
 
 from homeassistant.components.switch import (
+    DOMAIN as SWITCH_DOMAIN,
     ENTITY_ID_FORMAT,
     PLATFORM_SCHEMA,
     SwitchEntity,
@@ -26,12 +27,13 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.reload import async_setup_reload_service
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.template_entity import ManualTriggerEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.util import slugify
 
-from .const import CONF_COMMAND_TIMEOUT, DEFAULT_TIMEOUT, DOMAIN, PLATFORMS
+from .const import CONF_COMMAND_TIMEOUT, DEFAULT_TIMEOUT, DOMAIN
 from .utils import call_shell_with_timeout, check_output_or_log
 
 _LOGGER = logging.getLogger(__name__)
@@ -62,16 +64,38 @@ async def async_setup_platform(
 ) -> None:
     """Find and return switches controlled by shell commands."""
 
-    await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
+    if discovery_info:
+        entities: dict[str, Any] = {slugify(discovery_info[CONF_NAME]): discovery_info}
+    else:
+        async_create_issue(
+            hass,
+            DOMAIN,
+            "deprecated_yaml_switch",
+            breaks_in_ha_version="2023.8.0",
+            is_fixable=False,
+            severity=IssueSeverity.WARNING,
+            translation_key="deprecated_platform_yaml",
+            translation_placeholders={"platform": SWITCH_DOMAIN},
+        )
+        entities = config.get(CONF_SWITCHES, {})
 
-    devices: dict[str, Any] = config.get(CONF_SWITCHES, {})
     switches = []
 
-    for object_id, device_config in devices.items():
+    for object_id, device_config in entities.items():
+        if name := device_config.get(
+            CONF_FRIENDLY_NAME
+        ):  # Backward compatibility. Can be removed after deprecation
+            device_config[CONF_NAME] = name
+
+        if icon := device_config.get(
+            CONF_ICON_TEMPLATE
+        ):  # Backward compatibility. Can be removed after deprecation
+            device_config[CONF_ICON] = icon
+
         trigger_entity_config = {
             CONF_UNIQUE_ID: device_config.get(CONF_UNIQUE_ID),
-            CONF_NAME: Template(device_config.get(CONF_FRIENDLY_NAME, object_id), hass),
-            CONF_ICON: device_config.get(CONF_ICON_TEMPLATE),
+            CONF_NAME: Template(device_config.get(CONF_NAME, object_id), hass),
+            CONF_ICON: device_config.get(CONF_ICON),
         }
 
         value_template: Template | None = device_config.get(CONF_VALUE_TEMPLATE)

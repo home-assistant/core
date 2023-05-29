@@ -1,4 +1,5 @@
 """Unit tests for the Todoist calendar platform."""
+from datetime import timedelta
 from http import HTTPStatus
 from typing import Any
 from unittest.mock import AsyncMock, patch
@@ -180,6 +181,30 @@ async def test_update_entity_for_custom_project_no_due_date_on(
     await async_update_entity(hass, "calendar.name")
     state = hass.states.get("calendar.name")
     assert state.state == "on"
+
+
+@pytest.mark.parametrize(
+    "due",
+    [
+        Due(
+            date=(dt.now() + timedelta(days=3)).strftime("%Y-%m-%d"),
+            is_recurring=False,
+            string="3 days from today",
+        )
+    ],
+)
+async def test_update_entity_for_calendar_with_due_date_in_the_future(
+    hass: HomeAssistant,
+    api: AsyncMock,
+) -> None:
+    """Test that a task with a due date in the future has on state and correct end_time."""
+    await async_update_entity(hass, "calendar.name")
+    state = hass.states.get("calendar.name")
+    assert state.state == "on"
+
+    # The end time should be in the user's timezone
+    expected_end_time = (dt.now() + timedelta(days=3)).strftime("%Y-%m-%d 00:00:00")
+    assert state.attributes["end_time"] == expected_end_time
 
 
 @pytest.mark.parametrize("setup_integration", [None])
