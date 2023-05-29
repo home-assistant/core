@@ -266,8 +266,11 @@ class RuntimeEntryData:
         )
         stale_state.discard(subscription_key)
         current_state_by_type[key] = state
-        if subscription_key in self.state_subscriptions:
-            self.state_subscriptions[subscription_key]()
+        if subscription := self.state_subscriptions.get(subscription_key):
+            try:
+                subscription()
+            except Exception as ex:  # pylint: disable=broad-except
+                _LOGGER.exception("Error while calling subscription: %s", ex)
 
     @callback
     def async_update_device_state(self, hass: HomeAssistant) -> None:
