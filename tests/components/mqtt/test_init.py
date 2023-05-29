@@ -3737,3 +3737,105 @@ async def test_link_config_entry(
     )
     await hass.async_block_till_done()
     assert _check_entities() == 2
+
+
+async def test_reload_config_entry(
+    hass: HomeAssistant,
+    mqtt_client_mock: MqttMockPahoClient,
+    record_calls: MessageCallbackType,
+    calls: list[ReceiveMessage],
+) -> None:
+    """Test manual entities reloaded and set up correctly."""
+
+    # set up initial manual items
+    hass_config_initial = {
+        "mqtt": {
+            "sensor": [
+                {
+                    "name": "test_manual1",
+                    "unique_id": "test_manual_unique_id123",
+                    "state_topic": "test-topic_manual1",
+                },
+                {
+                    "name": "test_manual3",
+                    "unique_id": "test_manual_unique_id789",
+                    "state_topic": "test-topic_manual3",
+                },
+            ]
+        }
+    }
+    entry = MockConfigEntry(domain=mqtt.DOMAIN, data={mqtt.CONF_BROKER: "test-broker"})
+    entry.add_to_hass(hass)
+    mqtt_client_mock.connect.return_value = 0
+    with patch(
+        "homeassistant.config.load_yaml_config_file", return_value=hass_config_initial
+    ):
+        await entry.async_setup(hass)
+
+    assert (state := hass.states.get("sensor.test_manual1")) is not None
+    assert state.attributes["friendly_name"] == "test_manual1"
+    assert hass.states.get("sensor.test_manual2") is None
+    assert (state := hass.states.get("sensor.test_manual3")) is not None
+    assert state.attributes["friendly_name"] == "test_manual3"
+
+    # Mock configuration.yaml was updated
+    # The first item was updated, a new item was added, an item was removed
+    hass_config_new = {
+        "mqtt": {
+            "sensor": [
+                {
+                    "name": "test_manual1_updated",
+                    "unique_id": "test_manual_unique_id123",
+                    "state_topic": "test-topic_manual1_updated",
+                },
+                {
+                    "name": "test_manual2_new",
+                    "unique_id": "test_manual_unique_id456",
+                    "state_topic": "test-topic_manual2",
+                },
+            ]
+        }
+    }
+
+    def _check_entities() -> int:
+        entities: list[Entity] = []
+        mqtt_platforms = async_get_platforms(hass, mqtt.DOMAIN)
+        for mqtt_platform in mqtt_platforms:
+            assert mqtt_platform.config_entry is entry
+            entities += (entity for entity in mqtt_platform.entities.values())
+
+        return len(entities)
+
+    assert _check_entities() == 2
+
+    # Reload the entry
+    with patch(
+        "homeassistant.config.load_yaml_config_file", return_value=hass_config_new
+    ):
+        assert await hass.config_entries.async_reload(entry.entry_id)
+        assert entry.state is ConfigEntryState.LOADED
+        await hass.async_block_till_done()
+
+    assert (state := hass.states.get("sensor.test_manual1")) is not None
+    assert state.attributes["friendly_name"] == "test_manual1_updated"
+    assert (state := hass.states.get("sensor.test_manual2_new")) is not None
+    assert state.attributes["friendly_name"] == "test_manual2_new"
+    # assert (state := hass.states.get("sensor.test_manual3")) is None
+    assert _check_entities() == 2
+
+    # Reload manual configured items and assert again
+    await hass.services.async_call(
+        "mqtt",
+        SERVICE_RELOAD,
+        {},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get("sensor.test_manual1")) is not None
+    assert state.attributes["friendly_name"] == "test_manual1_updated"
+    assert (state := hass.states.get("sensor.test_manual2_new")) is not None
+    assert state.attributes["friendly_name"] == "test_manual2_new"
+    # assert (state := hass.states.get("sensor.test_manual3")) is None
+
+    assert _check_entities() == 2
