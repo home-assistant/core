@@ -270,6 +270,9 @@ class RuntimeEntryData:
             try:
                 subscription()
             except Exception as ex:  # pylint: disable=broad-except
+                # If we allow this exception to raise it will
+                # make it all the way to data_received in aioesphomeapi
+                # which will cause the connection to be closed.
                 _LOGGER.exception("Error while calling subscription: %s", ex)
 
     @callback
