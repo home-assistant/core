@@ -1946,6 +1946,9 @@ pysabnzbd==1.1.1
 # homeassistant.components.saj
 pysaj==0.0.16
 
+# homeassistant.components.schlage
+pyschlage==2023.5.0
+
 # homeassistant.components.sony_projector
 pysdcp==1
 
