@@ -122,4 +122,4 @@ class BMWButton(BMWBaseEntity, ButtonEntity):
             )
             await self.entity_description.account_function(self.coordinator)
 
-        self.coordinator.refresh_state_after_remote_service()
+        self.coordinator.async_update_listeners()

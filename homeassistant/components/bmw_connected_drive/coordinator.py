@@ -83,11 +83,3 @@ class BMWDataUpdateCoordinator(DataUpdateCoordinator[None]):
         if not refresh_token:
             data.pop(CONF_REFRESH_TOKEN)
         self.hass.config_entries.async_update_entry(self._entry, data=data)
-
-    def refresh_state_after_remote_service(self) -> None:
-        """Refresh the state of all entities after a remote service call.
-
-        If a remote service changes the state of the vehicle, `BMWDataUpdateCoordinator.account.vehicles` will be refreshed automatically.
-        We therefore only need to update the HA state machine without further API calls.
-        """
-        self.async_update_listeners()

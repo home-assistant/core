@@ -117,4 +117,4 @@ class BMWNumber(BMWBaseEntity, NumberEntity):
         except MyBMWAPIError as ex:
             raise HomeAssistantError(ex) from ex
 
-        self.coordinator.refresh_state_after_remote_service()
+        self.coordinator.async_update_listeners()

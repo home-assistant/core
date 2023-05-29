@@ -101,7 +101,7 @@ class BMWSwitch(BMWBaseEntity, SwitchEntity):
         except MyBMWAPIError as ex:
             raise HomeAssistantError(ex) from ex
 
-        self.coordinator.refresh_state_after_remote_service()
+        self.coordinator.async_update_listeners()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
@@ -110,4 +110,4 @@ class BMWSwitch(BMWBaseEntity, SwitchEntity):
         except MyBMWAPIError as ex:
             raise HomeAssistantError(ex) from ex
 
-        self.coordinator.refresh_state_after_remote_service()
+        self.coordinator.async_update_listeners()
