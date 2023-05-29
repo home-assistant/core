@@ -4,13 +4,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, Final
 
-from aioairzone_cloud.const import (
-    AZD_CONNECTED,
-    AZD_NAME,
-    AZD_PROBLEMS,
-    AZD_WARNINGS,
-    AZD_ZONES,
-)
+from aioairzone_cloud.const import AZD_NAME, AZD_PROBLEMS, AZD_WARNINGS, AZD_ZONES
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -85,7 +79,6 @@ class AirzoneBinarySensor(AirzoneEntity, BinarySensorEntity):
     @callback
     def _async_update_attrs(self) -> None:
         """Update binary sensor attributes."""
-        self._attr_available = self.get_airzone_value(AZD_CONNECTED)
         self._attr_is_on = self.get_airzone_value(self.entity_description.key)
         if self.entity_description.attributes:
             self._attr_extra_state_attributes = {
