@@ -458,26 +458,12 @@ class MqttTemperatureControlEntity(MqttEntity):
     _attr_hvac_action: HVACAction | str | None = None
     _attr_hvac_mode: HVACMode | str | None
     _attr_hvac_modes: list[HVACMode] | list[str]
-    _attr_is_aux_heat: bool | None
-    _attr_max_humidity: int
-    _attr_max_temp: float
-    _attr_min_temp: float
-    _attr_precision: float
     _attr_preset_mode: str | None
     _attr_preset_modes: list[str] | None
     _attr_supported_features: IntFlag
-    _attr_swing_mode: str | None
-    _attr_swing_modes: list[str] | None
-    _attr_target_humidity: int | None = None
-    _attr_target_temperature_high: float | None
-    _attr_target_temperature_low: float | None
-    _attr_target_temperature_step: float | None = None
-    _attr_target_temperature: float | None = None
-    _attr_temperature_unit: str
 
     _feature_preset_mode: bool
     _optimistic: bool
-    _optimistic_preset_mode: bool
     _topic: dict[str, Any]
 
     _command_templates: dict[str, Callable[[PublishPayloadType], PublishPayloadType]]
@@ -490,10 +476,10 @@ class MqttTemperatureControlEntity(MqttEntity):
         config_entry: ConfigEntry,
         discovery_data: DiscoveryInfoType | None,
     ) -> None:
-        """Initialize the climate device."""
-        self._attr_is_aux_heat = None
+        """Initialize the temperature controlled device."""
         self._attr_target_temperature_low = None
         self._attr_target_temperature_high = None
+        self._feature_preset_mode = False
         MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
 
     def _prepare_subscribe_topics(self) -> None:  # noqa: C901
