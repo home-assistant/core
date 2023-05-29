@@ -325,7 +325,7 @@ class BaseHaRemoteScanner(BaseHaScanner):
                 service_uuids = prev_advertisement.service_uuids
             elif (
                 prev_service_uuids := prev_advertisement.service_uuids
-            ) and not service_uuids != prev_service_uuids:
+            ) and service_uuids != prev_service_uuids:
                 service_uuids = list(set(service_uuids + prev_service_uuids))
 
             if not service_data:
