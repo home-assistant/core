@@ -244,7 +244,7 @@ def test_he_iw_prefer_exact() -> None:
     """Test that the exact language is preferred even if an interchangeable language is available."""
     assert language.matches(
         "he",
-        ["en-US", "en-GB", "nb", "he"],
+        ["en-US", "en-GB", "iw", "he"],
     ) == ["he", "iw"]
     assert language.matches(
         "he",
