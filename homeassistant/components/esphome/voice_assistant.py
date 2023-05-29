@@ -159,6 +159,11 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
         if event_type == VoiceAssistantEventType.VOICE_ASSISTANT_STT_END:
             assert event.data is not None
             data_to_send = {"text": event.data["stt_output"]["text"]}
+        elif event_type == VoiceAssistantEventType.VOICE_ASSISTANT_INTENT_END:
+            assert event.data is not None
+            data_to_send = {
+                "conversation_id": event.data["intent_output"]["conversation_id"] or "",
+            }
         elif event_type == VoiceAssistantEventType.VOICE_ASSISTANT_TTS_START:
             assert event.data is not None
             data_to_send = {"text": event.data["tts_input"]}
@@ -241,6 +246,7 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
 
     async def run_pipeline(
         self,
+        conversation_id: str | None,
         pipeline_timeout: float = 30.0,
     ) -> None:
         """Run the Voice Assistant pipeline."""
@@ -310,6 +316,7 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
                     pipeline_id=pipeline_select.get_chosen_pipeline(
                         self.hass, DOMAIN, self.device_info.mac_address
                     ),
+                    conversation_id=conversation_id,
                     tts_audio_output=tts_audio_output,
                 )
 
