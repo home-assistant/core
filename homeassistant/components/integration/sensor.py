@@ -128,6 +128,7 @@ async def async_setup_platform(
     async_add_entities([integral])
 
 
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
 class IntegrationSensor(RestoreEntity, SensorEntity):
     """Representation of an integration sensor."""
 

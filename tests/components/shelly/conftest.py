@@ -190,6 +190,7 @@ MOCK_STATUS_RPC = {
         "apower": 85.3,
     },
     "temperature:0": {"tC": 22.9},
+    "illuminance:0": {"lux": 345},
     "sys": {
         "available_updates": {
             "beta": {"version": "some_beta_version"},
