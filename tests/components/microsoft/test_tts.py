@@ -3,7 +3,6 @@ from unittest.mock import patch
 
 from pycsspeechtts import pycsspeechtts
 import pytest
-from requests import HTTPError
 
 from homeassistant.components import media_source, tts
 from homeassistant.components.media_player import (
@@ -14,7 +13,7 @@ from homeassistant.components.media_player import (
 from homeassistant.components.microsoft.tts import SUPPORTED_LANGUAGES
 from homeassistant.config import async_process_ha_core_config
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceNotFound
+from homeassistant.exceptions import HomeAssistantError, ServiceNotFound
 from homeassistant.setup import async_setup_component
 
 from tests.common import async_mock_service
@@ -173,9 +172,92 @@ async def test_service_say_en_gb_service(hass: HomeAssistant, mock_tts, calls) -
     }
 
 
+async def test_service_say_fa_ir_config(hass: HomeAssistant, mock_tts, calls) -> None:
+    """Test service call say with fa-ir code in the config."""
+
+    await async_setup_component(
+        hass,
+        tts.DOMAIN,
+        {
+            tts.DOMAIN: {
+                "platform": "microsoft",
+                "api_key": "",
+                "language": "fa-ir",
+                "type": "DilaraNeural",
+            }
+        },
+    )
+
+    await hass.services.async_call(
+        tts.DOMAIN,
+        "microsoft_say",
+        {
+            "entity_id": "media_player.something",
+            tts.ATTR_MESSAGE: "There is a person at the front door.",
+        },
+        blocking=True,
+    )
+
+    assert len(calls) == 1
+    await get_media_source_url(hass, calls[0].data[ATTR_MEDIA_CONTENT_ID])
+    assert len(mock_tts.mock_calls) == 2
+    assert mock_tts.mock_calls[1][2] == {
+        "language": "fa-ir",
+        "gender": "Female",
+        "voiceType": "DilaraNeural",
+        "output": "audio-24khz-96kbitrate-mono-mp3",
+        "rate": "0%",
+        "volume": "0%",
+        "pitch": "default",
+        "contour": "",
+        "text": "There is a person at the front door.",
+    }
+
+
+async def test_service_say_fa_ir_service(hass: HomeAssistant, mock_tts, calls) -> None:
+    """Test service call say with fa-ir code in the service."""
+
+    config = {
+        tts.DOMAIN: {
+            "platform": "microsoft",
+            "api_key": "",
+            "service_name": "microsoft_say",
+        }
+    }
+
+    await async_setup_component(hass, tts.DOMAIN, config)
+
+    await hass.services.async_call(
+        tts.DOMAIN,
+        "microsoft_say",
+        {
+            "entity_id": "media_player.something",
+            tts.ATTR_MESSAGE: "There is a person at the front door.",
+            tts.ATTR_LANGUAGE: "fa-ir",
+            tts.ATTR_OPTIONS: {"type": "DilaraNeural"},
+        },
+        blocking=True,
+    )
+
+    assert len(calls) == 1
+    await get_media_source_url(hass, calls[0].data[ATTR_MEDIA_CONTENT_ID])
+    assert len(mock_tts.mock_calls) == 2
+    assert mock_tts.mock_calls[1][2] == {
+        "language": "fa-ir",
+        "gender": "Female",
+        "voiceType": "DilaraNeural",
+        "output": "audio-24khz-96kbitrate-mono-mp3",
+        "rate": "0%",
+        "volume": "0%",
+        "pitch": "default",
+        "contour": "",
+        "text": "There is a person at the front door.",
+    }
+
+
 def test_supported_languages() -> None:
     """Test list of supported languages."""
-    for lang in ["en-us", "en-gb"]:
+    for lang in ["en-us", "fa-ir", "en-gb"]:
         assert lang in SUPPORTED_LANGUAGES
     assert "en-US" not in SUPPORTED_LANGUAGES
     for lang in [
@@ -187,7 +269,7 @@ def test_supported_languages() -> None:
         "en-us-jennyneural",
     ]:
         assert lang not in {s.lower() for s in SUPPORTED_LANGUAGES}
-    assert len(SUPPORTED_LANGUAGES) > 70
+    assert len(SUPPORTED_LANGUAGES) > 100
 
 
 async def test_invalid_language(hass: HomeAssistant, mock_tts, calls) -> None:
@@ -231,7 +313,6 @@ async def test_service_say_error(hass: HomeAssistant, mock_tts, calls) -> None:
     )
 
     assert len(calls) == 1
-    # Note: the integration currently catches HTTPException instead of HTTPError.
-    with pytest.raises(HTTPError):
+    with pytest.raises(HomeAssistantError):
         await get_media_source_url(hass, calls[0].data[ATTR_MEDIA_CONTENT_ID])
     assert len(mock_tts.mock_calls) == 2

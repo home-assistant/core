@@ -12,6 +12,10 @@ async def test_airzone_create_sensors(
 
     await async_init_integration(hass)
 
+    # Aidoos
+    state = hass.states.get("sensor.bron_temperature")
+    assert state.state == "21.0"
+
     # Zones
     state = hass.states.get("sensor.dormitorio_temperature")
     assert state.state == "25.0"
