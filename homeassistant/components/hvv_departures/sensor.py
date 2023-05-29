@@ -84,8 +84,10 @@ class HVVDepartureSensor(SensorEntity):
 
         departure_time_tz_berlin = departure_time.astimezone(BERLIN_TIME_ZONE)
 
+        station = self.config_entry.data[CONF_STATION]
+
         payload = {
-            "station": self.config_entry.data[CONF_STATION],
+            "station": {"id": station["id"], "type": station["type"]},
             "time": {
                 "date": departure_time_tz_berlin.strftime("%d.%m.%Y"),
                 "time": departure_time_tz_berlin.strftime("%H:%M"),

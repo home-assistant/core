@@ -52,11 +52,39 @@ class AirQEntityDescription(SensorEntityDescription, AirQEntityDescriptionMixin)
 # Keys must match those in the data dictionary
 SENSOR_TYPES: list[AirQEntityDescription] = [
     AirQEntityDescription(
+        key="c2h4o",
+        name="Acetaldehyde",
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        state_class=SensorStateClass.MEASUREMENT,
+        value=lambda data: data.get("c2h4o"),
+    ),
+    AirQEntityDescription(
         key="nh3_MR100",
         name="Ammonia",
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
         value=lambda data: data.get("nh3_MR100"),
+    ),
+    AirQEntityDescription(
+        key="ash3",
+        name="Arsine",
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        state_class=SensorStateClass.MEASUREMENT,
+        value=lambda data: data.get("ash3"),
+    ),
+    AirQEntityDescription(
+        key="br2",
+        name="Bromine",
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        state_class=SensorStateClass.MEASUREMENT,
+        value=lambda data: data.get("br2"),
+    ),
+    AirQEntityDescription(
+        key="ch4s",
+        name="CH4S",
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        state_class=SensorStateClass.MEASUREMENT,
+        value=lambda data: data.get("ch4s"),
     ),
     AirQEntityDescription(
         key="cl2_M20",
@@ -66,9 +94,15 @@ SENSOR_TYPES: list[AirQEntityDescription] = [
         value=lambda data: data.get("cl2_M20"),
     ),
     AirQEntityDescription(
+        key="clo2",
+        name="ClO2",
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        state_class=SensorStateClass.MEASUREMENT,
+        value=lambda data: data.get("clo2"),
+    ),
+    AirQEntityDescription(
         key="co",
         name="CO",
-        device_class=SensorDeviceClass.CO,
         native_unit_of_measurement=CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
         value=lambda data: data.get("co"),
@@ -80,6 +114,13 @@ SENSOR_TYPES: list[AirQEntityDescription] = [
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
         state_class=SensorStateClass.MEASUREMENT,
         value=lambda data: data.get("co2"),
+    ),
+    AirQEntityDescription(
+        key="cs2",
+        name="CS2",
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        state_class=SensorStateClass.MEASUREMENT,
+        value=lambda data: data.get("cs2"),
     ),
     AirQEntityDescription(
         key="dewpt",
@@ -97,6 +138,13 @@ SENSOR_TYPES: list[AirQEntityDescription] = [
         value=lambda data: data.get("ethanol"),
     ),
     AirQEntityDescription(
+        key="c2h4",
+        name="Ethylene",
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        state_class=SensorStateClass.MEASUREMENT,
+        value=lambda data: data.get("c2h4"),
+    ),
+    AirQEntityDescription(
         key="ch2o_M10",
         name="Formaldehyde",
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
@@ -104,11 +152,39 @@ SENSOR_TYPES: list[AirQEntityDescription] = [
         value=lambda data: data.get("ch2o_M10"),
     ),
     AirQEntityDescription(
+        key="f2",
+        name="Fluorine",
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        state_class=SensorStateClass.MEASUREMENT,
+        value=lambda data: data.get("f2"),
+    ),
+    AirQEntityDescription(
         key="h2s",
         name="H2S",
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
         value=lambda data: data.get("h2s"),
+    ),
+    AirQEntityDescription(
+        key="hcl",
+        name="HCl",
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        state_class=SensorStateClass.MEASUREMENT,
+        value=lambda data: data.get("hcl"),
+    ),
+    AirQEntityDescription(
+        key="hcn",
+        name="HCN",
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        state_class=SensorStateClass.MEASUREMENT,
+        value=lambda data: data.get("hcn"),
+    ),
+    AirQEntityDescription(
+        key="hf",
+        name="HF",
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        state_class=SensorStateClass.MEASUREMENT,
+        value=lambda data: data.get("hf"),
     ),
     AirQEntityDescription(
         key="health",
@@ -142,6 +218,13 @@ SENSOR_TYPES: list[AirQEntityDescription] = [
         value=lambda data: data.get("h2_M1000"),
     ),
     AirQEntityDescription(
+        key="h2o2",
+        name="Hydrogen peroxide",
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        state_class=SensorStateClass.MEASUREMENT,
+        value=lambda data: data.get("h2o2"),
+    ),
+    AirQEntityDescription(
         key="ch4_MIPEX",
         name="Methane",
         native_unit_of_measurement=PERCENTAGE,
@@ -173,12 +256,11 @@ SENSOR_TYPES: list[AirQEntityDescription] = [
         value=lambda data: data.get("no2"),
     ),
     AirQEntityDescription(
-        key="o3",
-        name="Ozone",
-        device_class=SensorDeviceClass.OZONE,
-        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        key="acid_M100",
+        name="Organic acid",
+        native_unit_of_measurement=CONCENTRATION_PARTS_PER_BILLION,
         state_class=SensorStateClass.MEASUREMENT,
-        value=lambda data: data.get("o3"),
+        value=lambda data: data.get("acid_M100"),
     ),
     AirQEntityDescription(
         key="oxygen",
@@ -189,12 +271,27 @@ SENSOR_TYPES: list[AirQEntityDescription] = [
         icon="mdi:leaf",
     ),
     AirQEntityDescription(
+        key="o3",
+        name="Ozone",
+        device_class=SensorDeviceClass.OZONE,
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        state_class=SensorStateClass.MEASUREMENT,
+        value=lambda data: data.get("o3"),
+    ),
+    AirQEntityDescription(
         key="performance",
         name="Performance Index",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         icon="mdi:head-check",
         value=lambda data: data.get("performance", 0.0) / 10.0,
+    ),
+    AirQEntityDescription(
+        key="ph3",
+        name="PH3",
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        state_class=SensorStateClass.MEASUREMENT,
+        value=lambda data: data.get("ph3"),
     ),
     AirQEntityDescription(
         key="pm1",
@@ -247,6 +344,20 @@ SENSOR_TYPES: list[AirQEntityDescription] = [
         value=lambda data: data.get("c3h8_MIPEX"),
     ),
     AirQEntityDescription(
+        key="refigerant",
+        name="Refrigerant",
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        state_class=SensorStateClass.MEASUREMENT,
+        value=lambda data: data.get("refigerant"),
+    ),
+    AirQEntityDescription(
+        key="sih4",
+        name="SiH4",
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        state_class=SensorStateClass.MEASUREMENT,
+        value=lambda data: data.get("sih4"),
+    ),
+    AirQEntityDescription(
         key="so2",
         name="SO2",
         device_class=SensorDeviceClass.SULPHUR_DIOXIDE,
@@ -289,7 +400,6 @@ SENSOR_TYPES: list[AirQEntityDescription] = [
     AirQEntityDescription(
         key="tvoc",
         name="VOC",
-        device_class=SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_BILLION,
         state_class=SensorStateClass.MEASUREMENT,
         value=lambda data: data.get("tvoc"),
@@ -297,10 +407,17 @@ SENSOR_TYPES: list[AirQEntityDescription] = [
     AirQEntityDescription(
         key="tvoc_ionsc",
         name="VOC (Industrial)",
-        device_class=SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_BILLION,
         state_class=SensorStateClass.MEASUREMENT,
         value=lambda data: data.get("tvoc_ionsc"),
+    ),
+    AirQEntityDescription(
+        key="virus",
+        name="Virus Index",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        icon="mdi:virus-off",
+        value=lambda data: data.get("virus", 0.0),
     ),
 ]
 

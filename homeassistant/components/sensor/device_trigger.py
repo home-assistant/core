@@ -69,6 +69,7 @@ CONF_SULPHUR_DIOXIDE = "sulphur_dioxide"
 CONF_TEMPERATURE = "temperature"
 CONF_VALUE = "value"
 CONF_VOLATILE_ORGANIC_COMPOUNDS = "volatile_organic_compounds"
+CONF_VOLATILE_ORGANIC_COMPOUNDS_PARTS = "volatile_organic_compounds_parts"
 CONF_VOLTAGE = "voltage"
 CONF_VOLUME = "volume"
 CONF_WATER = "water"
@@ -88,6 +89,7 @@ ENTITY_TRIGGERS = {
     SensorDeviceClass.DISTANCE: [{CONF_TYPE: CONF_DISTANCE}],
     SensorDeviceClass.DURATION: [{CONF_TYPE: CONF_DURATION}],
     SensorDeviceClass.ENERGY: [{CONF_TYPE: CONF_ENERGY}],
+    SensorDeviceClass.ENERGY_STORAGE: [{CONF_TYPE: CONF_ENERGY}],
     SensorDeviceClass.FREQUENCY: [{CONF_TYPE: CONF_FREQUENCY}],
     SensorDeviceClass.GAS: [{CONF_TYPE: CONF_GAS}],
     SensorDeviceClass.HUMIDITY: [{CONF_TYPE: CONF_HUMIDITY}],
@@ -118,8 +120,12 @@ ENTITY_TRIGGERS = {
     SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS: [
         {CONF_TYPE: CONF_VOLATILE_ORGANIC_COMPOUNDS}
     ],
+    SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS_PARTS: [
+        {CONF_TYPE: CONF_VOLATILE_ORGANIC_COMPOUNDS_PARTS}
+    ],
     SensorDeviceClass.VOLTAGE: [{CONF_TYPE: CONF_VOLTAGE}],
     SensorDeviceClass.VOLUME: [{CONF_TYPE: CONF_VOLUME}],
+    SensorDeviceClass.VOLUME_STORAGE: [{CONF_TYPE: CONF_VOLUME}],
     SensorDeviceClass.WATER: [{CONF_TYPE: CONF_WATER}],
     SensorDeviceClass.WEIGHT: [{CONF_TYPE: CONF_WEIGHT}],
     SensorDeviceClass.WIND_SPEED: [{CONF_TYPE: CONF_WIND_SPEED}],
@@ -171,6 +177,7 @@ TRIGGER_SCHEMA = vol.All(
                     CONF_SULPHUR_DIOXIDE,
                     CONF_TEMPERATURE,
                     CONF_VOLATILE_ORGANIC_COMPOUNDS,
+                    CONF_VOLATILE_ORGANIC_COMPOUNDS_PARTS,
                     CONF_VOLTAGE,
                     CONF_VOLUME,
                     CONF_WATER,

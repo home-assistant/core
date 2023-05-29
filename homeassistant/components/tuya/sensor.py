@@ -834,7 +834,7 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
         ),
         TuyaSensorEntityDescription(
             key=DPCode.TOTAL_CLEAN_AREA,
-            name="Total Cleaning Area",
+            name="Total cleaning area",
             icon="mdi:texture-box",
             state_class=SensorStateClass.TOTAL_INCREASING,
         ),

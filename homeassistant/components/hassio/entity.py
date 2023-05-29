@@ -11,6 +11,7 @@ from .const import (
     ATTR_SLUG,
     DATA_KEY_ADDONS,
     DATA_KEY_CORE,
+    DATA_KEY_HOST,
     DATA_KEY_OS,
     DATA_KEY_SUPERVISOR,
 )
@@ -68,6 +69,32 @@ class HassioOSEntity(CoordinatorEntity[HassioDataUpdateCoordinator]):
             super().available
             and DATA_KEY_OS in self.coordinator.data
             and self.entity_description.key in self.coordinator.data[DATA_KEY_OS]
+        )
+
+
+class HassioHostEntity(CoordinatorEntity[HassioDataUpdateCoordinator]):
+    """Base Entity for Hass.io host."""
+
+    _attr_has_entity_name = True
+
+    def __init__(
+        self,
+        coordinator: HassioDataUpdateCoordinator,
+        entity_description: EntityDescription,
+    ) -> None:
+        """Initialize base entity."""
+        super().__init__(coordinator)
+        self.entity_description = entity_description
+        self._attr_unique_id = f"home_assistant_host_{entity_description.key}"
+        self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, "host")})
+
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return (
+            super().available
+            and DATA_KEY_HOST in self.coordinator.data
+            and self.entity_description.key in self.coordinator.data[DATA_KEY_HOST]
         )
 
 

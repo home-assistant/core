@@ -295,6 +295,9 @@ SENSORS: Final = {
     ("sensor", "sensorOp"): BlockSensorDescription(
         key="sensor|sensorOp",
         name="Operation",
+        device_class=SensorDeviceClass.ENUM,
+        options=["unknown", "warmup", "normal", "fault"],
+        translation_key="operation",
         icon="mdi:cog-transfer",
         value=lambda value: value,
         extra_state_attributes=lambda block: {"self_test": block.selfTest},
@@ -439,6 +442,16 @@ RPC_SENSORS: Final = {
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
     ),
+    "current": RpcSensorDescription(
+        key="switch",
+        sub_key="current",
+        name="Current",
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        value=lambda status, _: None if status is None else float(status),
+        device_class=SensorDeviceClass.CURRENT,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+    ),
     "a_current": RpcSensorDescription(
         key="em",
         sub_key="a_current",
@@ -570,6 +583,14 @@ RPC_SENSORS: Final = {
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         entity_registry_enabled_default=False,
+    ),
+    "illuminance": RpcSensorDescription(
+        key="illuminance",
+        sub_key="lux",
+        name="Illuminance",
+        native_unit_of_measurement=LIGHT_LUX,
+        device_class=SensorDeviceClass.ILLUMINANCE,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     "temperature": RpcSensorDescription(
         key="switch",
@@ -755,6 +776,7 @@ class RpcSensor(ShellyRpcAttributeEntity, SensorEntity):
         return self.attribute_value
 
 
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
 class BlockSleepingSensor(ShellySleepingBlockAttributeEntity, SensorEntity):
     """Represent a block sleeping sensor."""
 
@@ -795,6 +817,7 @@ class BlockSleepingSensor(ShellySleepingBlockAttributeEntity, SensorEntity):
         return self.last_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
 
 
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
 class RpcSleepingSensor(ShellySleepingRpcAttributeEntity, SensorEntity):
     """Represent a RPC sleeping sensor."""
 

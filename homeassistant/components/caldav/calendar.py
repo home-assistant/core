@@ -1,7 +1,7 @@
 """Support for WebDav Calendar."""
 from __future__ import annotations
 
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, time, timedelta
 from functools import partial
 import logging
 import re
@@ -321,9 +321,7 @@ class WebDavCalendarData:
         """Return a datetime."""
         if isinstance(obj, datetime):
             return WebDavCalendarData.to_local(obj)
-        return dt.dt.datetime.combine(obj, dt.dt.time.min).replace(
-            tzinfo=dt.DEFAULT_TIME_ZONE
-        )
+        return datetime.combine(obj, time.min).replace(tzinfo=dt.DEFAULT_TIME_ZONE)
 
     @staticmethod
     def to_local(obj: datetime | date) -> datetime | date:
@@ -355,5 +353,11 @@ class WebDavCalendarData:
 
         else:
             enddate = obj.dtstart.value + timedelta(days=1)
+
+        # End date for an all day event is exclusive. This fixes the case where
+        # an all day event has a start and end values are the same, or the event
+        # has a zero duration.
+        if not isinstance(enddate, datetime) and obj.dtstart.value == enddate:
+            enddate += timedelta(days=1)
 
         return enddate

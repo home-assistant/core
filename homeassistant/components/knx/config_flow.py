@@ -4,14 +4,20 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from collections.abc import AsyncGenerator
 from pathlib import Path
+import shutil
 from typing import Any, Final
 
 import voluptuous as vol
 from xknx import XKNX
-from xknx.exceptions.exception import CommunicationError, InvalidSecureConfiguration
+from xknx.exceptions.exception import (
+    CommunicationError,
+    InvalidSecureConfiguration,
+    XKNXException,
+)
 from xknx.io import DEFAULT_MCAST_GRP, DEFAULT_MCAST_PORT
 from xknx.io.gateway_scanner import GatewayDescriptor, GatewayScanner
 from xknx.io.self_description import request_description
+from xknx.io.util import validate_ip as xknx_validate_ip
 from xknx.secure.keyring import Keyring, XMLInterface, sync_load_keyring
 
 from homeassistant.components.file_upload import process_uploaded_file
@@ -43,12 +49,15 @@ from .const import (
     CONF_KNX_SECURE_USER_ID,
     CONF_KNX_SECURE_USER_PASSWORD,
     CONF_KNX_STATE_UPDATER,
+    CONF_KNX_TELEGRAM_LOG_SIZE,
     CONF_KNX_TUNNEL_ENDPOINT_IA,
     CONF_KNX_TUNNELING,
     CONF_KNX_TUNNELING_TCP,
     CONF_KNX_TUNNELING_TCP_SECURE,
     DEFAULT_ROUTING_IA,
     DOMAIN,
+    TELEGRAM_LOG_DEFAULT,
+    TELEGRAM_LOG_MAX,
     KNXConfigEntryData,
 )
 from .schema import ia_validator, ip_v4_validator
@@ -64,6 +73,7 @@ DEFAULT_ENTRY_DATA = KNXConfigEntryData(
     rate_limit=CONF_KNX_DEFAULT_RATE_LIMIT,
     route_back=False,
     state_updater=CONF_KNX_DEFAULT_STATE_UPDATER,
+    telegram_log_size=TELEGRAM_LOG_DEFAULT,
 )
 
 CONF_KEYRING_FILE: Final = "knxkeys_file"
@@ -197,7 +207,11 @@ class KNXCommonFlow(ABC, FlowHandler):
         )
 
     async def async_step_tunnel(self, user_input: dict | None = None) -> FlowResult:
-        """Select a tunnel from a list. Will be skipped if the gateway scan was unsuccessful or if only one gateway was found."""
+        """Select a tunnel from a list.
+
+        Will be skipped if the gateway scan was unsuccessful
+        or if only one gateway was found.
+        """
         if user_input is not None:
             if user_input[CONF_KNX_GATEWAY] == OPTION_MANUAL_TUNNEL:
                 if self._found_tunnels:
@@ -257,21 +271,25 @@ class KNXCommonFlow(ABC, FlowHandler):
 
         if user_input is not None:
             try:
-                _host = ip_v4_validator(user_input[CONF_HOST], multicast=False)
-            except vol.Invalid:
+                _host = user_input[CONF_HOST]
+                _host_ip = await xknx_validate_ip(_host)
+                ip_v4_validator(_host_ip, multicast=False)
+            except (vol.Invalid, XKNXException):
                 errors[CONF_HOST] = "invalid_ip_address"
 
-            if _local_ip := user_input.get(CONF_KNX_LOCAL_IP):
+            _local_ip = None
+            if _local := user_input.get(CONF_KNX_LOCAL_IP):
                 try:
-                    _local_ip = ip_v4_validator(_local_ip, multicast=False)
-                except vol.Invalid:
+                    _local_ip = await xknx_validate_ip(_local)
+                    ip_v4_validator(_local_ip, multicast=False)
+                except (vol.Invalid, XKNXException):
                     errors[CONF_KNX_LOCAL_IP] = "invalid_ip_address"
 
             selected_tunnelling_type = user_input[CONF_KNX_TUNNELING_TYPE]
             if not errors:
                 try:
                     self._selected_tunnel = await request_description(
-                        gateway_ip=_host,
+                        gateway_ip=_host_ip,
                         gateway_port=user_input[CONF_PORT],
                         local_ip=_local_ip,
                         route_back=user_input[CONF_KNX_ROUTE_BACK],
@@ -295,7 +313,7 @@ class KNXCommonFlow(ABC, FlowHandler):
                     host=_host,
                     port=user_input[CONF_PORT],
                     route_back=user_input[CONF_KNX_ROUTE_BACK],
-                    local_ip=_local_ip,
+                    local_ip=_local,
                     device_authentication=None,
                     user_id=None,
                     user_password=None,
@@ -549,9 +567,12 @@ class KNXCommonFlow(ABC, FlowHandler):
                     ),
                     None,
                 )
+            _tunnel_identifier = selected_tunnel_ia or self.new_entry_data.get(
+                CONF_HOST
+            )
+            _tunnel_suffix = f" @ {_tunnel_identifier}" if _tunnel_identifier else ""
             self.new_title = (
-                f"{'Secure ' if _if_user_id else ''}"
-                f"Tunneling @ {selected_tunnel_ia or self.new_entry_data[CONF_HOST]}"
+                f"{'Secure ' if _if_user_id else ''}Tunneling{_tunnel_suffix}"
             )
             return self.finish_flow()
 
@@ -632,10 +653,11 @@ class KNXCommonFlow(ABC, FlowHandler):
                 ip_v4_validator(_multicast_group, multicast=True)
             except vol.Invalid:
                 errors[CONF_KNX_MCAST_GRP] = "invalid_ip_address"
-            if _local_ip := user_input.get(CONF_KNX_LOCAL_IP):
+            if _local := user_input.get(CONF_KNX_LOCAL_IP):
                 try:
+                    _local_ip = await xknx_validate_ip(_local)
                     ip_v4_validator(_local_ip, multicast=False)
-                except vol.Invalid:
+                except (vol.Invalid, XKNXException):
                     errors[CONF_KNX_LOCAL_IP] = "invalid_ip_address"
 
             if not errors:
@@ -649,7 +671,7 @@ class KNXCommonFlow(ABC, FlowHandler):
                     individual_address=_individual_address,
                     multicast_group=_multicast_group,
                     multicast_port=_multicast_port,
-                    local_ip=_local_ip,
+                    local_ip=_local,
                     device_authentication=None,
                     user_id=None,
                     user_password=None,
@@ -708,7 +730,8 @@ class KNXCommonFlow(ABC, FlowHandler):
                 else:
                     dest_path = Path(self.hass.config.path(STORAGE_DIR, DOMAIN))
                     dest_path.mkdir(exist_ok=True)
-                    file_path.rename(dest_path / DEFAULT_KNX_KEYRING_FILENAME)
+                    dest_file = dest_path / DEFAULT_KNX_KEYRING_FILENAME
+                    shutil.move(file_path, dest_file)
             return keyring, errors
 
         keyring, errors = await self.hass.async_add_executor_job(_process_upload)
@@ -789,6 +812,7 @@ class KNXOptionsFlow(KNXCommonFlow, OptionsFlow):
             self.new_entry_data = KNXConfigEntryData(
                 state_updater=user_input[CONF_KNX_STATE_UPDATER],
                 rate_limit=user_input[CONF_KNX_RATE_LIMIT],
+                telegram_log_size=user_input[CONF_KNX_TELEGRAM_LOG_SIZE],
             )
             return self.finish_flow()
 
@@ -796,15 +820,13 @@ class KNXOptionsFlow(KNXCommonFlow, OptionsFlow):
             vol.Required(
                 CONF_KNX_STATE_UPDATER,
                 default=self.initial_data.get(
-                    CONF_KNX_STATE_UPDATER,
-                    CONF_KNX_DEFAULT_STATE_UPDATER,
+                    CONF_KNX_STATE_UPDATER, CONF_KNX_DEFAULT_STATE_UPDATER
                 ),
             ): selector.BooleanSelector(),
             vol.Required(
                 CONF_KNX_RATE_LIMIT,
                 default=self.initial_data.get(
-                    CONF_KNX_RATE_LIMIT,
-                    CONF_KNX_DEFAULT_RATE_LIMIT,
+                    CONF_KNX_RATE_LIMIT, CONF_KNX_DEFAULT_RATE_LIMIT
                 ),
             ): vol.All(
                 selector.NumberSelector(
@@ -816,9 +838,27 @@ class KNXOptionsFlow(KNXCommonFlow, OptionsFlow):
                 ),
                 vol.Coerce(int),
             ),
+            vol.Required(
+                CONF_KNX_TELEGRAM_LOG_SIZE,
+                default=self.initial_data.get(
+                    CONF_KNX_TELEGRAM_LOG_SIZE, TELEGRAM_LOG_DEFAULT
+                ),
+            ): vol.All(
+                selector.NumberSelector(
+                    selector.NumberSelectorConfig(
+                        min=0,
+                        max=TELEGRAM_LOG_MAX,
+                        mode=selector.NumberSelectorMode.BOX,
+                    ),
+                ),
+                vol.Coerce(int),
+            ),
         }
         return self.async_show_form(
             step_id="communication_settings",
             data_schema=vol.Schema(data_schema),
             last_step=True,
+            description_placeholders={
+                "telegram_log_size_max": f"{TELEGRAM_LOG_MAX}",
+            },
         )

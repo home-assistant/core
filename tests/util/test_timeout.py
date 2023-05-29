@@ -273,6 +273,9 @@ async def test_mix_zone_timeout_trigger_global_cool_down() -> None:
 
         await asyncio.sleep(0.2)
 
+    # Cleanup lingering (cool_down) task after test is done
+    await asyncio.sleep(0.3)
+
 
 async def test_simple_zone_timeout_freeze_without_timeout_cleanup(
     hass: HomeAssistant,

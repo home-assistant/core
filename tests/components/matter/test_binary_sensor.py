@@ -23,6 +23,8 @@ async def contact_sensor_node_fixture(
     )
 
 
+# This tests needs to be adjusted to remove lingering tasks
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
 async def test_contact_sensor(
     hass: HomeAssistant,
     matter_client: MagicMock,
@@ -31,7 +33,7 @@ async def test_contact_sensor(
     """Test contact sensor."""
     state = hass.states.get("binary_sensor.mock_contact_sensor_contact")
     assert state
-    assert state.state == "on"
+    assert state.state == "off"
 
     set_node_attribute(contact_sensor_node, 1, 69, 0, False)
     await trigger_subscription_callback(
@@ -40,7 +42,7 @@ async def test_contact_sensor(
 
     state = hass.states.get("binary_sensor.mock_contact_sensor_contact")
     assert state
-    assert state.state == "off"
+    assert state.state == "on"
 
 
 @pytest.fixture(name="occupancy_sensor_node")
@@ -53,6 +55,8 @@ async def occupancy_sensor_node_fixture(
     )
 
 
+# This tests needs to be adjusted to remove lingering tasks
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
 async def test_occupancy_sensor(
     hass: HomeAssistant,
     matter_client: MagicMock,

@@ -18,6 +18,7 @@ from homeassistant.components.recorder.statistics import (
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import Platform, UnitOfEnergy, UnitOfTemperature, UnitOfVolume
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType
 import homeassistant.util.dt as dt_util
@@ -26,6 +27,8 @@ DOMAIN = "kitchen_sink"
 
 
 COMPONENTS_WITH_DEMO_PLATFORM = [Platform.SENSOR, Platform.LOCK]
+
+CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:

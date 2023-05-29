@@ -13,6 +13,7 @@ from homeassistant.components.fan import (
     ATTR_PRESET_MODE,
     ATTR_PRESET_MODES,
     DOMAIN as FAN_DOMAIN,
+    SERVICE_SET_PERCENTAGE,
     SERVICE_SET_PRESET_MODE,
     FanEntityFeature,
     NotValidPresetModeError,
@@ -30,7 +31,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_registry
+from homeassistant.helpers import entity_registry as er
 
 
 async def test_generic_fan(
@@ -42,7 +43,35 @@ async def test_generic_fan(
     state = hass.states.get(entity_id)
 
     assert state
-    assert state.state == "off"
+    assert state.state == STATE_OFF
+
+    # Test turn on no speed
+    await hass.services.async_call(
+        "fan",
+        "turn_on",
+        {"entity_id": entity_id},
+        blocking=True,
+    )
+
+    assert len(client.async_send_command.call_args_list) == 1
+    args = client.async_send_command.call_args[0][0]
+    assert args["command"] == "node.set_value"
+    assert args["nodeId"] == 17
+    assert args["valueId"] == {
+        "commandClass": 38,
+        "endpoint": 0,
+        "property": "targetValue",
+    }
+    assert args["value"] == 255
+
+    client.async_send_command.reset_mock()
+
+    # Due to optimistic updates, the state should be on even though the Z-Wave state
+    # hasn't been updated yet
+    state = hass.states.get(entity_id)
+
+    assert state
+    assert state.state == STATE_ON
 
     # Test turn on setting speed
     await hass.services.async_call(
@@ -73,27 +102,6 @@ async def test_generic_fan(
             {"entity_id": entity_id, "percentage": "bad"},
             blocking=True,
         )
-
-    client.async_send_command.reset_mock()
-
-    # Test turn on no speed
-    await hass.services.async_call(
-        "fan",
-        "turn_on",
-        {"entity_id": entity_id},
-        blocking=True,
-    )
-
-    assert len(client.async_send_command.call_args_list) == 1
-    args = client.async_send_command.call_args[0][0]
-    assert args["command"] == "node.set_value"
-    assert args["nodeId"] == 17
-    assert args["valueId"] == {
-        "commandClass": 38,
-        "endpoint": 0,
-        "property": "targetValue",
-    }
-    assert args["value"] == 255
 
     client.async_send_command.reset_mock()
 
@@ -139,7 +147,7 @@ async def test_generic_fan(
     node.receive_event(event)
 
     state = hass.states.get(entity_id)
-    assert state.state == "on"
+    assert state.state == STATE_ON
     assert state.attributes[ATTR_PERCENTAGE] == 100
 
     client.async_send_command.reset_mock()
@@ -164,8 +172,52 @@ async def test_generic_fan(
     node.receive_event(event)
 
     state = hass.states.get(entity_id)
-    assert state.state == "off"
+    assert state.state == STATE_OFF
     assert state.attributes[ATTR_PERCENTAGE] == 0
+
+    client.async_send_command.reset_mock()
+
+    # Test setting percentage to 0
+    await hass.services.async_call(
+        "fan",
+        SERVICE_SET_PERCENTAGE,
+        {"entity_id": entity_id, "percentage": 0},
+        blocking=True,
+    )
+
+    assert len(client.async_send_command.call_args_list) == 1
+    args = client.async_send_command.call_args[0][0]
+    assert args["command"] == "node.set_value"
+    assert args["nodeId"] == 17
+    assert args["valueId"] == {
+        "commandClass": 38,
+        "endpoint": 0,
+        "property": "targetValue",
+    }
+    assert args["value"] == 0
+
+    # Test value is None
+    event = Event(
+        type="value updated",
+        data={
+            "source": "node",
+            "event": "value updated",
+            "nodeId": 17,
+            "args": {
+                "commandClassName": "Multilevel Switch",
+                "commandClass": 38,
+                "endpoint": 0,
+                "property": "currentValue",
+                "newValue": None,
+                "prevValue": 0,
+                "propertyName": "currentValue",
+            },
+        },
+    )
+    node.receive_event(event)
+
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_UNKNOWN
 
 
 async def test_configurable_speeds_fan(
@@ -361,6 +413,29 @@ async def test_ge_12730_fan(hass: HomeAssistant, client, ge_12730, integration) 
     assert state.attributes[ATTR_PERCENTAGE_STEP] == pytest.approx(33.3333, rel=1e-3)
     assert state.attributes[ATTR_PRESET_MODES] == []
 
+    # Test value is None
+    event = Event(
+        type="value updated",
+        data={
+            "source": "node",
+            "event": "value updated",
+            "nodeId": node_id,
+            "args": {
+                "commandClassName": "Multilevel Switch",
+                "commandClass": 38,
+                "endpoint": 0,
+                "property": "currentValue",
+                "newValue": None,
+                "prevValue": 0,
+                "propertyName": "currentValue",
+            },
+        },
+    )
+    node.receive_event(event)
+
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_UNKNOWN
+
 
 async def test_inovelli_lzw36(
     hass: HomeAssistant, client, inovelli_lzw36, integration
@@ -538,23 +613,26 @@ async def test_leviton_zw4sf_fan(
 
 
 async def test_thermostat_fan(
-    hass: HomeAssistant, client, climate_adc_t3000, integration
+    hass: HomeAssistant,
+    client,
+    climate_adc_t3000,
+    integration,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test the fan entity for a z-wave fan."""
     node = climate_adc_t3000
     entity_id = "fan.adc_t3000"
 
-    registry = entity_registry.async_get(hass)
     state = hass.states.get(entity_id)
     assert state is None
 
-    entry = registry.async_get(entity_id)
+    entry = entity_registry.async_get(entity_id)
     assert entry
     assert entry.disabled
-    assert entry.disabled_by is entity_registry.RegistryEntryDisabler.INTEGRATION
+    assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
 
     # Test enabling entity
-    updated_entry = registry.async_update_entity(entity_id, disabled_by=None)
+    updated_entry = entity_registry.async_update_entity(entity_id, disabled_by=None)
     assert updated_entry != entry
     assert updated_entry.disabled is False
 
@@ -769,22 +847,25 @@ async def test_thermostat_fan(
 
 
 async def test_thermostat_fan_without_off(
-    hass: HomeAssistant, client, climate_radio_thermostat_ct100_plus, integration
+    hass: HomeAssistant,
+    client,
+    climate_radio_thermostat_ct100_plus,
+    integration,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test the fan entity for a z-wave fan without "off" property."""
     entity_id = "fan.z_wave_thermostat"
 
-    registry = entity_registry.async_get(hass)
     state = hass.states.get(entity_id)
     assert state is None
 
-    entry = registry.async_get(entity_id)
+    entry = entity_registry.async_get(entity_id)
     assert entry
     assert entry.disabled
-    assert entry.disabled_by is entity_registry.RegistryEntryDisabler.INTEGRATION
+    assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
 
     # Test enabling entity
-    updated_entry = registry.async_update_entity(entity_id, disabled_by=None)
+    updated_entry = entity_registry.async_update_entity(entity_id, disabled_by=None)
     assert updated_entry != entry
     assert updated_entry.disabled is False
 
@@ -827,22 +908,25 @@ async def test_thermostat_fan_without_off(
 
 
 async def test_thermostat_fan_without_preset_modes(
-    hass: HomeAssistant, client, climate_adc_t3000_missing_fan_mode_states, integration
+    hass: HomeAssistant,
+    client,
+    climate_adc_t3000_missing_fan_mode_states,
+    integration,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test the fan entity for a z-wave fan without "states" metadata."""
     entity_id = "fan.adc_t3000_missing_fan_mode_states"
 
-    registry = entity_registry.async_get(hass)
     state = hass.states.get(entity_id)
     assert state is None
 
-    entry = registry.async_get(entity_id)
+    entry = entity_registry.async_get(entity_id)
     assert entry
     assert entry.disabled
-    assert entry.disabled_by is entity_registry.RegistryEntryDisabler.INTEGRATION
+    assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
 
     # Test enabling entity
-    updated_entry = registry.async_update_entity(entity_id, disabled_by=None)
+    updated_entry = entity_registry.async_update_entity(entity_id, disabled_by=None)
     assert updated_entry != entry
     assert updated_entry.disabled is False
 

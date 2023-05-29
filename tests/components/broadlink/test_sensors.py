@@ -50,8 +50,8 @@ async def test_a1_sensor_setup(
     assert sensors_and_states == {
         (f"{device.name} Temperature", "27.4"),
         (f"{device.name} Humidity", "59.3"),
-        (f"{device.name} Air quality", "3"),
-        (f"{device.name} Light", "2"),
+        (f"{device.name} Air quality index", "3"),
+        (f"{device.name} Illuminance", "2"),
         (f"{device.name} Noise", "1"),
     }
 
@@ -101,8 +101,8 @@ async def test_a1_sensor_update(
     assert sensors_and_states == {
         (f"{device.name} Temperature", "22.5"),
         (f"{device.name} Humidity", "47.4"),
-        (f"{device.name} Air quality", "2"),
-        (f"{device.name} Light", "3"),
+        (f"{device.name} Air quality index", "2"),
+        (f"{device.name} Illuminance", "3"),
         (f"{device.name} Noise", "2"),
     }
 
@@ -355,7 +355,7 @@ async def test_scb1e_sensor_setup(
         for sensor in sensors
     }
     assert sensors_and_states == {
-        (f"{device.name} Current power", "255.57"),
+        (f"{device.name} Power", "255.57"),
         (f"{device.name} Voltage", "121.7"),
         (f"{device.name} Current", "2.1"),
         (f"{device.name} Overload", "0"),
@@ -421,7 +421,7 @@ async def test_scb1e_sensor_update(
         for sensor in sensors
     }
     assert sensors_and_states == {
-        (f"{device.name} Current power", "291.8"),
+        (f"{device.name} Power", "291.8"),
         (f"{device.name} Voltage", "121.6"),
         (f"{device.name} Current", "2.4"),
         (f"{device.name} Overload", "0"),

@@ -6,6 +6,7 @@ from http import HTTPStatus
 import logging
 import os
 import re
+from urllib.parse import quote, unquote
 
 import aiohttp
 from aiohttp import web
@@ -19,38 +20,70 @@ from aiohttp.hdrs import (
     TRANSFER_ENCODING,
 )
 from aiohttp.web_exceptions import HTTPBadGateway
-from multidict import istr
 
-from homeassistant.components.http import KEY_AUTHENTICATED, HomeAssistantView
+from homeassistant.components.http import (
+    KEY_AUTHENTICATED,
+    KEY_HASS_USER,
+    HomeAssistantView,
+)
 from homeassistant.components.onboarding import async_is_onboarded
 from homeassistant.core import HomeAssistant
 
-from .const import X_HASS_IS_ADMIN, X_HASS_USER_ID
+from .const import X_HASS_SOURCE
 
 _LOGGER = logging.getLogger(__name__)
 
 MAX_UPLOAD_SIZE = 1024 * 1024 * 1024
 
-# pylint: disable=implicit-str-concat
 NO_TIMEOUT = re.compile(
     r"^(?:"
-    r"|homeassistant/update"
-    r"|hassos/update"
-    r"|hassos/update/cli"
-    r"|supervisor/update"
-    r"|addons/[^/]+/(?:update|install|rebuild)"
     r"|backups/.+/full"
     r"|backups/.+/partial"
     r"|backups/[^/]+/(?:upload|download)"
     r")$"
 )
 
-NO_AUTH_ONBOARDING = re.compile(r"^(?:" r"|supervisor/logs" r"|backups/[^/]+/.+" r")$")
+# fmt: off
+# Onboarding can upload backups and restore it
+PATHS_NOT_ONBOARDED = re.compile(
+    r"^(?:"
+    r"|backups/[a-f0-9]{8}(/info|/new/upload|/download|/restore/full|/restore/partial)?"
+    r"|backups/new/upload"
+    r")$"
+)
 
-NO_AUTH = re.compile(r"^(?:" r"|app/.*" r"|[store\/]*addons/[^/]+/(logo|icon)" r")$")
+# Authenticated users manage backups + download logs, changelog and documentation
+PATHS_ADMIN = re.compile(
+    r"^(?:"
+    r"|backups/[a-f0-9]{8}(/info|/download|/restore/full|/restore/partial)?"
+    r"|backups/new/upload"
+    r"|audio/logs"
+    r"|cli/logs"
+    r"|core/logs"
+    r"|dns/logs"
+    r"|host/logs"
+    r"|multicast/logs"
+    r"|observer/logs"
+    r"|supervisor/logs"
+    r"|addons/[^/]+/(changelog|documentation|logs)"
+    r")$"
+)
 
-NO_STORE = re.compile(r"^(?:" r"|app/entrypoint.js" r")$")
+# Unauthenticated requests come in for Supervisor panel + add-on images
+PATHS_NO_AUTH = re.compile(
+    r"^(?:"
+    r"|app/.*"
+    r"|(store/)?addons/[^/]+/(logo|icon)"
+    r")$"
+)
+
+NO_STORE = re.compile(
+    r"^(?:"
+    r"|app/entrypoint.js"
+    r")$"
+)
 # pylint: enable=implicit-str-concat
+# fmt: on
 
 
 class HassIOView(HomeAssistantView):
@@ -65,38 +98,66 @@ class HassIOView(HomeAssistantView):
         self._host = host
         self._websession = websession
 
-    async def _handle(
-        self, request: web.Request, path: str
-    ) -> web.Response | web.StreamResponse:
-        """Route data to Hass.io."""
-        hass = request.app["hass"]
-        if _need_auth(hass, path) and not request[KEY_AUTHENTICATED]:
-            return web.Response(status=HTTPStatus.UNAUTHORIZED)
-
-        return await self._command_proxy(path, request)
-
-    delete = _handle
-    get = _handle
-    post = _handle
-
-    async def _command_proxy(
-        self, path: str, request: web.Request
-    ) -> web.StreamResponse:
+    async def _handle(self, request: web.Request, path: str) -> web.StreamResponse:
         """Return a client request with proxy origin for Hass.io supervisor.
 
-        This method is a coroutine.
+        Use cases:
+        - Onboarding allows restoring backups
+        - Load Supervisor panel and add-on logo unauthenticated
+        - User upload/restore backups
         """
-        headers = _init_header(request)
-        if path == "backups/new/upload":
-            # We need to reuse the full content type that includes the boundary
-            headers[
-                CONTENT_TYPE
-            ] = request._stored_content_type  # pylint: disable=protected-access
+        # No bullshit
+        if path != unquote(path):
+            return web.Response(status=HTTPStatus.BAD_REQUEST)
+
+        hass: HomeAssistant = request.app["hass"]
+        is_admin = request[KEY_AUTHENTICATED] and request[KEY_HASS_USER].is_admin
+        authorized = is_admin
+
+        if is_admin:
+            allowed_paths = PATHS_ADMIN
+
+        elif not async_is_onboarded(hass):
+            allowed_paths = PATHS_NOT_ONBOARDED
+
+            # During onboarding we need the user to manage backups
+            authorized = True
+
+        else:
+            # Either unauthenticated or not an admin
+            allowed_paths = PATHS_NO_AUTH
+
+        no_auth_path = PATHS_NO_AUTH.match(path)
+        headers = {
+            X_HASS_SOURCE: "core.http",
+        }
+
+        if no_auth_path:
+            if request.method != "GET":
+                return web.Response(status=HTTPStatus.METHOD_NOT_ALLOWED)
+
+        else:
+            if not allowed_paths.match(path):
+                return web.Response(status=HTTPStatus.UNAUTHORIZED)
+
+            if authorized:
+                headers[
+                    AUTHORIZATION
+                ] = f"Bearer {os.environ.get('SUPERVISOR_TOKEN', '')}"
+
+            if request.method == "POST":
+                headers[CONTENT_TYPE] = request.content_type
+                # _stored_content_type is only computed once `content_type` is accessed
+                if path == "backups/new/upload":
+                    # We need to reuse the full content type that includes the boundary
+                    headers[
+                        CONTENT_TYPE
+                    ] = request._stored_content_type  # pylint: disable=protected-access
 
         try:
             client = await self._websession.request(
                 method=request.method,
-                url=f"http://{self._host}/{path}",
+                url=f"http://{self._host}/{quote(path)}",
                 params=request.query,
                 data=request.content,
                 headers=headers,
@@ -123,20 +184,8 @@ class HassIOView(HomeAssistantView):
 
         raise HTTPBadGateway()
 
-
-def _init_header(request: web.Request) -> dict[istr, str]:
-    """Create initial header."""
-    headers = {
-        AUTHORIZATION: f"Bearer {os.environ.get('SUPERVISOR_TOKEN', '')}",
-        CONTENT_TYPE: request.content_type,
-    }
-
-    # Add user data
-    if request.get("hass_user") is not None:
-        headers[istr(X_HASS_USER_ID)] = request["hass_user"].id
-        headers[istr(X_HASS_IS_ADMIN)] = str(int(request["hass_user"].is_admin))
-
-    return headers
+    get = _handle
+    post = _handle
 
 
 def _response_header(response: aiohttp.ClientResponse, path: str) -> dict[str, str]:
@@ -164,12 +213,3 @@ def _get_timeout(path: str) -> ClientTimeout:
     if NO_TIMEOUT.match(path):
         return ClientTimeout(connect=10, total=None)
     return ClientTimeout(connect=10, total=300)
-
-
-def _need_auth(hass: HomeAssistant, path: str) -> bool:
-    """Return if a path need authentication."""
-    if not async_is_onboarded(hass) and NO_AUTH_ONBOARDING.match(path):
-        return False
-    if NO_AUTH.match(path):
-        return False
-    return True

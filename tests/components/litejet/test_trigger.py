@@ -14,7 +14,12 @@ import homeassistant.util.dt as dt_util
 from . import async_init_integration
 
 from tests.common import async_fire_time_changed_exact, async_mock_service
-from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa: F401
+
+
+@pytest.fixture(autouse=True, name="stub_blueprint_populate")
+def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
+    """Stub copying the blueprints to the config folder."""
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -105,6 +110,17 @@ async def test_simple(hass: HomeAssistant, calls, mock_litejet) -> None:
 
     assert len(calls) == 1
     assert calls[0].data["id"] == 0
+
+
+async def test_only_release(hass: HomeAssistant, calls, mock_litejet) -> None:
+    """Test the simplest form of a LiteJet trigger."""
+    await setup_automation(
+        hass, {"platform": "litejet", "number": ENTITY_OTHER_SWITCH_NUMBER}
+    )
+
+    await simulate_release(hass, mock_litejet, ENTITY_OTHER_SWITCH_NUMBER)
+
+    assert len(calls) == 0
 
 
 async def test_held_more_than_short(hass: HomeAssistant, calls, mock_litejet) -> None:

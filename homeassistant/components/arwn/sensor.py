@@ -1,7 +1,6 @@
 """Support for collecting data from the ARWN project."""
 from __future__ import annotations
 
-import json
 import logging
 
 from homeassistant.components import mqtt
@@ -11,6 +10,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import slugify
+from homeassistant.util.json import json_loads_object
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -101,8 +101,13 @@ async def async_setup_platform(
 ) -> None:
     """Set up the ARWN platform."""
 
+    # Make sure MQTT integration is enabled and the client is available
+    if not await mqtt.async_wait_for_mqtt_client(hass):
+        _LOGGER.error("MQTT integration is not available")
+        return
+
     @callback
-    def async_sensor_event_received(msg):
+    def async_sensor_event_received(msg: mqtt.ReceiveMessage) -> None:
         """Process events as sensors.
 
         When a new event on our topic (arwn/#) is received we map it
@@ -115,7 +120,7 @@ async def async_setup_platform(
         This lets us dynamically incorporate sensors without any
         configuration on our side.
         """
-        event = json.loads(msg.payload)
+        event = json_loads_object(msg.payload)
         sensors = discover_sensors(msg.topic, event)
         if not sensors:
             return

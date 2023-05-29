@@ -16,6 +16,7 @@ from homeassistant.components.climate import (
 )
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 
+from ..const import DOMAIN
 from ..coordinator import OverkizDataUpdateCoordinator
 from ..entity import OverkizEntity
 
@@ -70,6 +71,7 @@ class AtlanticElectricalHeaterWithAdjustableTemperatureSetpoint(
     _attr_supported_features = (
         ClimateEntityFeature.PRESET_MODE | ClimateEntityFeature.TARGET_TEMPERATURE
     )
+    _attr_translation_key = DOMAIN
 
     def __init__(
         self, device_url: str, coordinator: OverkizDataUpdateCoordinator

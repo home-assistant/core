@@ -30,8 +30,12 @@ from tests.common import (
     async_get_device_automations,
     async_mock_service,
 )
-from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa: F401
 from tests.testing_config.custom_components.test.sensor import UNITS_OF_MEASUREMENT
+
+
+@pytest.fixture(autouse=True, name="stub_blueprint_populate")
+def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
+    """Stub copying the blueprints to the config folder."""
 
 
 @pytest.fixture
@@ -55,12 +59,16 @@ def test_matches_device_classes(device_class: SensorDeviceClass) -> None:
         SensorDeviceClass.BATTERY: "CONF_BATTERY_LEVEL",
         SensorDeviceClass.CO: "CONF_CO",
         SensorDeviceClass.CO2: "CONF_CO2",
+        SensorDeviceClass.ENERGY_STORAGE: "CONF_ENERGY",
+        SensorDeviceClass.VOLUME_STORAGE: "CONF_VOLUME",
     }.get(device_class, f"CONF_{device_class.value.upper()}")
     assert hasattr(device_trigger, constant_name), f"Missing constant {constant_name}"
 
     # Ensure it has correct value
     constant_value = {
         SensorDeviceClass.BATTERY: "battery_level",
+        SensorDeviceClass.ENERGY_STORAGE: "energy",
+        SensorDeviceClass.VOLUME_STORAGE: "volume",
     }.get(device_class, device_class.value)
     assert getattr(device_trigger, constant_name) == constant_value
 

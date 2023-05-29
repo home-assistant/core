@@ -21,7 +21,8 @@ from homeassistant.const import (
     EntityCategory,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.update_coordinator import REQUEST_REFRESH_DEFAULT_COOLDOWN
 from homeassistant.util import dt
 
@@ -157,7 +158,9 @@ async def test_update_enable_guest_wifi(
     await hass.config_entries.async_unload(entry.entry_id)
 
 
-async def test_update_enable_leds(hass: HomeAssistant, mock_device: MockDevice) -> None:
+async def test_update_enable_leds(
+    hass: HomeAssistant, mock_device: MockDevice, entity_registry: er.EntityRegistry
+) -> None:
     """Test state change of a enable_leds switch device."""
     entry = configure_integration(hass)
     device_name = entry.title.replace(" ", "_").lower()
@@ -170,8 +173,7 @@ async def test_update_enable_leds(hass: HomeAssistant, mock_device: MockDevice) 
     assert state is not None
     assert state.state == STATE_OFF
 
-    er = entity_registry.async_get(hass)
-    assert er.async_get(state_key).entity_category == EntityCategory.CONFIG
+    assert entity_registry.async_get(state_key).entity_category == EntityCategory.CONFIG
 
     # Emulate state change
     mock_device.device.async_get_led_setting.return_value = True
@@ -299,9 +301,10 @@ async def test_auth_failed(
     api = getattr(mock_device.device, set_method)
     api.side_effect = DevicePasswordProtected
 
-    await hass.services.async_call(
-        PLATFORM, SERVICE_TURN_ON, {"entity_id": state_key}, blocking=True
-    )
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            PLATFORM, SERVICE_TURN_ON, {"entity_id": state_key}, blocking=True
+        )
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
 
@@ -312,9 +315,10 @@ async def test_auth_failed(
     assert flow["context"]["source"] == SOURCE_REAUTH
     assert flow["context"]["entry_id"] == entry.entry_id
 
-    await hass.services.async_call(
-        PLATFORM, SERVICE_TURN_OFF, {"entity_id": state_key}, blocking=True
-    )
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            PLATFORM, SERVICE_TURN_OFF, {"entity_id": state_key}, blocking=True
+        )
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
 

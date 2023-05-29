@@ -54,7 +54,7 @@ async def async_setup_entry(
 
 
 class GeonetnzVolcanoSensor(SensorEntity):
-    """This represents an external event with GeoNet NZ Volcano feed data."""
+    """Represents an external event with GeoNet NZ Volcano feed data."""
 
     _attr_should_poll = False
 

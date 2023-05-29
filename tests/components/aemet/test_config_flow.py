@@ -1,6 +1,7 @@
 """Define tests for the AEMET OpenData config flow."""
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
+import pytest
 import requests_mock
 
 from homeassistant import data_entry_flow
@@ -14,6 +15,8 @@ from .util import aemet_requests_mock
 
 from tests.common import MockConfigEntry
 
+pytestmark = pytest.mark.usefixtures("mock_setup_entry")
+
 CONFIG = {
     CONF_NAME: "aemet",
     CONF_API_KEY: "foo",
@@ -22,13 +25,10 @@ CONFIG = {
 }
 
 
-async def test_form(hass: HomeAssistant) -> None:
+async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     """Test that the form is served with valid input."""
 
-    with patch(
-        "homeassistant.components.aemet.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry, requests_mock.mock() as _m:
+    with requests_mock.mock() as _m:
         aemet_requests_mock(_m)
 
         result = await hass.config_entries.flow.async_init(
@@ -36,7 +36,7 @@ async def test_form(hass: HomeAssistant) -> None:
         )
 
         assert result["type"] == data_entry_flow.FlowResultType.FORM
-        assert result["step_id"] == SOURCE_USER
+        assert result["step_id"] == "user"
         assert result["errors"] == {}
 
         result = await hass.config_entries.flow.async_configure(
