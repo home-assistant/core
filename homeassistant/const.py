@@ -32,6 +32,7 @@ class Platform(StrEnum):
     CLIMATE = "climate"
     COVER = "cover"
     DATE = "date"
+    DATETIME = "datetime"
     DEVICE_TRACKER = "device_tracker"
     FAN = "fan"
     GEO_LOCATION = "geo_location"
@@ -1164,6 +1165,11 @@ CAST_APP_ID_HOMEASSISTANT_LOVELACE: Final = "A078F6B0"
 HASSIO_USER_NAME = "Supervisor"
 
 SIGNAL_BOOTSTRAP_INTEGRATIONS = "bootstrap_integrations"
+
+# Date/Time formats
+FORMAT_DATE: Final = "%Y-%m-%d"
+FORMAT_TIME: Final = "%H:%M:%S"
+FORMAT_DATETIME: Final = f"{FORMAT_DATE} {FORMAT_TIME}"
 
 
 class EntityCategory(StrEnum):
