@@ -31,7 +31,7 @@ class YouTubeMixin:
 
     value_fn: Callable[[Any], StateType]
     entity_picture_fn: Callable[[Any], str]
-    attributes_fn: Callable[[Any], dict[str, Any]]
+    attributes_fn: Callable[[Any], dict[str, Any]] | None
 
 
 @dataclass
@@ -57,7 +57,7 @@ SENSOR_TYPES = [
         native_unit_of_measurement="subscribers",
         value_fn=lambda channel: channel[ATTR_SUBSCRIBER_COUNT],
         entity_picture_fn=lambda channel: channel[ATTR_ICON],
-        attributes_fn=lambda _: {},
+        attributes_fn=None,
     ),
 ]
 
@@ -92,6 +92,8 @@ class YouTubeSensor(YouTubeChannelEntity, SensorEntity):
         return self.entity_description.entity_picture_fn(self._channel)
 
     @property
-    def extra_state_attributes(self) -> dict[str, Any]:
+    def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the extra state attributes."""
-        return self.entity_description.attributes_fn(self._channel)
+        if self.entity_description.attributes_fn:
+            return self.entity_description.attributes_fn(self._channel)
+        return None
