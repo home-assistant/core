@@ -108,10 +108,7 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up entities from config entry."""
-    api = hass.data[DOMAIN][entry.entry_id]
-    coordinator = DwdWeatherWarningsCoordinator(hass, api)
-
-    await coordinator.async_config_entry_first_refresh()
+    coordinator = hass.data[DOMAIN][entry.entry_id]
 
     async_add_entities(
         [
@@ -142,31 +139,29 @@ class DwdWeatherWarningsSensor(
         self._attr_name = f"{DEFAULT_NAME} {entry.title} {description.name}"
         self._attr_unique_id = f"{entry.unique_id}-{description.key}"
 
+        self.api = coordinator.api
+
     @property
     def native_value(self):
         """Return the state of the sensor."""
-        api = self.coordinator.api
-
         if self.entity_description.key == CURRENT_WARNING_SENSOR:
-            return api.current_warning_level
+            return self.api.current_warning_level
 
-        return api.expected_warning_level
+        return self.api.expected_warning_level
 
     @property
     def extra_state_attributes(self):
         """Return the state attributes of the sensor."""
-        api = self.coordinator.api
-
         data = {
-            ATTR_REGION_NAME: api.warncell_name,
-            ATTR_REGION_ID: api.warncell_id,
-            ATTR_LAST_UPDATE: api.last_update,
+            ATTR_REGION_NAME: self.api.warncell_name,
+            ATTR_REGION_ID: self.api.warncell_id,
+            ATTR_LAST_UPDATE: self.api.last_update,
         }
 
         if self.entity_description.key == CURRENT_WARNING_SENSOR:
-            searched_warnings = api.current_warnings
+            searched_warnings = self.api.current_warnings
         else:
-            searched_warnings = api.expected_warnings
+            searched_warnings = self.api.expected_warnings
 
         data[ATTR_WARNING_COUNT] = len(searched_warnings)
 
@@ -193,4 +188,4 @@ class DwdWeatherWarningsSensor(
     @property
     def available(self) -> bool:
         """Could the device be accessed during the last update call."""
-        return self.coordinator.api.data_valid
+        return self.api.data_valid
