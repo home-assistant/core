@@ -7,7 +7,7 @@
           "api_token": "Token"
         }
       },
-      "finish": {
+      "boards": {
         "data": {
           "board_ids": "Board names"
         }

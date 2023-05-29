@@ -1,4 +1,4 @@
-"""Data update coordinator for the Steam integration."""
+"""Data update coordinator for the Trello integration."""
 from __future__ import annotations
 
 from trello import TrelloClient

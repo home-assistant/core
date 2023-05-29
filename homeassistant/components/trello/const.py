@@ -1,4 +1,4 @@
-"""Constants for the trello_int integration."""
+"""Constants for the trello integration."""
 import logging
 from typing import Final
 

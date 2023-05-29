@@ -69,9 +69,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.user_email = member.email
         self.ids_boards = await self._fetch_all_boards()
 
-        return await self._show_board_form()
+        return await self._show_board_form(self.ids_boards)
 
-    async def async_step_finish(self, user_input: dict[str, Any]) -> FlowResult:
+    async def async_step_boards(self, user_input: dict[str, Any]) -> FlowResult:
         """Select desired boards to have card counts of per list.
 
         :param user_input: User's selected boards
@@ -103,11 +103,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=CREDS_FORM_SCHEMA, last_step=False
         )
 
-    async def _show_board_form(self) -> FlowResult:
+    async def _show_board_form(
+        self, ids_boards: dict[str, dict[str, str]]
+    ) -> FlowResult:
         return self.async_show_form(
-            step_id="finish",
-            data_schema=_get_board_select_schema(self.ids_boards),
-            last_step=True,
+            step_id="boards",
+            data_schema=_get_board_select_schema(ids_boards),
         )
 
     async def _show_error_creds_form(self, ex: Unauthorized) -> FlowResult:

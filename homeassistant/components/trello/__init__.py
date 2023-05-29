@@ -3,15 +3,11 @@ from typing import Any
 
 from trello import Member, TrelloClient
 
-from homeassistant.components.sensor import SensorStateClass
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import LOGGER
-from .coordinator import TrelloDataUpdateCoordinator
 
 PLATFORMS: list[str] = [Platform.SENSOR]
 
@@ -38,13 +34,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Handle removal of an entry."""
     await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-
-
-class TrelloEntity(CoordinatorEntity[TrelloDataUpdateCoordinator], Entity):
-    """Representation of a Steam entity."""
-
-    _attr_native_unit_of_measurement: str | None = "Cards"
-    _attr_state_class: SensorStateClass | str | None = SensorStateClass.MEASUREMENT
 
 
 class TrelloAdapter:

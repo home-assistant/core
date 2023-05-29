@@ -3,20 +3,23 @@ from __future__ import annotations
 
 from trello import TrelloClient
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import SensorEntity, SensorStateClass
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import TrelloEntity
 from .const import DOMAIN
 from .coordinator import TrelloDataUpdateCoordinator
 
 
-class TrelloSensor(TrelloEntity, SensorEntity):
+class TrelloSensor(CoordinatorEntity[TrelloDataUpdateCoordinator], SensorEntity):
     """Representation of a TrelloSensor."""
+
+    _attr_native_unit_of_measurement: str | None = "Cards"
+    _attr_state_class: SensorStateClass | str | None = SensorStateClass.MEASUREMENT
 
     def __init__(
         self,

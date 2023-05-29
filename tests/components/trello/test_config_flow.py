@@ -70,8 +70,7 @@ async def test_flow_user(hass: HomeAssistant) -> None:
     assert init_result["step_id"] == "user"
     assert init_result["last_step"] is False
 
-    assert creds_result["step_id"] == "finish"
-    assert creds_result["last_step"] is True
+    assert creds_result["step_id"] == "boards"
     assert creds_result["data_schema"].schema["board_ids"].options == {
         BOARD_ID: "a_board_name"
     }
