@@ -29,6 +29,7 @@ COMPONENTS_WITH_CONFIG_ENTRY_DEMO_PLATFORM = [
     Platform.CLIMATE,
     Platform.COVER,
     Platform.DATE,
+    Platform.DATETIME,
     Platform.FAN,
     Platform.HUMIDIFIER,
     Platform.LIGHT,
