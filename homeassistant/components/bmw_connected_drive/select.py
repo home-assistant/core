@@ -124,3 +124,5 @@ class BMWSelect(BMWBaseEntity, SelectEntity):
             option,
         )
         await self.entity_description.remote_service(self.vehicle, option)
+
+        self.coordinator.refresh_state_after_remote_service()

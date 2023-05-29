@@ -68,6 +68,8 @@ class BMWLock(BMWBaseEntity, LockEntity):
             self.async_write_ha_state()
         await self.vehicle.remote_services.trigger_remote_door_lock()
 
+        self.coordinator.refresh_state_after_remote_service()
+
     async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the car."""
         _LOGGER.debug("%s: unlocking doors", self.vehicle.name)
@@ -78,6 +80,8 @@ class BMWLock(BMWBaseEntity, LockEntity):
             self._attr_is_locked = False
             self.async_write_ha_state()
         await self.vehicle.remote_services.trigger_remote_door_unlock()
+
+        self.coordinator.refresh_state_after_remote_service()
 
     @callback
     def _handle_coordinator_update(self) -> None:
