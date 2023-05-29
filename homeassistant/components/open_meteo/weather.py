@@ -1,11 +1,18 @@
 """Support for Open-Meteo weather."""
 from __future__ import annotations
 
-from open_meteo import Forecast as OpenMeteoForecast
+from types import MappingProxyType
+
+from open_meteo import DailyForecast, Forecast as OpenMeteoForecast, HourlyForecast
 
 from homeassistant.components.weather import Forecast, WeatherEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import UnitOfPrecipitationDepth, UnitOfSpeed, UnitOfTemperature
+from homeassistant.const import (
+    CONF_NAME,
+    UnitOfPrecipitationDepth,
+    UnitOfSpeed,
+    UnitOfTemperature,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
@@ -15,7 +22,7 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
-from .const import DOMAIN, WMO_TO_HA_CONDITION_MAP
+from .const import DEFAULT_NAME, DOMAIN, WMO_TO_HA_CONDITION_MAP
 
 
 async def async_setup_entry(
@@ -25,7 +32,12 @@ async def async_setup_entry(
 ) -> None:
     """Set up Open-Meteo weather entity based on a config entry."""
     coordinator = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities([OpenMeteoWeatherEntity(entry=entry, coordinator=coordinator)])
+    async_add_entities(
+        [
+            OpenMeteoWeatherEntity(entry=entry, coordinator=coordinator, hourly=False),
+            OpenMeteoWeatherEntity(entry=entry, coordinator=coordinator, hourly=True),
+        ]
+    )
 
 
 class OpenMeteoWeatherEntity(
@@ -43,17 +55,52 @@ class OpenMeteoWeatherEntity(
         *,
         entry: ConfigEntry,
         coordinator: DataUpdateCoordinator[OpenMeteoForecast],
+        hourly: bool,
     ) -> None:
         """Initialize Open-Meteo weather entity."""
         super().__init__(coordinator=coordinator)
         self._attr_unique_id = entry.entry_id
+        self._config = MappingProxyType(entry.data)
+        self._hourly = hourly
 
-        self._attr_device_info = DeviceInfo(
+    @property
+    def name(self) -> str:
+        """Return the name of the sensor."""
+        name = self._config.get(CONF_NAME)
+        name_appendix = ""
+        if self._hourly:
+            name_appendix = " hourly"
+
+        if name is not None:
+            return f"{name}{name_appendix}"
+
+        return f"{DEFAULT_NAME}{name_appendix}"
+
+    @property
+    def unique_id(self) -> str:
+        """Return unique ID."""
+        name_appendix = ""
+        if self._hourly:
+            name_appendix = "-hourly"
+        unique_id = f"{self._attr_unique_id}{name_appendix}"
+        return unique_id
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Device info."""
+        return DeviceInfo(
+            default_name="Forecast",
             entry_type=DeviceEntryType.SERVICE,
-            identifiers={(DOMAIN, entry.entry_id)},
+            identifiers={(DOMAIN, self._attr_unique_id)},  # type: ignore[arg-type]
             manufacturer="Open-Meteo",
-            name=entry.title,
+            model="Forecast",
+            configuration_url="https://open-meteo.com/",
         )
+
+    @property
+    def entity_registry_enabled_default(self) -> bool:
+        """Return if the entity should be enabled when first added to the entity registry."""
+        return not self._hourly
 
     @property
     def condition(self) -> str | None:
@@ -88,36 +135,67 @@ class OpenMeteoWeatherEntity(
     @property
     def forecast(self) -> list[Forecast] | None:
         """Return the forecast in native units."""
-        if self.coordinator.data.daily is None:
-            return None
-
         forecasts: list[Forecast] = []
-        daily = self.coordinator.data.daily
-        for index, time in enumerate(self.coordinator.data.daily.time):
-            forecast = Forecast(
-                datetime=time.isoformat(),
-            )
 
-            if daily.weathercode is not None:
-                forecast["condition"] = WMO_TO_HA_CONDITION_MAP.get(
-                    daily.weathercode[index]
+        if self._hourly:
+            if self.coordinator.data.hourly is None:
+                return None
+            hourly_fc: HourlyForecast = self.coordinator.data.hourly
+
+            for index, time in enumerate(hourly_fc.time):
+                forecast = Forecast(
+                    datetime=time.isoformat(),
                 )
 
-            if daily.precipitation_sum is not None:
-                forecast["native_precipitation"] = daily.precipitation_sum[index]
+                if hourly_fc.weather_code is not None:
+                    forecast["condition"] = WMO_TO_HA_CONDITION_MAP.get(
+                        hourly_fc.weather_code[index]
+                    )
 
-            if daily.temperature_2m_max is not None:
-                forecast["native_temperature"] = daily.temperature_2m_max[index]
+                if hourly_fc.precipitation is not None:
+                    forecast["native_precipitation"] = hourly_fc.precipitation[index]
 
-            if daily.temperature_2m_min is not None:
-                forecast["native_templow"] = daily.temperature_2m_min[index]
+                if hourly_fc.temperature_2m is not None:
+                    forecast["native_temperature"] = hourly_fc.temperature_2m[index]
 
-            if daily.wind_direction_10m_dominant is not None:
-                forecast["wind_bearing"] = daily.wind_direction_10m_dominant[index]
+                if hourly_fc.wind_speed_10m is not None:
+                    forecast["native_wind_speed"] = hourly_fc.wind_speed_10m[index]
 
-            if daily.wind_speed_10m_max is not None:
-                forecast["native_wind_speed"] = daily.wind_speed_10m_max[index]
+                if hourly_fc.wind_direction_10m is not None:
+                    forecast["wind_bearing"] = hourly_fc.wind_direction_10m[index]
 
-            forecasts.append(forecast)
+                forecasts.append(forecast)
+        else:
+            if self.coordinator.data.daily is None:
+                return None
+            daily_fc: DailyForecast = self.coordinator.data.daily
+
+            for index, time in enumerate(daily_fc.time):  # type: ignore[assignment]
+                forecast = Forecast(
+                    datetime=time.isoformat(),
+                )
+                if daily_fc.weathercode is not None:
+                    forecast["condition"] = WMO_TO_HA_CONDITION_MAP.get(
+                        daily_fc.weathercode[index]
+                    )
+
+                if daily_fc.precipitation_sum is not None:
+                    forecast["native_precipitation"] = daily_fc.precipitation_sum[index]
+
+                if daily_fc.temperature_2m_max is not None:
+                    forecast["native_temperature"] = daily_fc.temperature_2m_max[index]
+
+                if daily_fc.temperature_2m_min is not None:
+                    forecast["native_templow"] = daily_fc.temperature_2m_min[index]
+
+                if daily_fc.wind_direction_10m_dominant is not None:
+                    forecast["wind_bearing"] = daily_fc.wind_direction_10m_dominant[
+                        index
+                    ]
+
+                if daily_fc.wind_speed_10m_max is not None:
+                    forecast["native_wind_speed"] = daily_fc.wind_speed_10m_max[index]
+
+                forecasts.append(forecast)
 
         return forecasts
