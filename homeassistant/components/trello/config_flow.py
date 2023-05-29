@@ -136,12 +136,6 @@ def _create_trello_adapter(api_key: str, api_token: str) -> TrelloAdapter:
     return TrelloAdapter(TrelloClient(api_key=api_key, api_secret=api_token))
 
 
-def _get_board_select_schema(
-    boards: dict[str, dict], default: list[str] | None = None
-) -> Schema:
-    if default is None:
-        default = []
+def _get_board_select_schema(boards: dict[str, dict]) -> Schema:
     options = {key: value["name"] for key, value in boards.items()}
-    return vol.Schema(
-        {vol.Required(USER_INPUT_BOARD_IDS, default=default): cv.multi_select(options)}
-    )
+    return vol.Schema({vol.Required(USER_INPUT_BOARD_IDS): cv.multi_select(options)})
