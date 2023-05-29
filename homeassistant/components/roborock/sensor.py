@@ -79,21 +79,19 @@ CONSUMABLE_SENSORS = [
 CLEAN_INFORMATION_SENSORS = [
     RoborockSensorDescription(
         native_unit_of_measurement=UnitOfTime.SECONDS,
-        key="clean_time",
-        translation_key="clean_time",
-        icon="mdi:timer-sand",
+        key="cleaning_time",
+        translation_key="cleaning_time",
+        icon="mdi:progress-clock",
         device_class=SensorDeviceClass.DURATION,
         value_fn=lambda data: data.status.clean_time,
-        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     RoborockSensorDescription(
         native_unit_of_measurement=UnitOfTime.SECONDS,
-        key="total_clean_time",
-        translation_key="total_clean_time",
-        icon="mdi:timer-sand",
+        key="total_cleaning_time",
+        translation_key="total_cleaning_time",
+        icon="mdi:history",
         device_class=SensorDeviceClass.DURATION,
         value_fn=lambda data: data.clean_summary.clean_time,
-        entity_category=EntityCategory.DIAGNOSTIC,
     ),
 ]
 

@@ -28,8 +28,8 @@
   },
   "entity": {
     "sensor": {
-      "clean_time": {
-        "name": "Clean time"
+      "cleaning_time": {
+        "name": "Cleaning time"
       },
       "main_brush_time_left": {
         "name": "Main brush time left"
@@ -37,14 +37,14 @@
       "side_brush_time_left": {
         "name": "Side brush time left"
       },
-      "total_clean_time": {
-        "name": "Total clean time"
-      },
       "filter_time_left": {
         "name": "Filter time left"
       },
       "sensor_time_left": {
         "name": "Sensor time left"
+      },
+      "total_cleaning_time": {
+        "name": "Total cleaning time"
       }
     },
     "select": {
