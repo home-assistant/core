@@ -6,7 +6,11 @@ from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
 
-from homeassistant.components.cover import PLATFORM_SCHEMA, CoverEntity
+from homeassistant.components.cover import (
+    DOMAIN as COVER_DOMAIN,
+    PLATFORM_SCHEMA,
+    CoverEntity,
+)
 from homeassistant.const import (
     CONF_COMMAND_CLOSE,
     CONF_COMMAND_OPEN,
@@ -14,17 +18,19 @@ from homeassistant.const import (
     CONF_COMMAND_STOP,
     CONF_COVERS,
     CONF_FRIENDLY_NAME,
+    CONF_NAME,
     CONF_UNIQUE_ID,
     CONF_VALUE_TEMPLATE,
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.reload import async_setup_reload_service
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.util import slugify
 
-from .const import CONF_COMMAND_TIMEOUT, DEFAULT_TIMEOUT, DOMAIN, PLATFORMS
+from .const import CONF_COMMAND_TIMEOUT, DEFAULT_TIMEOUT, DOMAIN
 from .utils import call_shell_with_timeout, check_output_or_log
 
 _LOGGER = logging.getLogger(__name__)
@@ -55,19 +61,35 @@ async def async_setup_platform(
 ) -> None:
     """Set up cover controlled by shell commands."""
 
-    await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
-
-    devices: dict[str, Any] = config.get(CONF_COVERS, {})
     covers = []
+    if discovery_info:
+        entities: dict[str, Any] = {slugify(discovery_info[CONF_NAME]): discovery_info}
+    else:
+        async_create_issue(
+            hass,
+            DOMAIN,
+            "deprecated_yaml_cover",
+            breaks_in_ha_version="2023.8.0",
+            is_fixable=False,
+            severity=IssueSeverity.WARNING,
+            translation_key="deprecated_platform_yaml",
+            translation_placeholders={"platform": COVER_DOMAIN},
+        )
+        entities = config.get(CONF_COVERS, {})
 
-    for device_name, device_config in devices.items():
+    for device_name, device_config in entities.items():
         value_template: Template | None = device_config.get(CONF_VALUE_TEMPLATE)
         if value_template is not None:
             value_template.hass = hass
 
+        if name := device_config.get(
+            CONF_FRIENDLY_NAME
+        ):  # Backward compatibility. Can be removed after deprecation
+            device_config[CONF_NAME] = name
+
         covers.append(
             CommandCover(
-                device_config.get(CONF_FRIENDLY_NAME, device_name),
+                device_config.get(CONF_NAME, device_name),
                 device_config[CONF_COMMAND_OPEN],
                 device_config[CONF_COMMAND_CLOSE],
                 device_config[CONF_COMMAND_STOP],
