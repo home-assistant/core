@@ -18,12 +18,14 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PAYLOAD_OFF,
     CONF_PAYLOAD_ON,
+    CONF_SCAN_INTERVAL,
     CONF_UNIQUE_ID,
     CONF_VALUE_TEMPLATE,
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -84,6 +86,9 @@ async def async_setup_platform(
     value_template: Template | None = binary_sensor_config.get(CONF_VALUE_TEMPLATE)
     command_timeout: int = binary_sensor_config[CONF_COMMAND_TIMEOUT]
     unique_id: str | None = binary_sensor_config.get(CONF_UNIQUE_ID)
+    scan_interval: timedelta = binary_sensor_config.get(
+        CONF_SCAN_INTERVAL, SCAN_INTERVAL
+    )
     if value_template is not None:
         value_template.hass = hass
     data = CommandSensorData(hass, command, command_timeout)
@@ -98,6 +103,7 @@ async def async_setup_platform(
                 payload_off,
                 value_template,
                 unique_id,
+                scan_interval,
             )
         ],
         True,
@@ -106,6 +112,8 @@ async def async_setup_platform(
 
 class CommandBinarySensor(BinarySensorEntity):
     """Representation of a command line binary sensor."""
+
+    _attr_should_poll = False
 
     def __init__(
         self,
@@ -116,6 +124,7 @@ class CommandBinarySensor(BinarySensorEntity):
         payload_off: str,
         value_template: Template | None,
         unique_id: str | None,
+        scan_interval: timedelta,
     ) -> None:
         """Initialize the Command line binary sensor."""
         self.data = data
@@ -126,8 +135,19 @@ class CommandBinarySensor(BinarySensorEntity):
         self._payload_off = payload_off
         self._value_template = value_template
         self._attr_unique_id = unique_id
+        self._scan_interval = scan_interval
 
-    async def async_update(self) -> None:
+    async def async_added_to_hass(self) -> None:
+        """Call when entity about to be added to hass."""
+        await super().async_added_to_hass()
+        await self._async_update(None)
+        self.async_on_remove(
+            async_track_time_interval(
+                self.hass, self._async_update, self._scan_interval
+            ),
+        )
+
+    async def _async_update(self, now) -> None:
         """Get the latest data and updates the state."""
         await self.hass.async_add_executor_job(self.data.update)
         value = self.data.value
@@ -141,3 +161,5 @@ class CommandBinarySensor(BinarySensorEntity):
             self._attr_is_on = True
         elif value == self._payload_off:
             self._attr_is_on = False
+
+        self.async_write_ha_state()

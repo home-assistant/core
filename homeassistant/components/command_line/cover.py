@@ -1,6 +1,7 @@
 """Support for command line covers."""
 from __future__ import annotations
 
+from datetime import timedelta
 import logging
 from typing import TYPE_CHECKING, Any
 
@@ -19,12 +20,14 @@ from homeassistant.const import (
     CONF_COVERS,
     CONF_FRIENDLY_NAME,
     CONF_NAME,
+    CONF_SCAN_INTERVAL,
     CONF_UNIQUE_ID,
     CONF_VALUE_TEMPLATE,
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -32,6 +35,8 @@ from homeassistant.util import slugify
 
 from .const import CONF_COMMAND_TIMEOUT, DEFAULT_TIMEOUT, DOMAIN
 from .utils import call_shell_with_timeout, check_output_or_log
+
+SCAN_INTERVAL = timedelta(seconds=15)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -97,6 +102,7 @@ async def async_setup_platform(
                 value_template,
                 device_config[CONF_COMMAND_TIMEOUT],
                 device_config.get(CONF_UNIQUE_ID),
+                device_config.get(CONF_SCAN_INTERVAL, SCAN_INTERVAL),
             )
         )
 
@@ -110,6 +116,8 @@ async def async_setup_platform(
 class CommandCover(CoverEntity):
     """Representation a command line cover."""
 
+    _attr_should_poll = False
+
     def __init__(
         self,
         name: str,
@@ -120,6 +128,7 @@ class CommandCover(CoverEntity):
         value_template: Template | None,
         timeout: int,
         unique_id: str | None,
+        scan_interval: timedelta,
     ) -> None:
         """Initialize the cover."""
         self._attr_name = name
@@ -131,7 +140,17 @@ class CommandCover(CoverEntity):
         self._value_template = value_template
         self._timeout = timeout
         self._attr_unique_id = unique_id
-        self._attr_should_poll = bool(command_state)
+        self._scan_interval = scan_interval
+
+    async def async_added_to_hass(self) -> None:
+        """Call when entity about to be added to hass."""
+        await super().async_added_to_hass()
+        if self._command_state:
+            self.async_on_remove(
+                async_track_time_interval(
+                    self.hass, self._async_update, self._scan_interval
+                ),
+            )
 
     def _move_cover(self, command: str) -> bool:
         """Execute the actual commands."""
@@ -170,7 +189,7 @@ class CommandCover(CoverEntity):
         if TYPE_CHECKING:
             return None
 
-    async def async_update(self) -> None:
+    async def _async_update(self, now) -> None:
         """Update device state."""
         if self._command_state:
             payload = str(await self.hass.async_add_executor_job(self._query_state))
@@ -181,15 +200,19 @@ class CommandCover(CoverEntity):
             self._state = None
             if payload:
                 self._state = int(payload)
+            await self.async_update_ha_state(True)
 
-    def open_cover(self, **kwargs: Any) -> None:
+    async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
-        self._move_cover(self._command_open)
+        await self.hass.async_add_executor_job(self._move_cover, self._command_open)
+        await self._async_update(None)
 
-    def close_cover(self, **kwargs: Any) -> None:
+    async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
-        self._move_cover(self._command_close)
+        await self.hass.async_add_executor_job(self._move_cover, self._command_close)
+        await self._async_update(None)
 
-    def stop_cover(self, **kwargs: Any) -> None:
+    async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
-        self._move_cover(self._command_stop)
+        await self.hass.async_add_executor_job(self._move_cover, self._command_stop)
+        await self._async_update(None)

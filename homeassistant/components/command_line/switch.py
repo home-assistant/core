@@ -1,6 +1,7 @@
 """Support for custom shell commands to turn a switch on/off."""
 from __future__ import annotations
 
+from datetime import timedelta
 import logging
 from typing import TYPE_CHECKING, Any
 
@@ -20,6 +21,7 @@ from homeassistant.const import (
     CONF_ICON,
     CONF_ICON_TEMPLATE,
     CONF_NAME,
+    CONF_SCAN_INTERVAL,
     CONF_SWITCHES,
     CONF_UNIQUE_ID,
     CONF_VALUE_TEMPLATE,
@@ -27,6 +29,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.template_entity import ManualTriggerEntity
@@ -35,6 +38,8 @@ from homeassistant.util import slugify
 
 from .const import CONF_COMMAND_TIMEOUT, DEFAULT_TIMEOUT, DOMAIN
 from .utils import call_shell_with_timeout, check_output_or_log
+
+SCAN_INTERVAL = timedelta(seconds=30)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -112,6 +117,7 @@ async def async_setup_platform(
                 device_config.get(CONF_COMMAND_STATE),
                 value_template,
                 device_config[CONF_COMMAND_TIMEOUT],
+                device_config.get(CONF_SCAN_INTERVAL, SCAN_INTERVAL),
             )
         )
 
@@ -125,6 +131,8 @@ async def async_setup_platform(
 class CommandSwitch(ManualTriggerEntity, SwitchEntity):
     """Representation a switch that can be toggled using shell commands."""
 
+    _attr_should_poll = False
+
     def __init__(
         self,
         config: ConfigType,
@@ -134,6 +142,7 @@ class CommandSwitch(ManualTriggerEntity, SwitchEntity):
         command_state: str | None,
         value_template: Template | None,
         timeout: int,
+        scan_interval: timedelta,
     ) -> None:
         """Initialize the switch."""
         super().__init__(self.hass, config)
@@ -144,7 +153,17 @@ class CommandSwitch(ManualTriggerEntity, SwitchEntity):
         self._command_state = command_state
         self._value_template = value_template
         self._timeout = timeout
-        self._attr_should_poll = bool(command_state)
+        self._scan_interval = scan_interval
+
+    async def async_added_to_hass(self) -> None:
+        """Call when entity about to be added to hass."""
+        await super().async_added_to_hass()
+        if self._command_state:
+            self.async_on_remove(
+                async_track_time_interval(
+                    self.hass, self._async_update, self._scan_interval
+                ),
+            )
 
     async def _switch(self, command: str) -> bool:
         """Execute the actual commands."""
@@ -188,7 +207,7 @@ class CommandSwitch(ManualTriggerEntity, SwitchEntity):
         if TYPE_CHECKING:
             return None
 
-    async def async_update(self) -> None:
+    async def _async_update(self, now) -> None:
         """Update device state."""
         if self._command_state:
             payload = str(await self.hass.async_add_executor_job(self._query_state))
@@ -201,15 +220,18 @@ class CommandSwitch(ManualTriggerEntity, SwitchEntity):
             if payload or value:
                 self._attr_is_on = (value or payload).lower() == "true"
             self._process_manual_data(payload)
+            await self.async_update_ha_state(True)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         if await self._switch(self._command_on) and not self._command_state:
             self._attr_is_on = True
             self.async_schedule_update_ha_state()
+        await self._async_update(None)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         if await self._switch(self._command_off) and not self._command_state:
             self._attr_is_on = False
             self.async_schedule_update_ha_state()
+        await self._async_update(None)

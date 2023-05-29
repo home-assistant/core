@@ -20,6 +20,7 @@ from homeassistant.const import (
     CONF_COMMAND,
     CONF_DEVICE_CLASS,
     CONF_NAME,
+    CONF_SCAN_INTERVAL,
     CONF_UNIQUE_ID,
     CONF_UNIT_OF_MEASUREMENT,
     CONF_VALUE_TEMPLATE,
@@ -28,6 +29,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -88,6 +90,7 @@ async def async_setup_platform(
     if value_template is not None:
         value_template.hass = hass
     json_attributes: list[str] | None = sensor_config.get(CONF_JSON_ATTRIBUTES)
+    scan_interval: timedelta = sensor_config.get(CONF_SCAN_INTERVAL, SCAN_INTERVAL)
     data = CommandSensorData(hass, command, command_timeout)
 
     async_add_entities(
@@ -99,14 +102,16 @@ async def async_setup_platform(
                 value_template,
                 json_attributes,
                 unique_id,
+                scan_interval,
             )
-        ],
-        True,
+        ]
     )
 
 
 class CommandSensor(SensorEntity):
     """Representation of a sensor that is using shell commands."""
+
+    _attr_should_poll = False
 
     def __init__(
         self,
@@ -116,6 +121,7 @@ class CommandSensor(SensorEntity):
         value_template: Template | None,
         json_attributes: list[str] | None,
         unique_id: str | None,
+        scan_interval: timedelta,
     ) -> None:
         """Initialize the sensor."""
         self._attr_name = name
@@ -126,8 +132,19 @@ class CommandSensor(SensorEntity):
         self._value_template = value_template
         self._attr_native_unit_of_measurement = unit_of_measurement
         self._attr_unique_id = unique_id
+        self._scan_interval = scan_interval
 
-    async def async_update(self) -> None:
+    async def async_added_to_hass(self) -> None:
+        """Call when entity about to be added to hass."""
+        await super().async_added_to_hass()
+        await self._async_update(None)
+        self.async_on_remove(
+            async_track_time_interval(
+                self.hass, self._async_update, self._scan_interval
+            ),
+        )
+
+    async def _async_update(self, now) -> None:
         """Get the latest data and updates the state."""
         await self.hass.async_add_executor_job(self.data.update)
         value = self.data.value
@@ -162,6 +179,8 @@ class CommandSensor(SensorEntity):
             )
         else:
             self._attr_native_value = value
+
+        self.async_write_ha_state()
 
 
 class CommandSensorData:
