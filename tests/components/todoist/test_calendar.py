@@ -21,7 +21,7 @@ from homeassistant.const import CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_component import async_update_entity
-from homeassistant.util import dt
+from homeassistant.util import dt as dt_util
 
 from tests.typing import ClientSessionGenerator
 
@@ -39,7 +39,9 @@ def set_time_zone(hass: HomeAssistant):
 @pytest.fixture(name="due")
 def mock_due() -> Due:
     """Mock a todoist Task Due date/time."""
-    return Due(is_recurring=False, date=dt.now().strftime("%Y-%m-%d"), string="today")
+    return Due(
+        is_recurring=False, date=dt_util.now().strftime("%Y-%m-%d"), string="today"
+    )
 
 
 @pytest.fixture(name="task")
@@ -187,7 +189,7 @@ async def test_update_entity_for_custom_project_no_due_date_on(
     "due",
     [
         Due(
-            date=(dt.now() + timedelta(days=3)).strftime("%Y-%m-%d"),
+            date=(dt_util.now() + timedelta(days=3)).strftime("%Y-%m-%d"),
             is_recurring=False,
             string="3 days from today",
         )
@@ -203,7 +205,9 @@ async def test_update_entity_for_calendar_with_due_date_in_the_future(
     assert state.state == "on"
 
     # The end time should be in the user's timezone
-    expected_end_time = (dt.now() + timedelta(days=3)).strftime("%Y-%m-%d 00:00:00")
+    expected_end_time = (dt_util.now() + timedelta(days=3)).strftime(
+        "%Y-%m-%d 00:00:00"
+    )
     assert state.attributes["end_time"] == expected_end_time
 
 
