@@ -9,7 +9,7 @@ from pytrafikverket.trafikverket_ferry import FerryStop
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.util import dt
+from homeassistant.util import dt as dt_util
 
 from tests.common import async_fire_time_changed
 
@@ -26,7 +26,7 @@ async def test_sensor(
     state3 = hass.states.get("sensor.harbor1_departure_time")
     assert state1.state == "Harbor 1"
     assert state2.state == "Harbor 2"
-    assert state3.state == str(dt.now().year + 1) + "-05-01T12:00:00+00:00"
+    assert state3.state == str(dt_util.now().year + 1) + "-05-01T12:00:00+00:00"
     assert state1.attributes["icon"] == "mdi:ferry"
     assert state1.attributes["other_information"] == [""]
     assert state2.attributes["icon"] == "mdi:ferry"
@@ -39,7 +39,7 @@ async def test_sensor(
     ):
         async_fire_time_changed(
             hass,
-            dt.utcnow() + timedelta(minutes=6),
+            dt_util.utcnow() + timedelta(minutes=6),
         )
         await hass.async_block_till_done()
 
