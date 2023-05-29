@@ -32,6 +32,7 @@ DISCOVERY = [
         config_flow.CONF_HOST: HOST,
         config_flow.CONF_PORT: PORT,
         "MAC": MAC,
+        "HARDWARE": "IPC model",
     },
     {
         "EPR": "urn:uuid:987654321",
@@ -54,7 +55,11 @@ DHCP_DISCOVERY_SAME_IP = dhcp.DhcpServiceInfo(
 
 
 def setup_mock_discovery(
-    mock_discovery, with_name=False, with_mac=False, two_devices=False
+    mock_discovery,
+    with_name=False,
+    with_mac=False,
+    two_devices=False,
+    with_hardware=True,
 ):
     """Prepare mock discovery result."""
     services = []
@@ -77,6 +82,12 @@ def setup_mock_discovery(
             scope = MagicMock()
             scope.getValue = MagicMock(
                 return_value=f"onvif://www.onvif.org/mac/{item['MAC']}"
+            )
+            scopes.append(scope)
+        if with_hardware and "HARDWARE" in item:
+            scope = MagicMock()
+            scope.getValue = MagicMock(
+                return_value=f"onvif://www.onvif.org/hardware/{item['HARDWARE']}"
             )
             scopes.append(scope)
         service.getScopes = MagicMock(return_value=scopes)
@@ -111,10 +122,16 @@ async def test_flow_discovered_devices(hass: HomeAssistant) -> None:
 
         assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["step_id"] == "device"
-        assert len(result["data_schema"].schema[config_flow.CONF_HOST].container) == 3
+        container = result["data_schema"].schema[config_flow.CONF_HOST].container
+        assert len(container) == 3
+        assert container == {
+            "Manually configure ONVIF device": "Manually configure ONVIF device",
+            "1.2.3.4": "urn:uuid:123456789 (1.2.3.4) [IPC model]",
+            "5.6.7.8": "urn:uuid:987654321 (5.6.7.8)",
+        }
 
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={config_flow.CONF_HOST: f"{URN} ({HOST})"}
+            result["flow_id"], user_input={config_flow.CONF_HOST: HOST}
         )
 
         assert result["type"] == data_entry_flow.FlowResultType.FORM

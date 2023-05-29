@@ -43,6 +43,7 @@ async def async_setup(hass):
 
     websocket_api.async_register_command(hass, config_entries_get)
     websocket_api.async_register_command(hass, config_entry_disable)
+    websocket_api.async_register_command(hass, config_entry_get_single)
     websocket_api.async_register_command(hass, config_entry_update)
     websocket_api.async_register_command(hass, config_entries_subscribe)
     websocket_api.async_register_command(hass, config_entries_progress)
@@ -282,6 +283,28 @@ def get_entry(
     if (entry := hass.config_entries.async_get_entry(entry_id)) is None:
         send_entry_not_found(connection, msg_id)
     return entry
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        "type": "config_entries/get_single",
+        "entry_id": str,
+    }
+)
+@websocket_api.async_response
+async def config_entry_get_single(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Update config entry."""
+    entry = get_entry(hass, connection, msg["entry_id"], msg["id"])
+    if entry is None:
+        return
+
+    result = {"config_entry": entry_json(entry)}
+    connection.send_result(msg["id"], result)
 
 
 @websocket_api.require_admin
