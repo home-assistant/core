@@ -142,7 +142,7 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Command Line from yaml config."""
-    command_line_config: list[dict[str, dict[str, Any]]] = config.get(DOMAIN, {})
+    command_line_config: list[dict[str, dict[str, Any]]] = config.get(DOMAIN, [])
     if not command_line_config:
         return True
 
