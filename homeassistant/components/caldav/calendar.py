@@ -1,7 +1,7 @@
 """Support for WebDav Calendar."""
 from __future__ import annotations
 
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, time, timedelta
 from functools import partial
 import logging
 import re
@@ -321,9 +321,7 @@ class WebDavCalendarData:
         """Return a datetime."""
         if isinstance(obj, datetime):
             return WebDavCalendarData.to_local(obj)
-        return dt.dt.datetime.combine(obj, dt.dt.time.min).replace(
-            tzinfo=dt.DEFAULT_TIME_ZONE
-        )
+        return datetime.combine(obj, time.min).replace(tzinfo=dt.DEFAULT_TIME_ZONE)
 
     @staticmethod
     def to_local(obj: datetime | date) -> datetime | date:

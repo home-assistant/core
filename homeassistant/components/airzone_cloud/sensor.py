@@ -45,7 +45,7 @@ async def async_setup_entry(
     coordinator = hass.data[DOMAIN][entry.entry_id]
 
     sensors = []
-    for zone_id, zone_data in coordinator.data[AZD_ZONES].items():
+    for zone_id, zone_data in coordinator.data.get(AZD_ZONES, {}).items():
         for description in ZONE_SENSOR_TYPES:
             if description.key in zone_data:
                 sensors.append(

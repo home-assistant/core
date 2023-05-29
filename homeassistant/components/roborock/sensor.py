@@ -76,6 +76,25 @@ CONSUMABLE_SENSORS = [
     ),
 ]
 
+CLEAN_INFORMATION_SENSORS = [
+    RoborockSensorDescription(
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        key="cleaning_time",
+        translation_key="cleaning_time",
+        icon="mdi:progress-clock",
+        device_class=SensorDeviceClass.DURATION,
+        value_fn=lambda data: data.status.clean_time,
+    ),
+    RoborockSensorDescription(
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        key="total_cleaning_time",
+        translation_key="total_cleaning_time",
+        icon="mdi:history",
+        device_class=SensorDeviceClass.DURATION,
+        value_fn=lambda data: data.clean_summary.clean_time,
+    ),
+]
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -93,7 +112,7 @@ async def async_setup_entry(
             description,
         )
         for device_id, coordinator in coordinators.items()
-        for description in CONSUMABLE_SENSORS
+        for description in CONSUMABLE_SENSORS + CLEAN_INFORMATION_SENSORS
     )
 
 

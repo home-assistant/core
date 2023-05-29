@@ -222,6 +222,20 @@ async def _async_setup_component(
         log_error("Invalid config.")
         return False
 
+    # Detect attempt to setup integration which can be setup only from config entry
+    if (
+        domain in processed_config
+        and not hasattr(component, "async_setup")
+        and not hasattr(component, "setup")
+    ):
+        _LOGGER.error(
+            (
+                "The %s integration does not support YAML setup, please remove it from "
+                "your configuration"
+            ),
+            domain,
+        )
+
     start = timer()
     _LOGGER.info("Setting up %s", domain)
     with async_start_setup(hass, [domain]):
