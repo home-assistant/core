@@ -120,17 +120,9 @@ class BMWSwitch(BMWBaseEntity, SwitchEntity):
         except MyBMWAPIError as ex:
             raise HomeAssistantError(ex) from ex
 
-        # BMW remote services that change the vehicle's state update the local object
-        # when executing the service, so only the HA state machine needs further updates.
-        self.coordinator.async_update_listeners()
-
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         try:
             await self.entity_description.remote_service_off(self.vehicle)
         except MyBMWAPIError as ex:
             raise HomeAssistantError(ex) from ex
-
-        # BMW remote services that change the vehicle's state update the local object
-        # when executing the service, so only the HA state machine needs further updates.
-        self.coordinator.async_update_listeners()
