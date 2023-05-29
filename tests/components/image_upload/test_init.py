@@ -8,7 +8,7 @@ from aiohttp import ClientSession, ClientWebSocketResponse
 from homeassistant.components.websocket_api import const as ws_const
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-from homeassistant.util import dt as util_dt
+from homeassistant.util import dt as dt_util
 
 from . import TEST_IMAGE
 
@@ -21,7 +21,7 @@ async def test_upload_image(
     hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test we can upload an image."""
-    now = util_dt.utcnow()
+    now = dt_util.utcnow()
 
     with tempfile.TemporaryDirectory() as tempdir, patch.object(
         hass.config, "path", return_value=tempdir
