@@ -3765,9 +3765,6 @@ async def test_link_config_entry(
 async def test_reload_config_entry(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
-    mqtt_client_mock: MqttMockPahoClient,
-    record_calls: MessageCallbackType,
-    calls: list[ReceiveMessage],
 ) -> None:
     """Test manual entities reloaded and set up correctly."""
     await mqtt_mock_entry()
