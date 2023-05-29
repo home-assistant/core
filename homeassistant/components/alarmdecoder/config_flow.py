@@ -331,8 +331,8 @@ def _validate_zone_input(
 
     if CONF_ZONE_RFID in zone_input:
         unique_id = zone_input[CONF_ZONE_RFID]
-        if CONF_ZONE_LOOP in zone_input:
-            unique_id += "_" + zone_input[CONF_ZONE_LOOP]
+        if zone_loop := zone_input.get(CONF_ZONE_LOOP):
+            unique_id += f"_{zone_loop}"
         if _binary_sensor_already_exists(hass, config_entry, unique_id):
             errors["base"] = "duplicate_sensor"
 
