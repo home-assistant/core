@@ -1,4 +1,4 @@
-"""Constants for the logfile integration."""
+"""Constants for the jsonlog integration."""
 import logging
 from typing import Final
 

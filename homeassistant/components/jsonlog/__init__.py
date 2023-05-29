@@ -39,7 +39,7 @@ CONFIG_SCHEMA = vol.Schema(
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the logfile component."""
+    """Set up the jsonlog component."""
 
     logpath: str = config[DOMAIN][CONF_FILENAME]
     if not os.path.isabs(logpath):
