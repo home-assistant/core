@@ -303,34 +303,43 @@ class BaseHaRemoteScanner(BaseHaScanner):
         """Call the registered callback."""
         now = MONOTONIC_TIME()
         self._last_detection = now
-        if prev_discovery := self._discovered_device_advertisement_datas.get(address):
+        discovered_device_advertisement_datas = (
+            self._discovered_device_advertisement_datas
+        )
+        if prev_discovery := discovered_device_advertisement_datas.get(address):
             # Merge the new data with the old data
             # to function the same as BlueZ which
             # merges the dicts on PropertiesChanged
             prev_device = prev_discovery[0]
             prev_advertisement = prev_discovery[1]
-            prev_service_uuids = prev_advertisement.service_uuids
-            prev_service_data = prev_advertisement.service_data
-            prev_manufacturer_data = prev_advertisement.manufacturer_data
-            prev_name = prev_device.name
 
-            if local_name and prev_name and len(prev_name) > len(local_name):
+            if (
+                local_name
+                and (prev_name := prev_device.name)
+                and local_name != prev_name
+                and len(prev_name) > len(local_name)
+            ):
                 local_name = prev_name
 
-            if service_uuids and service_uuids != prev_service_uuids:
+            if not service_uuids:
+                service_uuids = prev_advertisement.service_uuids
+            elif service_uuids != (
+                prev_service_uuids := prev_advertisement.service_uuids
+            ):
                 service_uuids = list(set(service_uuids + prev_service_uuids))
-            elif not service_uuids:
-                service_uuids = prev_service_uuids
 
-            if service_data and service_data != prev_service_data:
+            if not service_data:
+                service_data = prev_advertisement.service_data
+            elif service_data != (prev_service_data := prev_advertisement.service_data):
                 service_data = prev_service_data | service_data
-            elif not service_data:
-                service_data = prev_service_data
 
-            if manufacturer_data and manufacturer_data != prev_manufacturer_data:
+            if not manufacturer_data:
+                manufacturer_data = prev_advertisement.manufacturer_data
+            elif manufacturer_data != (
+                prev_manufacturer_data := prev_advertisement.manufacturer_data
+            ):
                 manufacturer_data = prev_manufacturer_data | manufacturer_data
-            elif not manufacturer_data:
-                manufacturer_data = prev_manufacturer_data
+
             #
             # Bleak updates the BLEDevice via create_or_update_device.
             # We need to do the same to ensure integrations that already
@@ -361,10 +370,7 @@ class BaseHaRemoteScanner(BaseHaScanner):
             rssi=rssi,
             platform_data=(),
         )
-        self._discovered_device_advertisement_datas[address] = (
-            device,
-            advertisement_data,
-        )
+        discovered_device_advertisement_datas[address] = (device, advertisement_data)
         self._discovered_device_timestamps[address] = now
         self._new_info_callback(
             BluetoothServiceInfoBleak(
