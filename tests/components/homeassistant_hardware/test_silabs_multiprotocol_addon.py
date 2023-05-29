@@ -111,7 +111,9 @@ class MockMultiprotocolPlatform(MockPlatform):
         super().__init__(**kwargs)
         self.change_channel_calls = []
 
-    async def async_change_channel(self, hass: HomeAssistant, channel: int) -> None:
+    async def async_change_channel(
+        self, hass: HomeAssistant, channel: int, delay: float
+    ) -> None:
         """Set the channel to be used."""
         self.change_channel_calls.append(channel)
 

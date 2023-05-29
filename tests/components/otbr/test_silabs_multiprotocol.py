@@ -19,15 +19,15 @@ async def test_async_change_channel(hass: HomeAssistant, otbr_config_entry) -> N
     """Test test_async_change_channel."""
 
     with patch("python_otbr_api.OTBR.set_channel") as mock_set_channel:
-        await otbr_silabs_multiprotocol.async_change_channel(hass, 16)
-    mock_set_channel.assert_awaited_once_with(16)
+        await otbr_silabs_multiprotocol.async_change_channel(hass, 16, delay=5 * 300)
+    mock_set_channel.assert_awaited_once_with(16, delay=5 * 300 * 1000)
 
 
 async def test_async_change_channel_no_otbr(hass: HomeAssistant) -> None:
     """Test async_change_channel when otbr is not configured."""
 
     with patch("python_otbr_api.OTBR.set_channel") as mock_set_channel:
-        await otbr_silabs_multiprotocol.async_change_channel(hass, 16)
+        await otbr_silabs_multiprotocol.async_change_channel(hass, 16, delay=0)
     mock_set_channel.assert_not_awaited()
 
 

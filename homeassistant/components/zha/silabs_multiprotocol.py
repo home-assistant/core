@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import contextlib
 
 from homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon import (
@@ -10,6 +11,9 @@ from homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon 
 from homeassistant.core import HomeAssistant
 
 from . import api
+
+# The approximate time it takes ZHA to change channels on SiLabs coordinators
+ZHA_CHANNEL_CHANGE_TIME_S = 10.27
 
 
 def _get_zha_url(hass: HomeAssistant) -> str | None:
@@ -31,7 +35,9 @@ async def _get_zha_channel(hass: HomeAssistant) -> int | None:
     return channel or None
 
 
-async def async_change_channel(hass: HomeAssistant, channel: int) -> None:
+async def async_change_channel(
+    hass: HomeAssistant, channel: int, delay: float = 0
+) -> None:
     """Set the channel to be used.
 
     Does nothing if not configured.
@@ -40,6 +46,8 @@ async def async_change_channel(hass: HomeAssistant, channel: int) -> None:
     if not zha_url:
         # ZHA is not configured
         return None
+
+    await asyncio.sleep(max(0, delay - ZHA_CHANNEL_CHANGE_TIME_S))
 
     return await api.async_change_channel(hass, channel)
 

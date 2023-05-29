@@ -7,7 +7,7 @@ from functools import wraps
 from typing import Any, Concatenate, ParamSpec, TypeVar, cast
 
 import python_otbr_api
-from python_otbr_api import tlv_parser
+from python_otbr_api import PENDING_DATASET_DELAY_TIMER, tlv_parser
 from python_otbr_api.pskc import compute_pskc
 from python_otbr_api.tlv_parser import MeshcopTLVType
 
@@ -96,9 +96,11 @@ class OTBRData:
         await self.api.set_active_dataset_tlvs(dataset)
 
     @_handle_otbr_error
-    async def set_channel(self, channel: int) -> None:
-        """Set current active operational dataset in TLVS format."""
-        await self.api.set_channel(channel)
+    async def set_channel(
+        self, channel: int, delay: float = PENDING_DATASET_DELAY_TIMER / 1000
+    ) -> None:
+        """Set current channel."""
+        await self.api.set_channel(channel, delay=int(delay * 1000))
 
     @_handle_otbr_error
     async def get_extended_address(self) -> bytes:

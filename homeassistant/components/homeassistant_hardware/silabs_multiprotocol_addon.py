@@ -47,6 +47,7 @@ CONF_ADDON_DEVICE = "device"
 CONF_ENABLE_MULTI_PAN = "enable_multi_pan"
 
 DEFAULT_CHANNEL = 15
+DEFAULT_CHANNEL_CHANGE_DELAY = 5 * 60  # Thread recommendation
 
 STORAGE_KEY = "homeassistant_hardware.silabs"
 STORAGE_VERSION_MAJOR = 1
@@ -109,14 +110,16 @@ class MultiprotocolAddonManager(AddonManager):
         )
         self.async_set_channel(new_channel)
 
-    async def async_change_channel(self, channel: int) -> None:
+    async def async_change_channel(
+        self, channel: int, delay: float = DEFAULT_CHANNEL_CHANGE_DELAY
+    ) -> None:
         """Change the channel and notify platforms."""
         self.async_set_channel(channel)
 
         for platform in self._platforms.values():
             if not await platform.async_using_multipan(self._hass):
                 continue
-            await platform.async_change_channel(self._hass, channel)
+            await platform.async_change_channel(self._hass, channel, delay)
 
     @callback
     def async_get_channel(self) -> int | None:
@@ -155,7 +158,9 @@ class MultiprotocolAddonManager(AddonManager):
 class MultipanProtocol(Protocol):
     """Define the format of multipan platforms."""
 
-    async def async_change_channel(self, hass: HomeAssistant, channel: int) -> None:
+    async def async_change_channel(
+        self, hass: HomeAssistant, channel: int, delay: float
+    ) -> None:
         """Set the channel to be used.
 
         Does nothing if not configured or the multiprotocol add-on is not used.

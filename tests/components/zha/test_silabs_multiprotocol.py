@@ -91,3 +91,25 @@ async def test_change_channel_no_zha(
         await silabs_multiprotocol.async_change_channel(hass, 20)
 
     assert mock_move_network_to_channel.mock_calls == []
+
+
+@pytest.mark.parametrize(("delay", "sleep"), [(0, 0), (5, 0), (15, 15 - 10.27)])
+async def test_change_channel_delay(
+    hass: HomeAssistant,
+    setup_zha,
+    zigpy_app_controller: ControllerApplication,
+    delay: float,
+    sleep: float,
+) -> None:
+    """Test changing the channel with a delay."""
+    await setup_zha()
+
+    with patch.object(
+        zigpy_app_controller, "move_network_to_channel", autospec=True
+    ) as mock_move_network_to_channel, patch(
+        "homeassistant.components.zha.silabs_multiprotocol.asyncio.sleep", autospec=True
+    ) as mock_sleep:
+        await silabs_multiprotocol.async_change_channel(hass, 20, delay=delay)
+
+    assert mock_move_network_to_channel.mock_calls == [call(20)]
+    assert mock_sleep.mock_calls == [call(sleep)]

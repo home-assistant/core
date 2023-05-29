@@ -19,7 +19,7 @@ from .util import OTBRData
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_change_channel(hass: HomeAssistant, channel: int) -> None:
+async def async_change_channel(hass: HomeAssistant, channel: int, delay: float) -> None:
     """Set the channel to be used.
 
     Does nothing if not configured.
@@ -28,7 +28,7 @@ async def async_change_channel(hass: HomeAssistant, channel: int) -> None:
         return
 
     data: OTBRData = hass.data[DOMAIN]
-    await data.set_channel(channel)
+    await data.set_channel(channel, delay)
 
 
 async def async_get_channel(hass: HomeAssistant) -> int | None:
