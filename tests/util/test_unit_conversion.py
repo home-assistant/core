@@ -557,6 +557,34 @@ def test_unit_conversion_factory(
     )
 
 
+def test_unit_conversion_factory_allow_none_with_none() -> None:
+    """Test test_unit_conversion_factory_allow_none with None."""
+    assert (
+        SpeedConverter.converter_factory_allow_none(
+            UnitOfSpeed.FEET_PER_SECOND, UnitOfSpeed.FEET_PER_SECOND
+        )(1)
+        == 1
+    )
+    assert (
+        SpeedConverter.converter_factory_allow_none(
+            UnitOfSpeed.FEET_PER_SECOND, UnitOfSpeed.FEET_PER_SECOND
+        )(None)
+        is None
+    )
+    assert (
+        TemperatureConverter.converter_factory_allow_none(
+            UnitOfTemperature.CELSIUS, UnitOfTemperature.CELSIUS
+        )(1)
+        == 1
+    )
+    assert (
+        TemperatureConverter.converter_factory_allow_none(
+            UnitOfTemperature.CELSIUS, UnitOfTemperature.CELSIUS
+        )(None)
+        is None
+    )
+
+
 @pytest.mark.parametrize(
     ("converter", "value", "from_unit", "expected", "to_unit"),
     chain(
