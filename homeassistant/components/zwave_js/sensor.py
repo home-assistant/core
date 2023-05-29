@@ -395,13 +395,6 @@ class ZwaveSensor(ZWaveBaseEntity, SensorEntity):
         self._attr_name = self.generate_name(include_value_name=True)
 
     @property
-    def options(self) -> list[str] | None:
-        """Return options for enum sensor."""
-        if self.device_class == SensorDeviceClass.ENUM:
-            return list(self.info.primary_value.metadata.states.values())
-        return None
-
-    @property
     def native_value(self) -> StateType:
         """Return state of the sensor."""
         key = str(self.info.primary_value.value)
@@ -496,6 +489,13 @@ class ZWaveListSensor(ZwaveSensor):
             alternate_value_name=self.info.primary_value.property_name,
             additional_info=[self.info.primary_value.property_key_name],
         )
+
+    @property
+    def options(self) -> list[str] | None:
+        """Return options for enum sensor."""
+        if self.device_class == SensorDeviceClass.ENUM:
+            return list(self.info.primary_value.metadata.states.values())
+        return None
 
     @property
     def device_class(self) -> SensorDeviceClass | None:

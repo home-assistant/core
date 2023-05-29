@@ -1,12 +1,15 @@
 """Test the Z-Wave JS switch platform."""
+import pytest
 from zwave_js_server.const import CURRENT_VALUE_PROPERTY, CommandClass
 from zwave_js_server.event import Event
+from zwave_js_server.exceptions import FailedZWaveCommand
 from zwave_js_server.model.node import Node
 
 from homeassistant.components.switch import DOMAIN, SERVICE_TURN_OFF, SERVICE_TURN_ON
 from homeassistant.components.zwave_js.helpers import ZwaveValueMatcher
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNKNOWN, EntityCategory
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from .common import SWITCH_ENTITY, replace_value_of_zwave_value
@@ -257,7 +260,7 @@ async def test_config_parameter_switch(
 
     client.async_send_command.reset_mock()
 
-    # Test turning on
+    # Test turning off
     await hass.services.async_call(
         DOMAIN, SERVICE_TURN_OFF, {"entity_id": switch_entity_id}, blocking=True
     )
@@ -272,3 +275,12 @@ async def test_config_parameter_switch(
         "endpoint": 0,
         "property": 20,
     }
+
+    client.async_send_command.reset_mock()
+    client.async_send_command.side_effect = FailedZWaveCommand("test", 1, "test")
+
+    # Test turning off error raises proper exception
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            DOMAIN, SERVICE_TURN_OFF, {"entity_id": switch_entity_id}, blocking=True
+        )

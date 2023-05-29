@@ -104,7 +104,7 @@ class ZwaveNumberEntity(ZWaveBaseEntity, NumberEntity):
         """Set new value."""
         if (target_value := self._target_value) is None:
             raise HomeAssistantError("Missing target value on device.")
-        await self.info.node.async_set_value(target_value, value)
+        await self._async_set_value(target_value, value)
 
 
 class ZWaveConfigParameterNumberEntity(ZwaveNumberEntity):

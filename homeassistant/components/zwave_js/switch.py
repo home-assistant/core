@@ -82,12 +82,12 @@ class ZWaveSwitch(ZWaveBaseEntity, SwitchEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         if self._target_value is not None:
-            await self.info.node.async_set_value(self._target_value, True)
+            await self._async_set_value(self._target_value, True)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         if self._target_value is not None:
-            await self.info.node.async_set_value(self._target_value, False)
+            await self._async_set_value(self._target_value, False)
 
 
 class ZWaveIndicatorSwitch(ZWaveSwitch):
@@ -132,7 +132,7 @@ class ZWaveBarrierEventSignalingSwitch(ZWaveBaseEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
-        await self.info.node.async_set_value(
+        await self._async_set_value(
             self.info.primary_value, BarrierEventSignalingSubsystemState.ON
         )
         # this value is not refreshed, so assume success
@@ -141,7 +141,7 @@ class ZWaveBarrierEventSignalingSwitch(ZWaveBaseEntity, SwitchEntity):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
-        await self.info.node.async_set_value(
+        await self._async_set_value(
             self.info.primary_value, BarrierEventSignalingSubsystemState.OFF
         )
         # this value is not refreshed, so assume success
@@ -177,8 +177,8 @@ class ZWaveConfigParameterSwitch(ZWaveSwitch):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
-        await self.info.node.async_set_value(self.info.primary_value, 1)
+        await self._async_set_value(self.info.primary_value, 1)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
-        await self.info.node.async_set_value(self.info.primary_value, 0)
+        await self._async_set_value(self.info.primary_value, 0)
