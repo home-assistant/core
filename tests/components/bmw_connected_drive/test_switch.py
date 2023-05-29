@@ -32,6 +32,8 @@ async def test_entity_state_attrs(
     [
         ("switch.i4_edrive40_climate", "ON"),
         ("switch.i4_edrive40_climate", "OFF"),
+        ("switch.i4_edrive40_charge", "ON"),
+        ("switch.i4_edrive40_charge", "OFF"),
     ],
 )
 async def test_update_triggers_success(
