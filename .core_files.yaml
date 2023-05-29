@@ -20,6 +20,7 @@ base_platforms: &base_platforms
   - homeassistant/components/camera/**
   - homeassistant/components/climate/**
   - homeassistant/components/cover/**
+  - homeassistant/components/date/**
   - homeassistant/components/device_tracker/**
   - homeassistant/components/diagnostics/**
   - homeassistant/components/fan/**
@@ -39,6 +40,7 @@ base_platforms: &base_platforms
   - homeassistant/components/stt/**
   - homeassistant/components/switch/**
   - homeassistant/components/text/**
+  - homeassistant/components/time/**
   - homeassistant/components/tts/**
   - homeassistant/components/update/**
   - homeassistant/components/vacuum/**

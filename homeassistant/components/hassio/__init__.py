@@ -61,6 +61,7 @@ from .const import (
     ATTR_FOLDERS,
     ATTR_HOMEASSISTANT,
     ATTR_INPUT,
+    ATTR_LOCATION,
     ATTR_PASSWORD,
     ATTR_REPOSITORY,
     ATTR_SLUG,
@@ -161,6 +162,9 @@ SCHEMA_BACKUP_FULL = vol.Schema(
         vol.Optional(ATTR_NAME): cv.string,
         vol.Optional(ATTR_PASSWORD): cv.string,
         vol.Optional(ATTR_COMPRESSED): cv.boolean,
+        vol.Optional(ATTR_LOCATION): vol.All(
+            cv.string, lambda v: None if v == "/backup" else v
+        ),
     }
 )
 
@@ -590,13 +594,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
     await async_setup_addon_panel(hass, hassio)
 
     # Setup hardware integration for the detected board type
-    async def _async_setup_hardware_integration(hass):
+    async def _async_setup_hardware_integration(_: datetime | None = None) -> None:
         """Set up hardaware integration for the detected board type."""
         if (os_info := get_os_info(hass)) is None:
             # os info not yet fetched from supervisor, retry later
             async_track_point_in_utc_time(
                 hass,
-                _async_setup_hardware_integration,
+                async_setup_hardware_integration_job,
                 utcnow() + HASSIO_UPDATE_INTERVAL,
             )
             return
@@ -610,7 +614,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
             )
         )
 
-    await _async_setup_hardware_integration(hass)
+    async_setup_hardware_integration_job = HassJob(
+        _async_setup_hardware_integration, cancel_on_shutdown=True
+    )
+
+    await _async_setup_hardware_integration()
 
     hass.async_create_task(
         hass.config_entries.flow.async_init(DOMAIN, context={"source": "system"})

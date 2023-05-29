@@ -370,6 +370,7 @@ async def test_websocket_update_orientation_prefs(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator, mock_camera
 ) -> None:
     """Test updating camera preferences."""
+    await async_setup_component(hass, "homeassistant", {})
 
     client = await hass_ws_client(hass)
 
