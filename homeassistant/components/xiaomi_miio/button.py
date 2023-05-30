@@ -43,7 +43,7 @@ class XiaomiMiioButtonDescription(ButtonEntityDescription):
     """A class that describes button entities."""
 
     method_press: str = ""
-    method_press_params: Any = None
+    method_press_params: Consumable | None = None
     method_press_error_message: str = ""
 
 
