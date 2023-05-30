@@ -330,7 +330,6 @@ async def test_start_service(hass: HomeAssistant) -> None:
             {CONF_ENTITY_ID: "timer.test1", CONF_DURATION: 20},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
     with pytest.raises(
         HomeAssistantError,
@@ -342,7 +341,6 @@ async def test_start_service(hass: HomeAssistant) -> None:
             {CONF_ENTITY_ID: "timer.test1", CONF_DURATION: -20},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
     await hass.services.async_call(
         DOMAIN,
@@ -350,7 +348,6 @@ async def test_start_service(hass: HomeAssistant) -> None:
         {CONF_ENTITY_ID: "timer.test1", CONF_DURATION: -3},
         blocking=True,
     )
-    await hass.async_block_till_done()
     state = hass.states.get("timer.test1")
     assert state
     assert state.state == STATUS_ACTIVE
@@ -363,7 +360,6 @@ async def test_start_service(hass: HomeAssistant) -> None:
         {CONF_ENTITY_ID: "timer.test1", CONF_DURATION: 2},
         blocking=True,
     )
-    await hass.async_block_till_done()
     state = hass.states.get("timer.test1")
     assert state
     assert state.state == STATUS_ACTIVE
@@ -390,7 +386,6 @@ async def test_start_service(hass: HomeAssistant) -> None:
             {CONF_ENTITY_ID: "timer.test1", CONF_DURATION: 2},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
     state = hass.states.get("timer.test1")
     assert state
