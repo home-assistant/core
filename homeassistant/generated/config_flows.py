@@ -505,6 +505,7 @@ FLOWS = {
         "whois",
         "wiffi",
         "wilight",
+        "windows_computer",
         "withings",
         "wiz",
         "wled",

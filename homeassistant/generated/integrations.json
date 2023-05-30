@@ -6237,6 +6237,12 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "windows_computer": {
+      "name": "Windows Computer",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "wirelesstag": {
       "name": "Wireless Sensor Tags",
       "integration_type": "hub",
