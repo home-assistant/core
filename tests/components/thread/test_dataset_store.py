@@ -121,7 +121,6 @@ async def test_dataset_properties(hass: HomeAssistant) -> None:
         {"source": "Google", "tlv": DATASET_1},
         {"source": "Multipan", "tlv": DATASET_2},
         {"source": "🎅", "tlv": DATASET_3},
-        {"source": "test1", "tlv": DATASET_1_BAD_CHANNEL},
         {"source": "test2", "tlv": DATASET_1_NO_CHANNEL},
     ]
 
@@ -136,10 +135,8 @@ async def test_dataset_properties(hass: HomeAssistant) -> None:
             dataset_2 = dataset
         if dataset.source == "🎅":
             dataset_3 = dataset
-        if dataset.source == "test1":
-            dataset_4 = dataset
         if dataset.source == "test2":
-            dataset_5 = dataset
+            dataset_4 = dataset
 
     dataset = store.async_get(dataset_1.id)
     assert dataset == dataset_1
@@ -164,10 +161,6 @@ async def test_dataset_properties(hass: HomeAssistant) -> None:
 
     dataset = store.async_get(dataset_4.id)
     assert dataset == dataset_4
-    assert dataset.channel is None
-
-    dataset = store.async_get(dataset_5.id)
-    assert dataset == dataset_5
     assert dataset.channel is None
 
 

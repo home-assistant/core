@@ -1,13 +1,13 @@
 """Persistently store thread datasets."""
 from __future__ import annotations
 
-from contextlib import suppress
 import dataclasses
 from datetime import datetime
 from functools import cached_property
 from typing import Any, cast
 
 from python_otbr_api import tlv_parser
+from python_otbr_api.tlv_parser import MeshcopTLVType
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -39,31 +39,33 @@ class DatasetEntry:
     @property
     def channel(self) -> int | None:
         """Return channel as an integer."""
-        if (channel := self.dataset.get(tlv_parser.MeshcopTLVType.CHANNEL)) is None:
+        if (channel := self.dataset.get(MeshcopTLVType.CHANNEL)) is None:
             return None
-        with suppress(ValueError):
-            return int(channel, 16)
-        return None
+        return cast(tlv_parser.Channel, channel).channel
 
     @cached_property
-    def dataset(self) -> dict[tlv_parser.MeshcopTLVType, str]:
+    def dataset(self) -> dict[MeshcopTLVType, tlv_parser.MeshcopTLVItem]:
         """Return the dataset in dict format."""
         return tlv_parser.parse_tlv(self.tlv)
 
     @property
     def extended_pan_id(self) -> str | None:
         """Return extended PAN ID as a hex string."""
-        return self.dataset.get(tlv_parser.MeshcopTLVType.EXTPANID)
+        if (ext_pan_id := self.dataset.get(MeshcopTLVType.EXTPANID)) is None:
+            return None
+        return str(ext_pan_id)
 
     @property
     def network_name(self) -> str | None:
         """Return network name as a string."""
-        return self.dataset.get(tlv_parser.MeshcopTLVType.NETWORKNAME)
+        if (name := self.dataset.get(MeshcopTLVType.NETWORKNAME)) is None:
+            return None
+        return cast(tlv_parser.NetworkName, name).name
 
     @property
     def pan_id(self) -> str | None:
         """Return PAN ID as a hex string."""
-        return self.dataset.get(tlv_parser.MeshcopTLVType.PANID)
+        return str(self.dataset.get(MeshcopTLVType.PANID))
 
     def to_json(self) -> dict[str, Any]:
         """Return a JSON serializable representation for storage."""
