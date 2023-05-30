@@ -17,7 +17,11 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv, discovery_flow
+from homeassistant.helpers import (
+    config_validation as cv,
+    discovery_flow,
+    issue_registry as ir,
+)
 from homeassistant.helpers.entity_platform import (
     AddEntitiesCallback,
     async_get_current_platform,
@@ -303,3 +307,13 @@ class EzvizCamera(EzvizEntity, Camera):
             )
         except (HTTPError, PyEzvizError) as err:
             raise PyEzvizError("Cannot set detection sensitivity level") from err
+
+        ir.async_create_issue(
+            self.hass,
+            DOMAIN,
+            "service_depreciation_detection_sensibility",
+            breaks_in_ha_version="2023.8.0",
+            is_fixable=False,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="service_depreciation_detection_sensibility",
+        )

@@ -11,6 +11,7 @@ import voluptuous as vol
 from homeassistant.components.sensor import (
     CONF_STATE_CLASS,
     DEVICE_CLASSES_SCHEMA,
+    DOMAIN as SENSOR_DOMAIN,
     PLATFORM_SCHEMA,
     STATE_CLASSES_SCHEMA,
     SensorEntity,
@@ -27,11 +28,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.reload import async_setup_reload_service
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import CONF_COMMAND_TIMEOUT, DEFAULT_TIMEOUT, DOMAIN, PLATFORMS
+from .const import CONF_COMMAND_TIMEOUT, DEFAULT_TIMEOUT, DOMAIN
 from .utils import check_output_or_log
 
 _LOGGER = logging.getLogger(__name__)
@@ -64,18 +65,29 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Command Sensor."""
+    if sensor_config := config:
+        async_create_issue(
+            hass,
+            DOMAIN,
+            "deprecated_yaml_sensor",
+            breaks_in_ha_version="2023.8.0",
+            is_fixable=False,
+            severity=IssueSeverity.WARNING,
+            translation_key="deprecated_platform_yaml",
+            translation_placeholders={"platform": SENSOR_DOMAIN},
+        )
+    if discovery_info:
+        sensor_config = discovery_info
 
-    await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
-
-    name: str = config[CONF_NAME]
-    command: str = config[CONF_COMMAND]
-    unit: str | None = config.get(CONF_UNIT_OF_MEASUREMENT)
-    value_template: Template | None = config.get(CONF_VALUE_TEMPLATE)
-    command_timeout: int = config[CONF_COMMAND_TIMEOUT]
-    unique_id: str | None = config.get(CONF_UNIQUE_ID)
+    name: str = sensor_config[CONF_NAME]
+    command: str = sensor_config[CONF_COMMAND]
+    unit: str | None = sensor_config.get(CONF_UNIT_OF_MEASUREMENT)
+    value_template: Template | None = sensor_config.get(CONF_VALUE_TEMPLATE)
+    command_timeout: int = sensor_config[CONF_COMMAND_TIMEOUT]
+    unique_id: str | None = sensor_config.get(CONF_UNIQUE_ID)
     if value_template is not None:
         value_template.hass = hass
-    json_attributes: list[str] | None = config.get(CONF_JSON_ATTRIBUTES)
+    json_attributes: list[str] | None = sensor_config.get(CONF_JSON_ATTRIBUTES)
     data = CommandSensorData(hass, command, command_timeout)
 
     async_add_entities(
