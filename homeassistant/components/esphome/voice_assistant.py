@@ -263,7 +263,9 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
                             segmenter, chunk_buffer
                         )
                         if not speech_detected:
-                            _LOGGER.debug("No speech detected, or cancelled")
+                            _LOGGER.debug(
+                                "Device stopped sending audio before speech was detected"
+                            )
                             self.handle_finished()
                             return
                 except asyncio.TimeoutError:
