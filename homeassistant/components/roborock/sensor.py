@@ -81,7 +81,6 @@ CLEAN_INFORMATION_SENSORS = [
         native_unit_of_measurement=UnitOfTime.SECONDS,
         key="cleaning_time",
         translation_key="cleaning_time",
-        icon="mdi:progress-clock",
         device_class=SensorDeviceClass.DURATION,
         value_fn=lambda data: data.status.clean_time,
     ),
