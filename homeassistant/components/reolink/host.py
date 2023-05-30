@@ -61,7 +61,7 @@ class ReolinkHost:
         self._webhook_url: str = ""
         self._webhook_reachable: asyncio.Event = asyncio.Event()
         self._cancel_poll: CALLBACK_TYPE | None = None
-        self._cancel_ONVIF_check: CALLBACK_TYPE | None = None
+        self._cancel_onvif_check: CALLBACK_TYPE | None = None
         self._poll_job = HassJob(self._async_poll_all_motion, cancel_on_shutdown=True)
         self._lost_subscription: bool = False
 
@@ -158,8 +158,8 @@ class ReolinkHost:
                 "upon ONVIF subscription, do not check",
                 self._api.model,
             )
-        self._cancel_ONVIF_check = async_call_later(
-            self._hass, FIRST_ONVIF_TIMEOUT, self._async_check_ONVIF
+        self._cancel_onvif_check = async_call_later(
+            self._hass, FIRST_ONVIF_TIMEOUT, self._async_check_onvif
         )
 
         if self._api.sw_version_update_required:
@@ -182,9 +182,12 @@ class ReolinkHost:
         else:
             ir.async_delete_issue(self._hass, DOMAIN, "firmware_update")
 
-    async def _async_check_ONVIF(self) -> None:
+    async def _async_check_onvif(self, *_) -> None:
         """Check the ONVIF subscription."""
-        if self._api.supported(None, "initial_ONVIF_state") and not self._webhook_reachable.is_set():
+        if (
+            self._api.supported(None, "initial_ONVIF_state")
+            and not self._webhook_reachable.is_set()
+        ):
             _LOGGER.debug(
                 "Did not receive initial ONVIF state on webhook '%s' after %i seconds",
                 self._webhook_url,
@@ -208,8 +211,8 @@ class ReolinkHost:
 
         # If no ONVIF push is received, start fast polling
         await self._async_poll_all_motion()
-        
-        self._cancel_ONVIF_check = None
+
+        self._cancel_onvif_check = None
 
     async def update_states(self) -> None:
         """Call the API of the camera device to update the internal states."""
@@ -250,9 +253,9 @@ class ReolinkHost:
         if self._cancel_poll is not None:
             self._cancel_poll()
             self._cancel_poll = None
-        if self._cancel_ONVIF_check is not None:
-            self._cancel_ONVIF_check()
-            self._cancel_ONVIF_check = None
+        if self._cancel_onvif_check is not None:
+            self._cancel_onvif_check()
+            self._cancel_onvif_check = None
         self.unregister_webhook()
         await self.disconnect()
 
