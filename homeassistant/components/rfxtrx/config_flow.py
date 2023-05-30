@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+from contextlib import suppress
 import copy
 import itertools
 import os
@@ -371,7 +372,8 @@ class OptionsFlow(config_entries.OptionsFlow):
             entity_registry.async_remove(entry.entity_id)
 
         # Wait for entities to finish cleanup
-        await wait_for_entities.wait()
+        with suppress(asyncio.TimeoutError):
+            await asyncio.wait_for(wait_for_entities.wait(), timeout=10)
         remove_track_state_changes()
 
         @callback
@@ -404,7 +406,8 @@ class OptionsFlow(config_entries.OptionsFlow):
             )
 
         # Wait for entities to finish renaming
-        await wait_for_entities.wait()
+        with suppress(asyncio.TimeoutError):
+            await asyncio.wait_for(wait_for_entities.wait(), timeout=10)
         remove_track_state_changes()
 
         device_registry.async_remove_device(old_device)
