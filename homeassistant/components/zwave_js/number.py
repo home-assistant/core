@@ -17,7 +17,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import ATTR_SPECIAL_VALUES, DATA_CLIENT, DOMAIN
+from .const import ATTR_RESERVED_VALUES, DATA_CLIENT, DOMAIN
 from .discovery import ZwaveDiscoveryInfo
 from .entity import ZWaveBaseEntity
 
@@ -131,7 +131,7 @@ class ZWaveConfigParameterNumberEntity(ZwaveNumberEntity):
         if not self.info.primary_value.metadata.states:
             return None
         return {
-            ATTR_SPECIAL_VALUES: {
+            ATTR_RESERVED_VALUES: {
                 int(k): v for k, v in self.info.primary_value.metadata.states.items()
             }
         }
