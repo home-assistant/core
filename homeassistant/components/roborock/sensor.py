@@ -38,7 +38,7 @@ class RoborockSensorDescription(
     """A class that describes Roborock sensors."""
 
 
-CONSUMABLE_SENSORS = [
+SENSOR_DESCRIPTIONS = [
     RoborockSensorDescription(
         native_unit_of_measurement=UnitOfTime.SECONDS,
         key="main_brush_time_left",
@@ -75,9 +75,6 @@ CONSUMABLE_SENSORS = [
         value_fn=lambda data: data.consumable.sensor_time_left,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-]
-
-CLEAN_INFORMATION_SENSORS = [
     RoborockSensorDescription(
         native_unit_of_measurement=UnitOfTime.SECONDS,
         key="cleaning_time",
@@ -94,18 +91,15 @@ CLEAN_INFORMATION_SENSORS = [
         device_class=SensorDeviceClass.DURATION,
         value_fn=lambda data: data.clean_summary.clean_time,
     ),
-]
-
-STATUS_SENSORS = [
     RoborockSensorDescription(
         key="status",
-        icon="",
+        icon="mdi:information-outline",
         device_class=SensorDeviceClass.ENUM,
         translation_key="status",
         value_fn=lambda data: data.status.state.name,
         entity_category=EntityCategory.DIAGNOSTIC,
         options=RoborockStateCode.keys(),
-    )
+    ),
 ]
 
 
@@ -125,9 +119,7 @@ async def async_setup_entry(
             description,
         )
         for device_id, coordinator in coordinators.items()
-        for description in CONSUMABLE_SENSORS
-        + CLEAN_INFORMATION_SENSORS
-        + STATUS_SENSORS
+        for description in SENSOR_DESCRIPTIONS
     )
 
 
