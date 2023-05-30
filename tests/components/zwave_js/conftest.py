@@ -445,6 +445,12 @@ def iblinds_v2_state_fixture():
     return json.loads(load_fixture("zwave_js/cover_iblinds_v2_state.json"))
 
 
+@pytest.fixture(name="iblinds_v3_state", scope="session")
+def iblinds_v3_state_fixture():
+    """Load the iBlinds v3 node state fixture data."""
+    return json.loads(load_fixture("zwave_js/cover_iblinds_v3_state.json"))
+
+
 @pytest.fixture(name="qubino_shutter_state", scope="session")
 def qubino_shutter_state_fixture():
     """Load the Qubino Shutter node state fixture data."""
@@ -949,6 +955,14 @@ def motorized_barrier_cover_fixture(client, gdc_zw062_state):
 def iblinds_v2_cover_fixture(client, iblinds_v2_state):
     """Mock an iBlinds v2.0 window cover node."""
     node = Node(client, copy.deepcopy(iblinds_v2_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="iblinds_v3")
+def iblinds_v3_cover_fixture(client, iblinds_v3_state):
+    """Mock an iBlinds v3 window cover node."""
+    node = Node(client, copy.deepcopy(iblinds_v3_state))
     client.driver.controller.nodes[node.node_id] = node
     return node
 

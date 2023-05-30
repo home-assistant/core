@@ -48,7 +48,7 @@ from homeassistant.const import EntityCategory, Platform
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceEntry
 
-from .const import LOGGER
+from .const import COVER_POSITION_PROPERTY_KEYS, COVER_TILT_PROPERTY_KEYS, LOGGER
 from .discovery_data_template import (
     BaseDiscoverySchemaDataTemplate,
     ConfigurableFanValueMappingDataTemplate,
@@ -257,6 +257,18 @@ SIREN_TONE_SCHEMA = ZWaveValueDiscoverySchema(
     command_class={CommandClass.SOUND_SWITCH},
     property={TONE_ID_PROPERTY},
     type={ValueType.NUMBER},
+)
+
+WINDOW_COVERING_COVER_CURRENT_VALUE_SCHEMA = ZWaveValueDiscoverySchema(
+    command_class={CommandClass.WINDOW_COVERING},
+    property={CURRENT_VALUE_PROPERTY},
+    property_key=COVER_POSITION_PROPERTY_KEYS,
+)
+
+WINDOW_COVERING_SLAT_CURRENT_VALUE_SCHEMA = ZWaveValueDiscoverySchema(
+    command_class={CommandClass.WINDOW_COVERING},
+    property={CURRENT_VALUE_PROPERTY},
+    property_key=COVER_TILT_PROPERTY_KEYS,
 )
 
 # For device class mapping see:
@@ -860,6 +872,17 @@ DISCOVERY_SCHEMAS = [
     # window coverings
     ZWaveDiscoverySchema(
         platform=Platform.COVER,
+        hint="window_covering",
+        primary_value=WINDOW_COVERING_COVER_CURRENT_VALUE_SCHEMA,
+    ),
+    ZWaveDiscoverySchema(
+        platform=Platform.COVER,
+        hint="window_covering",
+        primary_value=WINDOW_COVERING_SLAT_CURRENT_VALUE_SCHEMA,
+        absent_values=[WINDOW_COVERING_COVER_CURRENT_VALUE_SCHEMA],
+    ),
+    ZWaveDiscoverySchema(
+        platform=Platform.COVER,
         hint="multilevel_switch",
         device_class_generic={"Multilevel Switch"},
         device_class_specific={
@@ -869,6 +892,10 @@ DISCOVERY_SCHEMAS = [
             "Multiposition Motor",
         },
         primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
+        absent_values=[
+            WINDOW_COVERING_COVER_CURRENT_VALUE_SCHEMA,
+            WINDOW_COVERING_SLAT_CURRENT_VALUE_SCHEMA,
+        ],
     ),
     # cover
     # motorized barriers
