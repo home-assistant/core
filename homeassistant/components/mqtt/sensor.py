@@ -45,7 +45,6 @@ from .mixins import (
     MqttAvailability,
     MqttEntity,
     async_setup_entry_helper,
-    warn_for_legacy_schema,
 )
 from .models import (
     MqttValueTemplate,
@@ -114,12 +113,6 @@ _PLATFORM_SCHEMA_BASE = MQTT_RO_SCHEMA.extend(
 PLATFORM_SCHEMA_MODERN = vol.All(
     _PLATFORM_SCHEMA_BASE,
     validate_options,
-)
-
-# Configuring MQTT Sensors under the sensor platform key was deprecated in
-# HA Core 2022.6
-PLATFORM_SCHEMA = vol.All(
-    warn_for_legacy_schema(sensor.DOMAIN),
 )
 
 DISCOVERY_SCHEMA = vol.All(
