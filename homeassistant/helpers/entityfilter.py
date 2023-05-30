@@ -35,7 +35,14 @@ class EntityFilter:
         self._exclude_d = set(config[CONF_EXCLUDE_DOMAINS])
         self._include_eg = _convert_globs_to_pattern(config[CONF_INCLUDE_ENTITY_GLOBS])
         self._exclude_eg = _convert_globs_to_pattern(config[CONF_EXCLUDE_ENTITY_GLOBS])
-        self._filter: Callable[[str], bool] | None = None
+        self._filter = _generate_filter_from_sets_and_pattern_lists(
+            self._include_d,
+            self._include_e,
+            self._exclude_d,
+            self._exclude_e,
+            self._include_eg,
+            self._exclude_eg,
+        )
 
     def explicitly_included(self, entity_id: str) -> bool:
         """Check if an entity is explicitly included."""
@@ -49,17 +56,12 @@ class EntityFilter:
             bool(self._exclude_eg and self._exclude_eg.match(entity_id))
         )
 
+    def get_filter(self) -> Callable[[str], bool]:
+        """Return the filter function."""
+        return self._filter
+
     def __call__(self, entity_id: str) -> bool:
         """Run the filter."""
-        if self._filter is None:
-            self._filter = _generate_filter_from_sets_and_pattern_lists(
-                self._include_d,
-                self._include_e,
-                self._exclude_d,
-                self._exclude_e,
-                self._include_eg,
-                self._exclude_eg,
-            )
         return self._filter(entity_id)
 
 

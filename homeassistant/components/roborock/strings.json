@@ -28,6 +28,9 @@
   },
   "entity": {
     "sensor": {
+      "cleaning_time": {
+        "name": "Cleaning time"
+      },
       "main_brush_time_left": {
         "name": "Main brush time left"
       },
@@ -39,6 +42,9 @@
       },
       "sensor_time_left": {
         "name": "Sensor time left"
+      },
+      "total_cleaning_time": {
+        "name": "Total cleaning time"
       }
     },
     "select": {

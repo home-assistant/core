@@ -24,7 +24,7 @@ from homeassistant.const import EVENT_STATE_CHANGED
 import homeassistant.core as ha
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import InvalidEntityFormatError
-from homeassistant.util import dt, dt as dt_util
+from homeassistant.util import dt as dt_util
 
 
 def test_from_event_to_db_event() -> None:
@@ -85,7 +85,7 @@ def test_from_event_to_db_state_attributes() -> None:
 def test_repr() -> None:
     """Test converting event to db state repr."""
     attrs = {"this_attr": True}
-    fixed_time = datetime(2016, 7, 9, 11, 0, 0, tzinfo=dt.UTC, microsecond=432432)
+    fixed_time = datetime(2016, 7, 9, 11, 0, 0, tzinfo=dt_util.UTC, microsecond=432432)
     state = ha.State(
         "sensor.temperature",
         "18",
@@ -105,7 +105,7 @@ def test_repr() -> None:
 
 def test_states_repr_without_timestamp() -> None:
     """Test repr for a state without last_updated_ts."""
-    fixed_time = datetime(2016, 7, 9, 11, 0, 0, tzinfo=dt.UTC, microsecond=432432)
+    fixed_time = datetime(2016, 7, 9, 11, 0, 0, tzinfo=dt_util.UTC, microsecond=432432)
     states = States(
         entity_id="sensor.temp",
         attributes=None,
@@ -123,7 +123,7 @@ def test_states_repr_without_timestamp() -> None:
 
 def test_events_repr_without_timestamp() -> None:
     """Test repr for an event without time_fired_ts."""
-    fixed_time = datetime(2016, 7, 9, 11, 0, 0, tzinfo=dt.UTC, microsecond=432432)
+    fixed_time = datetime(2016, 7, 9, 11, 0, 0, tzinfo=dt_util.UTC, microsecond=432432)
     events = Events(
         event_type="any",
         event_data=None,
@@ -180,7 +180,7 @@ def test_states_from_native_invalid_entity_id() -> None:
 
 async def test_process_timestamp() -> None:
     """Test processing time stamp to UTC."""
-    datetime_with_tzinfo = datetime(2016, 7, 9, 11, 0, 0, tzinfo=dt.UTC)
+    datetime_with_tzinfo = datetime(2016, 7, 9, 11, 0, 0, tzinfo=dt_util.UTC)
     datetime_without_tzinfo = datetime(2016, 7, 9, 11, 0, 0)
     est = dt_util.get_time_zone("US/Eastern")
     datetime_est_timezone = datetime(2016, 7, 9, 11, 0, 0, tzinfo=est)
@@ -190,26 +190,26 @@ async def test_process_timestamp() -> None:
     datetime_hst_timezone = datetime(2016, 7, 9, 11, 0, 0, tzinfo=hst)
 
     assert process_timestamp(datetime_with_tzinfo) == datetime(
-        2016, 7, 9, 11, 0, 0, tzinfo=dt.UTC
+        2016, 7, 9, 11, 0, 0, tzinfo=dt_util.UTC
     )
     assert process_timestamp(datetime_without_tzinfo) == datetime(
-        2016, 7, 9, 11, 0, 0, tzinfo=dt.UTC
+        2016, 7, 9, 11, 0, 0, tzinfo=dt_util.UTC
     )
     assert process_timestamp(datetime_est_timezone) == datetime(
-        2016, 7, 9, 15, 0, tzinfo=dt.UTC
+        2016, 7, 9, 15, 0, tzinfo=dt_util.UTC
     )
     assert process_timestamp(datetime_nst_timezone) == datetime(
-        2016, 7, 9, 13, 30, tzinfo=dt.UTC
+        2016, 7, 9, 13, 30, tzinfo=dt_util.UTC
     )
     assert process_timestamp(datetime_hst_timezone) == datetime(
-        2016, 7, 9, 21, 0, tzinfo=dt.UTC
+        2016, 7, 9, 21, 0, tzinfo=dt_util.UTC
     )
     assert process_timestamp(None) is None
 
 
 async def test_process_timestamp_to_utc_isoformat() -> None:
     """Test processing time stamp to UTC isoformat."""
-    datetime_with_tzinfo = datetime(2016, 7, 9, 11, 0, 0, tzinfo=dt.UTC)
+    datetime_with_tzinfo = datetime(2016, 7, 9, 11, 0, 0, tzinfo=dt_util.UTC)
     datetime_without_tzinfo = datetime(2016, 7, 9, 11, 0, 0)
     est = dt_util.get_time_zone("US/Eastern")
     datetime_est_timezone = datetime(2016, 7, 9, 11, 0, 0, tzinfo=est)
@@ -409,7 +409,7 @@ async def test_process_datetime_to_timestamp_mirrors_utc_isoformat_behavior(
 ) -> None:
     """Test process_datetime_to_timestamp mirrors process_timestamp_to_utc_isoformat."""
     hass.config.set_time_zone(time_zone)
-    datetime_with_tzinfo = datetime(2016, 7, 9, 11, 0, 0, tzinfo=dt.UTC)
+    datetime_with_tzinfo = datetime(2016, 7, 9, 11, 0, 0, tzinfo=dt_util.UTC)
     datetime_without_tzinfo = datetime(2016, 7, 9, 11, 0, 0)
     est = dt_util.get_time_zone("US/Eastern")
     datetime_est_timezone = datetime(2016, 7, 9, 11, 0, 0, tzinfo=est)

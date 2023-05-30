@@ -770,8 +770,8 @@ class Entity(ABC):
             await self.parallel_updates.acquire()
 
         if warning:
-            update_warn = hass.loop.call_later(
-                SLOW_UPDATE_WARNING, self._async_slow_update_warning
+            update_warn = hass.loop.call_at(
+                hass.loop.time() + SLOW_UPDATE_WARNING, self._async_slow_update_warning
             )
 
         try:

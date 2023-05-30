@@ -17,7 +17,7 @@ from homeassistant.const import CONF_UNIQUE_ID, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
-from homeassistant.util import dt
+from homeassistant.util import dt as dt_util
 
 from . import (
     YAML_CONFIG,
@@ -218,7 +218,7 @@ async def test_invalid_url_on_update(
         await init_integration(hass, config)
         async_fire_time_changed(
             hass,
-            dt.utcnow() + timedelta(minutes=1),
+            dt_util.utcnow() + timedelta(minutes=1),
         )
         await hass.async_block_till_done()
 
@@ -399,7 +399,7 @@ async def test_no_issue_when_view_has_the_text_entity_id_in_it(
         )
         async_fire_time_changed(
             hass,
-            dt.utcnow() + timedelta(minutes=1),
+            dt_util.utcnow() + timedelta(minutes=1),
         )
         await hass.async_block_till_done()
 
