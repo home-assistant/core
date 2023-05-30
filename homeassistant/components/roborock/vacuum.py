@@ -101,11 +101,9 @@ class RoborockVacuum(RoborockCoordinatedEntity, StateVacuumEntity):
         return STATE_CODE_TO_STATE.get(self._device_status.state)
 
     @property
-    def state_attributes(self) -> dict[str, Any]:
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
-        attributes = super().state_attributes
-        attributes[ATTR_STATUS] = self.status
-        return attributes
+        return {ATTR_STATUS: self.status}
 
     @property
     def battery_level(self) -> int | None:
