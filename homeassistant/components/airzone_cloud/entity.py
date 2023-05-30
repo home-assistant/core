@@ -47,10 +47,10 @@ class AirzoneAidooEntity(AirzoneEntity):
         self.aidoo_id = aidoo_id
 
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, f"{aidoo_id}")},
+            identifiers={(DOMAIN, aidoo_id)},
             manufacturer=MANUFACTURER,
             name=aidoo_data[AZD_NAME],
-            via_device=(DOMAIN, f"{aidoo_data[AZD_WEBSERVER]}"),
+            via_device=(DOMAIN, aidoo_data[AZD_WEBSERVER]),
         )
 
     def get_airzone_value(self, key: str) -> Any:
@@ -78,7 +78,7 @@ class AirzoneWebServerEntity(AirzoneEntity):
 
         self._attr_device_info = DeviceInfo(
             connections={(dr.CONNECTION_NETWORK_MAC, ws_id)},
-            identifiers={(DOMAIN, f"{ws_id}")},
+            identifiers={(DOMAIN, ws_id)},
             manufacturer=MANUFACTURER,
             name=f"WebServer {ws_id}",
             sw_version=ws_data[AZD_FIRMWARE],
@@ -109,10 +109,10 @@ class AirzoneZoneEntity(AirzoneEntity):
         self.zone_id = zone_id
 
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, f"{zone_id}")},
+            identifiers={(DOMAIN, zone_id)},
             manufacturer=MANUFACTURER,
             name=zone_data[AZD_NAME],
-            via_device=(DOMAIN, f"{self.system_id}"),
+            via_device=(DOMAIN, self.system_id),
         )
 
     def get_airzone_value(self, key: str) -> Any:
