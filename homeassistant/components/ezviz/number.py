@@ -1,22 +1,32 @@
 """Support for EZVIZ number controls."""
 from __future__ import annotations
 
+from datetime import timedelta
+import logging
+
 from pyezviz.constants import DeviceCatagories
-from pyezviz.exceptions import HTTPError, PyEzvizError
+from pyezviz.exceptions import (
+    EzvizAuthTokenExpired,
+    EzvizAuthVerificationCode,
+    HTTPError,
+    InvalidURL,
+    PyEzvizError,
+)
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DATA_COORDINATOR, DOMAIN
 from .coordinator import EzvizDataUpdateCoordinator
-from .entity import EzvizEntity
+from .entity import EzvizBaseEntity
 
-PARALLEL_UPDATES = 1
-
+SCAN_INTERVAL = timedelta(seconds=3600)
+PARALLEL_UPDATES = 0
+_LOGGER = logging.getLogger(__name__)
 NUMBER_TYPES = NumberEntityDescription(
     key="detection_sensibility",
     name="Detection sensitivity",
@@ -36,15 +46,12 @@ async def async_setup_entry(
     ]
 
     async_add_entities(
-        EzvizSensor(coordinator, camera, sensor, NUMBER_TYPES)
-        for camera in coordinator.data
-        for sensor, value in coordinator.data[camera].items()
-        if sensor in NUMBER_TYPES.key
-        if value
+        [EzvizSensor(coordinator, camera, NUMBER_TYPES) for camera in coordinator.data],
+        update_before_add=True,
     )
 
 
-class EzvizSensor(EzvizEntity, NumberEntity):
+class EzvizSensor(EzvizBaseEntity, NumberEntity):
     """Representation of a EZVIZ number entity."""
 
     _attr_has_entity_name = True
@@ -53,27 +60,25 @@ class EzvizSensor(EzvizEntity, NumberEntity):
         self,
         coordinator: EzvizDataUpdateCoordinator,
         serial: str,
-        sensor: str,
         description: NumberEntityDescription,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator, serial)
-        self._sensor_name = sensor
         self.battery_cam_type = bool(
             self.data["device_category"]
             == DeviceCatagories.BATTERY_CAMERA_DEVICE_CATEGORY.value
         )
-        self._attr_unique_id = f"{serial}_{sensor}"
+        self._attr_unique_id = f"{serial}_{description.key}"
         self._attr_native_max_value = 100 if self.battery_cam_type else 6
         self.entity_description = description
+        self.sensor_value: int | None = None
 
     @property
     def native_value(self) -> float | None:
         """Return the state of the entity."""
-        try:
-            return float(self.data[self._sensor_name])
-        except ValueError:
-            return None
+        if self.sensor_value is not None:
+            return float(self.sensor_value)
+        return None
 
     def set_native_value(self, value: float) -> None:
         """Set camera detection sensitivity."""
@@ -96,3 +101,29 @@ class EzvizSensor(EzvizEntity, NumberEntity):
             raise HomeAssistantError(
                 f"Cannot set detection sensitivity level on {self.name}"
             ) from err
+
+        self.sensor_value = level
+
+    def update(self) -> None:
+        """Fetch data from EZVIZ."""
+        _LOGGER.debug("Updating %s", self.name)
+        try:
+            if self.battery_cam_type:
+                self.sensor_value = (
+                    self.coordinator.ezviz_client.get_detection_sensibility(
+                        self._serial,
+                        "3",
+                    )
+                )
+            else:
+                self.sensor_value = (
+                    self.coordinator.ezviz_client.get_detection_sensibility(
+                        self._serial,
+                    )
+                )
+
+        except (EzvizAuthTokenExpired, EzvizAuthVerificationCode) as error:
+            raise ConfigEntryAuthFailed from error
+
+        except (InvalidURL, HTTPError, PyEzvizError) as error:
+            raise HomeAssistantError(f"Invalid response from API: {error}") from error
