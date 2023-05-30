@@ -40,7 +40,10 @@ from homeassistant.util import dt as dt_util, ensure_unique_string, slugify
 
 from . import device_registry as dr, entity_registry as er
 from .device_registry import DeviceEntryType
-from .event import async_track_entity_registry_updated_event
+from .event import (
+    async_track_device_registry_updated_event,
+    async_track_entity_registry_updated_event,
+)
 from .typing import StateType
 
 if TYPE_CHECKING:
@@ -1028,7 +1031,7 @@ class Entity(ABC):
             """Handle device registry update."""
             data = event.data
 
-            if data["device_id"] != device_id or data["action"] != "update":
+            if data["action"] != "update":
                 return
 
             if "name" not in data["changes"] and "name_by_user" not in data["changes"]:
@@ -1036,8 +1039,9 @@ class Entity(ABC):
 
             self.async_write_ha_state()
 
-        self._unsub_device_updates = self.hass.bus.async_listen(
-            dr.EVENT_DEVICE_REGISTRY_UPDATED,
+        self._unsub_device_updates = async_track_device_registry_updated_event(
+            self.hass,
+            device_id,
             async_device_registry_updated,
         )
         self.async_on_remove(self._unsub_device_updates)
