@@ -13,6 +13,8 @@ from homeassistant.helpers.restore_state import (
     RestoreEntity,
     RestoreStateData,
     StoredState,
+    async_get,
+    async_load,
 )
 from homeassistant.util import dt as dt_util
 
@@ -28,12 +30,14 @@ async def test_caching_data(hass: HomeAssistant) -> None:
         StoredState(State("input_boolean.b2", "on"), None, now),
     ]
 
-    data = await RestoreStateData.async_get_instance(hass)
+    data = async_get(hass)
     await hass.async_block_till_done()
     await data.store.async_save([state.as_dict() for state in stored_states])
 
     # Emulate a fresh load
     hass.data.pop(DATA_RESTORE_STATE_TASK)
+    await async_load(hass)
+    data = async_get(hass)
 
     entity = RestoreEntity()
     entity.hass = hass
@@ -55,12 +59,14 @@ async def test_caching_data(hass: HomeAssistant) -> None:
 
 async def test_periodic_write(hass: HomeAssistant) -> None:
     """Test that we write periodiclly but not after stop."""
-    data = await RestoreStateData.async_get_instance(hass)
+    data = async_get(hass)
     await hass.async_block_till_done()
     await data.store.async_save([])
 
     # Emulate a fresh load
     hass.data.pop(DATA_RESTORE_STATE_TASK)
+    await async_load(hass)
+    data = async_get(hass)
 
     entity = RestoreEntity()
     entity.hass = hass
@@ -101,12 +107,14 @@ async def test_periodic_write(hass: HomeAssistant) -> None:
 
 async def test_save_persistent_states(hass: HomeAssistant) -> None:
     """Test that we cancel the currently running job, save the data, and verify the perdiodic job continues."""
-    data = await RestoreStateData.async_get_instance(hass)
+    data = async_get(hass)
     await hass.async_block_till_done()
     await data.store.async_save([])
 
     # Emulate a fresh load
     hass.data.pop(DATA_RESTORE_STATE_TASK)
+    await async_load(hass)
+    data = async_get(hass)
 
     entity = RestoreEntity()
     entity.hass = hass
@@ -166,13 +174,15 @@ async def test_hass_starting(hass: HomeAssistant) -> None:
         StoredState(State("input_boolean.b2", "on"), None, now),
     ]
 
-    data = await RestoreStateData.async_get_instance(hass)
+    data = async_get(hass)
     await hass.async_block_till_done()
     await data.store.async_save([state.as_dict() for state in stored_states])
 
     # Emulate a fresh load
     hass.state = CoreState.not_running
     hass.data.pop(DATA_RESTORE_STATE_TASK)
+    await async_load(hass)
+    data = async_get(hass)
 
     entity = RestoreEntity()
     entity.hass = hass
@@ -223,7 +233,7 @@ async def test_dump_data(hass: HomeAssistant) -> None:
     entity.entity_id = "input_boolean.b1"
     await entity.async_internal_added_to_hass()
 
-    data = await RestoreStateData.async_get_instance(hass)
+    data = async_get(hass)
     now = dt_util.utcnow()
     data.last_states = {
         "input_boolean.b0": StoredState(State("input_boolean.b0", "off"), None, now),
@@ -297,7 +307,7 @@ async def test_dump_error(hass: HomeAssistant) -> None:
     entity.entity_id = "input_boolean.b1"
     await entity.async_internal_added_to_hass()
 
-    data = await RestoreStateData.async_get_instance(hass)
+    data = async_get(hass)
 
     with patch(
         "homeassistant.helpers.restore_state.Store.async_save",
@@ -335,7 +345,7 @@ async def test_state_saved_on_remove(hass: HomeAssistant) -> None:
         "input_boolean.b0", "on", {"complicated": {"value": {1, 2, now}}}
     )
 
-    data = await RestoreStateData.async_get_instance(hass)
+    data = async_get(hass)
 
     # No last states should currently be saved
     assert not data.last_states

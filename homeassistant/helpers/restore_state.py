@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-import asyncio
 from datetime import datetime, timedelta
 import logging
 from typing import Any, cast
@@ -18,7 +17,6 @@ from . import start
 from .entity import Entity
 from .event import async_track_time_interval
 from .json import JSONEncoder
-from .singleton import singleton
 from .storage import Store
 
 DATA_RESTORE_STATE_TASK = "restore_state_task"
@@ -96,11 +94,21 @@ class StoredState:
         )
 
 
+async def async_load(hass: HomeAssistant) -> None:
+    """Load the restore state task."""
+    hass.data[DATA_RESTORE_STATE_TASK] = await RestoreStateData.async_get_instance(hass)
+
+
+@callback
+def async_get(hass: HomeAssistant) -> RestoreStateData:
+    """Get the restore state data helper."""
+    return cast(RestoreStateData, hass.data[DATA_RESTORE_STATE_TASK])
+
+
 class RestoreStateData:
     """Helper class for managing the helper saved data."""
 
     @staticmethod
-    @singleton(DATA_RESTORE_STATE_TASK)
     async def async_get_instance(hass: HomeAssistant) -> RestoreStateData:
         """Get the singleton instance of this data helper."""
         data = RestoreStateData(hass)
@@ -133,8 +141,7 @@ class RestoreStateData:
     @classmethod
     async def async_save_persistent_states(cls, hass: HomeAssistant) -> None:
         """Dump states now."""
-        data = await cls.async_get_instance(hass)
-        await data.async_dump_states()
+        await async_get(hass).async_dump_states()
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the restore state data class."""
@@ -288,19 +295,15 @@ class RestoreEntity(Entity):
 
     async def async_internal_added_to_hass(self) -> None:
         """Register this entity as a restorable entity."""
-        _, data = await asyncio.gather(
-            super().async_internal_added_to_hass(),
-            RestoreStateData.async_get_instance(self.hass),
-        )
-        data.async_restore_entity_added(self)
+        await super().async_internal_added_to_hass()
+        async_get(self.hass).async_restore_entity_added(self)
 
     async def async_internal_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from hass."""
-        _, data = await asyncio.gather(
-            super().async_internal_will_remove_from_hass(),
-            RestoreStateData.async_get_instance(self.hass),
+        async_get(self.hass).async_restore_entity_removed(
+            self.entity_id, self.extra_restore_state_data
         )
-        data.async_restore_entity_removed(self.entity_id, self.extra_restore_state_data)
+        await super().async_internal_added_to_hass()
 
     async def _async_get_restored_data(self) -> StoredState | None:
         """Get data stored for an entity, if any."""
@@ -310,7 +313,7 @@ class RestoreEntity(Entity):
                 "Cannot get last state. Entity not added to hass"
             )
             return None
-        data = await RestoreStateData.async_get_instance(self.hass)
+        data = async_get(self.hass)
         if self.entity_id not in data.last_states:
             return None
         return data.last_states[self.entity_id]
