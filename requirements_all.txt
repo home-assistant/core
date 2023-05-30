@@ -119,7 +119,7 @@ aioairq==0.2.4
 aioairzone-cloud==0.1.6
 
 # homeassistant.components.airzone
-aioairzone==0.5.6
+aioairzone==0.6.1
 
 # homeassistant.components.ambient_station
 aioambient==2023.04.0
@@ -336,7 +336,7 @@ amcrest==1.9.7
 androidtv[async]==0.0.70
 
 # homeassistant.components.androidtv_remote
-androidtvremote2==0.0.8
+androidtvremote2==0.0.9
 
 # homeassistant.components.anel_pwrctrl
 anel_pwrctrl-homeassistant==0.0.1.dev2
@@ -449,7 +449,7 @@ bleak==0.20.2
 blebox_uniapi==2.1.4
 
 # homeassistant.components.blink
-blinkpy==0.19.2
+blinkpy==0.21.0
 
 # homeassistant.components.blinksticklight
 blinkstick==1.2.0
@@ -811,6 +811,7 @@ goalzero==0.2.1
 goodwe==0.2.31
 
 # homeassistant.components.google_mail
+# homeassistant.components.youtube
 google-api-python-client==2.71.0
 
 # homeassistant.components.google_pubsub
@@ -920,7 +921,7 @@ hole==0.8.0
 holidays==0.21.13
 
 # homeassistant.components.frontend
-home-assistant-frontend==20230503.3
+home-assistant-frontend==20230526.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2023.4.26
@@ -1031,7 +1032,7 @@ kegtron-ble==0.4.0
 kiwiki-client==0.1.1
 
 # homeassistant.components.knx
-knx_frontend==2023.5.16.204359
+knx_frontend==2023.5.28.94855
 
 # homeassistant.components.konnected
 konnected==1.2.0
@@ -1121,7 +1122,7 @@ mcstatus==6.0.0
 meater-python==0.0.8
 
 # homeassistant.components.melnor
-melnor-bluetooth==0.0.20
+melnor-bluetooth==0.0.21
 
 # homeassistant.components.message_bird
 messagebird==1.2.0
@@ -1575,7 +1576,7 @@ pycsspeechtts==1.0.8
 # pycups==1.9.73
 
 # homeassistant.components.daikin
-pydaikin==2.9.0
+pydaikin==2.9.1
 
 # homeassistant.components.danfoss_air
 pydanfossair==0.1.0
@@ -1990,7 +1991,7 @@ pysmartapp==0.3.3
 pysmartthings==0.7.6
 
 # homeassistant.components.edl21
-pysml==0.0.11
+pysml==0.0.12
 
 # homeassistant.components.snmp
 pysnmplib==5.0.21
@@ -2005,7 +2006,7 @@ pysoma==0.0.12
 pyspcwebgw==0.4.0
 
 # homeassistant.components.squeezebox
-pysqueezebox==0.6.1
+pysqueezebox==0.6.3
 
 # homeassistant.components.stiebel_eltron
 pystiebeleltron==0.0.1.dev2
@@ -2108,7 +2109,7 @@ python-opensky==0.0.7
 
 # homeassistant.components.otbr
 # homeassistant.components.thread
-python-otbr-api==1.0.9
+python-otbr-api==2.1.0
 
 # homeassistant.components.picnic
 python-picnic-api==1.1.0
@@ -2254,7 +2255,7 @@ regenmaschine==2023.05.1
 renault-api==0.1.13
 
 # homeassistant.components.reolink
-reolink-aio==0.5.15
+reolink-aio==0.5.16
 
 # homeassistant.components.python_script
 restrictedpython==6.0
@@ -2679,7 +2680,7 @@ xbox-webapi==2.0.11
 xiaomi-ble==0.17.0
 
 # homeassistant.components.knx
-xknx==2.9.0
+xknx==2.10.0
 
 # homeassistant.components.knx
 xknxproject==3.1.0

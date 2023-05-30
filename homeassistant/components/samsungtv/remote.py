@@ -18,11 +18,13 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Samsung TV from a config entry."""
     bridge = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities([SamsungTVRemote(bridge=bridge, config_entry=entry)], True)
+    async_add_entities([SamsungTVRemote(bridge=bridge, config_entry=entry)])
 
 
 class SamsungTVRemote(SamsungTVEntity, RemoteEntity):
     """Device that sends commands to a SamsungTV."""
+
+    _attr_should_poll = False
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
