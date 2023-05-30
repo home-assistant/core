@@ -82,10 +82,11 @@ async def _resetup_platform(
         # Check if it's a multi-platform config
         added = False
         for item in conf[integration_name]:
-            if isinstance(item, dict):
-                if item.get(integration_platform):  # Config for current platform
-                    added = True
-                    root_config[integration_platform].extend(item[integration_platform])
+            if isinstance(item, dict) and (
+                current_platform_config := item.get(integration_platform)
+            ):
+                added = True
+                root_config[integration_platform].extend(current_platform_config)
         # If no valid item was found, it's a simple single platform config
         if not added:
             root_config[integration_platform].extend(conf[integration_name])
