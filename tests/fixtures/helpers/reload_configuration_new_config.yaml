@@ -1,3 +1,11 @@
+test_domain:
+  - platform: test_platform
+    sensors:
+      old_config_sendsor:
+        friendly_name: Test something in old config
+        unit_of_measurement: W
+        value_template: "{{ ((states('sensor.energy_usage') | float)}}"
+
 test_platform:
   - sensors:
       combined_sensor_energy_usage:

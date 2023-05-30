@@ -157,7 +157,7 @@ async def test_setup_reload_service_new_config(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert len(setup_called) == 3
+    assert len(setup_called) == 4
 
 
 async def test_setup_reload_service_when_async_process_component_config_fails(
