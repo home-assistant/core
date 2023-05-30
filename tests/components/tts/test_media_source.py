@@ -103,7 +103,7 @@ async def test_legacy_resolving(hass: HomeAssistant, mock_provider: MSProvider) 
     message, language = mock_get_tts_audio.mock_calls[0][1]
     assert message == "Hello World"
     assert language == "en_US"
-    assert mock_get_tts_audio.mock_calls[0][2]["options"] is None
+    assert mock_get_tts_audio.mock_calls[0][2]["options"] == {}
 
     # Pass language and options
     mock_get_tts_audio.reset_mock()
@@ -138,7 +138,7 @@ async def test_resolving(hass: HomeAssistant, mock_tts_entity: MSEntity) -> None
     message, language = mock_get_tts_audio.mock_calls[0][1]
     assert message == "Hello World"
     assert language == "en_US"
-    assert mock_get_tts_audio.mock_calls[0][2]["options"] is None
+    assert mock_get_tts_audio.mock_calls[0][2]["options"] == {}
 
     # Pass language and options
     mock_get_tts_audio.reset_mock()

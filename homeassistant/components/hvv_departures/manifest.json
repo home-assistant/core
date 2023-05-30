@@ -6,5 +6,5 @@
   "documentation": "https://www.home-assistant.io/integrations/hvv_departures",
   "iot_class": "cloud_polling",
   "loggers": ["pygti"],
-  "requirements": ["pygti==0.9.3"]
+  "requirements": ["pygti==0.9.4"]
 }

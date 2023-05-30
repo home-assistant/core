@@ -411,7 +411,7 @@ class UtilityMeterSensor(RestoreSensor):
         if (old_state_val := self._validate_state(old_state)) is not None:
             return new_state_val - old_state_val
 
-        _LOGGER.warning(
+        _LOGGER.debug(
             "%s received an invalid state change coming from %s (%s > %s)",
             self.name,
             self._sensor_source_id,
