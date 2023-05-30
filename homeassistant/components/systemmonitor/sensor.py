@@ -32,6 +32,7 @@ from homeassistant.const import (
     UnitOfDataRate,
     UnitOfInformation,
     UnitOfTemperature,
+    UnitOfTime,
 )
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
@@ -92,6 +93,14 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
         key="disk_use_percent",
         name="Disk use (percent)",
         native_unit_of_measurement=PERCENTAGE,
+        icon="mdi:harddisk",
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    "disk_await": SysMonitorSensorEntityDescription(
+        key="disk_await",
+        name="Disk await",
+        native_unit_of_measurement=UnitOfTime.MILLISECONDS,
+        device_class=SensorDeviceClass.DURATION,
         icon="mdi:harddisk",
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -344,7 +353,10 @@ async def async_setup_platform(
         # For disk monitoring default to "/" (root) to prevent runtime errors, if argument was not specified.
         if CONF_ARG not in resource:
             argument = ""
-            if resource[CONF_TYPE].startswith("disk_"):
+            if (
+                resource[CONF_TYPE].startswith("disk_")
+                and resource[CONF_TYPE] != "disk_await"
+            ):
                 argument = "/"
         else:
             argument = resource[CONF_ARG]
@@ -397,6 +409,7 @@ async def async_setup_sensor_registry_updates(
         # Only fetch these once per iteration as we use the same
         # data source multiple times in _update
         _disk_usage.cache_clear()
+        _disk_io_counters.cache_clear()
         _swap_memory.cache_clear()
         _virtual_memory.cache_clear()
         _net_io_counters.cache_clear()
@@ -487,6 +500,29 @@ def _update(  # noqa: C901
         state = round(_disk_usage(data.argument).used / 1024**3, 1)
     elif type_ == "disk_free":
         state = round(_disk_usage(data.argument).free / 1024**3, 1)
+    elif type_ == "disk_await":
+        state = None
+        counters = None
+        if data.argument:
+            all_counters = _disk_io_counters(perdisk=True)
+            if data.argument in all_counters:
+                counters = all_counters[data.argument]
+            else:
+                _LOGGER.warning(
+                    "Disk %s not found in: %s", data.argument, all_counters.keys()
+                )
+        else:
+            counters = _disk_io_counters(perdisk=False)
+        if counters and data.value:
+            iop_time_ms = (counters.read_time + counters.write_time) - (
+                data.value.read_time + data.value.write_time
+            )
+            num_iops = (counters.read_count + counters.write_count) - (
+                data.value.read_count + data.value.write_count
+            )
+            if num_iops > 0:
+                state = round(iop_time_ms / num_iops, 1)
+        value = counters
     elif type_ == "memory_use_percent":
         state = _virtual_memory().percent
     elif type_ == "memory_use":
@@ -575,6 +611,11 @@ def _update(  # noqa: C901
 @cache
 def _disk_usage(path: str) -> Any:
     return psutil.disk_usage(path)
+
+
+@cache
+def _disk_io_counters(perdisk: bool) -> Any:
+    return psutil.disk_io_counters(perdisk)
 
 
 @cache
