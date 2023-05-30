@@ -3,29 +3,21 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import datetime
 import logging
-from typing import TypedDict
 
-from mozart_api.exceptions import ApiException
 from mozart_api.models import (
-    BatteryState,
     BeoRemoteButton,
     ButtonEvent,
-    ListeningModeProps,
     PlaybackContentMetadata,
     PlaybackError,
     PlaybackProgress,
-    Preset,
     RenderingState,
     SoftwareUpdateState,
-    SoundSettings,
     Source,
-    SpeakerGroupOverview,
     VolumeState,
     WebsocketNotificationTag,
 )
-from urllib3.exceptions import MaxRetryError, NewConnectionError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE_ID, CONF_TYPE
@@ -33,7 +25,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
     BANGOLUFSEN_EVENT,
@@ -47,40 +38,21 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-class CoordinatorData(TypedDict):
-    """TypedDict for coordinator data."""
-
-    favourites: dict[str, Preset]
-
-
-class BangOlufsenCoordinator(DataUpdateCoordinator, BangOlufsenVariables):
-    """The entity coordinator and WebSocket listener(s)."""
+class BangOlufsenWebsocket(BangOlufsenVariables):
+    """The WebSocket listeners."""
 
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
-        """Initialize the entity coordinator."""
-        DataUpdateCoordinator.__init__(
-            self,
-            hass,
-            _LOGGER,
-            name="coordinator",
-            update_interval=timedelta(seconds=60),
-        )
+        """Initialize the WebSocket listeners."""
+
         BangOlufsenVariables.__init__(self, entry)
 
-        self._coordinator_data: CoordinatorData = {"favourites": {}}
-
+        self.hass = hass
         self._device: DeviceEntry | None = None
 
         # WebSocket callbacks
         self._client.get_on_connection(self.on_connection)
         self._client.get_on_connection_lost(self.on_connection_lost)
-        self._client.get_active_listening_mode_notifications(
-            self.on_active_listening_mode
-        )
-        self._client.get_active_speaker_group_notifications(
-            self.on_active_speaker_group
-        )
-        self._client.get_battery_notifications(self.on_battery_notification)
+
         self._client.get_beo_remote_button_notifications(
             self.on_beo_remote_button_notification
         )
@@ -98,9 +70,6 @@ class BangOlufsenCoordinator(DataUpdateCoordinator, BangOlufsenVariables):
         self._client.get_playback_state_notifications(
             self.on_playback_state_notification
         )
-        self._client.get_sound_settings_notifications(
-            self.on_sound_settings_notification
-        )
         self._client.get_source_change_notifications(self.on_source_change_notification)
         self._client.get_volume_notifications(self.on_volume_notification)
         self._client.get_software_update_state_notifications(
@@ -109,30 +78,6 @@ class BangOlufsenCoordinator(DataUpdateCoordinator, BangOlufsenVariables):
 
         # Used for firing events and debugging
         self._client.get_all_notifications_raw(self.on_all_notifications_raw)
-
-    async def _update_variables(self) -> None:
-        """Update the coordinator data."""
-        favourites = self._client.get_presets(async_req=True, _request_timeout=5).get()
-
-        self._coordinator_data = {"favourites": favourites}
-
-    async def _async_update_data(self) -> CoordinatorData:
-        """Get all information needed by the polling entities."""
-        if not self.last_update_success:
-            raise UpdateFailed
-
-        # Try to update coordinator_data.
-        try:
-            await self._update_variables()
-            return self._coordinator_data
-
-        except (
-            MaxRetryError,
-            NewConnectionError,
-            ApiException,
-            ConnectionResetError,
-        ):
-            raise UpdateFailed
 
     def connect_websocket(self, _: datetime | None = None) -> None:
         """Start the notification WebSocket listeners."""
@@ -148,7 +93,6 @@ class BangOlufsenCoordinator(DataUpdateCoordinator, BangOlufsenVariables):
 
     def _update_connection_status(self) -> None:
         """Update all entities of the connection status."""
-        self.last_update_success = self._client.websocket_connected
         async_dispatcher_send(
             self.hass,
             f"{self._unique_id}_{CONNECTION_STATUS}",
@@ -164,30 +108,6 @@ class BangOlufsenCoordinator(DataUpdateCoordinator, BangOlufsenVariables):
         """Handle WebSocket connection lost."""
         _LOGGER.error("Lost connection to the %s", self._name)
         self._update_connection_status()
-
-    def on_active_listening_mode(self, notification: ListeningModeProps) -> None:
-        """Send active_listening_mode dispatch."""
-        async_dispatcher_send(
-            self.hass,
-            f"{self._unique_id}_{WebSocketNotification.ACTIVE_LISTENING_MODE}",
-            notification,
-        )
-
-    def on_active_speaker_group(self, notification: SpeakerGroupOverview) -> None:
-        """Send active_speaker_group dispatch."""
-        async_dispatcher_send(
-            self.hass,
-            f"{self._unique_id}_{WebSocketNotification.ACTIVE_SPEAKER_GROUP}",
-            notification,
-        )
-
-    def on_battery_notification(self, notification: BatteryState) -> None:
-        """Send battery dispatch."""
-        async_dispatcher_send(
-            self.hass,
-            f"{self._unique_id}_{WebSocketNotification.BATTERY}",
-            notification,
-        )
 
     def on_beo_remote_button_notification(self, notification: BeoRemoteButton) -> None:
         """Send beo_remote_button dispatch."""
@@ -227,14 +147,7 @@ class BangOlufsenCoordinator(DataUpdateCoordinator, BangOlufsenVariables):
     ) -> None:
         """Send notification dispatch."""
 
-        if WebSocketNotification.PROXIMITY in notification.value:
-            async_dispatcher_send(
-                self.hass,
-                f"{self._unique_id}_{WebSocketNotification.PROXIMITY}",
-                notification,
-            )
-
-        elif WebSocketNotification.REMOTE_MENU_CHANGED in notification.value:
+        if WebSocketNotification.REMOTE_MENU_CHANGED in notification.value:
             async_dispatcher_send(
                 self.hass,
                 f"{self._unique_id}_{WebSocketNotification.REMOTE_MENU_CHANGED}",
@@ -296,14 +209,6 @@ class BangOlufsenCoordinator(DataUpdateCoordinator, BangOlufsenVariables):
         async_dispatcher_send(
             self.hass,
             f"{self._unique_id}_{WebSocketNotification.PLAYBACK_STATE}",
-            notification,
-        )
-
-    def on_sound_settings_notification(self, notification: SoundSettings) -> None:
-        """Send sound_settings dispatch."""
-        async_dispatcher_send(
-            self.hass,
-            f"{self._unique_id}_{WebSocketNotification.SOUND_SETTINGS}",
             notification,
         )
 

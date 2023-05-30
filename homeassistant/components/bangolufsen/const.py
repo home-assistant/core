@@ -6,26 +6,15 @@ from enum import Enum
 from typing import Final, cast
 
 from mozart_api.models import (
-    BatteryState,
-    BeoRemoteButton,
-    ButtonEvent,
-    ListeningModeProps,
     PlaybackContentMetadata,
-    PlaybackError,
     PlaybackProgress,
-    PowerStateEnum,
-    Preset,
     RenderingState,
-    SoftwareUpdateState,
-    SoundSettings,
     Source,
     SourceArray,
     SourceTypeEnum,
-    SpeakerGroupOverview,
     VolumeLevel,
     VolumeMute,
     VolumeState,
-    WebsocketNotificationTag,
 )
 from mozart_api.mozart_client import MozartClient
 
@@ -107,14 +96,6 @@ class BangOlufsenMediaType(StrEnum):
     TTS = "provider"
 
 
-# Proximity detection for binary_sensor
-class ProximityEnum(Enum):
-    """Proximity detection mapping.."""
-
-    proximityPresenceDetected = True
-    proximityPresenceNotDetected = False
-
-
 class ModelEnum(StrEnum):
     """Enum for compatible model names."""
 
@@ -131,15 +112,8 @@ class ModelEnum(StrEnum):
 class EntityEnum(StrEnum):
     """Enum for accessing and storing the entities in hass."""
 
-    BINARY_SENSORS = "binary_sensors"
-    COORDINATOR = "coordinator"
+    WEBSOCKET = "websocket"
     MEDIA_PLAYER = "media_player"
-    NUMBERS = "numbers"
-    FAVOURITES = "favourites"
-    SENSORS = "sensors"
-    SWITCHES = "switches"
-    TEXT = "text"
-    SELECTS = "selects"
 
 
 # Dispatcher events
@@ -177,20 +151,6 @@ class WebSocketNotification(StrEnum):
     REMOTE_CONTROL_DEVICES: Final[str] = "remoteControlDevices"
 
     ALL: Final[str] = "all"
-
-
-class SupportEnum(Enum):
-    """Enum for storing compatibility of devices."""
-
-    PROXIMITY_SENSOR = (
-        ModelEnum.beolab_28,
-        ModelEnum.beosound_2,
-        ModelEnum.beosound_balance,
-        ModelEnum.beosound_level,
-        ModelEnum.beosound_theatre,
-    )
-
-    HOME_CONTROL = (ModelEnum.beosound_theatre,)
 
 
 DOMAIN: Final[str] = "bangolufsen"
@@ -386,65 +346,6 @@ def get_device(hass: HomeAssistant | None, unique_id: str) -> DeviceEntry | None
     return device
 
 
-def generate_favourite_attributes(
-    favourite: Preset,
-) -> dict[str, str | int | dict[str, str | bool]]:
-    """Generate extra state attributes for a favourite."""
-    favourite_attribute: dict[str, str | int | dict[str, str | bool]] = {}
-
-    # Ensure that favourites with volume are properly shown.
-    for action in favourite.action_list:
-        if action.type == "volume":
-            favourite_attribute["volume"] = action.volume_level
-
-        else:
-            deezer_user_id = action.deezer_user_id
-            favourite_type = action.type
-            favourite_queue = action.queue_item
-
-            # Add Deezer as "source".
-            if (
-                favourite_type == "deezerFlow"
-                or favourite_type == "playQueue"
-                and favourite_queue.provider.value == "deezer"
-            ):
-                favourite_attribute["source"] = SourceEnum.deezer
-
-            # Add netradio as "source".
-            elif favourite_type == "radio":
-                favourite_attribute["source"] = SourceEnum.netRadio
-
-            # Add the source name if it is not none.
-            elif favourite.source is not None:
-                favourite_attribute["source"] = SourceEnum[favourite.source.value].value
-
-            # Add title if available.
-            if favourite.title is not None:
-                favourite_attribute["name"] = favourite.title
-
-            # Ensure that all favourites have a "name".
-            if "name" not in favourite_attribute:
-                favourite_attribute["name"] = favourite_attribute["source"]
-
-            # Add Deezer flow.
-            if favourite_type == "deezerFlow":
-                if deezer_user_id is not None:
-                    favourite_attribute["id"] = int(deezer_user_id)
-
-            # Add Deezer playlist "uri" and name
-            elif favourite_type == "playQueue":
-                favourite_attribute["id"] = favourite_queue.uri
-
-                # Add queue settings for Deezer queues.
-                if action.queue_settings:
-                    favourite_attribute["queue_settings"] = {
-                        "repeat": action.queue_settings.repeat,
-                        "shuffle": action.queue_settings.shuffle,
-                    }
-
-    return favourite_attribute
-
-
 class BangOlufsenVariables:
     """Shared variables for various classes."""
 
@@ -464,22 +365,10 @@ class BangOlufsenVariables:
         )
 
         # Objects that get directly updated by notifications.
-        self._active_listening_mode = ListeningModeProps()
-        self._active_speaker_group = SpeakerGroupOverview(
-            friendly_name="", id="", is_deleteable=False
-        )
-        self._battery: BatteryState = BatteryState()
-        self._beo_remote_button: BeoRemoteButton = BeoRemoteButton()
-        self._button: ButtonEvent = ButtonEvent()
-        self._notification: WebsocketNotificationTag = WebsocketNotificationTag()
-        self._playback_error: PlaybackError = PlaybackError()
         self._playback_metadata: PlaybackContentMetadata = PlaybackContentMetadata()
         self._playback_progress: PlaybackProgress = PlaybackProgress(total_duration=0)
         self._playback_source: Source = Source()
         self._playback_state: RenderingState = RenderingState()
-        self._power_state: PowerStateEnum = PowerStateEnum()
-        self._software_update_state: SoftwareUpdateState = SoftwareUpdateState()
-        self._sound_settings: SoundSettings = SoundSettings()
         self._source_change: Source = Source()
         self._volume: VolumeState = VolumeState(
             level=VolumeLevel(level=0), muted=VolumeMute(muted=False)
