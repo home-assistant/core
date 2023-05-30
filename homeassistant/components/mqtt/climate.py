@@ -455,14 +455,8 @@ class MqttTemperatureControlEntity(MqttEntity):
     climate and water_heater platforms.
     """
 
-    _attr_hvac_action: HVACAction | str | None = None
-    _attr_hvac_mode: HVACMode | str | None
-    _attr_hvac_modes: list[HVACMode] | list[str]
-    _attr_preset_mode: str | None
-    _attr_preset_modes: list[str] | None
     _attr_supported_features: IntFlag
 
-    _feature_preset_mode: bool
     _optimistic: bool
     _topic: dict[str, Any]
 
@@ -482,86 +476,65 @@ class MqttTemperatureControlEntity(MqttEntity):
         self._feature_preset_mode = False
         MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
 
-    def _prepare_subscribe_topics(self) -> None:  # noqa: C901
-        """(Re)Subscribe to topics."""
-        topics: dict[str, dict[str, Any]] = {}
+    def add_subscription(
+        self,
+        topics: dict[str, dict[str, Any]],
+        topic: str,
+        msg_callback: Callable[[ReceiveMessage], None],
+    ) -> None:
+        """Add a subscription."""
         qos: int = self._config[CONF_QOS]
+        if self._topic[topic] is not None:
+            topics[topic] = {
+                "topic": self._topic[topic],
+                "msg_callback": msg_callback,
+                "qos": qos,
+                "encoding": self._config[CONF_ENCODING] or None,
+            }
 
-        def add_subscription(
-            topics: dict[str, dict[str, Any]],
-            topic: str,
-            msg_callback: Callable[[ReceiveMessage], None],
-        ) -> None:
-            if self._topic[topic] is not None:
-                topics[topic] = {
-                    "topic": self._topic[topic],
-                    "msg_callback": msg_callback,
-                    "qos": qos,
-                    "encoding": self._config[CONF_ENCODING] or None,
-                }
+    def render_template(
+        self, msg: ReceiveMessage, template_name: str
+    ) -> ReceivePayloadType:
+        """Render a template by name."""
+        template = self._value_templates[template_name]
+        return template(msg.payload)
 
-        def render_template(
-            msg: ReceiveMessage, template_name: str
-        ) -> ReceivePayloadType:
-            template = self._value_templates[template_name]
-            return template(msg.payload)
-
-        @callback
-        @log_messages(self.hass, self.entity_id)
-        def handle_action_received(msg: ReceiveMessage) -> None:
-            """Handle receiving action via MQTT."""
-            payload = render_template(msg, CONF_ACTION_TEMPLATE)
-            if not payload or payload == PAYLOAD_NONE:
-                _LOGGER.debug(
-                    "Invalid %s action: %s, ignoring",
-                    [e.value for e in HVACAction],
-                    payload,
-                )
-                return
-            try:
-                self._attr_hvac_action = HVACAction(str(payload))
-            except ValueError:
-                _LOGGER.warning(
-                    "Invalid %s action: %s",
-                    [e.value for e in HVACAction],
-                    payload,
-                )
-                return
+    @callback
+    def handle_climate_attribute_received(
+        self, msg: ReceiveMessage, template_name: str, attr: str
+    ) -> None:
+        """Handle climate attributes coming via MQTT."""
+        payload = self.render_template(msg, template_name)
+        if not payload:
+            _LOGGER.debug(
+                "Invalid empty payload for attribute %s, ignoring update",
+                attr,
+            )
+            return
+        if payload == PAYLOAD_NONE:
+            setattr(self, attr, None)
             get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
+            return
+        try:
+            setattr(self, attr, float(payload))
+            get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
+        except ValueError:
+            _LOGGER.error("Could not parse %s from %s", template_name, payload)
 
-        add_subscription(topics, CONF_ACTION_TOPIC, handle_action_received)
-
-        @callback
-        def handle_climate_attribute_received(
-            msg: ReceiveMessage, template_name: str, attr: str
-        ) -> None:
-            """Handle climate attributes coming via MQTT."""
-            payload = render_template(msg, template_name)
-            if not payload:
-                _LOGGER.debug(
-                    "Invalid empty payload for attribute %s, ignoring update",
-                    attr,
-                )
-                return
-            if payload == PAYLOAD_NONE:
-                setattr(self, attr, None)
-                get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
-                return
-            try:
-                setattr(self, attr, float(payload))
-                get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
-            except ValueError:
-                _LOGGER.error("Could not parse %s from %s", template_name, payload)
+    def prepare_subscribe_topics(
+        self, topics: dict[str, dict[str, Any]]
+    ) -> None:  # noqa: C901
+        """(Re)Subscribe to topics."""
 
         @callback
         @log_messages(self.hass, self.entity_id)
         def handle_current_temperature_received(msg: ReceiveMessage) -> None:
             """Handle current temperature coming via MQTT."""
-            handle_climate_attribute_received(
+            self.handle_climate_attribute_received(
                 msg, CONF_CURRENT_TEMP_TEMPLATE, "_attr_current_temperature"
             )
 
-        add_subscription(
+        self.add_subscription(
             topics, CONF_CURRENT_TEMP_TOPIC, handle_current_temperature_received
         )
 
@@ -569,11 +542,11 @@ class MqttTemperatureControlEntity(MqttEntity):
         @log_messages(self.hass, self.entity_id)
         def handle_target_temperature_received(msg: ReceiveMessage) -> None:
             """Handle target temperature coming via MQTT."""
-            handle_climate_attribute_received(
+            self.handle_climate_attribute_received(
                 msg, CONF_TEMP_STATE_TEMPLATE, "_attr_target_temperature"
             )
 
-        add_subscription(
+        self.add_subscription(
             topics, CONF_TEMP_STATE_TOPIC, handle_target_temperature_received
         )
 
@@ -581,11 +554,11 @@ class MqttTemperatureControlEntity(MqttEntity):
         @log_messages(self.hass, self.entity_id)
         def handle_temperature_low_received(msg: ReceiveMessage) -> None:
             """Handle target temperature low coming via MQTT."""
-            handle_climate_attribute_received(
+            self.handle_climate_attribute_received(
                 msg, CONF_TEMP_LOW_STATE_TEMPLATE, "_attr_target_temperature_low"
             )
 
-        add_subscription(
+        self.add_subscription(
             topics, CONF_TEMP_LOW_STATE_TOPIC, handle_temperature_low_received
         )
 
@@ -593,152 +566,12 @@ class MqttTemperatureControlEntity(MqttEntity):
         @log_messages(self.hass, self.entity_id)
         def handle_temperature_high_received(msg: ReceiveMessage) -> None:
             """Handle target temperature high coming via MQTT."""
-            handle_climate_attribute_received(
+            self.handle_climate_attribute_received(
                 msg, CONF_TEMP_HIGH_STATE_TEMPLATE, "_attr_target_temperature_high"
             )
 
-        add_subscription(
+        self.add_subscription(
             topics, CONF_TEMP_HIGH_STATE_TOPIC, handle_temperature_high_received
-        )
-
-        @callback
-        @log_messages(self.hass, self.entity_id)
-        def handle_current_humidity_received(msg: ReceiveMessage) -> None:
-            """Handle current humidity coming via MQTT."""
-            handle_climate_attribute_received(
-                msg, CONF_CURRENT_HUMIDITY_TEMPLATE, "_attr_current_humidity"
-            )
-
-        add_subscription(
-            topics, CONF_CURRENT_HUMIDITY_TOPIC, handle_current_humidity_received
-        )
-
-        @callback
-        @log_messages(self.hass, self.entity_id)
-        def handle_target_humidity_received(msg: ReceiveMessage) -> None:
-            """Handle target humidity coming via MQTT."""
-
-            handle_climate_attribute_received(
-                msg, CONF_HUMIDITY_STATE_TEMPLATE, "_attr_target_humidity"
-            )
-
-        add_subscription(
-            topics, CONF_HUMIDITY_STATE_TOPIC, handle_target_humidity_received
-        )
-
-        @callback
-        def handle_mode_received(
-            msg: ReceiveMessage, template_name: str, attr: str, mode_list: str
-        ) -> None:
-            """Handle receiving listed mode via MQTT."""
-            payload = render_template(msg, template_name)
-
-            if payload not in self._config[mode_list]:
-                _LOGGER.error("Invalid %s mode: %s", mode_list, payload)
-            else:
-                setattr(self, attr, payload)
-                get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
-
-        @callback
-        @log_messages(self.hass, self.entity_id)
-        def handle_current_mode_received(msg: ReceiveMessage) -> None:
-            """Handle receiving mode via MQTT."""
-            handle_mode_received(
-                msg, CONF_MODE_STATE_TEMPLATE, "_attr_hvac_mode", CONF_MODE_LIST
-            )
-
-        add_subscription(topics, CONF_MODE_STATE_TOPIC, handle_current_mode_received)
-
-        @callback
-        @log_messages(self.hass, self.entity_id)
-        def handle_fan_mode_received(msg: ReceiveMessage) -> None:
-            """Handle receiving fan mode via MQTT."""
-            handle_mode_received(
-                msg,
-                CONF_FAN_MODE_STATE_TEMPLATE,
-                "_attr_fan_mode",
-                CONF_FAN_MODE_LIST,
-            )
-
-        add_subscription(topics, CONF_FAN_MODE_STATE_TOPIC, handle_fan_mode_received)
-
-        @callback
-        @log_messages(self.hass, self.entity_id)
-        def handle_swing_mode_received(msg: ReceiveMessage) -> None:
-            """Handle receiving swing mode via MQTT."""
-            handle_mode_received(
-                msg,
-                CONF_SWING_MODE_STATE_TEMPLATE,
-                "_attr_swing_mode",
-                CONF_SWING_MODE_LIST,
-            )
-
-        add_subscription(
-            topics, CONF_SWING_MODE_STATE_TOPIC, handle_swing_mode_received
-        )
-
-        @callback
-        def handle_onoff_mode_received(
-            msg: ReceiveMessage, template_name: str, attr: str
-        ) -> None:
-            """Handle receiving on/off mode via MQTT."""
-            payload = render_template(msg, template_name)
-            payload_on: str = self._config[CONF_PAYLOAD_ON]
-            payload_off: str = self._config[CONF_PAYLOAD_OFF]
-
-            if payload == "True":
-                payload = payload_on
-            elif payload == "False":
-                payload = payload_off
-
-            if payload == payload_on:
-                setattr(self, attr, True)
-            elif payload == payload_off:
-                setattr(self, attr, False)
-            else:
-                _LOGGER.error("Invalid %s mode: %s", attr, payload)
-
-            get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
-
-        @callback
-        @log_messages(self.hass, self.entity_id)
-        def handle_aux_mode_received(msg: ReceiveMessage) -> None:
-            """Handle receiving aux mode via MQTT."""
-            handle_onoff_mode_received(
-                msg, CONF_AUX_STATE_TEMPLATE, "_attr_is_aux_heat"
-            )
-
-        add_subscription(topics, CONF_AUX_STATE_TOPIC, handle_aux_mode_received)
-
-        @callback
-        @log_messages(self.hass, self.entity_id)
-        def handle_preset_mode_received(msg: ReceiveMessage) -> None:
-            """Handle receiving preset mode via MQTT."""
-            preset_mode = render_template(msg, CONF_PRESET_MODE_VALUE_TEMPLATE)
-            if preset_mode in [PRESET_NONE, PAYLOAD_NONE]:
-                self._attr_preset_mode = PRESET_NONE
-                get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
-                return
-            if not preset_mode:
-                _LOGGER.debug("Ignoring empty preset_mode from '%s'", msg.topic)
-                return
-            if (
-                not self._attr_preset_modes
-                or preset_mode not in self._attr_preset_modes
-            ):
-                _LOGGER.warning(
-                    "'%s' received on topic %s. '%s' is not a valid preset mode",
-                    msg.payload,
-                    msg.topic,
-                    preset_mode,
-                )
-            else:
-                self._attr_preset_mode = str(preset_mode)
-
-                get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
-
-        add_subscription(
-            topics, CONF_PRESET_MODE_STATE_TOPIC, handle_preset_mode_received
         )
 
         self._sub_state = subscription.async_prepare_subscribe_topics(
@@ -953,6 +786,181 @@ class MqttClimate(MqttTemperatureControlEntity, ClimateEntity):  # type: ignore[
         ):
             support |= ClimateEntityFeature.AUX_HEAT
         self._attr_supported_features = support
+
+    def _prepare_subscribe_topics(self) -> None:  # noqa: C901
+        """(Re)Subscribe to topics."""
+        topics: dict[str, dict[str, Any]] = {}
+
+        @callback
+        @log_messages(self.hass, self.entity_id)
+        def handle_action_received(msg: ReceiveMessage) -> None:
+            """Handle receiving action via MQTT."""
+            payload = self.render_template(msg, CONF_ACTION_TEMPLATE)
+            if not payload or payload == PAYLOAD_NONE:
+                _LOGGER.debug(
+                    "Invalid %s action: %s, ignoring",
+                    [e.value for e in HVACAction],
+                    payload,
+                )
+                return
+            try:
+                self._attr_hvac_action = HVACAction(str(payload))
+            except ValueError:
+                _LOGGER.warning(
+                    "Invalid %s action: %s",
+                    [e.value for e in HVACAction],
+                    payload,
+                )
+                return
+            get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
+
+        self.add_subscription(topics, CONF_ACTION_TOPIC, handle_action_received)
+
+        @callback
+        @log_messages(self.hass, self.entity_id)
+        def handle_current_humidity_received(msg: ReceiveMessage) -> None:
+            """Handle current humidity coming via MQTT."""
+            self.handle_climate_attribute_received(
+                msg, CONF_CURRENT_HUMIDITY_TEMPLATE, "_attr_current_humidity"
+            )
+
+        self.add_subscription(
+            topics, CONF_CURRENT_HUMIDITY_TOPIC, handle_current_humidity_received
+        )
+
+        @callback
+        @log_messages(self.hass, self.entity_id)
+        def handle_target_humidity_received(msg: ReceiveMessage) -> None:
+            """Handle target humidity coming via MQTT."""
+
+            self.handle_climate_attribute_received(
+                msg, CONF_HUMIDITY_STATE_TEMPLATE, "_attr_target_humidity"
+            )
+
+        self.add_subscription(
+            topics, CONF_HUMIDITY_STATE_TOPIC, handle_target_humidity_received
+        )
+
+        @callback
+        def handle_mode_received(
+            msg: ReceiveMessage, template_name: str, attr: str, mode_list: str
+        ) -> None:
+            """Handle receiving listed mode via MQTT."""
+            payload = self.render_template(msg, template_name)
+
+            if payload not in self._config[mode_list]:
+                _LOGGER.error("Invalid %s mode: %s", mode_list, payload)
+            else:
+                setattr(self, attr, payload)
+                get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
+
+        @callback
+        @log_messages(self.hass, self.entity_id)
+        def handle_current_mode_received(msg: ReceiveMessage) -> None:
+            """Handle receiving mode via MQTT."""
+            handle_mode_received(
+                msg, CONF_MODE_STATE_TEMPLATE, "_attr_hvac_mode", CONF_MODE_LIST
+            )
+
+        self.add_subscription(
+            topics, CONF_MODE_STATE_TOPIC, handle_current_mode_received
+        )
+
+        @callback
+        @log_messages(self.hass, self.entity_id)
+        def handle_fan_mode_received(msg: ReceiveMessage) -> None:
+            """Handle receiving fan mode via MQTT."""
+            handle_mode_received(
+                msg,
+                CONF_FAN_MODE_STATE_TEMPLATE,
+                "_attr_fan_mode",
+                CONF_FAN_MODE_LIST,
+            )
+
+        self.add_subscription(
+            topics, CONF_FAN_MODE_STATE_TOPIC, handle_fan_mode_received
+        )
+
+        @callback
+        @log_messages(self.hass, self.entity_id)
+        def handle_swing_mode_received(msg: ReceiveMessage) -> None:
+            """Handle receiving swing mode via MQTT."""
+            handle_mode_received(
+                msg,
+                CONF_SWING_MODE_STATE_TEMPLATE,
+                "_attr_swing_mode",
+                CONF_SWING_MODE_LIST,
+            )
+
+        self.add_subscription(
+            topics, CONF_SWING_MODE_STATE_TOPIC, handle_swing_mode_received
+        )
+
+        @callback
+        def handle_onoff_mode_received(
+            msg: ReceiveMessage, template_name: str, attr: str
+        ) -> None:
+            """Handle receiving on/off mode via MQTT."""
+            payload = self.render_template(msg, template_name)
+            payload_on: str = self._config[CONF_PAYLOAD_ON]
+            payload_off: str = self._config[CONF_PAYLOAD_OFF]
+
+            if payload == "True":
+                payload = payload_on
+            elif payload == "False":
+                payload = payload_off
+
+            if payload == payload_on:
+                setattr(self, attr, True)
+            elif payload == payload_off:
+                setattr(self, attr, False)
+            else:
+                _LOGGER.error("Invalid %s mode: %s", attr, payload)
+
+            get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
+
+        @callback
+        @log_messages(self.hass, self.entity_id)
+        def handle_aux_mode_received(msg: ReceiveMessage) -> None:
+            """Handle receiving aux mode via MQTT."""
+            handle_onoff_mode_received(
+                msg, CONF_AUX_STATE_TEMPLATE, "_attr_is_aux_heat"
+            )
+
+        self.add_subscription(topics, CONF_AUX_STATE_TOPIC, handle_aux_mode_received)
+
+        @callback
+        @log_messages(self.hass, self.entity_id)
+        def handle_preset_mode_received(msg: ReceiveMessage) -> None:
+            """Handle receiving preset mode via MQTT."""
+            preset_mode = self.render_template(msg, CONF_PRESET_MODE_VALUE_TEMPLATE)
+            if preset_mode in [PRESET_NONE, PAYLOAD_NONE]:
+                self._attr_preset_mode = PRESET_NONE
+                get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
+                return
+            if not preset_mode:
+                _LOGGER.debug("Ignoring empty preset_mode from '%s'", msg.topic)
+                return
+            if (
+                not self._attr_preset_modes
+                or preset_mode not in self._attr_preset_modes
+            ):
+                _LOGGER.warning(
+                    "'%s' received on topic %s. '%s' is not a valid preset mode",
+                    msg.payload,
+                    msg.topic,
+                    preset_mode,
+                )
+            else:
+                self._attr_preset_mode = str(preset_mode)
+
+                get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
+
+        self.add_subscription(
+            topics, CONF_PRESET_MODE_STATE_TOPIC, handle_preset_mode_received
+        )
+
+        self.prepare_subscribe_topics(topics)
 
     async def async_set_humidity(self, humidity: int) -> None:
         """Set new target humidity."""
