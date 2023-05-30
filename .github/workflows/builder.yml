@@ -62,7 +62,7 @@ jobs:
 
   build_python:
     name: Build PyPi package
-    needs: init
+    needs: ["init", "build_base"]
     runs-on: ubuntu-latest
     if: github.repository_owner == 'home-assistant' && needs.init.outputs.publish == 'true'
     steps:
