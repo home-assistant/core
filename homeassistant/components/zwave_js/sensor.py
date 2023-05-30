@@ -11,8 +11,11 @@ from zwave_js_server.const.command_class.meter import (
     RESET_METER_OPTION_TARGET_VALUE,
     RESET_METER_OPTION_TYPE,
 )
+from zwave_js_server.model.controller import Controller
+from zwave_js_server.model.controller.statistics import ControllerStatisticsDataType
 from zwave_js_server.model.driver import Driver
 from zwave_js_server.model.node import Node as ZwaveNode
+from zwave_js_server.model.node.statistics import NodeStatisticsDataType
 from zwave_js_server.model.value import ConfigurationValue, ConfigurationValueType
 from zwave_js_server.util.command_class.meter import get_meter_type
 
@@ -36,6 +39,7 @@ from homeassistant.const import (
     UnitOfPower,
     UnitOfPressure,
     UnitOfTemperature,
+    UnitOfTime,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_platform
@@ -272,6 +276,134 @@ ENTITY_DESCRIPTION_KEY_MAP = {
 }
 
 
+# Controller statistics descriptions
+ENTITY_DESCRIPTION_CONTROLLER_STATISTICS_LIST = [
+    SensorEntityDescription(
+        "messagesTX",
+        name="Successful messages (TX)",
+        state_class=SensorStateClass.TOTAL,
+    ),
+    SensorEntityDescription(
+        "messagesRX",
+        name="Successful messages (RX)",
+        state_class=SensorStateClass.TOTAL,
+    ),
+    SensorEntityDescription(
+        "messagesDroppedTX",
+        name="Messages dropped (TX)",
+        state_class=SensorStateClass.TOTAL,
+    ),
+    SensorEntityDescription(
+        "messagesDroppedRX",
+        name="Messages dropped (RX)",
+        state_class=SensorStateClass.TOTAL,
+    ),
+    SensorEntityDescription(
+        "NAK",
+        name="Messages not accepted",
+        state_class=SensorStateClass.TOTAL,
+    ),
+    SensorEntityDescription(
+        "CAN", name="Collisions", state_class=SensorStateClass.TOTAL
+    ),
+    SensorEntityDescription(
+        "timeoutACK", name="Missing ACKs", state_class=SensorStateClass.TOTAL
+    ),
+    SensorEntityDescription(
+        "timeoutResponse",
+        name="Timed out responses",
+        state_class=SensorStateClass.TOTAL,
+    ),
+    SensorEntityDescription(
+        "timeoutCallback",
+        name="Timed out callbacks",
+        state_class=SensorStateClass.TOTAL,
+    ),
+    SensorEntityDescription(
+        "backgroundRSSI.channel0.average",
+        name="Average background RSSI (channel 0)",
+        native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+        device_class=SensorDeviceClass.SIGNAL_STRENGTH,
+    ),
+    SensorEntityDescription(
+        "backgroundRSSI.channel0.current",
+        name="Current background RSSI (channel 0)",
+        native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+        device_class=SensorDeviceClass.SIGNAL_STRENGTH,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        "backgroundRSSI.channel1.average",
+        name="Average background RSSI (channel 1)",
+        native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+        device_class=SensorDeviceClass.SIGNAL_STRENGTH,
+    ),
+    SensorEntityDescription(
+        "backgroundRSSI.channel1.current",
+        name="Current background RSSI (channel 1)",
+        native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+        device_class=SensorDeviceClass.SIGNAL_STRENGTH,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        "backgroundRSSI.channel2.average",
+        name="Average background RSSI (channel 2)",
+        native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+        device_class=SensorDeviceClass.SIGNAL_STRENGTH,
+    ),
+    SensorEntityDescription(
+        "backgroundRSSI.channel2.current",
+        name="Current background RSSI (channel 2)",
+        native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+        device_class=SensorDeviceClass.SIGNAL_STRENGTH,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+]
+
+# Node statistics descriptions
+ENTITY_DESCRIPTION_NODE_STATISTICS_LIST = [
+    SensorEntityDescription(
+        "commandsRX",
+        name="Successful commands (RX)",
+        state_class=SensorStateClass.TOTAL,
+    ),
+    SensorEntityDescription(
+        "commandsTX",
+        name="Successful commands (TX)",
+        state_class=SensorStateClass.TOTAL,
+    ),
+    SensorEntityDescription(
+        "commandsDroppedRX",
+        name="Commands dropped (RX)",
+        state_class=SensorStateClass.TOTAL,
+    ),
+    SensorEntityDescription(
+        "commandsDroppedTX",
+        name="Commands dropped (TX)",
+        state_class=SensorStateClass.TOTAL,
+    ),
+    SensorEntityDescription(
+        "timeoutResponse",
+        name="Timed out responses",
+        state_class=SensorStateClass.TOTAL,
+    ),
+    SensorEntityDescription(
+        "rtt",
+        name="Round Trip Time",
+        native_unit_of_measurement=UnitOfTime.MILLISECONDS,
+        device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        "rssi",
+        name="RSSI",
+        native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+        device_class=SensorDeviceClass.SIGNAL_STRENGTH,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+]
+
+
 def get_entity_description(
     data: NumericSensorDataTemplateData,
 ) -> SensorEntityDescription:
@@ -347,6 +479,27 @@ async def async_setup_entry(
         assert driver is not None  # Driver is ready before platforms are loaded.
         async_add_entities([ZWaveNodeStatusSensor(config_entry, driver, node)])
 
+    @callback
+    def async_add_statistics_sensors(node: ZwaveNode) -> None:
+        """Add statistics sensors."""
+        driver = client.driver
+        assert driver is not None  # Driver is ready before platforms are loaded.
+        async_add_entities(
+            [
+                ZWaveStatisticsSensor(
+                    config_entry,
+                    driver,
+                    driver.controller if driver.controller.own_node == node else node,
+                    entity_description,
+                )
+                for entity_description in (
+                    ENTITY_DESCRIPTION_CONTROLLER_STATISTICS_LIST
+                    if driver.controller.own_node == node
+                    else ENTITY_DESCRIPTION_NODE_STATISTICS_LIST
+                )
+            ]
+        )
+
     config_entry.async_on_unload(
         async_dispatcher_connect(
             hass,
@@ -360,6 +513,14 @@ async def async_setup_entry(
             hass,
             f"{DOMAIN}_{config_entry.entry_id}_add_node_status_sensor",
             async_add_node_status_sensor,
+        )
+    )
+
+    config_entry.async_on_unload(
+        async_dispatcher_connect(
+            hass,
+            f"{DOMAIN}_{config_entry.entry_id}_add_statistics_sensors",
+            async_add_statistics_sensors,
         )
     )
 
@@ -625,3 +786,90 @@ class ZWaveNodeStatusSensor(SensorEntity):
         )
         self._attr_native_value: str = self.node.status.name.lower()
         self.async_write_ha_state()
+
+
+class ZWaveStatisticsSensor(SensorEntity):
+    """Representation of a node/controller statistics sensor."""
+
+    _attr_should_poll = False
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_entity_registry_enabled_default = False
+    _attr_has_entity_name = True
+
+    def __init__(
+        self,
+        config_entry: ConfigEntry,
+        driver: Driver,
+        statistics_src: ZwaveNode | Controller,
+        description: SensorEntityDescription,
+    ) -> None:
+        """Initialize a Z-Wave statistics entity."""
+        self.entity_description = description
+        self.config_entry = config_entry
+        self.statistics_src = statistics_src
+        node = (
+            statistics_src.own_node
+            if isinstance(statistics_src, Controller)
+            else statistics_src
+        )
+        assert node
+
+        # Entity class attributes
+        self._base_unique_id = get_valueless_base_unique_id(driver, node)
+        self._attr_unique_id = f"{self._base_unique_id}.statistics_{description.key}"
+        # device may not be precreated in main handler yet
+        self._attr_device_info = get_device_info(driver, node)
+
+    async def async_poll_value(self, _: bool) -> None:
+        """Poll a value."""
+        raise ValueError(
+            "There is no value to refresh for this entity so the zwave_js.refresh_value"
+            " service won't work for it"
+        )
+
+    def _get_data_from_statistics(
+        self, statistics: ControllerStatisticsDataType | NodeStatisticsDataType
+    ) -> int | None:
+        """Get the data from the statistics dict."""
+        if "." not in self.entity_description.key:
+            return cast(int | None, statistics.get(self.entity_description.key))
+
+        # If key contains dots, we need to traverse the dict to get to the right value
+        for key in self.entity_description.key.split("."):
+            if key not in statistics:
+                return None
+            statistics = statistics[key]  # type: ignore[literal-required]
+        return cast(int, statistics)
+
+    @callback
+    def statistics_updated(self, event_data: dict) -> None:
+        """Call when statistics updated event is received."""
+        self._attr_native_value = self._get_data_from_statistics(
+            event_data["statistics"]
+        )
+        self.async_write_ha_state()
+
+    async def async_added_to_hass(self) -> None:
+        """Call when entity is added."""
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                f"{DOMAIN}_{self.unique_id}_poll_value",
+                self.async_poll_value,
+            )
+        )
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                f"{DOMAIN}_{self._base_unique_id}_remove_entity",
+                self.async_remove,
+            )
+        )
+        self.async_on_remove(
+            self.statistics_src.on("statistics updated", self.statistics_updated)
+        )
+
+        # Set initial state
+        self._attr_native_value = self._get_data_from_statistics(
+            self.statistics_src.statistics.data
+        )
