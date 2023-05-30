@@ -303,7 +303,7 @@ class RestoreEntity(Entity):
         async_get(self.hass).async_restore_entity_removed(
             self.entity_id, self.extra_restore_state_data
         )
-        await super().async_internal_added_to_hass()
+        await super().async_internal_will_remove_from_hass()
 
     async def _async_get_restored_data(self) -> StoredState | None:
         """Get data stored for an entity, if any."""
