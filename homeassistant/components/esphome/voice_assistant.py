@@ -208,11 +208,10 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
 
         while chunk:
             segmenter.process(chunk)
+            # Buffer the data we have taken from the queue
+            chunk_buffer.append(chunk)
             if segmenter.in_command:
                 return True
-
-            # Buffer until command starts
-            chunk_buffer.append(chunk)
 
             async with async_timeout.timeout(self.audio_timeout):
                 chunk = await self.queue.get()
