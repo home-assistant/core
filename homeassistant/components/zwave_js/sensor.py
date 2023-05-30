@@ -882,4 +882,3 @@ class ZWaveStatisticsSensor(SensorEntity):
         self._attr_native_value = self._get_data_from_statistics(
             self.statistics_src.statistics.data
         )
-        self.async_write_ha_state()
