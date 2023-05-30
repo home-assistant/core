@@ -1,7 +1,10 @@
 """Websocket API for OTBR."""
 
+from typing import cast
+
 import python_otbr_api
 from python_otbr_api import tlv_parser
+from python_otbr_api.tlv_parser import MeshcopTLVType
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
@@ -133,8 +136,8 @@ async def websocket_set_network(
         connection.send_error(msg["id"], "unknown_dataset", "Unknown dataset")
         return
     dataset = tlv_parser.parse_tlv(dataset_tlv)
-    if channel_str := dataset.get(tlv_parser.MeshcopTLVType.CHANNEL):
-        thread_dataset_channel = int(channel_str, base=16)
+    if channel := dataset.get(MeshcopTLVType.CHANNEL):
+        thread_dataset_channel = cast(tlv_parser.Channel, channel).channel
 
     data: OTBRData = hass.data[DOMAIN]
     allowed_channel = await get_allowed_channel(hass, data.url)
