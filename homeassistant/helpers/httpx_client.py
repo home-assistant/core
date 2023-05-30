@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 import sys
+import os
 from typing import Any
 
 import httpx
@@ -75,9 +76,22 @@ def create_async_httpx_client(
         if verify_ssl
         else create_no_verify_ssl_context(ssl_cipher_list)
     )
+
+    # Check proxies in environment variables
+    http_proxy = os.environ.get("http_proxy") or os.environ.get("HTTP_PROXY")
+    https_proxy = os.environ.get("https_proxy") or os.environ.get("HTTPS_PROXY")
+    proxies = None
+    if http_proxy or https_proxy:
+        proxies = {}
+        if http_proxy:
+            proxies["http://"] = http_proxy
+        if https_proxy:
+            proxies["https://"] = https_proxy
+
     client = HassHttpXAsyncClient(
         verify=ssl_context,
         headers={USER_AGENT: SERVER_SOFTWARE},
+        proxies=proxies,
         **kwargs,
     )
 
