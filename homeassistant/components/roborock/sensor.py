@@ -101,8 +101,6 @@ SENSOR_DESCRIPTIONS = [
     ),
 ]
 
-DND_SENSORS = []
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
