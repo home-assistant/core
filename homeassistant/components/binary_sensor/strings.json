@@ -4,6 +4,8 @@
     "condition_type": {
       "is_bat_low": "{entity_name} battery is low",
       "is_not_bat_low": "{entity_name} battery is normal",
+      "is_charging": "{entity_name} is charging",
+      "is_not_charging": "{entity_name} is not charging",
       "is_co": "{entity_name} is detecting carbon monoxide",
       "is_no_co": "{entity_name} is not detecting carbon monoxide",
       "is_cold": "{entity_name} is cold",
@@ -56,6 +58,8 @@
     "trigger_type": {
       "bat_low": "{entity_name} battery low",
       "not_bat_low": "{entity_name} battery normal",
+      "charging": "{entity_name} charging",
+      "not_charging": "{entity_name} not charging",
       "co": "{entity_name} started detecting carbon monoxide",
       "no_co": "{entity_name} stopped detecting carbon monoxide",
       "cold": "{entity_name} became cold",
@@ -310,5 +314,11 @@
     "smoke": "smoke",
     "sound": "sound",
     "vibration": "vibration"
+  },
+  "issues": {
+    "platform_integration_no_support": {
+      "title": "[%key:common::issues::platform_integration_no_support_title%]",
+      "description": "[%key:common::issues::platform_integration_no_support_description%]"
+    }
   }
 }

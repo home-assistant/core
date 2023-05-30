@@ -340,6 +340,28 @@ class AttributeSelector(Selector[AttributeSelectorConfig]):
         return attribute
 
 
+class BackupLocationSelectorConfig(TypedDict, total=False):
+    """Class to represent a backup location selector config."""
+
+
+@SELECTORS.register("backup_location")
+class BackupLocationSelector(Selector[BackupLocationSelectorConfig]):
+    """Selector of a backup location."""
+
+    selector_type = "backup_location"
+
+    CONFIG_SCHEMA = vol.Schema({})
+
+    def __init__(self, config: BackupLocationSelectorConfig | None = None) -> None:
+        """Instantiate a selector."""
+        super().__init__(config)
+
+    def __call__(self, data: Any) -> str:
+        """Validate the passed selection."""
+        name: str = vol.Match(r"^(?:\/backup|\w+)$")(data)
+        return name
+
+
 class BooleanSelectorConfig(TypedDict):
     """Class to represent a boolean selector config."""
 

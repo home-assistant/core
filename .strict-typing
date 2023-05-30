@@ -49,6 +49,7 @@ homeassistant.components.air_quality.*
 homeassistant.components.airly.*
 homeassistant.components.airvisual.*
 homeassistant.components.airzone.*
+homeassistant.components.airzone_cloud.*
 homeassistant.components.aladdin_connect.*
 homeassistant.components.alarm_control_panel.*
 homeassistant.components.alert.*
@@ -86,6 +87,7 @@ homeassistant.components.camera.*
 homeassistant.components.canary.*
 homeassistant.components.clickatell.*
 homeassistant.components.clicksend.*
+homeassistant.components.cloud.*
 homeassistant.components.configurator.*
 homeassistant.components.cover.*
 homeassistant.components.cpuspeed.*
@@ -105,6 +107,7 @@ homeassistant.components.dormakaba_dkey.*
 homeassistant.components.dsmr.*
 homeassistant.components.dunehd.*
 homeassistant.components.efergy.*
+homeassistant.components.electrasmart.*
 homeassistant.components.elgato.*
 homeassistant.components.elkm1.*
 homeassistant.components.emulated_hue.*
@@ -166,10 +169,12 @@ homeassistant.components.homekit_controller.utils
 homeassistant.components.homewizard.*
 homeassistant.components.http.*
 homeassistant.components.huawei_lte.*
+homeassistant.components.hydrawise.*
 homeassistant.components.hyperion.*
 homeassistant.components.ibeacon.*
 homeassistant.components.image_processing.*
 homeassistant.components.image_upload.*
+homeassistant.components.imap.*
 homeassistant.components.input_button.*
 homeassistant.components.input_select.*
 homeassistant.components.integration.*
@@ -177,6 +182,7 @@ homeassistant.components.iqvia.*
 homeassistant.components.isy994.*
 homeassistant.components.jellyfin.*
 homeassistant.components.jewish_calendar.*
+homeassistant.components.jvc_projector.*
 homeassistant.components.kaleidescape.*
 homeassistant.components.knx.*
 homeassistant.components.kraken.*
@@ -230,6 +236,7 @@ homeassistant.components.oncue.*
 homeassistant.components.onewire.*
 homeassistant.components.open_meteo.*
 homeassistant.components.openexchangerates.*
+homeassistant.components.opensky.*
 homeassistant.components.openuv.*
 homeassistant.components.otbr.*
 homeassistant.components.overkiz.*
@@ -284,6 +291,7 @@ homeassistant.components.smhi.*
 homeassistant.components.snooz.*
 homeassistant.components.sonarr.*
 homeassistant.components.speedtestdotnet.*
+homeassistant.components.sql.*
 homeassistant.components.ssdp.*
 homeassistant.components.statistics.*
 homeassistant.components.steamist.*

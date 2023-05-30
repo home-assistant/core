@@ -7,16 +7,14 @@ from typing import Any
 
 from sml import SmlGetListResponse
 from sml.asyncio import SmlProtocol
-import voluptuous as vol
 
 from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_NAME,
     DEGREE,
@@ -27,15 +25,12 @@ from homeassistant.const import (
     UnitOfPower,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.dt import utcnow
 
 from .const import (
@@ -47,13 +42,6 @@ from .const import (
 )
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_SERIAL_PORT): cv.string,
-        vol.Optional(CONF_NAME, default=""): cv.string,
-    },
-)
 
 # OBIS format: A-B:C.D.E*F
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
@@ -279,31 +267,6 @@ SENSOR_UNIT_MAPPING = {
 }
 
 
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Set up EDL21 sensors via configuration.yaml and show deprecation warning."""
-    async_create_issue(
-        hass,
-        DOMAIN,
-        "deprecated_yaml",
-        breaks_in_ha_version="2023.6.0",
-        is_fixable=False,
-        severity=IssueSeverity.WARNING,
-        translation_key="deprecated_yaml",
-    )
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data=config,
-        )
-    )
-
-
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
@@ -344,6 +307,11 @@ class EDL21:
         self._name = config.get(CONF_NAME)
         self._proto = SmlProtocol(config[CONF_SERIAL_PORT])
         self._proto.add_listener(self.event, ["SmlGetListResponse"])
+        LOGGER.debug(
+            "Initialized EDL21 for %s on %s",
+            config.get(CONF_NAME),
+            config[CONF_SERIAL_PORT],
+        )
 
     async def connect(self) -> None:
         """Connect to an EDL21 reader."""
@@ -352,14 +320,12 @@ class EDL21:
     def event(self, message_body) -> None:
         """Handle events from pysml."""
         assert isinstance(message_body, SmlGetListResponse)
+        LOGGER.debug("Received sml message for %s: %s", self._name, message_body)
 
-        electricity_id = None
-        for telegram in message_body.get("valList", []):
-            if telegram.get("objName") in ("1-0:0.0.9*255", "1-0:96.1.0*255"):
-                electricity_id = telegram.get("value")
-                break
+        electricity_id = message_body["serverId"]
 
         if electricity_id is None:
+            LOGGER.debug("No electricity id found in sml message for %s", self._name)
             return
         electricity_id = electricity_id.replace(" ", "")
 

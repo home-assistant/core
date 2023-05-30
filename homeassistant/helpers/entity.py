@@ -763,13 +763,6 @@ class Entity(ABC):
         hass = self.hass
         assert hass is not None
 
-        if hasattr(self, "async_update"):
-            coro: asyncio.Future[None] = self.async_update()
-        elif hasattr(self, "update"):
-            coro = hass.async_add_executor_job(self.update)
-        else:
-            return
-
         self._update_staged = True
 
         # Process update sequential
@@ -777,11 +770,17 @@ class Entity(ABC):
             await self.parallel_updates.acquire()
 
         if warning:
-            update_warn = hass.loop.call_later(
-                SLOW_UPDATE_WARNING, self._async_slow_update_warning
+            update_warn = hass.loop.call_at(
+                hass.loop.time() + SLOW_UPDATE_WARNING, self._async_slow_update_warning
             )
+
         try:
-            await coro
+            if hasattr(self, "async_update"):
+                await self.async_update()
+            elif hasattr(self, "update"):
+                await hass.async_add_executor_job(self.update)
+            else:
+                return
         finally:
             self._update_staged = False
             if warning:
