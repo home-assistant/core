@@ -14,7 +14,7 @@ from homeassistant.const import CONF_MONITORED_CONDITIONS, UnitOfTime
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.util import dt
+from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN, LOGGER
 from .coordinator import HydrawiseDataUpdateCoordinator
@@ -83,7 +83,7 @@ class HydrawiseSensor(HydrawiseEntity, SensorEntity):
         else:  # _sensor_type == 'next_cycle'
             next_cycle = min(relay_data["time"], TWO_YEAR_SECONDS)
             LOGGER.debug("New cycle time: %s", next_cycle)
-            self._attr_native_value = dt.utc_from_timestamp(
-                dt.as_timestamp(dt.now()) + next_cycle
+            self._attr_native_value = dt_util.utc_from_timestamp(
+                dt_util.as_timestamp(dt_util.now()) + next_cycle
             )
         super()._handle_coordinator_update()
