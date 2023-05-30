@@ -57,16 +57,13 @@ class ElecPricesDataUpdateCoordinator(DataUpdateCoordinator[EsiosApiData]):
 
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Initialize."""
-        api_token = None
-        if entry.data.get(CONF_USE_API_TOKEN, False):
-            api_token = entry.data.get(CONF_API_TOKEN)
         self.api = PVPCData(
             session=async_get_clientsession(hass),
             tariff=entry.data[ATTR_TARIFF],
             local_timezone=hass.config.time_zone,
             power=entry.data[ATTR_POWER],
             power_valley=entry.data[ATTR_POWER_P3],
-            api_token=api_token,
+            api_token=entry.data.get(CONF_API_TOKEN),
         )
         super().__init__(
             hass, _LOGGER, name=DOMAIN, update_interval=timedelta(minutes=30)

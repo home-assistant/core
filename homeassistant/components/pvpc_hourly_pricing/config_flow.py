@@ -127,6 +127,13 @@ class TariffSelectorConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 description_placeholders={"mail_to_link": _MAIL_TO_LINK},
             )
 
+        data = {
+            CONF_NAME: self._name,
+            ATTR_TARIFF: self._tariff,
+            ATTR_POWER: self._power,
+            ATTR_POWER_P3: self._power_p3,
+            CONF_API_TOKEN: self._api_token if self._use_api_token else None,
+        }
         if self._reauth_entry:
             self.hass.config_entries.async_update_entry(self._reauth_entry, data=data)
             self.hass.async_create_task(
@@ -142,8 +149,8 @@ class TariffSelectorConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._reauth_entry = self.hass.config_entries.async_get_entry(
             self.context["entry_id"]
         )
-        self._use_api_token = entry_data[CONF_USE_API_TOKEN]
         self._api_token = entry_data.get(CONF_API_TOKEN)
+        self._use_api_token = self._api_token is not None
         self._name = entry_data[CONF_NAME]
         self._tariff = entry_data[ATTR_TARIFF]
         self._power = entry_data[ATTR_POWER]
@@ -183,7 +190,6 @@ class PVPCOptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
                 data={
                     ATTR_POWER: self._power,
                     ATTR_POWER_P3: self._power_p3,
-                    CONF_USE_API_TOKEN: True,
                     CONF_API_TOKEN: user_input[CONF_API_TOKEN],
                 },
             )
@@ -209,17 +215,24 @@ class PVPCOptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
                 self._power = user_input[ATTR_POWER]
                 self._power_p3 = user_input[ATTR_POWER_P3]
                 return await self.async_step_api_token(user_input)
-            return self.async_create_entry(title="", data=user_input)
+            return self.async_create_entry(
+                title="",
+                data={
+                    ATTR_POWER: user_input[ATTR_POWER],
+                    ATTR_POWER_P3: user_input[ATTR_POWER_P3],
+                    CONF_API_TOKEN: None,
+                },
+            )
 
         # Fill options with entry data
         power = self.options.get(ATTR_POWER, self.config_entry.data[ATTR_POWER])
         power_valley = self.options.get(
             ATTR_POWER_P3, self.config_entry.data[ATTR_POWER_P3]
         )
-        use_api_token = self.options.get(
-            CONF_USE_API_TOKEN,
-            self.config_entry.data.get(CONF_USE_API_TOKEN, False),
+        api_token = self.options.get(
+            CONF_API_TOKEN, self.config_entry.data.get(CONF_API_TOKEN)
         )
+        use_api_token = api_token is not None
         schema = vol.Schema(
             {
                 vol.Required(ATTR_POWER, default=power): VALID_POWER,
