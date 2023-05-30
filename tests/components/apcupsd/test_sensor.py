@@ -69,7 +69,7 @@ async def test_sensor(hass: HomeAssistant) -> None:
     # Test a representative wattage sensor.
     state = hass.states.get("sensor.ups_nominal_output_power")
     assert state
-    assert state.state == "330.0"
+    assert state.state == "330"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfPower.WATT
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.POWER
     entry = registry.async_get("sensor.ups_nominal_output_power")
