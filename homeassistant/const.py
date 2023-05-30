@@ -388,6 +388,9 @@ ATTR_AREA_ID: Final = "area_id"
 # Contains one string, the device ID
 ATTR_DEVICE_ID: Final = "device_id"
 
+# Should hidden entities be included
+ATTR_INCLUDE_HIDDEN: Final = "include_hidden"
+
 # String with a friendly name for the entity
 ATTR_FRIENDLY_NAME: Final = "friendly_name"
 

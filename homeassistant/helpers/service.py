@@ -17,6 +17,7 @@ from homeassistant.const import (
     ATTR_AREA_ID,
     ATTR_DEVICE_ID,
     ATTR_ENTITY_ID,
+    ATTR_INCLUDE_HIDDEN,
     CONF_ENTITY_ID,
     CONF_SERVICE,
     CONF_SERVICE_DATA,
@@ -193,6 +194,8 @@ class ServiceTargetSelector:
             set(cv.ensure_list(device_ids)) if _has_match(device_ids) else set()
         )
         self.area_ids = set(cv.ensure_list(area_ids)) if _has_match(area_ids) else set()
+
+        self.include_hidden: bool = service_call.data.get(ATTR_INCLUDE_HIDDEN, False)
 
     @property
     def has_any_selector(self) -> bool:
@@ -480,9 +483,12 @@ def async_extract_referenced_entity_ids(
         return selected
 
     for ent_entry in ent_reg.entities.values():
-        # Do not add entities which are hidden or which are config
-        # or diagnostic entities.
-        if ent_entry.entity_category is not None or ent_entry.hidden_by is not None:
+        # Do not add entities which are hidden (unless it was requested)
+        if ent_entry.hidden_by is not None and not selector.include_hidden:
+            continue
+
+        # Do not add config or diagnostic entities.
+        if ent_entry.entity_category is not None:
             continue
 
         if (

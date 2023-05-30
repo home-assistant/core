@@ -519,6 +519,50 @@ async def test_extract_entity_ids_from_area(hass: HomeAssistant, area_mock) -> N
     )
 
 
+async def test_extract_entity_ids_from_area_with_hidden(
+    hass: HomeAssistant, area_mock
+) -> None:
+    """Test extract_entity_ids method with areas."""
+    call = ServiceCall(
+        "light", "turn_on", {"area_id": "own-area", "include_hidden": True}
+    )
+
+    assert {
+        "light.in_own_area",
+        "light.hidden_in_own_area",
+    } == await service.async_extract_entity_ids(hass, call)
+
+    call = ServiceCall(
+        "light", "turn_on", {"area_id": "test-area", "include_hidden": True}
+    )
+
+    assert {
+        "light.in_area",
+        "light.hidden_in_area",
+        "light.assigned_to_area",
+    } == await service.async_extract_entity_ids(hass, call)
+
+    call = ServiceCall(
+        "light",
+        "turn_on",
+        {"area_id": ["test-area", "diff-area"], "include_hidden": True},
+    )
+
+    assert {
+        "light.in_area",
+        "light.hidden_in_area",
+        "light.diff_area",
+        "light.assigned_to_area",
+    } == await service.async_extract_entity_ids(hass, call)
+
+    assert (
+        await service.async_extract_entity_ids(
+            hass, ServiceCall("light", "turn_on", {"area_id": ENTITY_MATCH_NONE})
+        )
+        == set()
+    )
+
+
 async def test_extract_entity_ids_from_devices(hass: HomeAssistant, area_mock) -> None:
     """Test extract_entity_ids method with devices."""
     assert await service.async_extract_entity_ids(
