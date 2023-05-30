@@ -30,7 +30,7 @@ _LOGGER = logging.getLogger(__name__)
 PARALLEL_UPDATES = 0
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
-PLATFORMS = [Platform.CLIMATE, Platform.SENSOR, Platform.SWITCH]
+PLATFORMS = [Platform.CLIMATE, Platform.SENSOR, Platform.SWITCH, Platform.NUMBER]
 
 CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
@@ -67,7 +67,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-async def daikin_api_setup(hass, host, key, uuid, password):
+async def daikin_api_setup(hass: HomeAssistant, host, key, uuid, password):
     """Create a Daikin instance only once."""
 
     session = async_get_clientsession(hass)
