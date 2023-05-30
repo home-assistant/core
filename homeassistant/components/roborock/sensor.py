@@ -4,6 +4,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 
+from roborock.containers import RoborockStateCode
 from roborock.roborock_typing import DeviceProp
 
 from homeassistant.components.sensor import (
@@ -95,6 +96,18 @@ CLEAN_INFORMATION_SENSORS = [
     ),
 ]
 
+STATUS_SENSORS = [
+    RoborockSensorDescription(
+        key="status",
+        icon="",
+        device_class=SensorDeviceClass.ENUM,
+        translation_key="status",
+        value_fn=lambda data: data.status.state.name,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        options=RoborockStateCode.keys(),
+    )
+]
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -112,7 +125,9 @@ async def async_setup_entry(
             description,
         )
         for device_id, coordinator in coordinators.items()
-        for description in CONSUMABLE_SENSORS + CLEAN_INFORMATION_SENSORS
+        for description in CONSUMABLE_SENSORS
+        + CLEAN_INFORMATION_SENSORS
+        + STATUS_SENSORS
     )
 
 
