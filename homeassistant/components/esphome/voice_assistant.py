@@ -302,7 +302,7 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
 
         if use_vad:
             stt_stream = await self._iterate_packets_with_vad(pipeline_timeout)
-            # Error or timeout occured and was handled already
+            # Error or timeout occurred and was handled already
             if stt_stream is None:
                 return
         else:
