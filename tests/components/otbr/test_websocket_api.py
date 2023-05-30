@@ -97,9 +97,7 @@ async def test_create_network(
         assert msg["result"] is None
 
     create_dataset_mock.assert_called_once_with(
-        python_otbr_api.models.OperationalDataSet(
-            channel=15, network_name="home-assistant"
-        )
+        python_otbr_api.models.ActiveDataSet(channel=15, network_name="home-assistant")
     )
     assert len(set_enabled_mock.mock_calls) == 2
     assert set_enabled_mock.mock_calls[0][1][0] is False
