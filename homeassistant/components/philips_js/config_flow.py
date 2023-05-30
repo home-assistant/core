@@ -19,7 +19,14 @@ from homeassistant.const import (
 from homeassistant.data_entry_flow import FlowResult
 
 from . import LOGGER
-from .const import CONF_ALLOW_NOTIFY, CONF_SYSTEM, CONST_APP_ID, CONST_APP_NAME, DOMAIN
+from .const import (
+    CONF_ALLOW_NOTIFY,
+    CONF_SYSTEM,
+    CONF_USE_HTTPS,
+    CONST_APP_ID,
+    CONST_APP_NAME,
+    DOMAIN,
+)
 
 USER_SCHEMA = vol.Schema(
     {
@@ -30,18 +37,19 @@ USER_SCHEMA = vol.Schema(
             CONF_API_VERSION,
             default=1,
         ): vol.In([1, 5, 6]),
+        vol.Required(CONF_USE_HTTPS, default=False): bool,
     }
 )
 
 
 async def _validate_input(
-    hass: core.HomeAssistant, host: str, api_version: int
+    hass: core.HomeAssistant, host: str, api_version: int, secured_transport: bool
 ) -> PhilipsTV:
     """Validate the user input allows us to connect."""
-    hub = PhilipsTV(host, api_version)
+    hub = PhilipsTV(host, api_version, secured_transport=secured_transport)
 
+    await hub.setTransport(secured_transport)
     await hub.getSystem()
-    await hub.setTransport(hub.secured_transport)
 
     if not hub.system:
         raise ConnectionFailure("System data is empty")
@@ -136,6 +144,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
         self._current[CONF_HOST] = entry_data[CONF_HOST]
         self._current[CONF_API_VERSION] = entry_data[CONF_API_VERSION]
+        self._current[CONF_USE_HTTPS] = entry_data[CONF_USE_HTTPS]
         return await self.async_step_user()
 
     async def async_step_user(
@@ -147,7 +156,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self._current = user_input
             try:
                 hub = await _validate_input(
-                    self.hass, user_input[CONF_HOST], user_input[CONF_API_VERSION]
+                    self.hass,
+                    user_input[CONF_HOST],
+                    user_input[CONF_API_VERSION],
+                    user_input[CONF_USE_HTTPS],
                 )
             except ConnectionFailure as exc:
                 LOGGER.error(exc)

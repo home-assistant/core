@@ -141,7 +141,7 @@ async def test_pairing(hass: HomeAssistant, mock_tv_pairable, mock_setup_entry) 
     assert result["type"] == "form"
     assert result["errors"] == {}
 
-    mock_tv.setTransport.assert_called_with(True)
+    mock_tv.setTransport.assert_called_with(False)
     mock_tv.pairRequest.assert_called()
 
     result = await hass.config_entries.flow.async_configure(
@@ -212,7 +212,7 @@ async def test_pair_grant_failed(
     assert result["type"] == "form"
     assert result["errors"] == {}
 
-    mock_tv.setTransport.assert_called_with(True)
+    mock_tv.setTransport.assert_called_with(False)
     mock_tv.pairRequest.assert_called()
 
     # Test with invalid pin

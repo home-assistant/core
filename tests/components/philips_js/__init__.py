@@ -62,11 +62,13 @@ MOCK_CONFIG = {
     "host": "1.1.1.1",
     "api_version": 1,
     "system": MOCK_SYSTEM,
+    "use_https": False,
 }
 
 MOCK_CONFIG_PAIRED = {
     "host": "1.1.1.1",
     "api_version": 6,
+    "use_https": False,
     "username": MOCK_USERNAME,
     "password": MOCK_PASSWORD,
     "system": MOCK_SYSTEM_UNPAIRED,

@@ -23,7 +23,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import CONF_ALLOW_NOTIFY, CONF_SYSTEM, DOMAIN
+from .const import CONF_ALLOW_NOTIFY, CONF_SYSTEM, CONF_USE_HTTPS, DOMAIN
 
 PLATFORMS = [
     Platform.MEDIA_PLAYER,
@@ -44,6 +44,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entry.data[CONF_API_VERSION],
         username=entry.data.get(CONF_USERNAME),
         password=entry.data.get(CONF_PASSWORD),
+        secured_transport=entry.data.get(CONF_USE_HTTPS),
         system=system,
     )
     coordinator = PhilipsTVDataUpdateCoordinator(hass, tvapi, entry.options)
