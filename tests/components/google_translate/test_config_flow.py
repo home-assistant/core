@@ -66,3 +66,24 @@ async def test_already_configured(
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert len(mock_setup_entry.mock_calls) == 0
+
+
+async def test_import_step(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
+    """Test import step create entry result."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_IMPORT},
+        data={
+            CONF_LANG: "de",
+            CONF_TLD: "de",
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Google Translate Text-to-Speech"
+    assert result["data"] == {
+        CONF_LANG: "de",
+        CONF_TLD: "de",
+    }
+    assert len(mock_setup_entry.mock_calls) == 1
