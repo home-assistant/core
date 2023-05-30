@@ -52,7 +52,7 @@ from homeassistant.const import EntityCategory, Platform
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceEntry
 
-from .const import LOGGER
+from .const import COVER_POSITION_PROPERTY_KEYS, COVER_TILT_PROPERTY_KEYS, LOGGER
 from .discovery_data_template import (
     BaseDiscoverySchemaDataTemplate,
     ConfigurableFanValueMappingDataTemplate,
@@ -237,6 +237,18 @@ SIREN_TONE_SCHEMA = ZWaveValueDiscoverySchema(
     type={ValueType.NUMBER},
 )
 
+WINDOW_COVERING_COVER_CURRENT_VALUE_SCHEMA = ZWaveValueDiscoverySchema(
+    command_class={CommandClass.WINDOW_COVERING},
+    property={CURRENT_VALUE_PROPERTY},
+    property_key=COVER_POSITION_PROPERTY_KEYS,
+)
+
+WINDOW_COVERING_SLAT_CURRENT_VALUE_SCHEMA = ZWaveValueDiscoverySchema(
+    command_class={CommandClass.WINDOW_COVERING},
+    property={CURRENT_VALUE_PROPERTY},
+    property_key=COVER_TILT_PROPERTY_KEYS,
+)
+
 # For device class mapping see:
 # https://github.com/zwave-js/node-zwave-js/blob/master/packages/config/config/deviceClasses.json
 DISCOVERY_SCHEMAS = [
@@ -341,12 +353,18 @@ DISCOVERY_SCHEMAS = [
         product_type={0x0301, 0x0302},
         primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
         data_template=CoverTiltDataTemplate(
-            tilt_value_id=ZwaveValueID(
+            current_tilt_value_id=ZwaveValueID(
                 property_="fibaro",
                 command_class=CommandClass.MANUFACTURER_PROPRIETARY,
                 endpoint=0,
                 property_key="venetianBlindsTilt",
-            )
+            ),
+            target_tilt_value_id=ZwaveValueID(
+                property_="fibaro",
+                command_class=CommandClass.MANUFACTURER_PROPRIETARY,
+                endpoint=0,
+                property_key="venetianBlindsTilt",
+            ),
         ),
         required_values=[
             ZWaveValueDiscoverySchema(
@@ -825,7 +843,18 @@ DISCOVERY_SCHEMAS = [
     # window coverings
     ZWaveDiscoverySchema(
         platform=Platform.COVER,
-        hint="cover",
+        hint="window_covering",
+        primary_value=WINDOW_COVERING_COVER_CURRENT_VALUE_SCHEMA,
+    ),
+    ZWaveDiscoverySchema(
+        platform=Platform.COVER,
+        hint="window_covering",
+        primary_value=WINDOW_COVERING_SLAT_CURRENT_VALUE_SCHEMA,
+        absent_values=[WINDOW_COVERING_COVER_CURRENT_VALUE_SCHEMA],
+    ),
+    ZWaveDiscoverySchema(
+        platform=Platform.COVER,
+        hint="multilevel_switch",
         device_class_generic={"Multilevel Switch"},
         device_class_specific={
             "Motor Control Class A",
@@ -834,6 +863,10 @@ DISCOVERY_SCHEMAS = [
             "Multiposition Motor",
         },
         primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
+        absent_values=[
+            WINDOW_COVERING_COVER_CURRENT_VALUE_SCHEMA,
+            WINDOW_COVERING_SLAT_CURRENT_VALUE_SCHEMA,
+        ],
     ),
     # cover
     # motorized barriers

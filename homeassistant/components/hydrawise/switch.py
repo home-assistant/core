@@ -17,7 +17,6 @@ from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import (
     ALLOWED_WATERING_TIME,
@@ -90,7 +89,7 @@ class HydrawiseSwitch(HydrawiseEntity, SwitchEntity):
         self,
         *,
         data: dict[str, Any],
-        coordinator: DataUpdateCoordinator,
+        coordinator: HydrawiseDataUpdateCoordinator,
         description: SwitchEntityDescription,
         default_watering_timer: int,
     ) -> None:

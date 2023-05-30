@@ -1,6 +1,7 @@
 """Generic Z-Wave Entity Class."""
 from __future__ import annotations
 
+from collections.abc import Sequence
 from typing import Any
 
 from zwave_js_server.const import NodeStatus
@@ -12,7 +13,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import DEVICE_CLASS_NAME, DeviceInfo, Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity
 
 from .const import DOMAIN, LOGGER
 from .discovery import ZwaveDiscoveryInfo
@@ -143,7 +144,7 @@ class ZWaveBaseEntity(Entity):
         self,
         include_value_name: bool = False,
         alternate_value_name: str | None = None,
-        additional_info: list[str | None] | None = None,
+        additional_info: Sequence[str | None] | None = None,
         name_prefix: str | None = None,
     ) -> str:
         """Generate entity name."""
@@ -153,10 +154,6 @@ class ZWaveBaseEntity(Entity):
             and self.entity_description
             and self.entity_description.name
         ):
-            # It's not possible to do string manipulations on DEVICE_CLASS_NAME
-            # the assert satisfies the type checker and will catch attempts
-            # to use DEVICE_CLASS_NAME in the entity descriptions.
-            assert self.entity_description.name is not DEVICE_CLASS_NAME
             name = self.entity_description.name
 
         if name_prefix:
