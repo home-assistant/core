@@ -1075,8 +1075,16 @@ async def async_mock_restore_state_shutdown_restart(
     """Mock shutting down and saving restore state and restoring."""
     data = restore_state.async_get(hass)
     await data.async_dump_states()
-    await data.async_load()
+    await async_mock_load_restore_state_from_storage(data)
     return data
+
+
+async def async_mock_load_restore_state_from_storage(
+    hass: HomeAssistant,
+) -> None:
+    """Mock loading restore state from storage."""
+    data = restore_state.async_get(hass)
+    await data.async_load()
 
 
 class MockEntity(entity.Entity):
