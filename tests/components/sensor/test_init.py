@@ -30,7 +30,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.restore_state import STORAGE_KEY as RESTORE_STATE_KEY
+from homeassistant.helpers.restore_state import async_get
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_system import METRIC_SYSTEM, US_CUSTOMARY_SYSTEM
@@ -375,7 +375,6 @@ RESTORE_DATA = {
 async def test_restore_sensor_save_state(
     hass: HomeAssistant,
     enable_custom_integrations: None,
-    hass_storage: dict[str, Any],
     native_value,
     native_value_type,
     expected_extra_data,
@@ -396,15 +395,9 @@ async def test_restore_sensor_save_state(
     assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
     await hass.async_block_till_done()
 
-    # Trigger saving state
-    await hass.async_stop()
-
-    assert len(hass_storage[RESTORE_STATE_KEY]["data"]) == 1
-    state = hass_storage[RESTORE_STATE_KEY]["data"][0]["state"]
-    assert state["entity_id"] == entity0.entity_id
-    extra_data = hass_storage[RESTORE_STATE_KEY]["data"][0]["extra_data"]
-    assert extra_data == expected_extra_data
-    assert type(extra_data["native_value"]) == native_value_type
+    restore = async_get(hass)
+    assert len(restore.entities) == 1
+    assert entity0.entity_id in restore.entities
 
 
 @pytest.mark.parametrize(

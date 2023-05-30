@@ -252,7 +252,14 @@ async def async_test_home_assistant(event_loop, load_registries=True):
     # Load the registries
     entity.async_setup(hass)
     if load_registries:
-        with patch("homeassistant.helpers.storage.Store.async_load", return_value=None):
+        with patch(
+            "homeassistant.helpers.storage.Store.async_load", return_value=None
+        ), patch(
+            "homeassistant.helpers.restore_state.RestoreStateData.async_setup_dump",
+            return_value=None,
+        ), patch(
+            "homeassistant.helpers.restore_state.start.async_at_start"
+        ):
             await asyncio.gather(
                 ar.async_load(hass),
                 dr.async_load(hass),
