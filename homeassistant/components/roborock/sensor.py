@@ -95,6 +95,8 @@ CLEAN_INFORMATION_SENSORS = [
     ),
 ]
 
+DND_SENSORS = []
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
