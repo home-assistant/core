@@ -428,7 +428,7 @@ class DefaultAgent(AbstractConversationAgent):
                                 merge_dict(intents_dict, custom_sentences_yaml)
                             else:
                                 _LOGGER.warning(
-                                    "Custom sentences file is empty path=%s",
+                                    "Custom sentences file does not match expected format path=%s",
                                     custom_sentences_file.name,
                                 )
 
