@@ -68,7 +68,7 @@ from homeassistant.helpers.json import JSONEncoder
 from homeassistant.helpers.typing import ConfigType, StateType
 from homeassistant.setup import setup_component
 from homeassistant.util.async_ import run_callback_threadsafe
-import homeassistant.util.dt as date_util
+import homeassistant.util.dt as dt_util
 from homeassistant.util.json import (
     JsonArrayType,
     JsonObjectType,
@@ -357,7 +357,7 @@ def async_fire_time_changed_exact(
     if datetime_ is None:
         utc_datetime = datetime.now(timezone.utc)
     else:
-        utc_datetime = date_util.as_utc(datetime_)
+        utc_datetime = dt_util.as_utc(datetime_)
 
     _async_fire_time_changed(hass, utc_datetime, fire_all)
 
@@ -379,7 +379,7 @@ def async_fire_time_changed(
     if datetime_ is None:
         utc_datetime = datetime.now(timezone.utc)
     else:
-        utc_datetime = date_util.as_utc(datetime_)
+        utc_datetime = dt_util.as_utc(datetime_)
 
     if utc_datetime.microsecond < 500000:
         # Allow up to 500000 microseconds to be added to the time
@@ -395,7 +395,7 @@ def async_fire_time_changed(
 def _async_fire_time_changed(
     hass: HomeAssistant, utc_datetime: datetime | None, fire_all: bool
 ) -> None:
-    timestamp = date_util.utc_to_timestamp(utc_datetime)
+    timestamp = dt_util.utc_to_timestamp(utc_datetime)
     for task in list(hass.loop._scheduled):
         if not isinstance(task, asyncio.TimerHandle):
             continue
@@ -1012,7 +1012,7 @@ def mock_restore_cache(hass: HomeAssistant, states: Sequence[State]) -> None:
     """Mock the DATA_RESTORE_CACHE."""
     key = restore_state.DATA_RESTORE_STATE_TASK
     data = restore_state.RestoreStateData(hass)
-    now = date_util.utcnow()
+    now = dt_util.utcnow()
 
     last_states = {}
     for state in states:
@@ -1039,7 +1039,7 @@ def mock_restore_cache_with_extra_data(
     """Mock the DATA_RESTORE_CACHE."""
     key = restore_state.DATA_RESTORE_STATE_TASK
     data = restore_state.RestoreStateData(hass)
-    now = date_util.utcnow()
+    now = dt_util.utcnow()
 
     last_states = {}
     for state, extra_data in states:

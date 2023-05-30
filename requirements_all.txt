@@ -924,7 +924,7 @@ holidays==0.21.13
 home-assistant-frontend==20230526.0
 
 # homeassistant.components.conversation
-home-assistant-intents==2023.4.26
+home-assistant-intents==2023.5.30
 
 # homeassistant.components.home_connect
 homeconnect==0.7.2
@@ -2109,7 +2109,7 @@ python-opensky==0.0.7
 
 # homeassistant.components.otbr
 # homeassistant.components.thread
-python-otbr-api==1.0.9
+python-otbr-api==2.1.0
 
 # homeassistant.components.picnic
 python-picnic-api==1.1.0

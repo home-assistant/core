@@ -284,6 +284,7 @@ voluptuous = "vol"
 "homeassistant.helpers.device_registry" = "dr"
 "homeassistant.helpers.entity_registry" = "er"
 "homeassistant.helpers.issue_registry" = "ir"
+"homeassistant.util.dt" = "dt_util"
 
 [tool.ruff.flake8-pytest-style]
 fixture-parentheses = false

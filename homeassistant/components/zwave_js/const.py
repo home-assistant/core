@@ -3,6 +3,10 @@ from __future__ import annotations
 
 import logging
 
+from zwave_js_server.const.command_class.window_covering import (
+    WindowCoveringPropertyKey,
+)
+
 from homeassistant.const import APPLICATION_NAME, __version__ as HA_VERSION
 
 USER_AGENT = {APPLICATION_NAME: HA_VERSION}
@@ -31,6 +35,9 @@ DATA_CLIENT = "client"
 EVENT_DEVICE_ADDED_TO_REGISTRY = f"{DOMAIN}_device_added_to_registry"
 
 LOGGER = logging.getLogger(__package__)
+
+# constants extra state attributes
+ATTR_RESERVED_VALUES = "reserved_values"  # ConfigurationValue number entities
 
 # constants for events
 ZWAVE_JS_VALUE_NOTIFICATION_EVENT = f"{DOMAIN}_value_notification"
@@ -131,3 +138,35 @@ ENTITY_DESC_KEY_TOTAL_INCREASING = "total_increasing"
 API_KEY_FIRMWARE_UPDATE_SERVICE = (
     "2e39d98fc56386389fbb35e5a98fa1b44b9fdd8f971460303587cff408430d4cfcde6134"
 )
+
+# Platform constants
+# cover
+COVER_POSITION_PROPERTY_KEYS: set[str | int | None] = {
+    WindowCoveringPropertyKey.INBOUND_BOTTOM,
+    WindowCoveringPropertyKey.INBOUND_BOTTOM_NO_POSITION,
+    WindowCoveringPropertyKey.INBOUND_LEFT,
+    WindowCoveringPropertyKey.INBOUND_LEFT_NO_POSITION,
+    WindowCoveringPropertyKey.INBOUND_LEFT_RIGHT,
+    WindowCoveringPropertyKey.INBOUND_LEFT_RIGHT_NO_POSITION,
+    WindowCoveringPropertyKey.INBOUND_RIGHT,
+    WindowCoveringPropertyKey.INBOUND_RIGHT_NO_POSITION,
+    WindowCoveringPropertyKey.INBOUND_TOP,
+    WindowCoveringPropertyKey.INBOUND_TOP_NO_POSITION,
+    WindowCoveringPropertyKey.INBOUND_TOP_BOTTOM,
+    WindowCoveringPropertyKey.INBOUND_TOP_BOTTOM_NO_POSITION,
+    WindowCoveringPropertyKey.OUTBOUND_BOTTOM,
+    WindowCoveringPropertyKey.OUTBOUND_BOTTOM_NO_POSITION,
+    WindowCoveringPropertyKey.OUTBOUND_LEFT,
+    WindowCoveringPropertyKey.OUTBOUND_LEFT_NO_POSITION,
+    WindowCoveringPropertyKey.OUTBOUND_RIGHT,
+    WindowCoveringPropertyKey.OUTBOUND_RIGHT_NO_POSITION,
+    WindowCoveringPropertyKey.OUTBOUND_TOP,
+    WindowCoveringPropertyKey.OUTBOUND_TOP_NO_POSITION,
+}
+
+COVER_TILT_PROPERTY_KEYS: set[str | int | None] = {
+    WindowCoveringPropertyKey.HORIZONTAL_SLATS_ANGLE,
+    WindowCoveringPropertyKey.HORIZONTAL_SLATS_ANGLE_NO_POSITION,
+    WindowCoveringPropertyKey.VERTICAL_SLATS_ANGLE,
+    WindowCoveringPropertyKey.VERTICAL_SLATS_ANGLE_NO_POSITION,
+}
