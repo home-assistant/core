@@ -487,25 +487,37 @@ async def test_setting_sensor_value_via_mqtt_json_message_and_default_current_st
         }
     ],
 )
+@pytest.mark.parametrize(
+    ("message", "last_reset", "state"),
+    [
+        (
+            '{ "last_reset": "2020-01-02 08:11:00" }',
+            "2020-01-02T08:11:00",
+            STATE_UNKNOWN,
+        ),
+        (
+            '{ "last_reset": "2020-01-02 08:11:03", "state": 10.0 }',
+            "2020-01-02T08:11:03",
+            "10.0",
+        ),
+        ('{ "last_reset": null, "state": 10.1 }', None, "10.1"),
+        ('{ "last_reset": "", "state": 10.1 }', None, "10.1"),
+    ],
+)
 async def test_setting_sensor_last_reset_via_mqtt_json_message(
-    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    message: str,
+    last_reset: str,
+    state: str,
 ) -> None:
     """Test the setting of the value via MQTT with JSON payload."""
     await mqtt_mock_entry()
 
-    async_fire_mqtt_message(
-        hass, "test-topic", '{ "last_reset": "2020-01-02 08:11:00" }'
-    )
-    state = hass.states.get("sensor.test")
-    assert state.attributes.get("last_reset") == "2020-01-02T08:11:00"
-    assert state.state == STATE_UNKNOWN
-
-    async_fire_mqtt_message(
-        hass, "test-topic", '{ "last_reset": "2020-01-02 08:11:03", "state": 10.0 }'
-    )
-    state = hass.states.get("sensor.test")
-    assert state.attributes.get("last_reset") == "2020-01-02T08:11:03"
-    assert state.state == "10.0"
+    async_fire_mqtt_message(hass, "test-topic", message)
+    sensor_state = hass.states.get("sensor.test")
+    assert sensor_state.attributes.get("last_reset") == last_reset
+    assert sensor_state.state == state
 
 
 @pytest.mark.parametrize(
