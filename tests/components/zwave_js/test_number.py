@@ -256,10 +256,10 @@ async def test_config_parameter_number(
     state = hass.states.get(number_entity_id)
     assert state
     assert state.state == "30.0"
-    assert "special_values" not in state.attributes
+    assert "reserved_values" not in state.attributes
 
     state = hass.states.get(number_with_states_entity_id)
     assert state
     assert state.state == "0.0"
-    assert "special_values" in state.attributes
-    assert state.attributes["special_values"] == {-1: "Disabled"}
+    assert "reserved_values" in state.attributes
+    assert state.attributes["reserved_values"] == {-1: "Disabled"}
