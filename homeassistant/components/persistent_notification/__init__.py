@@ -63,6 +63,8 @@ SCHEMA_SERVICE_NOTIFICATION = vol.Schema(
 
 _LOGGER = logging.getLogger(__name__)
 
+CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
+
 
 @bind_hass
 def create(

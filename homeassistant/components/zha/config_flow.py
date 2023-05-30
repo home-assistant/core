@@ -23,7 +23,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowHandler, FlowResult
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.selector import FileSelector, FileSelectorConfig
-from homeassistant.util import dt
+from homeassistant.util import dt as dt_util
 
 from .core.const import (
     CONF_BAUDRATE,
@@ -69,7 +69,7 @@ def _format_backup_choice(
 ) -> str:
     """Format network backup info into a short piece of text."""
     if not pan_ids:
-        return dt.as_local(backup.backup_time).strftime("%c")
+        return dt_util.as_local(backup.backup_time).strftime("%c")
 
     identifier = (
         # PAN ID
@@ -78,7 +78,7 @@ def _format_backup_choice(
         f":{str(backup.network_info.extended_pan_id).replace(':', '')}"
     ).lower()
 
-    return f"{dt.as_local(backup.backup_time).strftime('%c')} ({identifier})"
+    return f"{dt_util.as_local(backup.backup_time).strftime('%c')} ({identifier})"
 
 
 async def list_serial_ports(hass: HomeAssistant) -> list[ListPortInfo]:

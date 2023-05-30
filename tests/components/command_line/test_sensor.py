@@ -13,7 +13,7 @@ from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 import homeassistant.helpers.issue_registry as ir
-from homeassistant.util import dt
+from homeassistant.util import dt as dt_util
 
 from tests.common import async_fire_time_changed
 
@@ -123,7 +123,7 @@ async def test_template_render(
     # Give time for template to load
     async_fire_time_changed(
         hass,
-        dt.utcnow() + timedelta(minutes=1),
+        dt_util.utcnow() + timedelta(minutes=1),
     )
     await hass.async_block_till_done()
 
@@ -158,7 +158,7 @@ async def test_template_render_with_quote(hass: HomeAssistant) -> None:
         # Give time for template to load
         async_fire_time_changed(
             hass,
-            dt.utcnow() + timedelta(minutes=1),
+            dt_util.utcnow() + timedelta(minutes=1),
         )
         await hass.async_block_till_done()
 
