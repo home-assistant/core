@@ -1491,7 +1491,7 @@ pytautulli==23.1.1
 python-bsblan==0.5.11
 
 # homeassistant.components.ecobee
-python-ecobee-api==0.2.14
+python-ecobee-api==0.2.17
 
 # homeassistant.components.fully_kiosk
 python-fullykiosk==0.0.12
