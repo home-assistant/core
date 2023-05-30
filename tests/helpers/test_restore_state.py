@@ -36,6 +36,17 @@ async def test_caching_data(hass: HomeAssistant) -> None:
 
     # Emulate a fresh load
     hass.data.pop(DATA_RESTORE_STATE_TASK)
+
+    with patch(
+        "homeassistant.helpers.restore_state.Store.async_load",
+        side_effect=HomeAssistantError,
+    ):
+        # Failure to load should not be treated as fatal
+        await async_load(hass)
+
+    data = async_get(hass)
+    assert data.last_states == {}
+
     await async_load(hass)
     data = async_get(hass)
 
