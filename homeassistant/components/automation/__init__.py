@@ -578,6 +578,14 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
         await super().async_will_remove_from_hass()
         await self.async_disable()
 
+    async def _async_enable_automation(self, event: Event) -> None:
+        """Start automation on startup."""
+        # Don't do anything if no longer enabled or already attached
+        if not self._is_enabled or self._async_detach_triggers is not None:
+            return
+
+        self._async_detach_triggers = await self._async_attach_triggers(True)
+
     async def async_enable(self) -> None:
         """Enable this automation entity.
 
@@ -594,16 +602,8 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
             self.async_write_ha_state()
             return
 
-        async def async_enable_automation(event: Event) -> None:
-            """Start automation on startup."""
-            # Don't do anything if no longer enabled or already attached
-            if not self._is_enabled or self._async_detach_triggers is not None:
-                return
-
-            self._async_detach_triggers = await self._async_attach_triggers(True)
-
         self.hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_STARTED, async_enable_automation
+            EVENT_HOMEASSISTANT_STARTED, self._async_enable_automation
         )
         self.async_write_ha_state()
 
