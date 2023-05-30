@@ -96,6 +96,28 @@
           "custom": "Custom"
         }
       }
+    },
+    "vacuum": {
+      "roborock": {
+        "state_attributes": {
+          "fan_speed": {
+            "state": {
+              "auto": "Auto",
+              "balanced": "Balanced",
+              "custom": "Custom",
+              "gentle": "Gentle",
+              "off": "Off",
+              "max": "Max",
+              "max_plus": "Max plus",
+              "medium": "Medium",
+              "quiet": "Quiet",
+              "silent": "Silent",
+              "standard": "Standard",
+              "turbo": "Turbo"
+            }
+          }
+        }
+      }
     }
   }
 }
