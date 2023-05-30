@@ -124,7 +124,7 @@ jobs:
         uses: dawidd6/action-download-artifact@v2
         with:
           github_token: ${{secrets.GITHUB_TOKEN}}
-          repo: home-assistant/intents
+          repo: home-assistant/intents-package
           branch: main
           workflow: nightly.yaml
           workflow_conclusion: success
