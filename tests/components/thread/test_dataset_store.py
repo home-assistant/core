@@ -205,9 +205,13 @@ async def test_update_dataset_newer(hass: HomeAssistant, caplog) -> None:
     assert len(store.datasets) == 1
     assert list(store.datasets.values())[0].tlv == DATASET_1_LARGER_TIMESTAMP
 
-    assert "Updating dataset with same EXTPANID and newer timestamp" in caplog.text
     assert (
-        "Got dataset with same EXTPANID and same or older timestamp" not in caplog.text
+        "Updating dataset with same extended PAN ID and newer active timestamp"
+        in caplog.text
+    )
+    assert (
+        "Got dataset with same extended PAN ID and same or older active timestamp"
+        not in caplog.text
     )
 
 
@@ -220,8 +224,14 @@ async def test_update_dataset_older(hass: HomeAssistant, caplog) -> None:
     assert len(store.datasets) == 1
     assert list(store.datasets.values())[0].tlv == DATASET_1_LARGER_TIMESTAMP
 
-    assert "Updating dataset with same EXTPANID and newer timestamp" not in caplog.text
-    assert "Got dataset with same EXTPANID and same or older timestamp" in caplog.text
+    assert (
+        "Updating dataset with same extended PAN ID and newer active timestamp"
+        not in caplog.text
+    )
+    assert (
+        "Got dataset with same extended PAN ID and same or older active timestamp"
+        in caplog.text
+    )
 
 
 async def test_load_datasets(hass: HomeAssistant) -> None:

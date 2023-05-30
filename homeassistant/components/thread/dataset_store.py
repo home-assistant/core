@@ -218,8 +218,8 @@ class DatasetStore:
             ):
                 _LOGGER.warning(
                     (
-                        "Got dataset with same EXTPANID and same or older timestamp, "
-                        "old dataset: '%s', new dataset: '%s'"
+                        "Got dataset with same extended PAN ID and same or older active"
+                        " timestamp, old dataset: '%s', new dataset: '%s'"
                     ),
                     entry.tlv,
                     tlv,
@@ -227,8 +227,8 @@ class DatasetStore:
                 return
             _LOGGER.debug(
                 (
-                    "Updating dataset with same EXTPANID and newer timestamp, "
-                    "old dataset: '%s', new dataset: '%s'"
+                    "Updating dataset with same extended PAN ID and newer active "
+                    "timestamp, old dataset: '%s', new dataset: '%s'"
                 ),
                 entry.tlv,
                 tlv,
