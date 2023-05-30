@@ -34,6 +34,19 @@
         }
       }
     },
+    "issue_system_docker_config": {
+      "title": "Restart(s) required",
+      "fix_flow": {
+        "step": {
+          "system_execute_rebuild": {
+            "description": "The default config for addons and Home Assistant has changed. In order to update config with the new defaults, a restart is required for the following:\n\n- {components}"
+          }
+        },
+        "abort": {
+          "apply_suggestion_fail": "One or more of the restarts failed. Check the supervisor logs for more details."
+        }
+      }
+    },
     "issue_system_multiple_data_disks": {
       "title": "Multiple data disks detected",
       "fix_flow": {
