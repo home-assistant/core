@@ -110,25 +110,9 @@ class RestoreStateData:
 
     @staticmethod
     async def async_get_instance(hass: HomeAssistant) -> RestoreStateData:
-        """Get the singleton instance of this data helper."""
+        """Get the instance of this data helper."""
         data = RestoreStateData(hass)
-
-        try:
-            stored_states = await data.store.async_load()
-        except HomeAssistantError as exc:
-            _LOGGER.error("Error loading last states", exc_info=exc)
-            stored_states = None
-
-        if stored_states is None:
-            _LOGGER.debug("Not creating cache - no saved states found")
-            data.last_states = {}
-        else:
-            data.last_states = {
-                item["state"]["entity_id"]: StoredState.from_dict(item)
-                for item in stored_states
-                if valid_entity_id(item["state"]["entity_id"])
-            }
-            _LOGGER.debug("Created cache with %s", list(data.last_states))
+        await data.async_load()
 
         async def hass_start(hass: HomeAssistant) -> None:
             """Start the restore state task."""
@@ -151,6 +135,25 @@ class RestoreStateData:
         )
         self.last_states: dict[str, StoredState] = {}
         self.entities: dict[str, RestoreEntity] = {}
+
+    async def async_load(self) -> None:
+        """Load the instance of this data helper."""
+        try:
+            stored_states = await self.store.async_load()
+        except HomeAssistantError as exc:
+            _LOGGER.error("Error loading last states", exc_info=exc)
+            stored_states = None
+
+        if stored_states is None:
+            _LOGGER.debug("Not creating cache - no saved states found")
+            self.last_states = {}
+        else:
+            self.last_states = {
+                item["state"]["entity_id"]: StoredState.from_dict(item)
+                for item in stored_states
+                if valid_entity_id(item["state"]["entity_id"])
+            }
+            _LOGGER.debug("Created cache with %s", list(self.last_states))
 
     @callback
     def async_get_stored_states(self) -> list[StoredState]:
@@ -305,7 +308,8 @@ class RestoreEntity(Entity):
         )
         await super().async_internal_will_remove_from_hass()
 
-    async def _async_get_restored_data(self) -> StoredState | None:
+    @callback
+    def _async_get_restored_data(self) -> StoredState | None:
         """Get data stored for an entity, if any."""
         if self.hass is None or self.entity_id is None:
             # Return None if this entity isn't added to hass yet
@@ -313,20 +317,17 @@ class RestoreEntity(Entity):
                 "Cannot get last state. Entity not added to hass"
             )
             return None
-        data = async_get(self.hass)
-        if self.entity_id not in data.last_states:
-            return None
-        return data.last_states[self.entity_id]
+        return async_get(self.hass).last_states.get(self.entity_id)
 
     async def async_get_last_state(self) -> State | None:
         """Get the entity state from the previous run."""
-        if (stored_state := await self._async_get_restored_data()) is None:
+        if (stored_state := self._async_get_restored_data()) is None:
             return None
         return stored_state.state
 
     async def async_get_last_extra_data(self) -> ExtraStoredData | None:
         """Get the entity specific state data from the previous run."""
-        if (stored_state := await self._async_get_restored_data()) is None:
+        if (stored_state := self._async_get_restored_data()) is None:
             return None
         return stored_state.extra_data
 
