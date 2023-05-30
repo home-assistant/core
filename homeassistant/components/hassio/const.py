@@ -1,5 +1,5 @@
 """Hass.io const variables."""
-from enum import Enum
+from homeassistant.backports.enum import StrEnum
 
 DOMAIN = "hassio"
 
@@ -82,7 +82,7 @@ PLACEHOLDER_KEY_COMPONENTS = "components"
 ISSUE_KEY_SYSTEM_DOCKER_CONFIG = "issue_system_docker_config"
 
 
-class SupervisorEntityModel(str, Enum):
+class SupervisorEntityModel(StrEnum):
     """Supervisor entity model."""
 
     ADDON = "Home Assistant Add-on"
@@ -92,7 +92,7 @@ class SupervisorEntityModel(str, Enum):
     HOST = "Home Assistant Host"
 
 
-class SupervisorIssueContext(str, Enum):
+class SupervisorIssueContext(StrEnum):
     """Context for supervisor issues."""
 
     ADDON = "addon"

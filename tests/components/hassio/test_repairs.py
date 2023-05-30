@@ -35,10 +35,10 @@ async def test_supervisor_issue_repair_flow(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     hass_client: ClientSessionGenerator,
+    issue_registry: ir.IssueRegistry,
     all_setup_requests,
 ) -> None:
     """Test fix flow for supervisor issue."""
-    issue_registry: ir.IssueRegistry = ir.async_get(hass)
     mock_resolution_info(
         aioclient_mock,
         issues=[
@@ -59,8 +59,7 @@ async def test_supervisor_issue_repair_flow(
         ],
     )
 
-    result = await async_setup_component(hass, "hassio", {})
-    assert result
+    assert await async_setup_component(hass, "hassio", {})
 
     repair_issue = issue_registry.async_get_issue(domain="hassio", issue_id="1234")
     assert repair_issue
@@ -115,10 +114,10 @@ async def test_supervisor_issue_repair_flow_with_multiple_suggestions(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     hass_client: ClientSessionGenerator,
+    issue_registry: ir.IssueRegistry,
     all_setup_requests,
 ) -> None:
     """Test fix flow for supervisor issue with multiple suggestions."""
-    issue_registry: ir.IssueRegistry = ir.async_get(hass)
     mock_resolution_info(
         aioclient_mock,
         issues=[
@@ -145,8 +144,7 @@ async def test_supervisor_issue_repair_flow_with_multiple_suggestions(
         ],
     )
 
-    result = await async_setup_component(hass, "hassio", {})
-    assert result
+    assert await async_setup_component(hass, "hassio", {})
 
     repair_issue = issue_registry.async_get_issue(domain="hassio", issue_id="1234")
     assert repair_issue
@@ -211,10 +209,10 @@ async def test_supervisor_issue_repair_flow_with_multiple_suggestions_and_confir
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     hass_client: ClientSessionGenerator,
+    issue_registry: ir.IssueRegistry,
     all_setup_requests,
 ) -> None:
     """Test fix flow for supervisor issue with multiple suggestions and choice requires confirmation."""
-    issue_registry: ir.IssueRegistry = ir.async_get(hass)
     mock_resolution_info(
         aioclient_mock,
         issues=[
@@ -241,8 +239,7 @@ async def test_supervisor_issue_repair_flow_with_multiple_suggestions_and_confir
         ],
     )
 
-    result = await async_setup_component(hass, "hassio", {})
-    assert result
+    assert await async_setup_component(hass, "hassio", {})
 
     repair_issue = issue_registry.async_get_issue(domain="hassio", issue_id="1234")
     assert repair_issue
@@ -325,10 +322,10 @@ async def test_supervisor_issue_repair_flow_skip_confirmation(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     hass_client: ClientSessionGenerator,
+    issue_registry: ir.IssueRegistry,
     all_setup_requests,
 ) -> None:
     """Test confirmation skipped for fix flow for supervisor issue with one suggestion."""
-    issue_registry: ir.IssueRegistry = ir.async_get(hass)
     mock_resolution_info(
         aioclient_mock,
         issues=[
@@ -349,8 +346,7 @@ async def test_supervisor_issue_repair_flow_skip_confirmation(
         ],
     )
 
-    result = await async_setup_component(hass, "hassio", {})
-    assert result
+    assert await async_setup_component(hass, "hassio", {})
 
     repair_issue = issue_registry.async_get_issue(domain="hassio", issue_id="1234")
     assert repair_issue
@@ -405,10 +401,10 @@ async def test_mount_failed_repair_flow(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     hass_client: ClientSessionGenerator,
+    issue_registry: ir.IssueRegistry,
     all_setup_requests,
 ) -> None:
     """Test repair flow for mount_failed issue."""
-    issue_registry: ir.IssueRegistry = ir.async_get(hass)
     mock_resolution_info(
         aioclient_mock,
         issues=[
@@ -435,8 +431,7 @@ async def test_mount_failed_repair_flow(
         ],
     )
 
-    result = await async_setup_component(hass, "hassio", {})
-    assert result
+    assert await async_setup_component(hass, "hassio", {})
 
     repair_issue = issue_registry.async_get_issue(domain="hassio", issue_id="1234")
     assert repair_issue
@@ -508,10 +503,10 @@ async def test_supervisor_issue_docker_config_repair_flow(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     hass_client: ClientSessionGenerator,
+    issue_registry: ir.IssueRegistry,
     all_setup_requests,
 ) -> None:
     """Test fix flow for supervisor issue."""
-    issue_registry: ir.IssueRegistry = ir.async_get(hass)
     mock_resolution_info(
         aioclient_mock,
         issues=[
@@ -560,8 +555,7 @@ async def test_supervisor_issue_docker_config_repair_flow(
         ],
     )
 
-    result = await async_setup_component(hass, "hassio", {})
-    assert result
+    assert await async_setup_component(hass, "hassio", {})
 
     repair_issue = issue_registry.async_get_issue(domain="hassio", issue_id="1234")
     assert repair_issue

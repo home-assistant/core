@@ -271,8 +271,8 @@ class SupervisorIssues:
     async def add_issue_from_data(self, data: IssueDataType) -> None:
         """Add issue from data to list after getting latest suggestions."""
         try:
-            data["suggestions"] = await self._client.get_suggestions_for_issue(
-                data["uuid"]
+            data["suggestions"] = (
+                await self._client.get_suggestions_for_issue(data["uuid"])
             )[ATTR_SUGGESTIONS]
             self.add_issue(Issue.from_dict(data))
         except HassioAPIError:
