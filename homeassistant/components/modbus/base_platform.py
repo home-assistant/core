@@ -215,7 +215,12 @@ class BaseStructPlatform(BasePlatform, RestoreEntity):
                 # We could convert int to float, and the code would still work; however
                 # we lose some precision, and unit tests will fail. Therefore, we do
                 # the conversion only when it's absolutely necessary.
-                if isinstance(v_temp, int) and self._precision == 0:
+                # NaN float detection replace with None
+                # Issue: https://github.com/home-assistant/core/issues/93297
+                if self._data_type == DataType.FLOAT32 or self._data_type == DataType.FLOAT64:
+                    if v_temp != vtemp:
+                        v_result.append(None)
+                elif isinstance(v_temp, int) and self._precision == 0:
                     v_result.append(str(v_temp))
                 else:
                     v_result.append(f"{float(v_temp):.{self._precision}f}")
@@ -229,6 +234,11 @@ class BaseStructPlatform(BasePlatform, RestoreEntity):
         # the conversion only when it's absolutely necessary.
         if isinstance(val_result, int) and self._precision == 0:
             return str(val_result)
+        # NaN float detection replace with None
+        # Issue: https://github.com/home-assistant/core/issues/93297        
+        if self._data_type == DataType.FLOAT32 or self._data_type == DataType.FLOAT64:
+            if val_result != val_result:
+                return None
         return f"{float(val_result):.{self._precision}f}"
 
 
