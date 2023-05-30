@@ -36,6 +36,9 @@ EVENT_DEVICE_ADDED_TO_REGISTRY = f"{DOMAIN}_device_added_to_registry"
 
 LOGGER = logging.getLogger(__package__)
 
+# constants extra state attributes
+ATTR_RESERVED_VALUES = "reserved_values"  # ConfigurationValue number entities
+
 # constants for events
 ZWAVE_JS_VALUE_NOTIFICATION_EVENT = f"{DOMAIN}_value_notification"
 ZWAVE_JS_NOTIFICATION_EVENT = f"{DOMAIN}_notification"
