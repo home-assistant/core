@@ -323,50 +323,17 @@ class Entity(ABC):
             return self.entity_description.has_entity_name
         return False
 
-    def _uses_device_name(self) -> bool:
-        """Return if this entity does not have its own name."""
-
-        if not self.has_entity_name:
-            return False
-        if hasattr(self, "_attr_name"):
-            if not self._attr_name:
-                return True
-            return False
-
-        if name_translation_key := self._name_translation_key():
-            assert self.platform
-            if name_translation_key in self.platform.entity_translations:
-                return False
-
-        if hasattr(self, "entity_description"):
-            if not self.entity_description.name:
-                return True
-            return False
-
-        if not self.name:
-            return True
-
-        return False
-
-    def _name_translation_key(self) -> str | None:
-        """Return translation key for entity name."""
-        if self.translation_key is None:
-            return None
-        assert self.platform
-        return (
-            f"component.{self.platform.platform_name}.entity.{self.platform.domain}"
-            f".{self.translation_key}.name"
-        )
-
     @property
     def name(self) -> str | None:
         """Return the name of the entity."""
         if hasattr(self, "_attr_name"):
             return self._attr_name
-        if self.has_entity_name and (
-            name_translation_key := self._name_translation_key()
-        ):
+        if self.translation_key is not None and self.has_entity_name:
             assert self.platform
+            name_translation_key = (
+                f"component.{self.platform.platform_name}.entity.{self.platform.domain}"
+                f".{self.translation_key}.name"
+            )
             if name_translation_key in self.platform.entity_translations:
                 name: str = self.platform.entity_translations[name_translation_key]
                 return name
@@ -1027,7 +994,7 @@ class Entity(ABC):
         if (device_id := self.registry_entry.device_id) is None:
             return
 
-        if not self._uses_device_name():
+        if not self.has_entity_name:
             return
 
         @callback
@@ -1049,11 +1016,10 @@ class Entity(ABC):
             async_device_registry_updated,
         )
         if (
-            self._on_remove
-            and self._async_unsubscribe_device_updates in self._on_remove
+            not self._on_remove
+            or self._async_unsubscribe_device_updates not in self._on_remove
         ):
-            return
-        self.async_on_remove(self._async_unsubscribe_device_updates)
+            self.async_on_remove(self._async_unsubscribe_device_updates)
 
     def __repr__(self) -> str:
         """Return the representation."""
