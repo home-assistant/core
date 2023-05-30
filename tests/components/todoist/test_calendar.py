@@ -193,7 +193,7 @@ async def test_update_entity_for_custom_project_no_due_date_on(
     [
         Due(
             # Note: This runs before the test fixture that sets the timezone
-            date=(dt.now(TIMEZONE) + timedelta(days=3)).strftime("%Y-%m-%d"),
+            date=(dt_util.now(TIMEZONE) + timedelta(days=3)).strftime("%Y-%m-%d"),
             is_recurring=False,
             string="3 days from today",
         )
