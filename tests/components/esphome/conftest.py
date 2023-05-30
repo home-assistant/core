@@ -180,9 +180,3 @@ async def mock_voice_assistant_v1_entry(mock_voice_assistant_entry) -> MockConfi
 async def mock_voice_assistant_v2_entry(mock_voice_assistant_entry) -> MockConfigEntry:
     """Set up an ESPHome entry with voice assistant."""
     return await mock_voice_assistant_entry(version=2)
-
-
-@pytest.fixture
-async def mock_voice_assistant_v3_entry(mock_voice_assistant_entry) -> MockConfigEntry:
-    """Set up an ESPHome entry with voice assistant."""
-    return await mock_voice_assistant_entry(version=3)

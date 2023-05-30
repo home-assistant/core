@@ -62,15 +62,6 @@ def voice_assistant_udp_server_v2(
     return voice_assistant_udp_server(entry=mock_voice_assistant_v2_entry)
 
 
-@pytest.fixture
-def voice_assistant_udp_server_v3(
-    voice_assistant_udp_server,
-    mock_voice_assistant_v3_entry,
-) -> VoiceAssistantUDPServer:
-    """Return the UDP server."""
-    return voice_assistant_udp_server(entry=mock_voice_assistant_v3_entry)
-
-
 async def test_pipeline_events(
     hass: HomeAssistant,
     voice_assistant_udp_server_v1: VoiceAssistantUDPServer,
@@ -130,7 +121,7 @@ async def test_pipeline_events(
     ):
         voice_assistant_udp_server_v1.transport = Mock()
 
-        await voice_assistant_udp_server_v1.run_pipeline()
+        await voice_assistant_udp_server_v1.run_pipeline(conversation_id=None)
 
 
 async def test_udp_server(
@@ -352,7 +343,7 @@ async def test_send_tts(
 
 async def test_speech_detection(
     hass: HomeAssistant,
-    voice_assistant_udp_server_v3: VoiceAssistantUDPServer,
+    voice_assistant_udp_server_v2: VoiceAssistantUDPServer,
 ) -> None:
     """Test the UDP server queues incoming data."""
 
@@ -381,19 +372,21 @@ async def test_speech_detection(
         "homeassistant.components.esphome.voice_assistant.async_pipeline_from_audio_stream",
         new=async_pipeline_from_audio_stream,
     ):
-        voice_assistant_udp_server_v3.started = True
+        voice_assistant_udp_server_v2.started = True
 
-        voice_assistant_udp_server_v3.queue.put_nowait(bytes(_ONE_SECOND))
-        voice_assistant_udp_server_v3.queue.put_nowait(bytes([255] * _ONE_SECOND * 2))
-        voice_assistant_udp_server_v3.queue.put_nowait(bytes([255] * _ONE_SECOND * 2))
-        voice_assistant_udp_server_v3.queue.put_nowait(bytes(_ONE_SECOND))
+        voice_assistant_udp_server_v2.queue.put_nowait(bytes(_ONE_SECOND))
+        voice_assistant_udp_server_v2.queue.put_nowait(bytes([255] * _ONE_SECOND * 2))
+        voice_assistant_udp_server_v2.queue.put_nowait(bytes([255] * _ONE_SECOND * 2))
+        voice_assistant_udp_server_v2.queue.put_nowait(bytes(_ONE_SECOND))
 
-        await voice_assistant_udp_server_v3.run_pipeline(pipeline_timeout=1.0)
+        await voice_assistant_udp_server_v2.run_pipeline(
+            conversation_id=None, use_vad=True, pipeline_timeout=1.0
+        )
 
 
 async def test_no_speech(
     hass: HomeAssistant,
-    voice_assistant_udp_server_v3: VoiceAssistantUDPServer,
+    voice_assistant_udp_server_v2: VoiceAssistantUDPServer,
 ) -> None:
     """Test there is no speech."""
 
@@ -408,22 +401,24 @@ async def test_no_speech(
         assert data is not None
         assert data["code"] == "speech-timeout"
 
-    voice_assistant_udp_server_v3.handle_event = handle_event
+    voice_assistant_udp_server_v2.handle_event = handle_event
 
     with patch(
         "webrtcvad.Vad.is_speech",
         new=is_speech,
     ):
-        voice_assistant_udp_server_v3.started = True
+        voice_assistant_udp_server_v2.started = True
 
-        voice_assistant_udp_server_v3.queue.put_nowait(bytes(_ONE_SECOND))
+        voice_assistant_udp_server_v2.queue.put_nowait(bytes(_ONE_SECOND))
 
-        await voice_assistant_udp_server_v3.run_pipeline(pipeline_timeout=1.0)
+        await voice_assistant_udp_server_v2.run_pipeline(
+            conversation_id=None, use_vad=True, pipeline_timeout=1.0
+        )
 
 
 async def test_speech_timeout(
     hass: HomeAssistant,
-    voice_assistant_udp_server_v3: VoiceAssistantUDPServer,
+    voice_assistant_udp_server_v2: VoiceAssistantUDPServer,
 ) -> None:
     """Test when speech was detected, but the pipeline times out."""
 
@@ -452,24 +447,28 @@ async def test_speech_timeout(
         "homeassistant.components.esphome.voice_assistant.VoiceAssistantUDPServer._segment_audio",
         new=segment_audio,
     ):
-        voice_assistant_udp_server_v3.started = True
+        voice_assistant_udp_server_v2.started = True
 
-        voice_assistant_udp_server_v3.queue.put_nowait(bytes([255] * (_ONE_SECOND * 2)))
+        voice_assistant_udp_server_v2.queue.put_nowait(bytes([255] * (_ONE_SECOND * 2)))
 
-        await voice_assistant_udp_server_v3.run_pipeline(pipeline_timeout=1.0)
+        await voice_assistant_udp_server_v2.run_pipeline(
+            conversation_id=None, use_vad=True, pipeline_timeout=1.0
+        )
 
 
 async def test_cancelled(
     hass: HomeAssistant,
-    voice_assistant_udp_server_v3: VoiceAssistantUDPServer,
+    voice_assistant_udp_server_v2: VoiceAssistantUDPServer,
 ) -> None:
     """Test when the server is stopped while waiting for speech."""
 
-    voice_assistant_udp_server_v3.started = True
+    voice_assistant_udp_server_v2.started = True
 
-    voice_assistant_udp_server_v3.queue.put_nowait(b"")
+    voice_assistant_udp_server_v2.queue.put_nowait(b"")
 
-    await voice_assistant_udp_server_v3.run_pipeline(pipeline_timeout=1.0)
+    await voice_assistant_udp_server_v2.run_pipeline(
+        conversation_id=None, use_vad=True, pipeline_timeout=1.0
+    )
 
     # No events should be sent if cancelled while waiting for speech
-    voice_assistant_udp_server_v3.handle_event.assert_not_called()
+    voice_assistant_udp_server_v2.handle_event.assert_not_called()
