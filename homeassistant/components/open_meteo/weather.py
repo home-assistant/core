@@ -7,12 +7,7 @@ from open_meteo import DailyForecast, Forecast as OpenMeteoForecast, HourlyForec
 
 from homeassistant.components.weather import Forecast, WeatherEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_NAME,
-    UnitOfPrecipitationDepth,
-    UnitOfSpeed,
-    UnitOfTemperature,
-)
+from homeassistant.const import UnitOfPrecipitationDepth, UnitOfSpeed, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
@@ -22,7 +17,7 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
-from .const import DEFAULT_NAME, DOMAIN, WMO_TO_HA_CONDITION_MAP
+from .const import DOMAIN, WMO_TO_HA_CONDITION_MAP
 
 
 async def async_setup_entry(
@@ -59,22 +54,17 @@ class OpenMeteoWeatherEntity(
     ) -> None:
         """Initialize Open-Meteo weather entity."""
         super().__init__(coordinator=coordinator)
-        self._attr_unique_id = entry.entry_id
+        self.entry_id = entry.entry_id
         self._config = MappingProxyType(entry.data)
         self._hourly = hourly
-
-    @property
-    def name(self) -> str:
-        """Return the name of the sensor."""
-        name = self._config.get(CONF_NAME)
-        name_appendix = ""
-        if self._hourly:
-            name_appendix = " hourly"
-
-        if name is not None:
-            return f"{name}{name_appendix}"
-
-        return f"{DEFAULT_NAME}{name_appendix}"
+        self._attr_name = "Hourly" if hourly else "Daily"
+        self._attr_device_info = DeviceInfo(
+            entry_type=DeviceEntryType.SERVICE,
+            identifiers={(DOMAIN, entry.entry_id)},
+            manufacturer="Open-Meteo",
+            name=entry.title,
+            configuration_url="https://open-meteo.com/",
+        )
 
     @property
     def unique_id(self) -> str:
@@ -82,20 +72,8 @@ class OpenMeteoWeatherEntity(
         name_appendix = ""
         if self._hourly:
             name_appendix = "-hourly"
-        unique_id = f"{self._attr_unique_id}{name_appendix}"
+        unique_id = f"{self.entry_id}{name_appendix}"
         return unique_id
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Device info."""
-        return DeviceInfo(
-            default_name="Forecast",
-            entry_type=DeviceEntryType.SERVICE,
-            identifiers={(DOMAIN, self._attr_unique_id)},  # type: ignore[arg-type]
-            manufacturer="Open-Meteo",
-            model="Forecast",
-            configuration_url="https://open-meteo.com/",
-        )
 
     @property
     def entity_registry_enabled_default(self) -> bool:
