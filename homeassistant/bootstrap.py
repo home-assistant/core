@@ -19,6 +19,7 @@ import yarl
 from . import config as conf_util, config_entries, core, loader
 from .components import http
 from .const import (
+    FORMAT_DATETIME,
     REQUIRED_NEXT_PYTHON_HA_RELEASE,
     REQUIRED_NEXT_PYTHON_VER,
     SIGNAL_BOOTSTRAP_INTEGRATIONS,
@@ -347,7 +348,6 @@ def async_enable_logging(
     fmt = (
         "%(asctime)s.%(msecs)03d %(levelname)s (%(threadName)s) [%(name)s] %(message)s"
     )
-    datefmt = "%Y-%m-%d %H:%M:%S"
 
     if not log_no_color:
         try:
@@ -362,7 +362,7 @@ def async_enable_logging(
             logging.getLogger().handlers[0].setFormatter(
                 ColoredFormatter(
                     colorfmt,
-                    datefmt=datefmt,
+                    datefmt=FORMAT_DATETIME,
                     reset=True,
                     log_colors={
                         "DEBUG": "cyan",
@@ -378,7 +378,7 @@ def async_enable_logging(
 
     # If the above initialization failed for any reason, setup the default
     # formatting.  If the above succeeds, this will result in a no-op.
-    logging.basicConfig(format=fmt, datefmt=datefmt, level=logging.INFO)
+    logging.basicConfig(format=fmt, datefmt=FORMAT_DATETIME, level=logging.INFO)
 
     # Capture warnings.warn(...) and friends messages in logs.
     # The standard destination for them is stderr, which may end up unnoticed.
@@ -435,7 +435,7 @@ def async_enable_logging(
             _LOGGER.error("Error rolling over log file: %s", err)
 
         err_handler.setLevel(logging.INFO if verbose else logging.WARNING)
-        err_handler.setFormatter(logging.Formatter(fmt, datefmt=datefmt))
+        err_handler.setFormatter(logging.Formatter(fmt, datefmt=FORMAT_DATETIME))
 
         logger = logging.getLogger("")
         logger.addHandler(err_handler)

@@ -79,7 +79,7 @@ class OTBRData:
 
     @_handle_otbr_error
     async def create_active_dataset(
-        self, dataset: python_otbr_api.OperationalDataSet
+        self, dataset: python_otbr_api.ActiveDataSet
     ) -> None:
         """Create an active operational dataset."""
         return await self.api.create_active_dataset(dataset)
