@@ -219,7 +219,12 @@ class BaseStructPlatform(BasePlatform, RestoreEntity):
                 if isinstance(v_temp, int) and self._precision == 0:
                     v_result.append(str(v_temp))
                 else:
-                    v_result.append(f"{float(v_temp):.{self._precision}f}")
+                    # NaN float detection replace with None
+                    # Issue: https://github.com/home-assistant/core/issues/93297
+                    if v_temp != v_temp:
+                        v_result.append(None)
+                    else:
+                        v_result.append(f"{float(v_temp):.{self._precision}f}")
             return ",".join(map(str, v_result))
 
         # Apply scale, precision, limits to floats and ints
@@ -234,6 +239,10 @@ class BaseStructPlatform(BasePlatform, RestoreEntity):
             if val_result == "nan":
                 val_result = STATE_UNAVAILABLE  # pragma: no cover
             return val_result
+        # NaN float detection replace with None
+        # Issue: https://github.com/home-assistant/core/issues/93297
+        if val_result != val_result:
+            return None  # pragma: no cover
         return f"{float(val_result):.{self._precision}f}"
 
 
