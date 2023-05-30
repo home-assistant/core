@@ -36,18 +36,14 @@ class OwletCoordinator(DataUpdateCoordinator):
         )
         assert self.config_entry is not None
         self.config_entry: ConfigEntry
-        self._device_unique_id = sock.serial
-        self._model = sock.model
-        self._sw_version = sock.sw_version
-        self._hw_version = sock.version
         self.sock = sock
         self.device_info = DeviceInfo(
-            identifiers={(DOMAIN, self._device_unique_id)},
+            identifiers={(DOMAIN, sock.serial)},
             name="Owlet Baby Care Sock",
             manufacturer=MANUFACTURER,
-            model=self._model,
-            sw_version=self._sw_version,
-            hw_version=self._hw_version,
+            model=sock.model,
+            sw_version=sock.sw_version,
+            hw_version=sock.version,
         )
 
     async def _async_update_data(self) -> None:

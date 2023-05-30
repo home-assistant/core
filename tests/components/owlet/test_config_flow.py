@@ -3,7 +3,12 @@ from __future__ import annotations
 
 from unittest.mock import patch
 
-from pyowletapi.exceptions import OwletDevicesError, OwletEmailError, OwletPasswordError
+from pyowletapi.exceptions import (
+    OwletCredentialsError,
+    OwletDevicesError,
+    OwletEmailError,
+    OwletPasswordError,
+)
 
 from homeassistant import config_entries
 from homeassistant.components.owlet.const import DOMAIN, POLLING_INTERVAL
@@ -84,6 +89,24 @@ async def test_flow_wrong_email(hass: HomeAssistant) -> None:
         )
         assert result["type"] == FlowResultType.FORM
         assert result["errors"] == {"base": "invalid_email"}
+
+
+async def test_flow_credentials_error(hass: HomeAssistant) -> None:
+    """Test incorrect login throwing error."""
+    with patch(
+        "homeassistant.components.owlet.config_flow.OwletAPI.authenticate",
+        side_effect=OwletCredentialsError(),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_USER},
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=CONF_INPUT,
+        )
+        assert result["type"] == FlowResultType.FORM
+        assert result["errors"] == {"base": "invalid_credentials"}
 
 
 async def test_flow_unknown_error(hass: HomeAssistant) -> None:

@@ -14,7 +14,15 @@ async def test_sensors_asleep(hass: HomeAssistant) -> None:
 
     assert len(hass.states.async_all("sensor")) == 8
 
-    assert hass.states.get("sensor.owlet_baby_care_sock_battery").state == "50.0"
+    assert (
+        hass.states.get("sensor.owlet_baby_care_sock_battery_percentage").state
+        == "50.0"
+    )
+    assert (
+        hass.states.get("sensor.owlet_baby_care_sock_battery_remaining").state
+        == "400.0"
+    )
+    assert hass.states.get("sensor.owlet_baby_care_sock_heart_rate").state == "97.0"
     assert hass.states.get("sensor.owlet_baby_care_sock_o2_saturation").state == "99.0"
     assert (
         hass.states.get(
@@ -22,18 +30,14 @@ async def test_sensors_asleep(hass: HomeAssistant) -> None:
         ).state
         == "97.0"
     )
-    assert hass.states.get("sensor.owlet_baby_care_sock_heart_rate").state == "97.0"
-    assert (
-        hass.states.get("sensor.owlet_baby_care_sock_battery_remaining").state
-        == "400.0"
-    )
+
     assert (
         hass.states.get("sensor.owlet_baby_care_sock_signal_strength").state == "30.0"
     )
     assert hass.states.get("sensor.owlet_baby_care_sock_skin_temperature").state == "34"
     assert (
         hass.states.get("sensor.owlet_baby_care_sock_sleep_state").state
-        == "Light Sleep"
+        == "light_sleep"
     )
 
 
@@ -45,7 +49,15 @@ async def test_sensors_awake(hass: HomeAssistant) -> None:
 
     assert len(hass.states.async_all("sensor")) == 8
 
-    assert hass.states.get("sensor.owlet_baby_care_sock_battery").state == "80.0"
+    assert (
+        hass.states.get("sensor.owlet_baby_care_sock_battery_percentage").state
+        == "80.0"
+    )
+    assert (
+        hass.states.get("sensor.owlet_baby_care_sock_battery_remaining").state
+        == "600.0"
+    )
+    assert hass.states.get("sensor.owlet_baby_care_sock_heart_rate").state == "110.0"
     assert hass.states.get("sensor.owlet_baby_care_sock_o2_saturation").state == "98.0"
     assert (
         hass.states.get(
@@ -53,16 +65,11 @@ async def test_sensors_awake(hass: HomeAssistant) -> None:
         ).state
         == "98.0"
     )
-    assert hass.states.get("sensor.owlet_baby_care_sock_heart_rate").state == "110.0"
-    assert (
-        hass.states.get("sensor.owlet_baby_care_sock_battery_remaining").state
-        == "600.0"
-    )
     assert (
         hass.states.get("sensor.owlet_baby_care_sock_signal_strength").state == "34.0"
     )
     assert hass.states.get("sensor.owlet_baby_care_sock_skin_temperature").state == "35"
-    assert hass.states.get("sensor.owlet_baby_care_sock_sleep_state").state == "Awake"
+    assert hass.states.get("sensor.owlet_baby_care_sock_sleep_state").state == "awake"
 
 
 async def test_sensors_charging(hass: HomeAssistant) -> None:
@@ -73,7 +80,15 @@ async def test_sensors_charging(hass: HomeAssistant) -> None:
 
     assert len(hass.states.async_all("sensor")) == 8
 
-    assert hass.states.get("sensor.owlet_baby_care_sock_battery").state == "100.0"
+    assert (
+        hass.states.get("sensor.owlet_baby_care_sock_battery_percentage").state
+        == "100.0"
+    )
+    assert (
+        hass.states.get("sensor.owlet_baby_care_sock_battery_remaining").state
+        == "unknown"
+    )
+    assert hass.states.get("sensor.owlet_baby_care_sock_heart_rate").state == "unknown"
     assert (
         hass.states.get("sensor.owlet_baby_care_sock_o2_saturation").state == "unknown"
     )
@@ -83,11 +98,7 @@ async def test_sensors_charging(hass: HomeAssistant) -> None:
         ).state
         == "unknown"
     )
-    assert hass.states.get("sensor.owlet_baby_care_sock_heart_rate").state == "unknown"
-    assert (
-        hass.states.get("sensor.owlet_baby_care_sock_battery_remaining").state
-        == "unknown"
-    )
+
     assert (
         hass.states.get("sensor.owlet_baby_care_sock_signal_strength").state == "34.0"
     )
@@ -95,4 +106,4 @@ async def test_sensors_charging(hass: HomeAssistant) -> None:
         hass.states.get("sensor.owlet_baby_care_sock_skin_temperature").state
         == "unknown"
     )
-    assert hass.states.get("sensor.owlet_baby_care_sock_sleep_state").state == "Unknown"
+    assert hass.states.get("sensor.owlet_baby_care_sock_sleep_state").state == "unknown"

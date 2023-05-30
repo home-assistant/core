@@ -6,6 +6,7 @@ from unittest.mock import patch
 from pyowletapi.exceptions import (
     OwletAuthenticationError,
     OwletConnectionError,
+    OwletDevicesError,
     OwletError,
 )
 
@@ -99,6 +100,23 @@ async def test_async_setup_entry_connection_error(hass: HomeAssistant) -> None:
 
         assert entry.state == ConfigEntryState.SETUP_RETRY
 
+        await entry.async_unload(hass)
+
+
+async def test_async_setup_entry_devices_error(hass: HomeAssistant) -> None:
+    """Test setting up entry with device error."""
+    entry = await async_init_integration(hass, skip_setup=True)
+
+    with patch(
+        "homeassistant.components.owlet.OwletAPI.authenticate", return_value=None
+    ), patch(
+        "homeassistant.components.owlet.OwletAPI.get_devices",
+        side_effect=OwletDevicesError(),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        assert entry.state == ConfigEntryState.SETUP_ERROR
         await entry.async_unload(hass)
 
 

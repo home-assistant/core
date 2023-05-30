@@ -77,22 +77,10 @@ class OwletConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             try:
                 token = await owlet_api.authenticate()
-                try:
-                    await owlet_api.validate_authentication()
-                    return self.async_create_entry(
-                        title=self._username,
-                        data={
-                            CONF_REGION: self._region,
-                            CONF_USERNAME: self._username,
-                            CONF_API_TOKEN: token[CONF_API_TOKEN],
-                            CONF_OWLET_EXPIRY: token[CONF_OWLET_EXPIRY],
-                            CONF_OWLET_REFRESH: token[CONF_OWLET_REFRESH],
-                        },
-                        options={CONF_SCAN_INTERVAL: POLLING_INTERVAL},
-                    )
-                except OwletDevicesError:
-                    errors["base"] = "no_devices"
+                await owlet_api.validate_authentication()
 
+            except OwletDevicesError:
+                errors["base"] = "no_devices"
             except OwletEmailError:
                 errors["base"] = "invalid_email"
             except OwletPasswordError:
@@ -102,6 +90,18 @@ class OwletConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
+            else:
+                return self.async_create_entry(
+                    title=self._username,
+                    data={
+                        CONF_REGION: self._region,
+                        CONF_USERNAME: self._username,
+                        CONF_API_TOKEN: token[CONF_API_TOKEN],
+                        CONF_OWLET_EXPIRY: token[CONF_OWLET_EXPIRY],
+                        CONF_OWLET_REFRESH: token[CONF_OWLET_REFRESH],
+                    },
+                    options={CONF_SCAN_INTERVAL: POLLING_INTERVAL},
+                )
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors

@@ -37,5 +37,39 @@
         }
       }
     }
+  },
+  "entity": {
+    "sensor": {
+      "batterypercent": {
+        "name": "Battery Percentage"
+      },
+      "o2saturation": {
+        "name": "O2 Saturation"
+      },
+      "o2saturation10a": {
+        "name": "O2 Saturation 10 Minute Average"
+      },
+      "heartrate": {
+        "name": "Heart Rate"
+      },
+      "batterymin": {
+        "name": "Battery Remaining"
+      },
+      "signalstrength": {
+        "name": "Signal Strength"
+      },
+      "skintemp": {
+        "name": "Skin Temperature"
+      },
+      "sleepstate": {
+        "name": "Sleep State",
+        "state": {
+          "unknown": "Unknown",
+          "awake": "Awake",
+          "light_sleep": "Light Sleep",
+          "deep_sleep": "Deep Sleep"
+        }
+      }
+    }
   }
 }
