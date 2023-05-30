@@ -249,7 +249,9 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
             async with async_timeout.timeout(self.audio_timeout):
                 chunk = await self.queue.get()
 
-    async def _iterate_packets_with_vad(self, pipeline_timeout: float):
+    async def _iterate_packets_with_vad(
+        self, pipeline_timeout: float
+    ) -> Callable[[], AsyncIterable[bytes]] | None:
         segmenter = VoiceCommandSegmenter()
         chunk_buffer: deque[bytes] = deque(maxlen=100)
         try:
@@ -260,7 +262,7 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
                         "Device stopped sending audio before speech was detected"
                     )
                     self.handle_finished()
-                    return
+                    return None
         except asyncio.TimeoutError:
             self.handle_event(
                 VoiceAssistantEventType.VOICE_ASSISTANT_ERROR,
@@ -270,7 +272,7 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
                 },
             )
             self.handle_finished()
-            return
+            return None
 
         async def _stream_packets() -> AsyncIterable[bytes]:
             try:
