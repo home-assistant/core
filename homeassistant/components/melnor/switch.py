@@ -47,7 +47,15 @@ ZONE_ENTITY_DESCRIPTIONS = [
         key="manual",
         on_off_fn=lambda valve, bool: valve.set_is_watering(bool),
         state_fn=lambda valve: valve.is_watering,
-    )
+    ),
+    MelnorSwitchEntityDescription(
+        device_class=SwitchDeviceClass.SWITCH,
+        icon="mdi:calendar-sync-outline",
+        key="frequency",
+        name="Schedule",
+        on_off_fn=lambda valve, bool: valve.set_frequency_enabled(bool),
+        state_fn=lambda valve: valve.schedule_enabled,
+    ),
 ]
 
 

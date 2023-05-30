@@ -5,11 +5,12 @@ from collections.abc import Callable, Coroutine
 import contextlib
 import dataclasses
 from functools import wraps
-from typing import Any, Concatenate, ParamSpec, TypeVar
+from typing import Any, Concatenate, ParamSpec, TypeVar, cast
 
 import python_otbr_api
 from python_otbr_api import tlv_parser
 from python_otbr_api.pskc import compute_pskc
+from python_otbr_api.tlv_parser import MeshcopTLVType
 
 from homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon import (
     is_multiprotocol_url,
@@ -79,7 +80,7 @@ class OTBRData:
 
     @_handle_otbr_error
     async def create_active_dataset(
-        self, dataset: python_otbr_api.OperationalDataSet
+        self, dataset: python_otbr_api.ActiveDataSet
     ) -> None:
         """Create an active operational dataset."""
         return await self.api.create_active_dataset(dataset)
@@ -146,14 +147,10 @@ async def _warn_on_channel_collision(
 
     dataset = tlv_parser.parse_tlv(dataset_tlvs.hex())
 
-    if (channel_s := dataset.get(tlv_parser.MeshcopTLVType.CHANNEL)) is None:
+    if (channel_s := dataset.get(MeshcopTLVType.CHANNEL)) is None:
         delete_issue()
         return
-    try:
-        channel = int(channel_s, 16)
-    except ValueError:
-        delete_issue()
-        return
+    channel = cast(tlv_parser.Channel, channel_s).channel
 
     if channel == allowed_channel:
         delete_issue()
@@ -186,20 +183,20 @@ def _warn_on_default_network_settings(
     insecure = False
 
     if (
-        network_key := dataset.get(tlv_parser.MeshcopTLVType.NETWORKKEY)
-    ) is not None and bytes.fromhex(network_key) in INSECURE_NETWORK_KEYS:
+        network_key := dataset.get(MeshcopTLVType.NETWORKKEY)
+    ) is not None and network_key.data in INSECURE_NETWORK_KEYS:
         insecure = True
     if (
         not insecure
-        and tlv_parser.MeshcopTLVType.EXTPANID in dataset
-        and tlv_parser.MeshcopTLVType.NETWORKNAME in dataset
-        and tlv_parser.MeshcopTLVType.PSKC in dataset
+        and MeshcopTLVType.EXTPANID in dataset
+        and MeshcopTLVType.NETWORKNAME in dataset
+        and MeshcopTLVType.PSKC in dataset
     ):
-        ext_pan_id = dataset[tlv_parser.MeshcopTLVType.EXTPANID]
-        network_name = dataset[tlv_parser.MeshcopTLVType.NETWORKNAME]
-        pskc = bytes.fromhex(dataset[tlv_parser.MeshcopTLVType.PSKC])
+        ext_pan_id = dataset[MeshcopTLVType.EXTPANID]
+        network_name = cast(tlv_parser.NetworkName, dataset[MeshcopTLVType.NETWORKNAME])
+        pskc = dataset[MeshcopTLVType.PSKC].data
         for passphrase in INSECURE_PASSPHRASES:
-            if pskc == compute_pskc(ext_pan_id, network_name, passphrase):
+            if pskc == compute_pskc(ext_pan_id.data, network_name.name, passphrase):
                 insecure = True
                 break
 
