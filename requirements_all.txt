@@ -1576,7 +1576,7 @@ pycsspeechtts==1.0.8
 # pycups==1.9.73
 
 # homeassistant.components.daikin
-pydaikin==2.9.0
+pydaikin==2.9.1
 
 # homeassistant.components.danfoss_air
 pydanfossair==0.1.0
@@ -2109,7 +2109,7 @@ python-opensky==0.0.7
 
 # homeassistant.components.otbr
 # homeassistant.components.thread
-python-otbr-api==1.0.9
+python-otbr-api==2.1.0
 
 # homeassistant.components.picnic
 python-picnic-api==1.1.0

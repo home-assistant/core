@@ -3,10 +3,12 @@ from __future__ import annotations
 
 import asyncio
 import logging
+from typing import cast
 
 import aiohttp
 import python_otbr_api
 from python_otbr_api import tlv_parser
+from python_otbr_api.tlv_parser import MeshcopTLVType
 import voluptuous as vol
 import yarl
 
@@ -38,8 +40,8 @@ class OTBRConfigFlow(ConfigFlow, domain=DOMAIN):
             thread_dataset_tlv = await async_get_preferred_dataset(self.hass)
             if thread_dataset_tlv:
                 dataset = tlv_parser.parse_tlv(thread_dataset_tlv)
-                if channel_str := dataset.get(tlv_parser.MeshcopTLVType.CHANNEL):
-                    thread_dataset_channel = int(channel_str, base=16)
+                if channel := dataset.get(MeshcopTLVType.CHANNEL):
+                    thread_dataset_channel = cast(tlv_parser.Channel, channel).channel
 
             if thread_dataset_tlv is not None and (
                 not allowed_channel or allowed_channel == thread_dataset_channel
@@ -50,7 +52,7 @@ class OTBRConfigFlow(ConfigFlow, domain=DOMAIN):
                     "not importing TLV with channel %s", thread_dataset_channel
                 )
                 await api.create_active_dataset(
-                    python_otbr_api.OperationalDataSet(
+                    python_otbr_api.ActiveDataSet(
                         channel=allowed_channel if allowed_channel else DEFAULT_CHANNEL,
                         network_name="home-assistant",
                     )

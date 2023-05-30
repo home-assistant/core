@@ -1478,7 +1478,9 @@ def statistic_during_period(
         state_unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
     convert = _get_statistic_to_display_unit_converter(unit, state_unit, units)
 
-    return {key: convert(value) if convert else value for key, value in result.items()}
+    if not convert:
+        return result
+    return {key: convert(value) for key, value in result.items()}
 
 
 _type_column_mapping = {
