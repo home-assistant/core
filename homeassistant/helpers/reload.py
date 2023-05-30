@@ -70,7 +70,6 @@ async def _resetup_platform(
         return
 
     root_config: dict[str, list[ConfigType]] = {integration_platform: []}
-
     # Extract only the config for template, ignore the rest.
     for p_type, p_config in config_per_platform(conf, integration_platform):
         if p_type != integration_name:
