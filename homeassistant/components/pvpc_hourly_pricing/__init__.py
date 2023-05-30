@@ -13,7 +13,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
-from .const import ATTR_POWER, ATTR_POWER_P3, ATTR_TARIFF, CONF_USE_API_TOKEN, DOMAIN
+from .const import ATTR_POWER, ATTR_POWER_P3, ATTR_TARIFF, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 PLATFORMS: list[Platform] = [Platform.SENSOR]
@@ -35,7 +35,7 @@ async def async_update_options(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Handle options update."""
     if any(
         entry.data.get(attrib) != entry.options.get(attrib)
-        for attrib in (ATTR_POWER, ATTR_POWER_P3, CONF_USE_API_TOKEN, CONF_API_TOKEN)
+        for attrib in (ATTR_POWER, ATTR_POWER_P3, CONF_API_TOKEN)
     ):
         # update entry replacing data with new options
         hass.config_entries.async_update_entry(
