@@ -323,6 +323,7 @@ CPU_SENSOR_PREFIXES = [
     "cpu0-thermal",
     "cpu0_thermal",
     "k10temp 1",
+    "thermal_fan_est",
 ]
 
 
