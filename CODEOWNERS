@@ -240,6 +240,8 @@ build.json @home-assistant/supervisor
 /tests/components/daikin/ @fredrike
 /homeassistant/components/date/ @home-assistant/core
 /tests/components/date/ @home-assistant/core
+/homeassistant/components/datetime/ @home-assistant/core
+/tests/components/datetime/ @home-assistant/core
 /homeassistant/components/debugpy/ @frenck
 /tests/components/debugpy/ @frenck
 /homeassistant/components/deconz/ @Kane610
@@ -971,8 +973,8 @@ build.json @home-assistant/supervisor
 /tests/components/radarr/ @tkdrob
 /homeassistant/components/radio_browser/ @frenck
 /tests/components/radio_browser/ @frenck
-/homeassistant/components/radiotherm/ @bdraco @vinnyfuria
-/tests/components/radiotherm/ @bdraco @vinnyfuria
+/homeassistant/components/radiotherm/ @vinnyfuria
+/tests/components/radiotherm/ @vinnyfuria
 /homeassistant/components/rainbird/ @konikvranik @allenporter
 /tests/components/rainbird/ @konikvranik @allenporter
 /homeassistant/components/raincloud/ @vanstinator

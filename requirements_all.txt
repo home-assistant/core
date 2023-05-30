@@ -449,7 +449,7 @@ bleak==0.20.2
 blebox_uniapi==2.1.4
 
 # homeassistant.components.blink
-blinkpy==0.19.2
+blinkpy==0.21.0
 
 # homeassistant.components.blinksticklight
 blinkstick==1.2.0
@@ -1576,7 +1576,7 @@ pycsspeechtts==1.0.8
 # pycups==1.9.73
 
 # homeassistant.components.daikin
-pydaikin==2.9.0
+pydaikin==2.9.1
 
 # homeassistant.components.danfoss_air
 pydanfossair==0.1.0
@@ -1991,7 +1991,7 @@ pysmartapp==0.3.3
 pysmartthings==0.7.6
 
 # homeassistant.components.edl21
-pysml==0.0.11
+pysml==0.0.12
 
 # homeassistant.components.snmp
 pysnmplib==5.0.21
@@ -2109,7 +2109,7 @@ python-opensky==0.0.7
 
 # homeassistant.components.otbr
 # homeassistant.components.thread
-python-otbr-api==1.0.9
+python-otbr-api==2.1.0
 
 # homeassistant.components.picnic
 python-picnic-api==1.1.0
