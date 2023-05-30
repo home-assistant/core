@@ -1,4 +1,4 @@
-"""Test Roborock Select platform."""
+"""Test Roborock Switch platform."""
 from unittest.mock import patch
 
 import pytest
@@ -23,7 +23,7 @@ async def test_update_success(
     setup_entry: MockConfigEntry,
     entity_id: str,
 ) -> None:
-    """Test allowed changing values for select entities."""
+    """Test turning switch entities on and off."""
     with patch(
         "homeassistant.components.roborock.coordinator.RoborockLocalClient.send_message"
     ) as mock_send_message:
