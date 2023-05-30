@@ -13,6 +13,7 @@ from homeassistant.components.switch import SwitchEntity, SwitchEntityDescriptio
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -113,8 +114,11 @@ class DevoloSwitchEntity(DevoloCoordinatorEntity[_DataT], SwitchEntity):
         """Turn the entity on."""
         try:
             await self.entity_description.turn_on_func(self.device)
-        except DevicePasswordProtected:
+        except DevicePasswordProtected as ex:
             self.entry.async_start_reauth(self.hass)
+            raise HomeAssistantError(
+                f"Device {self.entry.title} require re-authenticatication to set or change the password"
+            ) from ex
         except DeviceUnavailable:
             pass  # The coordinator will handle this
         await self.coordinator.async_request_refresh()
@@ -123,8 +127,11 @@ class DevoloSwitchEntity(DevoloCoordinatorEntity[_DataT], SwitchEntity):
         """Turn the entity off."""
         try:
             await self.entity_description.turn_off_func(self.device)
-        except DevicePasswordProtected:
+        except DevicePasswordProtected as ex:
             self.entry.async_start_reauth(self.hass)
+            raise HomeAssistantError(
+                f"Device {self.entry.title} require re-authenticatication to set or change the password"
+            ) from ex
         except DeviceUnavailable:
             pass  # The coordinator will handle this
         await self.coordinator.async_request_refresh()
