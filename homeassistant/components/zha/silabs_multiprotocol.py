@@ -37,7 +37,7 @@ async def _get_zha_channel(hass: HomeAssistant) -> int | None:
 
 async def async_change_channel(
     hass: HomeAssistant, channel: int, delay: float = 0
-) -> None:
+) -> asyncio.Task | None:
     """Set the channel to be used.
 
     Does nothing if not configured.
@@ -47,9 +47,12 @@ async def async_change_channel(
         # ZHA is not configured
         return None
 
-    await asyncio.sleep(max(0, delay - ZHA_CHANNEL_CHANGE_TIME_S))
+    async def finish_migration() -> None:
+        """Finish the channel migration."""
+        await asyncio.sleep(max(0, delay - ZHA_CHANNEL_CHANGE_TIME_S))
+        return await api.async_change_channel(hass, channel)
 
-    return await api.async_change_channel(hass, channel)
+    return hass.async_create_task(finish_migration())
 
 
 async def async_get_channel(hass: HomeAssistant) -> int | None:

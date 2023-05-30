@@ -112,14 +112,21 @@ class MultiprotocolAddonManager(AddonManager):
 
     async def async_change_channel(
         self, channel: int, delay: float = DEFAULT_CHANNEL_CHANGE_DELAY
-    ) -> None:
+    ) -> list[asyncio.Task]:
         """Change the channel and notify platforms."""
         self.async_set_channel(channel)
+
+        tasks = []
 
         for platform in self._platforms.values():
             if not await platform.async_using_multipan(self._hass):
                 continue
-            await platform.async_change_channel(self._hass, channel, delay)
+            task = await platform.async_change_channel(self._hass, channel, delay)
+            if not task:
+                continue
+            tasks.append(task)
+
+        return tasks
 
     @callback
     def async_get_channel(self) -> int | None:
@@ -160,7 +167,7 @@ class MultipanProtocol(Protocol):
 
     async def async_change_channel(
         self, hass: HomeAssistant, channel: int, delay: float
-    ) -> None:
+    ) -> asyncio.Task | None:
         """Set the channel to be used.
 
         Does nothing if not configured or the multiprotocol add-on is not used.
