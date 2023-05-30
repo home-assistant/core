@@ -87,3 +87,23 @@ async def test_import_step(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> 
         CONF_TLD: "de",
     }
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_import_already_configured(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
+    """Test import step already configured entry."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_LANG: "de", CONF_TLD: "de"}
+    )
+    config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_IMPORT},
+        data={CONF_LANG: "de", CONF_TLD: "de"},
+    )
+
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert len(mock_setup_entry.mock_calls) == 0
