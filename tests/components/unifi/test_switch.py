@@ -31,7 +31,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_registry import RegistryEntryDisabler
-from homeassistant.util import dt
+from homeassistant.util import dt as dt_util
 
 from .test_controller import (
     CONTROLLER_HOST,
@@ -1129,7 +1129,7 @@ async def test_poe_port_switches(
 
     async_fire_time_changed(
         hass,
-        dt.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1),
+        dt_util.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1),
     )
     await hass.async_block_till_done()
 
