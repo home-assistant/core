@@ -68,6 +68,11 @@
           "custom": "Custom"
         }
       }
+    },
+    "switch": {
+      "child_lock": {
+        "name": "Child lock"
+      }
     }
   }
 }
