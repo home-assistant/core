@@ -33,6 +33,7 @@ from homeassistant.const import (
     UnitOfTemperature,
     UnitOfTime,
     UnitOfVolume,
+    UnitOfVolumeFlowRate,
     UnitOfVolumetricFlux,
 )
 from homeassistant.util.unit_conversion import (
@@ -50,6 +51,7 @@ from homeassistant.util.unit_conversion import (
     TemperatureConverter,
     UnitlessRatioConverter,
     VolumeConverter,
+    VolumeFlowRateConverter,
 )
 
 DOMAIN: Final = "sensor"
@@ -381,6 +383,14 @@ class SensorDeviceClass(StrEnum):
     USCS/imperial units are currently assumed to be US volumes)
     """
 
+    VOLUME_FLOW_RATE = "volume_flow_rate"
+    """Generic flow rate
+
+    Unit of measurement: UnitOfVolumeFlowRate
+    - SI /metric: `m³/h`, `l/m`
+    - USCS / imperial: `ft³/m`
+    """
+
     WATER = "water"
     """Water.
 
@@ -470,6 +480,7 @@ UNIT_CONVERTERS: dict[SensorDeviceClass | str | None, type[BaseUnitConverter]] =
     SensorDeviceClass.VOLTAGE: ElectricPotentialConverter,
     SensorDeviceClass.VOLUME: VolumeConverter,
     SensorDeviceClass.VOLUME_STORAGE: VolumeConverter,
+    SensorDeviceClass.VOLUME_FLOW_RATE: VolumeFlowRateConverter,
     SensorDeviceClass.WATER: VolumeConverter,
     SensorDeviceClass.WEIGHT: MassConverter,
     SensorDeviceClass.WIND_SPEED: SpeedConverter,
@@ -535,6 +546,7 @@ DEVICE_CLASS_UNITS: dict[SensorDeviceClass, set[type[StrEnum] | str | None]] = {
     },
     SensorDeviceClass.VOLTAGE: set(UnitOfElectricPotential),
     SensorDeviceClass.VOLUME: set(UnitOfVolume),
+    SensorDeviceClass.VOLUME_FLOW_RATE: set(UnitOfVolumeFlowRate),
     SensorDeviceClass.WATER: {
         UnitOfVolume.CENTUM_CUBIC_FEET,
         UnitOfVolume.CUBIC_FEET,
