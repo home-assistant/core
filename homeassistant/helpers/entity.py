@@ -1010,15 +1010,19 @@ class Entity(ABC):
         await self.platform.async_add_entities([self])
 
     @callback
+    def _async_unsubscribe_device_updates(self) -> None:
+        """Unsubscribe from device registry updates."""
+        if not self._unsub_device_updates:
+            return
+        self._unsub_device_updates()
+        self._unsub_device_updates = None
+
+    @callback
     def _async_subscribe_device_updates(self) -> None:
         """Subscribe to device registry updates."""
         assert self.registry_entry
 
-        if self._unsub_device_updates:
-            self._unsub_device_updates()
-            assert self._on_remove is not None
-            self._on_remove.remove(self._unsub_device_updates)
-            self._unsub_device_updates = None
+        self._async_unsubscribe_device_updates()
 
         if (device_id := self.registry_entry.device_id) is None:
             return
@@ -1044,7 +1048,12 @@ class Entity(ABC):
             device_id,
             async_device_registry_updated,
         )
-        self.async_on_remove(self._unsub_device_updates)
+        if (
+            self._on_remove
+            and self._async_unsubscribe_device_updates in self._on_remove
+        ):
+            return
+        self.async_on_remove(self._async_unsubscribe_device_updates)
 
     def __repr__(self) -> str:
         """Return the representation."""
