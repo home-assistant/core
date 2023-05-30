@@ -11,18 +11,24 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import AbortFlow, FlowResult
+from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.selector import (
     SelectSelector,
     SelectSelectorConfig,
     SelectSelectorMode,
+    TextSelector,
+    TextSelectorConfig,
+    TextSelectorType,
 )
+from homeassistant.helpers.template import Template
 from homeassistant.util.ssl import SSLCipherList
 
 from .const import (
     CONF_CHARSET,
+    CONF_CUSTOM_EVENT_DATA_TEMPLATE,
     CONF_FOLDER,
     CONF_MAX_MESSAGE_SIZE,
     CONF_SEARCH,
@@ -42,6 +48,9 @@ CIPHER_SELECTOR = SelectSelector(
         mode=SelectSelectorMode.DROPDOWN,
         translation_key=CONF_SSL_CIPHER_LIST,
     )
+)
+TEMPLATE_SELECTOR = TextSelector(
+    TextSelectorConfig(type=TextSelectorType.TEXT, multiline=True)
 )
 
 CONFIG_SCHEMA = vol.Schema(
@@ -69,14 +78,17 @@ OPTIONS_SCHEMA = vol.Schema(
 )
 
 OPTIONS_SCHEMA_ADVANCED = {
+    vol.Optional(CONF_CUSTOM_EVENT_DATA_TEMPLATE): TEMPLATE_SELECTOR,
     vol.Optional(CONF_MAX_MESSAGE_SIZE, default=DEFAULT_MAX_MESSAGE_SIZE): vol.All(
         cv.positive_int,
         vol.Range(min=DEFAULT_MAX_MESSAGE_SIZE, max=MAX_MESSAGE_SIZE_LIMIT),
-    )
+    ),
 }
 
 
-async def validate_input(user_input: dict[str, Any]) -> dict[str, str]:
+async def validate_input(
+    hass: HomeAssistant, user_input: dict[str, Any]
+) -> dict[str, str]:
     """Validate user input."""
     errors = {}
 
@@ -104,6 +116,12 @@ async def validate_input(user_input: dict[str, Any]) -> dict[str, str]:
                 errors[CONF_CHARSET] = "invalid_charset"
             else:
                 errors[CONF_SEARCH] = "invalid_search"
+    if template := user_input.get(CONF_CUSTOM_EVENT_DATA_TEMPLATE):
+        try:
+            Template(template, hass=hass).ensure_valid()
+        except TemplateError:
+            errors[CONF_CUSTOM_EVENT_DATA_TEMPLATE] = "invalid_template"
+
     return errors
 
 
@@ -131,7 +149,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             }
         )
         title = user_input[CONF_NAME]
-        if await validate_input(data):
+        if await validate_input(self.hass, data):
             raise AbortFlow("cannot_connect")
         return self.async_create_entry(title=title, data=data)
 
@@ -154,7 +172,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             }
         )
 
-        if not (errors := await validate_input(user_input)):
+        if not (errors := await validate_input(self.hass, user_input)):
             title = user_input[CONF_USERNAME]
 
             return self.async_create_entry(title=title, data=user_input)
@@ -177,7 +195,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         assert self._reauth_entry
         if user_input is not None:
             user_input = {**self._reauth_entry.data, **user_input}
-            if not (errors := await validate_input(user_input)):
+            if not (errors := await validate_input(self.hass, user_input)):
                 self.hass.config_entries.async_update_entry(
                     self._reauth_entry, data=user_input
                 )
@@ -231,7 +249,7 @@ class OptionsFlow(config_entries.OptionsFlowWithConfigEntry):
                 errors = {"base": err.reason}
             else:
                 entry_data.update(user_input)
-                errors = await validate_input(entry_data)
+                errors = await validate_input(self.hass, entry_data)
                 if not errors:
                     self.hass.config_entries.async_update_entry(
                         self.config_entry, data=entry_data

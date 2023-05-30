@@ -14,7 +14,7 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-from homeassistant.util import dt, slugify
+from homeassistant.util import dt as dt_util, slugify
 
 from . import init_integration
 from .consts import DUMMY_SWITCHER_DEVICES, YAML_CONFIG
@@ -63,7 +63,7 @@ async def test_update_fail(
     assert len(hass.data[DOMAIN][DATA_DEVICE]) == 2
 
     async_fire_time_changed(
-        hass, dt.utcnow() + timedelta(seconds=MAX_UPDATE_INTERVAL_SEC + 1)
+        hass, dt_util.utcnow() + timedelta(seconds=MAX_UPDATE_INTERVAL_SEC + 1)
     )
     await hass.async_block_till_done()
 
@@ -84,7 +84,7 @@ async def test_update_fail(
     mock_bridge.mock_callbacks(DUMMY_SWITCHER_DEVICES)
     await hass.async_block_till_done()
     async_fire_time_changed(
-        hass, dt.utcnow() + timedelta(seconds=MAX_UPDATE_INTERVAL_SEC - 1)
+        hass, dt_util.utcnow() + timedelta(seconds=MAX_UPDATE_INTERVAL_SEC - 1)
     )
 
     for device in DUMMY_SWITCHER_DEVICES:

@@ -25,6 +25,7 @@ import os
 import pathlib
 import re
 import threading
+import time
 from time import monotonic
 from typing import (
     TYPE_CHECKING,
@@ -185,11 +186,6 @@ def valid_entity_id(entity_id: str) -> bool:
     Format: <domain>.<entity> where both are slugs.
     """
     return VALID_ENTITY_ID.match(entity_id) is not None
-
-
-def valid_state(state: str) -> bool:
-    """Test if a state is valid."""
-    return len(state) <= MAX_LENGTH_STATE_STATE
 
 
 def callback(func: _CallableT) -> _CallableT:
@@ -1255,7 +1251,7 @@ class State:
                 "Format should be <domain>.<object_id>"
             )
 
-        if not valid_state(state):
+        if len(state) > MAX_LENGTH_STATE_STATE:
             raise InvalidStateError(
                 f"Invalid state encountered for entity ID: {entity_id}. "
                 "State max length is 255 characters."
@@ -1620,10 +1616,24 @@ class StateMachine:
         if same_state and same_attr:
             return
 
-        now = dt_util.utcnow()
-
         if context is None:
-            context = Context(id=ulid_util.ulid_at_time(dt_util.utc_to_timestamp(now)))
+            # It is much faster to convert a timestamp to a utc datetime object
+            # than converting a utc datetime object to a timestamp since cpython
+            # does not have a fast path for handling the UTC timezone and has to do
+            # multiple local timezone conversions.
+            #
+            # from_timestamp implementation:
+            # https://github.com/python/cpython/blob/c90a862cdcf55dc1753c6466e5fa4a467a13ae24/Modules/_datetimemodule.c#L2936
+            #
+            # timestamp implementation:
+            # https://github.com/python/cpython/blob/c90a862cdcf55dc1753c6466e5fa4a467a13ae24/Modules/_datetimemodule.c#L6387
+            # https://github.com/python/cpython/blob/c90a862cdcf55dc1753c6466e5fa4a467a13ae24/Modules/_datetimemodule.c#L6323
+            timestamp = time.time()
+            now = dt_util.utc_from_timestamp(timestamp)
+            context = Context(id=ulid_util.ulid_at_time(timestamp))
+        else:
+            now = dt_util.utcnow()
+
         state = State(
             entity_id,
             new_state,

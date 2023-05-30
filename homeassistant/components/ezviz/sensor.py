@@ -25,7 +25,6 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
         device_class=SensorDeviceClass.BATTERY,
     ),
     "alarm_sound_mod": SensorEntityDescription(key="alarm_sound_mod"),
-    "detection_sensibility": SensorEntityDescription(key="detection_sensibility"),
     "last_alarm_time": SensorEntityDescription(key="last_alarm_time"),
     "Seconds_Last_Trigger": SensorEntityDescription(
         key="Seconds_Last_Trigger",
