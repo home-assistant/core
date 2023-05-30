@@ -1082,7 +1082,10 @@ async def async_mock_restore_state_shutdown_restart(
 async def async_mock_load_restore_state_from_storage(
     hass: HomeAssistant,
 ) -> None:
-    """Mock loading restore state from storage."""
+    """Mock loading restore state from storage.
+
+    hass_storage must already be mocked.
+    """
     await restore_state.async_get(hass).async_load()
 
 
