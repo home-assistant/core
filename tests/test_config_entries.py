@@ -46,6 +46,8 @@ from .common import (
     mock_integration,
 )
 
+from tests.common import async_get_persistent_notifications
+
 
 @pytest.fixture(autouse=True)
 def mock_handlers() -> Generator[None, None, None]:
@@ -733,14 +735,16 @@ async def test_discovery_notification(hass: HomeAssistant) -> None:
                     title="Test Title", data={"token": "abcd"}
                 )
 
+        notifications = async_get_persistent_notifications(hass)
+        assert "config_entry_discovery" not in notifications
+
         # Start first discovery flow to assert that reconfigure notification fires
         flow1 = await hass.config_entries.flow.async_init(
             "test", context={"source": config_entries.SOURCE_DISCOVERY}
         )
-
         await hass.async_block_till_done()
-        state = hass.states.get("persistent_notification.config_entry_discovery")
-        assert state is not None
+        notifications = async_get_persistent_notifications(hass)
+        assert "config_entry_discovery" in notifications
 
         # Start a second discovery flow so we can finish the first and assert that
         # the discovery notification persists until the second one is complete
@@ -752,15 +756,15 @@ async def test_discovery_notification(hass: HomeAssistant) -> None:
         assert flow1["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
 
         await hass.async_block_till_done()
-        state = hass.states.get("persistent_notification.config_entry_discovery")
-        assert state is not None
+        notifications = async_get_persistent_notifications(hass)
+        assert "config_entry_discovery" in notifications
 
         flow2 = await hass.config_entries.flow.async_configure(flow2["flow_id"], {})
         assert flow2["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
 
         await hass.async_block_till_done()
-        state = hass.states.get("persistent_notification.config_entry_discovery")
-        assert state is None
+        notifications = async_get_persistent_notifications(hass)
+        assert "config_entry_discovery" not in notifications
 
 
 async def test_reauth_notification(hass: HomeAssistant) -> None:
@@ -797,8 +801,8 @@ async def test_reauth_notification(hass: HomeAssistant) -> None:
         )
 
         await hass.async_block_till_done()
-        state = hass.states.get("persistent_notification.config_entry_reconfigure")
-        assert state is None
+        notifications = async_get_persistent_notifications(hass)
+        assert "config_entry_reconfigure" not in notifications
 
         # Start first reauth flow to assert that reconfigure notification fires
         flow1 = await hass.config_entries.flow.async_init(
@@ -806,8 +810,8 @@ async def test_reauth_notification(hass: HomeAssistant) -> None:
         )
 
         await hass.async_block_till_done()
-        state = hass.states.get("persistent_notification.config_entry_reconfigure")
-        assert state is not None
+        notifications = async_get_persistent_notifications(hass)
+        assert "config_entry_reconfigure" in notifications
 
         # Start a second reauth flow so we can finish the first and assert that
         # the reconfigure notification persists until the second one is complete
@@ -819,15 +823,15 @@ async def test_reauth_notification(hass: HomeAssistant) -> None:
         assert flow1["type"] == data_entry_flow.FlowResultType.ABORT
 
         await hass.async_block_till_done()
-        state = hass.states.get("persistent_notification.config_entry_reconfigure")
-        assert state is not None
+        notifications = async_get_persistent_notifications(hass)
+        assert "config_entry_reconfigure" in notifications
 
         flow2 = await hass.config_entries.flow.async_configure(flow2["flow_id"], {})
         assert flow2["type"] == data_entry_flow.FlowResultType.ABORT
 
         await hass.async_block_till_done()
-        state = hass.states.get("persistent_notification.config_entry_reconfigure")
-        assert state is None
+        notifications = async_get_persistent_notifications(hass)
+        assert "config_entry_reconfigure" not in notifications
 
 
 async def test_discovery_notification_not_created(hass: HomeAssistant) -> None:
@@ -2461,8 +2465,8 @@ async def test_partial_flows_hidden(
         assert len(hass.config_entries.flow.async_progress()) == 0
 
         await hass.async_block_till_done()
-        state = hass.states.get("persistent_notification.config_entry_discovery")
-        assert state is None
+        notifications = async_get_persistent_notifications(hass)
+        assert "config_entry_discovery" not in notifications
 
         # Let the flow init complete
         pause_discovery.set()
@@ -2474,8 +2478,8 @@ async def test_partial_flows_hidden(
         assert len(hass.config_entries.flow.async_progress()) == 1
 
         await hass.async_block_till_done()
-        state = hass.states.get("persistent_notification.config_entry_discovery")
-        assert state is not None
+        notifications = async_get_persistent_notifications(hass)
+        assert "config_entry_discovery" in notifications
 
 
 async def test_async_setup_init_entry(hass: HomeAssistant) -> None:

@@ -6,7 +6,7 @@ from typing import cast
 
 import voluptuous as vol
 from zwave_js_server.client import Client as ZwaveClient
-from zwave_js_server.const import CommandClass, ConfigurationValueType, NodeStatus
+from zwave_js_server.const import CommandClass, NodeStatus
 from zwave_js_server.const.command_class.meter import (
     RESET_METER_OPTION_TARGET_VALUE,
     RESET_METER_OPTION_TYPE,
@@ -16,7 +16,7 @@ from zwave_js_server.model.controller.statistics import ControllerStatisticsData
 from zwave_js_server.model.driver import Driver
 from zwave_js_server.model.node import Node as ZwaveNode
 from zwave_js_server.model.node.statistics import NodeStatisticsDataType
-from zwave_js_server.model.value import ConfigurationValue
+from zwave_js_server.model.value import ConfigurationValue, ConfigurationValueType
 from zwave_js_server.util.command_class.meter import get_meter_type
 
 from homeassistant.components.sensor import (
@@ -652,19 +652,19 @@ class ZWaveListSensor(ZwaveSensor):
         )
 
     @property
+    def options(self) -> list[str] | None:
+        """Return options for enum sensor."""
+        if self.device_class == SensorDeviceClass.ENUM:
+            return list(self.info.primary_value.metadata.states.values())
+        return None
+
+    @property
     def device_class(self) -> SensorDeviceClass | None:
         """Return sensor device class."""
         if (device_class := super().device_class) is not None:
             return device_class
         if self.info.primary_value.metadata.states:
             return SensorDeviceClass.ENUM
-        return None
-
-    @property
-    def options(self) -> list[str] | None:
-        """Return options for enum sensor."""
-        if self.device_class == SensorDeviceClass.ENUM:
-            return list(self.info.primary_value.metadata.states.values())
         return None
 
     @property
@@ -678,6 +678,8 @@ class ZWaveListSensor(ZwaveSensor):
 
 class ZWaveConfigParameterSensor(ZWaveListSensor):
     """Representation of a Z-Wave config parameter sensor."""
+
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
 
     def __init__(
         self,
@@ -698,7 +700,6 @@ class ZWaveConfigParameterSensor(ZWaveListSensor):
         self._attr_name = self.generate_name(
             alternate_value_name=self.info.primary_value.property_name,
             additional_info=[property_key_name] if property_key_name else None,
-            name_prefix="Config parameter",
         )
 
     @property
@@ -716,10 +717,7 @@ class ZWaveConfigParameterSensor(ZWaveListSensor):
     @property
     def extra_state_attributes(self) -> dict[str, str] | None:
         """Return the device specific state attributes."""
-        if (
-            self._primary_value.configuration_value_type == ConfigurationValueType.RANGE
-            or (value := self.info.primary_value.value) is None
-        ):
+        if (value := self.info.primary_value.value) is None:
             return None
         # add the value's int value as property for multi-value (list) items
         return {ATTR_VALUE: value}

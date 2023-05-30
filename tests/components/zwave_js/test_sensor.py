@@ -45,7 +45,6 @@ from .common import (
     CURRENT_SENSOR,
     ENERGY_SENSOR,
     HUMIDITY_SENSOR,
-    ID_LOCK_CONFIG_PARAMETER_SENSOR,
     METER_ENERGY_SENSOR,
     NOTIFICATION_MOTION_SENSOR,
     POWER_SENSOR,
@@ -188,7 +187,9 @@ async def test_disabled_notification_sensor(
 
     state = hass.states.get(NOTIFICATION_MOTION_SENSOR)
     assert state.state == "Motion detection"
-    assert state.attributes["value"] == 8
+    assert state.attributes[ATTR_VALUE] == 8
+    assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.ENUM
+    assert state.attributes[ATTR_OPTIONS] == ["idle", "Motion detection"]
 
     event = Event(
         "value updated",
@@ -218,13 +219,34 @@ async def test_disabled_notification_sensor(
 
 
 async def test_config_parameter_sensor(
-    hass: HomeAssistant, lock_id_lock_as_id150, integration
+    hass: HomeAssistant, climate_adc_t3000, lock_id_lock_as_id150, integration
 ) -> None:
     """Test config parameter sensor is created."""
+    sensor_entity_id = "sensor.adc_t3000_system_configuration_cool_stages"
+    sensor_with_states_entity_id = "sensor.adc_t3000_power_source"
     ent_reg = er.async_get(hass)
-    entity_entry = ent_reg.async_get(ID_LOCK_CONFIG_PARAMETER_SENSOR)
-    assert entity_entry
-    assert entity_entry.disabled
+    for entity_id in (sensor_entity_id, sensor_with_states_entity_id):
+        entity_entry = ent_reg.async_get(entity_id)
+        assert entity_entry
+        assert entity_entry.disabled
+        assert entity_entry.entity_category == EntityCategory.DIAGNOSTIC
+
+    for entity_id in (sensor_entity_id, sensor_with_states_entity_id):
+        updated_entry = ent_reg.async_update_entity(entity_id, **{"disabled_by": None})
+        assert updated_entry != entity_entry
+        assert updated_entry.disabled is False
+
+    # reload integration and check if entity is correctly there
+    await hass.config_entries.async_reload(integration.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(sensor_entity_id)
+    assert state
+    assert state.state == "1"
+
+    state = hass.states.get(sensor_with_states_entity_id)
+    assert state
+    assert state.state == "C-Wire"
 
     updated_entry = ent_reg.async_update_entity(
         entity_entry.entity_id, **{"disabled_by": None}
@@ -235,43 +257,6 @@ async def test_config_parameter_sensor(
     # reload integration and check if entity is correctly there
     await hass.config_entries.async_reload(integration.entry_id)
     await hass.async_block_till_done()
-
-    state = hass.states.get(ID_LOCK_CONFIG_PARAMETER_SENSOR)
-    assert state
-    assert state.state == "Disable Away Manual Lock"
-    assert state.attributes[ATTR_VALUE] == 0
-    assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.ENUM
-    assert state.attributes[ATTR_OPTIONS] == [
-        "Disable Away Manual Lock",
-        "Disable Away Auto Lock",
-        "Enable Away Manual Lock",
-        "Enable Away Auto Lock",
-    ]
-
-    event = Event(
-        "value updated",
-        {
-            "source": "node",
-            "event": "value updated",
-            "nodeId": lock_id_lock_as_id150.node_id,
-            "args": {
-                "commandClassName": "Configuration",
-                "commandClass": 112,
-                "endpoint": 0,
-                "property": 1,
-                "newValue": None,
-                "prevValue": 0,
-                "propertyName": "Door lock mode",
-            },
-        },
-    )
-
-    lock_id_lock_as_id150.receive_event(event)
-    await hass.async_block_till_done()
-    state = hass.states.get(ID_LOCK_CONFIG_PARAMETER_SENSOR)
-    assert state
-    assert state.state == STATE_UNKNOWN
-    assert ATTR_VALUE not in state.attributes
 
 
 async def test_node_status_sensor(
