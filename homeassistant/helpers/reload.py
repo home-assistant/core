@@ -78,10 +78,10 @@ async def _resetup_platform(
         root_config[integration_platform].append(p_config)
 
     # If new adr0007 style, include that as well.
-    if conf.get(integration_name):
+    if integration_config := conf.get(integration_name):
         # Check if it's a multi-platform config
         added = False
-        for item in conf[integration_name]:
+        for item in integration_config:
             if isinstance(item, dict) and (
                 current_platform_config := item.get(integration_platform)
             ):
