@@ -533,12 +533,14 @@ async def test_import_flow_connection_error(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize("cipher_list", ["python_default", "modern", "intermediate"])
-async def test_config_flow_with_cipherlist(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, cipher_list: str
+@pytest.mark.parametrize("verify_ssl", [False, True])
+async def test_config_flow_with_cipherlist_and_ssl_verify(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock, cipher_list: str, verify_ssl: True
 ) -> None:
-    """Test with alternate cipherlist."""
+    """Test with alternate cipherlist or disabled ssl verification."""
     config = MOCK_CONFIG.copy()
     config["ssl_cipher_list"] = cipher_list
+    config["verify_ssl"] = verify_ssl
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_USER, "show_advanced_options": True},
