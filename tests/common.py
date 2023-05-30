@@ -1075,7 +1075,7 @@ async def async_mock_restore_state_shutdown_restart(
     """Mock shutting down and saving restore state and restoring."""
     data = restore_state.async_get(hass)
     await data.async_dump_states()
-    await async_mock_load_restore_state_from_storage(data)
+    await async_mock_load_restore_state_from_storage(hass)
     return data
 
 
