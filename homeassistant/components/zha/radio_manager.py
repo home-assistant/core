@@ -48,6 +48,7 @@ RECOMMENDED_RADIOS = (
 
 CONNECT_DELAY_S = 1.0
 
+BACKUP_RETIRES = 5
 MIGRATION_RETRIES = 100
 
 HARDWARE_DISCOVERY_SCHEMA = vol.Schema(
@@ -340,7 +341,24 @@ class ZhaMultiPANMigrationHelper:
         old_radio_mgr.device_path = config_entry_data[CONF_DEVICE][CONF_DEVICE_PATH]
         old_radio_mgr.device_settings = config_entry_data[CONF_DEVICE]
         old_radio_mgr.radio_type = RadioType[config_entry_data[CONF_RADIO_TYPE]]
-        backup = await old_radio_mgr.async_load_network_settings(create_backup=True)
+
+        for retry in range(BACKUP_RETIRES):
+            try:
+                backup = await old_radio_mgr.async_load_network_settings(
+                    create_backup=True
+                )
+                break
+            except OSError as err:
+                if retry >= BACKUP_RETIRES - 1:
+                    raise
+
+                _LOGGER.debug(
+                    "Failed to create backup %r, retrying in %s seconds",
+                    err,
+                    CONNECT_DELAY_S,
+                )
+
+            await asyncio.sleep(CONNECT_DELAY_S)
 
         # Then configure the radio manager for the new radio to use the new settings
         self._radio_mgr.chosen_backup = backup
