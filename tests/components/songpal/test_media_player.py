@@ -376,7 +376,7 @@ async def test_disconnected(
     "service", [media_player.SERVICE_TURN_ON, media_player.SERVICE_TURN_OFF]
 )
 @pytest.mark.parametrize(
-    "error_code,swallow", [(ERROR_REQUEST_RETRY, True), (1234, False)]
+    ("error_code", "swallow"), [(ERROR_REQUEST_RETRY, True), (1234, False)]
 )
 async def test_error_swallowing(hass, caplog, service, error_code, swallow):
     """Test swallowing specific errors on turn_on and turn_off."""
