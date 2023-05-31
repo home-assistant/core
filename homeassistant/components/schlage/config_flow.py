@@ -32,10 +32,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             username = user_input[CONF_USERNAME]
             password = user_input[CONF_PASSWORD]
             try:
-                auth = await self.hass.async_add_executor_job(
-                    pyschlage.Auth, username, password
+                await self.hass.async_add_executor_job(
+                    _authenticate, username, password
                 )
-                await self.hass.async_add_executor_job(auth.authenticate)
             except NotAuthorizedError:
                 LOGGER.exception("Authentication error")
                 errors["base"] = "invalid_auth"
@@ -49,3 +48,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
+
+
+def _authenticate(username: str, password: str) -> None:
+    """Authenticate with the Schlage API."""
+    auth = pyschlage.Auth(username, password)
+    auth.authenticate()
