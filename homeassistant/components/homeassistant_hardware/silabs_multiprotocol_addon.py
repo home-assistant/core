@@ -7,6 +7,7 @@ import dataclasses
 import logging
 from typing import Any
 
+import async_timeout
 import voluptuous as vol
 import yarl
 
@@ -193,21 +194,26 @@ class OptionsFlowHandler(config_entries.OptionsFlow, ABC):
             )
 
     async def _async_wait_until_addon_state(
-        self, addon_manager: AddonManager, state: AddonState
+        self,
+        addon_manager: AddonManager,
+        state: AddonState,
+        *,
+        timeout: float = 15 * 60,
     ) -> None:
         """Poll an addon's info until it is in a specific state."""
-        while True:
-            try:
-                info = await addon_manager.async_get_addon_info()
-            except AddonError:
-                info = None
+        async with async_timeout.timeout(timeout):
+            while True:
+                try:
+                    info = await addon_manager.async_get_addon_info()
+                except AddonError:
+                    info = None
 
-            _LOGGER.debug("Waiting for addon to be in state %s: %s", state, info)
+                _LOGGER.debug("Waiting for addon to be in state %s: %s", state, info)
 
-            if info is not None and info.state == state:
-                break
+                if info is not None and info.state == state:
+                    break
 
-            await asyncio.sleep(ADDON_STATE_POLL_INTERVAL)
+                await asyncio.sleep(ADDON_STATE_POLL_INTERVAL)
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
