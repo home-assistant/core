@@ -22,6 +22,9 @@ BlinkStick==1.2.0
 # homeassistant.components.co2signal
 CO2Signal==0.4.2
 
+# homeassistant.components.doorbird
+DoorBirdPy==2.1.0
+
 # homeassistant.components.homekit
 HAP-python==4.6.0
 
@@ -609,9 +612,6 @@ discogs-client==2.3.0
 
 # homeassistant.components.steamist
 discovery30303==0.2.1
-
-# homeassistant.components.doorbird
-doorbirdpy==2.1.0
 
 # homeassistant.components.dovado
 dovado==0.4.1
