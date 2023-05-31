@@ -285,12 +285,12 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
             chunk = await self._audio_queue.get()
 
         while chunk:
+            chunk_buffer.append(chunk)
+
             segmenter.process(chunk)
             if segmenter.in_command:
+                # Buffer until command starts
                 return True
-
-            # Buffer until command starts
-            chunk_buffer.append(chunk)
 
             async with async_timeout.timeout(self.audio_timeout):
                 chunk = await self._audio_queue.get()

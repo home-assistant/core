@@ -169,6 +169,7 @@ homeassistant.components.homekit_controller.utils
 homeassistant.components.homewizard.*
 homeassistant.components.http.*
 homeassistant.components.huawei_lte.*
+homeassistant.components.hydrawise.*
 homeassistant.components.hyperion.*
 homeassistant.components.ibeacon.*
 homeassistant.components.image_processing.*
@@ -235,6 +236,7 @@ homeassistant.components.oncue.*
 homeassistant.components.onewire.*
 homeassistant.components.open_meteo.*
 homeassistant.components.openexchangerates.*
+homeassistant.components.opensky.*
 homeassistant.components.openuv.*
 homeassistant.components.otbr.*
 homeassistant.components.overkiz.*

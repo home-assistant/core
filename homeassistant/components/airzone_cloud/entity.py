@@ -4,9 +4,18 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing import Any
 
-from aioairzone_cloud.const import AZD_NAME, AZD_SYSTEM_ID, AZD_ZONES
+from aioairzone_cloud.const import (
+    AZD_AIDOOS,
+    AZD_FIRMWARE,
+    AZD_NAME,
+    AZD_SYSTEM_ID,
+    AZD_WEBSERVER,
+    AZD_WEBSERVERS,
+    AZD_ZONES,
+)
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -20,6 +29,67 @@ class AirzoneEntity(CoordinatorEntity[AirzoneUpdateCoordinator], ABC):
     @abstractmethod
     def get_airzone_value(self, key: str) -> Any:
         """Return Airzone Cloud entity value by key."""
+
+
+class AirzoneAidooEntity(AirzoneEntity):
+    """Define an Airzone Cloud Aidoo entity."""
+
+    def __init__(
+        self,
+        coordinator: AirzoneUpdateCoordinator,
+        entry: ConfigEntry,
+        aidoo_id: str,
+        aidoo_data: dict[str, Any],
+    ) -> None:
+        """Initialize."""
+        super().__init__(coordinator)
+
+        self.aidoo_id = aidoo_id
+
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, aidoo_id)},
+            manufacturer=MANUFACTURER,
+            name=aidoo_data[AZD_NAME],
+            via_device=(DOMAIN, aidoo_data[AZD_WEBSERVER]),
+        )
+
+    def get_airzone_value(self, key: str) -> Any:
+        """Return Aidoo value by key."""
+        value = None
+        if aidoo := self.coordinator.data[AZD_AIDOOS].get(self.aidoo_id):
+            value = aidoo.get(key)
+        return value
+
+
+class AirzoneWebServerEntity(AirzoneEntity):
+    """Define an Airzone Cloud WebServer entity."""
+
+    def __init__(
+        self,
+        coordinator: AirzoneUpdateCoordinator,
+        entry: ConfigEntry,
+        ws_id: str,
+        ws_data: dict[str, Any],
+    ) -> None:
+        """Initialize."""
+        super().__init__(coordinator)
+
+        self.ws_id = ws_id
+
+        self._attr_device_info = DeviceInfo(
+            connections={(dr.CONNECTION_NETWORK_MAC, ws_id)},
+            identifiers={(DOMAIN, ws_id)},
+            manufacturer=MANUFACTURER,
+            name=f"WebServer {ws_id}",
+            sw_version=ws_data[AZD_FIRMWARE],
+        )
+
+    def get_airzone_value(self, key: str) -> Any:
+        """Return WebServer value by key."""
+        value = None
+        if webserver := self.coordinator.data[AZD_WEBSERVERS].get(self.ws_id):
+            value = webserver.get(key)
+        return value
 
 
 class AirzoneZoneEntity(AirzoneEntity):
@@ -39,16 +109,15 @@ class AirzoneZoneEntity(AirzoneEntity):
         self.zone_id = zone_id
 
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, f"{entry.unique_id}_{zone_id}")},
+            identifiers={(DOMAIN, zone_id)},
             manufacturer=MANUFACTURER,
             name=zone_data[AZD_NAME],
-            via_device=(DOMAIN, f"{entry.unique_id}_{self.system_id}"),
+            via_device=(DOMAIN, self.system_id),
         )
 
     def get_airzone_value(self, key: str) -> Any:
         """Return zone value by key."""
         value = None
         if zone := self.coordinator.data[AZD_ZONES].get(self.zone_id):
-            if key in zone:
-                value = zone[key]
+            value = zone.get(key)
         return value

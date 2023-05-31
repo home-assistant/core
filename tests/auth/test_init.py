@@ -1,7 +1,7 @@
 """Tests for the Home Assistant auth module."""
 from datetime import timedelta
 from typing import Any
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
 from freezegun import freeze_time
 import jwt
@@ -31,10 +31,8 @@ from tests.common import (
 
 
 @pytest.fixture
-def mock_hass(event_loop):
+def mock_hass(hass: HomeAssistant) -> HomeAssistant:
     """Home Assistant mock with minimum amount of data set to make it work with auth."""
-    hass = Mock()
-    hass.config.skip_pip = True
     return hass
 
 
