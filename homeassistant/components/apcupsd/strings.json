@@ -2,7 +2,7 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "no_status": "No status is reported from [%key:common::config_flow::data::host%]"
+      "no_status": "No status is reported from host"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"

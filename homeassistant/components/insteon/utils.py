@@ -1,11 +1,13 @@
 """Utilities used by insteon component."""
 import asyncio
+from collections.abc import Callable
 import logging
 
 from pyinsteon import devices
 from pyinsteon.address import Address
 from pyinsteon.constants import ALDBStatus, DeviceAction
-from pyinsteon.events import OFF_EVENT, OFF_FAST_EVENT, ON_EVENT, ON_FAST_EVENT
+from pyinsteon.device_types.device_base import Device
+from pyinsteon.events import OFF_EVENT, OFF_FAST_EVENT, ON_EVENT, ON_FAST_EVENT, Event
 from pyinsteon.managers.link_manager import (
     async_enter_linking_mode,
     async_enter_unlinking_mode,
@@ -20,14 +22,16 @@ from pyinsteon.managers.x10_manager import (
     async_x10_all_units_off,
 )
 from pyinsteon.x10_address import create as create_x10_address
+from serial.tools import list_ports
 
+from homeassistant.components import usb
 from homeassistant.const import (
     CONF_ADDRESS,
     CONF_ENTITY_ID,
     CONF_PLATFORM,
     ENTITY_MATCH_ALL,
 )
-from homeassistant.core import ServiceCall, callback
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
@@ -47,7 +51,6 @@ from .const import (
     EVENT_GROUP_OFF_FAST,
     EVENT_GROUP_ON,
     EVENT_GROUP_ON_FAST,
-    ON_OFF_EVENTS,
     SIGNAL_ADD_DEFAULT_LINKS,
     SIGNAL_ADD_DEVICE_OVERRIDE,
     SIGNAL_ADD_ENTITIES,
@@ -89,49 +92,52 @@ from .schemas import (
 _LOGGER = logging.getLogger(__name__)
 
 
-def add_on_off_event_device(hass, device):
-    """Register an Insteon device as an on/off event device."""
+def _register_event(event: Event, listener: Callable) -> None:
+    """Register the events raised by a device."""
+    _LOGGER.debug(
+        "Registering on/off event for %s %d %s",
+        str(event.address),
+        event.group,
+        event.name,
+    )
+    event.subscribe(listener, force_strong_ref=True)
+
+
+def add_insteon_events(hass: HomeAssistant, device: Device) -> None:
+    """Register Insteon device events."""
 
     @callback
-    def async_fire_group_on_off_event(name, address, group, button):
+    def async_fire_group_on_off_event(
+        name: str, address: Address, group: int, button: str
+    ):
         # Firing an event when a button is pressed.
         if button and button[-2] == "_":
             button_id = button[-1].lower()
         else:
             button_id = None
 
-        schema = {CONF_ADDRESS: address}
+        schema = {CONF_ADDRESS: address, "group": group}
         if button_id:
             schema[EVENT_CONF_BUTTON] = button_id
         if name == ON_EVENT:
             event = EVENT_GROUP_ON
-        if name == OFF_EVENT:
+        elif name == OFF_EVENT:
             event = EVENT_GROUP_OFF
-        if name == ON_FAST_EVENT:
+        elif name == ON_FAST_EVENT:
             event = EVENT_GROUP_ON_FAST
-        if name == OFF_FAST_EVENT:
+        elif name == OFF_FAST_EVENT:
             event = EVENT_GROUP_OFF_FAST
+        else:
+            event = f"insteon.{name}"
         _LOGGER.debug("Firing event %s with %s", event, schema)
         hass.bus.async_fire(event, schema)
 
-    for group in device.events:
-        if isinstance(group, int):
-            for event in device.events[group]:
-                if event in [
-                    OFF_EVENT,
-                    ON_EVENT,
-                    OFF_FAST_EVENT,
-                    ON_FAST_EVENT,
-                ]:
-                    _LOGGER.debug(
-                        "Registering on/off event for %s %d %s",
-                        str(device.address),
-                        group,
-                        event,
-                    )
-                    device.events[group][event].subscribe(
-                        async_fire_group_on_off_event, force_strong_ref=True
-                    )
+    for name_or_group, event in device.events.items():
+        if isinstance(name_or_group, int):
+            for _, event in device.events[name_or_group].items():
+                _register_event(event, async_fire_group_on_off_event)
+        else:
+            _register_event(event, async_fire_group_on_off_event)
 
 
 def register_new_device_callback(hass):
@@ -152,12 +158,8 @@ def register_new_device_callback(hass):
         await device.async_status()
         platforms = get_device_platforms(device)
         for platform in platforms:
-            if platform == ON_OFF_EVENTS:
-                add_on_off_event_device(hass, device)
-
-            else:
-                signal = f"{SIGNAL_ADD_ENTITIES}_{platform}"
-                dispatcher_send(hass, signal, {"address": device.address})
+            signal = f"{SIGNAL_ADD_ENTITIES}_{platform}"
+            dispatcher_send(hass, signal, {"address": device.address})
 
     devices.subscribe(async_new_insteon_device, force_strong_ref=True)
 
@@ -393,3 +395,32 @@ def async_add_insteon_entities(
         for group in groups:
             new_entities.append(entity_type(device, group))
     async_add_entities(new_entities)
+
+
+def get_usb_ports() -> dict[str, str]:
+    """Return a dict of USB ports and their friendly names."""
+    ports = list_ports.comports()
+    port_descriptions = {}
+    for port in ports:
+        vid: str | None = None
+        pid: str | None = None
+        if port.vid is not None and port.pid is not None:
+            usb_device = usb.usb_device_from_port(port)
+            vid = usb_device.vid
+            pid = usb_device.pid
+        dev_path = usb.get_serial_by_id(port.device)
+        human_name = usb.human_readable_device_name(
+            dev_path,
+            port.serial_number,
+            port.manufacturer,
+            port.description,
+            vid,
+            pid,
+        )
+        port_descriptions[dev_path] = human_name
+    return port_descriptions
+
+
+async def async_get_usb_ports(hass: HomeAssistant) -> dict[str, str]:
+    """Return a dict of USB ports and their friendly names."""
+    return await hass.async_add_executor_job(get_usb_ports)

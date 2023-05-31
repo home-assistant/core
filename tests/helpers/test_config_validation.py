@@ -561,11 +561,16 @@ def test_x10_address() -> None:
     schema("C11")
 
 
-def test_template() -> None:
+def test_template(hass: HomeAssistant) -> None:
     """Test template validator."""
     schema = vol.Schema(cv.template)
 
-    for value in (None, "{{ partial_print }", "{% if True %}Hello", ["test"]):
+    for value in (
+        None,
+        "{{ partial_print }",
+        "{% if True %}Hello",
+        ["test"],
+    ):
         with pytest.raises(vol.Invalid):
             schema(value)
 
@@ -574,12 +579,43 @@ def test_template() -> None:
         "Hello",
         "{{ beer }}",
         "{% if 1 == 1 %}Hello{% else %}World{% endif %}",
+        # Function added as an extension by Home Assistant
+        "{{ expand('group.foo')|map(attribute='entity_id')|list }}",
+        # Filter added as an extension by Home Assistant
+        "{{ ['group.foo']|expand|map(attribute='entity_id')|list }}",
     )
     for value in options:
         schema(value)
 
 
-def test_dynamic_template() -> None:
+async def test_template_no_hass(hass: HomeAssistant) -> None:
+    """Test template validator."""
+    schema = vol.Schema(cv.template)
+
+    for value in (
+        None,
+        "{{ partial_print }",
+        "{% if True %}Hello",
+        ["test"],
+        # Filter added as an extension by Home Assistant
+        "{{ ['group.foo']|expand|map(attribute='entity_id')|list }}",
+    ):
+        with pytest.raises(vol.Invalid):
+            await hass.async_add_executor_job(schema, value)
+
+    options = (
+        1,
+        "Hello",
+        "{{ beer }}",
+        "{% if 1 == 1 %}Hello{% else %}World{% endif %}",
+        # Function added as an extension by Home Assistant
+        "{{ expand('group.foo')|map(attribute='entity_id')|list }}",
+    )
+    for value in options:
+        await hass.async_add_executor_job(schema, value)
+
+
+def test_dynamic_template(hass: HomeAssistant) -> None:
     """Test dynamic template validator."""
     schema = vol.Schema(cv.dynamic_template)
 
@@ -597,9 +633,40 @@ def test_dynamic_template() -> None:
     options = (
         "{{ beer }}",
         "{% if 1 == 1 %}Hello{% else %}World{% endif %}",
+        # Function added as an extension by Home Assistant
+        "{{ expand('group.foo')|map(attribute='entity_id')|list }}",
+        # Filter added as an extension by Home Assistant
+        "{{ ['group.foo']|expand|map(attribute='entity_id')|list }}",
     )
     for value in options:
         schema(value)
+
+
+async def test_dynamic_template_no_hass(hass: HomeAssistant) -> None:
+    """Test dynamic template validator."""
+    schema = vol.Schema(cv.dynamic_template)
+
+    for value in (
+        None,
+        1,
+        "{{ partial_print }",
+        "{% if True %}Hello",
+        ["test"],
+        "just a string",
+        # Filter added as an extension by Home Assistant
+        "{{ ['group.foo']|expand|map(attribute='entity_id')|list }}",
+    ):
+        with pytest.raises(vol.Invalid):
+            await hass.async_add_executor_job(schema, value)
+
+    options = (
+        "{{ beer }}",
+        "{% if 1 == 1 %}Hello{% else %}World{% endif %}",
+        # Function added as an extension by Home Assistant
+        "{{ expand('group.foo')|map(attribute='entity_id')|list }}",
+    )
+    for value in options:
+        await hass.async_add_executor_job(schema, value)
 
 
 def test_template_complex() -> None:
@@ -981,7 +1048,10 @@ def test_deprecated_or_removed_logger_with_config_attributes(
     setattr(config, "__config_file__", file)
     setattr(config, "__line__", line)
 
-    cv.deprecated("mars", replacement_key=replacement_key, default=False)(config)
+    validated = cv.deprecated("mars", replacement_key=replacement_key, default=False)(
+        config
+    )
+    assert "mars" not in validated  # Removed because a replacement_key is defined
 
     assert len(caplog.records) == 1
     assert replacement in caplog.text
@@ -996,7 +1066,8 @@ def test_deprecated_or_removed_logger_with_config_attributes(
     setattr(config, "__config_file__", file)
     setattr(config, "__line__", line)
 
-    cv.removed("mars", default=False, raise_if_present=False)(config)
+    validated = cv.removed("mars", default=False, raise_if_present=False)(config)
+    assert "mars" not in validated  # Removed because by cv.removed
 
     assert len(caplog.records) == 1
     assert replacement in caplog.text
@@ -1401,3 +1472,25 @@ def test_positive_time_period_template() -> None:
     schema("{{ 'invalid' }}")
     schema({"{{ 'invalid' }}": 5})
     schema({"minutes": "{{ 'invalid' }}"})
+
+
+def test_empty_schema(caplog: pytest.LogCaptureFixture) -> None:
+    """Test if the current module cannot be inspected."""
+    expected_message = (
+        "The test_domain integration does not support any configuration parameters"
+    )
+
+    cv.empty_config_schema("test_domain")({})
+    assert expected_message not in caplog.text
+
+    cv.empty_config_schema("test_domain")({"test_domain": {}})
+    assert expected_message not in caplog.text
+
+    cv.empty_config_schema("test_domain")({"test_domain": {"foo": "bar"}})
+    assert expected_message in caplog.text
+
+
+def test_empty_schema_cant_find_module() -> None:
+    """Test if the current module cannot be inspected."""
+    with patch("inspect.getmodule", return_value=None):
+        cv.empty_config_schema("test_domain")({"test_domain": {"foo": "bar"}})

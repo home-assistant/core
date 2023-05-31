@@ -60,7 +60,7 @@ from .const import (
     DEFAULT_PROBABILITY_THRESHOLD,
 )
 from .helpers import Observation
-from .repairs import raise_mirrored_entries, raise_no_prob_given_false
+from .issues import raise_mirrored_entries, raise_no_prob_given_false
 
 _LOGGER = logging.getLogger(__name__)
 

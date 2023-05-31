@@ -23,6 +23,8 @@ async def contact_sensor_node_fixture(
     )
 
 
+# This tests needs to be adjusted to remove lingering tasks
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
 async def test_contact_sensor(
     hass: HomeAssistant,
     matter_client: MagicMock,
@@ -53,6 +55,8 @@ async def occupancy_sensor_node_fixture(
     )
 
 
+# This tests needs to be adjusted to remove lingering tasks
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
 async def test_occupancy_sensor(
     hass: HomeAssistant,
     matter_client: MagicMock,

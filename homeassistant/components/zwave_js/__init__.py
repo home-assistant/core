@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 from collections import defaultdict
 from collections.abc import Coroutine
+from contextlib import suppress
 from typing import Any
 
 from async_timeout import timeout
@@ -320,10 +321,25 @@ class ControllerEvents:
 
     async def async_on_node_added(self, node: ZwaveNode) -> None:
         """Handle node added event."""
+        # Every node including the controller will have at least one sensor
+        await self.driver_events.async_setup_platform(Platform.SENSOR)
+
+        # Remove stale entities that may exist from a previous interview when an
+        # interview is started.
+        base_unique_id = get_valueless_base_unique_id(self.driver_events.driver, node)
+        self.config_entry.async_on_unload(
+            node.on(
+                "interview started",
+                lambda _: async_dispatcher_send(
+                    self.hass,
+                    f"{DOMAIN}_{base_unique_id}_remove_entity_on_interview_started",
+                ),
+            )
+        )
+
         # No need for a ping button or node status sensor for controller nodes
         if not node.is_controller_node:
             # Create a node status sensor for each device
-            await self.driver_events.async_setup_platform(Platform.SENSOR)
             async_dispatcher_send(
                 self.hass,
                 f"{DOMAIN}_{self.config_entry.entry_id}_add_node_status_sensor",
@@ -337,6 +353,13 @@ class ControllerEvents:
                 f"{DOMAIN}_{self.config_entry.entry_id}_add_ping_button_entity",
                 node,
             )
+
+        # Create statistics sensors for each device
+        async_dispatcher_send(
+            self.hass,
+            f"{DOMAIN}_{self.config_entry.entry_id}_add_statistics_sensors",
+            node,
+        )
 
         LOGGER.debug("Node added: %s", node.node_id)
 
@@ -454,7 +477,6 @@ class NodeEvents:
     async def async_on_node_ready(self, node: ZwaveNode) -> None:
         """Handle node ready event."""
         LOGGER.debug("Processing node %s", node)
-        driver = self.controller_events.driver_events.driver
         # register (or update) node in device registry
         device = self.controller_events.register_node_in_dev_reg(node)
         # We only want to create the defaultdict once, even on reinterviews
@@ -463,15 +485,6 @@ class NodeEvents:
 
         # Remove any old value ids if this is a reinterview.
         self.controller_events.discovered_value_ids.pop(device.id, None)
-        # Remove stale entities that may exist from a previous interview.
-        async_dispatcher_send(
-            self.hass,
-            (
-                f"{DOMAIN}_"
-                f"{get_valueless_base_unique_id(driver, node)}_"
-                "remove_entity_on_ready_node"
-            ),
-        )
 
         value_updates_disc_info: dict[str, ZwaveDiscoveryInfo] = {}
 
@@ -792,7 +805,11 @@ async def disconnect_client(hass: HomeAssistant, entry: ConfigEntry) -> None:
     for task in platform_setup_tasks:
         task.cancel()
 
-    await asyncio.gather(listen_task, start_client_task, *platform_setup_tasks)
+    tasks = (listen_task, start_client_task, *platform_setup_tasks)
+    await asyncio.gather(*tasks, return_exceptions=True)
+    for task in tasks:
+        with suppress(asyncio.CancelledError):
+            await task
 
     if client.connected:
         await client.disconnect()

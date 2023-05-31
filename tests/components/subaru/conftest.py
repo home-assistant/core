@@ -17,6 +17,8 @@ from homeassistant.components.subaru.const import (
     VEHICLE_HAS_REMOTE_SERVICE,
     VEHICLE_HAS_REMOTE_START,
     VEHICLE_HAS_SAFETY_SERVICE,
+    VEHICLE_MODEL_NAME,
+    VEHICLE_MODEL_YEAR,
     VEHICLE_NAME,
 )
 from homeassistant.config_entries import ConfigEntryState
@@ -40,10 +42,13 @@ MOCK_API_UPDATE_SAVED_PIN = f"{MOCK_API}update_saved_pin"
 MOCK_API_GET_VEHICLES = f"{MOCK_API}get_vehicles"
 MOCK_API_VIN_TO_NAME = f"{MOCK_API}vin_to_name"
 MOCK_API_GET_API_GEN = f"{MOCK_API}get_api_gen"
+MOCK_API_GET_MODEL_NAME = f"{MOCK_API}get_model_name"
+MOCK_API_GET_MODEL_YEAR = f"{MOCK_API}get_model_year"
 MOCK_API_GET_EV_STATUS = f"{MOCK_API}get_ev_status"
 MOCK_API_GET_RES_STATUS = f"{MOCK_API}get_res_status"
 MOCK_API_GET_REMOTE_STATUS = f"{MOCK_API}get_remote_status"
 MOCK_API_GET_SAFETY_STATUS = f"{MOCK_API}get_safety_status"
+MOCK_API_GET_SUBSCRIPTION_STATUS = f"{MOCK_API}get_subscription_status"
 MOCK_API_GET_DATA = f"{MOCK_API}get_data"
 MOCK_API_UPDATE = f"{MOCK_API}update"
 MOCK_API_FETCH = f"{MOCK_API}fetch"
@@ -115,6 +120,12 @@ async def setup_subaru_config_entry(
         MOCK_API_GET_API_GEN,
         return_value=vehicle_data[VEHICLE_API_GEN],
     ), patch(
+        MOCK_API_GET_MODEL_NAME,
+        return_value=vehicle_data[VEHICLE_MODEL_NAME],
+    ), patch(
+        MOCK_API_GET_MODEL_YEAR,
+        return_value=vehicle_data[VEHICLE_MODEL_YEAR],
+    ), patch(
         MOCK_API_GET_EV_STATUS,
         return_value=vehicle_data[VEHICLE_HAS_EV],
     ), patch(
@@ -126,6 +137,9 @@ async def setup_subaru_config_entry(
     ), patch(
         MOCK_API_GET_SAFETY_STATUS,
         return_value=vehicle_data[VEHICLE_HAS_SAFETY_SERVICE],
+    ), patch(
+        MOCK_API_GET_SUBSCRIPTION_STATUS,
+        return_value=True,
     ), patch(
         MOCK_API_GET_DATA,
         return_value=vehicle_status,

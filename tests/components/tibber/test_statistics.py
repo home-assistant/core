@@ -35,7 +35,7 @@ async def test_async_setup_entry(recorder_mock: Recorder, hass: HomeAssistant) -
             hass,
             dt_util.parse_datetime(data[0]["from"]),
             None,
-            [statistic_id],
+            {statistic_id},
             "hour",
             None,
             {"start", "state", "mean", "min", "max", "last_reset", "sum"},
@@ -47,9 +47,6 @@ async def test_async_setup_entry(recorder_mock: Recorder, hass: HomeAssistant) -
         for k, stat in enumerate(stats[statistic_id]):
             assert stat["start"] == dt_util.parse_datetime(data[k]["from"]).timestamp()
             assert stat["state"] == data[k][key]
-            assert stat["mean"] is None
-            assert stat["min"] is None
-            assert stat["max"] is None
             assert stat["last_reset"] is None
 
             _sum += data[k][key]

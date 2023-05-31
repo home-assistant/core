@@ -9,7 +9,7 @@ from pathlib import Path
 import tarfile
 from tarfile import TarError
 from tempfile import TemporaryDirectory
-from typing import Any, Protocol
+from typing import Any, Protocol, cast
 
 from securetar import SecureTarFile, atomic_contents_add
 
@@ -18,12 +18,15 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import integration_platform
 from homeassistant.helpers.json import save_json
-from homeassistant.util import dt
+from homeassistant.util import dt as dt_util
+from homeassistant.util.json import json_loads_object
 
 from .const import DOMAIN, EXCLUDE_FROM_BACKUP, LOGGER
 
+BUF_SIZE = 2**20 * 4  # 4MB
 
-@dataclass
+
+@dataclass(slots=True)
 class Backup:
     """Backup class."""
 
@@ -98,13 +101,13 @@ class BackupManager:
         backups: dict[str, Backup] = {}
         for backup_path in self.backup_dir.glob("*.tar"):
             try:
-                with tarfile.open(backup_path, "r:") as backup_file:
+                with tarfile.open(backup_path, "r:", bufsize=BUF_SIZE) as backup_file:
                     if data_file := backup_file.extractfile("./backup.json"):
-                        data = json.loads(data_file.read())
+                        data = json_loads_object(data_file.read())
                         backup = Backup(
-                            slug=data["slug"],
-                            name=data["name"],
-                            date=data["date"],
+                            slug=cast(str, data["slug"]),
+                            name=cast(str, data["name"]),
+                            date=cast(str, data["date"]),
                             path=backup_path,
                             size=round(backup_path.stat().st_size / 1_048_576, 2),
                         )
@@ -173,7 +176,7 @@ class BackupManager:
                     raise result
 
             backup_name = f"Core {HAVERSION}"
-            date_str = dt.now().isoformat()
+            date_str = dt_util.now().isoformat()
             slug = _generate_slug(date_str, backup_name)
 
             backup_data = {
@@ -186,13 +189,8 @@ class BackupManager:
                 "compressed": True,
             }
             tar_file_path = Path(self.backup_dir, f"{backup_data['slug']}.tar")
-
-            if not self.backup_dir.exists():
-                LOGGER.debug("Creating backup directory")
-                self.hass.async_add_executor_job(self.backup_dir.mkdir)
-
-            await self.hass.async_add_executor_job(
-                self._generate_backup_contents,
+            size_in_bytes = await self.hass.async_add_executor_job(
+                self._mkdir_and_generate_backup_contents,
                 tar_file_path,
                 backup_data,
             )
@@ -201,7 +199,7 @@ class BackupManager:
                 name=backup_name,
                 date=date_str,
                 path=tar_file_path,
-                size=round(tar_file_path.stat().st_size / 1_048_576, 2),
+                size=round(size_in_bytes / 1_048_576, 2),
             )
             if self.loaded_backups:
                 self.backups[slug] = backup
@@ -220,14 +218,18 @@ class BackupManager:
                 if isinstance(result, Exception):
                     raise result
 
-    def _generate_backup_contents(
+    def _mkdir_and_generate_backup_contents(
         self,
         tar_file_path: Path,
         backup_data: dict[str, Any],
-    ) -> None:
-        """Generate backup contents."""
+    ) -> int:
+        """Generate backup contents and return the size."""
+        if not self.backup_dir.exists():
+            LOGGER.debug("Creating backup directory")
+            self.backup_dir.mkdir()
+
         with TemporaryDirectory() as tmp_dir, SecureTarFile(
-            tar_file_path, "w", gzip=False
+            tar_file_path, "w", gzip=False, bufsize=BUF_SIZE
         ) as tar_file:
             tmp_dir_path = Path(tmp_dir)
             save_json(
@@ -237,6 +239,7 @@ class BackupManager:
             with SecureTarFile(
                 tmp_dir_path.joinpath("./homeassistant.tar.gz").as_posix(),
                 "w",
+                bufsize=BUF_SIZE,
             ) as core_tar:
                 atomic_contents_add(
                     tar_file=core_tar,
@@ -245,6 +248,7 @@ class BackupManager:
                     arcname="data",
                 )
             tar_file.add(tmp_dir_path, arcname=".")
+        return tar_file_path.stat().st_size
 
 
 def _generate_slug(date: str, name: str) -> str:

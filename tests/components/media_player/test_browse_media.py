@@ -86,8 +86,8 @@ async def test_process_play_media_url(hass: HomeAssistant, mock_sign_path) -> No
         == "http://example.local:8123/api/tts_proxy/bla"
     )
 
-    with pytest.raises(ValueError):
-        async_process_play_media_url(hass, "hello")
+    # Not changing a URL which is not absolute and does not start with /
+    async_process_play_media_url(hass, "hello") == "hello"
 
 
 async def test_process_play_media_url_for_addon(

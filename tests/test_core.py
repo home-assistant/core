@@ -33,7 +33,7 @@ from homeassistant.const import (
     __version__,
 )
 import homeassistant.core as ha
-from homeassistant.core import HomeAssistant, State
+from homeassistant.core import HassJob, HomeAssistant, State
 from homeassistant.exceptions import (
     InvalidEntityFormatError,
     InvalidStateError,
@@ -65,7 +65,7 @@ def test_split_entity_id() -> None:
 
 
 def test_async_add_hass_job_schedule_callback() -> None:
-    """Test that we schedule coroutines and add jobs to the job pool."""
+    """Test that we schedule callbacks and add jobs to the job pool."""
     hass = MagicMock()
     job = MagicMock()
 
@@ -73,6 +73,19 @@ def test_async_add_hass_job_schedule_callback() -> None:
     assert len(hass.loop.call_soon.mock_calls) == 1
     assert len(hass.loop.create_task.mock_calls) == 0
     assert len(hass.add_job.mock_calls) == 0
+
+
+def test_async_add_hass_job_coro_named(hass: HomeAssistant) -> None:
+    """Test that we schedule coroutines and add jobs to the job pool with a name."""
+
+    async def mycoro():
+        pass
+
+    job = ha.HassJob(mycoro, "named coro")
+    assert "named coro" in str(job)
+    assert job.name == "named coro"
+    task = ha.HomeAssistant.async_add_hass_job(hass, job)
+    assert "named coro" in str(task)
 
 
 def test_async_add_hass_job_schedule_partial_callback() -> None:
@@ -139,6 +152,20 @@ def test_async_create_task_schedule_coroutine(event_loop) -> None:
     assert len(hass.loop.call_soon.mock_calls) == 0
     assert len(hass.loop.create_task.mock_calls) == 1
     assert len(hass.add_job.mock_calls) == 0
+
+
+def test_async_create_task_schedule_coroutine_with_name(event_loop) -> None:
+    """Test that we schedule coroutines and add jobs to the job pool with a name."""
+    hass = MagicMock(loop=MagicMock(wraps=event_loop))
+
+    async def job():
+        pass
+
+    task = ha.HomeAssistant.async_create_task(hass, job(), "named task")
+    assert len(hass.loop.call_soon.mock_calls) == 0
+    assert len(hass.loop.create_task.mock_calls) == 1
+    assert len(hass.add_job.mock_calls) == 0
+    assert "named task" in str(task)
 
 
 def test_async_run_hass_job_calls_callback() -> None:
@@ -439,6 +466,29 @@ def test_state_as_dict() -> None:
     assert state.as_dict() is as_dict_1
 
 
+def test_state_as_dict_json() -> None:
+    """Test a State as JSON."""
+    last_time = datetime(1984, 12, 8, 12, 0, 0)
+    state = ha.State(
+        "happy.happy",
+        "on",
+        {"pig": "dog"},
+        last_updated=last_time,
+        last_changed=last_time,
+        context=ha.Context(id="01H0D6K3RFJAYAV2093ZW30PCW"),
+    )
+    expected = (
+        '{"entity_id":"happy.happy","state":"on","attributes":{"pig":"dog"},'
+        '"last_changed":"1984-12-08T12:00:00","last_updated":"1984-12-08T12:00:00",'
+        '"context":{"id":"01H0D6K3RFJAYAV2093ZW30PCW","parent_id":null,"user_id":null}}'
+    )
+    as_dict_json_1 = state.as_dict_json()
+    assert as_dict_json_1 == expected
+    # 2nd time to verify cache
+    assert state.as_dict_json() == expected
+    assert state.as_dict_json() is as_dict_json_1
+
+
 def test_state_as_compressed_state() -> None:
     """Test a State as compressed state."""
     last_time = datetime(1984, 12, 8, 12, 0, 0, tzinfo=dt_util.UTC)
@@ -461,7 +511,6 @@ def test_state_as_compressed_state() -> None:
     assert as_compressed_state == expected
     # 2nd time to verify cache
     assert state.as_compressed_state() == expected
-    assert state.as_compressed_state() is as_compressed_state
 
 
 def test_state_as_compressed_state_unique_last_updated() -> None:
@@ -488,7 +537,27 @@ def test_state_as_compressed_state_unique_last_updated() -> None:
     assert as_compressed_state == expected
     # 2nd time to verify cache
     assert state.as_compressed_state() == expected
-    assert state.as_compressed_state() is as_compressed_state
+
+
+def test_state_as_compressed_state_json() -> None:
+    """Test a State as a JSON compressed state."""
+    last_time = datetime(1984, 12, 8, 12, 0, 0, tzinfo=dt_util.UTC)
+    state = ha.State(
+        "happy.happy",
+        "on",
+        {"pig": "dog"},
+        last_updated=last_time,
+        last_changed=last_time,
+        context=ha.Context(id="01H0D6H5K3SZJ3XGDHED1TJ79N"),
+    )
+    expected = '"happy.happy":{"s":"on","a":{"pig":"dog"},"c":"01H0D6H5K3SZJ3XGDHED1TJ79N","lc":471355200.0}'
+    as_compressed_state = state.as_compressed_state_json()
+    # We are not too concerned about these being ReadOnlyDict
+    # since we don't expect them to be called by external callers
+    assert as_compressed_state == expected
+    # 2nd time to verify cache
+    assert state.as_compressed_state_json() == expected
+    assert state.as_compressed_state_json() is as_compressed_state
 
 
 async def test_eventbus_add_remove_listener(hass: HomeAssistant) -> None:
@@ -1357,6 +1426,32 @@ def test_valid_entity_id() -> None:
         assert ha.valid_entity_id(valid), valid
 
 
+def test_valid_domain() -> None:
+    """Test valid domain."""
+    for invalid in [
+        "_light",
+        ".kitchen",
+        ".light.kitchen",
+        "light_.kitchen",
+        "._kitchen",
+        "light.",
+        "light.kitchen__ceiling",
+        "light.kitchen_yo_",
+        "light.kitchen.",
+        "Light",
+    ]:
+        assert not ha.valid_domain(invalid), invalid
+
+    for valid in [
+        "1",
+        "1light",
+        "a",
+        "input_boolean",
+        "light",
+    ]:
+        assert ha.valid_domain(valid), valid
+
+
 async def test_additional_data_in_core_config(
     hass: HomeAssistant, hass_storage: dict[str, Any]
 ) -> None:
@@ -2054,3 +2149,26 @@ async def test_shutdown_does_not_block_on_shielded_tasks(
 
     # Cleanup lingering task after test is done
     sleep_task.cancel()
+
+
+async def test_cancellable_hassjob(hass: HomeAssistant) -> None:
+    """Simulate a shutdown, ensure cancellable jobs are cancelled."""
+    job = MagicMock()
+
+    @ha.callback
+    def run_job(job: HassJob) -> None:
+        """Call the action."""
+        hass.async_run_hass_job(job)
+
+    timer1 = hass.loop.call_later(
+        60, run_job, HassJob(ha.callback(job), cancel_on_shutdown=True)
+    )
+    timer2 = hass.loop.call_later(60, run_job, HassJob(ha.callback(job)))
+
+    await hass.async_stop()
+
+    assert timer1.cancelled()
+    assert not timer2.cancelled()
+
+    # Cleanup
+    timer2.cancel()

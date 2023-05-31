@@ -12,7 +12,7 @@
     dict({
       'description': None,
       'end': dict({
-        'date': '2022-01-06',
+        'date': '2022-01-07',
       }),
       'location': None,
       'recurrence_id': None,
@@ -30,7 +30,7 @@
     'attributes': ReadOnlyDict({
       'all_day': True,
       'description': '',
-      'end_time': '2022-01-06 00:00:00',
+      'end_time': '2022-01-07 00:00:00',
       'friendly_name': 'Twente Milieu',
       'icon': 'mdi:delete-empty',
       'location': '',

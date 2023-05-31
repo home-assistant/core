@@ -6,6 +6,7 @@ import dataclasses
 import logging
 from typing import cast
 
+from python_otbr_api.mdns import StateBitmap
 from zeroconf import BadTypeInNameException, DNSPointer, ServiceListener, Zeroconf
 from zeroconf.asyncio import AsyncServiceInfo, AsyncZeroconf
 
@@ -16,6 +17,7 @@ _LOGGER = logging.getLogger(__name__)
 
 KNOWN_BRANDS: dict[str | None, str] = {
     "Apple Inc.": "apple",
+    "eero": "eero",
     "Google Inc.": "google",
     "HomeAssistant": "homeassistant",
     "Home Assistant": "homeassistant",
@@ -29,14 +31,16 @@ TYPE_PTR = 12
 class ThreadRouterDiscoveryData:
     """Thread router discovery data."""
 
+    addresses: list[str] | None
     brand: str | None
+    extended_address: str | None
     extended_pan_id: str | None
     model_name: str | None
     network_name: str | None
     server: str | None
-    vendor_name: str | None
-    addresses: list[str] | None
     thread_version: str | None
+    unconfigured: bool | None
+    vendor_name: str | None
 
 
 def async_discovery_data_from_service(
@@ -53,21 +57,38 @@ def async_discovery_data_from_service(
         except UnicodeDecodeError:
             return None
 
+    ext_addr = service.properties.get(b"xa")
     ext_pan_id = service.properties.get(b"xp")
     network_name = try_decode(service.properties.get(b"nn"))
     model_name = try_decode(service.properties.get(b"mn"))
     server = service.server
     vendor_name = try_decode(service.properties.get(b"vn"))
     thread_version = try_decode(service.properties.get(b"tv"))
+    unconfigured = None
+    brand = KNOWN_BRANDS.get(vendor_name)
+    if brand == "homeassistant":
+        # Attempt to detect incomplete configuration
+        if (state_bitmap_b := service.properties.get(b"sb")) is not None:
+            try:
+                state_bitmap = StateBitmap.from_bytes(state_bitmap_b)
+                if not state_bitmap.is_active:
+                    unconfigured = True
+            except ValueError:
+                _LOGGER.debug("Failed to decode state bitmap in service %s", service)
+        if service.properties.get(b"at") is None:
+            unconfigured = True
+
     return ThreadRouterDiscoveryData(
-        brand=KNOWN_BRANDS.get(vendor_name),
+        addresses=service.parsed_addresses(),
+        brand=brand,
+        extended_address=ext_addr.hex() if ext_addr is not None else None,
         extended_pan_id=ext_pan_id.hex() if ext_pan_id is not None else None,
         model_name=model_name,
         network_name=network_name,
         server=server,
-        vendor_name=vendor_name,
-        addresses=service.parsed_addresses(),
         thread_version=thread_version,
+        unconfigured=unconfigured,
+        vendor_name=vendor_name,
     )
 
 

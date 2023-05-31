@@ -18,8 +18,9 @@ from .const import (
     PLATFORM_FORMAT,
     Platform,
 )
-from .core import CALLBACK_TYPE
+from .core import CALLBACK_TYPE, DOMAIN as HOMEASSISTANT_DOMAIN
 from .exceptions import DependencyError, HomeAssistantError
+from .helpers.issue_registry import IssueSeverity, async_create_issue
 from .helpers.typing import ConfigType
 from .util import dt as dt_util, ensure_unique_string
 
@@ -67,7 +68,8 @@ def async_set_domains_to_be_loaded(hass: core.HomeAssistant, domains: set[str]) 
      - Properly handle after_dependencies.
      - Keep track of domains which will load but have not yet finished loading
     """
-    hass.data[DATA_SETUP_DONE] = {domain: asyncio.Event() for domain in domains}
+    hass.data.setdefault(DATA_SETUP_DONE, {})
+    hass.data[DATA_SETUP_DONE].update({domain: asyncio.Event() for domain in domains})
 
 
 def setup_component(hass: core.HomeAssistant, domain: str, config: ConfigType) -> bool:
@@ -93,7 +95,7 @@ async def async_setup_component(
         return await setup_tasks[domain]
 
     task = setup_tasks[domain] = hass.async_create_task(
-        _async_setup_component(hass, domain, config)
+        _async_setup_component(hass, domain, config), f"setup component {domain}"
     )
 
     try:
@@ -221,6 +223,31 @@ async def _async_setup_component(
         log_error("Invalid config.")
         return False
 
+    # Detect attempt to setup integration which can be setup only from config entry
+    if (
+        domain in processed_config
+        and not hasattr(component, "async_setup")
+        and not hasattr(component, "setup")
+        and not hasattr(component, "CONFIG_SCHEMA")
+    ):
+        _LOGGER.error(
+            (
+                "The %s integration does not support YAML setup, please remove it from "
+                "your configuration"
+            ),
+            domain,
+        )
+        async_create_issue(
+            hass,
+            HOMEASSISTANT_DOMAIN,
+            f"integration_key_no_support_{domain}",
+            is_fixable=False,
+            severity=IssueSeverity.ERROR,
+            issue_domain=domain,
+            translation_key="integration_key_no_support",
+            translation_placeholders={"domain": domain},
+        )
+
     start = timer()
     _LOGGER.info("Setting up %s", domain)
     with async_start_setup(hass, [domain]):
@@ -236,7 +263,7 @@ async def _async_setup_component(
                 SLOW_SETUP_WARNING,
             )
 
-        task = None
+        task: Awaitable[bool] | None = None
         result: Any | bool = True
         try:
             if hasattr(component, "async_setup"):
@@ -295,7 +322,10 @@ async def _async_setup_component(
 
         await asyncio.gather(
             *(
-                entry.async_setup(hass, integration=integration)
+                asyncio.create_task(
+                    entry.async_setup(hass, integration=integration),
+                    name=f"config entry setup {entry.title} {entry.domain} {entry.entry_id}",
+                )
                 for entry in hass.config_entries.async_entries(domain)
             )
         )
@@ -426,7 +456,7 @@ def _async_when_setup(
             _LOGGER.exception("Error handling when_setup callback for %s", component)
 
     if component in hass.config.components:
-        hass.async_create_task(when_setup())
+        hass.async_create_task(when_setup(), f"when setup {component}")
         return
 
     listeners: list[CALLBACK_TYPE] = []

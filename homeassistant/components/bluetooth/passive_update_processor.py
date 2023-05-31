@@ -20,7 +20,7 @@ if TYPE_CHECKING:
     from . import BluetoothChange, BluetoothScanningMode, BluetoothServiceInfoBleak
 
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass(slots=True, frozen=True)
 class PassiveBluetoothEntityKey:
     """Key for a passive bluetooth entity.
 
@@ -36,7 +36,7 @@ class PassiveBluetoothEntityKey:
 _T = TypeVar("_T")
 
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass(slots=True, frozen=True)
 class PassiveBluetoothDataUpdate(Generic[_T]):
     """Generic bluetooth data."""
 

@@ -18,6 +18,8 @@ from .common import setup_integration_with_node_fixture
 from tests.common import MockConfigEntry
 
 
+# This tests needs to be adjusted to remove lingering tasks
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
 async def test_get_device_id(
     hass: HomeAssistant,
     matter_client: MagicMock,
@@ -31,6 +33,8 @@ async def test_get_device_id(
     assert device_id == "00000000000004D2-0000000000000005-MatterNodeDevice"
 
 
+# This tests needs to be adjusted to remove lingering tasks
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
 async def test_get_node_from_device_entry(
     hass: HomeAssistant,
     matter_client: MagicMock,

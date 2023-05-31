@@ -7,16 +7,14 @@ from typing import Any
 
 from sml import SmlGetListResponse
 from sml.asyncio import SmlProtocol
-import voluptuous as vol
 
 from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_NAME,
     DEGREE,
@@ -27,32 +25,37 @@ from homeassistant.const import (
     UnitOfPower,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.dt import utcnow
 
-from .const import CONF_SERIAL_PORT, DOMAIN, LOGGER, SIGNAL_EDL21_TELEGRAM
+from .const import (
+    CONF_SERIAL_PORT,
+    DEFAULT_DEVICE_NAME,
+    DOMAIN,
+    LOGGER,
+    SIGNAL_EDL21_TELEGRAM,
+)
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_SERIAL_PORT): cv.string,
-        vol.Optional(CONF_NAME, default=""): cv.string,
-    },
-)
 
 # OBIS format: A-B:C.D.E*F
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     # A=1: Electricity
     # C=0: General purpose objects
     # D=0: Free ID-numbers for utilities
+    # E=0 Ownership ID
+    SensorEntityDescription(
+        key="1-0:0.0.0*255",
+        name="Ownership ID",
+        icon="mdi:flash",
+        entity_registry_enabled_default=False,
+    ),
+    # E=9: Electrity ID
     SensorEntityDescription(
         key="1-0:0.0.9*255", name="Electricity ID", icon="mdi:flash"
     ),
@@ -264,31 +267,6 @@ SENSOR_UNIT_MAPPING = {
 }
 
 
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Set up EDL21 sensors via configuration.yaml and show deprecation warning."""
-    async_create_issue(
-        hass,
-        DOMAIN,
-        "deprecated_yaml",
-        breaks_in_ha_version="2023.2.0",
-        is_fixable=False,
-        severity=IssueSeverity.WARNING,
-        translation_key="deprecated_yaml",
-    )
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data=config,
-        )
-    )
-
-
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
@@ -329,6 +307,11 @@ class EDL21:
         self._name = config.get(CONF_NAME)
         self._proto = SmlProtocol(config[CONF_SERIAL_PORT])
         self._proto.add_listener(self.event, ["SmlGetListResponse"])
+        LOGGER.debug(
+            "Initialized EDL21 for %s on %s",
+            config.get(CONF_NAME),
+            config[CONF_SERIAL_PORT],
+        )
 
     async def connect(self) -> None:
         """Connect to an EDL21 reader."""
@@ -337,14 +320,12 @@ class EDL21:
     def event(self, message_body) -> None:
         """Handle events from pysml."""
         assert isinstance(message_body, SmlGetListResponse)
+        LOGGER.debug("Received sml message for %s: %s", self._name, message_body)
 
-        electricity_id = None
-        for telegram in message_body.get("valList", []):
-            if telegram.get("objName") in ("1-0:0.0.9*255", "1-0:96.1.0*255"):
-                electricity_id = telegram.get("value")
-                break
+        electricity_id = message_body["serverId"]
 
         if electricity_id is None:
+            LOGGER.debug("No electricity id found in sml message for %s", self._name)
             return
         electricity_id = electricity_id.replace(" ", "")
 
@@ -360,13 +341,16 @@ class EDL21:
             else:
                 entity_description = SENSORS.get(obis)
                 if entity_description and entity_description.name:
-                    name = entity_description.name
-                    if self._name:
-                        name = f"{self._name}: {name}"
-
+                    # self._name is only used for backwards YAML compatibility
+                    # This needs to be cleaned up when YAML support is removed
+                    device_name = self._name or DEFAULT_DEVICE_NAME
                     new_entities.append(
                         EDL21Entity(
-                            electricity_id, obis, name, entity_description, telegram
+                            electricity_id,
+                            obis,
+                            device_name,
+                            entity_description,
+                            telegram,
                         )
                     )
                     self._registered_obis.add((electricity_id, obis))
@@ -379,54 +363,29 @@ class EDL21:
                     self._OBIS_BLACKLIST.add(obis)
 
         if new_entities:
-            self._hass.loop.create_task(self.add_entities(new_entities))
-
-    async def add_entities(self, new_entities: list[EDL21Entity]) -> None:
-        """Migrate old unique IDs, then add entities to hass."""
-        registry = er.async_get(self._hass)
-
-        for entity in new_entities:
-            old_entity_id = registry.async_get_entity_id(
-                "sensor", DOMAIN, entity.old_unique_id
-            )
-            if old_entity_id is not None:
-                LOGGER.debug(
-                    "Migrating unique_id from [%s] to [%s]",
-                    entity.old_unique_id,
-                    entity.unique_id,
-                )
-                if registry.async_get_entity_id("sensor", DOMAIN, entity.unique_id):
-                    registry.async_remove(old_entity_id)
-                else:
-                    registry.async_update_entity(
-                        old_entity_id, new_unique_id=entity.unique_id
-                    )
-
-        self._async_add_entities(new_entities, update_before_add=True)
+            self._async_add_entities(new_entities, update_before_add=True)
 
 
 class EDL21Entity(SensorEntity):
     """Entity reading values from EDL21 telegram."""
 
     _attr_should_poll = False
+    _attr_has_entity_name = True
 
-    def __init__(self, electricity_id, obis, name, entity_description, telegram):
+    def __init__(self, electricity_id, obis, device_name, entity_description, telegram):
         """Initialize an EDL21Entity."""
         self._electricity_id = electricity_id
         self._obis = obis
-        self._name = name
-        self._unique_id = f"{electricity_id}_{obis}"
         self._telegram = telegram
         self._min_time = MIN_TIME_BETWEEN_UPDATES
         self._last_update = utcnow()
-        self._state_attrs = {
-            "status": "status",
-            "valTime": "val_time",
-            "scaler": "scaler",
-            "valueSignature": "value_signature",
-        }
         self._async_remove_dispatcher = None
         self.entity_description = entity_description
+        self._attr_unique_id = f"{electricity_id}_{obis}"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self._electricity_id)},
+            name=device_name,
+        )
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
@@ -459,36 +418,12 @@ class EDL21Entity(SensorEntity):
             self._async_remove_dispatcher()
 
     @property
-    def unique_id(self) -> str:
-        """Return a unique ID."""
-        return self._unique_id
-
-    @property
-    def old_unique_id(self) -> str:
-        """Return a less unique ID as used in the first version of edl21."""
-        return self._obis
-
-    @property
-    def name(self) -> str | None:
-        """Return a name."""
-        return self._name
-
-    @property
     def native_value(self) -> str:
         """Return the value of the last received telegram."""
         return self._telegram.get("value")
 
     @property
-    def extra_state_attributes(self):
-        """Enumerate supported attributes."""
-        return {
-            self._state_attrs[k]: v
-            for k, v in self._telegram.items()
-            if k in self._state_attrs
-        }
-
-    @property
-    def native_unit_of_measurement(self):
+    def native_unit_of_measurement(self) -> str | None:
         """Return the unit of measurement."""
         if (unit := self._telegram.get("unit")) is None or unit == 0:
             return None
