@@ -59,7 +59,7 @@ def _validate_integration(config: Config, integration: Integration) -> None:
         return
 
     # No schema
-    if not (
+    if (
         _has_assignment(init, "CONFIG_SCHEMA")
         or _has_assignment(init, "PLATFORM_SCHEMA")
         or _has_assignment(init, "PLATFORM_SCHEMA_BASE")
