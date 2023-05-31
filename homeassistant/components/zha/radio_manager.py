@@ -48,7 +48,7 @@ RECOMMENDED_RADIOS = (
 
 CONNECT_DELAY_S = 1.0
 
-BACKUP_RETIRES = 5
+BACKUP_RETRIES = 5
 MIGRATION_RETRIES = 100
 
 HARDWARE_DISCOVERY_SCHEMA = vol.Schema(
@@ -342,14 +342,14 @@ class ZhaMultiPANMigrationHelper:
         old_radio_mgr.device_settings = config_entry_data[CONF_DEVICE]
         old_radio_mgr.radio_type = RadioType[config_entry_data[CONF_RADIO_TYPE]]
 
-        for retry in range(BACKUP_RETIRES):
+        for retry in range(BACKUP_RETRIES):
             try:
                 backup = await old_radio_mgr.async_load_network_settings(
                     create_backup=True
                 )
                 break
             except OSError as err:
-                if retry >= BACKUP_RETIRES - 1:
+                if retry >= BACKUP_RETRIES - 1:
                     raise
 
                 _LOGGER.debug(
