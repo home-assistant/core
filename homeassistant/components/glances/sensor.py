@@ -334,9 +334,9 @@ class GlancesSensor(CoordinatorEntity[GlancesDataUpdateCoordinator], SensorEntit
         if super().available:
             return (
                 not self._numeric_state_expected
-                or isinstance(self.native_value, (int, float))
-                or isinstance(self.native_value, str)
-                and self.native_value.isnumeric()
+                or isinstance(value := self.native_value, (int, float))
+                or isinstance(value, str)
+                and value.isnumeric()
             )
         return False
 
