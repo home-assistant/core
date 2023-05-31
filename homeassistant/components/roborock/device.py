@@ -57,7 +57,7 @@ class RoborockCoordinatedEntity(
         RoborockEntity.__init__(
             self,
             unique_id=unique_id,
-            device_info=coordinator.device_specification,
+            device_info=coordinator.device_info,
             api=coordinator.api,
         )
         CoordinatorEntity.__init__(self, coordinator=coordinator)
