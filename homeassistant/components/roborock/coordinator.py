@@ -33,20 +33,20 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
     ) -> None:
         """Initialize."""
         super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=SCAN_INTERVAL)
-        self.device_info = RoborockHassDeviceInfo(
+        self.roborock_device_info = RoborockHassDeviceInfo(
             device,
             device_networking,
             product_info,
             DeviceProp(),
         )
-        device_info = DeviceData(device, product_info.model, device_networking.ip)
-        self.api = RoborockLocalClient(device_info)
-        self.device_specification = DeviceInfo(
-            name=self.device_info.device.name,
-            identifiers={(DOMAIN, self.device_info.device.duid)},
+        device_data = DeviceData(device, product_info.model, device_networking.ip)
+        self.api = RoborockLocalClient(device_data)
+        self.device_info = DeviceInfo(
+            name=self.roborock_device_info.device.name,
+            identifiers={(DOMAIN, self.roborock_device_info.device.duid)},
             manufacturer="Roborock",
-            model=self.device_info.product.model,
-            sw_version=self.device_info.device.fv,
+            model=self.roborock_device_info.product.model,
+            sw_version=self.roborock_device_info.device.fv,
         )
 
     async def release(self) -> None:
@@ -57,10 +57,10 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
         """Update device properties."""
         device_prop = await self.api.get_prop()
         if device_prop:
-            if self.device_info.props:
-                self.device_info.props.update(device_prop)
+            if self.roborock_device_info.props:
+                self.roborock_device_info.props.update(device_prop)
             else:
-                self.device_info.props = device_prop
+                self.roborock_device_info.props = device_prop
 
     async def _async_update_data(self) -> DeviceProp:
         """Update data via library."""
@@ -68,4 +68,4 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
             await self._update_device_prop()
         except RoborockException as ex:
             raise UpdateFailed(ex) from ex
-        return self.device_info.props
+        return self.roborock_device_info.props
