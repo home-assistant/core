@@ -24,10 +24,8 @@ async def async_setup_entry(
     """Set up Schlage WiFi locks based on a config entry."""
     coordinator: SchlageDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
     async_add_entities(
-        [
-            SchlageLockEntity(coordinator=coordinator, device_id=device_id)
-            for device_id in coordinator.data.locks
-        ]
+        SchlageLockEntity(coordinator=coordinator, device_id=device_id)
+        for device_id in coordinator.data.locks
     )
 
 
