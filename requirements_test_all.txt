@@ -27,6 +27,9 @@ DoorBirdPy==2.1.0
 # homeassistant.components.homekit
 HAP-python==4.6.0
 
+# homeassistant.components.tasmota
+HATasmota==0.6.5
+
 # homeassistant.components.flick_electric
 PyFlick==0.0.2
 
@@ -696,9 +699,6 @@ hass-nabucasa==0.67.1
 
 # homeassistant.components.conversation
 hassil==1.0.6
-
-# homeassistant.components.tasmota
-hatasmota==0.6.5
 
 # homeassistant.components.jewish_calendar
 hdate==0.10.4
