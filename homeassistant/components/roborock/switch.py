@@ -91,7 +91,7 @@ class RoborockSwitchEntity(RoborockEntity, SwitchEntity):
     ) -> None:
         """Create a switch entity."""
         self.entity_description = entity_description
-        super().__init__(unique_id, coordinator.device_specification, coordinator.api)
+        super().__init__(unique_id, coordinator.device_info, coordinator.api)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the switch."""

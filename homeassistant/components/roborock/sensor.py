@@ -140,4 +140,6 @@ class RoborockSensorEntity(RoborockCoordinatedEntity, SensorEntity):
     @property
     def native_value(self) -> StateType:
         """Return the value reported by the sensor."""
-        return self.entity_description.value_fn(self.coordinator.device_info.props)
+        return self.entity_description.value_fn(
+            self.coordinator.roborock_device_info.props
+        )
