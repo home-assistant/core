@@ -253,7 +253,8 @@ class OptionsFlowHandler(config_entries.OptionsFlow, ABC):
         if not self.install_task:
             addon_manager: AddonManager = get_multiprotocol_addon_manager(self.hass)
             self.install_task = self.hass.async_create_task(
-                self._async_install_addon(addon_manager)
+                self._async_install_addon(addon_manager),
+                "SiLabs Multiprotocol addon install",
             )
             return self.async_show_progress(
                 step_id="install_addon",
@@ -413,7 +414,8 @@ class OptionsFlowHandler(config_entries.OptionsFlow, ABC):
         if addon_info.state == AddonState.NOT_INSTALLED:
             if not self.install_task:
                 self.install_task = self.hass.async_create_task(
-                    self._async_install_addon(addon_manager)
+                    self._async_install_addon(addon_manager),
+                    "SiLabs Flasher addon install",
                 )
                 return self.async_show_progress(
                     step_id="firmware_revert",
@@ -491,7 +493,8 @@ class OptionsFlowHandler(config_entries.OptionsFlow, ABC):
         if not self.stop_task:
             addon_manager: AddonManager = get_multiprotocol_addon_manager(self.hass)
             self.stop_task = self.hass.async_create_task(
-                self._async_uninstall_addon(addon_manager)
+                self._async_uninstall_addon(addon_manager),
+                "SiLabs Multiprotocol addon uninstall",
             )
             return self.async_show_progress(
                 step_id="uninstall_multiprotocol_addon",
@@ -514,7 +517,8 @@ class OptionsFlowHandler(config_entries.OptionsFlow, ABC):
         if not self.start_task:
             addon_manager: AddonManager = get_flasher_addon_manager(self.hass)
             self.start_task = self.hass.async_create_task(
-                self._async_start_addon(addon_manager, wait_until_done=True)
+                self._async_start_addon(addon_manager, wait_until_done=True),
+                "SiLabs Flasher addon run",
             )
             return self.async_show_progress(
                 step_id="start_flasher_addon",
