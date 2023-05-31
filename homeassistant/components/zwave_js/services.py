@@ -213,7 +213,7 @@ class ZWaveServices:
                             cv.ensure_list, [cv.string]
                         ),
                         vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
-                        vol.Required(const.ATTR_ENDPOINT, default=0): vol.Coerce(int),
+                        vol.Optional(const.ATTR_ENDPOINT, default=0): vol.Coerce(int),
                         vol.Required(const.ATTR_CONFIG_PARAMETER): vol.Any(
                             vol.Coerce(int), cv.string
                         ),
