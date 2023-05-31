@@ -55,6 +55,9 @@ PyFlick==0.0.2
 # homeassistant.components.keymitt_ble
 PyMicroBot==0.0.9
 
+# homeassistant.components.nina
+PyNINA==0.3.0
+
 # homeassistant.components.mobile_app
 # homeassistant.components.owntracks
 PyNaCl==1.5.0
@@ -1069,7 +1072,7 @@ pure-python-adb[async]==0.3.0.dev0
 pushbullet.py==0.11.0
 
 # homeassistant.components.pushover
-pushover_complete==1.1.1
+pushover-complete==1.1.1
 
 # homeassistant.components.pvoutput
 pvo==1.0.0
@@ -1342,9 +1345,6 @@ pymysensors==0.24.0
 
 # homeassistant.components.netgear
 pynetgear==0.10.9
-
-# homeassistant.components.nina
-pynina==0.3.0
 
 # homeassistant.components.nobo_hub
 pynobo==1.6.0
