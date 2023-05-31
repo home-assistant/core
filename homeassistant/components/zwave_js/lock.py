@@ -134,10 +134,9 @@ class ZWaveLock(ZWaveBaseEntity, LockEntity):
         try:
             await set_usercode(self.info.node, code_slot, usercode)
         except BaseZwaveJSServerError as err:
-            LOGGER.error(
-                "Unable to set lock usercode on code_slot %s: %s", code_slot, err
-            )
-            raise HomeAssistantError from err
+            raise HomeAssistantError(
+                f"Unable to set lock usercode on code_slot {code_slot}: {err}"
+            ) from err
         LOGGER.debug("User code at slot %s set", code_slot)
 
     async def async_clear_lock_usercode(self, code_slot: int) -> None:
@@ -145,8 +144,7 @@ class ZWaveLock(ZWaveBaseEntity, LockEntity):
         try:
             await clear_usercode(self.info.node, code_slot)
         except BaseZwaveJSServerError as err:
-            LOGGER.error(
-                "Unable to clear lock usercode on code_slot %s: %s", code_slot, err
-            )
-            raise HomeAssistantError from err
+            raise HomeAssistantError(
+                f"Unable to clear lock usercode on code_slot {code_slot}: {err}"
+            ) from err
         LOGGER.debug("User code at slot %s cleared", code_slot)

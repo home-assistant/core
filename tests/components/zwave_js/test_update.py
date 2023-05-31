@@ -18,7 +18,7 @@ from homeassistant.components.update import (
     SERVICE_INSTALL,
     SERVICE_SKIP,
 )
-from homeassistant.components.zwave_js.const import DOMAIN
+from homeassistant.components.zwave_js.const import DOMAIN, SERVICE_REFRESH_VALUE
 from homeassistant.components.zwave_js.helpers import get_valueless_base_unique_id
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, STATE_UNKNOWN
 from homeassistant.core import CoreState, HomeAssistant, State
@@ -66,6 +66,7 @@ async def test_update_entity_states(
     client,
     climate_radio_thermostat_ct100_plus_different_endpoints,
     integration,
+    caplog: pytest.LogCaptureFixture,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test update entity states."""
@@ -116,6 +117,18 @@ async def test_update_entity_states(
     )
     result = await ws_client.receive_json()
     assert result["result"] == "blah 2"
+
+    # Refresh value should not be supported by this entity
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_REFRESH_VALUE,
+        {
+            ATTR_ENTITY_ID: UPDATE_ENTITY,
+        },
+        blocking=True,
+    )
+
+    assert "There is no value to refresh for this entity" in caplog.text
 
     client.async_send_command.return_value = {"updates": []}
 

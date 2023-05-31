@@ -1,8 +1,10 @@
 """Test the Z-Wave JS sensor platform."""
 import copy
 
+import pytest
 from zwave_js_server.const.command_class.meter import MeterType
 from zwave_js_server.event import Event
+from zwave_js_server.exceptions import FailedZWaveCommand
 from zwave_js_server.model.node import Node
 
 from homeassistant.components.sensor import (
@@ -16,6 +18,7 @@ from homeassistant.components.zwave_js.const import (
     ATTR_METER_TYPE_NAME,
     ATTR_VALUE,
     DOMAIN,
+    SERVICE_REFRESH_VALUE,
     SERVICE_RESET_METER,
 )
 from homeassistant.components.zwave_js.helpers import get_valueless_base_unique_id
@@ -37,6 +40,7 @@ from homeassistant.const import (
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from .common import (
@@ -328,6 +332,7 @@ async def test_node_status_sensor_not_ready(
     lock_id_lock_as_id150_not_ready,
     lock_id_lock_as_id150_state,
     integration,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test node status sensor is created and available if node is not ready."""
     node_status_entity_id = "sensor.z_wave_module_for_id_lock_150_and_101_node_status"
@@ -354,6 +359,17 @@ async def test_node_status_sensor_not_ready(
     assert node.ready
     assert hass.states.get(node_status_entity_id)
     assert hass.states.get(node_status_entity_id).state == "alive"
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_REFRESH_VALUE,
+        {
+            ATTR_ENTITY_ID: node_status_entity_id,
+        },
+        blocking=True,
+    )
+
+    assert "There is no value to refresh for this entity" in caplog.text
 
 
 async def test_reset_meter(
@@ -405,6 +421,18 @@ async def test_reset_meter(
     assert args["args"] == [{"type": 1, "targetValue": 2}]
 
     client.async_send_command_no_wait.reset_mock()
+
+    client.async_send_command_no_wait.side_effect = FailedZWaveCommand(
+        "test", 1, "test"
+    )
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_RESET_METER,
+            {ATTR_ENTITY_ID: METER_ENERGY_SENSOR},
+            blocking=True,
+        )
 
 
 async def test_meter_attributes(
