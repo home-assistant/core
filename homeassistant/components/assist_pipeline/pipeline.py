@@ -36,6 +36,7 @@ from .const import DOMAIN
 from .error import (
     IntentRecognitionError,
     PipelineError,
+    PipelineNotFound,
     SpeechToTextError,
     TextToSpeechError,
 )
@@ -208,9 +209,7 @@ async def async_create_default_pipeline(
 
 
 @callback
-def async_get_pipeline(
-    hass: HomeAssistant, pipeline_id: str | None = None
-) -> Pipeline | None:
+def async_get_pipeline(hass: HomeAssistant, pipeline_id: str | None = None) -> Pipeline:
     """Get a pipeline by id or the preferred pipeline."""
     pipeline_data: PipelineData = hass.data[DOMAIN]
 
@@ -218,7 +217,15 @@ def async_get_pipeline(
         # A pipeline was not specified, use the preferred one
         pipeline_id = pipeline_data.pipeline_store.async_get_preferred_item()
 
-    return pipeline_data.pipeline_store.data.get(pipeline_id)
+    pipeline = pipeline_data.pipeline_store.data.get(pipeline_id)
+
+    # If invalid pipeline ID was specified
+    if pipeline is None:
+        raise PipelineNotFound(
+            "pipeline_not_found", f"Pipeline {pipeline_id} not found"
+        )
+
+    return pipeline
 
 
 @callback
