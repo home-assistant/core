@@ -2,6 +2,7 @@
 from pypck.inputs import Input, ModSendKeysHost, ModStatusAccessControl
 from pypck.lcn_addr import LcnAddr
 from pypck.lcn_defs import AccessControlPeriphery, KeyAction, SendKeyCommand
+import pytest
 
 from homeassistant.core import HomeAssistant
 
@@ -137,6 +138,8 @@ async def test_dont_fire_on_non_module_input(
         assert len(events) == 0
 
 
+# This tests needs to be adjusted to remove lingering tasks
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
 async def test_dont_fire_on_unknown_module(hass: HomeAssistant, lcn_connection) -> None:
     """Test for no event is fired if an input from an unknown module is received."""
     inp = ModStatusAccessControl(

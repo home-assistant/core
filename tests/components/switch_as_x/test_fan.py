@@ -41,6 +41,7 @@ async def test_default_state(hass: HomeAssistant) -> None:
 async def test_service_calls(hass: HomeAssistant) -> None:
     """Test service calls affecting the switch as fan entity."""
     await async_setup_component(hass, "switch", {"switch": [{"platform": "demo"}]})
+    await hass.async_block_till_done()
     config_entry = MockConfigEntry(
         data={},
         domain=DOMAIN,
@@ -48,43 +49,43 @@ async def test_service_calls(hass: HomeAssistant) -> None:
             CONF_ENTITY_ID: "switch.decorative_lights",
             CONF_TARGET_DOMAIN: Platform.FAN,
         },
-        title="wind_machine",
+        title="Title is ignored",
     )
     config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert hass.states.get("fan.wind_machine").state == STATE_ON
+    assert hass.states.get("fan.decorative_lights").state == STATE_ON
 
     await hass.services.async_call(
         FAN_DOMAIN,
         SERVICE_TOGGLE,
-        {CONF_ENTITY_ID: "fan.wind_machine"},
+        {CONF_ENTITY_ID: "fan.decorative_lights"},
         blocking=True,
     )
 
     assert hass.states.get("switch.decorative_lights").state == STATE_OFF
-    assert hass.states.get("fan.wind_machine").state == STATE_OFF
+    assert hass.states.get("fan.decorative_lights").state == STATE_OFF
 
     await hass.services.async_call(
         FAN_DOMAIN,
         SERVICE_TURN_ON,
-        {CONF_ENTITY_ID: "fan.wind_machine"},
+        {CONF_ENTITY_ID: "fan.decorative_lights"},
         blocking=True,
     )
 
     assert hass.states.get("switch.decorative_lights").state == STATE_ON
-    assert hass.states.get("fan.wind_machine").state == STATE_ON
+    assert hass.states.get("fan.decorative_lights").state == STATE_ON
 
     await hass.services.async_call(
         FAN_DOMAIN,
         SERVICE_TURN_OFF,
-        {CONF_ENTITY_ID: "fan.wind_machine"},
+        {CONF_ENTITY_ID: "fan.decorative_lights"},
         blocking=True,
     )
 
     assert hass.states.get("switch.decorative_lights").state == STATE_OFF
-    assert hass.states.get("fan.wind_machine").state == STATE_OFF
+    assert hass.states.get("fan.decorative_lights").state == STATE_OFF
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
@@ -94,7 +95,7 @@ async def test_service_calls(hass: HomeAssistant) -> None:
     )
 
     assert hass.states.get("switch.decorative_lights").state == STATE_ON
-    assert hass.states.get("fan.wind_machine").state == STATE_ON
+    assert hass.states.get("fan.decorative_lights").state == STATE_ON
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
@@ -104,7 +105,7 @@ async def test_service_calls(hass: HomeAssistant) -> None:
     )
 
     assert hass.states.get("switch.decorative_lights").state == STATE_OFF
-    assert hass.states.get("fan.wind_machine").state == STATE_OFF
+    assert hass.states.get("fan.decorative_lights").state == STATE_OFF
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
@@ -114,4 +115,4 @@ async def test_service_calls(hass: HomeAssistant) -> None:
     )
 
     assert hass.states.get("switch.decorative_lights").state == STATE_ON
-    assert hass.states.get("fan.wind_machine").state == STATE_ON
+    assert hass.states.get("fan.decorative_lights").state == STATE_ON

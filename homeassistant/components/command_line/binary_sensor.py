@@ -7,6 +7,7 @@ import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA,
+    DOMAIN as BINARY_SENSOR_DOMAIN,
     PLATFORM_SCHEMA,
     BinarySensorDeviceClass,
     BinarySensorEntity,
@@ -23,11 +24,11 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.reload import setup_reload_service
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import CONF_COMMAND_TIMEOUT, DEFAULT_TIMEOUT, DOMAIN, PLATFORMS
+from .const import CONF_COMMAND_TIMEOUT, DEFAULT_TIMEOUT, DOMAIN
 from .sensor import CommandSensorData
 
 DEFAULT_NAME = "Binary Command Sensor"
@@ -51,29 +52,43 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(
+async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    add_entities: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Command line Binary Sensor."""
 
-    setup_reload_service(hass, DOMAIN, PLATFORMS)
+    if binary_sensor_config := config:
+        async_create_issue(
+            hass,
+            DOMAIN,
+            "deprecated_yaml_binary_sensor",
+            breaks_in_ha_version="2023.8.0",
+            is_fixable=False,
+            severity=IssueSeverity.WARNING,
+            translation_key="deprecated_platform_yaml",
+            translation_placeholders={"platform": BINARY_SENSOR_DOMAIN},
+        )
+    if discovery_info:
+        binary_sensor_config = discovery_info
 
-    name: str = config[CONF_NAME]
-    command: str = config[CONF_COMMAND]
-    payload_off: str = config[CONF_PAYLOAD_OFF]
-    payload_on: str = config[CONF_PAYLOAD_ON]
-    device_class: BinarySensorDeviceClass | None = config.get(CONF_DEVICE_CLASS)
-    value_template: Template | None = config.get(CONF_VALUE_TEMPLATE)
-    command_timeout: int = config[CONF_COMMAND_TIMEOUT]
-    unique_id: str | None = config.get(CONF_UNIQUE_ID)
+    name: str = binary_sensor_config.get(CONF_NAME, DEFAULT_NAME)
+    command: str = binary_sensor_config[CONF_COMMAND]
+    payload_off: str = binary_sensor_config[CONF_PAYLOAD_OFF]
+    payload_on: str = binary_sensor_config[CONF_PAYLOAD_ON]
+    device_class: BinarySensorDeviceClass | None = binary_sensor_config.get(
+        CONF_DEVICE_CLASS
+    )
+    value_template: Template | None = binary_sensor_config.get(CONF_VALUE_TEMPLATE)
+    command_timeout: int = binary_sensor_config[CONF_COMMAND_TIMEOUT]
+    unique_id: str | None = binary_sensor_config.get(CONF_UNIQUE_ID)
     if value_template is not None:
         value_template.hass = hass
     data = CommandSensorData(hass, command, command_timeout)
 
-    add_entities(
+    async_add_entities(
         [
             CommandBinarySensor(
                 data,
@@ -112,13 +127,16 @@ class CommandBinarySensor(BinarySensorEntity):
         self._value_template = value_template
         self._attr_unique_id = unique_id
 
-    def update(self) -> None:
+    async def async_update(self) -> None:
         """Get the latest data and updates the state."""
-        self.data.update()
+        await self.hass.async_add_executor_job(self.data.update)
         value = self.data.value
 
         if self._value_template is not None:
-            value = self._value_template.render_with_possible_json_value(value, False)
+            value = self._value_template.async_render_with_possible_json_value(
+                value, None
+            )
+        self._attr_is_on = None
         if value == self._payload_on:
             self._attr_is_on = True
         elif value == self._payload_off:

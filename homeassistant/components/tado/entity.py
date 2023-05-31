@@ -33,6 +33,8 @@ class TadoDeviceEntity(Entity):
 class TadoHomeEntity(Entity):
     """Base implementation for Tado home."""
 
+    _attr_should_poll = False
+
     def __init__(self, tado):
         """Initialize a Tado home."""
         super().__init__()

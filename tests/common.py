@@ -29,14 +29,16 @@ from homeassistant.auth import (
     providers as auth_providers,
 )
 from homeassistant.auth.permissions import system_policies
-from homeassistant.components import device_automation
+from homeassistant.components import device_automation, persistent_notification as pn
 from homeassistant.components.device_automation import (  # noqa: F401
     _async_get_device_automation_capabilities as async_get_device_automation_capabilities,
 )
 from homeassistant.config import async_process_component_config
+from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import (
     DEVICE_DEFAULT_NAME,
     EVENT_HOMEASSISTANT_CLOSE,
+    EVENT_HOMEASSISTANT_STOP,
     EVENT_STATE_CHANGED,
     STATE_OFF,
     STATE_ON,
@@ -59,6 +61,7 @@ from homeassistant.helpers import (
     issue_registry as ir,
     recorder as recorder_helper,
     restore_state,
+    restore_state as rs,
     storage,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -66,7 +69,7 @@ from homeassistant.helpers.json import JSONEncoder
 from homeassistant.helpers.typing import ConfigType, StateType
 from homeassistant.setup import setup_component
 from homeassistant.util.async_ import run_callback_threadsafe
-import homeassistant.util.dt as date_util
+import homeassistant.util.dt as dt_util
 from homeassistant.util.json import (
     JsonArrayType,
     JsonObjectType,
@@ -210,14 +213,14 @@ async def async_test_home_assistant(event_loop, load_registries=True):
 
         return orig_async_add_executor_job(target, *args)
 
-    def async_create_task(coroutine):
+    def async_create_task(coroutine, name=None):
         """Create task."""
         if isinstance(coroutine, Mock) and not isinstance(coroutine, AsyncMock):
             fut = asyncio.Future()
             fut.set_result(None)
             return fut
 
-        return orig_async_create_task(coroutine)
+        return orig_async_create_task(coroutine, name)
 
     hass.async_add_job = async_add_job
     hass.async_add_executor_job = async_add_executor_job
@@ -249,12 +252,20 @@ async def async_test_home_assistant(event_loop, load_registries=True):
     # Load the registries
     entity.async_setup(hass)
     if load_registries:
-        with patch("homeassistant.helpers.storage.Store.async_load", return_value=None):
+        with patch(
+            "homeassistant.helpers.storage.Store.async_load", return_value=None
+        ), patch(
+            "homeassistant.helpers.restore_state.RestoreStateData.async_setup_dump",
+            return_value=None,
+        ), patch(
+            "homeassistant.helpers.restore_state.start.async_at_start"
+        ):
             await asyncio.gather(
                 ar.async_load(hass),
                 dr.async_load(hass),
                 er.async_load(hass),
                 ir.async_load(hass),
+                rs.async_load(hass),
             )
         hass.data[bootstrap.DATA_REGISTRIES_LOADED] = None
 
@@ -355,7 +366,7 @@ def async_fire_time_changed_exact(
     if datetime_ is None:
         utc_datetime = datetime.now(timezone.utc)
     else:
-        utc_datetime = date_util.as_utc(datetime_)
+        utc_datetime = dt_util.as_utc(datetime_)
 
     _async_fire_time_changed(hass, utc_datetime, fire_all)
 
@@ -377,7 +388,7 @@ def async_fire_time_changed(
     if datetime_ is None:
         utc_datetime = datetime.now(timezone.utc)
     else:
-        utc_datetime = date_util.as_utc(datetime_)
+        utc_datetime = dt_util.as_utc(datetime_)
 
     if utc_datetime.microsecond < 500000:
         # Allow up to 500000 microseconds to be added to the time
@@ -393,7 +404,7 @@ def async_fire_time_changed(
 def _async_fire_time_changed(
     hass: HomeAssistant, utc_datetime: datetime | None, fire_all: bool
 ) -> None:
-    timestamp = date_util.utc_to_timestamp(utc_datetime)
+    timestamp = dt_util.utc_to_timestamp(utc_datetime)
     for task in list(hass.loop._scheduled):
         if not isinstance(task, asyncio.TimerHandle):
             continue
@@ -757,7 +768,7 @@ class MockEntityPlatform(entity_platform.EntityPlatform):
 
     def __init__(
         self,
-        hass,
+        hass: HomeAssistant,
         logger=None,
         domain="test_domain",
         platform_name="test_platform",
@@ -782,6 +793,11 @@ class MockEntityPlatform(entity_platform.EntityPlatform):
             scan_interval=scan_interval,
             entity_namespace=entity_namespace,
         )
+
+        async def _async_on_stop(_: Event) -> None:
+            await self.async_shutdown()
+
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_on_stop)
 
 
 class MockToggleEntity(entity.ToggleEntity):
@@ -1003,9 +1019,9 @@ def init_recorder_component(hass, add_config=None, db_url="sqlite://"):
 
 def mock_restore_cache(hass: HomeAssistant, states: Sequence[State]) -> None:
     """Mock the DATA_RESTORE_CACHE."""
-    key = restore_state.DATA_RESTORE_STATE_TASK
+    key = restore_state.DATA_RESTORE_STATE
     data = restore_state.RestoreStateData(hass)
-    now = date_util.utcnow()
+    now = dt_util.utcnow()
 
     last_states = {}
     for state in states:
@@ -1030,9 +1046,9 @@ def mock_restore_cache_with_extra_data(
     hass: HomeAssistant, states: Sequence[tuple[State, Mapping[str, Any]]]
 ) -> None:
     """Mock the DATA_RESTORE_CACHE."""
-    key = restore_state.DATA_RESTORE_STATE_TASK
+    key = restore_state.DATA_RESTORE_STATE
     data = restore_state.RestoreStateData(hass)
-    now = date_util.utcnow()
+    now = dt_util.utcnow()
 
     last_states = {}
     for state, extra_data in states:
@@ -1051,6 +1067,26 @@ def mock_restore_cache_with_extra_data(
     assert len(data.last_states) == len(states), f"Duplicate entity_id? {states}"
 
     hass.data[key] = data
+
+
+async def async_mock_restore_state_shutdown_restart(
+    hass: HomeAssistant,
+) -> restore_state.RestoreStateData:
+    """Mock shutting down and saving restore state and restoring."""
+    data = restore_state.async_get(hass)
+    await data.async_dump_states()
+    await async_mock_load_restore_state_from_storage(hass)
+    return data
+
+
+async def async_mock_load_restore_state_from_storage(
+    hass: HomeAssistant,
+) -> None:
+    """Mock loading restore state from storage.
+
+    hass_storage must already be mocked.
+    """
+    await restore_state.async_get(hass).async_load()
 
 
 class MockEntity(entity.Entity):
@@ -1236,6 +1272,16 @@ async def get_system_health_info(hass: HomeAssistant, domain: str) -> dict[str, 
     return await hass.data["system_health"][domain].info_callback(hass)
 
 
+@contextmanager
+def mock_config_flow(domain: str, config_flow: type[ConfigFlow]) -> None:
+    """Mock a config flow handler."""
+    assert domain not in config_entries.HANDLERS
+    config_entries.HANDLERS[domain] = config_flow
+    _LOGGER.info("Adding mock config flow: %s", domain)
+    yield
+    config_entries.HANDLERS.pop(domain)
+
+
 def mock_integration(
     hass: HomeAssistant, module: MockModule, built_in: bool = True
 ) -> loader.Integration:
@@ -1251,7 +1297,7 @@ def mock_integration(
 
     def mock_import_platform(platform_name: str) -> NoReturn:
         raise ImportError(
-            f"Mocked unable to import platform '{platform_name}'",
+            f"Mocked unable to import platform '{integration.pkg_path}.{platform_name}'",
             name=f"{integration.pkg_path}.{platform_name}",
         )
 
@@ -1379,3 +1425,11 @@ def raise_contains_mocks(val: Any) -> None:
     if isinstance(val, list):
         for dict_value in val:
             raise_contains_mocks(dict_value)
+
+
+@callback
+def async_get_persistent_notifications(
+    hass: HomeAssistant,
+) -> dict[str, pn.Notification]:
+    """Get the current persistent notifications."""
+    return pn._async_get_or_create_notifications(hass)

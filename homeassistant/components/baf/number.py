@@ -27,7 +27,6 @@ class BAFNumberDescriptionMixin:
     """Required values for BAF sensors."""
 
     value_fn: Callable[[Device], int | None]
-    mode: NumberMode
 
 
 @dataclass
@@ -39,6 +38,7 @@ AUTO_COMFORT_NUMBER_DESCRIPTIONS = (
     BAFNumberDescription(
         key="comfort_min_speed",
         name="Auto Comfort Minimum Speed",
+        native_step=1,
         native_min_value=0,
         native_max_value=SPEED_RANGE[1] - 1,
         entity_category=EntityCategory.CONFIG,
@@ -48,6 +48,7 @@ AUTO_COMFORT_NUMBER_DESCRIPTIONS = (
     BAFNumberDescription(
         key="comfort_max_speed",
         name="Auto Comfort Maximum Speed",
+        native_step=1,
         native_min_value=1,
         native_max_value=SPEED_RANGE[1],
         entity_category=EntityCategory.CONFIG,
@@ -57,6 +58,7 @@ AUTO_COMFORT_NUMBER_DESCRIPTIONS = (
     BAFNumberDescription(
         key="comfort_heat_assist_speed",
         name="Auto Comfort Heat Assist Speed",
+        native_step=1,
         native_min_value=SPEED_RANGE[0],
         native_max_value=SPEED_RANGE[1],
         entity_category=EntityCategory.CONFIG,
@@ -69,6 +71,7 @@ FAN_NUMBER_DESCRIPTIONS = (
     BAFNumberDescription(
         key="return_to_auto_timeout",
         name="Return to Auto Timeout",
+        native_step=1,
         native_min_value=ONE_MIN_SECS,
         native_max_value=HALF_DAY_SECS,
         entity_category=EntityCategory.CONFIG,
@@ -79,6 +82,7 @@ FAN_NUMBER_DESCRIPTIONS = (
     BAFNumberDescription(
         key="motion_sense_timeout",
         name="Motion Sense Timeout",
+        native_step=1,
         native_min_value=ONE_MIN_SECS,
         native_max_value=ONE_DAY_SECS,
         entity_category=EntityCategory.CONFIG,
@@ -92,6 +96,7 @@ LIGHT_NUMBER_DESCRIPTIONS = (
     BAFNumberDescription(
         key="light_return_to_auto_timeout",
         name="Light Return to Auto Timeout",
+        native_step=1,
         native_min_value=ONE_MIN_SECS,
         native_max_value=HALF_DAY_SECS,
         entity_category=EntityCategory.CONFIG,
@@ -102,6 +107,7 @@ LIGHT_NUMBER_DESCRIPTIONS = (
     BAFNumberDescription(
         key="light_auto_motion_timeout",
         name="Light Motion Sense Timeout",
+        native_step=1,
         native_min_value=ONE_MIN_SECS,
         native_max_value=ONE_DAY_SECS,
         entity_category=EntityCategory.CONFIG,
@@ -140,7 +146,6 @@ class BAFNumber(BAFEntity, NumberEntity):
         self.entity_description = description
         super().__init__(device, f"{device.name} {description.name}")
         self._attr_unique_id = f"{self._device.mac_address}-{description.key}"
-        self._attr_mode = description.mode
 
     @callback
     def _async_update_attrs(self) -> None:

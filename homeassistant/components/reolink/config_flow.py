@@ -95,10 +95,9 @@ class ReolinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(mac_address)
         self._abort_if_unique_id_configured(updates={CONF_HOST: discovery_info.ip})
 
-        short_mac = mac_address[-8:].upper()
         self.context["title_placeholders"] = {
-            "short_mac": short_mac,
             "ip_address": discovery_info.ip,
+            "hostname": discovery_info.hostname,
         }
 
         self._host = discovery_info.ip
@@ -109,7 +108,10 @@ class ReolinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Handle the initial step."""
         errors = {}
-        placeholders = {"error": ""}
+        placeholders = {
+            "error": "",
+            "troubleshooting_link": "https://www.home-assistant.io/integrations/reolink/#troubleshooting",
+        }
 
         if user_input is not None:
             if CONF_HOST not in user_input:
@@ -176,7 +178,7 @@ class ReolinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             data_schema = data_schema.extend(
                 {
                     vol.Optional(CONF_PORT): cv.positive_int,
-                    vol.Optional(CONF_USE_HTTPS): bool,
+                    vol.Required(CONF_USE_HTTPS, default=False): bool,
                 }
             )
 
