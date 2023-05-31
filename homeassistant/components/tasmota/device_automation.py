@@ -5,7 +5,7 @@ from hatasmota.models import DiscoveryHashType
 from hatasmota.trigger import TasmotaTrigger
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import Event, HomeAssistant
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers.device_registry import EVENT_DEVICE_REGISTRY_UPDATED
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
@@ -24,9 +24,12 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> N
 
     async def async_device_removed(event: Event) -> None:
         """Handle the removal of a device."""
-        if event.data["action"] != "remove":
-            return
         await async_remove_automations(hass, event.data["device_id"])
+
+    @callback
+    def _async_device_removed_filter(event: Event) -> bool:
+        """Filter device registry events."""
+        return event.data["action"] == "remove"
 
     async def async_discover(
         tasmota_automation: TasmotaTrigger, discovery_hash: DiscoveryHashType
@@ -45,5 +48,9 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> N
         async_discover,
     )
     hass.data[DATA_UNSUB].append(
-        hass.bus.async_listen(EVENT_DEVICE_REGISTRY_UPDATED, async_device_removed)
+        hass.bus.async_listen(
+            EVENT_DEVICE_REGISTRY_UPDATED,
+            async_device_removed,
+            event_filter=_async_device_removed_filter,
+        )
     )

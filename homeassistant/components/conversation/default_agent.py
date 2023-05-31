@@ -413,9 +413,18 @@ class DefaultAgent(AbstractConversationAgent):
                             encoding="utf-8"
                         ) as custom_sentences_file:
                             # Merge custom sentences
-                            merge_dict(
-                                intents_dict, yaml.safe_load(custom_sentences_file)
-                            )
+                            if isinstance(
+                                custom_sentences_yaml := yaml.safe_load(
+                                    custom_sentences_file
+                                ),
+                                dict,
+                            ):
+                                merge_dict(intents_dict, custom_sentences_yaml)
+                            else:
+                                _LOGGER.warning(
+                                    "Custom sentences file does not match expected format path=%s",
+                                    custom_sentences_file.name,
+                                )
 
                         # Will need to recreate graph
                         intents_changed = True

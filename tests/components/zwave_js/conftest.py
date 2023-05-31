@@ -445,6 +445,12 @@ def iblinds_v2_state_fixture():
     return json.loads(load_fixture("zwave_js/cover_iblinds_v2_state.json"))
 
 
+@pytest.fixture(name="iblinds_v3_state", scope="session")
+def iblinds_v3_state_fixture():
+    """Load the iBlinds v3 node state fixture data."""
+    return json.loads(load_fixture("zwave_js/cover_iblinds_v3_state.json"))
+
+
 @pytest.fixture(name="qubino_shutter_state", scope="session")
 def qubino_shutter_state_fixture():
     """Load the Qubino Shutter node state fixture data."""
@@ -618,6 +624,12 @@ def indicator_test_state_fixture():
     return json.loads(load_fixture("zwave_js/indicator_test_state.json"))
 
 
+@pytest.fixture(name="energy_production_state", scope="session")
+def energy_production_state_fixture():
+    """Load a mock node with energy production CC state fixture data."""
+    return json.loads(load_fixture("zwave_js/energy_production_state.json"))
+
+
 # model fixtures
 
 
@@ -647,7 +659,9 @@ def mock_client_fixture(
         client.connect = AsyncMock(side_effect=connect)
         client.listen = AsyncMock(side_effect=listen)
         client.disconnect = AsyncMock(side_effect=disconnect)
-        client.driver = Driver(client, controller_state, log_config_state)
+        client.driver = Driver(
+            client, copy.deepcopy(controller_state), copy.deepcopy(log_config_state)
+        )
         node = Node(client, copy.deepcopy(controller_node_state))
         client.driver.controller.nodes[node.node_id] = node
 
@@ -953,6 +967,14 @@ def iblinds_v2_cover_fixture(client, iblinds_v2_state):
     return node
 
 
+@pytest.fixture(name="iblinds_v3")
+def iblinds_v3_cover_fixture(client, iblinds_v3_state):
+    """Mock an iBlinds v3 window cover node."""
+    node = Node(client, copy.deepcopy(iblinds_v3_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
 @pytest.fixture(name="qubino_shutter")
 def qubino_shutter_cover_fixture(client, qubino_shutter_state):
     """Mock a Qubino flush shutter node."""
@@ -1173,5 +1195,13 @@ def switch_zooz_zen72_fixture(client, switch_zooz_zen72_state):
 def indicator_test_fixture(client, indicator_test_state):
     """Mock a indicator CC test node."""
     node = Node(client, copy.deepcopy(indicator_test_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="energy_production")
+def energy_prodution_fixture(client, energy_production_state):
+    """Mock a mock node with Energy Production CC."""
+    node = Node(client, copy.deepcopy(energy_production_state))
     client.driver.controller.nodes[node.node_id] = node
     return node
