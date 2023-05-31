@@ -1,8 +1,8 @@
 """Support for MQTT climate devices."""
 from __future__ import annotations
 
+from abc import ABC, abstractmethod
 from collections.abc import Callable
-from enum import IntFlag
 import functools
 import logging
 from typing import Any
@@ -448,14 +448,12 @@ async def _async_setup_entity(
     async_add_entities([MqttClimate(hass, config, config_entry, discovery_data)])
 
 
-class MqttTemperatureControlEntity(MqttEntity):
+class MqttTemperatureControlEntity(MqttEntity, ABC):
     """Helper entity class to control temperature.
 
     MqttTemperatureControlEntity supports shared methods for
     climate and water_heater platforms.
     """
-
-    _attr_supported_features: IntFlag
 
     _optimistic: bool
     _topic: dict[str, Any]
@@ -612,6 +610,7 @@ class MqttTemperatureControlEntity(MqttEntity):
         await self._publish(cmnd_topic, payload)
         return changed
 
+    @abstractmethod
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set hvac mode."""
 
