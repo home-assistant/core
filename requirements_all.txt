@@ -13,6 +13,9 @@ AIOSomecomfort==0.0.14
 # homeassistant.components.adax
 Adax-local==0.1.5
 
+# homeassistant.components.ambiclimate
+Ambiclimate==0.2.1
+
 # homeassistant.components.homekit
 HAP-python==4.6.0
 
@@ -321,13 +324,10 @@ airthings-cloud==0.1.0
 airtouch4pyapi==1.0.5
 
 # homeassistant.components.alpha_vantage
-alpha_vantage==2.3.1
+alpha-vantage==2.3.1
 
 # homeassistant.components.amberelectric
 amberelectric==1.0.4
-
-# homeassistant.components.ambiclimate
-ambiclimate==0.2.1
 
 # homeassistant.components.amcrest
 amcrest==1.9.7
