@@ -18,6 +18,9 @@ Adax-local==0.1.5
 # homeassistant.components.ambiclimate
 Ambiclimate==0.2.1
 
+# homeassistant.components.co2signal
+CO2Signal==0.4.2
+
 # homeassistant.components.homekit
 HAP-python==4.6.0
 
@@ -422,9 +425,6 @@ buienradar==1.0.5
 
 # homeassistant.components.caldav
 caldav==1.2.0
-
-# homeassistant.components.co2signal
-co2signal==0.4.2
 
 # homeassistant.components.coinbase
 coinbase==2.1.0

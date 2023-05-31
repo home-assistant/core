@@ -19,6 +19,9 @@ Ambiclimate==0.2.1
 # homeassistant.components.blinksticklight
 BlinkStick==1.2.0
 
+# homeassistant.components.co2signal
+CO2Signal==0.4.2
+
 # homeassistant.components.homekit
 HAP-python==4.6.0
 
@@ -527,9 +530,6 @@ clearpasspy==1.0.2
 
 # homeassistant.components.sinch
 clx-sdk-xms==1.0.0
-
-# homeassistant.components.co2signal
-co2signal==0.4.2
 
 # homeassistant.components.coinbase
 coinbase==2.1.0
