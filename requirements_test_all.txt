@@ -1841,7 +1841,7 @@ toonapi==0.2.1
 total-connect-client==2023.2
 
 # homeassistant.components.tplink_omada
-tplink-omada-client==1.2.4
+tplink_omada_client==1.2.4
 
 # homeassistant.components.transmission
 transmission-rpc==4.1.5
