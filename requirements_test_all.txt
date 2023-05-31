@@ -55,6 +55,10 @@ PyFlick==0.0.2
 # homeassistant.components.met_eireann
 PyMetEireann==2021.8.0
 
+# homeassistant.components.met
+# homeassistant.components.norway_air
+PyMetno==0.10.0
+
 # homeassistant.components.keymitt_ble
 PyMicroBot==0.0.9
 
@@ -1109,10 +1113,6 @@ pyCEC==0.5.2
 
 # homeassistant.components.control4
 pyControl4==1.1.0
-
-# homeassistant.components.met
-# homeassistant.components.norway_air
-pyMetno==0.10.0
 
 # homeassistant.components.rfxtrx
 pyRFXtrx==0.30.1
