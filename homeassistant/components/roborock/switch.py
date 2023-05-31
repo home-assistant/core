@@ -8,6 +8,7 @@ from roborock.roborock_typing import RoborockCommand
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import slugify
@@ -48,6 +49,7 @@ SWITCH_DESCRIPTIONS: list[RoborockSwitchDescription] = [
         key="child_lock",
         translation_key="child_lock",
         icon="mdi:account-lock",
+        entity_category=EntityCategory.CONFIG,
     )
 ]
 
