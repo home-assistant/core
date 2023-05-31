@@ -69,6 +69,12 @@ def _validate_integration(config: Config, integration: Integration) -> None:
     ):
         return
 
+    config_file = integration.path / "config.py"
+    if config_file.is_file():
+        config_module = ast.parse(config_file.read_text())
+        if _has_function(config_module, ast.AsyncFunctionDef, "async_validate_config"):
+            return
+
     if config.specific_integrations:
         notice_method = integration.add_warning
     else:
