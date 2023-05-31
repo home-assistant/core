@@ -251,6 +251,7 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
                         self.hass, DOMAIN, self.voip_device.voip_id
                     ),
                     conversation_id=self._conversation_id,
+                    device_id=self.voip_device.device_id,
                     tts_audio_output="raw",
                 )
 

@@ -143,7 +143,7 @@ async def async_setup_entry(  # noqa: C901
     port = entry.data[CONF_PORT]
     password = entry.data[CONF_PASSWORD]
     noise_psk = entry.data.get(CONF_NOISE_PSK)
-    device_id: str | None = None
+    device_id: str = None  # type: ignore[assignment]
 
     zeroconf_instance = await zeroconf.async_get_instance(hass)
 
@@ -316,6 +316,7 @@ async def async_setup_entry(  # noqa: C901
 
         hass.async_create_background_task(
             voice_assistant_udp_server.run_pipeline(
+                device_id=device_id,
                 conversation_id=conversation_id or None,
                 use_vad=use_vad,
             ),
