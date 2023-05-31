@@ -159,7 +159,7 @@ aioecowitt==2023.5.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==13.7.5
+aioesphomeapi==13.9.0
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -875,6 +875,9 @@ ha-av==10.1.0
 # homeassistant.components.ffmpeg
 ha-ffmpeg==3.1.0
 
+# homeassistant.components.iotawatt
+ha-iotawattpy==0.1.1
+
 # homeassistant.components.philips_js
 ha-philipsjs==3.0.0
 
@@ -994,9 +997,6 @@ insteon-frontend-home-assistant==0.3.5
 
 # homeassistant.components.intellifire
 intellifire4py==2.2.2
-
-# homeassistant.components.iotawatt
-iotawattpy==0.1.0
 
 # homeassistant.components.iperf3
 iperf3==0.1.11
