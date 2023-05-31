@@ -104,6 +104,9 @@ PyViCare==2.25.0
 # homeassistant.components.xiaomi_aqara
 PyXiaomiGateway==0.14.3
 
+# homeassistant.components.rachio
+RachioPy==1.0.3
+
 # homeassistant.components.remember_the_milk
 RtmAPI==0.7.2
 
@@ -1619,9 +1622,6 @@ pyzerproc==0.4.8
 
 # homeassistant.components.qingping
 qingping-ble==0.8.2
-
-# homeassistant.components.rachio
-rachiopy==1.0.3
 
 # homeassistant.components.radio_browser
 radios==0.1.1

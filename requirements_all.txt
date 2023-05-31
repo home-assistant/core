@@ -123,6 +123,9 @@ PyXiaomiGateway==0.14.3
 # homeassistant.components.goalfeed
 Pysher==1.0.7
 
+# homeassistant.components.rachio
+RachioPy==1.0.3
+
 # homeassistant.components.remember_the_milk
 RtmAPI==0.7.2
 
@@ -2232,9 +2235,6 @@ qnapstats==0.4.0
 
 # homeassistant.components.quantum_gateway
 quantum-gateway==0.0.8
-
-# homeassistant.components.rachio
-rachiopy==1.0.3
 
 # homeassistant.components.radio_browser
 radios==0.1.1
