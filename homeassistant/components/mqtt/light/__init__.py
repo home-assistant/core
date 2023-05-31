@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from ..mixins import async_setup_entry_helper, warn_for_legacy_schema
+from ..mixins import async_setup_entry_helper
 from .schema import CONF_SCHEMA, MQTT_LIGHT_SCHEMA_SCHEMA
 from .schema_basic import (
     DISCOVERY_SCHEMA_BASIC,
@@ -56,12 +56,6 @@ def validate_mqtt_light_modern(config_value: dict[str, Any]) -> ConfigType:
 DISCOVERY_SCHEMA = vol.All(
     MQTT_LIGHT_SCHEMA_SCHEMA.extend({}, extra=vol.ALLOW_EXTRA),
     validate_mqtt_light_discovery,
-)
-
-# Configuring MQTT Lights under the light platform key was deprecated in HA Core 2022.6
-# Setup for the legacy YAML format was removed in HA Core 2022.12
-PLATFORM_SCHEMA = vol.All(
-    warn_for_legacy_schema(light.DOMAIN),
 )
 
 PLATFORM_SCHEMA_MODERN = vol.All(

@@ -263,49 +263,52 @@ async def test_node_status_sensor(
     hass: HomeAssistant, client, lock_id_lock_as_id150, integration
 ) -> None:
     """Test node status sensor is created and gets updated on node state changes."""
-    NODE_STATUS_ENTITY = "sensor.z_wave_module_for_id_lock_150_and_101_node_status"
+    node_status_entity_id = "sensor.z_wave_module_for_id_lock_150_and_101_node_status"
     node = lock_id_lock_as_id150
     ent_reg = er.async_get(hass)
-    entity_entry = ent_reg.async_get(NODE_STATUS_ENTITY)
+    entity_entry = ent_reg.async_get(node_status_entity_id)
 
     assert not entity_entry.disabled
     assert entity_entry.entity_category is EntityCategory.DIAGNOSTIC
-    assert hass.states.get(NODE_STATUS_ENTITY).state == "alive"
+    assert hass.states.get(node_status_entity_id).state == "alive"
 
     # Test transitions work
     event = Event(
         "dead", data={"source": "node", "event": "dead", "nodeId": node.node_id}
     )
     node.receive_event(event)
-    assert hass.states.get(NODE_STATUS_ENTITY).state == "dead"
-    assert hass.states.get(NODE_STATUS_ENTITY).attributes[ATTR_ICON] == "mdi:robot-dead"
+    assert hass.states.get(node_status_entity_id).state == "dead"
+    assert (
+        hass.states.get(node_status_entity_id).attributes[ATTR_ICON] == "mdi:robot-dead"
+    )
 
     event = Event(
         "wake up", data={"source": "node", "event": "wake up", "nodeId": node.node_id}
     )
     node.receive_event(event)
-    assert hass.states.get(NODE_STATUS_ENTITY).state == "awake"
-    assert hass.states.get(NODE_STATUS_ENTITY).attributes[ATTR_ICON] == "mdi:eye"
+    assert hass.states.get(node_status_entity_id).state == "awake"
+    assert hass.states.get(node_status_entity_id).attributes[ATTR_ICON] == "mdi:eye"
 
     event = Event(
         "sleep", data={"source": "node", "event": "sleep", "nodeId": node.node_id}
     )
     node.receive_event(event)
-    assert hass.states.get(NODE_STATUS_ENTITY).state == "asleep"
-    assert hass.states.get(NODE_STATUS_ENTITY).attributes[ATTR_ICON] == "mdi:sleep"
+    assert hass.states.get(node_status_entity_id).state == "asleep"
+    assert hass.states.get(node_status_entity_id).attributes[ATTR_ICON] == "mdi:sleep"
 
     event = Event(
         "alive", data={"source": "node", "event": "alive", "nodeId": node.node_id}
     )
     node.receive_event(event)
-    assert hass.states.get(NODE_STATUS_ENTITY).state == "alive"
+    assert hass.states.get(node_status_entity_id).state == "alive"
     assert (
-        hass.states.get(NODE_STATUS_ENTITY).attributes[ATTR_ICON] == "mdi:heart-pulse"
+        hass.states.get(node_status_entity_id).attributes[ATTR_ICON]
+        == "mdi:heart-pulse"
     )
 
     # Disconnect the client and make sure the entity is still available
     await client.disconnect()
-    assert hass.states.get(NODE_STATUS_ENTITY).state != STATE_UNAVAILABLE
+    assert hass.states.get(node_status_entity_id).state != STATE_UNAVAILABLE
 
     # Assert a node status sensor entity is not created for the controller
     driver = client.driver
@@ -330,15 +333,15 @@ async def test_node_status_sensor_not_ready(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test node status sensor is created and available if node is not ready."""
-    NODE_STATUS_ENTITY = "sensor.z_wave_module_for_id_lock_150_and_101_node_status"
+    node_status_entity_id = "sensor.z_wave_module_for_id_lock_150_and_101_node_status"
     node = lock_id_lock_as_id150_not_ready
     assert not node.ready
     ent_reg = er.async_get(hass)
-    entity_entry = ent_reg.async_get(NODE_STATUS_ENTITY)
+    entity_entry = ent_reg.async_get(node_status_entity_id)
 
     assert not entity_entry.disabled
-    assert hass.states.get(NODE_STATUS_ENTITY)
-    assert hass.states.get(NODE_STATUS_ENTITY).state == "alive"
+    assert hass.states.get(node_status_entity_id)
+    assert hass.states.get(node_status_entity_id).state == "alive"
 
     # Mark node as ready
     event = Event(
@@ -352,14 +355,14 @@ async def test_node_status_sensor_not_ready(
     )
     node.receive_event(event)
     assert node.ready
-    assert hass.states.get(NODE_STATUS_ENTITY)
-    assert hass.states.get(NODE_STATUS_ENTITY).state == "alive"
+    assert hass.states.get(node_status_entity_id)
+    assert hass.states.get(node_status_entity_id).state == "alive"
 
     await hass.services.async_call(
         DOMAIN,
         SERVICE_REFRESH_VALUE,
         {
-            ATTR_ENTITY_ID: NODE_STATUS_ENTITY,
+            ATTR_ENTITY_ID: node_status_entity_id,
         },
         blocking=True,
     )
