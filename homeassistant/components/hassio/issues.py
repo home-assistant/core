@@ -274,12 +274,13 @@ class SupervisorIssues:
             data["suggestions"] = (
                 await self._client.get_suggestions_for_issue(data["uuid"])
             )[ATTR_SUGGESTIONS]
-            self.add_issue(Issue.from_dict(data))
         except HassioAPIError:
             _LOGGER.error(
                 "Could not get suggestions for supervisor issue %s, skipping it",
                 data["uuid"],
             )
+            return
+        self.add_issue(Issue.from_dict(data))
 
     def remove_issue(self, issue: Issue) -> None:
         """Remove an issue from the list. Delete a repair if necessary."""
