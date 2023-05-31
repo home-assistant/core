@@ -13,9 +13,7 @@ from tests.common import MockConfigEntry
 
 @pytest.mark.parametrize(
     ("entity_id"),
-    [
-        ("switch.roborock_s7_maxv_child_lock"),
-    ],
+    [("switch.roborock_s7_maxv_child_lock"), ("switch.roborock_s7_maxv_button_lights")],
 )
 async def test_update_success(
     hass: HomeAssistant,

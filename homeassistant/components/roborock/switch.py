@@ -27,7 +27,7 @@ class RoborockSwitchDescriptionMixin:
     # Gets the status of the switch
     get_value: Callable[[RoborockCoordinatedEntity], Coroutine[Any, Any, dict]]
     # Evaluate the result of get_value to determine a bool
-    evaluate_value: Callable[[dict], bool]
+    evaluate_value: Callable[[dict | int], bool]
     # Sets the status of the switch
     set_command: Callable[[RoborockCoordinatedEntity, bool], Coroutine[Any, Any, dict]]
 
@@ -45,10 +45,21 @@ SWITCH_DESCRIPTIONS: list[RoborockSwitchDescription] = [
             RoborockCommand.SET_CHILD_LOCK_STATUS, {"lock_status": 1 if value else 0}
         ),
         get_value=lambda data: data.send(RoborockCommand.GET_CHILD_LOCK_STATUS),
-        evaluate_value=lambda data: data["lock_status"] == 1,
+        evaluate_value=lambda data: isinstance(data, dict) and data["lock_status"] == 1,
         key="child_lock",
         translation_key="child_lock",
         icon="mdi:account-lock",
+        entity_category=EntityCategory.CONFIG,
+    ),
+    RoborockSwitchDescription(
+        set_command=lambda entity, value: entity.send(
+            RoborockCommand.SET_LED_STATUS, [1] if value else [0]
+        ),
+        get_value=lambda data: data.send(RoborockCommand.GET_LED_STATUS),
+        evaluate_value=lambda data: isinstance(data, int) and data == 1,
+        key="button_lights",
+        translation_key="button_lights",
+        icon="mdi:alarm-light-outline",
         entity_category=EntityCategory.CONFIG,
     ),
 ]

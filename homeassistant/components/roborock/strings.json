@@ -100,6 +100,9 @@
     "switch": {
       "child_lock": {
         "name": "Child lock"
+      },
+      "button_lights": {
+        "name": "Button lights"
       }
     },
     "vacuum": {
