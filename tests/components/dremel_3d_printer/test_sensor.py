@@ -1,5 +1,8 @@
 """Sensor tests for the Dremel 3D Printer integration."""
+from datetime import datetime
 from unittest.mock import AsyncMock
+
+from freezegun.api import FrozenDateTimeFactory
 
 from homeassistant.components.dremel_3d_printer.const import DOMAIN
 from homeassistant.components.sensor import (
@@ -17,6 +20,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
+from homeassistant.util.dt import UTC
 
 from tests.common import MockConfigEntry
 
@@ -26,16 +30,17 @@ async def test_sensors(
     connection,
     config_entry: MockConfigEntry,
     entity_registry_enabled_by_default: AsyncMock,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test we get sensor data."""
+    freezer.move_to(datetime(2023, 5, 31, 13, 30, tzinfo=UTC))
     await hass.config_entries.async_setup(config_entry.entry_id)
     assert await async_setup_component(hass, DOMAIN, {})
     state = hass.states.get("sensor.dremel_3d45_job_phase")
     assert state.state == "building"
     state = hass.states.get("sensor.dremel_3d45_remaining_time")
-    assert state.state == "3736"
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is UnitOfTime.SECONDS
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.DURATION
+    assert state.state == "2023-05-31T12:27:44+00:00"
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.TIMESTAMP
     state = hass.states.get("sensor.dremel_3d45_progress")
     assert state.state == "13.9"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is PERCENTAGE
@@ -80,13 +85,11 @@ async def test_sensors(
     state = hass.states.get("sensor.dremel_3d45_filament")
     assert state.state == "ECO-ABS"
     state = hass.states.get("sensor.dremel_3d45_elapsed_time")
-    assert state.state == "1770"
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is UnitOfTime.SECONDS
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.DURATION
+    assert state.state == "2023-05-31T13:30:00+00:00"
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.TIMESTAMP
     state = hass.states.get("sensor.dremel_3d45_estimated_total_time")
-    assert state.state == "4340"
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is UnitOfTime.SECONDS
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.DURATION
+    assert state.state == "2023-05-31T12:17:40+00:00"
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.TIMESTAMP
     state = hass.states.get("sensor.dremel_3d45_job_status")
     assert state.state == "building"
     state = hass.states.get("sensor.dremel_3d45_job_name")

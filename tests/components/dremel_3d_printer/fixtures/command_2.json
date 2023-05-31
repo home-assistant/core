@@ -2,7 +2,7 @@
   "buildPlate_target_temperature": 60,
   "chamber_temperature": 27,
   "door_open": 0,
-  "elaspedtime": 1770,
+  "elaspedtime": 0,
   "error_code": 200,
   "extruder_target_temperature": 230,
   "fanSpeed": 0,

@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import datetime, timedelta
 
 from dremel3dpy import Dremel3DPrinter
 
@@ -23,6 +24,8 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
+from homeassistant.util.dt import utcnow
+from homeassistant.util.variance import ignore_variance
 
 from .const import ATTR_EXTRUDER, ATTR_PLATFORM, DOMAIN
 from .entity import Dremel3DPrinterEntity
@@ -32,7 +35,7 @@ from .entity import Dremel3DPrinterEntity
 class Dremel3DPrinterSensorEntityMixin:
     """Mixin for Dremel 3D Printer sensor."""
 
-    value_fn: Callable[[Dremel3DPrinter, str], StateType]
+    value_fn: Callable[[Dremel3DPrinter, str], StateType | datetime]
 
 
 @dataclass
@@ -52,9 +55,11 @@ SENSOR_TYPES: tuple[Dremel3DPrinterSensorEntityDescription, ...] = (
     Dremel3DPrinterSensorEntityDescription(
         key="remaining_time",
         name="Remaining time",
-        native_unit_of_measurement=UnitOfTime.SECONDS,
-        device_class=SensorDeviceClass.DURATION,
-        value_fn=lambda api, key: api.get_job_status()[key],
+        device_class=SensorDeviceClass.TIMESTAMP,
+        value_fn=ignore_variance(
+            lambda api, key: utcnow() - timedelta(seconds=api.get_job_status()[key]),
+            timedelta(minutes=2),
+        ),
     ),
     Dremel3DPrinterSensorEntityDescription(
         key="progress",
@@ -162,20 +167,24 @@ SENSOR_TYPES: tuple[Dremel3DPrinterSensorEntityDescription, ...] = (
     Dremel3DPrinterSensorEntityDescription(
         key="elapsed_time",
         name="Elapsed time",
-        native_unit_of_measurement=UnitOfTime.SECONDS,
-        device_class=SensorDeviceClass.DURATION,
+        device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        value_fn=lambda api, key: api.get_job_status()[key],
+        value_fn=ignore_variance(
+            lambda api, key: utcnow() - timedelta(seconds=api.get_job_status()[key]),
+            timedelta(minutes=2),
+        ),
     ),
     Dremel3DPrinterSensorEntityDescription(
         key="estimated_total_time",
         name="Estimated total time",
-        native_unit_of_measurement=UnitOfTime.SECONDS,
-        device_class=SensorDeviceClass.DURATION,
+        device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        value_fn=lambda api, key: api.get_job_status()[key],
+        value_fn=ignore_variance(
+            lambda api, key: utcnow() - timedelta(seconds=api.get_job_status()[key]),
+            timedelta(minutes=2),
+        ),
     ),
     Dremel3DPrinterSensorEntityDescription(
         key="job_status",
@@ -258,6 +267,6 @@ class Dremel3DPrinterSensor(Dremel3DPrinterEntity, SensorEntity):
     entity_description: Dremel3DPrinterSensorEntityDescription
 
     @property
-    def native_value(self) -> StateType:
+    def native_value(self) -> StateType | datetime:
         """Return the sensor state."""
         return self.entity_description.value_fn(self._api, self.entity_description.key)

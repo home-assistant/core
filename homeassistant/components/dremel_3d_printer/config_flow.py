@@ -13,7 +13,7 @@ from homeassistant.const import CONF_HOST
 from homeassistant.data_entry_flow import FlowResult
 import homeassistant.helpers.config_validation as cv
 
-from .const import DOMAIN
+from .const import DOMAIN, LOGGER
 
 
 def _schema_with_defaults(host: str = "") -> vol.Schema:
@@ -42,7 +42,8 @@ class Dremel3DPrinterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             api = await self.hass.async_add_executor_job(Dremel3DPrinter, host)
         except (ConnectTimeout, HTTPError, JSONDecodeError):
             errors = {"base": "cannot_connect"}
-        except Exception:  # pylint: disable=broad-except
+        except Exception as ex:  # pylint: disable=broad-except
+            LOGGER.exception(ex)
             errors = {"base": "unknown"}
 
         if errors:

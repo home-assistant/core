@@ -4,8 +4,7 @@
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
-        },
-        "title": "Connect with your Dremel 3D Printer"
+        }
       }
     },
     "abort": {
