@@ -120,6 +120,9 @@ PyViCare==2.25.0
 # homeassistant.components.xiaomi_aqara
 PyXiaomiGateway==0.14.3
 
+# homeassistant.components.goalfeed
+Pysher==1.0.7
+
 # homeassistant.components.remember_the_milk
 RtmAPI==0.7.2
 
@@ -1971,9 +1974,6 @@ pyserial==3.5
 
 # homeassistant.components.sesame
 pysesame2==1.0.1
-
-# homeassistant.components.goalfeed
-pysher==1.0.7
 
 # homeassistant.components.sia
 pysiaalarm==3.1.1
