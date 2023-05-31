@@ -20,7 +20,7 @@ else:
     import tomli as tomllib
 
 COMMENT_REQUIREMENTS = (
-    "Adafruit_BBIO",
+    "Adafruit-BBIO",
     "atenpdu",  # depends on pysnmp which is not maintained at this time
     "avea",  # depends on bluepy
     "avion",
@@ -28,9 +28,9 @@ COMMENT_REQUIREMENTS = (
     "beewi_smartclim",  # depends on bluepy
     "bluepy",
     "decora",
-    "decora_wifi",
+    "decora-wifi",
     "evdev",
-    "face_recognition",
+    "face-recognition",
     "opencv-python-headless",
     "pybluez",
     "pycups",

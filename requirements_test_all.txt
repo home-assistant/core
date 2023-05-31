@@ -367,7 +367,7 @@ beautifulsoup4==4.11.1
 bellows==0.35.5
 
 # homeassistant.components.bmw_connected_drive
-bimmer_connected==0.13.6
+bimmer-connected==0.13.6
 
 # homeassistant.components.bluetooth
 bleak-retry-connector==3.0.2
@@ -376,7 +376,7 @@ bleak-retry-connector==3.0.2
 bleak==0.20.2
 
 # homeassistant.components.blebox
-blebox_uniapi==2.1.4
+blebox-uniapi==2.1.4
 
 # homeassistant.components.blink
 blinkpy==0.21.0
@@ -497,16 +497,16 @@ doorbirdpy==2.1.0
 dremel3dpy==2.1.1
 
 # homeassistant.components.dsmr
-dsmr_parser==0.33
+dsmr-parser==0.33
 
 # homeassistant.components.dwd_weather_warnings
 dwdwfsapi==1.0.6
 
 # homeassistant.components.dynalite
-dynalite_devices==0.1.47
+dynalite-devices==0.1.47
 
 # homeassistant.components.dynalite
-dynalite_panel==0.0.4
+dynalite-panel==0.0.4
 
 # homeassistant.components.rainforest_eagle
 eagle100==0.1.1
@@ -521,10 +521,10 @@ elgato==4.0.1
 elkm1-lib==2.2.2
 
 # homeassistant.components.elmax
-elmax_api==0.0.4
+elmax-api==0.0.4
 
 # homeassistant.components.emulated_roku
-emulated_roku==0.2.1
+emulated-roku==0.2.1
 
 # homeassistant.components.huisbaasje
 energyflip-client==0.2.2
@@ -536,10 +536,10 @@ energyzero==0.4.1
 enocean==0.50
 
 # homeassistant.components.environment_canada
-env_canada==0.5.34
+env-canada==0.5.34
 
 # homeassistant.components.enphase_envoy
-envoy_reader==0.20.1
+envoy-reader==0.20.1
 
 # homeassistant.components.season
 ephem==4.1.2
@@ -551,7 +551,7 @@ epson-projector==0.5.0
 esphome-dashboard-api==1.2.3
 
 # homeassistant.components.eufylife_ble
-eufylife_ble_client==0.1.7
+eufylife-ble-client==0.1.7
 
 # homeassistant.components.faa_delays
 faadelays==0.0.7
@@ -572,7 +572,7 @@ fjaraskupan==2.2.0
 flipr-api==1.5.0
 
 # homeassistant.components.flux_led
-flux_led==0.28.37
+flux-led==0.28.37
 
 # homeassistant.components.homekit
 # homeassistant.components.recorder
@@ -582,7 +582,7 @@ fnv-hash-fast==0.3.1
 foobot_async==1.0.0
 
 # homeassistant.components.forecast_solar
-forecast_solar==3.0.0
+forecast-solar==3.0.0
 
 # homeassistant.components.freebox
 freebox-api==1.1.0
@@ -607,13 +607,13 @@ geocachingapi==0.2.1
 geopy==2.3.0
 
 # homeassistant.components.geo_rss_events
-georss_generic_client==0.6
+georss-generic-client==0.6
 
 # homeassistant.components.ign_sismologia
-georss_ign_sismologia_client==0.6
+georss-ign-sismologia-client==0.6
 
 # homeassistant.components.qld_bushfire
-georss_qld_bushfire_alert_client==0.5
+georss-qld-bushfire-alert-client==0.5
 
 # homeassistant.components.dlna_dmr
 # homeassistant.components.kef
@@ -627,7 +627,7 @@ getmac==0.8.2
 gios==3.1.0
 
 # homeassistant.components.glances
-glances_api==0.4.2
+glances-api==0.4.2
 
 # homeassistant.components.goalzero
 goalzero==0.2.1
@@ -658,7 +658,7 @@ govee-ble==0.23.0
 greeclimate==1.4.1
 
 # homeassistant.components.greeneye_monitor
-greeneye_monitor==3.0.3
+greeneye-monitor==3.0.3
 
 # homeassistant.components.pure_energie
 gridnet==4.2.0
@@ -704,10 +704,10 @@ hatasmota==0.6.5
 hdate==0.10.4
 
 # homeassistant.components.here_travel_time
-here_routing==0.2.0
+here-routing==0.2.0
 
 # homeassistant.components.here_travel_time
-here_transit==1.2.0
+here-transit==1.2.0
 
 # homeassistant.components.hlk_sw16
 hlk-sw16==0.0.9
@@ -746,7 +746,7 @@ hyperion-py==0.7.5
 iaqualink==0.5.0
 
 # homeassistant.components.ibeacon
-ibeacon_ble==1.0.1
+ibeacon-ble==1.0.1
 
 # homeassistant.components.local_calendar
 ical==4.5.1
@@ -794,7 +794,7 @@ justnimbus==0.6.0
 kegtron-ble==0.4.0
 
 # homeassistant.components.knx
-knx_frontend==2023.5.31.141540
+knx-frontend==2023.5.31.141540
 
 # homeassistant.components.konnected
 konnected==1.2.0
@@ -806,7 +806,7 @@ krakenex==2.1.0
 lacrosse-view==1.0.1
 
 # homeassistant.components.laundrify
-laundrify_aio==1.1.2
+laundrify-aio==1.1.2
 
 # homeassistant.components.ld2410_ble
 ld2410-ble==0.1.1
@@ -827,7 +827,7 @@ libsoundtouch==0.8
 life360==5.5.0
 
 # homeassistant.components.logi_circle
-logi_circle==0.2.3
+logi-circle==0.2.3
 
 # homeassistant.components.luftdaten
 luftdaten==0.7.4
@@ -878,7 +878,7 @@ moat-ble==0.1.1
 moehlenhoff-alpha2==1.3.0
 
 # homeassistant.components.mopeka
-mopeka_iot_ble==0.4.1
+mopeka-iot-ble==0.4.1
 
 # homeassistant.components.motion_blinds
 motionblinds==0.6.18
