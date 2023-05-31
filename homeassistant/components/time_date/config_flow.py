@@ -24,6 +24,7 @@ class TimeDateConfigFlow(ConfigFlow, domain=DOMAIN):
         display_options = {
             CONF_DISPLAY_OPTIONS: config[CONF_DISPLAY_OPTIONS],
         }
+        self._async_abort_entries_match(display_options)
         return await self.async_step_user(user_input=display_options)
 
     async def async_step_user(
