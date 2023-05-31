@@ -52,6 +52,12 @@ PyChromecast==13.0.7
 # homeassistant.components.flick_electric
 PyFlick==0.0.2
 
+# homeassistant.components.flume
+PyFlume==0.6.5
+
+# homeassistant.components.fronius
+PyFronius==0.7.1
+
 # homeassistant.components.met_eireann
 PyMetEireann==2021.8.0
 
@@ -1217,9 +1223,6 @@ pyfireservicerota==0.0.43
 # homeassistant.components.flic
 pyflic==2.0.3
 
-# homeassistant.components.flume
-pyflume==0.6.5
-
 # homeassistant.components.forked_daapd
 pyforked-daapd==0.1.14
 
@@ -1228,9 +1231,6 @@ pyfreedompro==1.1.0
 
 # homeassistant.components.fritzbox
 pyfritzhome==0.6.8
-
-# homeassistant.components.fronius
-pyfronius==0.7.1
 
 # homeassistant.components.ifttt
 pyfttt==0.3
