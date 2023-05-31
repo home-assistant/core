@@ -10,6 +10,7 @@ from roborock.local_api import RoborockLocalClient
 from roborock.roborock_typing import DeviceProp
 
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
@@ -40,6 +41,13 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
         )
         device_info = DeviceData(device, product_info.model, device_networking.ip)
         self.api = RoborockLocalClient(device_info)
+        self.device_specification = DeviceInfo(
+            name=self.device_info.device.name,
+            identifiers={(DOMAIN, self.device_info.device.duid)},
+            manufacturer="Roborock",
+            model=self.device_info.product.model,
+            sw_version=self.device_info.device.fv,
+        )
 
     async def release(self) -> None:
         """Disconnect from API."""
