@@ -22,7 +22,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
     except WarrantException as ex:
         LOGGER.error("Schlage authentication failed: %s", ex)
-        # TODO(@dknowles2): raise ConfigEntryAuthFailed to start a reauth flow.
         return False
 
     coordinator = SchlageDataUpdateCoordinator(hass, pyschlage.Schlage(auth))
