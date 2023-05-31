@@ -422,4 +422,25 @@ DEMO_DEVICES = [
         "type": "action.devices.types.LIGHT",
         "willReportState": False,
     },
+    {
+        "id": "light.bathroom_ct_lights",
+        "name": {"name": "Bathroom CT Lights"},
+        "traits": [
+            "action.devices.traits.OnOff",
+            "action.devices.traits.Brightness",
+            "action.devices.traits.ColorSetting",
+        ],
+        "type": "action.devices.types.LIGHT",
+        "willReportState": False,
+    },
+    {
+        "id": "light.garage_brightness_lights",
+        "name": {"name": "Garage Brightness Lights"},
+        "traits": [
+            "action.devices.traits.OnOff",
+            "action.devices.traits.Brightness",
+        ],
+        "type": "action.devices.types.LIGHT",
+        "willReportState": False,
+    },
 ]
