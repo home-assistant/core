@@ -1101,10 +1101,13 @@ def no_yaml_config_schema(domain: str) -> Callable[[dict], dict]:
             HOMEASSISTANT_DOMAIN,
             f"integration_key_no_support_{domain}",
             is_fixable=False,
-            severity=IssueSeverity.ERROR,
             issue_domain=domain,
+            severity=IssueSeverity.ERROR,
             translation_key="integration_key_no_support",
-            translation_placeholders={"domain": domain},
+            translation_placeholders={
+                "domain": domain,
+                "add_integration": f"/_my_redirect/config_flow_start?domain={domain}",
+            },
         )
 
     def validator(config: dict) -> dict:
