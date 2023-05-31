@@ -6,7 +6,6 @@ from requests.exceptions import ConnectTimeout
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components.persistent_notification import create as notify_create
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
