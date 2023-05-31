@@ -151,7 +151,7 @@ async def websocket_run(
         # Input to conversation agent
         input_args["intent_input"] = msg["input"]["text"]
     elif start_stage == PipelineStage.TTS:
-        # Input to text to speech system
+        # Input to text-to-speech system
         input_args["tts_input"] = msg["input"]["text"]
 
     input_args["run"] = PipelineRun(

@@ -125,7 +125,7 @@ async def _async_resolve_default_pipeline_settings(
             stt_language = stt_languages[0]
         else:
             _LOGGER.debug(
-                "Speech to text engine '%s' does not support language '%s'",
+                "Speech-to-text engine '%s' does not support language '%s'",
                 stt_engine_id,
                 pipeline_language,
             )
@@ -152,7 +152,7 @@ async def _async_resolve_default_pipeline_settings(
                 tts_voice = tts_voices[0].voice_id
         else:
             _LOGGER.debug(
-                "Text to speech engine '%s' does not support language '%s'",
+                "Text-to-speech engine '%s' does not support language '%s'",
                 tts_engine_id,
                 pipeline_language,
             )
@@ -387,7 +387,7 @@ class PipelineRun:
         )
 
     async def prepare_speech_to_text(self, metadata: stt.SpeechMetadata) -> None:
-        """Prepare speech to text."""
+        """Prepare speech-to-text."""
         # pipeline.stt_engine can't be None or this function is not called
         stt_provider = stt.async_get_speech_to_text_engine(
             self.hass,
@@ -398,7 +398,7 @@ class PipelineRun:
             engine = self.pipeline.stt_engine
             raise SpeechToTextError(
                 code="stt-provider-missing",
-                message=f"No speech to text provider for: {engine}",
+                message=f"No speech-to-text provider for: {engine}",
             )
 
         metadata.language = self.pipeline.stt_language or self.language
@@ -419,7 +419,7 @@ class PipelineRun:
         metadata: stt.SpeechMetadata,
         stream: AsyncIterable[bytes],
     ) -> str:
-        """Run speech to text portion of pipeline. Returns the spoken text."""
+        """Run speech-to-text portion of pipeline. Returns the spoken text."""
         if isinstance(self.stt_provider, stt.Provider):
             engine = self.stt_provider.name
         else:
@@ -441,10 +441,10 @@ class PipelineRun:
                 metadata, stream
             )
         except Exception as src_error:
-            _LOGGER.exception("Unexpected error during speech to text")
+            _LOGGER.exception("Unexpected error during speech-to-text")
             raise SpeechToTextError(
                 code="stt-stream-failed",
-                message="Unexpected error during speech to text",
+                message="Unexpected error during speech-to-text",
             ) from src_error
 
         _LOGGER.debug("speech-to-text result %s", result)
@@ -452,7 +452,7 @@ class PipelineRun:
         if result.result != stt.SpeechResultState.SUCCESS:
             raise SpeechToTextError(
                 code="stt-stream-failed",
-                message="Speech to text failed",
+                message="speech-to-text failed",
             )
 
         if not result.text:
@@ -541,7 +541,7 @@ class PipelineRun:
         return speech
 
     async def prepare_text_to_speech(self) -> None:
-        """Prepare text to speech."""
+        """Prepare text-to-speech."""
         # pipeline.tts_engine can't be None or this function is not called
         engine = cast(str, self.pipeline.tts_engine)
 
@@ -562,13 +562,13 @@ class PipelineRun:
         except HomeAssistantError as err:
             raise TextToSpeechError(
                 code="tts-not-supported",
-                message=f"Text to speech engine '{engine}' not found",
+                message=f"Text-to-speech engine '{engine}' not found",
             ) from err
         if not options_supported:
             raise TextToSpeechError(
                 code="tts-not-supported",
                 message=(
-                    f"Text to speech engine {engine} "
+                    f"Text-to-speech engine {engine} "
                     f"does not support language {self.pipeline.tts_language} or options {tts_options}"
                 ),
             )
@@ -577,7 +577,7 @@ class PipelineRun:
         self.tts_options = tts_options
 
     async def text_to_speech(self, tts_input: str) -> str:
-        """Run text to speech portion of pipeline. Returns URL of TTS audio."""
+        """Run text-to-speech portion of pipeline. Returns URL of TTS audio."""
         self.process_event(
             PipelineEvent(
                 PipelineEventType.TTS_START,
@@ -605,10 +605,10 @@ class PipelineRun:
                 None,
             )
         except Exception as src_error:
-            _LOGGER.exception("Unexpected error during text to speech")
+            _LOGGER.exception("Unexpected error during text-to-speech")
             raise TextToSpeechError(
                 code="tts-failed",
-                message="Unexpected error during text to speech",
+                message="Unexpected error during text-to-speech",
             ) from src_error
 
         _LOGGER.debug("TTS result %s", tts_media)
@@ -644,7 +644,7 @@ class PipelineInput:
     """Input for conversation agent. Required when start_stage = intent."""
 
     tts_input: str | None = None
-    """Input for text to speech. Required when start_stage = tts."""
+    """Input for text-to-speech. Required when start_stage = tts."""
 
     conversation_id: str | None = None
 
@@ -654,7 +654,7 @@ class PipelineInput:
         current_stage = self.run.start_stage
 
         try:
-            # Speech to text
+            # speech-to-text
             intent_input = self.intent_input
             if current_stage == PipelineStage.STT:
                 assert self.stt_metadata is not None
@@ -696,15 +696,15 @@ class PipelineInput:
         if self.run.start_stage == PipelineStage.STT:
             if self.run.pipeline.stt_engine is None:
                 raise PipelineRunValidationError(
-                    "the pipeline does not support speech to text"
+                    "the pipeline does not support speech-to-text"
                 )
             if self.stt_metadata is None:
                 raise PipelineRunValidationError(
-                    "stt_metadata is required for speech to text"
+                    "stt_metadata is required for speech-to-text"
                 )
             if self.stt_stream is None:
                 raise PipelineRunValidationError(
-                    "stt_stream is required for speech to text"
+                    "stt_stream is required for speech-to-text"
                 )
         elif self.run.start_stage == PipelineStage.INTENT:
             if self.intent_input is None:
@@ -714,12 +714,12 @@ class PipelineInput:
         elif self.run.start_stage == PipelineStage.TTS:
             if self.tts_input is None:
                 raise PipelineRunValidationError(
-                    "tts_input is required for text to speech"
+                    "tts_input is required for text-to-speech"
                 )
         if self.run.end_stage == PipelineStage.TTS:
             if self.run.pipeline.tts_engine is None:
                 raise PipelineRunValidationError(
-                    "the pipeline does not support text to speech"
+                    "the pipeline does not support text-to-speech"
                 )
 
         start_stage_index = PIPELINE_STAGE_ORDER.index(self.run.start_stage)
