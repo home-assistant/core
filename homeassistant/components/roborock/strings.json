@@ -97,6 +97,11 @@
         }
       }
     },
+    "switch": {
+      "child_lock": {
+        "name": "Child lock"
+      }
+    },
     "vacuum": {
       "roborock": {
         "state_attributes": {
