@@ -50,7 +50,18 @@ SWITCH_DESCRIPTIONS: list[RoborockSwitchDescription] = [
         translation_key="child_lock",
         icon="mdi:account-lock",
         entity_category=EntityCategory.CONFIG,
-    )
+    ),
+    RoborockSwitchDescription(
+        set_command=lambda entity, value: entity.send(
+            RoborockCommand.SET_FLOW_LED_STATUS, {"status": 1 if value else 0}
+        ),
+        get_value=lambda data: data.send(RoborockCommand.GET_FLOW_LED_STATUS),
+        evaluate_value=lambda data: data["status"] == 1,
+        key="status_indicator",
+        translation_key="status_indicator",
+        icon="mdi:alarm-light-outline",
+        entity_category=EntityCategory.CONFIG,
+    ),
 ]
 
 
