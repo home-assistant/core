@@ -332,11 +332,12 @@ class GlancesSensor(CoordinatorEntity[GlancesDataUpdateCoordinator], SensorEntit
     def available(self) -> bool:
         """Set sensor unavailable when native value is invalid."""
         if super().available:
+            value = self.native_value
             return (
                 not self._numeric_state_expected
-                or isinstance(self.native_value, (int, float))
-                or isinstance(self.native_value, str)
-                and self.native_value.isnumeric()
+                or isinstance(value, (int, float))
+                or isinstance(value, str)
+                and value.isnumeric()
             )
         return False
 
