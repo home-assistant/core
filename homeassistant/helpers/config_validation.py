@@ -1112,7 +1112,7 @@ def no_yaml_config_schema(domain: str) -> Callable[[dict], dict]:
             logger_func(
                 (
                     "The %s integration does not support YAML setup, please remove it "
-                    "from your configuration"
+                    "from your configuration file"
                 ),
                 domain,
             )
