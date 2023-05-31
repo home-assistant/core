@@ -40,6 +40,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
     dispatcher_send,
 )
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
     CONF_CAT,
@@ -80,6 +81,7 @@ from .const import (
     SRV_X10_ALL_LIGHTS_ON,
     SRV_X10_ALL_UNITS_OFF,
 )
+from .insteon_entity import InsteonEntity
 from .ipdb import get_device_platform_groups, get_device_platforms
 from .schemas import (
     ADD_ALL_LINK_SCHEMA,
@@ -388,8 +390,8 @@ def print_aldb_to_log(aldb):
 def async_add_insteon_entities(
     hass: HomeAssistant,
     platform: Platform,
-    entity_type: type,
-    async_add_entities: Callable,
+    entity_type: type[InsteonEntity],
+    async_add_entities: AddEntitiesCallback,
     discovery_info: dict[str, Any],
 ) -> None:
     """Add an Insteon group to a platform."""
@@ -405,8 +407,8 @@ def async_add_insteon_entities(
 def async_add_insteon_devices(
     hass: HomeAssistant,
     platform: Platform,
-    entity_type: type,
-    async_add_entities: Callable,
+    entity_type: type[InsteonEntity],
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Add all entities to a platform."""
     for address in devices:
