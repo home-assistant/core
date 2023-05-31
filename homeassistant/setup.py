@@ -227,6 +227,7 @@ async def _async_setup_component(
         domain in processed_config
         and not hasattr(component, "async_setup")
         and not hasattr(component, "setup")
+        and not hasattr(component, "CONFIG_SCHEMA")
     ):
         _LOGGER.error(
             (
