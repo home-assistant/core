@@ -29,7 +29,7 @@ class AirzoneEntity(CoordinatorEntity[AirzoneUpdateCoordinator], ABC):
 
     @property
     def available(self) -> bool:
-        """Return zone availability."""
+        """Return Airzone Cloud entity availability."""
         return super().available and self.get_airzone_value(AZD_AVAILABLE)
 
     @abstractmethod
