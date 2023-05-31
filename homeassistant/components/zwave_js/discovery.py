@@ -722,9 +722,10 @@ DISCOVERY_SCHEMAS = [
         hint="numeric_sensor",
         primary_value=ZWaveValueDiscoverySchema(
             command_class={
-                CommandClass.SENSOR_MULTILEVEL,
-                CommandClass.SENSOR_ALARM,
                 CommandClass.BATTERY,
+                CommandClass.ENERGY_PRODUCTION,
+                CommandClass.SENSOR_ALARM,
+                CommandClass.SENSOR_MULTILEVEL,
             },
             type={ValueType.NUMBER},
         ),
