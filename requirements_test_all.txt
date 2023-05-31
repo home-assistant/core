@@ -82,6 +82,9 @@ PySocks==1.7.1
 # homeassistant.components.switchbot
 PySwitchbot==0.37.6
 
+# homeassistant.components.syncthru
+PySyncThru==0.7.10
+
 # homeassistant.components.transport_nsw
 PyTransportNSW==0.1.1
 
@@ -1493,9 +1496,6 @@ pysqueezebox==0.6.3
 
 # homeassistant.components.switchbee
 pyswitchbee==1.8.0
-
-# homeassistant.components.syncthru
-pysyncthru==0.7.10
 
 # homeassistant.components.tankerkoenig
 pytankerkoenig==0.0.6
