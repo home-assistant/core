@@ -1019,7 +1019,7 @@ def init_recorder_component(hass, add_config=None, db_url="sqlite://"):
 
 def mock_restore_cache(hass: HomeAssistant, states: Sequence[State]) -> None:
     """Mock the DATA_RESTORE_CACHE."""
-    key = restore_state.DATA_RESTORE_STATE_TASK
+    key = restore_state.DATA_RESTORE_STATE
     data = restore_state.RestoreStateData(hass)
     now = date_util.utcnow()
 
@@ -1046,7 +1046,7 @@ def mock_restore_cache_with_extra_data(
     hass: HomeAssistant, states: Sequence[tuple[State, Mapping[str, Any]]]
 ) -> None:
     """Mock the DATA_RESTORE_CACHE."""
-    key = restore_state.DATA_RESTORE_STATE_TASK
+    key = restore_state.DATA_RESTORE_STATE
     data = restore_state.RestoreStateData(hass)
     now = date_util.utcnow()
 

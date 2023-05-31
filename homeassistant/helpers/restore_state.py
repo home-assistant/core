@@ -19,7 +19,7 @@ from .event import async_track_time_interval
 from .json import JSONEncoder
 from .storage import Store
 
-DATA_RESTORE_STATE_TASK = "restore_state_task"
+DATA_RESTORE_STATE = "restore_state"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -96,13 +96,13 @@ class StoredState:
 
 async def async_load(hass: HomeAssistant) -> None:
     """Load the restore state task."""
-    hass.data[DATA_RESTORE_STATE_TASK] = await RestoreStateData.async_get_instance(hass)
+    hass.data[DATA_RESTORE_STATE] = await RestoreStateData.async_get_instance(hass)
 
 
 @callback
 def async_get(hass: HomeAssistant) -> RestoreStateData:
     """Get the restore state data helper."""
-    return cast(RestoreStateData, hass.data[DATA_RESTORE_STATE_TASK])
+    return cast(RestoreStateData, hass.data[DATA_RESTORE_STATE])
 
 
 class RestoreStateData:

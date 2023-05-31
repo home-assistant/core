@@ -8,7 +8,7 @@ from homeassistant.core import CoreState, HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.restore_state import (
-    DATA_RESTORE_STATE_TASK,
+    DATA_RESTORE_STATE,
     STORAGE_KEY,
     RestoreEntity,
     RestoreStateData,
@@ -35,7 +35,7 @@ async def test_caching_data(hass: HomeAssistant) -> None:
     await data.store.async_save([state.as_dict() for state in stored_states])
 
     # Emulate a fresh load
-    hass.data.pop(DATA_RESTORE_STATE_TASK)
+    hass.data.pop(DATA_RESTORE_STATE)
 
     with patch(
         "homeassistant.helpers.restore_state.Store.async_load",
@@ -75,7 +75,7 @@ async def test_periodic_write(hass: HomeAssistant) -> None:
     await data.store.async_save([])
 
     # Emulate a fresh load
-    hass.data.pop(DATA_RESTORE_STATE_TASK)
+    hass.data.pop(DATA_RESTORE_STATE)
     await async_load(hass)
     data = async_get(hass)
 
@@ -123,7 +123,7 @@ async def test_save_persistent_states(hass: HomeAssistant) -> None:
     await data.store.async_save([])
 
     # Emulate a fresh load
-    hass.data.pop(DATA_RESTORE_STATE_TASK)
+    hass.data.pop(DATA_RESTORE_STATE)
     await async_load(hass)
     data = async_get(hass)
 
@@ -191,7 +191,7 @@ async def test_hass_starting(hass: HomeAssistant) -> None:
 
     # Emulate a fresh load
     hass.state = CoreState.not_running
-    hass.data.pop(DATA_RESTORE_STATE_TASK)
+    hass.data.pop(DATA_RESTORE_STATE)
     await async_load(hass)
     data = async_get(hass)
 
