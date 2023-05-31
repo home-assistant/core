@@ -132,6 +132,10 @@ RestrictedPython==6.0
 # homeassistant.components.remember_the_milk
 RtmAPI==0.7.2
 
+# homeassistant.components.recorder
+# homeassistant.components.sql
+SQLAlchemy==2.0.15
+
 # homeassistant.components.travisci
 TravisPy==0.3.5
 
@@ -2421,10 +2425,6 @@ spiderpy==1.6.1
 
 # homeassistant.components.spotify
 spotipy==2.23.0
-
-# homeassistant.components.recorder
-# homeassistant.components.sql
-sqlalchemy==2.0.15
 
 # homeassistant.components.srp_energy
 srpenergy==1.3.6
