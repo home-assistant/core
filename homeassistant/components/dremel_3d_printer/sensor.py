@@ -44,6 +44,8 @@ class Dremel3DPrinterSensorEntityDescription(
 ):
     """Describes a Dremel 3D Printer sensor."""
 
+    available_fn: Callable[[Dremel3DPrinter, str], bool] = lambda api, _: True
+
 
 SENSOR_TYPES: tuple[Dremel3DPrinterSensorEntityDescription, ...] = (
     Dremel3DPrinterSensorEntityDescription(
@@ -56,6 +58,7 @@ SENSOR_TYPES: tuple[Dremel3DPrinterSensorEntityDescription, ...] = (
         key="remaining_time",
         name="Remaining time",
         device_class=SensorDeviceClass.TIMESTAMP,
+        available_fn=lambda api, key: api.get_job_status()[key] > 0,
         value_fn=ignore_variance(
             lambda api, key: utcnow() - timedelta(seconds=api.get_job_status()[key]),
             timedelta(minutes=2),
@@ -89,7 +92,7 @@ SENSOR_TYPES: tuple[Dremel3DPrinterSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        value_fn=lambda api, key: api.get_temperature_type(ATTR_PLATFORM),
+        value_fn=lambda api, _: api.get_temperature_type(ATTR_PLATFORM),
     ),
     Dremel3DPrinterSensorEntityDescription(
         key="target_platform_temperature",
@@ -170,6 +173,7 @@ SENSOR_TYPES: tuple[Dremel3DPrinterSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
+        available_fn=lambda api, _: api.get_printing_status() == "building",
         value_fn=ignore_variance(
             lambda api, key: utcnow() - timedelta(seconds=api.get_job_status()[key]),
             timedelta(minutes=2),
@@ -181,6 +185,7 @@ SENSOR_TYPES: tuple[Dremel3DPrinterSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
+        available_fn=lambda api, key: api.get_job_status()[key] > 0,
         value_fn=ignore_variance(
             lambda api, key: utcnow() - timedelta(seconds=api.get_job_status()[key]),
             timedelta(minutes=2),
@@ -265,6 +270,13 @@ class Dremel3DPrinterSensor(Dremel3DPrinterEntity, SensorEntity):
     """Representation of an Dremel 3D Printer sensor."""
 
     entity_description: Dremel3DPrinterSensorEntityDescription
+
+    @property
+    def available(self) -> bool:
+        """Return True if the entity is available."""
+        return super().available and self.entity_description.available_fn(
+            self._api, self.entity_description.key
+        )
 
     @property
     def native_value(self) -> StateType | datetime:
