@@ -16,7 +16,9 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from .const import DOMAIN
 from .models import MyStromData
 
-PLATFORMS: list[Platform] = [Platform.SWITCH, Platform.LIGHT]
+PLATFORMS_SWITCH = [Platform.SWITCH]
+PLATFORMS_BULB = [Platform.LIGHT]
+PLATFORMS = [Platform.SWITCH, Platform.LIGHT]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,9 +36,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     device_type = info["type"]
     if device_type in [101, 106, 107]:
         device = MyStromSwitch(host)
+        platforms = PLATFORMS_SWITCH
     elif device_type == 102:
         mac = info["mac"]
         device = MyStromBulb(host, mac)
+        platforms = PLATFORMS_BULB
         if device.bulb_type not in ["rgblamp", "strip"]:
             _LOGGER.error(
                 "Device %s (%s) is not a myStrom bulb nor myStrom LED Strip",
@@ -58,7 +62,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         device=device,
         info=info,
     )
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, platforms)
 
     return True
 

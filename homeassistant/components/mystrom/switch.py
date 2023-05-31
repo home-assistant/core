@@ -69,7 +69,7 @@ async def async_setup_platform(
 class MyStromSwitch(SwitchEntity):
     """Representation of a myStrom switch/plug."""
 
-    def __init__(self, plug, name) -> None:
+    def __init__(self, plug, name):
         """Initialize the myStrom switch/plug."""
         self.plug = plug
         self._attr_name = name
