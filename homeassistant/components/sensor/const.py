@@ -8,6 +8,7 @@ import voluptuous as vol
 from homeassistant.backports.enum import StrEnum
 from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    CONCENTRATION_PARTS_PER_BILLION,
     CONCENTRATION_PARTS_PER_MILLION,
     LIGHT_LUX,
     PERCENTAGE,
@@ -347,6 +348,12 @@ class SensorDeviceClass(StrEnum):
     Unit of measurement: `µg/m³`
     """
 
+    VOLATILE_ORGANIC_COMPOUNDS_PARTS = "volatile_organic_compounds_parts"
+    """Ratio of VOC.
+
+    Unit of measurement: `ppm`, `ppb`
+    """
+
     VOLTAGE = "voltage"
     """Voltage.
 
@@ -443,8 +450,6 @@ STATE_CLASS_TOTAL: Final = "total"
 STATE_CLASS_TOTAL_INCREASING: Final = "total_increasing"
 STATE_CLASSES: Final[list[str]] = [cls.value for cls in SensorStateClass]
 
-# Note: this needs to be aligned with frontend: OVERRIDE_SENSOR_UNITS in
-# `entity-registry-settings.ts`
 UNIT_CONVERTERS: dict[SensorDeviceClass | str | None, type[BaseUnitConverter]] = {
     SensorDeviceClass.ATMOSPHERIC_PRESSURE: PressureConverter,
     SensorDeviceClass.CURRENT: ElectricCurrentConverter,
@@ -461,6 +466,7 @@ UNIT_CONVERTERS: dict[SensorDeviceClass | str | None, type[BaseUnitConverter]] =
     SensorDeviceClass.PRESSURE: PressureConverter,
     SensorDeviceClass.SPEED: SpeedConverter,
     SensorDeviceClass.TEMPERATURE: TemperatureConverter,
+    SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS_PARTS: UnitlessRatioConverter,
     SensorDeviceClass.VOLTAGE: ElectricPotentialConverter,
     SensorDeviceClass.VOLUME: VolumeConverter,
     SensorDeviceClass.VOLUME_STORAGE: VolumeConverter,
@@ -523,6 +529,10 @@ DEVICE_CLASS_UNITS: dict[SensorDeviceClass, set[type[StrEnum] | str | None]] = {
     SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS: {
         CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
     },
+    SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS_PARTS: {
+        CONCENTRATION_PARTS_PER_BILLION,
+        CONCENTRATION_PARTS_PER_MILLION,
+    },
     SensorDeviceClass.VOLTAGE: set(UnitOfElectricPotential),
     SensorDeviceClass.VOLUME: set(UnitOfVolume),
     SensorDeviceClass.WATER: {
@@ -582,6 +592,7 @@ DEVICE_CLASS_STATE_CLASSES: dict[SensorDeviceClass, set[SensorStateClass]] = {
     SensorDeviceClass.TEMPERATURE: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.TIMESTAMP: set(),
     SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS: {SensorStateClass.MEASUREMENT},
+    SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS_PARTS: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.VOLTAGE: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.VOLUME: {
         SensorStateClass.TOTAL,

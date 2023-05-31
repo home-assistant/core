@@ -41,6 +41,7 @@
       "is_temperature": "Current {entity_name} temperature",
       "is_value": "Current {entity_name} value",
       "is_volatile_organic_compounds": "Current {entity_name} volatile organic compounds concentration level",
+      "is_volatile_organic_compounds_parts": "[%key:component::sensor::device_automation::condition_type::is_volatile_organic_compounds%]",
       "is_voltage": "Current {entity_name} voltage",
       "is_volume": "Current {entity_name} volume",
       "is_water": "Current {entity_name} water",
@@ -87,6 +88,7 @@
       "temperature": "{entity_name} temperature changes",
       "value": "{entity_name} value changes",
       "volatile_organic_compounds": "{entity_name} volatile organic compounds concentration changes",
+      "volatile_organic_compounds_parts": "[%key:component::sensor::device_automation::trigger_type::volatile_organic_compounds%]",
       "voltage": "{entity_name} voltage changes",
       "volume": "{entity_name} volume changes",
       "water": "{entity_name} water changes",
@@ -244,6 +246,9 @@
     "volatile_organic_compounds": {
       "name": "VOCs"
     },
+    "volatile_organic_compounds_parts": {
+      "name": "[%key:component::sensor::entity_component::volatile_organic_compounds::name%]"
+    },
     "voltage": {
       "name": "Voltage"
     },
@@ -261,6 +266,12 @@
     },
     "wind_speed": {
       "name": "Wind speed"
+    }
+  },
+  "issues": {
+    "platform_integration_no_support": {
+      "title": "[%key:common::issues::platform_integration_no_support_title%]",
+      "description": "[%key:common::issues::platform_integration_no_support_description%]"
     }
   }
 }

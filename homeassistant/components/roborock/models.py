@@ -2,7 +2,7 @@
 from dataclasses import dataclass
 
 from roborock.containers import HomeDataDevice, HomeDataProduct, NetworkInfo
-from roborock.typing import DeviceProp
+from roborock.roborock_typing import DeviceProp
 
 
 @dataclass

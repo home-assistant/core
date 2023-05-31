@@ -93,6 +93,16 @@ class AdvantageAirAC(AdvantageAirAcEntity, ClimateEntity):
     _attr_min_temp = 16
     _attr_preset_modes = [ADVANTAGE_AIR_MYZONE]
 
+    _attr_hvac_modes = [
+        HVACMode.OFF,
+        HVACMode.COOL,
+        HVACMode.HEAT,
+        HVACMode.FAN_ONLY,
+        HVACMode.DRY,
+    ]
+
+    _attr_supported_features = ClimateEntityFeature.FAN_MODE
+
     def __init__(self, instance: AdvantageAirData, ac_key: str) -> None:
         """Initialize an AdvantageAir AC unit."""
         super().__init__(instance, ac_key)
@@ -101,35 +111,14 @@ class AdvantageAirAC(AdvantageAirAcEntity, ClimateEntity):
         # Set supported features and HVAC modes based on current operating mode
         if self._ac.get(ADVANTAGE_AIR_MYAUTO_ENABLED):
             # MyAuto
-            self._attr_supported_features = (
-                ClimateEntityFeature.FAN_MODE
-                | ClimateEntityFeature.TARGET_TEMPERATURE
+            self._attr_supported_features |= (
+                ClimateEntityFeature.TARGET_TEMPERATURE
                 | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
             )
-            self._attr_hvac_modes = [
-                HVACMode.OFF,
-                HVACMode.COOL,
-                HVACMode.HEAT,
-                HVACMode.FAN_ONLY,
-                HVACMode.DRY,
-                HVACMode.HEAT_COOL,
-            ]
-        elif self._ac.get(ADVANTAGE_AIR_MYTEMP_ENABLED):
-            # MyTemp
-            self._attr_supported_features = ClimateEntityFeature.FAN_MODE
-            self._attr_hvac_modes = [HVACMode.OFF, HVACMode.COOL, HVACMode.HEAT]
-        else:
+            self._attr_hvac_modes += [HVACMode.HEAT_COOL]
+        elif not self._ac.get(ADVANTAGE_AIR_MYTEMP_ENABLED):
             # MyZone
-            self._attr_supported_features = (
-                ClimateEntityFeature.FAN_MODE | ClimateEntityFeature.TARGET_TEMPERATURE
-            )
-            self._attr_hvac_modes = [
-                HVACMode.OFF,
-                HVACMode.COOL,
-                HVACMode.HEAT,
-                HVACMode.FAN_ONLY,
-                HVACMode.DRY,
-            ]
+            self._attr_supported_features |= ClimateEntityFeature.TARGET_TEMPERATURE
 
         # Add "MyTemp" preset if available
         if ADVANTAGE_AIR_MYTEMP_ENABLED in self._ac:

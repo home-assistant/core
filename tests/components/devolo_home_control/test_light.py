@@ -1,16 +1,11 @@
 """Tests for the devolo Home Control light platform."""
 from unittest.mock import patch
 
-from homeassistant.components.light import (
-    ATTR_BRIGHTNESS,
-    ATTR_COLOR_MODE,
-    ATTR_SUPPORTED_COLOR_MODES,
-    DOMAIN,
-    ColorMode,
-)
+from syrupy.assertion import SnapshotAssertion
+
+from homeassistant.components.light import ATTR_BRIGHTNESS, DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    ATTR_FRIENDLY_NAME,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_OFF,
@@ -18,12 +13,15 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 from . import configure_integration
 from .mocks import BinarySwitchPropertyMock, HomeControlMock, HomeControlMockLight
 
 
-async def test_light_without_binary_sensor(hass: HomeAssistant) -> None:
+async def test_light_without_binary_sensor(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, snapshot: SnapshotAssertion
+) -> None:
     """Test setup and state change of a light device that does not have an additional binary sensor."""
     entry = configure_integration(hass)
     test_gateway = HomeControlMockLight()
@@ -35,18 +33,8 @@ async def test_light_without_binary_sensor(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     state = hass.states.get(f"{DOMAIN}.test")
-    assert state is not None
-    assert state.state == STATE_ON
-    assert state.attributes[ATTR_FRIENDLY_NAME] == "Test"
-    assert state.attributes[ATTR_COLOR_MODE] == ColorMode.BRIGHTNESS
-    assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.BRIGHTNESS]
-    assert state.attributes[ATTR_BRIGHTNESS] == round(
-        test_gateway.devices["Test"]
-        .multi_level_switch_property["devolo.Dimmer:Test"]
-        .value
-        / 100
-        * 255
-    )
+    assert state == snapshot
+    assert entity_registry.async_get(f"{DOMAIN}.test") == snapshot
 
     # Emulate websocket message: brightness changed
     test_gateway.publisher.dispatch("Test", ("devolo.Dimmer:Test", 0.0))
@@ -96,7 +84,9 @@ async def test_light_without_binary_sensor(hass: HomeAssistant) -> None:
     assert hass.states.get(f"{DOMAIN}.test").state == STATE_UNAVAILABLE
 
 
-async def test_light_with_binary_sensor(hass: HomeAssistant) -> None:
+async def test_light_with_binary_sensor(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, snapshot: SnapshotAssertion
+) -> None:
     """Test setup and state change of a light device that has an additional binary sensor."""
     entry = configure_integration(hass)
     test_gateway = HomeControlMockLight()
@@ -111,8 +101,8 @@ async def test_light_with_binary_sensor(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     state = hass.states.get(f"{DOMAIN}.test")
-    assert state is not None
-    assert state.state == STATE_ON
+    assert state == snapshot
+    assert entity_registry.async_get(f"{DOMAIN}.test") == snapshot
 
     # Emulate websocket message: brightness changed
     test_gateway.publisher.dispatch("Test", ("devolo.Dimmer:Test", 0.0))

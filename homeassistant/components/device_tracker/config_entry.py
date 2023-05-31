@@ -176,7 +176,9 @@ def _async_register_mac(
         # Enable entity
         ent_reg.async_update_entity(entity_id, disabled_by=None)
 
-    hass.bus.async_listen(dr.EVENT_DEVICE_REGISTRY_UPDATED, handle_device_event)
+    hass.bus.async_listen(
+        dr.EVENT_DEVICE_REGISTRY_UPDATED, handle_device_event, run_immediately=True
+    )
 
 
 class BaseTrackerEntity(Entity):

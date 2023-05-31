@@ -73,6 +73,15 @@ _StateDataType = list[tuple[_MqttMessageType, str | None, _AttributesType | None
 MQTT_YAML_SCHEMA = vol.Schema({mqtt.DOMAIN: PLATFORM_CONFIG_SCHEMA_BASE})
 
 
+def help_all_subscribe_calls(mqtt_client_mock: MqttMockPahoClient) -> list[Any]:
+    """Test of a call."""
+    all_calls = []
+    for calls in mqtt_client_mock.subscribe.mock_calls:
+        for call in calls[1]:
+            all_calls.extend(call)
+    return all_calls
+
+
 def help_test_validate_platform_config(
     hass: HomeAssistant, config: ConfigType
 ) -> ConfigType | None:
