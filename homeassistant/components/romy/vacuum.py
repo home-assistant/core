@@ -184,29 +184,3 @@ class RomyVacuumEntity(CoordinatorEntity[RomyVacuumCoordinator], StateVacuumEnti
         """Set fan speed."""
         LOGGER.debug("async_set_fan_speed to %s", fan_speed)
         await self.romy.async_set_fan_speed(FAN_SPEEDS.index(fan_speed))
-
-
-#    async def async_update(self) -> None:
-#        """Fetch state from the device."""
-#        LOGGER.error("async_update")
-
-# ret, response = await self.romy_async_query("get/status")
-# if ret:
-#    status = json.loads(response)
-#    self._status = status["mode"]
-#    self._battery_level = status["battery_level"]
-# else:
-#    LOGGER.error(
-#        "ROMY function async_update -> async_query response: %s", response
-#    )
-
-# ret, response = await self.romy_async_query("get/cleaning_parameter_set")
-# if ret:
-#    status = json.loads(response)
-#    # dont update if we set fan speed currently:
-#    if not self._fan_speed_update:
-#        self._fan_speed = status["cleaning_parameter_set"]
-# else:
-#    LOGGER.error(
-#        "FOMY function async_update -> async_query response: %s", response
-#   )
