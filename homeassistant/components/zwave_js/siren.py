@@ -83,9 +83,7 @@ class ZwaveSirenEntity(ZWaveBaseEntity, SirenEntity):
         self, new_value: int, options: dict[str, Any] | None = None
     ) -> None:
         """Set a value on a siren node."""
-        await self.info.node.async_set_value(
-            self.info.primary_value, new_value, options=options
-        )
+        await self._async_set_value(self.info.primary_value, new_value, options=options)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""

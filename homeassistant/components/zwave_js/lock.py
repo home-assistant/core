@@ -114,7 +114,7 @@ class ZWaveLock(ZWaveBaseEntity, LockEntity):
             ]
         )
         if target_value is not None:
-            await self.info.node.async_set_value(
+            await self._async_set_value(
                 target_value,
                 STATE_TO_ZWAVE_MAP[self.info.primary_value.command_class][target_state],
             )

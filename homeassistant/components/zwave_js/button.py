@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DATA_CLIENT, DOMAIN, LOGGER
+from .const import DATA_CLIENT, DOMAIN
 from .discovery import ZwaveDiscoveryInfo
 from .entity import ZWaveBaseEntity
 from .helpers import get_device_info, get_valueless_base_unique_id
@@ -77,7 +77,7 @@ class ZwaveBooleanNodeButton(ZWaveBaseEntity, ButtonEntity):
 
     async def async_press(self) -> None:
         """Press the button."""
-        await self.info.node.async_set_value(self.info.primary_value, True)
+        await self._async_set_value(self.info.primary_value, True)
 
 
 class ZWaveNodePingButton(ButtonEntity):
@@ -100,7 +100,7 @@ class ZWaveNodePingButton(ButtonEntity):
 
     async def async_poll_value(self, _: bool) -> None:
         """Poll a value."""
-        LOGGER.error(
+        raise ValueError(
             "There is no value to refresh for this entity so the zwave_js.refresh_value"
             " service won't work for it"
         )
