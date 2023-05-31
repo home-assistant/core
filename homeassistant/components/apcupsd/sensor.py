@@ -377,7 +377,6 @@ SENSORS: dict[str, SensorEntityDescription] = {
         key="stesti",
         name="UPS Self Test Interval",
         icon="mdi:information-outline",
-        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     "timeleft": SensorEntityDescription(
         key="timeleft",
@@ -440,6 +439,9 @@ INFERRED_UNITS = {
     # "34.6 C Internal". Here we create a fake unit " C Internal" to handle this case.
     " C Internal": UnitOfTemperature.CELSIUS,
     " Percent Load Capacity": PERCENTAGE,
+    # "stesti" field (Self Test Interval) field could report a "days" unit, e.g.,
+    # "7 days", so here we add support for it.
+    " days": UnitOfTime.DAYS,
 }
 
 
