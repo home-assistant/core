@@ -16,6 +16,9 @@ Adax-local==0.1.5
 # homeassistant.components.ambiclimate
 Ambiclimate==0.2.1
 
+# homeassistant.components.blinksticklight
+BlinkStick==1.2.0
+
 # homeassistant.components.homekit
 HAP-python==4.6.0
 
@@ -450,9 +453,6 @@ blebox-uniapi==2.1.4
 
 # homeassistant.components.blink
 blinkpy==0.21.0
-
-# homeassistant.components.blinksticklight
-blinkstick==1.2.0
 
 # homeassistant.components.bitcoin
 blockchain==1.4.4
