@@ -37,8 +37,24 @@ Hydrawiser==0.2
 # homeassistant.components.mastodon
 Mastodon.py==1.5.1
 
+# homeassistant.components.doods
+# homeassistant.components.generic
+# homeassistant.components.image_upload
+# homeassistant.components.proxy
+# homeassistant.components.qrcode
+# homeassistant.components.seven_segments
+# homeassistant.components.sighthound
+# homeassistant.components.tensorflow
+Pillow==9.5.0
+
+# homeassistant.components.plex
+PlexAPI==4.13.2
+
 # homeassistant.components.progettihwsw
 ProgettiHWSW==0.1.1
+
+# homeassistant.components.cast
+PyChromecast==13.0.7
 
 # homeassistant.components.flick_electric
 PyFlick==0.0.2
@@ -1364,21 +1380,8 @@ pigpio==1.78
 # homeassistant.components.pilight
 pilight==0.1.1
 
-# homeassistant.components.doods
-# homeassistant.components.generic
-# homeassistant.components.image_upload
-# homeassistant.components.proxy
-# homeassistant.components.qrcode
-# homeassistant.components.seven_segments
-# homeassistant.components.sighthound
-# homeassistant.components.tensorflow
-pillow==9.5.0
-
 # homeassistant.components.dominos
 pizzapi==0.0.3
-
-# homeassistant.components.plex
-plexapi==4.13.2
 
 # homeassistant.components.plex
 plexauth==0.0.6
@@ -1553,9 +1556,6 @@ pycfdns==2.0.1
 
 # homeassistant.components.channels
 pychannels==1.2.3
-
-# homeassistant.components.cast
-pychromecast==13.0.7
 
 # homeassistant.components.pocketcasts
 pycketcasts==1.0.1

@@ -1,4 +1,5 @@
 Jinja2==3.1.2
+Pillow==9.5.0
 PyJWT==2.7.0
 PyNaCl==1.5.0
 PyTurboJPEG==1.6.7
@@ -36,7 +37,6 @@ lru-dict==1.1.8
 mutagen==1.46.0
 orjson==3.8.12
 paho-mqtt==1.6.1
-pillow==9.5.0
 pip>=21.0,<23.2
 psutil-home-assistant==0.0.1
 pyOpenSSL==23.1.0
