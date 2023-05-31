@@ -75,7 +75,7 @@ async def async_setup_entry(
     entities: list[ClimateEntity] = []
     if aircons := instance.coordinator.data.get("aircons"):
         for ac_key, ac_device in aircons.items():
-            entities.append(AdvantageAirAC(instance, ac_key, config_entry))
+            entities.append(AdvantageAirAC(instance, ac_key))
             for zone_key, zone in ac_device["zones"].items():
                 # Only add zone climate control when zone is in temperature control
                 if zone["type"] > 0:
@@ -93,12 +93,10 @@ class AdvantageAirAC(AdvantageAirAcEntity, ClimateEntity):
     _attr_min_temp = 16
     _attr_preset_modes = [ADVANTAGE_AIR_MYZONE]
 
-    def __init__(
-        self, instance: AdvantageAirData, ac_key: str, config_entry: ConfigEntry
-    ) -> None:
+    def __init__(self, instance: AdvantageAirData, ac_key: str) -> None:
         """Initialize an AdvantageAir AC unit."""
         super().__init__(instance, ac_key)
-        self._config_entry = config_entry
+        self._config_entry: ConfigEntry | None = instance.coordinator.config_entry
 
         # Set supported features and HVAC modes based on current operating mode
         if self._ac.get(ADVANTAGE_AIR_MYAUTO_ENABLED):
@@ -264,11 +262,12 @@ class AdvantageAirAC(AdvantageAirAcEntity, ClimateEntity):
                 old_preset,
                 new_preset,
             )
-            self._attr_available = False
-            self.hass.async_create_task(
-                self.hass.config_entries.async_reload(self._config_entry.entry_id),
-                f"config entry reload {self._config_entry.title} {self._config_entry.domain} {self._config_entry.entry_id}",
-            )
+            if self._config_entry:
+                self._attr_available = False
+                self.hass.async_create_task(
+                    self.hass.config_entries.async_reload(self._config_entry.entry_id),
+                    f"config entry reload {self._config_entry.title} {self._config_entry.domain} {self._config_entry.entry_id}",
+                )
 
 
 class AdvantageAirZone(AdvantageAirZoneEntity, ClimateEntity):
