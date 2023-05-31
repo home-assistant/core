@@ -96,7 +96,7 @@ default_config:
 frontend:
   themes: !include_dir_merge_named themes
 
-# text-to-speech
+# Text-to-speech
 tts:
   - platform: google_translate
 
