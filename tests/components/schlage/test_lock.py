@@ -57,7 +57,7 @@ async def test_lock_device_registry(
     device = device_registry.async_get_device(identifiers={("schlage", "test")})
     assert device.model == "<model-name>"
     assert device.sw_version == "1.0"
-    assert device.name == "Vault Door Lock"
+    assert device.name == "Vault Door"
     assert device.manufacturer == "Schlage"
 
 
@@ -68,7 +68,7 @@ async def test_lock_services(
     await hass.services.async_call(
         LOCK_DOMAIN,
         SERVICE_LOCK,
-        service_data={ATTR_ENTITY_ID: "lock.vault_door_lock"},
+        service_data={ATTR_ENTITY_ID: "lock.vault_door"},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -77,7 +77,7 @@ async def test_lock_services(
     await hass.services.async_call(
         LOCK_DOMAIN,
         SERVICE_UNLOCK,
-        service_data={ATTR_ENTITY_ID: "lock.vault_door_lock"},
+        service_data={ATTR_ENTITY_ID: "lock.vault_door"},
         blocking=True,
     )
     await hass.async_block_till_done()
