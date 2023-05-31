@@ -27,3 +27,6 @@ ATTR_SERIAL_NUMBER = CONF_SERIAL_NUMBER
 
 # Key for the dictionary entry which holds the instance of aioremootio.RemootioClient to connect to the Remootio device using the Remootio Websocket API
 REMOOTIO_CLIENT = "remootio_client"
+
+# Key for the dictionary entry which holds reference to the callback to be invoked to handle events triggered by the Remootio device
+EVENT_HANDLER_CALLBACK = "event_handler_callback"
