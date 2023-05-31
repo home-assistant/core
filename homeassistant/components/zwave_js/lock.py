@@ -13,12 +13,14 @@ from zwave_js_server.const.command_class.lock import (
     LOCK_CMD_CLASS_TO_PROPERTY_MAP,
     DoorLockMode,
 )
+from zwave_js_server.exceptions import BaseZwaveJSServerError
 from zwave_js_server.util.lock import clear_usercode, set_usercode
 
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN, LockEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_LOCKED, STATE_UNLOCKED
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -129,10 +131,22 @@ class ZWaveLock(ZWaveBaseEntity, LockEntity):
 
     async def async_set_lock_usercode(self, code_slot: int, usercode: str) -> None:
         """Set the usercode to index X on the lock."""
-        await set_usercode(self.info.node, code_slot, usercode)
+        try:
+            await set_usercode(self.info.node, code_slot, usercode)
+        except BaseZwaveJSServerError as err:
+            LOGGER.error(
+                "Unable to set lock usercode on code_slot %s: %s", code_slot, err
+            )
+            raise HomeAssistantError from err
         LOGGER.debug("User code at slot %s set", code_slot)
 
     async def async_clear_lock_usercode(self, code_slot: int) -> None:
         """Clear the usercode at index X on the lock."""
-        await clear_usercode(self.info.node, code_slot)
+        try:
+            await clear_usercode(self.info.node, code_slot)
+        except BaseZwaveJSServerError as err:
+            LOGGER.error(
+                "Unable to clear lock usercode on code_slot %s: %s", code_slot, err
+            )
+            raise HomeAssistantError from err
         LOGGER.debug("User code at slot %s cleared", code_slot)

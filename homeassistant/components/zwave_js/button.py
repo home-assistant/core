@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DATA_CLIENT, DOMAIN
+from .const import DATA_CLIENT, DOMAIN, LOGGER
 from .discovery import ZwaveDiscoveryInfo
 from .entity import ZWaveBaseEntity
 from .helpers import get_device_info, get_valueless_base_unique_id
@@ -100,7 +100,10 @@ class ZWaveNodePingButton(ButtonEntity):
 
     async def async_poll_value(self, _: bool) -> None:
         """Poll a value."""
-        raise ValueError(
+        # We log an error instead of raising an exception because this service call occurs
+        # in a separate task since it is called via the dispatcher and we don't want to
+        # raise the exception in that separate task because it is confusing to the user.
+        LOGGER.error(
             "There is no value to refresh for this entity so the zwave_js.refresh_value"
             " service won't work for it"
         )
