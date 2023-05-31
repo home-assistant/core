@@ -80,7 +80,7 @@ class ZWaveBaseEntity(Entity):
     async def async_poll_value(self, refresh_all_values: bool) -> None:
         """Poll a value."""
         if not refresh_all_values:
-            self.hass.async_create_task(self._async_poll_value(self.info.primary_value))
+            await self._async_poll_value(self.info.primary_value)
             LOGGER.info(
                 (
                     "Refreshing primary value %s for %s, "
@@ -92,7 +92,7 @@ class ZWaveBaseEntity(Entity):
             return
 
         for value_id in self.watched_value_ids:
-            self.hass.async_create_task(self._async_poll_value(value_id))
+            await self._async_poll_value(value_id)
 
         LOGGER.info(
             (
