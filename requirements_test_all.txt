@@ -1838,7 +1838,7 @@ tololib==0.1.0b4
 toonapi==0.2.1
 
 # homeassistant.components.totalconnect
-total_connect_client==2023.2
+total-connect-client==2023.2
 
 # homeassistant.components.tplink_omada
 tplink-omada-client==1.2.4
@@ -1871,7 +1871,7 @@ ultraheat-api==0.5.1
 unifi-discovery==1.1.7
 
 # homeassistant.components.upb
-upb_lib==0.5.4
+upb-lib==0.5.4
 
 # homeassistant.components.upcloud
 upcloud-api==2.0.0
@@ -1943,7 +1943,7 @@ withings-api==2.4.0
 wled==0.16.0
 
 # homeassistant.components.wolflink
-wolf_smartset==0.1.11
+wolf-smartset==0.1.11
 
 # homeassistant.components.wyoming
 wyoming==0.0.1
@@ -2018,4 +2018,4 @@ zigpy==0.55.0
 zwave-js-server-python==0.49.0
 
 # homeassistant.components.zwave_me
-zwave_me_ws==0.4.3
+zwave-me-ws==0.4.3
