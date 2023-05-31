@@ -94,13 +94,13 @@ aio-geojson-geonetnz-quakes==0.15
 aio-geojson-geonetnz-volcano==0.8
 
 # homeassistant.components.nsw_rural_fire_service_feed
-aio_geojson_nsw_rfs_incidents==0.6
+aio-geojson-nsw-rfs-incidents==0.6
 
 # homeassistant.components.usgs_earthquakes_feed
-aio_geojson_usgs_earthquakes==0.2
+aio-geojson-usgs-earthquakes==0.2
 
 # homeassistant.components.gdacs
-aio_georss_gdacs==0.8
+aio-georss-gdacs==0.8
 
 # homeassistant.components.airq
 aioairq==0.2.4
@@ -168,7 +168,7 @@ aiohomekit==2.6.3
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
-aiohttp_cors==0.7.0
+aiohttp-cors==0.7.0
 
 # homeassistant.components.hue
 aiohue==4.6.2
