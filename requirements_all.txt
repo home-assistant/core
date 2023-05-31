@@ -1487,6 +1487,9 @@ py-zabbix==1.1.7
 # homeassistant.components.seventeentrack
 py17track==2021.12.2
 
+# homeassistant.components.atome
+pyAtome==0.1.1
+
 # homeassistant.components.hdmi_cec
 pyCEC==0.5.2
 
@@ -1526,9 +1529,6 @@ pyatag==0.3.5.3
 
 # homeassistant.components.netatmo
 pyatmo==7.5.0
-
-# homeassistant.components.atome
-pyatome==0.1.1
 
 # homeassistant.components.apple_tv
 pyatv==0.12.0
