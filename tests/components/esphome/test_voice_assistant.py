@@ -68,7 +68,9 @@ async def test_pipeline_events(
 ) -> None:
     """Test that the pipeline function is called."""
 
-    async def async_pipeline_from_audio_stream(*args, **kwargs):
+    async def async_pipeline_from_audio_stream(*args, device_id, **kwargs):
+        assert device_id == "mock-device-id"
+
         event_callback = kwargs["event_callback"]
 
         # Fake events
@@ -121,7 +123,9 @@ async def test_pipeline_events(
     ):
         voice_assistant_udp_server_v1.transport = Mock()
 
-        await voice_assistant_udp_server_v1.run_pipeline(conversation_id=None)
+        await voice_assistant_udp_server_v1.run_pipeline(
+            device_id="mock-device-id", conversation_id=None
+        )
 
 
 async def test_udp_server(
@@ -380,7 +384,7 @@ async def test_speech_detection(
         voice_assistant_udp_server_v2.queue.put_nowait(bytes(_ONE_SECOND))
 
         await voice_assistant_udp_server_v2.run_pipeline(
-            conversation_id=None, use_vad=True, pipeline_timeout=1.0
+            device_id="", conversation_id=None, use_vad=True, pipeline_timeout=1.0
         )
 
 
@@ -412,7 +416,7 @@ async def test_no_speech(
         voice_assistant_udp_server_v2.queue.put_nowait(bytes(_ONE_SECOND))
 
         await voice_assistant_udp_server_v2.run_pipeline(
-            conversation_id=None, use_vad=True, pipeline_timeout=1.0
+            device_id="", conversation_id=None, use_vad=True, pipeline_timeout=1.0
         )
 
 
@@ -452,7 +456,7 @@ async def test_speech_timeout(
         voice_assistant_udp_server_v2.queue.put_nowait(bytes([255] * (_ONE_SECOND * 2)))
 
         await voice_assistant_udp_server_v2.run_pipeline(
-            conversation_id=None, use_vad=True, pipeline_timeout=1.0
+            device_id="", conversation_id=None, use_vad=True, pipeline_timeout=1.0
         )
 
 
@@ -467,7 +471,7 @@ async def test_cancelled(
     voice_assistant_udp_server_v2.queue.put_nowait(b"")
 
     await voice_assistant_udp_server_v2.run_pipeline(
-        conversation_id=None, use_vad=True, pipeline_timeout=1.0
+        device_id="", conversation_id=None, use_vad=True, pipeline_timeout=1.0
     )
 
     # No events should be sent if cancelled while waiting for speech
