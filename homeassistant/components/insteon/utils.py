@@ -1,8 +1,10 @@
 """Utilities used by insteon component."""
+from __future__ import annotations
+
 import asyncio
 from collections.abc import Callable
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from pyinsteon import devices
 from pyinsteon.address import Address
@@ -81,7 +83,6 @@ from .const import (
     SRV_X10_ALL_LIGHTS_ON,
     SRV_X10_ALL_UNITS_OFF,
 )
-from .insteon_entity import InsteonEntity
 from .ipdb import get_device_platform_groups, get_device_platforms
 from .schemas import (
     ADD_ALL_LINK_SCHEMA,
@@ -92,6 +93,9 @@ from .schemas import (
     TRIGGER_SCENE_SCHEMA,
     X10_HOUSECODE_SCHEMA,
 )
+
+if TYPE_CHECKING:
+    from .insteon_entity import InsteonEntity
 
 _LOGGER = logging.getLogger(__name__)
 
