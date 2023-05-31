@@ -499,7 +499,7 @@ class PipelineRun:
         self.intent_agent = agent_info.id
 
     async def recognize_intent(
-        self, intent_input: str, conversation_id: str | None
+        self, intent_input: str, conversation_id: str | None, device_id: str | None
     ) -> str:
         """Run intent recognition portion of pipeline. Returns text to speak."""
         if self.intent_agent is None:
@@ -521,6 +521,7 @@ class PipelineRun:
                 hass=self.hass,
                 text=intent_input,
                 conversation_id=conversation_id,
+                device_id=device_id,
                 context=self.context,
                 language=self.pipeline.conversation_language,
                 agent_id=self.intent_agent,
@@ -655,6 +656,8 @@ class PipelineInput:
 
     conversation_id: str | None = None
 
+    device_id: str | None = None
+
     async def execute(self) -> None:
         """Run pipeline."""
         self.run.start()
@@ -678,7 +681,9 @@ class PipelineInput:
                 if current_stage == PipelineStage.INTENT:
                     assert intent_input is not None
                     tts_input = await self.run.recognize_intent(
-                        intent_input, self.conversation_id
+                        intent_input,
+                        self.conversation_id,
+                        self.device_id,
                     )
                     current_stage = PipelineStage.TTS
 
