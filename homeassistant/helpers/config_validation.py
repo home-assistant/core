@@ -1074,7 +1074,7 @@ def empty_config_schema(domain: str) -> Callable[[dict], dict]:
     return validator
 
 
-def config_entry_only_config_schema(domain: str) -> Callable[[dict], dict]:
+def no_yaml_config_schema(domain: str) -> Callable[[dict], dict]:
     """Return a config schema which logs if attempted to setup from YAML."""
 
     module = inspect.getmodule(inspect.stack(context=0)[2].frame)
