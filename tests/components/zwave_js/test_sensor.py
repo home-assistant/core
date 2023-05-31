@@ -763,8 +763,8 @@ ENERGY_PRODUCTION_ENTITY_MAP = {
         "attributes": {
             "unit_of_measurement": UnitOfTime.SECONDS,
             "device_class": SensorDeviceClass.DURATION,
-            "state_class": None,
         },
+        "missing_attributes": ["state_class"],
     },
 }
 
@@ -778,7 +778,7 @@ async def test_energy_production_sensors(
         assert state
         assert state.state == str(state_data["state"])
         for attr, val in state_data["attributes"].items():
-            if val is None:
-                assert attr not in state.attributes
-            else:
-                assert state.attributes[attr] == val
+            assert state.attributes[attr] == val
+
+        for attr in state_data.get("missing_attributes", []):
+            assert attr not in state.attributes
