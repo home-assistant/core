@@ -29,6 +29,7 @@ from homeassistant.const import (
     PERCENTAGE,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    UV_INDEX,
     EntityCategory,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
@@ -90,11 +91,9 @@ async def test_numeric_sensor(
 
     assert state
     assert state.state == "0.0"
-    # TODO: Add UV_INDEX unit of measurement to this sensor
-    assert ATTR_UNIT_OF_MEASUREMENT not in state.attributes
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UV_INDEX
     assert ATTR_DEVICE_CLASS not in state.attributes
-    # TODO: Add measurement state class to this sensor
-    assert ATTR_STATE_CLASS not in state.attributes
+    assert state.attributes[ATTR_STATE_CLASS] == SensorStateClass.MEASUREMENT
 
     state = hass.states.get("sensor.hsm200_illuminance")
 
