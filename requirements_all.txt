@@ -92,6 +92,9 @@ PySocks==1.7.1
 # homeassistant.components.switchbot
 PySwitchbot==0.37.6
 
+# homeassistant.components.switchmate
+PySwitchmate==0.5.1
+
 # homeassistant.components.transport_nsw
 PyTransportNSW==0.1.1
 
@@ -1489,9 +1492,6 @@ pyControl4==1.1.0
 
 # homeassistant.components.rfxtrx
 pyRFXtrx==0.30.1
-
-# homeassistant.components.switchmate
-pySwitchmate==0.5.1
 
 # homeassistant.components.tibber
 pyTibber==0.27.2
