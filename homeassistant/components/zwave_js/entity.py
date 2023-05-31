@@ -1,12 +1,17 @@
 """Generic Z-Wave Entity Class."""
 from __future__ import annotations
 
+from collections.abc import Sequence
+from typing import Any
+
 from zwave_js_server.const import NodeStatus
+from zwave_js_server.exceptions import BaseZwaveJSServerError
 from zwave_js_server.model.driver import Driver
 from zwave_js_server.model.value import Value as ZwaveValue, get_value_id_str
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo, Entity
 
@@ -139,7 +144,7 @@ class ZWaveBaseEntity(Entity):
         self,
         include_value_name: bool = False,
         alternate_value_name: str | None = None,
-        additional_info: list[str | None] | None = None,
+        additional_info: Sequence[str | None] | None = None,
         name_prefix: str | None = None,
     ) -> str:
         """Generate entity name."""
@@ -290,3 +295,19 @@ class ZWaveBaseEntity(Entity):
         ):
             self.watched_value_ids.add(return_value.value_id)
         return return_value
+
+    async def _async_set_value(
+        self,
+        value: ZwaveValue,
+        new_value: Any,
+        options: dict | None = None,
+        wait_for_result: bool | None = None,
+    ) -> bool | None:
+        """Set value on node."""
+        try:
+            return await self.info.node.async_set_value(
+                value, new_value, options=options, wait_for_result=wait_for_result
+            )
+        except BaseZwaveJSServerError as err:
+            LOGGER.error("Unable to set value %s: %s", value.value_id, err)
+            raise HomeAssistantError from err

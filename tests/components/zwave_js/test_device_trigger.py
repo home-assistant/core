@@ -32,7 +32,7 @@ from tests.common import (
 
 
 @pytest.fixture
-def calls(hass):
+def calls(hass: HomeAssistant):
     """Track calls to a mock service."""
     return async_mock_service(hass, "test", "automation")
 
@@ -1292,7 +1292,7 @@ async def test_get_value_updated_config_parameter_triggers(
         "property_key": None,
         "endpoint": 0,
         "command_class": CommandClass.CONFIGURATION.value,
-        "subtype": "3 (Beeper)",
+        "subtype": "3 (Beeper) on endpoint 0",
         "metadata": {},
     }
     triggers = await async_get_device_automations(

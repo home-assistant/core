@@ -47,11 +47,7 @@ from homeassistant.const import (
 from homeassistant.core import Context, CoreState, HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError, Unauthorized
 from homeassistant.helpers import config_validation as cv, entity_registry as er
-from homeassistant.helpers.restore_state import (
-    DATA_RESTORE_STATE_TASK,
-    RestoreStateData,
-    StoredState,
-)
+from homeassistant.helpers.restore_state import StoredState, async_get
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
@@ -838,12 +834,9 @@ async def test_restore_idle(hass: HomeAssistant) -> None:
         utc_now,
     )
 
-    data = await RestoreStateData.async_get_instance(hass)
-    await hass.async_block_till_done()
+    data = async_get(hass)
     await data.store.async_save([stored_state.as_dict()])
-
-    # Emulate a fresh load
-    hass.data.pop(DATA_RESTORE_STATE_TASK)
+    await data.async_load()
 
     entity = Timer.from_storage(
         {
@@ -878,12 +871,9 @@ async def test_restore_paused(hass: HomeAssistant) -> None:
         utc_now,
     )
 
-    data = await RestoreStateData.async_get_instance(hass)
-    await hass.async_block_till_done()
+    data = async_get(hass)
     await data.store.async_save([stored_state.as_dict()])
-
-    # Emulate a fresh load
-    hass.data.pop(DATA_RESTORE_STATE_TASK)
+    await data.async_load()
 
     entity = Timer.from_storage(
         {
@@ -922,12 +912,9 @@ async def test_restore_active_resume(hass: HomeAssistant) -> None:
         utc_now,
     )
 
-    data = await RestoreStateData.async_get_instance(hass)
-    await hass.async_block_till_done()
+    data = async_get(hass)
     await data.store.async_save([stored_state.as_dict()])
-
-    # Emulate a fresh load
-    hass.data.pop(DATA_RESTORE_STATE_TASK)
+    await data.async_load()
 
     entity = Timer.from_storage(
         {
@@ -973,12 +960,9 @@ async def test_restore_active_finished_outside_grace(hass: HomeAssistant) -> Non
         utc_now,
     )
 
-    data = await RestoreStateData.async_get_instance(hass)
-    await hass.async_block_till_done()
+    data = async_get(hass)
     await data.store.async_save([stored_state.as_dict()])
-
-    # Emulate a fresh load
-    hass.data.pop(DATA_RESTORE_STATE_TASK)
+    await data.async_load()
 
     entity = Timer.from_storage(
         {
