@@ -1892,7 +1892,7 @@ velbus-aio==2023.2.0
 venstarcolortouch==0.19
 
 # homeassistant.components.vilfo
-vilfo-api-client==0.3.2
+vilfo-api-client==0.4.1
 
 # homeassistant.components.voip
 voip-utils==0.0.7
