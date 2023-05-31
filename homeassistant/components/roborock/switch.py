@@ -50,7 +50,7 @@ SWITCH_DESCRIPTIONS: list[RoborockSwitchDescription] = [
         translation_key="child_lock",
         icon="mdi:account-lock",
         entity_category=EntityCategory.CONFIG,
-    )
+    ),
 ]
 
 
@@ -96,15 +96,16 @@ class RoborockSwitchEntity(RoborockCoordinatedEntity, SwitchEntity):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the switch."""
         await self.entity_description.set_command(self, False)
-        return self.async_schedule_update_ha_state(True)
+        self.async_schedule_update_ha_state(True)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the switch."""
         await self.entity_description.set_command(self, True)
-        return self.async_schedule_update_ha_state(True)
+        self.async_schedule_update_ha_state(True)
 
     async def async_update(self) -> None:
         """Update switch."""
+        await super().async_update()
         self._attr_is_on = self.entity_description.evaluate_value(
             await self.entity_description.get_value(self)
         )
