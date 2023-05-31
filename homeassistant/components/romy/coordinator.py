@@ -12,7 +12,7 @@ class RomyVacuumCoordinator(DataUpdateCoordinator):
     """ROMY Vacuum Coordinator."""
 
     def __init__(self, hass: HomeAssistant, romy: RomyRobot) -> None:
-        """Setuping ROMY Vacuum Coordinator class."""
+        """Initialize."""
         super().__init__(hass, LOGGER, name=DOMAIN, update_interval=UPDATE_INTERVAL)
         self.hass = hass
         self.romy = romy
