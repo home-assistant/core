@@ -372,7 +372,7 @@ arris-tg2492lg==1.2.1
 asmog==0.0.6
 
 # homeassistant.components.asterisk_mbox
-asterisk_mbox==0.5.0
+asterisk-mbox==0.5.0
 
 # homeassistant.components.dlna_dmr
 # homeassistant.components.dlna_dms
