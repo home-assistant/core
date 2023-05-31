@@ -39,7 +39,9 @@ class OvosNotificationService(BaseNotificationService):
             client.run_in_thread()
             client.emit(Message("speak", {"utterance": message, "lang": lang}))
             client.close()
-        except Exception:
+        except ConnectionRefusedError:
             _LOGGER.log(
                 level=1, msg="Could not reach this instance of OVOS", exc_info=True
             )
+        except ValueError:
+            _LOGGER.log(level=1, msg="Error from OVOS messagebus", exc_info=True)
