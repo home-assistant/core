@@ -3,16 +3,17 @@ from __future__ import annotations
 
 from typing import Any
 
-from pyschlage import Schlage
 from pyschlage.lock import Lock
 
 from homeassistant.components.lock import LockEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, MANUFACTURER
+from .coordinator import SchlageDataUpdateCoordinator
 
 
 async def async_setup_entry(
@@ -21,28 +22,40 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Schlage WiFi locks based on a config entry."""
-    api: Schlage = hass.data[DOMAIN][config_entry.entry_id]
-    locks: list[Lock] = await hass.async_add_executor_job(api.locks)
-    async_add_entities([SchlageLock(lock) for lock in locks])
+    coordinator: SchlageDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    async_add_entities(
+        [
+            SchlageLock(coordinator=coordinator, device_id=device_id)
+            for device_id in coordinator.data.locks
+        ]
+    )
 
 
-class SchlageLock(LockEntity):
+class SchlageLock(CoordinatorEntity, LockEntity):
     """Schlage lock entity."""
 
-    def __init__(self, lock: Lock) -> None:
+    def __init__(
+        self, *, coordinator: SchlageDataUpdateCoordinator, device_id: str
+    ) -> None:
         """Initialize a Schlage Lock."""
-        super().__init__()
-        self._lock: Lock = lock
-        self.device_id: str = lock.device_id
-        self._attr_unique_id = lock.device_id
+        super().__init__(coordinator=coordinator)
+        self.device_id: str = device_id
+        self._attr_unique_id = device_id
         self._update_attrs()
 
-    def update(self) -> None:
-        """Fetch new state data for this lock."""
-        self._lock.refresh()
+    @property
+    def _lock(self) -> Lock:
+        """Fetch the Schlage lock from our coordinator."""
+        return self.coordinator.data.locks[self.device_id]
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
         self._update_attrs()
+        return super()._handle_coordinator_update()
 
     def _update_attrs(self) -> None:
+        """Update our internal state attributes."""
         self._attr_name = self._lock.name
         # When is_locked is None the lock is unavailable.
         self._attr_available = self._lock.is_locked is not None
@@ -59,7 +72,9 @@ class SchlageLock(LockEntity):
     async def async_lock(self, **kwargs: Any) -> None:
         """Lock the device."""
         await self.hass.async_add_executor_job(self._lock.lock)
+        await self.coordinator.async_request_refresh()
 
     async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the device."""
         await self.hass.async_add_executor_job(self._lock.unlock)
+        await self.coordinator.async_request_refresh()

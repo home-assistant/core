@@ -10,6 +10,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import DOMAIN
+from .coordinator import SchlageDataUpdateCoordinator
 
 PLATFORMS: list[Platform] = [Platform.LOCK]
 
@@ -25,7 +26,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except WarrantException as ex:
         raise ConfigEntryNotReady from ex
 
-    hass.data[DOMAIN][entry.entry_id] = pyschlage.Schlage(auth)
+    coordinator = SchlageDataUpdateCoordinator(hass, pyschlage.Schlage(auth))
+    hass.data[DOMAIN][entry.entry_id] = coordinator
+    await coordinator.async_config_entry_first_refresh()
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
