@@ -11,6 +11,7 @@ from homeassistant.const import (
     PERCENTAGE,
     UnitOfElectricPotential,
     UnitOfPower,
+    UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -55,6 +56,15 @@ async def test_sensor(hass: HomeAssistant) -> None:
     entry = registry.async_get("sensor.ups_battery_voltage")
     assert entry
     assert entry.unique_id == "XXXXXXXXXXXX_battv"
+
+    # test a representative time sensor.
+    state = hass.states.get("sensor.ups_self_test_interval")
+    assert state
+    assert state.state == "7"
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfTime.DAYS
+    entry = registry.async_get("sensor.ups_self_test_interval")
+    assert entry
+    assert entry.unique_id == "XXXXXXXXXXXX_stesti"
 
     # Test a representative percentage sensor.
     state = hass.states.get("sensor.ups_load")
