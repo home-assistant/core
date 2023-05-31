@@ -5,8 +5,14 @@ from collections.abc import Mapping
 from typing import Any
 
 from aioairzone_cloud.const import (
+    API_CITY,
+    API_GROUP_ID,
+    API_LOCATION_ID,
+    API_OLD_ID,
+    API_PIN,
     API_STAT_AP_MAC,
     API_STAT_SSID,
+    API_USER_ID,
     AZD_WIFI_MAC,
     RAW_DEVICES_STATUS,
     RAW_INSTALLATIONS,
@@ -22,14 +28,14 @@ from .const import DOMAIN
 from .coordinator import AirzoneUpdateCoordinator
 
 TO_REDACT_API = [
-    "_id",
-    "city",
-    "group_id",
-    "location_id",
-    "pin",
-    "user_id",
+    API_CITY,
+    API_GROUP_ID,
+    API_LOCATION_ID,
+    API_OLD_ID,
+    API_PIN,
     API_STAT_AP_MAC,
     API_STAT_SSID,
+    API_USER_ID,
 ]
 
 TO_REDACT_CONFIG = [

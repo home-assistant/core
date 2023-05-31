@@ -25,8 +25,8 @@ ha-av==10.1.0
 hass-nabucasa==0.67.1
 hassil==1.0.6
 home-assistant-bluetooth==1.10.0
-home-assistant-frontend==20230526.0
-home-assistant-intents==2023.4.26
+home-assistant-frontend==20230531.0
+home-assistant-intents==2023.5.30
 httpx==0.24.1
 ifaddr==0.2.0
 janus==1.0.0
@@ -179,3 +179,7 @@ pysnmp==1000000000.0.0
 # pyminiaudio 1.58 is missing files in the package
 # https://github.com/irmen/pyminiaudio/issues/67
 miniaudio==1.57
+
+# The get-mac package has been replaced with getmac. Installing get-mac alongside getmac
+# breaks getmac due to them both sharing the same python package name inside 'getmac'.
+get-mac==1000000000.0.0

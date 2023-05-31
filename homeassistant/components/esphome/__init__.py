@@ -302,7 +302,7 @@ async def async_setup_entry(  # noqa: C901
             voice_assistant_udp_server.close()
             voice_assistant_udp_server = None
 
-    async def _handle_pipeline_start() -> int | None:
+    async def _handle_pipeline_start(conversation_id: str, use_vad: bool) -> int | None:
         """Start a voice assistant pipeline."""
         nonlocal voice_assistant_udp_server
 
@@ -315,7 +315,10 @@ async def async_setup_entry(  # noqa: C901
         port = await voice_assistant_udp_server.start_server()
 
         hass.async_create_background_task(
-            voice_assistant_udp_server.run_pipeline(),
+            voice_assistant_udp_server.run_pipeline(
+                conversation_id=conversation_id or None,
+                use_vad=use_vad,
+            ),
             "esphome.voice_assistant_udp_server.run_pipeline",
         )
         entry_data.async_set_assist_pipeline_state(True)

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name        = "homeassistant"
-version     = "2023.6.0.dev0"
+version     = "2023.7.0.dev0"
 license     = {text = "Apache-2.0"}
 description = "Open-source home automation platform running on Python 3."
 readme      = "README.rst"
@@ -284,6 +284,7 @@ voluptuous = "vol"
 "homeassistant.helpers.device_registry" = "dr"
 "homeassistant.helpers.entity_registry" = "er"
 "homeassistant.helpers.issue_registry" = "ir"
+"homeassistant.util.dt" = "dt_util"
 
 [tool.ruff.flake8-pytest-style]
 fixture-parentheses = false

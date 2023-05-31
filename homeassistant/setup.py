@@ -18,8 +18,9 @@ from .const import (
     PLATFORM_FORMAT,
     Platform,
 )
-from .core import CALLBACK_TYPE
+from .core import CALLBACK_TYPE, DOMAIN as HOMEASSISTANT_DOMAIN
 from .exceptions import DependencyError, HomeAssistantError
+from .helpers.issue_registry import IssueSeverity, async_create_issue
 from .helpers.typing import ConfigType
 from .util import dt as dt_util, ensure_unique_string
 
@@ -221,6 +222,31 @@ async def _async_setup_component(
     if processed_config is None:
         log_error("Invalid config.")
         return False
+
+    # Detect attempt to setup integration which can be setup only from config entry
+    if (
+        domain in processed_config
+        and not hasattr(component, "async_setup")
+        and not hasattr(component, "setup")
+        and not hasattr(component, "CONFIG_SCHEMA")
+    ):
+        _LOGGER.error(
+            (
+                "The %s integration does not support YAML setup, please remove it from "
+                "your configuration"
+            ),
+            domain,
+        )
+        async_create_issue(
+            hass,
+            HOMEASSISTANT_DOMAIN,
+            f"integration_key_no_support_{domain}",
+            is_fixable=False,
+            severity=IssueSeverity.ERROR,
+            issue_domain=domain,
+            translation_key="integration_key_no_support",
+            translation_placeholders={"domain": domain},
+        )
 
     start = timer()
     _LOGGER.info("Setting up %s", domain)
