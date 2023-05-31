@@ -24,7 +24,7 @@ from homeassistant.core import (
     callback as hass_callback,
 )
 from homeassistant.data_entry_flow import BaseServiceInfo
-from homeassistant.helpers import discovery_flow, system_info
+from homeassistant.helpers import config_validation as cv, discovery_flow, system_info
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import USBMatcher, async_get_usb
@@ -46,6 +46,8 @@ __all__ = [
     "USBCallbackMatcher",
     "UsbServiceInfo",
 ]
+
+CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 
 class USBCallbackMatcher(USBMatcher):
