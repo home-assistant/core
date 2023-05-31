@@ -25,7 +25,7 @@ async def async_setup_entry(
     coordinator: SchlageDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
     async_add_entities(
         [
-            SchlageLock(coordinator=coordinator, device_id=device_id)
+            SchlageLockEntity(coordinator=coordinator, device_id=device_id)
             for device_id in coordinator.data.locks
         ]
     )
