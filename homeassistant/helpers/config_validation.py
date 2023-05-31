@@ -86,6 +86,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import (
+    DOMAIN as HOMEASSISTANT_DOMAIN,
     HomeAssistant,
     async_get_hass,
     split_entity_id,
@@ -1087,6 +1088,25 @@ def no_yaml_config_schema(domain: str) -> Callable[[dict], dict]:
         module_name = __name__
     logger_func = logging.getLogger(module_name).error
 
+    def raise_issue() -> None:
+        # pylint: disable-next=import-outside-toplevel
+        from .issue_registry import IssueSeverity, async_create_issue
+
+        with contextlib.suppress(LookupError):
+            hass = async_get_hass()
+        if not hass:
+            return
+        async_create_issue(
+            hass,
+            HOMEASSISTANT_DOMAIN,
+            f"integration_key_no_support_{domain}",
+            is_fixable=False,
+            severity=IssueSeverity.ERROR,
+            issue_domain=domain,
+            translation_key="integration_key_no_support",
+            translation_placeholders={"domain": domain},
+        )
+
     def validator(config: dict) -> dict:
         if domain in config:
             logger_func(
@@ -1096,6 +1116,7 @@ def no_yaml_config_schema(domain: str) -> Callable[[dict], dict]:
                 ),
                 domain,
             )
+            raise_issue()
         return config
 
     return validator

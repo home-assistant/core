@@ -11,8 +11,13 @@ import pytest
 import voluptuous as vol
 
 import homeassistant
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv, selector, template
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.helpers import (
+    config_validation as cv,
+    issue_registry as ir,
+    selector,
+    template,
+)
 
 
 def test_boolean() -> None:
@@ -1496,21 +1501,27 @@ def test_empty_schema_cant_find_module() -> None:
         cv.empty_config_schema("test_domain")({"test_domain": {"foo": "bar"}})
 
 
-def test_no_yaml_schema(caplog: pytest.LogCaptureFixture) -> None:
+def test_no_yaml_schema(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -> None:
     """Test no_yaml_config_schema."""
+    expected_issue = "integration_key_no_support_test_domain"
     expected_message = (
         "The test_domain integration does not support YAML setup, please remove "
         "it from your configuration"
     )
+    issue_registry = ir.async_get(hass)
 
     cv.no_yaml_config_schema("test_domain")({})
     assert expected_message not in caplog.text
+    assert not issue_registry.async_get_issue(HOMEASSISTANT_DOMAIN, expected_issue)
 
     cv.no_yaml_config_schema("test_domain")({"test_domain": {}})
     assert expected_message in caplog.text
+    assert issue_registry.async_get_issue(HOMEASSISTANT_DOMAIN, expected_issue)
+    issue_registry.async_delete(HOMEASSISTANT_DOMAIN, expected_issue)
 
     cv.no_yaml_config_schema("test_domain")({"test_domain": {"foo": "bar"}})
     assert expected_message in caplog.text
+    assert issue_registry.async_get_issue(HOMEASSISTANT_DOMAIN, expected_issue)
 
 
 def test_no_yaml_schema_cant_find_module() -> None:
