@@ -10,4 +10,4 @@ class MyStromData:
     """Data class for mystrom device data."""
 
     device: MyStromSwitch | MyStromBulb
-    info: dict
+    info: dict[str, Any]
