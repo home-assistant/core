@@ -5,6 +5,13 @@ import ast
 
 from .model import Config, Integration
 
+CONFIG_SCHEMA_IGNORE = {
+    # Configuration under the homeassistant key is a special case, it's handled by
+    # conf_util.async_process_ha_core_config already during bootstrapping, not by
+    # a schema in the homeassistant integration.
+    "homeassistant",
+}
+
 
 def _has_assignment(module: ast.Module, name: str) -> bool:
     """Test if the module assigns to a name."""
@@ -44,6 +51,9 @@ def _has_import(module: ast.Module, name: str) -> bool:
 
 def _validate_integration(config: Config, integration: Integration) -> None:
     """Validate integration has has a configuration schema."""
+    if integration.domain in CONFIG_SCHEMA_IGNORE:
+        return
+
     init_file = integration.path / "__init__.py"
 
     if not init_file.is_file():
