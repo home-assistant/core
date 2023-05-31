@@ -5,6 +5,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+from homeassistant.components import sensor
 from homeassistant.components.nextbus.const import (
     CONF_AGENCY,
     CONF_ROUTE,
@@ -15,10 +16,10 @@ from homeassistant.components.nextbus.util import UserConfig
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import issue_registry as ir
+from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
-
-# from homeassistant.setup import async_setup_component
 
 VALID_AGENCY = "sf-muni"
 VALID_ROUTE = "F"
@@ -28,12 +29,21 @@ VALID_ROUTE_TITLE = "F-Market & Wharves"
 VALID_STOP_TITLE = "Market St & 7th St"
 SENSOR_ID_SHORT = "sensor.sf_muni_f"
 
+PLATFORM_CONFIG = {
+    sensor.DOMAIN: {
+        "platform": DOMAIN,
+        CONF_AGENCY: VALID_AGENCY,
+        CONF_ROUTE: VALID_ROUTE,
+        CONF_STOP: VALID_STOP,
+    },
+}
+
+
 CONFIG_BASIC = {
     DOMAIN: {
         CONF_AGENCY: VALID_AGENCY,
         CONF_ROUTE: VALID_ROUTE,
         CONF_STOP: VALID_STOP,
-        CONF_NAME: "sf_muni_f",
     }
 }
 
@@ -60,28 +70,11 @@ BASIC_RESULTS = {
 }
 
 
-async def assert_setup_sensor(
-    hass: HomeAssistant,
-    config: UserConfig,
-    expected_state=ConfigEntryState.LOADED,
-) -> MockConfigEntry:
-    """Set up the sensor and assert it's been created."""
-    config_entry = MockConfigEntry(domain=DOMAIN, data=config[DOMAIN])
-    config_entry.add_to_hass(hass)
-
-    await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert config_entry.state is expected_state
-
-    return config_entry
-
-
 @pytest.fixture
 def mock_nextbus() -> Generator[MagicMock, None, None]:
     """Create a mock py_nextbus module."""
     with patch(
-        "homeassistant.components.nextbus.sensor.NextBusClient"
+        "homeassistant.components.nextbus.sensor.NextBusClient",
     ) as NextBusClient:
         yield NextBusClient
 
@@ -112,6 +105,41 @@ def mock_nextbus_lists(mock_nextbus: MagicMock) -> MagicMock:
     }
 
     return instance
+
+
+async def assert_setup_sensor(
+    hass: HomeAssistant,
+    config: UserConfig,
+    expected_state=ConfigEntryState.LOADED,
+) -> MockConfigEntry:
+    """Set up the sensor and assert it's been created."""
+    config_entry = MockConfigEntry(domain=DOMAIN, data=config[DOMAIN])
+    config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is expected_state
+
+    return config_entry
+
+
+async def test_legacy_yaml_setup(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test config setup and yaml deprecation."""
+    with patch(
+        "homeassistant.components.nextbus.config_flow.NextBusClient",
+    ) as NextBusClient:
+        NextBusClient.return_value.get_predictions_for_multi_stops.return_value = (
+            BASIC_RESULTS
+        )
+        await async_setup_component(hass, sensor.DOMAIN, PLATFORM_CONFIG)
+        await hass.async_block_till_done()
+
+    issue = issue_registry.async_get_issue(DOMAIN, "deprecated_yaml")
+    assert issue
 
 
 async def test_valid_config(
@@ -275,21 +303,30 @@ async def test_custom_name(
 ) -> None:
     """Verify that a custom name can be set via config."""
     config = deepcopy(CONFIG_BASIC)
-    config[DOMAIN]["name"] = "Custom Name"
+    config[DOMAIN][CONF_NAME] = "Custom Name"
 
     await assert_setup_sensor(hass, config)
     state = hass.states.get("sensor.custom_name")
     assert state is not None
+    assert state.name == "Custom Name"
 
 
+@pytest.mark.parametrize(
+    "prediction_results",
+    (
+        {},
+        {"Error": "Failed"},
+    ),
+)
 async def test_no_predictions(
     hass: HomeAssistant,
     mock_nextbus: MagicMock,
     mock_nextbus_predictions: MagicMock,
     mock_nextbus_lists: MagicMock,
+    prediction_results: dict[str, str],
 ) -> None:
     """Verify there are no exceptions when no predictions are returned."""
-    mock_nextbus_predictions.return_value = {}
+    mock_nextbus_predictions.return_value = prediction_results
 
     await assert_setup_sensor(hass, CONFIG_BASIC)
 

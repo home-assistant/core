@@ -43,55 +43,21 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Initialize nextbus import from config."""
-    if DOMAIN in config:
-        async_create_issue(
-            hass,
-            DOMAIN,
-            "deprecated_yaml",
-            is_fixable=False,
-            breaks_in_ha_version="2023.7.0",
-            severity=IssueSeverity.WARNING,
-            translation_key="deprecated_yaml",
+    async_create_issue(
+        hass,
+        DOMAIN,
+        "deprecated_yaml",
+        is_fixable=False,
+        breaks_in_ha_version="2023.7.0",
+        severity=IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+    )
+
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=config
         )
-
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": SOURCE_IMPORT}, data=config
-            )
-        )
-
-
-def validate_value(value_name, value, value_list):
-    """Validate tag value is in the list of items and logs error if not."""
-    valid_values = {v["tag"]: v["title"] for v in value_list}
-    if value not in valid_values:
-        _LOGGER.error(
-            "Invalid %s tag `%s`. Please use one of the following: %s",
-            value_name,
-            value,
-            ", ".join(f"{title}: {tag}" for tag, title in valid_values.items()),
-        )
-        return False
-
-    return True
-
-
-def validate_tags(client, agency, route, stop):
-    """Validate provided tags."""
-    # Validate agencies
-    if not validate_value("agency", agency, client.get_agency_list()["agency"]):
-        return False
-
-    # Validate the route
-    if not validate_value("route", route, client.get_route_list(agency)["route"]):
-        return False
-
-    # Validate the stop
-    route_config = client.get_route_config(route, agency)["route"]
-    if not validate_value("stop", stop, route_config["stop"]):
-        return False
-
-    return True
+    )
 
 
 async def async_setup_entry(
