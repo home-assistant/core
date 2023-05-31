@@ -13,9 +13,7 @@ from .coordinator import RomyVacuumCoordinator
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Initialize the ROMY platform via config entry."""
 
-    password = ""
-    if CONF_PASSWORD in config_entry.data:
-        password = config_entry.data[CONF_PASSWORD]
+    password = config_entry.data.get(CONF_PASSWORD, "")
 
     new_romy = await romy.create_romy(config_entry.data[CONF_HOST], password)
 
