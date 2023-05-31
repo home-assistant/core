@@ -1,25 +1,25 @@
 {
-  "config": {
-    "abort": {
-      "already_configured": "Device is already configured",
-      "key_error": "API KEY error, Please make sure the key is entered correctly",
-      "port_error": "Port is occupied, Please make sure that there is no other integration occupying port 32100",
-      "device_none":"No device was found, Please confirm the IP address and input format"
-    },
-    "error": {
-      "cannot_connect": "Failed to connect",
-      "invalid_auth": "Invalid authentication",
-      "unknown": "Unexpected error"
-    },
-    "step": {
-      "user": {
-        "data": {
-          "api_key": "API KEY",
-          "host": "IP Address"
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "key_error": "API KEY error, Please make sure the key is entered correctly",
+            "port_error": "Port is occupied, Please make sure that there is no other integration occupying port 32100",
+            "device_none": "No device was found, Please confirm the IP address and input format"
         },
-        "description": "You will need the 16 character API key, If you have two or more hubs, please use & example 192.168.31.1&192.168.31.2 ",
-        "title": "Connector Local"
-      }
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API KEY",
+                    "host": "IP Address"
+                },
+                "description": "You will need the 16 character API key, If you have two or more hubs, please use & example 192.168.31.1&192.168.31.2 ",
+                "title": "Connector Local"
+            }
+        }
     }
-  }
 }

@@ -1,7 +1,6 @@
 """The Connector integration."""
 from __future__ import annotations
 
-import asyncio
 from datetime import timedelta
 import logging
 from socket import timeout
@@ -32,11 +31,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     host = entry.data[CONF_HOST]
     key = entry.data[CONF_API_KEY]
     connector = ConnectorHub(ip=host, key=key)
-    hub_list = None
+    connector.start_receive_data()
+    hub_list = await connector.device_list()
 
     if KEY_MULTICAST_LISTENER not in hass.data[DOMAIN]:
-        connector.start_receive_data()
-        hub_list = await connector.device_list()
         hass.data[DOMAIN][KEY_MULTICAST_LISTENER] = connector
 
         def stop_motion_multicast(event):
@@ -46,7 +44,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_motion_multicast)
 
-    def update_gateway():
+    def _update_gateway():
         """Call all updates using one async_add_executor_job."""
         for device in hub_list.values():
             try:
@@ -57,7 +55,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     async def async_update_data():
         """Fetch data from the gateway and blinds."""
         try:
-            await hass.async_add_executor_job(update_gateway)
+            await hass.async_add_executor_job(_update_gateway)
         except timeout:
             _LOGGER.warning("Async update data timeout")
 
@@ -69,14 +67,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         update_interval=timedelta(seconds=3600),
     )
 
-    await asyncio.sleep(3)
-    if connector.is_connected:
-        hass.data[DOMAIN][entry.entry_id] = {
-            KEY_GATEWAY: connector,
-            KEY_COORDINATOR: coordinator,
-        }
-    else:
-        return False
+    hass.data[DOMAIN][entry.entry_id] = {
+        KEY_GATEWAY: connector,
+        KEY_COORDINATOR: coordinator,
+    }
 
     device_registry = dr.async_get(hass)
     if hub_list is not None:

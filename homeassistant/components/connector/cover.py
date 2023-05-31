@@ -20,7 +20,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, KEY_COORDINATOR, KEY_GATEWAY, MANUFACTURER
 
-POSITION_DEVICE_MAP = {
+HUB_TYPE_DEVICE_CLASS_MAP = {
     1: CoverDeviceClass.SHADE,
     2: CoverDeviceClass.SHUTTER,
     3: CoverDeviceClass.SHADE,
@@ -51,7 +51,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         return
     for hub in device_list.values():
         if hub.devicetype in WIFIMOTORTYPE:
-            wifi_motor_type = POSITION_DEVICE_MAP.get(hub.type, CoverDeviceClass.SHADE)
+            wifi_motor_type = HUB_TYPE_DEVICE_CLASS_MAP.get(
+                hub.type, CoverDeviceClass.SHADE
+            )
             entities.append(
                 TwoWayDevice(
                     coordinator=coordinator,
@@ -62,7 +64,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             )
         else:
             for blind in hub.blinds_list.values():
-                blind_type = POSITION_DEVICE_MAP.get(blind.type, CoverDeviceClass.SHADE)
+                blind_type = HUB_TYPE_DEVICE_CLASS_MAP.get(
+                    blind.type, CoverDeviceClass.SHADE
+                )
                 if blind.wireless_mode in ONEWAYWIRELESSMODE:
                     entities.append(
                         OneWayDevice(
@@ -97,54 +101,34 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(entities)
 
 
-class TwoWayDevice(CoordinatorEntity, CoverEntity):
+class OneWayDevice(CoordinatorEntity, CoverEntity):
     """Representation of a Motion Blind Device."""
 
     def __init__(self, coordinator, blind, device_class, config_entry):
         """Initialize the blind."""
         super().__init__(coordinator)
-
         self._blind = blind
-        self._device_class = device_class
+        self._attr_device_class = device_class
         self._config_entry = config_entry
-
-    @property
-    def unique_id(self):
-        """Return the unique id of the blind."""
-        return self._blind.mac
-
-    @property
-    def device_info(self):
-        """Return the device info of the blind."""
-        device_info = {
+        self._attr_name = f"{self._blind.mac[-4:]}"
+        self._attr_unique_id = self._blind.mac
+        self._attr_device_info = {
             "identifiers": {(DOMAIN, self._blind.mac)},
             "manufacturer": MANUFACTURER,
-            "name": f"{self._blind.mac}",
+            "name": f"{self._blind.mac[-4:]}",
             "model": "Curtain",
             "via_device": (DOMAIN, self._config_entry.unique_id),
         }
 
-        return device_info
-
-    @property
-    def name(self):
-        """Return the name of the blind."""
-        return f"{self._blind.mac[-4:]}"
-
-    @property
-    def available(self):
-        """Return True if entity is available."""
-        return True
-
     @property
     def device_class(self):
         """Return the device class."""
-        return self._device_class
+        return self._attr_device_class
 
     @property
     def is_closed(self):
         """Return if the cover is closed or not."""
-        return self._blind.position == 100
+        return None
 
     @callback
     def _push_callback(self):
@@ -164,7 +148,7 @@ class TwoWayDevice(CoordinatorEntity, CoverEntity):
     @property
     def current_cover_position(self):
         """Return the current position."""
-        return 100 - self._blind.position
+        return None
 
     def open_cover(self, **kwargs):
         """Open the cover."""
@@ -174,14 +158,28 @@ class TwoWayDevice(CoordinatorEntity, CoverEntity):
         """Close cover."""
         self._blind.close()
 
+    def stop_cover(self, **kwargs):
+        """Stop the cover."""
+        self._blind.stop()
+
+
+class TwoWayDevice(OneWayDevice):
+    """Representation of a Motion Blind Device."""
+
+    @property
+    def is_closed(self):
+        """Return if the cover is closed or not."""
+        return self._blind.position == 100
+
+    @property
+    def current_cover_position(self):
+        """Return the current position."""
+        return 100 - self._blind.position
+
     def set_cover_position(self, **kwargs):
         """Move the cover to a specific position."""
         position = kwargs[ATTR_POSITION]
         self._blind.target_position(100 - position)
-
-    def stop_cover(self, **kwargs):
-        """Stop the cover."""
-        self._blind.stop()
 
 
 class TiltDevice(TwoWayDevice):
@@ -208,88 +206,5 @@ class TiltDevice(TwoWayDevice):
         self._blind.target_angle(angle)
 
     def stop_cover_tilt(self, **kwargs):
-        """Stop the cover."""
-        self._blind.stop()
-
-
-class OneWayDevice(CoordinatorEntity, CoverEntity):
-    """Representation of a Motion Blind Device."""
-
-    def __init__(self, coordinator, blind, device_class, config_entry):
-        """Initialize the blind."""
-        super().__init__(coordinator)
-
-        self._blind = blind
-        self._device_class = device_class
-        self._config_entry = config_entry
-
-    @property
-    def unique_id(self):
-        """Return the unique id of the blind."""
-        return self._blind.mac
-
-    @property
-    def device_info(self):
-        """Return the device info of the blind."""
-        device_info = {
-            "identifiers": {(DOMAIN, self._blind.mac)},
-            "manufacturer": MANUFACTURER,
-            "name": f"{self._blind.mac}",
-            "model": "Curtain",
-            "via_device": (DOMAIN, self._config_entry.unique_id),
-        }
-
-        return device_info
-
-    @property
-    def name(self):
-        """Return the name of the blind."""
-        return f"{self._blind.mac[-4:]}"
-
-    @property
-    def available(self):
-        """Return True if entity is available."""
-        return True
-
-    @property
-    def device_class(self):
-        """Return the device class."""
-        return self._device_class
-
-    @property
-    def is_closed(self):
-        """Return if the cover is closed or not."""
-        # return self._blind.position == 100
-        return None
-
-    @callback
-    def _push_callback(self):
-        """Update entity state when a push has been received."""
-        self.schedule_update_ha_state(force_refresh=False)
-
-    async def async_added_to_hass(self):
-        """Subscribe to multicast pushes."""
-        self._blind.register_callback(self._push_callback)
-        await super().async_added_to_hass()
-
-    async def async_will_remove_from_hass(self):
-        """Unsubscribe when removed."""
-        self._blind.remove_callback()
-        return super().async_will_remove_from_hass()
-
-    @property
-    def current_cover_position(self):
-        """Return the current position."""
-        return None
-
-    def open_cover(self, **kwargs):
-        """Open the cover."""
-        self._blind.open()
-
-    def close_cover(self, **kwargs):
-        """Close cover."""
-        self._blind.close()
-
-    def stop_cover(self, **kwargs):
         """Stop the cover."""
         self._blind.stop()
