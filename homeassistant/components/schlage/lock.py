@@ -41,6 +41,13 @@ class SchlageLockEntity(CoordinatorEntity, LockEntity):
         super().__init__(coordinator=coordinator)
         self.device_id: str = device_id
         self._attr_unique_id = device_id
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self.device_id)},
+            name=self._lock.name,
+            manufacturer=MANUFACTURER,
+            model=self._lock.model_name,
+            sw_version=self._lock.firmware_version,
+        )
         self._update_attrs()
 
     @property
@@ -61,13 +68,6 @@ class SchlageLockEntity(CoordinatorEntity, LockEntity):
         self._attr_available = self._lock.is_locked is not None
         self._attr_is_locked = self._lock.is_locked
         self._attr_is_jammed = self._lock.is_jammed
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self.device_id)},
-            name=self._attr_name,
-            manufacturer=MANUFACTURER,
-            model=self._lock.model_name,
-            sw_version=self._lock.firmware_version,
-        )
 
     async def async_lock(self, **kwargs: Any) -> None:
         """Lock the device."""

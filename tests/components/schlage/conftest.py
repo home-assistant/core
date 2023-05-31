@@ -25,4 +25,5 @@ def mock_schlage():
 def mock_pyschlage_auth():
     """Mock pyschlage.Auth."""
     with patch("pyschlage.Auth", autospec=True) as mock_auth:
+        mock_auth.return_value.user_id = "abc123"
         yield mock_auth.return_value

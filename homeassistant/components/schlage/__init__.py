@@ -7,9 +7,8 @@ import pyschlage
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 
-from .const import DOMAIN
+from .const import DOMAIN, LOGGER
 from .coordinator import SchlageDataUpdateCoordinator
 
 PLATFORMS: list[Platform] = [Platform.LOCK]
@@ -17,17 +16,17 @@ PLATFORMS: list[Platform] = [Platform.LOCK]
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Schlage from a config entry."""
-
-    hass.data.setdefault(DOMAIN, {})
     try:
         auth = await hass.async_add_executor_job(
             pyschlage.Auth, entry.data[CONF_USERNAME], entry.data[CONF_PASSWORD]
         )
     except WarrantException as ex:
-        raise ConfigEntryNotReady from ex
+        LOGGER.exception("Schlage authentication failed: %s", ex)
+        # TODO(@dknowles2): raise ConfigEntryAuthFailed to start a reauth flow.
+        return False
 
     coordinator = SchlageDataUpdateCoordinator(hass, pyschlage.Schlage(auth))
-    hass.data[DOMAIN][entry.entry_id] = coordinator
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
     await coordinator.async_config_entry_first_refresh()
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True

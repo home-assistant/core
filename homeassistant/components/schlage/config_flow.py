@@ -4,7 +4,7 @@ from __future__ import annotations
 from typing import Any
 
 import pyschlage
-from pyschlage.exceptions import Error as PyschlageError, NotAuthorizedError
+from pyschlage.exceptions import NotAuthorizedError
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -32,17 +32,17 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             username = user_input[CONF_USERNAME]
             password = user_input[CONF_PASSWORD]
             try:
-                await self.hass.async_add_executor_job(
+                auth = await self.hass.async_add_executor_job(
                     _authenticate, username, password
                 )
             except NotAuthorizedError:
                 LOGGER.exception("Authentication error")
                 errors["base"] = "invalid_auth"
-            except PyschlageError:
+            except Exception:  # pylint: disable=broad-exception-caught
                 LOGGER.exception("Unknown error")
                 errors["base"] = "unknown"
             else:
-                await self.async_set_unique_id(username.lower())
+                await self.async_set_unique_id(auth.user_id)
                 return self.async_create_entry(title=username, data=user_input)
 
         return self.async_show_form(
@@ -50,7 +50,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
 
-def _authenticate(username: str, password: str) -> None:
+def _authenticate(username: str, password: str) -> pyschlage.Auth:
     """Authenticate with the Schlage API."""
     auth = pyschlage.Auth(username, password)
     auth.authenticate()
+    # The user_id property will make a blocking call if it's not already
+    # cached. To avoid blocking the event loop, we read it here.
+    _ = auth.user_id
+    return auth
