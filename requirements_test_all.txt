@@ -9,6 +9,9 @@ AEMET-OpenData==0.2.2
 # homeassistant.components.aladdin_connect
 AIOAladdinConnect==0.1.56
 
+# homeassistant.components.honeywell
+AIOSomecomfort==0.0.14
+
 # homeassistant.components.adax
 Adax-local==0.1.5
 
@@ -258,9 +261,6 @@ aioskybell==22.7.0
 
 # homeassistant.components.slimproto
 aioslimproto==2.1.1
-
-# homeassistant.components.honeywell
-aiosomecomfort==0.0.14
 
 # homeassistant.components.steamist
 aiosteamist==0.3.2
