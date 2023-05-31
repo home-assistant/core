@@ -137,9 +137,20 @@
     },
     "airzone": {
       "name": "Airzone",
-      "integration_type": "hub",
-      "config_flow": true,
-      "iot_class": "local_polling"
+      "integrations": {
+        "airzone": {
+          "integration_type": "hub",
+          "config_flow": true,
+          "iot_class": "local_polling",
+          "name": "Airzone"
+        },
+        "airzone_cloud": {
+          "integration_type": "hub",
+          "config_flow": true,
+          "iot_class": "cloud_polling",
+          "name": "Airzone Cloud"
+        }
+      }
     },
     "aladdin_connect": {
       "name": "Aladdin Connect",
@@ -1299,6 +1310,12 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "electrasmart": {
+      "name": "Electra Smart",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "elgato": {
       "name": "Elgato",
       "integrations": {
@@ -2029,6 +2046,12 @@
           "iot_class": "cloud_polling",
           "name": "Google Domains"
         },
+        "google_generative_ai_conversation": {
+          "integration_type": "service",
+          "config_flow": true,
+          "iot_class": "cloud_polling",
+          "name": "Google Generative AI Conversation"
+        },
         "google_mail": {
           "integration_type": "service",
           "config_flow": true,
@@ -2093,6 +2116,12 @@
           "config_flow": true,
           "iot_class": "cloud_push",
           "name": "Dialogflow"
+        },
+        "youtube": {
+          "integration_type": "service",
+          "config_flow": true,
+          "iot_class": "cloud_polling",
+          "name": "YouTube"
         }
       }
     },
@@ -2823,7 +2852,7 @@
     "lastfm": {
       "name": "Last.fm",
       "integration_type": "hub",
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "cloud_polling"
     },
     "launch_library": {
@@ -4150,6 +4179,11 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
+    "piper": {
+      "name": "Piper",
+      "integration_type": "virtual",
+      "supported_by": "wyoming"
+    },
     "pjlink": {
       "name": "PJLink",
       "integration_type": "hub",
@@ -5080,7 +5114,7 @@
       "name": "Snapcast",
       "integration_type": "hub",
       "config_flow": true,
-      "iot_class": "local_polling"
+      "iot_class": "local_push"
     },
     "snips": {
       "name": "Snips",
@@ -6186,6 +6220,11 @@
       "config_flow": true,
       "iot_class": "cloud_push"
     },
+    "whisper": {
+      "name": "Whisper",
+      "integration_type": "virtual",
+      "supported_by": "wyoming"
+    },
     "whois": {
       "name": "Whois",
       "integration_type": "service",
@@ -6355,6 +6394,12 @@
           "config_flow": true,
           "iot_class": "local_push",
           "name": "Yale Access Bluetooth"
+        },
+        "yale_home": {
+          "integration_type": "virtual",
+          "config_flow": false,
+          "supported_by": "august",
+          "name": "Yale Home"
         }
       }
     },

@@ -29,6 +29,8 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
+
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Intent component."""
