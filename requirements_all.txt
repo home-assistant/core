@@ -37,6 +37,9 @@ Hydrawiser==0.2
 # homeassistant.components.mastodon
 Mastodon.py==1.5.1
 
+# homeassistant.components.progettihwsw
+ProgettiHWSW==0.1.1
+
 # homeassistant.components.flick_electric
 PyFlick==0.0.2
 
@@ -1400,9 +1403,6 @@ praw==7.5.0
 
 # homeassistant.components.islamic_prayer_times
 prayer-times-calculator==0.0.6
-
-# homeassistant.components.progettihwsw
-progettihwsw==0.1.1
 
 # homeassistant.components.proliphix
 proliphix==0.4.1

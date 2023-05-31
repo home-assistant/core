@@ -30,6 +30,9 @@ HAP-python==4.6.0
 # homeassistant.components.tasmota
 HATasmota==0.6.5
 
+# homeassistant.components.progettihwsw
+ProgettiHWSW==0.1.1
+
 # homeassistant.components.flick_electric
 PyFlick==0.0.2
 
@@ -1048,9 +1051,6 @@ praw==7.5.0
 
 # homeassistant.components.islamic_prayer_times
 prayer-times-calculator==0.0.6
-
-# homeassistant.components.progettihwsw
-progettihwsw==0.1.1
 
 # homeassistant.components.prometheus
 prometheus-client==0.7.1
