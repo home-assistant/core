@@ -1514,6 +1514,9 @@ pyElectra==1.2.0
 # homeassistant.components.emby
 pyEmby==1.8
 
+# homeassistant.components.hikvision
+pyHik==0.3.2
+
 # homeassistant.components.rfxtrx
 pyRFXtrx==0.30.1
 
@@ -1688,9 +1691,6 @@ pyhaversion==22.8.0
 
 # homeassistant.components.heos
 pyheos==0.7.2
-
-# homeassistant.components.hikvision
-pyhik==0.3.2
 
 # homeassistant.components.hive
 pyhiveapi==0.5.14
