@@ -41,7 +41,6 @@ class MelnorZoneTimeEntityDescription(
 ZONE_ENTITY_DESCRIPTIONS: list[MelnorZoneTimeEntityDescription] = [
     MelnorZoneTimeEntityDescription(
         entity_category=EntityCategory.CONFIG,
-        icon="mdi:calendar-clock-outline",
         key="frequency_start_time",
         name="Schedule Start Time",
         set_time_fn=lambda valve, value: valve.set_frequency_start_time(value),
@@ -69,7 +68,7 @@ async def async_setup_entry(
 
 
 class MelnorZoneTime(MelnorZoneEntity, TimeEntity):
-    """A number implementation for a melnor device."""
+    """A time implementation for a melnor device."""
 
     entity_description: MelnorZoneTimeEntityDescription
 
