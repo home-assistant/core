@@ -1475,7 +1475,7 @@ def test_positive_time_period_template() -> None:
 
 
 def test_empty_schema(caplog: pytest.LogCaptureFixture) -> None:
-    """Test if the current module cannot be inspected."""
+    """Test empty_config_schema."""
     expected_message = (
         "The test_domain integration does not support any configuration parameters"
     )
@@ -1494,3 +1494,26 @@ def test_empty_schema_cant_find_module() -> None:
     """Test if the current module cannot be inspected."""
     with patch("inspect.getmodule", return_value=None):
         cv.empty_config_schema("test_domain")({"test_domain": {"foo": "bar"}})
+
+
+def test_no_yaml_schema(caplog: pytest.LogCaptureFixture) -> None:
+    """Test no_yaml_config_schema."""
+    expected_message = (
+        "The test_domain integration does not support YAML setup, please remove "
+        "it from your configuration"
+    )
+
+    cv.no_yaml_config_schema("test_domain")({})
+    assert expected_message not in caplog.text
+
+    cv.no_yaml_config_schema("test_domain")({"test_domain": {}})
+    assert expected_message in caplog.text
+
+    cv.no_yaml_config_schema("test_domain")({"test_domain": {"foo": "bar"}})
+    assert expected_message in caplog.text
+
+
+def test_no_yaml_schema_cant_find_module() -> None:
+    """Test if the current module cannot be inspected."""
+    with patch("inspect.getmodule", return_value=None):
+        cv.no_yaml_config_schema("test_domain")({"test_domain": {"foo": "bar"}})
