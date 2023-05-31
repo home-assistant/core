@@ -487,7 +487,7 @@ batinfo==0.4.2
 beautifulsoup4==4.11.1
 
 # homeassistant.components.beewi_smartclim
-# beewi_smartclim==0.0.10
+# beewi-smartclim==0.0.10
 
 # homeassistant.components.zha
 bellows==0.35.5
