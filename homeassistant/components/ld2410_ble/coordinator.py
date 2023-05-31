@@ -43,6 +43,7 @@ class LD2410BLECoordinator(DataUpdateCoordinator[None]):
     def _async_handle_debounced_update(self, _now: datetime) -> None:
         """Handle debounced update."""
         self._debounce_cancel = None
+        self._last_update_time = time.monotonic()
         self.async_set_updated_data(None)
 
     @callback
