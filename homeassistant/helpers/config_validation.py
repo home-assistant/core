@@ -1091,9 +1091,8 @@ def config_entry_only_config_schema(domain: str) -> Callable[[dict], dict]:
         if domain in config:
             logger_func(
                 (
-                    "The %s integration can not be setup from YAML, it can only be "
-                    "setup from a config entry. Please remove it from your "
-                    "configuration."
+                    "The %s integration does not support YAML setup, please remove it "
+                    "from your configuration"
                 ),
                 domain,
             )
