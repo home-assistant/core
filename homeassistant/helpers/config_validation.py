@@ -1074,6 +1074,34 @@ def empty_config_schema(domain: str) -> Callable[[dict], dict]:
     return validator
 
 
+def config_entry_only_config_schema(domain: str) -> Callable[[dict], dict]:
+    """Return a config schema which logs if attempted to setup from YAML."""
+
+    module = inspect.getmodule(inspect.stack(context=0)[2].frame)
+    if module is not None:
+        module_name = module.__name__
+    else:
+        # If Python is unable to access the sources files, the call stack frame
+        # will be missing information, so let's guard.
+        # https://github.com/home-assistant/core/issues/24982
+        module_name = __name__
+    logger_func = logging.getLogger(module_name).error
+
+    def validator(config: dict) -> dict:
+        if domain in config:
+            logger_func(
+                (
+                    "The %s integration can not be setup from YAML, it can only be "
+                    "setup from a config entry. Please remove it from your "
+                    "configuration."
+                ),
+                domain,
+            )
+        return config
+
+    return validator
+
+
 PLATFORM_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_PLATFORM): string,
