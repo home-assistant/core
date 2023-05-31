@@ -107,6 +107,9 @@ PyXiaomiGateway==0.14.3
 # homeassistant.components.rachio
 RachioPy==1.0.3
 
+# homeassistant.components.python_script
+RestrictedPython==6.0
+
 # homeassistant.components.remember_the_milk
 RtmAPI==0.7.2
 
@@ -1640,9 +1643,6 @@ renault-api==0.1.13
 
 # homeassistant.components.reolink
 reolink-aio==0.5.16
-
-# homeassistant.components.python_script
-restrictedpython==6.0
 
 # homeassistant.components.rflink
 rflink==0.0.65
