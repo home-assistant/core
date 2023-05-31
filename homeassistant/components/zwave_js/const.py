@@ -130,8 +130,14 @@ ENTITY_DESC_KEY_PRESSURE = "pressure"
 ENTITY_DESC_KEY_SIGNAL_STRENGTH = "signal_strength"
 ENTITY_DESC_KEY_TEMPERATURE = "temperature"
 ENTITY_DESC_KEY_TARGET_TEMPERATURE = "target_temperature"
+ENTITY_DESC_KEY_UV_INDEX = "uv_index"
 ENTITY_DESC_KEY_MEASUREMENT = "measurement"
 ENTITY_DESC_KEY_TOTAL_INCREASING = "total_increasing"
+
+ENTITY_DESC_KEY_ENERGY_PRODUCTION_POWER = "energy_production_power"
+ENTITY_DESC_KEY_ENERGY_PRODUCTION_TIME = "energy_production_time"
+ENTITY_DESC_KEY_ENERGY_PRODUCTION_TOTAL = "energy_production_total"
+ENTITY_DESC_KEY_ENERGY_PRODUCTION_TODAY = "energy_production_today"
 
 # This API key is only for use with Home Assistant. Reach out to Z-Wave JS to apply for
 # your own (https://github.com/zwave-js/firmware-updates/).

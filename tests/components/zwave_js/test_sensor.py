@@ -29,12 +29,14 @@ from homeassistant.const import (
     PERCENTAGE,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    UV_INDEX,
     EntityCategory,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
     UnitOfEnergy,
     UnitOfPower,
     UnitOfTemperature,
+    UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -89,11 +91,9 @@ async def test_numeric_sensor(
 
     assert state
     assert state.state == "0.0"
-    # TODO: Add UV_INDEX unit of measurement to this sensor
-    assert ATTR_UNIT_OF_MEASUREMENT not in state.attributes
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UV_INDEX
     assert ATTR_DEVICE_CLASS not in state.attributes
-    # TODO: Add measurement state class to this sensor
-    assert ATTR_STATE_CLASS not in state.attributes
+    assert state.attributes[ATTR_STATE_CLASS] == SensorStateClass.MEASUREMENT
 
     state = hass.states.get("sensor.hsm200_illuminance")
 
@@ -733,3 +733,54 @@ async def test_statistics_sensors(
             state = hass.states.get(f"{prefix}{suffix_key}")
             assert state
             assert state.state == str(val)
+
+
+ENERGY_PRODUCTION_ENTITY_MAP = {
+    "energy_production_power": {
+        "state": 1.23,
+        "attributes": {
+            "unit_of_measurement": UnitOfPower.WATT,
+            "device_class": SensorDeviceClass.POWER,
+            "state_class": SensorStateClass.MEASUREMENT,
+        },
+    },
+    "energy_production_total": {
+        "state": 1234.56,
+        "attributes": {
+            "unit_of_measurement": UnitOfEnergy.WATT_HOUR,
+            "device_class": SensorDeviceClass.ENERGY,
+            "state_class": SensorStateClass.TOTAL_INCREASING,
+        },
+    },
+    "energy_production_today": {
+        "state": 123.45,
+        "attributes": {
+            "unit_of_measurement": UnitOfEnergy.WATT_HOUR,
+            "device_class": SensorDeviceClass.ENERGY,
+            "state_class": SensorStateClass.TOTAL_INCREASING,
+        },
+    },
+    "energy_production_time": {
+        "state": 123456.0,
+        "attributes": {
+            "unit_of_measurement": UnitOfTime.SECONDS,
+            "device_class": SensorDeviceClass.DURATION,
+        },
+        "missing_attributes": ["state_class"],
+    },
+}
+
+
+async def test_energy_production_sensors(
+    hass: HomeAssistant, energy_production, client, integration
+) -> None:
+    """Test sensors for Energy Production CC."""
+    for entity_id_suffix, state_data in ENERGY_PRODUCTION_ENTITY_MAP.items():
+        state = hass.states.get(f"sensor.node_2_{entity_id_suffix}")
+        assert state
+        assert state.state == str(state_data["state"])
+        for attr, val in state_data["attributes"].items():
+            assert state.attributes[attr] == val
+
+        for attr in state_data.get("missing_attributes", []):
+            assert attr not in state.attributes

@@ -32,6 +32,7 @@ from homeassistant.const import (
     LIGHT_LUX,
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+    UV_INDEX,
     EntityCategory,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
@@ -58,6 +59,10 @@ from .const import (
     ENTITY_DESC_KEY_CO2,
     ENTITY_DESC_KEY_CURRENT,
     ENTITY_DESC_KEY_ENERGY_MEASUREMENT,
+    ENTITY_DESC_KEY_ENERGY_PRODUCTION_POWER,
+    ENTITY_DESC_KEY_ENERGY_PRODUCTION_TIME,
+    ENTITY_DESC_KEY_ENERGY_PRODUCTION_TODAY,
+    ENTITY_DESC_KEY_ENERGY_PRODUCTION_TOTAL,
     ENTITY_DESC_KEY_ENERGY_TOTAL_INCREASING,
     ENTITY_DESC_KEY_HUMIDITY,
     ENTITY_DESC_KEY_ILLUMINANCE,
@@ -69,6 +74,7 @@ from .const import (
     ENTITY_DESC_KEY_TARGET_TEMPERATURE,
     ENTITY_DESC_KEY_TEMPERATURE,
     ENTITY_DESC_KEY_TOTAL_INCREASING,
+    ENTITY_DESC_KEY_UV_INDEX,
     ENTITY_DESC_KEY_VOLTAGE,
     LOGGER,
     SERVICE_RESET_METER,
@@ -235,6 +241,50 @@ ENTITY_DESCRIPTION_KEY_DEVICE_CLASS_MAP: dict[
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
     ),
+    (
+        ENTITY_DESC_KEY_ENERGY_PRODUCTION_TIME,
+        UnitOfTime.SECONDS,
+    ): SensorEntityDescription(
+        ENTITY_DESC_KEY_ENERGY_PRODUCTION_TIME,
+        name="Energy production time",
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+    ),
+    (ENTITY_DESC_KEY_ENERGY_PRODUCTION_TIME, UnitOfTime.HOURS): SensorEntityDescription(
+        ENTITY_DESC_KEY_ENERGY_PRODUCTION_TIME,
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.HOURS,
+    ),
+    (
+        ENTITY_DESC_KEY_ENERGY_PRODUCTION_TODAY,
+        UnitOfEnergy.WATT_HOUR,
+    ): SensorEntityDescription(
+        ENTITY_DESC_KEY_ENERGY_PRODUCTION_TODAY,
+        name="Energy production today",
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+    ),
+    (
+        ENTITY_DESC_KEY_ENERGY_PRODUCTION_TOTAL,
+        UnitOfEnergy.WATT_HOUR,
+    ): SensorEntityDescription(
+        ENTITY_DESC_KEY_ENERGY_PRODUCTION_TOTAL,
+        name="Energy production total",
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+    ),
+    (
+        ENTITY_DESC_KEY_ENERGY_PRODUCTION_POWER,
+        UnitOfPower.WATT,
+    ): SensorEntityDescription(
+        ENTITY_DESC_KEY_POWER,
+        name="Energy production power",
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfPower.WATT,
+    ),
 }
 
 # These descriptions are without device class.
@@ -272,6 +322,11 @@ ENTITY_DESCRIPTION_KEY_MAP = {
     ENTITY_DESC_KEY_TOTAL_INCREASING: SensorEntityDescription(
         ENTITY_DESC_KEY_TOTAL_INCREASING,
         state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    ENTITY_DESC_KEY_UV_INDEX: SensorEntityDescription(
+        ENTITY_DESC_KEY_UV_INDEX,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UV_INDEX,
     ),
 }
 
@@ -547,13 +602,14 @@ class ZwaveSensor(ZWaveBaseEntity, SensorEntity):
         unit_of_measurement: str | None = None,
     ) -> None:
         """Initialize a ZWaveSensorBase entity."""
-        super().__init__(config_entry, driver, info)
         self.entity_description = entity_description
+        super().__init__(config_entry, driver, info)
         self._attr_native_unit_of_measurement = unit_of_measurement
 
         # Entity class attributes
         self._attr_force_update = True
-        self._attr_name = self.generate_name(include_value_name=True)
+        if not entity_description.name:
+            self._attr_name = self.generate_name(include_value_name=True)
 
     @property
     def native_value(self) -> StateType:

@@ -624,6 +624,12 @@ def indicator_test_state_fixture():
     return json.loads(load_fixture("zwave_js/indicator_test_state.json"))
 
 
+@pytest.fixture(name="energy_production_state", scope="session")
+def energy_production_state_fixture():
+    """Load a mock node with energy production CC state fixture data."""
+    return json.loads(load_fixture("zwave_js/energy_production_state.json"))
+
+
 # model fixtures
 
 
@@ -1189,5 +1195,13 @@ def switch_zooz_zen72_fixture(client, switch_zooz_zen72_state):
 def indicator_test_fixture(client, indicator_test_state):
     """Mock a indicator CC test node."""
     node = Node(client, copy.deepcopy(indicator_test_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="energy_production")
+def energy_prodution_fixture(client, energy_production_state):
+    """Mock a mock node with Energy Production CC."""
+    node = Node(client, copy.deepcopy(energy_production_state))
     client.driver.controller.nodes[node.node_id] = node
     return node
