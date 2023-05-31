@@ -260,7 +260,7 @@ ENTITY_DESCRIPTION_KEY_DEVICE_CLASS_MAP: dict[
         ENTITY_DESC_KEY_ENERGY_PRODUCTION_TODAY,
         name="Energy production today",
         device_class=SensorDeviceClass.ENERGY,
-        state_class=SensorStateClass.TOTAL,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
     ),
     (

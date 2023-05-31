@@ -755,7 +755,7 @@ ENERGY_PRODUCTION_ENTITY_MAP = {
         "attributes": {
             "unit_of_measurement": UnitOfEnergy.WATT_HOUR,
             "device_class": SensorDeviceClass.ENERGY,
-            "state_class": SensorStateClass.TOTAL,
+            "state_class": SensorStateClass.TOTAL_INCREASING,
         },
     },
     "energy_production_time": {
