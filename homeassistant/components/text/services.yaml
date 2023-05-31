@@ -1,0 +1,14 @@
+set_value:
+  name: Set value
+  description: Set value of a text entity.
+  target:
+    entity:
+      domain: text
+  fields:
+    value:
+      name: Value
+      description: Value to set.
+      required: true
+      example: "Hello world!"
+      selector:
+        text:

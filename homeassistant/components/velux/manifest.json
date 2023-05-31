@@ -1,9 +1,9 @@
 {
   "domain": "velux",
   "name": "Velux",
-  "documentation": "https://www.home-assistant.io/integrations/velux",
-  "requirements": ["pyvlx==0.2.20"],
   "codeowners": ["@Julius2342"],
+  "documentation": "https://www.home-assistant.io/integrations/velux",
   "iot_class": "local_polling",
-  "loggers": ["pyvlx"]
+  "loggers": ["pyvlx"],
+  "requirements": ["pyvlx==0.2.20"]
 }

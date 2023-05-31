@@ -41,7 +41,7 @@ async def async_init_integration(
             scene.DOMAIN,
             DOMAIN,
             f"{entry.entry_id}_1",
-            suggested_object_id="mock_scene_1",
+            suggested_object_id="litejet_mock_scene_1",
             disabled_by=None,
         )
 

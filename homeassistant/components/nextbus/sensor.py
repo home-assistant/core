@@ -19,13 +19,10 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.dt import utc_from_timestamp
 
+from .const import CONF_AGENCY, CONF_ROUTE, CONF_STOP
+from .util import listify, maybe_first
+
 _LOGGER = logging.getLogger(__name__)
-
-DOMAIN = "nextbus"
-
-CONF_AGENCY = "agency"
-CONF_ROUTE = "route"
-CONF_STOP = "stop"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -35,29 +32,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_NAME): cv.string,
     }
 )
-
-
-def listify(maybe_list):
-    """Return list version of whatever value is passed in.
-
-    This is used to provide a consistent way of interacting with the JSON
-    results from the API. There are several attributes that will either missing
-    if there are no values, a single dictionary if there is only one value, and
-    a list if there are multiple.
-    """
-    if maybe_list is None:
-        return []
-    if isinstance(maybe_list, list):
-        return maybe_list
-    return [maybe_list]
-
-
-def maybe_first(maybe_list):
-    """Return the first item out of a list or returns back the input."""
-    if isinstance(maybe_list, list) and maybe_list:
-        return maybe_list[0]
-
-    return maybe_list
 
 
 def validate_value(value_name, value, value_list):
@@ -122,7 +96,7 @@ class NextBusDepartureSensor(SensorEntity):
     both the route and the stop.
 
     This is possibly a little convoluted to provide as it requires making a
-    request to the service to get these values. Perhaps it can be simplifed in
+    request to the service to get these values. Perhaps it can be simplified in
     the future using fuzzy logic and matching.
     """
 

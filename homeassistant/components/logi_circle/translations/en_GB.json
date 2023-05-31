@@ -1,7 +1,0 @@
-{
-    "config": {
-        "error": {
-            "authorize_url_timeout": "Timeout generating authorise URL."
-        }
-    }
-}

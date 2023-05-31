@@ -1,5 +1,6 @@
 """Test the surepetcare sensor platform."""
 from homeassistant.components.surepetcare.const import DOMAIN
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
@@ -13,7 +14,7 @@ EXPECTED_ENTITY_IDS = {
 }
 
 
-async def test_sensors(hass, surepetcare) -> None:
+async def test_sensors(hass: HomeAssistant, surepetcare) -> None:
     """Test the generation of unique ids."""
     assert await async_setup_component(hass, DOMAIN, MOCK_CONFIG)
     await hass.async_block_till_done()

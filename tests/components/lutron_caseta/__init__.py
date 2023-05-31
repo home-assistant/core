@@ -129,13 +129,14 @@ class MockBridge:
     def load_areas(self):
         """Loak mock areas into self.areas."""
         return {
-            "898": {"id": "898", "name": "Basement", "parent_id": None},
+            "3": {"id": "3", "name": "House", "parent_id": None},
+            "898": {"id": "898", "name": "Basement", "parent_id": "3"},
             "822": {"id": "822", "name": "Bedroom", "parent_id": "898"},
             "910": {"id": "910", "name": "Bathroom", "parent_id": "898"},
-            "1024": {"id": "1024", "name": "Master Bedroom", "parent_id": None},
-            "1025": {"id": "1025", "name": "Kitchen", "parent_id": None},
-            "1026": {"id": "1026", "name": "Dining Room", "parent_id": None},
-            "1205": {"id": "1205", "name": "Hallway", "parent_id": None},
+            "1024": {"id": "1024", "name": "Master Bedroom", "parent_id": "3"},
+            "1025": {"id": "1025", "name": "Kitchen", "parent_id": "3"},
+            "1026": {"id": "1026", "name": "Dining Room", "parent_id": "3"},
+            "1205": {"id": "1205", "name": "Hallway", "parent_id": "3"},
         }
 
     def load_devices(self):
@@ -250,7 +251,7 @@ class MockBridge:
             "111": {
                 "device_id": "111",
                 "current_state": "Release",
-                "button_number": 0,
+                "button_number": 1,
                 "name": "Dining Room_Pico",
                 "type": "Pico3ButtonRaiseLower",
                 "model": "PJ2-3BRL-GXX-X01",
@@ -278,8 +279,7 @@ class MockBridge:
         return self.devices
 
     def get_devices_by_domain(self, domain: str) -> list[dict]:
-        """
-        Return a list of devices for the given domain.
+        """Return a list of devices for the given domain.
 
         :param domain: one of 'light', 'switch', 'cover', 'fan' or 'sensor'
         :returns list of zero or more of the devices
@@ -293,16 +293,14 @@ class MockBridge:
         return self.get_devices_by_types(types)
 
     def get_devices_by_type(self, type_: str) -> list[dict]:
-        """
-        Will return all devices of a given device type.
+        """Will return all devices of a given device type.
 
         :param type_: LEAP device type, e.g. WallSwitch
         """
         return [device for device in self.devices.values() if device["type"] == type_]
 
     def get_devices_by_types(self, types: list[str]) -> list[dict]:
-        """
-        Will return all devices for a list of given device types.
+        """Will return all devices for a list of given device types.
 
         :param types: list of LEAP device types such as WallSwitch, WallDimmer
         """

@@ -13,8 +13,8 @@ import async_timeout
 from mysensors import BaseAsyncGateway, Message, Sensor, mysensors
 import voluptuous as vol
 
-from homeassistant.components.mqtt import DOMAIN as MQTT_DOMAIN
-from homeassistant.components.mqtt.models import (
+from homeassistant.components.mqtt import (
+    DOMAIN as MQTT_DOMAIN,
     ReceiveMessage as MQTTReceiveMessage,
     ReceivePayloadType,
 )
@@ -116,7 +116,7 @@ async def try_connect(
         finally:
             if connect_task is not None and not connect_task.done():
                 connect_task.cancel()
-            asyncio.create_task(gateway.stop())
+            await gateway.stop()
     except OSError as err:
         _LOGGER.info("Try gateway connect failed with exception", exc_info=err)
         return False
@@ -329,6 +329,6 @@ def _gw_callback_factory(
         if msg_handler is None:
             return
 
-        hass.async_create_task(msg_handler(hass, gateway_id, msg))
+        msg_handler(hass, gateway_id, msg)
 
     return mysensors_callback

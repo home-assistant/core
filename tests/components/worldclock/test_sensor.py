@@ -1,6 +1,7 @@
 """The test for the World clock sensor platform."""
 import pytest
 
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -11,7 +12,7 @@ def time_zone():
     return dt_util.get_time_zone("America/New_York")
 
 
-async def test_time(hass, time_zone):
+async def test_time(hass: HomeAssistant, time_zone) -> None:
     """Test the time at a different location."""
     config = {"sensor": {"platform": "worldclock", "time_zone": "America/New_York"}}
 
@@ -28,7 +29,7 @@ async def test_time(hass, time_zone):
     assert state.state == dt_util.now(time_zone=time_zone).strftime("%H:%M")
 
 
-async def test_time_format(hass, time_zone):
+async def test_time_format(hass: HomeAssistant, time_zone) -> None:
     """Test time_format setting."""
     time_format = "%a, %b %d, %Y %I:%M %p"
     config = {

@@ -40,7 +40,7 @@ async def validate_input(
 
     return {
         SERIAL_NUMBER: str(device.serial_number),
-        TITLE: device.hostname.split(".")[0],
+        TITLE: device.hostname.split(".", maxsplit=1)[0],
     }
 
 
@@ -85,7 +85,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="home_control")
 
         await self.async_set_unique_id(discovery_info.properties["SN"])
-        self._abort_if_unique_id_configured()
+        self._abort_if_unique_id_configured(
+            updates={CONF_IP_ADDRESS: discovery_info.host}
+        )
 
         self.context[CONF_HOST] = discovery_info.host
         self.context["title_placeholders"] = {

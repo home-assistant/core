@@ -22,10 +22,7 @@ from homeassistant.const import (
     CONF_UNIQUE_ID,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
-    TIME_DAYS,
-    TIME_HOURS,
-    TIME_MINUTES,
-    TIME_SECONDS,
+    UnitOfTime,
 )
 from homeassistant.core import Event, HomeAssistant, State, callback
 from homeassistant.helpers import config_validation as cv, entity_registry as er
@@ -55,10 +52,10 @@ UNIT_PREFIXES = {None: 1, "k": 10**3, "M": 10**6, "G": 10**9, "T": 10**12}
 
 # SI Time prefixes
 UNIT_TIME = {
-    TIME_SECONDS: 1,
-    TIME_MINUTES: 60,
-    TIME_HOURS: 60 * 60,
-    TIME_DAYS: 24 * 60 * 60,
+    UnitOfTime.SECONDS: 1,
+    UnitOfTime.MINUTES: 60,
+    UnitOfTime.HOURS: 60 * 60,
+    UnitOfTime.DAYS: 24 * 60 * 60,
 }
 
 DEFAULT_ROUND = 3
@@ -72,7 +69,7 @@ PLATFORM_SCHEMA = vol.All(
             vol.Required(CONF_SOURCE_SENSOR): cv.entity_id,
             vol.Optional(CONF_ROUND_DIGITS, default=DEFAULT_ROUND): vol.Coerce(int),
             vol.Optional(CONF_UNIT_PREFIX, default=None): vol.In(UNIT_PREFIXES),
-            vol.Optional(CONF_UNIT_TIME, default=TIME_HOURS): vol.In(UNIT_TIME),
+            vol.Optional(CONF_UNIT_TIME, default=UnitOfTime.HOURS): vol.In(UNIT_TIME),
             vol.Remove(CONF_UNIT_OF_MEASUREMENT): cv.string,
             vol.Optional(CONF_METHOD, default=METHOD_TRAPEZOIDAL): vol.In(
                 INTEGRATION_METHODS
@@ -131,6 +128,7 @@ async def async_setup_platform(
     async_add_entities([integral])
 
 
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
 class IntegrationSensor(RestoreEntity, SensorEntity):
     """Representation of an integration sensor."""
 
@@ -146,7 +144,7 @@ class IntegrationSensor(RestoreEntity, SensorEntity):
         source_entity: str,
         unique_id: str | None,
         unit_prefix: str | None,
-        unit_time: str,
+        unit_time: UnitOfTime,
     ) -> None:
         """Initialize the integration sensor."""
         self._attr_unique_id = unique_id
@@ -177,22 +175,22 @@ class IntegrationSensor(RestoreEntity, SensorEntity):
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         await super().async_added_to_hass()
-        if state := await self.async_get_last_state():
-            try:
-                self._state = Decimal(state.state)
-            except (DecimalException, ValueError) as err:
-                _LOGGER.warning(
-                    "%s could not restore last state %s: %s",
-                    self.entity_id,
-                    state.state,
-                    err,
-                )
-            else:
-                self._attr_device_class = state.attributes.get(ATTR_DEVICE_CLASS)
-                if self._unit_of_measurement is None:
-                    self._unit_of_measurement = state.attributes.get(
-                        ATTR_UNIT_OF_MEASUREMENT
+        if (state := await self.async_get_last_state()) is not None:
+            if state.state == STATE_UNAVAILABLE:
+                self._attr_available = False
+            elif state.state != STATE_UNKNOWN:
+                try:
+                    self._state = Decimal(state.state)
+                except (DecimalException, ValueError) as err:
+                    _LOGGER.warning(
+                        "%s could not restore last state %s: %s",
+                        self.entity_id,
+                        state.state,
+                        err,
                     )
+
+            self._attr_device_class = state.attributes.get(ATTR_DEVICE_CLASS)
+            self._unit_of_measurement = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
 
         @callback
         def calc_integration(event: Event) -> None:
@@ -200,16 +198,23 @@ class IntegrationSensor(RestoreEntity, SensorEntity):
             old_state: State | None = event.data.get("old_state")
             new_state: State | None = event.data.get("new_state")
 
-            if new_state is None or new_state.state in (
-                STATE_UNKNOWN,
-                STATE_UNAVAILABLE,
-            ):
-                return
-
             # We may want to update our state before an early return,
             # based on the source sensor's unit_of_measurement
             # or device_class.
             update_state = False
+
+            if (
+                source_state := self.hass.states.get(self._sensor_source_id)
+            ) is None or source_state.state == STATE_UNAVAILABLE:
+                self._attr_available = False
+                update_state = True
+            else:
+                self._attr_available = True
+
+            if old_state is None or new_state is None:
+                # we can't calculate the elapsed time, so we can't calculate the integral
+                return
+
             unit = new_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
             if unit is not None:
                 new_unit_of_measurement = self._unit(unit)
@@ -229,31 +234,53 @@ class IntegrationSensor(RestoreEntity, SensorEntity):
             if update_state:
                 self.async_write_ha_state()
 
-            if old_state is None or old_state.state in (
-                STATE_UNKNOWN,
-                STATE_UNAVAILABLE,
-            ):
-                return
-
             try:
                 # integration as the Riemann integral of previous measures.
-                area = Decimal(0)
                 elapsed_time = (
                     new_state.last_updated - old_state.last_updated
                 ).total_seconds()
 
-                if self._method == METHOD_TRAPEZOIDAL:
+                if (
+                    self._method == METHOD_TRAPEZOIDAL
+                    and new_state.state
+                    not in (
+                        STATE_UNKNOWN,
+                        STATE_UNAVAILABLE,
+                    )
+                    and old_state.state
+                    not in (
+                        STATE_UNKNOWN,
+                        STATE_UNAVAILABLE,
+                    )
+                ):
                     area = (
                         (Decimal(new_state.state) + Decimal(old_state.state))
                         * Decimal(elapsed_time)
                         / 2
                     )
-                elif self._method == METHOD_LEFT:
+                elif self._method == METHOD_LEFT and old_state.state not in (
+                    STATE_UNKNOWN,
+                    STATE_UNAVAILABLE,
+                ):
                     area = Decimal(old_state.state) * Decimal(elapsed_time)
-                elif self._method == METHOD_RIGHT:
+                elif self._method == METHOD_RIGHT and new_state.state not in (
+                    STATE_UNKNOWN,
+                    STATE_UNAVAILABLE,
+                ):
                     area = Decimal(new_state.state) * Decimal(elapsed_time)
+                else:
+                    _LOGGER.debug(
+                        "Could not apply method %s to %s -> %s",
+                        self._method,
+                        old_state.state,
+                        new_state.state,
+                    )
+                    return
 
                 integral = area / (self._unit_prefix * self._unit_time)
+                _LOGGER.debug(
+                    "area = %s, integral = %s state = %s", area, integral, self._state
+                )
                 assert isinstance(integral, Decimal)
             except ValueError as err:
                 _LOGGER.warning("While calculating integration: %s", err)

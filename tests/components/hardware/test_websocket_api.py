@@ -3,6 +3,7 @@ from collections import namedtuple
 import datetime
 from unittest.mock import patch
 
+from freezegun.api import FrozenDateTimeFactory
 import psutil_home_assistant as ha_psutil
 
 from homeassistant.components.hardware.const import DOMAIN
@@ -10,8 +11,12 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
+from tests.typing import WebSocketGenerator
 
-async def test_board_info(hass: HomeAssistant, hass_ws_client) -> None:
+
+async def test_board_info(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test we can get the board info."""
     assert await async_setup_component(hass, DOMAIN, {})
 
@@ -28,7 +33,11 @@ async def test_board_info(hass: HomeAssistant, hass_ws_client) -> None:
 TEST_TIME_ADVANCE_INTERVAL = datetime.timedelta(seconds=5 + 1)
 
 
-async def test_system_status_subscription(hass: HomeAssistant, hass_ws_client, freezer):
+async def test_system_status_subscription(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    freezer: FrozenDateTimeFactory,
+) -> None:
     """Test websocket system status subscription."""
 
     mock_psutil = None
@@ -64,6 +73,7 @@ async def test_system_status_subscription(hass: HomeAssistant, hass_ws_client, f
         return_value=vmem,
     ):
         freezer.tick(TEST_TIME_ADVANCE_INTERVAL)
+        await hass.async_block_till_done()
         await hass.async_block_till_done()
 
     response = await client.receive_json()

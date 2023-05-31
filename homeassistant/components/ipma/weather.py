@@ -38,12 +38,12 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_MODE,
     CONF_NAME,
-    PRESSURE_HPA,
-    SPEED_KILOMETERS_PER_HOUR,
-    TEMP_CELSIUS,
+    UnitOfPressure,
+    UnitOfSpeed,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import entity_registry
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.sun import is_up
 from homeassistant.util import Throttle
@@ -89,7 +89,7 @@ async def async_setup_entry(
 
     # Migrate old unique_id
     @callback
-    def _async_migrator(entity_entry: entity_registry.RegistryEntry):
+    def _async_migrator(entity_entry: er.RegistryEntry):
         # Reject if new unique_id
         if entity_entry.unique_id.count(",") == 2:
             return None
@@ -105,9 +105,7 @@ async def async_setup_entry(
         )
         return {"new_unique_id": new_unique_id}
 
-    await entity_registry.async_migrate_entries(
-        hass, config_entry.entry_id, _async_migrator
-    )
+    await er.async_migrate_entries(hass, config_entry.entry_id, _async_migrator)
 
     async_add_entities([IPMAWeather(location, api, config_entry.data)], True)
 
@@ -115,13 +113,13 @@ async def async_setup_entry(
 class IPMAWeather(WeatherEntity):
     """Representation of a weather condition."""
 
-    _attr_native_pressure_unit = PRESSURE_HPA
-    _attr_native_temperature_unit = TEMP_CELSIUS
-    _attr_native_wind_speed_unit = SPEED_KILOMETERS_PER_HOUR
+    _attr_native_pressure_unit = UnitOfPressure.HPA
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_wind_speed_unit = UnitOfSpeed.KILOMETERS_PER_HOUR
 
     _attr_attribution = ATTRIBUTION
 
-    def __init__(self, location: Location, api: IPMA_API, config):
+    def __init__(self, location: Location, api: IPMA_API, config) -> None:
         """Initialise the platform with a data instance and station name."""
         self._api = api
         self._location_name = config.get(CONF_NAME, location.name)
@@ -158,7 +156,10 @@ class IPMAWeather(WeatherEntity):
     @property
     def unique_id(self) -> str:
         """Return a unique id."""
-        return f"{self._location.station_latitude}, {self._location.station_longitude}, {self._mode}"
+        return (
+            f"{self._location.station_latitude}, {self._location.station_longitude},"
+            f" {self._mode}"
+        )
 
     @property
     def name(self):

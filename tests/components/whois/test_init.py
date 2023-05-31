@@ -44,7 +44,6 @@ async def test_error_handling(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_whois: MagicMock,
-    caplog: pytest.LogCaptureFixture,
     side_effect: Exception,
 ) -> None:
     """Test the Whois threw an error."""

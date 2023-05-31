@@ -15,12 +15,13 @@ from homeassistant.const import (
     CONCENTRATION_PARTS_PER_BILLION,
     CONCENTRATION_PARTS_PER_MILLION,
     PERCENTAGE,
-    PRESSURE_MBAR,
     SIGNAL_STRENGTH_DECIBELS,
-    TEMP_CELSIUS,
+    EntityCategory,
+    UnitOfPressure,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo, EntityCategory
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import (
@@ -39,7 +40,7 @@ SENSORS: dict[str, SensorEntityDescription] = {
     "temp": SensorEntityDescription(
         key="temp",
         device_class=SensorDeviceClass.TEMPERATURE,
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         name="Temperature",
     ),
     "humidity": SensorEntityDescription(
@@ -51,7 +52,7 @@ SENSORS: dict[str, SensorEntityDescription] = {
     "pressure": SensorEntityDescription(
         key="pressure",
         device_class=SensorDeviceClass.PRESSURE,
-        native_unit_of_measurement=PRESSURE_MBAR,
+        native_unit_of_measurement=UnitOfPressure.MBAR,
         name="Pressure",
     ),
     "battery": SensorEntityDescription(
@@ -149,10 +150,14 @@ class AirthingsHeaterEnergySensor(CoordinatorEntity, SensorEntity):
         self._attr_unique_id = f"{airthings_device.device_id}_{entity_description.key}"
         self._id = airthings_device.device_id
         self._attr_device_info = DeviceInfo(
-            configuration_url="https://dashboard.airthings.com/",
+            configuration_url=(
+                "https://dashboard.airthings.com/devices/"
+                f"{airthings_device.device_id}"
+            ),
             identifiers={(DOMAIN, airthings_device.device_id)},
             name=airthings_device.name,
             manufacturer="Airthings",
+            model=airthings_device.device_type.replace("_", " ").lower().title(),
         )
 
     @property

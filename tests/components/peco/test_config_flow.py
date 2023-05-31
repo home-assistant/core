@@ -1,7 +1,7 @@
 """Test the PECO Outage Counter config flow."""
 from unittest.mock import patch
 
-from pytest import raises
+import pytest
 from voluptuous.error import MultipleInvalid
 
 from homeassistant import config_entries
@@ -45,7 +45,7 @@ async def test_invalid_county(hass: HomeAssistant) -> None:
     assert result["type"] == FlowResultType.FORM
     assert result["errors"] is None
 
-    with raises(MultipleInvalid):
+    with pytest.raises(MultipleInvalid):
         await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {

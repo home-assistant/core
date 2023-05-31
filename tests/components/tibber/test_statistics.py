@@ -1,8 +1,10 @@
 """Test adding external statistics from Tibber."""
 from unittest.mock import AsyncMock
 
+from homeassistant.components.recorder import Recorder
 from homeassistant.components.recorder.statistics import statistics_during_period
 from homeassistant.components.tibber.sensor import TibberDataCoordinator
+from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
 from .test_common import CONSUMPTION_DATA_1, PRODUCTION_DATA_1, mock_get_homes
@@ -10,7 +12,7 @@ from .test_common import CONSUMPTION_DATA_1, PRODUCTION_DATA_1, mock_get_homes
 from tests.components.recorder.common import async_wait_recording_done
 
 
-async def test_async_setup_entry(hass, recorder_mock):
+async def test_async_setup_entry(recorder_mock: Recorder, hass: HomeAssistant) -> None:
     """Test setup Tibber."""
     tibber_connection = AsyncMock()
     tibber_connection.name = "tibber"
@@ -22,7 +24,7 @@ async def test_async_setup_entry(hass, recorder_mock):
     await coordinator._async_update_data()
     await async_wait_recording_done(hass)
 
-    for (statistic_id, data, key) in (
+    for statistic_id, data, key in (
         ("tibber:energy_consumption_home_id", CONSUMPTION_DATA_1, "consumption"),
         ("tibber:energy_totalcost_home_id", CONSUMPTION_DATA_1, "totalCost"),
         ("tibber:energy_production_home_id", PRODUCTION_DATA_1, "production"),
@@ -33,20 +35,18 @@ async def test_async_setup_entry(hass, recorder_mock):
             hass,
             dt_util.parse_datetime(data[0]["from"]),
             None,
-            [statistic_id],
+            {statistic_id},
             "hour",
-            True,
+            None,
+            {"start", "state", "mean", "min", "max", "last_reset", "sum"},
         )
 
         assert len(stats) == 1
         assert len(stats[statistic_id]) == 3
         _sum = 0
         for k, stat in enumerate(stats[statistic_id]):
-            assert stat["start"] == dt_util.parse_datetime(data[k]["from"])
+            assert stat["start"] == dt_util.parse_datetime(data[k]["from"]).timestamp()
             assert stat["state"] == data[k][key]
-            assert stat["mean"] is None
-            assert stat["min"] is None
-            assert stat["max"] is None
             assert stat["last_reset"] is None
 
             _sum += data[k][key]

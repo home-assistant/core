@@ -10,9 +10,8 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_ON
+from homeassistant.const import STATE_ON, EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.entity_registry import RegistryEntry
 
@@ -25,6 +24,7 @@ from .entity import (
     ShellyRestAttributeEntity,
     ShellyRpcAttributeEntity,
     ShellySleepingBlockAttributeEntity,
+    ShellySleepingRpcAttributeEntity,
     async_setup_entry_attribute_entities,
     async_setup_entry_rest,
     async_setup_entry_rpc,
@@ -91,6 +91,7 @@ SENSORS: Final = {
         key="sensor|gas",
         name="Gas",
         device_class=BinarySensorDeviceClass.GAS,
+        translation_key="gas",
         value=lambda value: value in ["mild", "heavy"],
         extra_state_attributes=lambda block: {"detected": block.gas},
     ),
@@ -125,7 +126,7 @@ SENSORS: Final = {
     ),
     ("sensor", "extInput"): BlockBinarySensorDescription(
         key="sensor|extInput",
-        name="External Input",
+        name="External input",
         device_class=BinarySensorDeviceClass.POWER,
         entity_registry_enabled_default=False,
     ),
@@ -189,6 +190,12 @@ RPC_SENSORS: Final = {
         entity_category=EntityCategory.DIAGNOSTIC,
         supported=lambda status: status.get("apower") is not None,
     ),
+    "smoke": RpcBinarySensorDescription(
+        key="smoke",
+        sub_key="alarm",
+        name="Smoke",
+        device_class=BinarySensorDeviceClass.SMOKE,
+    ),
 }
 
 
@@ -209,9 +216,19 @@ async def async_setup_entry(
 ) -> None:
     """Set up sensors for device."""
     if get_device_entry_gen(config_entry) == 2:
-        return async_setup_entry_rpc(
-            hass, config_entry, async_add_entities, RPC_SENSORS, RpcBinarySensor
-        )
+        if config_entry.data[CONF_SLEEP_PERIOD]:
+            async_setup_entry_rpc(
+                hass,
+                config_entry,
+                async_add_entities,
+                RPC_SENSORS,
+                RpcSleepingBinarySensor,
+            )
+        else:
+            async_setup_entry_rpc(
+                hass, config_entry, async_add_entities, RPC_SENSORS, RpcBinarySensor
+            )
+        return
 
     if config_entry.data[CONF_SLEEP_PERIOD]:
         async_setup_entry_attribute_entities(
@@ -257,10 +274,8 @@ class RestBinarySensor(ShellyRestAttributeEntity, BinarySensorEntity):
     entity_description: RestBinarySensorDescription
 
     @property
-    def is_on(self) -> bool | None:
+    def is_on(self) -> bool:
         """Return true if REST sensor state is on."""
-        if self.attribute_value is None:
-            return None
         return bool(self.attribute_value)
 
 
@@ -270,10 +285,8 @@ class RpcBinarySensor(ShellyRpcAttributeEntity, BinarySensorEntity):
     entity_description: RpcBinarySensorDescription
 
     @property
-    def is_on(self) -> bool | None:
+    def is_on(self) -> bool:
         """Return true if RPC sensor state is on."""
-        if self.attribute_value is None:
-            return None
         return bool(self.attribute_value)
 
 
@@ -283,9 +296,29 @@ class BlockSleepingBinarySensor(ShellySleepingBlockAttributeEntity, BinarySensor
     entity_description: BlockBinarySensorDescription
 
     @property
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Return true if sensor state is on."""
         if self.block is not None:
             return bool(self.attribute_value)
 
-        return self.last_state == STATE_ON
+        if self.last_state is None:
+            return None
+
+        return self.last_state.state == STATE_ON
+
+
+class RpcSleepingBinarySensor(ShellySleepingRpcAttributeEntity, BinarySensorEntity):
+    """Represent a RPC sleeping binary sensor entity."""
+
+    entity_description: RpcBinarySensorDescription
+
+    @property
+    def is_on(self) -> bool | None:
+        """Return true if RPC sensor state is on."""
+        if self.coordinator.device.initialized:
+            return bool(self.attribute_value)
+
+        if self.last_state is None:
+            return None
+
+        return self.last_state.state == STATE_ON

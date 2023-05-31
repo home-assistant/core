@@ -3,9 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Awaitable, Callable, Coroutine
 from functools import wraps
-from typing import Any, TypeVar
-
-from typing_extensions import Concatenate, ParamSpec
+from typing import Any, Concatenate, ParamSpec, TypeVar
 
 from . import EvilGeniusEntity
 

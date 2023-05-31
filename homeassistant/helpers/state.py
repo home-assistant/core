@@ -31,8 +31,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class AsyncTrackStates:
-    """
-    Record the time when the with-block is entered.
+    """Record the time when the with-block is entered.
 
     Add all states that have changed since the start time to the return list
     when with-block is exited.
@@ -119,8 +118,7 @@ async def async_reproduce_state(
 
 
 def state_as_number(state: State) -> float:
-    """
-    Try to coerce our state to a number.
+    """Try to coerce our state to a number.
 
     Raises ValueError if this is not possible.
     """

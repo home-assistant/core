@@ -28,7 +28,7 @@ def log_messages(
 
     debug_info_entities = get_mqtt_data(hass).debug_info_entities
 
-    def _log_message(msg):
+    def _log_message(msg: Any) -> None:
         """Log message."""
         messages = debug_info_entities[entity_id]["subscriptions"][
             msg.subscribed_topic

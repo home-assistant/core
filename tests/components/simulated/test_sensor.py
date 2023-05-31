@@ -17,10 +17,11 @@ from homeassistant.components.simulated.sensor import (
     DEFAULT_SEED,
 )
 from homeassistant.const import CONF_FRIENDLY_NAME
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 
-async def test_simulated_sensor_default_config(hass):
+async def test_simulated_sensor_default_config(hass: HomeAssistant) -> None:
     """Test default config."""
     config = {"sensor": {"platform": "simulated"}}
     assert await async_setup_component(hass, "sensor", config)

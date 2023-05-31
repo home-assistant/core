@@ -36,6 +36,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
@@ -99,7 +100,7 @@ async def setup_comp(hass, config_count):
 
 
 @pytest.mark.parametrize("config_count", [(CONFIG_ATTRIBUTES, 1)])
-async def test_state(hass, setup_comp):
+async def test_state(hass: HomeAssistant, setup_comp) -> None:
     """Test handling of state.
 
     The group state is unknown if all group members are unknown or unavailable.
@@ -248,7 +249,7 @@ async def test_state(hass, setup_comp):
 
 
 @pytest.mark.parametrize("config_count", [(CONFIG_ATTRIBUTES, 1)])
-async def test_attributes(hass, setup_comp):
+async def test_attributes(hass: HomeAssistant, setup_comp) -> None:
     """Test handling of state attributes."""
     state = hass.states.get(COVER_GROUP)
     assert state.state == STATE_UNAVAILABLE
@@ -412,7 +413,9 @@ async def test_attributes(hass, setup_comp):
 
 
 @pytest.mark.parametrize("config_count", [(CONFIG_TILT_ONLY, 2)])
-async def test_cover_that_only_supports_tilt_removed(hass, setup_comp):
+async def test_cover_that_only_supports_tilt_removed(
+    hass: HomeAssistant, setup_comp
+) -> None:
     """Test removing a cover that support tilt."""
     hass.states.async_set(
         DEMO_COVER_TILT,
@@ -440,7 +443,7 @@ async def test_cover_that_only_supports_tilt_removed(hass, setup_comp):
 
 
 @pytest.mark.parametrize("config_count", [(CONFIG_ALL, 2)])
-async def test_open_covers(hass, setup_comp):
+async def test_open_covers(hass: HomeAssistant, setup_comp) -> None:
     """Test open cover function."""
     await hass.services.async_call(
         DOMAIN, SERVICE_OPEN_COVER, {ATTR_ENTITY_ID: COVER_GROUP}, blocking=True
@@ -461,7 +464,7 @@ async def test_open_covers(hass, setup_comp):
 
 
 @pytest.mark.parametrize("config_count", [(CONFIG_ALL, 2)])
-async def test_close_covers(hass, setup_comp):
+async def test_close_covers(hass: HomeAssistant, setup_comp) -> None:
     """Test close cover function."""
     await hass.services.async_call(
         DOMAIN, SERVICE_CLOSE_COVER, {ATTR_ENTITY_ID: COVER_GROUP}, blocking=True
@@ -482,7 +485,7 @@ async def test_close_covers(hass, setup_comp):
 
 
 @pytest.mark.parametrize("config_count", [(CONFIG_ALL, 2)])
-async def test_toggle_covers(hass, setup_comp):
+async def test_toggle_covers(hass: HomeAssistant, setup_comp) -> None:
     """Test toggle cover function."""
     # Start covers in open state
     await hass.services.async_call(
@@ -532,7 +535,7 @@ async def test_toggle_covers(hass, setup_comp):
 
 
 @pytest.mark.parametrize("config_count", [(CONFIG_ALL, 2)])
-async def test_stop_covers(hass, setup_comp):
+async def test_stop_covers(hass: HomeAssistant, setup_comp) -> None:
     """Test stop cover function."""
     await hass.services.async_call(
         DOMAIN, SERVICE_OPEN_COVER, {ATTR_ENTITY_ID: COVER_GROUP}, blocking=True
@@ -558,7 +561,7 @@ async def test_stop_covers(hass, setup_comp):
 
 
 @pytest.mark.parametrize("config_count", [(CONFIG_ALL, 2)])
-async def test_set_cover_position(hass, setup_comp):
+async def test_set_cover_position(hass: HomeAssistant, setup_comp) -> None:
     """Test set cover position function."""
     await hass.services.async_call(
         DOMAIN,
@@ -581,7 +584,7 @@ async def test_set_cover_position(hass, setup_comp):
 
 
 @pytest.mark.parametrize("config_count", [(CONFIG_ALL, 2)])
-async def test_open_tilts(hass, setup_comp):
+async def test_open_tilts(hass: HomeAssistant, setup_comp) -> None:
     """Test open tilt function."""
     await hass.services.async_call(
         DOMAIN, SERVICE_OPEN_COVER_TILT, {ATTR_ENTITY_ID: COVER_GROUP}, blocking=True
@@ -601,7 +604,7 @@ async def test_open_tilts(hass, setup_comp):
 
 
 @pytest.mark.parametrize("config_count", [(CONFIG_ALL, 2)])
-async def test_close_tilts(hass, setup_comp):
+async def test_close_tilts(hass: HomeAssistant, setup_comp) -> None:
     """Test close tilt function."""
     await hass.services.async_call(
         DOMAIN, SERVICE_CLOSE_COVER_TILT, {ATTR_ENTITY_ID: COVER_GROUP}, blocking=True
@@ -619,7 +622,7 @@ async def test_close_tilts(hass, setup_comp):
 
 
 @pytest.mark.parametrize("config_count", [(CONFIG_ALL, 2)])
-async def test_toggle_tilts(hass, setup_comp):
+async def test_toggle_tilts(hass: HomeAssistant, setup_comp) -> None:
     """Test toggle tilt function."""
     # Start tilted open
     await hass.services.async_call(
@@ -672,7 +675,7 @@ async def test_toggle_tilts(hass, setup_comp):
 
 
 @pytest.mark.parametrize("config_count", [(CONFIG_ALL, 2)])
-async def test_stop_tilts(hass, setup_comp):
+async def test_stop_tilts(hass: HomeAssistant, setup_comp) -> None:
     """Test stop tilts function."""
     await hass.services.async_call(
         DOMAIN, SERVICE_OPEN_COVER_TILT, {ATTR_ENTITY_ID: COVER_GROUP}, blocking=True
@@ -696,7 +699,7 @@ async def test_stop_tilts(hass, setup_comp):
 
 
 @pytest.mark.parametrize("config_count", [(CONFIG_ALL, 2)])
-async def test_set_tilt_positions(hass, setup_comp):
+async def test_set_tilt_positions(hass: HomeAssistant, setup_comp) -> None:
     """Test set tilt position function."""
     await hass.services.async_call(
         DOMAIN,
@@ -717,7 +720,7 @@ async def test_set_tilt_positions(hass, setup_comp):
 
 
 @pytest.mark.parametrize("config_count", [(CONFIG_POS, 2)])
-async def test_is_opening_closing(hass, setup_comp):
+async def test_is_opening_closing(hass: HomeAssistant, setup_comp) -> None:
     """Test is_opening property."""
     await hass.services.async_call(
         DOMAIN, SERVICE_OPEN_COVER, {ATTR_ENTITY_ID: COVER_GROUP}, blocking=True
@@ -789,7 +792,7 @@ async def test_is_opening_closing(hass, setup_comp):
     assert hass.states.get(COVER_GROUP).state == STATE_OPENING
 
 
-async def test_nested_group(hass):
+async def test_nested_group(hass: HomeAssistant) -> None:
     """Test nested cover group."""
     await async_setup_component(
         hass,

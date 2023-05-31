@@ -1,5 +1,4 @@
 """deCONZ sensor platform tests."""
-
 from datetime import timedelta
 from unittest.mock import patch
 
@@ -15,17 +14,27 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
-from homeassistant.const import ATTR_DEVICE_CLASS, STATE_UNAVAILABLE
+from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
+    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    CONCENTRATION_PARTS_PER_BILLION,
+    CONCENTRATION_PARTS_PER_MILLION,
+    STATE_UNAVAILABLE,
+    EntityCategory,
+)
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.helpers.entity import EntityCategory
-from homeassistant.util import dt
+from homeassistant.util import dt as dt_util
 
 from .test_gateway import DECONZ_WEB_REQUEST, setup_deconz_integration
 
 from tests.common import async_fire_time_changed
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 
-async def test_no_sensors(hass, aioclient_mock):
+async def test_no_sensors(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test that no sensors in deconz results in no sensor entities."""
     await setup_deconz_integration(hass, aioclient_mock)
     assert len(hass.states.async_all()) == 0
@@ -62,9 +71,8 @@ TEST_DATA = [
             "state": "poor",
             "entity_category": None,
             "device_class": None,
-            "state_class": SensorStateClass.MEASUREMENT,
+            "state_class": None,
             "attributes": {
-                "state_class": "measurement",
                 "friendly_name": "BOSCH Air quality sensor",
             },
             "websocket_event": {"state": {"airquality": "excellent"}},
@@ -100,15 +108,135 @@ TEST_DATA = [
             "old_unique_id": "00:12:4b:00:14:4d:00:07-ppb",
             "state": "809",
             "entity_category": None,
-            "device_class": SensorDeviceClass.AQI,
+            "device_class": None,
             "state_class": SensorStateClass.MEASUREMENT,
             "attributes": {
-                "state_class": "measurement",
-                "device_class": "aqi",
                 "friendly_name": "BOSCH Air quality sensor PPB",
+                "state_class": "measurement",
+                "unit_of_measurement": CONCENTRATION_PARTS_PER_BILLION,
             },
             "websocket_event": {"state": {"airqualityppb": 1000}},
             "next_state": "1000",
+        },
+    ),
+    (  # Air quality 6 in 1 (without airquality) -> airquality_co2_density
+        {
+            "config": {
+                "on": True,
+                "reachable": True,
+            },
+            "etag": "e1a406dbbe1438fa924007309ef46a01",
+            "lastseen": "2023-03-29T18:25Z",
+            "manufacturername": "_TZE200_dwcarsat",
+            "modelid": "TS0601",
+            "name": "AirQuality 1",
+            "state": {
+                "airquality_co2_density": 359,
+                "airquality_formaldehyde_density": 4,
+                "airqualityppb": 15,
+                "lastupdated": "2023-03-29T19:05:41.903",
+                "pm2_5": 8,
+            },
+            "type": "ZHAAirQuality",
+            "uniqueid": "00:00:00:00:00:00:00:01-02-0113",
+        },
+        {
+            "entity_count": 4,
+            "device_count": 3,
+            "entity_id": "sensor.airquality_1_co2",
+            "unique_id": "00:00:00:00:00:00:00:01-02-0113-air_quality_co2",
+            "state": "359",
+            "entity_category": None,
+            "device_class": SensorDeviceClass.CO2,
+            "state_class": SensorStateClass.MEASUREMENT,
+            "attributes": {
+                "friendly_name": "AirQuality 1 CO2",
+                "device_class": SensorDeviceClass.CO2,
+                "state_class": SensorStateClass.MEASUREMENT,
+                "unit_of_measurement": CONCENTRATION_PARTS_PER_MILLION,
+            },
+            "websocket_event": {"state": {"airquality_co2_density": 332}},
+            "next_state": "332",
+        },
+    ),
+    (  # Air quality 6 in 1 (without airquality) -> airquality_formaldehyde_density
+        {
+            "config": {
+                "on": True,
+                "reachable": True,
+            },
+            "etag": "e1a406dbbe1438fa924007309ef46a01",
+            "lastseen": "2023-03-29T18:25Z",
+            "manufacturername": "_TZE200_dwcarsat",
+            "modelid": "TS0601",
+            "name": "AirQuality 1",
+            "state": {
+                "airquality_co2_density": 359,
+                "airquality_formaldehyde_density": 4,
+                "airqualityppb": 15,
+                "lastupdated": "2023-03-29T19:05:41.903",
+                "pm2_5": 8,
+            },
+            "type": "ZHAAirQuality",
+            "uniqueid": "00:00:00:00:00:00:00:01-02-0113",
+        },
+        {
+            "entity_count": 4,
+            "device_count": 3,
+            "entity_id": "sensor.airquality_1_ch2o",
+            "unique_id": "00:00:00:00:00:00:00:01-02-0113-air_quality_formaldehyde",
+            "state": "4",
+            "entity_category": None,
+            "device_class": SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
+            "state_class": SensorStateClass.MEASUREMENT,
+            "attributes": {
+                "friendly_name": "AirQuality 1 CH2O",
+                "device_class": SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
+                "state_class": SensorStateClass.MEASUREMENT,
+                "unit_of_measurement": CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+            },
+            "websocket_event": {"state": {"airquality_formaldehyde_density": 5}},
+            "next_state": "5",
+        },
+    ),
+    (  # Air quality 6 in 1 (without airquality) -> pm2_5
+        {
+            "config": {
+                "on": True,
+                "reachable": True,
+            },
+            "etag": "e1a406dbbe1438fa924007309ef46a01",
+            "lastseen": "2023-03-29T18:25Z",
+            "manufacturername": "_TZE200_dwcarsat",
+            "modelid": "TS0601",
+            "name": "AirQuality 1",
+            "state": {
+                "airquality_co2_density": 359,
+                "airquality_formaldehyde_density": 4,
+                "airqualityppb": 15,
+                "lastupdated": "2023-03-29T19:05:41.903",
+                "pm2_5": 8,
+            },
+            "type": "ZHAAirQuality",
+            "uniqueid": "00:00:00:00:00:00:00:01-02-0113",
+        },
+        {
+            "entity_count": 4,
+            "device_count": 3,
+            "entity_id": "sensor.airquality_1_pm25",
+            "unique_id": "00:00:00:00:00:00:00:01-02-0113-air_quality_pm2_5",
+            "state": "8",
+            "entity_category": None,
+            "device_class": SensorDeviceClass.PM25,
+            "state_class": SensorStateClass.MEASUREMENT,
+            "attributes": {
+                "friendly_name": "AirQuality 1 PM25",
+                "device_class": SensorDeviceClass.PM25,
+                "state_class": SensorStateClass.MEASUREMENT,
+                "unit_of_measurement": CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+            },
+            "websocket_event": {"state": {"pm2_5": 11}},
+            "next_state": "11",
         },
     ),
     (  # Battery sensor
@@ -295,7 +423,7 @@ TEST_DATA = [
             "entity_id": "sensor.mi_temperature_1",
             "unique_id": "00:15:8d:00:02:45:dc:53-01-0405-humidity",
             "old_unique_id": "00:15:8d:00:02:45:dc:53-01-0405",
-            "state": "35.5",
+            "state": "35.55",
             "entity_category": None,
             "device_class": SensorDeviceClass.HUMIDITY,
             "state_class": SensorStateClass.MEASUREMENT,
@@ -305,6 +433,9 @@ TEST_DATA = [
                 "unit_of_measurement": "%",
                 "device_class": "humidity",
                 "friendly_name": "Mi temperature 1",
+            },
+            "options": {
+                "suggested_display_precision": 1,
             },
             "websocket_event": {"state": {"humidity": 1000}},
             "next_state": "10.0",
@@ -473,7 +604,7 @@ TEST_DATA = [
             "entity_id": "sensor.mi_temperature_1",
             "unique_id": "00:15:8d:00:02:45:dc:53-01-0402-temperature",
             "old_unique_id": "00:15:8d:00:02:45:dc:53-01-0402",
-            "state": "21.8",
+            "state": "21.82",
             "entity_category": None,
             "device_class": SensorDeviceClass.TEMPERATURE,
             "state_class": SensorStateClass.MEASUREMENT,
@@ -483,6 +614,9 @@ TEST_DATA = [
                 "unit_of_measurement": "°C",
                 "device_class": "temperature",
                 "friendly_name": "Mi temperature 1",
+            },
+            "options": {
+                "suggested_display_precision": 1,
             },
             "websocket_event": {"state": {"temperature": 1800}},
             "next_state": "18.0",
@@ -618,10 +752,14 @@ TEST_DATA = [
 ]
 
 
-@pytest.mark.parametrize("sensor_data, expected", TEST_DATA)
+@pytest.mark.parametrize(("sensor_data", "expected"), TEST_DATA)
 async def test_sensors(
-    hass, aioclient_mock, mock_deconz_websocket, sensor_data, expected
-):
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    mock_deconz_websocket,
+    sensor_data,
+    expected,
+) -> None:
     """Test successful creation of sensor entities."""
     ent_reg = er.async_get(hass)
     dev_reg = dr.async_get(hass)
@@ -647,7 +785,7 @@ async def test_sensors(
 
         async_fire_time_changed(
             hass,
-            dt.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1),
+            dt_util.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1),
         )
         await hass.async_block_till_done()
 
@@ -694,7 +832,9 @@ async def test_sensors(
     assert len(hass.states.async_all()) == 0
 
 
-async def test_not_allow_clip_sensor(hass, aioclient_mock):
+async def test_not_allow_clip_sensor(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test that CLIP sensors are not allowed."""
     data = {
         "sensors": {
@@ -716,7 +856,9 @@ async def test_not_allow_clip_sensor(hass, aioclient_mock):
     assert len(hass.states.async_all()) == 0
 
 
-async def test_allow_clip_sensors(hass, aioclient_mock):
+async def test_allow_clip_sensors(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test that CLIP sensors can be allowed."""
     data = {
         "sensors": {
@@ -782,7 +924,9 @@ async def test_allow_clip_sensors(hass, aioclient_mock):
     assert hass.states.get("sensor.clip_flur").state == "0"
 
 
-async def test_add_new_sensor(hass, aioclient_mock, mock_deconz_websocket):
+async def test_add_new_sensor(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, mock_deconz_websocket
+) -> None:
     """Test that adding a new sensor works."""
     event_added_sensor = {
         "t": "event",
@@ -818,10 +962,13 @@ BAD_SENSOR_DATA = [
 ]
 
 
-@pytest.mark.parametrize("sensor_type, sensor_property", BAD_SENSOR_DATA)
+@pytest.mark.parametrize(("sensor_type", "sensor_property"), BAD_SENSOR_DATA)
 async def test_dont_add_sensor_if_state_is_none(
-    hass, aioclient_mock, sensor_type, sensor_property
-):
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    sensor_type,
+    sensor_property,
+) -> None:
     """Test sensor with scaled data is not created if state is None."""
     data = {
         "sensors": {
@@ -840,7 +987,9 @@ async def test_dont_add_sensor_if_state_is_none(
     assert len(hass.states.async_all()) == 0
 
 
-async def test_air_quality_sensor_without_ppb(hass, aioclient_mock):
+async def test_air_quality_sensor_without_ppb(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test sensor with scaled data is not created if state is None."""
     data = {
         "sensors": {
@@ -871,7 +1020,9 @@ async def test_air_quality_sensor_without_ppb(hass, aioclient_mock):
     assert len(hass.states.async_all()) == 1
 
 
-async def test_add_battery_later(hass, aioclient_mock, mock_deconz_websocket):
+async def test_add_battery_later(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, mock_deconz_websocket
+) -> None:
     """Test that a battery sensor can be created later on.
 
     Without an initial battery state a battery sensor
@@ -928,7 +1079,9 @@ async def test_add_battery_later(hass, aioclient_mock, mock_deconz_websocket):
 
 
 @pytest.mark.parametrize("model_id", ["0x8030", "0x8031", "0x8034", "0x8035"])
-async def test_special_danfoss_battery_creation(hass, aioclient_mock, model_id):
+async def test_special_danfoss_battery_creation(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, model_id
+) -> None:
     """Test the special Danfoss battery creation works.
 
     Normally there should only be one battery sensor per device from deCONZ.
@@ -1066,7 +1219,9 @@ async def test_special_danfoss_battery_creation(hass, aioclient_mock, model_id):
     assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 5
 
 
-async def test_unsupported_sensor(hass, aioclient_mock):
+async def test_unsupported_sensor(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test that unsupported sensors doesn't break anything."""
     data = {
         "sensors": {

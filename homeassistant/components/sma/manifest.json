@@ -1,10 +1,10 @@
 {
   "domain": "sma",
   "name": "SMA Solar",
+  "codeowners": ["@kellerza", "@rklomp"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/sma",
-  "requirements": ["pysma==0.6.12"],
-  "codeowners": ["@kellerza", "@rklomp"],
   "iot_class": "local_polling",
-  "loggers": ["pysma"]
+  "loggers": ["pysma"],
+  "requirements": ["pysma==0.7.3"]
 }

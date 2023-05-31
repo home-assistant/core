@@ -7,13 +7,14 @@ from homeassistant import config as hass_config
 import homeassistant.components.notify as notify
 from homeassistant.components.rest import DOMAIN
 from homeassistant.const import SERVICE_RELOAD
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import get_fixture_path
 
 
 @respx.mock
-async def test_reload_notify(hass):
+async def test_reload_notify(hass: HomeAssistant) -> None:
     """Verify we can reload the notify service."""
     respx.get("http://localhost") % 200
 

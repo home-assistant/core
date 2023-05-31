@@ -19,7 +19,7 @@ from homeassistant.const import (
     ATTR_TEMPERATURE,
     PRECISION_TENTHS,
     PRECISION_WHOLE,
-    TEMP_CELSIUS,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
@@ -36,7 +36,9 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 VICARE_MODE_DHW = "dhw"
+VICARE_MODE_HEATING = "heating"
 VICARE_MODE_DHWANDHEATING = "dhwAndHeating"
+VICARE_MODE_DHWANDHEATINGCOOLING = "dhwAndHeatingCooling"
 VICARE_MODE_FORCEDREDUCED = "forcedReduced"
 VICARE_MODE_FORCEDNORMAL = "forcedNormal"
 VICARE_MODE_OFF = "standby"
@@ -50,6 +52,8 @@ OPERATION_MODE_OFF = "off"
 VICARE_TO_HA_HVAC_DHW = {
     VICARE_MODE_DHW: OPERATION_MODE_ON,
     VICARE_MODE_DHWANDHEATING: OPERATION_MODE_ON,
+    VICARE_MODE_DHWANDHEATINGCOOLING: OPERATION_MODE_ON,
+    VICARE_MODE_HEATING: OPERATION_MODE_OFF,
     VICARE_MODE_FORCEDREDUCED: OPERATION_MODE_OFF,
     VICARE_MODE_FORCEDNORMAL: OPERATION_MODE_ON,
     VICARE_MODE_OFF: OPERATION_MODE_OFF,
@@ -166,7 +170,7 @@ class ViCareWater(WaterHeaterEntity):
     @property
     def temperature_unit(self):
         """Return the unit of measurement."""
-        return TEMP_CELSIUS
+        return UnitOfTemperature.CELSIUS
 
     @property
     def current_temperature(self):

@@ -1,23 +1,22 @@
 """Platform for Kostal Plenticore numbers."""
 from __future__ import annotations
 
-from abc import ABC
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
 
-from kostal.plenticore import SettingsData
+from pykoplenti import SettingsData
 
 from homeassistant.components.number import (
+    NumberDeviceClass,
     NumberEntity,
     NumberEntityDescription,
     NumberMode,
 )
-from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PERCENTAGE, POWER_WATT
+from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfPower
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo, EntityCategory
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -62,11 +61,11 @@ NUMBER_SETTINGS_DATA = [
     ),
     PlenticoreNumberEntityDescription(
         key="battery_min_home_consumption",
-        device_class=SensorDeviceClass.POWER,
+        device_class=NumberDeviceClass.POWER,
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
         name="Battery min Home Consumption",
-        native_unit_of_measurement=POWER_WATT,
+        native_unit_of_measurement=UnitOfPower.WATT,
         native_max_value=38000,
         native_min_value=50,
         native_step=1,
@@ -130,11 +129,12 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class PlenticoreDataNumber(CoordinatorEntity, NumberEntity, ABC):
+class PlenticoreDataNumber(
+    CoordinatorEntity[SettingDataUpdateCoordinator], NumberEntity
+):
     """Representation of a Kostal Plenticore Number entity."""
 
     entity_description: PlenticoreNumberEntityDescription
-    coordinator: SettingDataUpdateCoordinator
 
     def __init__(
         self,
@@ -188,7 +188,9 @@ class PlenticoreDataNumber(CoordinatorEntity, NumberEntity, ABC):
     async def async_added_to_hass(self) -> None:
         """Register this entity on the Update Coordinator."""
         await super().async_added_to_hass()
-        self.coordinator.start_fetch_data(self.module_id, self.data_id)
+        self.async_on_remove(
+            self.coordinator.start_fetch_data(self.module_id, self.data_id)
+        )
 
     async def async_will_remove_from_hass(self) -> None:
         """Unregister this entity from the Update Coordinator."""

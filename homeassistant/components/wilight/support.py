@@ -43,7 +43,7 @@ def wilight_trigger(value: Any) -> str | None:
 
     if (step == 6) & result_60:
         step = 7
-        err_desc = "Active part shoul be less than 2"
+        err_desc = "Active part should be less than 2"
 
     if (step == 7) & result_2:
         return value

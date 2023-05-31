@@ -2,17 +2,21 @@
 from unittest.mock import patch
 
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.siren import DOMAIN
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 from . import configure_integration
 from .mocks import HomeControlMock, HomeControlMockSiren
 
 
 @pytest.mark.usefixtures("mock_zeroconf")
-async def test_siren(hass: HomeAssistant):
+async def test_siren(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, snapshot: SnapshotAssertion
+) -> None:
     """Test setup and state change of a siren device."""
     entry = configure_integration(hass)
     test_gateway = HomeControlMockSiren()
@@ -25,8 +29,8 @@ async def test_siren(hass: HomeAssistant):
         await hass.async_block_till_done()
 
     state = hass.states.get(f"{DOMAIN}.test")
-    assert state is not None
-    assert state.state == STATE_OFF
+    assert state == snapshot
+    assert entity_registry.async_get(f"{DOMAIN}.test") == snapshot
 
     # Emulate websocket message: sensor turned on
     test_gateway.publisher.dispatch("Test", ("devolo.SirenMultiLevelSwitch:Test", 1))
@@ -41,7 +45,9 @@ async def test_siren(hass: HomeAssistant):
 
 
 @pytest.mark.usefixtures("mock_zeroconf")
-async def test_siren_switching(hass: HomeAssistant):
+async def test_siren_switching(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, snapshot: SnapshotAssertion
+) -> None:
     """Test setup and state change via switching of a siren device."""
     entry = configure_integration(hass)
     test_gateway = HomeControlMockSiren()
@@ -54,8 +60,8 @@ async def test_siren_switching(hass: HomeAssistant):
         await hass.async_block_till_done()
 
     state = hass.states.get(f"{DOMAIN}.test")
-    assert state is not None
-    assert state.state == STATE_OFF
+    assert state == snapshot
+    assert entity_registry.async_get(f"{DOMAIN}.test") == snapshot
 
     with patch(
         "devolo_home_control_api.properties.multi_level_switch_property.MultiLevelSwitchProperty.set"
@@ -92,7 +98,9 @@ async def test_siren_switching(hass: HomeAssistant):
 
 
 @pytest.mark.usefixtures("mock_zeroconf")
-async def test_siren_change_default_tone(hass: HomeAssistant):
+async def test_siren_change_default_tone(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, snapshot: SnapshotAssertion
+) -> None:
     """Test changing the default tone on message."""
     entry = configure_integration(hass)
     test_gateway = HomeControlMockSiren()
@@ -105,7 +113,8 @@ async def test_siren_change_default_tone(hass: HomeAssistant):
         await hass.async_block_till_done()
 
     state = hass.states.get(f"{DOMAIN}.test")
-    assert state is not None
+    assert state == snapshot
+    assert entity_registry.async_get(f"{DOMAIN}.test") == snapshot
 
     with patch(
         "devolo_home_control_api.properties.multi_level_switch_property.MultiLevelSwitchProperty.set"
@@ -121,7 +130,7 @@ async def test_siren_change_default_tone(hass: HomeAssistant):
 
 
 @pytest.mark.usefixtures("mock_zeroconf")
-async def test_remove_from_hass(hass: HomeAssistant):
+async def test_remove_from_hass(hass: HomeAssistant) -> None:
     """Test removing entity."""
     entry = configure_integration(hass)
     test_gateway = HomeControlMockSiren()

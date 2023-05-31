@@ -1,4 +1,6 @@
 """Support for Join notifications."""
+from __future__ import annotations
+
 import logging
 
 from pyjoin import get_devices, send_notification
@@ -12,7 +14,9 @@ from homeassistant.components.notify import (
     BaseNotificationService,
 )
 from homeassistant.const import CONF_API_KEY, CONF_DEVICE_ID
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,7 +33,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def get_service(hass, config, discovery_info=None):
+def get_service(
+    hass: HomeAssistant,
+    config: ConfigType,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> JoinNotificationService | None:
     """Get the Join notification service."""
     api_key = config.get(CONF_API_KEY)
     device_id = config.get(CONF_DEVICE_ID)
@@ -37,13 +45,13 @@ def get_service(hass, config, discovery_info=None):
     device_names = config.get(CONF_DEVICE_NAMES)
     if api_key and not get_devices(api_key):
         _LOGGER.error("Error connecting to Join. Check the API key")
-        return False
+        return None
     if device_id is None and device_ids is None and device_names is None:
         _LOGGER.error(
             "No device was provided. Please specify device_id"
             ", device_ids, or device_names"
         )
-        return False
+        return None
     return JoinNotificationService(api_key, device_id, device_ids, device_names)
 
 

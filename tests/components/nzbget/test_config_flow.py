@@ -6,6 +6,7 @@ from pynzbgetapi import NZBGetAPIException
 from homeassistant.components.nzbget.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_SCAN_INTERVAL, CONF_VERIFY_SSL
+from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from . import (
@@ -20,7 +21,7 @@ from . import (
 from tests.common import MockConfigEntry
 
 
-async def test_user_form(hass):
+async def test_user_form(hass: HomeAssistant) -> None:
     """Test we get the user initiated form."""
 
     result = await hass.config_entries.flow.async_init(
@@ -43,7 +44,7 @@ async def test_user_form(hass):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_user_form_show_advanced_options(hass):
+async def test_user_form_show_advanced_options(hass: HomeAssistant) -> None:
     """Test we get the user initiated form with advanced options shown."""
 
     result = await hass.config_entries.flow.async_init(
@@ -71,7 +72,7 @@ async def test_user_form_show_advanced_options(hass):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_user_form_cannot_connect(hass):
+async def test_user_form_cannot_connect(hass: HomeAssistant) -> None:
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -90,7 +91,7 @@ async def test_user_form_cannot_connect(hass):
     assert result["errors"] == {"base": "cannot_connect"}
 
 
-async def test_user_form_unexpected_exception(hass):
+async def test_user_form_unexpected_exception(hass: HomeAssistant) -> None:
     """Test we handle unexpected exception."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -109,7 +110,7 @@ async def test_user_form_unexpected_exception(hass):
     assert result["reason"] == "unknown"
 
 
-async def test_user_form_single_instance_allowed(hass):
+async def test_user_form_single_instance_allowed(hass: HomeAssistant) -> None:
     """Test that configuring more than one instance is rejected."""
     entry = MockConfigEntry(domain=DOMAIN, data=ENTRY_CONFIG)
     entry.add_to_hass(hass)
@@ -123,7 +124,7 @@ async def test_user_form_single_instance_allowed(hass):
     assert result["reason"] == "single_instance_allowed"
 
 
-async def test_options_flow(hass, nzbget_api):
+async def test_options_flow(hass: HomeAssistant, nzbget_api) -> None:
     """Test updating options."""
     entry = MockConfigEntry(
         domain=DOMAIN,

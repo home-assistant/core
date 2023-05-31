@@ -5,72 +5,23 @@ import logging
 
 from anthemav.connection import Connection
 from anthemav.protocol import AVR
-import voluptuous as vol
 
 from homeassistant.components.media_player import (
-    PLATFORM_SCHEMA,
     MediaPlayerDeviceClass,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
     MediaPlayerState,
 )
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME, CONF_PORT
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_MAC, CONF_NAME
 from homeassistant.core import HomeAssistant, callback
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import (
-    ANTHEMAV_UDATE_SIGNAL,
-    CONF_MODEL,
-    DEFAULT_NAME,
-    DEFAULT_PORT,
-    DOMAIN,
-    MANUFACTURER,
-)
+from .const import ANTHEMAV_UDATE_SIGNAL, CONF_MODEL, DOMAIN, MANUFACTURER
 
 _LOGGER = logging.getLogger(__name__)
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-    }
-)
-
-
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Set up our socket to the AVR."""
-    async_create_issue(
-        hass,
-        DOMAIN,
-        "deprecated_yaml",
-        breaks_in_ha_version="2022.10.0",
-        is_fixable=False,
-        severity=IssueSeverity.WARNING,
-        translation_key="deprecated_yaml",
-    )
-    _LOGGER.warning(
-        "Configuration of the Anthem A/V Receivers integration in YAML is "
-        "deprecated and will be removed in Home Assistant 2022.10; Your "
-        "existing configuration has been imported into the UI automatically "
-        "and can be safely removed from your configuration.yaml file"
-    )
-    await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_IMPORT},
-        data=config,
-    )
 
 
 async def async_setup_entry(

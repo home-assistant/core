@@ -136,8 +136,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         file_path = _render_service_value(service, ATTR_FILE_PATH)
 
         if not hass.config.is_allowed_path(file_path):
-            _LOGGER.error("Invalid file_path %s", file_path)
-            return
+            raise ValueError(f"Invalid file_path {file_path}")
 
         minio_client.fput_object(bucket, key, file_path)
 
@@ -148,8 +147,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         file_path = _render_service_value(service, ATTR_FILE_PATH)
 
         if not hass.config.is_allowed_path(file_path):
-            _LOGGER.error("Invalid file_path %s", file_path)
-            return
+            raise ValueError(f"Invalid file_path {file_path}")
 
         minio_client.fget_object(bucket, key, file_path)
 

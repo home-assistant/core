@@ -16,7 +16,7 @@
         "description": "[%key:component::samsungtv::config::step::confirm::description%]"
       },
       "reauth_confirm": {
-        "description": "After submitting, accept the the popup on {device} requesting authorization within 30 seconds or input PIN."
+        "description": "After submitting, accept the popup on {device} requesting authorization within 30 seconds or input PIN."
       },
       "encrypted_pairing": {
         "description": "Please enter the PIN displayed on {device}."
@@ -38,6 +38,11 @@
       "not_supported": "This Samsung device is currently not supported.",
       "unknown": "[%key:common::config_flow::error::unknown%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    }
+  },
+  "device_automation": {
+    "trigger_type": {
+      "samsungtv.turn_on": "Device is requested to turn on"
     }
   }
 }

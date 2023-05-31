@@ -9,10 +9,11 @@ from homeassistant.const import (
     STATE_OPEN,
     STATE_OPENING,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 
-async def test_services(hass, enable_custom_integrations):
+async def test_services(hass: HomeAssistant, enable_custom_integrations: None) -> None:
     """Test the provided services."""
     platform = getattr(hass.components, "test.cover")
 

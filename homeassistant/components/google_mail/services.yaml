@@ -1,0 +1,53 @@
+set_vacation:
+  name: Set Vacation
+  description: Set vacation responder settings for Google Mail.
+  target:
+    device:
+      integration: google_mail
+    entity:
+      integration: google_mail
+  fields:
+    enabled:
+      name: Enabled
+      required: true
+      default: true
+      description: Turn this off to end vacation responses.
+      selector:
+        boolean:
+    title:
+      name: Title
+      description: The subject for the email
+      selector:
+        text:
+    message:
+      name: Message
+      description: Body of the email
+      required: true
+      selector:
+        text:
+    plain_text:
+      name: Plain text
+      default: true
+      description: Choose to send message in plain text or HTML.
+      selector:
+        boolean:
+    restrict_contacts:
+      name: Restrict to Contacts
+      description: Restrict automatic reply to contacts.
+      selector:
+        boolean:
+    restrict_domain:
+      name: Restrict to Domain
+      description: Restrict automatic reply to domain. This only affects GSuite accounts.
+      selector:
+        boolean:
+    start:
+      name: start
+      description: First day of the vacation
+      selector:
+        date:
+    end:
+      name: end
+      description: Last day of the vacation
+      selector:
+        date:

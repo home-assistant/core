@@ -25,15 +25,15 @@ from homeassistant.components.weather import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    LENGTH_KILOMETERS,
-    PRESSURE_KPA,
-    SPEED_KILOMETERS_PER_HOUR,
-    TEMP_CELSIUS,
+    UnitOfLength,
+    UnitOfPressure,
+    UnitOfSpeed,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from homeassistant.util import dt
+from homeassistant.util import dt as dt_util
 
 from . import device_info
 from .const import DOMAIN
@@ -70,10 +70,10 @@ class ECWeather(CoordinatorEntity, WeatherEntity):
     """Representation of a weather condition."""
 
     _attr_has_entity_name = True
-    _attr_native_pressure_unit = PRESSURE_KPA
-    _attr_native_temperature_unit = TEMP_CELSIUS
-    _attr_native_visibility_unit = LENGTH_KILOMETERS
-    _attr_native_wind_speed_unit = SPEED_KILOMETERS_PER_HOUR
+    _attr_native_pressure_unit = UnitOfPressure.KPA
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_visibility_unit = UnitOfLength.KILOMETERS
+    _attr_native_wind_speed_unit = UnitOfSpeed.KILOMETERS_PER_HOUR
 
     def __init__(self, coordinator, hourly):
         """Initialize Environment Canada weather."""
@@ -169,7 +169,7 @@ def get_forecast(ec_data, hourly):
             return None
 
         today = {
-            ATTR_FORECAST_TIME: dt.now().isoformat(),
+            ATTR_FORECAST_TIME: dt_util.now().isoformat(),
             ATTR_FORECAST_CONDITION: icon_code_to_condition(
                 int(half_days[0]["icon_code"])
             ),
@@ -201,7 +201,7 @@ def get_forecast(ec_data, hourly):
             forecast_array.append(
                 {
                     ATTR_FORECAST_TIME: (
-                        dt.now() + datetime.timedelta(days=day)
+                        dt_util.now() + datetime.timedelta(days=day)
                     ).isoformat(),
                     ATTR_FORECAST_NATIVE_TEMP: int(half_days[high]["temperature"]),
                     ATTR_FORECAST_NATIVE_TEMP_LOW: int(half_days[low]["temperature"]),

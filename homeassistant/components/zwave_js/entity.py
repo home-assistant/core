@@ -1,12 +1,17 @@
 """Generic Z-Wave Entity Class."""
 from __future__ import annotations
 
+from collections.abc import Sequence
+from typing import Any
+
 from zwave_js_server.const import NodeStatus
+from zwave_js_server.exceptions import BaseZwaveJSServerError
 from zwave_js_server.model.driver import Driver
 from zwave_js_server.model.value import Value as ZwaveValue, get_value_id_str
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo, Entity
 
@@ -44,10 +49,12 @@ class ZWaveBaseEntity(Entity):
         # Entity class attributes
         self._attr_name = self.generate_name()
         self._attr_unique_id = get_unique_id(driver, self.info.primary_value.value_id)
-        self._attr_entity_registry_enabled_default = (
-            self.info.entity_registry_enabled_default
-        )
-        self._attr_assumed_state = self.info.assumed_state
+        if self.info.entity_registry_enabled_default is False:
+            self._attr_entity_registry_enabled_default = False
+        if self.info.entity_category is not None:
+            self._attr_entity_category = self.info.entity_category
+        if self.info.assumed_state:
+            self._attr_assumed_state = True
         # device is precreated in main handler
         self._attr_device_info = DeviceInfo(
             identifiers={get_device_id(driver, self.info.node)},
@@ -103,7 +110,18 @@ class ZWaveBaseEntity(Entity):
                 (
                     f"{DOMAIN}_"
                     f"{get_valueless_base_unique_id(self.driver, self.info.node)}_"
-                    "remove_entity_on_ready_node"
+                    "remove_entity"
+                ),
+                self.async_remove,
+            )
+        )
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                (
+                    f"{DOMAIN}_"
+                    f"{get_valueless_base_unique_id(self.driver, self.info.node)}_"
+                    "remove_entity_on_interview_started"
                 ),
                 self.async_remove,
             )
@@ -126,7 +144,7 @@ class ZWaveBaseEntity(Entity):
         self,
         include_value_name: bool = False,
         alternate_value_name: str | None = None,
-        additional_info: list[str] | None = None,
+        additional_info: Sequence[str | None] | None = None,
         name_prefix: str | None = None,
     ) -> str:
         """Generate entity name."""
@@ -151,8 +169,11 @@ class ZWaveBaseEntity(Entity):
                 or self.info.primary_value.property_name
                 or ""
             )
+
         name = f"{name} {value_name}".strip()
-        name = f"{name} {' '.join(additional_info or [])}".strip()
+        # Only include non empty additional info
+        if additional_info := [item for item in (additional_info or []) if item]:
+            name = f"{name} {' '.join(additional_info)}"
         # append endpoint if > 1
         if (
             self.info.primary_value.endpoint is not None
@@ -173,8 +194,7 @@ class ZWaveBaseEntity(Entity):
 
     @callback
     def _node_status_alive_or_dead(self, event_data: dict) -> None:
-        """
-        Call when node status changes to alive or dead.
+        """Call when node status changes to alive or dead.
 
         Should not be overridden by subclasses.
         """
@@ -275,3 +295,19 @@ class ZWaveBaseEntity(Entity):
         ):
             self.watched_value_ids.add(return_value.value_id)
         return return_value
+
+    async def _async_set_value(
+        self,
+        value: ZwaveValue,
+        new_value: Any,
+        options: dict | None = None,
+        wait_for_result: bool | None = None,
+    ) -> bool | None:
+        """Set value on node."""
+        try:
+            return await self.info.node.async_set_value(
+                value, new_value, options=options, wait_for_result=wait_for_result
+            )
+        except BaseZwaveJSServerError as err:
+            LOGGER.error("Unable to set value %s: %s", value.value_id, err)
+            raise HomeAssistantError from err

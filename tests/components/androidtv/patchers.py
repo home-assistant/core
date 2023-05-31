@@ -111,7 +111,7 @@ def patch_connect(success):
     }
 
 
-def patch_shell(response=None, error=False, mac_eth=False):
+def patch_shell(response=None, error=False, mac_eth=False, exc=None):
     """Mock the `AdbDeviceTcpAsyncFake.shell` and `DeviceAsyncFake.shell` methods."""
 
     async def shell_success(self, cmd, *args, **kwargs):
@@ -128,7 +128,7 @@ def patch_shell(response=None, error=False, mac_eth=False):
     async def shell_fail_python(self, cmd, *args, **kwargs):
         """Mock the `AdbDeviceTcpAsyncFake.shell` method when it fails."""
         self.shell_cmd = cmd
-        raise ValueError
+        raise exc or ValueError
 
     async def shell_fail_server(self, cmd):
         """Mock the `DeviceAsyncFake.shell` method when it fails."""

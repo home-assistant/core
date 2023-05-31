@@ -3,11 +3,11 @@ from __future__ import annotations
 
 from collections.abc import Callable
 import logging
-from typing import TYPE_CHECKING, Any, TypeVar, overload
+from typing import TYPE_CHECKING, Any, Concatenate, ParamSpec, TypeVar, overload
 
+from requests.exceptions import Timeout
 from soco import SoCo
 from soco.exceptions import SoCoException, SoCoUPnPException
-from typing_extensions import Concatenate, ParamSpec
 
 from homeassistant.helpers.dispatcher import dispatcher_send
 
@@ -31,33 +31,30 @@ _T = TypeVar(
 _R = TypeVar("_R")
 _P = ParamSpec("_P")
 
+_FuncType = Callable[Concatenate[_T, _P], _R]
+_ReturnFuncType = Callable[Concatenate[_T, _P], _R | None]
+
 
 @overload
 def soco_error(
     errorcodes: None = ...,
-) -> Callable[[Callable[Concatenate[_T, _P], _R]], Callable[Concatenate[_T, _P], _R]]:
+) -> Callable[[_FuncType[_T, _P, _R]], _FuncType[_T, _P, _R]]:
     ...
 
 
 @overload
 def soco_error(
     errorcodes: list[str],
-) -> Callable[
-    [Callable[Concatenate[_T, _P], _R]], Callable[Concatenate[_T, _P], _R | None]
-]:
+) -> Callable[[_FuncType[_T, _P, _R]], _ReturnFuncType[_T, _P, _R]]:
     ...
 
 
 def soco_error(
     errorcodes: list[str] | None = None,
-) -> Callable[
-    [Callable[Concatenate[_T, _P], _R]], Callable[Concatenate[_T, _P], _R | None]
-]:
+) -> Callable[[_FuncType[_T, _P, _R]], _ReturnFuncType[_T, _P, _R]]:
     """Filter out specified UPnP errors and raise exceptions for service calls."""
 
-    def decorator(
-        funct: Callable[Concatenate[_T, _P], _R]
-    ) -> Callable[Concatenate[_T, _P], _R | None]:
+    def decorator(funct: _FuncType[_T, _P, _R]) -> _ReturnFuncType[_T, _P, _R]:
         """Decorate functions."""
 
         def wrapper(self: _T, *args: _P.args, **kwargs: _P.kwargs) -> _R | None:
@@ -65,7 +62,7 @@ def soco_error(
             args_soco = next((arg for arg in args if isinstance(arg, SoCo)), None)
             try:
                 result = funct(self, *args, **kwargs)
-            except (OSError, SoCoException, SoCoUPnPException) as err:
+            except (OSError, SoCoException, SoCoUPnPException, Timeout) as err:
                 error_code = getattr(err, "error_code", None)
                 function = funct.__qualname__
                 if errorcodes and error_code in errorcodes:
@@ -94,7 +91,7 @@ def soco_error(
 
 
 def _find_target_identifier(instance: Any, fallback_soco: SoCo | None) -> str | None:
-    """Extract the the best available target identifier from the provided instance object."""
+    """Extract the best available target identifier from the provided instance object."""
     if entity_id := getattr(instance, "entity_id", None):
         # SonosEntity instance
         return entity_id
@@ -114,9 +111,16 @@ def _find_target_identifier(instance: Any, fallback_soco: SoCo | None) -> str | 
 def hostname_to_uid(hostname: str) -> str:
     """Convert a Sonos hostname to a uid."""
     if hostname.startswith("Sonos-"):
-        baseuid = hostname.split("-")[1].replace(".local.", "")
+        baseuid = hostname.removeprefix("Sonos-").replace(".local.", "")
     elif hostname.startswith("sonos"):
-        baseuid = hostname[5:].replace(".local.", "")
+        baseuid = hostname.removeprefix("sonos").replace(".local.", "")
     else:
         raise ValueError(f"{hostname} is not a sonos device.")
     return f"{UID_PREFIX}{baseuid}{UID_POSTFIX}"
+
+
+def sync_get_visible_zones(soco: SoCo) -> set[SoCo]:
+    """Ensure I/O attributes are cached and return visible zones."""
+    _ = soco.household_id
+    _ = soco.uid
+    return soco.visible_zones

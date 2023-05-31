@@ -1,15 +1,15 @@
 """The test for switch device automation."""
 from datetime import timedelta
-from unittest.mock import patch
 
+from freezegun import freeze_time
 import pytest
 
 import homeassistant.components.automation as automation
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.switch import DOMAIN
-from homeassistant.const import CONF_PLATFORM, STATE_OFF, STATE_ON
-from homeassistant.helpers import device_registry
-from homeassistant.helpers.entity import EntityCategory
+from homeassistant.const import CONF_PLATFORM, STATE_OFF, STATE_ON, EntityCategory
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity_registry import RegistryEntryHider
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
@@ -20,22 +20,12 @@ from tests.common import (
     async_get_device_automation_capabilities,
     async_get_device_automations,
     async_mock_service,
-    mock_device_registry,
-    mock_registry,
 )
-from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa: F401
 
 
-@pytest.fixture
-def device_reg(hass):
-    """Return an empty, loaded, registry."""
-    return mock_device_registry(hass)
-
-
-@pytest.fixture
-def entity_reg(hass):
-    """Return an empty, loaded, registry."""
-    return mock_registry(hass)
+@pytest.fixture(autouse=True, name="stub_blueprint_populate")
+def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
+    """Stub copying the blueprints to the config folder."""
 
 
 @pytest.fixture
@@ -44,15 +34,21 @@ def calls(hass):
     return async_mock_service(hass, "test", "automation")
 
 
-async def test_get_conditions(hass, device_reg, entity_reg):
+async def test_get_conditions(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test we get the expected conditions from a switch."""
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
-    device_entry = device_reg.async_get_or_create(
+    device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    entity_reg.async_get_or_create(DOMAIN, "test", "5678", device_id=device_entry.id)
+    entity_registry.async_get_or_create(
+        DOMAIN, "test", "5678", device_id=device_entry.id
+    )
     expected_conditions = [
         {
             "condition": "device",
@@ -71,7 +67,7 @@ async def test_get_conditions(hass, device_reg, entity_reg):
 
 
 @pytest.mark.parametrize(
-    "hidden_by,entity_category",
+    ("hidden_by", "entity_category"),
     (
         (RegistryEntryHider.INTEGRATION, None),
         (RegistryEntryHider.USER, None),
@@ -80,20 +76,20 @@ async def test_get_conditions(hass, device_reg, entity_reg):
     ),
 )
 async def test_get_conditions_hidden_auxiliary(
-    hass,
-    device_reg,
-    entity_reg,
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
     hidden_by,
     entity_category,
-):
+) -> None:
     """Test we get the expected conditions from a hidden or auxiliary entity."""
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
-    device_entry = device_reg.async_get_or_create(
+    device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    entity_reg.async_get_or_create(
+    entity_registry.async_get_or_create(
         DOMAIN,
         "test",
         "5678",
@@ -118,15 +114,21 @@ async def test_get_conditions_hidden_auxiliary(
     assert_lists_same(conditions, expected_conditions)
 
 
-async def test_get_condition_capabilities(hass, device_reg, entity_reg):
+async def test_get_condition_capabilities(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test we get the expected capabilities from a switch condition."""
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
-    device_entry = device_reg.async_get_or_create(
+    device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    entity_reg.async_get_or_create(DOMAIN, "test", "5678", device_id=device_entry.id)
+    entity_registry.async_get_or_create(
+        DOMAIN, "test", "5678", device_id=device_entry.id
+    )
     expected_capabilities = {
         "extra_fields": [
             {"name": "for", "optional": True, "type": "positive_time_period_dict"}
@@ -142,7 +144,9 @@ async def test_get_condition_capabilities(hass, device_reg, entity_reg):
         assert capabilities == expected_capabilities
 
 
-async def test_if_state(hass, calls, enable_custom_integrations):
+async def test_if_state(
+    hass: HomeAssistant, calls, enable_custom_integrations: None
+) -> None:
     """Test for turn_on and turn_off conditions."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
 
@@ -216,7 +220,9 @@ async def test_if_state(hass, calls, enable_custom_integrations):
     assert calls[1].data["some"] == "is_off event - test_event2"
 
 
-async def test_if_fires_on_for_condition(hass, calls, enable_custom_integrations):
+async def test_if_fires_on_for_condition(
+    hass: HomeAssistant, calls, enable_custom_integrations: None
+) -> None:
     """Test for firing if condition is on with delay."""
     point1 = dt_util.utcnow()
     point2 = point1 + timedelta(seconds=10)
@@ -230,8 +236,7 @@ async def test_if_fires_on_for_condition(hass, calls, enable_custom_integrations
 
     ent1, ent2, ent3 = platform.ENTITIES
 
-    with patch("homeassistant.core.dt_util.utcnow") as mock_utcnow:
-        mock_utcnow.return_value = point1
+    with freeze_time(point1) as freezer:
         assert await async_setup_component(
             hass,
             automation.DOMAIN,
@@ -269,7 +274,7 @@ async def test_if_fires_on_for_condition(hass, calls, enable_custom_integrations
         assert len(calls) == 0
 
         # Time travel 10 secs into the future
-        mock_utcnow.return_value = point2
+        freezer.move_to(point2)
         hass.bus.async_fire("test_event1")
         await hass.async_block_till_done()
         assert len(calls) == 0
@@ -280,7 +285,7 @@ async def test_if_fires_on_for_condition(hass, calls, enable_custom_integrations
         assert len(calls) == 0
 
         # Time travel 20 secs into the future
-        mock_utcnow.return_value = point3
+        freezer.move_to(point3)
         hass.bus.async_fire("test_event1")
         await hass.async_block_till_done()
         assert len(calls) == 1

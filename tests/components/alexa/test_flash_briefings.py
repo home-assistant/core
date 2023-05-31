@@ -1,5 +1,5 @@
 """The tests for the Alexa component."""
-# pylint: disable=protected-access
+
 import datetime
 from http import HTTPStatus
 
@@ -21,8 +21,9 @@ NPR_NEWS_MP3_URL = "https://pd.npr.org/anon.npr-mp3/npr/news/newscast.mp3"
 
 
 @pytest.fixture
-def alexa_client(loop, hass, hass_client):
+def alexa_client(event_loop, hass, hass_client):
     """Initialize a Home Assistant server for testing this module."""
+    loop = event_loop
 
     @callback
     def mock_service(call):
@@ -71,7 +72,7 @@ def _flash_briefing_req(client, briefing_id, password="pass%2Fabc"):
     return client.get(f"/api/alexa/flash_briefings/{briefing_id}?password={password}")
 
 
-async def test_flash_briefing_invalid_id(alexa_client):
+async def test_flash_briefing_invalid_id(alexa_client) -> None:
     """Test an invalid Flash Briefing ID."""
     req = await _flash_briefing_req(alexa_client, 10000)
     assert req.status == HTTPStatus.NOT_FOUND
@@ -79,7 +80,7 @@ async def test_flash_briefing_invalid_id(alexa_client):
     assert text == ""
 
 
-async def test_flash_briefing_no_password(alexa_client):
+async def test_flash_briefing_no_password(alexa_client) -> None:
     """Test for no Flash Briefing password."""
     req = await _flash_briefing_req(alexa_client, "weather", password=None)
     assert req.status == HTTPStatus.UNAUTHORIZED
@@ -87,7 +88,7 @@ async def test_flash_briefing_no_password(alexa_client):
     assert text == ""
 
 
-async def test_flash_briefing_invalid_password(alexa_client):
+async def test_flash_briefing_invalid_password(alexa_client) -> None:
     """Test an invalid Flash Briefing password."""
     req = await _flash_briefing_req(alexa_client, "weather", password="wrongpass")
     assert req.status == HTTPStatus.UNAUTHORIZED
@@ -95,7 +96,7 @@ async def test_flash_briefing_invalid_password(alexa_client):
     assert text == ""
 
 
-async def test_flash_briefing_request_for_password(alexa_client):
+async def test_flash_briefing_request_for_password(alexa_client) -> None:
     """Test for "password" Flash Briefing."""
     req = await _flash_briefing_req(alexa_client, "password")
     assert req.status == HTTPStatus.NOT_FOUND
@@ -103,7 +104,7 @@ async def test_flash_briefing_request_for_password(alexa_client):
     assert text == ""
 
 
-async def test_flash_briefing_date_from_str(alexa_client):
+async def test_flash_briefing_date_from_str(alexa_client) -> None:
     """Test the response has a valid date parsed from string."""
     req = await _flash_briefing_req(alexa_client, "weather")
     assert req.status == HTTPStatus.OK
@@ -116,7 +117,7 @@ async def test_flash_briefing_date_from_str(alexa_client):
     )
 
 
-async def test_flash_briefing_valid(alexa_client):
+async def test_flash_briefing_valid(alexa_client) -> None:
     """Test the response is valid."""
     data = [
         {

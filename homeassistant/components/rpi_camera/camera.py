@@ -32,7 +32,10 @@ _LOGGER = logging.getLogger(__name__)
 def kill_raspistill(*args):
     """Kill any previously running raspistill process.."""
     with subprocess.Popen(
-        ["killall", "raspistill"], stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT
+        ["killall", "raspistill"],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.STDOUT,
+        close_fds=False,  # required for posix_spawn
     ):
         pass
 
@@ -132,7 +135,10 @@ class RaspberryCamera(Camera):
         # Therefore it must not be wrapped with "with", since that
         # waits for the subprocess to exit before continuing.
         subprocess.Popen(  # pylint: disable=consider-using-with
-            cmd_args, stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT
+            cmd_args,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.STDOUT,
+            close_fds=False,  # required for posix_spawn
         )
 
     def camera_image(

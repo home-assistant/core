@@ -82,12 +82,19 @@ from homeassistant.const import (
     ENTITY_MATCH_NONE,
     SUN_EVENT_SUNRISE,
     SUN_EVENT_SUNSET,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
     WEEKDAYS,
+    UnitOfTemperature,
 )
-from homeassistant.core import split_entity_id, valid_entity_id
+from homeassistant.core import (
+    HomeAssistant,
+    async_get_hass,
+    split_entity_id,
+    valid_entity_id,
+)
 from homeassistant.exceptions import TemplateError
+from homeassistant.generated import currencies
+from homeassistant.generated.countries import COUNTRIES
+from homeassistant.generated.languages import LANGUAGES
 from homeassistant.util import raise_if_invalid_path, slugify as util_slugify
 import homeassistant.util.dt as dt_util
 
@@ -301,7 +308,7 @@ def entity_id_or_uuid(value: Any) -> str:
 def _entity_ids(value: str | list, allow_uuid: bool) -> list[str]:
     """Help validate entity IDs or UUIDs."""
     if value is None:
-        raise vol.Invalid("Entity IDs can not be None")
+        raise vol.Invalid("Entity IDs cannot be None")
     if isinstance(value, str):
         value = [ent_id.strip() for ent_id in value.split(",")]
 
@@ -384,6 +391,8 @@ def icon(value: Any) -> str:
     raise vol.Invalid('Icons should be specified in the form "prefix:name"')
 
 
+_TIME_PERIOD_DICT_KEYS = ("days", "hours", "minutes", "seconds", "milliseconds")
+
 time_period_dict = vol.All(
     dict,
     vol.Schema(
@@ -395,7 +404,7 @@ time_period_dict = vol.All(
             "milliseconds": vol.Coerce(float),
         }
     ),
-    has_at_least_one_key("days", "hours", "minutes", "seconds", "milliseconds"),
+    has_at_least_one_key(*_TIME_PERIOD_DICT_KEYS),
     lambda value: timedelta(**value),
 )
 
@@ -535,7 +544,7 @@ def schema_with_slug_keys(
         if not isinstance(value, dict):
             raise vol.Invalid("expected dictionary")
 
-        for key in value.keys():
+        for key in value:
             slug_validator(key)
 
         return cast(dict, schema(value))
@@ -558,6 +567,10 @@ def string(value: Any) -> str:
     if value is None:
         raise vol.Invalid("string value is None")
 
+    # This is expected to be the most common case, so check it first.
+    if type(value) is str:  # pylint: disable=unidiomatic-typecheck
+        return value
+
     if isinstance(value, template_helper.ResultWrapper):
         value = value.render_result
 
@@ -576,13 +589,13 @@ def string_with_no_html(value: Any) -> str:
     return str(value)
 
 
-def temperature_unit(value: Any) -> str:
+def temperature_unit(value: Any) -> UnitOfTemperature:
     """Validate and transform temperature unit."""
     value = str(value).upper()
     if value == "C":
-        return TEMP_CELSIUS
+        return UnitOfTemperature.CELSIUS
     if value == "F":
-        return TEMP_FAHRENHEIT
+        return UnitOfTemperature.FAHRENHEIT
     raise vol.Invalid("invalid temperature unit (expected C or F)")
 
 
@@ -593,7 +606,11 @@ def template(value: Any | None) -> template_helper.Template:
     if isinstance(value, (list, dict, template_helper.Template)):
         raise vol.Invalid("template value should be a string")
 
-    template_value = template_helper.Template(str(value))  # type: ignore[no-untyped-call]
+    hass: HomeAssistant | None = None
+    with contextlib.suppress(LookupError):
+        hass = async_get_hass()
+
+    template_value = template_helper.Template(str(value), hass)
 
     try:
         template_value.ensure_valid()
@@ -611,7 +628,12 @@ def dynamic_template(value: Any | None) -> template_helper.Template:
     if not template_helper.is_template_string(str(value)):
         raise vol.Invalid("template value does not contain a dynamic template")
 
-    template_value = template_helper.Template(str(value))  # type: ignore[no-untyped-call]
+    hass: HomeAssistant | None = None
+    with contextlib.suppress(LookupError):
+        hass = async_get_hass()
+
+    template_value = template_helper.Template(str(value), hass)
+
     try:
         template_value.ensure_valid()
         return template_value
@@ -637,8 +659,24 @@ def template_complex(value: Any) -> Any:
     return value
 
 
+def _positive_time_period_template_complex(value: Any) -> Any:
+    """Do basic validation of a positive time period expressed as a templated dict."""
+    if not isinstance(value, dict) or not value:
+        raise vol.Invalid("template should be a dict")
+    for key, element in value.items():
+        if not isinstance(key, str):
+            raise vol.Invalid("key should be a string")
+        if not template_helper.is_template_string(key):
+            vol.In(_TIME_PERIOD_DICT_KEYS)(key)
+        if not isinstance(element, str) or (
+            isinstance(element, str) and not template_helper.is_template_string(element)
+        ):
+            vol.All(vol.Coerce(float), vol.Range(min=0))(element)
+    return template_complex(value)
+
+
 positive_time_period_template = vol.Any(
-    positive_time_period, template, template_complex
+    positive_time_period, dynamic_template, _positive_time_period_template_complex
 )
 
 
@@ -776,12 +814,12 @@ def _deprecated_or_removed(
     raise_if_present: bool,
     option_removed: bool,
 ) -> Callable[[dict], dict]:
-    """
-    Log key as deprecated and provide a replacement (if exists) or fail.
+    """Log key as deprecated and provide a replacement (if exists) or fail.
 
     Expected behavior:
         - Outputs or throws the appropriate deprecation warning if key is detected
-        - Outputs or throws the appropriate error if key is detected and removed from support
+        - Outputs or throws the appropriate error if key is detected
+          and removed from support
         - Processes schema moving the value from key to replacement_key
         - Processes schema changing nothing if only replacement_key provided
         - No warning if only replacement_key provided
@@ -807,7 +845,10 @@ def _deprecated_or_removed(
         """Check if key is in config and log warning or error."""
         if key in config:
             try:
-                near = f"near {config.__config_file__}:{config.__line__} "  # type: ignore[attr-defined]
+                near = (
+                    f"near {config.__config_file__}"  # type: ignore[attr-defined]
+                    f":{config.__line__} "
+                )
             except AttributeError:
                 near = ""
             arguments: tuple[str, ...]
@@ -825,7 +866,7 @@ def _deprecated_or_removed(
 
             logger_func(warning, *arguments)
             value = config[key]
-            if replacement_key:
+            if replacement_key or option_removed:
                 config.pop(key)
         else:
             value = default
@@ -849,11 +890,11 @@ def deprecated(
     default: Any | None = None,
     raise_if_present: bool | None = False,
 ) -> Callable[[dict], dict]:
-    """
-    Log key as deprecated and provide a replacement (if exists).
+    """Log key as deprecated and provide a replacement (if exists).
 
     Expected behavior:
-        - Outputs the appropriate deprecation warning if key is detected or raises an exception
+        - Outputs the appropriate deprecation warning if key is detected
+          or raises an exception
         - Processes schema moving the value from key to replacement_key
         - Processes schema changing nothing if only replacement_key provided
         - No warning if only replacement_key provided
@@ -874,11 +915,11 @@ def removed(
     default: Any | None = None,
     raise_if_present: bool | None = True,
 ) -> Callable[[dict], dict]:
-    """
-    Log key as deprecated and fail the config validation.
+    """Log key as deprecated and fail the config validation.
 
     Expected behavior:
-        - Outputs the appropriate error if key is detected and removed from support or raises an exception
+        - Outputs the appropriate error if key is detected and removed from
+          support or raises an exception.
     """
     return _deprecated_or_removed(
         key,
@@ -913,9 +954,9 @@ def key_value_schemas(
             with contextlib.suppress(vol.Invalid):
                 return cast(dict[Hashable, Any], default_schema(value))
 
-        alternatives = ", ".join(str(key) for key in value_schemas)
+        alternatives = ", ".join(str(alternative) for alternative in value_schemas)
         if default_description:
-            alternatives += ", " + default_description
+            alternatives = f"{alternatives}, {default_description}"
         raise vol.Invalid(
             f"Unexpected value for {key}: '{key_value}'. Expected {alternatives}"
         )
@@ -1004,6 +1045,35 @@ def expand_condition_shorthand(value: Any | None) -> Any:
 
 
 # Schemas
+def empty_config_schema(domain: str) -> Callable[[dict], dict]:
+    """Return a config schema which logs if there are configuration parameters."""
+
+    module = inspect.getmodule(inspect.stack(context=0)[2].frame)
+    if module is not None:
+        module_name = module.__name__
+    else:
+        # If Python is unable to access the sources files, the call stack frame
+        # will be missing information, so let's guard.
+        # https://github.com/home-assistant/core/issues/24982
+        module_name = __name__
+    logger_func = logging.getLogger(module_name).error
+
+    def validator(config: dict) -> dict:
+        if domain in config and config[domain]:
+            logger_func(
+                (
+                    "The %s integration does not support any configuration parameters, "
+                    "got %s. Please remove the configuration parameters from your "
+                    "configuration."
+                ),
+                domain,
+                config[domain],
+            )
+        return config
+
+    return validator
+
+
 PLATFORM_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_PLATFORM): string,
@@ -1069,7 +1139,7 @@ def make_entity_service_schema(
 
 SCRIPT_VARIABLES_SCHEMA = vol.All(
     vol.Schema({str: template_complex}),
-    # pylint: disable=unnecessary-lambda
+    # pylint: disable-next=unnecessary-lambda
     lambda val: script_variables_helper.ScriptVariables(val),
 )
 
@@ -1161,7 +1231,7 @@ STATE_CONDITION_BASE_SCHEMA = {
         vol.Lower, vol.Any(ENTITY_MATCH_ALL, ENTITY_MATCH_ANY)
     ),
     vol.Optional(CONF_ATTRIBUTE): str,
-    vol.Optional(CONF_FOR): positive_time_period,
+    vol.Optional(CONF_FOR): positive_time_period_template,
     # To support use_trigger_value in automation
     # Deprecated 2016/04/25
     vol.Optional("from"): str,
@@ -1262,7 +1332,7 @@ AND_CONDITION_SCHEMA = vol.Schema(
         vol.Required(CONF_CONDITION): "and",
         vol.Required(CONF_CONDITIONS): vol.All(
             ensure_list,
-            # pylint: disable=unnecessary-lambda
+            # pylint: disable-next=unnecessary-lambda
             [lambda value: CONDITION_SCHEMA(value)],
         ),
     }
@@ -1273,7 +1343,7 @@ AND_CONDITION_SHORTHAND_SCHEMA = vol.Schema(
         **CONDITION_BASE_SCHEMA,
         vol.Required("and"): vol.All(
             ensure_list,
-            # pylint: disable=unnecessary-lambda
+            # pylint: disable-next=unnecessary-lambda
             [lambda value: CONDITION_SCHEMA(value)],
         ),
     }
@@ -1285,7 +1355,7 @@ OR_CONDITION_SCHEMA = vol.Schema(
         vol.Required(CONF_CONDITION): "or",
         vol.Required(CONF_CONDITIONS): vol.All(
             ensure_list,
-            # pylint: disable=unnecessary-lambda
+            # pylint: disable-next=unnecessary-lambda
             [lambda value: CONDITION_SCHEMA(value)],
         ),
     }
@@ -1296,7 +1366,7 @@ OR_CONDITION_SHORTHAND_SCHEMA = vol.Schema(
         **CONDITION_BASE_SCHEMA,
         vol.Required("or"): vol.All(
             ensure_list,
-            # pylint: disable=unnecessary-lambda
+            # pylint: disable-next=unnecessary-lambda
             [lambda value: CONDITION_SCHEMA(value)],
         ),
     }
@@ -1308,7 +1378,7 @@ NOT_CONDITION_SCHEMA = vol.Schema(
         vol.Required(CONF_CONDITION): "not",
         vol.Required(CONF_CONDITIONS): vol.All(
             ensure_list,
-            # pylint: disable=unnecessary-lambda
+            # pylint: disable-next=unnecessary-lambda
             [lambda value: CONDITION_SCHEMA(value)],
         ),
     }
@@ -1319,7 +1389,7 @@ NOT_CONDITION_SHORTHAND_SCHEMA = vol.Schema(
         **CONDITION_BASE_SCHEMA,
         vol.Required("not"): vol.All(
             ensure_list,
-            # pylint: disable=unnecessary-lambda
+            # pylint: disable-next=unnecessary-lambda
             [lambda value: CONDITION_SCHEMA(value)],
         ),
     }
@@ -1351,7 +1421,7 @@ CONDITION_SHORTHAND_SCHEMA = vol.Schema(
         **CONDITION_BASE_SCHEMA,
         vol.Required(CONF_CONDITION): vol.All(
             ensure_list,
-            # pylint: disable=unnecessary-lambda
+            # pylint: disable-next=unnecessary-lambda
             [lambda value: CONDITION_SCHEMA(value)],
         ),
     }
@@ -1654,167 +1724,14 @@ ACTION_TYPE_SCHEMAS: dict[str, Callable[[Any], dict]] = {
 }
 
 
-# Validate currencies adopted by countries
 currency = vol.In(
-    {
-        "AED",
-        "AFN",
-        "ALL",
-        "AMD",
-        "ANG",
-        "AOA",
-        "ARS",
-        "AUD",
-        "AWG",
-        "AZN",
-        "BAM",
-        "BBD",
-        "BDT",
-        "BGN",
-        "BHD",
-        "BIF",
-        "BMD",
-        "BND",
-        "BOB",
-        "BRL",
-        "BSD",
-        "BTN",
-        "BWP",
-        "BYN",
-        "BYR",
-        "BZD",
-        "CAD",
-        "CDF",
-        "CHF",
-        "CLP",
-        "CNY",
-        "COP",
-        "CRC",
-        "CUP",
-        "CVE",
-        "CZK",
-        "DJF",
-        "DKK",
-        "DOP",
-        "DZD",
-        "EGP",
-        "ERN",
-        "ETB",
-        "EUR",
-        "FJD",
-        "FKP",
-        "GBP",
-        "GEL",
-        "GHS",
-        "GIP",
-        "GMD",
-        "GNF",
-        "GTQ",
-        "GYD",
-        "HKD",
-        "HNL",
-        "HRK",
-        "HTG",
-        "HUF",
-        "IDR",
-        "ILS",
-        "INR",
-        "IQD",
-        "IRR",
-        "ISK",
-        "JMD",
-        "JOD",
-        "JPY",
-        "KES",
-        "KGS",
-        "KHR",
-        "KMF",
-        "KPW",
-        "KRW",
-        "KWD",
-        "KYD",
-        "KZT",
-        "LAK",
-        "LBP",
-        "LKR",
-        "LRD",
-        "LSL",
-        "LTL",
-        "LYD",
-        "MAD",
-        "MDL",
-        "MGA",
-        "MKD",
-        "MMK",
-        "MNT",
-        "MOP",
-        "MRO",
-        "MUR",
-        "MVR",
-        "MWK",
-        "MXN",
-        "MYR",
-        "MZN",
-        "NAD",
-        "NGN",
-        "NIO",
-        "NOK",
-        "NPR",
-        "NZD",
-        "OMR",
-        "PAB",
-        "PEN",
-        "PGK",
-        "PHP",
-        "PKR",
-        "PLN",
-        "PYG",
-        "QAR",
-        "RON",
-        "RSD",
-        "RUB",
-        "RWF",
-        "SAR",
-        "SBD",
-        "SCR",
-        "SDG",
-        "SEK",
-        "SGD",
-        "SHP",
-        "SLL",
-        "SOS",
-        "SRD",
-        "SSP",
-        "STD",
-        "SYP",
-        "SZL",
-        "THB",
-        "TJS",
-        "TMT",
-        "TND",
-        "TOP",
-        "TRY",
-        "TTD",
-        "TWD",
-        "TZS",
-        "UAH",
-        "UGX",
-        "USD",
-        "UYU",
-        "UZS",
-        "VEF",
-        "VND",
-        "VUV",
-        "WST",
-        "XAF",
-        "XCD",
-        "XOF",
-        "XPF",
-        "YER",
-        "ZAR",
-        "ZMK",
-        "ZMW",
-        "ZWL",
-    },
-    msg="invalid ISO 4217 formatted currency",
+    currencies.ACTIVE_CURRENCIES, msg="invalid ISO 4217 formatted currency"
 )
+
+historic_currency = vol.In(
+    currencies.HISTORIC_CURRENCIES, msg="invalid ISO 4217 formatted historic currency"
+)
+
+country = vol.In(COUNTRIES, msg="invalid ISO 3166 formatted country")
+
+language = vol.In(LANGUAGES, msg="invalid RFC 5646 formatted language")

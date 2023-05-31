@@ -2,7 +2,7 @@
 from homeassistant.auth import models, permissions
 
 
-def test_owner_fetching_owner_permissions():
+def test_owner_fetching_owner_permissions() -> None:
     """Test we fetch the owner permissions for an owner user."""
     group = models.Group(name="Test Group", policy={})
     owner = models.User(
@@ -11,7 +11,7 @@ def test_owner_fetching_owner_permissions():
     assert owner.permissions is permissions.OwnerPermissions
 
 
-def test_permissions_merged():
+def test_permissions_merged() -> None:
     """Test we merge the groups permissions."""
     group = models.Group(
         name="Test Group", policy={"entities": {"domains": {"switch": True}}}

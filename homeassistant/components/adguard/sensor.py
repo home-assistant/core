@@ -10,7 +10,7 @@ from adguardhome import AdGuardHome, AdGuardHomeConnectionError
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PERCENTAGE, TIME_MILLISECONDS
+from homeassistant.const import PERCENTAGE, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -83,7 +83,7 @@ SENSORS: tuple[AdGuardHomeEntityDescription, ...] = (
         key="average_speed",
         name="Average processing speed",
         icon="mdi:speedometer",
-        native_unit_of_measurement=TIME_MILLISECONDS,
+        native_unit_of_measurement=UnitOfTime.MILLISECONDS,
         value_fn=lambda adguard: adguard.stats.avg_processing_time(),
     ),
     AdGuardHomeEntityDescription(

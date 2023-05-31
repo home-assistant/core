@@ -1,9 +1,7 @@
 {
   "domain": "squeezebox",
   "name": "Squeezebox (Logitech Media Server)",
-  "documentation": "https://www.home-assistant.io/integrations/squeezebox",
   "codeowners": ["@rajlaud"],
-  "requirements": ["pysqueezebox==0.6.0"],
   "config_flow": true,
   "dhcp": [
     {
@@ -11,6 +9,8 @@
       "macaddress": "000420*"
     }
   ],
+  "documentation": "https://www.home-assistant.io/integrations/squeezebox",
   "iot_class": "local_polling",
-  "loggers": ["pysqueezebox"]
+  "loggers": ["pysqueezebox"],
+  "requirements": ["pysqueezebox==0.6.3"]
 }

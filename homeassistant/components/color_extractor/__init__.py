@@ -24,6 +24,8 @@ from .const import ATTR_PATH, ATTR_URL, DOMAIN, SERVICE_TURN_ON
 
 _LOGGER = logging.getLogger(__name__)
 
+CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
+
 # Extend the existing light.turn_on service schema
 SERVICE_SCHEMA = vol.All(
     cv.has_at_least_one_key(ATTR_URL, ATTR_PATH),
@@ -104,7 +106,10 @@ async def async_setup(hass: HomeAssistant, hass_config: ConfigType) -> bool:
         """Handle call for URL based image."""
         if not hass.config.is_allowed_external_url(url):
             _LOGGER.error(
-                "External URL '%s' is not allowed, please add to 'allowlist_external_urls'",
+                (
+                    "External URL '%s' is not allowed, please add to"
+                    " 'allowlist_external_urls'"
+                ),
                 url,
             )
             return None
@@ -134,7 +139,10 @@ async def async_setup(hass: HomeAssistant, hass_config: ConfigType) -> bool:
         """Handle call for local file based image."""
         if not hass.config.is_allowed_path(file_path):
             _LOGGER.error(
-                "File path '%s' is not allowed, please add to 'allowlist_external_dirs'",
+                (
+                    "File path '%s' is not allowed, please add to"
+                    " 'allowlist_external_dirs'"
+                ),
                 file_path,
             )
             return None

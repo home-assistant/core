@@ -91,8 +91,9 @@ class RegistrationsView(HomeAssistantView):
         )
 
         remote_ui_url = None
-        with suppress(hass.components.cloud.CloudNotAvailable):
-            remote_ui_url = cloud.async_remote_ui_url(hass)
+        if cloud.async_active_subscription(hass):
+            with suppress(hass.components.cloud.CloudNotAvailable):
+                remote_ui_url = cloud.async_remote_ui_url(hass)
 
         return self.json(
             {

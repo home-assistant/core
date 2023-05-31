@@ -1,15 +1,26 @@
 """Tests for debounce."""
+import asyncio
+from datetime import timedelta
+import logging
 from unittest.mock import AsyncMock
 
+import pytest
+
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import debounce
+from homeassistant.util.dt import utcnow
+
+from ..common import async_fire_time_changed
+
+_LOGGER = logging.getLogger(__name__)
 
 
-async def test_immediate_works(hass):
+async def test_immediate_works(hass: HomeAssistant) -> None:
     """Test immediate works."""
     calls = []
     debouncer = debounce.Debouncer(
         hass,
-        None,
+        _LOGGER,
         cooldown=0.01,
         immediate=True,
         function=AsyncMock(side_effect=lambda: calls.append(None)),
@@ -40,7 +51,8 @@ async def test_immediate_works(hass):
     # Call and let timer run out
     await debouncer.async_call()
     assert len(calls) == 2
-    await debouncer._handle_timer_finish()
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=1))
+    await hass.async_block_till_done()
     assert len(calls) == 2
     assert debouncer._timer_task is None
     assert debouncer._execute_at_end_of_timer is False
@@ -57,12 +69,12 @@ async def test_immediate_works(hass):
     assert debouncer._job.target == debouncer.function
 
 
-async def test_not_immediate_works(hass):
+async def test_not_immediate_works(hass: HomeAssistant) -> None:
     """Test immediate works."""
     calls = []
     debouncer = debounce.Debouncer(
         hass,
-        None,
+        _LOGGER,
         cooldown=0.01,
         immediate=False,
         function=AsyncMock(side_effect=lambda: calls.append(None)),
@@ -88,7 +100,8 @@ async def test_not_immediate_works(hass):
     # Call and let timer run out
     await debouncer.async_call()
     assert len(calls) == 0
-    await debouncer._handle_timer_finish()
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=1))
+    await hass.async_block_till_done()
     assert len(calls) == 1
     assert debouncer._timer_task is not None
     assert debouncer._execute_at_end_of_timer is False
@@ -107,7 +120,7 @@ async def test_not_immediate_works(hass):
     assert debouncer._job.target == debouncer.function
 
 
-async def test_immediate_works_with_function_swapped(hass):
+async def test_immediate_works_with_function_swapped(hass: HomeAssistant) -> None:
     """Test immediate works and we can change out the function."""
     calls = []
 
@@ -116,7 +129,7 @@ async def test_immediate_works_with_function_swapped(hass):
 
     debouncer = debounce.Debouncer(
         hass,
-        None,
+        _LOGGER,
         cooldown=0.01,
         immediate=True,
         function=one_function,
@@ -149,7 +162,8 @@ async def test_immediate_works_with_function_swapped(hass):
     await debouncer.async_call()
     assert len(calls) == 2
     assert calls == [1, 2]
-    await debouncer._handle_timer_finish()
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=1))
+    await hass.async_block_till_done()
     assert len(calls) == 2
     assert calls == [1, 2]
     assert debouncer._timer_task is None
@@ -166,3 +180,37 @@ async def test_immediate_works_with_function_swapped(hass):
     assert debouncer._execute_at_end_of_timer is False
     debouncer._execute_lock.release()
     assert debouncer._job.target == debouncer.function
+
+
+async def test_shutdown(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -> None:
+    """Test shutdown."""
+    calls = []
+    future = asyncio.Future()
+
+    async def _func() -> None:
+        await future
+        calls.append(None)
+
+    debouncer = debounce.Debouncer(
+        hass,
+        _LOGGER,
+        cooldown=0.01,
+        immediate=False,
+        function=_func,
+    )
+
+    # Ensure shutdown during a run doesn't create a cooldown timer
+    hass.async_create_task(debouncer.async_call())
+    await asyncio.sleep(0.01)
+    await debouncer.async_shutdown()
+    future.set_result(True)
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+    assert debouncer._timer_task is None
+
+    assert "Debouncer call ignored as shutdown has been requested." not in caplog.text
+    await debouncer.async_call()
+    assert "Debouncer call ignored as shutdown has been requested." in caplog.text
+
+    assert len(calls) == 1
+    assert debouncer._timer_task is None

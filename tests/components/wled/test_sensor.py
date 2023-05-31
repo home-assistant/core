@@ -1,37 +1,35 @@
 """Tests for the WLED sensor platform."""
 from datetime import datetime
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN, SensorDeviceClass
-from homeassistant.components.wled.const import DOMAIN
+from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ICON,
     ATTR_UNIT_OF_MEASUREMENT,
-    DATA_BYTES,
-    ELECTRIC_CURRENT_MILLIAMPERE,
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     STATE_UNKNOWN,
+    EntityCategory,
+    UnitOfElectricCurrent,
+    UnitOfInformation,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "mock_wled")
 async def test_sensors(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_wled: MagicMock,
-    entity_registry_enabled_by_default: AsyncMock,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test the creation and values of the WLED sensors."""
-    registry = er.async_get(hass)
     mock_config_entry.add_to_hass(hass)
 
     test_time = datetime(2019, 11, 11, 9, 10, 32, tzinfo=dt_util.UTC)
@@ -39,56 +37,50 @@ async def test_sensors(
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.wled_rgb_light_estimated_current")
-    assert state
+    assert (state := hass.states.get("sensor.wled_rgb_light_estimated_current"))
     assert (
-        state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ELECTRIC_CURRENT_MILLIAMPERE
+        state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        == UnitOfElectricCurrent.MILLIAMPERE
     )
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.CURRENT
     assert state.state == "470"
 
-    entry = registry.async_get("sensor.wled_rgb_light_estimated_current")
-    assert entry
+    assert (
+        entry := entity_registry.async_get("sensor.wled_rgb_light_estimated_current")
+    )
     assert entry.unique_id == "aabbccddeeff_estimated_current"
     assert entry.entity_category is EntityCategory.DIAGNOSTIC
 
-    state = hass.states.get("sensor.wled_rgb_light_uptime")
-    assert state
+    assert (state := hass.states.get("sensor.wled_rgb_light_uptime"))
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.TIMESTAMP
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
     assert state.state == "2019-11-11T09:10:00+00:00"
 
-    entry = registry.async_get("sensor.wled_rgb_light_uptime")
-    assert entry
+    assert (entry := entity_registry.async_get("sensor.wled_rgb_light_uptime"))
     assert entry.unique_id == "aabbccddeeff_uptime"
     assert entry.entity_category is EntityCategory.DIAGNOSTIC
 
-    state = hass.states.get("sensor.wled_rgb_light_free_memory")
-    assert state
+    assert (state := hass.states.get("sensor.wled_rgb_light_free_memory"))
     assert state.attributes.get(ATTR_ICON) == "mdi:memory"
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == DATA_BYTES
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfInformation.BYTES
     assert state.state == "14600"
     assert entry.entity_category is EntityCategory.DIAGNOSTIC
 
-    entry = registry.async_get("sensor.wled_rgb_light_free_memory")
-    assert entry
+    assert (entry := entity_registry.async_get("sensor.wled_rgb_light_free_memory"))
     assert entry.unique_id == "aabbccddeeff_free_heap"
     assert entry.entity_category is EntityCategory.DIAGNOSTIC
 
-    state = hass.states.get("sensor.wled_rgb_light_wi_fi_signal")
-    assert state
+    assert (state := hass.states.get("sensor.wled_rgb_light_wi_fi_signal"))
     assert state.attributes.get(ATTR_ICON) == "mdi:wifi"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
     assert state.state == "76"
     assert entry.entity_category is EntityCategory.DIAGNOSTIC
 
-    entry = registry.async_get("sensor.wled_rgb_light_wi_fi_signal")
-    assert entry
+    assert (entry := entity_registry.async_get("sensor.wled_rgb_light_wi_fi_signal"))
     assert entry.unique_id == "aabbccddeeff_wifi_signal"
     assert entry.entity_category is EntityCategory.DIAGNOSTIC
 
-    state = hass.states.get("sensor.wled_rgb_light_wi_fi_rssi")
-    assert state
+    assert (state := hass.states.get("sensor.wled_rgb_light_wi_fi_rssi"))
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.SIGNAL_STRENGTH
     assert (
         state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
@@ -96,31 +88,35 @@ async def test_sensors(
     )
     assert state.state == "-62"
 
-    entry = registry.async_get("sensor.wled_rgb_light_wi_fi_rssi")
-    assert entry
+    assert (entry := entity_registry.async_get("sensor.wled_rgb_light_wi_fi_rssi"))
     assert entry.unique_id == "aabbccddeeff_wifi_rssi"
     assert entry.entity_category is EntityCategory.DIAGNOSTIC
 
-    state = hass.states.get("sensor.wled_rgb_light_wi_fi_channel")
-    assert state
+    assert (state := hass.states.get("sensor.wled_rgb_light_wi_fi_channel"))
     assert state.attributes.get(ATTR_ICON) == "mdi:wifi"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
     assert state.state == "11"
 
-    entry = registry.async_get("sensor.wled_rgb_light_wi_fi_channel")
-    assert entry
+    assert (entry := entity_registry.async_get("sensor.wled_rgb_light_wi_fi_channel"))
     assert entry.unique_id == "aabbccddeeff_wifi_channel"
     assert entry.entity_category is EntityCategory.DIAGNOSTIC
 
-    state = hass.states.get("sensor.wled_rgb_light_wi_fi_bssid")
-    assert state
+    assert (state := hass.states.get("sensor.wled_rgb_light_wi_fi_bssid"))
     assert state.attributes.get(ATTR_ICON) == "mdi:wifi"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
     assert state.state == "AA:AA:AA:AA:AA:BB"
 
-    entry = registry.async_get("sensor.wled_rgb_light_wi_fi_bssid")
-    assert entry
+    assert (entry := entity_registry.async_get("sensor.wled_rgb_light_wi_fi_bssid"))
     assert entry.unique_id == "aabbccddeeff_wifi_bssid"
+    assert entry.entity_category is EntityCategory.DIAGNOSTIC
+
+    assert (state := hass.states.get("sensor.wled_rgb_light_ip"))
+    assert state.attributes.get(ATTR_ICON) == "mdi:ip-network"
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
+    assert state.state == "127.0.0.1"
+
+    assert (entry := entity_registry.async_get("sensor.wled_rgb_light_ip"))
+    assert entry.unique_id == "aabbccddeeff_ip"
     assert entry.entity_category is EntityCategory.DIAGNOSTIC
 
 
@@ -135,17 +131,14 @@ async def test_sensors(
         "sensor.wled_rgb_light_wi_fi_bssid",
     ),
 )
+@pytest.mark.usefixtures("init_integration")
 async def test_disabled_by_default_sensors(
-    hass: HomeAssistant, init_integration: MockConfigEntry, entity_id: str
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, entity_id: str
 ) -> None:
     """Test the disabled by default WLED sensors."""
-    registry = er.async_get(hass)
+    assert hass.states.get(entity_id) is None
 
-    state = hass.states.get(entity_id)
-    assert state is None
-
-    entry = registry.async_get(entity_id)
-    assert entry
+    assert (entry := entity_registry.async_get(entity_id))
     assert entry.disabled
     assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
 
@@ -159,6 +152,7 @@ async def test_disabled_by_default_sensors(
         "signal",
     ],
 )
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_no_wifi_support(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -166,17 +160,6 @@ async def test_no_wifi_support(
     key: str,
 ) -> None:
     """Test missing Wi-Fi information from WLED device."""
-    registry = er.async_get(hass)
-
-    # Pre-create registry entries for disabled by default sensors
-    registry.async_get_or_create(
-        SENSOR_DOMAIN,
-        DOMAIN,
-        f"aabbccddeeff_wifi_{key}",
-        suggested_object_id=f"wled_rgb_light_wifi_{key}",
-        disabled_by=None,
-    )
-
     # Remove Wi-Fi info
     device = mock_wled.update.return_value
     device.info.wifi = None
@@ -186,8 +169,7 @@ async def test_no_wifi_support(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    state = hass.states.get(f"sensor.wled_rgb_light_wifi_{key}")
-    assert state
+    assert (state := hass.states.get(f"sensor.wled_rgb_light_wi_fi_{key}"))
     assert state.state == STATE_UNKNOWN
 
 

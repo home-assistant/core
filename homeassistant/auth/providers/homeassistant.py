@@ -93,9 +93,11 @@ class Data:
                 self.is_legacy = True
 
                 logging.getLogger(__name__).warning(
-                    "Home Assistant auth provider is running in legacy mode "
-                    "because we detected usernames that are case-insensitive"
-                    "equivalent. Please change the username: '%s'.",
+                    (
+                        "Home Assistant auth provider is running in legacy mode "
+                        "because we detected usernames that are case-insensitive"
+                        "equivalent. Please change the username: '%s'."
+                    ),
                     username,
                 )
 
@@ -108,9 +110,11 @@ class Data:
                 self.is_legacy = True
 
                 logging.getLogger(__name__).warning(
-                    "Home Assistant auth provider is running in legacy mode "
-                    "because we detected usernames that start or end in a "
-                    "space. Please change the username: '%s'.",
+                    (
+                        "Home Assistant auth provider is running in legacy mode "
+                        "because we detected usernames that start or end in a "
+                        "space. Please change the username: '%s'."
+                    ),
                     username,
                 )
 

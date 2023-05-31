@@ -14,9 +14,8 @@ from aiohomekit.model.services import Service, ServicesTypes
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
+from homeassistant.const import EntityCategory, Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType
 
@@ -56,6 +55,18 @@ SWITCH_ENTITIES: dict[str, DeclarativeSwitchEntityDescription] = {
         key=CharacteristicsTypes.LOCK_PHYSICAL_CONTROLS,
         name="Lock Physical Controls",
         icon="mdi:lock-open",
+        entity_category=EntityCategory.CONFIG,
+    ),
+    CharacteristicsTypes.MUTE: DeclarativeSwitchEntityDescription(
+        key=CharacteristicsTypes.MUTE,
+        name="Mute",
+        icon="mdi:volume-mute",
+        entity_category=EntityCategory.CONFIG,
+    ),
+    CharacteristicsTypes.VENDOR_AIRVERSA_SLEEP_MODE: DeclarativeSwitchEntityDescription(
+        key=CharacteristicsTypes.VENDOR_AIRVERSA_SLEEP_MODE,
+        name="Sleep Mode",
+        icon="mdi:power-sleep",
         entity_category=EntityCategory.CONFIG,
     ),
 }

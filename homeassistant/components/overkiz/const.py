@@ -5,9 +5,28 @@ from datetime import timedelta
 import logging
 from typing import Final
 
-from pyoverkiz.enums import OverkizCommandParam, UIClass, UIWidget
+from pyoverkiz.enums import MeasuredValueType, OverkizCommandParam, UIClass, UIWidget
 
-from homeassistant.const import Platform
+from homeassistant.const import (
+    CONCENTRATION_PARTS_PER_BILLION,
+    CONCENTRATION_PARTS_PER_MILLION,
+    DEGREE,
+    LIGHT_LUX,
+    PERCENTAGE,
+    Platform,
+    UnitOfElectricCurrent,
+    UnitOfElectricPotential,
+    UnitOfEnergy,
+    UnitOfIrradiance,
+    UnitOfLength,
+    UnitOfPower,
+    UnitOfPressure,
+    UnitOfSpeed,
+    UnitOfTemperature,
+    UnitOfTime,
+    UnitOfVolume,
+    UnitOfVolumeFlowRate,
+)
 
 DOMAIN: Final = "overkiz"
 LOGGER: logging.Logger = logging.getLogger(__package__)
@@ -32,6 +51,7 @@ PLATFORMS: list[Platform] = [
     Platform.SENSOR,
     Platform.SIREN,
     Platform.SWITCH,
+    Platform.WATER_HEATER,
 ]
 
 IGNORED_OVERKIZ_DEVICES: list[UIClass | UIWidget] = [
@@ -62,10 +82,16 @@ OVERKIZ_DEVICE_TO_PLATFORM: dict[UIClass | UIWidget, Platform | None] = {
     UIClass.WINDOW: Platform.COVER,
     UIWidget.ALARM_PANEL_CONTROLLER: Platform.ALARM_CONTROL_PANEL,  # widgetName, uiClass is Alarm (not supported)
     UIWidget.ATLANTIC_ELECTRICAL_HEATER: Platform.CLIMATE,  # widgetName, uiClass is HeatingSystem (not supported)
+    UIWidget.ATLANTIC_ELECTRICAL_HEATER_WITH_ADJUSTABLE_TEMPERATURE_SETPOINT: Platform.CLIMATE,  # widgetName, uiClass is HeatingSystem (not supported)
     UIWidget.ATLANTIC_ELECTRICAL_TOWEL_DRYER: Platform.CLIMATE,  # widgetName, uiClass is HeatingSystem (not supported)
     UIWidget.ATLANTIC_HEAT_RECOVERY_VENTILATION: Platform.CLIMATE,  # widgetName, uiClass is HeatingSystem (not supported)
+    UIWidget.ATLANTIC_PASS_APC_DHW: Platform.WATER_HEATER,  # widgetName, uiClass is WaterHeatingSystem (not supported)
+    UIWidget.ATLANTIC_PASS_APC_HEATING_AND_COOLING_ZONE: Platform.CLIMATE,  # widgetName, uiClass is HeatingSystem (not supported)
+    UIWidget.ATLANTIC_PASS_APC_HEATING_ZONE: Platform.CLIMATE,  # widgetName, uiClass is HeatingSystem (not supported)
     UIWidget.ATLANTIC_PASS_APC_ZONE_CONTROL: Platform.CLIMATE,  # widgetName, uiClass is HeatingSystem (not supported)
+    UIWidget.DOMESTIC_HOT_WATER_PRODUCTION: Platform.WATER_HEATER,  # widgetName, uiClass is WaterHeatingSystem (not supported)
     UIWidget.DOMESTIC_HOT_WATER_TANK: Platform.SWITCH,  # widgetName, uiClass is WaterHeatingSystem (not supported)
+    UIWidget.HITACHI_DHW: Platform.WATER_HEATER,  # widgetName, uiClass is HitachiHeatingSystem (not supported)
     UIWidget.MY_FOX_ALARM_CONTROLLER: Platform.ALARM_CONTROL_PANEL,  # widgetName, uiClass is Alarm (not supported)
     UIWidget.MY_FOX_SECURITY_CAMERA: Platform.SWITCH,  # widgetName, uiClass is Camera (not supported)
     UIWidget.RTD_INDOOR_SIREN: Platform.SWITCH,  # widgetName, uiClass is Siren (not supported)
@@ -77,6 +103,7 @@ OVERKIZ_DEVICE_TO_PLATFORM: dict[UIClass | UIWidget, Platform | None] = {
     UIWidget.STATEFUL_ALARM_CONTROLLER: Platform.ALARM_CONTROL_PANEL,  # widgetName, uiClass is Alarm (not supported)
     UIWidget.STATELESS_EXTERIOR_HEATING: Platform.SWITCH,  # widgetName, uiClass is ExteriorHeatingSystem (not supported)
     UIWidget.TSKALARM_CONTROLLER: Platform.ALARM_CONTROL_PANEL,  # widgetName, uiClass is Alarm (not supported)
+    UIWidget.VALVE_HEATING_TEMPERATURE_INTERFACE: Platform.CLIMATE,  # widgetName, uiClass is HeatingSystem (not supported)
 }
 
 # Map Overkiz camelCase to Home Assistant snake_case for translation
@@ -90,4 +117,43 @@ OVERKIZ_STATE_TO_TRANSLATION: dict[str, str] = {
     OverkizCommandParam.SAAC: "saac",
     OverkizCommandParam.SFC: "sfc",
     OverkizCommandParam.UPS: "ups",
+}
+
+OVERKIZ_UNIT_TO_HA: dict[str, str] = {
+    MeasuredValueType.ABSOLUTE_VALUE: "",
+    MeasuredValueType.ANGLE_IN_DEGREES: DEGREE,
+    MeasuredValueType.ANGULAR_SPEED_IN_DEGREES_PER_SECOND: f"{DEGREE}/{UnitOfTime.SECONDS}",
+    MeasuredValueType.ELECTRICAL_ENERGY_IN_KWH: UnitOfEnergy.KILO_WATT_HOUR,
+    MeasuredValueType.ELECTRICAL_ENERGY_IN_WH: UnitOfEnergy.WATT_HOUR,
+    MeasuredValueType.ELECTRICAL_POWER_IN_KW: UnitOfPower.KILO_WATT,
+    MeasuredValueType.ELECTRICAL_POWER_IN_W: UnitOfPower.WATT,
+    MeasuredValueType.ELECTRIC_CURRENT_IN_AMPERE: UnitOfElectricCurrent.AMPERE,
+    MeasuredValueType.ELECTRIC_CURRENT_IN_MILLI_AMPERE: UnitOfElectricCurrent.MILLIAMPERE,
+    MeasuredValueType.ENERGY_IN_CAL: "cal",
+    MeasuredValueType.ENERGY_IN_KCAL: "kcal",
+    MeasuredValueType.FLOW_IN_LITRE_PER_SECOND: f"{UnitOfVolume.LITERS}/{UnitOfTime.SECONDS}",
+    MeasuredValueType.FLOW_IN_METER_CUBE_PER_HOUR: UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
+    MeasuredValueType.FLOW_IN_METER_CUBE_PER_SECOND: f"{UnitOfVolume.CUBIC_METERS}/{UnitOfTime.SECONDS}",
+    MeasuredValueType.FOSSIL_ENERGY_IN_WH: UnitOfEnergy.WATT_HOUR,
+    MeasuredValueType.GRADIENT_IN_PERCENTAGE_PER_SECOND: f"{PERCENTAGE}/{UnitOfTime.SECONDS}",
+    MeasuredValueType.LENGTH_IN_METER: UnitOfLength.METERS,
+    MeasuredValueType.LINEAR_SPEED_IN_METER_PER_SECOND: UnitOfSpeed.METERS_PER_SECOND,
+    MeasuredValueType.LUMINANCE_IN_LUX: LIGHT_LUX,
+    MeasuredValueType.PARTS_PER_BILLION: CONCENTRATION_PARTS_PER_BILLION,
+    MeasuredValueType.PARTS_PER_MILLION: CONCENTRATION_PARTS_PER_MILLION,
+    MeasuredValueType.PARTS_PER_QUADRILLION: "ppq",
+    MeasuredValueType.PARTS_PER_TRILLION: "ppt",
+    MeasuredValueType.POWER_PER_SQUARE_METER: UnitOfIrradiance.WATTS_PER_SQUARE_METER,
+    MeasuredValueType.PRESSURE_IN_HPA: UnitOfPressure.HPA,
+    MeasuredValueType.PRESSURE_IN_MILLI_BAR: UnitOfPressure.MBAR,
+    MeasuredValueType.RELATIVE_VALUE_IN_PERCENTAGE: PERCENTAGE,
+    MeasuredValueType.TEMPERATURE_IN_CELCIUS: UnitOfTemperature.CELSIUS,
+    MeasuredValueType.TEMPERATURE_IN_KELVIN: UnitOfTemperature.KELVIN,
+    MeasuredValueType.TIME_IN_SECOND: UnitOfTime.SECONDS,
+    # MeasuredValueType.VECTOR_COORDINATE: "",
+    MeasuredValueType.VOLTAGE_IN_MILLI_VOLT: UnitOfElectricPotential.MILLIVOLT,
+    MeasuredValueType.VOLTAGE_IN_VOLT: UnitOfElectricPotential.VOLT,
+    MeasuredValueType.VOLUME_IN_CUBIC_METER: UnitOfVolume.CUBIC_METERS,
+    MeasuredValueType.VOLUME_IN_GALLON: UnitOfVolume.GALLONS,
+    MeasuredValueType.VOLUME_IN_LITER: UnitOfVolume.LITERS,
 }

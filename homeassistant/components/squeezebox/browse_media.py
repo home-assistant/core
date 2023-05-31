@@ -156,7 +156,6 @@ async def library_payload(hass, player):
                     media_content_type=item,
                     can_play=True,
                     can_expand=True,
-                    thumbnail="https://brands.home-assistant.io/_/squeezebox/logo.png",
                 )
             )
 

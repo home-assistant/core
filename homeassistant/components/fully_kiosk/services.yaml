@@ -20,7 +20,7 @@ start_application:
     device:
       integration: fully_kiosk
   fields:
-    url:
+    application:
       name: Application
       description: Package name of the application to start.
       example: "de.ozerov.fully"
