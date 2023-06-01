@@ -132,11 +132,6 @@ class RomyVacuumEntity(CoordinatorEntity[RomyVacuumCoordinator], StateVacuumEnti
         """Return the icon to use for device."""
         return ICON
 
-    @property
-    def device_state_attributes(self) -> Mapping[str, Any] | None:
-        """Return the state attributes of the device."""
-        return self._state_attrs
-
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the vacuum on."""
         LOGGER.debug("async_turn_on")
