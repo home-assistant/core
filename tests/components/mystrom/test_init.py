@@ -2,7 +2,6 @@
 from unittest.mock import AsyncMock, PropertyMock, patch
 
 from pymystrom.exceptions import MyStromConnectionError
-from slugify import slugify
 
 from homeassistant.components.mystrom.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -11,7 +10,7 @@ from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
-DEVICE_NAME = "test_myStrom Device"
+DEVICE_NAME = "testmyStromdevice"
 
 ENTRY_ID = "uuid"
 DEVICE_MAC = "6001940376EB"
@@ -53,14 +52,14 @@ async def init_integration(hass, device_type, bulb_type="strip"):
 async def test_init_switch(hass: HomeAssistant) -> None:
     """Test the initialization of a myStrom switch."""
     await init_integration(hass, 101)
-    state = hass.states.get("switch." + slugify(DEVICE_NAME, separator="_"))
+    state = hass.states.get("switch." + DEVICE_NAME)
     assert state is not None
 
 
 async def test_init_bulb(hass: HomeAssistant) -> None:
     """Test the initialization of a myStrom bulb."""
     await init_integration(hass, 102)
-    state = hass.states.get("light." + slugify(DEVICE_NAME, separator="_"))
+    state = hass.states.get("light." + DEVICE_NAME)
     assert state is not None
 
 
