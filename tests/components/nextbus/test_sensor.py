@@ -47,8 +47,6 @@ CONFIG_BASIC = {
     }
 }
 
-CONFIG_INVALID_MISSING: dict[str, dict] = {DOMAIN: {}}
-
 BASIC_RESULTS = {
     "predictions": {
         "agencyTitle": VALID_AGENCY_TITLE,
@@ -147,16 +145,6 @@ async def test_valid_config(
 ) -> None:
     """Test that sensor is set up properly with valid config."""
     await assert_setup_sensor(hass, CONFIG_BASIC)
-
-
-async def test_invalid_config(
-    hass: HomeAssistant, mock_nextbus: MagicMock, mock_nextbus_lists: MagicMock
-) -> None:
-    """Checks that component is not setup when missing information."""
-    await assert_setup_sensor(
-        hass, CONFIG_INVALID_MISSING, ConfigEntryState.SETUP_ERROR
-    )
-    assert hass.states.get(SENSOR_ID_SHORT) is None
 
 
 async def test_verify_valid_state(

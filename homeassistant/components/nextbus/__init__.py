@@ -4,17 +4,11 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
-from .const import CONF_AGENCY
-
 PLATFORMS = [Platform.SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up platforms for NextBus."""
-    entry_agency = entry.data.get(CONF_AGENCY)
-    if not entry_agency:
-        return False
-
     for platform in PLATFORMS:
         await hass.config_entries.async_forward_entry_setup(entry, platform)
 
