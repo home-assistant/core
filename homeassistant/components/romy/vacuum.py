@@ -87,7 +87,6 @@ class RomyVacuumEntity(CoordinatorEntity[RomyVacuumCoordinator], StateVacuumEnti
         self.romy = romy
         self._device_info = device_info
         self._attr_unique_id = self.romy.unique_id
-        self._state_attrs: dict[str, Any] = {}
 
         self._is_on = False
         self._fan_speed = FAN_SPEEDS.index(FAN_SPEED_NONE)
