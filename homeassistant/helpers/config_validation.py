@@ -1075,7 +1075,7 @@ def empty_config_schema(domain: str) -> Callable[[dict], dict]:
     return validator
 
 
-def no_yaml_config_schema(domain: str) -> Callable[[dict], dict]:
+def config_entry_only_config_schema(domain: str) -> Callable[[dict], dict]:
     """Return a config schema which logs if attempted to setup from YAML."""
 
     module = inspect.getmodule(inspect.stack(context=0)[2].frame)
@@ -1098,11 +1098,11 @@ def no_yaml_config_schema(domain: str) -> Callable[[dict], dict]:
             async_create_issue(
                 hass,
                 HOMEASSISTANT_DOMAIN,
-                f"integration_key_no_support_{domain}",
+                f"config_entry_only_{domain}",
                 is_fixable=False,
                 issue_domain=domain,
                 severity=IssueSeverity.ERROR,
-                translation_key="integration_key_no_support",
+                translation_key="config_entry_only",
                 translation_placeholders={
                     "domain": domain,
                     "add_integration": add_integration,

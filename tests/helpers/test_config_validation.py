@@ -1501,36 +1501,40 @@ def test_empty_schema_cant_find_module() -> None:
         cv.empty_config_schema("test_domain")({"test_domain": {"foo": "bar"}})
 
 
-def test_no_yaml_schema(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -> None:
-    """Test no_yaml_config_schema."""
-    expected_issue = "integration_key_no_support_test_domain"
+def test_config_entry_only_schema(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test config_entry_only_config_schema."""
+    expected_issue = "config_entry_only_test_domain"
     expected_message = (
         "The test_domain integration does not support YAML setup, please remove "
         "it from your configuration"
     )
     issue_registry = ir.async_get(hass)
 
-    cv.no_yaml_config_schema("test_domain")({})
+    cv.config_entry_only_config_schema("test_domain")({})
     assert expected_message not in caplog.text
     assert not issue_registry.async_get_issue(HOMEASSISTANT_DOMAIN, expected_issue)
 
-    cv.no_yaml_config_schema("test_domain")({"test_domain": {}})
+    cv.config_entry_only_config_schema("test_domain")({"test_domain": {}})
     assert expected_message in caplog.text
     assert issue_registry.async_get_issue(HOMEASSISTANT_DOMAIN, expected_issue)
     issue_registry.async_delete(HOMEASSISTANT_DOMAIN, expected_issue)
 
-    cv.no_yaml_config_schema("test_domain")({"test_domain": {"foo": "bar"}})
+    cv.config_entry_only_config_schema("test_domain")({"test_domain": {"foo": "bar"}})
     assert expected_message in caplog.text
     assert issue_registry.async_get_issue(HOMEASSISTANT_DOMAIN, expected_issue)
 
 
-def test_no_yaml_schema_cant_find_module() -> None:
+def test_config_entry_only_schema_cant_find_module() -> None:
     """Test if the current module cannot be inspected."""
     with patch("inspect.getmodule", return_value=None):
-        cv.no_yaml_config_schema("test_domain")({"test_domain": {"foo": "bar"}})
+        cv.config_entry_only_config_schema("test_domain")(
+            {"test_domain": {"foo": "bar"}}
+        )
 
 
-def test_no_yaml_schema_no_hass(
+def test_config_entry_only_schema_no_hass(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test if the the hass context var is not set in our context."""
@@ -1538,7 +1542,9 @@ def test_no_yaml_schema_no_hass(
         "homeassistant.helpers.config_validation.async_get_hass",
         side_effect=LookupError,
     ):
-        cv.no_yaml_config_schema("test_domain")({"test_domain": {"foo": "bar"}})
+        cv.config_entry_only_config_schema("test_domain")(
+            {"test_domain": {"foo": "bar"}}
+        )
     expected_message = (
         "The test_domain integration does not support YAML setup, please remove "
         "it from your configuration"

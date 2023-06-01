@@ -16,7 +16,7 @@ __all__ = [
     "filter_urllib3_logging",
 ]
 
-CONFIG_SCHEMA = cv.no_yaml_config_schema(DOMAIN)
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:

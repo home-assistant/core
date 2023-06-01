@@ -75,7 +75,7 @@ NAME_TO_WHITE_CHANNEL_TYPE: Final = {
     option.name.lower(): option for option in WhiteChannelType
 }
 
-CONFIG_SCHEMA = cv.no_yaml_config_schema(DOMAIN)
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
 @callback

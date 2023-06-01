@@ -44,7 +44,7 @@ SERVICE_SEND_TEXT_COMMAND_SCHEMA = vol.All(
     },
 )
 
-CONFIG_SCHEMA = cv.no_yaml_config_schema(DOMAIN)
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
