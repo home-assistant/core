@@ -99,7 +99,7 @@ class ElecPricesDataUpdateCoordinator(DataUpdateCoordinator[EsiosApiData]):
         if (
             not api_data
             or not api_data.sensors
-            or not all(api_data.availability.values())
+            or not any(api_data.availability.values())
         ):
             raise UpdateFailed
         return api_data

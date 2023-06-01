@@ -183,6 +183,13 @@ class ElecPriceSensor(CoordinatorEntity[ElecPricesDataUpdateCoordinator], Sensor
             )
         )
 
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return self.coordinator.data.availability.get(
+            self.entity_description.key, False
+        )
+
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         await super().async_added_to_hass()

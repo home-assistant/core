@@ -165,7 +165,7 @@ async def test_config_flow(
     assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert pvpc_aioclient_mock.call_count == 10
     await hass.async_block_till_done()
-    assert pvpc_aioclient_mock.call_count == 12
+    assert pvpc_aioclient_mock.call_count == 11
 
     state = hass.states.get("sensor.esios_pvpc")
     state_inyection = hass.states.get("sensor.esios_injection_price")
