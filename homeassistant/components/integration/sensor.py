@@ -411,7 +411,6 @@ class IntegrationSensor(RestoreSensor):
         """Restore Utility Meter Sensor Extra Stored Data."""
         if (restored_last_extra_data := await self.async_get_last_extra_data()) is None:
             return None
-        _LOGGER.error(restored_last_extra_data.as_dict())
 
         return IntegrationSensorExtraStoredData.from_dict(
             restored_last_extra_data.as_dict()
