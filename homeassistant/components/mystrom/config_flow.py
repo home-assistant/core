@@ -61,5 +61,3 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
 
 
-class CannotConnect(HomeAssistantError):
-    """Error to indicate we cannot connect."""
