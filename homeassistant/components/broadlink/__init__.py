@@ -12,7 +12,7 @@ from .const import DOMAIN
 from .device import BroadlinkDevice
 from .heartbeat import BroadlinkHeartbeat
 
-CONFIG_SCHEMA = cv.no_yaml_config_schema(DOMAIN)
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
 @dataclass
