@@ -10,9 +10,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_NAME
-from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.exceptions import HomeAssistantError
 
 from .const import DOMAIN
 
@@ -26,8 +24,6 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
         vol.Required(CONF_HOST): str,
     }
 )
-
-
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -47,7 +43,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             try:
-                info = await pymystrom.get_device_info(self.hass, user_input[CONF_HOST])
+                info = await pymystrom.get_device_info(user_input[CONF_HOST])
             except MyStromConnectionError:
                 errors["base"] = "cannot_connect"
             else:
@@ -59,5 +55,3 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         schema = self.add_suggested_values_to_schema(STEP_USER_DATA_SCHEMA, user_input)
         return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
-
-

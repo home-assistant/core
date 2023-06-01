@@ -39,7 +39,7 @@ async def test_form_combined(hass: HomeAssistant, mock_setup_entry: AsyncMock) -
         await hass.async_block_till_done()
 
         assert result2["type"] == FlowResultType.CREATE_ENTRY
-        assert result2["title"] == DEVICE_NAME
+        assert result2["title"] == "myStrom Device"
         assert result2["data"] == {"host": "1.1.1.1"}
 
 
@@ -55,6 +55,7 @@ async def test_form_duplicates(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "user"
     assert result["errors"] == {}
 
     with patch(
@@ -70,9 +71,9 @@ async def test_form_duplicates(
         await hass.async_block_till_done()
 
         assert result2["type"] == FlowResultType.ABORT
+        assert result2["reason"] == "already_configured"
 
     assert len(mock_session.mock_calls) == 1
-    # assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_step_import(hass: HomeAssistant) -> None:
@@ -88,7 +89,7 @@ async def test_step_import(hass: HomeAssistant) -> None:
             DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=conf
         )
         assert result["type"] == FlowResultType.CREATE_ENTRY
-        assert result["title"] == DEVICE_NAME
+        assert result["title"] == "myStrom Device"
         assert result["data"] == {
             CONF_HOST: "1.1.1.1",
         }
@@ -101,6 +102,7 @@ async def test_wong_answer_from_device(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "user"
     assert result["errors"] == {}
     with patch(
         "pymystrom.get_device_info",
@@ -115,6 +117,7 @@ async def test_wong_answer_from_device(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
         assert result2["type"] == FlowResultType.FORM
+        assert result2["step_id"] == "user"
         assert result2["errors"] == {"base": "cannot_connect"}
     with patch(
         "pymystrom.get_device_info",
@@ -126,8 +129,6 @@ async def test_wong_answer_from_device(hass: HomeAssistant) -> None:
                 "host": "1.1.1.1",
             },
         )
-        await hass.async_block_till_done()
-
+        assert result2["title"] == DEVICE_NAME
+        assert result2["data"] == {"host": "1.1.1.1"}
         assert result2["type"] == FlowResultType.CREATE_ENTRY
-        # assert result2["title"] == DEVICE_NAME
-        # assert result2["data"] == {"host": "1.1.1.1"}

@@ -5,6 +5,15 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
+from homeassistant.components.mystrom.const import DOMAIN
+from homeassistant.const import CONF_HOST
+from homeassistant.core import HomeAssistant
+
+from tests.common import MockConfigEntry
+
+ENTRY_ID = "uuid"
+DEVICE_NAME = "testmyStromdevice"
+
 
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock, None, None]:
@@ -13,3 +22,17 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
         "homeassistant.components.mystrom.async_setup_entry", return_value=True
     ) as mock_setup_entry:
         yield mock_setup_entry
+
+
+@pytest.fixture
+def config_entry(hass: HomeAssistant) -> MockConfigEntry:
+    """Create and add a config entry."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        entry_id=ENTRY_ID,
+        unique_id="uuid",
+        data={CONF_HOST: "1.1.1.1"},
+        title=DEVICE_NAME,
+    )
+    config_entry.add_to_hass(hass)
+    return config_entry

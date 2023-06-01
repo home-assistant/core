@@ -17,7 +17,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import ATTR_MANUFACTURER, DOMAIN
+from .const import DOMAIN, MANUFACTURER
 
 DEFAULT_NAME = "myStrom Switch"
 
@@ -73,7 +73,7 @@ class MyStromSwitch(SwitchEntity):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self.plug.mac)},
             name=name,
-            manufacturer=ATTR_MANUFACTURER,
+            manufacturer=MANUFACTURER,
             sw_version=self.plug.firmware,
         )
 

@@ -25,7 +25,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import ATTR_MANUFACTURER, DOMAIN
+from .const import DOMAIN, MANUFACTURER
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -93,7 +93,7 @@ class MyStromLight(LightEntity):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, mac)},
             name=name,
-            manufacturer=ATTR_MANUFACTURER,
+            manufacturer=MANUFACTURER,
             sw_version=self._bulb.firmware,
         )
 
