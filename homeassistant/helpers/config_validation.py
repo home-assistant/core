@@ -86,6 +86,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import (
+    DOMAIN as HOMEASSISTANT_DOMAIN,
     HomeAssistant,
     async_get_hass,
     split_entity_id,
@@ -1069,6 +1070,55 @@ def empty_config_schema(domain: str) -> Callable[[dict], dict]:
                 domain,
                 config[domain],
             )
+        return config
+
+    return validator
+
+
+def no_yaml_config_schema(domain: str) -> Callable[[dict], dict]:
+    """Return a config schema which logs if attempted to setup from YAML."""
+
+    module = inspect.getmodule(inspect.stack(context=0)[2].frame)
+    if module is not None:
+        module_name = module.__name__
+    else:
+        # If Python is unable to access the sources files, the call stack frame
+        # will be missing information, so let's guard.
+        # https://github.com/home-assistant/core/issues/24982
+        module_name = __name__
+    logger_func = logging.getLogger(module_name).error
+
+    def raise_issue() -> None:
+        # pylint: disable-next=import-outside-toplevel
+        from .issue_registry import IssueSeverity, async_create_issue
+
+        add_integration = f"/_my_redirect/config_flow_start?domain={domain}"
+        with contextlib.suppress(LookupError):
+            hass = async_get_hass()
+            async_create_issue(
+                hass,
+                HOMEASSISTANT_DOMAIN,
+                f"integration_key_no_support_{domain}",
+                is_fixable=False,
+                issue_domain=domain,
+                severity=IssueSeverity.ERROR,
+                translation_key="integration_key_no_support",
+                translation_placeholders={
+                    "domain": domain,
+                    "add_integration": add_integration,
+                },
+            )
+
+    def validator(config: dict) -> dict:
+        if domain in config:
+            logger_func(
+                (
+                    "The %s integration does not support YAML setup, please remove it "
+                    "from your configuration file"
+                ),
+                domain,
+            )
+            raise_issue()
         return config
 
     return validator
