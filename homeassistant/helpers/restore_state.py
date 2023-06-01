@@ -214,12 +214,12 @@ class RestoreStateData:
         """Save the current state machine to storage."""
         _LOGGER.debug("Dumping states")
         try:
-            states_to_save = [
-                stored_state.as_dict()
-                for stored_state in self.async_get_stored_states()
-            ]
-            _LOGGER.debug("States to save: %s", len(states_to_save))
-            await self.store.async_save(states_to_save)
+            await self.store.async_save(
+                [
+                    stored_state.as_dict()
+                    for stored_state in self.async_get_stored_states()
+                ]
+            )
         except HomeAssistantError as exc:
             _LOGGER.error("Error saving current states", exc_info=exc)
 
