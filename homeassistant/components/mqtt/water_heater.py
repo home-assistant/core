@@ -9,6 +9,7 @@ import voluptuous as vol
 
 from homeassistant.components import water_heater
 from homeassistant.components.water_heater import (
+    ATTR_OPERATION_MODE,
     DEFAULT_MAX_TEMP,
     DEFAULT_MIN_TEMP,
     STATE_ECO,
@@ -39,7 +40,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .climate import HVACMode, MqttTemperatureControlEntity
+from .climate import MqttTemperatureControlEntity
 from .config import DEFAULT_RETAIN, MQTT_BASE_SCHEMA
 from .const import (
     CONF_CURRENT_TEMP_TEMPLATE,
@@ -288,10 +289,6 @@ class MqttWaterHeater(MqttTemperatureControlEntity, WaterHeaterEntity):  # type:
 
         self.prepare_subscribe_topics(topics)
 
-    async def async_set_hvac_mode(self, hvac_mode: HVACMode | str) -> None:
-        """Raise error for unsupported climate feature."""
-        raise NotImplementedError()
-
     async def async_set_operation_mode(self, operation_mode: str) -> None:
         """Set new operation mode."""
         payload = self._command_templates[CONF_MODE_COMMAND_TEMPLATE](operation_mode)
@@ -300,3 +297,12 @@ class MqttWaterHeater(MqttTemperatureControlEntity, WaterHeaterEntity):  # type:
         if self._optimistic or self._topic[CONF_MODE_STATE_TOPIC] is None:
             self._attr_current_operation = operation_mode
             self.async_write_ha_state()
+
+    async def async_set_temperature(self, **kwargs: Any) -> None:
+        """Set new target temperatures and mode."""
+        operation_mode: str | None
+        if operation_mode := kwargs.get(ATTR_OPERATION_MODE):
+            await self.async_set_operation_mode(operation_mode)
+            del kwargs[ATTR_OPERATION_MODE]
+
+        await self.async_set_temperature_attributes(**kwargs)
