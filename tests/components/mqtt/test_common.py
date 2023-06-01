@@ -1930,3 +1930,29 @@ async def help_test_discovery_setup(
     await hass.async_block_till_done()
     state = hass.states.get(f"{domain}.{name}")
     assert state and state.state is not None
+
+
+async def help_test_temperature_control_value_template_keys(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    domain: str,
+    config: ConfigType,
+    attribute: str,
+    value_topic: str,
+    value_template: str,
+    payload: Any,
+) -> None:
+    """Test setting of attribute from an MQTT Temperature Control entity using templates."""
+    config = copy.deepcopy(config)
+    config[mqtt.DOMAIN][domain][value_topic] = "state-topic"
+    config[mqtt.DOMAIN][domain][value_template] = "{{ value_json }}"
+
+    await help_setup_component(
+        hass, mqtt_mock_entry, domain, config, use_discovery=True
+    )
+
+    async_fire_mqtt_message(hass, "state-topic", f'"{payload}"')
+    await hass.async_block_till_done()
+
+    state = hass.states.get(f"{domain}.test")
+    assert state.attributes.get(attribute) == payload
