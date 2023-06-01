@@ -14,6 +14,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PORT,
     CONF_RESOURCES,
+    CONF_TIMEOUT,
     PERCENTAGE,
 )
 from homeassistant.core import HomeAssistant
@@ -31,6 +32,7 @@ CONF_INVERT = "invert"
 DEFAULT_HOST = "localhost"
 DEFAULT_NAME = "Netdata"
 DEFAULT_PORT = 19999
+DEFAULT_TIMEOUT = 5
 
 DEFAULT_ICON = "mdi:desktop-classic"
 
@@ -48,6 +50,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
         vol.Required(CONF_RESOURCES): vol.Schema({cv.string: RESOURCE_SCHEMA}),
     }
 )
@@ -64,9 +67,10 @@ async def async_setup_platform(
     name = config[CONF_NAME]
     host = config[CONF_HOST]
     port = config[CONF_PORT]
+    timeout = config[CONF_TIMEOUT]
     resources = config[CONF_RESOURCES]
 
-    netdata = NetdataData(Netdata(host, port=port))
+    netdata = NetdataData(Netdata(host, port=port, timeout=timeout))
     await netdata.async_update()
 
     if netdata.api.metrics is None:
