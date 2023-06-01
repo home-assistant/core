@@ -1528,3 +1528,21 @@ def test_no_yaml_schema_cant_find_module() -> None:
     """Test if the current module cannot be inspected."""
     with patch("inspect.getmodule", return_value=None):
         cv.no_yaml_config_schema("test_domain")({"test_domain": {"foo": "bar"}})
+
+
+def test_no_yaml_schema_no_hass(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test if the the hass context var is not set in our context."""
+    with patch(
+        "homeassistant.helpers.config_validation.async_get_hass",
+        side_effect=LookupError,
+    ):
+        cv.no_yaml_config_schema("test_domain")({"test_domain": {"foo": "bar"}})
+    expected_message = (
+        "The test_domain integration does not support YAML setup, please remove "
+        "it from your configuration"
+    )
+    assert expected_message in caplog.text
+    issue_registry = ir.async_get(hass)
+    assert not issue_registry.issues

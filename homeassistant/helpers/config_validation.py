@@ -1092,23 +1092,22 @@ def no_yaml_config_schema(domain: str) -> Callable[[dict], dict]:
         # pylint: disable-next=import-outside-toplevel
         from .issue_registry import IssueSeverity, async_create_issue
 
+        add_integration = f"/_my_redirect/config_flow_start?domain={domain}"
         with contextlib.suppress(LookupError):
             hass = async_get_hass()
-        if not hass:
-            return
-        async_create_issue(
-            hass,
-            HOMEASSISTANT_DOMAIN,
-            f"integration_key_no_support_{domain}",
-            is_fixable=False,
-            issue_domain=domain,
-            severity=IssueSeverity.ERROR,
-            translation_key="integration_key_no_support",
-            translation_placeholders={
-                "domain": domain,
-                "add_integration": f"/_my_redirect/config_flow_start?domain={domain}",
-            },
-        )
+            async_create_issue(
+                hass,
+                HOMEASSISTANT_DOMAIN,
+                f"integration_key_no_support_{domain}",
+                is_fixable=False,
+                issue_domain=domain,
+                severity=IssueSeverity.ERROR,
+                translation_key="integration_key_no_support",
+                translation_placeholders={
+                    "domain": domain,
+                    "add_integration": add_integration,
+                },
+            )
 
     def validator(config: dict) -> dict:
         if domain in config:
