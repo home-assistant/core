@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any
 
 from miio.integrations.vacuum.roborock.vacuum import Consumable
 
