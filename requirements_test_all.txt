@@ -1198,7 +1198,7 @@ pycsspeechtts==1.0.8
 pydaikin==2.9.1
 
 # homeassistant.components.deconz
-pydeconz==112
+pydeconz==113
 
 # homeassistant.components.dexcom
 pydexcom==0.2.3
