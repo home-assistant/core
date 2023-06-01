@@ -10,10 +10,9 @@ from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from tests.common import MockConfigEntry
+from .conftest import DEVICE_MAC
 
-DEVICE_MAC = "6001940376EB"
-DEVICE_NAME = "myStrom Device"
+from tests.common import MockConfigEntry
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
