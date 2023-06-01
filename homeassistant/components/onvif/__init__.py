@@ -120,31 +120,33 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return await hass.config_entries.async_unload_platforms(entry, device.platforms)
 
 
-async def _get_snapshot_auth(device):
+async def _get_snapshot_auth(device: ONVIFDevice) -> str | None:
     """Determine auth type for snapshots."""
-    if not device.capabilities.snapshot or not (device.username and device.password):
-        return HTTP_DIGEST_AUTHENTICATION
+    if not device.capabilities.snapshot:
+        return None
 
-    try:
-        snapshot = await device.device.get_snapshot(device.profiles[0].token)
+    for basic_auth in (False, True):
+        method = HTTP_BASIC_AUTHENTICATION if basic_auth else HTTP_DIGEST_AUTHENTICATION
+        try:
+            if await device.device.get_snapshot(device.profiles[0].token, basic_auth):
+                return method
+        except (ONVIFAuthError, ONVIFTimeoutError, ONVIFError):
+            pass
 
-        if snapshot:
-            return HTTP_DIGEST_AUTHENTICATION
-        return HTTP_BASIC_AUTHENTICATION
-    except (ONVIFAuthError, ONVIFTimeoutError):
-        return HTTP_BASIC_AUTHENTICATION
-    except ONVIFError:
-        return HTTP_DIGEST_AUTHENTICATION
+    return None
 
 
-async def async_populate_snapshot_auth(hass, device, entry):
+async def async_populate_snapshot_auth(
+    hass: HomeAssistant, device: ONVIFDevice, entry: ConfigEntry
+) -> None:
     """Check if digest auth for snapshots is possible."""
-    auth = await _get_snapshot_auth(device)
-    new_data = {**entry.data, CONF_SNAPSHOT_AUTH: auth}
-    hass.config_entries.async_update_entry(entry, data=new_data)
+    if auth := await _get_snapshot_auth(device):
+        hass.config_entries.async_update_entry(
+            entry, data={**entry.data, CONF_SNAPSHOT_AUTH: auth}
+        )
 
 
-async def async_populate_options(hass, entry):
+async def async_populate_options(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Populate default options for device."""
     options = {
         CONF_EXTRA_ARGUMENTS: DEFAULT_ARGUMENTS,
