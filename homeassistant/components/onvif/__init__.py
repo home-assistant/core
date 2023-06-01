@@ -1,10 +1,11 @@
 """The ONVIF integration."""
 import asyncio
+from contextlib import suppress
 from http import HTTPStatus
 import logging
 
 from httpx import RequestError
-from onvif.exceptions import ONVIFAuthError, ONVIFError, ONVIFTimeoutError
+from onvif.exceptions import ONVIFError
 from onvif.util import is_auth_error, stringify_onvif_error
 from zeep.exceptions import Fault, TransportError
 
@@ -127,11 +128,9 @@ async def _get_snapshot_auth(device: ONVIFDevice) -> str | None:
 
     for basic_auth in (False, True):
         method = HTTP_BASIC_AUTHENTICATION if basic_auth else HTTP_DIGEST_AUTHENTICATION
-        try:
+        with suppress(ONVIFError):
             if await device.device.get_snapshot(device.profiles[0].token, basic_auth):
                 return method
-        except (ONVIFAuthError, ONVIFTimeoutError, ONVIFError):
-            pass
 
     return None
 
