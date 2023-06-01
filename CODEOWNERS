@@ -240,6 +240,8 @@ build.json @home-assistant/supervisor
 /tests/components/daikin/ @fredrike
 /homeassistant/components/date/ @home-assistant/core
 /tests/components/date/ @home-assistant/core
+/homeassistant/components/datetime/ @home-assistant/core
+/tests/components/datetime/ @home-assistant/core
 /homeassistant/components/debugpy/ @frenck
 /tests/components/debugpy/ @frenck
 /homeassistant/components/deconz/ @Kane610
@@ -287,6 +289,8 @@ build.json @home-assistant/supervisor
 /tests/components/doorbird/ @oblogic7 @bdraco @flacjacket
 /homeassistant/components/dormakaba_dkey/ @emontnemery
 /tests/components/dormakaba_dkey/ @emontnemery
+/homeassistant/components/dremel_3d_printer/ @tkdrob
+/tests/components/dremel_3d_printer/ @tkdrob
 /homeassistant/components/dsmr/ @Robbie1221 @frenck
 /tests/components/dsmr/ @Robbie1221 @frenck
 /homeassistant/components/dsmr_reader/ @depl0y @glodenox
@@ -959,6 +963,7 @@ build.json @home-assistant/supervisor
 /tests/components/qingping/ @bdraco @skgsergio
 /homeassistant/components/qld_bushfire/ @exxamalte
 /tests/components/qld_bushfire/ @exxamalte
+/homeassistant/components/qnap/ @disforw
 /homeassistant/components/qnap_qsw/ @Noltari
 /tests/components/qnap_qsw/ @Noltari
 /homeassistant/components/quantum_gateway/ @cisasteelersfan
@@ -971,8 +976,8 @@ build.json @home-assistant/supervisor
 /tests/components/radarr/ @tkdrob
 /homeassistant/components/radio_browser/ @frenck
 /tests/components/radio_browser/ @frenck
-/homeassistant/components/radiotherm/ @bdraco @vinnyfuria
-/tests/components/radiotherm/ @bdraco @vinnyfuria
+/homeassistant/components/radiotherm/ @vinnyfuria
+/tests/components/radiotherm/ @vinnyfuria
 /homeassistant/components/rainbird/ @konikvranik @allenporter
 /tests/components/rainbird/ @konikvranik @allenporter
 /homeassistant/components/raincloud/ @vanstinator

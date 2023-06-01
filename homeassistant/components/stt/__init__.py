@@ -413,7 +413,7 @@ def _metadata_from_header(request: web.Request) -> SpeechMetadata:
 def websocket_list_engines(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
 ) -> None:
-    """List speech to text engines and, optionally, if they support a given language."""
+    """List speech-to-text engines and, optionally, if they support a given language."""
     component: EntityComponent[SpeechToTextEntity] = hass.data[DOMAIN]
     legacy_providers: dict[str, Provider] = hass.data[DATA_PROVIDERS]
 

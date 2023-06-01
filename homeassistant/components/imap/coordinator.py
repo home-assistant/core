@@ -18,6 +18,7 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_PORT,
     CONF_USERNAME,
+    CONF_VERIFY_SSL,
     CONTENT_TYPE_TEXT_PLAIN,
 )
 from homeassistant.core import HomeAssistant
@@ -29,7 +30,11 @@ from homeassistant.exceptions import (
 from homeassistant.helpers.json import json_bytes
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-from homeassistant.util.ssl import SSLCipherList, client_context
+from homeassistant.util.ssl import (
+    SSLCipherList,
+    client_context,
+    create_no_verify_ssl_context,
+)
 
 from .const import (
     CONF_CHARSET,
@@ -54,9 +59,11 @@ MAX_EVENT_DATA_BYTES = 32168
 
 async def connect_to_server(data: Mapping[str, Any]) -> IMAP4_SSL:
     """Connect to imap server and return client."""
-    ssl_context = client_context(
-        ssl_cipher_list=data.get(CONF_SSL_CIPHER_LIST, SSLCipherList.PYTHON_DEFAULT)
-    )
+    ssl_cipher_list: str = data.get(CONF_SSL_CIPHER_LIST, SSLCipherList.PYTHON_DEFAULT)
+    if data.get(CONF_VERIFY_SSL, True):
+        ssl_context = client_context(ssl_cipher_list=ssl_cipher_list)
+    else:
+        ssl_context = create_no_verify_ssl_context()
     client = IMAP4_SSL(data[CONF_SERVER], data[CONF_PORT], ssl_context=ssl_context)
 
     await client.wait_hello_from_server()
