@@ -117,8 +117,7 @@ class RestoreStateData:
         await async_get(hass).async_dump_states()
 
     @classmethod
-    @callback
-    def async_get_instance(cls, hass: HomeAssistant) -> RestoreStateData:
+    async def async_get_instance(cls, hass: HomeAssistant) -> RestoreStateData:
         """Return the instance of this class."""
         # Nothing should actually be calling this anymore, but we'll keep it
         # around for a while to avoid breaking custom components.
