@@ -6,11 +6,17 @@ from collections.abc import Iterable
 import logging
 from typing import Any
 
+import voluptuous as vol
+
 from homeassistant import config as conf_util
 from homeassistant.const import SERVICE_RELOAD
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.loader import async_get_integration
+from homeassistant.loader import IntegrationNotFound, async_get_integration
+from homeassistant.requirements import (
+    RequirementsNotFound,
+    async_get_integration_with_requirements,
+)
 from homeassistant.setup import async_setup_component
 
 from . import config_per_platform
@@ -80,15 +86,80 @@ async def _resetup_platform(
     # If new adr0007 style, include that as well.
     if integration_config := conf.get(integration_name):
         # Check if it's a multi-platform config
-        added = False
-        for item in integration_config:
-            if isinstance(item, dict) and (
-                current_platform_config := item.get(integration_platform)
-            ):
-                added = True
-                root_config[integration_platform].extend(current_platform_config)
-        # If no valid item was found, it's a simple single platform config
-        if not added:
+        platform_config_inside = False
+        platform_config = None
+        for item in integration_config:  # this will contain the array with items
+            for (
+                config_item
+            ) in item.values():  # Config is the dict with configuration parameters
+                if isinstance(
+                    config_item, dict
+                ):  # Platform config is contained in another dict
+                    platform_config_inside = True  # Notify unknown platforms as well, as this prevents us from rendering invalid configs.
+            if current_platform_config := item.get(
+                integration_platform
+            ):  # Test if current platform is included in the config
+                platform_config = {
+                    "platform": integration_name
+                }  # Add the platform parameter, required for correct validation
+
+                # Add all non-platform settings to the config
+                for key, val in item.items():
+                    if not isinstance(val, dict):  # Add only non-platform settings
+                        platform_config.update({key: val})
+
+                # From now execute a validation similar to what's done in conf_util.async_process_component_config
+                try:
+                    p_integration = await async_get_integration_with_requirements(
+                        hass, integration_name
+                    )
+                except (RequirementsNotFound, IntegrationNotFound) as ex:
+                    _LOGGER.error("Platform error: %s - %s", integration_name, ex)
+                    continue
+
+                try:
+                    platform_wr = p_integration.get_platform(integration_platform)
+                except (ImportError, FileNotFoundError):
+                    _LOGGER.exception("Platform error: %s", integration_platform)
+                    continue
+                # Validate platform specific schema
+                p_validated = None
+                if hasattr(platform_wr, "PLATFORM_SCHEMA"):
+                    try:
+                        p_validated = platform_wr.PLATFORM_SCHEMA(platform_config)
+                    except vol.Invalid as ex:
+                        conf_util.async_log_exception(
+                            ex,
+                            f"{integration_name}.{integration_platform}",
+                            platform_config,
+                            hass,
+                            p_integration.documentation,
+                        )
+                        continue
+                    except Exception:  # pylint: disable=broad-except
+                        _LOGGER.exception(
+                            (
+                                "Unknown error validating config for %s platform for %s"
+                                " component with PLATFORM_SCHEMA"
+                            ),
+                            integration_name,
+                            integration_platform,
+                        )
+                        continue
+                if p_validated:
+                    platform_config = p_validated  # Use validated config if possible
+                # Add sensor config after validation (validation will fail if before)
+                if platform_config:
+                    platform_config.update(
+                        {str(integration_platform): current_platform_config}
+                    )
+
+        if platform_config:
+            root_config[integration_platform].append(platform_config)
+
+        if (
+            not platform_config_inside
+        ):  # If no platform was found, it's a simple single platform config
             root_config[integration_platform].extend(conf[integration_name])
 
     component = integration.get_component()
@@ -110,13 +181,16 @@ async def _resetup_platform(
     )
     if platform:
         await _async_reconfig_platform(platform, root_config[integration_platform])
+        # _LOGGER.info("Returning via A")
         return
 
     if not root_config[integration_platform]:
         # No config for this platform
         # and it's not loaded. Nothing to do.
+        # _LOGGER.info("Returning via B")
         return
 
+    # _LOGGER.info("Returning via C")
     await _async_setup_platform(
         hass, integration_name, integration_platform, root_config[integration_platform]
     )
