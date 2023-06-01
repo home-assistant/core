@@ -18,7 +18,6 @@ from .models import MyStromData
 
 PLATFORMS_SWITCH = [Platform.SWITCH]
 PLATFORMS_BULB = [Platform.LIGHT]
-PLATFORMS = [Platform.SWITCH, Platform.LIGHT]
 
 _LOGGER = logging.getLogger(__name__)
 
