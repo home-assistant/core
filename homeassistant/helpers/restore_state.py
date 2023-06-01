@@ -96,7 +96,7 @@ class StoredState:
 
 async def async_load(hass: HomeAssistant) -> None:
     """Load the restore state task."""
-    hass.data[DATA_RESTORE_STATE] = await RestoreStateData.async_get_instance(hass)
+    hass.data[DATA_RESTORE_STATE] = await RestoreStateData.async_create(hass)
 
 
 @callback
@@ -109,7 +109,7 @@ class RestoreStateData:
     """Helper class for managing the helper saved data."""
 
     @staticmethod
-    async def async_get_instance(hass: HomeAssistant) -> RestoreStateData:
+    async def async_create(hass: HomeAssistant) -> RestoreStateData:
         """Get the instance of this data helper."""
         data = RestoreStateData(hass)
         await data.async_load()
