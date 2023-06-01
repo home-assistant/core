@@ -1552,3 +1552,28 @@ def test_config_entry_only_schema_no_hass(
     assert expected_message in caplog.text
     issue_registry = ir.async_get(hass)
     assert not issue_registry.issues
+
+
+def test_platform_only_schema(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test config_entry_only_config_schema."""
+    expected_issue = "platform_only_test_domain"
+    expected_message = (
+        "The test_domain integration does not support YAML setup, please remove "
+        "it from your configuration"
+    )
+    issue_registry = ir.async_get(hass)
+
+    cv.platform_only_config_schema("test_domain")({})
+    assert expected_message not in caplog.text
+    assert not issue_registry.async_get_issue(HOMEASSISTANT_DOMAIN, expected_issue)
+
+    cv.platform_only_config_schema("test_domain")({"test_domain": {}})
+    assert expected_message in caplog.text
+    assert issue_registry.async_get_issue(HOMEASSISTANT_DOMAIN, expected_issue)
+    issue_registry.async_delete(HOMEASSISTANT_DOMAIN, expected_issue)
+
+    cv.platform_only_config_schema("test_domain")({"test_domain": {"foo": "bar"}})
+    assert expected_message in caplog.text
+    assert issue_registry.async_get_issue(HOMEASSISTANT_DOMAIN, expected_issue)
