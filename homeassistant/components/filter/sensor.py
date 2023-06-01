@@ -39,6 +39,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.reload import async_setup_reload_service
+from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
 from homeassistant.util.decorator import Registry
 import homeassistant.util.dt as dt_util
@@ -351,11 +352,16 @@ class SensorFilter(SensorEntity):
                 if state.state not in [STATE_UNKNOWN, STATE_UNAVAILABLE, None]:
                     self._update_filter_sensor_state(state, False)
 
-        self.async_on_remove(
-            async_track_state_change_event(
-                self.hass, [self._entity], self._update_filter_sensor_state_event
+        @callback
+        def _async_hass_started(hass: HomeAssistant) -> None:
+            """Delay source entity tracking."""
+            self.async_on_remove(
+                async_track_state_change_event(
+                    self.hass, [self._entity], self._update_filter_sensor_state_event
+                )
             )
-        )
+
+        self.async_on_remove(async_at_started(self.hass, _async_hass_started))
 
     @property
     def native_value(self) -> datetime | StateType:
