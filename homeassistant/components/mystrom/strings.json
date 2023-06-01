@@ -3,6 +3,7 @@
     "step": {
       "user": {
         "data": {
+          "name": "[%key:common::config_flow::data::name%]",
           "host": "[%key:common::config_flow::data::host%]"
         }
       }
