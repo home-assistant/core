@@ -78,7 +78,7 @@ def setup_platform(
     latitude = config.get(CONF_LATITUDE, hass.config.latitude)
     longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
     radius = config.get(CONF_RADIUS, 0)
-    bounding_box = OpenSky.get_bounding_box(latitude, longitude, radius)
+    bounding_box = OpenSky.get_bounding_box(latitude, longitude, radius * 1000)
     session = async_get_clientsession(hass)
     opensky = OpenSky(session=session)
     add_entities(
