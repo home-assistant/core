@@ -307,7 +307,9 @@ class InputSelect(collection.CollectionEntity, SelectEntity, RestoreEntity):
                 option,
                 ", ".join(self.options),
             )
-            return
+            raise HomeAssistantError(
+                f"Invalid option: {option} (possible options: {', '.join(self.options)})"
+            )
         self._attr_current_option = option
         self.async_write_ha_state()
 
