@@ -6,5 +6,5 @@
   "documentation": "https://www.home-assistant.io/integrations/co2signal",
   "iot_class": "cloud_polling",
   "loggers": ["CO2Signal"],
-  "requirements": ["co2signal==0.4.2"]
+  "requirements": ["CO2Signal==0.4.2"]
 }
