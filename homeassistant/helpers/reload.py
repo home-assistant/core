@@ -181,16 +181,13 @@ async def _resetup_platform(
     )
     if platform:
         await _async_reconfig_platform(platform, root_config[integration_platform])
-        # _LOGGER.info("Returning via A")
         return
 
     if not root_config[integration_platform]:
         # No config for this platform
         # and it's not loaded. Nothing to do.
-        # _LOGGER.info("Returning via B")
         return
 
-    # _LOGGER.info("Returning via C")
     await _async_setup_platform(
         hass, integration_name, integration_platform, root_config[integration_platform]
     )
