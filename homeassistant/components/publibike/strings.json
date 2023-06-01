@@ -16,7 +16,7 @@
       "init": {
         "title": "Configure PubliBike",
         "data": {
-          "battery_limit": "Min. battery level [%]",
+          "battery_limit": "Min. battery level",
           "latitude": "Latitude (optional)",
           "longitude": "Longitude (optional)"
         }
