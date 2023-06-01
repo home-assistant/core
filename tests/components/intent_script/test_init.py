@@ -181,9 +181,7 @@ async def test_reload(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert len(intents) == 1
-
-    # absence of intent_script from the configuration.yaml should be ignored, and not be processed.
-    # Thus, no changes.
+    # absence of intent_script from the configuration.yaml should delete all intents.
+    assert len(intents) == 0
     assert intents.get("NewIntent1") is None
-    assert intents.get("NewIntent2")
+    assert intents.get("NewIntent2") is None

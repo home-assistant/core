@@ -62,16 +62,16 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_reload(
-    hass: HomeAssistant, servie_call: ServiceCall, existing_intents: dict
-) -> None:
+async def async_reload(hass: HomeAssistant, servie_call: ServiceCall) -> None:
     """Handle start Intent Script service call."""
     new_config = await async_integration_yaml_config(hass, DOMAIN)
+    existing_intents = hass.data[DOMAIN]
 
     for intent_type in existing_intents:
         intent.async_remove(hass, intent_type)
-    
+
     if not new_config or DOMAIN not in new_config:
+        hass.data[DOMAIN] = {}
         return
 
     new_intents = new_config[DOMAIN]
@@ -82,6 +82,7 @@ async def async_reload(
 def async_load_intents(hass: HomeAssistant, intents: dict):
     """Load YAML intents into the intent system."""
     template.attach(hass, intents)
+    hass.data[DOMAIN] = intents
 
     for intent_type, conf in intents.items():
         if CONF_ACTION in conf:
@@ -98,7 +99,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     async_load_intents(hass, intents)
 
     async def _handle_reload(servie_call: ServiceCall) -> None:
-        return await async_reload(hass, servie_call, intents)
+        return await async_reload(hass, servie_call)
 
     service.async_register_admin_service(
         hass,
