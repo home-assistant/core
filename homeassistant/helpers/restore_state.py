@@ -16,6 +16,7 @@ import homeassistant.util.dt as dt_util
 from . import start
 from .entity import Entity
 from .event import async_track_time_interval
+from .frame import report
 from .json import JSONEncoder
 from .storage import Store
 
@@ -96,7 +97,9 @@ class StoredState:
 
 async def async_load(hass: HomeAssistant) -> None:
     """Load the restore state task."""
-    hass.data[DATA_RESTORE_STATE] = await RestoreStateData.async_get_instance(hass)
+    restore_state = RestoreStateData(hass)
+    await restore_state.async_setup()
+    hass.data[DATA_RESTORE_STATE] = restore_state
 
 
 @callback
@@ -108,24 +111,25 @@ def async_get(hass: HomeAssistant) -> RestoreStateData:
 class RestoreStateData:
     """Helper class for managing the helper saved data."""
 
-    @staticmethod
-    async def async_get_instance(hass: HomeAssistant) -> RestoreStateData:
-        """Get the instance of this data helper."""
-        data = RestoreStateData(hass)
-        await data.async_load()
-
-        async def hass_start(hass: HomeAssistant) -> None:
-            """Start the restore state task."""
-            data.async_setup_dump()
-
-        start.async_at_start(hass, hass_start)
-
-        return data
-
     @classmethod
     async def async_save_persistent_states(cls, hass: HomeAssistant) -> None:
         """Dump states now."""
         await async_get(hass).async_dump_states()
+
+    @classmethod
+    async def async_get_instance(cls, hass: HomeAssistant) -> RestoreStateData:
+        """Return the instance of this class."""
+        # Nothing should actually be calling this anymore, but we'll keep it
+        # around for a while to avoid breaking custom components.
+        #
+        # In fact they should not be accessing this at all.
+        report(
+            "restore_state.RestoreStateData.async_get_instance is deprecated, "
+            "and not intended to be called by custom components; Please"
+            "refactor your code to use RestoreEntity instead;"
+            " restore_state.async_get(hass) can be used in the meantime",
+        )
+        return async_get(hass)
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the restore state data class."""
@@ -135,6 +139,16 @@ class RestoreStateData:
         )
         self.last_states: dict[str, StoredState] = {}
         self.entities: dict[str, RestoreEntity] = {}
+
+    async def async_setup(self) -> None:
+        """Set up up the instance of this data helper."""
+        await self.async_load()
+
+        async def hass_start(hass: HomeAssistant) -> None:
+            """Start the restore state task."""
+            self.async_setup_dump()
+
+        start.async_at_start(self.hass, hass_start)
 
     async def async_load(self) -> None:
         """Load the instance of this data helper."""
