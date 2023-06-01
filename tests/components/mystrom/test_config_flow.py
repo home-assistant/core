@@ -24,6 +24,7 @@ async def test_form_combined(hass: HomeAssistant, mock_setup_entry: AsyncMock) -
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "user"
     assert result["errors"] == {}
 
     with patch(
@@ -44,13 +45,9 @@ async def test_form_combined(hass: HomeAssistant, mock_setup_entry: AsyncMock) -
 
 
 async def test_form_duplicates(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock
+    hass: HomeAssistant, mock_setup_entry: AsyncMock, config_entry: MockConfigEntry
 ) -> None:
     """Test abort on duplicate."""
-    entry = MockConfigEntry(
-        domain=DOMAIN, data={CONF_HOST: "1.1.1.1"}, unique_id=DEVICE_MAC
-    )
-    entry.add_to_hass(hass)
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )

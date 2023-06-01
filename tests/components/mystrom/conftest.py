@@ -11,8 +11,8 @@ from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
-ENTRY_ID = "uuid"
-DEVICE_NAME = "testmyStromdevice"
+DEVICE_NAME = "myStrom Device"
+DEVICE_MAC = "6001940376EB"
 
 
 @pytest.fixture
@@ -29,8 +29,7 @@ def config_entry(hass: HomeAssistant) -> MockConfigEntry:
     """Create and add a config entry."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
-        entry_id=ENTRY_ID,
-        unique_id="uuid",
+        unique_id=DEVICE_MAC,
         data={CONF_HOST: "1.1.1.1"},
         title=DEVICE_NAME,
     )

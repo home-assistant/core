@@ -3,14 +3,13 @@ from unittest.mock import AsyncMock, PropertyMock, patch
 
 from pymystrom.exceptions import MyStromConnectionError
 
+from homeassistant.components.mystrom.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
-from .conftest import DEVICE_NAME
+from .conftest import DEVICE_MAC
 
 from tests.common import MockConfigEntry
-
-DEVICE_MAC = "6001940376EB"
 
 
 async def init_integration(
@@ -47,19 +46,22 @@ async def test_init_switch_and_unload(
 ) -> None:
     """Test the initialization of a myStrom switch."""
     await init_integration(hass, config_entry, 101)
-    state = hass.states.get("switch." + DEVICE_NAME)
+    state = hass.states.get("switch.mystrom_device")
     assert state is not None
+    assert config_entry.state is ConfigEntryState.LOADED
+
     await hass.config_entries.async_unload(config_entry.entry_id)
     await hass.async_block_till_done()
-    state = hass.states.get("switch.test")
-    assert state is None
+    assert config_entry.state is ConfigEntryState.NOT_LOADED
+    assert not hass.data.get(DOMAIN)
 
 
 async def test_init_bulb(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
     """Test the initialization of a myStrom bulb."""
     await init_integration(hass, config_entry, 102)
-    state = hass.states.get("light." + DEVICE_NAME)
+    state = hass.states.get("light.mystrom_device")
     assert state is not None
+    assert config_entry.state is ConfigEntryState.LOADED
 
 
 async def test_init_of_unknown_bulb(
@@ -79,7 +81,7 @@ async def test_init_of_unknown_bulb(
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-        assert config_entry.state == ConfigEntryState.SETUP_ERROR
+    assert config_entry.state == ConfigEntryState.SETUP_ERROR
 
 
 async def test_init_of_unknown_device(
@@ -94,15 +96,6 @@ async def test_init_of_unknown_device(
         await hass.async_block_till_done()
 
     assert config_entry.state == ConfigEntryState.SETUP_ERROR
-
-
-async def test_unload(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
-    """Test the unloading of a myStrom witch."""
-    await init_integration(hass, config_entry, 101)
-    await hass.config_entries.async_unload(config_entry.entry_id)
-    await hass.async_block_till_done()
-    state = hass.states.get("switch.test")
-    assert state is None
 
 
 async def test_init_cannot_connect_because_of_device_info(
