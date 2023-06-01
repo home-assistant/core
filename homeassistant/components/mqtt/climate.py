@@ -28,6 +28,7 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
+from homeassistant.components.water_heater import ATTR_OPERATION_MODE
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_TEMPERATURE,
@@ -475,7 +476,7 @@ class MqttTemperatureControlEntity(MqttEntity, ABC):
     ) -> None:
         """Add a subscription."""
         qos: int = self._config[CONF_QOS]
-        if self._topic[topic] is not None:
+        if topic in self._topic and self._topic[topic] is not None:
             topics[topic] = {
                 "topic": self._topic[topic],
                 "msg_callback": msg_callback,
@@ -1013,6 +1014,10 @@ class MqttClimate(MqttTemperatureControlEntity, ClimateEntity):
         if self._optimistic or self._topic[CONF_MODE_STATE_TOPIC] is None:
             self._attr_hvac_mode = hvac_mode
             self.async_write_ha_state()
+
+    async def async_set_operation_mode(self, operation_mode: str) -> None:
+        """Raise error for unsupported water heater feature."""
+        raise NotImplementedError()
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set a preset mode."""

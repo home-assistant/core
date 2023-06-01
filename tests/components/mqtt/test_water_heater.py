@@ -459,7 +459,7 @@ async def test_get_with_templates(
     async_fire_mqtt_message(hass, "temperature-state", '"-INVALID-"')
     state = hass.states.get(ENTITY_WATER_HEATER)
     # make sure, the invalid value gets logged...
-    assert "Could not parse temperature from -INVALID-" in caplog.text
+    assert "Could not parse temperature_state_template from -INVALID-" in caplog.text
     # ... but the actual value stays unchanged.
     assert state.attributes.get("temperature") == 1031
 
