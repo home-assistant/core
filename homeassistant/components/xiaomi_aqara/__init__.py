@@ -79,6 +79,8 @@ SERVICE_SCHEMA_REMOVE_DEVICE = vol.Schema(
     {vol.Required(ATTR_DEVICE_ID): vol.All(cv.string, vol.Length(min=14, max=14))}
 )
 
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
 
 def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Xiaomi component."""
