@@ -34,6 +34,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
+
 from .const import DEFAULT_PORT, DEFAULT_TIMEOUT
 
 _LOGGER = logging.getLogger(__name__)
