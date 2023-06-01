@@ -66,16 +66,16 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
 
         # We _try_ to use the serial number of the UPS as the unique id since this field
         # is not guaranteed to exist on all APC UPS models.
-        await self.async_set_unique_id(coordinator.serial_no)
+        await self.async_set_unique_id(coordinator.ups_serial_no)
         self._abort_if_unique_id_configured()
 
         title = "APC UPS"
         if coordinator.ups_name is not None:
             title = coordinator.ups_name
-        elif coordinator.model is not None:
-            title = coordinator.model
-        elif coordinator.serial_no is not None:
-            title = coordinator.serial_no
+        elif coordinator.ups_model is not None:
+            title = coordinator.ups_model
+        elif coordinator.ups_serial_no is not None:
+            title = coordinator.ups_serial_no
 
         return self.async_create_entry(
             title=title,

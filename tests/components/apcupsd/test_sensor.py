@@ -1,5 +1,8 @@
 """Test sensors of APCUPSd integration."""
 
+from datetime import timedelta
+from unittest.mock import patch
+
 from homeassistant.components.apcupsd import REQUEST_REFRESH_COOLDOWN
 from homeassistant.components.sensor import (
     ATTR_STATE_CLASS,
@@ -121,7 +124,7 @@ async def test_state_update(hass: HomeAssistant) -> None:
     state = hass.states.get("sensor.ups_load")
     assert state
     assert state.state != STATE_UNAVAILABLE
-    assert pytest.approx(float(state.state)) == 14.0
+    assert state.state == "14.0"
 
     new_status = MOCK_STATUS | {"LOADPCT": "15.0 Percent"}
     with (
@@ -135,7 +138,7 @@ async def test_state_update(hass: HomeAssistant) -> None:
         state = hass.states.get("sensor.ups_load")
         assert state
         assert state.state != STATE_UNAVAILABLE
-        assert pytest.approx(float(state.state)) == 15.0
+        assert state.state == "15.0"
 
 
 async def test_manual_update_entity(hass: HomeAssistant) -> None:
@@ -146,7 +149,7 @@ async def test_manual_update_entity(hass: HomeAssistant) -> None:
     state = hass.states.get("sensor.ups_load")
     assert state
     assert state.state != STATE_UNAVAILABLE
-    assert pytest.approx(float(state.state)) == 14.0
+    assert state.state == "14.0"
 
     # Setup HASS for calling the update_entity service.
     await async_setup_component(hass, "homeassistant", {})
@@ -179,7 +182,7 @@ async def test_manual_update_entity(hass: HomeAssistant) -> None:
         state = hass.states.get("sensor.ups_load")
         assert state
         assert state.state != STATE_UNAVAILABLE
-        assert pytest.approx(float(state.state)) == 15.0
+        assert state.state == "15.0"
 
 
 async def test_multiple_manual_update_entity(hass: HomeAssistant) -> None:

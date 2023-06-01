@@ -86,7 +86,7 @@ class APCUPSdCoordinator(DataUpdateCoordinator[OrderedDict[str, str]]):
         return self.data.get("UPSNAME")
 
     @property
-    def model(self) -> str | None:
+    def ups_model(self) -> str | None:
         """Return the model of the UPS, if available."""
         # Different UPS models may report slightly different keys for model, here we
         # try them all.
@@ -96,24 +96,19 @@ class APCUPSdCoordinator(DataUpdateCoordinator[OrderedDict[str, str]]):
         return None
 
     @property
-    def serial_no(self) -> str | None:
+    def ups_serial_no(self) -> str | None:
         """Return the unique serial number of the UPS, if available."""
         return self.data.get("SERIALNO")
 
     @property
-    def statflag(self) -> str | None:
-        """Return the STATFLAG indicating the status of the UPS, if available."""
-        return self.data.get("STATFLAG")
-
-    @property
     def device_info(self) -> DeviceInfo | None:
         """Return the DeviceInfo of this APC UPS for the sensors, if serial number is available."""
-        if self.serial_no is None:
+        if self.ups_serial_no is None:
             return None
 
         return DeviceInfo(
-            identifiers={(DOMAIN, self.serial_no)},
-            model=self.model,
+            identifiers={(DOMAIN, self.ups_serial_no)},
+            model=self.ups_model,
             manufacturer="APC",
             name=self.name if self.name is not None else "APC UPS",
             hw_version=self.data.get("FIRMWARE"),
