@@ -96,15 +96,6 @@ async def test_init_of_unknown_device(hass: HomeAssistant) -> None:
         "pymystrom.get_device_info",
         side_effect=AsyncMock(return_value={"type": 103, "mac": DEVICE_MAC}),
     ):
-        config_entry = MockConfigEntry(
-            domain=DOMAIN,
-            entry_id=ENTRY_ID,
-            unique_id="uuid",
-            data={CONF_HOST: "1.1.1.1"},
-            title="myStrom",
-        )
-        config_entry.add_to_hass(hass)
-
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
