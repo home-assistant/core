@@ -125,7 +125,9 @@ class RestoreStateData:
         # In fact they should not be accessing this at all.
         report(
             "restore_state.RestoreStateData.async_get_instance is deprecated, "
-            "modify your code to use restore_state.async_get(hass)"
+            "and not intended to be called by custom components; Please"
+            "refactor your code to use RestoreEntity instead;"
+            " restore_state.async_get(hass) can be used in the meantime",
         )
         return async_get(hass)
 
