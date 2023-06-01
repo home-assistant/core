@@ -45,9 +45,24 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from . import subscription
 from .config import DEFAULT_RETAIN, MQTT_BASE_SCHEMA
 from .const import (
+    CONF_CURRENT_TEMP_TEMPLATE,
+    CONF_CURRENT_TEMP_TOPIC,
     CONF_ENCODING,
+    CONF_MODE_COMMAND_TEMPLATE,
+    CONF_MODE_COMMAND_TOPIC,
+    CONF_MODE_LIST,
+    CONF_MODE_STATE_TEMPLATE,
+    CONF_MODE_STATE_TOPIC,
+    CONF_PRECISION,
     CONF_QOS,
     CONF_RETAIN,
+    CONF_TEMP_COMMAND_TEMPLATE,
+    CONF_TEMP_COMMAND_TOPIC,
+    CONF_TEMP_INITIAL,
+    CONF_TEMP_MAX,
+    CONF_TEMP_MIN,
+    CONF_TEMP_STATE_TEMPLATE,
+    CONF_TEMP_STATE_TOPIC,
     DEFAULT_OPTIMISTIC,
     PAYLOAD_NONE,
 )
@@ -65,22 +80,6 @@ from .util import get_mqtt_data, valid_publish_topic, valid_subscribe_topic
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "MQTT Water Heater"
-
-CONF_CURRENT_TEMP_TEMPLATE = "current_temperature_template"
-CONF_CURRENT_TEMP_TOPIC = "current_temperature_topic"
-CONF_MODE_COMMAND_TEMPLATE = "mode_command_template"
-CONF_MODE_COMMAND_TOPIC = "mode_command_topic"
-CONF_MODE_LIST = "modes"
-CONF_MODE_STATE_TEMPLATE = "mode_state_template"
-CONF_MODE_STATE_TOPIC = "mode_state_topic"
-CONF_PRECISION = "precision"
-CONF_TEMP_COMMAND_TEMPLATE = "temperature_command_template"
-CONF_TEMP_COMMAND_TOPIC = "temperature_command_topic"
-CONF_TEMP_STATE_TEMPLATE = "temperature_state_template"
-CONF_TEMP_STATE_TOPIC = "temperature_state_topic"
-CONF_TEMP_INITIAL = "initial"
-CONF_TEMP_MAX = "max_temp"
-CONF_TEMP_MIN = "min_temp"
 
 MQTT_WATER_HEATER_ATTRIBUTES_BLOCKED = frozenset(
     {
