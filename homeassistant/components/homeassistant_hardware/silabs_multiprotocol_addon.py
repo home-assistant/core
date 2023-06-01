@@ -111,7 +111,7 @@ class MultiprotocolAddonManager(AddonManager):
         self.async_set_channel(new_channel)
 
     async def async_change_channel(
-        self, channel: int, delay: float = DEFAULT_CHANNEL_CHANGE_DELAY
+        self, channel: int, delay: float
     ) -> list[asyncio.Task]:
         """Change the channel and notify platforms."""
         self.async_set_channel(channel)
@@ -523,7 +523,22 @@ class OptionsFlowHandler(config_entries.OptionsFlow, ABC):
             )
 
         # Change the shared channel
-        await multipan_manager.async_change_channel(int(user_input["channel"]))
+        await multipan_manager.async_change_channel(
+            int(user_input["channel"]), DEFAULT_CHANNEL_CHANGE_DELAY
+        )
+        return await self.async_step_notify_channel_change()
+
+    async def async_step_notify_channel_change(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Notify that the channel change will take about five minutes."""
+        if user_input is None:
+            return self.async_show_form(
+                step_id="notify_channel_change",
+                description_placeholders={
+                    "delay_minutes": str(DEFAULT_CHANNEL_CHANGE_DELAY // 60)
+                },
+            )
         return self.async_create_entry(title="", data={})
 
     async def async_step_uninstall_addon(

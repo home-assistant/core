@@ -20,6 +20,10 @@
       "install_addon": {
         "title": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::step::install_addon::title%]"
       },
+      "notify_channel_change": {
+        "title": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::step::notify_channel_change::title%]",
+        "description": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::step::notify_channel_change::description%]"
+      },
       "reconfigure_addon": {
         "title": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::step::reconfigure_addon::title%]",
         "data": {

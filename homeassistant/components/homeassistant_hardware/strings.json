@@ -21,6 +21,10 @@
         "install_addon": {
           "title": "The Silicon Labs Multiprotocol add-on installation has started"
         },
+        "notify_channel_change": {
+          "title": "Channel change initiated",
+          "description": "A Zigbee and Thread channel change has been initiated and will finish in {delay_minutes} minutes."
+        },
         "reconfigure_addon": {
           "title": "Reconfigure IEEE 802.15.4 radio multiprotocol support",
           "data": {
