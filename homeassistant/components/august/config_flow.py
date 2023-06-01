@@ -171,6 +171,7 @@ class AugustConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Shutdown the gateway."""
         if self._aiohttp_session is not None:
             self._aiohttp_session.detach()
+        self._august_gateway = None
 
     async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Handle configuration by re-auth."""
