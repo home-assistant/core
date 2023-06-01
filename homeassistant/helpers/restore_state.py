@@ -122,6 +122,8 @@ class RestoreStateData:
         """Return the instance of this class."""
         # Nothing should actually be calling this anymore, but we'll keep it
         # around for a while to avoid breaking custom components.
+        #
+        # In fact they should not be accessing this at all.
         report(
             "async_get_instance is deprecated, modify your code to use async_get(hass)"
         )
