@@ -190,7 +190,6 @@ class MqttWaterHeater(MqttTemperatureControlEntity, WaterHeaterEntity):  # type:
         discovery_data: DiscoveryInfoType | None,
     ) -> None:
         """Initialize the water heater device."""
-        self._attr_current_operation = None
         MqttTemperatureControlEntity.__init__(
             self, hass, config, config_entry, discovery_data
         )
