@@ -58,7 +58,7 @@ from .view import PlexImageView
 
 _LOGGER = logging.getLogger(__package__)
 
-CONFIG_SCHEMA = cv.no_yaml_config_schema(DOMAIN)
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
 def is_plex_media_id(media_content_id):
