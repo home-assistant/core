@@ -34,6 +34,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
+from .const import DEFAULT_NAME, DEFAULT_PORT, DEFAULT_TIMEOUT
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -56,9 +57,6 @@ ATTR_VOLUME_SIZE = "Volume Size"
 CONF_DRIVES = "drives"
 CONF_NICS = "nics"
 CONF_VOLUMES = "volumes"
-DEFAULT_NAME = "QNAP"
-DEFAULT_PORT = 8080
-DEFAULT_TIMEOUT = 5
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=1)
 
