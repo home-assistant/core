@@ -111,7 +111,7 @@ async def test_unload(hass: HomeAssistant) -> None:
     assert state is None
 
 
-async def test_init_cannot_connect(hass: HomeAssistant) -> None:
+async def test_init_cannot_connect(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
     """Inititialize integration for testing."""
     with patch(
         "pymystrom.get_device_info",
