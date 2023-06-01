@@ -1075,7 +1075,12 @@ def empty_config_schema(domain: str) -> Callable[[dict], dict]:
     return validator
 
 
-def config_entry_only_config_schema(domain: str) -> Callable[[dict], dict]:
+def _no_yaml_config_schema(
+    domain: str,
+    issue_base: str,
+    translation_key: str,
+    translation_placeholders: dict[str, str],
+) -> Callable[[dict], dict]:
     """Return a config schema which logs if attempted to setup from YAML."""
 
     module = inspect.getmodule(inspect.stack(context=0)[2].frame)
@@ -1092,21 +1097,17 @@ def config_entry_only_config_schema(domain: str) -> Callable[[dict], dict]:
         # pylint: disable-next=import-outside-toplevel
         from .issue_registry import IssueSeverity, async_create_issue
 
-        add_integration = f"/_my_redirect/config_flow_start?domain={domain}"
         with contextlib.suppress(LookupError):
             hass = async_get_hass()
             async_create_issue(
                 hass,
                 HOMEASSISTANT_DOMAIN,
-                f"config_entry_only_{domain}",
+                f"{issue_base}_{domain}",
                 is_fixable=False,
                 issue_domain=domain,
                 severity=IssueSeverity.ERROR,
-                translation_key="config_entry_only",
-                translation_placeholders={
-                    "domain": domain,
-                    "add_integration": add_integration,
-                },
+                translation_key=translation_key,
+                translation_placeholders={"domain": domain} | translation_placeholders,
             )
 
     def validator(config: dict) -> dict:
@@ -1122,6 +1123,28 @@ def config_entry_only_config_schema(domain: str) -> Callable[[dict], dict]:
         return config
 
     return validator
+
+
+def config_entry_only_config_schema(domain: str) -> Callable[[dict], dict]:
+    """Return a config schema which logs if attempted to setup from YAML."""
+
+    return _no_yaml_config_schema(
+        domain,
+        "config_entry_only",
+        "config_entry_only",
+        {"add_integration": f"/_my_redirect/config_flow_start?domain={domain}"},
+    )
+
+
+def platform_only_config_schema(domain: str) -> Callable[[dict], dict]:
+    """Return a config schema which logs if attempted to setup from YAML."""
+
+    return _no_yaml_config_schema(
+        domain,
+        "platform_only",
+        "platform_only",
+        {},
+    )
 
 
 PLATFORM_SCHEMA = vol.Schema(
