@@ -124,7 +124,8 @@ class RestoreStateData:
         #
         # In fact they should not be accessing this at all.
         report(
-            "restore_state.RestoreStateData.async_get_instance is deprecated, modify your code to use restore_state.async_get(hass)"
+            "restore_state.RestoreStateData.async_get_instance is deprecated, "
+            "modify your code to use restore_state.async_get(hass)"
         )
         return async_get(hass)
 
