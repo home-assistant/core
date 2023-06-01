@@ -7,5 +7,5 @@
   "documentation": "https://www.home-assistant.io/integrations/totalconnect",
   "iot_class": "cloud_polling",
   "loggers": ["total_connect_client"],
-  "requirements": ["total_connect_client==2023.2"]
+  "requirements": ["total-connect-client==2023.2"]
 }

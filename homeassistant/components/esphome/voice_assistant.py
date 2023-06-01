@@ -293,6 +293,7 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
 
     async def run_pipeline(
         self,
+        device_id: str,
         conversation_id: str | None,
         use_vad: bool = False,
         pipeline_timeout: float = 30.0,
@@ -331,6 +332,7 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
                         self.hass, DOMAIN, self.device_info.mac_address
                     ),
                     conversation_id=conversation_id,
+                    device_id=device_id,
                     tts_audio_output=tts_audio_output,
                 )
 

@@ -20,17 +20,17 @@ else:
     import tomli as tomllib
 
 COMMENT_REQUIREMENTS = (
-    "Adafruit_BBIO",
+    "Adafruit-BBIO",
     "atenpdu",  # depends on pysnmp which is not maintained at this time
     "avea",  # depends on bluepy
     "avion",
     "beacontools",
-    "beewi_smartclim",  # depends on bluepy
+    "beewi-smartclim",  # depends on bluepy
     "bluepy",
     "decora",
-    "decora_wifi",
+    "decora-wifi",
     "evdev",
-    "face_recognition",
+    "face-recognition",
     "opencv-python-headless",
     "pybluez",
     "pycups",
@@ -438,7 +438,8 @@ def gather_constraints() -> str:
                     *core_requirements(),
                     *gather_recursive_requirements("default_config"),
                     *gather_recursive_requirements("mqtt"),
-                }
+                },
+                key=lambda name: name.lower(),
             )
             + [""]
         )
