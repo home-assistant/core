@@ -3,10 +3,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from homeassistant.components.button import (
-    DOMAIN,
-    SERVICE_PRESS,
-)
+from homeassistant.components.button import DOMAIN, SERVICE_PRESS
 from homeassistant.components.xiaomi_miio.const import (
     CONF_DEVICE,
     CONF_FLOW_TYPE,
