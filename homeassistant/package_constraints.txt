@@ -22,7 +22,7 @@ ha-av==10.1.0
 hass-nabucasa==0.67.1
 hassil==1.0.6
 home-assistant-bluetooth==1.10.0
-home-assistant-frontend==20230601.0
+home-assistant-frontend==20230601.1
 home-assistant-intents==2023.5.30
 httpx==0.24.1
 ifaddr==0.2.0
@@ -46,7 +46,7 @@ PyYAML==6.0
 requests==2.31.0
 scapy==2.5.0
 SQLAlchemy==2.0.15
-typing-extensions>=4.5.0,<5.0
+typing_extensions>=4.5.0,<5.0
 ulid-transform==0.7.2
 voluptuous-serialize==2.6.0
 voluptuous==0.13.1
