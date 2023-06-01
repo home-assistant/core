@@ -1,12 +1,24 @@
 """Support for QNAP NAS Sensors."""
 import logging
 
-from homeassistant.components.sensor import SensorEntity
-from homeassistant.const import ATTR_NAME, DATA_GIBIBYTES
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from dataclasses import dataclass
+from homeassistant.components.sensor import (
+    SensorEntity,
+    SensorDeviceClass,
+    SensorStateClass,
+    SensorEntityDescription,
+)
+from homeassistant.const import (
+    ATTR_NAME,
+    PERCENTAGE,
+    UnitOfTemperature,
+    UnitOfInformation,
+    UnitOfDataRate,
+)
 
 from .const import (
     ATTR_DRIVE,
@@ -23,16 +35,8 @@ from .const import (
     ATTR_TYPE,
     ATTR_UPTIME,
     ATTR_VOLUME_SIZE,
-    BAS_SENSOR,
-    CPU_SENSOR,
     DEFAULT_NAME,
     DOMAIN,
-    DRI_SENSOR,
-    FOL_SENSOR,
-    MEM_SENSOR,
-    NET_SENSOR,
-    VOL_SENSOR,
-    VOLUME_NAME,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -107,6 +111,172 @@ def round_nicely(number):
 
     return round(number)
 
+@dataclass
+class QNapSensorEntityDescription(SensorEntityDescription):
+    """Represents an Flow Sensor."""
+
+    stype: str | None = None
+
+
+SENSOR_TYPES: tuple[QNapSensorEntityDescription, ...] = (
+    QNapSensorEntityDescription(
+        stype="basic",
+        key="status",
+        name="Health",
+        icon="mdi:checkbox-marked-circle-outline",
+        entity_registry_enabled_default=True,
+    ),
+    QNapSensorEntityDescription(
+        stype="basic",
+        key="system_temp",
+        name="System Temperature",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        icon="mdi:thermometer",
+        entity_registry_enabled_default=True,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    QNapSensorEntityDescription(
+        stype="cpu",
+        key="cpu_temp",
+        name="CPU Temperature",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        icon="mdi:checkbox-marked-circle-outline",
+        entity_registry_enabled_default=False,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    QNapSensorEntityDescription(
+        stype="cpu",
+        key="cpu_usage",
+        name="CPU Usage",
+        native_unit_of_measurement=PERCENTAGE,
+        icon="mdi:chip",
+        entity_registry_enabled_default=True,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    QNapSensorEntityDescription(
+        stype="memory",
+        key="memory_free",
+        name="Memory Available",
+        native_unit_of_measurement=UnitOfInformation.GIBIBYTES,
+        icon="mdi:memory",
+        entity_registry_enabled_default=False,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    QNapSensorEntityDescription(
+        stype="memory",
+        key="memory_used",
+        name="Memory Used",
+        native_unit_of_measurement=UnitOfInformation.GIBIBYTES,
+        icon="mdi:memory",
+        entity_registry_enabled_default=False,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    QNapSensorEntityDescription(
+        stype="memory",
+        key="memory_percent_used",
+        name="Memory Usage",
+        native_unit_of_measurement=PERCENTAGE,
+        icon="mdi:memory",
+        entity_registry_enabled_default=True,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    QNapSensorEntityDescription(
+        stype="network",
+        key="network_link_status",
+        name="Network Link",
+        icon="mdi:checkbox-marked-circle-outline",
+        entity_registry_enabled_default=True,
+    ),
+    QNapSensorEntityDescription(
+        stype="network",
+        key="network_tx",
+        name="Network Up",
+        native_unit_of_measurement=UnitOfDataRate.MEBIBYTES_PER_SECOND,
+        icon="mdi:upload",
+        entity_registry_enabled_default=False,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    QNapSensorEntityDescription(
+        stype="network",
+        key="network_rx",
+        name="Network Down",
+        native_unit_of_measurement=UnitOfDataRate.MEBIBYTES_PER_SECOND,
+        icon="mdi:download",
+        entity_registry_enabled_default=False,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    QNapSensorEntityDescription(
+        stype="drive",
+        key="drive_smart_status",
+        name="SMART Status",
+        icon="mdi:checkbox-marked-circle-outline",
+        entity_registry_enabled_default=False,
+    ),
+    QNapSensorEntityDescription(
+        stype="drive",
+        key="drive_temp",
+        name="Temperature",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        icon="mdi:thermometer",
+        entity_registry_enabled_default=False,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    QNapSensorEntityDescription(
+        stype="folder",
+        key="folder_size_used",
+        name="Used Space",
+        native_unit_of_measurement=UnitOfInformation.GIBIBYTES,
+        icon="mdi:chart-pie",
+        entity_registry_enabled_default=False,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    QNapSensorEntityDescription(
+        stype="folder",
+        key="folder_percentage_used",
+        name="Folder Used",
+        native_unit_of_measurement=PERCENTAGE,
+        icon="mdi:chart-pie",
+        entity_registry_enabled_default=False,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    QNapSensorEntityDescription(
+        stype="volume",
+        key="volume_size_used",
+        name="Used Space",
+        native_unit_of_measurement=UnitOfInformation.GIBIBYTES,
+        icon="mdi:chart-pie",
+        entity_registry_enabled_default=False,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    QNapSensorEntityDescription(
+        stype="volume",
+        key="volume_size_free",
+        name="Free Space",
+        native_unit_of_measurement=UnitOfInformation.GIBIBYTES,
+        icon="mdi:chart-pie",
+        entity_registry_enabled_default=False,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    QNapSensorEntityDescription(
+        stype="volume",
+        key="volume_percentage_used",
+        name="Volume Used",
+        native_unit_of_measurement=PERCENTAGE,
+        icon="mdi:chart-pie",
+        entity_registry_enabled_default=True,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+)
+
+BAS_SENSOR = [desc for desc in SENSOR_TYPES if desc.stype == "basic"]
+CPU_SENSOR = [desc for desc in SENSOR_TYPES if desc.stype == "cpu"]
+MEM_SENSOR = [desc for desc in SENSOR_TYPES if desc.stype == "memory"]
+NET_SENSOR = [desc for desc in SENSOR_TYPES if desc.stype == "network"]
+DRI_SENSOR = [desc for desc in SENSOR_TYPES if desc.stype == "drive"]
+FOL_SENSOR = [desc for desc in SENSOR_TYPES if desc.stype == "folder"]
+VOL_SENSOR = [desc for desc in SENSOR_TYPES if desc.stype == "volume"]
 
 class QNAPSensor(CoordinatorEntity, SensorEntity):
     """Base class for a QNAP sensor."""
@@ -312,7 +482,7 @@ class QNAPVolumeSensor(QNAPSensor):
             data = self.coordinator.data["volumes"][self.monitor_device]
             total_gb = int(data["total_size"]) / 1024 / 1024 / 1024
 
-            return {ATTR_VOLUME_SIZE: f"{round_nicely(total_gb)} {DATA_GIBIBYTES}"}
+            return {ATTR_VOLUME_SIZE: f"{round_nicely(total_gb)} {UnitOfInformation.GIBIBYTES}"}
 
 
 class QNAPFolderSensor(QNAPSensor):
@@ -347,6 +517,6 @@ class QNAPFolderSensor(QNAPSensor):
             volume_name = self.monitor_device
 
             return {
-                ATTR_VOLUME_SIZE: f"{round_nicely(total_gb)} {DATA_GIBIBYTES}",
+                ATTR_VOLUME_SIZE: f"{round_nicely(total_gb)} {UnitOfInformation.GIBIBYTES}",
                 VOLUME_NAME: volume_name,
             }
