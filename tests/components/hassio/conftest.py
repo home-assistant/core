@@ -98,6 +98,10 @@ def all_setup_requests(
     aioclient_mock: AiohttpClientMocker, request: pytest.FixtureRequest
 ):
     """Mock all setup requests."""
+    include_addons = hasattr(request, "param") and request.param.get(
+        "include_addons", False
+    )
+
     aioclient_mock.post("http://127.0.0.1/homeassistant/options", json={"result": "ok"})
     aioclient_mock.get("http://127.0.0.1/supervisor/ping", json={"result": "ok"})
     aioclient_mock.post("http://127.0.0.1/supervisor/options", json={"result": "ok"})
@@ -157,7 +161,30 @@ def all_setup_requests(
                 "version": "1.0.0",
                 "version_latest": "1.0.0",
                 "auto_update": True,
-                "addons": [],
+                "addons": [
+                    {
+                        "name": "test",
+                        "slug": "test",
+                        "update_available": False,
+                        "version": "1.0.0",
+                        "version_latest": "1.0.0",
+                        "repository": "core",
+                        "state": "started",
+                        "icon": False,
+                    },
+                    {
+                        "name": "test2",
+                        "slug": "test2",
+                        "update_available": False,
+                        "version": "1.0.0",
+                        "version_latest": "1.0.0",
+                        "repository": "core",
+                        "state": "started",
+                        "icon": False,
+                    },
+                ]
+                if include_addons
+                else [],
             },
         },
     )
@@ -165,3 +192,106 @@ def all_setup_requests(
         "http://127.0.0.1/ingress/panels", json={"result": "ok", "data": {"panels": {}}}
     )
     aioclient_mock.post("http://127.0.0.1/refresh_updates", json={"result": "ok"})
+
+    aioclient_mock.get("http://127.0.0.1/addons/test/changelog", text="")
+    aioclient_mock.get(
+        "http://127.0.0.1/addons/test/info",
+        json={
+            "result": "ok",
+            "data": {
+                "name": "test",
+                "slug": "test",
+                "update_available": False,
+                "version": "1.0.0",
+                "version_latest": "1.0.0",
+                "repository": "core",
+                "state": "started",
+                "icon": False,
+                "url": "https://github.com/home-assistant/addons/test",
+                "auto_update": True,
+            },
+        },
+    )
+    aioclient_mock.get("http://127.0.0.1/addons/test2/changelog", text="")
+    aioclient_mock.get(
+        "http://127.0.0.1/addons/test2/info",
+        json={
+            "result": "ok",
+            "data": {
+                "name": "test2",
+                "slug": "test2",
+                "update_available": False,
+                "version": "1.0.0",
+                "version_latest": "1.0.0",
+                "repository": "core",
+                "state": "started",
+                "icon": False,
+                "url": "https://github.com",
+                "auto_update": False,
+            },
+        },
+    )
+    aioclient_mock.get(
+        "http://127.0.0.1/core/stats",
+        json={
+            "result": "ok",
+            "data": {
+                "cpu_percent": 0.99,
+                "memory_usage": 182611968,
+                "memory_limit": 3977146368,
+                "memory_percent": 4.59,
+                "network_rx": 362570232,
+                "network_tx": 82374138,
+                "blk_read": 46010945536,
+                "blk_write": 15051526144,
+            },
+        },
+    )
+    aioclient_mock.get(
+        "http://127.0.0.1/supervisor/stats",
+        json={
+            "result": "ok",
+            "data": {
+                "cpu_percent": 0.99,
+                "memory_usage": 182611968,
+                "memory_limit": 3977146368,
+                "memory_percent": 4.59,
+                "network_rx": 362570232,
+                "network_tx": 82374138,
+                "blk_read": 46010945536,
+                "blk_write": 15051526144,
+            },
+        },
+    )
+    aioclient_mock.get(
+        "http://127.0.0.1/addons/test/stats",
+        json={
+            "result": "ok",
+            "data": {
+                "cpu_percent": 0.99,
+                "memory_usage": 182611968,
+                "memory_limit": 3977146368,
+                "memory_percent": 4.59,
+                "network_rx": 362570232,
+                "network_tx": 82374138,
+                "blk_read": 46010945536,
+                "blk_write": 15051526144,
+            },
+        },
+    )
+    aioclient_mock.get(
+        "http://127.0.0.1/addons/test2/stats",
+        json={
+            "result": "ok",
+            "data": {
+                "cpu_percent": 0.8,
+                "memory_usage": 51941376,
+                "memory_limit": 3977146368,
+                "memory_percent": 1.31,
+                "network_rx": 31338284,
+                "network_tx": 15692900,
+                "blk_read": 740077568,
+                "blk_write": 6004736,
+            },
+        },
+    )

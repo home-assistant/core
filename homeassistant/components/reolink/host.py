@@ -8,7 +8,6 @@ from typing import Any
 
 import aiohttp
 from aiohttp.web import Request
-import async_timeout
 from reolink_aio.api import Host
 from reolink_aio.exceptions import ReolinkError, SubscriptionError
 
@@ -62,6 +61,7 @@ class ReolinkHost:
         self._webhook_url: str = ""
         self._webhook_reachable: asyncio.Event = asyncio.Event()
         self._cancel_poll: CALLBACK_TYPE | None = None
+        self._cancel_onvif_check: CALLBACK_TYPE | None = None
         self._poll_job = HassJob(self._async_poll_all_motion, cancel_on_shutdown=True)
         self._lost_subscription: bool = False
 
@@ -148,34 +148,19 @@ class ReolinkHost:
 
         await self.subscribe()
 
-        _LOGGER.debug(
-            "Waiting for initial ONVIF state on webhook '%s'", self._webhook_url
-        )
-        try:
-            async with async_timeout.timeout(FIRST_ONVIF_TIMEOUT):
-                await self._webhook_reachable.wait()
-        except asyncio.TimeoutError:
+        if self._api.supported(None, "initial_ONVIF_state"):
             _LOGGER.debug(
-                "Did not receive initial ONVIF state on webhook '%s' after %i seconds",
-                self._webhook_url,
-                FIRST_ONVIF_TIMEOUT,
+                "Waiting for initial ONVIF state on webhook '%s'", self._webhook_url
             )
-            ir.async_create_issue(
-                self._hass,
-                DOMAIN,
-                "webhook_url",
-                is_fixable=False,
-                severity=ir.IssueSeverity.WARNING,
-                translation_key="webhook_url",
-                translation_placeholders={
-                    "name": self._api.nvr_name,
-                    "base_url": self._base_url,
-                    "network_link": "https://my.home-assistant.io/redirect/network/",
-                },
-            )
-            await self._async_poll_all_motion()
         else:
-            ir.async_delete_issue(self._hass, DOMAIN, "webhook_url")
+            _LOGGER.debug(
+                "Camera model %s most likely does not push its initial state"
+                "upon ONVIF subscription, do not check",
+                self._api.model,
+            )
+        self._cancel_onvif_check = async_call_later(
+            self._hass, FIRST_ONVIF_TIMEOUT, self._async_check_onvif
+        )
 
         if self._api.sw_version_update_required:
             ir.async_create_issue(
@@ -196,6 +181,38 @@ class ReolinkHost:
             )
         else:
             ir.async_delete_issue(self._hass, DOMAIN, "firmware_update")
+
+    async def _async_check_onvif(self, *_) -> None:
+        """Check the ONVIF subscription."""
+        if (
+            self._api.supported(None, "initial_ONVIF_state")
+            and not self._webhook_reachable.is_set()
+        ):
+            _LOGGER.debug(
+                "Did not receive initial ONVIF state on webhook '%s' after %i seconds",
+                self._webhook_url,
+                FIRST_ONVIF_TIMEOUT,
+            )
+            ir.async_create_issue(
+                self._hass,
+                DOMAIN,
+                "webhook_url",
+                is_fixable=False,
+                severity=ir.IssueSeverity.WARNING,
+                translation_key="webhook_url",
+                translation_placeholders={
+                    "name": self._api.nvr_name,
+                    "base_url": self._base_url,
+                    "network_link": "https://my.home-assistant.io/redirect/network/",
+                },
+            )
+        else:
+            ir.async_delete_issue(self._hass, DOMAIN, "webhook_url")
+
+        # If no ONVIF push is received, start fast polling
+        await self._async_poll_all_motion()
+
+        self._cancel_onvif_check = None
 
     async def update_states(self) -> None:
         """Call the API of the camera device to update the internal states."""
@@ -236,6 +253,9 @@ class ReolinkHost:
         if self._cancel_poll is not None:
             self._cancel_poll()
             self._cancel_poll = None
+        if self._cancel_onvif_check is not None:
+            self._cancel_onvif_check()
+            self._cancel_onvif_check = None
         self.unregister_webhook()
         await self.disconnect()
 

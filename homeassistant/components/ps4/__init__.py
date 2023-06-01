@@ -53,6 +53,8 @@ PS4_COMMAND_SCHEMA = vol.Schema(
 
 PLATFORMS = [Platform.MEDIA_PLAYER]
 
+CONFIG_SCHEMA = cv.no_yaml_config_schema(DOMAIN)
+
 
 class PS4Data:
     """Init Data Class."""

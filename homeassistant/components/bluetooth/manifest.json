@@ -1,7 +1,6 @@
 {
   "domain": "bluetooth",
   "name": "Bluetooth",
-  "after_dependencies": ["hassio"],
   "codeowners": ["@bdraco"],
   "config_flow": true,
   "dependencies": ["logger", "usb"],
