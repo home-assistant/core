@@ -65,14 +65,14 @@ CONFIG_SCHEMA = vol.Schema(
 async def async_reload(
     hass: HomeAssistant, servie_call: ServiceCall, existing_intents: dict
 ) -> None:
-    """Handle start HomeKit service call."""
+    """Handle start Intent Script service call."""
     new_config = await async_integration_yaml_config(hass, DOMAIN)
-
-    if not new_config or DOMAIN not in new_config:
-        return
 
     for intent_type in existing_intents:
         intent.async_remove(hass, intent_type)
+    
+    if not new_config or DOMAIN not in new_config:
+        return
 
     new_intents = new_config[DOMAIN]
 
