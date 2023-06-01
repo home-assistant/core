@@ -115,6 +115,12 @@ class RestoreStateData:
         """Dump states now."""
         await async_get(hass).async_dump_states()
 
+    @classmethod
+    @callback
+    def async_get_instance(cls, hass: HomeAssistant) -> RestoreStateData:
+        """Return the instance of this class."""
+        return async_get(hass)
+
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the restore state data class."""
         self.hass: HomeAssistant = hass
