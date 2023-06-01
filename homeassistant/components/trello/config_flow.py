@@ -13,12 +13,12 @@ from homeassistant.helpers import config_validation as cv
 from . import TrelloAdapter
 from .const import (
     CONF_API_TOKEN,
+    CONF_BOARD_IDS,
     CONF_OPTIONS_BOARDS,
     CONF_USER_EMAIL,
     CONF_USER_ID,
     DOMAIN,
     LOGGER,
-    USER_INPUT_BOARD_IDS,
 )
 
 CREDS_FORM_SCHEMA = vol.Schema(
@@ -77,7 +77,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         :param user_input: User's selected boards
         """
         boards: dict[str, dict] = await self._get_boards_lists(
-            user_input[USER_INPUT_BOARD_IDS]
+            user_input[CONF_BOARD_IDS]
         )
 
         await self.async_set_unique_id(self.user_id)
@@ -138,4 +138,4 @@ def _create_trello_adapter(api_key: str, api_token: str) -> TrelloAdapter:
 
 def _get_board_select_schema(boards: dict[str, dict]) -> Schema:
     options = {key: value["name"] for key, value in boards.items()}
-    return vol.Schema({vol.Required(USER_INPUT_BOARD_IDS): cv.multi_select(options)})
+    return vol.Schema({vol.Required(CONF_BOARD_IDS): cv.multi_select(options)})
