@@ -48,11 +48,8 @@ async def async_setup_entry(
 ) -> None:
     """Set up the myStrom entities."""
     info = hass.data[DOMAIN][entry.entry_id].info
-    device_type = info["type"]
-
-    if device_type == 102:
-        device = hass.data[DOMAIN][entry.entry_id].device
-        async_add_entities([MyStromLight(device, entry.title, info["mac"])])
+    device = hass.data[DOMAIN][entry.entry_id].device
+    async_add_entities([MyStromLight(device, entry.title, info["mac"])])
 
 
 async def async_setup_platform(
