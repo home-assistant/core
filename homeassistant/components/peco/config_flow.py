@@ -45,18 +45,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         try:
             await api.meter_check(phone_number)
-        except ValueError as err:
+        except ValueError:
             self.meter_error = {"phone_number": "invalid_phone_number", "type": "error"}
-            _LOGGER.exception(err)
-        except IncompatibleMeterError as err:
+        except IncompatibleMeterError:
             self.meter_error = {"phone_number": "incompatible_meter", "type": "abort"}
-            _LOGGER.exception(err)
-        except UnresponsiveMeterError as err:
+        except UnresponsiveMeterError:
             self.meter_error = {"phone_number": "unresponsive_meter", "type": "error"}
-            _LOGGER.exception(err)
-        except HttpError as err:
+        except HttpError:
             self.meter_error = {"phone_number": "http_error", "type": "error"}
-            _LOGGER.exception(err)
 
         self.hass.async_create_task(
             self.hass.config_entries.flow.async_configure(flow_id=self.flow_id)
