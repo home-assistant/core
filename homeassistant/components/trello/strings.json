@@ -4,8 +4,8 @@
       "user": {},
       "creds": {
         "data": {
-          "api_key": "API Key",
-          "api_token": "Token"
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "api_token": "[%key:common::config_flow::data::api_token%]"
         }
       },
       "boards": {
