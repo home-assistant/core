@@ -28,17 +28,6 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 )
 
 
-async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
-    """Validate the user input allows us to connect.
-
-    Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
-    """
-    try:
-        info = await pymystrom.get_device_info(data[CONF_HOST])
-    except MyStromConnectionError as error:
-        raise CannotConnect() from error
-
-    return {"mac": info.get("mac")}
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
