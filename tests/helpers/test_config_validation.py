@@ -1501,7 +1501,9 @@ def test_empty_schema_cant_find_module() -> None:
         cv.empty_config_schema("test_domain")({"test_domain": {"foo": "bar"}})
 
 
-def test_no_yaml_schema(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -> None:
+def test_config_entry_only_schema(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test config_entry_only_config_schema."""
     expected_issue = "config_entry_only_test_domain"
     expected_message = (
@@ -1524,7 +1526,7 @@ def test_no_yaml_schema(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -
     assert issue_registry.async_get_issue(HOMEASSISTANT_DOMAIN, expected_issue)
 
 
-def test_no_yaml_schema_cant_find_module() -> None:
+def test_config_entry_only_schema_cant_find_module() -> None:
     """Test if the current module cannot be inspected."""
     with patch("inspect.getmodule", return_value=None):
         cv.config_entry_only_config_schema("test_domain")(
@@ -1532,7 +1534,7 @@ def test_no_yaml_schema_cant_find_module() -> None:
         )
 
 
-def test_no_yaml_schema_no_hass(
+def test_config_entry_only_schema_no_hass(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test if the the hass context var is not set in our context."""
