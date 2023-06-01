@@ -204,7 +204,6 @@ async def test_restore_unavailable_state(hass: HomeAssistant) -> None:
     state = hass.states.get("sensor.integration")
     assert state
     assert state.state == "100.00"
-    assert state.attributes.get("last_valid_state") == "100.00"
 
 
 @pytest.mark.parametrize(

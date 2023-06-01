@@ -48,7 +48,6 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_SOURCE_ID: Final = "source"
-ATTR_LAST_VALID_STATE: Final = "last_valid_state"
 
 # SI Metric prefixes
 UNIT_PREFIXES = {None: 1, "k": 10**3, "M": 10**6, "G": 10**9, "T": 10**12}
@@ -109,8 +108,8 @@ class IntegrationSensorExtraStoredData(SensorExtraStoredData):
 
         try:
             last_valid_state = (
-                Decimal(str(restored.get(ATTR_LAST_VALID_STATE)))
-                if restored.get(ATTR_LAST_VALID_STATE)
+                Decimal(str(restored.get("last_valid_state")))
+                if restored.get("last_valid_state")
                 else None
             )
         except InvalidOperation:
@@ -390,7 +389,6 @@ class IntegrationSensor(RestoreSensor):
         """Return the state attributes of the sensor."""
         state_attr = {
             ATTR_SOURCE_ID: self._source_entity,
-            ATTR_LAST_VALID_STATE: str(self._last_valid_state),
         }
 
         return state_attr
