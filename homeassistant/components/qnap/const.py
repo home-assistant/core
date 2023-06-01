@@ -33,9 +33,6 @@ ATTR_VOLUME_SIZE = "Volume Size"
 
 PLATFORMS = ["sensor"]
 DEFAULT_NAME = "QNAP"
-DEFAULT_PORT = 8080
-DEFAULT_TIMEOUT = 5
-DOMAIN = "qnap"
 
 NOTIFICATION_ID = "qnap_notification"
 NOTIFICATION_TITLE = "QNAP Sensor Setup"
