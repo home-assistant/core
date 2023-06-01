@@ -191,7 +191,7 @@ class RestoreStateData:
             for state in all_states
             if state.entity_id in self.entities and
             # Ignore all states that are entity registry placeholders
-            state.entity_id in current_entity_ids
+            not state.attributes.get(ATTR_RESTORED)
         ]
         expiration_time = now - STATE_EXPIRATION
 
@@ -309,15 +309,15 @@ class RestoreEntity(Entity):
 
     async def async_internal_added_to_hass(self) -> None:
         """Register this entity as a restorable entity."""
-        async_get(self.hass).async_restore_entity_added(self)
         await super().async_internal_added_to_hass()
+        async_get(self.hass).async_restore_entity_added(self)
 
     async def async_internal_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from hass."""
-        await super().async_internal_will_remove_from_hass()
         async_get(self.hass).async_restore_entity_removed(
             self.entity_id, self.extra_restore_state_data
         )
+        await super().async_internal_will_remove_from_hass()
 
     @callback
     def _async_get_restored_data(self) -> StoredState | None:
