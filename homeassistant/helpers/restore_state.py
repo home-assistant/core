@@ -180,7 +180,7 @@ class RestoreStateData:
             for state in all_states
             if state.entity_id in self.entities and
             # Ignore all states that are entity registry placeholders
-            not state.attributes.get(ATTR_RESTORED)
+            state.entity_id in current_entity_ids
         ]
         expiration_time = now - STATE_EXPIRATION
 
@@ -203,12 +203,12 @@ class RestoreStateData:
         """Save the current state machine to storage."""
         _LOGGER.debug("Dumping states")
         try:
-            await self.store.async_save(
-                [
-                    stored_state.as_dict()
-                    for stored_state in self.async_get_stored_states()
-                ]
-            )
+            states_to_save = [
+                stored_state.as_dict()
+                for stored_state in self.async_get_stored_states()
+            ]
+            _LOGGER.debug("States to save: %s", len(states_to_save))
+            await self.store.async_save(states_to_save)
         except HomeAssistantError as exc:
             _LOGGER.error("Error saving current states", exc_info=exc)
 
@@ -298,15 +298,15 @@ class RestoreEntity(Entity):
 
     async def async_internal_added_to_hass(self) -> None:
         """Register this entity as a restorable entity."""
-        await super().async_internal_added_to_hass()
         async_get(self.hass).async_restore_entity_added(self)
+        await super().async_internal_added_to_hass()
 
     async def async_internal_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from hass."""
+        await super().async_internal_will_remove_from_hass()
         async_get(self.hass).async_restore_entity_removed(
             self.entity_id, self.extra_restore_state_data
         )
-        await super().async_internal_will_remove_from_hass()
 
     @callback
     def _async_get_restored_data(self) -> StoredState | None:
