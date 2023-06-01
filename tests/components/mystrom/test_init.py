@@ -119,18 +119,6 @@ async def test_init_cannot_connect(hass: HomeAssistant, config_entry: MockConfig
     ), patch("pymystrom.switch.MyStromSwitch.get_state", return_value={}), patch(
         "pymystrom.bulb.MyStromBulb.get_state", return_value={}
     ):
-        config_entry = MockConfigEntry(
-            domain=DOMAIN,
-            entry_id=ENTRY_ID,
-            unique_id="uuid",
-            data={
-                CONF_HOST: "1.1.1.1",
-                CONF_NAME: "test",
-            },
-            title="myStrom",
-        )
-        config_entry.add_to_hass(hass)
-
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
