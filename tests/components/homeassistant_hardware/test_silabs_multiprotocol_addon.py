@@ -115,7 +115,7 @@ class MockMultiprotocolPlatform(MockPlatform):
         self, hass: HomeAssistant, channel: int, delay: float
     ) -> None:
         """Set the channel to be used."""
-        self.change_channel_calls.append(channel)
+        self.change_channel_calls.append((channel, delay))
 
     async def async_get_channel(self, hass: HomeAssistant) -> int | None:
         """Return the channel."""
@@ -500,9 +500,14 @@ async def test_option_flow_addon_installed_same_device_reconfigure(
     result = await hass.config_entries.options.async_configure(
         result["flow_id"], {"channel": "14"}
     )
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "notify_channel_change"
+    assert result["description_placeholders"] == {"delay_minutes": "5"}
+
+    result = await hass.config_entries.options.async_configure(result["flow_id"], {})
     assert result["type"] == FlowResultType.CREATE_ENTRY
 
-    assert mock_multiprotocol_platform.change_channel_calls == [14]
+    assert mock_multiprotocol_platform.change_channel_calls == [(14, 300)]
 
 
 async def test_option_flow_addon_installed_same_device_uninstall(
@@ -972,7 +977,7 @@ async def test_import_channel(
         "expected_calls",
     ),
     [
-        (True, [15]),
+        (True, [(15, 10)]),
         (False, []),
     ],
 )
@@ -986,7 +991,7 @@ async def test_change_channel(
     multipan_manager = await silabs_multiprotocol_addon.get_addon_manager(hass)
     mock_multiprotocol_platform.using_multipan = platform_using_multipan
 
-    await multipan_manager.async_change_channel(15)
+    await multipan_manager.async_change_channel(15, 10)
     assert mock_multiprotocol_platform.change_channel_calls == expected_calls
 
 
