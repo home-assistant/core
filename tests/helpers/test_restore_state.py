@@ -90,8 +90,12 @@ async def test_async_get_instance_backwards_compatibility(hass: HomeAssistant) -
     """Test async_get_instance backwards compatibility."""
     await async_load(hass)
     data = async_get(hass)
+    # When called from core it should raise
     with pytest.raises(RuntimeError):
         await RestoreStateData.async_get_instance(hass)
+
+    # When called from a component it should not raise
+    # but it should report
     with patch("homeassistant.helpers.restore_state.report"):
         assert data is await RestoreStateData.async_get_instance(hass)
 
