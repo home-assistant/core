@@ -488,3 +488,18 @@ async def test_restore_entity_end_to_end(
     assert len(storage_data) == 1
     assert storage_data[0]["state"]["entity_id"] == entity_id
     assert storage_data[0]["state"]["state"] == "stored"
+
+    await platform.async_reset()
+
+    assert hass.states.get(entity_id) is None
+
+    # Make sure the entity still gets saved to restore state
+    # even though the platform has been reset since it should
+    # not be expired yet.
+    await data.async_dump_states()
+    await hass.async_block_till_done()
+
+    storage_data = hass_storage[STORAGE_KEY]["data"]
+    assert len(storage_data) == 1
+    assert storage_data[0]["state"]["entity_id"] == entity_id
+    assert storage_data[0]["state"]["state"] == "stored"
