@@ -110,7 +110,8 @@ async def handle_webhook(hass, webhook_id, request):
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Configure based on config entry."""
-    hass.data.setdefault(DOMAIN, {"devices": set(), "unsub_device_tracker": {}})
+    if DOMAIN not in hass.data:
+        hass.data[DOMAIN] = {"devices": set(), "unsub_device_tracker": {}}
     webhook.async_register(
         hass, DOMAIN, "Locative", entry.data[CONF_WEBHOOK_ID], handle_webhook
     )
