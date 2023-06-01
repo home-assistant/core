@@ -365,9 +365,7 @@ class SensorFilter(SensorEntity):
                 )
             )
 
-        self.async_on_remove(
-            async_at_started(self.hass, _async_hass_started)
-        )
+        self.async_on_remove(async_at_started(self.hass, _async_hass_started))
 
     @property
     def native_value(self) -> datetime | StateType:
