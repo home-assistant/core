@@ -113,7 +113,7 @@ async def async_start(  # noqa: C901
                         "Received message on illegal discovery topic '%s'. The topic"
                         " contains "
                         "not allowed characters. For more information see "
-                        "https://www.home-assistant.io/docs/mqtt/discovery/#discovery-topic"
+                        "https://www.home-assistant.io/integrations/mqtt/#discovery-topic"
                     ),
                     topic,
                 )
@@ -311,10 +311,7 @@ async def async_start(  # noqa: C901
                     and result["reason"]
                     in ("already_configured", "single_instance_allowed")
                 ):
-                    unsub = mqtt_data.integration_unsubscribe.pop(key, None)
-                    if unsub is None:
-                        return
-                    unsub()
+                    mqtt_data.integration_unsubscribe.pop(key)()
 
         for topic in topics:
             key = f"{integration}_{topic}"

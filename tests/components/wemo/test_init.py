@@ -9,7 +9,7 @@ from homeassistant.components.wemo.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
-from homeassistant.util import dt
+from homeassistant.util import dt as dt_util
 
 from .conftest import (
     MOCK_FIRMWARE_VERSION,
@@ -107,6 +107,28 @@ async def test_static_config_with_invalid_host(hass: HomeAssistant) -> None:
     assert not setup_success
 
 
+async def test_static_with_upnp_failure(
+    hass: HomeAssistant, pywemo_device: pywemo.WeMoDevice
+) -> None:
+    """Device that fails to get state is not added."""
+    pywemo_device.get_state.side_effect = pywemo.exceptions.ActionException("Failed")
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            DOMAIN: {
+                CONF_DISCOVERY: False,
+                CONF_STATIC: [f"{MOCK_HOST}:{MOCK_PORT}"],
+            },
+        },
+    )
+    await hass.async_block_till_done()
+    entity_reg = er.async_get(hass)
+    entity_entries = list(entity_reg.entities.values())
+    assert len(entity_entries) == 0
+    pywemo_device.get_state.assert_called_once()
+
+
 async def test_discovery(hass: HomeAssistant, pywemo_registry) -> None:
     """Verify that discovery dispatches devices to the platform for setup."""
 
@@ -142,7 +164,7 @@ async def test_discovery(hass: HomeAssistant, pywemo_registry) -> None:
         # Test that discovery runs periodically and the async_dispatcher_send code works.
         async_fire_time_changed(
             hass,
-            dt.utcnow()
+            dt_util.utcnow()
             + timedelta(seconds=WemoDiscovery.ADDITIONAL_SECONDS_BETWEEN_SCANS + 1),
         )
         await hass.async_block_till_done()

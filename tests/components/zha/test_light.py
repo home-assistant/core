@@ -553,7 +553,7 @@ async def test_transitions(
         transition_time=0,
         expect_reply=True,
         manufacturer=None,
-        tries=1,
+        tries=3,
         tsn=None,
     )
 
@@ -569,7 +569,7 @@ async def test_transitions(
         "turn_on",
         {
             "entity_id": device_1_entity_id,
-            "transition": 3,
+            "transition": 3.5,
             "brightness": 18,
             "color_temp": 432,
         },
@@ -586,10 +586,10 @@ async def test_transitions(
         dev1_cluster_level.commands_by_name["move_to_level_with_on_off"].id,
         dev1_cluster_level.commands_by_name["move_to_level_with_on_off"].schema,
         level=18,
-        transition_time=30,
+        transition_time=35,
         expect_reply=True,
         manufacturer=None,
-        tries=1,
+        tries=3,
         tsn=None,
     )
     assert dev1_cluster_color.request.call_args == call(
@@ -597,10 +597,10 @@ async def test_transitions(
         dev1_cluster_color.commands_by_name["move_to_color_temp"].id,
         dev1_cluster_color.commands_by_name["move_to_color_temp"].schema,
         color_temp_mireds=432,
-        transition_time=30.0,
+        transition_time=35,
         expect_reply=True,
         manufacturer=None,
-        tries=1,
+        tries=3,
         tsn=None,
     )
 
@@ -637,7 +637,7 @@ async def test_transitions(
         transition_time=0,
         expect_reply=True,
         manufacturer=None,
-        tries=1,
+        tries=3,
         tsn=None,
     )
 
@@ -674,7 +674,7 @@ async def test_transitions(
         transition_time=0,
         expect_reply=True,
         manufacturer=None,
-        tries=1,
+        tries=3,
         tsn=None,
     )
     assert dev1_cluster_color.request.call_args == call(
@@ -685,7 +685,7 @@ async def test_transitions(
         transition_time=0,  # no transition when new_color_provided_while_off
         expect_reply=True,
         manufacturer=None,
-        tries=1,
+        tries=3,
         tsn=None,
     )
     assert dev1_cluster_level.request.call_args_list[1] == call(
@@ -696,7 +696,7 @@ async def test_transitions(
         transition_time=10,
         expect_reply=True,
         manufacturer=None,
-        tries=1,
+        tries=3,
         tsn=None,
     )
 
@@ -758,7 +758,7 @@ async def test_transitions(
         transition_time=0,
         expect_reply=True,
         manufacturer=None,
-        tries=1,
+        tries=3,
         tsn=None,
     )
     assert dev1_cluster_color.request.call_args == call(
@@ -769,7 +769,7 @@ async def test_transitions(
         transition_time=0,  # no transition when new_color_provided_while_off
         expect_reply=True,
         manufacturer=None,
-        tries=1,
+        tries=3,
         tsn=None,
     )
     assert dev1_cluster_level.request.call_args_list[1] == call(
@@ -780,7 +780,7 @@ async def test_transitions(
         transition_time=0,
         expect_reply=True,
         manufacturer=None,
-        tries=1,
+        tries=3,
         tsn=None,
     )
 
@@ -838,7 +838,7 @@ async def test_transitions(
         dev1_cluster_on_off.commands_by_name["on"].schema,
         expect_reply=True,
         manufacturer=None,
-        tries=1,
+        tries=3,
         tsn=None,
     )
 
@@ -850,7 +850,7 @@ async def test_transitions(
         transition_time=0,  # no transition when new_color_provided_while_off
         expect_reply=True,
         manufacturer=None,
-        tries=1,
+        tries=3,
         tsn=None,
     )
 
@@ -910,7 +910,7 @@ async def test_transitions(
         transition_time=1,  # transition time - sengled light uses default minimum
         expect_reply=True,
         manufacturer=None,
-        tries=1,
+        tries=3,
         tsn=None,
     )
 
@@ -968,7 +968,7 @@ async def test_transitions(
         transition_time=1,
         expect_reply=True,
         manufacturer=None,
-        tries=1,
+        tries=3,
         tsn=None,
     )
     assert dev2_cluster_color.request.call_args == call(
@@ -979,7 +979,7 @@ async def test_transitions(
         transition_time=1,  # sengled transition == 1 when new_color_provided_while_off
         expect_reply=True,
         manufacturer=None,
-        tries=1,
+        tries=3,
         tsn=None,
     )
     assert dev2_cluster_level.request.call_args_list[1] == call(
@@ -990,7 +990,7 @@ async def test_transitions(
         transition_time=10,
         expect_reply=True,
         manufacturer=None,
-        tries=1,
+        tries=3,
         tsn=None,
     )
 
@@ -1036,18 +1036,18 @@ async def test_transitions(
         blocking=True,
     )
 
-    group_on_off_channel = zha_group.endpoint[general.OnOff.cluster_id]
-    group_level_channel = zha_group.endpoint[general.LevelControl.cluster_id]
-    group_color_channel = zha_group.endpoint[lighting.Color.cluster_id]
-    assert group_on_off_channel.request.call_count == 0
-    assert group_on_off_channel.request.await_count == 0
-    assert group_color_channel.request.call_count == 1
-    assert group_color_channel.request.await_count == 1
-    assert group_level_channel.request.call_count == 1
-    assert group_level_channel.request.await_count == 1
+    group_on_off_cluster_handler = zha_group.endpoint[general.OnOff.cluster_id]
+    group_level_cluster_handler = zha_group.endpoint[general.LevelControl.cluster_id]
+    group_color_cluster_handler = zha_group.endpoint[lighting.Color.cluster_id]
+    assert group_on_off_cluster_handler.request.call_count == 0
+    assert group_on_off_cluster_handler.request.await_count == 0
+    assert group_color_cluster_handler.request.call_count == 1
+    assert group_color_cluster_handler.request.await_count == 1
+    assert group_level_cluster_handler.request.call_count == 1
+    assert group_level_cluster_handler.request.await_count == 1
 
     # groups are omitted from the 3 call dance for new_color_provided_while_off
-    assert group_color_channel.request.call_args == call(
+    assert group_color_cluster_handler.request.call_args == call(
         False,
         dev2_cluster_color.commands_by_name["move_to_color_temp"].id,
         dev2_cluster_color.commands_by_name["move_to_color_temp"].schema,
@@ -1058,7 +1058,7 @@ async def test_transitions(
         tries=1,
         tsn=None,
     )
-    assert group_level_channel.request.call_args == call(
+    assert group_level_cluster_handler.request.call_args == call(
         False,
         dev2_cluster_level.commands_by_name["move_to_level_with_on_off"].id,
         dev2_cluster_level.commands_by_name["move_to_level_with_on_off"].schema,
@@ -1076,9 +1076,9 @@ async def test_transitions(
     assert group_state.attributes["color_temp"] == 235
     assert group_state.attributes["color_mode"] == ColorMode.COLOR_TEMP
 
-    group_on_off_channel.request.reset_mock()
-    group_color_channel.request.reset_mock()
-    group_level_channel.request.reset_mock()
+    group_on_off_cluster_handler.request.reset_mock()
+    group_color_cluster_handler.request.reset_mock()
+    group_level_cluster_handler.request.reset_mock()
 
     # turn the sengled light back on
     await hass.services.async_call(
@@ -1121,7 +1121,7 @@ async def test_transitions(
         transition_time=20,  # transition time
         expect_reply=True,
         manufacturer=None,
-        tries=1,
+        tries=3,
         tsn=None,
     )
 
@@ -1151,7 +1151,7 @@ async def test_transitions(
         transition_time=1,  # transition time - sengled light uses default minimum
         expect_reply=True,
         manufacturer=None,
-        tries=1,
+        tries=3,
         tsn=None,
     )
 
@@ -1184,7 +1184,7 @@ async def test_transitions(
         eWeLink_cluster_on_off.commands_by_name["on"].schema,
         expect_reply=True,
         manufacturer=None,
-        tries=1,
+        tries=3,
         tsn=None,
     )
     assert dev1_cluster_color.request.call_args == call(
@@ -1195,7 +1195,7 @@ async def test_transitions(
         transition_time=0,
         expect_reply=True,
         manufacturer=None,
-        tries=1,
+        tries=3,
         tsn=None,
     )
 
@@ -1261,7 +1261,7 @@ async def test_on_with_off_color(hass: HomeAssistant, device_light_1) -> None:
         dev1_cluster_on_off.commands_by_name["on"].schema,
         expect_reply=True,
         manufacturer=None,
-        tries=1,
+        tries=3,
         tsn=None,
     )
     assert dev1_cluster_color.request.call_args == call(
@@ -1272,7 +1272,7 @@ async def test_on_with_off_color(hass: HomeAssistant, device_light_1) -> None:
         transition_time=0,
         expect_reply=True,
         manufacturer=None,
-        tries=1,
+        tries=3,
         tsn=None,
     )
 
@@ -1319,7 +1319,7 @@ async def test_on_with_off_color(hass: HomeAssistant, device_light_1) -> None:
         transition_time=0,
         expect_reply=True,
         manufacturer=None,
-        tries=1,
+        tries=3,
         tsn=None,
     )
     assert dev1_cluster_color.request.call_args == call(
@@ -1330,7 +1330,7 @@ async def test_on_with_off_color(hass: HomeAssistant, device_light_1) -> None:
         transition_time=0,
         expect_reply=True,
         manufacturer=None,
-        tries=1,
+        tries=3,
         tsn=None,
     )
     assert dev1_cluster_level.request.call_args_list[1] == call(
@@ -1341,7 +1341,7 @@ async def test_on_with_off_color(hass: HomeAssistant, device_light_1) -> None:
         transition_time=0,
         expect_reply=True,
         manufacturer=None,
-        tries=1,
+        tries=3,
         tsn=None,
     )
 
@@ -1373,7 +1373,9 @@ async def async_test_on_from_light(hass, cluster, entity_id):
     assert hass.states.get(entity_id).state == STATE_ON
 
 
-async def async_test_on_off_from_hass(hass, cluster, entity_id):
+async def async_test_on_off_from_hass(
+    hass, cluster, entity_id, expected_tries: int = 3
+):
     """Test on off functionality from hass."""
     # turn on via UI
     cluster.request.reset_mock()
@@ -1388,14 +1390,16 @@ async def async_test_on_off_from_hass(hass, cluster, entity_id):
         cluster.commands_by_name["on"].schema,
         expect_reply=True,
         manufacturer=None,
-        tries=1,
+        tries=expected_tries,
         tsn=None,
     )
 
-    await async_test_off_from_hass(hass, cluster, entity_id)
+    await async_test_off_from_hass(
+        hass, cluster, entity_id, expected_tries=expected_tries
+    )
 
 
-async def async_test_off_from_hass(hass, cluster, entity_id):
+async def async_test_off_from_hass(hass, cluster, entity_id, expected_tries: int = 3):
     """Test turning off the light from Home Assistant."""
 
     # turn off via UI
@@ -1411,13 +1415,18 @@ async def async_test_off_from_hass(hass, cluster, entity_id):
         cluster.commands_by_name["off"].schema,
         expect_reply=True,
         manufacturer=None,
-        tries=1,
+        tries=expected_tries,
         tsn=None,
     )
 
 
 async def async_test_level_on_off_from_hass(
-    hass, on_off_cluster, level_cluster, entity_id, expected_default_transition: int = 0
+    hass,
+    on_off_cluster,
+    level_cluster,
+    entity_id,
+    expected_default_transition: int = 0,
+    expected_tries: int = 3,
 ):
     """Test on off functionality from hass."""
 
@@ -1439,7 +1448,7 @@ async def async_test_level_on_off_from_hass(
         on_off_cluster.commands_by_name["on"].schema,
         expect_reply=True,
         manufacturer=None,
-        tries=1,
+        tries=expected_tries,
         tsn=None,
     )
     on_off_cluster.request.reset_mock()
@@ -1463,7 +1472,7 @@ async def async_test_level_on_off_from_hass(
         on_off_cluster.commands_by_name["on"].schema,
         expect_reply=True,
         manufacturer=None,
-        tries=1,
+        tries=expected_tries,
         tsn=None,
     )
     assert level_cluster.request.call_args == call(
@@ -1474,7 +1483,7 @@ async def async_test_level_on_off_from_hass(
         transition_time=100,
         expect_reply=True,
         manufacturer=None,
-        tries=1,
+        tries=expected_tries,
         tsn=None,
     )
     on_off_cluster.request.reset_mock()
@@ -1499,13 +1508,15 @@ async def async_test_level_on_off_from_hass(
         transition_time=int(expected_default_transition),
         expect_reply=True,
         manufacturer=None,
-        tries=1,
+        tries=expected_tries,
         tsn=None,
     )
     on_off_cluster.request.reset_mock()
     level_cluster.request.reset_mock()
 
-    await async_test_off_from_hass(hass, on_off_cluster, entity_id)
+    await async_test_off_from_hass(
+        hass, on_off_cluster, entity_id, expected_tries=expected_tries
+    )
 
 
 async def async_test_dimmer_from_light(hass, cluster, entity_id, level, expected_state):
@@ -1522,7 +1533,9 @@ async def async_test_dimmer_from_light(hass, cluster, entity_id, level, expected
     assert hass.states.get(entity_id).attributes.get("brightness") == level
 
 
-async def async_test_flash_from_hass(hass, cluster, entity_id, flash):
+async def async_test_flash_from_hass(
+    hass, cluster, entity_id, flash, expected_tries: int = 3
+):
     """Test flash functionality from hass."""
     # turn on via UI
     cluster.request.reset_mock()
@@ -1542,7 +1555,7 @@ async def async_test_flash_from_hass(hass, cluster, entity_id, flash):
         effect_variant=general.Identify.EffectVariant.Default,
         expect_reply=True,
         manufacturer=None,
-        tries=1,
+        tries=expected_tries,
         tsn=None,
     )
 
@@ -1642,13 +1655,15 @@ async def test_zha_group_light_entity(
     assert "color_mode" not in group_state.attributes
 
     # test turning the lights on and off from the HA
-    await async_test_on_off_from_hass(hass, group_cluster_on_off, group_entity_id)
+    await async_test_on_off_from_hass(
+        hass, group_cluster_on_off, group_entity_id, expected_tries=1
+    )
 
     await async_shift_time(hass)
 
     # test short flashing the lights from the HA
     await async_test_flash_from_hass(
-        hass, group_cluster_identify, group_entity_id, FLASH_SHORT
+        hass, group_cluster_identify, group_entity_id, FLASH_SHORT, expected_tries=1
     )
 
     await async_shift_time(hass)
@@ -1663,6 +1678,7 @@ async def test_zha_group_light_entity(
         group_cluster_level,
         group_entity_id,
         expected_default_transition=1,  # a Sengled light is in that group and needs a minimum 0.1s transition
+        expected_tries=1,
     )
 
     await async_shift_time(hass)
@@ -1683,7 +1699,7 @@ async def test_zha_group_light_entity(
 
     # test long flashing the lights from the HA
     await async_test_flash_from_hass(
-        hass, group_cluster_identify, group_entity_id, FLASH_LONG
+        hass, group_cluster_identify, group_entity_id, FLASH_LONG, expected_tries=1
     )
 
     await async_shift_time(hass)

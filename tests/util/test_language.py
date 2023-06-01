@@ -1,7 +1,19 @@
 """Test Home Assistant language util methods."""
 from __future__ import annotations
 
+import pytest
+
+from homeassistant.const import MATCH_ALL
 from homeassistant.util import language
+
+
+def test_match_all() -> None:
+    """Test MATCH_ALL."""
+    assert language.matches(MATCH_ALL, ["fr-Fr", "en-US", "en-GB"]) == [
+        "fr-Fr",
+        "en-US",
+        "en-GB",
+    ]
 
 
 def test_region_match() -> None:
@@ -53,6 +65,26 @@ def test_country_preferred() -> None:
     ]
 
 
+def test_country_preferred_over_family() -> None:
+    """Test that country hint is preferred over language family."""
+    assert (
+        language.matches(
+            "de",
+            ["de", "de-CH", "de-DE"],
+            country="CH",
+        )[0]
+        == "de-CH"
+    )
+    assert (
+        language.matches(
+            "de",
+            ["de", "de-CH", "de-DE"],
+            country="DE",
+        )[0]
+        == "de-DE"
+    )
+
+
 def test_language_as_region() -> None:
     """Test that the language itself can be interpreted as a region."""
     assert language.matches(
@@ -65,31 +97,68 @@ def test_language_as_region() -> None:
 
 
 def test_zh_hant() -> None:
-    """Test that the zh-Hant defaults to HK."""
+    """Test that the zh-Hant matches HK or TW."""
     assert language.matches(
         "zh-Hant",
-        ["en-US", "en-GB", "zh-CN", "zh-HK", "zh-TW"],
+        ["en-US", "en-GB", "zh-CN", "zh-HK"],
     ) == [
         "zh-HK",
         "zh-CN",
+    ]
+
+    assert language.matches(
+        "zh-Hant",
+        ["en-US", "en-GB", "zh-CN", "zh-TW"],
+    ) == [
         "zh-TW",
+        "zh-CN",
     ]
 
 
+@pytest.mark.parametrize("target", ["zh-Hant", "zh-Hans"])
+def test_zh_with_country(target: str) -> None:
+    """Test that the zh-Hant/zh-Hans still matches country when provided."""
+    supported = ["en-US", "en-GB", "zh-CN", "zh-HK", "zh-TW"]
+    assert (
+        language.matches(
+            target,
+            supported,
+            country="TW",
+        )[0]
+        == "zh-TW"
+    )
+    assert (
+        language.matches(
+            target,
+            supported,
+            country="HK",
+        )[0]
+        == "zh-HK"
+    )
+    assert (
+        language.matches(
+            target,
+            supported,
+            country="CN",
+        )[0]
+        == "zh-CN"
+    )
+
+
 def test_zh_hans() -> None:
-    """Test that the zh-Hans defaults to TW."""
+    """Test that the zh-Hans matches CN first."""
     assert language.matches(
         "zh-Hans",
         ["en-US", "en-GB", "zh-CN", "zh-HK", "zh-TW"],
     ) == [
-        "zh-TW",
         "zh-CN",
         "zh-HK",
+        "zh-TW",
     ]
 
 
 def test_zh_no_code() -> None:
-    """Test that the zh defaults to CN."""
+    """Test that the zh defaults to CN first."""
     assert language.matches(
         "zh",
         ["en-US", "en-GB", "zh-CN", "zh-HK", "zh-TW"],
@@ -121,3 +190,75 @@ def test_sr_latn() -> None:
         "sr-CS",
         "sr-RS",
     ]
+
+
+def test_no_nb_same() -> None:
+    """Test that the no/nb are interchangeable."""
+    assert language.matches(
+        "no",
+        ["en-US", "en-GB", "nb"],
+    ) == ["nb"]
+    assert language.matches(
+        "nb",
+        ["en-US", "en-GB", "no"],
+    ) == ["no"]
+
+
+def test_no_nb_prefer_exact() -> None:
+    """Test that the exact language is preferred even if an interchangeable language is available."""
+    assert language.matches(
+        "no",
+        ["en-US", "en-GB", "nb", "no"],
+    ) == ["no", "nb"]
+    assert language.matches(
+        "no",
+        ["en-US", "en-GB", "no", "nb"],
+    ) == ["no", "nb"]
+
+
+def test_no_nb_prefer_exact_regions() -> None:
+    """Test that the exact language/region is preferred."""
+    assert language.matches(
+        "no-AA",
+        ["en-US", "en-GB", "nb-AA", "no-AA"],
+    ) == ["no-AA", "nb-AA"]
+    assert language.matches(
+        "no-AA",
+        ["en-US", "en-GB", "no-AA", "nb-AA"],
+    ) == ["no-AA", "nb-AA"]
+
+
+def test_he_iw_same() -> None:
+    """Test that the he/iw are interchangeable."""
+    assert language.matches(
+        "he",
+        ["en-US", "en-GB", "iw"],
+    ) == ["iw"]
+    assert language.matches(
+        "iw",
+        ["en-US", "en-GB", "he"],
+    ) == ["he"]
+
+
+def test_he_iw_prefer_exact() -> None:
+    """Test that the exact language is preferred even if an interchangeable language is available."""
+    assert language.matches(
+        "he",
+        ["en-US", "en-GB", "iw", "he"],
+    ) == ["he", "iw"]
+    assert language.matches(
+        "he",
+        ["en-US", "en-GB", "he", "iw"],
+    ) == ["he", "iw"]
+
+
+def test_he_iw_prefer_exact_regions() -> None:
+    """Test that the exact language/region is preferred."""
+    assert language.matches(
+        "he-IL",
+        ["en-US", "en-GB", "iw-IL", "he-IL"],
+    ) == ["he-IL", "iw-IL"]
+    assert language.matches(
+        "he-IL",
+        ["en-US", "en-GB", "he-IL", "iw-IL"],
+    ) == ["he-IL", "iw-IL"]

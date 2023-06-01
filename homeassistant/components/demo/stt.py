@@ -1,4 +1,4 @@
-"""Support for the demo for speech to text service."""
+"""Support for the demo for speech-to-text service."""
 from __future__ import annotations
 
 from collections.abc import AsyncIterable
@@ -43,6 +43,8 @@ async def async_setup_entry(
 
 class DemoProviderEntity(SpeechToTextEntity):
     """Demo speech API provider entity."""
+
+    _attr_name = "Demo STT"
 
     @property
     def supported_languages(self) -> list[str]:

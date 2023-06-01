@@ -47,6 +47,9 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.helpers.integration_platform import (
+    async_process_integration_platform_for_component,
+)
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType
@@ -56,6 +59,7 @@ _LOGGER = logging.getLogger(__name__)
 
 ATTR_SOURCE = "source"
 ATTR_USER_ID = "user_id"
+ATTR_DEVICE_TRACKERS = "device_trackers"
 
 CONF_DEVICE_TRACKERS = "device_trackers"
 CONF_USER_ID = "user_id"
@@ -329,6 +333,9 @@ The following persons point at invalid users:
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the person component."""
+    # Process integration platforms right away since
+    # we will create entities before firing EVENT_COMPONENT_LOADED
+    await async_process_integration_platform_for_component(hass, DOMAIN)
     entity_component = EntityComponent[Person](_LOGGER, DOMAIN, hass)
     id_manager = collection.IDManager()
     yaml_collection = collection.YamlCollection(
@@ -446,6 +453,7 @@ class Person(collection.CollectionEntity, RestoreEntity):
             data[ATTR_SOURCE] = self._source
         if (user_id := self._config.get(CONF_USER_ID)) is not None:
             data[ATTR_USER_ID] = user_id
+        data[ATTR_DEVICE_TRACKERS] = self.device_trackers
         return data
 
     @property

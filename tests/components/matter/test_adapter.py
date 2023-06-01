@@ -8,6 +8,7 @@ from matter_server.common.helpers.util import dataclass_from_dict
 from matter_server.common.models import EventType, MatterNodeData
 import pytest
 
+from homeassistant.components.matter.adapter import get_clean_name
 from homeassistant.components.matter.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
@@ -17,14 +18,24 @@ from .common import load_and_parse_node_fixture, setup_integration_with_node_fix
 
 # This tests needs to be adjusted to remove lingering tasks
 @pytest.mark.parametrize("expected_lingering_tasks", [True])
+@pytest.mark.parametrize(
+    ("node_fixture", "name"),
+    [
+        ("onoff-light", "Mock OnOff Light"),
+        ("onoff-light-alt-name", "Mock OnOff Light"),
+        ("onoff-light-no-name", "Mock Light"),
+    ],
+)
 async def test_device_registry_single_node_device(
     hass: HomeAssistant,
     matter_client: MagicMock,
+    node_fixture: str,
+    name: str,
 ) -> None:
     """Test bridge devices are set up correctly with via_device."""
     await setup_integration_with_node_fixture(
         hass,
-        "onoff-light",
+        node_fixture,
         matter_client,
     )
 
@@ -37,7 +48,7 @@ async def test_device_registry_single_node_device(
     # test serial id present as additional identifier
     assert (DOMAIN, "serial_12345678") in entry.identifiers
 
-    assert entry.name == "Mock OnOff Light"
+    assert entry.name == name
     assert entry.manufacturer == "Nabu Casa"
     assert entry.model == "Mock Light"
     assert entry.hw_version == "v1.0"
@@ -145,3 +156,17 @@ async def test_node_added_subscription(
 
     entity_state = hass.states.get("light.mock_onoff_light")
     assert entity_state
+
+
+async def test_get_clean_name_() -> None:
+    """Test get_clean_name helper.
+
+    Test device names that are assigned to `null`
+    or have a trailing null char with spaces.
+    """
+    assert get_clean_name(None) is None
+    assert get_clean_name("\x00") is None
+    assert get_clean_name("   \x00") is None
+    assert get_clean_name("") is None
+    assert get_clean_name("Mock device") == "Mock device"
+    assert get_clean_name("Mock device                    \x00") == "Mock device"
