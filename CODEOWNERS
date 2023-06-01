@@ -963,6 +963,7 @@ build.json @home-assistant/supervisor
 /tests/components/qingping/ @bdraco @skgsergio
 /homeassistant/components/qld_bushfire/ @exxamalte
 /tests/components/qld_bushfire/ @exxamalte
+/homeassistant/components/qnap/ @disforw
 /homeassistant/components/qnap_qsw/ @Noltari
 /tests/components/qnap_qsw/ @Noltari
 /homeassistant/components/quantum_gateway/ @cisasteelersfan
