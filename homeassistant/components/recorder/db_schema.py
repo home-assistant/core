@@ -25,6 +25,7 @@ from sqlalchemy import (
     SmallInteger,
     String,
     Text,
+    case,
     type_coerce,
 )
 from sqlalchemy.dialects import mysql, oracle, postgresql, sqlite
@@ -151,10 +152,9 @@ def compile_char_zero(type_: TypeDecorator, compiler: Any, **kw: Any) -> str:
     return "CHAR(0)"  # Uses 1 byte on MySQL (no change on sqlite)
 
 
-@compiles(UnusedDateTime, "postgresql")  # type: ignore[misc,no-untyped-call]
 @compiles(Unused, "postgresql")  # type: ignore[misc,no-untyped-call]
 def compile_char_one(type_: TypeDecorator, compiler: Any, **kw: Any) -> str:
-    """Compile UnusedDateTime and Unused as CHAR(1) on postgresql."""
+    """Compile Unused as CHAR(1) on postgresql."""
     return "CHAR(1)"  # Uses 1 byte
 
 
@@ -164,6 +164,14 @@ class FAST_PYSQLITE_DATETIME(sqlite.DATETIME):
     def result_processor(self, dialect, coltype):  # type: ignore[no-untyped-def]
         """Offload the datetime parsing to ciso8601."""
         return lambda value: None if value is None else ciso8601.parse_datetime(value)
+
+
+class NativeLargeBinary(LargeBinary):
+    """A faster version of LargeBinary for engines that support python bytes natively."""
+
+    def result_processor(self, dialect, coltype):  # type: ignore[no-untyped-def]
+        """No conversion needed for engines that support native bytes."""
+        return None
 
 
 # For MariaDB and MySQL we can use an unsigned integer type since it will fit 2**32
@@ -190,7 +198,11 @@ DOUBLE_TYPE = (
 )
 UNUSED_LEGACY_COLUMN = Unused(0)
 UNUSED_LEGACY_DATETIME_COLUMN = UnusedDateTime(timezone=True)
+UNUSED_LEGACY_INTEGER_COLUMN = SmallInteger()
 DOUBLE_PRECISION_TYPE_SQL = "DOUBLE PRECISION"
+CONTEXT_BINARY_TYPE = LargeBinary(CONTEXT_ID_BIN_MAX_LENGTH).with_variant(
+    NativeLargeBinary(CONTEXT_ID_BIN_MAX_LENGTH), "mysql", "mariadb", "sqlite"
+)
 
 TIMESTAMP_TYPE = DOUBLE_TYPE
 
@@ -243,15 +255,9 @@ class Events(Base):
     data_id: Mapped[int | None] = mapped_column(
         Integer, ForeignKey("event_data.data_id"), index=True
     )
-    context_id_bin: Mapped[bytes | None] = mapped_column(
-        LargeBinary(CONTEXT_ID_BIN_MAX_LENGTH),
-    )
-    context_user_id_bin: Mapped[bytes | None] = mapped_column(
-        LargeBinary(CONTEXT_ID_BIN_MAX_LENGTH),
-    )
-    context_parent_id_bin: Mapped[bytes | None] = mapped_column(
-        LargeBinary(CONTEXT_ID_BIN_MAX_LENGTH)
-    )
+    context_id_bin: Mapped[bytes | None] = mapped_column(CONTEXT_BINARY_TYPE)
+    context_user_id_bin: Mapped[bytes | None] = mapped_column(CONTEXT_BINARY_TYPE)
+    context_parent_id_bin: Mapped[bytes | None] = mapped_column(CONTEXT_BINARY_TYPE)
     event_type_id: Mapped[int | None] = mapped_column(
         Integer, ForeignKey("event_types.event_type_id")
     )
@@ -414,7 +420,7 @@ class States(Base):
     entity_id: Mapped[str | None] = mapped_column(UNUSED_LEGACY_COLUMN)
     state: Mapped[str | None] = mapped_column(String(MAX_LENGTH_STATE_STATE))
     attributes: Mapped[str | None] = mapped_column(UNUSED_LEGACY_COLUMN)
-    event_id: Mapped[int | None] = mapped_column(UNUSED_LEGACY_COLUMN)
+    event_id: Mapped[int | None] = mapped_column(UNUSED_LEGACY_INTEGER_COLUMN)
     last_changed: Mapped[datetime | None] = mapped_column(UNUSED_LEGACY_DATETIME_COLUMN)
     last_changed_ts: Mapped[float | None] = mapped_column(TIMESTAMP_TYPE)
     last_updated: Mapped[datetime | None] = mapped_column(UNUSED_LEGACY_DATETIME_COLUMN)
@@ -435,15 +441,9 @@ class States(Base):
     )  # 0 is local, 1 is remote
     old_state: Mapped[States | None] = relationship("States", remote_side=[state_id])
     state_attributes: Mapped[StateAttributes | None] = relationship("StateAttributes")
-    context_id_bin: Mapped[bytes | None] = mapped_column(
-        LargeBinary(CONTEXT_ID_BIN_MAX_LENGTH),
-    )
-    context_user_id_bin: Mapped[bytes | None] = mapped_column(
-        LargeBinary(CONTEXT_ID_BIN_MAX_LENGTH),
-    )
-    context_parent_id_bin: Mapped[bytes | None] = mapped_column(
-        LargeBinary(CONTEXT_ID_BIN_MAX_LENGTH)
-    )
+    context_id_bin: Mapped[bytes | None] = mapped_column(CONTEXT_BINARY_TYPE)
+    context_user_id_bin: Mapped[bytes | None] = mapped_column(CONTEXT_BINARY_TYPE)
+    context_parent_id_bin: Mapped[bytes | None] = mapped_column(CONTEXT_BINARY_TYPE)
     metadata_id: Mapped[int | None] = mapped_column(
         Integer, ForeignKey("states_meta.metadata_id")
     )
@@ -822,3 +822,11 @@ ENTITY_ID_IN_EVENT: ColumnElement = EVENT_DATA_JSON["entity_id"]
 OLD_ENTITY_ID_IN_EVENT: ColumnElement = OLD_FORMAT_EVENT_DATA_JSON["entity_id"]
 DEVICE_ID_IN_EVENT: ColumnElement = EVENT_DATA_JSON["device_id"]
 OLD_STATE = aliased(States, name="old_state")
+
+SHARED_ATTR_OR_LEGACY_ATTRIBUTES = case(
+    (StateAttributes.shared_attrs.is_(None), States.attributes),
+    else_=StateAttributes.shared_attrs,
+).label("attributes")
+SHARED_DATA_OR_LEGACY_EVENT_DATA = case(
+    (EventData.shared_data.is_(None), Events.event_data), else_=EventData.shared_data
+).label("event_data")

@@ -1,22 +1,17 @@
 """Tests for Renault sensors."""
 from collections.abc import Generator
-from types import MappingProxyType
 from unittest.mock import patch
 
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from . import (
-    check_device_registry,
-    check_entities,
-    check_entities_no_data,
-    check_entities_unavailable,
-)
-from .const import ATTR_DEFAULT_DISABLED, MOCK_VEHICLES
+from . import check_device_registry, check_entities_unavailable
+from .const import MOCK_VEHICLES
 
 pytestmark = pytest.mark.usefixtures("patch_renault_account", "patch_get_vehicles")
 
@@ -28,71 +23,73 @@ def override_platforms() -> Generator[None, None, None]:
         yield
 
 
-def _check_and_enable_disabled_entities(
-    entity_registry: er.EntityRegistry, expected_entities: MappingProxyType
-) -> None:
-    """Ensure that the expected_entities are correctly disabled."""
-    for expected_entity in expected_entities:
-        if expected_entity.get(ATTR_DEFAULT_DISABLED):
-            entity_id = expected_entity[ATTR_ENTITY_ID]
-            registry_entry = entity_registry.entities.get(entity_id)
-            assert registry_entry, f"{entity_id} not found in registry"
-            assert registry_entry.disabled
-            assert registry_entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
-            entity_registry.async_update_entity(entity_id, **{"disabled_by": None})
-
-
 @pytest.mark.usefixtures("fixtures_with_data")
 async def test_sensors(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    vehicle_type: str,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test for Renault sensors."""
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    mock_vehicle = MOCK_VEHICLES[vehicle_type]
-    check_device_registry(device_registry, mock_vehicle["expected_device"])
+    # Ensure devices are correctly registered
+    device_entries = dr.async_entries_for_config_entry(
+        device_registry, config_entry.entry_id
+    )
+    assert device_entries == snapshot
 
-    expected_entities = mock_vehicle[Platform.SENSOR]
-    assert len(entity_registry.entities) == len(expected_entities)
+    # Ensure entities are correctly registered
+    entity_entries = er.async_entries_for_config_entry(
+        entity_registry, config_entry.entry_id
+    )
+    assert entity_entries == snapshot
 
-    _check_and_enable_disabled_entities(entity_registry, expected_entities)
+    # Some entities are disabled, enable them and reload before checking states
+    for ent in entity_entries:
+        entity_registry.async_update_entity(ent.entity_id, **{"disabled_by": None})
     await hass.config_entries.async_reload(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    check_entities(hass, entity_registry, expected_entities)
+    # Ensure entity states are correct
+    states = [hass.states.get(ent.entity_id) for ent in entity_entries]
+    assert states == snapshot
 
 
-@pytest.mark.usefixtures("fixtures_with_no_data")
+@pytest.mark.usefixtures("fixtures_with_no_data", "entity_registry_enabled_by_default")
 async def test_sensor_empty(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    vehicle_type: str,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test for Renault sensors with empty data from Renault."""
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    mock_vehicle = MOCK_VEHICLES[vehicle_type]
-    check_device_registry(device_registry, mock_vehicle["expected_device"])
+    # Ensure devices are correctly registered
+    device_entries = dr.async_entries_for_config_entry(
+        device_registry, config_entry.entry_id
+    )
+    assert device_entries == snapshot
 
-    expected_entities = mock_vehicle[Platform.SENSOR]
-    assert len(entity_registry.entities) == len(expected_entities)
+    # Ensure entities are correctly registered
+    entity_entries = er.async_entries_for_config_entry(
+        entity_registry, config_entry.entry_id
+    )
+    assert entity_entries == snapshot
 
-    _check_and_enable_disabled_entities(entity_registry, expected_entities)
-    await hass.config_entries.async_reload(config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    check_entities_no_data(hass, entity_registry, expected_entities, STATE_UNKNOWN)
+    # Ensure entity states are correct
+    states = [hass.states.get(ent.entity_id) for ent in entity_entries]
+    assert states == snapshot
 
 
-@pytest.mark.usefixtures("fixtures_with_invalid_upstream_exception")
+@pytest.mark.usefixtures(
+    "fixtures_with_invalid_upstream_exception", "entity_registry_enabled_by_default"
+)
 async def test_sensor_errors(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
@@ -110,7 +107,6 @@ async def test_sensor_errors(
     expected_entities = mock_vehicle[Platform.SENSOR]
     assert len(entity_registry.entities) == len(expected_entities)
 
-    _check_and_enable_disabled_entities(entity_registry, expected_entities)
     await hass.config_entries.async_reload(config_entry.entry_id)
     await hass.async_block_till_done()
 

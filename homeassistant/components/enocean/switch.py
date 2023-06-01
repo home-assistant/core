@@ -65,9 +65,9 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the EnOcean switch platform."""
-    channel = config.get(CONF_CHANNEL)
-    dev_id = config.get(CONF_ID)
-    dev_name = config.get(CONF_NAME)
+    channel: int = config[CONF_CHANNEL]
+    dev_id: list[int] = config[CONF_ID]
+    dev_name: str = config[CONF_NAME]
 
     _migrate_to_new_unique_id(hass, dev_id, channel)
     async_add_entities([EnOceanSwitch(dev_id, dev_name, channel)])
@@ -76,7 +76,7 @@ async def async_setup_platform(
 class EnOceanSwitch(EnOceanEntity, SwitchEntity):
     """Representation of an EnOcean switch device."""
 
-    def __init__(self, dev_id, dev_name, channel):
+    def __init__(self, dev_id: list[int], dev_name: str, channel: int) -> None:
         """Initialize the EnOcean switch device."""
         super().__init__(dev_id, dev_name)
         self._light = None

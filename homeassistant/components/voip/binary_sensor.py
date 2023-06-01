@@ -31,19 +31,19 @@ async def async_setup_entry(
     @callback
     def async_add_device(device: VoIPDevice) -> None:
         """Add device."""
-        async_add_entities([VoIPCallActive(device)])
+        async_add_entities([VoIPCallInProgress(device)])
 
     domain_data.devices.async_add_new_device_listener(async_add_device)
 
-    async_add_entities([VoIPCallActive(device) for device in domain_data.devices])
+    async_add_entities([VoIPCallInProgress(device) for device in domain_data.devices])
 
 
-class VoIPCallActive(VoIPEntity, BinarySensorEntity):
-    """Entity to represent voip is allowed."""
+class VoIPCallInProgress(VoIPEntity, BinarySensorEntity):
+    """Entity to represent voip call is in progress."""
 
     entity_description = BinarySensorEntityDescription(
-        key="call_active",
-        translation_key="call_active",
+        key="call_in_progress",
+        translation_key="call_in_progress",
     )
     _attr_is_on = False
 

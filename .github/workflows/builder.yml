@@ -29,7 +29,7 @@ jobs:
           fetch-depth: 0
 
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v4.5.0
+        uses: actions/setup-python@v4.6.1
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
 
@@ -62,7 +62,8 @@ jobs:
 
   build_python:
     name: Build PyPi package
-    needs: init
+    environment: ${{ needs.init.outputs.channel }}
+    needs: ["init", "build_base"]
     runs-on: ubuntu-latest
     if: github.repository_owner == 'home-assistant' && needs.init.outputs.publish == 'true'
     steps:
@@ -70,7 +71,7 @@ jobs:
         uses: actions/checkout@v3.5.2
 
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v4.5.0
+        uses: actions/setup-python@v4.6.1
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
 
@@ -123,7 +124,7 @@ jobs:
         uses: dawidd6/action-download-artifact@v2
         with:
           github_token: ${{secrets.GITHUB_TOKEN}}
-          repo: home-assistant/intents
+          repo: home-assistant/intents-package
           branch: main
           workflow: nightly.yaml
           workflow_conclusion: success
@@ -131,7 +132,7 @@ jobs:
 
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         if: needs.init.outputs.channel == 'dev'
-        uses: actions/setup-python@v4.5.0
+        uses: actions/setup-python@v4.6.1
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
 
@@ -140,7 +141,7 @@ jobs:
         shell: bash
         run: |
           python3 -m pip install packaging tomli
-          python3 -m pip install --use-deprecated=legacy-resolver .
+          python3 -m pip install .
           version="$(python3 script/version_bump.py nightly)"
 
           if [[ "$(ls home_assistant_frontend*.whl)" =~ ^home_assistant_frontend-(.*)-py3-none-any.whl$ ]]; then
@@ -173,6 +174,18 @@ jobs:
 
             python -m script.gen_requirements_all
           fi
+
+      - name: Adjustments for armhf
+        if: matrix.arch == 'armhf'
+        run: |
+          # Pandas has issues building on armhf, it is expected they
+          # will drop the platform in the near future (they consider it
+          # "flimsy" on 386). The following packages depend on pandas,
+          # so we comment them out.
+          sed -i "s|env-canada|# env-canada|g" requirements_all.txt
+          sed -i "s|noaa-coops|# noaa-coops|g" requirements_all.txt
+          sed -i "s|pyezviz|# pyezviz|g" requirements_all.txt
+          sed -i "s|pykrakenapi|# pykrakenapi|g" requirements_all.txt
 
       - name: Download Translations
         run: python3 -m script.translations download
@@ -287,6 +300,7 @@ jobs:
 
   publish_ha:
     name: Publish version files
+    environment: ${{ needs.init.outputs.channel }}
     if: github.repository_owner == 'home-assistant'
     needs: ["init", "build_machine"]
     runs-on: ubuntu-latest
@@ -320,6 +334,7 @@ jobs:
 
   publish_container:
     name: Publish meta container for ${{ matrix.registry }}
+    environment: ${{ needs.init.outputs.channel }}
     if: github.repository_owner == 'home-assistant'
     needs: ["init", "build_base"]
     runs-on: ubuntu-latest

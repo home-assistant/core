@@ -48,7 +48,10 @@ class LocalSource(MediaSource):
     @callback
     def async_full_path(self, source_dir_id: str, location: str) -> Path:
         """Return full path."""
-        return Path(self.hass.config.media_dirs[source_dir_id], location)
+        base_path = self.hass.config.media_dirs[source_dir_id]
+        full_path = Path(base_path, location)
+        full_path.relative_to(base_path)
+        return full_path
 
     @callback
     def async_parse_identifier(self, item: MediaSourceItem) -> tuple[str, str]:
@@ -64,6 +67,9 @@ class LocalSource(MediaSource):
             raise_if_invalid_path(location)
         except ValueError as err:
             raise Unresolvable("Invalid path.") from err
+
+        if Path(location).is_absolute():
+            raise Unresolvable("Invalid path.")
 
         return source_dir_id, location
 
