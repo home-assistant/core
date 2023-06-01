@@ -1182,7 +1182,7 @@ ndms2_client==0.1.2
 nessclient==0.10.0
 
 # homeassistant.components.netdata
-netdata==1.0.1
+netdata==1.1.0
 
 # homeassistant.components.discovery
 netdisco==3.0.0
