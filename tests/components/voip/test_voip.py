@@ -31,7 +31,9 @@ async def test_pipeline(
     # Used to test that audio queue is cleared before pipeline starts
     bad_chunk = bytes([1, 2, 3, 4])
 
-    async def async_pipeline_from_audio_stream(*args, **kwargs):
+    async def async_pipeline_from_audio_stream(*args, device_id, **kwargs):
+        assert device_id == voip_device.device_id
+
         stt_stream = kwargs["stt_stream"]
         event_callback = kwargs["event_callback"]
         async for _chunk in stt_stream:

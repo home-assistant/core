@@ -85,6 +85,7 @@ async def async_setup_entry(
         )
 
 
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
 class BlockSleepingNumber(ShellySleepingBlockAttributeEntity, NumberEntity):
     """Represent a block sleeping number."""
 

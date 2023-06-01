@@ -1,6 +1,7 @@
 """Implement the Google Smart Home traits."""
 from __future__ import annotations
 
+from abc import ABC, abstractmethod
 import logging
 from typing import Any, TypeVar
 
@@ -67,7 +68,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import DOMAIN as HA_DOMAIN
 from homeassistant.helpers.network import get_url
-from homeassistant.util import color as color_util, dt
+from homeassistant.util import color as color_util, dt as dt_util
 from homeassistant.util.percentage import (
     ordered_list_item_to_percentage,
     percentage_to_ordered_list_item,
@@ -196,15 +197,21 @@ def _next_selected(items: list[str], selected: str | None) -> str | None:
     return items[next_item]
 
 
-class _Trait:
+class _Trait(ABC):
     """Represents a Trait inside Google Assistant skill."""
 
+    name: str
     commands: list[str] = []
 
     @staticmethod
     def might_2fa(domain, features, device_class):
         """Return if the trait might ask for 2FA."""
         return False
+
+    @staticmethod
+    @abstractmethod
+    def supported(domain, features, device_class, attributes):
+        """Test if state is supported."""
 
     def __init__(self, hass, state, config):
         """Initialize a trait for a state."""
@@ -2211,7 +2218,7 @@ class TransportControlTrait(_Trait):
             rel_position = params["relativePositionMs"] / 1000
             seconds_since = 0  # Default to 0 seconds
             if self.state.state == STATE_PLAYING:
-                now = dt.utcnow()
+                now = dt_util.utcnow()
                 upd_at = self.state.attributes.get(
                     media_player.ATTR_MEDIA_POSITION_UPDATED_AT, now
                 )

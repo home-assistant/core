@@ -141,7 +141,6 @@ jobs:
         run: |
           requirement_files="requirements_all.txt requirements_diff.txt"
           for requirement_file in ${requirement_files}; do
-            sed -i "s|# azure-servicebus|azure-servicebus|g" ${requirement_file}
             sed -i "s|# pybluez|pybluez|g" ${requirement_file}
             sed -i "s|# beacontools|beacontools|g" ${requirement_file}
             sed -i "s|# fritzconnection|fritzconnection|g" ${requirement_file}
@@ -264,12 +263,6 @@ jobs:
             # beacontools requires PyBluez.
             # sed -i "s|# beacontools|beacontools|g" ${requirement_file}
 
-            # azure-servicebus requires uamqp, which requires OpenSSL 1.1 to
-            # compile/build. This is not available on Alpine 3.17. The compat
-            # layer offered by Alpine conflicts, so we have no way to build
-            # this package.
-            # sed -i "s|# azure-servicebus|azure-servicebus|g" ${requirement_file}
-
             # It doesn't build for some reason, so we skip it for now.
             # Bumping to the latest version (4.7.0.72) supporting Python 3.11
             # doesn't help. Reverted bump in #91871. There are 8 registered
@@ -281,7 +274,7 @@ jobs:
             sed -i "s|# evdev|evdev|g" ${requirement_file}
             sed -i "s|# pycups|pycups|g" ${requirement_file}
             sed -i "s|# homekit|homekit|g" ${requirement_file}
-            sed -i "s|# decora_wifi|decora_wifi|g" ${requirement_file}
+            sed -i "s|# decora-wifi|decora-wifi|g" ${requirement_file}
             sed -i "s|# python-gammu|python-gammu|g" ${requirement_file}
 
             # Some packages are not buildable on armhf anymore
@@ -291,7 +284,7 @@ jobs:
               # will drop the platform in the near future (they consider it
               # "flimsy" on 386). The following packages depend on pandas,
               # so we comment them out.
-              sed -i "s|env_canada|# env_canada|g" ${requirement_file}
+              sed -i "s|env-canada|# env-canada|g" ${requirement_file}
               sed -i "s|noaa-coops|# noaa-coops|g" ${requirement_file}
               sed -i "s|pyezviz|# pyezviz|g" ${requirement_file}
               sed -i "s|pykrakenapi|# pykrakenapi|g" ${requirement_file}

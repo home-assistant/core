@@ -1,0 +1,12 @@
+{
+  "SN": "123456789",
+  "api_version": "1.0.2-alpha",
+  "error_code": 200,
+  "ethernet_connected": 1,
+  "ethernet_ip": "1.2.3.4",
+  "firmware_version": "v3.0_R02.12.10",
+  "machine_type": "DREMEL 3D45 IDEA BUILDER",
+  "message": "success",
+  "wifi_connected": 1,
+  "wifi_ip": "1.2.3.5"
+}
