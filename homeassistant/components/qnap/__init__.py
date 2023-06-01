@@ -27,20 +27,6 @@ async def async_setup(hass, config):
     """Set up the qnap environment."""
     hass.data.setdefault(DOMAIN, {})
 
-    # Import configuration from sensor platform
-    config_platform = config_per_platform(config, "sensor")
-    for p_type, p_config in config_platform:
-        if p_type != DOMAIN:
-            continue
-
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": config_entries.SOURCE_IMPORT},
-                data=p_config,
-            )
-        )
-
     return True
 
 
