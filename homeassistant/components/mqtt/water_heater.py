@@ -153,12 +153,8 @@ _PLATFORM_SCHEMA_BASE = MQTT_BASE_SCHEMA.extend(
     }
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
 
-PLATFORM_SCHEMA = vol.All(
-    _PLATFORM_SCHEMA_BASE,
-)
-
 PLATFORM_SCHEMA_MODERN = vol.All(
-    PLATFORM_SCHEMA,
+    _PLATFORM_SCHEMA_BASE,
 )
 
 _DISCOVERY_SCHEMA_BASE = _PLATFORM_SCHEMA_BASE.extend({}, extra=vol.REMOVE_EXTRA)
@@ -397,8 +393,6 @@ class MqttWaterHeater(MqttEntity, WaterHeaterEntity):
         state_topic: str,
         attr: str,
     ) -> bool:
-        if temp is None:
-            return False
         changed = False
         if self._optimistic or self._topic[state_topic] is None:
             # optimistic mode
