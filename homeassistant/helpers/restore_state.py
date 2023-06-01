@@ -16,6 +16,7 @@ import homeassistant.util.dt as dt_util
 from . import start
 from .entity import Entity
 from .event import async_track_time_interval
+from .frame import report
 from .json import JSONEncoder
 from .storage import Store
 
@@ -119,6 +120,11 @@ class RestoreStateData:
     @callback
     def async_get_instance(cls, hass: HomeAssistant) -> RestoreStateData:
         """Return the instance of this class."""
+        # Nothing should actually be calling this anymore, but we'll keep it
+        # around for a while to avoid breaking custom components.
+        report(
+            "async_get_instance is deprecated, modify your code to use async_get(hass)"
+        )
         return async_get(hass)
 
     def __init__(self, hass: HomeAssistant) -> None:
