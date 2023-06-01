@@ -633,8 +633,11 @@ class ZWaveServices:
             "calls will still work for now but the service will be removed in a "
             "future release"
         )
-        nodes: set[ZwaveNode] = service.data[const.ATTR_NODES]
-        await asyncio.gather(*(node.async_ping() for node in nodes))
+        nodes: list[ZwaveNode] = list(service.data[const.ATTR_NODES])
+        results = await asyncio.gather(
+            *(node.async_ping() for node in nodes), return_exceptions=True
+        )
+        raise_exceptions_from_results(nodes, results)
 
     async def async_invoke_cc_api(self, service: ServiceCall) -> None:
         """Invoke a command class API."""

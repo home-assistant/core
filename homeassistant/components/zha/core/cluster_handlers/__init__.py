@@ -45,6 +45,8 @@ if TYPE_CHECKING:
 
 _LOGGER = logging.getLogger(__name__)
 
+DEFAULT_REQUEST_RETRIES = 3
+
 
 class AttrReportConfig(TypedDict, total=True):
     """Configuration to report for the attributes."""
@@ -78,6 +80,8 @@ def decorate_command(cluster_handler, command):
 
     @wraps(command)
     async def wrapper(*args, **kwds):
+        kwds.setdefault("tries", DEFAULT_REQUEST_RETRIES)
+
         try:
             result = await command(*args, **kwds)
             cluster_handler.debug(

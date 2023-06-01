@@ -67,12 +67,20 @@ class ZWaveBaseEntity(Entity):
         To be overridden by platforms needing this event.
         """
 
+    async def _async_poll_value(self, value_or_id: str | ZwaveValue) -> None:
+        """Poll a value."""
+        # We log an error instead of raising an exception because this service call occurs
+        # in a separate task and we don't want to raise the exception in that separate task
+        # because it is confusing to the user.
+        try:
+            await self.info.node.async_poll_value(value_or_id)
+        except BaseZwaveJSServerError as err:
+            LOGGER.error("Error while refreshing value %s: %s", value_or_id, err)
+
     async def async_poll_value(self, refresh_all_values: bool) -> None:
         """Poll a value."""
         if not refresh_all_values:
-            self.hass.async_create_task(
-                self.info.node.async_poll_value(self.info.primary_value)
-            )
+            await self._async_poll_value(self.info.primary_value)
             LOGGER.info(
                 (
                     "Refreshing primary value %s for %s, "
@@ -84,7 +92,7 @@ class ZWaveBaseEntity(Entity):
             return
 
         for value_id in self.watched_value_ids:
-            self.hass.async_create_task(self.info.node.async_poll_value(value_id))
+            await self._async_poll_value(value_id)
 
         LOGGER.info(
             (

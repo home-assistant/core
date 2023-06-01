@@ -11,6 +11,7 @@ from zwave_js_server.const.command_class.meter import (
     RESET_METER_OPTION_TARGET_VALUE,
     RESET_METER_OPTION_TYPE,
 )
+from zwave_js_server.exceptions import BaseZwaveJSServerError
 from zwave_js_server.model.controller import Controller
 from zwave_js_server.model.controller.statistics import ControllerStatisticsDataType
 from zwave_js_server.model.driver import Driver
@@ -43,6 +44,7 @@ from homeassistant.const import (
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -671,9 +673,15 @@ class ZWaveMeterSensor(ZWaveNumericSensor):
         if value is not None:
             options[RESET_METER_OPTION_TARGET_VALUE] = value
         args = [options] if options else []
-        await node.endpoints[endpoint].async_invoke_cc_api(
-            CommandClass.METER, "reset", *args, wait_for_result=False
-        )
+        try:
+            await node.endpoints[endpoint].async_invoke_cc_api(
+                CommandClass.METER, "reset", *args, wait_for_result=False
+            )
+        except BaseZwaveJSServerError as err:
+            LOGGER.error(
+                "Failed to reset meters on node %s endpoint %s: %s", node, endpoint, err
+            )
+            raise HomeAssistantError from err
         LOGGER.debug(
             "Meters on node %s endpoint %s reset with the following options: %s",
             node,
@@ -802,6 +810,9 @@ class ZWaveNodeStatusSensor(SensorEntity):
 
     async def async_poll_value(self, _: bool) -> None:
         """Poll a value."""
+        # We log an error instead of raising an exception because this service call occurs
+        # in a separate task since it is called via the dispatcher and we don't want to
+        # raise the exception in that separate task because it is confusing to the user.
         LOGGER.error(
             "There is no value to refresh for this entity so the zwave_js.refresh_value"
             " service won't work for it"
@@ -878,7 +889,10 @@ class ZWaveStatisticsSensor(SensorEntity):
 
     async def async_poll_value(self, _: bool) -> None:
         """Poll a value."""
-        raise ValueError(
+        # We log an error instead of raising an exception because this service call occurs
+        # in a separate task since it is called via the dispatcher and we don't want to
+        # raise the exception in that separate task because it is confusing to the user.
+        LOGGER.error(
             "There is no value to refresh for this entity so the zwave_js.refresh_value"
             " service won't work for it"
         )

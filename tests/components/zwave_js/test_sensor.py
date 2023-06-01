@@ -4,6 +4,7 @@ import copy
 import pytest
 from zwave_js_server.const.command_class.meter import MeterType
 from zwave_js_server.event import Event
+from zwave_js_server.exceptions import FailedZWaveCommand
 from zwave_js_server.model.node import Node
 
 from homeassistant.components.sensor import (
@@ -39,6 +40,7 @@ from homeassistant.const import (
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from .common import (
@@ -420,6 +422,18 @@ async def test_reset_meter(
 
     client.async_send_command_no_wait.reset_mock()
 
+    client.async_send_command_no_wait.side_effect = FailedZWaveCommand(
+        "test", 1, "test"
+    )
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_RESET_METER,
+            {ATTR_ENTITY_ID: METER_ENERGY_SENSOR},
+            blocking=True,
+        )
+
 
 async def test_meter_attributes(
     hass: HomeAssistant,
@@ -609,7 +623,7 @@ NODE_STATISTICS_SUFFIXES_UNKNOWN = {
 
 
 async def test_statistics_sensors(
-    hass: HomeAssistant, zp3111, client, integration
+    hass: HomeAssistant, zp3111, client, integration, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test statistics sensors."""
     ent_reg = er.async_get(hass)
@@ -730,9 +744,26 @@ async def test_statistics_sensors(
         (NODE_STATISTICS_ENTITY_PREFIX, NODE_STATISTICS_SUFFIXES_UNKNOWN),
     ):
         for suffix_key, val in suffixes.items():
-            state = hass.states.get(f"{prefix}{suffix_key}")
+            entity_id = f"{prefix}{suffix_key}"
+            state = hass.states.get(entity_id)
             assert state
             assert state.state == str(val)
+
+            await hass.services.async_call(
+                DOMAIN,
+                SERVICE_REFRESH_VALUE,
+                {ATTR_ENTITY_ID: entity_id},
+                blocking=True,
+            )
+
+    assert caplog.text.count("There is no value to refresh for this entity") == len(
+        [
+            *CONTROLLER_STATISTICS_SUFFIXES,
+            *CONTROLLER_STATISTICS_SUFFIXES_UNKNOWN,
+            *NODE_STATISTICS_SUFFIXES,
+            *NODE_STATISTICS_SUFFIXES_UNKNOWN,
+        ]
+    )
 
 
 ENERGY_PRODUCTION_ENTITY_MAP = {

@@ -15,6 +15,7 @@ from homeassistant.components import stt, tts
 from homeassistant.components.assist_pipeline import (
     PipelineEvent,
     PipelineEventType,
+    PipelineNotFound,
     async_pipeline_from_audio_stream,
     select as pipeline_select,
 )
@@ -292,6 +293,7 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
 
     async def run_pipeline(
         self,
+        device_id: str,
         conversation_id: str | None,
         use_vad: bool = False,
         pipeline_timeout: float = 30.0,
@@ -330,6 +332,7 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
                         self.hass, DOMAIN, self.device_info.mac_address
                     ),
                     conversation_id=conversation_id,
+                    device_id=device_id,
                     tts_audio_output=tts_audio_output,
                 )
 
@@ -337,6 +340,15 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
                 await self._tts_done.wait()
 
             _LOGGER.debug("Pipeline finished")
+        except PipelineNotFound:
+            self.handle_event(
+                VoiceAssistantEventType.VOICE_ASSISTANT_ERROR,
+                {
+                    "code": "pipeline not found",
+                    "message": "Selected pipeline timeout",
+                },
+            )
+            _LOGGER.warning("Pipeline not found")
         except asyncio.TimeoutError:
             self.handle_event(
                 VoiceAssistantEventType.VOICE_ASSISTANT_ERROR,
