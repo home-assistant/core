@@ -67,7 +67,13 @@ def mock_lametric_cloud() -> Generator[MagicMock, None, None]:
 
 
 @pytest.fixture
-def mock_lametric(request) -> Generator[MagicMock, None, None]:
+def device_fixture() -> str:
+    """Return the device fixture for a specific device."""
+    return "device"
+
+
+@pytest.fixture
+def mock_lametric(request, device_fixture: str) -> Generator[MagicMock, None, None]:
     """Return a mocked LaMetric TIME client."""
     with patch(
         "homeassistant.components.lametric.coordinator.LaMetricDevice", autospec=True
@@ -79,25 +85,7 @@ def mock_lametric(request) -> Generator[MagicMock, None, None]:
         lametric.api_key = "mock-api-key"
         lametric.host = "127.0.0.1"
         lametric.device.return_value = Device.parse_raw(
-            load_fixture("device.json", DOMAIN)
-        )
-        yield lametric
-
-
-@pytest.fixture
-def mock_lametric_sky(request) -> Generator[MagicMock, None, None]:
-    """Return a mocked LaMetric SKY client."""
-    with patch(
-        "homeassistant.components.lametric.coordinator.LaMetricDevice", autospec=True
-    ) as lametric_mock, patch(
-        "homeassistant.components.lametric.config_flow.LaMetricDevice",
-        new=lametric_mock,
-    ):
-        lametric = lametric_mock.return_value
-        lametric.api_key = "mock-api-key"
-        lametric.host = "127.0.0.1"
-        lametric.device.return_value = Device.parse_raw(
-            load_fixture("device_sa5.json", DOMAIN)
+            load_fixture(f"{device_fixture}.json", DOMAIN)
         )
         yield lametric
 
