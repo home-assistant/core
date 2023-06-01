@@ -27,7 +27,7 @@ BRIGHTNESS_RANGE = (1, 255)
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
-    """Set up EZVIZ sensors based on a config entry."""
+    """Set up EZVIZ lights based on a config entry."""
     coordinator: EzvizDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][
         DATA_COORDINATOR
     ]
@@ -53,7 +53,7 @@ class EzvizLight(EzvizEntity, LightEntity):
         coordinator: EzvizDataUpdateCoordinator,
         serial: str,
     ) -> None:
-        """Initialize the sensor."""
+        """Initialize the light."""
         super().__init__(coordinator, serial)
         self.battery_cam_type = bool(
             self.data["device_category"]
