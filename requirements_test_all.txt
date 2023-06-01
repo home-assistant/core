@@ -708,9 +708,6 @@ govee-ble==0.23.0
 # homeassistant.components.gree
 greeclimate==1.4.1
 
-# homeassistant.components.greeneye_monitor
-greeneye-monitor==3.0.3
-
 # homeassistant.components.pure_energie
 gridnet==4.2.0
 

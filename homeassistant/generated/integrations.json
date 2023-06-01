@@ -2161,12 +2161,6 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
-    "greeneye_monitor": {
-      "name": "GreenEye Monitor (GEM)",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "local_push"
-    },
     "greenwave": {
       "name": "Greenwave Reality",
       "integration_type": "hub",

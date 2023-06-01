@@ -474,8 +474,6 @@ build.json @home-assistant/supervisor
 /homeassistant/components/gpsd/ @fabaff
 /homeassistant/components/gree/ @cmroche
 /tests/components/gree/ @cmroche
-/homeassistant/components/greeneye_monitor/ @jkeljo
-/tests/components/greeneye_monitor/ @jkeljo
 /homeassistant/components/group/ @home-assistant/core
 /tests/components/group/ @home-assistant/core
 /homeassistant/components/growatt_server/ @muppet3000
