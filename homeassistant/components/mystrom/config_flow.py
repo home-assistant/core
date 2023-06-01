@@ -58,8 +58,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             try:
-                info = await validate_input(self.hass, user_input)
-            except CannotConnect:
+                info = await pymystrom.get_device_info(self.hass, user_input[CONF_HOST])
+            except MyStromConnectionError:
                 errors["base"] = "cannot_connect"
             else:
                 await self.async_set_unique_id(info["mac"])
