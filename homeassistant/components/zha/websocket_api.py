@@ -1302,6 +1302,9 @@ def async_load_api(hass: HomeAssistant) -> None:
                 cluster_type=cluster_type,
                 manufacturer=manufacturer,
             )
+        else:
+            raise ValueError(f"Device with IEEE {str(ieee)} not found")
+
         _LOGGER.debug(
             (
                 "Set attribute for: %s: [%s] %s: [%s] %s: [%s] %s: [%s] %s: [%s] %s:"
