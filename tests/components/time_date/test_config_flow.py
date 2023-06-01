@@ -22,6 +22,21 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result["type"] == FlowResultType.CREATE_ENTRY
 
 
+async def test_single_instance(hass: HomeAssistant) -> None:
+    """Test we get the forms."""
+
+    entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_DISPLAY_OPTIONS: ["time", "date"]}, options={}
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "single_instance_allowed"
+
+
 async def test_import_flow_success(hass: HomeAssistant) -> None:
     """Test a successful import of yaml."""
 
@@ -53,7 +68,7 @@ async def test_import_flow_already_exist(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     assert result["type"] == FlowResultType.ABORT
-    assert result["reason"] == "single_instance_allowed"
+    assert result["reason"] == "already_configured"
 
 
 async def test_timezone_not_set(hass: HomeAssistant) -> None:
