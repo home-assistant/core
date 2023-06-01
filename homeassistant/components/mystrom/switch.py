@@ -35,12 +35,8 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the myStrom entities."""
-    info = hass.data[DOMAIN][entry.entry_id].info
-    device_type = info["type"]
-
-    if device_type in [101, 106, 107]:
-        device = hass.data[DOMAIN][entry.entry_id].device
-        async_add_entities([MyStromSwitch(device, entry.title)])
+    device = hass.data[DOMAIN][entry.entry_id].device
+    async_add_entities([MyStromSwitch(device, entry.title)])
 
 
 async def async_setup_platform(
