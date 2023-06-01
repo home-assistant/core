@@ -12,8 +12,24 @@
         "addon_installed_other_device": {
           "title": "Multiprotocol support is already enabled for another device"
         },
+        "addon_menu": {
+          "menu_options": {
+            "reconfigure_addon": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::step::reconfigure_addon::title%]",
+            "uninstall_addon": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::step::uninstall_addon::title%]"
+          }
+        },
         "install_addon": {
           "title": "The Silicon Labs Multiprotocol add-on installation has started"
+        },
+        "notify_channel_change": {
+          "title": "Channel change initiated",
+          "description": "A Zigbee and Thread channel change has been initiated and will finish in {delay_minutes} minutes."
+        },
+        "reconfigure_addon": {
+          "title": "Reconfigure IEEE 802.15.4 radio multiprotocol support",
+          "data": {
+            "channel": "Channel"
+          }
         },
         "show_revert_guide": {
           "title": "Multiprotocol support is enabled for this device",
@@ -21,6 +37,9 @@
         },
         "start_addon": {
           "title": "The Silicon Labs Multiprotocol add-on is starting."
+        },
+        "uninstall_addon": {
+          "title": "Remove IEEE 802.15.4 radio multiprotocol support."
         }
       },
       "error": {
