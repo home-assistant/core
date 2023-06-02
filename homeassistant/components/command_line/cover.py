@@ -1,8 +1,8 @@
 """Support for command line covers."""
 from __future__ import annotations
 
+import asyncio
 from datetime import timedelta
-import logging
 from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
@@ -33,12 +33,10 @@ from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import slugify
 
-from .const import CONF_COMMAND_TIMEOUT, DEFAULT_TIMEOUT, DOMAIN
+from .const import CONF_COMMAND_TIMEOUT, DEFAULT_TIMEOUT, DOMAIN, LOGGER
 from .utils import call_shell_with_timeout, check_output_or_log
 
 SCAN_INTERVAL = timedelta(seconds=15)
-
-_LOGGER = logging.getLogger(__name__)
 
 COVER_SCHEMA = vol.Schema(
     {
@@ -107,7 +105,7 @@ async def async_setup_platform(
         )
 
     if not covers:
-        _LOGGER.error("No covers added")
+        LOGGER.error("No covers added")
         return
 
     async_add_entities(covers)
@@ -141,6 +139,7 @@ class CommandCover(CoverEntity):
         self._timeout = timeout
         self._attr_unique_id = unique_id
         self._scan_interval = scan_interval
+        self._process_updates: asyncio.Lock | None = None
 
     async def async_added_to_hass(self) -> None:
         """Call when entity about to be added to hass."""
@@ -148,19 +147,22 @@ class CommandCover(CoverEntity):
         if self._command_state:
             self.async_on_remove(
                 async_track_time_interval(
-                    self.hass, self._async_update, self._scan_interval
+                    self.hass,
+                    self._update_entity_state,
+                    self._scan_interval,
+                    name=f"Command Line Cover - {self.name}",
                 ),
             )
 
     def _move_cover(self, command: str) -> bool:
         """Execute the actual commands."""
-        _LOGGER.info("Running command: %s", command)
+        LOGGER.info("Running command: %s", command)
 
         returncode = call_shell_with_timeout(command, self._timeout)
         success = returncode == 0
 
         if not success:
-            _LOGGER.error(
+            LOGGER.error(
                 "Command failed (with return code %s): %s", returncode, command
             )
 
@@ -184,12 +186,27 @@ class CommandCover(CoverEntity):
     def _query_state(self) -> str | None:
         """Query for the state."""
         if self._command_state:
-            _LOGGER.info("Running state value command: %s", self._command_state)
+            LOGGER.info("Running state value command: %s", self._command_state)
             return check_output_or_log(self._command_state, self._timeout)
         if TYPE_CHECKING:
             return None
 
-    async def _async_update(self, now) -> None:
+    async def _update_entity_state(self, now) -> None:
+        """Update the state of the entity."""
+        if self._process_updates is None:
+            self._process_updates = asyncio.Lock()
+        if self._process_updates.locked():
+            LOGGER.warning(
+                "Updating Command Line Binary Sensor %s took longer than the scheduled update interval %s",
+                self.name,
+                self._scan_interval,
+            )
+            return
+
+        async with self._process_updates:
+            await self._async_update()
+
+    async def _async_update(self) -> None:
         """Update device state."""
         if self._command_state:
             payload = str(await self.hass.async_add_executor_job(self._query_state))
@@ -205,14 +222,14 @@ class CommandCover(CoverEntity):
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
         await self.hass.async_add_executor_job(self._move_cover, self._command_open)
-        await self._async_update(None)
+        await self._update_entity_state(None)
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
         await self.hass.async_add_executor_job(self._move_cover, self._command_close)
-        await self._async_update(None)
+        await self._update_entity_state(None)
 
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
         await self.hass.async_add_executor_job(self._move_cover, self._command_stop)
-        await self._async_update(None)
+        await self._update_entity_state(None)

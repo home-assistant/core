@@ -1,10 +1,10 @@
 """Allows to configure custom shell commands to turn a value for a sensor."""
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Mapping
 from datetime import timedelta
 import json
-import logging
 
 import voluptuous as vol
 
@@ -34,10 +34,8 @@ from homeassistant.helpers.issue_registry import IssueSeverity, async_create_iss
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import CONF_COMMAND_TIMEOUT, DEFAULT_TIMEOUT, DOMAIN
+from .const import CONF_COMMAND_TIMEOUT, DEFAULT_TIMEOUT, DOMAIN, LOGGER
 from .utils import check_output_or_log
-
-_LOGGER = logging.getLogger(__name__)
 
 CONF_JSON_ATTRIBUTES = "json_attributes"
 
@@ -133,18 +131,37 @@ class CommandSensor(SensorEntity):
         self._attr_native_unit_of_measurement = unit_of_measurement
         self._attr_unique_id = unique_id
         self._scan_interval = scan_interval
+        self._process_updates: asyncio.Lock | None = None
 
     async def async_added_to_hass(self) -> None:
         """Call when entity about to be added to hass."""
         await super().async_added_to_hass()
-        await self._async_update(None)
+        await self._update_entity_state(None)
         self.async_on_remove(
             async_track_time_interval(
-                self.hass, self._async_update, self._scan_interval
+                self.hass,
+                self._update_entity_state,
+                self._scan_interval,
+                name=f"Command Line Sensor - {self.name}",
             ),
         )
 
-    async def _async_update(self, now) -> None:
+    async def _update_entity_state(self, now) -> None:
+        """Update the state of the entity."""
+        if self._process_updates is None:
+            self._process_updates = asyncio.Lock()
+        if self._process_updates.locked():
+            LOGGER.warning(
+                "Updating Command Line Sensor %s took longer than the scheduled update interval %s",
+                self.name,
+                self._scan_interval,
+            )
+            return
+
+        async with self._process_updates:
+            await self._async_update()
+
+    async def _async_update(self) -> None:
         """Get the latest data and updates the state."""
         await self.hass.async_add_executor_job(self.data.update)
         value = self.data.value
@@ -161,11 +178,11 @@ class CommandSensor(SensorEntity):
                             if k in json_dict
                         }
                     else:
-                        _LOGGER.warning("JSON result was not a dictionary")
+                        LOGGER.warning("JSON result was not a dictionary")
                 except ValueError:
-                    _LOGGER.warning("Unable to parse output as JSON: %s", value)
+                    LOGGER.warning("Unable to parse output as JSON: %s", value)
             else:
-                _LOGGER.warning("Empty reply found when expecting JSON data")
+                LOGGER.warning("Empty reply found when expecting JSON data")
             if self._value_template is None:
                 self._attr_native_value = None
                 return
@@ -210,7 +227,7 @@ class CommandSensorData:
                 args_to_render = {"arguments": args}
                 rendered_args = args_compiled.render(args_to_render)
             except TemplateError as ex:
-                _LOGGER.exception("Error rendering command template: %s", ex)
+                LOGGER.exception("Error rendering command template: %s", ex)
                 return
         else:
             rendered_args = None
@@ -222,5 +239,5 @@ class CommandSensorData:
             # Template used. Construct the string used in the shell
             command = f"{prog} {rendered_args}"
 
-        _LOGGER.debug("Running command: %s", command)
+        LOGGER.debug("Running command: %s", command)
         self.value = check_output_or_log(command, self.timeout)

@@ -1,6 +1,7 @@
 """Support for custom shell commands to retrieve values."""
 from __future__ import annotations
 
+import asyncio
 from datetime import timedelta
 
 import voluptuous as vol
@@ -30,7 +31,7 @@ from homeassistant.helpers.issue_registry import IssueSeverity, async_create_iss
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import CONF_COMMAND_TIMEOUT, DEFAULT_TIMEOUT, DOMAIN
+from .const import CONF_COMMAND_TIMEOUT, DEFAULT_TIMEOUT, DOMAIN, LOGGER
 from .sensor import CommandSensorData
 
 DEFAULT_NAME = "Binary Command Sensor"
@@ -136,18 +137,37 @@ class CommandBinarySensor(BinarySensorEntity):
         self._value_template = value_template
         self._attr_unique_id = unique_id
         self._scan_interval = scan_interval
+        self._process_updates: asyncio.Lock | None = None
 
     async def async_added_to_hass(self) -> None:
         """Call when entity about to be added to hass."""
         await super().async_added_to_hass()
-        await self._async_update(None)
+        await self._update_entity_state(None)
         self.async_on_remove(
             async_track_time_interval(
-                self.hass, self._async_update, self._scan_interval
+                self.hass,
+                self._update_entity_state,
+                self._scan_interval,
+                name=f"Command Line Binary Sensor - {self.name}",
             ),
         )
 
-    async def _async_update(self, now) -> None:
+    async def _update_entity_state(self, now) -> None:
+        """Update the state of the entity."""
+        if self._process_updates is None:
+            self._process_updates = asyncio.Lock()
+        if self._process_updates.locked():
+            LOGGER.warning(
+                "Updating Command Line Binary Sensor %s took longer than the scheduled update interval %s",
+                self.name,
+                self._scan_interval,
+            )
+            return
+
+        async with self._process_updates:
+            await self._async_update()
+
+    async def _async_update(self) -> None:
         """Get the latest data and updates the state."""
         await self.hass.async_add_executor_job(self.data.update)
         value = self.data.value
