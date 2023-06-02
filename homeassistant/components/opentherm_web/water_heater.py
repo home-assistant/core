@@ -22,7 +22,7 @@ async def async_setup_entry(
 
     # Add all entities to HA
     async_add_entities(
-        OpenThermWaterHeater(controller) for controller in coordinator.controller
+        OpenThermWaterHeater(controller) for controller in coordinator.data
     )
 
 

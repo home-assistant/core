@@ -5,7 +5,8 @@ from datetime import timedelta
 import logging
 
 DOMAIN = "opentherm_web"
+HOST = "host"
 LOGGER = logging.getLogger(__package__)
 SCAN_INTERVAL = timedelta(seconds=5)
-HOST = "host"
 SECRET = "password"
+TIMEOUT = 5

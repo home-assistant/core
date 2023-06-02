@@ -1,7 +1,7 @@
 """The OpenTherm Web integration."""
 from __future__ import annotations
 
-from typing import TypedDict
+from typing import NamedTuple
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
@@ -9,7 +9,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN, HOST, LOGGER, SCAN_INTERVAL, SECRET
-from .opentherm_webapi import OpenThermWebApi
+from .opentherm_webapi import OpenThermController, OpenThermWebApi
 
 PLATFORMS: list[Platform] = [Platform.CLIMATE, Platform.WATER_HEATER]
 
@@ -17,14 +17,14 @@ PLATFORMS: list[Platform] = [Platform.CLIMATE, Platform.WATER_HEATER]
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up OpenTherm Web from a config entry."""
 
-    opentherm = OpenThermWebApi(entry.data[HOST], entry.data[SECRET])
+    opentherm = OpenThermWebApi(hass, entry.data[HOST], entry.data[SECRET])
     auth_valid = await opentherm.authenticate()
 
     if not auth_valid:
         LOGGER.error("Invalid authentication")
         return False
 
-    coordinator = OpenThermWebCoordinator(hass, entry)
+    coordinator = OpenThermWebCoordinator(hass, opentherm)
 
     await coordinator.async_config_entry_first_refresh()
 
@@ -44,8 +44,10 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-class OpenThermWebData(TypedDict):
+class OpenThermWebData(NamedTuple):
     """Class for defining data in dict."""
+
+    controller: OpenThermController
 
 
 class OpenThermWebCoordinator(DataUpdateCoordinator[OpenThermWebData]):
@@ -56,7 +58,7 @@ class OpenThermWebCoordinator(DataUpdateCoordinator[OpenThermWebData]):
     def __init__(
         self,
         hass: HomeAssistant,
-        entry: ConfigEntry,
+        webapi: OpenThermWebApi,
     ) -> None:
         """Initialize global OpenThermWeb data updater."""
         super().__init__(
@@ -66,9 +68,9 @@ class OpenThermWebCoordinator(DataUpdateCoordinator[OpenThermWebData]):
             update_interval=SCAN_INTERVAL,
         )
 
-        self.webapi = OpenThermWebApi(entry.data[HOST], entry.data[SECRET])
+        self.webapi = webapi
 
     async def _async_update_data(self) -> OpenThermWebData:
         """Fetch data from OpenThermWeb."""
-        data: OpenThermWebData = {}
-        return data
+        data = await self.hass.async_add_executor_job(self.webapi.get_controller)
+        return OpenThermWebData(controller=data)

@@ -26,7 +26,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
-    hub = OpenThermWebApi(data[HOST], data[SECRET])
+    hub = OpenThermWebApi(hass, data[HOST], data[SECRET])
 
     if not await hub.authenticate():
         raise InvalidAuth
