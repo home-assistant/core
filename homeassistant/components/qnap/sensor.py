@@ -36,9 +36,8 @@ from .const import (
     ATTR_UPTIME,
     ATTR_VOLUME_SIZE,
     DEFAULT_NAME,
-    DEFAULT_PORT,
-    DEFAULT_TIMEOUT,
     DOMAIN,
+    VOLUME_NAME,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -113,6 +112,7 @@ def round_nicely(number):
 
     return round(number)
 
+
 @dataclass
 class QNapSensorEntityDescription(SensorEntityDescription):
     """Represents an Flow Sensor."""
@@ -124,7 +124,7 @@ SENSOR_TYPES: tuple[QNapSensorEntityDescription, ...] = (
     QNapSensorEntityDescription(
         stype="basic",
         key="status",
-        name="Status",
+        name="Health",
         icon="mdi:checkbox-marked-circle-outline",
     ),
     QNapSensorEntityDescription(
@@ -272,13 +272,13 @@ NET_SENSOR = [desc for desc in SENSOR_TYPES if desc.stype == "network"]
 DRI_SENSOR = [desc for desc in SENSOR_TYPES if desc.stype == "drive"]
 FOL_SENSOR = [desc for desc in SENSOR_TYPES if desc.stype == "folder"]
 VOL_SENSOR = [desc for desc in SENSOR_TYPES if desc.stype == "volume"]
-
+    
 class QNAPSensor(CoordinatorEntity, SensorEntity):
     """Base class for a QNAP sensor."""
 
     def __init__(
-         self, coordinator, description, uid, monitor_device=None, monitor_subdevice=None
-     ) -> None:
+        self, coordinator, description, uid, monitor_device=None, monitor_subdevice=None
+    ) -> None:
         """Initialize the sensor."""
         self.coordinator = coordinator
         self.entity_description = description
