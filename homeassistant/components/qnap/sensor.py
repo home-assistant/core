@@ -5,7 +5,6 @@ from homeassistant import config_entries
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType
 from dataclasses import dataclass
 from homeassistant.components.sensor import (
     SensorEntity,
@@ -125,7 +124,7 @@ SENSOR_TYPES: tuple[QNapSensorEntityDescription, ...] = (
     QNapSensorEntityDescription(
         stype="basic",
         key="status",
-        name="Health",
+        name="Status",
         icon="mdi:checkbox-marked-circle-outline",
     ),
     QNapSensorEntityDescription(
