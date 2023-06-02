@@ -12,6 +12,7 @@ from zwave_js_server.model.driver import Driver
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchEntity
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -41,6 +42,8 @@ async def async_setup_entry(
             entities.append(
                 ZWaveBarrierEventSignalingSwitch(config_entry, driver, info)
             )
+        elif info.platform_hint == "config_parameter":
+            entities.append(ZWaveConfigParameterSwitch(config_entry, driver, info))
         elif info.platform_hint == "indicator":
             entities.append(ZWaveIndicatorSwitch(config_entry, driver, info))
         else:
@@ -79,12 +82,12 @@ class ZWaveSwitch(ZWaveBaseEntity, SwitchEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         if self._target_value is not None:
-            await self.info.node.async_set_value(self._target_value, True)
+            await self._async_set_value(self._target_value, True)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         if self._target_value is not None:
-            await self.info.node.async_set_value(self._target_value, False)
+            await self._async_set_value(self._target_value, False)
 
 
 class ZWaveIndicatorSwitch(ZWaveSwitch):
@@ -129,7 +132,7 @@ class ZWaveBarrierEventSignalingSwitch(ZWaveBaseEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
-        await self.info.node.async_set_value(
+        await self._async_set_value(
             self.info.primary_value, BarrierEventSignalingSubsystemState.ON
         )
         # this value is not refreshed, so assume success
@@ -138,7 +141,7 @@ class ZWaveBarrierEventSignalingSwitch(ZWaveBaseEntity, SwitchEntity):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
-        await self.info.node.async_set_value(
+        await self._async_set_value(
             self.info.primary_value, BarrierEventSignalingSubsystemState.OFF
         )
         # this value is not refreshed, so assume success
@@ -152,3 +155,30 @@ class ZWaveBarrierEventSignalingSwitch(ZWaveBaseEntity, SwitchEntity):
             self._state = (
                 self.info.primary_value.value == BarrierEventSignalingSubsystemState.ON
             )
+
+
+class ZWaveConfigParameterSwitch(ZWaveSwitch):
+    """Representation of a Z-Wave config parameter switch."""
+
+    _attr_entity_category = EntityCategory.CONFIG
+
+    def __init__(
+        self, config_entry: ConfigEntry, driver: Driver, info: ZwaveDiscoveryInfo
+    ) -> None:
+        """Initialize a ZWaveConfigParameterSwitch entity."""
+        super().__init__(config_entry, driver, info)
+
+        property_key_name = self.info.primary_value.property_key_name
+        # Entity class attributes
+        self._attr_name = self.generate_name(
+            alternate_value_name=self.info.primary_value.property_name,
+            additional_info=[property_key_name] if property_key_name else None,
+        )
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn the switch on."""
+        await self._async_set_value(self.info.primary_value, 1)
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn the switch off."""
+        await self._async_set_value(self.info.primary_value, 0)

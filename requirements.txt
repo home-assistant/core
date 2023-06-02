@@ -3,7 +3,7 @@
 # Home Assistant Core
 aiohttp==3.8.4
 astral==2.2
-async_timeout==4.0.2
+async-timeout==4.0.2
 attrs==22.2.0
 atomicwrites-homeassistant==1.4.1
 awesomeversion==22.9.0
@@ -13,7 +13,7 @@ ciso8601==2.3.0
 httpx==0.24.1
 home-assistant-bluetooth==1.10.0
 ifaddr==0.2.0
-jinja2==3.1.2
+Jinja2==3.1.2
 lru-dict==1.1.8
 PyJWT==2.7.0
 cryptography==40.0.2
@@ -21,9 +21,9 @@ pyOpenSSL==23.1.0
 orjson==3.8.12
 pip>=21.0,<23.2
 python-slugify==4.0.1
-pyyaml==6.0
+PyYAML==6.0
 requests==2.31.0
-typing-extensions>=4.5.0,<5.0
+typing_extensions>=4.5.0,<5.0
 ulid-transform==0.7.2
 voluptuous==0.13.1
 voluptuous-serialize==2.6.0

@@ -289,6 +289,16 @@
             'lock': True,
             'remote360': True,
             'remoteChargingCommands': dict({
+              'chargingControl': list([
+                'START',
+                'STOP',
+              ]),
+              'flapControl': list([
+                'NOT_SUPPORTED',
+              ]),
+              'plugControl': list([
+                'NOT_SUPPORTED',
+              ]),
             }),
             'remoteSoftwareUpgrade': True,
             'sendPoi': True,
@@ -524,9 +534,9 @@
             'electricChargingState': dict({
               'chargingConnectionType': 'UNKNOWN',
               'chargingLevelPercent': 80,
-              'chargingStatus': 'INVALID',
+              'chargingStatus': 'CHARGING',
               'chargingTarget': 80,
-              'isChargerConnected': False,
+              'isChargerConnected': True,
               'range': 472,
               'remainingChargingMinutes': 10,
             }),
@@ -778,9 +788,9 @@
           'charging_end_time': '2022-07-10T11:10:00+00:00',
           'charging_start_time': None,
           'charging_start_time_no_tz': None,
-          'charging_status': 'NOT_CHARGING',
+          'charging_status': 'CHARGING',
           'charging_target': 80,
-          'is_charger_connected': False,
+          'is_charger_connected': True,
           'remaining_battery_percent': 80,
           'remaining_fuel': list([
             None,
@@ -804,8 +814,8 @@
         'has_electric_drivetrain': True,
         'is_charging_plan_supported': True,
         'is_lsc_enabled': True,
-        'is_remote_charge_start_enabled': False,
-        'is_remote_charge_stop_enabled': False,
+        'is_remote_charge_start_enabled': True,
+        'is_remote_charge_stop_enabled': True,
         'is_remote_climate_start_enabled': True,
         'is_remote_climate_stop_enabled': True,
         'is_remote_horn_enabled': True,
@@ -1687,6 +1697,16 @@
             'lock': True,
             'remote360': True,
             'remoteChargingCommands': dict({
+              'chargingControl': list([
+                'START',
+                'STOP',
+              ]),
+              'flapControl': list([
+                'NOT_SUPPORTED',
+              ]),
+              'plugControl': list([
+                'NOT_SUPPORTED',
+              ]),
             }),
             'remoteSoftwareUpgrade': True,
             'sendPoi': True,
@@ -1812,9 +1832,9 @@
             'electricChargingState': dict({
               'chargingConnectionType': 'UNKNOWN',
               'chargingLevelPercent': 80,
-              'chargingStatus': 'INVALID',
+              'chargingStatus': 'CHARGING',
               'chargingTarget': 80,
-              'isChargerConnected': False,
+              'isChargerConnected': True,
               'range': 472,
               'remainingChargingMinutes': 10,
             }),
@@ -3191,6 +3211,16 @@
             'lock': True,
             'remote360': True,
             'remoteChargingCommands': dict({
+              'chargingControl': list([
+                'START',
+                'STOP',
+              ]),
+              'flapControl': list([
+                'NOT_SUPPORTED',
+              ]),
+              'plugControl': list([
+                'NOT_SUPPORTED',
+              ]),
             }),
             'remoteSoftwareUpgrade': True,
             'sendPoi': True,
@@ -3316,9 +3346,9 @@
             'electricChargingState': dict({
               'chargingConnectionType': 'UNKNOWN',
               'chargingLevelPercent': 80,
-              'chargingStatus': 'INVALID',
+              'chargingStatus': 'CHARGING',
               'chargingTarget': 80,
-              'isChargerConnected': False,
+              'isChargerConnected': True,
               'range': 472,
               'remainingChargingMinutes': 10,
             }),
@@ -4024,6 +4054,16 @@
             'lock': True,
             'remote360': True,
             'remoteChargingCommands': dict({
+              'chargingControl': list([
+                'START',
+                'STOP',
+              ]),
+              'flapControl': list([
+                'NOT_SUPPORTED',
+              ]),
+              'plugControl': list([
+                'NOT_SUPPORTED',
+              ]),
             }),
             'remoteSoftwareUpgrade': True,
             'sendPoi': True,
@@ -4149,9 +4189,9 @@
             'electricChargingState': dict({
               'chargingConnectionType': 'UNKNOWN',
               'chargingLevelPercent': 80,
-              'chargingStatus': 'INVALID',
+              'chargingStatus': 'CHARGING',
               'chargingTarget': 80,
-              'isChargerConnected': False,
+              'isChargerConnected': True,
               'range': 472,
               'remainingChargingMinutes': 10,
             }),
