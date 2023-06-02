@@ -305,8 +305,10 @@ class ZWaveMultilevelSwitchCover(CoverPositionMixin):
         self._attr_device_class = CoverDeviceClass.WINDOW
         if self.info.platform_hint and self.info.platform_hint.startswith("shutter"):
             self._attr_device_class = CoverDeviceClass.SHUTTER
-        if self.info.platform_hint and self.info.platform_hint.startswith("blind"):
+        elif self.info.platform_hint and self.info.platform_hint.startswith("blind"):
             self._attr_device_class = CoverDeviceClass.BLIND
+        elif self.info.platform_hint and self.info.platform_hint.startswith("gate"):
+            self._attr_device_class = CoverDeviceClass.GATE
 
 
 class ZWaveTiltCover(ZWaveMultilevelSwitchCover, CoverTiltMixin):
