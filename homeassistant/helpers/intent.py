@@ -62,7 +62,7 @@ def async_register(hass: HomeAssistant, handler: IntentHandler) -> None:
 def async_remove(hass: HomeAssistant, intent_type: str) -> None:
     """Remove an intent from Home Assistant."""
     if (intents := hass.data.get(DATA_KEY)) is None:
-        intents = hass.data[DATA_KEY] = {}
+        return
 
     intents.pop(intent_type, None)
 
