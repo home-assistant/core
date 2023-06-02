@@ -90,19 +90,9 @@ async def async_setup_entry(
             for description in VOL_SENSOR
         ]
     )
-
-    # Folders sensors
-    sensors.extend(
-        [
-            QNAPFolderSensor(coordinator, description, uid, volume, folder["sharename"])
-            for volume in coordinator.data["volumes"].keys()
-            for folder in coordinator.data["volumes"][volume].get("folders", [])
-            for description in FOL_SENSOR
-        ]
-    )
     async_add_entities(sensors)
 
-
+    
 def round_nicely(number):
     """Round a number based on its size (so it looks nice)."""
     if number < 10:
@@ -221,24 +211,6 @@ SENSOR_TYPES: tuple[QNapSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
     ),
     QNapSensorEntityDescription(
-        stype="folder",
-        key="folder_size_used",
-        name="Used Space",
-        native_unit_of_measurement=UnitOfInformation.GIBIBYTES,
-        icon="mdi:chart-pie",
-        entity_registry_enabled_default=False,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
-    QNapSensorEntityDescription(
-        stype="folder",
-        key="folder_percentage_used",
-        name="Folder Used",
-        native_unit_of_measurement=PERCENTAGE,
-        icon="mdi:chart-pie",
-        entity_registry_enabled_default=False,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
-    QNapSensorEntityDescription(
         stype="volume",
         key="volume_size_used",
         name="Used Space",
@@ -270,7 +242,6 @@ CPU_SENSOR = [desc for desc in SENSOR_TYPES if desc.stype == "cpu"]
 MEM_SENSOR = [desc for desc in SENSOR_TYPES if desc.stype == "memory"]
 NET_SENSOR = [desc for desc in SENSOR_TYPES if desc.stype == "network"]
 DRI_SENSOR = [desc for desc in SENSOR_TYPES if desc.stype == "drive"]
-FOL_SENSOR = [desc for desc in SENSOR_TYPES if desc.stype == "folder"]
 VOL_SENSOR = [desc for desc in SENSOR_TYPES if desc.stype == "volume"]
     
 class QNAPSensor(CoordinatorEntity, SensorEntity):
@@ -480,40 +451,3 @@ class QNAPVolumeSensor(QNAPSensor):
             total_gb = int(data["total_size"]) / 1024 / 1024 / 1024
 
             return {ATTR_VOLUME_SIZE: f"{round_nicely(total_gb)} {UnitOfInformation.GIBIBYTES}"}
-
-
-class QNAPFolderSensor(QNAPSensor):
-    """A QNAP sensor that monitors storage folder stats."""
-
-    @property
-    def name(self):
-        """Return the name of the sensor, if any."""
-        return f"{self.device_name} Folder {self.monitor_subdevice} - {self.entity_description.name}"
-
-    @property
-    def native_value(self):
-        """Return the state of the sensor."""
-        for folder in self.coordinator.data["volumes"][self.monitor_device]["folders"]:
-            if folder["sharename"] == self.monitor_subdevice:
-                vol = self.coordinator.data["volumes"][self.monitor_device]
-                used_gb = int(folder["used_size"]) / 1024 / 1024 / 1024
-                total_gb = int(vol["total_size"]) / 1024 / 1024 / 1024
-
-        if self.entity_description.key == "folder_size_used":
-            return round_nicely(used_gb)
-
-        if self.entity_description.key == "folder_percentage_used":
-            return round(used_gb / total_gb * 100)
-
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes."""
-        if self.coordinator.data:
-            data = self.coordinator.data["volumes"][self.monitor_device]
-            total_gb = int(data["total_size"]) / 1024 / 1024 / 1024
-            volume_name = self.monitor_device
-
-            return {
-                ATTR_VOLUME_SIZE: f"{round_nicely(total_gb)} {UnitOfInformation.GIBIBYTES}",
-                VOLUME_NAME: volume_name,
-            }
