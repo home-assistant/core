@@ -7,6 +7,5 @@
   "integration_type": "device",
   "iot_class": "local_polling",
   "loggers": ["qnapstats"],
-  "integration_type": "device",
   "requirements": ["qnapstats==0.4.0"]
 }
