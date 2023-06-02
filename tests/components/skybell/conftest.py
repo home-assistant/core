@@ -3,6 +3,7 @@ from unittest.mock import AsyncMock, patch
 
 from aioskybell import Skybell, SkybellDevice
 from aioskybell.helpers.const import BASE_URL, USERS_ME_URL
+import orjson
 import pytest
 
 from homeassistant.components.skybell.const import DOMAIN
@@ -104,13 +105,14 @@ async def connection(aioclient_mock: AiohttpClientMocker) -> None:
 
 def create_skybell(hass: HomeAssistant) -> Skybell:
     """Create Skybell object."""
-    return Skybell(
+    skybell = Skybell(
         username=USERNAME,
         password=PASSWORD,
         get_devices=True,
-        cache_path="tests/components/skybell/fixtures/cache.pickle",
         session=async_get_clientsession(hass),
     )
+    skybell._cache = orjson.loads(load_fixture("skybell/cache.json"))
+    return skybell
 
 
 def mock_skybell(hass: HomeAssistant):
@@ -124,7 +126,7 @@ async def async_init_integration(hass: HomeAssistant) -> MockConfigEntry:
     """Set up the Skybell integration in Home Assistant."""
     config_entry = create_entry(hass)
 
-    with mock_skybell(hass):
+    with mock_skybell(hass), patch("aioskybell.utils.async_save_cache"):
         await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
