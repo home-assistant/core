@@ -1315,9 +1315,98 @@ async def test_active_child_template(hass: HomeAssistant) -> None:
     )
     hass.states.async_set("media_player.child1", STATE_ON, {"source": "src2"})
     await hass.async_block_till_done()
+    assert hass.states.get("media_player.child1").attributes["source"] == "src2"
     assert (
         hass.states.get("media_player.test").attributes["active_child"]
         == "media_player.child2"
+    )
+
+
+async def test_invalid_active_child_template(hass: HomeAssistant) -> None:
+    """Test the active_child_template option."""
+    hass.states.async_set("media_player.child1", STATE_ON, {"source": "src1"})
+    hass.states.async_set("media_player.child2", STATE_ON)
+
+    templ = (
+        '{% if state_attr("media_player.child1") == "src2" %}media_player.child2'
+        "{% else %}media_player.child1"
+        "{% endif %}"
+    )
+
+    await async_setup_component(
+        hass,
+        "media_player",
+        {
+            "media_player": {
+                "name": "test",
+                "platform": "universal",
+                "children": [
+                    "media_player.child1",
+                    "media_player.child2",
+                ],
+                "active_child_template": templ,
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    assert len(hass.states.async_all()) == 3
+    await hass.async_start()
+
+    await hass.async_block_till_done()
+    assert (
+        hass.states.get("media_player.test").attributes["active_child"]
+        == "media_player.child1"
+    )
+    hass.states.async_set("media_player.child1", STATE_ON, {"source": "src2"})
+    await hass.async_block_till_done()
+    assert hass.states.get("media_player.child1").attributes["source"] == "src2"
+    assert (
+        hass.states.get("media_player.test").attributes["active_child"]
+        == "media_player.child1"
+    )
+
+
+async def test_active_child_template_missing_child(hass: HomeAssistant) -> None:
+    """Test the active_child_template option."""
+    hass.states.async_set("media_player.child1", STATE_ON, {"source": "src1"})
+    hass.states.async_set("media_player.child2", STATE_ON)
+
+    templ = (
+        '{% if state_attr("media_player.child1") == "src2" %}media_player.child3'
+        "{% else %}media_player.child1"
+        "{% endif %}"
+    )
+
+    await async_setup_component(
+        hass,
+        "media_player",
+        {
+            "media_player": {
+                "name": "test",
+                "platform": "universal",
+                "children": [
+                    "media_player.child1",
+                    "media_player.child2",
+                ],
+                "active_child_template": templ,
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    assert len(hass.states.async_all()) == 3
+    await hass.async_start()
+
+    await hass.async_block_till_done()
+    assert (
+        hass.states.get("media_player.test").attributes["active_child"]
+        == "media_player.child1"
+    )
+    hass.states.async_set("media_player.child1", STATE_ON, {"source": "src2"})
+    await hass.async_block_till_done()
+    assert hass.states.get("media_player.child1").attributes["source"] == "src2"
+    assert (
+        hass.states.get("media_player.test").attributes["active_child"]
+        == "media_player.child1"
     )
 
 
