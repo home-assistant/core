@@ -232,7 +232,7 @@ class AdvantageAirAC(AdvantageAirAcEntity, ClimateEntity):
             )
 
     @callback
-    async def check_preset(self, event: Event) -> None:
+    def check_preset(self, event: Event) -> None:
         """Determine if the entity needs to be reloaded based on state change."""
 
         if (
