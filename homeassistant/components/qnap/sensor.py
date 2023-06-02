@@ -37,7 +37,6 @@ from .const import (
     ATTR_VOLUME_SIZE,
     DEFAULT_NAME,
     DOMAIN,
-    VOLUME_NAME,
 )
 
 _LOGGER = logging.getLogger(__name__)
