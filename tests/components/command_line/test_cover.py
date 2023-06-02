@@ -362,17 +362,19 @@ async def test_updating_to_often(
         )
         await hass.async_block_till_done()
 
-        assert len(called) == 0
-        assert (
-            "Updating Command Line Cover Test took longer than the scheduled update interval"
-            not in caplog.text
-        )
+    assert len(called) == 1
+    assert (
+        "Updating Command Line Cover Test took longer than the scheduled update interval"
+        not in caplog.text
+    )
 
-        async_fire_time_changed(hass, dt_util.now() + timedelta(seconds=1))
-        await hass.async_block_till_done()
+    async_fire_time_changed(hass, dt_util.now() + timedelta(seconds=1))
+    await hass.async_block_till_done()
 
-        assert len(called) == 1
-        assert (
-            "Updating Command Line Cover Test took longer than the scheduled update interval"
-            in caplog.text
-        )
+    assert len(called) == 2
+    assert (
+        "Updating Command Line Cover Test took longer than the scheduled update interval"
+        in caplog.text
+    )
+
+    await asyncio.sleep(0.2)
