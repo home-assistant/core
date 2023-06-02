@@ -49,20 +49,18 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     """
     # TODO validate the data can be used to set up a connection.
     # Currently used here solely for config validation (i.e. not returned to be stored in the config entry)
-    client = FlexMeasuresClient(
-        host=data["host"],
-        email=data["username"],
-        password=data["password"],
-    )
+    try:
+        client = FlexMeasuresClient(
+            host=data["host"],
+            email=data["username"],
+            password=data["password"],
+        )
+    except Exception as e:
+        raise CannotConnect(e)
     try:
         await client.get_access_token()
     except Exception as e:
-        raise InvalidAuth
-
-    # If you cannot connect:
-    # throw CannotConnect
-    # If the authentication is wrong:
-    # InvalidAuth
+        raise InvalidAuth(e)
 
     # Return info that you want to store in the config entry.
     return {"title": "FlexMeasures"}
@@ -91,8 +89,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         try:
             info = await validate_input(self.hass, user_input)
-        except CannotConnect:
+        except CannotConnect as e:
             errors["base"] = "cannot_connect"
+            if "host" in str(e):
+                errors["host"] = str(e)
+            elif "email" in str(e):
+                errors["username"] = str(e)
+            elif "password" in str(e):
+                errors["password"] = str(e)
         except InvalidAuth:
             errors["base"] = "invalid_auth"
         except Exception:  # pylint: disable=broad-except
@@ -121,10 +125,10 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         self.config_entry = config_entry
 
     async def async_step_init(
-        self, user_input: Dict[str, Any] = None
-    ) -> Dict[str, Any]:
+        self, user_input: dict[str, Any] = None
+    ) -> dict[str, Any]:
         """Manage the options for the custom component."""
-        errors: Dict[str, str] = {}
+        errors: dict[str, str] = {}
 
         if user_input is not None:
             try:
