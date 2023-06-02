@@ -1,20 +1,5 @@
 """The Qnap constants."""
-
 from __future__ import annotations
-
-from dataclasses import dataclass
-
-from homeassistant.components.sensor import (
-    SensorDeviceClass,
-    SensorStateClass,
-    SensorEntityDescription,
-)
-from homeassistant.const import (
-    PERCENTAGE,
-    UnitOfTemperature,
-    UnitOfInformation,
-    UnitOfDataRate,
-)
 
 ATTR_DRIVE = "Drive"
 ATTR_ENABLED = "Sensor Enabled"
