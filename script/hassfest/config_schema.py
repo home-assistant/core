@@ -92,11 +92,12 @@ def _validate_integration(config: Config, integration: Integration) -> None:
 
     notice_method(
         "config_schema",
-        "Integrations which implement 'async_setup' or 'setup' must "
-        "define either 'CONFIG_SCHEMA', 'PLATFORM_SCHEMA' or 'PLATFORM_SCHEMA_BASE'. "
-        "If the integration has no configuration parameters or can not be setup from "
-        "YAML, import one of CONFIG_SCHEMA_... from "
-        "homeassistant.helpers.config_validation as CONFIG_SCHEMA",
+        "Integrations which implement 'async_setup' or 'setup' must define either "
+        "'CONFIG_SCHEMA', 'PLATFORM_SCHEMA' or 'PLATFORM_SCHEMA_BASE'. If the "
+        "integration has no configuration parameters, can only be set up from platforms"
+        " or can only be set up from config entries, one of the helpers "
+        "cv.empty_config_schema, cv.platform_only_config_schema or "
+        "cv.config_entry_only_config_schema can be used.",
     )
 
 
