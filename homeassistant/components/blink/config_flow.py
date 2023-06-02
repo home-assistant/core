@@ -58,13 +58,13 @@ def validate_input(hass: core.HomeAssistant, auth):
         raise Require2FA
 
 
-def _send_blink_2fa_pin(auth, pin):
+async def _send_blink_2fa_pin(auth, pin):
     """Send 2FA pin to blink servers."""
     blink = Blink()
     blink.auth = auth
     blink.setup_login_ids()
     blink.setup_urls()
-    return auth.send_auth_key(blink, pin)
+    return await auth.send_auth_key(blink, pin)
 
 
 class BlinkConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -125,9 +125,7 @@ class BlinkConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             pin = user_input.get(CONF_PIN)
             try:
-                valid_token = await self.hass.async_add_executor_job(
-                    _send_blink_2fa_pin, self.auth, pin
-                )
+                valid_token = await _send_blink_2fa_pin(self.auth, pin)
             except BlinkSetupError:
                 errors["base"] = "cannot_connect"
             except Exception:  # pylint: disable=broad-except

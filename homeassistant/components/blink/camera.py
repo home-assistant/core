@@ -60,15 +60,15 @@ class BlinkCamera(Camera):
         """Return the camera attributes."""
         return self._camera.attributes
 
-    def enable_motion_detection(self) -> None:
+    async def async_enable_motion_detection(self) -> None:
         """Enable motion detection for the camera."""
-        self._camera.arm = True
-        self.data.refresh()
+        await self._camera.async_arm(True)
+        await self.data.refresh()
 
-    def disable_motion_detection(self) -> None:
+    async def async_disable_motion_detection(self) -> None:
         """Disable motion detection for the camera."""
-        self._camera.arm = False
-        self.data.refresh()
+        await self._camera.async_arm(False)
+        await self.data.refresh()
 
     @property
     def motion_detection_enabled(self) -> bool:
@@ -80,17 +80,17 @@ class BlinkCamera(Camera):
         """Return the camera brand."""
         return DEFAULT_BRAND
 
-    def trigger_camera(self):
+    async def trigger_camera(self):
         """Trigger camera to take a snapshot."""
-        self._camera.snap_picture()
-        self.data.refresh()
+        await self._camera.snap_picture()
+        await self.data.refresh()
 
     def camera_image(
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
         """Return a still image response from the camera."""
         try:
-            return self._camera.image_from_cache.content
+            return self._camera.image_from_cache
         except ChunkedEncodingError:
             _LOGGER.debug("Could not retrieve image for %s", self._camera.name)
             return None

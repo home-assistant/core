@@ -1,7 +1,9 @@
 """Support for Blink Home Camera System."""
+import asyncio
 from copy import deepcopy
 import logging
 
+from aiohttp import ClientError
 from blinkpy.auth import Auth
 from blinkpy.blinkpy import Blink
 import voluptuous as vol
@@ -18,6 +20,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import (
     DEFAULT_SCAN_INTERVAL,
@@ -38,22 +41,6 @@ SERVICE_SEND_PIN_SCHEMA = vol.Schema({vol.Optional(CONF_PIN): cv.string})
 SERVICE_SAVE_RECENT_CLIPS_SCHEMA = vol.Schema(
     {vol.Required(CONF_NAME): cv.string, vol.Required(CONF_FILE_PATH): cv.string}
 )
-
-
-def _blink_startup_wrapper(hass: HomeAssistant, entry: ConfigEntry) -> Blink:
-    """Startup wrapper for blink."""
-    blink = Blink()
-    auth_data = deepcopy(dict(entry.data))
-    blink.auth = Auth(auth_data, no_prompt=True)
-    blink.refresh_rate = entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
-
-    if blink.start():
-        blink.setup_post_verify()
-    elif blink.auth.check_key_required():
-        _LOGGER.debug("Attempting a reauth flow")
-        _reauth_flow_wrapper(hass, auth_data)
-
-    return blink
 
 
 def _reauth_flow_wrapper(hass, data):
@@ -92,9 +79,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})
 
     _async_import_options_from_data_if_missing(hass, entry)
-    hass.data[DOMAIN][entry.entry_id] = await hass.async_add_executor_job(
-        _blink_startup_wrapper, hass, entry
-    )
+    blink = Blink(session=async_get_clientsession(hass))
+    auth_data = deepcopy(dict(entry.data))
+    blink.auth = Auth(auth_data, no_prompt=True)
+    blink.refresh_rate = entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
+
+    try:
+        if await blink.start():
+            await blink.setup_post_verify()
+        elif blink.auth.check_key_required():
+            _LOGGER.debug("Attempting a reauth flow")
+            _reauth_flow_wrapper(hass, auth_data)
+    except (ClientError, asyncio.TimeoutError) as ex:
+        raise ConfigEntryNotReady("Can not connect to host") from ex
+
+    hass.data[DOMAIN][entry.entry_id] = blink
 
     if not hass.data[DOMAIN][entry.entry_id].available:
         raise ConfigEntryNotReady
@@ -102,9 +101,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.async_on_unload(entry.add_update_listener(update_listener))
 
-    def blink_refresh(event_time=None):
+    async def blink_refresh(event_time=None):
         """Call blink to refresh info."""
-        hass.data[DOMAIN][entry.entry_id].refresh(force_cache=True)
+        await hass.data[DOMAIN][entry.entry_id].refresh(force_cache=True)
 
     async def async_save_video(call):
         """Call save video service handler."""
@@ -114,10 +113,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         """Call save recent clips service handler."""
         await async_handle_save_recent_clips_service(hass, entry, call)
 
-    def send_pin(call):
+    async def send_pin(call):
         """Call blink to send new pin."""
         pin = call.data[CONF_PIN]
-        hass.data[DOMAIN][entry.entry_id].auth.send_auth_key(
+        await hass.data[DOMAIN][entry.entry_id].auth.send_auth_key(
             hass.data[DOMAIN][entry.entry_id],
             pin,
         )
@@ -183,15 +182,11 @@ async def async_handle_save_video_service(hass, entry, call):
     if not hass.config.is_allowed_path(video_path):
         _LOGGER.error("Can't write %s, no access to path!", video_path)
         return
-
-    def _write_video(name, file_path):
-        """Call video write."""
-        all_cameras = hass.data[DOMAIN][entry.entry_id].cameras
-        if name in all_cameras:
-            all_cameras[name].video_to_file(file_path)
-
     try:
-        await hass.async_add_executor_job(_write_video, camera_name, video_path)
+        all_cameras = hass.data[DOMAIN][entry.entry_id].cameras
+        if camera_name in all_cameras:
+            await all_cameras[camera_name].video_to_file(video_path)
+
     except OSError as err:
         _LOGGER.error("Can't write image to file: %s", err)
 
@@ -204,13 +199,9 @@ async def async_handle_save_recent_clips_service(hass, entry, call):
         _LOGGER.error("Can't write to directory %s, no access to path!", clips_dir)
         return
 
-    def _save_recent_clips(name, output_dir):
-        """Call save recent clips."""
-        all_cameras = hass.data[DOMAIN][entry.entry_id].cameras
-        if name in all_cameras:
-            all_cameras[name].save_recent_clips(output_dir=output_dir)
-
     try:
-        await hass.async_add_executor_job(_save_recent_clips, camera_name, clips_dir)
+        all_cameras = hass.data[DOMAIN][entry.entry_id].cameras
+        if camera_name in all_cameras:
+            await all_cameras[camera_name].save_recent_clips(output_dir=clips_dir)
     except OSError as err:
         _LOGGER.error("Can't write recent clips to directory: %s", err)
