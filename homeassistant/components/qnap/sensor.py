@@ -36,10 +36,10 @@ from .const import (
     ATTR_UPTIME,
     ATTR_VOLUME_SIZE,
     DEFAULT_NAME,
+    DEFAULT_PORT,
+    DEFAULT_TIMEOUT,
     DOMAIN,
 )
-
-from .const import DEFAULT_PORT, DEFAULT_TIMEOUT
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -265,7 +265,6 @@ SENSOR_TYPES: tuple[QNapSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
     ),
 )
-
 BAS_SENSOR = [desc for desc in SENSOR_TYPES if desc.stype == "basic"]
 CPU_SENSOR = [desc for desc in SENSOR_TYPES if desc.stype == "cpu"]
 MEM_SENSOR = [desc for desc in SENSOR_TYPES if desc.stype == "memory"]
