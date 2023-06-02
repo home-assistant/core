@@ -38,7 +38,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except NotAuthorizedError:
                 LOGGER.exception("Authentication error")
                 errors["base"] = "invalid_auth"
-            except Exception:  # pylint: disable=broad-exception
+            except Exception:  # pylint: disable=broad-except
                 LOGGER.exception("Unknown error")
                 errors["base"] = "unknown"
             else:
