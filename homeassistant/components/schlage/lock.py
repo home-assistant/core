@@ -53,6 +53,12 @@ class SchlageLockEntity(CoordinatorEntity, LockEntity):
         """Fetch the Schlage lock from our coordinator."""
         return self.coordinator.data.locks[self.device_id]
 
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        # When is_locked is None the lock is unavailable.
+        return super().available and self._lock.is_locked is not None
+
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
@@ -62,8 +68,6 @@ class SchlageLockEntity(CoordinatorEntity, LockEntity):
     def _update_attrs(self) -> None:
         """Update our internal state attributes."""
         self._attr_name = self._lock.name
-        # When is_locked is None the lock is unavailable.
-        self._attr_available = self._lock.is_locked is not None
         self._attr_is_locked = self._lock.is_locked
         self._attr_is_jammed = self._lock.is_jammed
 
