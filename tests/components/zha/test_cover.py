@@ -132,7 +132,7 @@ async def test_cover(
     assert cluster.read_attributes.call_count == 1
     assert "current_position_lift_percentage" in cluster.read_attributes.call_args[0][0]
 
-    entity_id = await find_entity_id(Platform.COVER, zha_device, hass)
+    entity_id = find_entity_id(Platform.COVER, zha_device, hass)
     assert entity_id is not None
 
     await async_enable_traffic(hass, [zha_device], enabled=False)
@@ -223,7 +223,7 @@ async def test_shade(
 
     cluster_on_off = zigpy_shade_device.endpoints.get(1).on_off
     cluster_level = zigpy_shade_device.endpoints.get(1).level
-    entity_id = await find_entity_id(Platform.COVER, zha_device, hass)
+    entity_id = find_entity_id(Platform.COVER, zha_device, hass)
     assert entity_id is not None
 
     await async_enable_traffic(hass, [zha_device], enabled=False)
@@ -361,7 +361,7 @@ async def test_restore_state(
     hass.state = CoreState.starting
 
     zha_device = await zha_device_restored(zigpy_shade_device)
-    entity_id = await find_entity_id(Platform.COVER, zha_device, hass)
+    entity_id = find_entity_id(Platform.COVER, zha_device, hass)
     assert entity_id is not None
 
     # test that the cover was created and that it is unavailable
@@ -379,7 +379,7 @@ async def test_keen_vent(
 
     cluster_on_off = zigpy_keen_vent.endpoints.get(1).on_off
     cluster_level = zigpy_keen_vent.endpoints.get(1).level
-    entity_id = await find_entity_id(Platform.COVER, zha_device, hass)
+    entity_id = find_entity_id(Platform.COVER, zha_device, hass)
     assert entity_id is not None
 
     await async_enable_traffic(hass, [zha_device], enabled=False)

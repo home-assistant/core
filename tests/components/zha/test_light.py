@@ -264,7 +264,7 @@ async def test_light_refresh(
     on_off_cluster = zigpy_device.endpoints[1].on_off
     on_off_cluster.PLUGGED_ATTR_READS = {"on_off": 0}
     zha_device = await zha_device_joined_restored(zigpy_device)
-    entity_id = await find_entity_id(Platform.LIGHT, zha_device, hass)
+    entity_id = find_entity_id(Platform.LIGHT, zha_device, hass)
 
     # allow traffic to flow through the gateway and device
     await async_enable_traffic(hass, [zha_device])
@@ -326,7 +326,7 @@ async def test_light(
     # create zigpy devices
     zigpy_device = zigpy_device_mock(device)
     zha_device = await zha_device_joined_restored(zigpy_device)
-    entity_id = await find_entity_id(Platform.LIGHT, zha_device, hass)
+    entity_id = find_entity_id(Platform.LIGHT, zha_device, hass)
 
     assert entity_id is not None
 
@@ -446,7 +446,7 @@ async def test_light_initialization(
 
     with patch_zha_config("light", config_override):
         zha_device = await zha_device_joined_restored(zigpy_device)
-        entity_id = await find_entity_id(Platform.LIGHT, zha_device, hass)
+        entity_id = find_entity_id(Platform.LIGHT, zha_device, hass)
 
     assert entity_id is not None
 
@@ -495,9 +495,9 @@ async def test_transitions(
         assert member.group == zha_group
         assert member.endpoint is not None
 
-    device_1_entity_id = await find_entity_id(Platform.LIGHT, device_light_1, hass)
-    device_2_entity_id = await find_entity_id(Platform.LIGHT, device_light_2, hass)
-    eWeLink_light_entity_id = await find_entity_id(Platform.LIGHT, eWeLink_light, hass)
+    device_1_entity_id = find_entity_id(Platform.LIGHT, device_light_1, hass)
+    device_2_entity_id = find_entity_id(Platform.LIGHT, device_light_2, hass)
+    eWeLink_light_entity_id = find_entity_id(Platform.LIGHT, eWeLink_light, hass)
     assert device_1_entity_id != device_2_entity_id
 
     group_entity_id = async_find_group_entity_id(hass, Platform.LIGHT, zha_group)
@@ -1222,7 +1222,7 @@ async def test_transitions(
 async def test_on_with_off_color(hass: HomeAssistant, device_light_1) -> None:
     """Test turning on the light and sending color commands before on/level commands for supporting lights."""
 
-    device_1_entity_id = await find_entity_id(Platform.LIGHT, device_light_1, hass)
+    device_1_entity_id = find_entity_id(Platform.LIGHT, device_light_1, hass)
     dev1_cluster_on_off = device_light_1.device.endpoints[1].on_off
     dev1_cluster_level = device_light_1.device.endpoints[1].level
     dev1_cluster_color = device_light_1.device.endpoints[1].light_color
@@ -1606,9 +1606,9 @@ async def test_zha_group_light_entity(
         assert member.group == zha_group
         assert member.endpoint is not None
 
-    device_1_entity_id = await find_entity_id(Platform.LIGHT, device_light_1, hass)
-    device_2_entity_id = await find_entity_id(Platform.LIGHT, device_light_2, hass)
-    device_3_entity_id = await find_entity_id(Platform.LIGHT, device_light_3, hass)
+    device_1_entity_id = find_entity_id(Platform.LIGHT, device_light_1, hass)
+    device_2_entity_id = find_entity_id(Platform.LIGHT, device_light_2, hass)
+    device_3_entity_id = find_entity_id(Platform.LIGHT, device_light_3, hass)
 
     assert (
         device_1_entity_id != device_2_entity_id
@@ -1849,8 +1849,8 @@ async def test_group_member_assume_state(
             assert member.group == zha_group
             assert member.endpoint is not None
 
-        device_1_entity_id = await find_entity_id(Platform.LIGHT, device_light_1, hass)
-        device_2_entity_id = await find_entity_id(Platform.LIGHT, device_light_2, hass)
+        device_1_entity_id = find_entity_id(Platform.LIGHT, device_light_1, hass)
+        device_2_entity_id = find_entity_id(Platform.LIGHT, device_light_2, hass)
 
         assert device_1_entity_id != device_2_entity_id
 

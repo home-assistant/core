@@ -138,7 +138,7 @@ async def test_switch(
 
     zha_device = await zha_device_joined_restored(zigpy_device)
     cluster = zigpy_device.endpoints.get(1).on_off
-    entity_id = await find_entity_id(Platform.SWITCH, zha_device, hass)
+    entity_id = find_entity_id(Platform.SWITCH, zha_device, hass)
     assert entity_id is not None
 
     assert hass.states.get(entity_id).state == STATE_OFF
@@ -386,7 +386,7 @@ async def test_switch_configurable(
 
     zha_device = await zha_device_joined_restored(zigpy_device_tuya)
     cluster = zigpy_device_tuya.endpoints.get(1).tuya_manufacturer
-    entity_id = await find_entity_id(Platform.SWITCH, zha_device, hass)
+    entity_id = find_entity_id(Platform.SWITCH, zha_device, hass)
     assert entity_id is not None
 
     assert hass.states.get(entity_id).state == STATE_OFF

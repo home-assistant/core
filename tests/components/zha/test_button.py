@@ -127,7 +127,7 @@ async def test_button(hass: HomeAssistant, contact_sensor) -> None:
     entity_registry = er.async_get(hass)
     zha_device, cluster = contact_sensor
     assert cluster is not None
-    entity_id = await find_entity_id(DOMAIN, zha_device, hass)
+    entity_id = find_entity_id(DOMAIN, zha_device, hass)
     assert entity_id is not None
 
     state = hass.states.get(entity_id)
@@ -167,7 +167,7 @@ async def test_frost_unlock(hass: HomeAssistant, tuya_water_valve) -> None:
     entity_registry = er.async_get(hass)
     zha_device, cluster = tuya_water_valve
     assert cluster is not None
-    entity_id = await find_entity_id(DOMAIN, zha_device, hass)
+    entity_id = find_entity_id(DOMAIN, zha_device, hass, qualifier="frost_lock_reset")
     assert entity_id is not None
 
     state = hass.states.get(entity_id)

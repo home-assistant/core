@@ -64,7 +64,7 @@ async def test_lock(hass: HomeAssistant, lock) -> None:
     """Test ZHA lock platform."""
 
     zha_device, cluster = lock
-    entity_id = await find_entity_id(Platform.LOCK, zha_device, hass)
+    entity_id = find_entity_id(Platform.LOCK, zha_device, hass)
     assert entity_id is not None
 
     assert hass.states.get(entity_id).state == STATE_UNLOCKED
