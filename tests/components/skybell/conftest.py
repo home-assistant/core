@@ -1,9 +1,7 @@
 """Configure pytest for Skybell tests."""
-from http import HTTPStatus
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
-from aiohttp.client import ClientError
-from aioskybell import Skybell
+from aioskybell import Skybell, SkybellDevice
 from aioskybell.helpers.const import BASE_URL, USERS_ME_URL
 import pytest
 
@@ -26,55 +24,21 @@ CONF_DATA = {
 }
 
 
-@pytest.fixture
-def invalid_auth(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) -> None:
-    """Return invalid auth."""
-    return aioclient_mock.post(
-        f"{BASE_URL}login/",
-        text=load_fixture("skybell/login_401.json"),
-        status=HTTPStatus.UNAUTHORIZED,
-    )
+@pytest.fixture(autouse=True)
+def skybell_mock():
+    """Fixture for our skybell tests."""
+    mocked_skybell_device = AsyncMock(spec=SkybellDevice)
 
+    mocked_skybell = AsyncMock(spec=Skybell)
+    mocked_skybell.async_get_devices.return_value = [mocked_skybell_device]
+    mocked_skybell.async_send_request.return_value = {"id": USER_ID}
+    mocked_skybell.user_id = USER_ID
 
-@pytest.fixture
-def internal_server_error(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
-) -> None:
-    """Return internal server error."""
-    return aioclient_mock.post(
-        f"{BASE_URL}login/",
-        status=HTTPStatus.INTERNAL_SERVER_ERROR,
-    )
-
-
-@pytest.fixture
-def cannot_connect(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) -> None:
-    """Return internal server error."""
-    return aioclient_mock.post(
-        f"{BASE_URL}login/",
-        text="{}",
-        exc=ClientError,
-    )
-
-
-@pytest.fixture
-def auth_exception(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) -> None:
-    """Return invalid authorization error."""
-    return aioclient_mock.get(
-        USERS_ME_URL,
-        text=load_fixture("skybell/login_401.json"),
-        status=HTTPStatus.UNAUTHORIZED,
-    )
-
-
-@pytest.fixture
-def not_ready(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) -> None:
-    """Return internal server error."""
-    return aioclient_mock.get(
-        USERS_ME_URL,
-        text="{}",
-        status=HTTPStatus.INTERNAL_SERVER_ERROR,
-    )
+    with patch(
+        "homeassistant.components.skybell.config_flow.Skybell",
+        return_value=mocked_skybell,
+    ), patch("homeassistant.components.skybell.Skybell", return_value=mocked_skybell):
+        yield mocked_skybell
 
 
 def create_entry(hass: HomeAssistant) -> MockConfigEntry:
