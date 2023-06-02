@@ -378,6 +378,16 @@ DISCOVERY_SCHEMAS = [
             )
         ],
     ),
+    # Fibaro Nice BiDi-ZWave (IBT4ZWAVE)
+    ZWaveDiscoverySchema(
+        platform=Platform.COVER,
+        hint="gate",
+        manufacturer_id={0x0441},
+        product_id={0x1000},
+        product_type={0x2400},
+        primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
+        required_values=[SWITCH_MULTILEVEL_TARGET_VALUE_SCHEMA],
+    ),
     # Qubino flush shutter
     ZWaveDiscoverySchema(
         platform=Platform.COVER,
