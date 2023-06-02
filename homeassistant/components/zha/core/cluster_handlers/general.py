@@ -358,7 +358,7 @@ class OnOffClusterHandler(ClusterHandler):
         super().__init__(cluster, endpoint)
         self._off_listener = None
 
-        if self.cluster.endpoint.model in (
+        if self.cluster.endpoint.model not in (
             "TS011F",
             "TS0121",
             "TS0001",
@@ -366,13 +366,19 @@ class OnOffClusterHandler(ClusterHandler):
             "TS0003",
             "TS0004",
         ):
-            self.ZCL_INIT_ATTRS = (  # pylint: disable=invalid-name
-                self.ZCL_INIT_ATTRS.copy()
-            )
-            self.ZCL_INIT_ATTRS["backlight_mode"] = True
-            self.ZCL_INIT_ATTRS["power_on_state"] = True
-            if self.cluster.endpoint.model == "TS011F":
-                self.ZCL_INIT_ATTRS["child_lock"] = True
+            return
+
+        try:
+            self.cluster.find_attribute("backlight_mode")
+        except KeyError:
+            return
+
+        self.ZCL_INIT_ATTRS = self.ZCL_INIT_ATTRS.copy()  # pylint: disable=invalid-name
+        self.ZCL_INIT_ATTRS["backlight_mode"] = True
+        self.ZCL_INIT_ATTRS["power_on_state"] = True
+
+        if self.cluster.endpoint.model == "TS011F":
+            self.ZCL_INIT_ATTRS["child_lock"] = True
 
     @classmethod
     def matches(cls, cluster: zigpy.zcl.Cluster, endpoint: Endpoint) -> bool:
