@@ -84,18 +84,19 @@ async def _resetup_platform(
         root_config[integration_platform].append(p_config)
 
     # If new adr0007 style, include that as well.
-    if integration_config := conf.get(integration_name):
+    integration_config = conf.get(integration_name)
+    if integration_config and isinstance(integration_config, list):
         # Check if it's a multi-platform config
         platform_config_inside = False
         platform_config = None
-        for item in integration_config:  # this will contain the array with items
-            for (
-                config_item
-            ) in item.values():  # Config is the dict with configuration parameters
-                if isinstance(
-                    config_item, dict
-                ):  # Platform config is contained in another dict
-                    platform_config_inside = True  # Notify unknown platforms as well, as this prevents us from rendering invalid configs.
+        # itegration_config will contain the array with items. Items should be dicts for adr0007
+        for item in list(filter(lambda co: isinstance(co, dict), integration_config)):
+            # If one of the values is a dict, most probaply it's a platform definition
+            for _config_item in list(
+                filter(lambda it: isinstance(it, dict), item.values())
+            ):
+                platform_config_inside = True
+                break
             if current_platform_config := item.get(
                 integration_platform
             ):  # Test if current platform is included in the config
@@ -104,11 +105,12 @@ async def _resetup_platform(
                 }  # Add the platform parameter, required for correct validation
 
                 # Add all non-platform settings to the config
-                for key, val in item.items():
-                    if not isinstance(val, dict):  # Add only non-platform settings
-                        platform_config.update({key: val})
+                for key, val in list(
+                    filter(lambda it: isinstance(it, dict), item.items())
+                ):
+                    platform_config.update({key: val})
 
-                # From now execute a validation similar to what's done in conf_util.async_process_component_config
+                # Execute a validation similar to what's done in conf_util.async_process_component_config
                 try:
                     p_integration = await async_get_integration_with_requirements(
                         hass, integration_name
