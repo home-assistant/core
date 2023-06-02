@@ -4,6 +4,7 @@ from __future__ import annotations
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+import logging
 
 from .api import async_register_s2_api, S2FlexMeasuresClient
 from .const import DOMAIN
@@ -51,10 +52,25 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         method = call.data.get("method")
         call_dict = dict(**call.data)
         call_dict.pop("method")
-        if method is not None and hasattr(client, method):
+        if method == "post_measurements":
+            logging.info("post measurement")
+            await getattr(client, method)(**call_dict)
+        elif method == "trigger_storage_schedule":
+            logging.info("trigger_schedule")
+            schedule_id = await getattr(client, method)(**call_dict)
+            print(schedule_id)
+            hass.states.async_set(f"{DOMAIN}.schedule_id", schedule_id)
+            # hass.states.set("schedule_id", schedule_id)
+        elif method == "get_schedule":
+            logging.info("get schedule")
+            schedule = await getattr(client, method)(**call_dict)
+            print(schedule)
+            hass.states.async_set(f"{DOMAIN}.schedule", new_state=schedule['start'])
+
+
+        elif method is not None and hasattr(client, method):
             await getattr(client, method)(**call_dict)
 
-        #hass.states.set("flexmeasures_api.schedule", name)
 
     def handle_s2(call):
         """Handle the service call to the FlexMeasures S2 websockets implementation."""
