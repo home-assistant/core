@@ -76,6 +76,7 @@ from homeassistant.core import (
     State,
 )
 from homeassistant.util import color
+from homeassistant.util.unit_conversion import TemperatureConverter
 
 from . import BASIC_CONFIG, MockConfig
 
@@ -1247,9 +1248,35 @@ async def test_temperature_control(hass: HomeAssistant) -> None:
     assert err.value.code == const.ERR_NOT_SUPPORTED
 
 
-async def test_temperature_control_water_heater(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    ("unit_in", "unit_out", "temp_in", "temp_out", "current_in", "current_out"),
+    [
+        (UnitOfTemperature.CELSIUS, "C", "120", 120, "130", 130),
+        (UnitOfTemperature.FAHRENHEIT, "F", "248", 120, "266", 130),
+    ],
+)
+async def test_temperature_control_water_heater(
+    hass: HomeAssistant,
+    unit_in: UnitOfTemperature,
+    unit_out: str,
+    temp_in: str,
+    temp_out: float,
+    current_in: str,
+    current_out: float,
+) -> None:
     """Test TemperatureControl trait support for water heater domain."""
-    hass.config.units.temperature_unit = UnitOfTemperature.CELSIUS
+    hass.config.units.temperature_unit = unit_in
+
+    min_temp = TemperatureConverter.convert(
+        water_heater.DEFAULT_MIN_TEMP,
+        UnitOfTemperature.CELSIUS,
+        unit_in,
+    )
+    max_temp = TemperatureConverter.convert(
+        water_heater.DEFAULT_MAX_TEMP,
+        UnitOfTemperature.CELSIUS,
+        unit_in,
+    )
 
     trt = trait.TemperatureControlTrait(
         hass,
@@ -1257,30 +1284,56 @@ async def test_temperature_control_water_heater(hass: HomeAssistant) -> None:
             "water_heater.bla",
             "attributes",
             {
-                "min_temp": water_heater.DEFAULT_MIN_TEMP,
-                "max_temp": water_heater.DEFAULT_MAX_TEMP,
-                "temperature": 130,
-                "current_temperature": 120,
+                "min_temp": min_temp,
+                "max_temp": max_temp,
+                "temperature": temp_in,
+                "current_temperature": current_in,
             },
         ),
         BASIC_CONFIG,
     )
 
     assert trt.sync_attributes() == {
-        "temperatureUnitForUX": "C",
-        "temperatureRange": {"maxThresholdCelsius": 140, "minThresholdCelsius": 110},
+        "temperatureUnitForUX": unit_out,
+        "temperatureRange": {
+            "maxThresholdCelsius": water_heater.DEFAULT_MAX_TEMP,
+            "minThresholdCelsius": water_heater.DEFAULT_MIN_TEMP,
+        },
     }
     assert trt.query_attributes() == {
-        "temperatureSetpointCelsius": 130,
-        "temperatureAmbientCelsius": 120,
+        "temperatureSetpointCelsius": temp_out,
+        "temperatureAmbientCelsius": current_out,
     }
 
 
+@pytest.mark.parametrize(
+    ("unit", "temp_init", "temp_in", "temp_out", "current_init"),
+    [
+        (UnitOfTemperature.CELSIUS, "180", 220, 220, "180"),
+        (UnitOfTemperature.FAHRENHEIT, "356", 220, 428, "356"),
+    ],
+)
 async def test_temperature_control_water_heater_set_temperature(
     hass: HomeAssistant,
+    unit: UnitOfTemperature,
+    temp_init: str,
+    temp_in: float,
+    temp_out: float,
+    current_init: str,
 ) -> None:
     """Test TemperatureControl trait support for water heater domain - SetTemperature."""
-    hass.config.units.temperature_unit = UnitOfTemperature.CELSIUS
+    hass.config.units.temperature_unit = unit
+
+    min_temp = TemperatureConverter.convert(
+        40,
+        UnitOfTemperature.CELSIUS,
+        unit,
+    )
+    max_temp = TemperatureConverter.convert(
+        230,
+        UnitOfTemperature.CELSIUS,
+        unit,
+    )
 
     trt = trait.TemperatureControlTrait(
         hass,
@@ -1288,10 +1341,10 @@ async def test_temperature_control_water_heater_set_temperature(
             "water_heater.bla",
             "attributes",
             {
-                "min_temp": 40,
-                "max_temp": 230,
-                "temperature": 220,
-                "current_temperature": 120,
+                "min_temp": min_temp,
+                "max_temp": max_temp,
+                "temperature": temp_init,
+                "current_temperature": current_init,
             },
         ),
         BASIC_CONFIG,
@@ -1314,11 +1367,14 @@ async def test_temperature_control_water_heater_set_temperature(
     await trt.execute(
         trait.COMMAND_SET_TEMPERATURE,
         BASIC_DATA,
-        {"temperature": 220},
+        {"temperature": temp_in},
         {},
     )
     assert len(calls) == 1
-    assert calls[0].data == {ATTR_ENTITY_ID: "water_heater.bla", ATTR_TEMPERATURE: 220}
+    assert calls[0].data == {
+        ATTR_ENTITY_ID: "water_heater.bla",
+        ATTR_TEMPERATURE: temp_out,
+    }
 
 
 async def test_humidity_setting_humidifier_setpoint(hass: HomeAssistant) -> None:

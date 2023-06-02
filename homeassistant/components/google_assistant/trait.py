@@ -915,21 +915,30 @@ class TemperatureControlTrait(_Trait):
     def sync_attributes(self):
         """Return temperature attributes for a sync request."""
         domain = self.state.domain
+        unit = self.hass.config.units.temperature_unit
         if domain == water_heater.DOMAIN:
-            attrs = self.state.attributes
+            min_temp = TemperatureConverter.convert(
+                self.state.attributes[water_heater.ATTR_MIN_TEMP],
+                unit,
+                UnitOfTemperature.CELSIUS,
+            )
+            max_temp = TemperatureConverter.convert(
+                self.state.attributes[water_heater.ATTR_MAX_TEMP],
+                unit,
+                UnitOfTemperature.CELSIUS,
+            )
+            if unit == UnitOfTemperature.FAHRENHEIT:
+                min_temp = round(min_temp)
+                max_temp = round(max_temp)
             return {
-                "temperatureUnitForUX": _google_temp_unit(
-                    self.hass.config.units.temperature_unit
-                ),
+                "temperatureUnitForUX": _google_temp_unit(unit),
                 "temperatureRange": {
-                    "minThresholdCelsius": attrs[water_heater.ATTR_MIN_TEMP],
-                    "maxThresholdCelsius": attrs[water_heater.ATTR_MAX_TEMP],
+                    "minThresholdCelsius": min_temp,
+                    "maxThresholdCelsius": max_temp,
                 },
             }
         return {
-            "temperatureUnitForUX": _google_temp_unit(
-                self.hass.config.units.temperature_unit
-            ),
+            "temperatureUnitForUX": _google_temp_unit(unit),
             "queryOnlyTemperatureControl": True,
             "temperatureRange": {
                 "minThresholdCelsius": -100,
@@ -988,13 +997,11 @@ class TemperatureControlTrait(_Trait):
             if domain == water_heater.DOMAIN:
                 min_temp = self.state.attributes[water_heater.ATTR_MIN_TEMP]
                 max_temp = self.state.attributes[water_heater.ATTR_MAX_TEMP]
-
                 temp = TemperatureConverter.convert(
                     params["temperature"], UnitOfTemperature.CELSIUS, unit
                 )
                 if unit == UnitOfTemperature.FAHRENHEIT:
                     temp = round(temp)
-
                 if temp < min_temp or temp > max_temp:
                     raise SmartHomeError(
                         ERR_VALUE_OUT_OF_RANGE,
