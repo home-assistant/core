@@ -92,10 +92,7 @@ class RomyVacuumEntity(CoordinatorEntity[RomyVacuumCoordinator], StateVacuumEnti
         self._fan_speed = FAN_SPEEDS.index(FAN_SPEED_NONE)
         self._fan_speed_update = False
 
-    @property
-    def supported_features(self) -> VacuumEntityFeature:
-        """Flag vacuum cleaner robot features that are supported."""
-        return SUPPORT_ROMY_ROBOT
+    self._attr_supported_features = SUPPORT_ROMY_ROBOT
 
     @property
     def fan_speed(self) -> str:
