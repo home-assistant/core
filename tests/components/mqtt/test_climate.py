@@ -1770,19 +1770,18 @@ async def test_alt_temperature_unit(
     current: float,
 ) -> None:
     """Test deriving the systems temperature unit."""
-    hass.config.units.temperature_unit = temperature_unit
+    with patch.object(hass.config.units, "temperature_unit", temperature_unit):
+        await mqtt_mock_entry()
 
-    await mqtt_mock_entry()
+        state = hass.states.get(ENTITY_CLIMATE)
+        assert state.attributes.get("temperature") == initial
+        assert state.attributes.get("min_temp") == min
+        assert state.attributes.get("max_temp") == max
 
-    state = hass.states.get(ENTITY_CLIMATE)
-    assert state.attributes.get("temperature") == initial
-    assert state.attributes.get("min_temp") == min
-    assert state.attributes.get("max_temp") == max
+        async_fire_mqtt_message(hass, "current_temperature", "77")
 
-    async_fire_mqtt_message(hass, "current_temperature", "77")
-
-    state = hass.states.get(ENTITY_CLIMATE)
-    assert state.attributes.get("current_temperature") == current
+        state = hass.states.get(ENTITY_CLIMATE)
+        assert state.attributes.get("current_temperature") == current
 
 
 async def test_setting_attribute_via_mqtt_json_message(
