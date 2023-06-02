@@ -2,7 +2,7 @@
 import asyncio
 from http import HTTPStatus
 from typing import Any
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
 import aiohttp
 import pytest
@@ -72,8 +72,8 @@ async def test_user_flow_router_not_setup(
     """
     url = "http://custom_url:1234"
     aioclient_mock.get(f"{url}/node/dataset/active", status=HTTPStatus.NO_CONTENT)
-    aioclient_mock.post(f"{url}/node/dataset/active", status=HTTPStatus.ACCEPTED)
-    aioclient_mock.post(f"{url}/node/state", status=HTTPStatus.OK)
+    aioclient_mock.put(f"{url}/node/dataset/active", status=HTTPStatus.CREATED)
+    aioclient_mock.put(f"{url}/node/state", status=HTTPStatus.OK)
 
     result = await hass.config_entries.flow.async_init(
         otbr.DOMAIN, context={"source": "user"}
@@ -96,14 +96,14 @@ async def test_user_flow_router_not_setup(
         )
 
     # Check we create a dataset and enable the router
-    assert aioclient_mock.mock_calls[-2][0] == "POST"
+    assert aioclient_mock.mock_calls[-2][0] == "PUT"
     assert aioclient_mock.mock_calls[-2][1].path == "/node/dataset/active"
     assert aioclient_mock.mock_calls[-2][2] == {
         "Channel": 15,
         "NetworkName": "home-assistant",
     }
 
-    assert aioclient_mock.mock_calls[-1][0] == "POST"
+    assert aioclient_mock.mock_calls[-1][0] == "PUT"
     assert aioclient_mock.mock_calls[-1][1].path == "/node/state"
     assert aioclient_mock.mock_calls[-1][2] == "enable"
 
@@ -216,8 +216,8 @@ async def test_hassio_discovery_flow_router_not_setup(
     """
     url = "http://core-silabs-multiprotocol:8081"
     aioclient_mock.get(f"{url}/node/dataset/active", status=HTTPStatus.NO_CONTENT)
-    aioclient_mock.post(f"{url}/node/dataset/active", status=HTTPStatus.ACCEPTED)
-    aioclient_mock.post(f"{url}/node/state", status=HTTPStatus.OK)
+    aioclient_mock.put(f"{url}/node/dataset/active", status=HTTPStatus.CREATED)
+    aioclient_mock.put(f"{url}/node/state", status=HTTPStatus.OK)
 
     with patch(
         "homeassistant.components.otbr.config_flow.async_get_preferred_dataset",
@@ -231,14 +231,14 @@ async def test_hassio_discovery_flow_router_not_setup(
         )
 
     # Check we create a dataset and enable the router
-    assert aioclient_mock.mock_calls[-2][0] == "POST"
+    assert aioclient_mock.mock_calls[-2][0] == "PUT"
     assert aioclient_mock.mock_calls[-2][1].path == "/node/dataset/active"
     assert aioclient_mock.mock_calls[-2][2] == {
         "Channel": 15,
         "NetworkName": "home-assistant",
     }
 
-    assert aioclient_mock.mock_calls[-1][0] == "POST"
+    assert aioclient_mock.mock_calls[-1][0] == "PUT"
     assert aioclient_mock.mock_calls[-1][1].path == "/node/state"
     assert aioclient_mock.mock_calls[-1][2] == "enable"
 
@@ -268,8 +268,8 @@ async def test_hassio_discovery_flow_router_not_setup_has_preferred(
     """
     url = "http://core-silabs-multiprotocol:8081"
     aioclient_mock.get(f"{url}/node/dataset/active", status=HTTPStatus.NO_CONTENT)
-    aioclient_mock.put(f"{url}/node/dataset/active", status=HTTPStatus.ACCEPTED)
-    aioclient_mock.post(f"{url}/node/state", status=HTTPStatus.OK)
+    aioclient_mock.put(f"{url}/node/dataset/active", status=HTTPStatus.CREATED)
+    aioclient_mock.put(f"{url}/node/state", status=HTTPStatus.OK)
 
     with patch(
         "homeassistant.components.otbr.config_flow.async_get_preferred_dataset",
@@ -287,7 +287,7 @@ async def test_hassio_discovery_flow_router_not_setup_has_preferred(
     assert aioclient_mock.mock_calls[-2][1].path == "/node/dataset/active"
     assert aioclient_mock.mock_calls[-2][2] == DATASET_CH15.hex()
 
-    assert aioclient_mock.mock_calls[-1][0] == "POST"
+    assert aioclient_mock.mock_calls[-1][0] == "PUT"
     assert aioclient_mock.mock_calls[-1][1].path == "/node/state"
     assert aioclient_mock.mock_calls[-1][2] == "enable"
 
@@ -309,7 +309,9 @@ async def test_hassio_discovery_flow_router_not_setup_has_preferred(
 
 
 async def test_hassio_discovery_flow_router_not_setup_has_preferred_2(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    multiprotocol_addon_manager_mock,
 ) -> None:
     """Test the hassio discovery flow when the border router has no dataset.
 
@@ -318,11 +320,10 @@ async def test_hassio_discovery_flow_router_not_setup_has_preferred_2(
     """
     url = "http://core-silabs-multiprotocol:8081"
     aioclient_mock.get(f"{url}/node/dataset/active", status=HTTPStatus.NO_CONTENT)
-    aioclient_mock.post(f"{url}/node/dataset/active", status=HTTPStatus.ACCEPTED)
-    aioclient_mock.post(f"{url}/node/state", status=HTTPStatus.OK)
+    aioclient_mock.put(f"{url}/node/dataset/active", status=HTTPStatus.CREATED)
+    aioclient_mock.put(f"{url}/node/state", status=HTTPStatus.OK)
 
-    networksettings = Mock()
-    networksettings.network_info.channel = 15
+    multiprotocol_addon_manager_mock.async_get_channel.return_value = 15
 
     with patch(
         "homeassistant.components.otbr.config_flow.async_get_preferred_dataset",
@@ -330,26 +331,20 @@ async def test_hassio_discovery_flow_router_not_setup_has_preferred_2(
     ), patch(
         "homeassistant.components.otbr.async_setup_entry",
         return_value=True,
-    ) as mock_setup_entry, patch(
-        "homeassistant.components.otbr.util.zha_api.async_get_radio_path",
-        return_value="socket://core-silabs-multiprotocol:9999",
-    ), patch(
-        "homeassistant.components.otbr.util.zha_api.async_get_network_settings",
-        return_value=networksettings,
-    ):
+    ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_init(
             otbr.DOMAIN, context={"source": "hassio"}, data=HASSIO_DATA
         )
 
     # Check we create a dataset and enable the router
-    assert aioclient_mock.mock_calls[-2][0] == "POST"
+    assert aioclient_mock.mock_calls[-2][0] == "PUT"
     assert aioclient_mock.mock_calls[-2][1].path == "/node/dataset/active"
     assert aioclient_mock.mock_calls[-2][2] == {
         "Channel": 15,
         "NetworkName": "home-assistant",
     }
 
-    assert aioclient_mock.mock_calls[-1][0] == "POST"
+    assert aioclient_mock.mock_calls[-1][0] == "PUT"
     assert aioclient_mock.mock_calls[-1][1].path == "/node/state"
     assert aioclient_mock.mock_calls[-1][2] == "enable"
 

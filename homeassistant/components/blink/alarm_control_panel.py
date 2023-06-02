@@ -55,8 +55,15 @@ class BlinkSyncModule(AlarmControlPanelEntity):
 
     def update(self) -> None:
         """Update the state of the device."""
-        _LOGGER.debug("Updating Blink Alarm Control Panel %s", self._name)
-        self.data.refresh()
+        if self.data.check_if_ok_to_update():
+            _LOGGER.debug(
+                "Initiating a blink.refresh() from BlinkSyncModule('%s') (%s)",
+                self._name,
+                self.data,
+            )
+            self.data.refresh()
+            _LOGGER.info("Updating State of Blink Alarm Control Panel '%s'", self._name)
+
         self._attr_state = (
             STATE_ALARM_ARMED_AWAY if self.sync.arm else STATE_ALARM_DISARMED
         )

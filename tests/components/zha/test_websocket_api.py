@@ -744,6 +744,7 @@ async def test_get_network_settings(
     assert msg["success"]
     assert "radio_type" in msg["result"]
     assert "network_info" in msg["result"]["settings"]
+    assert "path" in msg["result"]["device"]
 
 
 async def test_list_network_backups(

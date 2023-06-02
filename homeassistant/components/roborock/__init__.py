@@ -7,8 +7,7 @@ import logging
 
 from roborock.api import RoborockApiClient
 from roborock.cloud_api import RoborockMqttClient
-from roborock.containers import HomeDataDevice, RoborockDeviceInfo, UserData
-from roborock.exceptions import RoborockException
+from roborock.containers import DeviceData, HomeDataDevice, UserData
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_USERNAME
@@ -32,39 +31,58 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     _LOGGER.debug("Getting home data")
     home_data = await api_client.get_home_data(user_data)
     _LOGGER.debug("Got home data %s", home_data)
-    devices: list[HomeDataDevice] = home_data.devices + home_data.received_devices
+    device_map: dict[str, HomeDataDevice] = {
+        device.duid: device for device in home_data.devices + home_data.received_devices
+    }
+    product_info = {product.id: product for product in home_data.products}
     # Create a mqtt_client, which is needed to get the networking information of the device for local connection and in the future, get the map.
-    mqtt_client = RoborockMqttClient(
-        user_data, {device.duid: RoborockDeviceInfo(device) for device in devices}
-    )
+    mqtt_clients = [
+        RoborockMqttClient(
+            user_data, DeviceData(device, product_info[device.product_id].model)
+        )
+        for device in device_map.values()
+    ]
     network_results = await asyncio.gather(
-        *(mqtt_client.get_networking(device.duid) for device in devices)
+        *(mqtt_client.get_networking() for mqtt_client in mqtt_clients)
     )
     network_info = {
         device.duid: result
-        for device, result in zip(devices, network_results)
+        for device, result in zip(device_map.values(), network_results)
         if result is not None
     }
-    try:
-        await mqtt_client.async_disconnect()
-    except RoborockException as err:
-        _LOGGER.warning("Failed disconnecting from the mqtt server %s", err)
+    await asyncio.gather(
+        *(mqtt_client.async_disconnect() for mqtt_client in mqtt_clients),
+        return_exceptions=True,
+    )
     if not network_info:
         raise ConfigEntryNotReady(
             "Could not get network information about your devices"
         )
-
-    product_info = {product.id: product for product in home_data.products}
-    coordinator = RoborockDataUpdateCoordinator(
-        hass,
-        devices,
-        network_info,
-        product_info,
+    coordinator_map: dict[str, RoborockDataUpdateCoordinator] = {}
+    for device_id, device in device_map.items():
+        coordinator_map[device_id] = RoborockDataUpdateCoordinator(
+            hass,
+            device,
+            network_info[device_id],
+            product_info[device.product_id],
+        )
+    # If one device update fails - we still want to set up other devices
+    await asyncio.gather(
+        *(
+            coordinator.async_config_entry_first_refresh()
+            for coordinator in coordinator_map.values()
+        ),
+        return_exceptions=True,
     )
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
+        device_id: coordinator
+        for device_id, coordinator in coordinator_map.items()
+        if coordinator.last_update_success
+    }  # Only add coordinators that succeeded
 
-    await coordinator.async_config_entry_first_refresh()
-
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
+    if not hass.data[DOMAIN][entry.entry_id]:
+        # Don't start if no coordinators succeeded.
+        raise ConfigEntryNotReady("There are no devices that can currently be reached.")
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -75,7 +93,12 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Handle removal of an entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
-        await hass.data[DOMAIN][entry.entry_id].release()
+        await asyncio.gather(
+            *(
+                coordinator.release()
+                for coordinator in hass.data[DOMAIN][entry.entry_id].values()
+            )
+        )
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
