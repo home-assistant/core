@@ -97,6 +97,7 @@ ATTR_ACTIVE_CHILD = "active_child"
 
 CONF_ATTRS = "attributes"
 CONF_CHILDREN = "children"
+CONF_ACTIVE_CHILD_TEMPLATE = "active_child_template"
 CONF_COMMANDS = "commands"
 CONF_BROWSE_MEDIA_ENTITY = "browse_media_entity"
 
@@ -129,6 +130,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_UNIQUE_ID): cv.string,
         vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
         vol.Optional(CONF_STATE_TEMPLATE): cv.template,
+        vol.Optional(CONF_ACTIVE_CHILD_TEMPLATE): cv.template,
     },
     extra=vol.REMOVE_EXTRA,
 )
@@ -171,6 +173,8 @@ class UniversalMediaPlayer(MediaPlayerEntity):
         self._child_state = None
         self._state_template_result = None
         self._state_template = config.get(CONF_STATE_TEMPLATE)
+        self._active_child_template_result = None
+        self._active_child_template = config.get(CONF_ACTIVE_CHILD_TEMPLATE)
         self._device_class = config.get(CONF_DEVICE_CLASS)
         self._attr_unique_id = config.get(CONF_UNIQUE_ID)
         self._browse_media_entity = config.get(CONF_BROWSE_MEDIA_ENTITY)
@@ -187,22 +191,38 @@ class UniversalMediaPlayer(MediaPlayerEntity):
         @callback
         def _async_on_template_update(event, updates):
             """Update ha state when dependencies update."""
-            result = updates.pop().result
-
-            if isinstance(result, TemplateError):
-                self._state_template_result = None
-            else:
-                self._state_template_result = result
+            for update in updates:
+                if (
+                    self._state_template is not None
+                    and update.template.template == self._state_template.template
+                ):
+                    if isinstance(update.result, TemplateError):
+                        self._state_template_result = None
+                    else:
+                        self._state_template_result = update.result
+                elif (
+                    self._active_child_template is not None
+                    and update.template.template == self._active_child_template.template
+                ):
+                    if isinstance(update.result, TemplateError):
+                        self._active_child_template_result = None
+                    else:
+                        self._active_child_template_result = update.result
 
             if event:
                 self.async_set_context(event.context)
 
             self.async_schedule_update_ha_state(True)
 
+        track_templates = []
         if self._state_template is not None:
+            track_templates.append(TrackTemplate(self._state_template, None))
+        if self._active_child_template is not None:
+            track_templates.append(TrackTemplate(self._active_child_template, None))
+        if track_templates:
             result = async_track_template_result(
                 self.hass,
-                [TrackTemplate(self._state_template, None)],
+                track_templates,
                 _async_on_template_update,
             )
             self.hass.bus.async_listen_once(
@@ -645,14 +665,21 @@ class UniversalMediaPlayer(MediaPlayerEntity):
     async def async_update(self) -> None:
         """Update state in HA."""
         self._child_state = None
-        for child_name in self._children:
-            if (child_state := self.hass.states.get(child_name)) and (
-                child_state_order := STATES_ORDER_LOOKUP.get(child_state.state, 0)
-            ) >= STATES_ORDER_IDLE:
-                if self._child_state:
-                    if child_state_order > STATES_ORDER_LOOKUP.get(
-                        self._child_state.state, 0
-                    ):
+        if (
+            self._active_child_template is not None
+            and self._active_child_template_result is not None
+            and self._active_child_template_result in self._children
+        ):
+            self._child_state = self.hass.states.get(self._active_child_template_result)
+        else:
+            for child_name in self._children:
+                if (child_state := self.hass.states.get(child_name)) and (
+                    child_state_order := STATES_ORDER_LOOKUP.get(child_state.state, 0)
+                ) >= STATES_ORDER_IDLE:
+                    if self._child_state:
+                        if child_state_order > STATES_ORDER_LOOKUP.get(
+                            self._child_state.state, 0
+                        ):
+                            self._child_state = child_state
+                    else:
                         self._child_state = child_state
-                else:
-                    self._child_state = child_state
