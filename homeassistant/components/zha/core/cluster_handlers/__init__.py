@@ -3,11 +3,12 @@ from __future__ import annotations
 
 import asyncio
 from enum import Enum
-from functools import partialmethod, wraps
+from functools import partialmethod
 import logging
 from typing import TYPE_CHECKING, Any, TypedDict
 
 import zigpy.exceptions
+import zigpy.util
 import zigpy.zcl
 from zigpy.zcl.foundation import (
     CommandSchema,
@@ -45,7 +46,7 @@ if TYPE_CHECKING:
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_REQUEST_RETRIES = 3
+retry_request = zigpy.util.retryable_request(tries=3)
 
 
 class AttrReportConfig(TypedDict, total=True):
@@ -73,37 +74,6 @@ def parse_and_log_command(cluster_handler, tsn, command_id, args):
         tsn,
     )
     return name
-
-
-def decorate_command(cluster_handler, command):
-    """Wrap a cluster command to make it safe."""
-
-    @wraps(command)
-    async def wrapper(*args, **kwds):
-        kwds.setdefault("tries", DEFAULT_REQUEST_RETRIES)
-
-        try:
-            result = await command(*args, **kwds)
-            cluster_handler.debug(
-                "executed '%s' command with args: '%s' kwargs: '%s' result: %s",
-                command.__name__,
-                args,
-                kwds,
-                result,
-            )
-            return result
-
-        except (zigpy.exceptions.ZigbeeException, asyncio.TimeoutError) as ex:
-            cluster_handler.debug(
-                "command failed: '%s' args: '%s' kwargs '%s' exception: '%s'",
-                command.__name__,
-                args,
-                kwds,
-                str(ex),
-            )
-            return ex
-
-    return wrapper
 
 
 class ClusterHandlerStatus(Enum):
@@ -514,7 +484,8 @@ class ClusterHandler(LogMixin):
         if hasattr(self._cluster, name) and callable(getattr(self._cluster, name)):
             command = getattr(self._cluster, name)
             command.__name__ = name
-            return decorate_command(self, command)
+
+            return retry_request(command)
         return self.__getattribute__(name)
 
 
