@@ -5,7 +5,6 @@ https://home-assistant.io/components/vacuum.romy/.
 """
 
 
-from collections.abc import Mapping
 from typing import Any
 
 from romy import RomyRobot
@@ -87,22 +86,18 @@ class RomyVacuumEntity(CoordinatorEntity[RomyVacuumCoordinator], StateVacuumEnti
         self.romy = romy
         self._device_info = device_info
         self._attr_unique_id = self.romy.unique_id
+        self._attr_supported_features = SUPPORT_ROMY_ROBOT
+        self._attr_fan_speed_list = FAN_SPEEDS
+        self._attr_icon = ICON
 
         self._is_on = False
         self._fan_speed = FAN_SPEEDS.index(FAN_SPEED_NONE)
         self._fan_speed_update = False
 
-    self._attr_supported_features = SUPPORT_ROMY_ROBOT
-
     @property
     def fan_speed(self) -> str:
         """Return the current fan speed of the vacuum cleaner."""
         return FAN_SPEEDS[self.romy.fan_speed]
-
-    @property
-    def fan_speed_list(self) -> list[str]:
-        """Get the list of available fan speed steps of the vacuum cleaner."""
-        return FAN_SPEEDS
 
     @property
     def battery_level(self) -> None | int:
@@ -123,11 +118,6 @@ class RomyVacuumEntity(CoordinatorEntity[RomyVacuumCoordinator], StateVacuumEnti
     def name(self) -> str:
         """Return the name of the device."""
         return self.romy.name
-
-    @property
-    def icon(self) -> str:
-        """Return the icon to use for device."""
-        return ICON
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the vacuum on."""
