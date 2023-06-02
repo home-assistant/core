@@ -818,6 +818,7 @@ async def test_nice_ibt4zwave_cover(
     )
     assert ATTR_CURRENT_POSITION in state.attributes
     assert state.attributes[ATTR_CURRENT_POSITION] == 0
+    assert state.attributes[ATTR_DEVICE_CLASS] == CoverDeviceClass.GATE
 
     await hass.services.async_call(
         DOMAIN,
