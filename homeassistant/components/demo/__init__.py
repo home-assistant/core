@@ -14,6 +14,7 @@ from homeassistant.const import (
 )
 import homeassistant.core as ha
 from homeassistant.core import Event, HomeAssistant
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.typing import ConfigType
 
@@ -28,6 +29,7 @@ COMPONENTS_WITH_CONFIG_ENTRY_DEMO_PLATFORM = [
     Platform.CLIMATE,
     Platform.COVER,
     Platform.DATE,
+    Platform.DATETIME,
     Platform.FAN,
     Platform.HUMIDIFIER,
     Platform.LIGHT,
@@ -55,6 +57,8 @@ COMPONENTS_WITH_DEMO_PLATFORM = [
     Platform.CALENDAR,
     Platform.DEVICE_TRACKER,
 ]
+
+CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:

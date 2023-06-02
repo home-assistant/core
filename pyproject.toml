@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name        = "homeassistant"
-version     = "2023.6.0.dev0"
+version     = "2023.7.0.dev0"
 license     = {text = "Apache-2.0"}
 description = "Open-source home automation platform running on Python 3."
 readme      = "README.rst"
@@ -25,7 +25,7 @@ requires-python = ">=3.10.0"
 dependencies    = [
     "aiohttp==3.8.4",
     "astral==2.2",
-    "async_timeout==4.0.2",
+    "async-timeout==4.0.2",
     "attrs==22.2.0",
     "atomicwrites-homeassistant==1.4.1",
     "awesomeversion==22.9.0",
@@ -37,7 +37,7 @@ dependencies    = [
     "httpx==0.24.1",
     "home-assistant-bluetooth==1.10.0",
     "ifaddr==0.2.0",
-    "jinja2==3.1.2",
+    "Jinja2==3.1.2",
     "lru-dict==1.1.8",
     "PyJWT==2.7.0",
     # PyJWT has loose dependency. We want the latest one.
@@ -47,9 +47,9 @@ dependencies    = [
     "orjson==3.8.12",
     "pip>=21.0,<23.2",
     "python-slugify==4.0.1",
-    "pyyaml==6.0",
+    "PyYAML==6.0",
     "requests==2.31.0",
-    "typing-extensions>=4.5.0,<5.0",
+    "typing_extensions>=4.5.0,<5.0",
     "ulid-transform==0.7.2",
     "voluptuous==0.13.1",
     "voluptuous-serialize==2.6.0",
@@ -284,6 +284,7 @@ voluptuous = "vol"
 "homeassistant.helpers.device_registry" = "dr"
 "homeassistant.helpers.entity_registry" = "er"
 "homeassistant.helpers.issue_registry" = "ir"
+"homeassistant.util.dt" = "dt_util"
 
 [tool.ruff.flake8-pytest-style]
 fixture-parentheses = false

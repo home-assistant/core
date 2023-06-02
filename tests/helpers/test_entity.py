@@ -988,6 +988,89 @@ async def test_friendly_name(
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == expected_friendly_name
 
 
+@pytest.mark.parametrize(
+    (
+        "entity_name",
+        "expected_friendly_name1",
+        "expected_friendly_name2",
+        "expected_friendly_name3",
+    ),
+    (
+        (
+            "Entity Blu",
+            "Device Bla Entity Blu",
+            "Device Bla2 Entity Blu",
+            "New Device Entity Blu",
+        ),
+        (
+            None,
+            "Device Bla",
+            "Device Bla2",
+            "New Device",
+        ),
+    ),
+)
+async def test_friendly_name_updated(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    entity_name: str | None,
+    expected_friendly_name1: str,
+    expected_friendly_name2: str,
+    expected_friendly_name3: str,
+) -> None:
+    """Test entity_id is influenced by entity name."""
+
+    async def async_setup_entry(hass, config_entry, async_add_entities):
+        """Mock setup entry method."""
+        async_add_entities(
+            [
+                MockEntity(
+                    unique_id="qwer",
+                    device_info={
+                        "identifiers": {("hue", "1234")},
+                        "connections": {(dr.CONNECTION_NETWORK_MAC, "abcd")},
+                        "name": "Device Bla",
+                    },
+                    has_entity_name=True,
+                    name=entity_name,
+                ),
+            ]
+        )
+        return True
+
+    platform = MockPlatform(async_setup_entry=async_setup_entry)
+    config_entry = MockConfigEntry(entry_id="super-mock-id")
+    entity_platform = MockEntityPlatform(
+        hass, platform_name=config_entry.domain, platform=platform
+    )
+
+    assert await entity_platform.async_setup_entry(config_entry)
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_entity_ids()) == 1
+    state = hass.states.async_all()[0]
+    assert state.attributes.get(ATTR_FRIENDLY_NAME) == expected_friendly_name1
+
+    device = device_registry.async_get_device(identifiers={("hue", "1234")})
+    device_registry.async_update_device(device.id, name_by_user="Device Bla2")
+    await hass.async_block_till_done()
+
+    state = hass.states.async_all()[0]
+    assert state.attributes.get(ATTR_FRIENDLY_NAME) == expected_friendly_name2
+
+    device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={("hue", "5678")},
+        name="New Device",
+    )
+    entity_registry.async_update_entity(state.entity_id, device_id=device.id)
+    await hass.async_block_till_done()
+
+    state = hass.states.async_all()[0]
+    assert state.attributes.get(ATTR_FRIENDLY_NAME) == expected_friendly_name3
+
+
 async def test_translation_key(hass: HomeAssistant) -> None:
     """Test translation key property."""
     mock_entity1 = entity.Entity()
