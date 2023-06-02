@@ -34,16 +34,28 @@ from tests.common import MockConfigEntry, async_capture_events, async_fire_time_
 
 
 @pytest.mark.parametrize(
-    "cipher_list", [None, "python_default", "modern", "intermediate"]
+    ("cipher_list", "verify_ssl"),
+    [
+        (None, None),
+        ("python_default", True),
+        ("python_default", False),
+        ("modern", True),
+        ("intermediate", True),
+    ],
 )
 @pytest.mark.parametrize("imap_has_capability", [True, False], ids=["push", "poll"])
 async def test_entry_startup_and_unload(
-    hass: HomeAssistant, mock_imap_protocol: MagicMock, cipher_list: str
+    hass: HomeAssistant,
+    mock_imap_protocol: MagicMock,
+    cipher_list: str | None,
+    verify_ssl: bool | None,
 ) -> None:
     """Test imap entry startup and unload with push and polling coordinator and alternate ciphers."""
     config = MOCK_CONFIG.copy()
-    if cipher_list:
+    if cipher_list is not None:
         config["ssl_cipher_list"] = cipher_list
+    if verify_ssl is not None:
+        config["verify_ssl"] = verify_ssl
 
     config_entry = MockConfigEntry(domain=DOMAIN, data=config)
     config_entry.add_to_hass(hass)

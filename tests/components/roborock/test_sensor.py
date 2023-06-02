@@ -14,7 +14,7 @@ from tests.common import MockConfigEntry
 
 async def test_sensors(hass: HomeAssistant, setup_entry: MockConfigEntry) -> None:
     """Test sensors and check test values are correctly set."""
-    assert len(hass.states.async_all("sensor")) == 6
+    assert len(hass.states.async_all("sensor")) == 7
     assert hass.states.get("sensor.roborock_s7_maxv_main_brush_time_left").state == str(
         MAIN_BRUSH_REPLACE_TIME - 74382
     )
@@ -31,3 +31,4 @@ async def test_sensors(hass: HomeAssistant, setup_entry: MockConfigEntry) -> Non
     assert (
         hass.states.get("sensor.roborock_s7_maxv_total_cleaning_time").state == "74382"
     )
+    assert hass.states.get("sensor.roborock_s7_maxv_status").state == "charging"

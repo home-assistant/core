@@ -6,5 +6,5 @@
   "documentation": "https://www.home-assistant.io/integrations/eight_sleep",
   "iot_class": "cloud_polling",
   "loggers": ["pyeight"],
-  "requirements": ["pyeight==0.3.2"]
+  "requirements": ["pyEight==0.3.2"]
 }

@@ -18,6 +18,7 @@ from .const import (
     ATTR_SUBSCRIBER_COUNT,
     ATTR_THUMBNAIL,
     ATTR_TITLE,
+    ATTR_VIDEO_ID,
     COORDINATOR,
     DOMAIN,
 )
@@ -30,6 +31,7 @@ class YouTubeMixin:
 
     value_fn: Callable[[Any], StateType]
     entity_picture_fn: Callable[[Any], str]
+    attributes_fn: Callable[[Any], dict[str, Any]] | None
 
 
 @dataclass
@@ -44,6 +46,9 @@ SENSOR_TYPES = [
         icon="mdi:youtube",
         value_fn=lambda channel: channel[ATTR_LATEST_VIDEO][ATTR_TITLE],
         entity_picture_fn=lambda channel: channel[ATTR_LATEST_VIDEO][ATTR_THUMBNAIL],
+        attributes_fn=lambda channel: {
+            ATTR_VIDEO_ID: channel[ATTR_LATEST_VIDEO][ATTR_VIDEO_ID]
+        },
     ),
     YouTubeSensorEntityDescription(
         key="subscribers",
@@ -52,6 +57,7 @@ SENSOR_TYPES = [
         native_unit_of_measurement="subscribers",
         value_fn=lambda channel: channel[ATTR_SUBSCRIBER_COUNT],
         entity_picture_fn=lambda channel: channel[ATTR_ICON],
+        attributes_fn=None,
     ),
 ]
 
@@ -84,3 +90,10 @@ class YouTubeSensor(YouTubeChannelEntity, SensorEntity):
     def entity_picture(self) -> str:
         """Return the value reported by the sensor."""
         return self.entity_description.entity_picture_fn(self._channel)
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any] | None:
+        """Return the extra state attributes."""
+        if self.entity_description.attributes_fn:
+            return self.entity_description.attributes_fn(self._channel)
+        return None

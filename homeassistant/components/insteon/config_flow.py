@@ -163,14 +163,6 @@ class InsteonFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             step_id=step_id, data_schema=data_schema, errors=errors
         )
 
-    async def async_step_import(self, import_info):
-        """Import a yaml entry as a config entry."""
-        if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
-        if not await _async_connect(**import_info):
-            return self.async_abort(reason="cannot_connect")
-        return self.async_create_entry(title="", data=import_info)
-
     async def async_step_usb(self, discovery_info: usb.UsbServiceInfo) -> FlowResult:
         """Handle USB discovery."""
         if self._async_current_entries():

@@ -4,6 +4,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 
+from roborock.containers import RoborockStateCode
 from roborock.roborock_typing import DeviceProp
 
 from homeassistant.components.sensor import (
@@ -37,7 +38,7 @@ class RoborockSensorDescription(
     """A class that describes Roborock sensors."""
 
 
-CONSUMABLE_SENSORS = [
+SENSOR_DESCRIPTIONS = [
     RoborockSensorDescription(
         native_unit_of_measurement=UnitOfTime.SECONDS,
         key="main_brush_time_left",
@@ -74,9 +75,6 @@ CONSUMABLE_SENSORS = [
         value_fn=lambda data: data.consumable.sensor_time_left,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-]
-
-CLEAN_INFORMATION_SENSORS = [
     RoborockSensorDescription(
         native_unit_of_measurement=UnitOfTime.SECONDS,
         key="cleaning_time",
@@ -91,6 +89,15 @@ CLEAN_INFORMATION_SENSORS = [
         icon="mdi:history",
         device_class=SensorDeviceClass.DURATION,
         value_fn=lambda data: data.clean_summary.clean_time,
+    ),
+    RoborockSensorDescription(
+        key="status",
+        icon="mdi:information-outline",
+        device_class=SensorDeviceClass.ENUM,
+        translation_key="status",
+        value_fn=lambda data: data.status.state.name,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        options=RoborockStateCode.keys(),
     ),
 ]
 
@@ -111,7 +118,7 @@ async def async_setup_entry(
             description,
         )
         for device_id, coordinator in coordinators.items()
-        for description in CONSUMABLE_SENSORS + CLEAN_INFORMATION_SENSORS
+        for description in SENSOR_DESCRIPTIONS
     )
 
 
@@ -133,4 +140,6 @@ class RoborockSensorEntity(RoborockCoordinatedEntity, SensorEntity):
     @property
     def native_value(self) -> StateType:
         """Return the value reported by the sensor."""
-        return self.entity_description.value_fn(self.coordinator.device_info.props)
+        return self.entity_description.value_fn(
+            self.coordinator.roborock_device_info.props
+        )
