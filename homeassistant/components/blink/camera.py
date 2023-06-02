@@ -64,20 +64,16 @@ class BlinkCamera(Camera):
         return self._camera.attributes
 
     async def async_enable_motion_detection(self) -> None:
+    async def async_enable_motion_detection(self) -> None:
         """Enable motion detection for the camera."""
-        try:
-            await self._camera.async_arm(True)
-            await self.data.refresh(force=True)
-        except asyncio.TimeoutError:
-            self._attr_available = False
+        await self._camera.async_arm(True)
+        await self.data.refresh()
 
     async def async_disable_motion_detection(self) -> None:
+    async def async_disable_motion_detection(self) -> None:
         """Disable motion detection for the camera."""
-        try:
-            await self._camera.async_arm(False)
-            await self.data.refresh(force=True)
-        except asyncio.TimeoutError:
-            self._attr_available = False
+        await self._camera.async_arm(False)
+        await self.data.refresh()
 
     @property
     def motion_detection_enabled(self) -> bool:
@@ -89,13 +85,10 @@ class BlinkCamera(Camera):
         """Return the camera brand."""
         return DEFAULT_BRAND
 
-    async def trigger_camera(self) -> None:
+    async def trigger_camera(self):
         """Trigger camera to take a snapshot."""
-        try:
-            await self._camera.snap_picture()
-            self.async_schedule_update_ha_state(force_refresh=True)
-        except asyncio.TimeoutError:
-            pass
+        await self._camera.snap_picture()
+        await self.data.refresh()
 
     def camera_image(
         self, width: int | None = None, height: int | None = None

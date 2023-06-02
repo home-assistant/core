@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import logging
 
 from blinkpy.blinkpy import Blink
@@ -68,11 +69,8 @@ class BlinkSyncModuleHA(AlarmControlPanelEntity):
                 self._name,
                 self.data,
             )
-            try:
-                await self.data.refresh(force=True)
-                self._attr_available = True
-            except asyncio.TimeoutError:
-                self._attr_available = False
+            with contextlib.suppress(asyncio.TimeoutError):
+                await self.data.refresh()
 
             _LOGGER.info("Updating State of Blink Alarm Control Panel '%s'", self._name)
 
@@ -81,25 +79,13 @@ class BlinkSyncModuleHA(AlarmControlPanelEntity):
         self.sync.attributes[ATTR_ATTRIBUTION] = DEFAULT_ATTRIBUTION
         self._attr_extra_state_attributes = self.sync.attributes
 
-    @property
-    def state(self) -> StateType:
-        """Return state of alarm."""
-        return STATE_ALARM_ARMED_AWAY if self.sync.arm else STATE_ALARM_DISARMED
-
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
-        try:
-            await self.sync.async_arm(False)
-            await self.sync.refresh()
-            self.async_write_ha_state()
-        except asyncio.TimeoutError:
-            self._attr_available = False
+        await self.sync.async_arm(False)
+        await self.sync.refresh()
 
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
+    async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm command."""
-        try:
-            await self.sync.async_arm(True)
-            await self.sync.refresh()
-            self.async_write_ha_state()
-        except asyncio.TimeoutError:
-            self._attr_available = False
+        await self.sync.async_arm(True)
+        await self.sync.refresh()
