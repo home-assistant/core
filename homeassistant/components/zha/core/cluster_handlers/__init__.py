@@ -370,7 +370,7 @@ class ClusterHandler(LogMixin):
         """Handle commands received to this cluster."""
 
     @callback
-    def attribute_updated(self, attrid, value):
+    def attribute_updated(self, attrid: int, value: Any, _: Any):
         """Handle attribute updates on this cluster."""
         self.async_send_signal(
             f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}",
@@ -543,7 +543,7 @@ class ClientClusterHandler(ClusterHandler):
     """ClusterHandler for Zigbee client (output) clusters."""
 
     @callback
-    def attribute_updated(self, attrid, value):
+    def attribute_updated(self, attrid: int, value: Any, _: Any):
         """Handle an attribute updated on this cluster."""
 
         try:
