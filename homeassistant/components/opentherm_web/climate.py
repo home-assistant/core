@@ -21,9 +21,7 @@ async def async_setup_entry(
     coordinator = hass.data[DOMAIN][config_entry.entry_id]
 
     # Add all entities to HA
-    async_add_entities(
-        OpenThermClimate(controller) for controller in coordinator.controller
-    )
+    async_add_entities(OpenThermClimate(controller) for controller in coordinator.data)
 
 
 # https://developers.home-assistant.io/docs/core/entity/climate/
