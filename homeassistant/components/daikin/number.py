@@ -42,7 +42,7 @@ async def async_setup_entry(
             [
                 DaikinZoneTemperature(daikin_api, zone_id)
                 for zone_id, zone in enumerate(zones)
-                if zone[0] != ("-", "0") and zone[1] != 0
+                if zone[0] != "-" and zone[2] != 0
             ]
         )
 
