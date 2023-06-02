@@ -5,6 +5,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
 
+from pyezviz import EzvizClient
 from pyezviz.constants import SupportExt
 from pyezviz.exceptions import HTTPError, PyEzvizError
 
@@ -25,7 +26,7 @@ PARALLEL_UPDATES = 1
 class EzvizButtonEntityDescriptionMixin:
     """Mixin values for EZVIZ button entities."""
 
-    method: Callable[[Any, Any, Any], Any]
+    method: Callable[[EzvizClient, str, str], Any]
     supported_ext: str
 
 
