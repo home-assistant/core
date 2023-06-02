@@ -33,14 +33,14 @@ class SchlageLockEntity(CoordinatorEntity, LockEntity):
     """Schlage lock entity."""
 
     def __init__(
-        self, *, coordinator: SchlageDataUpdateCoordinator, device_id: str
+        self, coordinator: SchlageDataUpdateCoordinator, device_id: str
     ) -> None:
         """Initialize a Schlage Lock."""
         super().__init__(coordinator=coordinator)
         self.device_id: str = device_id
         self._attr_unique_id = device_id
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self.device_id)},
+            identifiers={(DOMAIN, device_id)},
             name=self._lock.name,
             manufacturer=MANUFACTURER,
             model=self._lock.model_name,
