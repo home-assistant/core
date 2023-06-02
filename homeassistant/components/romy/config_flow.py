@@ -53,14 +53,10 @@ class RomyConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, str] | None = None
     ) -> FlowResult:
         """Handle the user step."""
-        errors = {}
+        errors: dict[str, str] = {}
         data = self.discovery_schema or _schema_with_defaults()
 
         if user_input is not None:
-            # Validate the user input
-            if "host" not in user_input:
-                errors["host"] = "Please enter a host."
-
             if not errors:
                 ## Save the user input and finish the setup
                 self.host = user_input["host"]

@@ -57,26 +57,6 @@ async def test_show_user_form_with_config(hass: HomeAssistant) -> None:
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
 
 
-INPUT_CONFIG_HOST_MISSING = {
-    CONF_NAME: CONFIG[CONF_NAME],
-}
-
-
-async def test_show_user_form_with_config_with_missing_host(
-    hass: HomeAssistant,
-) -> None:
-    """Test that the user set up form with config where host is missing."""
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
-        data=INPUT_CONFIG_HOST_MISSING,
-    )
-
-    assert "errors" in result
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-
-
 INPUT_CONFIG_WITH_PASS = {
     CONF_HOST: CONFIG[CONF_HOST],
     CONF_NAME: CONFIG[CONF_NAME],
@@ -128,7 +108,7 @@ async def test_show_user_form_with_config_which_contains_wrong_host(
             data=INPUT_CONFIG_WITH_PASS,
         )
 
-    assert "errors" in result
+    assert result["errors"].get("host") == "wrong host"
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
 
 
@@ -152,7 +132,7 @@ async def test_show_user_form_with_config_which_contains_wrong_password(
             data=INPUT_CONFIG_WITH_PASS,
         )
 
-    assert "errors" in result
+    assert result["errors"].get("password") == "wrong password"
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
 
 
