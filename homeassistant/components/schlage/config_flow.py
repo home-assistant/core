@@ -32,7 +32,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             username = user_input[CONF_USERNAME]
             password = user_input[CONF_PASSWORD]
             try:
-                auth = await self.hass.async_add_executor_job(
+                user_id = await self.hass.async_add_executor_job(
                     _authenticate, username, password
                 )
             except NotAuthorizedError:
@@ -42,7 +42,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 LOGGER.exception("Unknown error")
                 errors["base"] = "unknown"
             else:
-                await self.async_set_unique_id(auth.user_id)
+                await self.async_set_unique_id(user_id)
                 return self.async_create_entry(title=username, data=user_input)
 
         return self.async_show_form(
@@ -50,11 +50,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
 
-def _authenticate(username: str, password: str) -> pyschlage.Auth:
+def _authenticate(username: str, password: str) -> str:
     """Authenticate with the Schlage API."""
     auth = pyschlage.Auth(username, password)
     auth.authenticate()
     # The user_id property will make a blocking call if it's not already
     # cached. To avoid blocking the event loop, we read it here.
-    _ = auth.user_id
-    return auth
+    return auth.user_id
