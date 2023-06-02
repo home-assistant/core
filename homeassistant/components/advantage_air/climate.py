@@ -245,7 +245,7 @@ class AdvantageAirAC(AdvantageAirAcEntity, ClimateEntity):
 
         if old_preset != new_preset:
             # Reload config entry so that this entity can be reloaded
-            _LOGGER.info(
+            _LOGGER.debug(
                 "%s changed preset from %s to %s, so a reload is required",
                 self.entity_id,
                 old_preset,
