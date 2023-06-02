@@ -333,6 +333,7 @@ FLOWS = {
         "openhome",
         "opensky",
         "opentherm_gw",
+        "opentherm_web",
         "openuv",
         "openweathermap",
         "opower",
