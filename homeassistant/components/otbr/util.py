@@ -2,22 +2,22 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
-import contextlib
 import dataclasses
 from functools import wraps
 from typing import Any, Concatenate, ParamSpec, TypeVar, cast
 
 import python_otbr_api
-from python_otbr_api import tlv_parser
+from python_otbr_api import PENDING_DATASET_DELAY_TIMER, tlv_parser
 from python_otbr_api.pskc import compute_pskc
 from python_otbr_api.tlv_parser import MeshcopTLVType
 
 from homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon import (
+    MultiprotocolAddonManager,
+    get_addon_manager,
     is_multiprotocol_url,
     multi_pan_addon_using_device,
 )
 from homeassistant.components.homeassistant_yellow import RADIO_DEVICE as YELLOW_RADIO
-from homeassistant.components.zha import api as zha_api
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import issue_registry as ir
@@ -74,9 +74,19 @@ class OTBRData:
         return await self.api.set_enabled(enabled)
 
     @_handle_otbr_error
+    async def get_active_dataset(self) -> python_otbr_api.ActiveDataSet | None:
+        """Get current active operational dataset, or None."""
+        return await self.api.get_active_dataset()
+
+    @_handle_otbr_error
     async def get_active_dataset_tlvs(self) -> bytes | None:
         """Get current active operational dataset in TLVS format, or None."""
         return await self.api.get_active_dataset_tlvs()
+
+    @_handle_otbr_error
+    async def get_pending_dataset_tlvs(self) -> bytes | None:
+        """Get current pending operational dataset in TLVS format, or None."""
+        return await self.api.get_pending_dataset_tlvs()
 
     @_handle_otbr_error
     async def create_active_dataset(
@@ -91,28 +101,16 @@ class OTBRData:
         await self.api.set_active_dataset_tlvs(dataset)
 
     @_handle_otbr_error
+    async def set_channel(
+        self, channel: int, delay: float = PENDING_DATASET_DELAY_TIMER / 1000
+    ) -> None:
+        """Set current channel."""
+        await self.api.set_channel(channel, delay=int(delay * 1000))
+
+    @_handle_otbr_error
     async def get_extended_address(self) -> bytes:
         """Get extended address (EUI-64)."""
         return await self.api.get_extended_address()
-
-
-def _get_zha_url(hass: HomeAssistant) -> str | None:
-    """Get ZHA radio path, or None if there's no ZHA config entry."""
-    with contextlib.suppress(ValueError):
-        return zha_api.async_get_radio_path(hass)
-    return None
-
-
-async def _get_zha_channel(hass: HomeAssistant) -> int | None:
-    """Get ZHA channel, or None if there's no ZHA config entry."""
-    zha_network_settings: zha_api.NetworkBackup | None
-    with contextlib.suppress(ValueError):
-        zha_network_settings = await zha_api.async_get_network_settings(hass)
-    if not zha_network_settings:
-        return None
-    channel: int = zha_network_settings.network_info.channel
-    # ZHA uses channel 0 when no channel is set
-    return channel or None
 
 
 async def get_allowed_channel(hass: HomeAssistant, otbr_url: str) -> int | None:
@@ -121,12 +119,8 @@ async def get_allowed_channel(hass: HomeAssistant, otbr_url: str) -> int | None:
         # The OTBR is not sharing the radio, no restriction
         return None
 
-    zha_url = _get_zha_url(hass)
-    if not zha_url or not is_multiprotocol_url(zha_url):
-        # ZHA is not configured or not sharing the radio with this OTBR, no restriction
-        return None
-
-    return await _get_zha_channel(hass)
+    addon_manager: MultiprotocolAddonManager = await get_addon_manager(hass)
+    return addon_manager.async_get_channel()
 
 
 async def _warn_on_channel_collision(

@@ -39,6 +39,8 @@ from .const import (
     DOMAIN,
 )
 
+from .const import DEFAULT_PORT, DEFAULT_TIMEOUT
+
 _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(

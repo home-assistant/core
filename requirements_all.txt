@@ -255,7 +255,7 @@ aioguardian==2022.07.0
 aioharmony==0.2.10
 
 # homeassistant.components.homekit_controller
-aiohomekit==2.6.3
+aiohomekit==2.6.4
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -987,7 +987,7 @@ hole==0.8.0
 holidays==0.21.13
 
 # homeassistant.components.frontend
-home-assistant-frontend==20230601.0
+home-assistant-frontend==20230601.1
 
 # homeassistant.components.conversation
 home-assistant-intents==2023.5.30
@@ -1242,7 +1242,7 @@ ndms2-client==0.1.2
 nessclient==0.10.0
 
 # homeassistant.components.netdata
-netdata==1.0.1
+netdata==1.1.0
 
 # homeassistant.components.discovery
 netdisco==3.0.0
@@ -1331,7 +1331,7 @@ ondilo==0.2.0
 onkyo-eiscp==1.2.7
 
 # homeassistant.components.onvif
-onvif-zeep-async==3.1.8
+onvif-zeep-async==3.1.9
 
 # homeassistant.components.opengarage
 open-garage==0.2.0
@@ -1625,7 +1625,7 @@ pydaikin==2.9.1
 pydanfossair==0.1.0
 
 # homeassistant.components.deconz
-pydeconz==112
+pydeconz==113
 
 # homeassistant.components.delijn
 pydelijn==1.0.0
@@ -1664,7 +1664,7 @@ pyeverlights==0.1.0
 pyevilgenius==2.0.0
 
 # homeassistant.components.ezviz
-pyezviz==0.2.0.12
+pyezviz==0.2.0.15
 
 # homeassistant.components.fibaro
 pyfibaro==0.7.1
@@ -2124,7 +2124,7 @@ python-nest==4.2.0
 python-opendata-transport==0.3.0
 
 # homeassistant.components.opensky
-python-opensky==0.0.7
+python-opensky==0.0.8
 
 # homeassistant.components.otbr
 # homeassistant.components.thread
@@ -2184,7 +2184,7 @@ pytrafikverket==0.3.3
 pyudev==0.23.2
 
 # homeassistant.components.unifiprotect
-pyunifiprotect==4.9.0
+pyunifiprotect==4.9.1
 
 # homeassistant.components.uptimerobot
 pyuptimerobot==22.2.0
