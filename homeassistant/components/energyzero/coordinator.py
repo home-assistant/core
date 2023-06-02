@@ -1,8 +1,8 @@
 """The Coordinator for EnergyZero."""
 from __future__ import annotations
 
-from datetime import timedelta
-from typing import Literal, NamedTuple
+from datetime import datetime, timedelta
+from typing import NamedTuple
 
 from energyzero import (
     Electricity,
@@ -39,8 +39,8 @@ class EnergyZeroDataUpdateCoordinator(DataUpdateCoordinator[EnergyZeroData]):
     def __init__(
         self,
         hass: HomeAssistant,
-        gas_modifyer: Literal,
-        energy_modifyer: Literal,
+        gas_modifyer: str,
+        energy_modifyer: str,
     ) -> None:
         """Initialize global EnergyZero data updater."""
         super().__init__(
@@ -87,21 +87,17 @@ class EnergyZeroDataUpdateCoordinator(DataUpdateCoordinator[EnergyZeroData]):
         except EnergyZeroConnectionError as err:
             raise UpdateFailed("Error communicating with EnergyZero API") from err
 
-        energy_today.prices = self._apply_template(
-            self.energy_modifyer, energy_today.prices
-        )
+        self._apply_template(self.energy_modifyer, energy_today.prices)
 
         if energy_tomorrow is not None:
-            energy_tomorrow.prices = self._apply_template(
-                self.energy_modifyer, energy_tomorrow.prices
-            )
+            self._apply_template(self.energy_modifyer, energy_tomorrow.prices)
 
         energy_all = Electricity(
             prices=energy_today.prices
             | (energy_tomorrow.prices if energy_tomorrow is not None else {})
         )
         if gas_today is not None:
-            gas_today.prices = self._apply_template(self.gas_modifyer, gas_today.prices)
+            self._apply_template(self.gas_modifyer, gas_today.prices)
 
         return EnergyZeroData(
             energy=energy_all,
@@ -111,8 +107,7 @@ class EnergyZeroDataUpdateCoordinator(DataUpdateCoordinator[EnergyZeroData]):
         )
 
     def _apply_template(
-        self, template: Template, prices: dict[str, float]
-    ) -> dict[str, float]:
-        return {
-            key: template.async_render(price=value) for key, value in prices.items()
-        }
+        self, template: Template, prices: dict[datetime, float]
+    ) -> None:
+        for key, value in prices.items():
+            prices[key] = template.async_render(price=value)

@@ -1,7 +1,7 @@
 """Diagnostics support for EnergyZero."""
 from __future__ import annotations
 
-from datetime import timedelta
+from datetime import datetime, timedelta
 from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
@@ -22,11 +22,14 @@ def get_gas_price(data: EnergyZeroData, hours: int) -> float | None:
     Returns:
         The gas market price value.
     """
-    if not data.gas_today:
+    if not data.gas:
         return None
-    return data.gas_today.price_at_time(
-        data.gas_today.utcnow() + timedelta(hours=hours)
-    )
+    return data.gas.price_at_time(data.gas.utcnow() + timedelta(hours=hours))
+
+
+def serialize_prices(prices: dict[datetime, float]) -> dict[str, float]:
+    """Create a serializable dictionary from the prices."""
+    return {str(key): value for key, value in prices.items()}
 
 
 async def async_get_config_entry_diagnostics(
@@ -50,13 +53,15 @@ async def async_get_config_entry_diagnostics(
             "highest_price_time": coordinator.data.energy_today.highest_price_time,
             "lowest_price_time": coordinator.data.energy_today.lowest_price_time,
             "percentage_of_max": coordinator.data.energy_today.pct_of_max_price,
-            "all_prices": coordinator.data.energy.prices,
+            "all_prices": serialize_prices(coordinator.data.energy.prices),
             "template": coordinator.energy_modifyer.template,
         },
         "gas": {
             "current_hour_price": get_gas_price(coordinator.data, 0),
             "next_hour_price": get_gas_price(coordinator.data, 1),
-            "all_prices": coordinator.data.gas.prices if coordinator.data.gas else None,
+            "all_prices": serialize_prices(coordinator.data.gas.prices)
+            if coordinator.data.gas
+            else None,
             "template": coordinator.gas_modifyer.template,
         },
     }

@@ -7,7 +7,8 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.data_entry_flow import FlowHandler, FlowResult
+from homeassistant.exceptions import TemplateError
 from homeassistant.helpers.template import Template
 
 from .const import (
@@ -22,16 +23,14 @@ from .const import (
 class EnergyZeroFlowHandlerMixin:
     """Mixin class with shared methods for EnergyZero config flow handlers."""
 
-    def __init__(self):
-        """Initialize flow."""
-        self._gas_modifyer = None
-        self._energy_modifyer = None
+    _gas_modifyer: str | None = None
+    _energy_modifyer: str | None = None
 
     async def async_validate_data(self) -> str | None:
         """Validate the user input."""
         data = self._get_data()
 
-        for modifyer in [CONF_GAS_MODIFYER, CONF_ENERGY_MODIFYER]:
+        for modifyer in (CONF_GAS_MODIFYER, CONF_ENERGY_MODIFYER):
             if not await self._valid_template(data[modifyer]):
                 return "invalid_template"
 
@@ -58,13 +57,13 @@ class EnergyZeroFlowHandlerMixin:
 
             if isinstance(value, float):
                 return True
-        except Exception as exception:
+        except TemplateError as exception:
             LOGGER.exception(exception)
 
         return False
 
     async def async_shared_step(
-        self, user_input: dict[str, Any] | None, is_initial_setup: bool = True
+        self, original: FlowHandler, user_input: dict[str, Any] | None
     ) -> FlowResult:
         """Handle the initial step."""
         errors: dict[str, str] = {}
@@ -74,7 +73,7 @@ class EnergyZeroFlowHandlerMixin:
             and self._energy_modifyer is not None
             and self._gas_modifyer is not None
         ):
-            return self.async_show_form(
+            return original.async_show_form(
                 step_id="init",
                 data_schema=self._get_schema(),
                 errors=errors,
@@ -82,19 +81,17 @@ class EnergyZeroFlowHandlerMixin:
 
         self._set_data(user_input)
         if user_input is not None:
-            errors["base"] = await self.async_validate_data()
+            error = await self.async_validate_data()
 
-            if errors["base"] is None:
-                if is_initial_setup:
-                    await self.async_set_unique_id(DOMAIN)
-                    self._abort_if_unique_id_configured()
-
-                return self.async_create_entry(
+            if error is None:
+                return original.async_create_entry(
                     title="EnergyZero",
                     data=self._get_data(),
                 )
 
-        return self.async_show_form(
+            errors["base"] = error
+
+        return original.async_show_form(
             step_id="init", data_schema=self._get_schema(), errors=errors
         )
 
@@ -137,14 +134,20 @@ class EnergyZeroFlowHandler(ConfigFlow, EnergyZeroFlowHandlerMixin, domain=DOMAI
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
-        """Handle the initial step."""
-        return await self.async_shared_step(user_input)
+        """Handle the user step."""
+        await self.async_set_unique_id(DOMAIN)
+        self._abort_if_unique_id_configured()
+
+        return await self.async_shared_step(self, user_input)
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle the initial step."""
-        return await self.async_shared_step(user_input)
+        await self.async_set_unique_id(DOMAIN)
+        self._abort_if_unique_id_configured()
+
+        return await self.async_shared_step(self, user_input)
 
 
 class EnergyZeroOptionFlowHandler(OptionsFlow, EnergyZeroFlowHandlerMixin):
@@ -157,6 +160,6 @@ class EnergyZeroOptionFlowHandler(OptionsFlow, EnergyZeroFlowHandlerMixin):
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
-    ) -> dict[str, Any]:
+    ) -> FlowResult:
         """Manage the options."""
-        return await self.async_shared_step(user_input, is_initial_setup=False)
+        return await self.async_shared_step(self, user_input)

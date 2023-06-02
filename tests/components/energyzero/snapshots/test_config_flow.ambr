@@ -6,6 +6,8 @@
       'unique_id': 'energyzero',
     }),
     'data': dict({
+      'energy_modifyer': '{% set s = {"BTW": 1.21 } %}{{ price * s.BTW | float | round(5)}}',
+      'gas_modifyer': '{% set s = {"BTW": 1.21 } %}{{ price * s.BTW | float | round(5)}}',
     }),
     'description': None,
     'description_placeholders': None,
@@ -15,6 +17,8 @@
     }),
     'result': ConfigEntrySnapshot({
       'data': dict({
+        'energy_modifyer': '{% set s = {"BTW": 1.21 } %}{{ price * s.BTW | float | round(5)}}',
+        'gas_modifyer': '{% set s = {"BTW": 1.21 } %}{{ price * s.BTW | float | round(5)}}',
       }),
       'disabled_by': None,
       'domain': 'energyzero',
