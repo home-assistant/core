@@ -16,6 +16,7 @@ import voluptuous as vol
 from homeassistant.components import websocket_api
 from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.network import get_url
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
@@ -29,6 +30,8 @@ DOMAIN = "webhook"
 DEFAULT_METHODS = (METH_POST, METH_PUT)
 SUPPORTED_METHODS = (METH_GET, METH_HEAD, METH_POST, METH_PUT)
 URL_WEBHOOK_PATH = "/api/webhook/{webhook_id}"
+
+CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 
 @callback

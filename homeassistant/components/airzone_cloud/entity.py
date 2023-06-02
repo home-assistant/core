@@ -6,6 +6,7 @@ from typing import Any
 
 from aioairzone_cloud.const import (
     AZD_AIDOOS,
+    AZD_AVAILABLE,
     AZD_FIRMWARE,
     AZD_NAME,
     AZD_SYSTEM_ID,
@@ -25,6 +26,11 @@ from .coordinator import AirzoneUpdateCoordinator
 
 class AirzoneEntity(CoordinatorEntity[AirzoneUpdateCoordinator], ABC):
     """Define an Airzone Cloud entity."""
+
+    @property
+    def available(self) -> bool:
+        """Return Airzone Cloud entity availability."""
+        return super().available and self.get_airzone_value(AZD_AVAILABLE)
 
     @abstractmethod
     def get_airzone_value(self, key: str) -> Any:

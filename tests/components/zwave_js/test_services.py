@@ -1539,6 +1539,18 @@ async def test_ping(
             blocking=True,
         )
 
+    client.async_send_command.reset_mock()
+    client.async_send_command.side_effect = FailedZWaveCommand("test", 1, "test")
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_PING,
+            {
+                ATTR_ENTITY_ID: CLIMATE_RADIO_THERMOSTAT_ENTITY,
+            },
+            blocking=True,
+        )
+
 
 async def test_invoke_cc_api(
     hass: HomeAssistant,
