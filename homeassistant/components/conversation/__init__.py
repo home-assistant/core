@@ -335,6 +335,7 @@ class AgentInfo:
 
     id: str
     name: str
+    has_options_flow: bool
 
 
 @core.callback
@@ -433,6 +434,7 @@ class AgentManager:
             AgentInfo(
                 id=HOME_ASSISTANT_AGENT,
                 name="Home Assistant",
+                has_options_flow=False,
             )
         ]
         for agent_id, agent in self._agents.items():
@@ -451,6 +453,7 @@ class AgentManager:
                 AgentInfo(
                     id=agent_id,
                     name=config_entry.title or config_entry.domain,
+                    has_options_flow=config_entry.supports_options_flow(),
                 )
             )
         return agents

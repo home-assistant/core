@@ -1110,7 +1110,9 @@ async def test_entry_options(
     entry = MockConfigEntry(domain="test", data={"first": True}, options=None)
     entry.add_to_manager(manager)
 
-    class TestFlow:
+    assert entry.supports_options_flow() is False
+
+    class TestFlow(config_entries.ConfigFlow):
         """Test flow."""
 
         @staticmethod
@@ -1123,7 +1125,10 @@ async def test_entry_options(
 
             return OptionsFlowHandler()
 
-    config_entries.HANDLERS["test"] = TestFlow()
+    config_entries.HANDLERS["test"] = TestFlow
+
+    assert entry.supports_options_flow() is True
+
     flow = await manager.options.async_create_flow(
         entry.entry_id, context={"source": "test"}, data=None
     )

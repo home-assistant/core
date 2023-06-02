@@ -661,6 +661,12 @@ class ConfigEntry:
 
         return lambda: self.update_listeners.remove(weak_listener)
 
+    def supports_options_flow(self) -> bool:
+        """Return if config entry supports options flow."""
+        return (
+            handler := HANDLERS.get(self.domain)
+        ) is not None and handler.async_supports_options_flow(self)
+
     def as_dict(self) -> dict[str, Any]:
         """Return dictionary version of this entry."""
         return {

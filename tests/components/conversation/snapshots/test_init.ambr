@@ -1,24 +1,28 @@
 # serializer version: 1
 # name: test_get_agent_info
   dict({
+    'has_options_flow': False,
     'id': 'mock-entry',
     'name': 'Mock Title',
   })
 # ---
 # name: test_get_agent_info.1
   dict({
+    'has_options_flow': False,
     'id': 'homeassistant',
     'name': 'Home Assistant',
   })
 # ---
 # name: test_get_agent_info.2
   dict({
+    'has_options_flow': False,
     'id': 'mock-entry',
     'name': 'Mock Title',
   })
 # ---
 # name: test_get_agent_info.3
   dict({
+    'has_options_flow': False,
     'id': 'mock-entry',
     'name': 'test',
   })
