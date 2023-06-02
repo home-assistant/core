@@ -9,7 +9,7 @@ from .const import DOMAIN
 
 PLATFORMS = [Platform.SENSOR]
 
-CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
+CONFIG_SCHEMA = cv.deprecated(DOMAIN, raise_if_present=False)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
