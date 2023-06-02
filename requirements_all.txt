@@ -1261,6 +1261,9 @@ odp-amsterdam==5.1.0
 # homeassistant.components.oem
 oemthermostat==1.1.1
 
+# homeassistant.components.opentherm_web
+oidc-client==0.2.5
+
 # homeassistant.components.omnilogic
 omnilogic==0.4.5
 
