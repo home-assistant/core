@@ -92,7 +92,7 @@ class ZwaveSelectEntity(ZWaveBaseEntity, SelectEntity):
             for key, val in self.info.primary_value.metadata.states.items()
             if val == option
         )
-        await self.info.node.async_set_value(self.info.primary_value, int(key))
+        await self._async_set_value(self.info.primary_value, int(key))
 
 
 class ZWaveConfigParameterSelectEntity(ZwaveSelectEntity):
@@ -162,7 +162,7 @@ class ZwaveDefaultToneSelectEntity(ZWaveBaseEntity, SelectEntity):
             for key, val in self._tones_value.metadata.states.items()
             if val == option
         )
-        await self.info.node.async_set_value(self.info.primary_value, int(key))
+        await self._async_set_value(self.info.primary_value, int(key))
 
 
 class ZwaveMultilevelSwitchSelectEntity(ZWaveBaseEntity, SelectEntity):
@@ -197,4 +197,4 @@ class ZwaveMultilevelSwitchSelectEntity(ZWaveBaseEntity, SelectEntity):
         """Change the selected option."""
         assert self._target_value is not None
         key = next(key for key, val in self._lookup_map.items() if val == option)
-        await self.info.node.async_set_value(self._target_value, int(key))
+        await self._async_set_value(self._target_value, int(key))

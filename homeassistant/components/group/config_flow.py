@@ -24,14 +24,14 @@ from .binary_sensor import CONF_ALL
 from .const import CONF_HIDE_MEMBERS, CONF_IGNORE_NON_NUMERIC
 
 _STATISTIC_MEASURES = [
-    selector.SelectOptionDict(value="min", label="Minimum"),
-    selector.SelectOptionDict(value="max", label="Maximum"),
-    selector.SelectOptionDict(value="mean", label="Arithmetic mean"),
-    selector.SelectOptionDict(value="median", label="Median"),
-    selector.SelectOptionDict(value="last", label="Most recently updated"),
-    selector.SelectOptionDict(value="range", label="Statistical range"),
-    selector.SelectOptionDict(value="sum", label="Sum"),
-    selector.SelectOptionDict(value="product", label="Product"),
+    "min",
+    "max",
+    "mean",
+    "median",
+    "last",
+    "range",
+    "sum",
+    "product",
 ]
 
 
@@ -80,13 +80,17 @@ BINARY_SENSOR_CONFIG_SCHEMA = basic_group_config_schema("binary_sensor").extend(
 
 SENSOR_CONFIG_EXTENDS = {
     vol.Required(CONF_TYPE): selector.SelectSelector(
-        selector.SelectSelectorConfig(options=_STATISTIC_MEASURES),
+        selector.SelectSelectorConfig(
+            options=_STATISTIC_MEASURES, translation_key=CONF_TYPE
+        ),
     ),
 }
 SENSOR_OPTIONS = {
     vol.Optional(CONF_IGNORE_NON_NUMERIC, default=False): selector.BooleanSelector(),
     vol.Required(CONF_TYPE): selector.SelectSelector(
-        selector.SelectSelectorConfig(options=_STATISTIC_MEASURES),
+        selector.SelectSelectorConfig(
+            options=_STATISTIC_MEASURES, translation_key=CONF_TYPE
+        ),
     ),
 }
 

@@ -164,6 +164,6 @@ class ZwaveVolumeNumberEntity(ZWaveBaseEntity, NumberEntity):
 
     async def async_set_native_value(self, value: float) -> None:
         """Set new value."""
-        await self.info.node.async_set_value(
+        await self._async_set_value(
             self.info.primary_value, round(value * self.correction_factor)
         )

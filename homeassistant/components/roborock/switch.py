@@ -15,7 +15,7 @@ from homeassistant.util import slugify
 
 from .const import DOMAIN
 from .coordinator import RoborockDataUpdateCoordinator
-from .device import RoborockCoordinatedEntity
+from .device import RoborockEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,11 +25,11 @@ class RoborockSwitchDescriptionMixin:
     """Define an entity description mixin for switch entities."""
 
     # Gets the status of the switch
-    get_value: Callable[[RoborockCoordinatedEntity], Coroutine[Any, Any, dict]]
+    get_value: Callable[[RoborockEntity], Coroutine[Any, Any, dict]]
     # Evaluate the result of get_value to determine a bool
     evaluate_value: Callable[[dict], bool]
     # Sets the status of the switch
-    set_command: Callable[[RoborockCoordinatedEntity, bool], Coroutine[Any, Any, dict]]
+    set_command: Callable[[RoborockEntity, bool], Coroutine[Any, Any, dict]]
 
 
 @dataclass
@@ -50,7 +50,18 @@ SWITCH_DESCRIPTIONS: list[RoborockSwitchDescription] = [
         translation_key="child_lock",
         icon="mdi:account-lock",
         entity_category=EntityCategory.CONFIG,
-    )
+    ),
+    RoborockSwitchDescription(
+        set_command=lambda entity, value: entity.send(
+            RoborockCommand.SET_FLOW_LED_STATUS, {"status": 1 if value else 0}
+        ),
+        get_value=lambda data: data.send(RoborockCommand.GET_FLOW_LED_STATUS),
+        evaluate_value=lambda data: data["status"] == 1,
+        key="status_indicator",
+        translation_key="status_indicator",
+        icon="mdi:alarm-light-outline",
+        entity_category=EntityCategory.CONFIG,
+    ),
 ]
 
 
@@ -78,7 +89,7 @@ async def async_setup_entry(
     )
 
 
-class RoborockSwitchEntity(RoborockCoordinatedEntity, SwitchEntity):
+class RoborockSwitchEntity(RoborockEntity, SwitchEntity):
     """A class to let you turn functionality on Roborock devices on and off."""
 
     entity_description: RoborockSwitchDescription
@@ -91,17 +102,15 @@ class RoborockSwitchEntity(RoborockCoordinatedEntity, SwitchEntity):
     ) -> None:
         """Create a switch entity."""
         self.entity_description = entity_description
-        super().__init__(unique_id, coordinator)
+        super().__init__(unique_id, coordinator.device_info, coordinator.api)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the switch."""
         await self.entity_description.set_command(self, False)
-        return self.async_schedule_update_ha_state(True)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the switch."""
         await self.entity_description.set_command(self, True)
-        return self.async_schedule_update_ha_state(True)
 
     async def async_update(self) -> None:
         """Update switch."""
