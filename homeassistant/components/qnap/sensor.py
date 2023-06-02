@@ -294,6 +294,7 @@ class QNAPSensor(CoordinatorEntity, SensorEntity):
 
     @property
     def coordinator_context(self):
+        """helpers/update_coordinator"""
         return None
     
     @property
