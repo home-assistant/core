@@ -137,7 +137,7 @@ class ZWaveValueDiscoverySchema(DataclassMustHaveAtLeastOne):
 
     The Z-Wave Value must match these conditions.
     Use the Z-Wave specifications to find out the values for these parameters:
-    https://github.com/zwave-js/node-zwave-js/tree/master/specs
+    https://github.com/zwave-js/specs/tree/master
     """
 
     # [optional] the value's command class must match ANY of these values
@@ -168,7 +168,7 @@ class ZWaveDiscoverySchema:
 
     The Z-Wave node and it's (primary) value for an entity must match these conditions.
     Use the Z-Wave specifications to find out the values for these parameters:
-    https://github.com/zwave-js/node-zwave-js/tree/master/specs
+    https://github.com/zwave-js/specs/tree/master
     """
 
     # specify the hass platform for which this scheme applies (e.g. light, sensor)
@@ -377,6 +377,16 @@ DISCOVERY_SCHEMAS = [
                 property_key={"venetianBlindsTilt"},
             )
         ],
+    ),
+    # Fibaro Nice BiDi-ZWave (IBT4ZWAVE)
+    ZWaveDiscoverySchema(
+        platform=Platform.COVER,
+        hint="gate",
+        manufacturer_id={0x0441},
+        product_id={0x1000},
+        product_type={0x2400},
+        primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
+        required_values=[SWITCH_MULTILEVEL_TARGET_VALUE_SCHEMA],
     ),
     # Qubino flush shutter
     ZWaveDiscoverySchema(
