@@ -302,11 +302,6 @@ class InputSelect(collection.CollectionEntity, SelectEntity, RestoreEntity):
     async def async_select_option(self, option: str) -> None:
         """Select new option."""
         if option not in self.options:
-            _LOGGER.warning(
-                "Invalid option: %s (possible options: %s)",
-                option,
-                ", ".join(self.options),
-            )
             raise HomeAssistantError(
                 f"Invalid option: {option} (possible options: {', '.join(self.options)})"
             )
