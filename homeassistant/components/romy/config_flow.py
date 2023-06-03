@@ -67,13 +67,13 @@ class RomyConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 new_romy = await romy.create_romy(self.host, self.password)
 
                 if not new_romy.is_initialized:
-                    errors[CONF_HOST] = "wrong host"
+                    errors[CONF_HOST] = "cannot_connect"
                     return self.async_show_form(
                         step_id="user", data_schema=data, errors=errors
                     )
 
                 if not new_romy.is_unlocked:
-                    errors[CONF_PASSWORD] = "wrong password"
+                    errors[CONF_PASSWORD] = "invalid_auth"
                     return self.async_show_form(
                         step_id="user", data_schema=data, errors=errors
                     )
