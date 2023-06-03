@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from datetime import timedelta
 import logging
 
-from pyezviz.constants import DeviceCatagories, SupportExt
+from pyezviz.constants import SupportExt
 from pyezviz.exceptions import (
     EzvizAuthTokenExpired,
     EzvizAuthVerificationCode,
@@ -35,6 +35,7 @@ class EzvizNumberEntityDescriptionMixin:
     """Mixin values for EZVIZ Number entities."""
 
     supported_ext: str
+    supported_ext_value: list
 
 
 @dataclass
@@ -52,6 +53,7 @@ NUMBER_TYPES = EzvizNumberEntityDescription(
     native_min_value=0,
     native_step=1,
     supported_ext=str(SupportExt.SupportSensibilityAdjust.value),
+    supported_ext_value=["1", "3"],
 )
 
 
@@ -65,11 +67,11 @@ async def async_setup_entry(
 
     async_add_entities(
         [
-            EzvizSensor(coordinator, camera, NUMBER_TYPES)
+            EzvizSensor(coordinator, camera, NUMBER_TYPES, value)
             for camera in coordinator.data
             for capibility, value in coordinator.data[camera]["supportExt"].items()
             if capibility == NUMBER_TYPES.supported_ext
-            if value == "1"
+            if value in NUMBER_TYPES.supported_ext_value
         ],
         update_before_add=True,
     )
@@ -85,15 +87,13 @@ class EzvizSensor(EzvizBaseEntity, NumberEntity):
         coordinator: EzvizDataUpdateCoordinator,
         serial: str,
         description: EzvizNumberEntityDescription,
+        value: str,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator, serial)
-        self.battery_cam_type = bool(
-            self.data["device_category"]
-            == DeviceCatagories.BATTERY_CAMERA_DEVICE_CATEGORY.value
-        )
+        self.sensitivity_type = 3 if value == "3" else 0
+        self._attr_native_max_value = 100 if value == "3" else 6
         self._attr_unique_id = f"{serial}_{description.key}"
-        self._attr_native_max_value = 100 if self.battery_cam_type else 6
         self.entity_description = description
         self.sensor_value: int | None = None
 
@@ -108,18 +108,11 @@ class EzvizSensor(EzvizBaseEntity, NumberEntity):
         """Set camera detection sensitivity."""
         level = int(value)
         try:
-            if self.battery_cam_type:
-                self.coordinator.ezviz_client.detection_sensibility(
-                    self._serial,
-                    level,
-                    3,
-                )
-            else:
-                self.coordinator.ezviz_client.detection_sensibility(
-                    self._serial,
-                    level,
-                    0,
-                )
+            self.coordinator.ezviz_client.detection_sensibility(
+                self._serial,
+                level,
+                self.sensitivity_type,
+            )
 
         except (HTTPError, PyEzvizError) as err:
             raise HomeAssistantError(
@@ -132,19 +125,10 @@ class EzvizSensor(EzvizBaseEntity, NumberEntity):
         """Fetch data from EZVIZ."""
         _LOGGER.debug("Updating %s", self.name)
         try:
-            if self.battery_cam_type:
-                self.sensor_value = (
-                    self.coordinator.ezviz_client.get_detection_sensibility(
-                        self._serial,
-                        "3",
-                    )
-                )
-            else:
-                self.sensor_value = (
-                    self.coordinator.ezviz_client.get_detection_sensibility(
-                        self._serial,
-                    )
-                )
+            self.sensor_value = self.coordinator.ezviz_client.get_detection_sensibility(
+                self._serial,
+                str(self.sensitivity_type),
+            )
 
         except (EzvizAuthTokenExpired, EzvizAuthVerificationCode) as error:
             raise ConfigEntryAuthFailed from error
