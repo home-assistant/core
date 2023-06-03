@@ -14,8 +14,6 @@ from homeassistant.components.mqtt.water_heater import (
 from homeassistant.components.water_heater import (
     ATTR_CURRENT_TEMPERATURE,
     ATTR_OPERATION_MODE,
-    DEFAULT_MAX_TEMP,
-    DEFAULT_MIN_TEMP,
     STATE_ECO,
     STATE_ELECTRIC,
     STATE_GAS,
@@ -94,8 +92,9 @@ async def test_setup_params(
 
     assert state.attributes.get("temperature") == 110
     assert state.state == "off"
-    assert state.attributes.get("min_temp") == DEFAULT_MIN_TEMP
-    assert state.attributes.get("max_temp") == DEFAULT_MAX_TEMP
+    # Default water heater min/max temp in celsius
+    assert state.attributes.get("min_temp") == 43.3
+    assert state.attributes.get("max_temp") == 60
 
 
 @pytest.mark.parametrize("hass_config", [DEFAULT_CONFIG])

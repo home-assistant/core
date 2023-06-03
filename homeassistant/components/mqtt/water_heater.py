@@ -10,8 +10,6 @@ import voluptuous as vol
 from homeassistant.components import water_heater
 from homeassistant.components.water_heater import (
     ATTR_OPERATION_MODE,
-    DEFAULT_MAX_TEMP,
-    DEFAULT_MIN_TEMP,
     STATE_ECO,
     STATE_ELECTRIC,
     STATE_GAS,
@@ -131,8 +129,8 @@ _PLATFORM_SCHEMA_BASE = MQTT_BASE_SCHEMA.extend(
         ),
         vol.Optional(CONF_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
         vol.Optional(CONF_TEMP_INITIAL, default=110): cv.positive_int,
-        vol.Optional(CONF_TEMP_MIN, default=DEFAULT_MIN_TEMP): vol.Coerce(float),
-        vol.Optional(CONF_TEMP_MAX, default=DEFAULT_MAX_TEMP): vol.Coerce(float),
+        vol.Optional(CONF_TEMP_MIN): vol.Coerce(float),
+        vol.Optional(CONF_TEMP_MAX): vol.Coerce(float),
         vol.Optional(CONF_TEMP_COMMAND_TEMPLATE): cv.template,
         vol.Optional(CONF_TEMP_COMMAND_TOPIC): valid_publish_topic,
         vol.Optional(CONF_TEMP_STATE_TEMPLATE): cv.template,
@@ -201,13 +199,16 @@ class MqttWaterHeater(MqttTemperatureControlEntity, WaterHeaterEntity):  # type:
 
     def _setup_from_config(self, config: ConfigType) -> None:
         """(Re)Setup the entity."""
-        self._attr_min_temp = config[CONF_TEMP_MIN]
-        self._attr_max_temp = config[CONF_TEMP_MAX]
         self._attr_operation_list = config[CONF_MODE_LIST]
-        self._attr_precision = config.get(CONF_PRECISION, super().precision)
         self._attr_temperature_unit = config.get(
             CONF_TEMPERATURE_UNIT, self.hass.config.units.temperature_unit
         )
+        if (min_temp := config.get(CONF_TEMP_MIN)) is not None:
+            self._attr_min_temp = min_temp
+        if (max_temp := config.get(CONF_TEMP_MAX)) is not None:
+            self._attr_max_temp = max_temp
+        if (precision := config.get(CONF_PRECISION)) is not None:
+            self._attr_precision = precision
 
         self._topic = {key: config.get(key) for key in TOPIC_KEYS}
 
