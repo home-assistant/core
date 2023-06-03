@@ -19,7 +19,6 @@ from .const import (
     ATTR_THUMBNAIL,
     ATTR_TITLE,
     ATTR_VIDEO_ID,
-    CONF_CHANNELS,
     COORDINATOR,
     DOMAIN,
 )
@@ -72,7 +71,7 @@ async def async_setup_entry(
     ]
     async_add_entities(
         YouTubeSensor(coordinator, sensor_type, channel_id)
-        for channel_id in entry.options[CONF_CHANNELS]
+        for channel_id in coordinator.data
         for sensor_type in SENSOR_TYPES
     )
 
