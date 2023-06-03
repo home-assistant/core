@@ -19,6 +19,7 @@ from .const import (
     ATTR_THUMBNAIL,
     ATTR_TITLE,
     ATTR_VIDEO_ID,
+    CONF_CHANNELS,
     COORDINATOR,
     DOMAIN,
 )
@@ -70,8 +71,8 @@ async def async_setup_entry(
         COORDINATOR
     ]
     async_add_entities(
-        YouTubeSensor(coordinator, sensor_type, channel)
-        for channel in coordinator.data.values()
+        YouTubeSensor(coordinator, sensor_type, channel_id)
+        for channel_id in entry.options[CONF_CHANNELS]
         for sensor_type in SENSOR_TYPES
     )
 
@@ -84,16 +85,20 @@ class YouTubeSensor(YouTubeChannelEntity, SensorEntity):
     @property
     def native_value(self) -> StateType:
         """Return the value reported by the sensor."""
-        return self.entity_description.value_fn(self._channel)
+        return self.entity_description.value_fn(self.coordinator.data[self._channel_id])
 
     @property
     def entity_picture(self) -> str:
         """Return the value reported by the sensor."""
-        return self.entity_description.entity_picture_fn(self._channel)
+        return self.entity_description.entity_picture_fn(
+            self.coordinator.data[self._channel_id]
+        )
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the extra state attributes."""
         if self.entity_description.attributes_fn:
-            return self.entity_description.attributes_fn(self._channel)
+            return self.entity_description.attributes_fn(
+                self.coordinator.data[self._channel_id]
+            )
         return None
