@@ -17,6 +17,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.util import language as language_util
 
 from .const import DOMAIN
+from .error import PipelineNotFound
 from .pipeline import (
     PipelineData,
     PipelineError,
@@ -85,8 +86,9 @@ async def websocket_run(
 ) -> None:
     """Run a pipeline."""
     pipeline_id = msg.get("pipeline")
-    pipeline = async_get_pipeline(hass, pipeline_id=pipeline_id)
-    if pipeline is None:
+    try:
+        pipeline = async_get_pipeline(hass, pipeline_id=pipeline_id)
+    except PipelineNotFound:
         connection.send_error(
             msg["id"],
             "pipeline-not-found",
@@ -151,7 +153,7 @@ async def websocket_run(
         # Input to conversation agent
         input_args["intent_input"] = msg["input"]["text"]
     elif start_stage == PipelineStage.TTS:
-        # Input to text to speech system
+        # Input to text-to-speech system
         input_args["tts_input"] = msg["input"]["text"]
 
     input_args["run"] = PipelineRun(

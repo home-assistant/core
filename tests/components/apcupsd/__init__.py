@@ -43,6 +43,7 @@ MOCK_STATUS: Final = OrderedDict(
         ("XOFFBATT", "1970-01-01 00:00:00 0000"),
         ("LASTSTEST", "1970-01-01 00:00:00 0000"),
         ("SELFTEST", "NO"),
+        ("STESTI", "7 days"),
         ("STATFLAG", "0x05000008"),
         ("SERIALNO", "XXXXXXXXXXXX"),
         ("BATTDATE", "1970-01-01"),

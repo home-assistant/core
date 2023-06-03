@@ -19,7 +19,7 @@ from homeassistant.core import HomeAssistant, State
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from tests.common import mock_restore_cache
+from tests.common import mock_restore_cache, mock_restore_cache_with_extra_data
 
 
 @pytest.mark.parametrize("method", ["trapezoidal", "left", "right"])
@@ -163,6 +163,100 @@ async def test_restore_state(hass: HomeAssistant) -> None:
     assert state.state == "100.00"
     assert state.attributes.get("unit_of_measurement") == UnitOfEnergy.KILO_WATT_HOUR
     assert state.attributes.get("device_class") == SensorDeviceClass.ENERGY
+    assert state.attributes.get("last_good_state") is None
+
+
+async def test_restore_unavailable_state(hass: HomeAssistant) -> None:
+    """Test integration sensor state is restored correctly."""
+    mock_restore_cache_with_extra_data(
+        hass,
+        [
+            (
+                State(
+                    "sensor.integration",
+                    STATE_UNAVAILABLE,
+                    {
+                        "device_class": SensorDeviceClass.ENERGY,
+                        "unit_of_measurement": UnitOfEnergy.KILO_WATT_HOUR,
+                    },
+                ),
+                {
+                    "native_value": None,
+                    "native_unit_of_measurement": "kWh",
+                    "source_entity": "sensor.power",
+                    "last_valid_state": "100.00",
+                },
+            ),
+        ],
+    )
+    config = {
+        "sensor": {
+            "platform": "integration",
+            "name": "integration",
+            "source": "sensor.power",
+            "round": 2,
+        }
+    }
+
+    assert await async_setup_component(hass, "sensor", config)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.integration")
+    assert state
+    assert state.state == "100.00"
+
+
+@pytest.mark.parametrize(
+    "extra_attributes",
+    [
+        {
+            "native_unit_of_measurement": "kWh",
+            "source_entity": "sensor.power",
+            "last_valid_state": "100.00",
+        },
+        {
+            "native_value": None,
+            "native_unit_of_measurement": "kWh",
+            "source_entity": "sensor.power",
+            "last_valid_state": "None",
+        },
+    ],
+)
+async def test_restore_unavailable_state_failed(
+    hass: HomeAssistant, extra_attributes
+) -> None:
+    """Test integration sensor state is restored correctly."""
+    mock_restore_cache_with_extra_data(
+        hass,
+        [
+            (
+                State(
+                    "sensor.integration",
+                    STATE_UNAVAILABLE,
+                    {
+                        "device_class": SensorDeviceClass.ENERGY,
+                        "unit_of_measurement": UnitOfEnergy.KILO_WATT_HOUR,
+                    },
+                ),
+                extra_attributes,
+            ),
+        ],
+    )
+    config = {
+        "sensor": {
+            "platform": "integration",
+            "name": "integration",
+            "source": "sensor.power",
+            "round": 2,
+        }
+    }
+
+    assert await async_setup_component(hass, "sensor", config)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.integration")
+    assert state
+    assert state.state == STATE_UNAVAILABLE
 
 
 async def test_restore_state_failed(hass: HomeAssistant) -> None:

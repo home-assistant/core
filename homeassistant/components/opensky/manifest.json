@@ -4,5 +4,5 @@
   "codeowners": ["@joostlek"],
   "documentation": "https://www.home-assistant.io/integrations/opensky",
   "iot_class": "cloud_polling",
-  "requirements": ["python-opensky==0.0.7"]
+  "requirements": ["python-opensky==0.0.8"]
 }

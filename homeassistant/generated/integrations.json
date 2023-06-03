@@ -1172,6 +1172,12 @@
       "integration_type": "hub",
       "config_flow": false
     },
+    "dremel_3d_printer": {
+      "name": "Dremel 3D Printer",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "dsmr": {
       "name": "DSMR Slimme Meter",
       "integration_type": "hub",
@@ -2080,7 +2086,7 @@
           "integration_type": "hub",
           "config_flow": false,
           "iot_class": "cloud_push",
-          "name": "Google Translate Text-to-Speech"
+          "name": "Google Translate text-to-speech"
         },
         "google_travel_time": {
           "integration_type": "hub",
@@ -4380,7 +4386,7 @@
       "name": "QNAP",
       "integrations": {
         "qnap": {
-          "integration_type": "hub",
+          "integration_type": "device",
           "config_flow": false,
           "iot_class": "local_polling",
           "name": "QNAP"
