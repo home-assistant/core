@@ -16,15 +16,21 @@ from homeassistant.const import (
 )
 from homeassistant.helpers import config_validation as cv
 
-from .const import DEFAULT_PORT, DEFAULT_TIMEOUT, DOMAIN
+from .const import (
+    DEFAULT_PORT,
+    DEFAULT_SSL,
+    DEFAULT_TIMEOUT,
+    DEFAULT_VERIFY_SSL,
+    DOMAIN,
+)
 
 DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_SSL, default=False): cv.boolean,
-        vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
+        vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
+        vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
     }
 )
@@ -50,14 +56,17 @@ class QnapConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle a flow initialized by the user."""
         errors = {}
         if user_input is not None:
+            user_input.setdefault(CONF_SSL, DEFAULT_SSL)
+            user_input.setdefault(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL)
+            user_input.setdefault(CONF_PORT, DEFAULT_PORT)
             host = user_input[CONF_HOST]
-            protocol = "https" if user_input.get(CONF_SSL, False) else "http"
+            protocol = "https" if user_input[CONF_SSL] else "http"
             api = QNAPStats(
                 host=f"{protocol}://{host}",
-                port=user_input.get(CONF_PORT, DEFAULT_PORT),
+                port=user_input[CONF_PORT],
                 username=user_input[CONF_USERNAME],
                 password=user_input[CONF_PASSWORD],
-                verify_ssl=user_input.get(CONF_VERIFY_SSL, True),
+                verify_ssl=user_input[CONF_VERIFY_SSL],
                 timeout=DEFAULT_TIMEOUT,
             )
             try:

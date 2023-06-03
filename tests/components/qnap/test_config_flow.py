@@ -1,0 +1,111 @@
+"""Test the QNAP config flow."""
+from unittest.mock import MagicMock
+
+import pytest
+from requests.exceptions import ConnectTimeout
+
+from homeassistant import config_entries, data_entry_flow
+from homeassistant.components.qnap import const
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_SSL,
+    CONF_USERNAME,
+    CONF_VERIFY_SSL,
+)
+from homeassistant.core import HomeAssistant
+
+from .conftest import TEST_HOST, TEST_NAS_NAME, TEST_PASSWORD, TEST_USERNAME
+
+STANDARD_CONFIG = {
+    CONF_USERNAME: TEST_USERNAME,
+    CONF_PASSWORD: TEST_PASSWORD,
+    CONF_HOST: TEST_HOST,
+}
+
+STANDARD_RESULT = {
+    CONF_HOST: TEST_HOST,
+    CONF_USERNAME: TEST_USERNAME,
+    CONF_PASSWORD: TEST_PASSWORD,
+    CONF_SSL: const.DEFAULT_SSL,
+    CONF_VERIFY_SSL: const.DEFAULT_VERIFY_SSL,
+    CONF_PORT: const.DEFAULT_PORT,
+}
+
+
+pytestmark = pytest.mark.usefixtures("mock_setup_entry", "qnap_connect")
+
+
+async def test_config_flow_success(hass: HomeAssistant) -> None:
+    """Successful flow manually initialized by the user."""
+    result = await hass.config_entries.flow.async_init(
+        const.DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] is data_entry_flow.FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        STANDARD_CONFIG,
+    )
+
+    assert result["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["title"] == TEST_NAS_NAME.capitalize()
+    assert result["data"] == STANDARD_RESULT
+
+
+async def test_config_flow_errors(hass: HomeAssistant, qnap_connect: MagicMock) -> None:
+    """Flow manually initialized by the user after some errors."""
+    result = await hass.config_entries.flow.async_init(
+        const.DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] is data_entry_flow.FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+
+    qnap_connect.get_system_stats.side_effect = ConnectTimeout("Test error")
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        STANDARD_CONFIG,
+    )
+
+    assert result["type"] is data_entry_flow.FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": "cannot_connect"}
+
+    qnap_connect.get_system_stats.side_effect = TypeError("Test error")
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        STANDARD_CONFIG,
+    )
+
+    assert result["type"] is data_entry_flow.FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": "invalid_auth"}
+
+    qnap_connect.get_system_stats.side_effect = Exception("Test error")
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        STANDARD_CONFIG,
+    )
+
+    assert result["type"] is data_entry_flow.FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": "unknown"}
+
+
+async def test_config_flow_import(hass: HomeAssistant) -> None:
+    """Test import of YAML config."""
+    result = await hass.config_entries.flow.async_init(
+        const.DOMAIN,
+        context={"source": config_entries.SOURCE_IMPORT},
+        data=STANDARD_CONFIG,
+    )
+
+    assert result["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["title"] == TEST_NAS_NAME.capitalize()
+    assert result["data"] == STANDARD_RESULT
