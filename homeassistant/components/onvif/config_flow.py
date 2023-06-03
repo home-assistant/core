@@ -34,7 +34,10 @@ from homeassistant.helpers import device_registry as dr
 
 from .const import (
     CONF_DEVICE_ID,
+    CONF_ENABLE_WEBHOOKS,
+    CONF_HARDWARE,
     DEFAULT_ARGUMENTS,
+    DEFAULT_ENABLE_WEBHOOKS,
     DEFAULT_PORT,
     DOMAIN,
     GET_CAPABILITIES_EXCEPTIONS,
@@ -48,12 +51,15 @@ CONF_MANUAL_INPUT = "Manually configure ONVIF device"
 def wsdiscovery() -> list[Service]:
     """Get ONVIF Profile S devices from network."""
     discovery = WSDiscovery(ttl=4)
-    discovery.start()
-    services = discovery.searchServices(
-        scopes=[Scope("onvif://www.onvif.org/Profile/Streaming")]
-    )
-    discovery.stop()
-    return services
+    try:
+        discovery.start()
+        return discovery.searchServices(
+            scopes=[Scope("onvif://www.onvif.org/Profile/Streaming")]
+        )
+    finally:
+        discovery.stop()
+        # Stop the threads started by WSDiscovery since otherwise there is a leak.
+        discovery._stopThreads()  # pylint: disable=protected-access
 
 
 async def async_discovery(hass: HomeAssistant) -> list[dict[str, Any]]:
@@ -69,11 +75,14 @@ async def async_discovery(hass: HomeAssistant) -> list[dict[str, Any]]:
             CONF_NAME: service.getEPR(),
             CONF_HOST: url.hostname,
             CONF_PORT: url.port or 80,
+            CONF_HARDWARE: None,
         }
         for scope in service.getScopes():
             scope_str = scope.getValue()
             if scope_str.lower().startswith("onvif://www.onvif.org/name"):
                 device[CONF_NAME] = scope_str.split("/")[-1]
+            if scope_str.lower().startswith("onvif://www.onvif.org/hardware"):
+                device[CONF_HARDWARE] = scope_str.split("/")[-1]
             if scope_str.lower().startswith("onvif://www.onvif.org/mac"):
                 device[CONF_DEVICE_ID] = scope_str.split("/")[-1]
         devices.append(device)
@@ -190,8 +199,7 @@ class OnvifFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 return await self.async_step_configure()
 
             for device in self.devices:
-                name = f"{device[CONF_NAME]} ({device[CONF_HOST]})"
-                if name == user_input[CONF_HOST]:
+                if device[CONF_HOST] == user_input[CONF_HOST]:
                     self.device_id = device[CONF_DEVICE_ID]
                     self.onvif_config = {
                         CONF_NAME: device[CONF_NAME],
@@ -213,15 +221,16 @@ class OnvifFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         LOGGER.debug("Discovered ONVIF devices %s", pformat(self.devices))
 
         if self.devices:
-            names = [
-                f"{device[CONF_NAME]} ({device[CONF_HOST]})" for device in self.devices
-            ]
-
-            names.append(CONF_MANUAL_INPUT)
+            devices = {CONF_MANUAL_INPUT: CONF_MANUAL_INPUT}
+            for device in self.devices:
+                description = f"{device[CONF_NAME]} ({device[CONF_HOST]})"
+                if hardware := device[CONF_HARDWARE]:
+                    description += f" [{hardware}]"
+                devices[device[CONF_HOST]] = description
 
             return self.async_show_form(
                 step_id="device",
-                data_schema=vol.Schema({vol.Optional(CONF_HOST): vol.In(names)}),
+                data_schema=vol.Schema({vol.Optional(CONF_HOST): vol.In(devices)}),
             )
 
         return await self.async_step_configure()
@@ -387,6 +396,12 @@ class OnvifOptionsFlowHandler(config_entries.OptionsFlow):
                 CONF_USE_WALLCLOCK_AS_TIMESTAMPS,
                 self.config_entry.options.get(CONF_USE_WALLCLOCK_AS_TIMESTAMPS, False),
             )
+            self.options[CONF_ENABLE_WEBHOOKS] = user_input.get(
+                CONF_ENABLE_WEBHOOKS,
+                self.config_entry.options.get(
+                    CONF_ENABLE_WEBHOOKS, DEFAULT_ENABLE_WEBHOOKS
+                ),
+            )
             return self.async_create_entry(title="", data=self.options)
 
         advanced_options = {}
@@ -415,6 +430,12 @@ class OnvifOptionsFlowHandler(config_entries.OptionsFlow):
                             CONF_RTSP_TRANSPORT, next(iter(RTSP_TRANSPORTS))
                         ),
                     ): vol.In(RTSP_TRANSPORTS),
+                    vol.Optional(
+                        CONF_ENABLE_WEBHOOKS,
+                        default=self.config_entry.options.get(
+                            CONF_ENABLE_WEBHOOKS, DEFAULT_ENABLE_WEBHOOKS
+                        ),
+                    ): bool,
                     **advanced_options,
                 }
             ),

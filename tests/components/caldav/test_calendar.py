@@ -9,7 +9,7 @@ import pytest
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-from homeassistant.util import dt
+from homeassistant.util import dt as dt_util
 
 DEVICE_DATA = {"name": "Private Calendar", "device_id": "Private Calendar"}
 
@@ -360,7 +360,7 @@ def get_api_events(hass_client):
 
 def _local_datetime(hours, minutes):
     """Build a datetime object for testing in the correct timezone."""
-    return dt.as_local(datetime.datetime(2017, 11, 27, hours, minutes, 0))
+    return dt_util.as_local(datetime.datetime(2017, 11, 27, hours, minutes, 0))
 
 
 def _mocked_dav_client(*names, calendars=None):
@@ -693,7 +693,9 @@ async def test_all_day_event_returned_early(
         hass,
         calendar,
         config,
-        datetime.datetime(2017, 11, 27, 0, 30).replace(tzinfo=dt.DEFAULT_TIME_ZONE),
+        datetime.datetime(2017, 11, 27, 0, 30).replace(
+            tzinfo=dt_util.DEFAULT_TIME_ZONE
+        ),
     )
 
 
@@ -711,7 +713,9 @@ async def test_all_day_event_returned_mid(
         hass,
         calendar,
         config,
-        datetime.datetime(2017, 11, 27, 12, 30).replace(tzinfo=dt.DEFAULT_TIME_ZONE),
+        datetime.datetime(2017, 11, 27, 12, 30).replace(
+            tzinfo=dt_util.DEFAULT_TIME_ZONE
+        ),
     )
 
 
@@ -729,7 +733,9 @@ async def test_all_day_event_returned_late(
         hass,
         calendar,
         config,
-        datetime.datetime(2017, 11, 27, 23, 30).replace(tzinfo=dt.DEFAULT_TIME_ZONE),
+        datetime.datetime(2017, 11, 27, 23, 30).replace(
+            tzinfo=dt_util.DEFAULT_TIME_ZONE
+        ),
     )
 
 
@@ -883,7 +889,7 @@ async def test_event_rrule_all_day_early(hass: HomeAssistant, calendar, set_tz) 
         hass,
         calendar,
         config,
-        datetime.datetime(2016, 12, 1, 0, 30).replace(tzinfo=dt.DEFAULT_TIME_ZONE),
+        datetime.datetime(2016, 12, 1, 0, 30).replace(tzinfo=dt_util.DEFAULT_TIME_ZONE),
     )
 
 
@@ -899,7 +905,9 @@ async def test_event_rrule_all_day_mid(hass: HomeAssistant, calendar, set_tz) ->
         hass,
         calendar,
         config,
-        datetime.datetime(2016, 12, 1, 17, 30).replace(tzinfo=dt.DEFAULT_TIME_ZONE),
+        datetime.datetime(2016, 12, 1, 17, 30).replace(
+            tzinfo=dt_util.DEFAULT_TIME_ZONE
+        ),
     )
 
 
@@ -915,14 +923,16 @@ async def test_event_rrule_all_day_late(hass: HomeAssistant, calendar, set_tz) -
         hass,
         calendar,
         config,
-        datetime.datetime(2016, 12, 1, 23, 30).replace(tzinfo=dt.DEFAULT_TIME_ZONE),
+        datetime.datetime(2016, 12, 1, 23, 30).replace(
+            tzinfo=dt_util.DEFAULT_TIME_ZONE
+        ),
     )
 
 
 @pytest.mark.parametrize("set_tz", ["utc"], indirect=True)
 @patch(
     "homeassistant.util.dt.now",
-    return_value=dt.as_local(datetime.datetime(2015, 11, 27, 0, 15)),
+    return_value=dt_util.as_local(datetime.datetime(2015, 11, 27, 0, 15)),
 )
 async def test_event_rrule_hourly_on_first(
     mock_now, hass: HomeAssistant, calendar, set_tz
@@ -949,7 +959,7 @@ async def test_event_rrule_hourly_on_first(
 @pytest.mark.parametrize("set_tz", ["utc"], indirect=True)
 @patch(
     "homeassistant.util.dt.now",
-    return_value=dt.as_local(datetime.datetime(2015, 11, 27, 11, 15)),
+    return_value=dt_util.as_local(datetime.datetime(2015, 11, 27, 11, 15)),
 )
 async def test_event_rrule_hourly_on_last(
     mock_now, hass: HomeAssistant, calendar, set_tz
@@ -975,7 +985,7 @@ async def test_event_rrule_hourly_on_last(
 
 @patch(
     "homeassistant.util.dt.now",
-    return_value=dt.as_local(datetime.datetime(2015, 11, 27, 0, 45)),
+    return_value=dt_util.as_local(datetime.datetime(2015, 11, 27, 0, 45)),
 )
 async def test_event_rrule_hourly_off_first(
     mock_now, hass: HomeAssistant, calendar
@@ -991,7 +1001,7 @@ async def test_event_rrule_hourly_off_first(
 
 @patch(
     "homeassistant.util.dt.now",
-    return_value=dt.as_local(datetime.datetime(2015, 11, 27, 11, 45)),
+    return_value=dt_util.as_local(datetime.datetime(2015, 11, 27, 11, 45)),
 )
 async def test_event_rrule_hourly_off_last(
     mock_now, hass: HomeAssistant, calendar
@@ -1007,7 +1017,7 @@ async def test_event_rrule_hourly_off_last(
 
 @patch(
     "homeassistant.util.dt.now",
-    return_value=dt.as_local(datetime.datetime(2015, 11, 27, 12, 15)),
+    return_value=dt_util.as_local(datetime.datetime(2015, 11, 27, 12, 15)),
 )
 async def test_event_rrule_hourly_ended(
     mock_now, hass: HomeAssistant, calendar

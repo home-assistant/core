@@ -740,9 +740,15 @@ class ZHADevice(LogMixin):
         manufacturer=None,
     ):
         """Write a value to a zigbee attribute for a cluster in this entity."""
-        cluster = self.async_get_cluster(endpoint_id, cluster_id, cluster_type)
-        if cluster is None:
-            return None
+        try:
+            cluster: Cluster = self.async_get_cluster(
+                endpoint_id, cluster_id, cluster_type
+            )
+        except KeyError as exc:
+            raise ValueError(
+                f"Cluster {cluster_id} not found on endpoint {endpoint_id} while"
+                f" writing attribute {attribute} with value {value}"
+            ) from exc
 
         try:
             response = await cluster.write_attributes(
@@ -758,15 +764,13 @@ class ZHADevice(LogMixin):
             )
             return response
         except zigpy.exceptions.ZigbeeException as exc:
-            self.debug(
-                "failed to set attribute: %s %s %s %s %s",
-                f"{ATTR_VALUE}: {value}",
-                f"{ATTR_ATTRIBUTE}: {attribute}",
-                f"{ATTR_CLUSTER_ID}: {cluster_id}",
-                f"{ATTR_ENDPOINT_ID}: {endpoint_id}",
-                exc,
-            )
-            return None
+            raise HomeAssistantError(
+                f"Failed to set attribute: "
+                f"{ATTR_VALUE}: {value} "
+                f"{ATTR_ATTRIBUTE}: {attribute} "
+                f"{ATTR_CLUSTER_ID}: {cluster_id} "
+                f"{ATTR_ENDPOINT_ID}: {endpoint_id}"
+            ) from exc
 
     async def issue_cluster_command(
         self,
