@@ -4,7 +4,6 @@ import logging
 
 from qnapstats import QNAPStats
 
-from homeassistant import config_entries
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -13,7 +12,6 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
-from homeassistant.helpers import config_per_platform
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DEFAULT_PORT, DEFAULT_TIMEOUT, DOMAIN, PLATFORMS
@@ -22,11 +20,13 @@ UPDATE_INTERVAL = timedelta(minutes=1)
 
 _LOGGER = logging.getLogger(__name__)
 
+
 async def async_setup(hass, config):
     """Set up the qnap environment."""
     hass.data.setdefault(DOMAIN, {})
 
     return True
+
 
 async def async_setup_entry(hass, config_entry):
     """Set the config entry up."""
@@ -44,8 +44,12 @@ async def async_setup_entry(hass, config_entry):
     async def async_update_data():
         datas = {}
         datas["system_stats"] = await hass.async_add_executor_job(api.get_system_stats)
-        datas["system_health"] = await hass.async_add_executor_job(api.get_system_health)
-        datas["smart_drive_health"] = await hass.async_add_executor_job(api.get_smart_disk_health)
+        datas["system_health"] = await hass.async_add_executor_job(
+            api.get_system_health
+        )
+        datas["smart_drive_health"] = await hass.async_add_executor_job(
+            api.get_smart_disk_health
+        )
         datas["volumes"] = await hass.async_add_executor_job(api.get_volumes)
         datas["bandwidth"] = await hass.async_add_executor_job(api.get_bandwidth)
         return datas
