@@ -1,10 +1,11 @@
 """Support for EZVIZ number controls."""
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import timedelta
 import logging
 
-from pyezviz.constants import DeviceCatagories
+from pyezviz.constants import DeviceCatagories, SupportExt
 from pyezviz.exceptions import (
     EzvizAuthTokenExpired,
     EzvizAuthVerificationCode,
@@ -27,13 +28,30 @@ from .entity import EzvizBaseEntity
 SCAN_INTERVAL = timedelta(seconds=3600)
 PARALLEL_UPDATES = 0
 _LOGGER = logging.getLogger(__name__)
-NUMBER_TYPES = NumberEntityDescription(
+
+
+@dataclass
+class EzvizNumberEntityDescriptionMixin:
+    """Mixin values for EZVIZ Number entities."""
+
+    supported_ext: str
+
+
+@dataclass
+class EzvizNumberEntityDescription(
+    NumberEntityDescription, EzvizNumberEntityDescriptionMixin
+):
+    """Describe a EZVIZ Number."""
+
+
+NUMBER_TYPES = EzvizNumberEntityDescription(
     key="detection_sensibility",
     name="Detection sensitivity",
     icon="mdi:eye",
     entity_category=EntityCategory.CONFIG,
     native_min_value=0,
     native_step=1,
+    supported_ext=str(SupportExt.SupportSensibilityAdjust.value),
 )
 
 
@@ -46,7 +64,13 @@ async def async_setup_entry(
     ]
 
     async_add_entities(
-        [EzvizSensor(coordinator, camera, NUMBER_TYPES) for camera in coordinator.data],
+        [
+            EzvizSensor(coordinator, camera, NUMBER_TYPES)
+            for camera in coordinator.data
+            for capibility, value in coordinator.data[camera]["supportExt"].items()
+            if capibility == NUMBER_TYPES.supported_ext
+            if value == "1"
+        ],
         update_before_add=True,
     )
 
@@ -60,7 +84,7 @@ class EzvizSensor(EzvizBaseEntity, NumberEntity):
         self,
         coordinator: EzvizDataUpdateCoordinator,
         serial: str,
-        description: NumberEntityDescription,
+        description: EzvizNumberEntityDescription,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator, serial)
