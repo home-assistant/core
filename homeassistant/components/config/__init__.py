@@ -11,6 +11,7 @@ from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import CONF_ID, EVENT_COMPONENT_LOADED
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import ATTR_COMPONENT
 from homeassistant.util.file import write_utf8_file_atomic
@@ -31,6 +32,8 @@ SECTIONS = (
 )
 ACTION_CREATE_UPDATE = "create_update"
 ACTION_DELETE = "delete"
+
+CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
