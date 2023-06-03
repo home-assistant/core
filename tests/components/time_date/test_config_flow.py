@@ -1,6 +1,8 @@
 """Test the Time & Date config flow."""
 from __future__ import annotations
 
+from unittest.mock import patch
+
 import pytest
 
 from homeassistant import config_entries
@@ -19,6 +21,18 @@ async def test_form(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
+    assert result["type"] == FlowResultType.FORM
+
+    with patch(
+        "homeassistant.components.time_date.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"display_options": ["time"]},
+        )
+        await hass.async_block_till_done()
+    assert len(mock_setup_entry.mock_calls) == 1
     assert result["type"] == FlowResultType.CREATE_ENTRY
 
 
@@ -81,3 +95,22 @@ async def test_timezone_not_set(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     assert result["type"] == FlowResultType.FORM
     assert result["errors"]["timezone_not_exist"] == "timezone_not_exist"
+
+
+async def test_options(hass: HomeAssistant) -> None:
+    """Test updating options."""
+    entry = MockConfigEntry(domain=DOMAIN, data={"display_options": ["time"]})
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={"display_options": ["time", "date"]},
+    )
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["data"] == {"display_options": ["time", "date"]}

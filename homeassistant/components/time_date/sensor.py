@@ -66,9 +66,8 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Time & Date sensor."""
     entities = []
-    for option_type in OPTION_TYPES:
-        status = option_type in entry.data.get(CONF_DISPLAY_OPTIONS, OPTION_TYPES)
-        entities.append(TimeDateSensor(hass, option_type, status, entry.entry_id))
+    for option_type in entry.options[CONF_DISPLAY_OPTIONS]:
+        entities.append(TimeDateSensor(hass, option_type, entry.entry_id))
     async_add_entities(entities)
 
 
@@ -77,7 +76,7 @@ class TimeDateSensor(SensorEntity):
 
     _attr_has_entity_name = True
 
-    def __init__(self, hass, option_type, status, entry_id):
+    def __init__(self, hass, option_type, entry_id):
         """Initialize the sensor."""
         self._attr_name = OPTION_TYPES[option_type]
         self._attr_unique_id = f"{option_type}_{entry_id}"
@@ -86,7 +85,6 @@ class TimeDateSensor(SensorEntity):
             identifiers={(DOMAIN, entry_id)},
             name="Time & Date",
         )
-        self._attr_entity_registry_enabled_default = status
         self.entity_id = ENTITY_ID_FORMAT.format(option_type)
         self.type = option_type
         self._state = None

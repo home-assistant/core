@@ -12,7 +12,11 @@ async def test_setup_and_remove_config_entry(hass: HomeAssistant) -> None:
     # Setup the config entry
 
     config_entry = MockConfigEntry(
-        domain=DOMAIN, source=SOURCE_USER, data={}, options={}, entry_id="123456abc"
+        domain=DOMAIN,
+        source=SOURCE_USER,
+        data={"display_options": ["time"]},
+        options={"display_options": ["time"]},
+        entry_id="123456abc",
     )
 
     config_entry.add_to_hass(hass)

@@ -14,6 +14,15 @@
       "timezone_not_exist": "Timezone is not set in Home Assistant configuration"
     }
   },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "display_options": "Options"
+        }
+      }
+    }
+  },
   "issues": {
     "deprecated_yaml": {
       "title": "The Time & Date YAML configuration is being removed",
