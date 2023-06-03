@@ -227,7 +227,7 @@ aioguardian==2022.07.0
 aioharmony==0.2.10
 
 # homeassistant.components.homekit_controller
-aiohomekit==2.6.3
+aiohomekit==2.6.4
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -1276,7 +1276,7 @@ pyinsteon==1.4.2
 pyipma==3.0.6
 
 # homeassistant.components.ipp
-pyipp==0.12.1
+pyipp==0.13.0
 
 # homeassistant.components.iqvia
 pyiqvia==2022.04.0
