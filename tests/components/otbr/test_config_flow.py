@@ -2,7 +2,7 @@
 import asyncio
 from http import HTTPStatus
 from typing import Any
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
 import aiohttp
 import pytest
@@ -309,7 +309,9 @@ async def test_hassio_discovery_flow_router_not_setup_has_preferred(
 
 
 async def test_hassio_discovery_flow_router_not_setup_has_preferred_2(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    multiprotocol_addon_manager_mock,
 ) -> None:
     """Test the hassio discovery flow when the border router has no dataset.
 
@@ -321,8 +323,7 @@ async def test_hassio_discovery_flow_router_not_setup_has_preferred_2(
     aioclient_mock.put(f"{url}/node/dataset/active", status=HTTPStatus.CREATED)
     aioclient_mock.put(f"{url}/node/state", status=HTTPStatus.OK)
 
-    networksettings = Mock()
-    networksettings.network_info.channel = 15
+    multiprotocol_addon_manager_mock.async_get_channel.return_value = 15
 
     with patch(
         "homeassistant.components.otbr.config_flow.async_get_preferred_dataset",
@@ -330,13 +331,7 @@ async def test_hassio_discovery_flow_router_not_setup_has_preferred_2(
     ), patch(
         "homeassistant.components.otbr.async_setup_entry",
         return_value=True,
-    ) as mock_setup_entry, patch(
-        "homeassistant.components.otbr.util.zha_api.async_get_radio_path",
-        return_value="socket://core-silabs-multiprotocol:9999",
-    ), patch(
-        "homeassistant.components.otbr.util.zha_api.async_get_network_settings",
-        return_value=networksettings,
-    ):
+    ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_init(
             otbr.DOMAIN, context={"source": "hassio"}, data=HASSIO_DATA
         )

@@ -1,7 +1,6 @@
 """The tests for the MQTT component."""
 import asyncio
 from collections.abc import Generator
-import copy
 from datetime import datetime, timedelta
 from functools import partial
 import json
@@ -3468,31 +3467,6 @@ async def test_subscribe_connection_status(
     assert len(mqtt_connected_calls_async) == 2
     assert mqtt_connected_calls_async[0] is True
     assert mqtt_connected_calls_async[1] is False
-
-
-# Test existence of removed YAML configuration under the platform key
-# This warning and test is to be removed from HA core 2023.6
-async def test_one_deprecation_warning_per_platform(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test a deprecation warning is is logged once per platform."""
-    platform = "light"
-    config = {"platform": "mqtt", "command_topic": "test-topic"}
-    config1 = copy.deepcopy(config)
-    config1["name"] = "test1"
-    config2 = copy.deepcopy(config)
-    config2["name"] = "test2"
-    await async_setup_component(hass, platform, {platform: [config1, config2]})
-    count = 0
-    for record in caplog.records:
-        if record.levelname == "ERROR" and (
-            f"Manually configured MQTT {platform}(s) found under platform key '{platform}'"
-            in record.message
-        ):
-            count += 1
-    assert count == 1
 
 
 @patch("homeassistant.components.mqtt.PLATFORMS", [Platform.LIGHT])

@@ -10,12 +10,19 @@ from aioimaplib import AioImapException
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
+from homeassistant.const import (
+    CONF_NAME,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_USERNAME,
+    CONF_VERIFY_SSL,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import AbortFlow, FlowResult
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.selector import (
+    BooleanSelector,
     SelectSelector,
     SelectSelectorConfig,
     SelectSelectorMode,
@@ -42,6 +49,7 @@ from .const import (
 from .coordinator import connect_to_server
 from .errors import InvalidAuth, InvalidFolder
 
+BOOLEAN_SELECTOR = BooleanSelector()
 CIPHER_SELECTOR = SelectSelector(
     SelectSelectorConfig(
         options=list(SSLCipherList),
@@ -68,6 +76,7 @@ CONFIG_SCHEMA_ADVANCED = {
     vol.Optional(
         CONF_SSL_CIPHER_LIST, default=SSLCipherList.PYTHON_DEFAULT
     ): CIPHER_SELECTOR,
+    vol.Optional(CONF_VERIFY_SSL, default=True): BOOLEAN_SELECTOR,
 }
 
 OPTIONS_SCHEMA = vol.Schema(
@@ -177,7 +186,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             return self.async_create_entry(title=title, data=user_input)
 
-        schema = self.add_suggested_values_to_schema(CONFIG_SCHEMA, user_input)
+        schema = self.add_suggested_values_to_schema(schema, user_input)
         return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
 
     async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:

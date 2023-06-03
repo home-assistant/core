@@ -11,16 +11,24 @@ import voluptuous as vol
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA as BINARY_SENSOR_DEVICE_CLASSES_SCHEMA,
     DOMAIN as BINARY_SENSOR_DOMAIN,
+    SCAN_INTERVAL as BINARY_SENSOR_DEFAULT_SCAN_INTERVAL,
 )
-from homeassistant.components.cover import DOMAIN as COVER_DOMAIN
+from homeassistant.components.cover import (
+    DOMAIN as COVER_DOMAIN,
+    SCAN_INTERVAL as COVER_DEFAULT_SCAN_INTERVAL,
+)
 from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
 from homeassistant.components.sensor import (
     CONF_STATE_CLASS,
     DEVICE_CLASSES_SCHEMA as SENSOR_DEVICE_CLASSES_SCHEMA,
     DOMAIN as SENSOR_DOMAIN,
+    SCAN_INTERVAL as SENSOR_DEFAULT_SCAN_INTERVAL,
     STATE_CLASSES_SCHEMA as SENSOR_STATE_CLASSES_SCHEMA,
 )
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.components.switch import (
+    DOMAIN as SWITCH_DOMAIN,
+    SCAN_INTERVAL as SWITCH_DEFAULT_SCAN_INTERVAL,
+)
 from homeassistant.const import (
     CONF_COMMAND,
     CONF_COMMAND_CLOSE,
@@ -34,6 +42,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PAYLOAD_OFF,
     CONF_PAYLOAD_ON,
+    CONF_SCAN_INTERVAL,
     CONF_UNIQUE_ID,
     CONF_UNIT_OF_MEASUREMENT,
     CONF_VALUE_TEMPLATE,
@@ -74,6 +83,9 @@ BINARY_SENSOR_SCHEMA = vol.Schema(
         vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
         vol.Optional(CONF_COMMAND_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
         vol.Optional(CONF_UNIQUE_ID): cv.string,
+        vol.Optional(
+            CONF_SCAN_INTERVAL, default=BINARY_SENSOR_DEFAULT_SCAN_INTERVAL
+        ): vol.All(cv.time_period, cv.positive_timedelta),
     }
 )
 COVER_SCHEMA = vol.Schema(
@@ -86,6 +98,9 @@ COVER_SCHEMA = vol.Schema(
         vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
         vol.Optional(CONF_COMMAND_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
         vol.Optional(CONF_UNIQUE_ID): cv.string,
+        vol.Optional(CONF_SCAN_INTERVAL, default=COVER_DEFAULT_SCAN_INTERVAL): vol.All(
+            cv.time_period, cv.positive_timedelta
+        ),
     }
 )
 NOTIFY_SCHEMA = vol.Schema(
@@ -106,6 +121,9 @@ SENSOR_SCHEMA = vol.Schema(
         vol.Optional(CONF_UNIQUE_ID): cv.string,
         vol.Optional(CONF_DEVICE_CLASS): SENSOR_DEVICE_CLASSES_SCHEMA,
         vol.Optional(CONF_STATE_CLASS): SENSOR_STATE_CLASSES_SCHEMA,
+        vol.Optional(CONF_SCAN_INTERVAL, default=SENSOR_DEFAULT_SCAN_INTERVAL): vol.All(
+            cv.time_period, cv.positive_timedelta
+        ),
     }
 )
 SWITCH_SCHEMA = vol.Schema(
@@ -118,6 +136,9 @@ SWITCH_SCHEMA = vol.Schema(
         vol.Optional(CONF_ICON): cv.template,
         vol.Optional(CONF_COMMAND_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
         vol.Optional(CONF_UNIQUE_ID): cv.string,
+        vol.Optional(CONF_SCAN_INTERVAL, default=SWITCH_DEFAULT_SCAN_INTERVAL): vol.All(
+            cv.time_period, cv.positive_timedelta
+        ),
     }
 )
 COMBINED_SCHEMA = vol.Schema(

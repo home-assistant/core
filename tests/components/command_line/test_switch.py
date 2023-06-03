@@ -1,6 +1,8 @@
 """The tests for the Command line switch platform."""
 from __future__ import annotations
 
+import asyncio
+from datetime import timedelta
 import json
 import os
 import subprocess
@@ -11,6 +13,7 @@ import pytest
 
 from homeassistant import setup
 from homeassistant.components.command_line import DOMAIN
+from homeassistant.components.command_line.switch import CommandSwitch
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SCAN_INTERVAL
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -637,3 +640,59 @@ async def test_templating(hass: HomeAssistant) -> None:
         assert entity_state.attributes.get("icon") == "mdi:on"
         assert entity_state2.state == STATE_ON
         assert entity_state2.attributes.get("icon") == "mdi:on"
+
+
+async def test_updating_to_often(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test handling updating when command already running."""
+    called = []
+
+    class MockCommandSwitch(CommandSwitch):
+        """Mock entity that updates slow."""
+
+        async def _async_update(self) -> None:
+            """Update slow."""
+            called.append(1)
+            # Add waiting time
+            await asyncio.sleep(1)
+
+    with patch(
+        "homeassistant.components.command_line.switch.CommandSwitch",
+        side_effect=MockCommandSwitch,
+    ):
+        await setup.async_setup_component(
+            hass,
+            DOMAIN,
+            {
+                "command_line": [
+                    {
+                        "switch": {
+                            "command_state": "echo 1",
+                            "command_on": "echo 2",
+                            "command_off": "echo 3",
+                            "name": "Test",
+                            "scan_interval": 0.1,
+                        }
+                    }
+                ]
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert len(called) == 0
+    assert (
+        "Updating Command Line Switch Test took longer than the scheduled update interval"
+        not in caplog.text
+    )
+
+    async_fire_time_changed(hass, dt_util.now() + timedelta(seconds=1))
+    await hass.async_block_till_done()
+
+    assert len(called) == 1
+    assert (
+        "Updating Command Line Switch Test took longer than the scheduled update interval"
+        in caplog.text
+    )
+
+    await asyncio.sleep(0.2)

@@ -62,6 +62,7 @@ jobs:
 
   build_python:
     name: Build PyPi package
+    environment: ${{ needs.init.outputs.channel }}
     needs: ["init", "build_base"]
     runs-on: ubuntu-latest
     if: github.repository_owner == 'home-assistant' && needs.init.outputs.publish == 'true'
@@ -123,7 +124,7 @@ jobs:
         uses: dawidd6/action-download-artifact@v2
         with:
           github_token: ${{secrets.GITHUB_TOKEN}}
-          repo: home-assistant/intents
+          repo: home-assistant/intents-package
           branch: main
           workflow: nightly.yaml
           workflow_conclusion: success
@@ -181,7 +182,7 @@ jobs:
           # will drop the platform in the near future (they consider it
           # "flimsy" on 386). The following packages depend on pandas,
           # so we comment them out.
-          sed -i "s|env_canada|# env_canada|g" requirements_all.txt
+          sed -i "s|env-canada|# env-canada|g" requirements_all.txt
           sed -i "s|noaa-coops|# noaa-coops|g" requirements_all.txt
           sed -i "s|pyezviz|# pyezviz|g" requirements_all.txt
           sed -i "s|pykrakenapi|# pykrakenapi|g" requirements_all.txt
@@ -299,6 +300,7 @@ jobs:
 
   publish_ha:
     name: Publish version files
+    environment: ${{ needs.init.outputs.channel }}
     if: github.repository_owner == 'home-assistant'
     needs: ["init", "build_machine"]
     runs-on: ubuntu-latest
@@ -332,6 +334,7 @@ jobs:
 
   publish_container:
     name: Publish meta container for ${{ matrix.registry }}
+    environment: ${{ needs.init.outputs.channel }}
     if: github.repository_owner == 'home-assistant'
     needs: ["init", "build_base"]
     runs-on: ubuntu-latest
