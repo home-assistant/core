@@ -83,7 +83,7 @@ class Concord232Alarm(alarm.AlarmControlPanelEntity):
         | AlarmControlPanelEntityFeature.ARM_AWAY
     )
 
-    def __init__(self, url, name, code, mode) -> None:
+    def __init__(self, url: str, name: str, code: str | None, mode: str) -> None:
         """Initialize the Concord232 alarm panel."""
 
         self._attr_name = name
@@ -168,7 +168,7 @@ class Concord232Alarm(alarm.AlarmControlPanelEntity):
 
         self._attr_state = self.alarm_status
 
-    def _validate_code(self, code, state) -> bool:
+    def _validate_code(self, code: str | None, state: str) -> bool:
         """Validate given code."""
         if self._code is None:
             return True
