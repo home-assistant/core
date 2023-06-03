@@ -636,6 +636,12 @@ def energy_production_state_fixture():
     return json.loads(load_fixture("zwave_js/energy_production_state.json"))
 
 
+@pytest.fixture(name="nice_ibt4zwave_state", scope="session")
+def nice_ibt4zwave_state_fixture():
+    """Load a Nice IBT4ZWAVE cover node state fixture data."""
+    return json.loads(load_fixture("zwave_js/cover_nice_ibt4zwave_state.json"))
+
+
 # model fixtures
 
 
@@ -1214,8 +1220,16 @@ def indicator_test_fixture(client, indicator_test_state):
 
 
 @pytest.fixture(name="energy_production")
-def energy_prodution_fixture(client, energy_production_state):
+def energy_production_fixture(client, energy_production_state):
     """Mock a mock node with Energy Production CC."""
     node = Node(client, copy.deepcopy(energy_production_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="nice_ibt4zwave")
+def nice_ibt4zwave_fixture(client, nice_ibt4zwave_state):
+    """Mock a Nice IBT4ZWAVE cover node."""
+    node = Node(client, copy.deepcopy(nice_ibt4zwave_state))
     client.driver.controller.nodes[node.node_id] = node
     return node
