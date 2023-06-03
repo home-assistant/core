@@ -4387,7 +4387,7 @@
       "integrations": {
         "qnap": {
           "integration_type": "device",
-          "config_flow": false,
+          "config_flow": true,
           "iot_class": "local_polling",
           "name": "QNAP"
         },

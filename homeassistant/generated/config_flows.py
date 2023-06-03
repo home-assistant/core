@@ -351,6 +351,7 @@ FLOWS = {
         "pvpc_hourly_pricing",
         "qbittorrent",
         "qingping",
+        "qnap",
         "qnap_qsw",
         "rachio",
         "radarr",

@@ -1,24 +1,24 @@
 """Support for QNAP NAS Sensors."""
+from dataclasses import dataclass
 import logging
 
 from homeassistant import config_entries
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from dataclasses import dataclass
 from homeassistant.components.sensor import (
-    SensorEntity,
     SensorDeviceClass,
-    SensorStateClass,
+    SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.const import (
     ATTR_NAME,
     PERCENTAGE,
-    UnitOfTemperature,
-    UnitOfInformation,
     UnitOfDataRate,
+    UnitOfInformation,
+    UnitOfTemperature,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
     ATTR_DRIVE,
@@ -41,10 +41,11 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: config_entries.ConfigEntry,
-    async_add_entities: AddEntitiesCallback
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up entry."""
     coordinator = hass.data[DOMAIN][config_entry.entry_id]
@@ -67,7 +68,7 @@ async def async_setup_entry(
     sensors.extend(
         [
             QNAPNetworkSensor(coordinator, description, uid, nic)
-            for nic in coordinator.data["system_stats"]["nics"].keys()
+            for nic in coordinator.data["system_stats"]["nics"]
             for description in NET_SENSOR
         ]
     )
@@ -76,7 +77,7 @@ async def async_setup_entry(
     sensors.extend(
         [
             QNAPDriveSensor(coordinator, description, uid, drive)
-            for drive in coordinator.data["smart_drive_health"].keys()
+            for drive in coordinator.data["smart_drive_health"]
             for description in DRI_SENSOR
         ]
     )
@@ -85,13 +86,13 @@ async def async_setup_entry(
     sensors.extend(
         [
             QNAPVolumeSensor(coordinator, description, uid, volume)
-            for volume in coordinator.data["volumes"].keys()
+            for volume in coordinator.data["volumes"]
             for description in VOL_SENSOR
         ]
     )
     async_add_entities(sensors)
 
-    
+
 def round_nicely(number):
     """Round a number based on its size (so it looks nice)."""
     if number < 10:
@@ -242,7 +243,8 @@ MEM_SENSOR = [desc for desc in SENSOR_TYPES if desc.stype == "memory"]
 NET_SENSOR = [desc for desc in SENSOR_TYPES if desc.stype == "network"]
 DRI_SENSOR = [desc for desc in SENSOR_TYPES if desc.stype == "drive"]
 VOL_SENSOR = [desc for desc in SENSOR_TYPES if desc.stype == "volume"]
-    
+
+
 class QNAPSensor(CoordinatorEntity, SensorEntity):
     """Base class for a QNAP sensor."""
 
@@ -265,9 +267,9 @@ class QNAPSensor(CoordinatorEntity, SensorEntity):
 
     @property
     def coordinator_context(self):
-        """helpers/update_coordinator"""
+        """helpers/update_coordinator."""
         return None
-    
+
     @property
     def name(self):
         """Return the name of the sensor, if any."""
@@ -449,4 +451,6 @@ class QNAPVolumeSensor(QNAPSensor):
             data = self.coordinator.data["volumes"][self.monitor_device]
             total_gb = int(data["total_size"]) / 1024 / 1024 / 1024
 
-            return {ATTR_VOLUME_SIZE: f"{round_nicely(total_gb)} {UnitOfInformation.GIBIBYTES}"}
+            return {
+                ATTR_VOLUME_SIZE: f"{round_nicely(total_gb)} {UnitOfInformation.GIBIBYTES}"
+            }
