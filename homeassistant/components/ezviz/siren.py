@@ -1,16 +1,19 @@
 """Support for EZVIZ sirens."""
 from __future__ import annotations
 
+from collections.abc import Callable
+from datetime import datetime, timedelta
 from typing import Any
 
-from pyezviz import HTTPError, PyEzvizError
+from pyezviz import HTTPError, PyEzvizError, SupportExt
 
 from homeassistant.components.siren import SirenEntity, SirenEntityFeature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_ON
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+import homeassistant.helpers.event as evt
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import DATA_COORDINATOR, DOMAIN
@@ -18,6 +21,7 @@ from .coordinator import EzvizDataUpdateCoordinator
 from .entity import EzvizEntity
 
 PARALLEL_UPDATES = 1
+OFF_DELAY = timedelta(seconds=60)  # Camera firmware has hard coded turn off.
 
 
 async def async_setup_entry(
@@ -29,7 +33,11 @@ async def async_setup_entry(
     ]
 
     async_add_entities(
-        EzvizSirenEntity(coordinator, camera) for camera in coordinator.data
+        EzvizSirenEntity(coordinator, camera)
+        for camera in coordinator.data
+        for capibility, value in coordinator.data[camera]["supportExt"].items()
+        if capibility == str(SupportExt.SupportActiveDefense.value)
+        if value == "1"
     )
 
 
@@ -38,6 +46,7 @@ class EzvizSirenEntity(EzvizEntity, SirenEntity, RestoreEntity):
 
     _attr_has_entity_name = True
     _attr_name = "Siren"
+    _delay_listener: Callable | None = None
     _attr_supported_features = SirenEntityFeature.TURN_ON | SirenEntityFeature.TURN_OFF
 
     def __init__(
@@ -47,7 +56,7 @@ class EzvizSirenEntity(EzvizEntity, SirenEntity, RestoreEntity):
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator, serial)
-        self._attr_unique_id = f"{serial}_siren"
+        self._attr_unique_id = f"{serial}_{self._attr_name}"
         self._attr_is_on = False
 
     async def async_added_to_hass(self) -> None:
@@ -74,6 +83,12 @@ class EzvizSirenEntity(EzvizEntity, SirenEntity, RestoreEntity):
 
         self.async_write_ha_state()
 
+    @callback
+    def off_delay_listener(self, now: datetime) -> None:
+        """Switch device off after a delay."""
+        self._attr_is_on = False
+        self.async_write_ha_state()
+
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on camera siren."""
         try:
@@ -88,5 +103,6 @@ class EzvizSirenEntity(EzvizEntity, SirenEntity, RestoreEntity):
 
         if success:
             self._attr_is_on = True
+            evt.async_call_later(self.hass, OFF_DELAY, self.off_delay_listener)
 
         self.async_write_ha_state()
