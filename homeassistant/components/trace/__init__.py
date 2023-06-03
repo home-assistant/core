@@ -37,6 +37,8 @@ TRACE_CONFIG_SCHEMA = {
     vol.Optional(CONF_STORED_TRACES, default=DEFAULT_STORED_TRACES): cv.positive_int
 }
 
+CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
+
 TraceData = dict[str, LimitedSizeDict[str, BaseTrace]]
 
 
