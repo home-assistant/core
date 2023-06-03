@@ -16,6 +16,7 @@ from homeassistant.components.sensor import (
     PLATFORM_SCHEMA,
     STATE_CLASSES_SCHEMA,
     SensorEntity,
+    SensorStateClass,
 )
 from homeassistant.const import (
     CONF_COMMAND,
@@ -91,11 +92,13 @@ async def async_setup_platform(
         value_template.hass = hass
     json_attributes: list[str] | None = sensor_config.get(CONF_JSON_ATTRIBUTES)
     scan_interval: timedelta = sensor_config.get(CONF_SCAN_INTERVAL, SCAN_INTERVAL)
+    state_class: SensorStateClass | None = sensor_config.get(CONF_STATE_CLASS)
     data = CommandSensorData(hass, command, command_timeout)
 
     trigger_entity_config = {
         CONF_UNIQUE_ID: unique_id,
         CONF_NAME: Template(name, hass),
+        CONF_DEVICE_CLASS: sensor_config.get(CONF_DEVICE_CLASS),
     }
 
     async_add_entities(
@@ -104,6 +107,7 @@ async def async_setup_platform(
                 data,
                 trigger_entity_config,
                 unit,
+                state_class,
                 value_template,
                 json_attributes,
                 scan_interval,
@@ -122,6 +126,7 @@ class CommandSensor(ManualTriggerEntity, SensorEntity):
         data: CommandSensorData,
         config: ConfigType,
         unit_of_measurement: str | None,
+        state_class: SensorStateClass | None,
         value_template: Template | None,
         json_attributes: list[str] | None,
         scan_interval: timedelta,
@@ -134,6 +139,7 @@ class CommandSensor(ManualTriggerEntity, SensorEntity):
         self._attr_native_value = None
         self._value_template = value_template
         self._attr_native_unit_of_measurement = unit_of_measurement
+        self._attr_state_class = state_class
         self._scan_interval = scan_interval
         self._process_updates: asyncio.Lock | None = None
 
