@@ -1,9 +1,17 @@
 """Platform for water heater integration."""
 from __future__ import annotations
 
-from homeassistant.components.water_heater import WaterHeaterEntity
+from typing import Any
+
+from homeassistant.components.water_heater import (
+    STATE_GAS,
+    WaterHeaterEntity,
+    WaterHeaterEntityFeature,
+)
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
@@ -30,6 +38,14 @@ async def async_setup_entry(
 class OpenThermWaterHeater(WaterHeaterEntity):
     """Class that represents WaterHeater entity."""
 
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_supported_features = (
+        WaterHeaterEntityFeature.TARGET_TEMPERATURE
+        | WaterHeaterEntityFeature.AWAY_MODE
+        | WaterHeaterEntityFeature.OPERATION_MODE
+    )
+    _attr_operation_list = [STATE_GAS]
+
     controller: OpenThermController
 
     def __init__(
@@ -38,3 +54,37 @@ class OpenThermWaterHeater(WaterHeaterEntity):
     ) -> None:
         """Initiatlize."""
         self.controller = controller
+        self._attr_unique_id = f"water_heater_{controller.device_id}"
+        self._attr_name = "Water Heater"
+        self._attr_current_operation = STATE_GAS
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, controller.device_id)},
+            name="OpenThermWeb",
+            manufacturer="Pohorelice",
+        )
+
+    async def async_update(self) -> None:
+        """Get the latest data."""
+        if self.controller.away or self.controller.dhw_setpoint == 0:
+            self._attr_icon = "mdi:water-boiler-off"
+        else:
+            self._attr_icon = "mdi:water-boiler-auto"
+
+        self._attr_current_temperature = self.controller.dhw_temperature
+        self._attr_target_temperature = self.controller.dhw_setpoint
+        self._attr_is_away_mode_on = self.controller.away
+        return
+
+    def set_temperature(self, **kwargs: Any) -> None:
+        """Set new target temperature."""
+        if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
+            return
+        self.controller.set_dhw_temperature(temperature)
+
+    def turn_away_mode_on(self) -> None:
+        """Turn on away mode."""
+        self.controller.set_away_mode(True)
+
+    def turn_away_mode_off(self) -> None:
+        """Turn off away mode."""
+        self.controller.set_away_mode(False)
