@@ -37,7 +37,7 @@ async def async_setup_entry(
         for camera in coordinator.data
         for capibility, value in coordinator.data[camera]["supportExt"].items()
         if capibility == str(SupportExt.SupportActiveDefense.value)
-        if value == "1"
+        if value != "0"
     )
 
 
