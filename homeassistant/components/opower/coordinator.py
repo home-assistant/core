@@ -88,7 +88,7 @@ class OpowerCoordinator(DataUpdateCoordinator):
             )
 
             if not await get_instance(self.hass).async_add_executor_job(
-                get_last_statistics, self.hass, 1, consumption_statistic_id, True, {}
+                get_last_statistics, self.hass, 1, consumption_statistic_id, True, set()
             ):
                 _LOGGER.debug("Updating statistic for the first time")
                 cost_reads = await self._async_get_all_cost_reads(account)
@@ -105,7 +105,7 @@ class OpowerCoordinator(DataUpdateCoordinator):
                     self.hass,
                     cost_reads[0].start_time,
                     None,
-                    [cost_statistic_id, consumption_statistic_id],
+                    {cost_statistic_id, consumption_statistic_id},
                     "hour" if account.meter_type == MeterType.ELEC else "day",
                     None,
                     {"sum"},
