@@ -294,10 +294,10 @@ class ConfigEntry:
         self.disabled_by = disabled_by
 
         # Supports unload
-        self.supports_unload = False
+        self.supports_unload: bool | None = None
 
         # Supports remove device
-        self.supports_remove_device = False
+        self.supports_remove_device: bool | None = None
 
         # Listeners to call on update
         self.update_listeners: list[
@@ -340,10 +340,12 @@ class ConfigEntry:
         if self.domain == integration.domain:
             self.async_set_state(hass, ConfigEntryState.SETUP_IN_PROGRESS, None)
 
-        self.supports_unload = await support_entry_unload(hass, self.domain)
-        self.supports_remove_device = await support_remove_from_device(
-            hass, self.domain
-        )
+        if self.supports_unload is None:
+            self.supports_unload = await support_entry_unload(hass, self.domain)
+        if self.supports_remove_device is None:
+            self.supports_remove_device = await support_remove_from_device(
+                hass, self.domain
+            )
 
         try:
             component = integration.get_component()

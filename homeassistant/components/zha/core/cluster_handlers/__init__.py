@@ -45,6 +45,8 @@ if TYPE_CHECKING:
 
 _LOGGER = logging.getLogger(__name__)
 
+DEFAULT_REQUEST_RETRIES = 3
+
 
 class AttrReportConfig(TypedDict, total=True):
     """Configuration to report for the attributes."""
@@ -78,6 +80,8 @@ def decorate_command(cluster_handler, command):
 
     @wraps(command)
     async def wrapper(*args, **kwds):
+        kwds.setdefault("tries", DEFAULT_REQUEST_RETRIES)
+
         try:
             result = await command(*args, **kwds)
             cluster_handler.debug(
@@ -424,13 +428,13 @@ class ClusterHandler(LogMixin):
         else:
             raise TypeError(f"Unexpected zha_send_event {command!r} argument: {arg!r}")
 
-        self._endpoint.device.zha_send_event(
+        self._endpoint.send_event(
             {
                 ATTR_UNIQUE_ID: self.unique_id,
                 ATTR_CLUSTER_ID: self.cluster.cluster_id,
                 ATTR_COMMAND: command,
                 # Maintain backwards compatibility with the old zigpy response format
-                ATTR_ARGS: args,  # type: ignore[dict-item]
+                ATTR_ARGS: args,
                 ATTR_PARAMS: params,
             }
         )

@@ -4,7 +4,7 @@
     dict({
       'data': dict({
         'language': 'en',
-        'pipeline': 'Home Assistant',
+        'pipeline': <ANY>,
       }),
       'type': <PipelineEventType.RUN_START: 'run-start'>,
     }),
@@ -91,7 +91,7 @@
     dict({
       'data': dict({
         'language': 'en',
-        'pipeline': 'test_name',
+        'pipeline': <ANY>,
       }),
       'type': <PipelineEventType.RUN_START: 'run-start'>,
     }),
@@ -178,7 +178,7 @@
     dict({
       'data': dict({
         'language': 'en',
-        'pipeline': 'test_name',
+        'pipeline': <ANY>,
       }),
       'type': <PipelineEventType.RUN_START: 'run-start'>,
     }),

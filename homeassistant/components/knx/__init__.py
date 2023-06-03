@@ -60,6 +60,7 @@ from .const import (
     CONF_KNX_SECURE_USER_ID,
     CONF_KNX_SECURE_USER_PASSWORD,
     CONF_KNX_STATE_UPDATER,
+    CONF_KNX_TELEGRAM_LOG_SIZE,
     CONF_KNX_TUNNELING,
     CONF_KNX_TUNNELING_TCP,
     CONF_KNX_TUNNELING_TCP_SECURE,
@@ -68,9 +69,11 @@ from .const import (
     DOMAIN,
     KNX_ADDRESS,
     SUPPORTED_PLATFORMS,
+    TELEGRAM_LOG_DEFAULT,
 )
 from .device import KNXInterfaceDevice
 from .expose import KNXExposeSensor, KNXExposeTime, create_knx_exposure
+from .project import KNXProject
 from .schema import (
     BinarySensorSchema,
     ButtonSchema,
@@ -91,6 +94,8 @@ from .schema import (
     ga_validator,
     sensor_type_validator,
 )
+from .telegrams import Telegrams
+from .websocket import register_panel
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -222,6 +227,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     conf = dict(conf)
     hass.data[DATA_KNX_CONFIG] = conf
+
     return True
 
 
@@ -304,6 +310,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         schema=SERVICE_KNX_EXPOSURE_REGISTER_SCHEMA,
     )
 
+    await register_panel(hass)
+
     return True
 
 
@@ -368,6 +376,8 @@ class KNXModule:
         self.service_exposures: dict[str, KNXExposeSensor | KNXExposeTime] = {}
         self.entry = entry
 
+        self.project = KNXProject(hass=hass, entry=entry)
+
         self.xknx = XKNX(
             connection_config=self.connection_config(),
             rate_limit=self.entry.data[CONF_KNX_RATE_LIMIT],
@@ -375,6 +385,12 @@ class KNXModule:
         )
         self.xknx.connection_manager.register_connection_state_changed_cb(
             self.connection_state_changed_cb
+        )
+        self.telegrams = Telegrams(
+            hass=hass,
+            xknx=self.xknx,
+            project=self.project,
+            log_size=entry.data.get(CONF_KNX_TELEGRAM_LOG_SIZE, TELEGRAM_LOG_DEFAULT),
         )
         self.interface_device = KNXInterfaceDevice(
             hass=hass, entry=entry, xknx=self.xknx
@@ -393,6 +409,7 @@ class KNXModule:
 
     async def start(self) -> None:
         """Start XKNX object. Connect to tunneling or Routing device."""
+        await self.project.load_project()
         await self.xknx.start()
 
     async def stop(self, event: Event | None = None) -> None:

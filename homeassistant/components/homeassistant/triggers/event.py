@@ -91,7 +91,7 @@ async def async_attach_trigger(
             if event_data_schema:
                 event_data_schema(event.data)
             if event_context_schema:
-                event_context_schema(event.context.as_dict())
+                event_context_schema(dict(event.context.as_dict()))
         except vol.Invalid:
             # If event doesn't match, skip event
             return False

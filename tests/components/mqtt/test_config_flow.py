@@ -208,7 +208,8 @@ async def test_user_v5_connection_works(
     mock_try_connection.return_value = True
 
     result = await hass.config_entries.flow.async_init(
-        "mqtt", context={"source": config_entries.SOURCE_USER}
+        "mqtt",
+        context={"source": config_entries.SOURCE_USER, "show_advanced_options": True},
     )
     assert result["type"] == "form"
 
@@ -1015,7 +1016,9 @@ async def test_skipping_advanced_options(
 
     mqtt_mock.async_connect.reset_mock()
 
-    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    result = await hass.config_entries.options.async_init(
+        config_entry.entry_id, context={"show_advanced_options": True}
+    )
     assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "broker"
 
@@ -1268,7 +1271,9 @@ async def test_setup_with_advanced_settings(
 
     mock_try_connection.return_value = True
 
-    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    result = await hass.config_entries.options.async_init(
+        config_entry.entry_id, context={"show_advanced_options": True}
+    )
     assert result["type"] == "form"
     assert result["step_id"] == "broker"
     assert result["data_schema"].schema["advanced_options"]

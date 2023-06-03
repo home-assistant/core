@@ -392,7 +392,7 @@ async def test_ws_list_engines(
     setup: MockProvider | MockProviderEntity,
     engine_id: str,
 ) -> None:
-    """Test listing speech to text engines."""
+    """Test listing speech-to-text engines."""
     client = await hass_ws_client()
 
     await client.send_json_auto_id({"type": "stt/engine/list"})
@@ -509,6 +509,12 @@ async def test_get_engine_legacy(
         hass,
         tmp_path,
         TEST_DOMAIN,
+        async_get_engine=AsyncMock(return_value=mock_provider),
+    )
+    mock_stt_platform(
+        hass,
+        tmp_path,
+        "cloud",
         async_get_engine=AsyncMock(return_value=mock_provider),
     )
     assert await async_setup_component(
