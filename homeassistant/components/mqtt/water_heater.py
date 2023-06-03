@@ -10,6 +10,7 @@ import voluptuous as vol
 from homeassistant.components import water_heater
 from homeassistant.components.water_heater import (
     ATTR_OPERATION_MODE,
+    DEFAULT_MIN_TEMP,
     STATE_ECO,
     STATE_ELECTRIC,
     STATE_GAS,
@@ -31,12 +32,14 @@ from homeassistant.const import (
     PRECISION_TENTHS,
     PRECISION_WHOLE,
     STATE_OFF,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.util.unit_conversion import TemperatureConverter
 
 from .climate import MqttTemperatureControlEntity
 from .config import DEFAULT_RETAIN, MQTT_BASE_SCHEMA
@@ -128,7 +131,7 @@ _PLATFORM_SCHEMA_BASE = MQTT_BASE_SCHEMA.extend(
             [PRECISION_TENTHS, PRECISION_HALVES, PRECISION_WHOLE]
         ),
         vol.Optional(CONF_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
-        vol.Optional(CONF_TEMP_INITIAL, default=110): cv.positive_int,
+        vol.Optional(CONF_TEMP_INITIAL): cv.positive_int,
         vol.Optional(CONF_TEMP_MIN): vol.Coerce(float),
         vol.Optional(CONF_TEMP_MAX): vol.Coerce(float),
         vol.Optional(CONF_TEMP_COMMAND_TEMPLATE): cv.template,
@@ -214,8 +217,17 @@ class MqttWaterHeater(MqttTemperatureControlEntity, WaterHeaterEntity):  # type:
 
         self._optimistic = config[CONF_OPTIMISTIC]
 
+        # convert init temp to target unit if this is not Fahrenheit
+        init_temp: float = config.get(
+            CONF_TEMP_INITIAL,
+            TemperatureConverter.convert(
+                DEFAULT_MIN_TEMP,
+                UnitOfTemperature.FAHRENHEIT,
+                self.temperature_unit,
+            ),
+        )
         if self._topic[CONF_TEMP_STATE_TOPIC] is None or self._optimistic:
-            self._attr_target_temperature = config[CONF_TEMP_INITIAL]
+            self._attr_target_temperature = init_temp
         if self._topic[CONF_MODE_STATE_TOPIC] is None or self._optimistic:
             self._attr_current_operation = STATE_OFF
 

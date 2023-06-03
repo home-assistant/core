@@ -14,6 +14,8 @@ from homeassistant.components.mqtt.water_heater import (
 from homeassistant.components.water_heater import (
     ATTR_CURRENT_TEMPERATURE,
     ATTR_OPERATION_MODE,
+    DEFAULT_MAX_TEMP,
+    DEFAULT_MIN_TEMP,
     STATE_ECO,
     STATE_ELECTRIC,
     STATE_GAS,
@@ -22,8 +24,9 @@ from homeassistant.components.water_heater import (
     STATE_PERFORMANCE,
     WaterHeaterEntityFeature,
 )
-from homeassistant.const import ATTR_TEMPERATURE, STATE_OFF, Platform
+from homeassistant.const import ATTR_TEMPERATURE, STATE_OFF, Platform, UnitOfTemperature
 from homeassistant.core import HomeAssistant
+from homeassistant.util.unit_conversion import TemperatureConverter
 
 from .test_common import (
     help_custom_config,
@@ -63,6 +66,24 @@ from tests.typing import MqttMockHAClientGenerator, MqttMockPahoClient
 ENTITY_WATER_HEATER = "water_heater.test"
 
 
+_DEFAULT_MIN_TEMP_CELSIUS = round(
+    TemperatureConverter.convert(
+        DEFAULT_MIN_TEMP,
+        UnitOfTemperature.FAHRENHEIT,
+        UnitOfTemperature.CELSIUS,
+    ),
+    1,
+)
+_DEFAULT_MAX_TEMP_CELSIUS = round(
+    TemperatureConverter.convert(
+        DEFAULT_MAX_TEMP,
+        UnitOfTemperature.FAHRENHEIT,
+        UnitOfTemperature.CELSIUS,
+    ),
+    1,
+)
+
+
 DEFAULT_CONFIG = {
     mqtt.DOMAIN: {
         water_heater.DOMAIN: {
@@ -90,11 +111,11 @@ async def test_setup_params(
 
     state = hass.states.get(ENTITY_WATER_HEATER)
 
-    assert state.attributes.get("temperature") == 110
+    assert state.attributes.get("temperature") == _DEFAULT_MIN_TEMP_CELSIUS
     assert state.state == "off"
-    # Default water heater min/max temp in celsius
-    assert state.attributes.get("min_temp") == 43.3
-    assert state.attributes.get("max_temp") == 60
+    # default water heater min/max temp in celsius
+    assert state.attributes.get("min_temp") == _DEFAULT_MIN_TEMP_CELSIUS
+    assert state.attributes.get("max_temp") == _DEFAULT_MAX_TEMP_CELSIUS
 
 
 @pytest.mark.parametrize("hass_config", [DEFAULT_CONFIG])
@@ -245,7 +266,7 @@ async def test_set_target_temperature(
     mqtt_mock = await mqtt_mock_entry()
 
     state = hass.states.get(ENTITY_WATER_HEATER)
-    assert state.attributes.get("temperature") == 110
+    assert state.attributes.get("temperature") == _DEFAULT_MIN_TEMP_CELSIUS
     await common.async_set_operation_mode(hass, "performance", ENTITY_WATER_HEATER)
     state = hass.states.get(ENTITY_WATER_HEATER)
     assert state.state == "performance"
@@ -254,26 +275,26 @@ async def test_set_target_temperature(
     )
     mqtt_mock.async_publish.reset_mock()
     await common.async_set_temperature(
-        hass, temperature=120, entity_id=ENTITY_WATER_HEATER
+        hass, temperature=50, entity_id=ENTITY_WATER_HEATER
     )
     state = hass.states.get(ENTITY_WATER_HEATER)
-    assert state.attributes.get("temperature") == 120
+    assert state.attributes.get("temperature") == 50
     mqtt_mock.async_publish.assert_called_once_with(
-        "temperature-topic", "120.0", 0, False
+        "temperature-topic", "50.0", 0, False
     )
 
     # also test directly supplying the operation mode to set_temperature
     mqtt_mock.async_publish.reset_mock()
     await common.async_set_temperature(
-        hass, temperature=110, operation_mode="eco", entity_id=ENTITY_WATER_HEATER
+        hass, temperature=47, operation_mode="eco", entity_id=ENTITY_WATER_HEATER
     )
     state = hass.states.get(ENTITY_WATER_HEATER)
     assert state.state == "eco"
-    assert state.attributes.get("temperature") == 110
+    assert state.attributes.get("temperature") == 47
     mqtt_mock.async_publish.assert_has_calls(
         [
             call("mode-topic", "eco", 0, False),
-            call("temperature-topic", "110.0", 0, False),
+            call("temperature-topic", "47.0", 0, False),
         ]
     )
 
@@ -298,7 +319,7 @@ async def test_set_target_temperature_pessimistic(
     assert state.attributes.get("temperature") is None
     await common.async_set_operation_mode(hass, "performance", ENTITY_WATER_HEATER)
     await common.async_set_temperature(
-        hass, temperature=150, entity_id=ENTITY_WATER_HEATER
+        hass, temperature=60, entity_id=ENTITY_WATER_HEATER
     )
     state = hass.states.get(ENTITY_WATER_HEATER)
     assert state.attributes.get("temperature") is None
@@ -329,21 +350,21 @@ async def test_set_target_temperature_optimistic(
     await mqtt_mock_entry()
 
     state = hass.states.get(ENTITY_WATER_HEATER)
-    assert state.attributes.get("temperature") == 110
+    assert state.attributes.get("temperature") == _DEFAULT_MIN_TEMP_CELSIUS
     await common.async_set_operation_mode(hass, "performance", ENTITY_WATER_HEATER)
     await common.async_set_temperature(
-        hass, temperature=125, entity_id=ENTITY_WATER_HEATER
+        hass, temperature=55, entity_id=ENTITY_WATER_HEATER
     )
     state = hass.states.get(ENTITY_WATER_HEATER)
-    assert state.attributes.get("temperature") == 125
+    assert state.attributes.get("temperature") == 55
 
-    async_fire_mqtt_message(hass, "temperature-state", "130")
+    async_fire_mqtt_message(hass, "temperature-state", "49")
     state = hass.states.get(ENTITY_WATER_HEATER)
-    assert state.attributes.get("temperature") == 130
+    assert state.attributes.get("temperature") == 49
 
     async_fire_mqtt_message(hass, "temperature-state", "not a number")
     state = hass.states.get(ENTITY_WATER_HEATER)
-    assert state.attributes.get("temperature") == 130
+    assert state.attributes.get("temperature") == 49
 
 
 @pytest.mark.parametrize(
@@ -364,9 +385,9 @@ async def test_receive_mqtt_temperature(
     """Test getting the current temperature via MQTT."""
     await mqtt_mock_entry()
 
-    async_fire_mqtt_message(hass, "current_temperature", "108")
+    async_fire_mqtt_message(hass, "current_temperature", "53")
     state = hass.states.get(ENTITY_WATER_HEATER)
-    assert state.attributes.get("current_temperature") == 108
+    assert state.attributes.get("current_temperature") == 53
 
     async_fire_mqtt_message(hass, "current_temperature", "")
     state = hass.states.get(ENTITY_WATER_HEATER)
@@ -374,7 +395,7 @@ async def test_receive_mqtt_temperature(
         "Invalid empty payload for attribute _attr_current_temperature, ignoring update"
         in caplog.text
     )
-    assert state.attributes.get("current_temperature") == 108
+    assert state.attributes.get("current_temperature") == 53
 
 
 @pytest.mark.parametrize("hass_config", [DEFAULT_CONFIG])
@@ -577,10 +598,95 @@ async def test_temperature_unit(
     """Test that setting temperature unit converts temperature values."""
     await mqtt_mock_entry()
 
-    async_fire_mqtt_message(hass, "current_temperature", "77")
+    state = hass.states.get(ENTITY_WATER_HEATER)
+    assert state.attributes.get("temperature") == _DEFAULT_MIN_TEMP_CELSIUS
+    assert state.attributes.get("min_temp") == _DEFAULT_MIN_TEMP_CELSIUS
+    assert state.attributes.get("max_temp") == _DEFAULT_MAX_TEMP_CELSIUS
+
+    async_fire_mqtt_message(hass, "current_temperature", "127")
 
     state = hass.states.get(ENTITY_WATER_HEATER)
-    assert state.attributes.get("current_temperature") == 25
+    assert state.attributes.get("current_temperature") == 52.8
+
+
+@pytest.mark.parametrize(
+    ("hass_config", "temperature_unit", "initial", "min_temp", "max_temp", "current"),
+    [
+        (
+            help_custom_config(
+                water_heater.DOMAIN,
+                DEFAULT_CONFIG,
+                (
+                    {
+                        "temperature_unit": "F",
+                        "current_temperature_topic": "current_temperature",
+                    },
+                ),
+            ),
+            UnitOfTemperature.CELSIUS,
+            _DEFAULT_MIN_TEMP_CELSIUS,
+            _DEFAULT_MIN_TEMP_CELSIUS,
+            _DEFAULT_MAX_TEMP_CELSIUS,
+            48.9,
+        ),
+        (
+            help_custom_config(
+                water_heater.DOMAIN,
+                DEFAULT_CONFIG,
+                (
+                    {
+                        "temperature_unit": "F",
+                        "current_temperature_topic": "current_temperature",
+                    },
+                ),
+            ),
+            UnitOfTemperature.KELVIN,
+            316,
+            316,
+            333,
+            322,
+        ),
+        (
+            help_custom_config(
+                water_heater.DOMAIN,
+                DEFAULT_CONFIG,
+                (
+                    {
+                        "temperature_unit": "F",
+                        "current_temperature_topic": "current_temperature",
+                    },
+                ),
+            ),
+            UnitOfTemperature.FAHRENHEIT,
+            DEFAULT_MIN_TEMP,
+            DEFAULT_MIN_TEMP,
+            DEFAULT_MAX_TEMP,
+            120,
+        ),
+    ],
+)
+async def test_alt_temperature_unit(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    temperature_unit: UnitOfTemperature,
+    initial: float,
+    min_temp: float,
+    max_temp: float,
+    current: float,
+) -> None:
+    """Test deriving the systems temperature unit."""
+    with patch.object(hass.config.units, "temperature_unit", temperature_unit):
+        await mqtt_mock_entry()
+
+        state = hass.states.get(ENTITY_WATER_HEATER)
+        assert state.attributes.get("temperature") == initial
+        assert state.attributes.get("min_temp") == min_temp
+        assert state.attributes.get("max_temp") == max_temp
+
+        async_fire_mqtt_message(hass, "current_temperature", "120")
+
+        state = hass.states.get(ENTITY_WATER_HEATER)
+        assert state.attributes.get("current_temperature") == current
 
 
 @pytest.mark.parametrize(
