@@ -23,7 +23,7 @@ from homeassistant.exceptions import (
     ConfigEntryNotReady,
     HomeAssistantError,
 )
-from homeassistant.helpers import device_registry as dr, discovery_flow
+from homeassistant.helpers import aiohttp_client, device_registry as dr, discovery_flow
 
 from .activity import ActivityStream
 from .const import CONF_BRAND, DOMAIN, MIN_TIME_BETWEEN_DETAIL_UPDATES, PLATFORMS
@@ -44,8 +44,11 @@ YALEXS_BLE_DOMAIN = "yalexs_ble"
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up August from a config entry."""
-
-    august_gateway = AugustGateway(hass)
+    # Create an aiohttp session instead of using the default one since the
+    # default one is likely to trigger august's WAF if another integration
+    # is also using Cloudflare
+    session = aiohttp_client.async_create_clientsession(hass)
+    august_gateway = AugustGateway(hass, session)
 
     try:
         await august_gateway.async_setup(entry.data)
@@ -142,6 +145,11 @@ class AugustData(AugustSubscriberMixin):
         self._house_ids: set[str] = set()
         self._pubnub_unsub: CALLBACK_TYPE | None = None
 
+    @property
+    def brand(self) -> str:
+        """Brand of the device."""
+        return self._config_entry.data.get(CONF_BRAND, DEFAULT_BRAND)
+
     async def async_setup(self):
         """Async setup of august device data and activities."""
         token = self._august_gateway.access_token
@@ -194,7 +202,7 @@ class AugustData(AugustSubscriberMixin):
         self._pubnub_unsub = async_create_pubnub(
             user_data["UserID"],
             pubnub,
-            self._config_entry.data.get(CONF_BRAND, DEFAULT_BRAND),
+            self.brand,
         )
 
         if self._locks_by_id:

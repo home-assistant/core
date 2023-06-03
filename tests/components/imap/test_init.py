@@ -18,7 +18,9 @@ from .const import (
     EMPTY_SEARCH_RESPONSE,
     TEST_FETCH_RESPONSE_BINARY,
     TEST_FETCH_RESPONSE_HTML,
-    TEST_FETCH_RESPONSE_INVALID_DATE,
+    TEST_FETCH_RESPONSE_INVALID_DATE1,
+    TEST_FETCH_RESPONSE_INVALID_DATE2,
+    TEST_FETCH_RESPONSE_INVALID_DATE3,
     TEST_FETCH_RESPONSE_MULTIPART,
     TEST_FETCH_RESPONSE_TEXT_BARE,
     TEST_FETCH_RESPONSE_TEXT_OTHER,
@@ -32,16 +34,28 @@ from tests.common import MockConfigEntry, async_capture_events, async_fire_time_
 
 
 @pytest.mark.parametrize(
-    "cipher_list", [None, "python_default", "modern", "intermediate"]
+    ("cipher_list", "verify_ssl"),
+    [
+        (None, None),
+        ("python_default", True),
+        ("python_default", False),
+        ("modern", True),
+        ("intermediate", True),
+    ],
 )
 @pytest.mark.parametrize("imap_has_capability", [True, False], ids=["push", "poll"])
 async def test_entry_startup_and_unload(
-    hass: HomeAssistant, mock_imap_protocol: MagicMock, cipher_list: str
+    hass: HomeAssistant,
+    mock_imap_protocol: MagicMock,
+    cipher_list: str | None,
+    verify_ssl: bool | None,
 ) -> None:
     """Test imap entry startup and unload with push and polling coordinator and alternate ciphers."""
     config = MOCK_CONFIG.copy()
-    if cipher_list:
+    if cipher_list is not None:
         config["ssl_cipher_list"] = cipher_list
+    if verify_ssl is not None:
+        config["verify_ssl"] = verify_ssl
 
     config_entry = MockConfigEntry(domain=DOMAIN, data=config)
     config_entry.add_to_hass(hass)
@@ -81,7 +95,9 @@ async def test_entry_startup_fails(
         (TEST_FETCH_RESPONSE_TEXT_BARE, True),
         (TEST_FETCH_RESPONSE_TEXT_PLAIN, True),
         (TEST_FETCH_RESPONSE_TEXT_PLAIN_ALT, True),
-        (TEST_FETCH_RESPONSE_INVALID_DATE, False),
+        (TEST_FETCH_RESPONSE_INVALID_DATE1, False),
+        (TEST_FETCH_RESPONSE_INVALID_DATE2, False),
+        (TEST_FETCH_RESPONSE_INVALID_DATE3, False),
         (TEST_FETCH_RESPONSE_TEXT_OTHER, True),
         (TEST_FETCH_RESPONSE_HTML, True),
         (TEST_FETCH_RESPONSE_MULTIPART, True),
@@ -91,7 +107,9 @@ async def test_entry_startup_fails(
         "bare",
         "plain",
         "plain_alt",
-        "invalid_date",
+        "invalid_date1",
+        "invalid_date2",
+        "invalid_date3",
         "other",
         "html",
         "multipart",
@@ -446,3 +464,116 @@ async def test_reset_last_message(
 
     # One new event
     assert len(event_called) == 2
+
+
+@pytest.mark.parametrize("imap_search", [TEST_SEARCH_RESPONSE])
+@pytest.mark.parametrize(
+    "imap_fetch", [(TEST_FETCH_RESPONSE_TEXT_PLAIN)], ids=["plain"]
+)
+@pytest.mark.parametrize("imap_has_capability", [True, False], ids=["push", "poll"])
+@patch("homeassistant.components.imap.coordinator.MAX_EVENT_DATA_BYTES", 500)
+async def test_event_skipped_message_too_large(
+    hass: HomeAssistant, mock_imap_protocol: MagicMock, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test skipping event when message is to large."""
+    event_called = async_capture_events(hass, "imap_content")
+
+    config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG)
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    # Make sure we have had one update (when polling)
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=5))
+    await hass.async_block_till_done()
+    state = hass.states.get("sensor.imap_email_email_com")
+    # We should have received one message
+    assert state is not None
+    assert state.state == "1"
+    assert len(event_called) == 0
+    assert "Custom imap_content event skipped" in caplog.text
+
+
+@pytest.mark.parametrize("imap_search", [TEST_SEARCH_RESPONSE])
+@pytest.mark.parametrize(
+    "imap_fetch", [(TEST_FETCH_RESPONSE_TEXT_PLAIN)], ids=["plain"]
+)
+@pytest.mark.parametrize("imap_has_capability", [True, False], ids=["push", "poll"])
+async def test_message_is_truncated(
+    hass: HomeAssistant, mock_imap_protocol: MagicMock, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test truncating message text in event data."""
+    event_called = async_capture_events(hass, "imap_content")
+
+    config = MOCK_CONFIG.copy()
+
+    # Mock the max message size to test it is truncated
+    config["max_message_size"] = 3
+    config_entry = MockConfigEntry(domain=DOMAIN, data=config)
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    # Make sure we have had one update (when polling)
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=5))
+    await hass.async_block_till_done()
+    state = hass.states.get("sensor.imap_email_email_com")
+    # We should have received one message
+    assert state is not None
+    assert state.state == "1"
+    assert len(event_called) == 1
+
+    event_data = event_called[0].data
+    assert len(event_data["text"]) == 3
+
+
+@pytest.mark.parametrize(
+    ("imap_search", "imap_fetch"),
+    [(TEST_SEARCH_RESPONSE, TEST_FETCH_RESPONSE_TEXT_PLAIN)],
+    ids=["plain"],
+)
+@pytest.mark.parametrize("imap_has_capability", [True, False], ids=["push", "poll"])
+@pytest.mark.parametrize(
+    ("custom_template", "result", "error"),
+    [
+        ("{{ subject }}", "Test subject", None),
+        ('{{ "@example.com" in sender }}', True, None),
+        ("{% bad template }}", None, "Error rendering imap custom template"),
+    ],
+    ids=["subject_test", "sender_filter", "template_error"],
+)
+async def test_custom_template(
+    hass: HomeAssistant,
+    mock_imap_protocol: MagicMock,
+    caplog: pytest.LogCaptureFixture,
+    custom_template: str,
+    result: str | bool | None,
+    error: str | None,
+) -> None:
+    """Test the custom template event data."""
+    event_called = async_capture_events(hass, "imap_content")
+
+    config = MOCK_CONFIG.copy()
+    config["custom_event_data_template"] = custom_template
+    config_entry = MockConfigEntry(domain=DOMAIN, data=config)
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    # Make sure we have had one update (when polling)
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=5))
+    await hass.async_block_till_done()
+    state = hass.states.get("sensor.imap_email_email_com")
+    # we should have received one message
+    assert state is not None
+    assert state.state == "1"
+
+    # we should have received one event
+    assert len(event_called) == 1
+    data: dict[str, Any] = event_called[0].data
+    assert data["server"] == "imap.server.com"
+    assert data["username"] == "email@email.com"
+    assert data["search"] == "UnSeen UnDeleted"
+    assert data["folder"] == "INBOX"
+    assert data["sender"] == "john.doe@example.com"
+    assert data["subject"] == "Test subject"
+    assert data["text"]
+    assert data["custom"] == result
+    assert error in caplog.text if error is not None else True
