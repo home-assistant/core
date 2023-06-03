@@ -90,7 +90,7 @@ async def async_setup_entry(
     # If present with value of "1" then add button entity.
 
     async_add_entities(
-        EzvizButton(coordinator, camera, entity_description)
+        EzvizButtonEntity(coordinator, camera, entity_description)
         for camera in coordinator.data
         for capibility, value in coordinator.data[camera]["supportExt"].items()
         for entity_description in BUTTON_ENTITIES
@@ -99,7 +99,7 @@ async def async_setup_entry(
     )
 
 
-class EzvizButton(EzvizEntity, ButtonEntity):
+class EzvizButtonEntity(EzvizEntity, ButtonEntity):
     """Representation of a EZVIZ button entity."""
 
     entity_description: EzvizButtonEntityDescription
