@@ -403,16 +403,12 @@ async def test_setting_device_tracker_location_via_lat_lon_message(
     mqtt_mock_entry: MqttMockHAClientGenerator,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test the setting of the latitude and longitude via MQTT."""
+    """Test the setting of the latitude and longitude via MQTT without state topic."""
     await mqtt_mock_entry()
     async_fire_mqtt_message(
         hass,
         "homeassistant/device_tracker/bla/config",
-        "{ "
-        '"name": "test", '
-        '"state_topic": "test-topic", '
-        '"json_attributes_topic": "attributes-topic" '
-        "}",
+        '{ "name": "test", "json_attributes_topic": "attributes-topic"}',
     )
     await hass.async_block_till_done()
 
