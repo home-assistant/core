@@ -1,6 +1,8 @@
 """Data update coordinator for the Trello integration."""
 from __future__ import annotations
 
+from datetime import timedelta
+
 from trello import TrelloClient
 
 from homeassistant.config_entries import ConfigEntry
@@ -23,6 +25,7 @@ class TrelloDataUpdateCoordinator(DataUpdateCoordinator[dict[str, int]]):
             hass=hass,
             logger=LOGGER,
             name="trello",
+            update_interval=timedelta(seconds=60),
         )
         self.client = trello_client
         self.board_ids = board_ids
