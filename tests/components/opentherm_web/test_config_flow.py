@@ -31,16 +31,16 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
             result["flow_id"],
             {
                 "host": "1.1.1.1",
-                "secret": "test-secret",
+                "password": "test-secret",
             },
         )
         await hass.async_block_till_done()
 
     assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "OpenTherm"
+    assert result2["title"] == "Pohorelice"
     assert result2["data"] == {
         "host": "1.1.1.1",
-        "username": "test-secret",
+        "password": "test-secret",
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
