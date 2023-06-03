@@ -5,6 +5,7 @@ import asyncio
 from collections.abc import Mapping
 from datetime import timedelta
 import json
+from typing import Any, cast
 
 import voluptuous as vol
 
@@ -32,6 +33,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.template import Template
+from homeassistant.helpers.template_entity import ManualTriggerEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import CONF_COMMAND_TIMEOUT, DEFAULT_TIMEOUT, DOMAIN, LOGGER
@@ -91,22 +93,26 @@ async def async_setup_platform(
     scan_interval: timedelta = sensor_config.get(CONF_SCAN_INTERVAL, SCAN_INTERVAL)
     data = CommandSensorData(hass, command, command_timeout)
 
+    trigger_entity_config = {
+        CONF_UNIQUE_ID: unique_id,
+        CONF_NAME: Template(name, hass),
+    }
+
     async_add_entities(
         [
             CommandSensor(
                 data,
-                name,
+                trigger_entity_config,
                 unit,
                 value_template,
                 json_attributes,
-                unique_id,
                 scan_interval,
             )
         ]
     )
 
 
-class CommandSensor(SensorEntity):
+class CommandSensor(ManualTriggerEntity, SensorEntity):
     """Representation of a sensor that is using shell commands."""
 
     _attr_should_poll = False
@@ -114,24 +120,27 @@ class CommandSensor(SensorEntity):
     def __init__(
         self,
         data: CommandSensorData,
-        name: str,
+        config: ConfigType,
         unit_of_measurement: str | None,
         value_template: Template | None,
         json_attributes: list[str] | None,
-        unique_id: str | None,
         scan_interval: timedelta,
     ) -> None:
         """Initialize the sensor."""
-        self._attr_name = name
+        super().__init__(self.hass, config)
         self.data = data
         self._attr_extra_state_attributes = {}
         self._json_attributes = json_attributes
         self._attr_native_value = None
         self._value_template = value_template
         self._attr_native_unit_of_measurement = unit_of_measurement
-        self._attr_unique_id = unique_id
         self._scan_interval = scan_interval
         self._process_updates: asyncio.Lock | None = None
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return extra state attributes."""
+        return cast(dict, self._attr_extra_state_attributes)
 
     async def async_added_to_hass(self) -> None:
         """Call when entity about to be added to hass."""
@@ -186,6 +195,7 @@ class CommandSensor(SensorEntity):
                 LOGGER.warning("Empty reply found when expecting JSON data")
             if self._value_template is None:
                 self._attr_native_value = None
+                self._process_manual_data(value)
                 return
 
         if self._value_template is not None:
@@ -197,7 +207,7 @@ class CommandSensor(SensorEntity):
             )
         else:
             self._attr_native_value = value
-
+        self._process_manual_data(value)
         self.async_write_ha_state()
 
 
