@@ -115,10 +115,6 @@ class Concord232Alarm(alarm.AlarmControlPanelEntity):
 
         return STATE_ALARM_ARMED_AWAY
 
-    def update(self) -> None:
-        """Update alarm panel state."""
-        self._attr_state = self.alarm_status
-
     def alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
         if not self._validate_code(code, STATE_ALARM_DISARMED):
