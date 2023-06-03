@@ -48,7 +48,7 @@ class OpenThermClimate(ClimateEntity):
         self,
         controller: OpenThermController,
     ) -> None:
-        """Initialize."""
+        """Initialize Climate Entity."""
         self.controller = controller
         self._attr_unique_id = f"climate_{controller.device_id}"
         self._attr_name = "Thermostat"

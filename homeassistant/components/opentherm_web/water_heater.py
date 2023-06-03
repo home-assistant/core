@@ -52,7 +52,7 @@ class OpenThermWaterHeater(WaterHeaterEntity):
         self,
         controller: OpenThermController,
     ) -> None:
-        """Initiatlize."""
+        """Initiatlize WaterHeater entity."""
         self.controller = controller
         self._attr_unique_id = f"water_heater_{controller.device_id}"
         self._attr_name = "Water Heater"
