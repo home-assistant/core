@@ -44,6 +44,8 @@ SERVICE_SEND_TEXT_COMMAND_SCHEMA = vol.All(
     },
 )
 
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Google Assistant SDK component."""
@@ -149,6 +151,14 @@ class GoogleAssistantConversationAgent(conversation.AbstractConversationAgent):
             "name": "Powered by Google Assistant SDK",
             "url": "https://www.home-assistant.io/integrations/google_assistant_sdk/",
         }
+
+    @property
+    def supported_languages(self) -> list[str]:
+        """Return a list of supported languages."""
+        language_code = self.entry.options.get(
+            CONF_LANGUAGE_CODE, default_language_code(self.hass)
+        )
+        return [language_code]
 
     async def async_process(
         self, user_input: conversation.ConversationInput

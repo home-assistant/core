@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 from datetime import datetime, timedelta
+import json
 import logging
 import math
 import random
@@ -10,6 +11,7 @@ from typing import Any
 from unittest.mock import patch
 
 from freezegun import freeze_time
+import orjson
 import pytest
 import voluptuous as vol
 
@@ -98,14 +100,14 @@ def assert_result_info(
     assert info.filter("invalid_entity_name.somewhere") == all_states
     if entities is not None:
         assert info.entities == frozenset(entities)
-        assert all([info.filter(entity) for entity in entities])
+        assert all(info.filter(entity) for entity in entities)
         if not all_states:
             assert not info.filter("invalid_entity_name.somewhere")
     else:
         assert not info.entities
     if domains is not None:
         assert info.domains == frozenset(domains)
-        assert all([info.filter(domain + ".entity") for domain in domains])
+        assert all(info.filter(domain + ".entity") for domain in domains)
     else:
         assert not hasattr(info, "_domains")
 
@@ -1047,20 +1049,50 @@ def test_to_json(hass: HomeAssistant) -> None:
     ).async_render()
     assert actual_result == expected_result
 
+    expected_result = orjson.dumps({"Foo": "Bar"}, option=orjson.OPT_INDENT_2).decode()
+    actual_result = template.Template(
+        "{{ {'Foo': 'Bar'} | to_json(pretty_print=True) }}", hass
+    ).async_render(parse_result=False)
+    assert actual_result == expected_result
 
-def test_to_json_string(hass: HomeAssistant) -> None:
+    expected_result = orjson.dumps(
+        {"Z": 26, "A": 1, "M": 13}, option=orjson.OPT_SORT_KEYS
+    ).decode()
+    actual_result = template.Template(
+        "{{ {'Z': 26, 'A': 1, 'M': 13} | to_json(sort_keys=True) }}", hass
+    ).async_render(parse_result=False)
+    assert actual_result == expected_result
+
+    with pytest.raises(TemplateError):
+        template.Template("{{ {'Foo': now()} | to_json }}", hass).async_render()
+
+
+def test_to_json_ensure_ascii(hass: HomeAssistant) -> None:
     """Test the object to JSON string filter."""
 
     # Note that we're not testing the actual json.loads and json.dumps methods,
     # only the filters, so we don't need to be exhaustive with our sample JSON.
     actual_value_ascii = template.Template(
-        "{{ 'Bar ҝ éèà' | to_json }}", hass
+        "{{ 'Bar ҝ éèà' | to_json(ensure_ascii=True) }}", hass
     ).async_render()
     assert actual_value_ascii == '"Bar \\u049d \\u00e9\\u00e8\\u00e0"'
     actual_value = template.Template(
         "{{ 'Bar ҝ éèà' | to_json(ensure_ascii=False) }}", hass
     ).async_render()
     assert actual_value == '"Bar ҝ éèà"'
+
+    expected_result = json.dumps({"Foo": "Bar"}, indent=2)
+    actual_result = template.Template(
+        "{{ {'Foo': 'Bar'} | to_json(pretty_print=True, ensure_ascii=True) }}", hass
+    ).async_render(parse_result=False)
+    assert actual_result == expected_result
+
+    expected_result = json.dumps({"Z": 26, "A": 1, "M": 13}, sort_keys=True)
+    actual_result = template.Template(
+        "{{ {'Z': 26, 'A': 1, 'M': 13} | to_json(sort_keys=True, ensure_ascii=True) }}",
+        hass,
+    ).async_render(parse_result=False)
+    assert actual_result == expected_result
 
 
 def test_from_json(hass: HomeAssistant) -> None:
@@ -1170,32 +1202,28 @@ def test_min_max_attribute(hass: HomeAssistant, attribute) -> None:
     )
     assert (
         template.Template(
-            "{{ (state_attr('test.object', 'objects') | min(attribute='%s'))['%s']}}"
-            % (attribute, attribute),
+            f"{{{{ (state_attr('test.object', 'objects') | min(attribute='{attribute}'))['{attribute}']}}}}",
             hass,
         ).async_render()
         == 1
     )
     assert (
         template.Template(
-            "{{ (min(state_attr('test.object', 'objects'), attribute='%s'))['%s']}}"
-            % (attribute, attribute),
+            f"{{{{ (min(state_attr('test.object', 'objects'), attribute='{attribute}'))['{attribute}']}}}}",
             hass,
         ).async_render()
         == 1
     )
     assert (
         template.Template(
-            "{{ (state_attr('test.object', 'objects') | max(attribute='%s'))['%s']}}"
-            % (attribute, attribute),
+            f"{{{{ (state_attr('test.object', 'objects') | max(attribute='{attribute}'))['{attribute}']}}}}",
             hass,
         ).async_render()
         == 3
     )
     assert (
         template.Template(
-            "{{ (max(state_attr('test.object', 'objects'), attribute='%s'))['%s']}}"
-            % (attribute, attribute),
+            f"{{{{ (max(state_attr('test.object', 'objects'), attribute='{attribute}'))['{attribute}']}}}}",
             hass,
         ).async_render()
         == 3
@@ -1613,7 +1641,7 @@ def test_states_function(hass: HomeAssistant) -> None:
     assert tpl.async_render() == "available"
 
 
-def test_has_value(hass):
+def test_has_value(hass: HomeAssistant) -> None:
     """Test has_value method."""
     hass.states.async_set("test.value1", 1)
     hass.states.async_set("test.unavailable", STATE_UNAVAILABLE)
@@ -2291,8 +2319,7 @@ def test_distance_function_with_2_coords(hass: HomeAssistant) -> None:
     _set_up_units(hass)
     assert (
         template.Template(
-            '{{ distance("32.87336", "-117.22943", %s, %s) | round }}'
-            % (hass.config.latitude, hass.config.longitude),
+            f'{{{{ distance("32.87336", "-117.22943", {hass.config.latitude}, {hass.config.longitude}) | round }}}}',
             hass,
         ).async_render()
         == 187
@@ -3320,16 +3347,14 @@ def test_closest_function_to_coord(hass: HomeAssistant) -> None:
     )
 
     tpl = template.Template(
-        '{{ closest("%s", %s, states.test_domain).entity_id }}'
-        % (hass.config.latitude + 0.3, hass.config.longitude + 0.3),
+        f'{{{{ closest("{hass.config.latitude + 0.3}", {hass.config.longitude + 0.3}, states.test_domain).entity_id }}}}',
         hass,
     )
 
     assert tpl.async_render() == "test_domain.closest_zone"
 
     tpl = template.Template(
-        '{{ (states.test_domain | closest("%s", %s)).entity_id }}'
-        % (hass.config.latitude + 0.3, hass.config.longitude + 0.3),
+        f'{{{{ (states.test_domain | closest("{hass.config.latitude + 0.3}", {hass.config.longitude + 0.3})).entity_id }}}}',
         hass,
     )
 

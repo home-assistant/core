@@ -89,6 +89,14 @@ async def test_get_actions(
     device_entry = device_registry.async_get_device(device.device_identifiers, set())
     assert device_entry
 
+    # Add alternate identifiers, to make sure we can handle future formats
+    identifiers: list[str] = list(*device_entry.identifiers)
+    device_registry.async_update_device(
+        device_entry.id, merge_identifiers={(identifiers[0], "_".join(identifiers[1:]))}
+    )
+    device_entry = device_registry.async_get_device(device.device_identifiers, set())
+    assert device_entry
+
     actions = await async_get_device_automations(
         hass, DeviceAutomationType.ACTION, device_entry.id
     )

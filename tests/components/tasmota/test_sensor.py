@@ -19,7 +19,7 @@ from homeassistant.components.tasmota.const import DEFAULT_PREFIX
 from homeassistant.const import ATTR_ASSUMED_STATE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.util import dt
+from homeassistant.util import dt as dt_util
 
 from .test_common import (
     DEFAULT_CONFIG,
@@ -102,7 +102,7 @@ INDEXED_SENSOR_CONFIG_2 = {
 }
 
 
-NESTED_SENSOR_CONFIG = {
+NESTED_SENSOR_CONFIG_1 = {
     "sn": {
         "Time": "2020-03-03T00:00:00+00:00",
         "TX23": {
@@ -116,6 +116,17 @@ NESTED_SENSOR_CONFIG = {
             },
         },
         "SpeedUnit": "km/h",
+    }
+}
+
+NESTED_SENSOR_CONFIG_2 = {
+    "sn": {
+        "Time": "2023-01-27T11:04:56",
+        "DS18B20": {
+            "Id": "01191ED79190",
+            "Temperature": 2.4,
+        },
+        "TempUnit": "C",
     }
 }
 
@@ -174,12 +185,59 @@ async def test_controlling_state_via_mqtt(
     assert state.state == "20.0"
 
 
+@pytest.mark.parametrize(
+    ("sensor_config", "entity_ids", "messages", "states"),
+    [
+        (
+            NESTED_SENSOR_CONFIG_1,
+            ["sensor.tasmota_tx23_speed_act", "sensor.tasmota_tx23_dir_card"],
+            (
+                '{"TX23":{"Speed":{"Act":"12.3"},"Dir": {"Card": "WSW"}}}',
+                '{"StatusSNS":{"TX23":{"Speed":{"Act":"23.4"},"Dir": {"Card": "ESE"}}}}',
+            ),
+            (
+                {
+                    "sensor.tasmota_tx23_speed_act": "12.3",
+                    "sensor.tasmota_tx23_dir_card": "WSW",
+                },
+                {
+                    "sensor.tasmota_tx23_speed_act": "23.4",
+                    "sensor.tasmota_tx23_dir_card": "ESE",
+                },
+            ),
+        ),
+        (
+            NESTED_SENSOR_CONFIG_2,
+            ["sensor.tasmota_ds18b20_temperature", "sensor.tasmota_ds18b20_id"],
+            (
+                '{"DS18B20":{"Id": "01191ED79190","Temperature": 12.3}}',
+                '{"StatusSNS":{"DS18B20":{"Id": "meep","Temperature": 23.4}}}',
+            ),
+            (
+                {
+                    "sensor.tasmota_ds18b20_temperature": "12.3",
+                    "sensor.tasmota_ds18b20_id": "01191ED79190",
+                },
+                {
+                    "sensor.tasmota_ds18b20_temperature": "23.4",
+                    "sensor.tasmota_ds18b20_id": "meep",
+                },
+            ),
+        ),
+    ],
+)
 async def test_nested_sensor_state_via_mqtt(
-    hass: HomeAssistant, mqtt_mock: MqttMockHAClient, setup_tasmota
+    hass: HomeAssistant,
+    mqtt_mock: MqttMockHAClient,
+    setup_tasmota,
+    sensor_config,
+    entity_ids,
+    messages,
+    states,
 ) -> None:
     """Test state update via MQTT."""
     config = copy.deepcopy(DEFAULT_CONFIG)
-    sensor_config = copy.deepcopy(NESTED_SENSOR_CONFIG)
+    sensor_config = copy.deepcopy(sensor_config)
     mac = config["mac"]
 
     async_fire_mqtt_message(
@@ -195,31 +253,29 @@ async def test_nested_sensor_state_via_mqtt(
     )
     await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.tasmota_tx23_speed_act")
-    assert state.state == "unavailable"
-    assert not state.attributes.get(ATTR_ASSUMED_STATE)
+    for entity_id in entity_ids:
+        state = hass.states.get(entity_id)
+        assert state.state == "unavailable"
+        assert not state.attributes.get(ATTR_ASSUMED_STATE)
 
     async_fire_mqtt_message(hass, "tasmota_49A3BC/tele/LWT", "Online")
     await hass.async_block_till_done()
-    state = hass.states.get("sensor.tasmota_tx23_speed_act")
-    assert state.state == STATE_UNKNOWN
-    assert not state.attributes.get(ATTR_ASSUMED_STATE)
+    for entity_id in entity_ids:
+        state = hass.states.get(entity_id)
+        assert state.state == STATE_UNKNOWN
+        assert not state.attributes.get(ATTR_ASSUMED_STATE)
 
     # Test periodic state update
-    async_fire_mqtt_message(
-        hass, "tasmota_49A3BC/tele/SENSOR", '{"TX23":{"Speed":{"Act":"12.3"}}}'
-    )
-    state = hass.states.get("sensor.tasmota_tx23_speed_act")
-    assert state.state == "12.3"
+    async_fire_mqtt_message(hass, "tasmota_49A3BC/tele/SENSOR", messages[0])
+    for entity_id in entity_ids:
+        state = hass.states.get(entity_id)
+        assert state.state == states[0][entity_id]
 
     # Test polled state update
-    async_fire_mqtt_message(
-        hass,
-        "tasmota_49A3BC/stat/STATUS10",
-        '{"StatusSNS":{"TX23":{"Speed":{"Act":"23.4"}}}}',
-    )
-    state = hass.states.get("sensor.tasmota_tx23_speed_act")
-    assert state.state == "23.4"
+    async_fire_mqtt_message(hass, "tasmota_49A3BC/stat/STATUS10", messages[1])
+    for entity_id in entity_ids:
+        state = hass.states.get(entity_id)
+        assert state.state == states[1][entity_id]
 
 
 async def test_indexed_sensor_state_via_mqtt(
@@ -671,7 +727,7 @@ async def test_restart_time_status_sensor_state_via_mqtt(
     assert not state.attributes.get(ATTR_ASSUMED_STATE)
 
     # Test polled state update
-    utc_now = datetime.datetime(2020, 11, 11, 8, 0, 0, tzinfo=dt.UTC)
+    utc_now = datetime.datetime(2020, 11, 11, 8, 0, 0, tzinfo=dt_util.UTC)
     hatasmota.status_sensor.datetime.now.return_value = utc_now
     async_fire_mqtt_message(
         hass,
@@ -728,7 +784,7 @@ async def test_nested_sensor_attributes(
 ) -> None:
     """Test correct attributes for sensors."""
     config = copy.deepcopy(DEFAULT_CONFIG)
-    sensor_config = copy.deepcopy(NESTED_SENSOR_CONFIG)
+    sensor_config = copy.deepcopy(NESTED_SENSOR_CONFIG_1)
     mac = config["mac"]
 
     async_fire_mqtt_message(
@@ -754,7 +810,7 @@ async def test_nested_sensor_attributes(
     assert state.attributes.get("device_class") is None
     assert state.attributes.get("friendly_name") == "Tasmota TX23 Dir Avg"
     assert state.attributes.get("icon") is None
-    assert state.attributes.get("unit_of_measurement") == " "
+    assert state.attributes.get("unit_of_measurement") is None
 
 
 async def test_indexed_sensor_attributes(
@@ -875,7 +931,8 @@ async def test_enable_status_sensor(
 
     async_fire_time_changed(
         hass,
-        dt.utcnow() + timedelta(seconds=config_entries.RELOAD_AFTER_UPDATE_DELAY + 1),
+        dt_util.utcnow()
+        + timedelta(seconds=config_entries.RELOAD_AFTER_UPDATE_DELAY + 1),
     )
     await hass.async_block_till_done()
 

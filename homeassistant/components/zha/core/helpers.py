@@ -309,19 +309,19 @@ class LogMixin:
 
     def debug(self, msg, *args, **kwargs):
         """Debug level log."""
-        return self.log(logging.DEBUG, msg, *args)
+        return self.log(logging.DEBUG, msg, *args, **kwargs)
 
     def info(self, msg, *args, **kwargs):
         """Info level log."""
-        return self.log(logging.INFO, msg, *args)
+        return self.log(logging.INFO, msg, *args, **kwargs)
 
     def warning(self, msg, *args, **kwargs):
         """Warning method log."""
-        return self.log(logging.WARNING, msg, *args)
+        return self.log(logging.WARNING, msg, *args, **kwargs)
 
     def error(self, msg, *args, **kwargs):
         """Error level log."""
-        return self.log(logging.ERROR, msg, *args)
+        return self.log(logging.ERROR, msg, *args, **kwargs)
 
 
 def retryable_req(
@@ -336,17 +336,17 @@ def retryable_req(
 
     def decorator(func):
         @functools.wraps(func)
-        async def wrapper(channel, *args, **kwargs):
+        async def wrapper(cluster_handler, *args, **kwargs):
             exceptions = (zigpy.exceptions.ZigbeeException, asyncio.TimeoutError)
             try_count, errors = 1, []
             for delay in itertools.chain(delays, [None]):
                 try:
-                    return await func(channel, *args, **kwargs)
+                    return await func(cluster_handler, *args, **kwargs)
                 except exceptions as ex:
                     errors.append(ex)
                     if delay:
                         delay = uniform(delay * 0.75, delay * 1.25)
-                        channel.debug(
+                        cluster_handler.debug(
                             "%s: retryable request #%d failed: %s. Retrying in %ss",
                             func.__name__,
                             try_count,
@@ -356,7 +356,7 @@ def retryable_req(
                         try_count += 1
                         await asyncio.sleep(delay)
                     else:
-                        channel.warning(
+                        cluster_handler.warning(
                             "%s: all attempts have failed: %s", func.__name__, errors
                         )
                         if raise_:

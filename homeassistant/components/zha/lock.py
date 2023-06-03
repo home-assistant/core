@@ -19,7 +19,7 @@ from homeassistant.helpers.typing import StateType
 
 from .core import discovery
 from .core.const import (
-    CHANNEL_DOORLOCK,
+    CLUSTER_HANDLER_DOORLOCK,
     DATA_ZHA,
     SIGNAL_ADD_ENTITIES,
     SIGNAL_ATTR_UPDATED,
@@ -92,20 +92,24 @@ async def async_setup_entry(
     )
 
 
-@MULTI_MATCH(channel_names=CHANNEL_DOORLOCK)
+@MULTI_MATCH(cluster_handler_names=CLUSTER_HANDLER_DOORLOCK)
 class ZhaDoorLock(ZhaEntity, LockEntity):
     """Representation of a ZHA lock."""
 
-    def __init__(self, unique_id, zha_device, channels, **kwargs):
+    _attr_name: str = "Door lock"
+
+    def __init__(self, unique_id, zha_device, cluster_handlers, **kwargs):
         """Init this sensor."""
-        super().__init__(unique_id, zha_device, channels, **kwargs)
-        self._doorlock_channel = self.cluster_channels.get(CHANNEL_DOORLOCK)
+        super().__init__(unique_id, zha_device, cluster_handlers, **kwargs)
+        self._doorlock_cluster_handler = self.cluster_handlers.get(
+            CLUSTER_HANDLER_DOORLOCK
+        )
 
     async def async_added_to_hass(self) -> None:
         """Run when about to be added to hass."""
         await super().async_added_to_hass()
         self.async_accept_signal(
-            self._doorlock_channel, SIGNAL_ATTR_UPDATED, self.async_set_state
+            self._doorlock_cluster_handler, SIGNAL_ATTR_UPDATED, self.async_set_state
         )
 
     @callback
@@ -127,7 +131,7 @@ class ZhaDoorLock(ZhaEntity, LockEntity):
 
     async def async_lock(self, **kwargs: Any) -> None:
         """Lock the lock."""
-        result = await self._doorlock_channel.lock_door()
+        result = await self._doorlock_cluster_handler.lock_door()
         if isinstance(result, Exception) or result[0] is not Status.SUCCESS:
             self.error("Error with lock_door: %s", result)
             return
@@ -135,7 +139,7 @@ class ZhaDoorLock(ZhaEntity, LockEntity):
 
     async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the lock."""
-        result = await self._doorlock_channel.unlock_door()
+        result = await self._doorlock_cluster_handler.unlock_door()
         if isinstance(result, Exception) or result[0] is not Status.SUCCESS:
             self.error("Error with unlock_door: %s", result)
             return
@@ -148,14 +152,14 @@ class ZhaDoorLock(ZhaEntity, LockEntity):
 
     @callback
     def async_set_state(self, attr_id, attr_name, value):
-        """Handle state update from channel."""
+        """Handle state update from cluster handler."""
         self._state = VALUE_TO_STATE.get(value, self._state)
         self.async_write_ha_state()
 
     async def async_get_state(self, from_cache=True):
         """Attempt to retrieve state from the lock."""
-        if self._doorlock_channel:
-            state = await self._doorlock_channel.get_attribute_value(
+        if self._doorlock_cluster_handler:
+            state = await self._doorlock_cluster_handler.get_attribute_value(
                 "lock_state", from_cache=from_cache
             )
             if state is not None:
@@ -167,24 +171,26 @@ class ZhaDoorLock(ZhaEntity, LockEntity):
 
     async def async_set_lock_user_code(self, code_slot: int, user_code: str) -> None:
         """Set the user_code to index X on the lock."""
-        if self._doorlock_channel:
-            await self._doorlock_channel.async_set_user_code(code_slot, user_code)
+        if self._doorlock_cluster_handler:
+            await self._doorlock_cluster_handler.async_set_user_code(
+                code_slot, user_code
+            )
             self.debug("User code at slot %s set", code_slot)
 
     async def async_enable_lock_user_code(self, code_slot: int) -> None:
         """Enable user_code at index X on the lock."""
-        if self._doorlock_channel:
-            await self._doorlock_channel.async_enable_user_code(code_slot)
+        if self._doorlock_cluster_handler:
+            await self._doorlock_cluster_handler.async_enable_user_code(code_slot)
             self.debug("User code at slot %s enabled", code_slot)
 
     async def async_disable_lock_user_code(self, code_slot: int) -> None:
         """Disable user_code at index X on the lock."""
-        if self._doorlock_channel:
-            await self._doorlock_channel.async_disable_user_code(code_slot)
+        if self._doorlock_cluster_handler:
+            await self._doorlock_cluster_handler.async_disable_user_code(code_slot)
             self.debug("User code at slot %s disabled", code_slot)
 
     async def async_clear_lock_user_code(self, code_slot: int) -> None:
         """Clear the user_code at index X on the lock."""
-        if self._doorlock_channel:
-            await self._doorlock_channel.async_clear_user_code(code_slot)
+        if self._doorlock_cluster_handler:
+            await self._doorlock_cluster_handler.async_clear_user_code(code_slot)
             self.debug("User code at slot %s cleared", code_slot)

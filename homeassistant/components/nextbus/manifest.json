@@ -3,7 +3,7 @@
   "name": "NextBus",
   "codeowners": ["@vividboarder"],
   "documentation": "https://www.home-assistant.io/integrations/nextbus",
-  "iot_class": "local_polling",
+  "iot_class": "cloud_polling",
   "loggers": ["py_nextbus"],
-  "requirements": ["py_nextbusnext==0.1.5"]
+  "requirements": ["py-nextbusnext==0.1.5"]
 }

@@ -18,8 +18,9 @@ from .const import (
     PLATFORM_FORMAT,
     Platform,
 )
-from .core import CALLBACK_TYPE
+from .core import CALLBACK_TYPE, DOMAIN as HOMEASSISTANT_DOMAIN
 from .exceptions import DependencyError, HomeAssistantError
+from .helpers.issue_registry import IssueSeverity, async_create_issue
 from .helpers.typing import ConfigType
 from .util import dt as dt_util, ensure_unique_string
 
@@ -67,7 +68,8 @@ def async_set_domains_to_be_loaded(hass: core.HomeAssistant, domains: set[str]) 
      - Properly handle after_dependencies.
      - Keep track of domains which will load but have not yet finished loading
     """
-    hass.data[DATA_SETUP_DONE] = {domain: asyncio.Event() for domain in domains}
+    hass.data.setdefault(DATA_SETUP_DONE, {})
+    hass.data[DATA_SETUP_DONE].update({domain: asyncio.Event() for domain in domains})
 
 
 def setup_component(hass: core.HomeAssistant, domain: str, config: ConfigType) -> bool:
@@ -220,6 +222,31 @@ async def _async_setup_component(
     if processed_config is None:
         log_error("Invalid config.")
         return False
+
+    # Detect attempt to setup integration which can be setup only from config entry
+    if (
+        domain in processed_config
+        and not hasattr(component, "async_setup")
+        and not hasattr(component, "setup")
+        and not hasattr(component, "CONFIG_SCHEMA")
+    ):
+        _LOGGER.error(
+            (
+                "The %s integration does not support YAML setup, please remove it from "
+                "your configuration"
+            ),
+            domain,
+        )
+        async_create_issue(
+            hass,
+            HOMEASSISTANT_DOMAIN,
+            f"config_entry_only{domain}",
+            is_fixable=False,
+            severity=IssueSeverity.ERROR,
+            issue_domain=domain,
+            translation_key="config_entry_only",
+            translation_placeholders={"domain": domain},
+        )
 
     start = timer()
     _LOGGER.info("Setting up %s", domain)

@@ -77,7 +77,7 @@ async def get_integration_loggers(hass: HomeAssistant, domain: str) -> set[str]:
     return loggers
 
 
-@dataclass
+@dataclass(slots=True)
 class LoggerSetting:
     """Settings for a single module or integration."""
 
@@ -86,7 +86,7 @@ class LoggerSetting:
     type: str
 
 
-@dataclass
+@dataclass(slots=True)
 class LoggerDomainConfig:
     """Logger domain config."""
 

@@ -35,7 +35,10 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_system import METRIC_SYSTEM, US_CUSTOMARY_SYSTEM
 
-from tests.common import mock_restore_cache_with_extra_data
+from tests.common import (
+    async_mock_restore_state_shutdown_restart,
+    mock_restore_cache_with_extra_data,
+)
 
 
 @pytest.mark.parametrize(
@@ -397,7 +400,7 @@ async def test_restore_sensor_save_state(
     await hass.async_block_till_done()
 
     # Trigger saving state
-    await hass.async_stop()
+    await async_mock_restore_state_shutdown_restart(hass)
 
     assert len(hass_storage[RESTORE_STATE_KEY]["data"]) == 1
     state = hass_storage[RESTORE_STATE_KEY]["data"][0]["state"]
@@ -1758,6 +1761,7 @@ async def test_non_numeric_device_class_with_unit_of_measurement(
         SensorDeviceClass.SULPHUR_DIOXIDE,
         SensorDeviceClass.TEMPERATURE,
         SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
+        SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS_PARTS,
         SensorDeviceClass.VOLTAGE,
         SensorDeviceClass.VOLUME,
         SensorDeviceClass.WATER,
@@ -1841,7 +1845,7 @@ async def test_non_numeric_validation_error(
 
     assert (
         "thus indicating it has a numeric value; "
-        f"however, it has the non-numeric value: {native_value}"
+        f"however, it has the non-numeric value: '{native_value}'"
     ) in caplog.text
 
 
