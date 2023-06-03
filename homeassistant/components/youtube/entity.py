@@ -27,17 +27,9 @@ class YouTubeChannelEntity(CoordinatorEntity):
             f"{coordinator.config_entry.entry_id}_{channel_id}_{description.key}"
         )
         self._channel_id = channel_id
-        if self.available:
-            self._attr_device_info = DeviceInfo(
-                entry_type=DeviceEntryType.SERVICE,
-                identifiers={
-                    (DOMAIN, f"{coordinator.config_entry.entry_id}_{channel_id}")
-                },
-                manufacturer=MANUFACTURER,
-                name=coordinator.data[channel_id][ATTR_TITLE],
-            )
-
-    @property
-    def available(self):
-        """Return if the sensor is available."""
-        return self._channel_id in self.coordinator.data
+        self._attr_device_info = DeviceInfo(
+            entry_type=DeviceEntryType.SERVICE,
+            identifiers={(DOMAIN, f"{coordinator.config_entry.entry_id}_{channel_id}")},
+            manufacturer=MANUFACTURER,
+            name=coordinator.data[channel_id][ATTR_TITLE],
+        )
