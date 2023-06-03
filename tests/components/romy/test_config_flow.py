@@ -108,7 +108,7 @@ async def test_show_user_form_with_config_which_contains_wrong_host(
             data=INPUT_CONFIG_WITH_PASS,
         )
 
-    assert result["errors"].get("host") == "wrong host"
+    assert result["errors"].get("host") == "cannot_connect"
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
 
 
@@ -132,7 +132,7 @@ async def test_show_user_form_with_config_which_contains_wrong_password(
             data=INPUT_CONFIG_WITH_PASS,
         )
 
-    assert result["errors"].get("password") == "wrong password"
+    assert result["errors"].get("password") == "invalid_auth"
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
 
 
