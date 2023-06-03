@@ -5,10 +5,15 @@ from __future__ import annotations
 import pytest
 
 from homeassistant.components.assist_pipeline import Pipeline
-from homeassistant.components.assist_pipeline.pipeline import PipelineStorageCollection
+from homeassistant.components.assist_pipeline.pipeline import (
+    PipelineData,
+    PipelineStorageCollection,
+)
 from homeassistant.components.assist_pipeline.select import AssistPipelineSelect
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from tests.common import MockConfigEntry, MockPlatform, mock_entity_platform
@@ -25,7 +30,11 @@ class SelectPlatform(MockPlatform):
         async_add_entities: AddEntitiesCallback,
     ) -> None:
         """Set up fake select platform."""
-        async_add_entities([AssistPipelineSelect(hass, "test")])
+        entity = AssistPipelineSelect(hass, "test")
+        entity._attr_device_info = DeviceInfo(
+            identifiers={("test", "test")},
+        )
+        async_add_entities([entity])
 
 
 @pytest.fixture
@@ -33,6 +42,7 @@ async def init_select(hass: HomeAssistant, init_components) -> ConfigEntry:
     """Initialize select entity."""
     mock_entity_platform(hass, "select.assist_pipeline", SelectPlatform())
     config_entry = MockConfigEntry(domain="assist_pipeline")
+    config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_forward_entry_setup(config_entry, "select")
     return config_entry
 
@@ -75,6 +85,25 @@ async def pipeline_2(
             "stt_language": None,
         }
     )
+
+
+async def test_select_entity_registering_device(
+    hass: HomeAssistant,
+    init_select: ConfigEntry,
+    pipeline_data: PipelineData,
+) -> None:
+    """Test entity registering as an assist device."""
+    dev_reg = dr.async_get(hass)
+    device = dev_reg.async_get_device({("test", "test")})
+
+    # Test device is registered
+    assert pipeline_data.pipeline_devices == {device.id}
+
+    await hass.config_entries.async_remove(init_select.entry_id)
+    await hass.async_block_till_done()
+
+    # Test device is removed
+    assert pipeline_data.pipeline_devices == set()
 
 
 async def test_select_entity_changing_pipelines(
