@@ -1,6 +1,7 @@
 """The tests for the Command line sensor platform."""
 from __future__ import annotations
 
+import asyncio
 from datetime import timedelta
 from typing import Any
 from unittest.mock import patch
@@ -9,6 +10,7 @@ import pytest
 
 from homeassistant import setup
 from homeassistant.components.command_line import DOMAIN
+from homeassistant.components.command_line.sensor import CommandSensor
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -530,3 +532,57 @@ async def test_unique_id(
     assert entity_registry.async_get_entity_id(
         "sensor", "command_line", "not-so-unique-anymore"
     )
+
+
+async def test_updating_to_often(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test handling updating when command already running."""
+    called = []
+
+    class MockCommandSensor(CommandSensor):
+        """Mock entity that updates slow."""
+
+        async def _async_update(self) -> None:
+            """Update slow."""
+            called.append(1)
+            # Add waiting time
+            await asyncio.sleep(1)
+
+    with patch(
+        "homeassistant.components.command_line.sensor.CommandSensor",
+        side_effect=MockCommandSensor,
+    ):
+        await setup.async_setup_component(
+            hass,
+            DOMAIN,
+            {
+                "command_line": [
+                    {
+                        "sensor": {
+                            "name": "Test",
+                            "command": "echo 1",
+                            "scan_interval": 0.1,
+                        }
+                    }
+                ]
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert len(called) == 1
+    assert (
+        "Updating Command Line Sensor Test took longer than the scheduled update interval"
+        not in caplog.text
+    )
+
+    async_fire_time_changed(hass, dt_util.now() + timedelta(seconds=1))
+    await hass.async_block_till_done()
+
+    assert len(called) == 2
+    assert (
+        "Updating Command Line Sensor Test took longer than the scheduled update interval"
+        in caplog.text
+    )
+
+    await asyncio.sleep(0.2)
