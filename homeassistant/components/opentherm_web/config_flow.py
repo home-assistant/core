@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from opentherm_web_api import OpenThermWebApi
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -11,7 +12,6 @@ from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 
 from .const import DOMAIN, HOST, LOGGER, SECRET
-from .opentherm_webapi import OpenThermWebApi
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
@@ -26,9 +26,9 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
-    hub = OpenThermWebApi(hass, data[HOST], data[SECRET])
+    hub = OpenThermWebApi(data[HOST], data[SECRET])
 
-    if not await hub.authenticate():
+    if not await hass.async_add_executor_job(hub.authenticate):
         raise InvalidAuth
 
     # Return info that you want to store in the config entry.
