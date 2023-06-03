@@ -1,7 +1,6 @@
 """Support for EZVIZ sirens."""
 from __future__ import annotations
 
-from collections.abc import Callable
 from datetime import datetime, timedelta
 from typing import Any
 
@@ -46,7 +45,6 @@ class EzvizSirenEntity(EzvizEntity, SirenEntity, RestoreEntity):
 
     _attr_has_entity_name = True
     _attr_name = "Siren"
-    _delay_listener: Callable | None = None
     _attr_supported_features = SirenEntityFeature.TURN_ON | SirenEntityFeature.TURN_OFF
 
     def __init__(
