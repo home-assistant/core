@@ -228,11 +228,21 @@ def test_async_remove(hass: HomeAssistant) -> None:
     assert "test_intent" not in hass.data[intent.DATA_KEY]
 
 
-def test_async_remove_no_existing(hass: HomeAssistant) -> None:
+def test_async_remove_no_existing_entry(hass: HomeAssistant) -> None:
     """Test the removal of a non-existing intent from Home Assistant's data."""
     handler = MagicMock()
     handler.intent_type = "test_intent"
+    intent.async_register(hass, handler)
 
-    intent.async_remove(hass, "test_intent")
+    intent.async_remove(hass, "test_intent2")
 
-    assert "test_intent" not in hass.data[intent.DATA_KEY]
+    assert "test_intent2" not in hass.data[intent.DATA_KEY]
+
+
+def test_async_remove_no_existing(hass: HomeAssistant) -> None:
+    """Test the removal of an intent where no config exists."""
+
+    intent.async_remove(hass, "test_intent2")
+    # simply shouldn't cause an exception
+
+    assert intent.DATA_KEY not in hass.data
