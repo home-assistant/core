@@ -3,6 +3,8 @@ from __future__ import annotations
 
 from typing import Any
 
+from opentherm_web_api import OpenThermController
+
 from homeassistant.components.climate import (
     ClimateEntity,
     ClimateEntityFeature,
@@ -15,7 +17,6 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
-from .opentherm_webapi import OpenThermController
 
 
 # This function is called as part of the __init__.async_setup_entry (via the
