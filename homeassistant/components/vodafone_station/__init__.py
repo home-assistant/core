@@ -1,0 +1,1 @@
+"""Vodafone Station integration."""
