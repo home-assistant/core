@@ -12,9 +12,10 @@ from homeassistant.components.climate import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 
@@ -30,11 +31,13 @@ async def async_setup_entry(
     coordinator = hass.data[DOMAIN][config_entry.entry_id]
 
     # Add all entities to HA
-    async_add_entities(OpenThermClimate(web_api) for web_api in coordinator.data)
+    async_add_entities(
+        OpenThermClimate(coordinator, web_api) for web_api in coordinator.data
+    )
 
 
 # https://developers.home-assistant.io/docs/core/entity/climate/
-class OpenThermClimate(ClimateEntity):
+class OpenThermClimate(CoordinatorEntity, ClimateEntity):
     """Class that represents Climate entity."""
 
     _attr_hvac_modes = [HVACMode.AUTO, HVACMode.OFF]
@@ -48,9 +51,11 @@ class OpenThermClimate(ClimateEntity):
 
     def __init__(
         self,
+        coordinator: CoordinatorEntity,
         web_api: OpenThermWebApi,
     ) -> None:
         """Initialize Climate Entity."""
+        super().__init__(coordinator, context=web_api)
         self.web_api = web_api
         self.controller = web_api.get_controller()
         self._attr_unique_id = f"climate_{self.controller.device_id}"
@@ -61,8 +66,10 @@ class OpenThermClimate(ClimateEntity):
             manufacturer="Pohorelice",
         )
 
-    async def async_update(self) -> None:
-        """Get the latest data."""
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self.controller = self.coordinator.data.web_api.get_controller()
         self._attr_current_temperature = self.controller.room_temperature
         self._attr_target_temperature = self.controller.room_setpoint
 
@@ -75,8 +82,8 @@ class OpenThermClimate(ClimateEntity):
         else:
             self._attr_hvac_mode = HVACMode.OFF
             self._attr_icon = "mdi:radiator-disabled"
-
-        return
+        self.async_write_ha_state()
+        super()._handle_coordinator_update()
 
     def set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""

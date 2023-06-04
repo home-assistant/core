@@ -7,5 +7,5 @@ import logging
 DOMAIN = "opentherm_web"
 HOST = "host"
 LOGGER = logging.getLogger(__package__)
-SCAN_INTERVAL = timedelta(seconds=10)
+SCAN_INTERVAL = timedelta(seconds=30)
 SECRET = "password"
