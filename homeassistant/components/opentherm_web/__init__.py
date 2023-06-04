@@ -12,7 +12,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN, HOST, LOGGER, SCAN_INTERVAL, SECRET
 
-PLATFORMS: list[Platform] = [Platform.CLIMATE, Platform.WATER_HEATER]
+PLATFORMS: list[Platform] = [Platform.CLIMATE]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
