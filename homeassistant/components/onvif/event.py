@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Callable
 import datetime as dt
+from logging import DEBUG, WARNING
 from typing import Optional
 
 from aiohttp.web import Request
@@ -25,7 +26,7 @@ from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.network import NoURLAvailableError, get_url
 
-from .const import DOMAIN, CONF_ONVIF_EVENT, CONF_UNIQUE_ID, LOGGER
+from .const import DOMAIN, CONF_ONVIF_EVENT, CONF_UNIQUE_ID, CONF_ONVIF_EVENT, CONF_UNIQUE_ID, LOGGER
 from .models import Event, PullPointManagerState, WebHookManagerState
 from .parsers import PARSERS
 
@@ -174,7 +175,7 @@ class EventManager:
                     UNHANDLED_TOPICS.add(topic)
                 continue
 
-            event: Optional[Event] = await parser(unique_id, msg)
+            event: Optional[Event]: Optional[Event] = await parser(unique_id, msg)
 
             if not event:
                 LOGGER.info(
@@ -191,6 +192,14 @@ class EventManager:
                 )
 
             self.get_uids_by_platform(event.platform).add(event.uid)
+            if self._events.get(event.uid) is None:
+                LOGGER.info(
+                    "Registered %s as a(n) %s with unique id: %s",
+                    event.name,
+                    event.platform,
+                    event.uid,
+                )
+
             self._events[event.uid] = event
 
             if event.platform == "event" and event.entity_enabled:

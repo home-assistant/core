@@ -617,7 +617,7 @@ async def async_parse_last_reset(uid: str, msg) -> Event | None:
             None,
             date_time,
             EntityCategory.DIAGNOSTIC,
-            entity_enabled=False,
+            enabled=False,
         )
     except (AttributeError, KeyError):
         return None
@@ -644,7 +644,7 @@ async def async_parse_backup_last(uid: str, msg) -> Event | None:
             None,
             date_time,
             EntityCategory.DIAGNOSTIC,
-            entity_enabled=False,
+            enabled=False,
         )
     except (AttributeError, KeyError):
         return None
@@ -670,7 +670,7 @@ async def async_parse_last_clock_sync(uid: str, msg) -> Event | None:
             None,
             date_time,
             EntityCategory.DIAGNOSTIC,
-            entity_enabled=False,
+            enabled=False,
         )
     except (AttributeError, KeyError):
         return None

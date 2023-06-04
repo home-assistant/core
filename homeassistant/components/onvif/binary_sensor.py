@@ -81,7 +81,7 @@ class ONVIFBinarySensor(ONVIFBaseEntity, RestoreEntity, BinarySensorEntity):
                 BinarySensorDeviceClass, event.device_class
             )
             self._attr_entity_category = event.entity_category
-            self._attr_entity_registry_enabled_default = event.entity_enabled
+            self._attr_entity_registry_enabled_default = event.enabled
             self._attr_name = f"{device.name} {event.name}"
             self._attr_is_on = event.value
 
