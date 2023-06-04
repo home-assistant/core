@@ -5,5 +5,5 @@
   "documentation": "https://www.home-assistant.io/integrations/goalfeed",
   "iot_class": "cloud_push",
   "loggers": ["pysher"],
-  "requirements": ["pysher==1.0.7"]
+  "requirements": ["Pysher==1.0.7"]
 }

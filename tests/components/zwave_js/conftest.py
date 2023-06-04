@@ -433,6 +433,12 @@ def leviton_zw4sf_state_fixture():
     return json.loads(load_fixture("zwave_js/leviton_zw4sf_state.json"))
 
 
+@pytest.fixture(name="fan_honeywell_39358_state", scope="session")
+def fan_honeywell_39358_state_fixture():
+    """Load the fan node state fixture data."""
+    return json.loads(load_fixture("zwave_js/fan_honeywell_39358_state.json"))
+
+
 @pytest.fixture(name="gdc_zw062_state", scope="session")
 def motorized_barrier_cover_state_fixture():
     """Load the motorized barrier cover node state fixture data."""
@@ -628,6 +634,12 @@ def indicator_test_state_fixture():
 def energy_production_state_fixture():
     """Load a mock node with energy production CC state fixture data."""
     return json.loads(load_fixture("zwave_js/energy_production_state.json"))
+
+
+@pytest.fixture(name="nice_ibt4zwave_state", scope="session")
+def nice_ibt4zwave_state_fixture():
+    """Load a Nice IBT4ZWAVE cover node state fixture data."""
+    return json.loads(load_fixture("zwave_js/cover_nice_ibt4zwave_state.json"))
 
 
 # model fixtures
@@ -943,6 +955,14 @@ def leviton_zw4sf_fixture(client, leviton_zw4sf_state):
     return node
 
 
+@pytest.fixture(name="fan_honeywell_39358")
+def fan_honeywell_39358_fixture(client, fan_honeywell_39358_state):
+    """Mock a fan node."""
+    node = Node(client, copy.deepcopy(fan_honeywell_39358_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
 @pytest.fixture(name="null_name_check")
 def null_name_check_fixture(client, null_name_check_state):
     """Mock a node with no name."""
@@ -1200,8 +1220,16 @@ def indicator_test_fixture(client, indicator_test_state):
 
 
 @pytest.fixture(name="energy_production")
-def energy_prodution_fixture(client, energy_production_state):
+def energy_production_fixture(client, energy_production_state):
     """Mock a mock node with Energy Production CC."""
     node = Node(client, copy.deepcopy(energy_production_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="nice_ibt4zwave")
+def nice_ibt4zwave_fixture(client, nice_ibt4zwave_state):
+    """Mock a Nice IBT4ZWAVE cover node."""
+    node = Node(client, copy.deepcopy(nice_ibt4zwave_state))
     client.driver.controller.nodes[node.node_id] = node
     return node

@@ -10,7 +10,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import collection, entity_registry as er, restore_state
 
 from .const import DOMAIN
-from .pipeline import PipelineStorageCollection
+from .pipeline import PipelineData, PipelineStorageCollection
 
 OPTION_PREFERRED = "preferred"
 
@@ -60,14 +60,23 @@ class AssistPipelineSelect(SelectEntity, restore_state.RestoreEntity):
         """When entity is added to Home Assistant."""
         await super().async_added_to_hass()
 
-        pipeline_store: PipelineStorageCollection = self.hass.data[
-            DOMAIN
-        ].pipeline_store
-        pipeline_store.async_add_change_set_listener(self._pipelines_updated)
+        pipeline_data: PipelineData = self.hass.data[DOMAIN]
+        pipeline_store = pipeline_data.pipeline_store
+        self.async_on_remove(
+            pipeline_store.async_add_change_set_listener(self._pipelines_updated)
+        )
 
         state = await self.async_get_last_state()
         if state is not None and state.state in self.options:
             self._attr_current_option = state.state
+
+        if self.registry_entry and (device_id := self.registry_entry.device_id):
+            pipeline_data.pipeline_devices.add(device_id)
+            self.async_on_remove(
+                lambda: pipeline_data.pipeline_devices.discard(
+                    device_id  # type: ignore[arg-type]
+                )
+            )
 
     async def async_select_option(self, option: str) -> None:
         """Select an option."""
