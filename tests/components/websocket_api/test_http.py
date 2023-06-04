@@ -1,7 +1,7 @@
 """Test Websocket API http module."""
 import asyncio
 from datetime import timedelta
-from typing import Any
+from typing import Any, cast
 from unittest.mock import patch
 
 from aiohttp import ServerDisconnectedError, WSMsgType, web
@@ -53,12 +53,12 @@ async def test_pending_msg_peak(
 ) -> None:
     """Test pending msg overflow command."""
     orig_handler = http.WebSocketHandler
-    instance = None
+    setup_instance: http.WebSocketHandler | None = None
 
     def instantiate_handler(*args):
-        nonlocal instance
-        instance = orig_handler(*args)
-        return instance
+        nonlocal setup_instance
+        setup_instance = orig_handler(*args)
+        return setup_instance
 
     with patch(
         "homeassistant.components.websocket_api.http.WebSocketHandler",
@@ -66,12 +66,11 @@ async def test_pending_msg_peak(
     ):
         websocket_client = await hass_ws_client()
 
-    # Kill writer task and fill queue past peak
-    for _ in range(5):
-        instance._to_write.put_nowait(None)
+    instance: http.WebSocketHandler = cast(http.WebSocketHandler, setup_instance)
 
-    # Trigger the peak check
-    instance._send_message({})
+    # Fill the queue past the allowed peak
+    for _ in range(10):
+        instance._send_message({"overload": "message"})
 
     async_fire_time_changed(
         hass, utcnow() + timedelta(seconds=const.PENDING_MSG_PEAK_TIME + 1)
@@ -79,8 +78,55 @@ async def test_pending_msg_peak(
 
     msg = await websocket_client.receive()
     assert msg.type == WSMsgType.close
-
     assert "Client unable to keep up with pending messages" in caplog.text
+    assert "Stayed over 5 for 5 seconds" in caplog.text
+    assert "overload" in caplog.text
+
+
+async def test_pending_msg_peak_recovery(
+    hass: HomeAssistant,
+    mock_low_peak,
+    hass_ws_client: WebSocketGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test pending msg nears the peak but recovers."""
+    orig_handler = http.WebSocketHandler
+    setup_instance: http.WebSocketHandler | None = None
+
+    def instantiate_handler(*args):
+        nonlocal setup_instance
+        setup_instance = orig_handler(*args)
+        return setup_instance
+
+    with patch(
+        "homeassistant.components.websocket_api.http.WebSocketHandler",
+        instantiate_handler,
+    ):
+        websocket_client = await hass_ws_client()
+
+    instance: http.WebSocketHandler = cast(http.WebSocketHandler, setup_instance)
+
+    # Make sure the call later is started
+    for _ in range(10):
+        instance._send_message({})
+
+    for _ in range(10):
+        msg = await websocket_client.receive()
+        assert msg.type == WSMsgType.TEXT
+
+    instance._send_message({})
+    msg = await websocket_client.receive()
+    assert msg.type == WSMsgType.TEXT
+
+    # Cleanly shutdown
+    instance._send_message({})
+    instance._handle_task.cancel()
+
+    msg = await websocket_client.receive()
+    assert msg.type == WSMsgType.TEXT
+    msg = await websocket_client.receive()
+    assert msg.type == WSMsgType.close
+    assert "Client unable to keep up with pending messages" not in caplog.text
 
 
 async def test_pending_msg_peak_but_does_not_overflow(
@@ -91,12 +137,12 @@ async def test_pending_msg_peak_but_does_not_overflow(
 ) -> None:
     """Test pending msg hits the low peak but recovers and does not overflow."""
     orig_handler = http.WebSocketHandler
-    instance: http.WebSocketHandler | None = None
+    setup_instance: http.WebSocketHandler | None = None
 
     def instantiate_handler(*args):
-        nonlocal instance
-        instance = orig_handler(*args)
-        return instance
+        nonlocal setup_instance
+        setup_instance = orig_handler(*args)
+        return setup_instance
 
     with patch(
         "homeassistant.components.websocket_api.http.WebSocketHandler",
@@ -104,18 +150,17 @@ async def test_pending_msg_peak_but_does_not_overflow(
     ):
         websocket_client = await hass_ws_client()
 
-    assert instance is not None
+    instance: http.WebSocketHandler = cast(http.WebSocketHandler, setup_instance)
 
     # Kill writer task and fill queue past peak
     for _ in range(5):
-        instance._to_write.put_nowait(None)
+        instance._message_queue.append(None)
 
     # Trigger the peak check
     instance._send_message({})
 
     # Clear the queue
-    while instance._to_write.qsize() > 0:
-        instance._to_write.get_nowait()
+    instance._message_queue.clear()
 
     # Trigger the peak clear
     instance._send_message({})
@@ -143,10 +188,9 @@ async def test_non_json_message(
     assert msg["type"] == const.TYPE_RESULT
     assert msg["success"]
     assert msg["result"] == []
-    assert (
-        f"Unable to serialize to JSON. Bad data found at $.result[0](State: test_domain.entity).attributes.bad={bad_data}(<class 'object'>"
-        in caplog.text
-    )
+    assert "Unable to serialize to JSON. Bad data found" in caplog.text
+    assert "State: test_domain.entity" in caplog.text
+    assert "bad=<object" in caplog.text
 
 
 async def test_prepare_fail(

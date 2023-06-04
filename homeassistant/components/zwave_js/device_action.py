@@ -101,6 +101,7 @@ RESET_METER_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
 SET_CONFIG_PARAMETER_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_TYPE): SERVICE_SET_CONFIG_PARAMETER,
+        vol.Required(ATTR_ENDPOINT): vol.Coerce(int),
         vol.Required(ATTR_CONFIG_PARAMETER): vol.Any(int, str),
         vol.Required(ATTR_CONFIG_PARAMETER_BITMASK): vol.Any(None, int, str),
         vol.Required(ATTR_VALUE): vol.Coerce(int),
@@ -168,6 +169,7 @@ async def async_get_actions(
             {
                 **base_action,
                 CONF_TYPE: SERVICE_SET_CONFIG_PARAMETER,
+                ATTR_ENDPOINT: config_value.endpoint,
                 ATTR_CONFIG_PARAMETER: config_value.property_,
                 ATTR_CONFIG_PARAMETER_BITMASK: config_value.property_key,
                 CONF_SUBTYPE: generate_config_parameter_subtype(config_value),
@@ -186,8 +188,9 @@ async def async_get_actions(
         # underlying value is not being monitored by HA so we shouldn't allow
         # actions against it.
         if (
-            state := hass.states.get(entry.entity_id)
-        ) and state.state == STATE_UNAVAILABLE:
+            not (state := hass.states.get(entry.entity_id))
+            or state.state == STATE_UNAVAILABLE
+        ):
             continue
         entity_action = {**base_action, CONF_ENTITY_ID: entry.entity_id}
         actions.append({**entity_action, CONF_TYPE: SERVICE_REFRESH_VALUE})
@@ -209,9 +212,7 @@ async def async_get_actions(
             # If the value has the meterType CC specific value, we can add a reset_meter
             # action for it
             if CC_SPECIFIC_METER_TYPE in value.metadata.cc_specific:
-                endpoint_idx = value.endpoint
-                if endpoint_idx is None:
-                    endpoint_idx = 0
+                endpoint_idx = value.endpoint or 0
                 meter_endpoints[endpoint_idx].setdefault(
                     CONF_ENTITY_ID, entry.entity_id
                 )
@@ -348,6 +349,7 @@ async def async_get_action_capabilities(
             CommandClass.CONFIGURATION,
             config[ATTR_CONFIG_PARAMETER],
             property_key=config[ATTR_CONFIG_PARAMETER_BITMASK],
+            endpoint=config[ATTR_ENDPOINT],
         )
         value_schema = get_config_parameter_value_schema(node, value_id)
         if value_schema is None:

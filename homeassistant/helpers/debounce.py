@@ -64,7 +64,10 @@ class Debouncer(Generic[_R_co]):
     async def async_call(self) -> None:
         """Call the function."""
         if self._shutdown_requested:
-            raise RuntimeError("Debouncer has been shutdown.")
+            self.logger.warning(
+                "Debouncer call ignored as shutdown has been requested."
+            )
+            return
         assert self._job is not None
 
         if self._timer_task:
@@ -118,8 +121,7 @@ class Debouncer(Generic[_R_co]):
             # Schedule a new timer to prevent new runs during cooldown
             self._schedule_timer()
 
-    @callback
-    def async_shutdown(self) -> None:
+    async def async_shutdown(self) -> None:
         """Cancel any scheduled call, and prevent new runs."""
         self._shutdown_requested = True
         self.async_cancel()

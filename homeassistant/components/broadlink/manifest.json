@@ -21,6 +21,15 @@
     },
     {
       "macaddress": "C8F742*"
+    },
+    {
+      "macaddress": "E81656*"
+    },
+    {
+      "macaddress": "E87072*"
+    },
+    {
+      "macaddress": "EC0BAE*"
     }
   ],
   "documentation": "https://www.home-assistant.io/integrations/broadlink",

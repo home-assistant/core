@@ -188,7 +188,10 @@ class SystemBridgeDataUpdateCoordinator(
                     session=async_get_clientsession(self.hass),
                 )
 
-            self.hass.async_create_task(self._listen_for_data())
+            self.hass.async_create_background_task(
+                self._listen_for_data(),
+                name="System Bridge WebSocket Listener",
+            )
 
             await self.websocket_client.register_data_listener(
                 RegisterDataListener(modules=MODULES)

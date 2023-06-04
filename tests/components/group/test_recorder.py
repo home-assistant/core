@@ -3,6 +3,8 @@ from __future__ import annotations
 
 from datetime import timedelta
 
+import pytest
+
 from homeassistant.components import group
 from homeassistant.components.group import ATTR_AUTO, ATTR_ENTITY_ID, ATTR_ORDER
 from homeassistant.components.recorder import Recorder
@@ -14,6 +16,11 @@ from homeassistant.util import dt as dt_util
 
 from tests.common import async_fire_time_changed
 from tests.components.recorder.common import async_wait_recording_done
+
+
+@pytest.fixture(autouse=True)
+async def setup_homeassistant():
+    """Override the fixture in group.conftest."""
 
 
 async def test_exclude_attributes(recorder_mock: Recorder, hass: HomeAssistant) -> None:

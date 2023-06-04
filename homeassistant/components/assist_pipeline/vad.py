@@ -28,7 +28,7 @@ class VoiceCommandSegmenter:
     reset_seconds: float = 1.0
     """Seconds before reset start/stop time counters."""
 
-    _in_command: bool = False
+    in_command: bool = False
     """True if inside voice command."""
 
     _speech_seconds_left: float = 0.0
@@ -48,21 +48,21 @@ class VoiceCommandSegmenter:
     _bytes_per_chunk: int = 480 * 2  # 16-bit samples
     _seconds_per_chunk: float = 0.03  # 30 ms
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         """Initialize VAD."""
         self._vad = webrtcvad.Vad(self.vad_mode)
         self._bytes_per_chunk = self.vad_frames * 2
         self._seconds_per_chunk = self.vad_frames / _SAMPLE_RATE
         self.reset()
 
-    def reset(self):
+    def reset(self) -> None:
         """Reset all counters and state."""
         self._audio_buffer = b""
         self._speech_seconds_left = self.speech_seconds
         self._silence_seconds_left = self.silence_seconds
         self._timeout_seconds_left = self.timeout_seconds
         self._reset_seconds_left = self.reset_seconds
-        self._in_command = False
+        self.in_command = False
 
     def process(self, samples: bytes) -> bool:
         """Process a 16-bit 16Khz mono audio samples.
@@ -101,13 +101,13 @@ class VoiceCommandSegmenter:
         if self._timeout_seconds_left <= 0:
             return False
 
-        if not self._in_command:
+        if not self.in_command:
             if is_speech:
                 self._reset_seconds_left = self.reset_seconds
                 self._speech_seconds_left -= self._seconds_per_chunk
                 if self._speech_seconds_left <= 0:
                     # Inside voice command
-                    self._in_command = True
+                    self.in_command = True
             else:
                 # Reset if enough silence
                 self._reset_seconds_left -= self._seconds_per_chunk

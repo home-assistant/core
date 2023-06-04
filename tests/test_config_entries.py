@@ -31,7 +31,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.setup import async_set_domains_to_be_loaded, async_setup_component
-from homeassistant.util import dt
 import homeassistant.util.dt as dt_util
 
 from .common import (
@@ -45,6 +44,8 @@ from .common import (
     mock_entity_platform,
     mock_integration,
 )
+
+from tests.common import async_get_persistent_notifications
 
 
 @pytest.fixture(autouse=True)
@@ -276,7 +277,7 @@ async def test_remove_entry(
         hass: HomeAssistant, entry: config_entries.ConfigEntry
     ) -> bool:
         """Mock setting up entry."""
-        hass.config_entries.async_setup_platforms(entry, ["light"])
+        await hass.config_entries.async_forward_entry_setups(entry, ["light"])
         return True
 
     async def mock_unload_entry(
@@ -648,7 +649,7 @@ async def test_saving_and_loading(hass: HomeAssistant) -> None:
     )
 
     # To trigger the call_later
-    async_fire_time_changed(hass, dt.utcnow() + timedelta(seconds=1))
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=1))
     # To execute the save
     await hass.async_block_till_done()
 
@@ -733,14 +734,16 @@ async def test_discovery_notification(hass: HomeAssistant) -> None:
                     title="Test Title", data={"token": "abcd"}
                 )
 
+        notifications = async_get_persistent_notifications(hass)
+        assert "config_entry_discovery" not in notifications
+
         # Start first discovery flow to assert that reconfigure notification fires
         flow1 = await hass.config_entries.flow.async_init(
             "test", context={"source": config_entries.SOURCE_DISCOVERY}
         )
-
         await hass.async_block_till_done()
-        state = hass.states.get("persistent_notification.config_entry_discovery")
-        assert state is not None
+        notifications = async_get_persistent_notifications(hass)
+        assert "config_entry_discovery" in notifications
 
         # Start a second discovery flow so we can finish the first and assert that
         # the discovery notification persists until the second one is complete
@@ -752,15 +755,15 @@ async def test_discovery_notification(hass: HomeAssistant) -> None:
         assert flow1["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
 
         await hass.async_block_till_done()
-        state = hass.states.get("persistent_notification.config_entry_discovery")
-        assert state is not None
+        notifications = async_get_persistent_notifications(hass)
+        assert "config_entry_discovery" in notifications
 
         flow2 = await hass.config_entries.flow.async_configure(flow2["flow_id"], {})
         assert flow2["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
 
         await hass.async_block_till_done()
-        state = hass.states.get("persistent_notification.config_entry_discovery")
-        assert state is None
+        notifications = async_get_persistent_notifications(hass)
+        assert "config_entry_discovery" not in notifications
 
 
 async def test_reauth_notification(hass: HomeAssistant) -> None:
@@ -797,8 +800,8 @@ async def test_reauth_notification(hass: HomeAssistant) -> None:
         )
 
         await hass.async_block_till_done()
-        state = hass.states.get("persistent_notification.config_entry_reconfigure")
-        assert state is None
+        notifications = async_get_persistent_notifications(hass)
+        assert "config_entry_reconfigure" not in notifications
 
         # Start first reauth flow to assert that reconfigure notification fires
         flow1 = await hass.config_entries.flow.async_init(
@@ -806,8 +809,8 @@ async def test_reauth_notification(hass: HomeAssistant) -> None:
         )
 
         await hass.async_block_till_done()
-        state = hass.states.get("persistent_notification.config_entry_reconfigure")
-        assert state is not None
+        notifications = async_get_persistent_notifications(hass)
+        assert "config_entry_reconfigure" in notifications
 
         # Start a second reauth flow so we can finish the first and assert that
         # the reconfigure notification persists until the second one is complete
@@ -819,15 +822,15 @@ async def test_reauth_notification(hass: HomeAssistant) -> None:
         assert flow1["type"] == data_entry_flow.FlowResultType.ABORT
 
         await hass.async_block_till_done()
-        state = hass.states.get("persistent_notification.config_entry_reconfigure")
-        assert state is not None
+        notifications = async_get_persistent_notifications(hass)
+        assert "config_entry_reconfigure" in notifications
 
         flow2 = await hass.config_entries.flow.async_configure(flow2["flow_id"], {})
         assert flow2["type"] == data_entry_flow.FlowResultType.ABORT
 
         await hass.async_block_till_done()
-        state = hass.states.get("persistent_notification.config_entry_reconfigure")
-        assert state is None
+        notifications = async_get_persistent_notifications(hass)
+        assert "config_entry_reconfigure" not in notifications
 
 
 async def test_discovery_notification_not_created(hass: HomeAssistant) -> None:
@@ -1607,7 +1610,8 @@ async def test_reload_entry_entity_registry_works(
 
     async_fire_time_changed(
         hass,
-        dt.utcnow() + timedelta(seconds=config_entries.RELOAD_AFTER_UPDATE_DELAY + 1),
+        dt_util.utcnow()
+        + timedelta(seconds=config_entries.RELOAD_AFTER_UPDATE_DELAY + 1),
     )
     await hass.async_block_till_done()
 
@@ -2461,8 +2465,8 @@ async def test_partial_flows_hidden(
         assert len(hass.config_entries.flow.async_progress()) == 0
 
         await hass.async_block_till_done()
-        state = hass.states.get("persistent_notification.config_entry_discovery")
-        assert state is None
+        notifications = async_get_persistent_notifications(hass)
+        assert "config_entry_discovery" not in notifications
 
         # Let the flow init complete
         pause_discovery.set()
@@ -2474,8 +2478,8 @@ async def test_partial_flows_hidden(
         assert len(hass.config_entries.flow.async_progress()) == 1
 
         await hass.async_block_till_done()
-        state = hass.states.get("persistent_notification.config_entry_discovery")
-        assert state is not None
+        notifications = async_get_persistent_notifications(hass)
+        assert "config_entry_discovery" in notifications
 
 
 async def test_async_setup_init_entry(hass: HomeAssistant) -> None:
@@ -2657,7 +2661,7 @@ async def test_async_setup_update_entry(hass: HomeAssistant) -> None:
         (config_entries.SOURCE_ZEROCONF, BaseServiceInfo()),
         (
             config_entries.SOURCE_HASSIO,
-            HassioServiceInfo(config={}, name="Test", slug="test"),
+            HassioServiceInfo(config={}, name="Test", slug="test", uuid="1234"),
         ),
     ),
 )
@@ -3299,7 +3303,7 @@ async def test_setup_retrying_during_shutdown(hass: HomeAssistant) -> None:
 
     assert len(mock_call.return_value.mock_calls) == 0
 
-    async_fire_time_changed(hass, dt.utcnow() + timedelta(hours=4))
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(hours=4))
     await hass.async_block_till_done()
 
     assert len(mock_call.return_value.mock_calls) == 0
@@ -3867,7 +3871,7 @@ async def test_task_tracking(hass: HomeAssistant) -> None:
     event = asyncio.Event()
     results = []
 
-    async def test_task():
+    async def test_task() -> None:
         try:
             await event.wait()
             results.append("normal")
@@ -3875,9 +3879,14 @@ async def test_task_tracking(hass: HomeAssistant) -> None:
             results.append("background")
             raise
 
+    async def test_unload() -> None:
+        await event.wait()
+        results.append("on_unload")
+
+    entry.async_on_unload(test_unload)
     entry.async_create_task(hass, test_task())
     entry.async_create_background_task(hass, test_task(), "background-task-name")
     await asyncio.sleep(0)
     hass.loop.call_soon(event.set)
-    await entry._async_process_on_unload()
-    assert results == ["background", "normal"]
+    await entry._async_process_on_unload(hass)
+    assert results == ["on_unload", "background", "normal"]

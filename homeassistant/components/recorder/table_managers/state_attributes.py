@@ -114,7 +114,7 @@ class StateAttributesManager(BaseLRUTableManager[StateAttributes]):
         with session.no_autoflush:
             for hashs_chunk in chunked(hashes, SQLITE_MAX_BIND_VARS):
                 for attributes_id, shared_attrs in execute_stmt_lambda_element(
-                    session, get_shared_attributes(hashs_chunk)
+                    session, get_shared_attributes(hashs_chunk), orm_rows=False
                 ):
                     results[shared_attrs] = self._id_map[shared_attrs] = cast(
                         int, attributes_id

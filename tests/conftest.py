@@ -305,7 +305,7 @@ def skip_stop_scripts(
         return
     with patch(
         "homeassistant.helpers.script._schedule_stop_scripts_after_shutdown",
-        AsyncMock(),
+        Mock(),
     ):
         yield
 
@@ -537,6 +537,15 @@ async def _hass(
     loop.set_exception_handler(exc_handle)
 
     yield hass
+
+    # Config entries are not normally unloaded on HA shutdown. They are unloaded here
+    # to ensure that they could, and to help track lingering tasks and timers.
+    await asyncio.gather(
+        *(
+            config_entry.async_unload(hass)
+            for config_entry in hass.config_entries.async_entries()
+        )
+    )
 
     await hass.async_stop(force=True)
 
