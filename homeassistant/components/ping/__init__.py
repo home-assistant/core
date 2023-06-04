@@ -15,7 +15,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the template integration."""
+    """Set up the ping integration."""
     await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
     hass.data[DOMAIN] = {
         PING_PRIVS: await hass.async_add_executor_job(_can_use_icmp_lib_with_privilege),

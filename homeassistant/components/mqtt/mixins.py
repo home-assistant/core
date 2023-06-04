@@ -34,10 +34,7 @@ from homeassistant.helpers import (
     device_registry as dr,
     entity_registry as er,
 )
-from homeassistant.helpers.device_registry import (
-    EVENT_DEVICE_REGISTRY_UPDATED,
-    DeviceEntry,
-)
+from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
@@ -49,7 +46,10 @@ from homeassistant.helpers.entity import (
     async_generate_entity_id,
 )
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.event import async_track_entity_registry_updated_event
+from homeassistant.helpers.event import (
+    async_track_device_registry_updated_event,
+    async_track_entity_registry_updated_event,
+)
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.json import json_loads
@@ -680,8 +680,8 @@ class MqttDiscoveryDeviceUpdate(ABC):
         )
         config_entry.async_on_unload(self._entry_unload)
         if device_id is not None:
-            self._remove_device_updated = hass.bus.async_listen(
-                EVENT_DEVICE_REGISTRY_UPDATED, self._async_device_removed
+            self._remove_device_updated = async_track_device_registry_updated_event(
+                hass, device_id, self._async_device_removed
             )
         _LOGGER.info(
             "%s %s has been initialized",
@@ -1182,19 +1182,16 @@ def async_removed_from_device(
     hass: HomeAssistant, event: Event, mqtt_device_id: str, config_entry_id: str
 ) -> bool:
     """Check if the passed event indicates MQTT was removed from a device."""
-    device_id: str = event.data["device_id"]
-    if event.data["action"] not in ("remove", "update"):
+    action: str = event.data["action"]
+    if action not in ("remove", "update"):
         return False
 
-    if device_id != mqtt_device_id:
-        return False
-
-    if event.data["action"] == "update":
+    if action == "update":
         if "config_entries" not in event.data["changes"]:
             return False
         device_registry = dr.async_get(hass)
         if (
-            device_entry := device_registry.async_get(device_id)
+            device_entry := device_registry.async_get(event.data["device_id"])
         ) and config_entry_id in device_entry.config_entries:
             # Not removed from device
             return False

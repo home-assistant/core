@@ -2,6 +2,7 @@
 import asyncio
 from datetime import timedelta
 import logging
+from typing import Any
 from unittest.mock import ANY, Mock, patch
 
 import pytest
@@ -13,6 +14,7 @@ from homeassistant.helpers import (
     device_registry as dr,
     entity_platform,
     entity_registry as er,
+    issue_registry as ir,
 )
 from homeassistant.helpers.entity import (
     DeviceInfo,
@@ -223,16 +225,18 @@ async def test_platform_warn_slow_setup(hass: HomeAssistant) -> None:
 
     component = EntityComponent(_LOGGER, DOMAIN, hass)
 
-    with patch.object(hass.loop, "call_later") as mock_call:
+    with patch.object(hass.loop, "call_at") as mock_call:
         await component.async_setup({DOMAIN: {"platform": "platform"}})
         await hass.async_block_till_done()
         assert mock_call.called
 
-        # mock_calls[0] is the warning message for component setup
-        # mock_calls[4] is the warning message for platform setup
-        timeout, logger_method = mock_call.mock_calls[4][1][:2]
+        # mock_calls[3] is the warning message for component setup
+        # mock_calls[10] is the warning message for platform setup
+        timeout, logger_method = mock_call.mock_calls[10][1][:2]
 
-        assert timeout == entity_platform.SLOW_SETUP_WARNING
+        assert timeout - hass.loop.time() == pytest.approx(
+            entity_platform.SLOW_SETUP_WARNING, 0.5
+        )
         assert logger_method == _LOGGER.warning
 
         assert mock_call().cancel.called
@@ -305,6 +309,7 @@ async def test_parallel_updates_async_platform(hass: HomeAssistant) -> None:
     entity = AsyncEntity()
     await handle.async_add_entities([entity])
     assert entity.parallel_updates is None
+    assert handle._update_in_sequence is False
 
 
 async def test_parallel_updates_async_platform_with_constant(
@@ -334,6 +339,7 @@ async def test_parallel_updates_async_platform_with_constant(
     await handle.async_add_entities([entity])
     assert entity.parallel_updates is not None
     assert entity.parallel_updates._value == 2
+    assert handle._update_in_sequence is False
 
 
 async def test_parallel_updates_sync_platform(hass: HomeAssistant) -> None:
@@ -408,6 +414,104 @@ async def test_parallel_updates_sync_platform_with_constant(
     await handle.async_add_entities([entity])
     assert entity.parallel_updates is not None
     assert entity.parallel_updates._value == 2
+
+
+async def test_parallel_updates_async_platform_updates_in_parallel(
+    hass: HomeAssistant,
+) -> None:
+    """Test an async platform is updated in parallel."""
+    platform = MockPlatform()
+
+    mock_entity_platform(hass, "test_domain.async_platform", platform)
+
+    component = EntityComponent(_LOGGER, DOMAIN, hass)
+    component._platforms = {}
+
+    await component.async_setup({DOMAIN: {"platform": "async_platform"}})
+    await hass.async_block_till_done()
+
+    handle = list(component._platforms.values())[-1]
+    updating = []
+    peak_update_count = 0
+
+    class AsyncEntity(MockEntity):
+        """Mock entity that has async_update."""
+
+        async def async_update(self):
+            pass
+
+        async def async_update_ha_state(self, *args: Any, **kwargs: Any) -> None:
+            nonlocal peak_update_count
+            updating.append(self.entity_id)
+            await asyncio.sleep(0)
+            peak_update_count = max(len(updating), peak_update_count)
+            await asyncio.sleep(0)
+            updating.remove(self.entity_id)
+
+    entity1 = AsyncEntity()
+    entity2 = AsyncEntity()
+    entity3 = AsyncEntity()
+
+    await handle.async_add_entities([entity1, entity2, entity3])
+
+    assert entity1.parallel_updates is None
+    assert entity2.parallel_updates is None
+    assert entity3.parallel_updates is None
+
+    assert handle._update_in_sequence is False
+
+    await handle._update_entity_states(dt_util.utcnow())
+    assert peak_update_count > 1
+
+
+async def test_parallel_updates_sync_platform_updates_in_sequence(
+    hass: HomeAssistant,
+) -> None:
+    """Test a sync platform is updated in sequence."""
+    platform = MockPlatform()
+
+    mock_entity_platform(hass, "test_domain.platform", platform)
+
+    component = EntityComponent(_LOGGER, DOMAIN, hass)
+    component._platforms = {}
+
+    await component.async_setup({DOMAIN: {"platform": "platform"}})
+    await hass.async_block_till_done()
+
+    handle = list(component._platforms.values())[-1]
+    updating = []
+    peak_update_count = 0
+
+    class SyncEntity(MockEntity):
+        """Mock entity that has update."""
+
+        def update(self):
+            pass
+
+        async def async_update_ha_state(self, *args: Any, **kwargs: Any) -> None:
+            nonlocal peak_update_count
+            updating.append(self.entity_id)
+            await asyncio.sleep(0)
+            peak_update_count = max(len(updating), peak_update_count)
+            await asyncio.sleep(0)
+            updating.remove(self.entity_id)
+
+    entity1 = SyncEntity()
+    entity2 = SyncEntity()
+    entity3 = SyncEntity()
+
+    await handle.async_add_entities([entity1, entity2, entity3])
+    assert entity1.parallel_updates is not None
+    assert entity1.parallel_updates._value == 1
+    assert entity2.parallel_updates is not None
+    assert entity2.parallel_updates._value == 1
+    assert entity3.parallel_updates is not None
+    assert entity3.parallel_updates._value == 1
+
+    assert handle._update_in_sequence is True
+
+    await handle._update_entity_states(dt_util.utcnow())
+    assert peak_update_count == 1
 
 
 async def test_raise_error_on_update(hass: HomeAssistant) -> None:
@@ -1355,7 +1459,9 @@ async def test_override_restored_entities(
 
 
 async def test_platform_with_no_setup(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test setting up a platform that does not support setup."""
     entity_platform = MockEntityPlatform(
@@ -1368,6 +1474,12 @@ async def test_platform_with_no_setup(
         "The mock-platform platform for the mock-integration integration does not support platform setup."
         in caplog.text
     )
+    issue = issue_registry.async_get_issue(
+        domain="mock-integration",
+        issue_id="platform_integration_no_support_mock-integration_mock-platform",
+    )
+    assert issue
+    assert issue.translation_key == "platform_integration_no_support"
 
 
 async def test_platforms_sharing_services(hass: HomeAssistant) -> None:

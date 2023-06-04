@@ -120,7 +120,7 @@ async def async_setup_platform(
 
     api = TodoistAPIAsync(token)
     coordinator = TodoistCoordinator(hass, _LOGGER, SCAN_INTERVAL, api)
-    await coordinator.async_config_entry_first_refresh()
+    await coordinator.async_refresh()
 
     async def _shutdown_coordinator(_: Event) -> None:
         await coordinator.async_shutdown()
@@ -477,16 +477,16 @@ class TodoistProjectData:
             end = dt.parse_datetime(
                 data.due.datetime if data.due.datetime else data.due.date
             )
-            task[END] = dt.as_utc(end) if end is not None else end
+            task[END] = dt.as_local(end) if end is not None else end
             if task[END] is not None:
                 if self._due_date_days is not None and (
-                    task[END] > dt.utcnow() + self._due_date_days
+                    task[END] > dt.now() + self._due_date_days
                 ):
                     # This task is out of range of our due date;
                     # it shouldn't be counted.
                     return None
 
-                task[DUE_TODAY] = task[END].date() == dt.utcnow().date()
+                task[DUE_TODAY] = task[END].date() == dt.now().date()
 
                 # Special case: Task is overdue.
                 if task[END] <= task[START]:
