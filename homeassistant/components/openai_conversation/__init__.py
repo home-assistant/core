@@ -10,7 +10,7 @@ from openai import error
 
 from homeassistant.components import conversation
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_API_KEY, MATCH_ALL
+from homeassistant.const import CONF_API_KEY, CONF_BASE_URL, CONF_TYPE, MATCH_ALL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady, TemplateError
 from homeassistant.helpers import intent, template
@@ -27,6 +27,8 @@ from .const import (
     DEFAULT_PROMPT,
     DEFAULT_TEMPERATURE,
     DEFAULT_TOP_P,
+    DEFAULT_API_BASE,
+    DEFAULT_API_TYPE,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -35,6 +37,8 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up OpenAI Conversation from a config entry."""
     openai.api_key = entry.data[CONF_API_KEY]
+    openai.api_base = entry.data[CONF_BASE_URL]
+    openai.api_type = entry.data[CONF_TYPE]
 
     try:
         await hass.async_add_executor_job(
@@ -53,6 +57,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload OpenAI."""
     openai.api_key = None
+    openai.api_base = None
+    openai.api_type = None
     conversation.async_unset_agent(hass, entry)
     return True
 

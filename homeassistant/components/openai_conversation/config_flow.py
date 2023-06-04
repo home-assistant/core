@@ -27,6 +27,8 @@ from .const import (
     CONF_PROMPT,
     CONF_TEMPERATURE,
     CONF_TOP_P,
+    DEFAULT_API_BASE,
+    DEFAULT_API_TYPE,
     DEFAULT_CHAT_MODEL,
     DEFAULT_MAX_TOKENS,
     DEFAULT_PROMPT,
@@ -40,6 +42,16 @@ _LOGGER = logging.getLogger(__name__)
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_API_KEY): str,
+        vol.Optional(
+            CONF_API_BASE,
+            description={"suggested_value": options[CONF_API_BASE]},
+            default=DEFAULT_API_BASE,
+        ): str,
+        vol.Optional(
+            CONF_API_TYPE,
+            description={"suggested_value": options[CONF_API_TYPE]},
+            default=DEFAULT_API_TYPE,
+        ): str,
     }
 )
 
@@ -50,6 +62,8 @@ DEFAULT_OPTIONS = types.MappingProxyType(
         CONF_MAX_TOKENS: DEFAULT_MAX_TOKENS,
         CONF_TOP_P: DEFAULT_TOP_P,
         CONF_TEMPERATURE: DEFAULT_TEMPERATURE,
+        CONF_API_BASE: DEFAULT_API_BASE
+        CONF_API_TYPE: DEFAULT_API_TYPE
     }
 )
 
@@ -60,6 +74,8 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
     openai.api_key = data[CONF_API_KEY]
+    openai.api_base = data[CONF_API_BASE]
+    openai.api_type = data[CONF_API_TYPE]
     await hass.async_add_executor_job(partial(openai.Engine.list, request_timeout=10))
 
 
