@@ -12,9 +12,10 @@ from homeassistant.components.water_heater import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 
@@ -30,11 +31,13 @@ async def async_setup_entry(
     coordinator = hass.data[DOMAIN][config_entry.entry_id]
 
     # Add all entities to HA
-    async_add_entities(OpenThermWaterHeater(web_api) for web_api in coordinator.data)
+    async_add_entities(
+        OpenThermWaterHeater(coordinator, web_api) for web_api in coordinator.data
+    )
 
 
 # https://developers.home-assistant.io/docs/core/entity/water-heater/
-class OpenThermWaterHeater(WaterHeaterEntity):
+class OpenThermWaterHeater(CoordinatorEntity, WaterHeaterEntity):
     """Class that represents WaterHeater entity."""
 
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
@@ -50,9 +53,11 @@ class OpenThermWaterHeater(WaterHeaterEntity):
 
     def __init__(
         self,
+        coordinator: CoordinatorEntity,
         web_api: OpenThermWebApi,
     ) -> None:
         """Initiatlize WaterHeater entity."""
+        super().__init__(coordinator, context=web_api)
         self.web_api = web_api
         self.controller = web_api.get_controller()
         self._attr_unique_id = f"water_heater_{self.controller.device_id}"
@@ -64,8 +69,10 @@ class OpenThermWaterHeater(WaterHeaterEntity):
             manufacturer="Pohorelice",
         )
 
-    async def async_update(self) -> None:
-        """Get the latest data."""
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self.controller = self.coordinator.data.web_api.get_controller()
         if self.controller.away or self.controller.dhw_setpoint == 0:
             self._attr_icon = "mdi:water-boiler-off"
         else:
@@ -74,7 +81,8 @@ class OpenThermWaterHeater(WaterHeaterEntity):
         self._attr_current_temperature = self.controller.dhw_temperature
         self._attr_target_temperature = self.controller.dhw_setpoint
         self._attr_is_away_mode_on = self.controller.away
-        return
+        self.async_write_ha_state()
+        super()._handle_coordinator_update()
 
     def set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
