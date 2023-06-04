@@ -18,15 +18,22 @@ from homeassistant.components.stt import (
     SpeechResult,
     SpeechResultState,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
+from .client import CloudClient
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_get_engine(hass, config, discovery_info=None):
+async def async_get_engine(
+    hass: HomeAssistant,
+    config: ConfigType,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> CloudProvider:
     """Set up Cloud speech component."""
-    cloud: Cloud = hass.data[DOMAIN]
+    cloud: Cloud[CloudClient] = hass.data[DOMAIN]
 
     cloud_provider = CloudProvider(cloud)
     if discovery_info is not None:
@@ -37,7 +44,7 @@ async def async_get_engine(hass, config, discovery_info=None):
 class CloudProvider(Provider):
     """NabuCasa speech API provider."""
 
-    def __init__(self, cloud: Cloud) -> None:
+    def __init__(self, cloud: Cloud[CloudClient]) -> None:
         """Home Assistant NabuCasa Speech to text."""
         self.cloud = cloud
 
