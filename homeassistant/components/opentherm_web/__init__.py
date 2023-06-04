@@ -18,14 +18,12 @@ PLATFORMS: list[Platform] = [Platform.CLIMATE, Platform.WATER_HEATER]
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up OpenTherm Web from a config entry."""
 
-    opentherm = OpenThermWebApi(entry.data[HOST], entry.data[SECRET])
-    auth_valid = await hass.async_add_executor_job(opentherm.authenticate)
+    coordinator = OpenThermWebCoordinator(hass, entry)
+    auth_valid = await hass.async_add_executor_job(coordinator.web_api.authenticate)
 
     if not auth_valid:
         LOGGER.error("Invalid authentication")
         return False
-
-    coordinator = OpenThermWebCoordinator(hass, opentherm)
 
     await coordinator.async_config_entry_first_refresh()
 
@@ -54,12 +52,12 @@ class OpenThermWebData(NamedTuple):
 class OpenThermWebCoordinator(DataUpdateCoordinator[OpenThermWebData]):
     """Class to manage fetching OpenThermWeb data from single endpoint."""
 
-    webapi: OpenThermWebApi
+    web_api: OpenThermWebApi
 
     def __init__(
         self,
         hass: HomeAssistant,
-        webapi: OpenThermWebApi,
+        entry: ConfigEntry,
     ) -> None:
         """Initialize global OpenThermWeb data updater."""
         super().__init__(
@@ -69,9 +67,9 @@ class OpenThermWebCoordinator(DataUpdateCoordinator[OpenThermWebData]):
             update_interval=SCAN_INTERVAL,
         )
 
-        self.webapi = webapi
+        self.web_api = OpenThermWebApi(entry.data[HOST], entry.data[SECRET])
 
     async def _async_update_data(self) -> OpenThermWebData:
         """Fetch data from OpenThermWeb."""
-        await self.hass.async_add_executor_job(self.webapi.refresh_controller)
-        return OpenThermWebData(web_api=self.webapi)
+        await self.hass.async_add_executor_job(self.web_api.refresh_controller)
+        return OpenThermWebData(web_api=self.web_api)
