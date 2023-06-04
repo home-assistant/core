@@ -105,6 +105,14 @@
         "name": "Status indicator light"
       }
     },
+    "time": {
+      "dnd_start_time": {
+        "name": "DnD begin"
+      },
+      "dnd_end_time": {
+        "name": "DnD end"
+      }
+    },
     "vacuum": {
       "roborock": {
         "state_attributes": {
