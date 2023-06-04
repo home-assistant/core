@@ -9,7 +9,9 @@ from tests.common import MockConfigEntry
 
 
 async def test_load_unload_config_entry(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_opentherm: AsyncMock
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_opentherm_webapi: AsyncMock,
 ) -> None:
     """Test the OpenThermWeb configuration entry loading/unloading."""
     mock_config_entry.add_to_hass(hass)
