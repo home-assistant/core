@@ -3,6 +3,7 @@
   "name": "Flux",
   "after_dependencies": ["light"],
   "codeowners": [],
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/flux",
   "iot_class": "calculated",
   "quality_scale": "internal"
