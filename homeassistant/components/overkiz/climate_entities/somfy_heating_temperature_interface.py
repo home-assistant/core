@@ -1,7 +1,6 @@
 """Support for Somfy Heating Temperature Interface."""
 from __future__ import annotations
 
-import logging
 from typing import Any
 
 from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, OverkizState
@@ -16,12 +15,10 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
+from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 
 from ..coordinator import OverkizDataUpdateCoordinator
 from ..entity import OverkizEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 OVERKIZ_TO_PRESET_MODES: dict[str, str] = {
     OverkizCommandParam.SECURED: PRESET_AWAY,
@@ -50,7 +47,7 @@ MAP_PRESET_TEMPERATURES: dict[str, str] = {
     PRESET_AWAY: OverkizState.CORE_SECURED_POSITION_TEMPERATURE,
 }
 
-MODE_COMMAND_MAPPING: dict[str, str] = {
+SETPOINT_MODE_TO_OVERKIZ_COMMAND: dict[str, str] = {
     OverkizCommandParam.COMFORT: OverkizCommand.SET_COMFORT_TEMPERATURE,
     OverkizCommandParam.ECO: OverkizCommand.SET_ECO_TEMPERATURE,
     OverkizCommandParam.SECURED: OverkizCommand.SET_SECURED_POSITION_TEMPERATURE,
@@ -72,7 +69,7 @@ class SomfyHeatingTemperatureInterface(OverkizEntity, ClimateEntity):
     floor to a cooling floor in the summer.
     """
 
-    _attr_temperature_unit = TEMP_CELSIUS
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_supported_features = (
         ClimateEntityFeature.PRESET_MODE | ClimateEntityFeature.TARGET_TEMPERATURE
     )
@@ -139,7 +136,6 @@ class SomfyHeatingTemperatureInterface(OverkizEntity, ClimateEntity):
                 OverkizState.OVP_HEATING_TEMPERATURE_INTERFACE_OPERATING_MODE
             ]
         ) and current_operation.value_as_str:
-
             return OVERKIZ_TO_HVAC_ACTION[current_operation.value_as_str]
 
         return None
@@ -179,5 +175,5 @@ class SomfyHeatingTemperatureInterface(OverkizEntity, ClimateEntity):
             ]
         ) and mode.value_as_str:
             return await self.executor.async_execute_command(
-                MODE_COMMAND_MAPPING[mode.value_as_str], temperature
+                SETPOINT_MODE_TO_OVERKIZ_COMMAND[mode.value_as_str], temperature
             )
