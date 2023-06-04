@@ -24,7 +24,7 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     assert result["errors"] is None
 
     with patch(
-        "homeassistant.components.opentherm_web.opentherm_webapi.OpenThermWebApi.authenticate",
+        "opentherm_web_api.opentherm_web_api.OpenThermWebApi.authenticate",
         return_value=True,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -52,7 +52,7 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.opentherm_web.opentherm_webapi.OpenThermWebApi.authenticate",
+        "opentherm_web_api.opentherm_web_api.OpenThermWebApi.authenticate",
         side_effect=InvalidAuth,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -74,7 +74,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.opentherm_web.opentherm_webapi.OpenThermWebApi.authenticate",
+        "opentherm_web_api.opentherm_web_api.OpenThermWebApi.authenticate",
         side_effect=CannotConnect,
     ):
         result2 = await hass.config_entries.flow.async_configure(

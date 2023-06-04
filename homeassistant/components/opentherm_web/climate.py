@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from opentherm_web_api import OpenThermController
+from opentherm_web_api import OpenThermController, OpenThermWebApi
 
 from homeassistant.components.climate import (
     ClimateEntity,
@@ -30,7 +30,7 @@ async def async_setup_entry(
     coordinator = hass.data[DOMAIN][config_entry.entry_id]
 
     # Add all entities to HA
-    async_add_entities(OpenThermClimate(controller) for controller in coordinator.data)
+    async_add_entities(OpenThermClimate(web_api) for web_api in coordinator.data)
 
 
 # https://developers.home-assistant.io/docs/core/entity/climate/
@@ -44,17 +44,19 @@ class OpenThermClimate(ClimateEntity):
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
     controller: OpenThermController
+    web_api: OpenThermWebApi
 
     def __init__(
         self,
-        controller: OpenThermController,
+        web_api: OpenThermWebApi,
     ) -> None:
         """Initialize Climate Entity."""
-        self.controller = controller
-        self._attr_unique_id = f"climate_{controller.device_id}"
+        self.web_api = web_api
+        self.controller = web_api.get_controller()
+        self._attr_unique_id = f"climate_{self.controller.device_id}"
         self._attr_name = "Thermostat"
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, controller.device_id)},
+            identifiers={(DOMAIN, self.controller.device_id)},
             name="OpenThermWeb",
             manufacturer="Pohorelice",
         )
@@ -80,11 +82,11 @@ class OpenThermClimate(ClimateEntity):
         """Set new target temperature."""
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
             return
-        self.controller.set_room_temperature(temperature)
+        self.web_api.set_room_temperature(temperature)
 
     def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set HVAC mode."""
         if hvac_mode not in (HVACMode.AUTO, HVACMode.OFF):
             return
 
-        self.controller.set_hvac_mode(hvac_mode == HVACMode.AUTO)
+        self.web_api.set_hvac_mode(hvac_mode == HVACMode.AUTO)
