@@ -4,8 +4,15 @@ import logging
 from types import MappingProxyType
 from typing import Any, cast
 
-from aiohttp.client_exceptions import ClientResponseError
-from opower import Account, AggregateType, CostRead, Forecast, MeterType, Opower
+from opower import (
+    Account,
+    AggregateType,
+    CostRead,
+    Forecast,
+    InvalidAuth,
+    MeterType,
+    Opower,
+)
 
 from homeassistant.components.recorder import get_instance
 from homeassistant.components.recorder.models import StatisticData, StatisticMetaData
@@ -56,14 +63,10 @@ class OpowerCoordinator(DataUpdateCoordinator):
         try:
             # Login expires after a few minutes.
             # Given the infrequent updating (every 12h)
-            # assume previous sessions have expired and re-login.
+            # assume previous session has expired and re-login.
             await self.api.async_login()
-        except ClientResponseError as err:
-            if err.status in (401, 403):
-                # Cancel future updates and start reauth config flow
-                raise ConfigEntryAuthFailed from err
-            # Let DataUpdateCoordinator handle ClientError retries
-            raise err
+        except InvalidAuth as err:
+            raise ConfigEntryAuthFailed from err
         forecasts: list[Forecast] = await self.api.async_get_forecast()
         _LOGGER.debug("Updating sensor data with: %s", forecasts)
         await self._insert_statistics([forecast.account for forecast in forecasts])
@@ -177,14 +180,9 @@ class OpowerCoordinator(DataUpdateCoordinator):
         cost_reads = []
         start = None
         end = datetime.now() - timedelta(days=3 * 365)
-        try:
-            cost_reads += await self.api.async_get_cost_reads(
-                account, AggregateType.BILL, start, end
-            )
-        except ClientResponseError as err:
-            # Ignore server errors that could happen if end is before account activation
-            if err.status != 500:
-                raise err
+        cost_reads += await self.api.async_get_cost_reads(
+            account, AggregateType.BILL, start, end
+        )
         start = end if not cost_reads else cost_reads[-1].end_time
         end = (
             datetime.now() - timedelta(days=2 * 30)

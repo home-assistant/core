@@ -2,7 +2,7 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
-from aiohttp.client_exceptions import ClientResponseError
+from opower import CannotConnect, InvalidAuth
 import pytest
 
 from homeassistant import config_entries
@@ -68,15 +68,14 @@ async def test_form(
 
 
 @pytest.mark.parametrize(
-    ("http_status", "expected_error"),
+    ("api_exception", "expected_error"),
     [
-        (401, "invalid_auth"),
-        (403, "invalid_auth"),
-        (500, "cannot_connect"),
+        (InvalidAuth(), "invalid_auth"),
+        (CannotConnect(), "cannot_connect"),
     ],
 )
 async def test_form_exceptions(
-    recorder_mock: Recorder, hass: HomeAssistant, http_status, expected_error
+    recorder_mock: Recorder, hass: HomeAssistant, api_exception, expected_error
 ) -> None:
     """Test we handle exceptions."""
     result = await hass.config_entries.flow.async_init(
@@ -85,7 +84,7 @@ async def test_form_exceptions(
 
     with patch(
         "homeassistant.components.opower.config_flow.Opower.async_login",
-        side_effect=ClientResponseError(None, None, status=http_status),
+        side_effect=api_exception,
     ) as mock_login:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],

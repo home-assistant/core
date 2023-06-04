@@ -5,8 +5,7 @@ from collections.abc import Mapping
 import logging
 from typing import Any
 
-from aiohttp.client_exceptions import ClientResponseError
-from opower import Opower, get_supported_utility_names
+from opower import CannotConnect, InvalidAuth, Opower, get_supported_utility_names
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -46,13 +45,10 @@ async def _validate_login(
     errors: dict[str, str] = {}
     try:
         await api.async_login()
-    except ClientResponseError as err:
-        _LOGGER.exception("Exception while logging in")
-        if err.status in (401, 403):
-            errors["base"] = "invalid_auth"
-        else:
-            errors["base"] = "cannot_connect"
-
+    except InvalidAuth:
+        errors["base"] = "invalid_auth"
+    except CannotConnect:
+        errors["base"] = "cannot_connect"
     return errors
 
 
