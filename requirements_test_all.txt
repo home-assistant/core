@@ -1363,7 +1363,7 @@ pynetgear==0.10.9
 pynobo==1.6.0
 
 # homeassistant.components.nuki
-pynuki==1.6.1
+pynuki==1.6.2
 
 # homeassistant.components.nut
 pynut2==2.1.2
