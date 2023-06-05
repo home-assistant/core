@@ -1,7 +1,9 @@
 """Support for EZVIZ select controls."""
 from __future__ import annotations
 
-from pyezviz.constants import SoundMode
+from dataclasses import dataclass
+
+from pyezviz.constants import DeviceSwitchType, SoundMode
 from pyezviz.exceptions import HTTPError, PyEzvizError
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
@@ -17,12 +19,28 @@ from .entity import EzvizEntity
 
 PARALLEL_UPDATES = 1
 
-SELECT_TYPES = SelectEntityDescription(
+
+@dataclass
+class EzvizSelectEntityDescriptionMixin:
+    """Mixin values for EZVIZ Select entities."""
+
+    supported_switch: int
+
+
+@dataclass
+class EzvizSelectEntityDescription(
+    SelectEntityDescription, EzvizSelectEntityDescriptionMixin
+):
+    """Describe a EZVIZ Select entity."""
+
+
+SELECT_TYPE = EzvizSelectEntityDescription(
     key="alarm_sound_mod",
     name="Warning sound",
     icon="mdi:alarm",
     entity_category=EntityCategory.CONFIG,
     options=["soft", "intensive", "silent"],
+    supported_switch=DeviceSwitchType.ALARM_TONE.value,
 )
 
 
@@ -35,11 +53,10 @@ async def async_setup_entry(
     ]
 
     async_add_entities(
-        EzvizSensor(coordinator, camera, entity, SELECT_TYPES)
+        EzvizSensor(coordinator, camera)
         for camera in coordinator.data
-        for entity, value in coordinator.data[camera].items()
-        if entity in SELECT_TYPES.key
-        if value
+        for switch in coordinator.data[camera]["switches"]
+        if switch == SELECT_TYPE.supported_switch
     )
 
 
@@ -52,14 +69,12 @@ class EzvizSensor(EzvizEntity, SelectEntity):
         self,
         coordinator: EzvizDataUpdateCoordinator,
         serial: str,
-        entity: str,
-        description: SelectEntityDescription,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator, serial)
-        self._sensor_name = entity
-        self._attr_unique_id = f"{serial}_{entity}"
-        self.entity_description = description
+        self._sensor_name = SELECT_TYPE.key
+        self._attr_unique_id = f"{serial}_{SELECT_TYPE.key}"
+        self.entity_description = SELECT_TYPE
 
     @property
     def current_option(self) -> str | None:
