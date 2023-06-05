@@ -17,6 +17,7 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from . import OpenThermWebCoordinator
 from .const import DOMAIN
 
 
@@ -37,7 +38,7 @@ async def async_setup_entry(
 
 
 # https://developers.home-assistant.io/docs/core/entity/climate/
-class OpenThermClimate(CoordinatorEntity, ClimateEntity):
+class OpenThermClimate(CoordinatorEntity[OpenThermWebCoordinator], ClimateEntity):
     """Class that represents Climate entity."""
 
     _attr_hvac_modes = [HVACMode.AUTO, HVACMode.OFF]
@@ -51,7 +52,7 @@ class OpenThermClimate(CoordinatorEntity, ClimateEntity):
 
     def __init__(
         self,
-        coordinator: CoordinatorEntity,
+        coordinator: OpenThermWebCoordinator,
         web_api: OpenThermWebApi,
     ) -> None:
         """Initialize Climate Entity."""
