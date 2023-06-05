@@ -274,7 +274,7 @@ jobs:
             sed -i "s|# evdev|evdev|g" ${requirement_file}
             sed -i "s|# pycups|pycups|g" ${requirement_file}
             sed -i "s|# homekit|homekit|g" ${requirement_file}
-            sed -i "s|# decora_wifi|decora_wifi|g" ${requirement_file}
+            sed -i "s|# decora-wifi|decora-wifi|g" ${requirement_file}
             sed -i "s|# python-gammu|python-gammu|g" ${requirement_file}
 
             # Some packages are not buildable on armhf anymore
@@ -284,7 +284,7 @@ jobs:
               # will drop the platform in the near future (they consider it
               # "flimsy" on 386). The following packages depend on pandas,
               # so we comment them out.
-              sed -i "s|env_canada|# env_canada|g" ${requirement_file}
+              sed -i "s|env-canada|# env-canada|g" ${requirement_file}
               sed -i "s|noaa-coops|# noaa-coops|g" ${requirement_file}
               sed -i "s|pyezviz|# pyezviz|g" ${requirement_file}
               sed -i "s|pykrakenapi|# pykrakenapi|g" ${requirement_file}

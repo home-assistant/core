@@ -227,6 +227,7 @@ omit =
     homeassistant/components/dunehd/__init__.py
     homeassistant/components/dunehd/media_player.py
     homeassistant/components/dwd_weather_warnings/const.py
+    homeassistant/components/dwd_weather_warnings/coordinator.py
     homeassistant/components/dwd_weather_warnings/sensor.py
     homeassistant/components/dweet/*
     homeassistant/components/ebox/sensor.py
@@ -326,6 +327,7 @@ omit =
     homeassistant/components/ezviz/__init__.py
     homeassistant/components/ezviz/binary_sensor.py
     homeassistant/components/ezviz/camera.py
+    homeassistant/components/ezviz/light.py
     homeassistant/components/ezviz/coordinator.py
     homeassistant/components/ezviz/number.py
     homeassistant/components/ezviz/entity.py

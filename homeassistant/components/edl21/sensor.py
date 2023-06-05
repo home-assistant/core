@@ -322,11 +322,7 @@ class EDL21:
         assert isinstance(message_body, SmlGetListResponse)
         LOGGER.debug("Received sml message for %s: %s", self._name, message_body)
 
-        electricity_id = None
-        for telegram in message_body.get("valList", []):
-            if telegram.get("objName") in ("1-0:0.0.9*255", "1-0:96.1.0*255"):
-                electricity_id = telegram.get("value")
-                break
+        electricity_id = message_body["serverId"]
 
         if electricity_id is None:
             LOGGER.debug("No electricity id found in sml message for %s", self._name)

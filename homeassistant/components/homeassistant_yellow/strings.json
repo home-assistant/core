@@ -11,6 +11,12 @@
       "addon_installed_other_device": {
         "title": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::step::addon_installed_other_device::title%]"
       },
+      "addon_menu": {
+        "menu_options": {
+          "reconfigure_addon": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::step::addon_menu::menu_options::reconfigure_addon%]",
+          "uninstall_addon": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::step::addon_menu::menu_options::uninstall_addon%]"
+        }
+      },
       "hardware_settings": {
         "title": "Configure hardware settings",
         "data": {
@@ -21,6 +27,10 @@
       },
       "install_addon": {
         "title": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::step::install_addon::title%]"
+      },
+      "notify_channel_change": {
+        "title": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::step::notify_channel_change::title%]",
+        "description": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::step::notify_channel_change::description%]"
       },
       "main_menu": {
         "menu_options": {
@@ -36,12 +46,21 @@
           "reboot_now": "Reboot now"
         }
       },
+      "reconfigure_addon": {
+        "title": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::step::reconfigure_addon::title%]",
+        "data": {
+          "channel": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::step::reconfigure_addon::data::channel%]"
+        }
+      },
       "show_revert_guide": {
         "title": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::step::show_revert_guide::title%]",
         "description": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::step::show_revert_guide::description%]"
       },
       "start_addon": {
         "title": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::step::start_addon::title%]"
+      },
+      "uninstall_addon": {
+        "title": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::step::uninstall_addon::title%]"
       }
     },
     "error": {
