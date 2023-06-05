@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import asyncio
-import contextlib
 import logging
 
 from homeassistant.components.alarm_control_panel import (
@@ -66,8 +65,11 @@ class BlinkSyncModule(AlarmControlPanelEntity):
                 self._name,
                 self.data,
             )
-            with contextlib.suppress(asyncio.TimeoutError):
+            try:
                 await self.data.refresh()
+                self._attr_available = False
+            except asyncio.TimeoutError:
+                self._attr_available = False
 
             _LOGGER.info("Updating State of Blink Alarm Control Panel '%s'", self._name)
 
@@ -81,10 +83,16 @@ class BlinkSyncModule(AlarmControlPanelEntity):
 
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
-        await self.sync.async_arm(False)
-        await self.sync.refresh()
+        try:
+            await self.sync.async_arm(False)
+            await self.sync.refresh()
+        except asyncio.TimeoutError:
+            self._attr_available = False
 
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm command."""
-        await self.sync.async_arm(True)
-        await self.sync.refresh()
+        try:
+            await self.sync.async_arm(True)
+            await self.sync.refresh()
+        except asyncio.TimeoutError:
+            self._attr_available = False

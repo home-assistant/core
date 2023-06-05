@@ -1,6 +1,7 @@
 """Support for Blink system camera."""
 from __future__ import annotations
 
+import asyncio
 import logging
 
 from requests.exceptions import ChunkedEncodingError
@@ -62,13 +63,19 @@ class BlinkCamera(Camera):
 
     async def async_enable_motion_detection(self) -> None:
         """Enable motion detection for the camera."""
-        await self._camera.async_arm(True)
-        await self.data.refresh()
+        try:
+            await self._camera.async_arm(True)
+            await self.data.refresh()
+        except asyncio.TimeoutError:
+            self._attr_available = False
 
     async def async_disable_motion_detection(self) -> None:
         """Disable motion detection for the camera."""
-        await self._camera.async_arm(False)
-        await self.data.refresh()
+        try:
+            await self._camera.async_arm(False)
+            await self.data.refresh()
+        except asyncio.TimeoutError:
+            self._attr_available = False
 
     @property
     def motion_detection_enabled(self) -> bool:
@@ -82,8 +89,11 @@ class BlinkCamera(Camera):
 
     async def trigger_camera(self):
         """Trigger camera to take a snapshot."""
-        await self._camera.snap_picture()
-        await self.data.refresh()
+        try:
+            await self._camera.snap_picture()
+            await self.data.refresh()
+        except asyncio.TimeoutError:
+            pass
 
     def camera_image(
         self, width: int | None = None, height: int | None = None
