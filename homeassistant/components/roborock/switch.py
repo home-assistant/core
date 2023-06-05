@@ -100,7 +100,11 @@ async def async_setup_entry(
         ),
         return_exceptions=True,
     )
-
+    for result in results:
+        if isinstance(result, Exception):
+            if not isinstance(result, RoborockException):
+                raise result
+            _LOGGER.info("Not setting a entity because of %s", result)
     async_add_entities(
         (
             RoborockSwitchEntity(
