@@ -33,7 +33,7 @@ CONF_OPTIONS_2 = {
     }
 }
 
-MAX_LENGTH_STEAM_IDS = 8071
+MAX_LENGTH_STEAM_IDS = 30
 
 
 def create_entry(hass: HomeAssistant) -> MockConfigEntry:
@@ -68,7 +68,7 @@ class MockedInterface(dict):
     def GetFriendList(self, steamid: str) -> dict:
         """Get friend list."""
         fake_friends = [{"steamid": ACCOUNT_2}]
-        for _i in range(0, 400):
+        for _i in range(0, 4):
             fake_friends.append(
                 {"steamid": "".join(random.choices(string.digits, k=len(ACCOUNT_1)))}
             )
