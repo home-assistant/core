@@ -44,7 +44,7 @@ class NextcloudEntity(CoordinatorEntity[NextcloudDataUpdateCoordinator]):
         self.item = item
         self._attr_translation_key = slugify(item)
         self._attr_name = item
-        self._attr_unique_id = f"{domain}#{item}"
+        self._attr_unique_id = f"{coordinator.url}#{item}"
         self._attr_device_info = DeviceInfo(
             configuration_url=coordinator.url + "/settings/admin/serverinfo",
             entry_type=DeviceEntryType.SERVICE,
