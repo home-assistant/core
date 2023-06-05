@@ -14,9 +14,8 @@
           "host": "[%key:common::config_flow::data::host%]",
           "port": "[%key:common::config_flow::data::port%]",
           "name": "[%key:common::config_flow::data::name%]",
-          "password": "[%key:common::config_flow::data::name%]"
-        },
-        "title": "[%key:common::config_flow::title%]"
+          "password": "[%key:common::config_flow::data::password%]"
+        }
       }
     }
   }
