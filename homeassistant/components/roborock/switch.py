@@ -1,4 +1,5 @@
 """Support for Roborock switch."""
+import asyncio
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 import logging
@@ -10,6 +11,7 @@ from homeassistant.components.switch import SwitchEntity, SwitchEntityDescriptio
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import slugify
 
@@ -75,15 +77,26 @@ async def async_setup_entry(
     coordinators: dict[str, RoborockDataUpdateCoordinator] = hass.data[DOMAIN][
         config_entry.entry_id
     ]
+    possible_entities = [
+        RoborockSwitchEntity(
+            f"{description.key}_{slugify(device_id)}",
+            coordinator,
+            description,
+        )
+        for device_id, coordinator in coordinators.items()
+        for description in SWITCH_DESCRIPTIONS
+    ]
+    # We need to check if this function is supported by the device.
+    results = await asyncio.gather(
+        *(entity.entity_description.get_value(entity) for entity in possible_entities),
+        return_exceptions=True,
+    )
+
     async_add_entities(
         (
-            RoborockSwitchEntity(
-                f"{description.key}_{slugify(device_id)}",
-                coordinator,
-                description,
-            )
-            for device_id, coordinator in coordinators.items()
-            for description in SWITCH_DESCRIPTIONS
+            entity
+            for entity, result in zip(possible_entities, results)
+            if not isinstance(result, HomeAssistantError)
         ),
         True,
     )
