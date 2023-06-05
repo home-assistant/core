@@ -63,7 +63,7 @@ class OpenThermClimate(CoordinatorEntity, ClimateEntity):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self.controller.device_id)},
             name="OpenThermWeb",
-            manufacturer="Pohorelice",
+            manufacturer="Lake292",
         )
 
     @callback
