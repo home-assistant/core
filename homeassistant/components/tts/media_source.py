@@ -104,7 +104,7 @@ def media_source_id_to_kwargs(media_source_id: str) -> MediaSourceOptions:
 class TTSMediaSource(MediaSource):
     """Provide text-to-speech providers as media sources."""
 
-    name: str = "Text to Speech"
+    name: str = "Text-to-speech"
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize TTSMediaSource."""

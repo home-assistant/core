@@ -712,6 +712,30 @@ async def test_zeroconf_flow_already_configured_host_not_changed_no_reload_entry
     assert len(mock_setup_entry.mock_calls) == 0
 
 
+async def test_zeroconf_flow_abort_if_mac_is_missing(
+    hass: HomeAssistant,
+) -> None:
+    """Test when mac is missing in the zeroconf discovery we abort."""
+    host = "1.2.3.4"
+    name = "My Android TV"
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=zeroconf.ZeroconfServiceInfo(
+            host=host,
+            addresses=[host],
+            port=6466,
+            hostname=host,
+            type="mock_type",
+            name=name + "._androidtvremote2._tcp.local.",
+            properties={},
+        ),
+    )
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"
+
+
 async def test_reauth_flow_success(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,

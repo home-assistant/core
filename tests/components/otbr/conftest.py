@@ -1,9 +1,10 @@
 """Test fixtures for the Open Thread Border Router integration."""
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 import pytest
 
 from homeassistant.components import otbr
+from homeassistant.core import HomeAssistant
 
 from . import CONFIG_ENTRY_DATA, DATASET_CH16
 
@@ -31,3 +32,12 @@ async def otbr_config_entry_fixture(hass):
 @pytest.fixture(autouse=True)
 def use_mocked_zeroconf(mock_async_zeroconf):
     """Mock zeroconf in all tests."""
+
+
+@pytest.fixture(name="multiprotocol_addon_manager_mock")
+def multiprotocol_addon_manager_mock_fixture(hass: HomeAssistant):
+    """Mock the Silicon Labs Multiprotocol add-on manager."""
+    mock_manager = Mock()
+    mock_manager.async_get_channel = Mock(return_value=None)
+    with patch.dict(hass.data, {"silabs_multiprotocol_addon_manager": mock_manager}):
+        yield mock_manager
