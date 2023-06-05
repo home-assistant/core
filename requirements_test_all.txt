@@ -1554,7 +1554,7 @@ python-otbr-api==2.1.0
 python-picnic-api==1.1.0
 
 # homeassistant.components.qbittorrent
-python-qbittorrent==0.4.2
+python-qbittorrent==0.4.3
 
 # homeassistant.components.roborock
 python-roborock==0.21.0
