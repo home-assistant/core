@@ -24,7 +24,7 @@ from homeassistant.helpers.selector import (
     SelectSelectorMode,
     TextSelector,
 )
-from homeassistant.util import dt
+from homeassistant.util import dt as dt_util
 
 from .const import (
     ALLOWED_DAYS,
@@ -73,16 +73,16 @@ def validate_custom_dates(user_input: dict[str, Any]) -> None:
     """Validate custom dates for add/remove holidays."""
 
     for add_date in user_input[CONF_ADD_HOLIDAYS]:
-        if dt.parse_date(add_date) is None:
+        if dt_util.parse_date(add_date) is None:
             raise AddDatesError("Incorrect date")
 
-    year: int = dt.now().year
+    year: int = dt_util.now().year
     obj_holidays = country_holidays(
         user_input[CONF_COUNTRY], user_input.get(CONF_PROVINCE), year
     )
 
     for remove_date in user_input[CONF_REMOVE_HOLIDAYS]:
-        if dt.parse_date(remove_date) is None:
+        if dt_util.parse_date(remove_date) is None:
             if obj_holidays.get_named(remove_date) == []:
                 raise RemoveDatesError("Incorrect date or name")
 

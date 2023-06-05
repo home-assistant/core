@@ -53,6 +53,7 @@ class LazyState(State):
         entity_id: str,
         state: str,
         last_updated_ts: float | None,
+        no_attributes: bool,
     ) -> None:
         """Init the lazy state."""
         self._row = row
@@ -143,14 +144,14 @@ def row_to_compressed_state(
     entity_id: str,
     state: str,
     last_updated_ts: float | None,
+    no_attributes: bool,
 ) -> dict[str, Any]:
     """Convert a database row to a compressed state schema 41 and later."""
-    comp_state: dict[str, Any] = {
-        COMPRESSED_STATE_STATE: state,
-        COMPRESSED_STATE_ATTRIBUTES: decode_attributes_from_source(
+    comp_state: dict[str, Any] = {COMPRESSED_STATE_STATE: state}
+    if not no_attributes:
+        comp_state[COMPRESSED_STATE_ATTRIBUTES] = decode_attributes_from_source(
             getattr(row, "attributes", None), attr_cache
-        ),
-    }
+        )
     row_last_updated_ts: float = last_updated_ts or start_time_ts  # type: ignore[assignment]
     comp_state[COMPRESSED_STATE_LAST_UPDATED] = row_last_updated_ts
     if (

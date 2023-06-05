@@ -29,10 +29,7 @@ from homeassistant.helpers import config_validation as cv, event, template
 from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import async_get_platforms
-from homeassistant.helpers.reload import (
-    async_integration_yaml_config,
-    async_reload_integration_platforms,
-)
+from homeassistant.helpers.reload import async_integration_yaml_config
 from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.typing import ConfigType
 
@@ -374,7 +371,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         conf: ConfigType,
     ) -> None:
         """Forward the config entry setup to the platforms and set up discovery."""
-        reload_manual_setup: bool = False
         # Local import to avoid circular dependencies
         # pylint: disable-next=import-outside-toplevel
         from . import device_automation, tag
@@ -399,33 +395,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             )
         # Setup reload service after all platforms have loaded
         await async_setup_reload_service()
-        # When the entry is reloaded, also reload manual set up items to enable MQTT
-        if mqtt_data.reload_entry:
-            mqtt_data.reload_entry = False
-            reload_manual_setup = True
-
-        # When the entry was disabled before, reload manual set up items to enable
-        # MQTT again
-        if mqtt_data.reload_needed:
-            mqtt_data.reload_needed = False
-            reload_manual_setup = True
-
-        if reload_manual_setup:
-            await async_reload_manual_mqtt_items(hass)
 
     await async_forward_entry_setup_and_setup_discovery(entry, conf)
 
     return True
-
-
-async def async_reload_manual_mqtt_items(hass: HomeAssistant) -> None:
-    """Reload manual configured MQTT items."""
-    await hass.services.async_call(
-        DOMAIN,
-        SERVICE_RELOAD,
-        {},
-        blocking=True,
-    )
 
 
 @websocket_api.websocket_command(
@@ -570,17 +543,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Cleanup listeners
     mqtt_client.cleanup()
 
-    # Trigger reload manual MQTT items at entry setup
-    if (mqtt_entry_status := mqtt_config_entry_enabled(hass)) is False:
-        # The entry is disabled reload legacy manual items when
-        # the entry is enabled again
-        mqtt_data.reload_needed = True
-    elif mqtt_entry_status is True:
-        # The entry is reloaded:
-        # Trigger re-fetching the yaml config at entry setup
-        mqtt_data.reload_entry = True
-    # Reload the legacy yaml platform to make entities unavailable
-    await async_reload_integration_platforms(hass, DOMAIN, RELOADABLE_PLATFORMS)
     # Cleanup entity registry hooks
     registry_hooks = mqtt_data.discovery_registry_hooks
     while registry_hooks:

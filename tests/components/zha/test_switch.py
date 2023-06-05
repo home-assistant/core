@@ -176,7 +176,7 @@ async def test_switch(
             cluster.commands_by_name["on"].schema,
             expect_reply=True,
             manufacturer=None,
-            tries=1,
+            tries=3,
             tsn=None,
         )
 
@@ -196,7 +196,7 @@ async def test_switch(
             cluster.commands_by_name["off"].schema,
             expect_reply=True,
             manufacturer=None,
-            tries=1,
+            tries=3,
             tsn=None,
         )
 
