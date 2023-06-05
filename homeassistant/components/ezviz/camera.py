@@ -17,7 +17,11 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv, discovery_flow
+from homeassistant.helpers import (
+    config_validation as cv,
+    discovery_flow,
+    issue_registry as ir,
+)
 from homeassistant.helpers.entity_platform import (
     AddEntitiesCallback,
     async_get_current_platform,
@@ -34,7 +38,6 @@ from .const import (
     DATA_COORDINATOR,
     DEFAULT_CAMERA_USERNAME,
     DEFAULT_FFMPEG_ARGUMENTS,
-    DEFAULT_RTSP_PORT,
     DIR_DOWN,
     DIR_LEFT,
     DIR_RIGHT,
@@ -70,24 +73,17 @@ async def async_setup_entry(
             if item.unique_id == camera and item.source != SOURCE_IGNORE
         ]
 
-        # There seem to be a bug related to localRtspPort in EZVIZ API.
-        local_rtsp_port = (
-            value["local_rtsp_port"]
-            if value["local_rtsp_port"] != 0
-            else DEFAULT_RTSP_PORT
-        )
-
         if camera_rtsp_entry:
             ffmpeg_arguments = camera_rtsp_entry[0].options[CONF_FFMPEG_ARGUMENTS]
             camera_username = camera_rtsp_entry[0].data[CONF_USERNAME]
             camera_password = camera_rtsp_entry[0].data[CONF_PASSWORD]
 
-            camera_rtsp_stream = f"rtsp://{camera_username}:{camera_password}@{value['local_ip']}:{local_rtsp_port}{ffmpeg_arguments}"
+            camera_rtsp_stream = f"rtsp://{camera_username}:{camera_password}@{value['local_ip']}:{value['local_rtsp_port']}{ffmpeg_arguments}"
             _LOGGER.debug(
                 "Configuring Camera %s with ip: %s rtsp port: %s ffmpeg arguments: %s",
                 camera,
                 value["local_ip"],
-                local_rtsp_port,
+                value["local_rtsp_port"],
                 ffmpeg_arguments,
             )
 
@@ -123,7 +119,7 @@ async def async_setup_entry(
                 camera_username,
                 camera_password,
                 camera_rtsp_stream,
-                local_rtsp_port,
+                value["local_rtsp_port"],
                 ffmpeg_arguments,
             )
         )
@@ -311,3 +307,13 @@ class EzvizCamera(EzvizEntity, Camera):
             )
         except (HTTPError, PyEzvizError) as err:
             raise PyEzvizError("Cannot set detection sensitivity level") from err
+
+        ir.async_create_issue(
+            self.hass,
+            DOMAIN,
+            "service_depreciation_detection_sensibility",
+            breaks_in_ha_version="2023.8.0",
+            is_fixable=False,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="service_depreciation_detection_sensibility",
+        )

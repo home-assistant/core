@@ -38,7 +38,7 @@ from homeassistant.core import HomeAssistant, ServiceCall
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.util import color, dt
+from homeassistant.util import color, dt as dt_util
 
 from .const import (
     CONF_DEVICE,
@@ -362,7 +362,7 @@ class XiaomiPhilipsGenericLight(XiaomiPhilipsAbstractLight):
 
         delayed_turn_off = self.delayed_turn_off_timestamp(
             state.delay_off_countdown,
-            dt.utcnow(),
+            dt_util.utcnow(),
             self._state_attrs[ATTR_DELAYED_TURN_OFF],
         )
 
@@ -523,7 +523,7 @@ class XiaomiPhilipsBulb(XiaomiPhilipsGenericLight):
 
         delayed_turn_off = self.delayed_turn_off_timestamp(
             state.delay_off_countdown,
-            dt.utcnow(),
+            dt_util.utcnow(),
             self._state_attrs[ATTR_DELAYED_TURN_OFF],
         )
 
@@ -582,7 +582,7 @@ class XiaomiPhilipsCeilingLamp(XiaomiPhilipsBulb):
 
         delayed_turn_off = self.delayed_turn_off_timestamp(
             state.delay_off_countdown,
-            dt.utcnow(),
+            dt_util.utcnow(),
             self._state_attrs[ATTR_DELAYED_TURN_OFF],
         )
 
@@ -625,7 +625,7 @@ class XiaomiPhilipsEyecareLamp(XiaomiPhilipsGenericLight):
 
         delayed_turn_off = self.delayed_turn_off_timestamp(
             state.delay_off_countdown,
-            dt.utcnow(),
+            dt_util.utcnow(),
             self._state_attrs[ATTR_DELAYED_TURN_OFF],
         )
 

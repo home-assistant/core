@@ -1,7 +1,7 @@
 """The tests for the generic_hygrostat."""
 import datetime
-from unittest.mock import patch
 
+from freezegun import freeze_time
 import pytest
 import voluptuous as vol
 
@@ -855,9 +855,7 @@ async def test_humidity_change_dry_trigger_on_long_enough(
     fake_changed = datetime.datetime(
         1970, 11, 11, 11, 11, 11, tzinfo=datetime.timezone.utc
     )
-    with patch(
-        "homeassistant.helpers.condition.dt_util.utcnow", return_value=fake_changed
-    ):
+    with freeze_time(fake_changed):
         calls = await _setup_switch(hass, False)
     _setup_sensor(hass, 35)
     await hass.async_block_till_done()
@@ -893,9 +891,7 @@ async def test_humidity_change_dry_trigger_off_long_enough(
     fake_changed = datetime.datetime(
         1970, 11, 11, 11, 11, 11, tzinfo=datetime.timezone.utc
     )
-    with patch(
-        "homeassistant.helpers.condition.dt_util.utcnow", return_value=fake_changed
-    ):
+    with freeze_time(fake_changed):
         calls = await _setup_switch(hass, True)
     _setup_sensor(hass, 45)
     await hass.async_block_till_done()
@@ -1021,9 +1017,7 @@ async def test_humidity_change_humidifier_trigger_on_long_enough(
     fake_changed = datetime.datetime(
         1970, 11, 11, 11, 11, 11, tzinfo=datetime.timezone.utc
     )
-    with patch(
-        "homeassistant.helpers.condition.dt_util.utcnow", return_value=fake_changed
-    ):
+    with freeze_time(fake_changed):
         calls = await _setup_switch(hass, False)
     _setup_sensor(hass, 45)
     await hass.async_block_till_done()
@@ -1045,9 +1039,7 @@ async def test_humidity_change_humidifier_trigger_off_long_enough(
     fake_changed = datetime.datetime(
         1970, 11, 11, 11, 11, 11, tzinfo=datetime.timezone.utc
     )
-    with patch(
-        "homeassistant.helpers.condition.dt_util.utcnow", return_value=fake_changed
-    ):
+    with freeze_time(fake_changed):
         calls = await _setup_switch(hass, True)
     _setup_sensor(hass, 35)
     await hass.async_block_till_done()

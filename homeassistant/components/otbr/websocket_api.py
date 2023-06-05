@@ -1,8 +1,10 @@
 """Websocket API for OTBR."""
-from typing import TYPE_CHECKING
+
+from typing import cast
 
 import python_otbr_api
 from python_otbr_api import tlv_parser
+from python_otbr_api.tlv_parser import MeshcopTLVType
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
@@ -11,10 +13,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 
 from .const import DEFAULT_CHANNEL, DOMAIN
-from .util import get_allowed_channel
-
-if TYPE_CHECKING:
-    from . import OTBRData
+from .util import OTBRData, get_allowed_channel, update_issues
 
 
 @callback
@@ -84,7 +83,7 @@ async def websocket_create_network(
 
     try:
         await data.create_active_dataset(
-            python_otbr_api.OperationalDataSet(
+            python_otbr_api.ActiveDataSet(
                 channel=channel, network_name="home-assistant"
             )
         )
@@ -108,6 +107,9 @@ async def websocket_create_network(
         return
 
     await async_add_dataset(hass, DOMAIN, dataset_tlvs.hex())
+
+    # Update repair issues
+    await update_issues(hass, data, dataset_tlvs)
 
     connection.send_result(msg["id"])
 
@@ -134,8 +136,8 @@ async def websocket_set_network(
         connection.send_error(msg["id"], "unknown_dataset", "Unknown dataset")
         return
     dataset = tlv_parser.parse_tlv(dataset_tlv)
-    if channel_str := dataset.get(tlv_parser.MeshcopTLVType.CHANNEL):
-        thread_dataset_channel = int(channel_str, base=16)
+    if channel := dataset.get(MeshcopTLVType.CHANNEL):
+        thread_dataset_channel = cast(tlv_parser.Channel, channel).channel
 
     data: OTBRData = hass.data[DOMAIN]
     allowed_channel = await get_allowed_channel(hass, data.url)
@@ -166,6 +168,9 @@ async def websocket_set_network(
     except HomeAssistantError as exc:
         connection.send_error(msg["id"], "set_enabled_failed", str(exc))
         return
+
+    # Update repair issues
+    await update_issues(hass, data, bytes.fromhex(dataset_tlv))
 
     connection.send_result(msg["id"])
 

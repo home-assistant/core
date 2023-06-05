@@ -35,7 +35,7 @@ from homeassistant.helpers.event import (
     async_track_point_in_time,
     async_track_state_change_event,
 )
-from homeassistant.helpers.start import async_at_start
+from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.template import is_number
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import slugify
@@ -94,7 +94,6 @@ DEVICE_CLASS_MAP = {
     UnitOfEnergy.KILO_WATT_HOUR: SensorDeviceClass.ENERGY,
 }
 
-ICON = "mdi:counter"
 
 PRECISION = 3
 PAUSED = "paused"
@@ -323,6 +322,7 @@ class UtilitySensorExtraStoredData(SensorExtraStoredData):
 class UtilityMeterSensor(RestoreSensor):
     """Representation of an utility meter sensor."""
 
+    _attr_icon = "mdi:counter"
     _attr_should_poll = False
 
     def __init__(
@@ -410,8 +410,11 @@ class UtilityMeterSensor(RestoreSensor):
 
         if (old_state_val := self._validate_state(old_state)) is not None:
             return new_state_val - old_state_val
-        _LOGGER.warning(
-            "Invalid state (%s > %s)",
+
+        _LOGGER.debug(
+            "%s received an invalid state change coming from %s (%s > %s)",
+            self.name,
+            self._sensor_source_id,
             old_state.state if old_state else None,
             new_state_val,
         )
@@ -420,11 +423,26 @@ class UtilityMeterSensor(RestoreSensor):
     @callback
     def async_reading(self, event: Event):
         """Handle the sensor state changes."""
+        if (
+            source_state := self.hass.states.get(self._sensor_source_id)
+        ) is None or source_state.state == STATE_UNAVAILABLE:
+            self._attr_available = False
+            self.async_write_ha_state()
+            return
+
+        self._attr_available = True
+
         old_state: State | None = event.data.get("old_state")
         new_state: State = event.data.get("new_state")  # type: ignore[assignment] # a state change event always has a new state
 
+        # First check if the new_state is valid (see discussion in PR #88446)
         if (new_state_val := self._validate_state(new_state)) is None:
-            _LOGGER.warning("Invalid state %s", new_state.state)
+            _LOGGER.warning(
+                "%s received an invalid new state from %s : %s",
+                self.name,
+                self._sensor_source_id,
+                new_state.state,
+            )
             return
 
         if self._state is None:
@@ -597,7 +615,7 @@ class UtilityMeterSensor(RestoreSensor):
                 self.hass, [self._sensor_source_id], self.async_reading
             )
 
-        self.async_on_remove(async_at_start(self.hass, async_source_tracking))
+        self.async_on_remove(async_at_started(self.hass, async_source_tracking))
 
     async def async_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from hass."""
@@ -658,11 +676,6 @@ class UtilityMeterSensor(RestoreSensor):
             state_attr[ATTR_LAST_RESET] = last_reset.isoformat()
 
         return state_attr
-
-    @property
-    def icon(self):
-        """Return the icon to use in the frontend, if any."""
-        return ICON
 
     @property
     def extra_restore_state_data(self) -> UtilitySensorExtraStoredData:

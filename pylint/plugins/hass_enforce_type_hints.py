@@ -135,12 +135,12 @@ _TEST_FIXTURES: dict[str, list[str] | str] = {
     "mock_zeroconf": "None",
     "mqtt_client_mock": "MqttMockPahoClient",
     "mqtt_mock": "MqttMockHAClient",
-    "mqtt_mock_entry_no_yaml_config": "MqttMockHAClientGenerator",
-    "mqtt_mock_entry_with_yaml_config": "MqttMockHAClientGenerator",
+    "mqtt_mock_entry": "MqttMockHAClientGenerator",
     "recorder_db_url": "str",
     "recorder_mock": "Recorder",
     "requests_mock": "requests_mock.Mocker",
     "snapshot": "SnapshotAssertion",
+    "stub_blueprint_populate": "None",
     "tmp_path": "Path",
     "tmpdir": "py.path.local",
 }
@@ -201,6 +201,14 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
                 2: "DeviceEntry",
             },
             return_type="bool",
+        ),
+        TypeHintMatch(
+            function_name="async_reset_platform",
+            arg_types={
+                0: "HomeAssistant",
+                1: "str",
+            },
+            return_type=None,
         ),
     ],
     "__any_platform__": [
@@ -2442,7 +2450,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 ),
                 TypeHintMatch(
                     function_name="get_tts_audio",
-                    arg_types={1: "str", 2: "str", 3: "dict[str, Any] | None"},
+                    arg_types={1: "str", 2: "str", 3: "dict[str, Any]"},
                     return_type="TtsAudioType",
                     has_async_counterpart=True,
                 ),

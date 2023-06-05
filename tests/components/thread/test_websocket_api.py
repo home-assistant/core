@@ -153,6 +153,7 @@ async def test_list_get_dataset(
     assert msg["result"] == {
         "datasets": [
             {
+                "channel": 15,
                 "created": dataset_1.created.isoformat(),
                 "dataset_id": dataset_1.id,
                 "extended_pan_id": "1111111122222222",
@@ -162,18 +163,20 @@ async def test_list_get_dataset(
                 "source": "Google",
             },
             {
+                "channel": 15,
                 "created": dataset_2.created.isoformat(),
                 "dataset_id": dataset_2.id,
-                "extended_pan_id": "1111111122222222",
+                "extended_pan_id": "1111111122222233",
                 "network_name": "HomeAssistant!",
                 "pan_id": "1234",
                 "preferred": False,
                 "source": "Multipan",
             },
             {
+                "channel": 15,
                 "created": dataset_3.created.isoformat(),
                 "dataset_id": dataset_3.id,
-                "extended_pan_id": "1111111122222222",
+                "extended_pan_id": "1111111122222244",
                 "network_name": "~🐣🐥🐤~",
                 "pan_id": "1234",
                 "preferred": False,

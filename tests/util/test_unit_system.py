@@ -457,6 +457,25 @@ def test_get_unit_system_invalid(key: str) -> None:
         (SensorDeviceClass.WATER, UnitOfVolume.CUBIC_METERS, None),
         (SensorDeviceClass.WATER, UnitOfVolume.LITERS, None),
         (SensorDeviceClass.WATER, "very_much", None),
+        # Test wind speed conversion
+        (
+            SensorDeviceClass.WIND_SPEED,
+            UnitOfSpeed.FEET_PER_SECOND,
+            UnitOfSpeed.KILOMETERS_PER_HOUR,
+        ),
+        (
+            SensorDeviceClass.WIND_SPEED,
+            UnitOfSpeed.MILES_PER_HOUR,
+            UnitOfSpeed.KILOMETERS_PER_HOUR,
+        ),
+        (SensorDeviceClass.WIND_SPEED, UnitOfSpeed.KILOMETERS_PER_HOUR, None),
+        (SensorDeviceClass.WIND_SPEED, UnitOfSpeed.KNOTS, None),
+        (
+            SensorDeviceClass.WIND_SPEED,
+            UnitOfSpeed.METERS_PER_SECOND,
+            UnitOfSpeed.KILOMETERS_PER_HOUR,
+        ),
+        (SensorDeviceClass.WIND_SPEED, "very_fast", None),
     ),
 )
 def test_get_metric_converted_unit_(
@@ -657,6 +676,25 @@ def test_metric_converted_units(device_class: SensorDeviceClass) -> None:
         (SensorDeviceClass.WATER, UnitOfVolume.CUBIC_FEET, None),
         (SensorDeviceClass.WATER, UnitOfVolume.GALLONS, None),
         (SensorDeviceClass.WATER, "very_much", None),
+        # Test wind speed conversion
+        (
+            SensorDeviceClass.WIND_SPEED,
+            UnitOfSpeed.METERS_PER_SECOND,
+            UnitOfSpeed.MILES_PER_HOUR,
+        ),
+        (
+            SensorDeviceClass.WIND_SPEED,
+            UnitOfSpeed.KILOMETERS_PER_HOUR,
+            UnitOfSpeed.MILES_PER_HOUR,
+        ),
+        (
+            SensorDeviceClass.WIND_SPEED,
+            UnitOfSpeed.FEET_PER_SECOND,
+            UnitOfSpeed.MILES_PER_HOUR,
+        ),
+        (SensorDeviceClass.WIND_SPEED, UnitOfSpeed.KNOTS, None),
+        (SensorDeviceClass.WIND_SPEED, UnitOfSpeed.MILES_PER_HOUR, None),
+        (SensorDeviceClass.WIND_SPEED, "very_fast", None),
     ),
 )
 def test_get_us_converted_unit(

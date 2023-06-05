@@ -16,7 +16,7 @@ _LOGGER = logging.getLogger(__name__)
 DATA_INTEGRATION_PLATFORMS = "integration_platforms"
 
 
-@dataclass(frozen=True)
+@dataclass(slots=True, frozen=True)
 class IntegrationPlatform:
     """An integration platform."""
 

@@ -1,6 +1,7 @@
 """Implement the Google Smart Home traits."""
 from __future__ import annotations
 
+from abc import ABC, abstractmethod
 import logging
 from typing import Any, TypeVar
 
@@ -67,7 +68,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import DOMAIN as HA_DOMAIN
 from homeassistant.helpers.network import get_url
-from homeassistant.util import color as color_util, dt
+from homeassistant.util import color as color_util, dt as dt_util
 from homeassistant.util.percentage import (
     ordered_list_item_to_percentage,
     percentage_to_ordered_list_item,
@@ -75,7 +76,6 @@ from homeassistant.util.percentage import (
 from homeassistant.util.unit_conversion import TemperatureConverter
 
 from .const import (
-    CHALLENGE_ACK_NEEDED,
     CHALLENGE_FAILED_PIN_NEEDED,
     CHALLENGE_PIN_NEEDED,
     ERR_ALREADY_ARMED,
@@ -197,15 +197,21 @@ def _next_selected(items: list[str], selected: str | None) -> str | None:
     return items[next_item]
 
 
-class _Trait:
+class _Trait(ABC):
     """Represents a Trait inside Google Assistant skill."""
 
+    name: str
     commands: list[str] = []
 
     @staticmethod
     def might_2fa(domain, features, device_class):
         """Return if the trait might ask for 2FA."""
         return False
+
+    @staticmethod
+    @abstractmethod
+    def supported(domain, features, device_class, attributes):
+        """Test if state is supported."""
 
     def __init__(self, hass, state, config):
         """Initialize a trait for a state."""
@@ -2131,14 +2137,6 @@ def _verify_pin_challenge(data, state, challenge):
         raise ChallengeNeeded(CHALLENGE_FAILED_PIN_NEEDED)
 
 
-def _verify_ack_challenge(data, state, challenge):
-    """Verify an ack challenge."""
-    if not data.config.should_2fa(state):
-        return
-    if not challenge or not challenge.get("ack"):
-        raise ChallengeNeeded(CHALLENGE_ACK_NEEDED)
-
-
 MEDIA_COMMAND_SUPPORT_MAPPING = {
     COMMAND_MEDIA_NEXT: media_player.SUPPORT_NEXT_TRACK,
     COMMAND_MEDIA_PAUSE: media_player.SUPPORT_PAUSE,
@@ -2220,7 +2218,7 @@ class TransportControlTrait(_Trait):
             rel_position = params["relativePositionMs"] / 1000
             seconds_since = 0  # Default to 0 seconds
             if self.state.state == STATE_PLAYING:
-                now = dt.utcnow()
+                now = dt_util.utcnow()
                 upd_at = self.state.attributes.get(
                     media_player.ATTR_MEDIA_POSITION_UPDATED_AT, now
                 )

@@ -9,6 +9,7 @@ from homeassistant.components.imap_email_content import sensor as imap_email_con
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.event import async_track_state_change
 from homeassistant.helpers.template import Template
+from homeassistant.setup import async_setup_component
 
 
 class FakeEMailReader:
@@ -35,6 +36,11 @@ class FakeEMailReader:
             return None
         self.last_id += 1
         return self._messages.popleft()
+
+
+async def test_integration_setup_(hass: HomeAssistant) -> None:
+    """Test the integration component setup is successful."""
+    assert await async_setup_component(hass, "imap_email_content", {})
 
 
 async def test_allowed_sender(hass: HomeAssistant) -> None:

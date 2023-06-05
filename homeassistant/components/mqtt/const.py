@@ -35,6 +35,7 @@ CONF_CLIENT_CERT = "client_cert"
 CONF_TLS_INSECURE = "tls_insecure"
 
 DATA_MQTT = "mqtt"
+DATA_MQTT_AVAILABLE = "mqtt_client_available"
 
 DEFAULT_PREFIX = "homeassistant"
 DEFAULT_BIRTH_WILL_TOPIC = DEFAULT_PREFIX + "/status"
@@ -46,6 +47,7 @@ DEFAULT_PAYLOAD_AVAILABLE = "online"
 DEFAULT_PAYLOAD_NOT_AVAILABLE = "offline"
 DEFAULT_PORT = 1883
 DEFAULT_RETAIN = False
+DEFAULT_WS_HEADERS: dict[str, str] = {}
 DEFAULT_WS_PATH = "/"
 
 PROTOCOL_31 = "3.1"
@@ -113,6 +115,7 @@ RELOADABLE_PLATFORMS = [
     Platform.CAMERA,
     Platform.CLIMATE,
     Platform.COVER,
+    Platform.DEVICE_TRACKER,
     Platform.FAN,
     Platform.HUMIDIFIER,
     Platform.LIGHT,
