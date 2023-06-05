@@ -28,7 +28,7 @@ from homeassistant.helpers import device_registry as dr, entity, entity_registry
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from homeassistant.util import dt
+from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN, VOLT_AMPERE_REACTIVE, VOLT_AMPERE_REACTIVE_HOURS
 from .coordinator import IotawattUpdater
@@ -203,7 +203,7 @@ class IotaWattSensor(CoordinatorEntity[IotawattUpdater], SensorEntity):
             return
 
         if (begin := self._sensor_data.getBegin()) and (
-            last_reset := dt.parse_datetime(begin)
+            last_reset := dt_util.parse_datetime(begin)
         ):
             self._attr_last_reset = last_reset
 
