@@ -21,18 +21,6 @@ from tests.components.lastfm import (
 
 ComponentSetup = Callable[[MockConfigEntry, MockUser], Awaitable[None]]
 
-BUILD = "homeassistant.components.google_mail.api.build"
-CLIENT_ID = "1234"
-CLIENT_SECRET = "5678"
-GOOGLE_AUTH_URI = "https://accounts.google.com/o/oauth2/v2/auth"
-GOOGLE_TOKEN_URI = "https://oauth2.googleapis.com/token"
-SCOPES = [
-    "https://www.googleapis.com/auth/youtube.readonly",
-]
-SENSOR = "sensor.example_gmail_com_vacation_end_date"
-TITLE = "Google for Developers"
-TOKEN = "homeassistant.components.youtube.api.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid"
-
 
 @pytest.fixture(name="config_entry")
 def mock_config_entry() -> MockConfigEntry:
