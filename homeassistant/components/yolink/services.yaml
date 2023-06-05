@@ -1,0 +1,52 @@
+play_on_speaker_hub:
+  name: Play on Speaker Hub
+  description: Play audio on YoLink Speaker Hub
+  fields:
+    target_device:
+      name: Speaker Hub
+      description: Speaker Hub device
+      required: true
+      selector:
+        device:
+          filter:
+            - integration: yolink
+
+    message:
+      name: Text message
+      description: Text message
+      required: true
+      example: hello, yolink
+      selector:
+        text:
+    tone:
+      name: Tone
+      description: Tone
+      required: true
+      default: "Tip"
+      selector:
+        select:
+          options:
+            - "Emergency"
+            - "Alert"
+            - "Warn"
+            - "Tip"
+    volume:
+      name: Volume
+      description: Volume
+      required: true
+      default: 8
+      selector:
+        number:
+          min: 0
+          max: 15
+          step: 1
+    repeat:
+      name: Repeat
+      description: Repeat times
+      required: true
+      default: 0
+      selector:
+        number:
+          min: 0
+          max: 10
+          step: 1

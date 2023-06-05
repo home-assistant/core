@@ -7,7 +7,7 @@ from datetime import timedelta
 from typing import Any
 
 import async_timeout
-from yolink.const import ATTR_DEVICE_SMART_REMOTER
+from yolink.const import ATTR_DEVICE_SMART_REMOTER, ATTR_DEVICE_SPEAKER_HUB
 from yolink.device import YoLinkDevice
 from yolink.exception import YoLinkAuthFailError, YoLinkClientError
 from yolink.home_manager import YoLinkHome
@@ -24,9 +24,10 @@ from homeassistant.helpers import (
 )
 
 from . import api
-from .const import DOMAIN, YOLINK_EVENT
+from .const import DOMAIN, MANUFACTURER, YOLINK_EVENT
 from .coordinator import YoLinkCoordinator
 from .device_trigger import CONF_LONG_PRESS, CONF_SHORT_PRESS
+from .services import async_register_services
 
 SCAN_INTERVAL = timedelta(minutes=5)
 
@@ -133,6 +134,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         yolink_home, device_coordinators
     )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    # Speaker Hub devices registration
+    for device_coordinator in device_coordinators.values():
+        if device_coordinator.device.device_type == ATTR_DEVICE_SPEAKER_HUB:
+            device_registry = dr.async_get(hass)
+            device_registry.async_get_or_create(
+                config_entry_id=entry.entry_id,
+                identifiers={(DOMAIN, device_coordinator.device.device_id)},
+                manufacturer=MANUFACTURER,
+                name=device_coordinator.device.device_name,
+                model=device_coordinator.device.device_type,
+            )
+    async_register_services(hass)
 
     async def async_yolink_unload(event) -> None:
         """Unload yolink."""
