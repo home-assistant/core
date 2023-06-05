@@ -693,7 +693,7 @@ class MqttClimate(MqttTemperatureControlEntity, ClimateEntity):
 
         self._optimistic = config[CONF_OPTIMISTIC]
 
-        # convert init temp to target unit if this is not Celsius
+        # Set init temp, if it is missing convert the default to the temperature units
         init_temp: float = config.get(
             CONF_TEMP_INITIAL,
             TemperatureConverter.convert(
