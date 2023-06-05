@@ -1,5 +1,4 @@
 """Exceptions raised by IMAP integration."""
-
 from homeassistant.exceptions import HomeAssistantError
 
 
