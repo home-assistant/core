@@ -100,22 +100,23 @@ async def async_setup_entry(
         ),
         return_exceptions=True,
     )
-    for result in results:
+    valid_entities: list[RoborockSwitchEntity] = []
+    for posible_entity, result in zip(possible_entities, results):
         if isinstance(result, Exception):
             if not isinstance(result, RoborockException):
                 raise result
-            _LOGGER.info("Not setting a entity because of %s", result)
-    async_add_entities(
-        (
-            RoborockSwitchEntity(
-                f"{posible_entity[2].key}_{slugify(posible_entity[0])}",
-                posible_entity[1],
-                posible_entity[2],
-                result,
+            _LOGGER.debug("Not adding entity because of %s", result)
+        else:
+            valid_entities.append(
+                RoborockSwitchEntity(
+                    f"{posible_entity[2].key}_{slugify(posible_entity[0])}",
+                    posible_entity[1],
+                    posible_entity[2],
+                    result,
+                )
             )
-            for posible_entity, result in zip(possible_entities, results)
-            if not isinstance(result, RoborockException) and result is not None
-        ),
+    async_add_entities(
+        valid_entities,
         True,
     )
 
