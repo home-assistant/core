@@ -1733,7 +1733,7 @@ pyintesishome==1.8.0
 pyipma==3.0.6
 
 # homeassistant.components.ipp
-pyipp==0.13.0
+pyipp==0.14.0
 
 # homeassistant.components.iqvia
 pyiqvia==2022.04.0
@@ -1853,7 +1853,7 @@ pynetio==0.1.9.1
 pynobo==1.6.0
 
 # homeassistant.components.nuki
-pynuki==1.6.1
+pynuki==1.6.2
 
 # homeassistant.components.nut
 pynut2==2.1.2
@@ -2140,7 +2140,7 @@ python-qbittorrent==0.4.2
 python-ripple-api==0.0.3
 
 # homeassistant.components.roborock
-python-roborock==0.17.0
+python-roborock==0.21.0
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.33
@@ -2682,7 +2682,7 @@ wyoming==0.0.1
 xbox-webapi==2.0.11
 
 # homeassistant.components.xiaomi_ble
-xiaomi-ble==0.17.0
+xiaomi-ble==0.17.2
 
 # homeassistant.components.knx
 xknx==2.10.0
@@ -2733,7 +2733,7 @@ zamg==0.2.2
 zengge==0.2
 
 # homeassistant.components.zeroconf
-zeroconf==0.63.0
+zeroconf==0.64.0
 
 # homeassistant.components.zeversolar
 zeversolar==0.3.1
