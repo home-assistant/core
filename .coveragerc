@@ -804,6 +804,7 @@ omit =
     homeassistant/components/nexia/switch.py
     homeassistant/components/nextcloud/__init__.py
     homeassistant/components/nextcloud/binary_sensor.py
+    homeassistant/components/nextcloud/const.py
     homeassistant/components/nextcloud/coordinator.py
     homeassistant/components/nextcloud/entity.py
     homeassistant/components/nextcloud/sensor.py
