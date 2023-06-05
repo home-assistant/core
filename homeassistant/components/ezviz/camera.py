@@ -290,13 +290,6 @@ class EzvizCamera(EzvizEntity, Camera):
 
     def perform_alarm_sound(self, level: int) -> None:
         """Enable/Disable movement sound alarm."""
-        try:
-            self.coordinator.ezviz_client.alarm_sound(self._serial, level, 1)
-        except HTTPError as err:
-            raise HTTPError(
-                "Cannot set alarm sound level for on movement detected"
-            ) from err
-
         ir.async_create_issue(
             self.hass,
             DOMAIN,
@@ -306,6 +299,12 @@ class EzvizCamera(EzvizEntity, Camera):
             severity=ir.IssueSeverity.WARNING,
             translation_key="service_depreciation_alarm_sound_level",
         )
+        try:
+            self.coordinator.ezviz_client.alarm_sound(self._serial, level, 1)
+        except HTTPError as err:
+            raise HTTPError(
+                "Cannot set alarm sound level for on movement detected"
+            ) from err
 
     def perform_set_alarm_detection_sensibility(
         self, level: int, type_value: int
