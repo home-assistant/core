@@ -1733,7 +1733,7 @@ pyintesishome==1.8.0
 pyipma==3.0.6
 
 # homeassistant.components.ipp
-pyipp==0.13.0
+pyipp==0.14.0
 
 # homeassistant.components.iqvia
 pyiqvia==2022.04.0
@@ -2733,7 +2733,7 @@ zamg==0.2.2
 zengge==0.2
 
 # homeassistant.components.zeroconf
-zeroconf==0.63.0
+zeroconf==0.64.0
 
 # homeassistant.components.zeversolar
 zeversolar==0.3.1
