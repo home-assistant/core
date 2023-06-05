@@ -3,7 +3,6 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .coordinator import OwletCoordinator
 
-
 class OwletBaseEntity(CoordinatorEntity[OwletCoordinator]):
     """Base class for Owlet Sock entities."""
 
