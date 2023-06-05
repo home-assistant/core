@@ -115,8 +115,6 @@ class NextBusDepartureSensor(SensorEntity):
         if name:
             self._attr_name = name
 
-        self._attr_unique_id = "_".join((agency, route, stop))
-
         self._client = client
 
     def _log_debug(self, message, *args):
