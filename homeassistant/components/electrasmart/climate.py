@@ -117,7 +117,7 @@ class ElectraClimateEntity(ClimateEntity):
         self._attr_name = device.name
         self._attr_unique_id = device.mac
         self._attr_supported_features = (
-            ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.FAN_MODE
+            ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.FAN_MODE | ClimateEntityFeature.PRESET_MODE
         )
 
         swing_modes: list = []
