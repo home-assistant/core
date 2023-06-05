@@ -101,6 +101,7 @@ RESET_METER_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
 SET_CONFIG_PARAMETER_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_TYPE): SERVICE_SET_CONFIG_PARAMETER,
+        vol.Required(ATTR_ENDPOINT): vol.Coerce(int),
         vol.Required(ATTR_CONFIG_PARAMETER): vol.Any(int, str),
         vol.Required(ATTR_CONFIG_PARAMETER_BITMASK): vol.Any(None, int, str),
         vol.Required(ATTR_VALUE): vol.Coerce(int),
@@ -168,6 +169,7 @@ async def async_get_actions(
             {
                 **base_action,
                 CONF_TYPE: SERVICE_SET_CONFIG_PARAMETER,
+                ATTR_ENDPOINT: config_value.endpoint,
                 ATTR_CONFIG_PARAMETER: config_value.property_,
                 ATTR_CONFIG_PARAMETER_BITMASK: config_value.property_key,
                 CONF_SUBTYPE: generate_config_parameter_subtype(config_value),
@@ -347,6 +349,7 @@ async def async_get_action_capabilities(
             CommandClass.CONFIGURATION,
             config[ATTR_CONFIG_PARAMETER],
             property_key=config[ATTR_CONFIG_PARAMETER_BITMASK],
+            endpoint=config[ATTR_ENDPOINT],
         )
         value_schema = get_config_parameter_value_schema(node, value_id)
         if value_schema is None:

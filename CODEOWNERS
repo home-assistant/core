@@ -240,6 +240,8 @@ build.json @home-assistant/supervisor
 /tests/components/daikin/ @fredrike
 /homeassistant/components/date/ @home-assistant/core
 /tests/components/date/ @home-assistant/core
+/homeassistant/components/datetime/ @home-assistant/core
+/tests/components/datetime/ @home-assistant/core
 /homeassistant/components/debugpy/ @frenck
 /tests/components/debugpy/ @frenck
 /homeassistant/components/deconz/ @Kane610
@@ -287,6 +289,8 @@ build.json @home-assistant/supervisor
 /tests/components/doorbird/ @oblogic7 @bdraco @flacjacket
 /homeassistant/components/dormakaba_dkey/ @emontnemery
 /tests/components/dormakaba_dkey/ @emontnemery
+/homeassistant/components/dremel_3d_printer/ @tkdrob
+/tests/components/dremel_3d_printer/ @tkdrob
 /homeassistant/components/dsmr/ @Robbie1221 @frenck
 /tests/components/dsmr/ @Robbie1221 @frenck
 /homeassistant/components/dsmr_reader/ @depl0y @glodenox
@@ -446,8 +450,8 @@ build.json @home-assistant/supervisor
 /tests/components/glances/ @engrbm87
 /homeassistant/components/goalzero/ @tkdrob
 /tests/components/goalzero/ @tkdrob
-/homeassistant/components/gogogate2/ @vangorra @bdraco
-/tests/components/gogogate2/ @vangorra @bdraco
+/homeassistant/components/gogogate2/ @vangorra
+/tests/components/gogogate2/ @vangorra
 /homeassistant/components/goodwe/ @mletenay @starkillerOG
 /tests/components/goodwe/ @mletenay @starkillerOG
 /homeassistant/components/google/ @allenporter
@@ -561,8 +565,8 @@ build.json @home-assistant/supervisor
 /tests/components/image_processing/ @home-assistant/core
 /homeassistant/components/image_upload/ @home-assistant/core
 /tests/components/image_upload/ @home-assistant/core
-/homeassistant/components/imap/ @engrbm87 @jbouwh
-/tests/components/imap/ @engrbm87 @jbouwh
+/homeassistant/components/imap/ @jbouwh
+/tests/components/imap/ @jbouwh
 /homeassistant/components/incomfort/ @zxdavb
 /homeassistant/components/influxdb/ @mdegat01
 /tests/components/influxdb/ @mdegat01
@@ -959,6 +963,7 @@ build.json @home-assistant/supervisor
 /tests/components/qingping/ @bdraco @skgsergio
 /homeassistant/components/qld_bushfire/ @exxamalte
 /tests/components/qld_bushfire/ @exxamalte
+/homeassistant/components/qnap/ @disforw
 /homeassistant/components/qnap_qsw/ @Noltari
 /tests/components/qnap_qsw/ @Noltari
 /homeassistant/components/quantum_gateway/ @cisasteelersfan
