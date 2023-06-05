@@ -847,3 +847,25 @@ async def test_entities_in_person(hass: HomeAssistant) -> None:
         "device_tracker.paulus_iphone",
         "device_tracker.paulus_ipad",
     ]
+
+
+async def test_extra_attributes(hass: HomeAssistant) -> None:
+    """Test extra attributes."""
+    config = {
+        DOMAIN: {
+            "id": "1234",
+            "name": "test person",
+            "extra_attributes": {"address": "123, fake st", "mobile": "489032984"},
+        }
+    }
+    assert await async_setup_component(hass, DOMAIN, config)
+
+    state = hass.states.get("person.test_person")
+    assert state.state == STATE_UNKNOWN
+    assert state.attributes.get(ATTR_LATITUDE) is None
+    assert state.attributes.get(ATTR_LONGITUDE) is None
+    assert state.attributes.get(ATTR_SOURCE) is None
+    assert state.attributes.get(ATTR_USER_ID) is None
+    assert state.attributes.get(ATTR_ENTITY_PICTURE) is None
+    assert state.attributes.get("address") == "123, fake st"
+    assert state.attributes.get("mobile") == "489032984"

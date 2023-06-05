@@ -60,10 +60,12 @@ _LOGGER = logging.getLogger(__name__)
 ATTR_SOURCE = "source"
 ATTR_USER_ID = "user_id"
 ATTR_DEVICE_TRACKERS = "device_trackers"
+ATTR_EXTRA_ATTRIBUTES = "extra_attributes"
 
 CONF_DEVICE_TRACKERS = "device_trackers"
 CONF_USER_ID = "user_id"
 CONF_PICTURE = "picture"
+CONF_EXTRA_ATTRIBUTES = "extra_attributes"
 
 DOMAIN = "person"
 
@@ -81,6 +83,7 @@ PERSON_SCHEMA = vol.Schema(
             cv.ensure_list, cv.entities_domain(DEVICE_TRACKER_DOMAIN)
         ),
         vol.Optional(CONF_PICTURE): cv.string,
+        vol.Optional(CONF_EXTRA_ATTRIBUTES): dict,
     }
 )
 
@@ -168,6 +171,7 @@ CREATE_FIELDS = {
         cv.ensure_list, cv.entities_domain(DEVICE_TRACKER_DOMAIN)
     ),
     vol.Optional(CONF_PICTURE): vol.Any(str, None),
+    vol.Optional(CONF_EXTRA_ATTRIBUTES): vol.Any(dict, None),
 }
 
 
@@ -178,6 +182,7 @@ UPDATE_FIELDS = {
         cv.ensure_list, cv.entities_domain(DEVICE_TRACKER_DOMAIN)
     ),
     vol.Optional(CONF_PICTURE): vol.Any(str, None),
+    vol.Optional(CONF_EXTRA_ATTRIBUTES): vol.Any(dict, None),
 }
 
 
@@ -442,7 +447,8 @@ class Person(collection.CollectionEntity, RestoreEntity):
     @property
     def extra_state_attributes(self):
         """Return the state attributes of the person."""
-        data = {ATTR_EDITABLE: self.editable, ATTR_ID: self.unique_id}
+        data = self._config.get(ATTR_EXTRA_ATTRIBUTES, {})
+        data.update({ATTR_EDITABLE: self.editable, ATTR_ID: self.unique_id})
         if self._latitude is not None:
             data[ATTR_LATITUDE] = self._latitude
         if self._longitude is not None:
