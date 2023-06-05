@@ -23,7 +23,7 @@ from .const import DOMAIN, MANUFACTURER
 _LOGGER = logging.getLogger(__name__)
 
 
-class OwletCoordinator(DataUpdateCoordinator):
+class OwletCoordinator(DataUpdateCoordinator[None]):
     """Coordinator is responsible for querying the device at a specified route."""
 
     def __init__(self, hass: HomeAssistant, sock: Sock, interval) -> None:
