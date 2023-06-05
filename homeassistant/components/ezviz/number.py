@@ -18,7 +18,7 @@ from homeassistant.components.number import NumberEntity, NumberEntityDescriptio
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DATA_COORDINATOR, DOMAIN
@@ -45,7 +45,7 @@ class EzvizNumberEntityDescription(
     """Describe a EZVIZ Number."""
 
 
-NUMBER_TYPES = EzvizNumberEntityDescription(
+NUMBER_TYPE = EzvizNumberEntityDescription(
     key="detection_sensibility",
     name="Detection sensitivity",
     icon="mdi:eye",
@@ -67,11 +67,11 @@ async def async_setup_entry(
 
     async_add_entities(
         [
-            EzvizSensor(coordinator, camera, NUMBER_TYPES, value)
+            EzvizSensor(coordinator, camera, value, entry.entry_id)
             for camera in coordinator.data
             for capibility, value in coordinator.data[camera]["supportExt"].items()
-            if capibility == NUMBER_TYPES.supported_ext
-            if value in NUMBER_TYPES.supported_ext_value
+            if capibility == NUMBER_TYPE.supported_ext
+            if value in NUMBER_TYPE.supported_ext_value
         ],
         update_before_add=True,
     )
@@ -86,15 +86,16 @@ class EzvizSensor(EzvizBaseEntity, NumberEntity):
         self,
         coordinator: EzvizDataUpdateCoordinator,
         serial: str,
-        description: EzvizNumberEntityDescription,
         value: str,
+        config_entry_id: str,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator, serial)
         self.sensitivity_type = 3 if value == "3" else 0
         self._attr_native_max_value = 100 if value == "3" else 6
-        self._attr_unique_id = f"{serial}_{description.key}"
-        self.entity_description = description
+        self._attr_unique_id = f"{serial}_{NUMBER_TYPE.key}"
+        self.entity_description = NUMBER_TYPE
+        self.config_entry_id = config_entry_id
         self.sensor_value: int | None = None
 
     @property
@@ -130,8 +131,12 @@ class EzvizSensor(EzvizBaseEntity, NumberEntity):
                 str(self.sensitivity_type),
             )
 
-        except (EzvizAuthTokenExpired, EzvizAuthVerificationCode) as error:
-            raise ConfigEntryAuthFailed from error
+        except (EzvizAuthTokenExpired, EzvizAuthVerificationCode):
+            _LOGGER.debug("Failed to login to EZVIZ API")
+            self.hass.async_create_task(
+                self.hass.config_entries.async_reload(self.config_entry_id)
+            )
+            return
 
         except (InvalidURL, HTTPError, PyEzvizError) as error:
             raise HomeAssistantError(f"Invalid response from API: {error}") from error
