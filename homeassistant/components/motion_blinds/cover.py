@@ -36,6 +36,9 @@ from .const import (
     KEY_VERSION,
     MANUFACTURER,
     SERVICE_SET_ABSOLUTE_POSITION,
+    UPDATE_DELAY_STOP,
+    UPDATE_INTERVAL_MOVING,
+    UPDATE_INTERVAL_MOVING_WIFI,
 )
 from .gateway import device_name
 
@@ -82,10 +85,6 @@ SET_ABSOLUTE_POSITION_SCHEMA = {
     vol.Optional(ATTR_TILT_POSITION): vol.All(cv.positive_int, vol.Range(max=100)),
     vol.Optional(ATTR_WIDTH): vol.All(cv.positive_int, vol.Range(max=100)),
 }
-
-UPDATE_DELAY_STOP = 3
-UPDATE_INTERVAL_MOVING = 5
-UPDATE_INTERVAL_MOVING_WIFI = 45
 
 
 async def async_setup_entry(
