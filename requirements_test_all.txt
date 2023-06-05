@@ -767,10 +767,10 @@ hole==0.8.0
 holidays==0.21.13
 
 # homeassistant.components.frontend
-home-assistant-frontend==20230601.1
+home-assistant-frontend==20230605.0
 
 # homeassistant.components.conversation
-home-assistant-intents==2023.5.30
+home-assistant-intents==2023.6.5
 
 # homeassistant.components.home_connect
 homeconnect==0.7.2
@@ -1273,7 +1273,7 @@ pyinsteon==1.4.2
 pyipma==3.0.6
 
 # homeassistant.components.ipp
-pyipp==0.13.0
+pyipp==0.14.0
 
 # homeassistant.components.iqvia
 pyiqvia==2022.04.0
@@ -1363,7 +1363,7 @@ pynetgear==0.10.9
 pynobo==1.6.0
 
 # homeassistant.components.nuki
-pynuki==1.6.1
+pynuki==1.6.2
 
 # homeassistant.components.nut
 pynut2==2.1.2
@@ -1952,7 +1952,7 @@ wyoming==0.0.1
 xbox-webapi==2.0.11
 
 # homeassistant.components.xiaomi_ble
-xiaomi-ble==0.17.0
+xiaomi-ble==0.17.2
 
 # homeassistant.components.knx
 xknx==2.10.0
@@ -1991,7 +1991,7 @@ youless-api==1.0.1
 zamg==0.2.2
 
 # homeassistant.components.zeroconf
-zeroconf==0.63.0
+zeroconf==0.64.0
 
 # homeassistant.components.zeversolar
 zeversolar==0.3.1
