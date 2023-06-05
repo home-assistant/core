@@ -1,5 +1,4 @@
-"""Config flow for Windows Computer."""
-import logging
+"""Config flow for OpenHardwareMonitor integration."""
 from typing import Any
 
 import voluptuous as vol
@@ -10,11 +9,9 @@ from homeassistant.data_entry_flow import FlowResult
 
 from .const import DOMAIN
 
-_LOGGER = logging.getLogger(__name__)
 
-
-class WindowsComputerConfigFlow(ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for Windows Computer Integration."""
+class OpenHardwareMonitorConfigFlow(ConfigFlow, domain=DOMAIN):
+    """Handle a config flow for OpenHardwareMonitor Integration."""
 
     VERSION = 1
 
@@ -30,8 +27,8 @@ class WindowsComputerConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_NAME): str,
-                    vol.Required(CONF_HOST, msg="Host"): str,
-                    vol.Optional(CONF_PORT, msg="Port", default=8085): int,
+                    vol.Required(CONF_HOST): str,
+                    vol.Optional(CONF_PORT, default=8085): int,
                 }
             ),
         )

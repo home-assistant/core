@@ -1,4 +1,4 @@
-"""Support for Open Hardware Monitor Sensor Platform."""
+"""Support for Windows Computer Sensor Platform."""
 from __future__ import annotations
 
 from datetime import timedelta
@@ -8,9 +8,11 @@ import requests
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -40,24 +42,122 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up Windows Computer based on config entry."""
+    instance = AsyncWindowsComputerMonitorData(entry, hass)
+    await instance.initialize(utcnow())
+    data = instance.devices
+
+    if data is None:
+        raise PlatformNotReady
+    async_add_entities(data)
+
+
 def setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
     add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the Open Hardware Monitor platform."""
-    data = OpenHardwareMonitorData(config, hass)
+    """Set up the Windows Computer Monitor platform."""
+    data = WindowsComputerMonitorData(config, hass)
     if data.data is None:
         raise PlatformNotReady
     add_entities(data.devices, True)
 
 
-class OpenHardwareMonitorDevice(SensorEntity):
-    """Device used to display information from OpenHardwareMonitor."""
+class AsyncWindowsComputerMonitorData:
+    """Class used to pull async data from OHM and create sensors."""
+
+    def __init__(self, config, hass):
+        """Initialize the Windows Computer Monitor data-handler."""
+        self.data = None
+        self._config = config
+        self._hass = hass
+        self.devices = []
+        self.session = async_get_clientsession(hass)
+
+    @Throttle(MIN_TIME_BETWEEN_UPDATES)
+    async def update(self):
+        """Hit by the timer with the configured interval."""
+        if self.data is None:
+            self.initialize(utcnow())
+        else:
+            self.refresh()
+
+    async def refresh(self):
+        """Download and parse JSON from OHM."""
+        if isinstance(self._config, ConfigEntry):
+            data_url = (
+                f"http://{self._config.data.get(CONF_HOST)}:"
+                f"{self._config.data.get(CONF_PORT)}/data.json"
+            )
+        else:
+            data_url = (
+                f"http://{self._config.get(CONF_HOST)}:"
+                f"{self._config.get(CONF_PORT)}/data.json"
+            )
+
+        try:
+            response = await self.session.get(data_url, timeout=30)
+            self.data = await response.json()
+        except requests.exceptions.ConnectionError:
+            _LOGGER.debug("ConnectionError: Is OpenHardwareMonitor running?")
+
+    async def initialize(self, now):
+        """Parse of the sensors and adding of devices."""
+        await self.refresh()
+
+        if self.data is None:
+            return
+
+        self.devices = self.parse_children(self.data, [], [], [])
+
+    def parse_children(self, json, devices, path, names):
+        """Recursively loop through child objects, finding the values."""
+        result = devices.copy()
+
+        if json[OHM_CHILDREN]:
+            for child_index in range(0, len(json[OHM_CHILDREN])):
+                child_path = path.copy()
+                child_path.append(child_index)
+
+                child_names = names.copy()
+                if path:
+                    child_names.append(json[OHM_NAME])
+
+                obj = json[OHM_CHILDREN][child_index]
+
+                added_devices = self.parse_children(
+                    obj, devices, child_path, child_names
+                )
+
+                result = result + added_devices
+            return result
+
+        if json[OHM_VALUE].find(" ") == -1:
+            return result
+
+        unit_of_measurement = json[OHM_VALUE].split(" ")[1]
+        child_names = names.copy()
+        child_names.append(json[OHM_NAME])
+        fullname = " ".join(child_names)
+
+        dev = WindowsComputerMonitorDevice(self, fullname, path, unit_of_measurement)
+
+        result.append(dev)
+        return result
+
+
+class WindowsComputerMonitorDevice(SensorEntity):
+    """Device used to display information from WindowsComputerMonitor."""
 
     def __init__(self, data, name, path, unit_of_measurement):
-        """Initialize an OpenHardwareMonitor sensor."""
+        """Initialize an WindowsComputerMonitor sensor."""
         self._name = name
         self._data = data
         self.path = path
@@ -121,11 +221,11 @@ class OpenHardwareMonitorDevice(SensorEntity):
             _attributes.update({f"level_{path_index}": values[OHM_NAME]})
 
 
-class OpenHardwareMonitorData:
+class WindowsComputerMonitorData:
     """Class used to pull data from OHM and create sensors."""
 
     def __init__(self, config, hass):
-        """Initialize the Open Hardware Monitor data-handler."""
+        """Initialize the Windows Computer Monitor data-handler."""
         self.data = None
         self._config = config
         self._hass = hass
@@ -142,10 +242,16 @@ class OpenHardwareMonitorData:
 
     def refresh(self):
         """Download and parse JSON from OHM."""
-        data_url = (
-            f"http://{self._config.get(CONF_HOST)}:"
-            f"{self._config.get(CONF_PORT)}/data.json"
-        )
+        if isinstance(self._config, ConfigEntry):
+            data_url = (
+                f"http://{self._config.data.get(CONF_HOST)}:"
+                f"{self._config.data.get(CONF_PORT)}/data.json"
+            )
+        else:
+            data_url = (
+                f"http://{self._config.get(CONF_HOST)}:"
+                f"{self._config.get(CONF_PORT)}/data.json"
+            )
 
         try:
             response = requests.get(data_url, timeout=30)
@@ -192,7 +298,7 @@ class OpenHardwareMonitorData:
         child_names.append(json[OHM_NAME])
         fullname = " ".join(child_names)
 
-        dev = OpenHardwareMonitorDevice(self, fullname, path, unit_of_measurement)
+        dev = WindowsComputerMonitorDevice(self, fullname, path, unit_of_measurement)
 
         result.append(dev)
         return result

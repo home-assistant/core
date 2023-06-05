@@ -1375,8 +1375,6 @@ build.json @home-assistant/supervisor
 /tests/components/wiffi/ @mampfes
 /homeassistant/components/wilight/ @leofig-rj
 /tests/components/wilight/ @leofig-rj
-/homeassistant/components/windows_computer/ @BramKelchtermans
-/tests/components/windows_computer/ @BramKelchtermans
 /homeassistant/components/wirelesstag/ @sergeymaysak
 /homeassistant/components/withings/ @vangorra
 /tests/components/withings/ @vangorra
