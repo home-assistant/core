@@ -111,12 +111,10 @@ class NextBusDepartureSensor(SensorEntity):
         self._attr_extra_state_attributes = {}
 
         # Maybe pull a more user friendly name from the API here
+        self._attr_name = f"{agency} {route}"
         if name:
             self._attr_name = name
-        else:
-            self._attr_name = f"{agency} {route}"
 
-        # Set unique id using agency, route, and stop
         self._attr_unique_id = "_".join((agency, route, stop))
 
         self._client = client
