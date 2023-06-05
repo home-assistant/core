@@ -109,7 +109,25 @@ MOCK_DATA = {
             "unit": "C",
             "type": "temperature_core",
             "key": "label",
-        }
+        },
+        {
+            "label": "err_temp",
+            "value": "ERR",
+            "warning": None,
+            "critical": None,
+            "unit": "C",
+            "type": "temperature_hdd",
+            "key": "label",
+        },
+        {
+            "label": "na_temp",
+            "value": "NA",
+            "warning": None,
+            "critical": None,
+            "unit": "C",
+            "type": "temperature_hdd",
+            "key": "label",
+        },
     ],
     "system": {
         "os_name": "Linux",
@@ -127,7 +145,11 @@ HA_SENSOR_DATA: dict[str, Any] = {
         "/ssl": {"disk_use": 30.7, "disk_use_percent": 6.7, "disk_free": 426.5},
         "/media": {"disk_use": 30.7, "disk_use_percent": 6.7, "disk_free": 426.5},
     },
-    "sensors": {"cpu_thermal 1": {"temperature_core": 59}},
+    "sensors": {
+        "cpu_thermal 1": {"temperature_core": 59},
+        "err_temp": {"temperature_hdd": "Unavailable"},
+        "na_temp": {"temperature_hdd": "Unavailable"},
+    },
     "mem": {
         "memory_use_percent": 27.6,
         "memory_use": 1047.1,

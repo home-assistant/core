@@ -278,13 +278,13 @@ class DefaultAgent(AbstractConversationAgent):
         all_states = matched + unmatched
         domains = {state.domain for state in all_states}
         translations = await translation.async_get_translations(
-            self.hass, language, "state", domains
+            self.hass, language, "entity_component", domains
         )
 
         # Use translated state names
         for state in all_states:
             device_class = state.attributes.get("device_class", "_")
-            key = f"component.{state.domain}.state.{device_class}.{state.state}"
+            key = f"component.{state.domain}.entity_component.{device_class}.state.{state.state}"
             state.state = translations.get(key, state.state)
 
         # Get first matched or unmatched state.
@@ -413,9 +413,18 @@ class DefaultAgent(AbstractConversationAgent):
                             encoding="utf-8"
                         ) as custom_sentences_file:
                             # Merge custom sentences
-                            merge_dict(
-                                intents_dict, yaml.safe_load(custom_sentences_file)
-                            )
+                            if isinstance(
+                                custom_sentences_yaml := yaml.safe_load(
+                                    custom_sentences_file
+                                ),
+                                dict,
+                            ):
+                                merge_dict(intents_dict, custom_sentences_yaml)
+                            else:
+                                _LOGGER.warning(
+                                    "Custom sentences file does not match expected format path=%s",
+                                    custom_sentences_file.name,
+                                )
 
                         # Will need to recreate graph
                         intents_changed = True

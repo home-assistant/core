@@ -18,7 +18,9 @@ from .const import (
     EMPTY_SEARCH_RESPONSE,
     TEST_FETCH_RESPONSE_BINARY,
     TEST_FETCH_RESPONSE_HTML,
-    TEST_FETCH_RESPONSE_INVALID_DATE,
+    TEST_FETCH_RESPONSE_INVALID_DATE1,
+    TEST_FETCH_RESPONSE_INVALID_DATE2,
+    TEST_FETCH_RESPONSE_INVALID_DATE3,
     TEST_FETCH_RESPONSE_MULTIPART,
     TEST_FETCH_RESPONSE_TEXT_BARE,
     TEST_FETCH_RESPONSE_TEXT_OTHER,
@@ -32,16 +34,28 @@ from tests.common import MockConfigEntry, async_capture_events, async_fire_time_
 
 
 @pytest.mark.parametrize(
-    "cipher_list", [None, "python_default", "modern", "intermediate"]
+    ("cipher_list", "verify_ssl"),
+    [
+        (None, None),
+        ("python_default", True),
+        ("python_default", False),
+        ("modern", True),
+        ("intermediate", True),
+    ],
 )
 @pytest.mark.parametrize("imap_has_capability", [True, False], ids=["push", "poll"])
 async def test_entry_startup_and_unload(
-    hass: HomeAssistant, mock_imap_protocol: MagicMock, cipher_list: str
+    hass: HomeAssistant,
+    mock_imap_protocol: MagicMock,
+    cipher_list: str | None,
+    verify_ssl: bool | None,
 ) -> None:
     """Test imap entry startup and unload with push and polling coordinator and alternate ciphers."""
     config = MOCK_CONFIG.copy()
-    if cipher_list:
+    if cipher_list is not None:
         config["ssl_cipher_list"] = cipher_list
+    if verify_ssl is not None:
+        config["verify_ssl"] = verify_ssl
 
     config_entry = MockConfigEntry(domain=DOMAIN, data=config)
     config_entry.add_to_hass(hass)
@@ -81,7 +95,9 @@ async def test_entry_startup_fails(
         (TEST_FETCH_RESPONSE_TEXT_BARE, True),
         (TEST_FETCH_RESPONSE_TEXT_PLAIN, True),
         (TEST_FETCH_RESPONSE_TEXT_PLAIN_ALT, True),
-        (TEST_FETCH_RESPONSE_INVALID_DATE, False),
+        (TEST_FETCH_RESPONSE_INVALID_DATE1, False),
+        (TEST_FETCH_RESPONSE_INVALID_DATE2, False),
+        (TEST_FETCH_RESPONSE_INVALID_DATE3, False),
         (TEST_FETCH_RESPONSE_TEXT_OTHER, True),
         (TEST_FETCH_RESPONSE_HTML, True),
         (TEST_FETCH_RESPONSE_MULTIPART, True),
@@ -91,7 +107,9 @@ async def test_entry_startup_fails(
         "bare",
         "plain",
         "plain_alt",
-        "invalid_date",
+        "invalid_date1",
+        "invalid_date2",
+        "invalid_date3",
         "other",
         "html",
         "multipart",
