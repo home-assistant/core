@@ -11,7 +11,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from ..mixins import async_setup_entry_helper, warn_for_legacy_schema
+from ..mixins import async_setup_entry_helper
 from .schema import CONF_SCHEMA, LEGACY, MQTT_VACUUM_SCHEMA, STATE
 from .schema_legacy import (
     DISCOVERY_SCHEMA_LEGACY,
@@ -44,13 +44,6 @@ def validate_mqtt_vacuum_modern(config_value: ConfigType) -> ConfigType:
 
 DISCOVERY_SCHEMA = vol.All(
     MQTT_VACUUM_SCHEMA.extend({}, extra=vol.ALLOW_EXTRA), validate_mqtt_vacuum_discovery
-)
-
-# Configuring MQTT Vacuums under the vacuum platform key was deprecated in
-# HA Core 2022.6
-# Setup for the legacy YAML format was removed in HA Core 2022.12
-PLATFORM_SCHEMA = vol.All(
-    warn_for_legacy_schema(vacuum.DOMAIN),
 )
 
 PLATFORM_SCHEMA_MODERN = vol.All(

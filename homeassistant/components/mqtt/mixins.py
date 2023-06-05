@@ -28,7 +28,7 @@ from homeassistant.const import (
     CONF_UNIQUE_ID,
     CONF_VALUE_TEMPLATE,
 )
-from homeassistant.core import Event, HomeAssistant, async_get_hass, callback
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
@@ -50,7 +50,6 @@ from homeassistant.helpers.event import (
     async_track_device_registry_updated_event,
     async_track_entity_registry_updated_event,
 )
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.json import json_loads
 
@@ -229,51 +228,6 @@ MQTT_ENTITY_COMMON_SCHEMA = MQTT_AVAILABILITY_SCHEMA.extend(
         vol.Optional(CONF_UNIQUE_ID): cv.string,
     }
 )
-
-
-def warn_for_legacy_schema(domain: str) -> Callable[[ConfigType], ConfigType]:
-    """Warn once when a legacy platform schema is used."""
-    warned = set()
-
-    def validator(config: ConfigType) -> ConfigType:
-        """Return a validator."""
-        nonlocal warned
-
-        # Logged error and repair can be removed from HA 2023.6
-        if domain in warned:
-            return config
-
-        _LOGGER.error(
-            (
-                "Manually configured MQTT %s(s) found under platform key '%s', "
-                "please move to the mqtt integration key, see "
-                "https://www.home-assistant.io/integrations/%s.mqtt/"
-            ),
-            domain,
-            domain,
-            domain,
-        )
-        warned.add(domain)
-        # Register a repair
-        async_create_issue(
-            async_get_hass(),
-            DOMAIN,
-            f"deprecated_yaml_{domain}",
-            breaks_in_ha_version="2022.12.0",  # Warning first added in 2022.6.0
-            is_fixable=False,
-            severity=IssueSeverity.ERROR,
-            translation_key="deprecated_yaml",
-            translation_placeholders={
-                "more_info_url": (
-                    "https://www.home-assistant.io"
-                    f"/integrations/{domain}.mqtt/#new_format"
-                ),
-                "platform": domain,
-            },
-        )
-        return config
-
-    return validator
 
 
 class SetupEntity(Protocol):
