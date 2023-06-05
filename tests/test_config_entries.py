@@ -31,7 +31,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.setup import async_set_domains_to_be_loaded, async_setup_component
-from homeassistant.util import dt
 import homeassistant.util.dt as dt_util
 
 from .common import (
@@ -650,7 +649,7 @@ async def test_saving_and_loading(hass: HomeAssistant) -> None:
     )
 
     # To trigger the call_later
-    async_fire_time_changed(hass, dt.utcnow() + timedelta(seconds=1))
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=1))
     # To execute the save
     await hass.async_block_till_done()
 
@@ -1611,7 +1610,8 @@ async def test_reload_entry_entity_registry_works(
 
     async_fire_time_changed(
         hass,
-        dt.utcnow() + timedelta(seconds=config_entries.RELOAD_AFTER_UPDATE_DELAY + 1),
+        dt_util.utcnow()
+        + timedelta(seconds=config_entries.RELOAD_AFTER_UPDATE_DELAY + 1),
     )
     await hass.async_block_till_done()
 
@@ -3303,7 +3303,7 @@ async def test_setup_retrying_during_shutdown(hass: HomeAssistant) -> None:
 
     assert len(mock_call.return_value.mock_calls) == 0
 
-    async_fire_time_changed(hass, dt.utcnow() + timedelta(hours=4))
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(hours=4))
     await hass.async_block_till_done()
 
     assert len(mock_call.return_value.mock_calls) == 0
