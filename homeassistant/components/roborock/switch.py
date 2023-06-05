@@ -15,7 +15,7 @@ from homeassistant.util import slugify
 
 from .const import DOMAIN
 from .coordinator import RoborockDataUpdateCoordinator
-from .device import RoborockEntity
+from .device import RoborockCoordinatedEntity, RoborockEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,10 +33,25 @@ class RoborockSwitchDescriptionMixin:
 
 
 @dataclass
+class RoborockCoordinatedSwitchDescriptionMixIn:
+    """Define an entity description mixin for switch entities."""
+
+    get_value: Callable[[RoborockCoordinatedEntity], bool]
+    set_command: Callable[[RoborockCoordinatedEntity, bool], Coroutine[Any, Any, dict]]
+
+
+@dataclass
 class RoborockSwitchDescription(
     SwitchEntityDescription, RoborockSwitchDescriptionMixin
 ):
     """Class to describe an Roborock switch entity."""
+
+
+@dataclass
+class RoborockCoordinatedSwitchDescription(
+    SwitchEntityDescription, RoborockCoordinatedSwitchDescriptionMixIn
+):
+    """Class to describe an Roborock switch entity that needs a coordinator."""
 
 
 SWITCH_DESCRIPTIONS: list[RoborockSwitchDescription] = [
@@ -64,6 +79,27 @@ SWITCH_DESCRIPTIONS: list[RoborockSwitchDescription] = [
     ),
 ]
 
+COORDINATED_SWITCH_DESCRIPTION = [
+    RoborockCoordinatedSwitchDescription(
+        set_command=lambda entity, value: entity.send(
+            RoborockCommand.SET_DND_TIMER,
+            [
+                entity.coordinator.roborock_device_info.props.dnd_timer.start_hour,
+                entity.coordinator.roborock_device_info.props.dnd_timer.start_minute,
+                entity.coordinator.roborock_device_info.props.dnd_timer.end_hour,
+                entity.coordinator.roborock_device_info.props.dnd_timer.end_minute,
+            ],
+        )
+        if value
+        else entity.send(RoborockCommand.CLOSE_DND_TIMER),
+        get_value=lambda data: data.coordinator.roborock_device_info.props.dnd_timer.enabled,
+        key="dnd_switch",
+        translation_key="dnd_switch",
+        icon="mdi:bell-cancel",
+        entity_category=EntityCategory.CONFIG,
+    ),
+]
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -77,7 +113,7 @@ async def async_setup_entry(
     ]
     async_add_entities(
         (
-            RoborockSwitchEntity(
+            RoborockNonCoordinatedSwitchEntity(
                 f"{description.key}_{slugify(device_id)}",
                 coordinator,
                 description,
@@ -87,10 +123,21 @@ async def async_setup_entry(
         ),
         True,
     )
+    async_add_entities(
+        (
+            RoborockCoordinatedSwitchEntity(
+                f"{description.key}_{slugify(device_id)}",
+                coordinator,
+                description,
+            )
+            for device_id, coordinator in coordinators.items()
+            for description in COORDINATED_SWITCH_DESCRIPTION
+        )
+    )
 
 
-class RoborockSwitchEntity(RoborockEntity, SwitchEntity):
-    """A class to let you turn functionality on Roborock devices on and off."""
+class RoborockNonCoordinatedSwitchEntity(RoborockEntity, SwitchEntity):
+    """A class to let you turn functionality on Roborock devices on and off that does not need a coordinator."""
 
     entity_description: RoborockSwitchDescription
 
@@ -117,3 +164,32 @@ class RoborockSwitchEntity(RoborockEntity, SwitchEntity):
         self._attr_is_on = self.entity_description.evaluate_value(
             await self.entity_description.get_value(self)
         )
+
+
+class RoborockCoordinatedSwitchEntity(RoborockCoordinatedEntity, SwitchEntity):
+    """A class to let you turn functionality on Roborock devices on and off that does need a coordinator."""
+
+    entity_description: RoborockCoordinatedSwitchDescription
+
+    def __init__(
+        self,
+        unique_id: str,
+        coordinator: RoborockDataUpdateCoordinator,
+        entity_description: RoborockCoordinatedSwitchDescription,
+    ) -> None:
+        """Create a switch entity."""
+        self.entity_description = entity_description
+        super().__init__(unique_id, coordinator)
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn off the switch."""
+        await self.entity_description.set_command(self, False)
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn on the switch."""
+        await self.entity_description.set_command(self, True)
+
+    @property
+    def is_on(self) -> bool | None:
+        """Use the coordinator to determine if the switch is on."""
+        return self.entity_description.get_value(self)
