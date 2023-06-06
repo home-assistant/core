@@ -133,6 +133,12 @@ def async_dismiss(hass: HomeAssistant, notification_id: str) -> None:
     )
 
 
+@callback
+def _async_get_notifications_list(hass: HomeAssistant) -> list[Notification]:
+    """Return a list of persistent notifications."""
+    return list(_async_get_or_create_notifications(hass).values())
+
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the persistent notification component."""
     notifications = _async_get_or_create_notifications(hass)
@@ -199,12 +205,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     websocket_api.async_register_command(hass, websocket_get_notifications)
     websocket_api.async_register_command(hass, websocket_subscribe_notifications)
 
-    def _get_persistent_notifications(hass: HomeAssistant) -> list[Notification]:
-        """Return a list of persistent notifications."""
-        return list(_async_get_or_create_notifications(hass).values())
-
     template.async_register_hass_environment_function(
-        hass, "persistent_notifications", _get_persistent_notifications
+        hass, "persistent_notifications", _async_get_notifications_list
     )
 
     return True
@@ -219,9 +221,7 @@ def websocket_get_notifications(
 ) -> None:
     """Return a list of persistent_notifications."""
     connection.send_message(
-        websocket_api.result_message(
-            msg["id"], list(_async_get_or_create_notifications(hass).values())
-        )
+        websocket_api.result_message(msg["id"], _async_get_notifications_list(hass))
     )
 
 
