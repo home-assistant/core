@@ -14,7 +14,7 @@ class RoborockHassDeviceInfo:
     product: HomeDataProduct
     props: DeviceProp
 
-    def as_dict(self):
+    def as_dict(self) -> dict[str, dict[str, Any]]:
         """Turn RoborockHassDeviceInfo into a dictionary."""
         return {
             "device": self.device.as_dict(),
