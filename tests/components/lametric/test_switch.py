@@ -16,6 +16,7 @@ from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
     ATTR_ICON,
     STATE_OFF,
+    STATE_ON,
     STATE_UNAVAILABLE,
     EntityCategory,
 )
@@ -91,6 +92,68 @@ async def test_bluetooth(
     state = hass.states.get("switch.frenck_s_lametric_bluetooth")
     assert state
     assert state.state == STATE_UNAVAILABLE
+
+
+async def test_nonexistant_control_switch(
+    hass: HomeAssistant,
+) -> None:
+    """Test missing control switch on LaMetric TIME device."""
+    state = hass.states.get("switch.frenck_s_lametric")
+    assert state is None
+
+
+@pytest.mark.parametrize("device_fixture", ["device_sa5"])
+async def test_control_switch_toggle_sky(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_lametric: MagicMock,
+) -> None:
+    """Test control switch toggle function on LaMetric SKY device."""
+    state = hass.states.get("switch.spyfly_s_lametric_sky")
+    assert state.attributes.get(ATTR_DEVICE_CLASS) is None
+    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "spyfly's LaMetric SKY"
+    assert state.attributes.get(ATTR_ICON) == "mdi:monitor"
+    assert state.state == STATE_ON
+    assert state
+
+    entry = entity_registry.async_get(state.entity_id)
+    assert entry
+    assert entry.device_id
+    assert entry.entity_category is None
+    assert entry.unique_id == "SA52100000123TBNC-on"
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_OFF,
+        {
+            ATTR_ENTITY_ID: "switch.spyfly_s_lametric_sky",
+        },
+        blocking=True,
+    )
+
+    assert len(mock_lametric.display.mock_calls) == 1
+    mock_lametric.display.assert_called_once_with(on=False)
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_ON,
+        {
+            ATTR_ENTITY_ID: "switch.spyfly_s_lametric_sky",
+        },
+        blocking=True,
+    )
+
+    assert len(mock_lametric.display.mock_calls) == 2
+    mock_lametric.display.assert_called_with(on=True)
+
+    mock_lametric.device.return_value.display.on = False
+
+    async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("switch.spyfly_s_lametric_sky")
+    assert state
+    assert state.state == STATE_OFF
 
 
 async def test_switch_error(
