@@ -22,18 +22,6 @@ create:
       selector:
         text:
 
-dismiss:
-  name: Dismiss
-  description: Remove a notification from the frontend.
-  fields:
-    notification_id:
-      name: Notification ID
-      description: Target ID of the notification, which should be removed.
-      required: true
-      example: 1234
-      selector:
-        text:
-
 mark_read:
   name: Mark read
   description: Mark a notification read.
