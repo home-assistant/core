@@ -86,7 +86,7 @@ class ProtectEventMixin(ProtectRequiredKeysMixin[T]):
             _LOGGER.debug("%s (%s): missing event", self.name, obj.mac)
         else:
             value = now > event.start
-            if event.end is not None and now > event.end:
+            if value and event.end is not None and now > event.end:
                 value = False
                 _LOGGER.debug(
                     "%s (%s): end ended at %s",
