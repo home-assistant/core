@@ -54,7 +54,9 @@ async def test_setup_entry(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
         # Assert data is loaded
-        current_power = hass.states.get("sensor.huisbaasje_current_power")
+        current_power = hass.states.get(
+            "sensor.huisbaasje_huisbaasje_userid_electricity_rate"
+        )
         assert current_power.state == "1012.0"
         assert (
             current_power.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.POWER
@@ -68,7 +70,9 @@ async def test_setup_entry(hass: HomeAssistant) -> None:
             current_power.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfPower.WATT
         )
 
-        current_power_in = hass.states.get("sensor.huisbaasje_current_power_in_peak")
+        current_power_in = hass.states.get(
+            "sensor.huisbaasje_huisbaasje_userid_electricityin_rate"
+        )
         assert current_power_in.state == "1012.0"
         assert (
             current_power_in.attributes.get(ATTR_DEVICE_CLASS)
@@ -85,7 +89,7 @@ async def test_setup_entry(hass: HomeAssistant) -> None:
         )
 
         current_power_in_low = hass.states.get(
-            "sensor.huisbaasje_current_power_in_off_peak"
+            "sensor.huisbaasje_huisbaasje_userid_electricityinlow_rate"
         )
         assert current_power_in_low.state == "unknown"
         assert (
@@ -102,7 +106,9 @@ async def test_setup_entry(hass: HomeAssistant) -> None:
             == UnitOfPower.WATT
         )
 
-        current_power_out = hass.states.get("sensor.huisbaasje_current_power_out_peak")
+        current_power_out = hass.states.get(
+            "sensor.huisbaasje_huisbaasje_userid_electricityout_rate"
+        )
         assert current_power_out.state == "unknown"
         assert (
             current_power_out.attributes.get(ATTR_DEVICE_CLASS)
@@ -119,7 +125,7 @@ async def test_setup_entry(hass: HomeAssistant) -> None:
         )
 
         current_power_out_low = hass.states.get(
-            "sensor.huisbaasje_current_power_out_off_peak"
+            "sensor.huisbaasje_huisbaasje_userid_electricityoutlow_rate"
         )
         assert current_power_out_low.state == "unknown"
         assert (
@@ -137,7 +143,7 @@ async def test_setup_entry(hass: HomeAssistant) -> None:
         )
 
         energy_consumption_peak_today = hass.states.get(
-            "sensor.huisbaasje_energy_consumption_peak_today"
+            "sensor.huisbaasje_huisbaasje_userid_electricityin_thisday"
         )
         assert energy_consumption_peak_today.state == "2.67"
         assert (
@@ -158,7 +164,7 @@ async def test_setup_entry(hass: HomeAssistant) -> None:
         )
 
         energy_consumption_off_peak_today = hass.states.get(
-            "sensor.huisbaasje_energy_consumption_off_peak_today"
+            "sensor.huisbaasje_huisbaasje_userid_electricityinlow_thisday"
         )
         assert energy_consumption_off_peak_today.state == "0.627"
         assert (
@@ -179,7 +185,7 @@ async def test_setup_entry(hass: HomeAssistant) -> None:
         )
 
         energy_production_peak_today = hass.states.get(
-            "sensor.huisbaasje_energy_production_peak_today"
+            "sensor.huisbaasje_huisbaasje_userid_electricityout_thisday"
         )
         assert energy_production_peak_today.state == "1.512"
         assert (
@@ -200,7 +206,7 @@ async def test_setup_entry(hass: HomeAssistant) -> None:
         )
 
         energy_production_off_peak_today = hass.states.get(
-            "sensor.huisbaasje_energy_production_off_peak_today"
+            "sensor.huisbaasje_huisbaasje_userid_electricityoutlow_thisday"
         )
         assert energy_production_off_peak_today.state == "1.093"
         assert (
@@ -220,7 +226,9 @@ async def test_setup_entry(hass: HomeAssistant) -> None:
             == UnitOfEnergy.KILO_WATT_HOUR
         )
 
-        energy_today = hass.states.get("sensor.huisbaasje_energy_today")
+        energy_today = hass.states.get(
+            "sensor.huisbaasje_huisbaasje_userid_electricity_thisday"
+        )
         assert energy_today.state == "3.3"
         assert (
             energy_today.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.ENERGY
@@ -235,7 +243,9 @@ async def test_setup_entry(hass: HomeAssistant) -> None:
             == UnitOfEnergy.KILO_WATT_HOUR
         )
 
-        energy_this_week = hass.states.get("sensor.huisbaasje_energy_this_week")
+        energy_this_week = hass.states.get(
+            "sensor.huisbaasje_huisbaasje_userid_electricity_thisweek"
+        )
         assert energy_this_week.state == "17.5"
         assert (
             energy_this_week.attributes.get(ATTR_DEVICE_CLASS)
@@ -251,7 +261,9 @@ async def test_setup_entry(hass: HomeAssistant) -> None:
             == UnitOfEnergy.KILO_WATT_HOUR
         )
 
-        energy_this_month = hass.states.get("sensor.huisbaasje_energy_this_month")
+        energy_this_month = hass.states.get(
+            "sensor.huisbaasje_huisbaasje_userid_electricity_thismonth"
+        )
         assert energy_this_month.state == "103.3"
         assert (
             energy_this_month.attributes.get(ATTR_DEVICE_CLASS)
@@ -267,7 +279,9 @@ async def test_setup_entry(hass: HomeAssistant) -> None:
             == UnitOfEnergy.KILO_WATT_HOUR
         )
 
-        energy_this_year = hass.states.get("sensor.huisbaasje_energy_this_year")
+        energy_this_year = hass.states.get(
+            "sensor.huisbaasje_huisbaasje_userid_electricity_thisyear"
+        )
         assert energy_this_year.state == "673.0"
         assert (
             energy_this_year.attributes.get(ATTR_DEVICE_CLASS)
@@ -283,7 +297,7 @@ async def test_setup_entry(hass: HomeAssistant) -> None:
             == UnitOfEnergy.KILO_WATT_HOUR
         )
 
-        current_gas = hass.states.get("sensor.huisbaasje_current_gas")
+        current_gas = hass.states.get("sensor.huisbaasje_huisbaasje_userid_gas_rate")
         assert current_gas.state == "0.0"
         assert current_gas.attributes.get(ATTR_DEVICE_CLASS) is None
         assert current_gas.attributes.get(ATTR_ICON) == "mdi:fire"
@@ -295,7 +309,7 @@ async def test_setup_entry(hass: HomeAssistant) -> None:
             == UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR
         )
 
-        gas_today = hass.states.get("sensor.huisbaasje_gas_today")
+        gas_today = hass.states.get("sensor.huisbaasje_huisbaasje_userid_gas_thisday")
         assert gas_today.state == "1.1"
         assert gas_today.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.GAS
         assert gas_today.attributes.get(ATTR_ICON) == "mdi:counter"
@@ -308,7 +322,9 @@ async def test_setup_entry(hass: HomeAssistant) -> None:
             == UnitOfVolume.CUBIC_METERS
         )
 
-        gas_this_week = hass.states.get("sensor.huisbaasje_gas_this_week")
+        gas_this_week = hass.states.get(
+            "sensor.huisbaasje_huisbaasje_userid_gas_thisweek"
+        )
         assert gas_this_week.state == "5.6"
         assert gas_this_week.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.GAS
         assert gas_this_week.attributes.get(ATTR_ICON) == "mdi:counter"
@@ -321,7 +337,9 @@ async def test_setup_entry(hass: HomeAssistant) -> None:
             == UnitOfVolume.CUBIC_METERS
         )
 
-        gas_this_month = hass.states.get("sensor.huisbaasje_gas_this_month")
+        gas_this_month = hass.states.get(
+            "sensor.huisbaasje_huisbaasje_userid_gas_thismonth"
+        )
         assert gas_this_month.state == "39.1"
         assert gas_this_month.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.GAS
         assert gas_this_month.attributes.get(ATTR_ICON) == "mdi:counter"
@@ -334,7 +352,9 @@ async def test_setup_entry(hass: HomeAssistant) -> None:
             == UnitOfVolume.CUBIC_METERS
         )
 
-        gas_this_year = hass.states.get("sensor.huisbaasje_gas_this_year")
+        gas_this_year = hass.states.get(
+            "sensor.huisbaasje_huisbaasje_userid_gas_thisyear"
+        )
         assert gas_this_year.state == "116.7"
         assert gas_this_year.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.GAS
         assert gas_this_year.attributes.get(ATTR_ICON) == "mdi:counter"
@@ -381,42 +401,74 @@ async def test_setup_entry_absent_measurement(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
         # Assert data is loaded
-        assert hass.states.get("sensor.huisbaasje_current_power").state == "1012.0"
         assert (
-            hass.states.get("sensor.huisbaasje_current_power_in_peak").state
+            hass.states.get(
+                "sensor.huisbaasje_huisbaasje_userid_electricity_rate"
+            ).state
+            == "1012.0"
+        )
+        assert (
+            hass.states.get(
+                "sensor.huisbaasje_huisbaasje_userid_electricityin_rate"
+            ).state
             == "unknown"
         )
         assert (
-            hass.states.get("sensor.huisbaasje_current_power_in_off_peak").state
+            hass.states.get(
+                "sensor.huisbaasje_huisbaasje_userid_electricityinlow_rate"
+            ).state
             == "unknown"
         )
         assert (
-            hass.states.get("sensor.huisbaasje_current_power_out_peak").state
+            hass.states.get(
+                "sensor.huisbaasje_huisbaasje_userid_electricityout_rate"
+            ).state
             == "unknown"
         )
         assert (
-            hass.states.get("sensor.huisbaasje_current_power_out_off_peak").state
-            == "unknown"
-        )
-        assert hass.states.get("sensor.huisbaasje_current_gas").state == "unknown"
-        assert hass.states.get("sensor.huisbaasje_energy_today").state == "3.3"
-        assert (
-            hass.states.get("sensor.huisbaasje_energy_consumption_peak_today").state
+            hass.states.get(
+                "sensor.huisbaasje_huisbaasje_userid_electricityoutlow_rate"
+            ).state
             == "unknown"
         )
         assert (
-            hass.states.get("sensor.huisbaasje_energy_consumption_off_peak_today").state
+            hass.states.get("sensor.huisbaasje_huisbaasje_userid_gas_rate").state
             == "unknown"
         )
         assert (
-            hass.states.get("sensor.huisbaasje_energy_production_peak_today").state
+            hass.states.get(
+                "sensor.huisbaasje_huisbaasje_userid_electricity_thisday"
+            ).state
+            == "3.3"
+        )
+        assert (
+            hass.states.get(
+                "sensor.huisbaasje_huisbaasje_userid_electricityin_thisday"
+            ).state
             == "unknown"
         )
         assert (
-            hass.states.get("sensor.huisbaasje_energy_production_off_peak_today").state
+            hass.states.get(
+                "sensor.huisbaasje_huisbaasje_userid_electricityinlow_thisday"
+            ).state
             == "unknown"
         )
-        assert hass.states.get("sensor.huisbaasje_gas_today").state == "unknown"
+        assert (
+            hass.states.get(
+                "sensor.huisbaasje_huisbaasje_userid_electricityout_thisday"
+            ).state
+            == "unknown"
+        )
+        assert (
+            hass.states.get(
+                "sensor.huisbaasje_huisbaasje_userid_electricityoutlow_thisday"
+            ).state
+            == "unknown"
+        )
+        assert (
+            hass.states.get("sensor.huisbaasje_huisbaasje_userid_gas_thisday").state
+            == "unknown"
+        )
 
         # Assert mocks are called
         assert len(mock_authenticate.mock_calls) == 1
