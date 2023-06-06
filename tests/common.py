@@ -63,6 +63,7 @@ from homeassistant.helpers import (
     restore_state,
     restore_state as rs,
     storage,
+    template,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.json import JSONEncoder
@@ -267,6 +268,7 @@ async def async_test_home_assistant(event_loop, load_registries=True):
                 ir.async_load(hass),
                 rs.async_load(hass),
             )
+            template.async_setup(hass)
         hass.data[bootstrap.DATA_REGISTRIES_LOADED] = None
 
     hass.state = CoreState.running

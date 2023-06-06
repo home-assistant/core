@@ -4,6 +4,7 @@ import pytest
 import homeassistant.components.persistent_notification as pn
 from homeassistant.components.websocket_api.const import TYPE_RESULT
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.template import Template
 from homeassistant.setup import async_setup_component
 
 from tests.typing import WebSocketGenerator
@@ -13,6 +14,29 @@ from tests.typing import WebSocketGenerator
 async def setup_integration(hass):
     """Set up persistent notification integration."""
     assert await async_setup_component(hass, pn.DOMAIN, {})
+
+
+async def test_template_usage(hass: HomeAssistant) -> None:
+    """Test enumerating persistent notifications in a template."""
+    await hass.services.async_call(
+        pn.DOMAIN,
+        "create",
+        {"notification_id": "Beer 2", "message": "test"},
+        blocking=True,
+    )
+
+    result = Template("{{ persistent_notifications() | count }}", hass).async_render()
+    assert result == 1
+
+    await hass.services.async_call(
+        pn.DOMAIN,
+        "dismiss",
+        {"notification_id": "Beer 2"},
+        blocking=True,
+    )
+
+    result = Template("{{ persistent_notifications() | count }}", hass).async_render()
+    assert result == 0
 
 
 async def test_create(hass: HomeAssistant) -> None:
