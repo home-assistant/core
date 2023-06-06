@@ -9,9 +9,8 @@ from flux_led.const import MODE_MUSIC
 
 from homeassistant import config_entries
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.const import CONF_NAME
+from homeassistant.const import CONF_NAME, EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -48,8 +47,7 @@ async def async_setup_entry(
             FluxMusicSwitch(coordinator, base_unique_id, f"{name} Music", "music")
         )
 
-    if entities:
-        async_add_entities(entities)
+    async_add_entities(entities)
 
 
 class FluxSwitch(

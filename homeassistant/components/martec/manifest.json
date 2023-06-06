@@ -1,0 +1,6 @@
+{
+  "domain": "martec",
+  "name": "Martec",
+  "integration_type": "virtual",
+  "supported_by": "motion_blinds"
+}

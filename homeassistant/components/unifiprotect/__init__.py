@@ -5,30 +5,24 @@ import asyncio
 from datetime import timedelta
 import logging
 
-from aiohttp import CookieJar
 from aiohttp.client_exceptions import ServerDisconnectedError
-from pyunifiprotect import ProtectApiClient
 from pyunifiprotect.exceptions import ClientError, NotAuthorized
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_PASSWORD,
-    CONF_PORT,
-    CONF_USERNAME,
-    CONF_VERIFY_SSL,
-    EVENT_HOMEASSISTANT_STOP,
-)
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.aiohttp_client import async_create_clientsession
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    issue_registry as ir,
+)
+from homeassistant.helpers.issue_registry import IssueSeverity
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
-    CONF_ALL_UPDATES,
-    CONF_OVERRIDE_CHOST,
+    CONF_ALLOW_EA,
     DEFAULT_SCAN_INTERVAL,
-    DEVICES_FOR_SUBSCRIBE,
     DEVICES_THAT_ADOPT,
     DOMAIN,
     MIN_REQUIRED_PROTECT_V,
@@ -39,31 +33,30 @@ from .data import ProtectData, async_ufp_instance_for_config_entry_ids
 from .discovery import async_start_discovery
 from .migrate import async_migrate_data
 from .services import async_cleanup_services, async_setup_services
-from .utils import _async_unifi_mac_from_hass, async_get_devices
+from .utils import (
+    _async_unifi_mac_from_hass,
+    async_create_api_client,
+    async_get_devices,
+)
 from .views import ThumbnailProxyView, VideoProxyView
 
 _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(seconds=DEFAULT_SCAN_INTERVAL)
 
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the UniFi Protect."""
+    # Only start discovery once regardless of how many entries they have
+    async_start_discovery(hass)
+    return True
+
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up the UniFi Protect config entries."""
-
-    async_start_discovery(hass)
-    session = async_create_clientsession(hass, cookie_jar=CookieJar(unsafe=True))
-    protect = ProtectApiClient(
-        host=entry.data[CONF_HOST],
-        port=entry.data[CONF_PORT],
-        username=entry.data[CONF_USERNAME],
-        password=entry.data[CONF_PASSWORD],
-        verify_ssl=entry.data[CONF_VERIFY_SSL],
-        session=session,
-        subscribed_models=DEVICES_FOR_SUBSCRIBE,
-        override_connection_host=entry.options.get(CONF_OVERRIDE_CHOST, False),
-        ignore_stats=not entry.options.get(CONF_ALL_UPDATES, False),
-        ignore_unadopted=False,
-    )
+    protect = async_create_api_client(hass, entry)
     _LOGGER.debug("Connect to UniFi Protect")
     data_service = ProtectData(hass, protect, SCAN_INTERVAL, entry)
 
@@ -82,26 +75,73 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
         return False
 
-    await async_migrate_data(hass, entry, protect)
     if entry.unique_id is None:
         hass.config_entries.async_update_entry(entry, unique_id=nvr_info.mac)
 
-    await data_service.async_setup()
-    if not data_service.last_update_success:
-        raise ConfigEntryNotReady
-
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = data_service
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    async_setup_services(hass)
-    hass.http.register_view(ThumbnailProxyView(hass))
-    hass.http.register_view(VideoProxyView(hass))
-
     entry.async_on_unload(entry.add_update_listener(_async_options_updated))
     entry.async_on_unload(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, data_service.async_stop)
     )
 
+    if (
+        not entry.options.get(CONF_ALLOW_EA, False)
+        and await nvr_info.get_is_prerelease()
+    ):
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            "ea_warning",
+            is_fixable=True,
+            is_persistent=True,
+            learn_more_url="https://www.home-assistant.io/integrations/unifiprotect#about-unifi-early-access",
+            severity=IssueSeverity.WARNING,
+            translation_key="ea_warning",
+            translation_placeholders={"version": str(nvr_info.version)},
+            data={"entry_id": entry.entry_id},
+        )
+
+    try:
+        await _async_setup_entry(hass, entry, data_service)
+    except Exception as err:
+        if await nvr_info.get_is_prerelease():
+            # If they are running a pre-release, its quite common for setup
+            # to fail so we want to create a repair issue for them so its
+            # obvious what the problem is.
+            ir.async_create_issue(
+                hass,
+                DOMAIN,
+                f"ea_setup_failed_{nvr_info.version}",
+                is_fixable=False,
+                is_persistent=False,
+                learn_more_url="https://www.home-assistant.io/integrations/unifiprotect#about-unifi-early-access",
+                severity=IssueSeverity.ERROR,
+                translation_key="ea_setup_failed",
+                translation_placeholders={
+                    "error": str(err),
+                    "version": str(nvr_info.version),
+                },
+            )
+            ir.async_delete_issue(hass, DOMAIN, "ea_warning")
+            _LOGGER.exception("Error setting up UniFi Protect integration: %s", err)
+        raise
+
     return True
+
+
+async def _async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, data_service: ProtectData
+) -> None:
+    await async_migrate_data(hass, entry, data_service.api)
+
+    await data_service.async_setup()
+    if not data_service.last_update_success:
+        raise ConfigEntryNotReady
+
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    async_setup_services(hass)
+    hass.http.register_view(ThumbnailProxyView(hass))
+    hass.http.register_view(VideoProxyView(hass))
 
 
 async def _async_options_updated(hass: HomeAssistant, entry: ConfigEntry) -> None:
@@ -111,6 +151,7 @@ async def _async_options_updated(hass: HomeAssistant, entry: ConfigEntry) -> Non
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload UniFi Protect config entry."""
+
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         data: ProtectData = hass.data[DOMAIN][entry.entry_id]
         await data.async_stop()

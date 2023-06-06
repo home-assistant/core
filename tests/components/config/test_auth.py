@@ -3,8 +3,10 @@ import pytest
 
 from homeassistant.auth import models as auth_models
 from homeassistant.components.config import auth as auth_config
+from homeassistant.core import HomeAssistant
 
 from tests.common import CLIENT_ID, MockGroup, MockUser
+from tests.typing import WebSocketGenerator
 
 
 @pytest.fixture(autouse=True)
@@ -13,7 +15,11 @@ def setup_config(hass, aiohttp_client):
     hass.loop.run_until_complete(auth_config.async_setup(hass))
 
 
-async def test_list_requires_admin(hass, hass_ws_client, hass_read_only_access_token):
+async def test_list_requires_admin(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_read_only_access_token: str,
+) -> None:
     """Test get users requires auth."""
     client = await hass_ws_client(hass, hass_read_only_access_token)
 
@@ -24,7 +30,9 @@ async def test_list_requires_admin(hass, hass_ws_client, hass_read_only_access_t
     assert result["error"]["code"] == "unauthorized"
 
 
-async def test_list(hass, hass_ws_client, hass_admin_user):
+async def test_list(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, hass_admin_user: MockUser
+) -> None:
     """Test get users."""
     group = MockGroup().add_to_hass(hass)
 
@@ -106,7 +114,11 @@ async def test_list(hass, hass_ws_client, hass_admin_user):
     }
 
 
-async def test_delete_requires_admin(hass, hass_ws_client, hass_read_only_access_token):
+async def test_delete_requires_admin(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_read_only_access_token: str,
+) -> None:
     """Test delete command requires an admin."""
     client = await hass_ws_client(hass, hass_read_only_access_token)
 
@@ -119,7 +131,9 @@ async def test_delete_requires_admin(hass, hass_ws_client, hass_read_only_access
     assert result["error"]["code"] == "unauthorized"
 
 
-async def test_delete_unable_self_account(hass, hass_ws_client, hass_access_token):
+async def test_delete_unable_self_account(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, hass_access_token: str
+) -> None:
     """Test we cannot delete our own account."""
     client = await hass_ws_client(hass, hass_access_token)
     refresh_token = await hass.auth.async_validate_access_token(hass_access_token)
@@ -133,7 +147,9 @@ async def test_delete_unable_self_account(hass, hass_ws_client, hass_access_toke
     assert result["error"]["code"] == "no_delete_self"
 
 
-async def test_delete_unknown_user(hass, hass_ws_client, hass_access_token):
+async def test_delete_unknown_user(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, hass_access_token: str
+) -> None:
     """Test we cannot delete an unknown user."""
     client = await hass_ws_client(hass, hass_access_token)
 
@@ -146,7 +162,9 @@ async def test_delete_unknown_user(hass, hass_ws_client, hass_access_token):
     assert result["error"]["code"] == "not_found"
 
 
-async def test_delete(hass, hass_ws_client, hass_access_token):
+async def test_delete(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, hass_access_token: str
+) -> None:
     """Test delete command works."""
     client = await hass_ws_client(hass, hass_access_token)
     test_user = MockUser(id="efg").add_to_hass(hass)
@@ -162,7 +180,9 @@ async def test_delete(hass, hass_ws_client, hass_access_token):
     assert len(await hass.auth.async_get_users()) == cur_users - 1
 
 
-async def test_create(hass, hass_ws_client, hass_access_token):
+async def test_create(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, hass_access_token: str
+) -> None:
     """Test create command works."""
     client = await hass_ws_client(hass, hass_access_token)
 
@@ -184,7 +204,9 @@ async def test_create(hass, hass_ws_client, hass_access_token):
     assert not user.system_generated
 
 
-async def test_create_user_group(hass, hass_ws_client, hass_access_token):
+async def test_create_user_group(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, hass_access_token: str
+) -> None:
     """Test create user with a group."""
     client = await hass_ws_client(hass, hass_access_token)
 
@@ -213,7 +235,11 @@ async def test_create_user_group(hass, hass_ws_client, hass_access_token):
     assert not user.system_generated
 
 
-async def test_create_requires_admin(hass, hass_ws_client, hass_read_only_access_token):
+async def test_create_requires_admin(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_read_only_access_token: str,
+) -> None:
     """Test create command requires an admin."""
     client = await hass_ws_client(hass, hass_read_only_access_token)
 
@@ -224,7 +250,7 @@ async def test_create_requires_admin(hass, hass_ws_client, hass_read_only_access
     assert result["error"]["code"] == "unauthorized"
 
 
-async def test_update(hass, hass_ws_client):
+async def test_update(hass: HomeAssistant, hass_ws_client: WebSocketGenerator) -> None:
     """Test update command works."""
     client = await hass_ws_client(hass)
 
@@ -251,7 +277,11 @@ async def test_update(hass, hass_ws_client):
     assert data_user["group_ids"] == ["system-read-only"]
 
 
-async def test_update_requires_admin(hass, hass_ws_client, hass_read_only_access_token):
+async def test_update_requires_admin(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_read_only_access_token: str,
+) -> None:
     """Test update command requires an admin."""
     client = await hass_ws_client(hass, hass_read_only_access_token)
 
@@ -272,7 +302,9 @@ async def test_update_requires_admin(hass, hass_ws_client, hass_read_only_access
     assert user.name == "Test user"
 
 
-async def test_update_system_generated(hass, hass_ws_client):
+async def test_update_system_generated(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test update command cannot update a system generated."""
     client = await hass_ws_client(hass)
 
@@ -293,7 +325,9 @@ async def test_update_system_generated(hass, hass_ws_client):
     assert user.name == "Test user"
 
 
-async def test_deactivate(hass, hass_ws_client):
+async def test_deactivate(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test deactivation and reactivation of regular user."""
     client = await hass_ws_client(hass)
 
@@ -331,7 +365,9 @@ async def test_deactivate(hass, hass_ws_client):
     assert data_user["is_active"] is True
 
 
-async def test_deactivate_owner(hass, hass_ws_client):
+async def test_deactivate_owner(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test that owner cannot be deactivated."""
     user = MockUser(id="abc", name="Test Owner", is_owner=True).add_to_hass(hass)
 
@@ -348,7 +384,9 @@ async def test_deactivate_owner(hass, hass_ws_client):
     assert result["error"]["code"] == "cannot_deactivate_owner"
 
 
-async def test_deactivate_system_generated(hass, hass_ws_client):
+async def test_deactivate_system_generated(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test that owner cannot be deactivated."""
     client = await hass_ws_client(hass)
 

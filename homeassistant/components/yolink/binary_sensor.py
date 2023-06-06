@@ -5,6 +5,13 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
 
+from yolink.const import (
+    ATTR_DEVICE_CO_SMOKE_SENSOR,
+    ATTR_DEVICE_DOOR_SENSOR,
+    ATTR_DEVICE_LEAK_SENSOR,
+    ATTR_DEVICE_MOTION_SENSOR,
+    ATTR_DEVICE_VIBRATION_SENSOR,
+)
 from yolink.device import YoLinkDevice
 
 from homeassistant.components.binary_sensor import (
@@ -16,15 +23,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import (
-    ATTR_COORDINATORS,
-    ATTR_DEVICE_CO_SMOKE_SENSOR,
-    ATTR_DEVICE_DOOR_SENSOR,
-    ATTR_DEVICE_LEAK_SENSOR,
-    ATTR_DEVICE_MOTION_SENSOR,
-    ATTR_DEVICE_VIBRATION_SENSOR,
-    DOMAIN,
-)
+from .const import DOMAIN
 from .coordinator import YoLinkCoordinator
 from .entity import YoLinkEntity
 
@@ -47,13 +46,6 @@ SENSOR_DEVICE_TYPE = [
 ]
 
 
-def is_door_sensor(device: YoLinkDevice) -> bool:
-    """Check Door Sensor type."""
-    return device.device_type == ATTR_DEVICE_DOOR_SENSOR and (
-        device.parent_id is None or device.parent_id == "null"
-    )
-
-
 SENSOR_TYPES: tuple[YoLinkBinarySensorEntityDescription, ...] = (
     YoLinkBinarySensorEntityDescription(
         key="door_state",
@@ -61,7 +53,7 @@ SENSOR_TYPES: tuple[YoLinkBinarySensorEntityDescription, ...] = (
         device_class=BinarySensorDeviceClass.DOOR,
         name="State",
         value=lambda value: value == "open" if value is not None else None,
-        exists_fn=is_door_sensor,
+        exists_fn=lambda device: device.device_type == ATTR_DEVICE_DOOR_SENSOR,
     ),
     YoLinkBinarySensorEntityDescription(
         key="motion_state",
@@ -108,7 +100,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up YoLink Sensor from a config entry."""
-    device_coordinators = hass.data[DOMAIN][config_entry.entry_id][ATTR_COORDINATORS]
+    device_coordinators = hass.data[DOMAIN][config_entry.entry_id].device_coordinators
     binary_sensor_device_coordinators = [
         device_coordinator
         for device_coordinator in device_coordinators.values()

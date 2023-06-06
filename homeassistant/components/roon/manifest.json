@@ -1,10 +1,10 @@
 {
   "domain": "roon",
   "name": "RoonLabs music player",
+  "codeowners": ["@pavoni"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/roon",
-  "requirements": ["roonapi==0.1.1"],
-  "codeowners": ["@pavoni"],
   "iot_class": "local_push",
-  "loggers": ["roonapi"]
+  "loggers": ["roonapi"],
+  "requirements": ["roonapi==0.1.4"]
 }

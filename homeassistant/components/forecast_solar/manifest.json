@@ -1,10 +1,11 @@
 {
   "domain": "forecast_solar",
   "name": "Forecast.Solar",
+  "codeowners": ["@klaasnicolaas", "@frenck"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/forecast_solar",
-  "requirements": ["forecast_solar==2.2.0"],
-  "codeowners": ["@klaasnicolaas", "@frenck"],
+  "integration_type": "service",
+  "iot_class": "cloud_polling",
   "quality_scale": "platinum",
-  "iot_class": "cloud_polling"
+  "requirements": ["forecast-solar==3.0.0"]
 }

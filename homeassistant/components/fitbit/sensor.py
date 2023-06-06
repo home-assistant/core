@@ -19,19 +19,16 @@ from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
     SensorEntity,
 )
-from homeassistant.const import (
-    ATTR_ATTRIBUTION,
-    CONF_CLIENT_ID,
-    CONF_CLIENT_SECRET,
-    CONF_UNIT_SYSTEM,
-)
+from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_UNIT_SYSTEM
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.icon import icon_for_battery_level
+from homeassistant.helpers.json import save_json
 from homeassistant.helpers.network import NoURLAvailableError, get_url
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.util.json import load_json, save_json
+from homeassistant.util.json import load_json_object
+from homeassistant.util.unit_system import METRIC_SYSTEM
 
 from .const import (
     ATTR_ACCESS_TOKEN,
@@ -88,9 +85,12 @@ def request_app_setup(
         """Handle configuration updates."""
         config_path = hass.config.path(FITBIT_CONFIG_FILE)
         if os.path.isfile(config_path):
-            config_file = load_json(config_path)
+            config_file = load_json_object(config_path)
             if config_file == DEFAULT_CONFIG:
-                error_msg = f"You didn't correctly modify {FITBIT_CONFIG_FILE}, please try again."
+                error_msg = (
+                    f"You didn't correctly modify {FITBIT_CONFIG_FILE}, please try"
+                    " again."
+                )
 
                 configurator.notify_errors(hass, _CONFIGURING["fitbit"], error_msg)
             else:
@@ -161,7 +161,7 @@ def setup_platform(
     """Set up the Fitbit sensor."""
     config_path = hass.config.path(FITBIT_CONFIG_FILE)
     if os.path.isfile(config_path):
-        config_file: ConfigType = cast(ConfigType, load_json(config_path))
+        config_file = load_json_object(config_path)
         if config_file == DEFAULT_CONFIG:
             request_app_setup(
                 hass, config, add_entities, config_path, discovery_info=None
@@ -175,13 +175,10 @@ def setup_platform(
     if "fitbit" in _CONFIGURING:
         configurator.request_done(hass, _CONFIGURING.pop("fitbit"))
 
-    access_token: str | None = config_file.get(ATTR_ACCESS_TOKEN)
-    refresh_token: str | None = config_file.get(ATTR_REFRESH_TOKEN)
-    expires_at: int | None = config_file.get(ATTR_LAST_SAVED_AT)
     if (
-        access_token is not None
-        and refresh_token is not None
-        and expires_at is not None
+        (access_token := config_file.get(ATTR_ACCESS_TOKEN)) is not None
+        and (refresh_token := config_file.get(ATTR_REFRESH_TOKEN)) is not None
+        and (expires_at := config_file.get(ATTR_LAST_SAVED_AT)) is not None
     ):
         authd_client = Fitbit(
             config_file.get(CONF_CLIENT_ID),
@@ -192,14 +189,14 @@ def setup_platform(
             refresh_cb=lambda x: None,
         )
 
-        if int(time.time()) - expires_at > 3600:
+        if int(time.time()) - cast(int, expires_at) > 3600:
             authd_client.client.refresh_token()
 
         user_profile = authd_client.user_profile_get()["user"]
         if (unit_system := config[CONF_UNIT_SYSTEM]) == "default":
             authd_client.system = user_profile["locale"]
             if authd_client.system != "en_GB":
-                if hass.config.units.is_metric:
+                if hass.config.units is METRIC_SYSTEM:
                     authd_client.system = "metric"
                 else:
                     authd_client.system = "en_US"
@@ -215,7 +212,7 @@ def setup_platform(
                 user_profile,
                 config_path,
                 description,
-                hass.config.units.is_metric,
+                hass.config.units is METRIC_SYSTEM,
                 clock_format,
             )
             for description in FITBIT_RESOURCES_LIST
@@ -229,7 +226,7 @@ def setup_platform(
                         user_profile,
                         config_path,
                         FITBIT_RESOURCE_BATTERY,
-                        hass.config.units.is_metric,
+                        hass.config.units is METRIC_SYSTEM,
                         clock_format,
                         dev_extra,
                     )
@@ -344,6 +341,7 @@ class FitbitSensor(SensorEntity):
     """Implementation of a Fitbit sensor."""
 
     entity_description: FitbitSensorEntityDescription
+    _attr_attribution = ATTRIBUTION
 
     def __init__(
         self,
@@ -368,8 +366,7 @@ class FitbitSensor(SensorEntity):
             self._attr_name = f"{self.extra.get('deviceVersion')} Battery"
             self._attr_unique_id = f"{self._attr_unique_id}_{self.extra.get('id')}"
 
-        if (unit_type := description.unit_type) == "":
-            split_resource = description.key.rsplit("/", maxsplit=1)[-1]
+        if description.unit_type:
             try:
                 measurement_system = FITBIT_MEASUREMENTS[self.client.system]
             except KeyError:
@@ -377,8 +374,9 @@ class FitbitSensor(SensorEntity):
                     measurement_system = FITBIT_MEASUREMENTS["metric"]
                 else:
                     measurement_system = FITBIT_MEASUREMENTS["en_US"]
+            split_resource = description.key.rsplit("/", maxsplit=1)[-1]
             unit_type = measurement_system[split_resource]
-        self._attr_native_unit_of_measurement = unit_type
+            self._attr_native_unit_of_measurement = unit_type
 
     @property
     def icon(self) -> str | None:
@@ -395,7 +393,7 @@ class FitbitSensor(SensorEntity):
     @property
     def extra_state_attributes(self) -> dict[str, str | None]:
         """Return the state attributes."""
-        attrs: dict[str, str | None] = {ATTR_ATTRIBUTION: ATTRIBUTION}
+        attrs: dict[str, str | None] = {}
 
         if self.extra is not None:
             attrs["model"] = self.extra.get("deviceVersion")
@@ -449,7 +447,7 @@ class FitbitSensor(SensorEntity):
                     self._attr_native_value = raw_state
                 else:
                     try:
-                        self._attr_native_value = f"{int(raw_state):,}"
+                        self._attr_native_value = int(raw_state)
                     except TypeError:
                         self._attr_native_value = raw_state
 

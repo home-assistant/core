@@ -1,20 +1,32 @@
 {
   "domain": "inkbird",
   "name": "INKBIRD",
-  "config_flow": true,
-  "documentation": "https://www.home-assistant.io/integrations/inkbird",
   "bluetooth": [
-    { "local_name": "sps", "connectable": false },
-    { "local_name": "Inkbird*", "connectable": false },
-    { "local_name": "iBBQ*", "connectable": false },
-    { "local_name": "xBBQ*", "connectable": false },
-    { "local_name": "tps", "connectable": false }
+    {
+      "local_name": "sps",
+      "connectable": false
+    },
+    {
+      "local_name": "Inkbird*",
+      "connectable": false
+    },
+    {
+      "local_name": "iBBQ*",
+      "connectable": false
+    },
+    {
+      "local_name": "xBBQ*",
+      "connectable": false
+    },
+    {
+      "local_name": "tps",
+      "connectable": false
+    }
   ],
-  "requirements": ["inkbird-ble==0.5.5"],
-  "dependencies": ["bluetooth"],
   "codeowners": ["@bdraco"],
+  "config_flow": true,
+  "dependencies": ["bluetooth_adapters"],
+  "documentation": "https://www.home-assistant.io/integrations/inkbird",
   "iot_class": "local_push",
-  "supported_brands": {
-    "nutrichef": "Nutrichef"
-  }
+  "requirements": ["inkbird-ble==0.5.6"]
 }

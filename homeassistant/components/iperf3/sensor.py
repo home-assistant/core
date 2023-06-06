@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_MONITORED_CONDITIONS
+from homeassistant.const import CONF_MONITORED_CONDITIONS
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -10,10 +10,6 @@ from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import ATTR_VERSION, DATA_UPDATED, DOMAIN as IPERF3_DOMAIN, SENSOR_TYPES
-
-ATTRIBUTION = "Data retrieved using Iperf3"
-
-ICON = "mdi:speedometer"
 
 ATTR_PROTOCOL = "Protocol"
 ATTR_REMOTE_HOST = "Remote Server"
@@ -39,13 +35,14 @@ async def async_setup_platform(
     async_add_entities(entities, True)
 
 
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
 class Iperf3Sensor(RestoreEntity, SensorEntity):
     """A Iperf3 sensor implementation."""
 
-    _attr_icon = ICON
+    _attr_attribution = "Data retrieved using Iperf3"
     _attr_should_poll = False
 
-    def __init__(self, iperf3_data, description: SensorEntityDescription):
+    def __init__(self, iperf3_data, description: SensorEntityDescription) -> None:
         """Initialize the sensor."""
         self.entity_description = description
         self._iperf3_data = iperf3_data
@@ -55,7 +52,6 @@ class Iperf3Sensor(RestoreEntity, SensorEntity):
     def extra_state_attributes(self):
         """Return the state attributes."""
         return {
-            ATTR_ATTRIBUTION: ATTRIBUTION,
             ATTR_PROTOCOL: self._iperf3_data.protocol,
             ATTR_REMOTE_HOST: self._iperf3_data.host,
             ATTR_REMOTE_PORT: self._iperf3_data.port,

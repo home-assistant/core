@@ -1,10 +1,11 @@
 """The test for the Random binary sensor platform."""
 from unittest.mock import patch
 
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 
-async def test_random_binary_sensor_on(hass):
+async def test_random_binary_sensor_on(hass: HomeAssistant) -> None:
     """Test the Random binary sensor."""
     config = {"binary_sensor": {"platform": "random", "name": "test"}}
 
@@ -24,7 +25,7 @@ async def test_random_binary_sensor_on(hass):
     assert state.state == "on"
 
 
-async def test_random_binary_sensor_off(hass):
+async def test_random_binary_sensor_off(hass: HomeAssistant) -> None:
     """Test the Random binary sensor."""
     config = {"binary_sensor": {"platform": "random", "name": "test"}}
 

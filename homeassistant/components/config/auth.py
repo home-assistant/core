@@ -1,7 +1,10 @@
 """Offer API to configure Home Assistant auth."""
+from typing import Any
+
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
+from homeassistant.core import HomeAssistant
 
 WS_TYPE_LIST = "config/auth/list"
 SCHEMA_WS_LIST = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
@@ -29,7 +32,11 @@ async def async_setup(hass):
 
 @websocket_api.require_admin
 @websocket_api.async_response
-async def websocket_list(hass, connection, msg):
+async def websocket_list(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
     """Return a list of users."""
     result = [_user_info(u) for u in await hass.auth.async_get_users()]
 
@@ -38,7 +45,11 @@ async def websocket_list(hass, connection, msg):
 
 @websocket_api.require_admin
 @websocket_api.async_response
-async def websocket_delete(hass, connection, msg):
+async def websocket_delete(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
     """Delete a user."""
     if msg["user_id"] == connection.user.id:
         connection.send_message(
@@ -69,7 +80,11 @@ async def websocket_delete(hass, connection, msg):
     }
 )
 @websocket_api.async_response
-async def websocket_create(hass, connection, msg):
+async def websocket_create(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
     """Create a user."""
     user = await hass.auth.async_create_user(
         msg["name"], group_ids=msg.get("group_ids"), local_only=msg.get("local_only")
@@ -92,7 +107,11 @@ async def websocket_create(hass, connection, msg):
     }
 )
 @websocket_api.async_response
-async def websocket_update(hass, connection, msg):
+async def websocket_update(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
     """Update a user."""
     if not (user := await hass.auth.async_get_user(msg.pop("user_id"))):
         connection.send_message(

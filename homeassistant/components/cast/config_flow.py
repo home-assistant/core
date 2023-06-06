@@ -7,11 +7,12 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components import onboarding, zeroconf
+from homeassistant.const import CONF_UUID
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_validation as cv
 
-from .const import CONF_IGNORE_CEC, CONF_KNOWN_HOSTS, CONF_UUID, DOMAIN
+from .const import CONF_IGNORE_CEC, CONF_KNOWN_HOSTS, DOMAIN
 
 IGNORE_CEC_SCHEMA = vol.Schema(vol.All(cv.ensure_list, [cv.string]))
 KNOWN_HOSTS_SCHEMA = vol.Schema(vol.All(cv.ensure_list, [cv.string]))
@@ -36,21 +37,6 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> CastOptionsFlowHandler:
         """Get the options flow for this handler."""
         return CastOptionsFlowHandler(config_entry)
-
-    async def async_step_import(self, import_data=None):
-        """Import data."""
-        if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
-
-        media_player_config = import_data or []
-        for cfg in media_player_config:
-            if CONF_IGNORE_CEC in cfg:
-                self._ignore_cec.update(set(cfg[CONF_IGNORE_CEC]))
-            if CONF_UUID in cfg:
-                self._wanted_uuid.add(cfg[CONF_UUID])
-
-        data = self._get_data()
-        return self.async_create_entry(title="Google Cast", data=data)
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""

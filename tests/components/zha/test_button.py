@@ -25,10 +25,11 @@ from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
     STATE_UNKNOWN,
+    EntityCategory,
     Platform,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entity import EntityCategory
 
 from .common import find_entity_id
 from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_TYPE
@@ -38,7 +39,7 @@ from tests.common import mock_coro
 
 @pytest.fixture(autouse=True)
 def button_platform_only():
-    """Only setup the button and required base platforms to speed up tests."""
+    """Only set up the button and required base platforms to speed up tests."""
     with patch(
         "homeassistant.components.zha.PLATFORMS",
         (
@@ -120,8 +121,8 @@ async def tuya_water_valve(hass, zigpy_device_mock, zha_device_joined_restored):
 
 
 @freeze_time("2021-11-04 17:37:00", tz_offset=-1)
-async def test_button(hass, contact_sensor):
-    """Test zha button platform."""
+async def test_button(hass: HomeAssistant, contact_sensor) -> None:
+    """Test ZHA button platform."""
 
     entity_registry = er.async_get(hass)
     zha_device, cluster = contact_sensor
@@ -160,8 +161,8 @@ async def test_button(hass, contact_sensor):
     assert state.attributes[ATTR_DEVICE_CLASS] == ButtonDeviceClass.UPDATE
 
 
-async def test_frost_unlock(hass, tuya_water_valve):
-    """Test custom frost unlock zha button."""
+async def test_frost_unlock(hass: HomeAssistant, tuya_water_valve) -> None:
+    """Test custom frost unlock ZHA button."""
 
     entity_registry = er.async_get(hass)
     zha_device, cluster = tuya_water_valve

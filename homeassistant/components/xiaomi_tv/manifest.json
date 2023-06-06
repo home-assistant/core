@@ -1,9 +1,9 @@
 {
   "domain": "xiaomi_tv",
   "name": "Xiaomi TV",
-  "documentation": "https://www.home-assistant.io/integrations/xiaomi_tv",
-  "requirements": ["pymitv==1.4.3"],
   "codeowners": ["@simse"],
+  "documentation": "https://www.home-assistant.io/integrations/xiaomi_tv",
   "iot_class": "assumed_state",
-  "loggers": ["pymitv"]
+  "loggers": ["pymitv"],
+  "requirements": ["pymitv==1.4.3"]
 }

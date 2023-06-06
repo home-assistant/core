@@ -1,5 +1,5 @@
 """Class to hold remote accessories."""
-from abc import abstractmethod
+from abc import ABC, abstractmethod
 import logging
 
 from pyhap.const import CATEGORY_TELEVISION
@@ -18,7 +18,7 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_ON,
 )
-from homeassistant.core import callback
+from homeassistant.core import State, callback
 
 from .accessories import TYPES, HomeAccessory
 from .const import (
@@ -75,7 +75,7 @@ REMOTE_KEYS = {
 }
 
 
-class RemoteInputSelectAccessory(HomeAccessory):
+class RemoteInputSelectAccessory(HomeAccessory, ABC):
     """Generate a InputSelect accessory."""
 
     def __init__(
@@ -91,21 +91,21 @@ class RemoteInputSelectAccessory(HomeAccessory):
         state = self.hass.states.get(self.entity_id)
         features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
 
+        self._mapped_sources_list = []
+        self._mapped_sources = {}
         self.source_key = source_key
         self.source_list_key = source_list_key
         self.sources = []
         self.support_select_source = False
         if features & required_feature:
-            sources = state.attributes.get(source_list_key, [])
+            sources = self._get_ordered_source_list_from_state(state)
             if len(sources) > MAXIMUM_SOURCES:
                 _LOGGER.warning(
                     "%s: Reached maximum number of sources (%s)",
                     self.entity_id,
                     MAXIMUM_SOURCES,
                 )
-            self.sources = [
-                cleanup_name_for_homekit(source) for source in sources[:MAXIMUM_SOURCES]
-            ]
+            self.sources = sources[:MAXIMUM_SOURCES]
             if self.sources:
                 self.support_select_source = True
 
@@ -131,7 +131,7 @@ class RemoteInputSelectAccessory(HomeAccessory):
         )
         for index, source in enumerate(self.sources):
             serv_input = self.add_preload_service(
-                SERV_INPUT_SOURCE, [CHAR_IDENTIFIER, CHAR_NAME]
+                SERV_INPUT_SOURCE, [CHAR_IDENTIFIER, CHAR_NAME], unique_id=source
             )
             serv_tv.add_linked_service(serv_input)
             serv_input.configure_char(CHAR_CONFIGURED_NAME, value=source)
@@ -142,6 +142,24 @@ class RemoteInputSelectAccessory(HomeAccessory):
             serv_input.configure_char(CHAR_INPUT_SOURCE_TYPE, value=input_type)
             serv_input.configure_char(CHAR_CURRENT_VISIBILITY_STATE, value=False)
             _LOGGER.debug("%s: Added source %s", self.entity_id, source)
+
+    def _get_mapped_sources(self, state: State) -> dict[str, str]:
+        """Return a dict of sources mapped to their homekit safe name."""
+        source_list = state.attributes.get(self.source_list_key, [])
+        if self._mapped_sources_list != source_list:
+            self._mapped_sources = {
+                cleanup_name_for_homekit(source): source for source in source_list
+            }
+        return self._mapped_sources
+
+    def _get_ordered_source_list_from_state(self, state: State) -> list[str]:
+        """Return ordered source list while preserving order with duplicates removed.
+
+        Some integrations have duplicate sources in the source list
+        which will make the source list conflict as HomeKit requires
+        unique source names.
+        """
+        return list(self._get_mapped_sources(state))
 
     @abstractmethod
     def set_on_off(self, value):
@@ -169,9 +187,9 @@ class RemoteInputSelectAccessory(HomeAccessory):
             self.char_input_source.set_value(index)
             return
 
-        possible_sources = new_state.attributes.get(self.source_list_key, [])
-        if source in possible_sources:
-            index = possible_sources.index(source)
+        possible_sources = self._get_ordered_source_list_from_state(new_state)
+        if source_name in possible_sources:
+            index = possible_sources.index(source_name)
             if index >= MAXIMUM_SOURCES:
                 _LOGGER.debug(
                     "%s: Source %s and above are not supported",
@@ -220,7 +238,7 @@ class ActivityRemote(RemoteInputSelectAccessory):
     def set_input_source(self, value):
         """Send input set value if call came from HomeKit."""
         _LOGGER.debug("%s: Set current input to %s", self.entity_id, value)
-        source = self.sources[value]
+        source = self._mapped_sources[self.sources[value]]
         params = {ATTR_ENTITY_ID: self.entity_id, ATTR_ACTIVITY: source}
         self.async_call_service(REMOTE_DOMAIN, SERVICE_TURN_ON, params)
 

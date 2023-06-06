@@ -150,8 +150,6 @@ async def _configure_flow(
     user_input = user_input or {}
 
     with patch(
-        "homeassistant.components.hyperion.async_setup", return_value=True
-    ), patch(
         "homeassistant.components.hyperion.async_setup_entry",
         return_value=True,
     ):
@@ -765,7 +763,7 @@ async def test_options_priority(hass: HomeAssistant) -> None:
             {ATTR_ENTITY_ID: TEST_ENTITY_ID_1},
             blocking=True,
         )
-        # pylint: disable=unsubscriptable-object
+        # pylint: disable-next=unsubscriptable-object
         assert client.async_send_set_color.call_args[1][CONF_PRIORITY] == new_priority
 
 
@@ -836,9 +834,7 @@ async def test_reauth_success(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.hyperion.client.HyperionClient", return_value=client
-    ), patch("homeassistant.components.hyperion.async_setup", return_value=True), patch(
-        "homeassistant.components.hyperion.async_setup_entry", return_value=True
-    ):
+    ), patch("homeassistant.components.hyperion.async_setup_entry", return_value=True):
         result = await _init_flow(
             hass,
             source=SOURCE_REAUTH,

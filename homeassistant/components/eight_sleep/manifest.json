@@ -1,10 +1,10 @@
 {
   "domain": "eight_sleep",
   "name": "Eight Sleep",
-  "documentation": "https://www.home-assistant.io/integrations/eight_sleep",
-  "requirements": ["pyeight==0.3.0"],
   "codeowners": ["@mezz64", "@raman325"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/eight_sleep",
   "iot_class": "cloud_polling",
   "loggers": ["pyeight"],
-  "config_flow": true
+  "requirements": ["pyEight==0.3.2"]
 }

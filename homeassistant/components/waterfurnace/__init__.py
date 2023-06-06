@@ -96,8 +96,10 @@ class WaterFurnaceData(threading.Thread):
             _LOGGER.error("Failed to refresh login credentials. Thread stopped")
             persistent_notification.create(
                 self.hass,
-                "Error:<br/>Connection to waterfurnace website failed "
-                "the maximum number of times. Thread has stopped",
+                (
+                    "Error:<br/>Connection to waterfurnace website failed "
+                    "the maximum number of times. Thread has stopped"
+                ),
                 title=NOTIFICATION_TITLE,
                 notification_id=NOTIFICATION_ID,
             )

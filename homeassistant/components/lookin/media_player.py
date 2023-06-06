@@ -36,6 +36,7 @@ _FUNCTION_NAME_TO_FEATURE = {
     "volup": MediaPlayerEntityFeature.VOLUME_STEP,
     "chup": MediaPlayerEntityFeature.NEXT_TRACK,
     "chdown": MediaPlayerEntityFeature.PREVIOUS_TRACK,
+    "mode": MediaPlayerEntityFeature.SELECT_SOURCE,
 }
 
 
@@ -78,15 +79,37 @@ class LookinMedia(LookinPowerPushRemoteEntity, MediaPlayerEntity):
         uuid: str,
         device: Remote,
         lookin_data: LookinData,
-        device_class: str,
+        device_class: MediaPlayerDeviceClass,
     ) -> None:
         """Init the lookin media player."""
         self._attr_device_class = device_class
-        self._attr_supported_features: int = 0
         super().__init__(coordinator, uuid, device, lookin_data)
         for function_name, feature in _FUNCTION_NAME_TO_FEATURE.items():
             if function_name in self._function_names:
                 self._attr_supported_features |= feature
+        self._source_list: dict[str, str] | None = None
+
+    @property
+    def source_list(self) -> list[str]:
+        """List of available input sources."""
+        return list(self._source_list.keys()) if self._source_list else []
+
+    async def async_select_source(self, source: str) -> None:
+        """Choose an available playlist and play it."""
+        if not self._source_list:
+            return
+        await self._async_send_command(command="mode", signal=self._source_list[source])
+
+    async def async_added_to_hass(self) -> None:
+        """Get list of available input sources."""
+        if self._source_list is None and "mode" in self._function_names:
+            if sources := await self._lookin_protocol.get_media_sources(
+                uuid=self._uuid
+            ):
+                self._source_list = {
+                    f"INPUT_{index}": f"{index:02x}" for index in range(len(sources))
+                }
+        await super().async_added_to_hass()
 
     async def async_volume_up(self) -> None:
         """Turn volume up for media player."""

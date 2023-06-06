@@ -10,10 +10,9 @@ from zwave_js_server.model.driver import Driver
 
 from homeassistant.components.select import DOMAIN as SELECT_DOMAIN, SelectEntity
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DATA_CLIENT, DOMAIN
@@ -42,6 +41,10 @@ async def async_setup_entry(
         elif info.platform_hint == "multilevel_switch":
             entities.append(
                 ZwaveMultilevelSwitchSelectEntity(config_entry, driver, info)
+            )
+        elif info.platform_hint == "config_parameter":
+            entities.append(
+                ZWaveConfigParameterSelectEntity(config_entry, driver, info)
             )
         else:
             entities.append(ZwaveSelectEntity(config_entry, driver, info))
@@ -89,7 +92,26 @@ class ZwaveSelectEntity(ZWaveBaseEntity, SelectEntity):
             for key, val in self.info.primary_value.metadata.states.items()
             if val == option
         )
-        await self.info.node.async_set_value(self.info.primary_value, int(key))
+        await self._async_set_value(self.info.primary_value, int(key))
+
+
+class ZWaveConfigParameterSelectEntity(ZwaveSelectEntity):
+    """Representation of a Z-Wave config parameter select."""
+
+    _attr_entity_category = EntityCategory.CONFIG
+
+    def __init__(
+        self, config_entry: ConfigEntry, driver: Driver, info: ZwaveDiscoveryInfo
+    ) -> None:
+        """Initialize a ZWaveConfigParameterSelect entity."""
+        super().__init__(config_entry, driver, info)
+
+        property_key_name = self.info.primary_value.property_key_name
+        # Entity class attributes
+        self._attr_name = self.generate_name(
+            alternate_value_name=self.info.primary_value.property_name,
+            additional_info=[property_key_name] if property_key_name else None,
+        )
 
 
 class ZwaveDefaultToneSelectEntity(ZWaveBaseEntity, SelectEntity):
@@ -140,7 +162,7 @@ class ZwaveDefaultToneSelectEntity(ZWaveBaseEntity, SelectEntity):
             for key, val in self._tones_value.metadata.states.items()
             if val == option
         )
-        await self.info.node.async_set_value(self.info.primary_value, int(key))
+        await self._async_set_value(self.info.primary_value, int(key))
 
 
 class ZwaveMultilevelSwitchSelectEntity(ZWaveBaseEntity, SelectEntity):
@@ -173,7 +195,6 @@ class ZwaveMultilevelSwitchSelectEntity(ZWaveBaseEntity, SelectEntity):
 
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
-        if (target_value := self._target_value) is None:
-            raise HomeAssistantError("Missing target value on device.")
+        assert self._target_value is not None
         key = next(key for key, val in self._lookup_map.items() if val == option)
-        await self.info.node.async_set_value(target_value, int(key))
+        await self._async_set_value(self._target_value, int(key))

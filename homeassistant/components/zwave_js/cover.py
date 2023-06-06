@@ -4,15 +4,22 @@ from __future__ import annotations
 from typing import Any, cast
 
 from zwave_js_server.client import Client as ZwaveClient
-from zwave_js_server.const import TARGET_STATE_PROPERTY, TARGET_VALUE_PROPERTY
+from zwave_js_server.const import (
+    CURRENT_VALUE_PROPERTY,
+    TARGET_STATE_PROPERTY,
+    TARGET_VALUE_PROPERTY,
+)
 from zwave_js_server.const.command_class.barrier_operator import BarrierState
 from zwave_js_server.const.command_class.multilevel_switch import (
-    COVER_CLOSE_PROPERTY,
-    COVER_DOWN_PROPERTY,
-    COVER_OFF_PROPERTY,
     COVER_ON_PROPERTY,
     COVER_OPEN_PROPERTY,
     COVER_UP_PROPERTY,
+)
+from zwave_js_server.const.command_class.window_covering import (
+    NO_POSITION_PROPERTY_KEYS,
+    NO_POSITION_SUFFIX,
+    WINDOW_COVERING_OPEN_PROPERTY,
+    SlatStates,
 )
 from zwave_js_server.model.driver import Driver
 from zwave_js_server.model.value import Value as ZwaveValue
@@ -27,11 +34,15 @@ from homeassistant.components.cover import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DATA_CLIENT, DOMAIN
+from .const import (
+    COVER_POSITION_PROPERTY_KEYS,
+    COVER_TILT_PROPERTY_KEYS,
+    DATA_CLIENT,
+    DOMAIN,
+)
 from .discovery import ZwaveDiscoveryInfo
 from .discovery_data_template import CoverTiltDataTemplate
 from .entity import ZWaveBaseEntity
@@ -53,12 +64,14 @@ async def async_setup_entry(
         driver = client.driver
         assert driver is not None  # Driver is ready before platforms are loaded.
         entities: list[ZWaveBaseEntity] = []
-        if info.platform_hint == "motorized_barrier":
+        if info.platform_hint == "window_covering":
+            entities.append(ZWaveWindowCovering(config_entry, driver, info))
+        elif info.platform_hint == "motorized_barrier":
             entities.append(ZwaveMotorizedBarrier(config_entry, driver, info))
-        elif info.platform_hint == "window_shutter_tilt":
+        elif info.platform_hint and info.platform_hint.endswith("tilt"):
             entities.append(ZWaveTiltCover(config_entry, driver, info))
         else:
-            entities.append(ZWaveCover(config_entry, driver, info))
+            entities.append(ZWaveMultilevelSwitchCover(config_entry, driver, info))
         async_add_entities(entities)
 
     config_entry.async_on_unload(
@@ -70,139 +83,168 @@ async def async_setup_entry(
     )
 
 
-def percent_to_zwave_position(value: int) -> int:
-    """Convert position in 0-100 scale to 0-99 scale.
+class CoverPositionMixin(ZWaveBaseEntity, CoverEntity):
+    """Mix-in class for cover with position support."""
 
-    `value` -- (int) Position byte value from 0-100.
-    """
-    if value > 0:
-        return max(1, round((value / 100) * 99))
-    return 0
+    _current_position_value: ZwaveValue | None = None
+    _target_position_value: ZwaveValue | None = None
+    _stop_position_value: ZwaveValue | None = None
 
-
-def percent_to_zwave_tilt(value: int) -> int:
-    """Convert position in 0-100 scale to 0-99 scale.
-
-    `value` -- (int) Position byte value from 0-100.
-    """
-    if value > 0:
-        return round((value / 100) * 99)
-    return 0
-
-
-def zwave_tilt_to_percent(value: int) -> int:
-    """Convert 0-99 scale to position in 0-100 scale.
-
-    `value` -- (int) Position byte value from 0-99.
-    """
-    if value > 0:
-        return round((value / 99) * 100)
-    return 0
-
-
-class ZWaveCover(ZWaveBaseEntity, CoverEntity):
-    """Representation of a Z-Wave Cover device."""
-
-    def __init__(
+    def _set_position_values(
         self,
-        config_entry: ConfigEntry,
-        driver: Driver,
-        info: ZwaveDiscoveryInfo,
+        current_value: ZwaveValue,
+        target_value: ZwaveValue | None = None,
+        stop_value: ZwaveValue | None = None,
     ) -> None:
-        """Initialize a ZWaveCover entity."""
-        super().__init__(config_entry, driver, info)
+        """Set values for position."""
+        self._attr_supported_features = (
+            (self._attr_supported_features or 0)
+            | CoverEntityFeature.OPEN
+            | CoverEntityFeature.CLOSE
+            | CoverEntityFeature.SET_POSITION
+        )
+        self._current_position_value = current_value
+        self._target_position_value = target_value or self.get_zwave_value(
+            TARGET_VALUE_PROPERTY, value_property_key=current_value.property_key
+        )
 
-        # Entity class attributes
-        self._attr_device_class = CoverDeviceClass.WINDOW
-        if self.info.platform_hint in ("window_shutter", "window_shutter_tilt"):
-            self._attr_device_class = CoverDeviceClass.SHUTTER
-        if self.info.platform_hint == "window_blind":
-            self._attr_device_class = CoverDeviceClass.BLIND
+        if stop_value:
+            self._stop_position_value = stop_value
+            self._attr_supported_features |= CoverEntityFeature.STOP
+
+    def percent_to_zwave_position(self, value: int) -> int:
+        """Convert position in 0-100 scale to closed_value-open_value scale."""
+        return (
+            round(max(min(1, (value / 100)), 0) * self._position_range)
+            + self._fully_closed_position
+        )
+
+    def zwave_to_percent_position(self, value: int) -> int:
+        """Convert closed_value-open_value scale to position in 0-100 scale."""
+        return round(
+            ((value - self._fully_closed_position) / self._position_range) * 100
+        )
+
+    @property
+    def _fully_open_position(self) -> int:
+        """Return value that represents fully opened position."""
+        max_ = self.info.primary_value.metadata.max
+        return 99 if max_ is None else max_
+
+    @property
+    def _fully_closed_position(self) -> int:
+        """Return value that represents fully closed position."""
+        min_ = self.info.primary_value.metadata.min
+        return 0 if min_ is None else min_
+
+    @property
+    def _position_range(self) -> int:
+        """Return range between fully opened and fully closed position."""
+        return self._fully_open_position - self._fully_closed_position
 
     @property
     def is_closed(self) -> bool | None:
         """Return true if cover is closed."""
-        if self.info.primary_value.value is None:
-            # guard missing value
+        if not (value := self._current_position_value) or value.value is None:
             return None
-        return bool(self.info.primary_value.value == 0)
+        return bool(value.value == self._fully_closed_position)
 
     @property
     def current_cover_position(self) -> int | None:
         """Return the current position of cover where 0 means closed and 100 is fully open."""
-        if self.info.primary_value.value is None:
+        if (
+            self._current_position_value is None
+            or self._current_position_value.value is None
+        ):
             # guard missing value
             return None
-        return round((self.info.primary_value.value / 99) * 100)
+        return self.zwave_to_percent_position(self._current_position_value.value)
 
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
-        target_value = self.get_zwave_value(TARGET_VALUE_PROPERTY)
-        if target_value is None:
-            raise HomeAssistantError("Missing target value on device.")
-        await self.info.node.async_set_value(
-            target_value, percent_to_zwave_position(kwargs[ATTR_POSITION])
+        assert self._target_position_value
+        await self._async_set_value(
+            self._target_position_value,
+            self.percent_to_zwave_position(kwargs[ATTR_POSITION]),
         )
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
-        target_value = self.get_zwave_value(TARGET_VALUE_PROPERTY)
-        if target_value is None:
-            raise HomeAssistantError("Missing target value on device.")
-        await self.info.node.async_set_value(target_value, 99)
+        assert self._target_position_value
+        await self._async_set_value(
+            self._target_position_value, self._fully_open_position
+        )
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close cover."""
-        target_value = self.get_zwave_value(TARGET_VALUE_PROPERTY)
-        if target_value is None:
-            raise HomeAssistantError("Missing target value on device.")
-        await self.info.node.async_set_value(target_value, 0)
+        assert self._target_position_value
+        await self._async_set_value(
+            self._target_position_value, self._fully_closed_position
+        )
 
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop cover."""
-        open_value = (
-            self.get_zwave_value(COVER_OPEN_PROPERTY)
-            or self.get_zwave_value(COVER_UP_PROPERTY)
-            or self.get_zwave_value(COVER_ON_PROPERTY)
-        )
-        if open_value:
-            # Stop the cover if it's opening
-            await self.info.node.async_set_value(open_value, False)
-
-        close_value = (
-            self.get_zwave_value(COVER_CLOSE_PROPERTY)
-            or self.get_zwave_value(COVER_DOWN_PROPERTY)
-            or self.get_zwave_value(COVER_OFF_PROPERTY)
-        )
-        if close_value:
-            # Stop the cover if it's closing
-            await self.info.node.async_set_value(close_value, False)
+        assert self._stop_position_value
+        # Stop the cover, will stop regardless of the actual direction of travel.
+        await self._async_set_value(self._stop_position_value, False)
 
 
-class ZWaveTiltCover(ZWaveCover):
-    """Representation of a Z-Wave Cover device with tilt."""
+class CoverTiltMixin(ZWaveBaseEntity, CoverEntity):
+    """Mix-in class for cover with tilt support."""
 
-    _attr_supported_features = (
-        CoverEntityFeature.OPEN
-        | CoverEntityFeature.CLOSE
-        | CoverEntityFeature.STOP
-        | CoverEntityFeature.SET_POSITION
-        | CoverEntityFeature.OPEN_TILT
-        | CoverEntityFeature.CLOSE_TILT
-        | CoverEntityFeature.SET_TILT_POSITION
-    )
+    _current_tilt_value: ZwaveValue | None = None
+    _target_tilt_value: ZwaveValue | None = None
+    _stop_tilt_value: ZwaveValue | None = None
 
-    def __init__(
+    def _set_tilt_values(
         self,
-        config_entry: ConfigEntry,
-        driver: Driver,
-        info: ZwaveDiscoveryInfo,
+        current_value: ZwaveValue,
+        target_value: ZwaveValue | None = None,
+        stop_value: ZwaveValue | None = None,
     ) -> None:
-        """Initialize a ZWaveCover entity."""
-        super().__init__(config_entry, driver, info)
-        self.data_template = cast(
-            CoverTiltDataTemplate, self.info.platform_data_template
+        """Set values for tilt."""
+        self._attr_supported_features = (
+            (self._attr_supported_features or 0)
+            | CoverEntityFeature.OPEN_TILT
+            | CoverEntityFeature.CLOSE_TILT
+            | CoverEntityFeature.SET_TILT_POSITION
         )
+        self._current_tilt_value = current_value
+        self._target_tilt_value = target_value or self.get_zwave_value(
+            TARGET_VALUE_PROPERTY, value_property_key=current_value.property_key
+        )
+
+        if stop_value:
+            self._stop_tilt_value = stop_value
+            self._attr_supported_features |= CoverEntityFeature.STOP_TILT
+
+    def percent_to_zwave_tilt(self, value: int) -> int:
+        """Convert position in 0-100 scale to closed_value-open_value scale."""
+        return (
+            round(max(min(1, (value / 100)), 0) * self._tilt_range)
+            + self._fully_closed_tilt
+        )
+
+    def zwave_to_percent_tilt(self, value: int) -> int:
+        """Convert closed_value-open_value scale to position in 0-100 scale."""
+        return round(((value - self._fully_closed_tilt) / self._tilt_range) * 100)
+
+    @property
+    def _fully_open_tilt(self) -> int:
+        """Return value that represents fully opened tilt."""
+        max_ = self.info.primary_value.metadata.max
+        return 99 if max_ is None else max_
+
+    @property
+    def _fully_closed_tilt(self) -> int:
+        """Return value that represents fully closed tilt."""
+        min_ = self.info.primary_value.metadata.min
+        return 0 if min_ is None else min_
+
+    @property
+    def _tilt_range(self) -> int:
+        """Return range between fully opened and fully closed tilt."""
+        return self._fully_open_tilt - self._fully_closed_tilt
 
     @property
     def current_cover_tilt_position(self) -> int | None:
@@ -210,27 +252,155 @@ class ZWaveTiltCover(ZWaveCover):
 
         None is unknown, 0 is closed, 100 is fully open.
         """
-        value = self.data_template.current_tilt_value(self.info.platform_data)
-        if value is None or value.value is None:
+        if (value := self._current_tilt_value) is None or value.value is None:
             return None
-        return zwave_tilt_to_percent(int(value.value))
+        return self.zwave_to_percent_tilt(int(value.value))
 
     async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Move the cover tilt to a specific position."""
-        tilt_value = self.data_template.current_tilt_value(self.info.platform_data)
-        if tilt_value:
-            await self.info.node.async_set_value(
-                tilt_value,
-                percent_to_zwave_tilt(kwargs[ATTR_TILT_POSITION]),
-            )
+        assert self._target_tilt_value
+        await self._async_set_value(
+            self._target_tilt_value,
+            self.percent_to_zwave_tilt(kwargs[ATTR_TILT_POSITION]),
+        )
 
     async def async_open_cover_tilt(self, **kwargs: Any) -> None:
         """Open the cover tilt."""
-        await self.async_set_cover_tilt_position(tilt_position=100)
+        assert self._target_tilt_value
+        await self._async_set_value(self._target_tilt_value, self._fully_open_tilt)
 
     async def async_close_cover_tilt(self, **kwargs: Any) -> None:
         """Close the cover tilt."""
-        await self.async_set_cover_tilt_position(tilt_position=0)
+        assert self._target_tilt_value
+        await self._async_set_value(self._target_tilt_value, self._fully_closed_tilt)
+
+    async def async_stop_cover_tilt(self, **kwargs: Any) -> None:
+        """Stop the cover tilt."""
+        assert self._stop_tilt_value
+        # Stop the tilt, will stop regardless of the actual direction of travel.
+        await self._async_set_value(self._stop_tilt_value, False)
+
+
+class ZWaveMultilevelSwitchCover(CoverPositionMixin):
+    """Representation of a Z-Wave Cover that uses Multilevel Switch CC for position."""
+
+    def __init__(
+        self,
+        config_entry: ConfigEntry,
+        driver: Driver,
+        info: ZwaveDiscoveryInfo,
+    ) -> None:
+        """Initialize a ZWaveCover entity."""
+        super().__init__(config_entry, driver, info)
+        self._set_position_values(
+            self.info.primary_value,
+            stop_value=(
+                self.get_zwave_value(COVER_OPEN_PROPERTY)
+                or self.get_zwave_value(COVER_UP_PROPERTY)
+                or self.get_zwave_value(COVER_ON_PROPERTY)
+            ),
+        )
+
+        # Entity class attributes
+        self._attr_device_class = CoverDeviceClass.WINDOW
+        if self.info.platform_hint and self.info.platform_hint.startswith("shutter"):
+            self._attr_device_class = CoverDeviceClass.SHUTTER
+        elif self.info.platform_hint and self.info.platform_hint.startswith("blind"):
+            self._attr_device_class = CoverDeviceClass.BLIND
+        elif self.info.platform_hint and self.info.platform_hint.startswith("gate"):
+            self._attr_device_class = CoverDeviceClass.GATE
+
+
+class ZWaveTiltCover(ZWaveMultilevelSwitchCover, CoverTiltMixin):
+    """Representation of a Z-Wave cover device with tilt."""
+
+    def __init__(
+        self,
+        config_entry: ConfigEntry,
+        driver: Driver,
+        info: ZwaveDiscoveryInfo,
+    ) -> None:
+        """Initialize a ZWaveCover entity."""
+        super().__init__(config_entry, driver, info)
+
+        template = cast(CoverTiltDataTemplate, self.info.platform_data_template)
+        self._set_tilt_values(
+            template.current_tilt_value(self.info.platform_data),
+            template.target_tilt_value(self.info.platform_data),
+        )
+
+
+class ZWaveWindowCovering(CoverPositionMixin, CoverTiltMixin):
+    """Representation of a Z-Wave Window Covering cover device."""
+
+    def __init__(
+        self, config_entry: ConfigEntry, driver: Driver, info: ZwaveDiscoveryInfo
+    ) -> None:
+        """Initialize."""
+        super().__init__(config_entry, driver, info)
+        pos_value: ZwaveValue | None = None
+        tilt_value: ZwaveValue | None = None
+
+        # If primary value is for position, we have to search for a tilt value
+        if info.primary_value.property_key in COVER_POSITION_PROPERTY_KEYS:
+            pos_value = info.primary_value
+            tilt_value = next(
+                (
+                    value
+                    for property_key in COVER_TILT_PROPERTY_KEYS
+                    if (
+                        value := self.get_zwave_value(
+                            CURRENT_VALUE_PROPERTY, value_property_key=property_key
+                        )
+                    )
+                ),
+                None,
+            )
+        # If primary value is for tilt, there is no position value
+        else:
+            tilt_value = info.primary_value
+
+        # Set position and tilt values if they exist. If the corresponding value is of
+        # the type No Position, we remove the corresponding set position feature.
+        for set_values_func, value, set_position_feature in (
+            (self._set_position_values, pos_value, CoverEntityFeature.SET_POSITION),
+            (self._set_tilt_values, tilt_value, CoverEntityFeature.SET_TILT_POSITION),
+        ):
+            if value:
+                set_values_func(
+                    value,
+                    stop_value=self.get_zwave_value(
+                        WINDOW_COVERING_OPEN_PROPERTY,
+                        value_property_key=value.property_key,
+                    ),
+                )
+                if value.property_key in NO_POSITION_PROPERTY_KEYS:
+                    assert self._attr_supported_features
+                    self._attr_supported_features ^= set_position_feature
+
+        additional_info: list[str] = []
+        for value in (self._current_position_value, self._current_tilt_value):
+            if value and value.property_key_name:
+                additional_info.append(
+                    value.property_key_name.removesuffix(f" {NO_POSITION_SUFFIX}")
+                )
+        self._attr_name = self.generate_name(additional_info=additional_info)
+        self._attr_device_class = CoverDeviceClass.WINDOW
+
+    @property
+    def _fully_open_tilt(self) -> int:
+        """Return position to open cover tilt."""
+        return SlatStates.OPEN
+
+    @property
+    def _fully_closed_tilt(self) -> int:
+        """Return position to close cover tilt."""
+        return SlatStates.CLOSED_1
+
+    @property
+    def _tilt_range(self) -> int:
+        """Return range of valid tilt positions."""
+        return abs(SlatStates.CLOSED_2 - SlatStates.CLOSED_1)
 
 
 class ZwaveMotorizedBarrier(ZWaveBaseEntity, CoverEntity):
@@ -283,8 +453,8 @@ class ZwaveMotorizedBarrier(ZWaveBaseEntity, CoverEntity):
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the garage door."""
-        await self.info.node.async_set_value(self._target_state, BarrierState.OPEN)
+        await self._async_set_value(self._target_state, BarrierState.OPEN)
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the garage door."""
-        await self.info.node.async_set_value(self._target_state, BarrierState.CLOSED)
+        await self._async_set_value(self._target_state, BarrierState.CLOSED)

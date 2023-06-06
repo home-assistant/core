@@ -215,7 +215,7 @@ _OBSOLETE_IMPORT: dict[str, list[ObsoleteImportMatch]] = {
     "homeassistant.components.sensor": [
         ObsoleteImportMatch(
             reason="replaced by SensorDeviceClass enum",
-            constant=re.compile(r"^DEVICE_CLASS_(\w*)$"),
+            constant=re.compile(r"^DEVICE_CLASS_(?!STATE_CLASSES)$"),
         ),
         ObsoleteImportMatch(
             reason="replaced by SensorStateClass enum",
@@ -260,12 +260,76 @@ _OBSOLETE_IMPORT: dict[str, list[ObsoleteImportMatch]] = {
     ],
     "homeassistant.const": [
         ObsoleteImportMatch(
-            reason="replaced by SensorDeviceClass enum",
-            constant=re.compile(r"^DEVICE_CLASS_(\w*)$"),
+            reason="replaced by local constants",
+            constant=re.compile(r"^CONF_UNIT_SYSTEM_(\w+)$"),
+        ),
+        ObsoleteImportMatch(
+            reason="replaced by unit enums",
+            constant=re.compile(r"^DATA_(\w+)$"),
+        ),
+        ObsoleteImportMatch(
+            reason="replaced by ***DeviceClass enum",
+            constant=re.compile(r"^DEVICE_CLASS_(\w+)$"),
+        ),
+        ObsoleteImportMatch(
+            reason="replaced by unit enums",
+            constant=re.compile(r"^ELECTRIC_(\w+)$"),
+        ),
+        ObsoleteImportMatch(
+            reason="replaced by unit enums",
+            constant=re.compile(r"^ENERGY_(\w+)$"),
         ),
         ObsoleteImportMatch(
             reason="replaced by EntityCategory enum",
-            constant=re.compile(r"^(ENTITY_CATEGORY_(\w*))|(ENTITY_CATEGORIES)$"),
+            constant=re.compile(r"^(ENTITY_CATEGORY_(\w+))|(ENTITY_CATEGORIES)$"),
+        ),
+        ObsoleteImportMatch(
+            reason="replaced by unit enums",
+            constant=re.compile(r"^FREQUENCY_(\w+)$"),
+        ),
+        ObsoleteImportMatch(
+            reason="replaced by unit enums",
+            constant=re.compile(r"^IRRADIATION_(\w+)$"),
+        ),
+        ObsoleteImportMatch(
+            reason="replaced by unit enums",
+            constant=re.compile(r"^LENGTH_(\w+)$"),
+        ),
+        ObsoleteImportMatch(
+            reason="replaced by unit enums",
+            constant=re.compile(r"^MASS_(\w+)$"),
+        ),
+        ObsoleteImportMatch(
+            reason="replaced by unit enums",
+            constant=re.compile(r"^POWER_(?!VOLT_AMPERE_REACTIVE)(\w+)$"),
+        ),
+        ObsoleteImportMatch(
+            reason="replaced by unit enums",
+            constant=re.compile(r"^PRECIPITATION_(\w+)$"),
+        ),
+        ObsoleteImportMatch(
+            reason="replaced by unit enums",
+            constant=re.compile(r"^PRESSURE_(\w+)$"),
+        ),
+        ObsoleteImportMatch(
+            reason="replaced by unit enums",
+            constant=re.compile(r"^SOUND_PRESSURE_(\w+)$"),
+        ),
+        ObsoleteImportMatch(
+            reason="replaced by unit enums",
+            constant=re.compile(r"^SPEED_(\w+)$"),
+        ),
+        ObsoleteImportMatch(
+            reason="replaced by unit enums",
+            constant=re.compile(r"^TEMP_(\w+)$"),
+        ),
+        ObsoleteImportMatch(
+            reason="replaced by unit enums",
+            constant=re.compile(r"^TIME_(\w+)$"),
+        ),
+        ObsoleteImportMatch(
+            reason="replaced by unit enums",
+            constant=re.compile(r"^VOLUME_(\w+)$"),
         ),
     ],
     "homeassistant.core": [
@@ -286,10 +350,30 @@ _OBSOLETE_IMPORT: dict[str, list[ObsoleteImportMatch]] = {
             constant=re.compile(r"^DISABLED_(\w*)$"),
         ),
     ],
+    "homeassistant.helpers.json": [
+        ObsoleteImportMatch(
+            reason="moved to homeassistant.util.json",
+            constant=re.compile(
+                r"^JSON_DECODE_EXCEPTIONS|JSON_ENCODE_EXCEPTIONS|json_loads$"
+            ),
+        ),
+    ],
     "homeassistant.util": [
         ObsoleteImportMatch(
             reason="replaced by unit_conversion.***Converter",
             constant=re.compile(r"^(distance|pressure|speed|temperature|volume)$"),
+        ),
+    ],
+    "homeassistant.util.unit_system": [
+        ObsoleteImportMatch(
+            reason="replaced by US_CUSTOMARY_SYSTEM",
+            constant=re.compile(r"^IMPERIAL_SYSTEM$"),
+        ),
+    ],
+    "homeassistant.util.json": [
+        ObsoleteImportMatch(
+            reason="moved to homeassistant.helpers.json",
+            constant=re.compile(r"^save_json|find_paths_unserializable_data$"),
         ),
     ],
 }
@@ -326,11 +410,12 @@ class HassImportsFormatChecker(BaseChecker):  # type: ignore[misc]
     options = ()
 
     def __init__(self, linter: PyLinter | None = None) -> None:
+        """Initialize the HassImportsFormatChecker."""
         super().__init__(linter)
         self.current_package: str | None = None
 
     def visit_module(self, node: nodes.Module) -> None:
-        """Called when a Module node is visited."""
+        """Determine current package."""
         if node.package:
             self.current_package = node.name
         else:
@@ -338,7 +423,7 @@ class HassImportsFormatChecker(BaseChecker):  # type: ignore[misc]
             self.current_package = node.name[: node.name.rfind(".")]
 
     def visit_import(self, node: nodes.Import) -> None:
-        """Called when a Import node is visited."""
+        """Check for improper `import _` invocations."""
         if self.current_package is None:
             return
         for module, _alias in node.names:
@@ -360,7 +445,7 @@ class HassImportsFormatChecker(BaseChecker):  # type: ignore[misc]
     def _visit_importfrom_relative(
         self, current_package: str, node: nodes.ImportFrom
     ) -> None:
-        """Called when a ImportFrom node is visited."""
+        """Check for improper 'from ._ import _' invocations."""
         if (
             node.level <= 1
             or not current_package.startswith("homeassistant.components.")
@@ -379,7 +464,7 @@ class HassImportsFormatChecker(BaseChecker):  # type: ignore[misc]
             self.add_message("hass-absolute-import", node=node)
 
     def visit_importfrom(self, node: nodes.ImportFrom) -> None:
-        """Called when a ImportFrom node is visited."""
+        """Check for improper 'from _ import _' invocations."""
         if not self.current_package:
             return
         if node.level is not None:

@@ -27,7 +27,7 @@ def mock_config_entry() -> MockConfigEntry:
 def mock_cpuinfo_config_flow() -> Generator[MagicMock, None, None]:
     """Return a mocked get_cpu_info.
 
-    It is only used to check thruthy or falsy values, so it is mocked
+    It is only used to check truthy or falsy values, so it is mocked
     to return True.
     """
     with patch(

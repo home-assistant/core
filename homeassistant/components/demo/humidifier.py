@@ -13,7 +13,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-SUPPORT_FLAGS = 0
+SUPPORT_FLAGS = HumidifierEntityFeature(0)
 
 
 async def async_setup_platform(
@@ -75,9 +75,7 @@ class DemoHumidifier(HumidifierEntity):
         self._attr_is_on = is_on
         self._attr_supported_features = SUPPORT_FLAGS
         if mode is not None:
-            self._attr_supported_features = (
-                self._attr_supported_features | HumidifierEntityFeature.MODES
-            )
+            self._attr_supported_features |= HumidifierEntityFeature.MODES
         self._attr_target_humidity = target_humidity
         self._attr_mode = mode
         self._attr_available_modes = available_modes

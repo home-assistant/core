@@ -3,8 +3,6 @@ from __future__ import annotations
 
 from unittest.mock import Mock
 
-from aiohttp import ClientSession
-
 from homeassistant.components.diagnostics import REDACTED
 from homeassistant.components.fritzbox.const import DOMAIN as FB_DOMAIN
 from homeassistant.components.fritzbox.diagnostics import TO_REDACT
@@ -15,11 +13,12 @@ from . import setup_config_entry
 from .const import MOCK_CONFIG
 
 from tests.components.diagnostics import get_diagnostics_for_config_entry
+from tests.typing import ClientSessionGenerator
 
 
 async def test_entry_diagnostics(
-    hass: HomeAssistant, hass_client: ClientSession, fritz: Mock
-):
+    hass: HomeAssistant, hass_client: ClientSessionGenerator, fritz: Mock
+) -> None:
     """Test config entry diagnostics."""
     assert await setup_config_entry(hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0])
 

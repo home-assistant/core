@@ -2,12 +2,12 @@
 import asyncio
 from datetime import timedelta
 
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import ratelimit
 from homeassistant.util import dt as dt_util
 
 
-async def test_hit(hass):
+async def test_hit(hass: HomeAssistant) -> None:
     """Test hitting the rate limit."""
 
     refresh_called = False
@@ -44,7 +44,7 @@ async def test_hit(hass):
     rate_limiter.async_remove()
 
 
-async def test_miss(hass):
+async def test_miss(hass: HomeAssistant) -> None:
     """Test missing the rate limit."""
 
     refresh_called = False
@@ -76,7 +76,7 @@ async def test_miss(hass):
     rate_limiter.async_remove()
 
 
-async def test_no_limit(hass):
+async def test_no_limit(hass: HomeAssistant) -> None:
     """Test async_schedule_action always return None when there is no rate limit."""
 
     refresh_called = False

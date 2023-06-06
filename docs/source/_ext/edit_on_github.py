@@ -1,6 +1,4 @@
-"""
-Sphinx extension to add ReadTheDocs-style "Edit on GitHub" links to the
-sidebar.
+"""Sphinx extension for ReadTheDocs-style "Edit on GitHub" links on the sidebar.
 
 Loosely based on https://github.com/astropy/astropy/pull/347
 """
@@ -12,6 +10,7 @@ __licence__ = "BSD (3 clause)"
 
 
 def get_github_url(app, view, path):
+    """Build the GitHub URL."""
     return (
         f"https://github.com/{app.config.edit_on_github_project}/"
         f"{view}/{app.config.edit_on_github_branch}/"
@@ -20,6 +19,7 @@ def get_github_url(app, view, path):
 
 
 def html_page_context(app, pagename, templatename, context, doctree):
+    """Build the HTML page."""
     if templatename != "page.html":
         return
 
@@ -38,6 +38,7 @@ def html_page_context(app, pagename, templatename, context, doctree):
 
 
 def setup(app):
+    """Set up the app."""
     app.add_config_value("edit_on_github_project", "", True)
     app.add_config_value("edit_on_github_branch", "master", True)
     app.add_config_value("edit_on_github_src_path", "", True)  # 'eg' "docs/"

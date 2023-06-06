@@ -7,7 +7,7 @@ from pyirishrail.pyirishrail import IrishRailRTPI
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME, TIME_MINUTES
+from homeassistant.const import CONF_NAME, UnitOfTime
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -23,7 +23,6 @@ ATTR_DUE_AT = "Due at"
 ATTR_EXPECT_AT = "Expected at"
 ATTR_NEXT_UP = "Later Train"
 ATTR_TRAIN_TYPE = "Train type"
-ATTRIBUTION = "Data provided by Irish Rail"
 
 CONF_STATION = "station"
 CONF_DESTINATION = "destination"
@@ -31,7 +30,7 @@ CONF_DIRECTION = "direction"
 CONF_STOPS_AT = "stops_at"
 
 DEFAULT_NAME = "Next Train"
-ICON = "mdi:train"
+
 
 SCAN_INTERVAL = timedelta(minutes=2)
 TIME_STR_FORMAT = "%H:%M"
@@ -76,6 +75,9 @@ def setup_platform(
 class IrishRailTransportSensor(SensorEntity):
     """Implementation of an irish rail public transport sensor."""
 
+    _attr_attribution = "Data provided by Irish Rail"
+    _attr_icon = "mdi:train"
+
     def __init__(self, data, station, direction, destination, stops_at, name):
         """Initialize the sensor."""
         self.data = data
@@ -110,7 +112,6 @@ class IrishRailTransportSensor(SensorEntity):
                 )
 
             return {
-                ATTR_ATTRIBUTION: ATTRIBUTION,
                 ATTR_STATION: self._station,
                 ATTR_ORIGIN: self._times[0][ATTR_ORIGIN],
                 ATTR_DESTINATION: self._times[0][ATTR_DESTINATION],
@@ -126,12 +127,7 @@ class IrishRailTransportSensor(SensorEntity):
     @property
     def native_unit_of_measurement(self):
         """Return the unit this state is expressed in."""
-        return TIME_MINUTES
-
-    @property
-    def icon(self):
-        """Icon to use in the frontend, if any."""
-        return ICON
+        return UnitOfTime.MINUTES
 
     def update(self) -> None:
         """Get the latest data and update the states."""

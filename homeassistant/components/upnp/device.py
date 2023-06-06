@@ -1,8 +1,7 @@
 """Home Assistant representation of an UPnP/IGD."""
 from __future__ import annotations
 
-import asyncio
-from collections.abc import Mapping
+from datetime import datetime
 from functools import partial
 from ipaddress import ip_address
 from typing import Any
@@ -10,19 +9,21 @@ from urllib.parse import urlparse
 
 from async_upnp_client.aiohttp import AiohttpSessionRequester
 from async_upnp_client.client_factory import UpnpFactory
-from async_upnp_client.exceptions import UpnpError
-from async_upnp_client.profiles.igd import IgdDevice, StatusInfo
+from async_upnp_client.profiles.igd import IgdDevice
 from getmac import get_mac_address
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
-from homeassistant.util.dt import utcnow
 
 from .const import (
     BYTES_RECEIVED,
     BYTES_SENT,
+    KIBIBYTES_PER_SEC_RECEIVED,
+    KIBIBYTES_PER_SEC_SENT,
     LOGGER as _LOGGER,
+    PACKETS_PER_SEC_RECEIVED,
+    PACKETS_PER_SEC_SENT,
     PACKETS_RECEIVED,
     PACKETS_SENT,
     ROUTER_IP,
@@ -51,7 +52,7 @@ async def async_create_device(hass: HomeAssistant, ssdp_location: str) -> Device
     session = async_get_clientsession(hass, verify_ssl=False)
     requester = AiohttpSessionRequester(session, with_sleep=True, timeout=20)
 
-    factory = UpnpFactory(requester, disable_state_variable_validation=True)
+    factory = UpnpFactory(requester, non_strict=True)
     upnp_device = await factory.async_create_device(ssdp_location)
 
     # Create profile wrapper.
@@ -68,7 +69,9 @@ class Device:
         """Initialize UPnP/IGD device."""
         self.hass = hass
         self._igd_device = igd_device
-        self.coordinator: DataUpdateCoordinator | None = None
+        self.coordinator: DataUpdateCoordinator[
+            dict[str, str | datetime | int | float | None]
+        ] | None = None
         self.original_udn: str | None = None
 
     async def async_get_mac_address(self) -> str | None:
@@ -134,69 +137,35 @@ class Device:
         """Get string representation."""
         return f"IGD Device: {self.name}/{self.udn}::{self.device_type}"
 
-    async def async_get_traffic_data(self) -> Mapping[str, Any]:
-        """
-        Get all traffic data in one go.
+    async def async_get_data(self) -> dict[str, str | datetime | int | float | None]:
+        """Get all data from device."""
+        _LOGGER.debug("Getting data for device: %s", self)
+        igd_state = await self._igd_device.async_get_traffic_and_status_data()
+        status_info = igd_state.status_info
+        if status_info is not None and not isinstance(status_info, Exception):
+            wan_status = status_info.connection_status
+            router_uptime = status_info.uptime
+        else:
+            wan_status = None
+            router_uptime = None
 
-        Traffic data consists of:
-        - total bytes sent
-        - total bytes received
-        - total packets sent
-        - total packats received
+        def get_value(value: Any) -> Any:
+            if value is None or isinstance(value, Exception):
+                return None
 
-        Data is timestamped.
-        """
-        _LOGGER.debug("Getting traffic statistics from device: %s", self)
-
-        values = await asyncio.gather(
-            self._igd_device.async_get_total_bytes_received(),
-            self._igd_device.async_get_total_bytes_sent(),
-            self._igd_device.async_get_total_packets_received(),
-            self._igd_device.async_get_total_packets_sent(),
-        )
+            return value
 
         return {
-            TIMESTAMP: utcnow(),
-            BYTES_RECEIVED: values[0],
-            BYTES_SENT: values[1],
-            PACKETS_RECEIVED: values[2],
-            PACKETS_SENT: values[3],
-        }
-
-    async def async_get_status(self) -> Mapping[str, Any]:
-        """Get connection status, uptime, and external IP."""
-        _LOGGER.debug("Getting status for device: %s", self)
-
-        values = await asyncio.gather(
-            self._igd_device.async_get_status_info(),
-            self._igd_device.async_get_external_ip_address(),
-            return_exceptions=True,
-        )
-        status_info: StatusInfo | None = None
-        router_ip: str | None = None
-
-        for idx, value in enumerate(values):
-            if isinstance(value, UpnpError):
-                # Not all routers support some of these items although based
-                # on defined standard they should.
-                _LOGGER.debug(
-                    "Exception occurred while trying to get status %s for device %s: %s",
-                    "status" if idx == 1 else "external IP address",
-                    self,
-                    str(value),
-                )
-                continue
-
-            if isinstance(value, Exception):
-                raise value
-
-            if isinstance(value, StatusInfo):
-                status_info = value
-            elif isinstance(value, str):
-                router_ip = value
-
-        return {
-            WAN_STATUS: status_info[0] if status_info is not None else None,
-            ROUTER_UPTIME: status_info[2] if status_info is not None else None,
-            ROUTER_IP: router_ip,
+            TIMESTAMP: igd_state.timestamp,
+            BYTES_RECEIVED: get_value(igd_state.bytes_received),
+            BYTES_SENT: get_value(igd_state.bytes_sent),
+            PACKETS_RECEIVED: get_value(igd_state.packets_received),
+            PACKETS_SENT: get_value(igd_state.packets_sent),
+            WAN_STATUS: wan_status,
+            ROUTER_UPTIME: router_uptime,
+            ROUTER_IP: get_value(igd_state.external_ip_address),
+            KIBIBYTES_PER_SEC_RECEIVED: igd_state.kibibytes_per_sec_received,
+            KIBIBYTES_PER_SEC_SENT: igd_state.kibibytes_per_sec_sent,
+            PACKETS_PER_SEC_RECEIVED: igd_state.packets_per_sec_received,
+            PACKETS_PER_SEC_SENT: igd_state.packets_per_sec_sent,
         }

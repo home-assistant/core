@@ -6,7 +6,6 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -73,6 +72,7 @@ def sense_to_mdi(sense_icon):
 class SenseDevice(BinarySensorEntity):
     """Implementation of a Sense energy device binary sensor."""
 
+    _attr_attribution = ATTRIBUTION
     _attr_should_poll = False
 
     def __init__(self, sense_devices_data, device, sense_monitor_id):
@@ -110,11 +110,6 @@ class SenseDevice(BinarySensorEntity):
     def old_unique_id(self):
         """Return the old not so unique id of the binary sensor."""
         return self._id
-
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes."""
-        return {ATTR_ATTRIBUTION: ATTRIBUTION}
 
     @property
     def icon(self):

@@ -7,8 +7,8 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN, HEV_CYCLE_STATE
@@ -32,11 +32,7 @@ async def async_setup_entry(
 
     if lifx_features(coordinator.device)["hev"]:
         async_add_entities(
-            [
-                LIFXHevCycleBinarySensorEntity(
-                    coordinator=coordinator, description=HEV_CYCLE_STATE_SENSOR
-                )
-            ]
+            [LIFXHevCycleBinarySensorEntity(coordinator, HEV_CYCLE_STATE_SENSOR)]
         )
 
 
@@ -52,9 +48,7 @@ class LIFXHevCycleBinarySensorEntity(LIFXEntity, BinarySensorEntity):
     ) -> None:
         """Initialise the sensor."""
         super().__init__(coordinator)
-
         self.entity_description = description
-        self._attr_name = description.name
         self._attr_unique_id = f"{coordinator.serial_number}_{description.key}"
         self._async_update_attrs()
 

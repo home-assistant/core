@@ -27,13 +27,11 @@ COMMANDS_STOP_TILT: list[OverkizCommand] = [
 COMMANDS_OPEN: list[OverkizCommand] = [
     OverkizCommand.OPEN,
     OverkizCommand.UP,
-    OverkizCommand.CYCLE,
 ]
 COMMANDS_OPEN_TILT: list[OverkizCommand] = [OverkizCommand.OPEN_SLATS]
 COMMANDS_CLOSE: list[OverkizCommand] = [
     OverkizCommand.CLOSE,
     OverkizCommand.DOWN,
-    OverkizCommand.CYCLE,
 ]
 COMMANDS_CLOSE_TILT: list[OverkizCommand] = [OverkizCommand.CLOSE_SLATS]
 
@@ -129,9 +127,9 @@ class OverkizGenericCover(OverkizEntity, CoverEntity):
         return attr
 
     @property
-    def supported_features(self) -> int:
+    def supported_features(self) -> CoverEntityFeature:
         """Flag supported features."""
-        supported_features = 0
+        supported_features = CoverEntityFeature(0)
 
         if self.executor.has_command(*COMMANDS_OPEN_TILT):
             supported_features |= CoverEntityFeature.OPEN_TILT

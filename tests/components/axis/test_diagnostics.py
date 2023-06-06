@@ -1,30 +1,25 @@
 """Test Axis diagnostics."""
-
-from copy import deepcopy
-from unittest.mock import patch
+import pytest
 
 from homeassistant.components.diagnostics import REDACTED
+from homeassistant.core import HomeAssistant
 
-from .test_device import (
-    API_DISCOVERY_BASIC_DEVICE_INFO,
-    API_DISCOVERY_RESPONSE,
-    setup_axis_integration,
-)
+from .const import API_DISCOVERY_BASIC_DEVICE_INFO
 
 from tests.components.diagnostics import get_diagnostics_for_config_entry
+from tests.typing import ClientSessionGenerator
 
 
-async def test_entry_diagnostics(hass, hass_client):
+@pytest.mark.parametrize("api_discovery_items", [API_DISCOVERY_BASIC_DEVICE_INFO])
+async def test_entry_diagnostics(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator, setup_config_entry
+) -> None:
     """Test config entry diagnostics."""
-    api_discovery = deepcopy(API_DISCOVERY_RESPONSE)
-    api_discovery["data"]["apiList"].append(API_DISCOVERY_BASIC_DEVICE_INFO)
-
-    with patch.dict(API_DISCOVERY_RESPONSE, api_discovery):
-        config_entry = await setup_axis_integration(hass)
-
-    assert await get_diagnostics_for_config_entry(hass, hass_client, config_entry) == {
+    assert await get_diagnostics_for_config_entry(
+        hass, hass_client, setup_config_entry
+    ) == {
         "config": {
-            "entry_id": config_entry.entry_id,
+            "entry_id": setup_config_entry.entry_id,
             "version": 3,
             "domain": "axis",
             "title": "Mock Title",

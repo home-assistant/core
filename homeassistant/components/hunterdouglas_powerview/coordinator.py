@@ -25,7 +25,7 @@ class PowerviewShadeUpdateCoordinator(DataUpdateCoordinator[PowerviewShadeData])
         shades: Shades,
         hub_address: str,
     ) -> None:
-        """Initialize DataUpdateCoordinator to gather data for specific SmartPlug."""
+        """Initialize DataUpdateCoordinator to gather data for specific Powerview Hub."""
         self.shades = shades
         super().__init__(
             hass,

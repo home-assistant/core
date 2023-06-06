@@ -1,5 +1,4 @@
-"""
-Provide a mock select platform.
+"""Provide a mock select platform.
 
 Call init before using it in your tests to ensure clean test data.
 """

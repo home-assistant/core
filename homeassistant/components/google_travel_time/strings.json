@@ -13,6 +13,7 @@
       }
     },
     "error": {
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     },
     "abort": {
@@ -29,6 +30,7 @@
           "time_type": "Time Type",
           "time": "Time",
           "avoid": "Avoid",
+          "traffic_mode": "Traffic Mode",
           "transit_mode": "Transit Mode",
           "transit_routing_preference": "Transit Routing Preference",
           "units": "Units"

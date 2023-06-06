@@ -1,8 +1,13 @@
 """Constants for the Xiaomi Miio component."""
-from miio.vacuum import (
+from miio.integrations.vacuum.roborock.vacuum import (
+    ROCKROBO_E2,
+    ROCKROBO_S4,
+    ROCKROBO_S4_MAX,
     ROCKROBO_S5,
+    ROCKROBO_S5_MAX,
     ROCKROBO_S6,
     ROCKROBO_S6_MAXV,
+    ROCKROBO_S6_PURE,
     ROCKROBO_S7,
     ROCKROBO_S7_MAXV,
     ROCKROBO_V1,
@@ -70,6 +75,7 @@ MODEL_AIRPURIFIER_V1 = "zhimi.airpurifier.v1"
 MODEL_AIRPURIFIER_V2 = "zhimi.airpurifier.v2"
 MODEL_AIRPURIFIER_V3 = "zhimi.airpurifier.v3"
 MODEL_AIRPURIFIER_V5 = "zhimi.airpurifier.v5"
+MODEL_AIRPURIFIER_ZA1 = "zhimi.airpurifier.za1"
 
 MODEL_AIRHUMIDIFIER_V1 = "zhimi.humidifier.v1"
 MODEL_AIRHUMIDIFIER_CA1 = "zhimi.humidifier.ca1"
@@ -124,6 +130,7 @@ MODELS_PURIFIER_MIOT = [
     MODEL_AIRPURIFIER_4_LITE_RMB1,
     MODEL_AIRPURIFIER_4,
     MODEL_AIRPURIFIER_4_PRO,
+    MODEL_AIRPURIFIER_ZA1,
 ]
 MODELS_PURIFIER_MIIO = [
     MODEL_AIRPURIFIER_V1,
@@ -213,12 +220,6 @@ MODELS_LIGHT = (
     + MODELS_LIGHT_MONO
 )
 
-# TODO: use const from pythonmiio once new release with the constant has been published. # pylint: disable=fixme
-ROCKROBO_S4 = "roborock.vacuum.s4"
-ROCKROBO_S4_MAX = "roborock.vacuum.a19"
-ROCKROBO_S5_MAX = "roborock.vacuum.s5e"
-ROCKROBO_S6_PURE = "roborock.vacuum.a08"
-ROCKROBO_E2 = "roborock.vacuum.e2"
 ROBOROCK_GENERIC = "roborock.vacuum"
 ROCKROBO_GENERIC = "rockrobo.vacuum"
 MODELS_VACUUM = [
@@ -395,6 +396,10 @@ FEATURE_FLAGS_AIRPURIFIER_V1 = FEATURE_FLAGS_AIRPURIFIER_MIIO | FEATURE_SET_AUTO
 
 FEATURE_FLAGS_AIRPURIFIER_V3 = (
     FEATURE_SET_BUZZER | FEATURE_SET_CHILD_LOCK | FEATURE_SET_LED
+)
+
+FEATURE_FLAGS_AIRPURIFIER_ZA1 = (
+    FEATURE_SET_BUZZER | FEATURE_SET_CHILD_LOCK | FEATURE_SET_FAVORITE_LEVEL
 )
 
 FEATURE_FLAGS_AIRHUMIDIFIER = (

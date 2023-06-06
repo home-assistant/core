@@ -44,9 +44,11 @@ async def test_connection_error(
 ) -> None:
     """Test we show user form on AdGuard Home connection error."""
     aioclient_mock.get(
-        f"{'https' if FIXTURE_USER_INPUT[CONF_SSL] else 'http'}"
-        f"://{FIXTURE_USER_INPUT[CONF_HOST]}"
-        f":{FIXTURE_USER_INPUT[CONF_PORT]}/control/status",
+        (
+            f"{'https' if FIXTURE_USER_INPUT[CONF_SSL] else 'http'}"
+            f"://{FIXTURE_USER_INPUT[CONF_HOST]}"
+            f":{FIXTURE_USER_INPUT[CONF_PORT]}/control/status"
+        ),
         exc=aiohttp.ClientError,
     )
 
@@ -65,9 +67,11 @@ async def test_full_flow_implementation(
 ) -> None:
     """Test registering an integration and finishing flow works."""
     aioclient_mock.get(
-        f"{'https' if FIXTURE_USER_INPUT[CONF_SSL] else 'http'}"
-        f"://{FIXTURE_USER_INPUT[CONF_HOST]}"
-        f":{FIXTURE_USER_INPUT[CONF_PORT]}/control/status",
+        (
+            f"{'https' if FIXTURE_USER_INPUT[CONF_SSL] else 'http'}"
+            f"://{FIXTURE_USER_INPUT[CONF_HOST]}"
+            f":{FIXTURE_USER_INPUT[CONF_PORT]}/control/status"
+        ),
         json={"version": "v0.99.0"},
         headers={"Content-Type": CONTENT_TYPE_JSON},
     )
@@ -127,7 +131,10 @@ async def test_hassio_already_configured(hass: HomeAssistant) -> None:
                 "addon": "AdGuard Home Addon",
                 "host": "mock-adguard",
                 "port": "3000",
-            }
+            },
+            name="AdGuard Home Addon",
+            slug="adguard",
+            uuid="1234",
         ),
         context={"source": config_entries.SOURCE_HASSIO},
     )
@@ -149,7 +156,10 @@ async def test_hassio_ignored(hass: HomeAssistant) -> None:
                 "addon": "AdGuard Home Addon",
                 "host": "mock-adguard",
                 "port": "3000",
-            }
+            },
+            name="AdGuard Home Addon",
+            slug="adguard",
+            uuid="1234",
         ),
         context={"source": config_entries.SOURCE_HASSIO},
     )
@@ -171,7 +181,14 @@ async def test_hassio_confirm(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         data=HassioServiceInfo(
-            config={"addon": "AdGuard Home Addon", "host": "mock-adguard", "port": 3000}
+            config={
+                "addon": "AdGuard Home Addon",
+                "host": "mock-adguard",
+                "port": 3000,
+            },
+            name="AdGuard Home Addon",
+            slug="adguard",
+            uuid="1234",
         ),
         context={"source": config_entries.SOURCE_HASSIO},
     )
@@ -207,7 +224,14 @@ async def test_hassio_connection_error(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         data=HassioServiceInfo(
-            config={"addon": "AdGuard Home Addon", "host": "mock-adguard", "port": 3000}
+            config={
+                "addon": "AdGuard Home Addon",
+                "host": "mock-adguard",
+                "port": 3000,
+            },
+            name="AdGuard Home Addon",
+            slug="adguard",
+            uuid="1234",
         ),
         context={"source": config_entries.SOURCE_HASSIO},
     )

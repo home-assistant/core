@@ -12,12 +12,13 @@ from homeassistant.components.media_source import (
     async_resolve_media,
 )
 from homeassistant.components.netatmo import DATA_CAMERAS, DATA_EVENTS, DOMAIN
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import load_fixture
 
 
-async def test_async_browse_media(hass):
+async def test_async_browse_media(hass: HomeAssistant) -> None:
     """Test browse media."""
     assert await async_setup_component(hass, DOMAIN, {})
 

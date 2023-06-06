@@ -1,7 +1,7 @@
 """Fixtures for Google Time Travel tests."""
 from unittest.mock import patch
 
-from googlemaps.exceptions import ApiError
+from googlemaps.exceptions import ApiError, Timeout, TransportError
 import pytest
 
 from homeassistant.components.google_travel_time.const import DOMAIN
@@ -21,7 +21,7 @@ async def mock_config_fixture(hass, data, options):
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
-    yield config_entry
+    return config_entry
 
 
 @pytest.fixture(name="bypass_setup")
@@ -58,3 +58,21 @@ def validate_config_entry_fixture():
 def invalidate_config_entry_fixture(validate_config_entry):
     """Return invalid config entry."""
     validate_config_entry.side_effect = ApiError("test")
+
+
+@pytest.fixture(name="invalid_api_key")
+def invalid_api_key_fixture(validate_config_entry):
+    """Throw a REQUEST_DENIED ApiError."""
+    validate_config_entry.side_effect = ApiError("REQUEST_DENIED", "Invalid API key.")
+
+
+@pytest.fixture(name="timeout")
+def timeout_fixture(validate_config_entry):
+    """Throw a Timeout exception."""
+    validate_config_entry.side_effect = Timeout()
+
+
+@pytest.fixture(name="transport_error")
+def transport_error_fixture(validate_config_entry):
+    """Throw a TransportError exception."""
+    validate_config_entry.side_effect = TransportError("Unknown.")

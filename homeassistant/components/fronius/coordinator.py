@@ -7,7 +7,6 @@ from typing import TYPE_CHECKING, Any, TypeVar
 
 from pyfronius import BadStatusError, FroniusError
 
-from homeassistant.components.sensor import SensorEntityDescription
 from homeassistant.core import callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -25,6 +24,7 @@ from .sensor import (
     OHMPILOT_ENTITY_DESCRIPTIONS,
     POWER_FLOW_ENTITY_DESCRIPTIONS,
     STORAGE_ENTITY_DESCRIPTIONS,
+    FroniusSensorEntityDescription,
 )
 
 if TYPE_CHECKING:
@@ -41,7 +41,7 @@ class FroniusCoordinatorBase(
 
     default_interval: timedelta
     error_interval: timedelta
-    valid_descriptions: list[SensorEntityDescription]
+    valid_descriptions: list[FroniusSensorEntityDescription]
 
     MAX_FAILED_UPDATES = 3
 
@@ -86,8 +86,7 @@ class FroniusCoordinatorBase(
         async_add_entities: AddEntitiesCallback,
         entity_constructor: type[_FroniusEntityT],
     ) -> None:
-        """
-        Add entities for received keys and registers listener for future seen keys.
+        """Add entities for received keys and registers listener for future seen keys.
 
         Called from a platforms `async_setup_entry`.
         """
@@ -104,8 +103,7 @@ class FroniusCoordinatorBase(
                         continue
                     new_entities.append(entity_constructor(self, key, solar_net_id))
                     self.unregistered_keys[solar_net_id].remove(key)
-            if new_entities:
-                async_add_entities(new_entities)
+            async_add_entities(new_entities)
 
         _add_entities_for_unregistered_keys()
         self.solar_net.cleanup_callbacks.append(

@@ -5,7 +5,7 @@ DOMAIN = "nzbget"
 ATTR_SPEED = "speed"
 
 # Data
-DATA_COORDINATOR = "corrdinator"
+DATA_COORDINATOR = "coordinator"
 DATA_UNDO_UPDATE_LISTENER = "undo_update_listener"
 
 # Defaults

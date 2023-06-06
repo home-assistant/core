@@ -3,12 +3,15 @@ from __future__ import annotations
 
 from typing import Any
 
+from yolink.client_request import ClientRequest
+from yolink.const import ATTR_DEVICE_LOCK
+
 from homeassistant.components.lock import LockEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import ATTR_COORDINATORS, ATTR_DEVICE_LOCK, DOMAIN
+from .const import DOMAIN
 from .coordinator import YoLinkCoordinator
 from .entity import YoLinkEntity
 
@@ -19,7 +22,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up YoLink lock from a config entry."""
-    device_coordinators = hass.data[DOMAIN][config_entry.entry_id][ATTR_COORDINATORS]
+    device_coordinators = hass.data[DOMAIN][config_entry.entry_id].device_coordinators
     entities = [
         YoLinkLockEntity(config_entry, device_coordinator)
         for device_coordinator in device_coordinators.values()
@@ -52,7 +55,7 @@ class YoLinkLockEntity(YoLinkEntity, LockEntity):
 
     async def call_lock_state_change(self, state: str) -> None:
         """Call setState api to change lock state."""
-        await self.call_device_api("setState", {"state": state})
+        await self.call_device(ClientRequest("setState", {"state": state}))
         self._attr_is_locked = state == "lock"
         self.async_write_ha_state()
 

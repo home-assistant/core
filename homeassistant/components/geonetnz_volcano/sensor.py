@@ -5,18 +5,12 @@ import logging
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_ATTRIBUTION,
-    ATTR_LATITUDE,
-    ATTR_LONGITUDE,
-    CONF_UNIT_SYSTEM_IMPERIAL,
-    LENGTH_KILOMETERS,
-)
+from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE, UnitOfLength
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.util import dt
-from homeassistant.util.unit_system import IMPERIAL_SYSTEM
+from homeassistant.util import dt as dt_util
+from homeassistant.util.unit_conversion import DistanceConverter
 
 from .const import (
     ATTR_ACTIVITY,
@@ -26,6 +20,7 @@ from .const import (
     DEFAULT_ICON,
     DOMAIN,
     FEED,
+    IMPERIAL_UNITS,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -59,7 +54,7 @@ async def async_setup_entry(
 
 
 class GeonetnzVolcanoSensor(SensorEntity):
-    """This represents an external event with GeoNet NZ Volcano feed data."""
+    """Represents an external event with GeoNet NZ Volcano feed data."""
 
     _attr_should_poll = False
 
@@ -112,22 +107,26 @@ class GeonetnzVolcanoSensor(SensorEntity):
         """Update the internal state from the provided feed entry."""
         self._title = feed_entry.title
         # Convert distance if not metric system.
-        if self._unit_system == CONF_UNIT_SYSTEM_IMPERIAL:
+        if self._unit_system == IMPERIAL_UNITS:
             self._distance = round(
-                IMPERIAL_SYSTEM.length(feed_entry.distance_to_home, LENGTH_KILOMETERS),
+                DistanceConverter.convert(
+                    feed_entry.distance_to_home,
+                    UnitOfLength.KILOMETERS,
+                    UnitOfLength.MILES,
+                ),
                 1,
             )
         else:
             self._distance = round(feed_entry.distance_to_home, 1)
         self._latitude = round(feed_entry.coordinates[0], 5)
         self._longitude = round(feed_entry.coordinates[1], 5)
-        self._attribution = feed_entry.attribution
+        self._attr_attribution = feed_entry.attribution
         self._alert_level = feed_entry.alert_level
         self._activity = feed_entry.activity
         self._hazards = feed_entry.hazards
-        self._feed_last_update = dt.as_utc(last_update) if last_update else None
+        self._feed_last_update = dt_util.as_utc(last_update) if last_update else None
         self._feed_last_update_successful = (
-            dt.as_utc(last_update_successful) if last_update_successful else None
+            dt_util.as_utc(last_update_successful) if last_update_successful else None
         )
 
     @property
@@ -156,7 +155,6 @@ class GeonetnzVolcanoSensor(SensorEntity):
         attributes = {}
         for key, value in (
             (ATTR_EXTERNAL_ID, self._external_id),
-            (ATTR_ATTRIBUTION, self._attribution),
             (ATTR_ACTIVITY, self._activity),
             (ATTR_HAZARDS, self._hazards),
             (ATTR_LONGITUDE, self._longitude),

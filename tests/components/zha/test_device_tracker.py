@@ -12,6 +12,7 @@ from homeassistant.components.zha.core.registries import (
     SMARTTHINGS_ARRIVAL_SENSOR_DEVICE_TYPE,
 )
 from homeassistant.const import STATE_HOME, STATE_NOT_HOME, STATE_UNAVAILABLE, Platform
+from homeassistant.core import HomeAssistant
 import homeassistant.util.dt as dt_util
 
 from .common import (
@@ -27,7 +28,7 @@ from tests.common import async_fire_time_changed
 
 @pytest.fixture(autouse=True)
 def device_tracker_platforms_only():
-    """Only setup the device_tracker platforms and required base platforms to speed up tests."""
+    """Only set up the device_tracker platforms and required base platforms to speed up tests."""
     with patch(
         "homeassistant.components.zha.PLATFORMS",
         (
@@ -62,8 +63,10 @@ def zigpy_device_dt(zigpy_device_mock):
     return zigpy_device_mock(endpoints)
 
 
-async def test_device_tracker(hass, zha_device_joined_restored, zigpy_device_dt):
-    """Test zha device tracker platform."""
+async def test_device_tracker(
+    hass: HomeAssistant, zha_device_joined_restored, zigpy_device_dt
+) -> None:
+    """Test ZHA device tracker platform."""
 
     zha_device = await zha_device_joined_restored(zigpy_device_dt)
     cluster = zigpy_device_dt.endpoints.get(1).power

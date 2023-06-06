@@ -1,0 +1,6 @@
+{
+  "domain": "pcs_lighting",
+  "name": "PCS Lighting",
+  "integration_type": "virtual",
+  "supported_by": "upb"
+}

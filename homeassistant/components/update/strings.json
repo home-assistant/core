@@ -6,5 +6,19 @@
       "turned_on": "{entity_name} got an update available",
       "turned_off": "{entity_name} became up-to-date"
     }
+  },
+  "entity_component": {
+    "_": {
+      "name": "[%key:component::update::title%]"
+    },
+    "firmware": {
+      "name": "firmware"
+    }
+  },
+  "issues": {
+    "platform_integration_no_support": {
+      "title": "[%key:common::issues::platform_integration_no_support_title%]",
+      "description": "[%key:common::issues::platform_integration_no_support_description%]"
+    }
   }
 }

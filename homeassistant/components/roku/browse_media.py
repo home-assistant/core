@@ -222,8 +222,7 @@ def item_payload(
     coordinator: RokuDataUpdateCoordinator,
     get_browse_image_url: GetBrowseImageUrlType,
 ) -> BrowseMedia:
-    """
-    Create response payload for a single media item.
+    """Create response payload for a single media item.
 
     Used by async_browse_media.
     """

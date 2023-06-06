@@ -3,10 +3,11 @@ import json
 from unittest.mock import patch
 
 from homeassistant.const import __version__ as current_version
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.system_info import async_get_system_info
 
 
-async def test_get_system_info(hass):
+async def test_get_system_info(hass: HomeAssistant) -> None:
     """Test the get system info."""
     info = await async_get_system_info(hass)
     assert isinstance(info, dict)
@@ -15,7 +16,7 @@ async def test_get_system_info(hass):
     assert json.dumps(info) is not None
 
 
-async def test_container_installationtype(hass):
+async def test_container_installationtype(hass: HomeAssistant) -> None:
     """Test container installation type."""
     with patch("platform.system", return_value="Linux"), patch(
         "os.path.isfile", return_value=True
@@ -30,7 +31,7 @@ async def test_container_installationtype(hass):
         assert info["installation_type"] == "Unsupported Third Party Container"
 
 
-async def test_getuser_keyerror(hass):
+async def test_getuser_keyerror(hass: HomeAssistant) -> None:
     """Test getuser keyerror."""
     with patch("homeassistant.helpers.system_info.getuser", side_effect=KeyError):
         info = await async_get_system_info(hass)

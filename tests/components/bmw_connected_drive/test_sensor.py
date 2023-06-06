@@ -3,8 +3,8 @@ import pytest
 
 from homeassistant.core import HomeAssistant
 from homeassistant.util.unit_system import (
-    IMPERIAL_SYSTEM as IMPERIAL,
     METRIC_SYSTEM as METRIC,
+    US_CUSTOMARY_SYSTEM as IMPERIAL,
     UnitSystem,
 )
 
@@ -12,7 +12,7 @@ from . import setup_mocked_integration
 
 
 @pytest.mark.parametrize(
-    "entity_id,unit_system,value,unit_of_measurement",
+    ("entity_id", "unit_system", "value", "unit_of_measurement"),
     [
         ("sensor.i3_rex_remaining_range_total", METRIC, "279", "km"),
         ("sensor.i3_rex_remaining_range_total", IMPERIAL, "173.36", "mi"),

@@ -9,8 +9,10 @@ from homeassistant.components.light import (
     ColorMode,
 )
 from homeassistant.const import ATTR_SUPPORTED_FEATURES, STATE_UNAVAILABLE
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
-from .common import setup_test_component
+from .common import get_next_aid, setup_test_component
 
 LIGHT_BULB_NAME = "TestDevice"
 LIGHT_BULB_ENTITY_ID = "light.testdevice"
@@ -52,7 +54,7 @@ def create_lightbulb_service_with_color_temp(accessory):
     return service
 
 
-async def test_switch_change_light_state(hass, utcnow):
+async def test_switch_change_light_state(hass: HomeAssistant, utcnow) -> None:
     """Test that we can turn a HomeKit light on and off again."""
     helper = await setup_test_component(hass, create_lightbulb_service_with_hs)
 
@@ -83,7 +85,9 @@ async def test_switch_change_light_state(hass, utcnow):
     )
 
 
-async def test_switch_change_light_state_color_temp(hass, utcnow):
+async def test_switch_change_light_state_color_temp(
+    hass: HomeAssistant, utcnow
+) -> None:
     """Test that we can turn change color_temp."""
     helper = await setup_test_component(hass, create_lightbulb_service_with_color_temp)
 
@@ -103,7 +107,7 @@ async def test_switch_change_light_state_color_temp(hass, utcnow):
     )
 
 
-async def test_switch_read_light_state_dimmer(hass, utcnow):
+async def test_switch_read_light_state_dimmer(hass: HomeAssistant, utcnow) -> None:
     """Test that we can read the state of a HomeKit light accessory."""
     helper = await setup_test_component(hass, create_lightbulb_service)
 
@@ -138,7 +142,7 @@ async def test_switch_read_light_state_dimmer(hass, utcnow):
     assert state.state == "off"
 
 
-async def test_switch_push_light_state_dimmer(hass, utcnow):
+async def test_switch_push_light_state_dimmer(hass: HomeAssistant, utcnow) -> None:
     """Test that we can read the state of a HomeKit light accessory."""
     helper = await setup_test_component(hass, create_lightbulb_service)
 
@@ -166,7 +170,7 @@ async def test_switch_push_light_state_dimmer(hass, utcnow):
     assert state.state == "off"
 
 
-async def test_switch_read_light_state_hs(hass, utcnow):
+async def test_switch_read_light_state_hs(hass: HomeAssistant, utcnow) -> None:
     """Test that we can read the state of a HomeKit light accessory."""
     helper = await setup_test_component(hass, create_lightbulb_service_with_hs)
 
@@ -204,7 +208,7 @@ async def test_switch_read_light_state_hs(hass, utcnow):
     assert state.state == "off"
 
 
-async def test_switch_push_light_state_hs(hass, utcnow):
+async def test_switch_push_light_state_hs(hass: HomeAssistant, utcnow) -> None:
     """Test that we can read the state of a HomeKit light accessory."""
     helper = await setup_test_component(hass, create_lightbulb_service_with_hs)
 
@@ -235,7 +239,7 @@ async def test_switch_push_light_state_hs(hass, utcnow):
     assert state.state == "off"
 
 
-async def test_switch_read_light_state_color_temp(hass, utcnow):
+async def test_switch_read_light_state_color_temp(hass: HomeAssistant, utcnow) -> None:
     """Test that we can read the color_temp of a  light accessory."""
     helper = await setup_test_component(hass, create_lightbulb_service_with_color_temp)
 
@@ -263,7 +267,7 @@ async def test_switch_read_light_state_color_temp(hass, utcnow):
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == 0
 
 
-async def test_switch_push_light_state_color_temp(hass, utcnow):
+async def test_switch_push_light_state_color_temp(hass: HomeAssistant, utcnow) -> None:
     """Test that we can read the state of a HomeKit light accessory."""
     helper = await setup_test_component(hass, create_lightbulb_service_with_color_temp)
 
@@ -284,7 +288,9 @@ async def test_switch_push_light_state_color_temp(hass, utcnow):
     assert state.attributes["color_temp"] == 400
 
 
-async def test_light_becomes_unavailable_but_recovers(hass, utcnow):
+async def test_light_becomes_unavailable_but_recovers(
+    hass: HomeAssistant, utcnow
+) -> None:
     """Test transition to and from unavailable state."""
     helper = await setup_test_component(hass, create_lightbulb_service_with_color_temp)
 
@@ -312,7 +318,7 @@ async def test_light_becomes_unavailable_but_recovers(hass, utcnow):
     assert state.attributes["color_temp"] == 400
 
 
-async def test_light_unloaded_removed(hass, utcnow):
+async def test_light_unloaded_removed(hass: HomeAssistant, utcnow) -> None:
     """Test entity and HKDevice are correctly unloaded and removed."""
     helper = await setup_test_component(hass, create_lightbulb_service_with_color_temp)
 
@@ -335,3 +341,47 @@ async def test_light_unloaded_removed(hass, utcnow):
 
     # Make sure entity is removed
     assert hass.states.get(helper.entity_id).state == STATE_UNAVAILABLE
+
+
+async def test_migrate_unique_id(hass: HomeAssistant, utcnow) -> None:
+    """Test a we can migrate a light unique id."""
+    entity_registry = er.async_get(hass)
+    aid = get_next_aid()
+    light_entry = entity_registry.async_get_or_create(
+        "light",
+        "homekit_controller",
+        f"homekit-00:00:00:00:00:00-{aid}-8",
+    )
+    await setup_test_component(hass, create_lightbulb_service_with_color_temp)
+
+    assert (
+        entity_registry.async_get(light_entry.entity_id).unique_id
+        == f"00:00:00:00:00:00_{aid}_8"
+    )
+
+
+async def test_only_migrate_once(hass: HomeAssistant, utcnow) -> None:
+    """Test a we handle migration happening after an upgrade and than a downgrade and then an upgrade."""
+    entity_registry = er.async_get(hass)
+    aid = get_next_aid()
+    old_light_entry = entity_registry.async_get_or_create(
+        "light",
+        "homekit_controller",
+        f"homekit-00:00:00:00:00:00-{aid}-8",
+    )
+    new_light_entry = entity_registry.async_get_or_create(
+        "light",
+        "homekit_controller",
+        f"00:00:00:00:00:00_{aid}_8",
+    )
+    await setup_test_component(hass, create_lightbulb_service_with_color_temp)
+
+    assert (
+        entity_registry.async_get(old_light_entry.entity_id).unique_id
+        == f"homekit-00:00:00:00:00:00-{aid}-8"
+    )
+
+    assert (
+        entity_registry.async_get(new_light_entry.entity_id).unique_id
+        == f"00:00:00:00:00:00_{aid}_8"
+    )

@@ -3,7 +3,6 @@
 import os
 from unittest.mock import patch
 
-from aiohttp import ClientSession
 import pytest
 
 from homeassistant.components.hassio import DOMAIN
@@ -12,6 +11,7 @@ from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 from tests.components.diagnostics import get_diagnostics_for_config_entry
+from tests.typing import ClientSessionGenerator
 
 MOCK_ENVIRON = {"SUPERVISOR": "127.0.0.1", "SUPERVISOR_TOKEN": "abcdefgh"}
 
@@ -125,6 +125,38 @@ def mock_all(aioclient_mock, request):
             },
         },
     )
+    aioclient_mock.get(
+        "http://127.0.0.1/core/stats",
+        json={
+            "result": "ok",
+            "data": {
+                "cpu_percent": 0.99,
+                "memory_usage": 182611968,
+                "memory_limit": 3977146368,
+                "memory_percent": 4.59,
+                "network_rx": 362570232,
+                "network_tx": 82374138,
+                "blk_read": 46010945536,
+                "blk_write": 15051526144,
+            },
+        },
+    )
+    aioclient_mock.get(
+        "http://127.0.0.1/supervisor/stats",
+        json={
+            "result": "ok",
+            "data": {
+                "cpu_percent": 0.99,
+                "memory_usage": 182611968,
+                "memory_limit": 3977146368,
+                "memory_percent": 4.59,
+                "network_rx": 362570232,
+                "network_tx": 82374138,
+                "blk_read": 46010945536,
+                "blk_write": 15051526144,
+            },
+        },
+    )
     aioclient_mock.get("http://127.0.0.1/addons/test/changelog", text="")
     aioclient_mock.get(
         "http://127.0.0.1/addons/test/info",
@@ -139,11 +171,24 @@ def mock_all(aioclient_mock, request):
         "http://127.0.0.1/ingress/panels", json={"result": "ok", "data": {"panels": {}}}
     )
     aioclient_mock.post("http://127.0.0.1/refresh_updates", json={"result": "ok"})
+    aioclient_mock.get(
+        "http://127.0.0.1/resolution/info",
+        json={
+            "result": "ok",
+            "data": {
+                "unsupported": [],
+                "unhealthy": [],
+                "suggestions": [],
+                "issues": [],
+                "checks": [],
+            },
+        },
+    )
 
 
 async def test_diagnostics(
     hass: HomeAssistant,
-    hass_client: ClientSession,
+    hass_client: ClientSessionGenerator,
 ) -> None:
     """Test diagnostic information."""
     config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
@@ -166,5 +211,6 @@ async def test_diagnostics(
     assert "core" in diagnostics["coordinator_data"]
     assert "supervisor" in diagnostics["coordinator_data"]
     assert "os" in diagnostics["coordinator_data"]
+    assert "host" in diagnostics["coordinator_data"]
 
-    assert len(diagnostics["devices"]) == 5
+    assert len(diagnostics["devices"]) == 6

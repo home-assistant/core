@@ -1,14 +1,13 @@
 """Support for ESPHome buttons."""
 from __future__ import annotations
 
-from contextlib import suppress
-
 from aioesphomeapi import ButtonInfo, EntityState
 
 from homeassistant.components.button import ButtonDeviceClass, ButtonEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.util.enum import try_parse_enum
 
 from . import EsphomeEntity, platform_async_setup_entry
 
@@ -34,9 +33,7 @@ class EsphomeButton(EsphomeEntity[ButtonInfo, EntityState], ButtonEntity):
     @property
     def device_class(self) -> ButtonDeviceClass | None:
         """Return the class of this entity."""
-        with suppress(ValueError):
-            return ButtonDeviceClass(self._static_info.device_class)
-        return None
+        return try_parse_enum(ButtonDeviceClass, self._static_info.device_class)
 
     @callback
     def _on_device_update(self) -> None:

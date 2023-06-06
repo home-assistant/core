@@ -1,0 +1,104 @@
+{
+  "config": {
+    "step": {
+      "by_coordinates": {
+        "description": "Search for a PurpleAir sensor within a certain distance of a latitude/longitude.",
+        "data": {
+          "latitude": "[%key:common::config_flow::data::latitude%]",
+          "longitude": "[%key:common::config_flow::data::longitude%]",
+          "distance": "Search Radius"
+        },
+        "data_description": {
+          "latitude": "The latitude around which to search for sensors",
+          "longitude": "The longitude around which to search for sensors",
+          "distance": "The radius (in kilometers) of the circle to search within"
+        }
+      },
+      "choose_sensor": {
+        "description": "Which of the nearby sensors would you like to track?",
+        "data": {
+          "sensor_index": "Sensor"
+        },
+        "data_description": {
+          "sensor_index": "The sensor to track"
+        }
+      },
+      "reauth_confirm": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "data_description": {
+          "api_key": "[%key:component::purpleair::config::step::user::data_description::api_key%]"
+        }
+      },
+      "user": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "data_description": {
+          "api_key": "Your PurpleAir API key (if you have both read and write keys, use the read key)"
+        }
+      }
+    },
+    "error": {
+      "invalid_api_key": "[%key:common::config_flow::error::invalid_api_key%]",
+      "no_sensors_near_coordinates": "No sensors found near coordinates (within distance)",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    }
+  },
+  "options": {
+    "step": {
+      "add_sensor": {
+        "title": "Add Sensor",
+        "description": "[%key:component::purpleair::config::step::by_coordinates::description%]",
+        "data": {
+          "latitude": "[%key:component::purpleair::config::step::by_coordinates::data::latitude%]",
+          "longitude": "[%key:component::purpleair::config::step::by_coordinates::data::longitude%]",
+          "distance": "[%key:component::purpleair::config::step::by_coordinates::data::distance%]"
+        },
+        "data_description": {
+          "latitude": "[%key:component::purpleair::config::step::by_coordinates::data_description::latitude%]",
+          "longitude": "[%key:component::purpleair::config::step::by_coordinates::data_description::longitude%]",
+          "distance": "[%key:component::purpleair::config::step::by_coordinates::data_description::distance%]"
+        }
+      },
+      "choose_sensor": {
+        "title": "Choose Sensor to Add",
+        "description": "[%key:component::purpleair::config::step::choose_sensor::description%]",
+        "data": {
+          "sensor_index": "[%key:component::purpleair::config::step::choose_sensor::data::sensor_index%]"
+        },
+        "data_description": {
+          "sensor_index": "[%key:component::purpleair::config::step::choose_sensor::data_description::sensor_index%]"
+        }
+      },
+      "init": {
+        "menu_options": {
+          "add_sensor": "Add sensor",
+          "remove_sensor": "Remove sensor"
+        }
+      },
+      "remove_sensor": {
+        "title": "Remove Sensor",
+        "data": {
+          "sensor_device_id": "Sensor Name"
+        },
+        "data_description": {
+          "sensor_device_id": "The sensor to remove"
+        }
+      }
+    },
+    "error": {
+      "invalid_api_key": "[%key:common::config_flow::error::invalid_api_key%]",
+      "no_sensors_near_coordinates": "[%key:component::purpleair::config::error::no_sensors_near_coordinates%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  }
+}

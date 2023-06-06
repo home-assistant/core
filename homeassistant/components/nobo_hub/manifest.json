@@ -1,9 +1,9 @@
 {
   "domain": "nobo_hub",
   "name": "Nob\u00f8 Ecohub",
+  "codeowners": ["@echoromeo", "@oyvindwe"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/nobo_hub",
-  "requirements": ["pynobo==1.4.0"],
-  "codeowners": ["@echoromeo", "@oyvindwe"],
-  "iot_class": "local_push"
+  "iot_class": "local_push",
+  "requirements": ["pynobo==1.6.0"]
 }

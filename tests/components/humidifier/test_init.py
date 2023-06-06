@@ -2,6 +2,7 @@
 from unittest.mock import MagicMock
 
 from homeassistant.components.humidifier import HumidifierEntity
+from homeassistant.core import HomeAssistant
 
 
 class MockHumidifierEntity(HumidifierEntity):
@@ -13,7 +14,7 @@ class MockHumidifierEntity(HumidifierEntity):
         return 0
 
 
-async def test_sync_turn_on(hass):
+async def test_sync_turn_on(hass: HomeAssistant) -> None:
     """Test if async turn_on calls sync turn_on."""
     humidifier = MockHumidifierEntity()
     humidifier.hass = hass
@@ -24,7 +25,7 @@ async def test_sync_turn_on(hass):
     assert humidifier.turn_on.called
 
 
-async def test_sync_turn_off(hass):
+async def test_sync_turn_off(hass: HomeAssistant) -> None:
     """Test if async turn_off calls sync turn_off."""
     humidifier = MockHumidifierEntity()
     humidifier.hass = hass

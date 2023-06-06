@@ -1,4 +1,4 @@
-"""Support for ISY994 fans."""
+"""Support for ISY fans."""
 from __future__ import annotations
 
 import math
@@ -6,9 +6,11 @@ from typing import Any
 
 from pyisy.constants import ISY_VALUE_UNKNOWN, PROTO_INSTEON
 
-from homeassistant.components.fan import DOMAIN as FAN, FanEntity, FanEntityFeature
+from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.percentage import (
     int_states_in_range,
@@ -16,9 +18,8 @@ from homeassistant.util.percentage import (
     ranged_value_to_percentage,
 )
 
-from .const import _LOGGER, DOMAIN as ISY994_DOMAIN, ISY994_NODES, ISY994_PROGRAMS
+from .const import _LOGGER, DOMAIN
 from .entity import ISYNodeEntity, ISYProgramEntity
-from .helpers import migrate_old_unique_ids
 
 SPEED_RANGE = (1, 255)  # off is not included
 
@@ -26,22 +27,22 @@ SPEED_RANGE = (1, 255)  # off is not included
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
-    """Set up the ISY994 fan platform."""
-    hass_isy_data = hass.data[ISY994_DOMAIN][entry.entry_id]
+    """Set up the ISY fan platform."""
+    isy_data = hass.data[DOMAIN][entry.entry_id]
+    devices: dict[str, DeviceInfo] = isy_data.devices
     entities: list[ISYFanEntity | ISYFanProgramEntity] = []
 
-    for node in hass_isy_data[ISY994_NODES][FAN]:
-        entities.append(ISYFanEntity(node))
+    for node in isy_data.nodes[Platform.FAN]:
+        entities.append(ISYFanEntity(node, devices.get(node.primary_node)))
 
-    for name, status, actions in hass_isy_data[ISY994_PROGRAMS][FAN]:
+    for name, status, actions in isy_data.programs[Platform.FAN]:
         entities.append(ISYFanProgramEntity(name, status, actions))
 
-    await migrate_old_unique_ids(hass, FAN, entities)
     async_add_entities(entities)
 
 
 class ISYFanEntity(ISYNodeEntity, FanEntity):
-    """Representation of an ISY994 fan device."""
+    """Representation of an ISY fan device."""
 
     _attr_supported_features = FanEntityFeature.SET_SPEED
 
@@ -67,7 +68,7 @@ class ISYFanEntity(ISYNodeEntity, FanEntity):
         return bool(self._node.status != 0)
 
     async def async_set_percentage(self, percentage: int) -> None:
-        """Set node to speed percentage for the ISY994 fan device."""
+        """Set node to speed percentage for the ISY fan device."""
         if percentage == 0:
             await self._node.turn_off()
             return
@@ -82,16 +83,16 @@ class ISYFanEntity(ISYNodeEntity, FanEntity):
         preset_mode: str | None = None,
         **kwargs: Any,
     ) -> None:
-        """Send the turn on command to the ISY994 fan device."""
+        """Send the turn on command to the ISY fan device."""
         await self.async_set_percentage(percentage or 67)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
-        """Send the turn off command to the ISY994 fan device."""
+        """Send the turn off command to the ISY fan device."""
         await self._node.turn_off()
 
 
 class ISYFanProgramEntity(ISYProgramEntity, FanEntity):
-    """Representation of an ISY994 fan program."""
+    """Representation of an ISY fan program."""
 
     @property
     def percentage(self) -> int | None:
@@ -111,7 +112,7 @@ class ISYFanProgramEntity(ISYProgramEntity, FanEntity):
         return bool(self._node.status != 0)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
-        """Send the turn on command to ISY994 fan program."""
+        """Send the turn on command to ISY fan program."""
         if not await self._actions.run_then():
             _LOGGER.error("Unable to turn off the fan")
 
@@ -121,6 +122,6 @@ class ISYFanProgramEntity(ISYProgramEntity, FanEntity):
         preset_mode: str | None = None,
         **kwargs: Any,
     ) -> None:
-        """Send the turn off command to ISY994 fan program."""
+        """Send the turn off command to ISY fan program."""
         if not await self._actions.run_else():
             _LOGGER.error("Unable to turn on the fan")

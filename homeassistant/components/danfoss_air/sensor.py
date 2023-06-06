@@ -10,7 +10,7 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorStateClass,
 )
-from homeassistant.const import PERCENTAGE, TEMP_CELSIUS
+from homeassistant.const import PERCENTAGE, REVOLUTIONS_PER_MINUTE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -32,28 +32,28 @@ def setup_platform(
     sensors = [
         [
             "Danfoss Air Exhaust Temperature",
-            TEMP_CELSIUS,
+            UnitOfTemperature.CELSIUS,
             ReadCommand.exhaustTemperature,
             SensorDeviceClass.TEMPERATURE,
             SensorStateClass.MEASUREMENT,
         ],
         [
             "Danfoss Air Outdoor Temperature",
-            TEMP_CELSIUS,
+            UnitOfTemperature.CELSIUS,
             ReadCommand.outdoorTemperature,
             SensorDeviceClass.TEMPERATURE,
             SensorStateClass.MEASUREMENT,
         ],
         [
             "Danfoss Air Supply Temperature",
-            TEMP_CELSIUS,
+            UnitOfTemperature.CELSIUS,
             ReadCommand.supplyTemperature,
             SensorDeviceClass.TEMPERATURE,
             SensorStateClass.MEASUREMENT,
         ],
         [
             "Danfoss Air Extract Temperature",
-            TEMP_CELSIUS,
+            UnitOfTemperature.CELSIUS,
             ReadCommand.extractTemperature,
             SensorDeviceClass.TEMPERATURE,
             SensorStateClass.MEASUREMENT,
@@ -75,14 +75,14 @@ def setup_platform(
         ["Danfoss Air Fan Step", PERCENTAGE, ReadCommand.fan_step, None, None],
         [
             "Danfoss Air Exhaust Fan Speed",
-            "RPM",
+            REVOLUTIONS_PER_MINUTE,
             ReadCommand.exhaust_fan_speed,
             None,
             None,
         ],
         [
             "Danfoss Air Supply Fan Speed",
-            "RPM",
+            REVOLUTIONS_PER_MINUTE,
             ReadCommand.supply_fan_speed,
             None,
             None,

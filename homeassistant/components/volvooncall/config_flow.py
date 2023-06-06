@@ -92,7 +92,9 @@ class VolvoOnCallConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 ): vol.In(
                     {
                         UNIT_SYSTEM_METRIC: "Metric",
-                        UNIT_SYSTEM_SCANDINAVIAN_MILES: "Metric with Scandinavian Miles",
+                        UNIT_SYSTEM_SCANDINAVIAN_MILES: (
+                            "Metric with Scandinavian Miles"
+                        ),
                         UNIT_SYSTEM_IMPERIAL: "Imperial",
                     }
                 ),
@@ -103,10 +105,6 @@ class VolvoOnCallConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user", data_schema=user_schema, errors=errors
         )
-
-    async def async_step_import(self, import_data) -> FlowResult:
-        """Import volvooncall config from configuration.yaml."""
-        return await self.async_step_user(import_data)
 
     async def async_step_reauth(self, user_input: Mapping[str, Any]) -> FlowResult:
         """Perform reauth upon an API authentication error."""

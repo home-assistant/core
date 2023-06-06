@@ -2,6 +2,7 @@
 import asyncio
 from datetime import timedelta
 import logging
+from typing import Any
 
 import voluptuous as vol
 from xiaomi_gateway import AsyncXiaomiGatewayMulticast, XiaomiGateway
@@ -78,6 +79,8 @@ SERVICE_SCHEMA_REMOVE_DEVICE = vol.Schema(
     {vol.Required(ATTR_DEVICE_ID): vol.All(cv.string, vol.Length(min=14, max=14))}
 )
 
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
 
 def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Xiaomi component."""
@@ -105,8 +108,10 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         gateway.write_to_hub(gateway.sid, join_permission="yes")
         persistent_notification.async_create(
             hass,
-            "Join permission enabled for 30 seconds! "
-            "Please press the pairing button of the new device once.",
+            (
+                "Join permission enabled for 30 seconds! "
+                "Please press the pairing button of the new device once."
+            ),
             title="Xiaomi Aqara Gateway",
         )
 
@@ -349,9 +354,13 @@ class XiaomiDevice(Entity):
             return True
         return False
 
+    def push_data(self, data: dict[str, Any], raw_data: dict[Any, Any]) -> None:
+        """Push from Hub running in another thread."""
+        self.hass.loop.call_soon_threadsafe(self.async_push_data, data, raw_data)
+
     @callback
-    def push_data(self, data, raw_data):
-        """Push from Hub."""
+    def async_push_data(self, data: dict[str, Any], raw_data: dict[Any, Any]) -> None:
+        """Push from Hub handled in the event loop."""
         _LOGGER.debug("PUSH >> %s: %s", self, data)
         was_unavailable = self._async_track_unavailable()
         is_data = self.parse_data(data, raw_data)

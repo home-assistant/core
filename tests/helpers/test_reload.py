@@ -6,6 +6,7 @@ import pytest
 
 from homeassistant import config
 from homeassistant.const import SERVICE_RELOAD
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity_platform import async_get_platforms
 from homeassistant.helpers.reload import (
@@ -29,7 +30,7 @@ DOMAIN = "test_domain"
 PLATFORM = "test_platform"
 
 
-async def test_reload_platform(hass):
+async def test_reload_platform(hass: HomeAssistant) -> None:
     """Test the polling of only updated entities."""
     component_setup = Mock(return_value=True)
 
@@ -69,7 +70,7 @@ async def test_reload_platform(hass):
     assert not async_get_platform_without_config_entry(hass, PLATFORM, DOMAIN)
 
 
-async def test_setup_reload_service(hass):
+async def test_setup_reload_service(hass: HomeAssistant) -> None:
     """Test setting up a reload service."""
     component_setup = Mock(return_value=True)
 
@@ -108,7 +109,9 @@ async def test_setup_reload_service(hass):
     assert len(setup_called) == 2
 
 
-async def test_setup_reload_service_when_async_process_component_config_fails(hass):
+async def test_setup_reload_service_when_async_process_component_config_fails(
+    hass: HomeAssistant,
+) -> None:
     """Test setting up a reload service with the config processing failing."""
     component_setup = Mock(return_value=True)
 
@@ -150,8 +153,8 @@ async def test_setup_reload_service_when_async_process_component_config_fails(ha
 
 
 async def test_setup_reload_service_with_platform_that_provides_async_reset_platform(
-    hass,
-):
+    hass: HomeAssistant,
+) -> None:
     """Test setting up a reload service using a platform that has its own async_reset_platform."""
     component_setup = AsyncMock(return_value=True)
 
@@ -198,7 +201,7 @@ async def test_setup_reload_service_with_platform_that_provides_async_reset_plat
     assert len(async_reset_platform_called) == 1
 
 
-async def test_async_integration_yaml_config(hass):
+async def test_async_integration_yaml_config(hass: HomeAssistant) -> None:
     """Test loading yaml config for an integration."""
     mock_integration(hass, MockModule(DOMAIN))
 
@@ -209,7 +212,7 @@ async def test_async_integration_yaml_config(hass):
     assert processed_config == {DOMAIN: [{"name": "one"}, {"name": "two"}]}
 
 
-async def test_async_integration_missing_yaml_config(hass):
+async def test_async_integration_missing_yaml_config(hass: HomeAssistant) -> None:
     """Test loading missing yaml config for an integration."""
     mock_integration(hass, MockModule(DOMAIN))
 

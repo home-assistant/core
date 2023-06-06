@@ -9,8 +9,8 @@ from wled import Segment
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import ATTR_INTENSITY, ATTR_SPEED, DOMAIN
@@ -147,5 +147,4 @@ def async_update_segments(
         for desc in NUMBERS:
             new_entities.append(WLEDNumber(coordinator, segment_id, desc))
 
-    if new_entities:
-        async_add_entities(new_entities)
+    async_add_entities(new_entities)

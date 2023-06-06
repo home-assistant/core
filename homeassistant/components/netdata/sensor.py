@@ -1,7 +1,6 @@
 """Support gathering system information of hosts which are running netdata."""
 from __future__ import annotations
 
-from datetime import timedelta
 import logging
 
 from netdata import Netdata
@@ -22,11 +21,8 @@ from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
-
-MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=1)
 
 CONF_DATA_GROUP = "data_group"
 CONF_ELEMENT = "element"
@@ -70,7 +66,7 @@ async def async_setup_platform(
     port = config[CONF_PORT]
     resources = config[CONF_RESOURCES]
 
-    netdata = NetdataData(Netdata(host, port=port))
+    netdata = NetdataData(Netdata(host, port=port, timeout=20.0))
     await netdata.async_update()
 
     if netdata.api.metrics is None:
@@ -223,7 +219,6 @@ class NetdataData:
         self.api = api
         self.available = True
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
     async def async_update(self):
         """Get the latest data from the Netdata REST API."""
 

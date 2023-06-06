@@ -1,5 +1,4 @@
 """Tests for the Insteon lock."""
-
 from unittest.mock import patch
 
 import pytest
@@ -19,6 +18,7 @@ from homeassistant.const import (  # ATTR_ENTITY_ID,;
     STATE_UNLOCKED,
     Platform,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .const import MOCK_USER_INPUT_PLM
@@ -57,7 +57,7 @@ async def mock_connection(*args, **kwargs):
     return True
 
 
-async def test_lock_lock(hass):
+async def test_lock_lock(hass: HomeAssistant) -> None:
     """Test locking an Insteon lock device."""
 
     config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_INPUT_PLM)
@@ -82,7 +82,7 @@ async def test_lock_lock(hass):
         await hass.async_block_till_done()
 
 
-async def test_lock_unlock(hass):
+async def test_lock_unlock(hass: HomeAssistant) -> None:
     """Test locking an Insteon lock device."""
 
     config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_INPUT_PLM)

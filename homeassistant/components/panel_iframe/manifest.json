@@ -1,8 +1,8 @@
 {
   "domain": "panel_iframe",
   "name": "iframe Panel",
-  "documentation": "https://www.home-assistant.io/integrations/panel_iframe",
-  "dependencies": ["frontend"],
   "codeowners": ["@home-assistant/frontend"],
+  "dependencies": ["frontend"],
+  "documentation": "https://www.home-assistant.io/integrations/panel_iframe",
   "quality_scale": "internal"
 }
