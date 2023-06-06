@@ -96,6 +96,7 @@ DATE_STR_FORMAT = "%Y-%m-%d %H:%M:%S"
 _ENVIRONMENT = "template.environment"
 _ENVIRONMENT_LIMITED = "template.environment_limited"
 _ENVIRONMENT_STRICT = "template.environment_strict"
+_REGISTERED_HASS_FUNCTIONS = "template.registered_hass_functions"
 
 # We don't register functions into the limited environment
 # since its only for device_entities
@@ -210,10 +211,6 @@ def async_setup(hass: HomeAssistant) -> bool:
     )
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, _async_adjust_lru_sizes)
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, callback(lambda _: cancel()))
-
-    hass.data[_ENVIRONMENT] = TemplateEnvironment(hass)  # type: ignore[no-untyped-call]
-    hass.data[_ENVIRONMENT_LIMITED] = TemplateEnvironment(hass, limited=True)  # type: ignore[no-untyped-call]
-    hass.data[_ENVIRONMENT_STRICT] = TemplateEnvironment(hass, strict=True)  # type: ignore[no-untyped-call]
     return True
 
 
@@ -460,13 +457,29 @@ class RenderInfo:
 
 
 @callback
+def _async_get_registered_hass_functions(
+    hass: HomeAssistant,
+) -> dict[str, Callable[Concatenate[HomeAssistant, _P], _R]]:
+    """Return the registered hass functions."""
+    functions = hass.data.setdefault(_REGISTERED_HASS_FUNCTIONS, {})
+    return cast(dict[str, Callable[Concatenate[HomeAssistant, _P], _R]], functions)
+
+
+@callback
 def async_register_hass_environment_function(
     hass: HomeAssistant, name: str, func: Callable[Concatenate[HomeAssistant, _P], _R]
 ) -> None:
     """Register the environment function."""
+    registered_hass_functions: dict[
+        str, Callable[Concatenate[HomeAssistant, _P], _R]
+    ] = _async_get_registered_hass_functions(hass)
+    registered_hass_functions[name] = func
+
+    # If the environment is already created, register it there too
     for env in _REGISTER_ENVIRONMENTS:
-        template_env = cast(TemplateEnvironment, hass.data[env])
-        template_env.async_register_hass_function(name, func)
+        if maybe_template_env := hass.data.get(env):
+            template_env = cast(TemplateEnvironment, maybe_template_env)
+            template_env.async_register_hass_function(name, func)
 
 
 class Template:
@@ -2514,6 +2527,10 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["relative_time"] = self.globals["relative_time"]
         self.globals["today_at"] = hassfunction(today_at)
         self.filters["today_at"] = self.globals["today_at"]
+
+        registered_hass_functions = _async_get_registered_hass_functions(hass)
+        for name, func in registered_hass_functions.items():
+            self.async_register_hass_function(name, func)
 
     def hassfunction(
         self,
