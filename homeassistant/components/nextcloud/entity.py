@@ -1,7 +1,8 @@
 """Base entity for the Nextcloud integration."""
-from typing import Any
+from copy import copy
 from urllib.parse import urlparse
 
+from homeassistant.components.sensor import SensorEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.helpers.device_registry import DeviceEntryType
@@ -36,7 +37,7 @@ class NextcloudEntity(CoordinatorEntity[NextcloudDataUpdateCoordinator]):
         coordinator: NextcloudDataUpdateCoordinator,
         item: str,
         entry: ConfigEntry,
-        attrs: dict[str, dict[str, Any]] | None = None,
+        desc: SensorEntityDescription | None,
     ) -> None:
         """Initialize the Nextcloud sensor."""
         super().__init__(coordinator)
@@ -53,15 +54,16 @@ class NextcloudEntity(CoordinatorEntity[NextcloudDataUpdateCoordinator]):
             name=domain,
             sw_version=coordinator.data.get("system version"),
         )
-
-        if attrs:
-            for attr in attrs:
-                setattr(self, f"_attr_{attr}", attrs[attr])
+        if desc:
+            self.entity_description = copy(desc)
+            self.entity_description.key = item
+        else:
+            self.entity_description = SensorEntityDescription(key=item)
 
         if any(x in item for x in DIAGNOSTICS):
-            self._attr_entity_category = EntityCategory.DIAGNOSTIC
-            self._attr_entity_registry_enabled_default = False
+            self.entity_description.entity_category = EntityCategory.DIAGNOSTIC
+            self.entity_description.entity_registry_enabled_default = False
 
         icon = next(filter(lambda x: x in item, ICONS), None)
         if icon:
-            self._attr_icon = ICONS[icon]
+            self.entity_description.icon = ICONS[icon]

@@ -10,8 +10,6 @@ from .const import BOOLEAN_TRUE_VALUES, BOOLEN_VALUES, DOMAIN
 from .coordinator import NextcloudDataUpdateCoordinator
 from .entity import NextcloudEntity
 
-BINARY_SENSORS: dict[str, dict] = {}
-
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
@@ -20,9 +18,7 @@ async def async_setup_entry(
     coordinator: NextcloudDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
         [
-            NextcloudBinarySensor(
-                coordinator, name, entry, attrs=BINARY_SENSORS.get(name)
-            )
+            NextcloudBinarySensor(coordinator, name, entry, None)
             for name in coordinator.data
             if isinstance(coordinator.data[name], bool)
             or coordinator.data[name] in BOOLEN_VALUES
