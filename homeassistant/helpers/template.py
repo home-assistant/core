@@ -22,7 +22,6 @@ from struct import error as StructError, pack, unpack_from
 import sys
 from types import CodeType
 from typing import (
-    TYPE_CHECKING,
     Any,
     Concatenate,
     Literal,
@@ -83,9 +82,6 @@ from homeassistant.util.thread import ThreadWithException
 from . import area_registry, device_registry, entity_registry, location as loc_helper
 from .singleton import singleton
 from .typing import TemplateVarsType
-
-if TYPE_CHECKING:
-    pass
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
