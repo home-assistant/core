@@ -8,7 +8,6 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.components import water_heater
-from homeassistant.components.climate import HVACMode
 from homeassistant.components.water_heater import (
     DEFAULT_MIN_TEMP,
     STATE_ECO,
@@ -309,7 +308,3 @@ class MqttWaterHeater(MqttTemperatureControlEntity, WaterHeaterEntity):
         if self._optimistic or self._topic[CONF_MODE_STATE_TOPIC] is None:
             self._attr_current_operation = operation_mode
             self.async_write_ha_state()
-
-    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
-        """Set new hvac mode."""
-        raise NotImplementedError()

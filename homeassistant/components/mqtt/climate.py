@@ -1,7 +1,7 @@
 """Support for MQTT climate devices."""
 from __future__ import annotations
 
-from abc import ABC, abstractmethod
+from abc import ABC
 from collections.abc import Callable
 import functools
 import logging
@@ -1014,10 +1014,6 @@ class MqttClimate(MqttTemperatureControlEntity, ClimateEntity):
         if self._optimistic or self._topic[CONF_MODE_STATE_TOPIC] is None:
             self._attr_hvac_mode = hvac_mode
             self.async_write_ha_state()
-
-    async def async_set_operation_mode(self, operation_mode: str) -> None:
-        """Set new operation mode."""
-        raise NotImplementedError()
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set a preset mode."""
