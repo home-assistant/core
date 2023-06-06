@@ -52,7 +52,6 @@ from .test_common import (
     help_test_setting_attribute_via_mqtt_json_message,
     help_test_setting_attribute_with_template,
     help_test_setting_blocked_attribute_via_mqtt_json_message,
-    help_test_temperature_control_value_template_keys,
     help_test_unique_id,
     help_test_unload_config_entry_with_platform,
     help_test_update_with_json_attrs_bad_json,
@@ -447,6 +446,9 @@ async def test_custom_availability_payload(
                     "temperature_command_topic": "temperature-topic",
                     # By default, just unquote the JSON-strings
                     "value_template": "{{ value_json }}",
+                    "mode_state_template": "{{ value_json.attribute }}",
+                    "temperature_state_template": "{{ value_json }}",
+                    "current_temperature_template": "{{ value_json}}",
                     "mode_state_topic": "mode-state",
                     "temperature_state_topic": "temperature-state",
                     "current_temperature_topic": "current-temperature",
@@ -465,7 +467,7 @@ async def test_get_with_templates(
 
     # Operation Mode
     state = hass.states.get(ENTITY_WATER_HEATER)
-    async_fire_mqtt_message(hass, "mode-state", '"eco"')
+    async_fire_mqtt_message(hass, "mode-state", '{"attribute": "eco"}')
     state = hass.states.get(ENTITY_WATER_HEATER)
     assert state.state == "eco"
 
@@ -687,53 +689,6 @@ async def test_alt_temperature_unit(
 
         state = hass.states.get(ENTITY_WATER_HEATER)
         assert state.attributes.get("current_temperature") == current
-
-
-@pytest.mark.parametrize(
-    ("attribute", "value_topic", "value_template", "payload"),
-    [
-        (
-            "temperature",
-            "temperature_state_topic",
-            "temperature_state_template",
-            200,
-        ),
-        (
-            "current_temperature",
-            "current_temperature_topic",
-            "current_temperature_template",
-            220,
-        ),
-        (
-            "operation_mode",
-            "mode_state_topic",
-            "mode_state_template",
-            "performance",
-        ),
-    ],
-)
-async def test_temperature_control_value_template_keys(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    attribute: str,
-    value_topic: str,
-    value_template: str,
-    payload: Any,
-) -> None:
-    """Test setting of attribute via MQTT entity using templates."""
-    domain = water_heater.DOMAIN
-    config = copy.deepcopy(DEFAULT_CONFIG)
-
-    await help_test_temperature_control_value_template_keys(
-        hass,
-        mqtt_mock_entry,
-        domain,
-        config,
-        attribute,
-        value_topic,
-        value_template,
-        payload,
-    )
 
 
 async def test_setting_attribute_via_mqtt_json_message(
