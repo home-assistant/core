@@ -69,7 +69,7 @@ async def test_form_duplicates(
         assert result2["type"] == FlowResultType.ABORT
         assert result2["reason"] == "already_configured"
 
-    assert len(mock_session.mock_calls) == 1
+    mock_session.assert_called_once()
 
 
 async def test_step_import(hass: HomeAssistant) -> None:
