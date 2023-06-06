@@ -461,8 +461,10 @@ def _async_get_registered_hass_functions(
     hass: HomeAssistant,
 ) -> dict[str, Callable[Concatenate[HomeAssistant, _P], _R]]:
     """Return the registered hass functions."""
-    functions = hass.data.setdefault(_REGISTERED_HASS_FUNCTIONS, {})
-    return cast(dict[str, Callable[Concatenate[HomeAssistant, _P], _R]], functions)
+    functions: dict[
+        str, Callable[Concatenate[HomeAssistant, _P], _R]
+    ] = hass.data.setdefault(_REGISTERED_HASS_FUNCTIONS, {})
+    return functions
 
 
 @callback
