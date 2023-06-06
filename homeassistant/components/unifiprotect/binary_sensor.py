@@ -14,8 +14,6 @@ from pyunifiprotect.data import (
     ProtectAdoptableDeviceModel,
     ProtectModelWithId,
     Sensor,
-    SmartDetectAudioType,
-    SmartDetectObjectType,
 )
 from pyunifiprotect.data.nvr import UOSDisk
 

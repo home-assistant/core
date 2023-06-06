@@ -10,7 +10,7 @@ from typing import Any, Generic, TypeVar, cast
 from pyunifiprotect.data import NVR, Event, ProtectAdoptableDeviceModel
 
 from homeassistant.helpers.entity import EntityDescription
-from homeassistant.util import dt as date_util
+from homeassistant.util import dt as dt_util
 
 from .utils import get_nested_attr
 
@@ -80,20 +80,16 @@ class ProtectEventMixin(ProtectRequiredKeysMixin[T]):
         """Return value if event is active."""
 
         event = self.get_event_obj(obj)
-        now = date_util.utcnow()
-        if event is None:
+        now = dt_util.utcnow()
+        value = event is not None and now > event.start
+        if value and event.end is not None and now > event.end:
             value = False
-            _LOGGER.debug("%s (%s): missing event", self.name, obj.mac)
-        else:
-            value = now > event.start
-            if value and event.end is not None and now > event.end:
-                value = False
-                _LOGGER.debug(
-                    "%s (%s): end ended at %s",
-                    self.name,
-                    obj.mac,
-                    event.end.isoformat(),
-                )
+            _LOGGER.debug(
+                "%s (%s): end ended at %s",
+                self.name,
+                obj.mac,
+                event.end.isoformat(),
+            )
 
         if value:
             _LOGGER.debug("%s (%s): value is on", self.name, obj.mac)

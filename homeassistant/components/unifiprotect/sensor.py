@@ -15,7 +15,6 @@ from pyunifiprotect.data import (
     ProtectDeviceModel,
     ProtectModelWithId,
     Sensor,
-    SmartDetectObjectType,
 )
 
 from homeassistant.components.sensor import (
