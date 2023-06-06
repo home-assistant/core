@@ -25,7 +25,7 @@ async def async_get_config_entry_diagnostics(
     ]
 
     return {
-        "config_entry": async_redact_data(config_entry.as_dict(), TO_REDACT_CONFIG),
+        "config_entry": async_redact_data(config_entry.data, TO_REDACT_CONFIG),
         "coordinators": {
             f"**REDACTED-{i}**": {
                 "roborock_device_info": async_redact_data(

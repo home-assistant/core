@@ -1,5 +1,6 @@
 """Roborock Models."""
 from dataclasses import dataclass
+from typing import Any
 
 from roborock.containers import HomeDataDevice, HomeDataProduct, NetworkInfo
 from roborock.roborock_typing import DeviceProp
