@@ -11,14 +11,19 @@ from homeassistant.const import (
     CONF_SSL,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
+    Platform,
 )
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import DEFAULT_PORT, DEFAULT_TIMEOUT, DOMAIN, PLATFORMS
+from .const import DEFAULT_PORT, DEFAULT_TIMEOUT, DOMAIN
 
 UPDATE_INTERVAL = timedelta(minutes=1)
 
 _LOGGER = logging.getLogger(__name__)
+
+PLATFORMS: list[Platform] = [
+    Platform.SENSOR,
+]
 
 
 async def async_setup_entry(hass, config_entry):
