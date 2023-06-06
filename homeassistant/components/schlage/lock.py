@@ -29,7 +29,7 @@ async def async_setup_entry(
     )
 
 
-class SchlageLockEntity(CoordinatorEntity, LockEntity):
+class SchlageLockEntity(CoordinatorEntity[SchlageDataUpdateCoordinator], LockEntity):
     """Schlage lock entity."""
 
     def __init__(
