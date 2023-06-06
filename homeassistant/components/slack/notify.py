@@ -17,16 +17,9 @@ from homeassistant.components.notify import (
     ATTR_DATA,
     ATTR_TARGET,
     ATTR_TITLE,
-    PLATFORM_SCHEMA,
     BaseNotificationService,
 )
-from homeassistant.const import (
-    ATTR_ICON,
-    CONF_API_KEY,
-    CONF_ICON,
-    CONF_PATH,
-    CONF_USERNAME,
-)
+from homeassistant.const import ATTR_ICON, CONF_PATH
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import aiohttp_client, config_validation as cv, template
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -73,16 +66,6 @@ DATA_SCHEMA = vol.All(
     cv.ensure_list, [vol.Any(DATA_FILE_SCHEMA, DATA_TEXT_ONLY_SCHEMA)]
 )
 
-# Deprecated in Home Assistant 2022.5
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_API_KEY): cv.string,
-        vol.Required(CONF_DEFAULT_CHANNEL): cv.string,
-        vol.Optional(CONF_ICON): cv.string,
-        vol.Optional(CONF_USERNAME): cv.string,
-    }
-)
-
 
 class AuthDictT(TypedDict, total=False):
     """Type for auth request data."""
@@ -117,14 +100,13 @@ async def async_get_service(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> SlackNotificationService | None:
     """Set up the Slack notification service."""
-    if discovery_info is None:
-        return None
-
-    return SlackNotificationService(
-        hass,
-        discovery_info[SLACK_DATA][DATA_CLIENT],
-        discovery_info,
-    )
+    if discovery_info:
+        return SlackNotificationService(
+            hass,
+            discovery_info[SLACK_DATA][DATA_CLIENT],
+            discovery_info,
+        )
+    return None
 
 
 @callback

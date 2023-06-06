@@ -17,8 +17,8 @@ from homeassistant.const import (
     UnitOfFrequency,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry
-from homeassistant.util import dt
+from homeassistant.helpers import entity_registry as er
+from homeassistant.util import dt as dt_util
 
 from . import configure_integration
 from .const import CONNECTED_STATIONS, DISCOVERY_INFO, NO_CONNECTED_STATIONS
@@ -30,22 +30,23 @@ STATION = CONNECTED_STATIONS[0]
 SERIAL = DISCOVERY_INFO.properties["SN"]
 
 
-async def test_device_tracker(hass: HomeAssistant, mock_device: MockDevice) -> None:
+async def test_device_tracker(
+    hass: HomeAssistant, mock_device: MockDevice, entity_registry: er.EntityRegistry
+) -> None:
     """Test device tracker states."""
     state_key = (
         f"{PLATFORM}.{DOMAIN}_{SERIAL}_{STATION.mac_address.lower().replace(':', '_')}"
     )
     entry = configure_integration(hass)
-    er = entity_registry.async_get(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
-    async_fire_time_changed(hass, dt.utcnow() + LONG_UPDATE_INTERVAL)
+    async_fire_time_changed(hass, dt_util.utcnow() + LONG_UPDATE_INTERVAL)
     await hass.async_block_till_done()
 
     # Enable entity
-    er.async_update_entity(state_key, disabled_by=None)
+    entity_registry.async_update_entity(state_key, disabled_by=None)
     await hass.async_block_till_done()
-    async_fire_time_changed(hass, dt.utcnow() + LONG_UPDATE_INTERVAL)
+    async_fire_time_changed(hass, dt_util.utcnow() + LONG_UPDATE_INTERVAL)
     await hass.async_block_till_done()
 
     state = hass.states.get(state_key)
@@ -61,7 +62,7 @@ async def test_device_tracker(hass: HomeAssistant, mock_device: MockDevice) -> N
     mock_device.device.async_get_wifi_connected_station = AsyncMock(
         return_value=NO_CONNECTED_STATIONS
     )
-    async_fire_time_changed(hass, dt.utcnow() + LONG_UPDATE_INTERVAL)
+    async_fire_time_changed(hass, dt_util.utcnow() + LONG_UPDATE_INTERVAL)
     await hass.async_block_till_done()
 
     state = hass.states.get(state_key)
@@ -72,7 +73,7 @@ async def test_device_tracker(hass: HomeAssistant, mock_device: MockDevice) -> N
     mock_device.device.async_get_wifi_connected_station = AsyncMock(
         side_effect=DeviceUnavailable
     )
-    async_fire_time_changed(hass, dt.utcnow() + LONG_UPDATE_INTERVAL)
+    async_fire_time_changed(hass, dt_util.utcnow() + LONG_UPDATE_INTERVAL)
     await hass.async_block_till_done()
 
     state = hass.states.get(state_key)
@@ -82,14 +83,15 @@ async def test_device_tracker(hass: HomeAssistant, mock_device: MockDevice) -> N
     await hass.config_entries.async_unload(entry.entry_id)
 
 
-async def test_restoring_clients(hass: HomeAssistant, mock_device: MockDevice) -> None:
+async def test_restoring_clients(
+    hass: HomeAssistant, mock_device: MockDevice, entity_registry: er.EntityRegistry
+) -> None:
     """Test restoring existing device_tracker entities."""
     state_key = (
         f"{PLATFORM}.{DOMAIN}_{SERIAL}_{STATION.mac_address.lower().replace(':', '_')}"
     )
     entry = configure_integration(hass)
-    er = entity_registry.async_get(hass)
-    er.async_get_or_create(
+    entity_registry.async_get_or_create(
         PLATFORM,
         DOMAIN,
         f"{SERIAL}_{STATION.mac_address}",

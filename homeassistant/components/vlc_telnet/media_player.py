@@ -21,7 +21,6 @@ from homeassistant.components.media_player import (
 from homeassistant.config_entries import SOURCE_HASSIO, ConfigEntry
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -293,13 +292,7 @@ class VlcDevice(MediaPlayerEntity):
             sourced_media = await media_source.async_resolve_media(
                 self.hass, media_id, self.entity_id
             )
-            media_type = sourced_media.mime_type
             media_id = sourced_media.url
-
-        if media_type != MediaType.MUSIC and not media_type.startswith("audio/"):
-            raise HomeAssistantError(
-                f"Invalid media type {media_type}. Only {MediaType.MUSIC} is supported"
-            )
 
         # If media ID is a relative URL, we serve it from HA.
         media_id = async_process_play_media_url(
@@ -336,8 +329,4 @@ class VlcDevice(MediaPlayerEntity):
         media_content_id: str | None = None,
     ) -> BrowseMedia:
         """Implement the websocket media browsing helper."""
-        return await media_source.async_browse_media(
-            self.hass,
-            media_content_id,
-            content_filter=lambda item: item.media_content_type.startswith("audio/"),
-        )
+        return await media_source.async_browse_media(self.hass, media_content_id)

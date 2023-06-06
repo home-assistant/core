@@ -1274,6 +1274,7 @@ async def test_unavailable_device(
     hass.config_entries.async_update_entry(
         config_entry_mock, options={CONF_POLL_AVAILABILITY: True}
     )
+    await hass.async_block_till_done()
     await async_update_entity(hass, mock_entity_id)
     domain_data_mock.upnp_factory.async_create_device.assert_awaited_once_with(
         MOCK_DEVICE_LOCATION

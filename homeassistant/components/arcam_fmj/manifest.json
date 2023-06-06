@@ -6,7 +6,7 @@
   "documentation": "https://www.home-assistant.io/integrations/arcam_fmj",
   "iot_class": "local_polling",
   "loggers": ["arcam"],
-  "requirements": ["arcam-fmj==1.2.1"],
+  "requirements": ["arcam-fmj==1.3.0"],
   "ssdp": [
     {
       "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:1",

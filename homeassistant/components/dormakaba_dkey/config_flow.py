@@ -1,6 +1,7 @@
 """Config flow for Dormakaba dKey integration."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 import logging
 from typing import Any
 
@@ -12,6 +13,7 @@ from homeassistant import config_entries
 from homeassistant.components.bluetooth import (
     BluetoothServiceInfoBleak,
     async_discovered_service_info,
+    async_last_service_info,
 )
 from homeassistant.const import CONF_ADDRESS
 from homeassistant.data_entry_flow import FlowResult
@@ -32,12 +34,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    _reauth_entry: config_entries.ConfigEntry | None = None
+
     def __init__(self) -> None:
         """Initialize the config flow."""
         self._lock: DKEYLock | None = None
         # Populated by user step
         self._discovered_devices: dict[str, BluetoothServiceInfoBleak] = {}
-        # Populated by bluetooth and user steps
+        # Populated by bluetooth, reauth_confirm and user steps
         self._discovery_info: BluetoothServiceInfoBleak | None = None
 
     async def async_step_user(
@@ -113,6 +117,36 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_associate()
 
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+        """Handle reauthorization request."""
+        self._reauth_entry = self.hass.config_entries.async_get_entry(
+            self.context["entry_id"]
+        )
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Handle reauthorization flow."""
+        errors = {}
+        reauth_entry = self._reauth_entry
+        assert reauth_entry is not None
+
+        if user_input is not None:
+            if (
+                discovery_info := async_last_service_info(
+                    self.hass, reauth_entry.data[CONF_ADDRESS], True
+                )
+            ) is None:
+                errors = {"base": "no_longer_in_range"}
+            else:
+                self._discovery_info = discovery_info
+                return await self.async_step_associate()
+
+        return self.async_show_form(
+            step_id="reauth_confirm", data_schema=vol.Schema({}), errors=errors
+        )
+
     async def async_step_associate(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
@@ -132,7 +166,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         try:
             association_data = await lock.associate(user_input["activation_code"])
-        except BleakError:
+        except BleakError as err:
+            _LOGGER.warning("BleakError", exc_info=err)
             return self.async_abort(reason="cannot_connect")
         except dkey_errors.InvalidActivationCode:
             errors["base"] = "invalid_code"
@@ -142,14 +177,20 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.exception("Unexpected exception")
             return self.async_abort(reason="unknown")
         else:
+            data = {
+                CONF_ADDRESS: self._discovery_info.device.address,
+                CONF_ASSOCIATION_DATA: association_data.to_json(),
+            }
+            if reauth_entry := self._reauth_entry:
+                self.hass.config_entries.async_update_entry(reauth_entry, data=data)
+                await self.hass.config_entries.async_reload(reauth_entry.entry_id)
+                return self.async_abort(reason="reauth_successful")
+
             return self.async_create_entry(
                 title=lock.device_info.device_name
                 or lock.device_info.device_id
                 or lock.name,
-                data={
-                    CONF_ADDRESS: self._discovery_info.device.address,
-                    CONF_ASSOCIATION_DATA: association_data.to_json(),
-                },
+                data=data,
             )
 
         return self.async_show_form(

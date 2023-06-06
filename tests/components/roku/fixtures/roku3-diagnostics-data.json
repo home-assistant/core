@@ -73,6 +73,7 @@
     "supports_airplay": false,
     "supports_find_remote": false,
     "supports_private_listening": false,
+    "supports_wake_on_wlan": false,
     "version": "7.5.0",
     "wifi_mac": "b0:a7:37:96:4d:fb"
   },

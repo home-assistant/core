@@ -1,7 +1,12 @@
 """Support for a ScreenLogic 'circuit' switch."""
 import logging
 
-from screenlogicpy.const import CODE, DATA as SL_DATA, GENERIC_CIRCUIT_NAMES
+from screenlogicpy.const import (
+    CODE,
+    DATA as SL_DATA,
+    GENERIC_CIRCUIT_NAMES,
+    INTERFACE_GROUP,
+)
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
@@ -31,7 +36,8 @@ async def async_setup_entry(
                 coordinator,
                 circuit_num,
                 CODE.STATUS_CHANGED,
-                circuit["name"] not in GENERIC_CIRCUIT_NAMES,
+                circuit["name"] not in GENERIC_CIRCUIT_NAMES
+                and circuit["interface"] != INTERFACE_GROUP.DONT_SHOW,
             )
             for circuit_num, circuit in circuits.items()
             if circuit["function"] not in LIGHT_CIRCUIT_FUNCTIONS

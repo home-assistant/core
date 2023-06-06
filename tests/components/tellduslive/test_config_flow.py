@@ -141,7 +141,7 @@ async def test_step_import_load_json_matching_host(
     flow = init_config_flow(hass)
 
     with patch(
-        "homeassistant.components.tellduslive.config_flow.load_json",
+        "homeassistant.components.tellduslive.config_flow.load_json_object",
         return_value={"tellduslive": {}},
     ), patch("os.path.isfile"):
         result = await flow.async_step_import(
@@ -156,7 +156,7 @@ async def test_step_import_load_json(hass: HomeAssistant, mock_tellduslive) -> N
     flow = init_config_flow(hass)
 
     with patch(
-        "homeassistant.components.tellduslive.config_flow.load_json",
+        "homeassistant.components.tellduslive.config_flow.load_json_object",
         return_value={"localhost": {}},
     ), patch("os.path.isfile"):
         result = await flow.async_step_import(

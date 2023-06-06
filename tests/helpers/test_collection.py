@@ -16,6 +16,7 @@ from homeassistant.helpers import (
 from homeassistant.helpers.typing import ConfigType
 
 from tests.common import flush_store
+from tests.typing import WebSocketGenerator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -81,7 +82,7 @@ class MockObservableCollection(collection.ObservableCollection):
         return entity_class.from_storage(config)
 
 
-class MockStorageCollection(collection.StorageCollection):
+class MockStorageCollection(collection.DictStorageCollection):
     """Mock storage collection."""
 
     async def _process_create_data(self, data: dict) -> dict:
@@ -95,9 +96,9 @@ class MockStorageCollection(collection.StorageCollection):
         """Suggest an ID based on the config."""
         return info["name"]
 
-    async def _update_data(self, data: dict, update_data: dict) -> dict:
+    async def _update_data(self, item: dict, update_data: dict) -> dict:
         """Return a new updated data object."""
-        return {**data, **update_data}
+        return {**item, **update_data}
 
 
 def test_id_manager() -> None:
@@ -115,7 +116,7 @@ def test_id_manager() -> None:
 
 async def test_observable_collection() -> None:
     """Test observerable collection."""
-    coll = collection.ObservableCollection(_LOGGER)
+    coll = collection.ObservableCollection(None)
     assert coll.async_items() == []
     coll.data["bla"] = 1
     assert coll.async_items() == [1]
@@ -201,7 +202,7 @@ async def test_storage_collection(hass: HomeAssistant) -> None:
         }
     )
     id_manager = collection.IDManager()
-    coll = MockStorageCollection(store, _LOGGER, id_manager)
+    coll = MockStorageCollection(store, id_manager)
     changes = track_changes(coll)
 
     await coll.async_load()
@@ -255,7 +256,8 @@ async def test_storage_collection(hass: HomeAssistant) -> None:
 async def test_attach_entity_component_collection(hass: HomeAssistant) -> None:
     """Test attaching collection to entity component."""
     ent_comp = entity_component.EntityComponent(_LOGGER, "test", hass)
-    coll = MockObservableCollection(_LOGGER)
+    await ent_comp.async_setup({})
+    coll = MockObservableCollection(None)
     collection.sync_entity_lifecycle(hass, "test", "test", ent_comp, coll, MockEntity)
 
     await coll.notify_changes(
@@ -294,7 +296,8 @@ async def test_attach_entity_component_collection(hass: HomeAssistant) -> None:
 async def test_entity_component_collection_abort(hass: HomeAssistant) -> None:
     """Test aborted entity adding is handled."""
     ent_comp = entity_component.EntityComponent(_LOGGER, "test", hass)
-    coll = MockObservableCollection(_LOGGER)
+    await ent_comp.async_setup({})
+    coll = MockObservableCollection(None)
 
     async_update_config_calls = []
     async_remove_calls = []
@@ -360,7 +363,8 @@ async def test_entity_component_collection_abort(hass: HomeAssistant) -> None:
 async def test_entity_component_collection_entity_removed(hass: HomeAssistant) -> None:
     """Test entity removal is handled."""
     ent_comp = entity_component.EntityComponent(_LOGGER, "test", hass)
-    coll = MockObservableCollection(_LOGGER)
+    await ent_comp.async_setup({})
+    coll = MockObservableCollection(None)
 
     async_update_config_calls = []
     async_remove_calls = []
@@ -425,12 +429,14 @@ async def test_entity_component_collection_entity_removed(hass: HomeAssistant) -
     assert len(async_remove_calls) == 1
 
 
-async def test_storage_collection_websocket(hass, hass_ws_client):
+async def test_storage_collection_websocket(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test exposing a storage collection via websockets."""
     store = storage.Store(hass, 1, "test-data")
-    coll = MockStorageCollection(store, _LOGGER)
+    coll = MockStorageCollection(store)
     changes = track_changes(coll)
-    collection.StorageCollectionWebsocket(
+    collection.DictStorageCollectionWebsocket(
         coll,
         "test_item/collection",
         "test_item",

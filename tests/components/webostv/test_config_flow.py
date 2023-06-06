@@ -1,6 +1,6 @@
 """Test the WebOS Tv config flow."""
 import dataclasses
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
 
 from aiowebostv import WebOsTvPairError
 import pytest
@@ -15,6 +15,8 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from . import setup_webostv
 from .const import CLIENT_KEY, FAKE_UUID, HOST, MOCK_APPS, MOCK_INPUTS, TV_NAME
+
+pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
 MOCK_USER_CONFIG = {
     CONF_HOST: HOST,
@@ -65,10 +67,9 @@ async def test_form(hass: HomeAssistant, client) -> None:
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "pairing"
 
-    with patch("homeassistant.components.webostv.async_setup_entry", return_value=True):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={}
-        )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
+    )
 
     await hass.async_block_till_done()
 
@@ -184,10 +185,9 @@ async def test_form_ssdp(hass: HomeAssistant, client) -> None:
     """Test that the ssdp confirmation form is served."""
     assert client
 
-    with patch("homeassistant.components.webostv.async_setup_entry", return_value=True):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={CONF_SOURCE: SOURCE_SSDP}, data=MOCK_DISCOVERY_INFO
-        )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={CONF_SOURCE: SOURCE_SSDP}, data=MOCK_DISCOVERY_INFO
+    )
     await hass.async_block_till_done()
 
     assert result["type"] == FlowResultType.FORM

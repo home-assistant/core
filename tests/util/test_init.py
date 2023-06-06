@@ -200,7 +200,7 @@ def test_throttle_on_two_method() -> None:
 
 
 @patch.object(util, "random")
-def test_get_random_string(mock_random):
+def test_get_random_string(mock_random) -> None:
     """Test get random string."""
     results = ["A", "B", "C"]
 

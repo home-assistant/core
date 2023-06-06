@@ -1,9 +1,8 @@
 """Tests for the LD2410 BLE Bluetooth integration."""
-from bleak.backends.device import BLEDevice
 
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
 
-from tests.components.bluetooth import generate_advertisement_data
+from tests.components.bluetooth import generate_advertisement_data, generate_ble_device
 
 LD2410_BLE_DISCOVERY_INFO = BluetoothServiceInfoBleak(
     name="HLK-LD2410B_EEFF",
@@ -13,7 +12,7 @@ LD2410_BLE_DISCOVERY_INFO = BluetoothServiceInfoBleak(
     service_uuids=[],
     service_data={},
     source="local",
-    device=BLEDevice(address="AA:BB:CC:DD:EE:FF", name="HLK-LD2410B_EEFF"),
+    device=generate_ble_device(address="AA:BB:CC:DD:EE:FF", name="HLK-LD2410B_EEFF"),
     advertisement=generate_advertisement_data(),
     time=0,
     connectable=True,
@@ -30,7 +29,7 @@ NOT_LD2410_BLE_DISCOVERY_INFO = BluetoothServiceInfoBleak(
     service_uuids=[],
     service_data={},
     source="local",
-    device=BLEDevice(address="AA:BB:CC:DD:EE:FF", name="Aug"),
+    device=generate_ble_device(address="AA:BB:CC:DD:EE:FF", name="Aug"),
     advertisement=generate_advertisement_data(),
     time=0,
     connectable=True,

@@ -2,8 +2,10 @@
 from dataclasses import dataclass
 import datetime
 from http import HTTPStatus
+from typing import Any
 from unittest import mock
 
+from freezegun import freeze_time
 import prometheus_client
 import pytest
 
@@ -58,7 +60,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, split_entity_id
-from homeassistant.helpers import entity_registry
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -522,7 +524,11 @@ async def test_counter(client, counter_entities) -> None:
 
 @pytest.mark.parametrize("namespace", [""])
 async def test_renaming_entity_name(
-    hass: HomeAssistant, registry, client, sensor_entities, climate_entities
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    client,
+    sensor_entities,
+    climate_entities,
 ) -> None:
     """Test renaming entity name."""
     data = {**sensor_entities, **climate_entities}
@@ -566,9 +572,9 @@ async def test_renaming_entity_name(
         'friendly_name="HeatPump"} 0.0' in body
     )
 
-    assert "sensor.outside_temperature" in registry.entities
-    assert "climate.heatpump" in registry.entities
-    registry.async_update_entity(
+    assert "sensor.outside_temperature" in entity_registry.entities
+    assert "climate.heatpump" in entity_registry.entities
+    entity_registry.async_update_entity(
         entity_id=data["sensor_1"].entity_id,
         name="Outside Temperature Renamed",
     )
@@ -578,7 +584,7 @@ async def test_renaming_entity_name(
         15.6,
         {ATTR_FRIENDLY_NAME: "Outside Temperature Renamed"},
     )
-    registry.async_update_entity(
+    entity_registry.async_update_entity(
         entity_id=data["climate_1"].entity_id,
         name="HeatPump Renamed",
     )
@@ -644,7 +650,11 @@ async def test_renaming_entity_name(
 
 @pytest.mark.parametrize("namespace", [""])
 async def test_renaming_entity_id(
-    hass: HomeAssistant, registry, client, sensor_entities, climate_entities
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    client,
+    sensor_entities,
+    climate_entities,
 ) -> None:
     """Test renaming entity id."""
     data = {**sensor_entities, **climate_entities}
@@ -674,9 +684,9 @@ async def test_renaming_entity_id(
         'friendly_name="Outside Humidity"} 1.0' in body
     )
 
-    assert "sensor.outside_temperature" in registry.entities
-    assert "climate.heatpump" in registry.entities
-    registry.async_update_entity(
+    assert "sensor.outside_temperature" in entity_registry.entities
+    assert "climate.heatpump" in entity_registry.entities
+    entity_registry.async_update_entity(
         entity_id="sensor.outside_temperature",
         new_entity_id="sensor.outside_temperature_renamed",
     )
@@ -720,7 +730,11 @@ async def test_renaming_entity_id(
 
 @pytest.mark.parametrize("namespace", [""])
 async def test_deleting_entity(
-    hass: HomeAssistant, registry, client, sensor_entities, climate_entities
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    client,
+    sensor_entities,
+    climate_entities,
 ) -> None:
     """Test deleting a entity."""
     data = {**sensor_entities, **climate_entities}
@@ -764,10 +778,10 @@ async def test_deleting_entity(
         'friendly_name="HeatPump"} 0.0' in body
     )
 
-    assert "sensor.outside_temperature" in registry.entities
-    assert "climate.heatpump" in registry.entities
-    registry.async_remove(data["sensor_1"].entity_id)
-    registry.async_remove(data["climate_1"].entity_id)
+    assert "sensor.outside_temperature" in entity_registry.entities
+    assert "climate.heatpump" in entity_registry.entities
+    entity_registry.async_remove(data["sensor_1"].entity_id)
+    entity_registry.async_remove(data["climate_1"].entity_id)
 
     await hass.async_block_till_done()
     body = await generate_latest_metrics(client)
@@ -795,7 +809,11 @@ async def test_deleting_entity(
 
 @pytest.mark.parametrize("namespace", [""])
 async def test_disabling_entity(
-    hass: HomeAssistant, registry, client, sensor_entities, climate_entities
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    client,
+    sensor_entities,
+    climate_entities,
 ) -> None:
     """Test disabling a entity."""
     data = {**sensor_entities, **climate_entities}
@@ -848,15 +866,15 @@ async def test_disabling_entity(
         'friendly_name="HeatPump"} 0.0' in body
     )
 
-    assert "sensor.outside_temperature" in registry.entities
-    assert "climate.heatpump" in registry.entities
-    registry.async_update_entity(
+    assert "sensor.outside_temperature" in entity_registry.entities
+    assert "climate.heatpump" in entity_registry.entities
+    entity_registry.async_update_entity(
         entity_id=data["sensor_1"].entity_id,
-        disabled_by=entity_registry.RegistryEntryDisabler.USER,
+        disabled_by=er.RegistryEntryDisabler.USER,
     )
-    registry.async_update_entity(
+    entity_registry.async_update_entity(
         entity_id="climate.heatpump",
-        disabled_by=entity_registry.RegistryEntryDisabler.USER,
+        disabled_by=er.RegistryEntryDisabler.USER,
     )
 
     await hass.async_block_till_done()
@@ -883,17 +901,13 @@ async def test_disabling_entity(
     )
 
 
-@pytest.fixture(name="registry")
-def entity_registry_fixture(hass):
-    """Provide entity registry."""
-    return entity_registry.async_get(hass)
-
-
 @pytest.fixture(name="sensor_entities")
-async def sensor_fixture(hass, registry):
+async def sensor_fixture(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> dict[str, er.RegistryEntry]:
     """Simulate sensor entities."""
     data = {}
-    sensor_1 = registry.async_get_or_create(
+    sensor_1 = entity_registry.async_get_or_create(
         domain=sensor.DOMAIN,
         platform="test",
         unique_id="sensor_1",
@@ -907,7 +921,7 @@ async def sensor_fixture(hass, registry):
     data["sensor_1"] = sensor_1
     data["sensor_1_attributes"] = sensor_1_attributes
 
-    sensor_2 = registry.async_get_or_create(
+    sensor_2 = entity_registry.async_get_or_create(
         domain=sensor.DOMAIN,
         platform="test",
         unique_id="sensor_2",
@@ -919,7 +933,7 @@ async def sensor_fixture(hass, registry):
     set_state_with_entry(hass, sensor_2, 54.0)
     data["sensor_2"] = sensor_2
 
-    sensor_3 = registry.async_get_or_create(
+    sensor_3 = entity_registry.async_get_or_create(
         domain=sensor.DOMAIN,
         platform="test",
         unique_id="sensor_3",
@@ -928,14 +942,11 @@ async def sensor_fixture(hass, registry):
         suggested_object_id="radio_energy",
         original_name="Radio Energy",
     )
-    with mock.patch(
-        "homeassistant.util.dt.utcnow",
-        return_value=datetime.datetime(1970, 1, 2, tzinfo=dt_util.UTC),
-    ):
+    with freeze_time(datetime.datetime(1970, 1, 2, tzinfo=dt_util.UTC)):
         set_state_with_entry(hass, sensor_3, 14)
     data["sensor_3"] = sensor_3
 
-    sensor_4 = registry.async_get_or_create(
+    sensor_4 = entity_registry.async_get_or_create(
         domain=sensor.DOMAIN,
         platform="test",
         unique_id="sensor_4",
@@ -946,7 +957,7 @@ async def sensor_fixture(hass, registry):
     set_state_with_entry(hass, sensor_4, 74)
     data["sensor_4"] = sensor_4
 
-    sensor_5 = registry.async_get_or_create(
+    sensor_5 = entity_registry.async_get_or_create(
         domain=sensor.DOMAIN,
         platform="test",
         unique_id="sensor_5",
@@ -957,7 +968,7 @@ async def sensor_fixture(hass, registry):
     set_state_with_entry(hass, sensor_5, 0.123)
     data["sensor_5"] = sensor_5
 
-    sensor_6 = registry.async_get_or_create(
+    sensor_6 = entity_registry.async_get_or_create(
         domain=sensor.DOMAIN,
         platform="test",
         unique_id="sensor_6",
@@ -968,7 +979,7 @@ async def sensor_fixture(hass, registry):
     set_state_with_entry(hass, sensor_6, 25)
     data["sensor_6"] = sensor_6
 
-    sensor_7 = registry.async_get_or_create(
+    sensor_7 = entity_registry.async_get_or_create(
         domain=sensor.DOMAIN,
         platform="test",
         unique_id="sensor_7",
@@ -979,7 +990,7 @@ async def sensor_fixture(hass, registry):
     set_state_with_entry(hass, sensor_7, 3.7069)
     data["sensor_7"] = sensor_7
 
-    sensor_8 = registry.async_get_or_create(
+    sensor_8 = entity_registry.async_get_or_create(
         domain=sensor.DOMAIN,
         platform="test",
         unique_id="sensor_8",
@@ -989,7 +1000,7 @@ async def sensor_fixture(hass, registry):
     set_state_with_entry(hass, sensor_8, 0.002)
     data["sensor_8"] = sensor_8
 
-    sensor_9 = registry.async_get_or_create(
+    sensor_9 = entity_registry.async_get_or_create(
         domain=sensor.DOMAIN,
         platform="test",
         unique_id="sensor_9",
@@ -999,7 +1010,7 @@ async def sensor_fixture(hass, registry):
     set_state_with_entry(hass, sensor_9, "should_not_work")
     data["sensor_9"] = sensor_9
 
-    sensor_10 = registry.async_get_or_create(
+    sensor_10 = entity_registry.async_get_or_create(
         domain=sensor.DOMAIN,
         platform="test",
         unique_id="sensor_10",
@@ -1010,7 +1021,7 @@ async def sensor_fixture(hass, registry):
     set_state_with_entry(hass, sensor_10, "should_not_work")
     data["sensor_10"] = sensor_10
 
-    sensor_11 = registry.async_get_or_create(
+    sensor_11 = entity_registry.async_get_or_create(
         domain=sensor.DOMAIN,
         platform="test",
         unique_id="sensor_11",
@@ -1027,10 +1038,12 @@ async def sensor_fixture(hass, registry):
 
 
 @pytest.fixture(name="climate_entities")
-async def climate_fixture(hass, registry):
+async def climate_fixture(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> dict[str, er.RegistryEntry | dict[str, Any]]:
     """Simulate climate entities."""
     data = {}
-    climate_1 = registry.async_get_or_create(
+    climate_1 = entity_registry.async_get_or_create(
         domain=climate.DOMAIN,
         platform="test",
         unique_id="climate_1",
@@ -1049,7 +1062,7 @@ async def climate_fixture(hass, registry):
     data["climate_1"] = climate_1
     data["climate_1_attributes"] = climate_1_attributes
 
-    climate_2 = registry.async_get_or_create(
+    climate_2 = entity_registry.async_get_or_create(
         domain=climate.DOMAIN,
         platform="test",
         unique_id="climate_2",
@@ -1070,7 +1083,7 @@ async def climate_fixture(hass, registry):
     data["climate_2"] = climate_2
     data["climate_2_attributes"] = climate_2_attributes
 
-    climate_3 = registry.async_get_or_create(
+    climate_3 = entity_registry.async_get_or_create(
         domain=climate.DOMAIN,
         platform="test",
         unique_id="climate_3",
@@ -1092,10 +1105,12 @@ async def climate_fixture(hass, registry):
 
 
 @pytest.fixture(name="humidifier_entities")
-async def humidifier_fixture(hass, registry):
+async def humidifier_fixture(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> dict[str, er.RegistryEntry | dict[str, Any]]:
     """Simulate humidifier entities."""
     data = {}
-    humidifier_1 = registry.async_get_or_create(
+    humidifier_1 = entity_registry.async_get_or_create(
         domain=humidifier.DOMAIN,
         platform="test",
         unique_id="humidifier_1",
@@ -1110,7 +1125,7 @@ async def humidifier_fixture(hass, registry):
     data["humidifier_1"] = humidifier_1
     data["humidifier_1_attributes"] = humidifier_1_attributes
 
-    humidifier_2 = registry.async_get_or_create(
+    humidifier_2 = entity_registry.async_get_or_create(
         domain=humidifier.DOMAIN,
         platform="test",
         unique_id="humidifier_2",
@@ -1125,7 +1140,7 @@ async def humidifier_fixture(hass, registry):
     data["humidifier_2"] = humidifier_2
     data["humidifier_2_attributes"] = humidifier_2_attributes
 
-    humidifier_3 = registry.async_get_or_create(
+    humidifier_3 = entity_registry.async_get_or_create(
         domain=humidifier.DOMAIN,
         platform="test",
         unique_id="humidifier_3",
@@ -1146,10 +1161,12 @@ async def humidifier_fixture(hass, registry):
 
 
 @pytest.fixture(name="lock_entities")
-async def lock_fixture(hass, registry):
+async def lock_fixture(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> dict[str, er.RegistryEntry]:
     """Simulate lock entities."""
     data = {}
-    lock_1 = registry.async_get_or_create(
+    lock_1 = entity_registry.async_get_or_create(
         domain=lock.DOMAIN,
         platform="test",
         unique_id="lock_1",
@@ -1159,7 +1176,7 @@ async def lock_fixture(hass, registry):
     set_state_with_entry(hass, lock_1, STATE_LOCKED)
     data["lock_1"] = lock_1
 
-    lock_2 = registry.async_get_or_create(
+    lock_2 = entity_registry.async_get_or_create(
         domain=lock.DOMAIN,
         platform="test",
         unique_id="lock_2",
@@ -1174,10 +1191,12 @@ async def lock_fixture(hass, registry):
 
 
 @pytest.fixture(name="cover_entities")
-async def cover_fixture(hass, registry):
+async def cover_fixture(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> dict[str, er.RegistryEntry]:
     """Simulate cover entities."""
     data = {}
-    cover_open = registry.async_get_or_create(
+    cover_open = entity_registry.async_get_or_create(
         domain=cover.DOMAIN,
         platform="test",
         unique_id="cover_open",
@@ -1187,7 +1206,7 @@ async def cover_fixture(hass, registry):
     set_state_with_entry(hass, cover_open, STATE_OPEN)
     data["cover_open"] = cover_open
 
-    cover_closed = registry.async_get_or_create(
+    cover_closed = entity_registry.async_get_or_create(
         domain=cover.DOMAIN,
         platform="test",
         unique_id="cover_closed",
@@ -1197,7 +1216,7 @@ async def cover_fixture(hass, registry):
     set_state_with_entry(hass, cover_closed, STATE_CLOSED)
     data["cover_closed"] = cover_closed
 
-    cover_closing = registry.async_get_or_create(
+    cover_closing = entity_registry.async_get_or_create(
         domain=cover.DOMAIN,
         platform="test",
         unique_id="cover_closing",
@@ -1207,7 +1226,7 @@ async def cover_fixture(hass, registry):
     set_state_with_entry(hass, cover_closing, STATE_CLOSING)
     data["cover_closing"] = cover_closing
 
-    cover_opening = registry.async_get_or_create(
+    cover_opening = entity_registry.async_get_or_create(
         domain=cover.DOMAIN,
         platform="test",
         unique_id="cover_opening",
@@ -1217,7 +1236,7 @@ async def cover_fixture(hass, registry):
     set_state_with_entry(hass, cover_opening, STATE_OPENING)
     data["cover_opening"] = cover_opening
 
-    cover_position = registry.async_get_or_create(
+    cover_position = entity_registry.async_get_or_create(
         domain=cover.DOMAIN,
         platform="test",
         unique_id="cover_position",
@@ -1228,7 +1247,7 @@ async def cover_fixture(hass, registry):
     set_state_with_entry(hass, cover_position, STATE_OPEN, cover_position_attributes)
     data["cover_position"] = cover_position
 
-    cover_tilt_position = registry.async_get_or_create(
+    cover_tilt_position = entity_registry.async_get_or_create(
         domain=cover.DOMAIN,
         platform="test",
         unique_id="cover_tilt_position",
@@ -1246,10 +1265,12 @@ async def cover_fixture(hass, registry):
 
 
 @pytest.fixture(name="input_number_entities")
-async def input_number_fixture(hass, registry):
+async def input_number_fixture(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> dict[str, er.RegistryEntry]:
     """Simulate input_number entities."""
     data = {}
-    input_number_1 = registry.async_get_or_create(
+    input_number_1 = entity_registry.async_get_or_create(
         domain=input_number.DOMAIN,
         platform="test",
         unique_id="input_number_1",
@@ -1259,7 +1280,7 @@ async def input_number_fixture(hass, registry):
     set_state_with_entry(hass, input_number_1, 5.2)
     data["input_number_1"] = input_number_1
 
-    input_number_2 = registry.async_get_or_create(
+    input_number_2 = entity_registry.async_get_or_create(
         domain=input_number.DOMAIN,
         platform="test",
         unique_id="input_number_2",
@@ -1268,7 +1289,7 @@ async def input_number_fixture(hass, registry):
     set_state_with_entry(hass, input_number_2, 60)
     data["input_number_2"] = input_number_2
 
-    input_number_3 = registry.async_get_or_create(
+    input_number_3 = entity_registry.async_get_or_create(
         domain=input_number.DOMAIN,
         platform="test",
         unique_id="input_number_3",
@@ -1284,10 +1305,12 @@ async def input_number_fixture(hass, registry):
 
 
 @pytest.fixture(name="input_boolean_entities")
-async def input_boolean_fixture(hass, registry):
+async def input_boolean_fixture(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> dict[str, er.RegistryEntry]:
     """Simulate input_boolean entities."""
     data = {}
-    input_boolean_1 = registry.async_get_or_create(
+    input_boolean_1 = entity_registry.async_get_or_create(
         domain=input_boolean.DOMAIN,
         platform="test",
         unique_id="input_boolean_1",
@@ -1297,7 +1320,7 @@ async def input_boolean_fixture(hass, registry):
     set_state_with_entry(hass, input_boolean_1, STATE_ON)
     data["input_boolean_1"] = input_boolean_1
 
-    input_boolean_2 = registry.async_get_or_create(
+    input_boolean_2 = entity_registry.async_get_or_create(
         domain=input_boolean.DOMAIN,
         platform="test",
         unique_id="input_boolean_2",
@@ -1312,10 +1335,12 @@ async def input_boolean_fixture(hass, registry):
 
 
 @pytest.fixture(name="binary_sensor_entities")
-async def binary_sensor_fixture(hass, registry):
+async def binary_sensor_fixture(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> dict[str, er.RegistryEntry]:
     """Simulate binary_sensor entities."""
     data = {}
-    binary_sensor_1 = registry.async_get_or_create(
+    binary_sensor_1 = entity_registry.async_get_or_create(
         domain=binary_sensor.DOMAIN,
         platform="test",
         unique_id="binary_sensor_1",
@@ -1325,7 +1350,7 @@ async def binary_sensor_fixture(hass, registry):
     set_state_with_entry(hass, binary_sensor_1, STATE_ON)
     data["binary_sensor_1"] = binary_sensor_1
 
-    binary_sensor_2 = registry.async_get_or_create(
+    binary_sensor_2 = entity_registry.async_get_or_create(
         domain=binary_sensor.DOMAIN,
         platform="test",
         unique_id="binary_sensor_2",
@@ -1340,10 +1365,12 @@ async def binary_sensor_fixture(hass, registry):
 
 
 @pytest.fixture(name="light_entities")
-async def light_fixture(hass, registry):
+async def light_fixture(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> dict[str, er.RegistryEntry]:
     """Simulate light entities."""
     data = {}
-    light_1 = registry.async_get_or_create(
+    light_1 = entity_registry.async_get_or_create(
         domain=light.DOMAIN,
         platform="test",
         unique_id="light_1",
@@ -1353,7 +1380,7 @@ async def light_fixture(hass, registry):
     set_state_with_entry(hass, light_1, STATE_ON)
     data["light_1"] = light_1
 
-    light_2 = registry.async_get_or_create(
+    light_2 = entity_registry.async_get_or_create(
         domain=light.DOMAIN,
         platform="test",
         unique_id="light_2",
@@ -1363,7 +1390,7 @@ async def light_fixture(hass, registry):
     set_state_with_entry(hass, light_2, STATE_OFF)
     data["light_2"] = light_2
 
-    light_3 = registry.async_get_or_create(
+    light_3 = entity_registry.async_get_or_create(
         domain=light.DOMAIN,
         platform="test",
         unique_id="light_3",
@@ -1375,7 +1402,7 @@ async def light_fixture(hass, registry):
     data["light_3"] = light_3
     data["light_3_attributes"] = light_3_attributes
 
-    light_4 = registry.async_get_or_create(
+    light_4 = entity_registry.async_get_or_create(
         domain=light.DOMAIN,
         platform="test",
         unique_id="light_4",
@@ -1392,10 +1419,12 @@ async def light_fixture(hass, registry):
 
 
 @pytest.fixture(name="switch_entities")
-async def switch_fixture(hass, registry):
+async def switch_fixture(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> dict[str, er.RegistryEntry | dict[str, Any]]:
     """Simulate switch entities."""
     data = {}
-    switch_1 = registry.async_get_or_create(
+    switch_1 = entity_registry.async_get_or_create(
         domain=switch.DOMAIN,
         platform="test",
         unique_id="switch_1",
@@ -1407,7 +1436,7 @@ async def switch_fixture(hass, registry):
     data["switch_1"] = switch_1
     data["switch_1_attributes"] = switch_1_attributes
 
-    switch_2 = registry.async_get_or_create(
+    switch_2 = entity_registry.async_get_or_create(
         domain=switch.DOMAIN,
         platform="test",
         unique_id="switch_2",
@@ -1424,10 +1453,12 @@ async def switch_fixture(hass, registry):
 
 
 @pytest.fixture(name="person_entities")
-async def person_fixture(hass, registry):
+async def person_fixture(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> dict[str, er.RegistryEntry]:
     """Simulate person entities."""
     data = {}
-    person_1 = registry.async_get_or_create(
+    person_1 = entity_registry.async_get_or_create(
         domain=person.DOMAIN,
         platform="test",
         unique_id="person_1",
@@ -1437,7 +1468,7 @@ async def person_fixture(hass, registry):
     set_state_with_entry(hass, person_1, STATE_HOME)
     data["person_1"] = person_1
 
-    person_2 = registry.async_get_or_create(
+    person_2 = entity_registry.async_get_or_create(
         domain=person.DOMAIN,
         platform="test",
         unique_id="person_2",
@@ -1452,10 +1483,12 @@ async def person_fixture(hass, registry):
 
 
 @pytest.fixture(name="device_tracker_entities")
-async def device_tracker_fixture(hass, registry):
+async def device_tracker_fixture(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> dict[str, er.RegistryEntry]:
     """Simulate device_tracker entities."""
     data = {}
-    device_tracker_1 = registry.async_get_or_create(
+    device_tracker_1 = entity_registry.async_get_or_create(
         domain=device_tracker.DOMAIN,
         platform="test",
         unique_id="device_tracker_1",
@@ -1465,7 +1498,7 @@ async def device_tracker_fixture(hass, registry):
     set_state_with_entry(hass, device_tracker_1, STATE_HOME)
     data["device_tracker_1"] = device_tracker_1
 
-    device_tracker_2 = registry.async_get_or_create(
+    device_tracker_2 = entity_registry.async_get_or_create(
         domain=device_tracker.DOMAIN,
         platform="test",
         unique_id="device_tracker_2",
@@ -1480,10 +1513,12 @@ async def device_tracker_fixture(hass, registry):
 
 
 @pytest.fixture(name="counter_entities")
-async def counter_fixture(hass, registry):
+async def counter_fixture(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> dict[str, er.RegistryEntry]:
     """Simulate counter entities."""
     data = {}
-    counter_1 = registry.async_get_or_create(
+    counter_1 = entity_registry.async_get_or_create(
         domain=counter.DOMAIN,
         platform="test",
         unique_id="counter_1",
@@ -1497,8 +1532,8 @@ async def counter_fixture(hass, registry):
 
 
 def set_state_with_entry(
-    hass,
-    entry: entity_registry.RegistryEntry,
+    hass: HomeAssistant,
+    entry: er.RegistryEntry,
     state,
     additional_attributes=None,
     new_entity_id=None,

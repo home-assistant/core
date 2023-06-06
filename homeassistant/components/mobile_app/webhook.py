@@ -4,7 +4,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Callable, Coroutine
 from contextlib import suppress
-from functools import wraps
+from functools import lru_cache, wraps
 from http import HTTPStatus
 import logging
 import secrets
@@ -365,6 +365,12 @@ async def webhook_stream_camera(
     return webhook_response(resp, registration=config_entry.data)
 
 
+@lru_cache
+def _cached_template(template_str: str, hass: HomeAssistant) -> template.Template:
+    """Return a cached template."""
+    return template.Template(template_str, hass)
+
+
 @WEBHOOK_COMMANDS.register("render_template")
 @validate_schema(
     {
@@ -381,7 +387,7 @@ async def webhook_render_template(
     resp = {}
     for key, item in data.items():
         try:
-            tpl = template.Template(item[ATTR_TEMPLATE], hass)
+            tpl = _cached_template(item[ATTR_TEMPLATE], hass)
             resp[key] = tpl.async_render(item.get(ATTR_TEMPLATE_VARIABLES))
         except TemplateError as ex:
             resp[key] = {"error": str(ex)}

@@ -53,7 +53,7 @@ async def test_hardware_info(
                 },
                 "config_entries": [config_entry.entry_id],
                 "dongle": None,
-                "name": "Home Assistant Blue / Hardkernel Odroid-N2",
+                "name": "Home Assistant Blue / Hardkernel ODROID-N2/N2+",
                 "url": None,
             }
         ]

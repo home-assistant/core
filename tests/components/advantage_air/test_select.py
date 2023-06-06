@@ -42,7 +42,7 @@ async def test_select_async_setup_entry(
     assert len(aioclient_mock.mock_calls) == 1
 
     # Test MyZone Select Entity
-    entity_id = "select.ac_one_myzone"
+    entity_id = "select.myzone_myzone"
     state = hass.states.get(entity_id)
     assert state
     assert state.state == "Zone open with Sensor"

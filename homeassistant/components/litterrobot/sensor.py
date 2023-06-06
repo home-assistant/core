@@ -140,7 +140,7 @@ ROBOT_SENSOR_MAP: dict[type[Robot], list[RobotSensorEntityDescription]] = {
             name="Pet weight",
             native_unit_of_measurement=UnitOfMass.POUNDS,
             device_class=SensorDeviceClass.WEIGHT,
-            state_class=SensorStateClass.TOTAL,
+            state_class=SensorStateClass.MEASUREMENT,
         ),
     ],
     FeederRobot: [

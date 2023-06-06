@@ -16,7 +16,7 @@ from homeassistant.const import (
     ATTR_VIA_DEVICE,
 )
 from homeassistant.core import callback
-from homeassistant.helpers import device_registry
+from homeassistant.helpers import device_registry as dr
 
 from ..const import DOMAIN
 
@@ -29,11 +29,11 @@ async def async_setup_devices(bridge: "HueBridge"):
     entry = bridge.config_entry
     hass = bridge.hass
     api: HueBridgeV2 = bridge.api  # to satisfy typing
-    dev_reg = device_registry.async_get(hass)
+    dev_reg = dr.async_get(hass)
     dev_controller = api.devices
 
     @callback
-    def add_device(hue_device: Device) -> device_registry.DeviceEntry:
+    def add_device(hue_device: Device) -> dr.DeviceEntry:
         """Register a Hue device in device registry."""
         model = f"{hue_device.product_data.product_name} ({hue_device.product_data.model_id})"
         params = {
@@ -51,9 +51,7 @@ async def async_setup_devices(bridge: "HueBridge"):
             params[ATTR_VIA_DEVICE] = (DOMAIN, api.config.bridge_device.id)
         zigbee = dev_controller.get_zigbee_connectivity(hue_device.id)
         if zigbee and zigbee.mac_address:
-            params[ATTR_CONNECTIONS] = {
-                (device_registry.CONNECTION_NETWORK_MAC, zigbee.mac_address)
-            }
+            params[ATTR_CONNECTIONS] = {(dr.CONNECTION_NETWORK_MAC, zigbee.mac_address)}
 
         return dev_reg.async_get_or_create(config_entry_id=entry.entry_id, **params)
 
@@ -77,9 +75,7 @@ async def async_setup_devices(bridge: "HueBridge"):
     known_devices = [add_device(hue_device) for hue_device in dev_controller]
 
     # Check for nodes that no longer exist and remove them
-    for device in device_registry.async_entries_for_config_entry(
-        dev_reg, entry.entry_id
-    ):
+    for device in dr.async_entries_for_config_entry(dev_reg, entry.entry_id):
         if device not in known_devices:
             # handle case where a virtual device was created for a Hue group
             hue_dev_id = next(x[1] for x in device.identifiers if x[0] == DOMAIN)
