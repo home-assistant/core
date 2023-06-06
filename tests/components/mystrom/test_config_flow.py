@@ -66,8 +66,8 @@ async def test_form_duplicates(
         )
         await hass.async_block_till_done()
 
-        assert result2["type"] == FlowResultType.ABORT
-        assert result2["reason"] == "already_configured"
+    assert result2["type"] == FlowResultType.ABORT
+    assert result2["reason"] == "already_configured"
 
     mock_session.assert_called_once()
 
