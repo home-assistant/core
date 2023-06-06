@@ -127,6 +127,7 @@ async def test_wong_answer_from_device(hass: HomeAssistant) -> None:
                 "host": "1.1.1.1",
             },
         )
-        assert result2["title"] == "myStrom Device"
-        assert result2["data"] == {"host": "1.1.1.1"}
-        assert result2["type"] == FlowResultType.CREATE_ENTRY
+        await hass.async_block_till_done()
+    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["title"] == "myStrom Device"
+    assert result2["data"] == {"host": "1.1.1.1"}
