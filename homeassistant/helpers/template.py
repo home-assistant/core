@@ -85,7 +85,7 @@ from .singleton import singleton
 from .typing import TemplateVarsType
 
 if TYPE_CHECKING:
-    from homeassistant.components import persistent_notification as pn
+    pass
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
@@ -96,6 +96,8 @@ DATE_STR_FORMAT = "%Y-%m-%d %H:%M:%S"
 _ENVIRONMENT = "template.environment"
 _ENVIRONMENT_LIMITED = "template.environment_limited"
 _ENVIRONMENT_STRICT = "template.environment_strict"
+_ENVIRONMENTS = (_ENVIRONMENT, _ENVIRONMENT_LIMITED, _ENVIRONMENT_STRICT)
+
 _HASS_LOADER = "template.hass_loader"
 
 _RE_JINJA_DELIMITERS = re.compile(r"\{%|\{\{|\{#")
@@ -205,6 +207,10 @@ def async_setup(hass: HomeAssistant) -> bool:
     )
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, _async_adjust_lru_sizes)
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, callback(lambda _: cancel()))
+
+    hass.data[_ENVIRONMENT] = TemplateEnvironment(hass)  # type: ignore[no-untyped-call]
+    hass.data[_ENVIRONMENT_LIMITED] = TemplateEnvironment(hass, limited=True)  # type: ignore[no-untyped-call]
+    hass.data[_ENVIRONMENT_STRICT] = TemplateEnvironment(hass, strict=True)  # type: ignore[no-untyped-call]
     return True
 
 
@@ -448,6 +454,16 @@ class RenderInfo:
             self.filter = self._filter_entities
         else:
             self.filter = _false
+
+
+@callback
+def async_register_hass_environment_function(
+    hass: HomeAssistant, name: str, func: Callable[..., Any]
+) -> None:
+    """Register the environment function."""
+    for env in _ENVIRONMENTS:
+        template_env = cast(TemplateEnvironment, hass.data[env])
+        template_env.async_register_function(name, func)
 
 
 class Template:
@@ -2278,19 +2294,6 @@ class HassLoader(jinja2.BaseLoader):
         return self._sources[template], template, lambda: cur_reload == self._reload
 
 
-def get_persistent_notifications(hass: HomeAssistant) -> list[pn.Notification]:
-    """Return a list of persistent notifications."""
-    from homeassistant.components import (  # pylint: disable=import-outside-toplevel
-        persistent_notification as pn,
-    )
-
-    return list(
-        pn._async_get_or_create_notifications(  # pylint: disable=protected-access
-            hass
-        ).values()
-    )
-
-
 class TemplateEnvironment(ImmutableSandboxedEnvironment):
     """The Home Assistant template environment."""
 
@@ -2392,21 +2395,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
 
         # This environment has access to hass, attach its loader to enable imports.
         self.loader = _get_hass_loader(hass)
-
-        # We mark these as a context functions to ensure they get
-        # evaluated fresh with every execution, rather than executed
-        # at compile time and the value stored. The context itself
-        # can be discarded, we only need to get at the hass object.
-        def hassfunction(
-            func: Callable[Concatenate[HomeAssistant, _P], _R],
-        ) -> Callable[Concatenate[Any, _P], _R]:
-            """Wrap function that depend on hass."""
-
-            @wraps(func)
-            def wrapper(_: Any, *args: _P.args, **kwargs: _P.kwargs) -> _R:
-                return func(hass, *args, **kwargs)
-
-            return pass_context(wrapper)
+        hassfunction = self.hassfunction
 
         self.globals["device_entities"] = hassfunction(device_entities)
         self.filters["device_entities"] = pass_context(self.globals["device_entities"])
@@ -2513,12 +2502,6 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["state_attr"] = self.globals["state_attr"]
         self.globals["states"] = AllStates(hass)
         self.filters["states"] = self.globals["states"]
-        self.globals["persistent_notifications"] = hassfunction(
-            get_persistent_notifications
-        )
-        self.filters["persistent_notifications"] = self.globals[
-            "persistent_notifications"
-        ]
         self.globals["has_value"] = hassfunction(has_value)
         self.filters["has_value"] = pass_context(self.globals["has_value"])
         self.tests["has_value"] = pass_eval_context(self.globals["has_value"])
@@ -2528,6 +2511,30 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["relative_time"] = self.globals["relative_time"]
         self.globals["today_at"] = hassfunction(today_at)
         self.filters["today_at"] = self.globals["today_at"]
+
+    def hassfunction(
+        self,
+        func: Callable[Concatenate[HomeAssistant, _P], _R],
+    ) -> Callable[Concatenate[Any, _P], _R]:
+        """Wrap function that depend on hass.
+
+        We mark these as a context functions to ensure they get
+        evaluated fresh with every execution, rather than executed
+        at compile time and the value stored. The context itself
+        can be discarded, we only need to get at the hass object.
+        """
+
+        @wraps(func)
+        def wrapper(_: Any, *args: _P.args, **kwargs: _P.kwargs) -> _R:
+            return func(self.hass, *args, **kwargs)
+
+        return pass_context(wrapper)
+
+    def async_register_function(self, name: str, func: Callable[..., Any]) -> None:
+        """Register a function."""
+        hass_func = self.hassfunction(func)
+        self.globals[name] = hass_func
+        self.filters[name] = hass_func
 
     def is_safe_callable(self, obj):
         """Test if callback is safe."""

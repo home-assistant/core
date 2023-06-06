@@ -11,7 +11,7 @@ import voluptuous as vol
 from homeassistant.backports.enum import StrEnum
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, ServiceCall, callback
-from homeassistant.helpers import config_validation as cv, singleton
+from homeassistant.helpers import config_validation as cv, singleton, template
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
@@ -198,6 +198,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     websocket_api.async_register_command(hass, websocket_get_notifications)
     websocket_api.async_register_command(hass, websocket_subscribe_notifications)
+
+    def _get_persistent_notifications(hass: HomeAssistant) -> list[Notification]:
+        """Return a list of persistent notifications."""
+        return list(_async_get_or_create_notifications(hass).values())
+
+    template.async_register_hass_environment_function(
+        hass, "persistent_notifications", _get_persistent_notifications
+    )
 
     return True
 
