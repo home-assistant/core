@@ -133,7 +133,7 @@ async def async_get_announced_addresses(hass: HomeAssistant) -> list[str]:
         for ips in adapter["ipv4"]:
             addresses.append(str(IPv4Address(ips["address"])))
         for ips in adapter["ipv6"]:
-            addresses.append(str(IPv6Address(f"{ips['address']}%{ips['scope_id']}")))
+            addresses.append(str(IPv6Address(ips["address"])))
 
     # Puts the default IPv4 address first in the list to preserve compatibility,
     # because some mDNS implementations ignores anything but the first announced

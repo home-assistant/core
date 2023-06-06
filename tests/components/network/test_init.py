@@ -787,10 +787,10 @@ async def test_async_get_announced_addresses(hass: HomeAssistant) -> None:
         actual = await network.async_get_announced_addresses(hass)
     assert actual[0] == first_ip and actual == [
         first_ip,
-        "2001:db8::%1",
-        "fe80::1234:5678:9abc:def0%1",
+        "2001:db8::",
+        "fe80::1234:5678:9abc:def0",
         "192.168.1.5",
-        "fe80::dead:beef:dead:beef%3",
+        "fe80::dead:beef:dead:beef",
     ]
 
     first_ip = "192.168.1.5"
@@ -805,8 +805,8 @@ async def test_async_get_announced_addresses(hass: HomeAssistant) -> None:
 
     assert actual[0] == first_ip and actual == [
         first_ip,
-        "2001:db8::%1",
-        "fe80::1234:5678:9abc:def0%1",
+        "2001:db8::",
+        "fe80::1234:5678:9abc:def0",
         "172.16.1.5",
-        "fe80::dead:beef:dead:beef%3",
+        "fe80::dead:beef:dead:beef",
     ]
