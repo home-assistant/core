@@ -113,9 +113,10 @@ async def test_wong_answer_from_device(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-        assert result2["type"] == FlowResultType.FORM
-        assert result2["step_id"] == "user"
-        assert result2["errors"] == {"base": "cannot_connect"}
+    assert result2["type"] == FlowResultType.FORM
+    assert result2["step_id"] == "user"
+    assert result2["errors"] == {"base": "cannot_connect"}
+
     with patch(
         "pymystrom.get_device_info",
         return_value={"type": 101, "mac": DEVICE_MAC},
