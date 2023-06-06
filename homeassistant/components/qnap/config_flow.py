@@ -43,9 +43,6 @@ class QnapConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self):
-        """Initialize."""
-        self.is_imported = False
 
     async def async_step_import(self, import_info):
         """Set the config entry up from yaml."""
