@@ -458,7 +458,7 @@ class RenderInfo:
 
 @callback
 def async_register_hass_environment_function(
-    hass: HomeAssistant, name: str, func: Callable[..., Any]
+    hass: HomeAssistant, name: str, func: Callable[Concatenate[HomeAssistant, _P], _R]
 ) -> None:
     """Register the environment function."""
     for env in _ENVIRONMENTS:
@@ -2530,7 +2530,9 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
 
         return pass_context(wrapper)
 
-    def async_register_hass_function(self, name: str, func: Callable[..., Any]) -> None:
+    def async_register_hass_function(
+        self, name: str, func: Callable[Concatenate[HomeAssistant, _P], _R]
+    ) -> None:
         """Register a function that needs to be wrapped with hass."""
         hass_func = self.hassfunction(func)
         self.globals[name] = hass_func
