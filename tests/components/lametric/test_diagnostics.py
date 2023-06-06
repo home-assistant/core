@@ -42,6 +42,8 @@ async def test_diagnostics(
             "width": 37,
             "height": 8,
             "display_type": "mixed",
+            "on": None,
+            "screensaver": {"enabled": False},
         },
         "wifi": {
             "active": True,
