@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, Any, Literal, NamedTuple, TypeVar, cast
 
 import voluptuous as vol
 import zigpy.backups
+from zigpy.config import CONF_DEVICE
 from zigpy.config.validators import cv_boolean
 from zigpy.types.named import EUI64
 from zigpy.zcl.clusters.security import IasAce
@@ -1136,6 +1137,7 @@ async def websocket_get_network_settings(
         msg[ID],
         {
             "radio_type": async_get_radio_type(hass, zha_gateway.config_entry).name,
+            "device": zha_gateway.application_controller.config[CONF_DEVICE],
             "settings": backup.as_dict(),
         },
     )
@@ -1302,6 +1304,9 @@ def async_load_api(hass: HomeAssistant) -> None:
                 cluster_type=cluster_type,
                 manufacturer=manufacturer,
             )
+        else:
+            raise ValueError(f"Device with IEEE {str(ieee)} not found")
+
         _LOGGER.debug(
             (
                 "Set attribute for: %s: [%s] %s: [%s] %s: [%s] %s: [%s] %s: [%s] %s:"

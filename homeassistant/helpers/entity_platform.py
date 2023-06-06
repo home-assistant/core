@@ -44,6 +44,7 @@ from . import (
 from .device_registry import DeviceRegistry
 from .entity_registry import EntityRegistry, RegistryEntryDisabler, RegistryEntryHider
 from .event import async_call_later, async_track_time_interval
+from .issue_registry import IssueSeverity, async_create_issue
 from .typing import ConfigType, DiscoveryInfoType
 
 if TYPE_CHECKING:
@@ -136,7 +137,7 @@ class EntityPlatform:
         self._process_updates: asyncio.Lock | None = None
 
         self.parallel_updates: asyncio.Semaphore | None = None
-        self._update_in_parallel: bool = True
+        self._update_in_sequence: bool = False
 
         # Platform is None for the EntityComponent "catch-all" EntityPlatform
         # which powers entity_component.add_entities
@@ -187,7 +188,7 @@ class EntityPlatform:
 
         if parallel_updates is not None:
             self.parallel_updates = asyncio.Semaphore(parallel_updates)
-            self._update_in_parallel = parallel_updates != 1
+            self._update_in_sequence = parallel_updates == 1
 
         return self.parallel_updates
 
@@ -211,6 +212,19 @@ class EntityPlatform:
                 self.platform_name,
                 self.domain,
             )
+            async_create_issue(
+                self.hass,
+                self.domain,
+                f"platform_integration_no_support_{self.domain}_{self.platform_name}",
+                is_fixable=False,
+                severity=IssueSeverity.ERROR,
+                translation_key="platform_integration_no_support",
+                translation_placeholders={
+                    "domain": self.domain,
+                    "platform": self.platform_name,
+                },
+            )
+
             return
 
         @callback
@@ -846,11 +860,13 @@ class EntityPlatform:
             return
 
         async with self._process_updates:
-            if self._update_in_parallel or len(self.entities) <= 1:
-                # If we know are going to update sequentially, we want to update
-                # to avoid scheduling the coroutines as tasks that will we know
-                # are going to wait on the semaphore lock.
+            if self._update_in_sequence or len(self.entities) <= 1:
+                # If we know we will update sequentially, we want to avoid scheduling
+                # the coroutines as tasks that will wait on the semaphore lock.
                 for entity in list(self.entities.values()):
+                    # If the entity is removed from hass during the previous
+                    # entity being updated, we need to skip updating the
+                    # entity.
                     if entity.should_poll and entity.hass:
                         await entity.async_update_ha_state(True)
                 return
