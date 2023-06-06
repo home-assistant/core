@@ -38,9 +38,9 @@ async def test_form_combined(hass: HomeAssistant, mock_setup_entry: AsyncMock) -
         )
         await hass.async_block_till_done()
 
-        assert result2["type"] == FlowResultType.CREATE_ENTRY
-        assert result2["title"] == "myStrom Device"
-        assert result2["data"] == {"host": "1.1.1.1"}
+    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["title"] == "myStrom Device"
+    assert result2["data"] == {"host": "1.1.1.1"}
 
 
 async def test_form_duplicates(
