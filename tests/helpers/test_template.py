@@ -4560,3 +4560,27 @@ async def test_lru_increases_with_many_entities(hass: HomeAssistant) -> None:
     assert template.CACHED_TEMPLATE_NO_COLLECT_LRU.get_size() == int(
         round(mock_entity_count * template.ENTITY_COUNT_GROWTH_FACTOR)
     )
+
+
+async def test_async_register_hass_environment_function(hass: HomeAssistant) -> None:
+    """Test adding a new function to templates."""
+
+    template.async_setup(hass)
+
+    template.async_register_hass_environment_function(
+        hass, "before_render", lambda hass: "before_render"
+    )
+
+    assert (
+        template.Template("{{ before_render() }}", hass).async_render()
+        == "before_render"
+    )
+
+    with pytest.raises(TemplateError, match="'zombies' is undefined"):
+        template.Template("{{ zombies() }}", hass).async_render()
+
+    template.async_register_hass_environment_function(
+        hass, "zombies", lambda hass: "zombies"
+    )
+
+    assert template.Template("{{ zombies() }}", hass).async_render() == "zombies"
