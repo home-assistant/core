@@ -463,7 +463,7 @@ def async_register_hass_environment_function(
     """Register the environment function."""
     for env in _ENVIRONMENTS:
         template_env = cast(TemplateEnvironment, hass.data[env])
-        template_env.async_register_function(name, func)
+        template_env.async_register_hass_function(name, func)
 
 
 class Template:
@@ -2530,8 +2530,8 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
 
         return pass_context(wrapper)
 
-    def async_register_function(self, name: str, func: Callable[..., Any]) -> None:
-        """Register a function."""
+    def async_register_hass_function(self, name: str, func: Callable[..., Any]) -> None:
+        """Register a function that needs to be wrapped with hass."""
         hass_func = self.hassfunction(func)
         self.globals[name] = hass_func
         self.filters[name] = hass_func
