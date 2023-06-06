@@ -229,22 +229,23 @@ class ProtectData:
         # trigger updates for camera that the event references
         elif isinstance(obj, Event):
             if obj.type in SMART_EVENTS:
-                if obj.end is None:
-                    _LOGGER.debug(
-                        "%s (%s): New smart detection started for %s (%s)",
-                        obj.camera.name,
-                        obj.camera.mac,
-                        obj.smart_detect_types,
-                        obj.id,
-                    )
-                else:
-                    _LOGGER.debug(
-                        "%s (%s): Smart detection ended for %s (%s)",
-                        obj.camera.name,
-                        obj.camera.mac,
-                        obj.smart_detect_types,
-                        obj.id,
-                    )
+                if obj.camera is not None:
+                    if obj.end is None:
+                        _LOGGER.debug(
+                            "%s (%s): New smart detection started for %s (%s)",
+                            obj.camera.name,
+                            obj.camera.mac,
+                            obj.smart_detect_types,
+                            obj.id,
+                        )
+                    else:
+                        _LOGGER.debug(
+                            "%s (%s): Smart detection ended for %s (%s)",
+                            obj.camera.name,
+                            obj.camera.mac,
+                            obj.smart_detect_types,
+                            obj.id,
+                        )
 
             if obj.type == EventType.DEVICE_ADOPTED:
                 if obj.metadata is not None and obj.metadata.device_id is not None:
