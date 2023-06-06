@@ -11,7 +11,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .const import DOMAIN, isbool
+from .const import BOOLEN_VALUES, DOMAIN
 from .coordinator import NextcloudDataUpdateCoordinator
 from .entity import NextcloudEntity
 
@@ -95,7 +95,8 @@ async def async_setup_entry(
                 ),
             )
             for name in coordinator.data
-            if not isbool(coordinator.data[name])
+            if not isinstance(coordinator.data[name], bool)
+            and coordinator.data[name] not in BOOLEN_VALUES
         ]
     )
 

@@ -6,7 +6,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN, isbool, istrue
+from .const import BOOLEAN_TRUE_VALUES, BOOLEN_VALUES, DOMAIN
 from .coordinator import NextcloudDataUpdateCoordinator
 from .entity import NextcloudEntity
 
@@ -24,7 +24,8 @@ async def async_setup_entry(
                 coordinator, name, entry, attrs=BINARY_SENSORS.get(name)
             )
             for name in coordinator.data
-            if isbool(coordinator.data[name])
+            if isinstance(coordinator.data[name], bool)
+            or coordinator.data[name] in BOOLEN_VALUES
         ]
     )
 
@@ -35,4 +36,5 @@ class NextcloudBinarySensor(NextcloudEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool:
         """Return true if the binary sensor is on."""
-        return istrue(self.coordinator.data.get(self.item))
+        val = self.coordinator.data.get(self.item)
+        return val is True or val in BOOLEAN_TRUE_VALUES
