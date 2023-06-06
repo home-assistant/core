@@ -120,9 +120,6 @@ PyViCare==2.25.0
 # homeassistant.components.xiaomi_aqara
 PyXiaomiGateway==0.14.3
 
-# homeassistant.components.goalfeed
-Pysher==1.0.7
-
 # homeassistant.components.rachio
 RachioPy==1.0.3
 
