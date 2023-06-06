@@ -22,6 +22,7 @@ from struct import error as StructError, pack, unpack_from
 import sys
 from types import CodeType
 from typing import (
+    TYPE_CHECKING,
     Any,
     Concatenate,
     Literal,
@@ -82,6 +83,9 @@ from homeassistant.util.thread import ThreadWithException
 from . import area_registry, device_registry, entity_registry, location as loc_helper
 from .singleton import singleton
 from .typing import TemplateVarsType
+
+if TYPE_CHECKING:
+    from homeassistant.components import persistent_notification as pn
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
@@ -2274,6 +2278,19 @@ class HassLoader(jinja2.BaseLoader):
         return self._sources[template], template, lambda: cur_reload == self._reload
 
 
+def get_persistent_notifications(hass: HomeAssistant) -> list[pn.Notification]:
+    """Return a list of persistent notifications."""
+    from homeassistant.components import (  # pylint: disable=import-outside-toplevel
+        persistent_notification as pn,
+    )
+
+    return list(
+        pn._async_get_or_create_notifications(  # pylint: disable=protected-access
+            hass
+        ).values()
+    )
+
+
 class TemplateEnvironment(ImmutableSandboxedEnvironment):
     """The Home Assistant template environment."""
 
@@ -2496,6 +2513,12 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["state_attr"] = self.globals["state_attr"]
         self.globals["states"] = AllStates(hass)
         self.filters["states"] = self.globals["states"]
+        self.globals["persistent_notifications"] = hassfunction(
+            get_persistent_notifications
+        )
+        self.filters["persistent_notifications"] = self.globals[
+            "persistent_notifications"
+        ]
         self.globals["has_value"] = hassfunction(has_value)
         self.filters["has_value"] = pass_context(self.globals["has_value"])
         self.tests["has_value"] = pass_eval_context(self.globals["has_value"])
