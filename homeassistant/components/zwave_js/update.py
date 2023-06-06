@@ -42,6 +42,7 @@ PARALLEL_UPDATES = 1
 
 UPDATE_DELAY_STRING = "delay"
 UPDATE_DELAY_INTERVAL = 5  # In minutes
+ATTR_LATEST_VERSION_FIRMWARE = "latest_version_firmware"
 
 
 @dataclass
@@ -53,7 +54,7 @@ class ZWaveNodeFirmwareUpdateExtraStoredData(ExtraStoredData):
     def as_dict(self) -> dict[str, Any]:
         """Return a dict representation of the extra data."""
         return {
-            "latest_version_firmware": asdict(self.latest_version_firmware)
+            ATTR_LATEST_VERSION_FIRMWARE: asdict(self.latest_version_firmware)
             if self.latest_version_firmware
             else None
         }
@@ -61,7 +62,7 @@ class ZWaveNodeFirmwareUpdateExtraStoredData(ExtraStoredData):
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> ZWaveNodeFirmwareUpdateExtraStoredData:
         """Initialize the extra data from a dict."""
-        if not (firmware_dict := data["latest_version_firmware"]):
+        if not (firmware_dict := data[ATTR_LATEST_VERSION_FIRMWARE]):
             return cls(None)
 
         return cls(NodeFirmwareUpdateInfo.from_dict(firmware_dict))
@@ -291,6 +292,9 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
 
     async def async_poll_value(self, _: bool) -> None:
         """Poll a value."""
+        # We log an error instead of raising an exception because this service call occurs
+        # in a separate task since it is called via the dispatcher and we don't want to
+        # raise the exception in that separate task because it is confusing to the user.
         LOGGER.error(
             "There is no value to refresh for this entity so the zwave_js.refresh_value"
             " service won't work for it"
@@ -317,26 +321,30 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"{DOMAIN}_{self._base_unique_id}_remove_entity_on_ready_node",
+                f"{DOMAIN}_{self._base_unique_id}_remove_entity_on_interview_started",
                 self.async_remove,
             )
         )
 
         # If we have a complete previous state, use that to set the latest version
-        if (state := await self.async_get_last_state()) and (
-            extra_data := await self.async_get_last_extra_data()
+        if (
+            (state := await self.async_get_last_state())
+            and (latest_version := state.attributes.get(ATTR_LATEST_VERSION))
+            is not None
+            and (extra_data := await self.async_get_last_extra_data())
         ):
-            self._attr_latest_version = state.attributes[ATTR_LATEST_VERSION]
+            self._attr_latest_version = latest_version
             self._latest_version_firmware = (
                 ZWaveNodeFirmwareUpdateExtraStoredData.from_dict(
                     extra_data.as_dict()
                 ).latest_version_firmware
             )
-        # If we have no state to restore, we can set the latest version to installed
-        # so that the entity starts as off. If we have partial restore data due to an
-        # upgrade to an HA version where this feature is released from one that is not
-        # the entity will start in an unknown state until we can correct on next update
-        elif not state:
+        # If we have no state or latest version to restore, we can set the latest
+        # version to installed so that the entity starts as off. If we have partial
+        # restore data due to an upgrade to an HA version where this feature is released
+        # from one that is not the entity will start in an unknown state until we can
+        # correct on next update
+        elif not state or not latest_version:
             self._attr_latest_version = self._attr_installed_version
 
         # Spread updates out in 5 minute increments to avoid flooding the network

@@ -5,5 +5,5 @@
   "documentation": "https://www.home-assistant.io/integrations/bt_smarthub",
   "iot_class": "local_polling",
   "loggers": ["btsmarthub_devicelist"],
-  "requirements": ["btsmarthub_devicelist==0.2.3"]
+  "requirements": ["btsmarthub-devicelist==0.2.3"]
 }

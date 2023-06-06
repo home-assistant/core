@@ -7,7 +7,7 @@ from homeassistant.const import ATTR_FRIENDLY_NAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity_component import async_update_entity
-from homeassistant.util import dt
+from homeassistant.util import dt as dt_util
 
 from . import get_device
 
@@ -384,7 +384,9 @@ async def test_scb1e_sensor_update(
     }
 
     target_time = (
-        dt.utcnow() + BroadlinkSP4UpdateManager.SCAN_INTERVAL * 3 + timedelta(seconds=1)
+        dt_util.utcnow()
+        + BroadlinkSP4UpdateManager.SCAN_INTERVAL * 3
+        + timedelta(seconds=1)
     )
 
     mock_setup = await device.setup_entry(hass, mock_api=mock_api)

@@ -21,9 +21,10 @@ from homeassistant.const import (
     EntityCategory,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.update_coordinator import REQUEST_REFRESH_DEFAULT_COOLDOWN
-from homeassistant.util import dt
+from homeassistant.util import dt as dt_util
 
 from . import configure_integration
 from .mock import MockDevice
@@ -89,7 +90,7 @@ async def test_update_enable_guest_wifi(
     mock_device.device.async_get_wifi_guest_access.return_value = WifiGuestAccessGet(
         enabled=True
     )
-    async_fire_time_changed(hass, dt.utcnow() + SHORT_UPDATE_INTERVAL)
+    async_fire_time_changed(hass, dt_util.utcnow() + SHORT_UPDATE_INTERVAL)
     await hass.async_block_till_done()
 
     state = hass.states.get(state_key)
@@ -114,7 +115,7 @@ async def test_update_enable_guest_wifi(
         turn_off.assert_called_once_with(False)
 
     async_fire_time_changed(
-        hass, dt.utcnow() + timedelta(seconds=REQUEST_REFRESH_DEFAULT_COOLDOWN)
+        hass, dt_util.utcnow() + timedelta(seconds=REQUEST_REFRESH_DEFAULT_COOLDOWN)
     )
     await hass.async_block_till_done()
 
@@ -136,7 +137,7 @@ async def test_update_enable_guest_wifi(
         turn_on.assert_called_once_with(True)
 
     async_fire_time_changed(
-        hass, dt.utcnow() + timedelta(seconds=REQUEST_REFRESH_DEFAULT_COOLDOWN)
+        hass, dt_util.utcnow() + timedelta(seconds=REQUEST_REFRESH_DEFAULT_COOLDOWN)
     )
     await hass.async_block_till_done()
 
@@ -176,7 +177,7 @@ async def test_update_enable_leds(
 
     # Emulate state change
     mock_device.device.async_get_led_setting.return_value = True
-    async_fire_time_changed(hass, dt.utcnow() + SHORT_UPDATE_INTERVAL)
+    async_fire_time_changed(hass, dt_util.utcnow() + SHORT_UPDATE_INTERVAL)
     await hass.async_block_till_done()
 
     state = hass.states.get(state_key)
@@ -199,7 +200,7 @@ async def test_update_enable_leds(
         turn_off.assert_called_once_with(False)
 
     async_fire_time_changed(
-        hass, dt.utcnow() + timedelta(seconds=REQUEST_REFRESH_DEFAULT_COOLDOWN)
+        hass, dt_util.utcnow() + timedelta(seconds=REQUEST_REFRESH_DEFAULT_COOLDOWN)
     )
     await hass.async_block_till_done()
 
@@ -219,7 +220,7 @@ async def test_update_enable_leds(
         turn_on.assert_called_once_with(True)
 
     async_fire_time_changed(
-        hass, dt.utcnow() + timedelta(seconds=REQUEST_REFRESH_DEFAULT_COOLDOWN)
+        hass, dt_util.utcnow() + timedelta(seconds=REQUEST_REFRESH_DEFAULT_COOLDOWN)
     )
     await hass.async_block_till_done()
 
@@ -267,7 +268,7 @@ async def test_device_failure(
 
     api = getattr(mock_device.device, get_method)
     api.side_effect = DeviceUnavailable
-    async_fire_time_changed(hass, dt.utcnow() + update_interval)
+    async_fire_time_changed(hass, dt_util.utcnow() + update_interval)
     await hass.async_block_till_done()
 
     state = hass.states.get(state_key)
@@ -300,9 +301,10 @@ async def test_auth_failed(
     api = getattr(mock_device.device, set_method)
     api.side_effect = DevicePasswordProtected
 
-    await hass.services.async_call(
-        PLATFORM, SERVICE_TURN_ON, {"entity_id": state_key}, blocking=True
-    )
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            PLATFORM, SERVICE_TURN_ON, {"entity_id": state_key}, blocking=True
+        )
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
 
@@ -313,9 +315,10 @@ async def test_auth_failed(
     assert flow["context"]["source"] == SOURCE_REAUTH
     assert flow["context"]["entry_id"] == entry.entry_id
 
-    await hass.services.async_call(
-        PLATFORM, SERVICE_TURN_OFF, {"entity_id": state_key}, blocking=True
-    )
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            PLATFORM, SERVICE_TURN_OFF, {"entity_id": state_key}, blocking=True
+        )
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
 
