@@ -1,7 +1,7 @@
 """Support for MQTT climate devices."""
 from __future__ import annotations
 
-from abc import ABC
+from abc import ABC, abstractmethod
 from collections.abc import Callable
 import functools
 import logging
@@ -28,6 +28,7 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
+from homeassistant.components.water_heater import ATTR_OPERATION_MODE
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_TEMPERATURE,
@@ -1014,14 +1015,9 @@ class MqttClimate(MqttTemperatureControlEntity, ClimateEntity):
             self._attr_hvac_mode = hvac_mode
             self.async_write_ha_state()
 
-    async def async_set_temperature(self, **kwargs: Any) -> None:
-        """Set new target temperatures and mode."""
-        hvac_mode: HVACMode | None
-        if hvac_mode := kwargs.get(ATTR_HVAC_MODE):
-            await self.async_set_hvac_mode(hvac_mode)
-            del kwargs[ATTR_HVAC_MODE]
-
-        await self.async_set_temperature_attributes(**kwargs)
+    async def async_set_operation_mode(self, operation_mode: str) -> None:
+        """Set new operation mode."""
+        raise NotImplementedError()
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set a preset mode."""
