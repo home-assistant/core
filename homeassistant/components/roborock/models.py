@@ -13,3 +13,12 @@ class RoborockHassDeviceInfo:
     network_info: NetworkInfo
     product: HomeDataProduct
     props: DeviceProp
+
+    def as_dict(self):
+        """Turn RoborockHassDeviceInfo into a dictionary."""
+        return {
+            "device": self.device.as_dict(),
+            "network_info": self.network_info.as_dict(),
+            "product": self.product.as_dict(),
+            "props": self.props.as_dict(),
+        }
