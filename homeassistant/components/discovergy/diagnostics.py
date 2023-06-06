@@ -7,17 +7,14 @@ from pydiscovergy.models import Meter
 
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
+from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, CONF_UNIQUE_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import DiscovergyData
 from .const import DOMAIN
 
-TO_REDACT_CONFIG_ENTRY = {
-    CONF_EMAIL,
-    CONF_PASSWORD,
-}
+TO_REDACT_CONFIG_ENTRY = {CONF_EMAIL, CONF_PASSWORD, CONF_UNIQUE_ID, "title"}
 
 TO_REDACT_METER = {
     "serial_number",

@@ -20,13 +20,13 @@ async def test_entry_diagnostics(
         "entry_id": entry.entry_id,
         "version": 1,
         "domain": "discovergy",
-        "title": "user@example.org",
+        "title": REDACTED,
         "data": {"email": REDACTED, "password": REDACTED},
         "options": {},
         "pref_disable_new_entities": False,
         "pref_disable_polling": False,
         "source": "user",
-        "unique_id": "user@example.org",
+        "unique_id": REDACTED,
         "disabled_by": None,
     }
 
