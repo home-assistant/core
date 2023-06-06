@@ -84,11 +84,12 @@ async def test_step_import(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=conf
         )
-        assert result["type"] == FlowResultType.CREATE_ENTRY
-        assert result["title"] == "myStrom Device"
-        assert result["data"] == {
-            CONF_HOST: "1.1.1.1",
-        }
+        await hass.async_block_till_done()
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["title"] == "myStrom Device"
+    assert result["data"] == {
+        CONF_HOST: "1.1.1.1",
+    }
 
 
 async def test_wong_answer_from_device(hass: HomeAssistant) -> None:
