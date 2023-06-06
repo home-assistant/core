@@ -1,15 +1,22 @@
 """Test config flow for Twitch."""
 from unittest.mock import patch
 
+from homeassistant.components import sensor
 from homeassistant.components.twitch.const import CONF_CHANNELS, DOMAIN
-from homeassistant.config_entries import SOURCE_USER
+from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
 
 from tests.common import MockConfigEntry
 from tests.components.twitch import TwitchMock
-from tests.components.twitch.conftest import CLIENT_ID, SCOPES, TWITCH_AUTHORIZE_URI
+from tests.components.twitch.conftest import (
+    CLIENT_ID,
+    SCOPES,
+    TWITCH_AUTHORIZE_URI,
+    ComponentSetup,
+)
+from tests.components.twitch.test_sensor import LEGACY_CONFIG
 from tests.typing import ClientSessionGenerator
 
 
@@ -143,3 +150,19 @@ async def test_user_not_found(
 
         assert result["type"] == FlowResultType.ABORT
         assert result.get("reason") == "user_not_found"
+
+
+async def test_legacy_migration_already_exists(
+    hass: HomeAssistant, setup_integration: ComponentSetup
+) -> None:
+    """Test if there already exists a twitch instance and abort."""
+    await setup_integration()
+    with patch(
+        "homeassistant.components.twitch.sensor.Twitch", return_value=TwitchMock()
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=LEGACY_CONFIG[sensor.DOMAIN]
+        )
+        await hass.async_block_till_done()
+        assert result["type"] == FlowResultType.ABORT
+        assert result["reason"] == "already_configured"

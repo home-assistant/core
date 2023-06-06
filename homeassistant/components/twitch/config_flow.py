@@ -136,9 +136,8 @@ class OAuth2FlowHandler(
 
     async def async_step_import(self, import_config: ConfigType) -> FlowResult:
         """Handle import of yaml configuration."""
-        for entry in self._async_current_entries():
-            if entry.data[CONF_CLIENT_ID] == import_config[CONF_CLIENT_ID]:
-                return self.async_abort(reason="already_configured")
+        if len(self._async_current_entries()) > 0:
+            return self.async_abort(reason="already_configured")
         scopes = [scope.value for scope in OAUTH_SCOPES]
         return self.async_create_entry(
             title="",

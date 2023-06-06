@@ -1,10 +1,13 @@
 """The tests for an update of the Twitch component."""
-
+from unittest.mock import patch
 
 from homeassistant.components import sensor
-from homeassistant.components.twitch.const import CONF_CHANNELS
-from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
+from homeassistant.components.twitch.const import CONF_CHANNELS, DOMAIN
+from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import issue_registry as ir
+from homeassistant.setup import async_setup_component
 
 from . import (
     TwitchAPIExceptionMock,
@@ -22,16 +25,31 @@ CONFIG = {
     CONF_CLIENT_ID: "1234",
     CONF_CLIENT_SECRET: "abcd",
 }
-CONFIG_WITH_OAUTH = {
+
+LEGACY_CONFIG = {
     sensor.DOMAIN: {
         "platform": "twitch",
         CONF_CLIENT_ID: "1234",
         CONF_CLIENT_SECRET: "abcd",
         "channels": ["channel123"],
-        "token": "9876",
     }
 }
+
 OPTIONS = {CONF_CHANNELS: ["channel123"]}
+
+
+async def test_legacy_migration(hass: HomeAssistant) -> None:
+    """Test importing legacy yaml."""
+    with patch(
+        "homeassistant.components.twitch.sensor.Twitch", return_value=TwitchMock()
+    ):
+        assert await async_setup_component(hass, Platform.SENSOR, LEGACY_CONFIG)
+        await hass.async_block_till_done()
+        entries = hass.config_entries.async_entries(DOMAIN)
+        assert len(entries) == 1
+        assert entries[0].state is ConfigEntryState.LOADED
+        issue_registry = ir.async_get(hass)
+        assert len(issue_registry.issues) == 1
 
 
 async def test_init(hass: HomeAssistant, setup_integration: ComponentSetup) -> None:

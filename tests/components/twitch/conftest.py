@@ -74,7 +74,7 @@ def mock_config_entry(expires_at: int, scopes: list[str]) -> MockConfigEntry:
 
 @pytest.fixture(autouse=True)
 def mock_connection(aioclient_mock: AiohttpClientMocker) -> None:
-    """Mock Google Mail connection."""
+    """Mock Twitch connection."""
     aioclient_mock.post(
         TWITCH_TOKEN_URI,
         json={
