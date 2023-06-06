@@ -20,17 +20,17 @@ else:
     import tomli as tomllib
 
 COMMENT_REQUIREMENTS = (
-    "Adafruit_BBIO",
+    "Adafruit-BBIO",
     "atenpdu",  # depends on pysnmp which is not maintained at this time
     "avea",  # depends on bluepy
     "avion",
     "beacontools",
-    "beewi_smartclim",  # depends on bluepy
+    "beewi-smartclim",  # depends on bluepy
     "bluepy",
     "decora",
-    "decora_wifi",
+    "decora-wifi",
     "evdev",
-    "face_recognition",
+    "face-recognition",
     "opencv-python-headless",
     "pybluez",
     "pycups",
@@ -158,7 +158,7 @@ pyOpenSSL>=23.1.0
 
 # protobuf must be in package constraints for the wheel
 # builder to build binary wheels
-protobuf==4.22.3
+protobuf==4.23.1
 
 # faust-cchardet: Ensure we have a version we can build wheels
 # 2.1.18 is the first version that works with our wheel builder
@@ -179,6 +179,10 @@ pysnmplib==5.0.21
 # pysnmp is no longer maintained and does not work with newer
 # python
 pysnmp==1000000000.0.0
+
+# The get-mac package has been replaced with getmac. Installing get-mac alongside getmac
+# breaks getmac due to them both sharing the same python package name inside 'getmac'.
+get-mac==1000000000.0.0
 """
 
 IGNORE_PRE_COMMIT_HOOK_ID = (
@@ -430,7 +434,8 @@ def gather_constraints() -> str:
                     *core_requirements(),
                     *gather_recursive_requirements("default_config"),
                     *gather_recursive_requirements("mqtt"),
-                }
+                },
+                key=lambda name: name.lower(),
             )
             + [""]
         )

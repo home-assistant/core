@@ -3,6 +3,7 @@
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import format_mac
 
 from .connectivity import ObihaiConnection
 from .const import LOGGER, PLATFORMS
@@ -29,10 +30,10 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
         await hass.async_add_executor_job(requester.update)
 
-        new_unique_id = await hass.async_add_executor_job(
+        device_mac = await hass.async_add_executor_job(
             requester.pyobihai.get_device_mac
         )
-        hass.config_entries.async_update_entry(entry, unique_id=new_unique_id)
+        hass.config_entries.async_update_entry(entry, unique_id=format_mac(device_mac))
 
         entry.version = 2
 

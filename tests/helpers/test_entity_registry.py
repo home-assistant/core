@@ -748,13 +748,13 @@ async def test_update_entity_options(entity_registry: er.EntityRegistry) -> None
     assert new_entry_1.options == {"light": {"minimum_brightness": 20}}
 
     # Test it's not possible to modify the options
-    with pytest.raises(NotImplementedError):
+    with pytest.raises(RuntimeError):
         new_entry_1.options["blah"] = {}
-    with pytest.raises(NotImplementedError):
+    with pytest.raises(RuntimeError):
         new_entry_1.options["light"] = {}
-    with pytest.raises(TypeError):
+    with pytest.raises(RuntimeError):
         new_entry_1.options["light"]["blah"] = 123
-    with pytest.raises(TypeError):
+    with pytest.raises(RuntimeError):
         new_entry_1.options["light"]["minimum_brightness"] = 123
 
     entity_registry.async_update_entity_options(
