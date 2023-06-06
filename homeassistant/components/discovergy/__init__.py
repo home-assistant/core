@@ -7,7 +7,7 @@ import logging
 import pydiscovergy
 from pydiscovergy.authentication import BasicAuth
 import pydiscovergy.error as discovergyError
-from pydiscovergy.models import Meter
+from pydiscovergy.models import Meter, Reading
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, Platform
@@ -29,7 +29,9 @@ class DiscovergyData:
 
     api_client: pydiscovergy.Discovergy = field(default_factory=lambda: None)
     meters: list[Meter] = field(default_factory=lambda: [])
-    coordinators: dict[str, DataUpdateCoordinator] = field(default_factory=lambda: {})
+    coordinators: dict[str, DataUpdateCoordinator[Reading]] = field(
+        default_factory=lambda: {}
+    )
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

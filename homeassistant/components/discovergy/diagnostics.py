@@ -9,7 +9,6 @@ from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, CONF_UNIQUE_ID
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import DiscovergyData
 from .const import DOMAIN
@@ -40,7 +39,7 @@ async def async_get_config_entry_diagnostics(
         flattened_meter.append(async_redact_data(meter.__dict__, TO_REDACT_METER))
 
         # get last reading for meter and make a dict of it
-        coordinator: DataUpdateCoordinator = data.coordinators[meter.get_meter_id()]
+        coordinator = data.coordinators[meter.get_meter_id()]
         last_readings[meter.get_meter_id()] = coordinator.data.__dict__
 
     return {

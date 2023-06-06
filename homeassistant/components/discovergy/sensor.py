@@ -5,7 +5,7 @@ import logging
 
 from pydiscovergy import Discovergy
 from pydiscovergy.error import AccessTokenExpired, HTTPError
-from pydiscovergy.models import Meter
+from pydiscovergy.models import Meter, Reading
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -50,7 +50,7 @@ _LOGGER = logging.getLogger(__name__)
 class DiscovergyMixin:
     """Mixin for alternative keys."""
 
-    alternative_keys: list = field(default_factory=lambda: [])
+    alternative_keys: list[str] = field(default_factory=lambda: [])
     scale: int = field(default_factory=lambda: 1000)
 
 
@@ -165,10 +165,10 @@ def get_coordinator_for_meter(
     meter: Meter,
     discovergy_instance: Discovergy,
     update_interval: timedelta,
-) -> DataUpdateCoordinator:
+) -> DataUpdateCoordinator[Reading]:
     """Create a new DataUpdateCoordinator for given meter."""
 
-    async def async_update_data():
+    async def async_update_data() -> Reading:
         """Fetch data from API endpoint."""
         try:
             return await discovergy_instance.get_last_reading(meter.get_meter_id())
@@ -205,7 +205,7 @@ async def async_setup_entry(
         seconds=entry.options.get(CONF_TIME_BETWEEN_UPDATE, DEFAULT_TIME_BETWEEN_UPDATE)
     )
 
-    entities = []
+    entities: list[DiscovergySensor] = []
     for meter in meters:
         # Get coordinator for meter, set config entry and fetch initial data
         # so we have data when entities are added
@@ -238,7 +238,7 @@ async def async_setup_entry(
     async_add_entities(entities, False)
 
 
-class DiscovergySensor(CoordinatorEntity, SensorEntity):
+class DiscovergySensor(CoordinatorEntity[DataUpdateCoordinator[Reading]], SensorEntity):
     """Represents a discovergy smart meter sensor."""
 
     entity_description: DiscovergySensorEntityDescription
@@ -250,7 +250,7 @@ class DiscovergySensor(CoordinatorEntity, SensorEntity):
         data_key: str,
         description: DiscovergySensorEntityDescription,
         meter: Meter,
-        coordinator: DataUpdateCoordinator,
+        coordinator: DataUpdateCoordinator[Reading],
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
