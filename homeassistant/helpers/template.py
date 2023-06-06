@@ -96,7 +96,10 @@ DATE_STR_FORMAT = "%Y-%m-%d %H:%M:%S"
 _ENVIRONMENT = "template.environment"
 _ENVIRONMENT_LIMITED = "template.environment_limited"
 _ENVIRONMENT_STRICT = "template.environment_strict"
-_ENVIRONMENTS = (_ENVIRONMENT, _ENVIRONMENT_LIMITED, _ENVIRONMENT_STRICT)
+
+# We don't register functions into the limited environment
+# since its only for device_entities
+_REGISTER_ENVIRONMENTS = (_ENVIRONMENT, _ENVIRONMENT_STRICT)
 
 _HASS_LOADER = "template.hass_loader"
 
@@ -461,7 +464,7 @@ def async_register_hass_environment_function(
     hass: HomeAssistant, name: str, func: Callable[Concatenate[HomeAssistant, _P], _R]
 ) -> None:
     """Register the environment function."""
-    for env in _ENVIRONMENTS:
+    for env in _REGISTER_ENVIRONMENTS:
         template_env = cast(TemplateEnvironment, hass.data[env])
         template_env.async_register_hass_function(name, func)
 
