@@ -7,6 +7,7 @@ from typing import Any, cast
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import UnitOfInformation, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -17,26 +18,26 @@ from .entity import NextcloudEntity
 
 ATTRS_B_IN_GB = {
     "device_class": SensorDeviceClass.DATA_SIZE,
-    "native_unit_of_measurement": "B",
+    "native_unit_of_measurement": UnitOfInformation.BYTES,
     "suggested_display_precision": 2,
-    "suggested_unit_of_measurement": "GB",
+    "suggested_unit_of_measurement": UnitOfInformation.GIGABYTES,
 }
 ATTRS_B_IN_MB = {
     "device_class": SensorDeviceClass.DATA_SIZE,
-    "native_unit_of_measurement": "B",
+    "native_unit_of_measurement": UnitOfInformation.BYTES,
     "suggested_display_precision": 1,
-    "suggested_unit_of_measurement": "MB",
+    "suggested_unit_of_measurement": UnitOfInformation.MEGABYTES,
 }
 ATTRS_KB_IN_GB = {
     "device_class": SensorDeviceClass.DATA_SIZE,
     "icon": "mdi:memory",
-    "native_unit_of_measurement": "kB",
+    "native_unit_of_measurement": UnitOfInformation.KILOBYTES,
     "suggested_display_precision": 2,
-    "suggested_unit_of_measurement": "GB",
+    "suggested_unit_of_measurement": UnitOfInformation.GIGABYTES,
 }
 ATTRS_S = {
     "device_class": SensorDeviceClass.DURATION,
-    "native_unit_of_measurement": "s",
+    "native_unit_of_measurement": UnitOfTime.SECONDS,
 }
 ATTRS_TS = {
     "device_class": SensorDeviceClass.TIMESTAMP,
