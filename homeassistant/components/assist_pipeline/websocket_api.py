@@ -280,7 +280,6 @@ def websocket_get_run(
     )
 
 
-@callback
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "assist_pipeline/language/list",
