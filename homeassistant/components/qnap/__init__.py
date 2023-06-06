@@ -21,15 +21,9 @@ UPDATE_INTERVAL = timedelta(minutes=1)
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup(hass, config):
-    """Set up the qnap environment."""
-    hass.data.setdefault(DOMAIN, {})
-
-    return True
-
-
 async def async_setup_entry(hass, config_entry):
     """Set the config entry up."""
+    hass.data.setdefault(DOMAIN, {})
     host = config_entry.data[CONF_HOST]
     protocol = "https" if config_entry.data.get(CONF_SSL) else "http"
     api = QNAPStats(
@@ -77,9 +71,8 @@ async def async_setup_entry(hass, config_entry):
 
 async def async_unload_entry(hass, config_entry):
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(
+    if unload_ok := await hass.config_entries.async_unload_platforms(
         config_entry, PLATFORMS
-    )
-    if unload_ok:
+    ):
         hass.data[DOMAIN].pop(config_entry.entry_id)
     return unload_ok
