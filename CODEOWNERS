@@ -786,6 +786,7 @@ build.json @home-assistant/supervisor
 /homeassistant/components/mysensors/ @MartinHjelmare @functionpointer
 /tests/components/mysensors/ @MartinHjelmare @functionpointer
 /homeassistant/components/mystrom/ @fabaff
+/tests/components/mystrom/ @fabaff
 /homeassistant/components/nam/ @bieniu
 /tests/components/nam/ @bieniu
 /homeassistant/components/nanoleaf/ @milanmeu
