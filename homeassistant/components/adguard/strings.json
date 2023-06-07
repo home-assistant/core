@@ -24,5 +24,53 @@
       "existing_instance_updated": "Updated existing configuration.",
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
     }
+  },
+  "entity": {
+    "sensor": {
+      "dns_queries": {
+        "name": "DNS queries"
+      },
+      "dns_queries_blocked": {
+        "name": "DNS queries blocked"
+      },
+      "dns_queries_blocked_ratio": {
+        "name": "DNS queries blocked ratio"
+      },
+      "parental_control_blocked": {
+        "name": "Parental control blocked"
+      },
+      "safe_browsing_blocked": {
+        "name": "Safe browsing blocked"
+      },
+      "safe_searches_enforced": {
+        "name": "Safe searches enforced"
+      },
+      "average_processing_speed": {
+        "name": "Average processing speed"
+      },
+      "rules_count": {
+        "name": "Rules count"
+      }
+    },
+    "switch": {
+      "protection": {
+        "name": "Protection"
+      },
+      "parental": {
+        "name": "Parental control"
+      },
+      "safe_search": {
+        "name": "Safe search"
+      },
+      "safe_browsing": {
+        "name": "Safe browsing"
+      },
+      "filtering": {
+        "name": "Filtering"
+      },
+      "query_log": {
+        "name": "Query log"
+      }
+    }
   }
 }

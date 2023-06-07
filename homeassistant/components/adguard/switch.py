@@ -20,6 +20,13 @@ from .entity import AdGuardHomeEntity
 SCAN_INTERVAL = timedelta(seconds=10)
 PARALLEL_UPDATES = 1
 
+SWITCH_PROTECTION = "protection"
+SWITCH_PARENTAL = "parental"
+SWITCH_SAFE_SEARCH = "safe_search"
+SWITCH_SAFE_BROWSING = "safe_browsing"
+SWITCH_FILTERING = "filtering"
+SWITCH_QUERY_LOG = "query_log"
+
 
 @dataclass
 class AdGuardHomeSwitchEntityDescriptionMixin:
@@ -39,48 +46,48 @@ class AdGuardHomeSwitchEntityDescription(
 
 SWITCHES: tuple[AdGuardHomeSwitchEntityDescription, ...] = (
     AdGuardHomeSwitchEntityDescription(
-        key="protection",
-        name="Protection",
+        key=SWITCH_PROTECTION,
+        translation_key=SWITCH_PROTECTION,
         icon="mdi:shield-check",
         is_on_fn=lambda adguard: adguard.protection_enabled,
         turn_on_fn=lambda adguard: adguard.enable_protection,
         turn_off_fn=lambda adguard: adguard.disable_protection,
     ),
     AdGuardHomeSwitchEntityDescription(
-        key="parental",
-        name="Parental control",
+        key=SWITCH_PARENTAL,
+        translation_key=SWITCH_PARENTAL,
         icon="mdi:shield-check",
         is_on_fn=lambda adguard: adguard.parental.enabled,
         turn_on_fn=lambda adguard: adguard.parental.enable,
         turn_off_fn=lambda adguard: adguard.parental.disable,
     ),
     AdGuardHomeSwitchEntityDescription(
-        key="safesearch",
-        name="Safe search",
+        key=SWITCH_SAFE_SEARCH,
+        translation_key=SWITCH_SAFE_SEARCH,
         icon="mdi:shield-check",
         is_on_fn=lambda adguard: adguard.safesearch.enabled,
         turn_on_fn=lambda adguard: adguard.safesearch.enable,
         turn_off_fn=lambda adguard: adguard.safesearch.disable,
     ),
     AdGuardHomeSwitchEntityDescription(
-        key="safebrowsing",
-        name="Safe browsing",
+        key=SWITCH_SAFE_BROWSING,
+        translation_key=SWITCH_SAFE_BROWSING,
         icon="mdi:shield-check",
         is_on_fn=lambda adguard: adguard.safebrowsing.enabled,
         turn_on_fn=lambda adguard: adguard.safebrowsing.enable,
         turn_off_fn=lambda adguard: adguard.safebrowsing.disable,
     ),
     AdGuardHomeSwitchEntityDescription(
-        key="filtering",
-        name="Filtering",
+        key=SWITCH_FILTERING,
+        translation_key=SWITCH_FILTERING,
         icon="mdi:shield-check",
         is_on_fn=lambda adguard: adguard.filtering.enabled,
         turn_on_fn=lambda adguard: adguard.filtering.enable,
         turn_off_fn=lambda adguard: adguard.filtering.disable,
     ),
     AdGuardHomeSwitchEntityDescription(
-        key="querylog",
-        name="Query log",
+        key=SWITCH_QUERY_LOG,
+        translation_key=SWITCH_QUERY_LOG,
         icon="mdi:shield-check",
         is_on_fn=lambda adguard: adguard.querylog.enabled,
         turn_on_fn=lambda adguard: adguard.querylog.enable,
