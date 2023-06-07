@@ -63,7 +63,7 @@ async def async_connect_scanner(
 
     legacy_version = device_info.legacy_bluetooth_proxy_version
     bluetooth_proxy_feature_flags = device_info.bluetooth_proxy_feature_flags
-    connectable = (
+    connectable = bool(
         legacy_version > 2
         or bluetooth_proxy_feature_flags & BluetoothProxyFeature.ACTIVE_CONNECTIONS
     )
