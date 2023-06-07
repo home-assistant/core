@@ -66,6 +66,21 @@
       "status_code": {
         "name": "Status code"
       },
+      "status_message": {
+        "name": "Status message",
+        "state": {
+          "startup": "Startup",
+          "running": "Running",
+          "standby": "Standby",
+          "bootloading": "Bootloading",
+          "error": "Error",
+          "idle": "Idle",
+          "ready": "Ready",
+          "sleeping": "Sleeping",
+          "unknown": "Unknown",
+          "invalid": "Invalid"
+        }
+      },
       "led_state": {
         "name": "LED state"
       },
