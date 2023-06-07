@@ -89,7 +89,12 @@ async def async_connect_scanner(
         async_register_scanner(hass, scanner, connectable),
         scanner.async_setup(),
     ]
-    await cli.subscribe_bluetooth_le_advertisements(scanner.async_on_advertisement)
+    if 0:  # feature flag has RAW_ADVERTISEMENTS
+        await cli.subscribe_bluetooth_le_raw_advertisements(
+            scanner.async_on_raw_advertisements
+        )
+    else:
+        await cli.subscribe_bluetooth_le_advertisements(scanner.async_on_advertisement)
 
     @hass_callback
     def _async_unload() -> None:
