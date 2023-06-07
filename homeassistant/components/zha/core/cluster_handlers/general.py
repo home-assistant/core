@@ -297,7 +297,7 @@ class LevelControlClusterHandler(ClusterHandler):
             )
 
     @callback
-    def attribute_updated(self, attrid: int, value: Any, _: Any):
+    def attribute_updated(self, attrid: int, value: Any, _: Any) -> None:
         """Handle attribute updates on this cluster."""
         self.debug("received attribute: %s update with value: %s", attrid, value)
         if attrid == self.CURRENT_LEVEL:
@@ -444,7 +444,7 @@ class OnOffClusterHandler(ClusterHandler):
         self.cluster.update_attribute(self.ON_OFF, t.Bool.false)
 
     @callback
-    def attribute_updated(self, attrid: int, value: Any, _: Any):
+    def attribute_updated(self, attrid: int, value: Any, _: Any) -> None:
         """Handle attribute updates on this cluster."""
         if attrid == self.ON_OFF:
             self.async_send_signal(

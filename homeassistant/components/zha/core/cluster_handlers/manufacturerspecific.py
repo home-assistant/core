@@ -198,7 +198,7 @@ class SmartThingsAcceleration(ClusterHandler):
         )
 
     @callback
-    def attribute_updated(self, attrid: int, value: Any, _: Any):
+    def attribute_updated(self, attrid: int, value: Any, _: Any) -> None:
         """Handle attribute updates on this cluster."""
         try:
             attr_name = self._cluster.attributes[attrid].name
@@ -229,7 +229,7 @@ class InovelliNotificationClusterHandler(ClientClusterHandler):
     """Inovelli Notification cluster handler."""
 
     @callback
-    def attribute_updated(self, attrid: int, value: Any, _: Any):
+    def attribute_updated(self, attrid: int, value: Any, _: Any) -> None:
         """Handle an attribute updated on this cluster."""
 
     @callback
