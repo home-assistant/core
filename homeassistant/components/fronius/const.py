@@ -98,3 +98,30 @@ def get_meter_location_description(code: StateType) -> MeterLocationCodeOption |
         case _ as _code if 256 <= _code <= 511:
             return MeterLocationCodeOption.SUBLOAD
     return None
+
+
+class OhmPilotStateCodeOption(StrEnum):
+    """OhmPilot state codes for Fronius inverters."""
+
+    # these are keys for state translations - so snake_case is used
+    UP_AND_RUNNING = "up_and_running"
+    KEEP_MINIMUM_TEMPERATURE = "keep_minimum_temperature"
+    LEGIONELLA_PROTECTION = "legionella_protection"
+    CRITICAL_FAULT = "critical_fault"
+    FAULT = "fault"
+    BOOST_MODE = "boost_mode"
+
+
+_OHMPILOT_STATE_CODES: Final[dict[int, OhmPilotStateCodeOption]] = {
+    0: OhmPilotStateCodeOption.UP_AND_RUNNING,
+    1: OhmPilotStateCodeOption.KEEP_MINIMUM_TEMPERATURE,
+    2: OhmPilotStateCodeOption.LEGIONELLA_PROTECTION,
+    3: OhmPilotStateCodeOption.CRITICAL_FAULT,
+    4: OhmPilotStateCodeOption.FAULT,
+    5: OhmPilotStateCodeOption.BOOST_MODE,
+}
+
+
+def get_ohmpilot_state_message(code: StateType) -> OhmPilotStateCodeOption | None:
+    """Return a status message for a given status code."""
+    return _OHMPILOT_STATE_CODES.get(code)  # type: ignore[arg-type]
