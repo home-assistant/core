@@ -2310,7 +2310,7 @@ russound-rio==0.1.8
 russound==0.1.9
 
 # homeassistant.components.ruuvitag_ble
-ruuvitag-ble==0.1.1
+ruuvitag-ble==0.1.2
 
 # homeassistant.components.yamaha
 rxv==0.7.0
