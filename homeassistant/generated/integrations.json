@@ -1995,12 +1995,6 @@
         }
       }
     },
-    "goalfeed": {
-      "name": "Goalfeed",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "cloud_push"
-    },
     "goalzero": {
       "name": "Goal Zero Yeti",
       "integration_type": "device",
