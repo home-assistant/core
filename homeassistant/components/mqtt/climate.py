@@ -602,6 +602,7 @@ class MqttClimate(MqttTemperatureControlEntity, ClimateEntity):
 
     _entity_id_format = climate.ENTITY_ID_FORMAT
     _attributes_extra_blocked = MQTT_CLIMATE_ATTRIBUTES_BLOCKED
+    _last_active_mode: HVACMode | None = None
 
     def __init__(
         self,
@@ -973,6 +974,8 @@ class MqttClimate(MqttTemperatureControlEntity, ClimateEntity):
         await self._publish(CONF_MODE_COMMAND_TOPIC, payload)
 
         if self._optimistic or self._topic[CONF_MODE_STATE_TOPIC] is None:
+            if hvac_mode != HVACMode.OFF:
+                self._last_active_mode = hvac_mode
             self._attr_hvac_mode = hvac_mode
             self.async_write_ha_state()
 
@@ -1013,3 +1016,14 @@ class MqttClimate(MqttTemperatureControlEntity, ClimateEntity):
     async def async_turn_aux_heat_off(self) -> None:
         """Turn auxiliary heater off."""
         await self._set_aux_heat(False)
+
+    async def async_turn_on(self) -> None:
+        """Turn the climate on."""
+        if self._last_active_mode is not None:
+            await self.async_set_hvac_mode(self._last_active_mode)
+            return
+        for mode in (HVACMode.HEAT_COOL, HVACMode.HEAT, HVACMode.COOL):
+            if mode not in self.hvac_modes:
+                continue
+            await self.async_set_hvac_mode(mode)
+            break

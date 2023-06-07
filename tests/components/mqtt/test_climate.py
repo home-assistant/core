@@ -288,8 +288,46 @@ async def test_set_operation(
     await common.async_set_hvac_mode(hass, "cool", ENTITY_CLIMATE)
     state = hass.states.get(ENTITY_CLIMATE)
     assert state.state == "cool"
+    mqtt_mock.async_publish.assert_called_once_with("mode-topic", "cool", 0, False)
+
+
+@pytest.mark.parametrize("hass_config", [DEFAULT_CONFIG])
+async def test_set_default_operation(
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
+) -> None:
+    """Test setting of new operation mode."""
+    mqtt_mock = await mqtt_mock_entry()
+
+    state = hass.states.get(ENTITY_CLIMATE)
+    assert state.state == "off"
+
+    # Default operation will be the first supported mode
+    await common.async_turn_on(hass, ENTITY_CLIMATE)
+    state = hass.states.get(ENTITY_CLIMATE)
+    assert state.state == "heat"
+    mqtt_mock.async_publish.assert_called_once_with("mode-topic", "heat", 0, False)
+    mqtt_mock.reset_mock()
+
+    # Change hvac mode to change last active moded
+    await common.async_set_hvac_mode(hass, "cool", ENTITY_CLIMATE)
+    state = hass.states.get(ENTITY_CLIMATE)
     assert state.state == "cool"
     mqtt_mock.async_publish.assert_called_once_with("mode-topic", "cool", 0, False)
+    mqtt_mock.reset_mock()
+
+    # Turn off the climate
+    await common.async_turn_off(hass, ENTITY_CLIMATE)
+    state = hass.states.get(ENTITY_CLIMATE)
+    assert state.state == "off"
+    mqtt_mock.async_publish.assert_called_once_with("mode-topic", "off", 0, False)
+    mqtt_mock.reset_mock()
+
+    # Turn the climate on and check the last active mode was restored
+    await common.async_turn_on(hass, ENTITY_CLIMATE)
+    state = hass.states.get(ENTITY_CLIMATE)
+    assert state.state == "cool"
+    mqtt_mock.async_publish.assert_called_once_with("mode-topic", "cool", 0, False)
+    mqtt_mock.reset_mock()
 
 
 @pytest.mark.parametrize(
@@ -304,7 +342,6 @@ async def test_set_operation_pessimistic(
     hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test setting operation mode in pessimistic mode."""
-    await hass.async_block_till_done()
     await mqtt_mock_entry()
 
     state = hass.states.get(ENTITY_CLIMATE)
