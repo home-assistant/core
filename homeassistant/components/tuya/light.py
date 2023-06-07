@@ -350,6 +350,11 @@ LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
             brightness=DPCode.BRIGHT_VALUE,
             color_temp=DPCode.TEMP_VALUE,
         ),
+        TuyaLightEntityDescription(
+            key=DPCode.SWITCH_LED,
+            name="White Light",
+            brightness=DPCode.BRIGHT_VALUE_1,
+        ),
     ),
 }
 
