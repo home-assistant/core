@@ -42,9 +42,7 @@ SWITCH_DESCRIPTIONS = [
         device_class=SwitchDeviceClass.SWITCH,
         key="precision_cooker_swtich",
         translation_key="precision_cooker_switch",
-        is_on_lambda=lambda data: data.binary_sensor.maintaining
-        or data.binary_sensor.cooking
-        or data.binary_sensor.preheating,
+        is_on_lambda=lambda data: data.sensor.mode != "Idle",
         turn_on_lambda=lambda data: data.anova_device.set_mode("COOK"),
         turn_off_lambda=lambda data: data.anova_device.set_mode("IDLE"),
     )
@@ -79,7 +77,7 @@ class AnovaSwitch(AnovaDescriptionEntity, SwitchEntity):
         """Turn the Anova device on."""
         try:
             await self.entity_description.turn_on_lambda(self.coordinator)
-            await self.coordinator.async_request_refresh()
+            await self.coordinator.async_refresh()
         except AnovaException as err:
             raise HomeAssistantError("Failed to turn the switch on.") from err
 
@@ -87,6 +85,6 @@ class AnovaSwitch(AnovaDescriptionEntity, SwitchEntity):
         """Turn the Anova device off."""
         try:
             await self.entity_description.turn_off_lambda(self.coordinator)
-            await self.coordinator.async_request_refresh()
+            await self.coordinator.async_refresh()
         except AnovaException as err:
             raise HomeAssistantError("Failed to turn the switch off.") from err

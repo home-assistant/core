@@ -15,7 +15,7 @@ from homeassistant.exceptions import HomeAssistantError
 
 from . import async_init_integration
 
-DEVICE_ID = "switch.anova_precision_cooker"
+DEVICE_ID = "switch.anova_precision_cooker_circulating"
 
 
 async def test_turn_on(
