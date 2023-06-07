@@ -12,6 +12,7 @@ from aioesphomeapi import (
     ESP_CONNECTION_ERROR_DESCRIPTION,
     ESPHOME_GATT_ERRORS,
     BLEConnectionError,
+    BluetoothProxyFeature,
 )
 from aioesphomeapi.connection import APIConnectionError, TimeoutAPIError
 from aioesphomeapi.core import BluetoothGATTAPIError
@@ -159,6 +160,9 @@ class ESPHomeClient(BaseBleakClient):
         device_info = self.entry_data.device_info
         assert device_info is not None
         self._connection_version = device_info.legacy_bluetooth_proxy_version
+        self._feature_flags = device_info.bluetooth_proxy_feature_flags_compat(
+            self.entry_data.api_version
+        )
         self._address_type = address_or_ble_device.details["address_type"]
         self._source_name = f"{config_entry.title} [{self._source}]"
 
@@ -247,7 +251,7 @@ class ESPHomeClient(BaseBleakClient):
         self._mtu = domain_data.get_gatt_mtu_cache(self._address_as_int)
         has_cache = bool(
             dangerous_use_bleak_cache
-            and self._connection_version >= MIN_BLUETOOTH_PROXY_VERSION_HAS_CACHE
+            and self._feature_flags & BluetoothProxyFeature.REMOTE_CACHING
             and domain_data.get_gatt_services_cache(self._address_as_int)
             and self._mtu
         )
@@ -397,7 +401,7 @@ class ESPHomeClient(BaseBleakClient):
     @api_error_as_bleak_error
     async def pair(self, *args: Any, **kwargs: Any) -> bool:
         """Attempt to pair."""
-        if self._connection_version < MIN_BLUETOOTH_PROXY_HAS_PAIRING:
+        if not self._feature_flags & BluetoothProxyFeature.PAIRING:
             raise NotImplementedError(
                 "Pairing is not available in ESPHome with version {self._connection_version}."
             )
@@ -413,7 +417,7 @@ class ESPHomeClient(BaseBleakClient):
     @api_error_as_bleak_error
     async def unpair(self) -> bool:
         """Attempt to unpair."""
-        if self._connection_version < MIN_BLUETOOTH_PROXY_HAS_PAIRING:
+        if not self._feature_flags & BluetoothProxyFeature.PAIRING:
             raise NotImplementedError(
                 "Unpairing is not available in ESPHome with version {self._connection_version}."
             )
@@ -441,7 +445,7 @@ class ESPHomeClient(BaseBleakClient):
         # because the esp has already wiped the services list to
         # save memory.
         if (
-            self._connection_version >= MIN_BLUETOOTH_PROXY_VERSION_HAS_CACHE
+            self._feature_flags & BluetoothProxyFeature.REMOTE_CACHING
             or dangerous_use_bleak_cache
         ) and (cached_services := domain_data.get_gatt_services_cache(address_as_int)):
             _LOGGER.debug(
@@ -524,7 +528,7 @@ class ESPHomeClient(BaseBleakClient):
         """Clear the GATT cache."""
         self.domain_data.clear_gatt_services_cache(self._address_as_int)
         self.domain_data.clear_gatt_mtu_cache(self._address_as_int)
-        if self._connection_version < MIN_BLUETOOTH_PROXY_HAS_CLEAR_CACHE:
+        if not self._feature_flags & BluetoothProxyFeature.CACHE_CLEARING:
             _LOGGER.warning(
                 "On device cache clear is not available with ESPHome Bluetooth version %s, "
                 "version %s is needed; Only memory cache will be cleared",
@@ -673,7 +677,7 @@ class ESPHomeClient(BaseBleakClient):
             lambda handle, data: callback(data),
         )
 
-        if self._connection_version < MIN_BLUETOOTH_PROXY_VERSION_HAS_CACHE:
+        if not self._feature_flags & BluetoothProxyFeature.REMOTE_CACHING:
             return
 
         # For connection v3 we are responsible for enabling notifications
