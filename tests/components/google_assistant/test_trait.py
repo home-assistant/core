@@ -854,14 +854,18 @@ async def test_temperature_setting_climate_onoff(hass: HomeAssistant) -> None:
                     climate.HVACMode.HEAT,
                     climate.HVACMode.HEAT_COOL,
                 ],
-                climate.ATTR_MIN_TEMP: None,
-                climate.ATTR_MAX_TEMP: None,
+                climate.ATTR_MIN_TEMP: 45,
+                climate.ATTR_MAX_TEMP: 95,
             },
         ),
         BASIC_CONFIG,
     )
     assert trt.sync_attributes() == {
         "availableThermostatModes": ["off", "cool", "heat", "heatcool", "on"],
+        "thermostatTemperatureRange": {
+            "minThresholdCelsius": 7,
+            "maxThresholdCelsius": 35,
+        },
         "thermostatTemperatureUnit": "F",
     }
     assert trt.can_execute(trait.COMMAND_THERMOSTAT_SET_MODE, {})
@@ -893,14 +897,18 @@ async def test_temperature_setting_climate_no_modes(hass: HomeAssistant) -> None
             climate.HVACMode.AUTO,
             {
                 climate.ATTR_HVAC_MODES: [],
-                climate.ATTR_MIN_TEMP: None,
-                climate.ATTR_MAX_TEMP: None,
+                climate.ATTR_MIN_TEMP: climate.DEFAULT_MIN_TEMP,
+                climate.ATTR_MAX_TEMP: climate.DEFAULT_MAX_TEMP,
             },
         ),
         BASIC_CONFIG,
     )
     assert trt.sync_attributes() == {
         "availableThermostatModes": ["heat"],
+        "thermostatTemperatureRange": {
+            "minThresholdCelsius": climate.DEFAULT_MIN_TEMP,
+            "maxThresholdCelsius": climate.DEFAULT_MAX_TEMP,
+        },
         "thermostatTemperatureUnit": "C",
     }
 
@@ -937,6 +945,10 @@ async def test_temperature_setting_climate_range(hass: HomeAssistant) -> None:
     )
     assert trt.sync_attributes() == {
         "availableThermostatModes": ["off", "cool", "heat", "auto", "on"],
+        "thermostatTemperatureRange": {
+            "minThresholdCelsius": 10,
+            "maxThresholdCelsius": 27,
+        },
         "thermostatTemperatureUnit": "F",
     }
     assert trt.query_attributes() == {
@@ -1011,6 +1023,10 @@ async def test_temperature_setting_climate_setpoint(hass: HomeAssistant) -> None
     )
     assert trt.sync_attributes() == {
         "availableThermostatModes": ["off", "cool", "on"],
+        "thermostatTemperatureRange": {
+            "minThresholdCelsius": 10,
+            "maxThresholdCelsius": 30,
+        },
         "thermostatTemperatureUnit": "C",
     }
     assert trt.query_attributes() == {
@@ -1068,6 +1084,10 @@ async def test_temperature_setting_climate_setpoint_auto(hass: HomeAssistant) ->
     )
     assert trt.sync_attributes() == {
         "availableThermostatModes": ["off", "heatcool", "on"],
+        "thermostatTemperatureRange": {
+            "minThresholdCelsius": 10,
+            "maxThresholdCelsius": 30,
+        },
         "thermostatTemperatureUnit": "C",
     }
     assert trt.query_attributes() == {
