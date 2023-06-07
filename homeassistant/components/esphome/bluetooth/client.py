@@ -158,7 +158,7 @@ class ESPHomeClient(BaseBleakClient):
         self._disconnected_event: asyncio.Event | None = None
         device_info = self.entry_data.device_info
         assert device_info is not None
-        self._connection_version = device_info.bluetooth_proxy_version
+        self._connection_version = device_info.legacy_bluetooth_proxy_version
         self._address_type = address_or_ble_device.details["address_type"]
         self._source_name = f"{config_entry.title} [{self._source}]"
 

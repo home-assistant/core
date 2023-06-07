@@ -59,7 +59,8 @@ async def async_connect_scanner(
     source = str(entry.unique_id)
     new_info_callback = async_get_advertisement_callback(hass)
     assert entry_data.device_info is not None
-    version = entry_data.device_info.bluetooth_proxy_version
+    version = entry_data.device_info.legacy_bluetooth_proxy_version
+    _LOGGER.warning("version=%s", version)
     connectable = version >= 2
     _LOGGER.debug(
         "%s [%s]: Connecting scanner version=%s, connectable=%s",
@@ -89,7 +90,7 @@ async def async_connect_scanner(
         async_register_scanner(hass, scanner, connectable),
         scanner.async_setup(),
     ]
-    if 0:  # feature flag has RAW_ADVERTISEMENTS
+    if 1:  # feature flag has RAW_ADVERTISEMENTS
         await cli.subscribe_bluetooth_le_raw_advertisements(
             scanner.async_on_raw_advertisements
         )
