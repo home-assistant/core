@@ -108,7 +108,12 @@ def _supported_legacy(hass: HomeAssistant, entity_id: str) -> bool:
     if domain in SUPPORTED_DOMAINS:
         return True
 
-    device_class = get_device_class(hass, entity_id)
+    try:
+        device_class = get_device_class(hass, entity_id)
+    except HomeAssistantError:
+        # The entity no longer exists
+        return False
+
     if (
         domain == "binary_sensor"
         and device_class in SUPPORTED_BINARY_SENSOR_DEVICE_CLASSES
