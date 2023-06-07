@@ -20,5 +20,18 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
+  },
+  "entity": {
+    "sensor": {
+      "aqi": {
+        "name": "[%key:component::sensor::entity_component::aqi::name%]"
+      },
+      "pm25": {
+        "name": "[%key:component::sensor::entity_component::pm25::name%]"
+      },
+      "o3": {
+        "name": "[%key:component::sensor::entity_component::ozone::name%]"
+      }
+    }
   }
 }
