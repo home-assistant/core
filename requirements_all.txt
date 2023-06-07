@@ -2632,7 +2632,7 @@ wakeonlan==2.1.0
 wallbox==0.4.12
 
 # homeassistant.components.waqi
-waqiasync==1.0.0
+waqiasync==1.1.0
 
 # homeassistant.components.folder_watcher
 watchdog==2.3.1
