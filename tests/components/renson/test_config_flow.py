@@ -2,7 +2,6 @@
 from unittest.mock import patch
 
 from homeassistant import config_entries
-from homeassistant.components.renson.config_flow import CannotConnect
 from homeassistant.components.renson.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import RESULT_TYPE_CREATE_ENTRY, RESULT_TYPE_FORM
@@ -47,7 +46,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.renson.config_flow.renson.RensonVentilation.connect",
-        side_effect=CannotConnect,
+        return_value=False,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
