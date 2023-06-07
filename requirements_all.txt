@@ -984,7 +984,7 @@ hole==0.8.0
 holidays==0.21.13
 
 # homeassistant.components.frontend
-home-assistant-frontend==20230606.0
+home-assistant-frontend==20230607.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2023.6.5
@@ -1179,7 +1179,7 @@ mcstatus==6.0.0
 meater-python==0.0.8
 
 # homeassistant.components.melnor
-melnor-bluetooth==0.0.24
+melnor-bluetooth==0.0.25
 
 # homeassistant.components.message_bird
 messagebird==1.2.0
@@ -1667,7 +1667,7 @@ pyeverlights==0.1.0
 pyevilgenius==2.0.0
 
 # homeassistant.components.ezviz
-pyezviz==0.2.0.15
+pyezviz==0.2.0.17
 
 # homeassistant.components.fibaro
 pyfibaro==0.7.1
@@ -2131,13 +2131,13 @@ python-opensky==0.0.8
 
 # homeassistant.components.otbr
 # homeassistant.components.thread
-python-otbr-api==2.1.0
+python-otbr-api==2.2.0
 
 # homeassistant.components.picnic
 python-picnic-api==1.1.0
 
 # homeassistant.components.qbittorrent
-python-qbittorrent==0.4.2
+python-qbittorrent==0.4.3
 
 # homeassistant.components.ripple
 python-ripple-api==0.0.3
@@ -2187,7 +2187,7 @@ pytrafikverket==0.3.3
 pyudev==0.23.2
 
 # homeassistant.components.unifiprotect
-pyunifiprotect==4.10.0
+pyunifiprotect==4.10.1
 
 # homeassistant.components.uptimerobot
 pyuptimerobot==22.2.0
@@ -2313,7 +2313,7 @@ russound-rio==0.1.8
 russound==0.1.9
 
 # homeassistant.components.ruuvitag_ble
-ruuvitag-ble==0.1.1
+ruuvitag-ble==0.1.2
 
 # homeassistant.components.yamaha
 rxv==0.7.0
