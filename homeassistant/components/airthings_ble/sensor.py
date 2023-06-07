@@ -151,6 +151,7 @@ class AirthingsSensor(
     """Airthings BLE sensors for the device."""
 
     _attr_has_entity_name = True
+    _last_valid_value: str | float | None = None
 
     def __init__(
         self,
@@ -183,4 +184,12 @@ class AirthingsSensor(
     @property
     def native_value(self) -> StateType:
         """Return the value reported by the sensor."""
-        return self.coordinator.data.sensors[self.entity_description.key]
+        _LOGGER.debug(
+            "updating %s, data: %s", self.entity_description.key, self.coordinator.data
+        )
+        current_value = self.coordinator.data.sensors.get(self.entity_description.key)
+
+        if current_value is not None:
+            self._last_valid_value = current_value
+
+        return self._last_valid_value
