@@ -1,8 +1,10 @@
 """Test Discovergy diagnostics."""
+from unittest.mock import patch
+
 from homeassistant.components.diagnostics import REDACTED
 from homeassistant.core import HomeAssistant
 
-from . import init_integration
+from . import GET_METERS, LAST_READING, setup_mock_config_entry
 
 from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.typing import ClientSessionGenerator
@@ -12,7 +14,12 @@ async def test_entry_diagnostics(
     hass: HomeAssistant, hass_client: ClientSessionGenerator
 ) -> None:
     """Test config entry diagnostics."""
-    entry = await init_integration(hass)
+    entry = await setup_mock_config_entry(hass)
+    with patch("pydiscovergy.Discovergy.get_meters", return_value=GET_METERS), patch(
+        "pydiscovergy.Discovergy.get_last_reading", return_value=LAST_READING
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
 
     result = await get_diagnostics_for_config_entry(hass, hass_client, entry)
 

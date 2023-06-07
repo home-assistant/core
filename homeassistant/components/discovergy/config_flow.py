@@ -90,8 +90,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             except discovergyError.InvalidLogin:
                 errors["base"] = "invalid_auth"
-            except Exception as err:  # pylint: disable=broad-except
-                _LOGGER.error("Unexpected error occurred while getting meters: %s", err)
+            except Exception:  # pylint: disable=broad-except
                 errors["base"] = "unknown"
             else:
                 if self.existing_entry:

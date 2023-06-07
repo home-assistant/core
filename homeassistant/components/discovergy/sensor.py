@@ -154,6 +154,8 @@ async def async_setup_entry(
 
     entities: list[DiscovergySensor] = []
     for meter in meters:
+        meter_id = meter.get_meter_id()
+
         sensors = None
         if meter.measurement_type == "ELECTRICITY":
             sensors = ELECTRICITY_SENSORS
@@ -165,7 +167,7 @@ async def async_setup_entry(
                 # check if this meter has this data, then add this sensor
                 for key in {description.key, *description.alternative_keys}:
                     coordinator: DiscovergyUpdateCoordinator = data.coordinators[
-                        meter.get_meter_id()
+                        meter_id
                     ]
                     if key in coordinator.data.values:
                         entities.append(

@@ -9,7 +9,7 @@ from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 
-from tests.components.discovergy import init_integration
+from tests.components.discovergy import setup_mock_config_entry
 
 
 async def test_form(hass: HomeAssistant, mock_meters) -> None:
@@ -44,7 +44,7 @@ async def test_form(hass: HomeAssistant, mock_meters) -> None:
 
 async def test_reauth(hass: HomeAssistant, mock_meters) -> None:
     """Test reauth flow."""
-    entry = await init_integration(hass)
+    entry = await setup_mock_config_entry(hass)
 
     init_result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -66,6 +66,7 @@ async def test_reauth(hass: HomeAssistant, mock_meters) -> None:
                 CONF_PASSWORD: "test-password",
             },
         )
+        await hass.async_block_till_done()
 
         assert configure_result["type"] == data_entry_flow.FlowResultType.ABORT
         assert configure_result["reason"] == "reauth_successful"

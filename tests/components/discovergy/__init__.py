@@ -1,6 +1,5 @@
 """Tests for the Discovergy integration."""
 import datetime
-from unittest.mock import patch
 
 from pydiscovergy.models import Meter, Reading
 
@@ -56,20 +55,15 @@ LAST_READING = Reading(
 )
 
 
-async def init_integration(hass: HomeAssistant) -> MockConfigEntry:
-    """Set up the Discovergy integration in Home Assistant."""
+async def setup_mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
+    """Return a MockConfigEntry for testing."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="user@example.org",
         unique_id="user@example.org",
         data={CONF_EMAIL: "user@example.org", CONF_PASSWORD: "supersecretpassword"},
     )
-
-    with patch("pydiscovergy.Discovergy.get_meters", return_value=GET_METERS), patch(
-        "pydiscovergy.Discovergy.get_last_reading", return_value=LAST_READING
-    ):
-        entry.add_to_hass(hass)
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+    entry.add_to_hass(hass)
+    await hass.async_block_till_done()
 
     return entry
