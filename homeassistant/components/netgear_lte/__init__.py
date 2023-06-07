@@ -194,54 +194,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await async_setup_services(hass)
 
-    hass.async_create_task(
-        discovery.async_load_platform(
-            hass,
-            Platform.NOTIFY,
-            DOMAIN,
-            {CONF_HOST: entry.data[CONF_HOST], CONF_NAME: entry.title},
-            hass.data[DATA_HASS_CONFIG],
-        )
-    )
-    if lte_configs := hass.data[DATA_HASS_CONFIG].get(DOMAIN, []):
-        async_create_issue(
-            hass,
-            DOMAIN,
-            "deprecated_notify",
-            breaks_in_ha_version="2023.9.0",
-            is_fixable=False,
-            severity=IssueSeverity.WARNING,
-            translation_key="deprecated_notify",
-            translation_placeholders={
-                "name": f"{Platform.NOTIFY}.{entry.title.lower().replace(' ', '_')}"
-            },
-        )
-        hass.async_create_task(
-            discovery.async_load_platform(
-                hass,
-                Platform.NOTIFY,
-                DOMAIN,
-                {CONF_HOST: entry.data[CONF_HOST], CONF_NAME: DOMAIN},
-                hass.data[DATA_HASS_CONFIG],
-            )
-        )
-    for lte_config in lte_configs:
-        if lte_config[CONF_HOST] == entry.data[CONF_HOST]:
-            for notify_conf in lte_config[CONF_NOTIFY]:
-                discovery_info = {
-                    CONF_HOST: lte_config[CONF_HOST],
-                    CONF_NAME: notify_conf.get(CONF_NAME),
-                    CONF_NOTIFY: notify_conf,
-                }
-                hass.async_create_task(
-                    discovery.async_load_platform(
-                        hass,
-                        Platform.NOTIFY,
-                        DOMAIN,
-                        discovery_info,
-                        hass.data[DATA_HASS_CONFIG],
-                    )
-                )
+    _legacy_task(hass, entry)
 
     await hass.config_entries.async_forward_entry_setups(
         entry, [platform for platform in PLATFORMS if platform != Platform.NOTIFY]
@@ -312,7 +265,7 @@ async def _login(hass, modem_data, password):
         """Clean up resources."""
         update_unsub()
         await modem_data.modem.logout()
-        hass.data[DOMAIN].modem_data.pop(modem_data.host)
+        del hass.data[DOMAIN].modem_data[modem_data.host]
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, cleanup)
 
@@ -332,3 +285,64 @@ async def _retry_login(hass, modem_data, password):
             await _login(hass, modem_data, password)
         except eternalegypt.Error:
             delay = min(2 * delay, 300)
+
+
+def _legacy_task(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Create notify service and add a repair issue when appropriate."""
+    # Discovery can happen up to 2 times for notify depending on existing yaml config
+    # One for the name of the config entry, allows the user to customize the name
+    # One for each notify described in the yaml config which goes away with config flow
+    # One for the default if the user never specified one
+    hass.async_create_task(
+        discovery.async_load_platform(
+            hass,
+            Platform.NOTIFY,
+            DOMAIN,
+            {CONF_HOST: entry.data[CONF_HOST], CONF_NAME: entry.title},
+            hass.data[DATA_HASS_CONFIG],
+        )
+    )
+    if not (lte_configs := hass.data[DATA_HASS_CONFIG].get(DOMAIN, [])):
+        return
+    async_create_issue(
+        hass,
+        DOMAIN,
+        "deprecated_notify",
+        breaks_in_ha_version="2023.9.0",
+        is_fixable=False,
+        severity=IssueSeverity.WARNING,
+        translation_key="deprecated_notify",
+        translation_placeholders={
+            "name": f"{Platform.NOTIFY}.{entry.title.lower().replace(' ', '_')}"
+        },
+    )
+
+    for lte_config in lte_configs:
+        if lte_config[CONF_HOST] == entry.data[CONF_HOST]:
+            if not lte_config[CONF_NOTIFY]:
+                hass.async_create_task(
+                    discovery.async_load_platform(
+                        hass,
+                        Platform.NOTIFY,
+                        DOMAIN,
+                        {CONF_HOST: entry.data[CONF_HOST], CONF_NAME: DOMAIN},
+                        hass.data[DATA_HASS_CONFIG],
+                    )
+                )
+                break
+            for notify_conf in lte_config[CONF_NOTIFY]:
+                discovery_info = {
+                    CONF_HOST: lte_config[CONF_HOST],
+                    CONF_NAME: notify_conf.get(CONF_NAME),
+                    CONF_NOTIFY: notify_conf,
+                }
+                hass.async_create_task(
+                    discovery.async_load_platform(
+                        hass,
+                        Platform.NOTIFY,
+                        DOMAIN,
+                        discovery_info,
+                        hass.data[DATA_HASS_CONFIG],
+                    )
+                )
+            break
