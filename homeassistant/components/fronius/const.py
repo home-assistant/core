@@ -76,6 +76,7 @@ class MeterLocationCodeOption(StrEnum):
     FEED_IN = "feed_in"
     CONSUMPTION_PATH = "consumption_path"
     GENERATOR = "external_generator"
+    EXT_BATTERY = "external_battery"
     SUBLOAD = "subload"
 
 
@@ -92,6 +93,8 @@ def get_meter_location_description(code: StateType) -> MeterLocationCodeOption |
             return MeterLocationCodeOption.CONSUMPTION_PATH
         case 3:
             return MeterLocationCodeOption.GENERATOR
+        case 4:
+            return MeterLocationCodeOption.EXT_BATTERY
         case _ as _code if 256 <= _code <= 511:
             return MeterLocationCodeOption.SUBLOAD
     return None

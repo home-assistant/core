@@ -135,6 +135,7 @@
           "feed_in": "Grid interconnection point",
           "consumption_path": "Consumption path",
           "external_generator": "External generator",
+          "external_battery": "External battery",
           "subload": "Subload"
         }
       },
