@@ -18,6 +18,7 @@ from homeassistant.components.media_player import (
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
     MediaPlayerState,
+    MediaType,
     async_process_play_media_url,
 )
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
@@ -282,7 +283,7 @@ class SoundTouchMediaPlayer(MediaPlayerEntity):
         )
 
     async def async_play_media(
-        self, media_type: str, media_id: str, **kwargs: Any
+        self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
         """Play a piece of media."""
         if media_source.is_media_source_id(media_id):
@@ -295,7 +296,9 @@ class SoundTouchMediaPlayer(MediaPlayerEntity):
             partial(self.play_media, media_type, media_id, **kwargs)
         )
 
-    def play_media(self, media_type: str, media_id: str, **kwargs: Any) -> None:
+    def play_media(
+        self, media_type: MediaType | str, media_id: str, **kwargs: Any
+    ) -> None:
         """Play a piece of media."""
         _LOGGER.debug("Starting media with media_id: %s", media_id)
         if re.match(r"http?://", str(media_id)):
@@ -395,7 +398,9 @@ class SoundTouchMediaPlayer(MediaPlayerEntity):
         return attributes
 
     async def async_browse_media(
-        self, media_content_type: str | None = None, media_content_id: str | None = None
+        self,
+        media_content_type: MediaType | str | None = None,
+        media_content_id: str | None = None,
     ) -> BrowseMedia:
         """Implement the websocket media browsing helper."""
         return await media_source.async_browse_media(self.hass, media_content_id)

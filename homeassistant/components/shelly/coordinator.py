@@ -195,17 +195,10 @@ class ShellyBlockCoordinator(ShellyCoordinatorBase[BlockDevice]):
             if block.type == "device":
                 cfg_changed = block.cfgChanged
 
+            # Shelly TRV sends information about changing the configuration for no
+            # reason, reloading the config entry is not needed for it.
             if self.model == "SHTRV-01":
-                # Reloading the entry is not needed when the target temperature changes
-                if "targetTemp" in block.sensor_ids:
-                    if self._last_target_temp != block.targetTemp:
-                        self._last_cfg_changed = None
-                    self._last_target_temp = block.targetTemp
-                # Reloading the entry is not needed when the mode changes
-                if "mode" in block.sensor_ids:
-                    if self._last_mode != block.mode:
-                        self._last_cfg_changed = None
-                    self._last_mode = block.mode
+                self._last_cfg_changed = None
 
             # For dual mode bulbs ignore change if it is due to mode/effect change
             if self.model in DUAL_MODE_LIGHT_MODELS:

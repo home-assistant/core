@@ -437,7 +437,7 @@ async def test_entity_config(
     config = {
         SWITCH_DOMAIN: {
             # REST configuration
-            CONF_PLATFORM: "rest",
+            CONF_PLATFORM: DOMAIN,
             CONF_METHOD: "POST",
             CONF_RESOURCE: "http://localhost",
             # Entity configuration

@@ -24,12 +24,12 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.reload import setup_reload_service
+from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import call_shell_with_timeout, check_output_or_log
 from .const import CONF_COMMAND_TIMEOUT, DEFAULT_TIMEOUT, DOMAIN, PLATFORMS
+from .utils import call_shell_with_timeout, check_output_or_log
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -51,15 +51,15 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(
+async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    add_entities: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Find and return switches controlled by shell commands."""
 
-    setup_reload_service(hass, DOMAIN, PLATFORMS)
+    await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
 
     devices: dict[str, Any] = config.get(CONF_SWITCHES, {})
     switches = []
@@ -92,7 +92,7 @@ def setup_platform(
         _LOGGER.error("No switches added")
         return
 
-    add_entities(switches)
+    async_add_entities(switches)
 
 
 class CommandSwitch(SwitchEntity):
@@ -123,11 +123,16 @@ class CommandSwitch(SwitchEntity):
         self._attr_unique_id = unique_id
         self._attr_should_poll = bool(command_state)
 
-    def _switch(self, command: str) -> bool:
+    async def _switch(self, command: str) -> bool:
         """Execute the actual commands."""
         _LOGGER.info("Running command: %s", command)
 
-        success = call_shell_with_timeout(command, self._timeout) == 0
+        success = (
+            await self.hass.async_add_executor_job(
+                call_shell_with_timeout, command, self._timeout
+            )
+            == 0
+        )
 
         if not success:
             _LOGGER.error("Command failed: %s", command)
@@ -160,26 +165,30 @@ class CommandSwitch(SwitchEntity):
         if TYPE_CHECKING:
             return None
 
-    def update(self) -> None:
+    async def async_update(self) -> None:
         """Update device state."""
         if self._command_state:
-            payload = str(self._query_state())
+            payload = str(await self.hass.async_add_executor_job(self._query_state))
             if self._icon_template:
-                self._attr_icon = self._icon_template.render_with_possible_json_value(
-                    payload
+                self._attr_icon = (
+                    self._icon_template.async_render_with_possible_json_value(payload)
                 )
             if self._value_template:
-                payload = self._value_template.render_with_possible_json_value(payload)
-            self._attr_is_on = payload.lower() == "true"
+                payload = self._value_template.async_render_with_possible_json_value(
+                    payload, None
+                )
+            self._attr_is_on = None
+            if payload:
+                self._attr_is_on = payload.lower() == "true"
 
-    def turn_on(self, **kwargs: Any) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
-        if self._switch(self._command_on) and not self._command_state:
+        if await self._switch(self._command_on) and not self._command_state:
             self._attr_is_on = True
-            self.schedule_update_ha_state()
+            self.async_schedule_update_ha_state()
 
-    def turn_off(self, **kwargs: Any) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
-        if self._switch(self._command_off) and not self._command_state:
+        if await self._switch(self._command_off) and not self._command_state:
             self._attr_is_on = False
-            self.schedule_update_ha_state()
+            self.async_schedule_update_ha_state()

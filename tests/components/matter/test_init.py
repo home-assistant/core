@@ -2,10 +2,9 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable, Callable, Generator
+from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, call, patch
 
-from aiohttp import ClientWebSocketResponse
 from matter_server.client.exceptions import CannotConnect, InvalidServerVersion
 from matter_server.client.models.node import MatterNode
 from matter_server.common.errors import MatterError
@@ -28,6 +27,7 @@ from homeassistant.setup import async_setup_component
 from .common import load_and_parse_node_fixture, setup_integration_with_node_fixture
 
 from tests.common import MockConfigEntry
+from tests.typing import WebSocketGenerator
 
 
 @pytest.fixture(name="connect_timeout")
@@ -613,7 +613,7 @@ async def test_remove_entry(
 async def test_remove_config_entry_device(
     hass: HomeAssistant,
     matter_client: MagicMock,
-    hass_ws_client: Callable[[HomeAssistant], Awaitable[ClientWebSocketResponse]],
+    hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test that a device can be removed ok."""
     assert await async_setup_component(hass, "config", {})
@@ -656,7 +656,7 @@ async def test_remove_config_entry_device_no_node(
     hass: HomeAssistant,
     matter_client: MagicMock,
     integration: MockConfigEntry,
-    hass_ws_client: Callable[[HomeAssistant], Awaitable[ClientWebSocketResponse]],
+    hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test that a device can be removed ok without an existing node."""
     assert await async_setup_component(hass, "config", {})

@@ -1,0 +1,32 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "description": "Receive Voice over IP calls to interact with Assist."
+      }
+    },
+    "abort": {
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "call_in_progress": {
+        "name": "Call in progress"
+      }
+    },
+    "switch": {
+      "allow_call": {
+        "name": "Allow calls"
+      }
+    },
+    "select": {
+      "pipeline": {
+        "name": "[%key:component::assist_pipeline::entity::select::pipeline::name%]",
+        "state": {
+          "preferred": "[%key:component::assist_pipeline::entity::select::pipeline::state::preferred%]"
+        }
+      }
+    }
+  }
+}

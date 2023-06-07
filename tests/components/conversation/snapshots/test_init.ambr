@@ -1,0 +1,250 @@
+# serializer version: 1
+# name: test_get_agent_info
+  dict({
+    'id': 'mock-entry',
+    'name': 'Mock Title',
+  })
+# ---
+# name: test_get_agent_info.1
+  dict({
+    'id': 'homeassistant',
+    'name': 'Home Assistant',
+  })
+# ---
+# name: test_get_agent_info.2
+  dict({
+    'id': 'mock-entry',
+    'name': 'Mock Title',
+  })
+# ---
+# name: test_get_agent_info.3
+  dict({
+    'id': 'mock-entry',
+    'name': 'test',
+  })
+# ---
+# name: test_get_agent_list
+  dict({
+    'agents': list([
+      dict({
+        'id': 'homeassistant',
+        'name': 'Home Assistant',
+        'supported_languages': list([
+          'ar',
+          'bg',
+          'bn',
+          'ca',
+          'cs',
+          'da',
+          'de',
+          'de-CH',
+          'el',
+          'en',
+          'es',
+          'fa',
+          'fi',
+          'fr',
+          'fr-CA',
+          'gl',
+          'gu',
+          'he',
+          'hi',
+          'hr',
+          'hu',
+          'id',
+          'is',
+          'it',
+          'ka',
+          'kn',
+          'lb',
+          'lt',
+          'lv',
+          'ml',
+          'mn',
+          'ms',
+          'nb',
+          'nl',
+          'pl',
+          'pt',
+          'pt-br',
+          'ro',
+          'ru',
+          'sk',
+          'sl',
+          'sr',
+          'sv',
+          'sw',
+          'te',
+          'tr',
+          'uk',
+          'ur',
+          'vi',
+          'zh-cn',
+          'zh-hk',
+          'zh-tw',
+        ]),
+      }),
+      dict({
+        'id': 'mock-entry',
+        'name': 'Mock Title',
+        'supported_languages': list([
+          'smurfish',
+        ]),
+      }),
+      dict({
+        'id': 'mock-entry-support-all',
+        'name': 'Mock Title',
+        'supported_languages': '*',
+      }),
+    ]),
+  })
+# ---
+# name: test_get_agent_list.1
+  dict({
+    'agents': list([
+      dict({
+        'id': 'homeassistant',
+        'name': 'Home Assistant',
+        'supported_languages': list([
+        ]),
+      }),
+      dict({
+        'id': 'mock-entry',
+        'name': 'Mock Title',
+        'supported_languages': list([
+          'smurfish',
+        ]),
+      }),
+      dict({
+        'id': 'mock-entry-support-all',
+        'name': 'Mock Title',
+        'supported_languages': '*',
+      }),
+    ]),
+  })
+# ---
+# name: test_get_agent_list.2
+  dict({
+    'agents': list([
+      dict({
+        'id': 'homeassistant',
+        'name': 'Home Assistant',
+        'supported_languages': list([
+          'en',
+        ]),
+      }),
+      dict({
+        'id': 'mock-entry',
+        'name': 'Mock Title',
+        'supported_languages': list([
+        ]),
+      }),
+      dict({
+        'id': 'mock-entry-support-all',
+        'name': 'Mock Title',
+        'supported_languages': '*',
+      }),
+    ]),
+  })
+# ---
+# name: test_get_agent_list.3
+  dict({
+    'agents': list([
+      dict({
+        'id': 'homeassistant',
+        'name': 'Home Assistant',
+        'supported_languages': list([
+          'en',
+        ]),
+      }),
+      dict({
+        'id': 'mock-entry',
+        'name': 'Mock Title',
+        'supported_languages': list([
+        ]),
+      }),
+      dict({
+        'id': 'mock-entry-support-all',
+        'name': 'Mock Title',
+        'supported_languages': '*',
+      }),
+    ]),
+  })
+# ---
+# name: test_get_agent_list.4
+  dict({
+    'agents': list([
+      dict({
+        'id': 'homeassistant',
+        'name': 'Home Assistant',
+        'supported_languages': list([
+          'de',
+          'de-CH',
+        ]),
+      }),
+      dict({
+        'id': 'mock-entry',
+        'name': 'Mock Title',
+        'supported_languages': list([
+        ]),
+      }),
+      dict({
+        'id': 'mock-entry-support-all',
+        'name': 'Mock Title',
+        'supported_languages': '*',
+      }),
+    ]),
+  })
+# ---
+# name: test_get_agent_list.5
+  dict({
+    'agents': list([
+      dict({
+        'id': 'homeassistant',
+        'name': 'Home Assistant',
+        'supported_languages': list([
+          'de-CH',
+          'de',
+        ]),
+      }),
+      dict({
+        'id': 'mock-entry',
+        'name': 'Mock Title',
+        'supported_languages': list([
+        ]),
+      }),
+      dict({
+        'id': 'mock-entry-support-all',
+        'name': 'Mock Title',
+        'supported_languages': '*',
+      }),
+    ]),
+  })
+# ---
+# name: test_ws_get_agent_info
+  dict({
+    'attribution': dict({
+      'name': 'Mock assistant',
+      'url': 'https://assist.me',
+    }),
+  })
+# ---
+# name: test_ws_get_agent_info.1
+  dict({
+    'attribution': None,
+  })
+# ---
+# name: test_ws_get_agent_info.2
+  dict({
+    'attribution': dict({
+      'name': 'Mock assistant',
+      'url': 'https://assist.me',
+    }),
+  })
+# ---
+# name: test_ws_get_agent_info.3
+  dict({
+    'code': 'invalid_format',
+    'message': "invalid agent ID for dictionary value @ data['agent_id']. Got 'not_exist'",
+  })
+# ---

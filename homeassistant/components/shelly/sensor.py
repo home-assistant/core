@@ -295,6 +295,9 @@ SENSORS: Final = {
     ("sensor", "sensorOp"): BlockSensorDescription(
         key="sensor|sensorOp",
         name="Operation",
+        device_class=SensorDeviceClass.ENUM,
+        options=["unknown", "warmup", "normal", "fault"],
+        translation_key="operation",
         icon="mdi:cog-transfer",
         value=lambda value: value,
         extra_state_attributes=lambda block: {"self_test": block.selfTest},

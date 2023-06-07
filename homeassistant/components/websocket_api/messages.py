@@ -132,7 +132,6 @@ def _state_diff_event(event: Event) -> dict:
     return _state_diff(event_old_state, event_new_state)
 
 
-@lru_cache(maxsize=128)
 def _state_diff(
     old_state: State, new_state: State
 ) -> dict[str, dict[str, dict[str, dict[str, str | list[str]]]]]:

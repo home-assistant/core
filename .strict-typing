@@ -57,10 +57,12 @@ homeassistant.components.ambient_station.*
 homeassistant.components.amcrest.*
 homeassistant.components.ampio.*
 homeassistant.components.analytics.*
+homeassistant.components.anova.*
 homeassistant.components.anthemav.*
 homeassistant.components.apcupsd.*
 homeassistant.components.aqualogic.*
 homeassistant.components.aseko_pool_live.*
+homeassistant.components.assist_pipeline.*
 homeassistant.components.asuswrt.*
 homeassistant.components.auth.*
 homeassistant.components.automation.*
@@ -137,6 +139,7 @@ homeassistant.components.hardkernel.*
 homeassistant.components.hardware.*
 homeassistant.components.here_travel_time.*
 homeassistant.components.history.*
+homeassistant.components.homeassistant.exposed_entities
 homeassistant.components.homeassistant.triggers.event
 homeassistant.components.homeassistant_alerts.*
 homeassistant.components.homeassistant_hardware.*
@@ -297,6 +300,7 @@ homeassistant.components.tag.*
 homeassistant.components.tailscale.*
 homeassistant.components.tautulli.*
 homeassistant.components.tcp.*
+homeassistant.components.threshold.*
 homeassistant.components.tibber.*
 homeassistant.components.tile.*
 homeassistant.components.tilt_ble.*
@@ -310,7 +314,7 @@ homeassistant.components.trafikverket_train.*
 homeassistant.components.trafikverket_weatherstation.*
 homeassistant.components.tts.*
 homeassistant.components.twentemilieu.*
-homeassistant.components.unifi.update
+homeassistant.components.unifi.*
 homeassistant.components.unifiprotect.*
 homeassistant.components.upcloud.*
 homeassistant.components.update.*

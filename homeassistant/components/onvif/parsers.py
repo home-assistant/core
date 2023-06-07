@@ -301,6 +301,106 @@ async def async_parse_tamper_detector(uid: str, msg) -> Event | None:
         return None
 
 
+@PARSERS.register("tns1:RuleEngine/MyRuleDetector/DogCatDetect")
+# pylint: disable=protected-access
+async def async_parse_dog_cat_detector(uid: str, msg) -> Event | None:
+    """Handle parsing event message.
+
+    Topic: tns1:RuleEngine/MyRuleDetector/DogCatDetect
+    """
+    try:
+        video_source = ""
+        for source in msg.Message._value_1.Source.SimpleItem:
+            if source.Name == "Source":
+                video_source = source.Value
+
+        return Event(
+            f"{uid}_{msg.Topic._value_1}_{video_source}",
+            "Pet Detection",
+            "binary_sensor",
+            "motion",
+            None,
+            msg.Message._value_1.Data.SimpleItem[0].Value == "true",
+        )
+    except (AttributeError, KeyError):
+        return None
+
+
+@PARSERS.register("tns1:RuleEngine/MyRuleDetector/VehicleDetect")
+# pylint: disable=protected-access
+async def async_parse_vehicle_detector(uid: str, msg) -> Event | None:
+    """Handle parsing event message.
+
+    Topic: tns1:RuleEngine/MyRuleDetector/VehicleDetect
+    """
+    try:
+        video_source = ""
+        for source in msg.Message._value_1.Source.SimpleItem:
+            if source.Name == "Source":
+                video_source = source.Value
+
+        return Event(
+            f"{uid}_{msg.Topic._value_1}_{video_source}",
+            "Vehicle Detection",
+            "binary_sensor",
+            "motion",
+            None,
+            msg.Message._value_1.Data.SimpleItem[0].Value == "true",
+        )
+    except (AttributeError, KeyError):
+        return None
+
+
+@PARSERS.register("tns1:RuleEngine/MyRuleDetector/PeopleDetect")
+# pylint: disable=protected-access
+async def async_parse_person_detector(uid: str, msg) -> Event | None:
+    """Handle parsing event message.
+
+    Topic: tns1:RuleEngine/MyRuleDetector/PeopleDetect
+    """
+    try:
+        video_source = ""
+        for source in msg.Message._value_1.Source.SimpleItem:
+            if source.Name == "Source":
+                video_source = source.Value
+
+        return Event(
+            f"{uid}_{msg.Topic._value_1}_{video_source}",
+            "Person Detection",
+            "binary_sensor",
+            "motion",
+            None,
+            msg.Message._value_1.Data.SimpleItem[0].Value == "true",
+        )
+    except (AttributeError, KeyError):
+        return None
+
+
+@PARSERS.register("tns1:RuleEngine/MyRuleDetector/FaceDetect")
+# pylint: disable=protected-access
+async def async_parse_face_detector(uid: str, msg) -> Event | None:
+    """Handle parsing event message.
+
+    Topic: tns1:RuleEngine/MyRuleDetector/FaceDetect
+    """
+    try:
+        video_source = ""
+        for source in msg.Message._value_1.Source.SimpleItem:
+            if source.Name == "Source":
+                video_source = source.Value
+
+        return Event(
+            f"{uid}_{msg.Topic._value_1}_{video_source}",
+            "Face Detection",
+            "binary_sensor",
+            "motion",
+            None,
+            msg.Message._value_1.Data.SimpleItem[0].Value == "true",
+        )
+    except (AttributeError, KeyError):
+        return None
+
+
 @PARSERS.register("tns1:Device/Trigger/DigitalInput")
 # pylint: disable=protected-access
 async def async_parse_digital_input(uid: str, msg) -> Event | None:
@@ -507,6 +607,70 @@ async def async_parse_jobstate(uid: str, msg) -> Event | None:
             None,
             None,
             msg.Message._value_1.Data.SimpleItem[0].Value == "Active",
+            EntityCategory.DIAGNOSTIC,
+        )
+    except (AttributeError, KeyError):
+        return None
+
+
+@PARSERS.register("tns1:RuleEngine/LineDetector/Crossed")
+# pylint: disable=protected-access
+async def async_parse_linedetector_crossed(uid: str, msg) -> Event | None:
+    """Handle parsing event message.
+
+    Topic: tns1:RuleEngine/LineDetector/Crossed
+    """
+    try:
+        video_source = ""
+        video_analytics = ""
+        rule = ""
+        for source in msg.Message._value_1.Source.SimpleItem:
+            if source.Name == "VideoSourceConfigurationToken":
+                video_source = source.Value
+            if source.Name == "VideoAnalyticsConfigurationToken":
+                video_analytics = source.Value
+            if source.Name == "Rule":
+                rule = source.Value
+
+        return Event(
+            f"{uid}_{msg.Topic._value_1}_{video_source}_{video_analytics}_{rule}",
+            "Line Detector Crossed",
+            "sensor",
+            None,
+            None,
+            msg.Message._value_1.Data.SimpleItem[0].Value,
+            EntityCategory.DIAGNOSTIC,
+        )
+    except (AttributeError, KeyError):
+        return None
+
+
+@PARSERS.register("tns1:RuleEngine/CountAggregation/Counter")
+# pylint: disable=protected-access
+async def async_parse_count_aggregation_counter(uid: str, msg) -> Event | None:
+    """Handle parsing event message.
+
+    Topic: tns1:RuleEngine/CountAggregation/Counter
+    """
+    try:
+        video_source = ""
+        video_analytics = ""
+        rule = ""
+        for source in msg.Message._value_1.Source.SimpleItem:
+            if source.Name == "VideoSourceConfigurationToken":
+                video_source = source.Value
+            if source.Name == "VideoAnalyticsConfigurationToken":
+                video_analytics = source.Value
+            if source.Name == "Rule":
+                rule = source.Value
+
+        return Event(
+            f"{uid}_{msg.Topic._value_1}_{video_source}_{video_analytics}_{rule}",
+            "Count Aggregation Counter",
+            "sensor",
+            None,
+            None,
+            msg.Message._value_1.Data.SimpleItem[0].Value,
             EntityCategory.DIAGNOSTIC,
         )
     except (AttributeError, KeyError):

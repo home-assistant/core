@@ -12,10 +12,6 @@ if [ -z "$files" ] ; then
   exit
 fi
 printf "%s\n" $files
-echo "================"
-echo "LINT with flake8"
-echo "================"
-pre-commit run flake8 --files $files
 echo "=============="
 echo "LINT with ruff"
 echo "=============="

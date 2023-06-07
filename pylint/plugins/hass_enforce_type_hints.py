@@ -42,7 +42,6 @@ class TypeHintMatch:
     """named_arg_types is for named or keyword arguments"""
     kwargs_type: str | None = None
     """kwargs_type is for the special case `**kwargs`"""
-    check_return_type_inheritance: bool = False
     has_async_counterpart: bool = False
 
     def need_to_check_function(self, node: nodes.FunctionDef) -> bool:
@@ -102,8 +101,10 @@ _TEST_FIXTURES: dict[str, list[str] | str] = {
     "enable_custom_integrations": "None",
     "enable_nightly_purge": "bool",
     "enable_statistics": "bool",
-    "enable_statistics_table_validation": "bool",
+    "enable_schema_validation": "bool",
     "entity_registry": "EntityRegistry",
+    "entity_registry_enabled_by_default": "None",
+    "freezer": "FrozenDateTimeFactory",
     "hass_access_token": "str",
     "hass_admin_credential": "Credentials",
     "hass_admin_user": "MockUser",
@@ -134,13 +135,13 @@ _TEST_FIXTURES: dict[str, list[str] | str] = {
     "mock_zeroconf": "None",
     "mqtt_client_mock": "MqttMockPahoClient",
     "mqtt_mock": "MqttMockHAClient",
-    "mqtt_mock_entry_no_yaml_config": "MqttMockHAClientGenerator",
-    "mqtt_mock_entry_with_yaml_config": "MqttMockHAClientGenerator",
+    "mqtt_mock_entry": "MqttMockHAClientGenerator",
     "recorder_db_url": "str",
     "recorder_mock": "Recorder",
     "requests_mock": "requests_mock.Mocker",
     "snapshot": "SnapshotAssertion",
     "tmp_path": "Path",
+    "tmpdir": "py.path.local",
 }
 _TEST_FUNCTION_MATCH = TypeHintMatch(
     function_name="test_*",
@@ -199,6 +200,14 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
                 2: "DeviceEntry",
             },
             return_type="bool",
+        ),
+        TypeHintMatch(
+            function_name="async_reset_platform",
+            arg_types={
+                0: "HomeAssistant",
+                1: "str",
+            },
+            return_type=None,
         ),
     ],
     "__any_platform__": [
@@ -395,7 +404,6 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
                 1: "ConfigType",
             },
             return_type=["DeviceScanner", None],
-            check_return_type_inheritance=True,
             has_async_counterpart=True,
         ),
     ],
@@ -463,7 +471,6 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
                 2: "DiscoveryInfoType | None",
             },
             return_type=["BaseNotificationService", None],
-            check_return_type_inheritance=True,
             has_async_counterpart=True,
         ),
     ],
@@ -490,7 +497,6 @@ _CLASS_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                         0: "ConfigEntry",
                     },
                     return_type="OptionsFlow",
-                    check_return_type_inheritance=True,
                 ),
                 TypeHintMatch(
                     function_name="async_step_dhcp",
@@ -712,6 +718,10 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
             matches=_ENTITY_MATCH,
         ),
         ClassTypeHintMatch(
+            base_class="RestoreEntity",
+            matches=_RESTORE_ENTITY_MATCH,
+        ),
+        ClassTypeHintMatch(
             base_class="AlarmControlPanelEntity",
             matches=[
                 TypeHintMatch(
@@ -795,6 +805,10 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
             matches=_ENTITY_MATCH,
         ),
         ClassTypeHintMatch(
+            base_class="RestoreEntity",
+            matches=_RESTORE_ENTITY_MATCH,
+        ),
+        ClassTypeHintMatch(
             base_class="BinarySensorEntity",
             matches=[
                 TypeHintMatch(
@@ -838,6 +852,10 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
             matches=_ENTITY_MATCH,
         ),
         ClassTypeHintMatch(
+            base_class="RestoreEntity",
+            matches=_RESTORE_ENTITY_MATCH,
+        ),
+        ClassTypeHintMatch(
             base_class="CalendarEntity",
             matches=[
                 TypeHintMatch(
@@ -860,6 +878,10 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
         ClassTypeHintMatch(
             base_class="Entity",
             matches=_ENTITY_MATCH,
+        ),
+        ClassTypeHintMatch(
+            base_class="RestoreEntity",
+            matches=_RESTORE_ENTITY_MATCH,
         ),
         ClassTypeHintMatch(
             base_class="Camera",
@@ -974,6 +996,10 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
         ClassTypeHintMatch(
             base_class="Entity",
             matches=_ENTITY_MATCH,
+        ),
+        ClassTypeHintMatch(
+            base_class="RestoreEntity",
+            matches=_RESTORE_ENTITY_MATCH,
         ),
         ClassTypeHintMatch(
             base_class="ClimateEntity",
@@ -1149,6 +1175,10 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
             matches=_ENTITY_MATCH,
         ),
         ClassTypeHintMatch(
+            base_class="RestoreEntity",
+            matches=_RESTORE_ENTITY_MATCH,
+        ),
+        ClassTypeHintMatch(
             base_class="CoverEntity",
             matches=[
                 TypeHintMatch(
@@ -1248,6 +1278,10 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
             matches=_ENTITY_MATCH,
         ),
         ClassTypeHintMatch(
+            base_class="RestoreEntity",
+            matches=_RESTORE_ENTITY_MATCH,
+        ),
+        ClassTypeHintMatch(
             base_class="BaseTrackerEntity",
             matches=[
                 TypeHintMatch(
@@ -1319,6 +1353,10 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
         ClassTypeHintMatch(
             base_class="Entity",
             matches=_ENTITY_MATCH,
+        ),
+        ClassTypeHintMatch(
+            base_class="RestoreEntity",
+            matches=_RESTORE_ENTITY_MATCH,
         ),
         ClassTypeHintMatch(
             base_class="ToggleEntity",
@@ -1402,6 +1440,10 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
             matches=_ENTITY_MATCH,
         ),
         ClassTypeHintMatch(
+            base_class="RestoreEntity",
+            matches=_RESTORE_ENTITY_MATCH,
+        ),
+        ClassTypeHintMatch(
             base_class="GeolocationEvent",
             matches=[
                 TypeHintMatch(
@@ -1427,6 +1469,10 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
         ClassTypeHintMatch(
             base_class="Entity",
             matches=_ENTITY_MATCH,
+        ),
+        ClassTypeHintMatch(
+            base_class="RestoreEntity",
+            matches=_RESTORE_ENTITY_MATCH,
         ),
         ClassTypeHintMatch(
             base_class="ImageProcessingEntity",
@@ -1470,6 +1516,10 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
         ClassTypeHintMatch(
             base_class="Entity",
             matches=_ENTITY_MATCH,
+        ),
+        ClassTypeHintMatch(
+            base_class="RestoreEntity",
+            matches=_RESTORE_ENTITY_MATCH,
         ),
         ClassTypeHintMatch(
             base_class="ToggleEntity",
@@ -1525,6 +1575,10 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
         ClassTypeHintMatch(
             base_class="Entity",
             matches=_ENTITY_MATCH,
+        ),
+        ClassTypeHintMatch(
+            base_class="RestoreEntity",
+            matches=_RESTORE_ENTITY_MATCH,
         ),
         ClassTypeHintMatch(
             base_class="ToggleEntity",
@@ -1626,6 +1680,10 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
             matches=_ENTITY_MATCH,
         ),
         ClassTypeHintMatch(
+            base_class="RestoreEntity",
+            matches=_RESTORE_ENTITY_MATCH,
+        ),
+        ClassTypeHintMatch(
             base_class="LockEntity",
             matches=[
                 TypeHintMatch(
@@ -1716,6 +1774,10 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
             matches=_ENTITY_MATCH,
         ),
         ClassTypeHintMatch(
+            base_class="RestoreEntity",
+            matches=_RESTORE_ENTITY_MATCH,
+        ),
+        ClassTypeHintMatch(
             base_class="MediaPlayerEntity",
             matches=[
                 TypeHintMatch(
@@ -1777,7 +1839,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 TypeHintMatch(
                     function_name="async_get_browse_image",
                     arg_types={
-                        1: "str",
+                        1: "MediaType | str",
                         2: "str",
                         3: "str | None",
                     },
@@ -2000,7 +2062,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 TypeHintMatch(
                     function_name="async_browse_media",
                     arg_types={
-                        1: "str | None",
+                        1: "MediaType | str | None",
                         2: "str | None",
                     },
                     return_type="BrowseMedia",
@@ -2036,7 +2098,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
             matches=[
                 TypeHintMatch(
                     function_name="targets",
-                    return_type=["dict[str, Any]", None],
+                    return_type=["Mapping[str, Any]", None],
                 ),
                 TypeHintMatch(
                     function_name="send_message",
@@ -2120,6 +2182,10 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
             matches=_ENTITY_MATCH,
         ),
         ClassTypeHintMatch(
+            base_class="RestoreEntity",
+            matches=_RESTORE_ENTITY_MATCH,
+        ),
+        ClassTypeHintMatch(
             base_class="ToggleEntity",
             matches=_TOGGLE_ENTITY_MATCH,
         ),
@@ -2185,6 +2251,10 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
         ClassTypeHintMatch(
             base_class="Entity",
             matches=_ENTITY_MATCH,
+        ),
+        ClassTypeHintMatch(
+            base_class="RestoreEntity",
+            matches=_RESTORE_ENTITY_MATCH,
         ),
         ClassTypeHintMatch(
             base_class="SelectEntity",
@@ -2277,6 +2347,10 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
             matches=_ENTITY_MATCH,
         ),
         ClassTypeHintMatch(
+            base_class="RestoreEntity",
+            matches=_RESTORE_ENTITY_MATCH,
+        ),
+        ClassTypeHintMatch(
             base_class="ToggleEntity",
             matches=_TOGGLE_ENTITY_MATCH,
         ),
@@ -2324,7 +2398,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 ),
                 TypeHintMatch(
                     function_name="async_process_audio_stream",
-                    arg_types={1: "SpeechMetadata", 2: "StreamReader"},
+                    arg_types={1: "SpeechMetadata", 2: "AsyncIterable[bytes]"},
                     return_type="SpeechResult",
                 ),
             ],
@@ -2334,6 +2408,10 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
         ClassTypeHintMatch(
             base_class="Entity",
             matches=_ENTITY_MATCH,
+        ),
+        ClassTypeHintMatch(
+            base_class="RestoreEntity",
+            matches=_RESTORE_ENTITY_MATCH,
         ),
         ClassTypeHintMatch(
             base_class="ToggleEntity",
@@ -2367,7 +2445,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 ),
                 TypeHintMatch(
                     function_name="default_options",
-                    return_type=["dict[str, Any]", None],
+                    return_type=["Mapping[str, Any]", None],
                 ),
                 TypeHintMatch(
                     function_name="get_tts_audio",
@@ -2445,6 +2523,10 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
         ClassTypeHintMatch(
             base_class="Entity",
             matches=_ENTITY_MATCH,
+        ),
+        ClassTypeHintMatch(
+            base_class="RestoreEntity",
+            matches=_RESTORE_ENTITY_MATCH,
         ),
         ClassTypeHintMatch(
             base_class="ToggleEntity",
@@ -2582,6 +2664,10 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
             matches=_ENTITY_MATCH,
         ),
         ClassTypeHintMatch(
+            base_class="RestoreEntity",
+            matches=_RESTORE_ENTITY_MATCH,
+        ),
+        ClassTypeHintMatch(
             base_class="WaterHeaterEntity",
             matches=[
                 TypeHintMatch(
@@ -2661,6 +2747,10 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
         ClassTypeHintMatch(
             base_class="Entity",
             matches=_ENTITY_MATCH,
+        ),
+        ClassTypeHintMatch(
+            base_class="RestoreEntity",
+            matches=_RESTORE_ENTITY_MATCH,
         ),
         ClassTypeHintMatch(
             base_class="WeatherEntity",
@@ -2797,7 +2887,7 @@ def _is_valid_type(
             _is_valid_type(match.group(1), node.value)
             and isinstance(node.slice, nodes.Tuple)
             and all(
-                _is_valid_type(match.group(n + 2), node.slice.elts[n])
+                _is_valid_type(match.group(n + 2), node.slice.elts[n], in_return)
                 for n in range(len(node.slice.elts))
             )
         )
@@ -2838,15 +2928,13 @@ def _is_valid_return_type(match: TypeHintMatch, node: nodes.NodeNG) -> bool:
             match, node.right
         )
 
-    if (
-        match.check_return_type_inheritance
-        and isinstance(match.return_type, (str, list))
-        and isinstance(node, nodes.Name)
-    ):
+    if isinstance(match.return_type, (str, list)) and isinstance(node, nodes.Name):
         if isinstance(match.return_type, str):
             valid_types = {match.return_type}
         else:
             valid_types = {el for el in match.return_type if isinstance(el, str)}
+        if "Mapping[str, Any]" in valid_types:
+            valid_types.add("TypedDict")
 
         try:
             for infer_node in node.infer():
@@ -2977,9 +3065,7 @@ class HassTypeHintChecker(BaseChecker):  # type: ignore[misc]
         if class_matches := _CLASS_MATCH.get(module_platform):
             self._class_matchers.extend(class_matches)
 
-        if not self.linter.config.ignore_missing_annotations and (
-            property_matches := _INHERITANCE_MATCH.get(module_platform)
-        ):
+        if property_matches := _INHERITANCE_MATCH.get(module_platform):
             self._class_matchers.extend(property_matches)
 
         self._class_matchers.reverse()

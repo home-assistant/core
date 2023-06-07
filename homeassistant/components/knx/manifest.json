@@ -9,5 +9,5 @@
   "iot_class": "local_push",
   "loggers": ["xknx"],
   "quality_scale": "platinum",
-  "requirements": ["xknx==2.6.0"]
+  "requirements": ["xknx==2.9.0"]
 }

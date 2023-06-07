@@ -197,6 +197,15 @@ class IntegrationSensor(RestoreEntity, SensorEntity):
             old_state: State | None = event.data.get("old_state")
             new_state: State | None = event.data.get("new_state")
 
+            if (
+                source_state := self.hass.states.get(self._sensor_source_id)
+            ) is None or source_state.state == STATE_UNAVAILABLE:
+                self._attr_available = False
+                self.async_write_ha_state()
+                return
+
+            self._attr_available = True
+
             if new_state is None or new_state.state in (
                 STATE_UNKNOWN,
                 STATE_UNAVAILABLE,

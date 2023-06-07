@@ -39,6 +39,7 @@ from . import (
     device_registry as dev_reg,
     entity_registry as ent_reg,
     service,
+    translation,
 )
 from .device_registry import DeviceRegistry
 from .entity_registry import EntityRegistry, RegistryEntryDisabler, RegistryEntryHider
@@ -124,6 +125,7 @@ class EntityPlatform:
         self.entity_namespace = entity_namespace
         self.config_entry: config_entries.ConfigEntry | None = None
         self.entities: dict[str, Entity] = {}
+        self.entity_translations: dict[str, Any] = {}
         self._tasks: list[asyncio.Task[None]] = []
         # Stop tracking tasks after setup is completed
         self._setup_complete = False
@@ -275,6 +277,15 @@ class EntityPlatform:
         logger = self.logger
         hass = self.hass
         full_name = f"{self.domain}.{self.platform_name}"
+
+        try:
+            self.entity_translations = await translation.async_get_translations(
+                hass, hass.config.language, "entity", {self.platform_name}
+            )
+        except Exception as err:  # pylint: disable=broad-exception-caught
+            _LOGGER.debug(
+                "Could not load translations for %s", self.platform_name, exc_info=err
+            )
 
         logger.info("Setting up %s", full_name)
         warn_task = hass.loop.call_later(
@@ -468,6 +479,7 @@ class EntityPlatform:
             self.hass,
             self._update_entity_states,
             self.scan_interval,
+            name=f"EntityPlatform poll {self.domain}.{self.platform_name}",
         )
 
     def _entity_id_already_exists(self, entity_id: str) -> tuple[bool, bool]:

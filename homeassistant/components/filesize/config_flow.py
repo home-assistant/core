@@ -49,7 +49,9 @@ class FilesizeConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             try:
-                full_path = validate_path(self.hass, user_input[CONF_FILE_PATH])
+                full_path = await self.hass.async_add_executor_job(
+                    validate_path, self.hass, user_input[CONF_FILE_PATH]
+                )
             except NotValidError:
                 errors["base"] = "not_valid"
             except NotAllowedError:

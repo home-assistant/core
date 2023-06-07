@@ -5,7 +5,13 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
 
-from reolink_aio.api import DayNightEnum, Host, SpotlightModeEnum
+from reolink_aio.api import (
+    DayNightEnum,
+    Host,
+    SpotlightModeEnum,
+    StatusLedEnum,
+    TrackMethodEnum,
+)
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.config_entries import ConfigEntry
@@ -67,6 +73,40 @@ SELECT_ENTITIES = (
         supported=lambda api, ch: api.supported(ch, "ptz_presets"),
         method=lambda api, ch, name: api.set_ptz_command(ch, preset=name),
     ),
+    ReolinkSelectEntityDescription(
+        key="auto_quick_reply_message",
+        name="Auto quick reply message",
+        icon="mdi:message-reply-text-outline",
+        translation_key="auto_quick_reply_message",
+        get_options=lambda api, ch: list(api.quick_reply_dict(ch).values()),
+        supported=lambda api, ch: api.supported(ch, "quick_reply"),
+        value=lambda api, ch: api.quick_reply_dict(ch)[api.quick_reply_file(ch)],
+        method=lambda api, ch, mess: api.set_quick_reply(
+            ch, file_id=[k for k, v in api.quick_reply_dict(ch).items() if v == mess][0]
+        ),
+    ),
+    ReolinkSelectEntityDescription(
+        key="auto_track_method",
+        name="Auto track method",
+        icon="mdi:target-account",
+        translation_key="auto_track_method",
+        entity_category=EntityCategory.CONFIG,
+        get_options=[method.name for method in TrackMethodEnum],
+        supported=lambda api, ch: api.supported(ch, "auto_track_method"),
+        value=lambda api, ch: TrackMethodEnum(api.auto_track_method(ch)).name,
+        method=lambda api, ch, name: api.set_auto_tracking(ch, method=name),
+    ),
+    ReolinkSelectEntityDescription(
+        key="status_led",
+        name="Status LED",
+        icon="mdi:lightning-bolt-circle",
+        translation_key="status_led",
+        entity_category=EntityCategory.CONFIG,
+        get_options=[state.name for state in StatusLedEnum],
+        supported=lambda api, ch: api.supported(ch, "doorbell_led"),
+        value=lambda api, ch: StatusLedEnum(api.doorbell_led(ch)).name,
+        method=lambda api, ch, name: api.set_status_led(ch, StatusLedEnum[name].value),
+    ),
 )
 
 
@@ -121,3 +161,4 @@ class ReolinkSelectEntity(ReolinkChannelCoordinatorEntity, SelectEntity):
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         await self.entity_description.method(self._host.api, self._channel, option)
+        self.async_write_ha_state()

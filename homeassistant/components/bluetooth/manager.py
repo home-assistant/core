@@ -276,6 +276,7 @@ class BluetoothManager:
             self.hass,
             self._async_check_unavailable,
             timedelta(seconds=UNAVAILABLE_TRACK_SECONDS),
+            name="Bluetooth manager unavailable tracking",
         )
 
     @hass_callback

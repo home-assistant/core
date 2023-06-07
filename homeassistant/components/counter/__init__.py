@@ -106,7 +106,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     storage_collection = CounterStorageCollection(
         Store(hass, STORAGE_VERSION, STORAGE_KEY),
-        logging.getLogger(f"{__name__}.storage_collection"),
         id_manager,
     )
     collection.sync_entity_lifecycle(
@@ -118,7 +117,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
     await storage_collection.async_load()
 
-    collection.StorageCollectionWebsocket(
+    collection.DictStorageCollectionWebsocket(
         storage_collection, DOMAIN, DOMAIN, STORAGE_FIELDS, STORAGE_FIELDS
     ).async_setup(hass)
 
@@ -140,7 +139,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-class CounterStorageCollection(collection.StorageCollection):
+class CounterStorageCollection(collection.DictStorageCollection):
     """Input storage based collection."""
 
     CREATE_UPDATE_SCHEMA = vol.Schema(STORAGE_FIELDS)
@@ -154,10 +153,10 @@ class CounterStorageCollection(collection.StorageCollection):
         """Suggest an ID based on the config."""
         return info[CONF_NAME]
 
-    async def _update_data(self, data: dict, update_data: dict) -> dict:
+    async def _update_data(self, item: dict, update_data: dict) -> dict:
         """Return a new updated data object."""
         update_data = self.CREATE_UPDATE_SCHEMA(update_data)
-        return {CONF_ID: data[CONF_ID]} | update_data
+        return {CONF_ID: item[CONF_ID]} | update_data
 
 
 class Counter(collection.CollectionEntity, RestoreEntity):

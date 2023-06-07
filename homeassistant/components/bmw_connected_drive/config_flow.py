@@ -1,6 +1,7 @@
 """Config flow for BMW ConnectedDrive integration."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import Any
 
 from bimmer_connected.api.authentication import MyBMWAuthentication
@@ -55,35 +56,60 @@ class BMWConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    _reauth_entry: config_entries.ConfigEntry | None = None
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle the initial step."""
         errors: dict[str, str] = {}
+
         if user_input is not None:
             unique_id = f"{user_input[CONF_REGION]}-{user_input[CONF_USERNAME]}"
 
-            await self.async_set_unique_id(unique_id)
-            self._abort_if_unique_id_configured()
+            if not self._reauth_entry:
+                await self.async_set_unique_id(unique_id)
+                self._abort_if_unique_id_configured()
 
             info = None
             try:
                 info = await validate_input(self.hass, user_input)
+                entry_data = {
+                    **user_input,
+                    CONF_REFRESH_TOKEN: info.get(CONF_REFRESH_TOKEN),
+                }
             except CannotConnect:
                 errors["base"] = "cannot_connect"
 
             if info:
+                if self._reauth_entry:
+                    self.hass.config_entries.async_update_entry(
+                        self._reauth_entry, data=entry_data
+                    )
+                    self.hass.async_create_task(
+                        self.hass.config_entries.async_reload(
+                            self._reauth_entry.entry_id
+                        )
+                    )
+                    return self.async_abort(reason="reauth_successful")
+
                 return self.async_create_entry(
                     title=info["title"],
-                    data={
-                        **user_input,
-                        CONF_REFRESH_TOKEN: info.get(CONF_REFRESH_TOKEN),
-                    },
+                    data=entry_data,
                 )
 
-        return self.async_show_form(
-            step_id="user", data_schema=DATA_SCHEMA, errors=errors
+        schema = self.add_suggested_values_to_schema(
+            DATA_SCHEMA, self._reauth_entry.data if self._reauth_entry else {}
         )
+
+        return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
+
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+        """Handle configuration by re-auth."""
+        self._reauth_entry = self.hass.config_entries.async_get_entry(
+            self.context["entry_id"]
+        )
+        return await self.async_step_user()
 
     @staticmethod
     @callback

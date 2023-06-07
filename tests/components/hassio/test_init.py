@@ -14,6 +14,7 @@ from homeassistant.components.hassio import (
     DOMAIN,
     STORAGE_KEY,
     async_get_addon_store_info,
+    hostname_from_addon_slug,
 )
 from homeassistant.components.hassio.handler import HassioAPIError
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
@@ -678,7 +679,7 @@ async def test_device_registry_calls(hass: HomeAssistant) -> None:
         config_entry.add_to_hass(hass)
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
-        assert len(dev_reg.devices) == 5
+        assert len(dev_reg.devices) == 6
 
     supervisor_mock_data = {
         "version": "1.0.0",
@@ -709,11 +710,11 @@ async def test_device_registry_calls(hass: HomeAssistant) -> None:
     ):
         async_fire_time_changed(hass, dt_util.now() + timedelta(hours=1))
         await hass.async_block_till_done()
-        assert len(dev_reg.devices) == 4
+        assert len(dev_reg.devices) == 5
 
         async_fire_time_changed(hass, dt_util.now() + timedelta(hours=2))
         await hass.async_block_till_done()
-        assert len(dev_reg.devices) == 4
+        assert len(dev_reg.devices) == 5
 
     supervisor_mock_data = {
         "version": "1.0.0",
@@ -763,7 +764,7 @@ async def test_device_registry_calls(hass: HomeAssistant) -> None:
     ):
         async_fire_time_changed(hass, dt_util.now() + timedelta(hours=3))
         await hass.async_block_till_done()
-        assert len(dev_reg.devices) == 4
+        assert len(dev_reg.devices) == 5
 
 
 async def test_coordinator_updates(
@@ -871,3 +872,12 @@ async def test_get_store_addon_info(
     data = await async_get_addon_store_info(hass, "test")
     assert data["name"] == "bla"
     assert aioclient_mock.call_count == 1
+
+
+def test_hostname_from_addon_slug() -> None:
+    """Test hostname_from_addon_slug."""
+    assert hostname_from_addon_slug("mqtt") == "mqtt"
+    assert (
+        hostname_from_addon_slug("core_silabs_multiprotocol")
+        == "core-silabs-multiprotocol"
+    )

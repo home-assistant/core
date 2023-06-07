@@ -56,6 +56,7 @@ from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.network import get_url
+from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 
@@ -379,7 +380,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             entity.async_update_token()
             entity.async_write_ha_state()
 
-    unsub = async_track_time_interval(hass, update_tokens, TOKEN_CHANGE_INTERVAL)
+    unsub = async_track_time_interval(
+        hass, update_tokens, TOKEN_CHANGE_INTERVAL, name="Camera update tokens"
+    )
 
     @callback
     def unsub_track_time_interval(_event: Event) -> None:
@@ -910,15 +913,16 @@ async def async_handle_snapshot_service(
 ) -> None:
     """Handle snapshot services calls."""
     hass = camera.hass
-    filename = service_call.data[ATTR_FILENAME]
+    filename: Template = service_call.data[ATTR_FILENAME]
     filename.hass = hass
 
     snapshot_file = filename.async_render(variables={ATTR_ENTITY_ID: camera})
 
     # check if we allow to access to that file
     if not hass.config.is_allowed_path(snapshot_file):
-        _LOGGER.error("Can't write %s, no access to path!", snapshot_file)
-        return
+        raise HomeAssistantError(
+            f"Cannot write `{snapshot_file}`, no access to path; `allowlist_external_dirs` may need to be adjusted in `configuration.yaml`"
+        )
 
     image = await camera.async_camera_image()
 

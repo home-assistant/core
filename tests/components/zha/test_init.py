@@ -120,7 +120,9 @@ async def test_config_depreciation(hass: HomeAssistant, zha_config) -> None:
     ],
 )
 @patch("homeassistant.components.zha.setup_quirks", Mock(return_value=True))
-@patch("homeassistant.components.zha.api.async_load_api", Mock(return_value=True))
+@patch(
+    "homeassistant.components.zha.websocket_api.async_load_api", Mock(return_value=True)
+)
 async def test_setup_with_v3_spaces_in_uri(
     hass: HomeAssistant, path: str, cleaned_path: str
 ) -> None:

@@ -189,12 +189,31 @@ async def test_sensor_with_forecast(hass: HomeAssistant) -> None:
     assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
     assert state.attributes.get(ATTR_ICON) == "mdi:weather-sunny"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UV_INDEX
-    assert state.attributes.get("level") == "Moderate"
+    assert state.attributes.get("level") == "moderate"
     assert state.attributes.get(ATTR_STATE_CLASS) is None
 
     entry = registry.async_get("sensor.home_uv_index_0d")
     assert entry
     assert entry.unique_id == "0123456-uvindex-0"
+
+    state = hass.states.get("sensor.home_air_quality_0d")
+    assert state
+    assert state.state == "good"
+    assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
+    assert state.attributes.get(ATTR_ICON) == "mdi:air-filter"
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.ENUM
+    assert state.attributes.get(ATTR_OPTIONS) == [
+        "good",
+        "hazardous",
+        "high",
+        "low",
+        "moderate",
+        "unhealthy",
+    ]
+
+    entry = registry.async_get("sensor.home_air_quality_0d")
+    assert entry
+    assert entry.unique_id == "0123456-airquality-0"
 
 
 async def test_sensor_disabled(hass: HomeAssistant) -> None:
@@ -303,13 +322,6 @@ async def test_sensor_enabled_without_forecast(hass: HomeAssistant) -> None:
         DOMAIN,
         "0123456-mold-0",
         suggested_object_id="home_mold_pollen_0d",
-        disabled_by=None,
-    )
-    registry.async_get_or_create(
-        SENSOR_DOMAIN,
-        DOMAIN,
-        "0123456-ozone-0",
-        suggested_object_id="home_ozone_0d",
         disabled_by=None,
     )
     registry.async_get_or_create(
@@ -506,7 +518,7 @@ async def test_sensor_enabled_without_forecast(hass: HomeAssistant) -> None:
         state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         == CONCENTRATION_PARTS_PER_CUBIC_METER
     )
-    assert state.attributes.get("level") == "Low"
+    assert state.attributes.get("level") == "low"
     assert state.attributes.get(ATTR_ICON) == "mdi:grass"
     assert state.attributes.get(ATTR_STATE_CLASS) is None
 
@@ -522,24 +534,12 @@ async def test_sensor_enabled_without_forecast(hass: HomeAssistant) -> None:
         state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         == CONCENTRATION_PARTS_PER_CUBIC_METER
     )
-    assert state.attributes.get("level") == "Low"
+    assert state.attributes.get("level") == "low"
     assert state.attributes.get(ATTR_ICON) == "mdi:blur"
 
     entry = registry.async_get("sensor.home_mold_pollen_0d")
     assert entry
     assert entry.unique_id == "0123456-mold-0"
-
-    state = hass.states.get("sensor.home_ozone_0d")
-    assert state
-    assert state.state == "32"
-    assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
-    assert state.attributes.get("level") == "Good"
-    assert state.attributes.get(ATTR_ICON) == "mdi:vector-triangle"
-    assert state.attributes.get(ATTR_STATE_CLASS) is None
-
-    entry = registry.async_get("sensor.home_ozone_0d")
-    assert entry
-    assert entry.unique_id == "0123456-ozone-0"
 
     state = hass.states.get("sensor.home_ragweed_pollen_0d")
     assert state
@@ -549,7 +549,7 @@ async def test_sensor_enabled_without_forecast(hass: HomeAssistant) -> None:
         state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         == CONCENTRATION_PARTS_PER_CUBIC_METER
     )
-    assert state.attributes.get("level") == "Low"
+    assert state.attributes.get("level") == "low"
     assert state.attributes.get(ATTR_ICON) == "mdi:sprout"
 
     entry = registry.async_get("sensor.home_ragweed_pollen_0d")
@@ -587,7 +587,7 @@ async def test_sensor_enabled_without_forecast(hass: HomeAssistant) -> None:
         state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         == CONCENTRATION_PARTS_PER_CUBIC_METER
     )
-    assert state.attributes.get("level") == "Low"
+    assert state.attributes.get("level") == "low"
     assert state.attributes.get(ATTR_ICON) == "mdi:tree-outline"
     assert state.attributes.get(ATTR_STATE_CLASS) is None
 
@@ -741,10 +741,20 @@ async def test_sensor_imperial_units(hass: HomeAssistant) -> None:
 
     state = hass.states.get("sensor.home_cloud_ceiling")
     assert state
-    assert state.state == "10500.0"
-    assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
-    assert state.attributes.get(ATTR_ICON) == "mdi:weather-fog"
+    assert state.state == "10498.687664042"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfLength.FEET
+
+    state = hass.states.get("sensor.home_wind")
+    assert state
+    assert state.state == "9.0"
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfSpeed.MILES_PER_HOUR
+
+    state = hass.states.get("sensor.home_realfeel_temperature")
+    assert state
+    assert state.state == "77.2"
+    assert (
+        state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfTemperature.FAHRENHEIT
+    )
 
 
 async def test_state_update(hass: HomeAssistant) -> None:

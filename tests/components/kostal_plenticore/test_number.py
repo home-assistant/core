@@ -1,5 +1,4 @@
 """Test Kostal Plenticore number."""
-
 from collections.abc import Generator
 from datetime import timedelta
 from unittest.mock import patch
@@ -90,7 +89,7 @@ async def test_setup_all_entries(
     mock_config_entry: MockConfigEntry,
     mock_plenticore_client: ApiClient,
     mock_get_setting_values: list,
-    entity_registry_enabled_by_default,
+    entity_registry_enabled_by_default: None,
 ) -> None:
     """Test if all available entries are setup."""
 
@@ -109,7 +108,7 @@ async def test_setup_no_entries(
     mock_config_entry: MockConfigEntry,
     mock_plenticore_client: ApiClient,
     mock_get_setting_values: list,
-    entity_registry_enabled_by_default,
+    entity_registry_enabled_by_default: None,
 ) -> None:
     """Test that no entries are setup if Plenticore does not provide data."""
 
@@ -130,7 +129,7 @@ async def test_number_has_value(
     mock_config_entry: MockConfigEntry,
     mock_plenticore_client: ApiClient,
     mock_get_setting_values: list,
-    entity_registry_enabled_by_default,
+    entity_registry_enabled_by_default: None,
 ) -> None:
     """Test if number has a value if data is provided on update."""
 
@@ -155,7 +154,7 @@ async def test_number_is_unavailable(
     mock_config_entry: MockConfigEntry,
     mock_plenticore_client: ApiClient,
     mock_get_setting_values: list,
-    entity_registry_enabled_by_default,
+    entity_registry_enabled_by_default: None,
 ) -> None:
     """Test if number is unavailable if no data is provided on update."""
 
@@ -176,7 +175,7 @@ async def test_set_value(
     mock_config_entry: MockConfigEntry,
     mock_plenticore_client: ApiClient,
     mock_get_setting_values: list,
-    entity_registry_enabled_by_default,
+    entity_registry_enabled_by_default: None,
 ) -> None:
     """Test if a new value could be set."""
 

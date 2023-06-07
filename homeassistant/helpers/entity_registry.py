@@ -12,6 +12,7 @@ from __future__ import annotations
 from collections import UserDict
 from collections.abc import Callable, Iterable, Mapping, ValuesView
 import logging
+from types import MappingProxyType
 from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 import attr
@@ -41,13 +42,11 @@ from homeassistant.core import (
     valid_entity_id,
 )
 from homeassistant.exceptions import MaxLengthExceeded
-from homeassistant.loader import bind_hass
 from homeassistant.util import slugify, uuid as uuid_util
 from homeassistant.util.json import format_unserializable_data
 
 from . import device_registry as dr, storage
 from .device_registry import EVENT_DEVICE_REGISTRY_UPDATED
-from .frame import report
 from .json import JSON_DUMP, find_paths_unserializable_data
 from .typing import UNDEFINED, UndefinedType
 
@@ -111,6 +110,29 @@ DISLAY_DICT_OPTIONAL = (
 )
 
 
+class _EntityOptions(UserDict[str, MappingProxyType]):
+    """Container for entity options."""
+
+    def __init__(self, data: Mapping[str, Mapping] | None) -> None:
+        """Initialize."""
+        super().__init__()
+        if data is None:
+            return
+        self.data = {key: MappingProxyType(val) for key, val in data.items()}
+
+    def __setitem__(self, key: str, entry: Mapping) -> None:
+        """Add an item."""
+        raise NotImplementedError
+
+    def __delitem__(self, key: str) -> None:
+        """Remove an item."""
+        raise NotImplementedError
+
+    def as_dict(self) -> dict[str, dict]:
+        """Return dictionary version."""
+        return {key: dict(val) for key, val in self.data.items()}
+
+
 @attr.s(slots=True, frozen=True)
 class RegistryEntry:
     """Entity Registry Entry."""
@@ -132,10 +154,7 @@ class RegistryEntry:
     id: str = attr.ib(factory=uuid_util.random_uuid_hex)
     has_entity_name: bool = attr.ib(default=False)
     name: str | None = attr.ib(default=None)
-    options: EntityOptionsType = attr.ib(
-        default=None,
-        converter=attr.converters.default_if_none(factory=dict),  # type: ignore[misc]
-    )
+    options: _EntityOptions = attr.ib(default=None, converter=_EntityOptions)
     # As set by integration
     original_device_class: str | None = attr.ib(default=None)
     original_icon: str | None = attr.ib(default=None)
@@ -287,6 +306,26 @@ class RegistryEntry:
             attrs[ATTR_UNIT_OF_MEASUREMENT] = self.unit_of_measurement
 
         hass.states.async_set(self.entity_id, STATE_UNAVAILABLE, attrs)
+
+    def async_friendly_name(self, hass: HomeAssistant) -> str | None:
+        """Return the friendly name.
+
+        If self.name is not None, this returns self.name
+        If has_entity_name is False, self.original_name
+        If has_entity_name is True, this returns device.name + self.original_name
+        """
+        if not self.has_entity_name or self.name is not None:
+            return self.name or self.original_name
+
+        device_registry = dr.async_get(hass)
+        if not (device_id := self.device_id) or not (
+            device_entry := device_registry.async_get(device_id)
+        ):
+            return self.original_name
+
+        if not (original_name := self.original_name):
+            return device_entry.name_by_user or device_entry.name
+        return f"{device_entry.name_by_user or device_entry.name} {original_name}"
 
 
 class EntityRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
@@ -930,7 +969,7 @@ class EntityRegistry:
         If the domain options are set to None, they will be removed.
         """
         old = self.entities[entity_id]
-        new_options = {
+        new_options: dict[str, Mapping] = {
             key: value for key, value in old.options.items() if key != domain
         }
         if options is not None:
@@ -1010,7 +1049,7 @@ class EntityRegistry:
                 "id": entry.id,
                 "has_entity_name": entry.has_entity_name,
                 "name": entry.name,
-                "options": entry.options,
+                "options": entry.options.as_dict(),
                 "original_device_class": entry.original_device_class,
                 "original_icon": entry.original_icon,
                 "original_name": entry.original_name,
@@ -1054,19 +1093,6 @@ async def async_load(hass: HomeAssistant) -> None:
     assert DATA_REGISTRY not in hass.data
     hass.data[DATA_REGISTRY] = EntityRegistry(hass)
     await hass.data[DATA_REGISTRY].async_load()
-
-
-@bind_hass
-async def async_get_registry(hass: HomeAssistant) -> EntityRegistry:
-    """Get entity registry.
-
-    This is deprecated and will be removed in the future. Use async_get instead.
-    """
-    report(
-        "uses deprecated `async_get_registry` to access entity registry, use async_get"
-        " instead"
-    )
-    return async_get(hass)
 
 
 @callback

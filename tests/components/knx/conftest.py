@@ -6,7 +6,7 @@ from unittest.mock import DEFAULT, AsyncMock, Mock, patch
 
 import pytest
 from xknx import XKNX
-from xknx.core import XknxConnectionState
+from xknx.core import XknxConnectionState, XknxConnectionType
 from xknx.dpt import DPTArray, DPTBinary
 from xknx.io import DEFAULT_MCAST_GRP, DEFAULT_MCAST_PORT
 from xknx.telegram import Telegram, TelegramDirection
@@ -67,7 +67,8 @@ class KNXTestKit:
             # set XknxConnectionState.CONNECTED to avoid `unavailable` entities at startup
             # and start StateUpdater. This would be awaited on normal startup too.
             await self.xknx.connection_manager.connection_state_changed(
-                XknxConnectionState.CONNECTED
+                state=XknxConnectionState.CONNECTED,
+                connection_type=XknxConnectionType.TUNNEL_TCP,
             )
 
         def knx_ip_interface_mock():

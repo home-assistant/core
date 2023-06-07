@@ -1,0 +1,90 @@
+{
+  "config": {
+    "abort": {
+      "incorrect_province": "Incorrect subdivision from yaml import"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "name": "[%key:common::config_flow::data::name%]",
+          "country": "Country"
+        }
+      },
+      "options": {
+        "data": {
+          "excludes": "Excludes",
+          "days_offset": "Offset",
+          "workdays": "Workdays",
+          "add_holidays": "Add holidays",
+          "remove_holidays": "Remove Holidays",
+          "province": "Subdivision of country"
+        },
+        "data_description": {
+          "excludes": "List of workdays to exclude",
+          "days_offset": "Days offset",
+          "workdays": "List of workdays",
+          "add_holidays": "Add custom holidays as YYYY-MM-DD",
+          "remove_holidays": "Remove holidays as YYYY-MM-DD or by using partial of name",
+          "province": "State, Terroritory, Province, Region of Country"
+        }
+      }
+    },
+    "error": {
+      "add_holiday_error": "Incorrect format on date (YYYY-MM-DD)",
+      "remove_holiday_error": "Incorrect format on date (YYYY-MM-DD) or holiday name not found",
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "excludes": "[%key:component::workday::config::step::options::data::excludes%]",
+          "days_offset": "[%key:component::workday::config::step::options::data::days_offset%]",
+          "workdays": "[%key:component::workday::config::step::options::data::workdays%]",
+          "add_holidays": "[%key:component::workday::config::step::options::data::add_holidays%]",
+          "remove_holidays": "[%key:component::workday::config::step::options::data::remove_holidays%]",
+          "province": "[%key:component::workday::config::step::options::data::province%]"
+        },
+        "data_description": {
+          "excludes": "[%key:component::workday::config::step::options::data_description::excludes%]",
+          "days_offset": "[%key:component::workday::config::step::options::data_description::days_offset%]",
+          "workdays": "[%key:component::workday::config::step::options::data_description::workdays%]",
+          "add_holidays": "[%key:component::workday::config::step::options::data_description::add_holidays%]",
+          "remove_holidays": "[%key:component::workday::config::step::options::data_description::remove_holidays%]",
+          "province": "[%key:component::workday::config::step::options::data_description::province%]"
+        }
+      }
+    },
+    "error": {
+      "add_holiday_error": "Incorrect format on date (YYYY-MM-DD)",
+      "remove_holiday_error": "Incorrect format on date (YYYY-MM-DD) or holiday name not found",
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+    }
+  },
+  "issues": {
+    "deprecated_yaml": {
+      "title": "The Workday YAML configuration is being removed",
+      "description": "Configuring Workday using YAML is being removed.\n\nYour existing YAML configuration has been imported into the UI automatically.\n\nRemove the Workday YAML configuration from your configuration.yaml file and restart Home Assistant to fix this issue."
+    }
+  },
+  "selector": {
+    "province": {
+      "options": {
+        "none": "No subdivision"
+      }
+    },
+    "days": {
+      "options": {
+        "mon": "Monday",
+        "tue": "Tuesday",
+        "wed": "Wednesday",
+        "thu": "Thursday",
+        "fri": "Friday",
+        "sat": "Saturday",
+        "sun": "Sunday",
+        "holiday": "Holidays"
+      }
+    }
+  }
+}

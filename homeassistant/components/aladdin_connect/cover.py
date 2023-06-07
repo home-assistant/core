@@ -4,7 +4,7 @@ from __future__ import annotations
 from datetime import timedelta
 from typing import Any
 
-from AIOAladdinConnect import AladdinConnectClient
+from AIOAladdinConnect import AladdinConnectClient, session_manager
 
 from homeassistant.components.cover import CoverDeviceClass, CoverEntity
 from homeassistant.config_entries import ConfigEntry
@@ -46,7 +46,7 @@ class AladdinDevice(CoverEntity):
     ) -> None:
         """Initialize the Aladdin Connect cover."""
         self._acc = acc
-
+        self._entry_id = entry.entry_id
         self._device_id = device["device_id"]
         self._number = device["door_number"]
         self._name = device["name"]
@@ -85,7 +85,18 @@ class AladdinDevice(CoverEntity):
 
     async def async_update(self) -> None:
         """Update status of cover."""
-        await self._acc.get_doors(self._serial)
+        try:
+            await self._acc.get_doors(self._serial)
+            self._attr_available = True
+
+        except session_manager.ConnectionError:
+            self._attr_available = False
+
+        except session_manager.InvalidPasswordError:
+            self._attr_available = False
+            await self.hass.async_create_task(
+                self.hass.config_entries.async_reload(self._entry_id)
+            )
 
     @property
     def is_closed(self) -> bool | None:

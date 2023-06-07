@@ -27,7 +27,7 @@ ATTR_QUANTITY = "quantity"
 
 SENSOR_DESCRIPTION = SensorEntityDescription(
     key=SENSOR_TYPE_NEXT_PICKUP,
-    name="Ridwell pickup",
+    name="Next Ridwell pickup",
     device_class=SensorDeviceClass.DATE,
 )
 
@@ -54,9 +54,10 @@ class RidwellSensor(RidwellEntity, SensorEntity):
         description: SensorEntityDescription,
     ) -> None:
         """Initialize."""
-        super().__init__(coordinator, account, description)
+        super().__init__(coordinator, account)
 
-        self._attr_name = f"{description.name} ({account.address['street1']})"
+        self._attr_unique_id = f"{account.account_id}_{description.key}"
+        self.entity_description = description
 
     @property
     def extra_state_attributes(self) -> Mapping[str, Any]:

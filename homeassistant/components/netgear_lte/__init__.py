@@ -221,7 +221,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     netgear_lte_config = config[DOMAIN]
 
     # Set up each modem
-    tasks = [_setup_lte(hass, lte_conf) for lte_conf in netgear_lte_config]
+    tasks = [
+        hass.async_create_task(_setup_lte(hass, lte_conf))
+        for lte_conf in netgear_lte_config
+    ]
     await asyncio.wait(tasks)
 
     # Load platforms for each modem

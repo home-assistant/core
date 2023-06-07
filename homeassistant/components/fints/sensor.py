@@ -272,7 +272,7 @@ class FinTsHoldingsAccount(SensorEntity):
         self._attr_native_value = sum(h.total_value for h in self._holdings)
 
     @property
-    def extra_state_attributes(self) -> dict:
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Additional attributes of the sensor.
 
         Lists each holding of the account with the current value.

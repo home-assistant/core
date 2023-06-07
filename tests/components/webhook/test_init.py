@@ -140,7 +140,9 @@ async def test_webhook_head(hass: HomeAssistant, mock_client) -> None:
         """Handle webhook."""
         hooks.append(args)
 
-    webhook.async_register(hass, "test", "Test hook", webhook_id, handle)
+    webhook.async_register(
+        hass, "test", "Test hook", webhook_id, handle, allowed_methods=["HEAD"]
+    )
 
     resp = await mock_client.head(f"/api/webhook/{webhook_id}")
     assert resp.status == HTTPStatus.OK
@@ -148,6 +150,58 @@ async def test_webhook_head(hass: HomeAssistant, mock_client) -> None:
     assert hooks[0][0] is hass
     assert hooks[0][1] == webhook_id
     assert hooks[0][2].method == "HEAD"
+
+    # Test that status is HTTPStatus.OK even when HEAD is not allowed.
+    webhook.async_unregister(hass, webhook_id)
+    webhook.async_register(
+        hass, "test", "Test hook", webhook_id, handle, allowed_methods=["PUT"]
+    )
+    resp = await mock_client.head(f"/api/webhook/{webhook_id}")
+    assert resp.status == HTTPStatus.OK
+    assert len(hooks) == 1  # Should not have been called
+
+
+async def test_webhook_get(hass, mock_client):
+    """Test sending a get request to a webhook."""
+    hooks = []
+    webhook_id = webhook.async_generate_id()
+
+    async def handle(*args):
+        """Handle webhook."""
+        hooks.append(args)
+
+    webhook.async_register(
+        hass, "test", "Test hook", webhook_id, handle, allowed_methods=["GET"]
+    )
+
+    resp = await mock_client.get(f"/api/webhook/{webhook_id}")
+    assert resp.status == HTTPStatus.OK
+    assert len(hooks) == 1
+    assert hooks[0][0] is hass
+    assert hooks[0][1] == webhook_id
+    assert hooks[0][2].method == "GET"
+
+    # Test that status is HTTPStatus.METHOD_NOT_ALLOWED even when GET is not allowed.
+    webhook.async_unregister(hass, webhook_id)
+    webhook.async_register(
+        hass, "test", "Test hook", webhook_id, handle, allowed_methods=["PUT"]
+    )
+    resp = await mock_client.get(f"/api/webhook/{webhook_id}")
+    assert resp.status == HTTPStatus.METHOD_NOT_ALLOWED
+    assert len(hooks) == 1  # Should not have been called
+
+
+async def test_webhook_not_allowed_method(hass):
+    """Test that an exception is raised if an unsupported method is used."""
+    webhook_id = webhook.async_generate_id()
+
+    async def handle(*args):
+        pass
+
+    with pytest.raises(ValueError):
+        webhook.async_register(
+            hass, "test", "Test hook", webhook_id, handle, allowed_methods=["PATCH"]
+        )
 
 
 async def test_webhook_local_only(hass: HomeAssistant, mock_client) -> None:
@@ -192,7 +246,15 @@ async def test_listing_webhook(
     client = await hass_ws_client(hass, hass_access_token)
 
     webhook.async_register(hass, "test", "Test hook", "my-id", None)
-    webhook.async_register(hass, "test", "Test hook", "my-2", None, local_only=True)
+    webhook.async_register(
+        hass,
+        "test",
+        "Test hook",
+        "my-2",
+        None,
+        local_only=True,
+        allowed_methods=["GET"],
+    )
 
     await client.send_json({"id": 5, "type": "webhook/list"})
 
@@ -205,12 +267,14 @@ async def test_listing_webhook(
             "domain": "test",
             "name": "Test hook",
             "local_only": False,
+            "allowed_methods": ["POST", "PUT"],
         },
         {
             "webhook_id": "my-2",
             "domain": "test",
             "name": "Test hook",
             "local_only": True,
+            "allowed_methods": ["GET"],
         },
     ]
 

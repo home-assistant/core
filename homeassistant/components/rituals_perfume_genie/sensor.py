@@ -1,16 +1,14 @@
 """Support for Rituals Perfume Genie sensors."""
 from __future__ import annotations
 
-from pyrituals import Diffuser
-
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import RitualsDataUpdateCoordinator
-from .const import COORDINATORS, DEVICES, DOMAIN
+from .const import DOMAIN
+from .coordinator import RitualsDataUpdateCoordinator
 from .entity import DiffuserEntity
 
 BATTERY_SUFFIX = " Battery"
@@ -25,16 +23,21 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the diffuser sensors."""
-    diffusers = hass.data[DOMAIN][config_entry.entry_id][DEVICES]
-    coordinators = hass.data[DOMAIN][config_entry.entry_id][COORDINATORS]
+    coordinators: dict[str, RitualsDataUpdateCoordinator] = hass.data[DOMAIN][
+        config_entry.entry_id
+    ]
+
     entities: list[DiffuserEntity] = []
-    for hublot, diffuser in diffusers.items():
-        coordinator = coordinators[hublot]
-        entities.append(DiffuserPerfumeSensor(diffuser, coordinator))
-        entities.append(DiffuserFillSensor(diffuser, coordinator))
-        entities.append(DiffuserWifiSensor(diffuser, coordinator))
-        if diffuser.has_battery:
-            entities.append(DiffuserBatterySensor(diffuser, coordinator))
+    for coordinator in coordinators.values():
+        entities.extend(
+            [
+                DiffuserPerfumeSensor(coordinator),
+                DiffuserFillSensor(coordinator),
+                DiffuserWifiSensor(coordinator),
+            ]
+        )
+        if coordinator.diffuser.has_battery:
+            entities.append(DiffuserBatterySensor(coordinator))
 
     async_add_entities(entities)
 
@@ -42,45 +45,41 @@ async def async_setup_entry(
 class DiffuserPerfumeSensor(DiffuserEntity, SensorEntity):
     """Representation of a diffuser perfume sensor."""
 
-    def __init__(
-        self, diffuser: Diffuser, coordinator: RitualsDataUpdateCoordinator
-    ) -> None:
+    def __init__(self, coordinator: RitualsDataUpdateCoordinator) -> None:
         """Initialize the perfume sensor."""
-        super().__init__(diffuser, coordinator, PERFUME_SUFFIX)
+        super().__init__(coordinator, PERFUME_SUFFIX)
 
     @property
     def icon(self) -> str:
         """Return the perfume sensor icon."""
-        if self._diffuser.has_cartridge:
+        if self.coordinator.diffuser.has_cartridge:
             return "mdi:tag-text"
         return "mdi:tag-remove"
 
     @property
     def native_value(self) -> str:
         """Return the state of the perfume sensor."""
-        return self._diffuser.perfume
+        return self.coordinator.diffuser.perfume
 
 
 class DiffuserFillSensor(DiffuserEntity, SensorEntity):
     """Representation of a diffuser fill sensor."""
 
-    def __init__(
-        self, diffuser: Diffuser, coordinator: RitualsDataUpdateCoordinator
-    ) -> None:
+    def __init__(self, coordinator: RitualsDataUpdateCoordinator) -> None:
         """Initialize the fill sensor."""
-        super().__init__(diffuser, coordinator, FILL_SUFFIX)
+        super().__init__(coordinator, FILL_SUFFIX)
 
     @property
     def icon(self) -> str:
         """Return the fill sensor icon."""
-        if self._diffuser.has_cartridge:
+        if self.coordinator.diffuser.has_cartridge:
             return "mdi:beaker"
         return "mdi:beaker-question"
 
     @property
     def native_value(self) -> str:
         """Return the state of the fill sensor."""
-        return self._diffuser.fill
+        return self.coordinator.diffuser.fill
 
 
 class DiffuserBatterySensor(DiffuserEntity, SensorEntity):
@@ -90,16 +89,14 @@ class DiffuserBatterySensor(DiffuserEntity, SensorEntity):
     _attr_native_unit_of_measurement = PERCENTAGE
     _attr_entity_category = EntityCategory.DIAGNOSTIC
 
-    def __init__(
-        self, diffuser: Diffuser, coordinator: RitualsDataUpdateCoordinator
-    ) -> None:
+    def __init__(self, coordinator: RitualsDataUpdateCoordinator) -> None:
         """Initialize the battery sensor."""
-        super().__init__(diffuser, coordinator, BATTERY_SUFFIX)
+        super().__init__(coordinator, BATTERY_SUFFIX)
 
     @property
     def native_value(self) -> int:
         """Return the state of the battery sensor."""
-        return self._diffuser.battery_percentage
+        return self.coordinator.diffuser.battery_percentage
 
 
 class DiffuserWifiSensor(DiffuserEntity, SensorEntity):
@@ -108,13 +105,11 @@ class DiffuserWifiSensor(DiffuserEntity, SensorEntity):
     _attr_native_unit_of_measurement = PERCENTAGE
     _attr_entity_category = EntityCategory.DIAGNOSTIC
 
-    def __init__(
-        self, diffuser: Diffuser, coordinator: RitualsDataUpdateCoordinator
-    ) -> None:
+    def __init__(self, coordinator: RitualsDataUpdateCoordinator) -> None:
         """Initialize the wifi sensor."""
-        super().__init__(diffuser, coordinator, WIFI_SUFFIX)
+        super().__init__(coordinator, WIFI_SUFFIX)
 
     @property
     def native_value(self) -> int:
         """Return the state of the wifi sensor."""
-        return self._diffuser.wifi_percentage
+        return self.coordinator.diffuser.wifi_percentage

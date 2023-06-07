@@ -49,10 +49,10 @@ from tests.typing import (
 )
 async def test_subscribing_config_topic(
     hass: HomeAssistant,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
 ) -> None:
     """Test setting up discovery."""
-    mqtt_mock = await mqtt_mock_entry_no_yaml_config()
+    mqtt_mock = await mqtt_mock_entry()
     entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
 
     discovery_topic = "homeassistant"
@@ -77,13 +77,13 @@ async def test_subscribing_config_topic(
 )
 async def test_invalid_topic(
     hass: HomeAssistant,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
     caplog: pytest.LogCaptureFixture,
     topic: str,
     log: bool,
 ) -> None:
     """Test sending to invalid topic."""
-    await mqtt_mock_entry_no_yaml_config()
+    await mqtt_mock_entry()
     with patch(
         "homeassistant.components.mqtt.discovery.async_dispatcher_send"
     ) as mock_dispatcher_send:
@@ -104,11 +104,11 @@ async def test_invalid_topic(
 @patch("homeassistant.components.mqtt.PLATFORMS", [Platform.BINARY_SENSOR])
 async def test_invalid_json(
     hass: HomeAssistant,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test sending in invalid JSON."""
-    await mqtt_mock_entry_no_yaml_config()
+    await mqtt_mock_entry()
     with patch(
         "homeassistant.components.mqtt.discovery.async_dispatcher_send"
     ) as mock_dispatcher_send:
@@ -124,11 +124,11 @@ async def test_invalid_json(
 
 async def test_only_valid_components(
     hass: HomeAssistant,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test for a valid component."""
-    await mqtt_mock_entry_no_yaml_config()
+    await mqtt_mock_entry()
     with patch(
         "homeassistant.components.mqtt.discovery.async_dispatcher_send"
     ) as mock_dispatcher_send:
@@ -150,10 +150,10 @@ async def test_only_valid_components(
 @patch("homeassistant.components.mqtt.PLATFORMS", [Platform.BINARY_SENSOR])
 async def test_correct_config_discovery(
     hass: HomeAssistant,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
 ) -> None:
     """Test sending in correct JSON."""
-    await mqtt_mock_entry_no_yaml_config()
+    await mqtt_mock_entry()
     async_fire_mqtt_message(
         hass,
         "homeassistant/binary_sensor/bla/config",
@@ -171,10 +171,10 @@ async def test_correct_config_discovery(
 @patch("homeassistant.components.mqtt.PLATFORMS", [Platform.FAN])
 async def test_discover_fan(
     hass: HomeAssistant,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
 ) -> None:
     """Test discovering an MQTT fan."""
-    await mqtt_mock_entry_no_yaml_config()
+    await mqtt_mock_entry()
     async_fire_mqtt_message(
         hass,
         "homeassistant/fan/bla/config",
@@ -192,11 +192,11 @@ async def test_discover_fan(
 @patch("homeassistant.components.mqtt.PLATFORMS", [Platform.CLIMATE])
 async def test_discover_climate(
     hass: HomeAssistant,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test discovering an MQTT climate component."""
-    await mqtt_mock_entry_no_yaml_config()
+    await mqtt_mock_entry()
     data = (
         '{ "name": "ClimateTest",'
         '  "current_temperature_topic": "climate/bla/current_temp",'
@@ -216,10 +216,10 @@ async def test_discover_climate(
 @patch("homeassistant.components.mqtt.PLATFORMS", [Platform.ALARM_CONTROL_PANEL])
 async def test_discover_alarm_control_panel(
     hass: HomeAssistant,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
 ) -> None:
     """Test discovering an MQTT alarm control panel component."""
-    await mqtt_mock_entry_no_yaml_config()
+    await mqtt_mock_entry()
     data = (
         '{ "name": "AlarmControlPanelTest",'
         '  "state_topic": "test_topic",'
@@ -385,7 +385,7 @@ async def test_discover_alarm_control_panel(
 )
 async def test_discovery_with_object_id(
     hass: HomeAssistant,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
     topic: str,
     config: str,
     entity_id: str,
@@ -393,7 +393,7 @@ async def test_discovery_with_object_id(
     domain: str,
 ) -> None:
     """Test discovering an MQTT entity with object_id."""
-    await mqtt_mock_entry_no_yaml_config()
+    await mqtt_mock_entry()
     async_fire_mqtt_message(hass, topic, config)
     await hass.async_block_till_done()
 
@@ -407,10 +407,10 @@ async def test_discovery_with_object_id(
 @patch("homeassistant.components.mqtt.PLATFORMS", [Platform.BINARY_SENSOR])
 async def test_discovery_incl_nodeid(
     hass: HomeAssistant,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
 ) -> None:
     """Test sending in correct JSON with optional node_id included."""
-    await mqtt_mock_entry_no_yaml_config()
+    await mqtt_mock_entry()
     async_fire_mqtt_message(
         hass,
         "homeassistant/binary_sensor/my_node_id/bla/config",
@@ -430,11 +430,11 @@ async def test_discovery_incl_nodeid(
 @patch("homeassistant.components.mqtt.PLATFORMS", [Platform.BINARY_SENSOR])
 async def test_non_duplicate_discovery(
     hass: HomeAssistant,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test for a non duplicate component."""
-    await mqtt_mock_entry_no_yaml_config()
+    await mqtt_mock_entry()
     async_fire_mqtt_message(
         hass,
         "homeassistant/binary_sensor/bla/config",
@@ -459,10 +459,10 @@ async def test_non_duplicate_discovery(
 @patch("homeassistant.components.mqtt.PLATFORMS", [Platform.BINARY_SENSOR])
 async def test_removal(
     hass: HomeAssistant,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
 ) -> None:
     """Test removal of component through empty discovery message."""
-    await mqtt_mock_entry_no_yaml_config()
+    await mqtt_mock_entry()
     async_fire_mqtt_message(
         hass,
         "homeassistant/binary_sensor/bla/config",
@@ -481,10 +481,10 @@ async def test_removal(
 @patch("homeassistant.components.mqtt.PLATFORMS", [Platform.BINARY_SENSOR])
 async def test_rediscover(
     hass: HomeAssistant,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
 ) -> None:
     """Test rediscover of removed component."""
-    await mqtt_mock_entry_no_yaml_config()
+    await mqtt_mock_entry()
     async_fire_mqtt_message(
         hass,
         "homeassistant/binary_sensor/bla/config",
@@ -512,10 +512,10 @@ async def test_rediscover(
 @patch("homeassistant.components.mqtt.PLATFORMS", [Platform.BINARY_SENSOR])
 async def test_rapid_rediscover(
     hass: HomeAssistant,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
 ) -> None:
     """Test immediate rediscover of removed component."""
-    await mqtt_mock_entry_no_yaml_config()
+    await mqtt_mock_entry()
     events = async_capture_events(hass, EVENT_STATE_CHANGED)
 
     async_fire_mqtt_message(
@@ -565,10 +565,10 @@ async def test_rapid_rediscover(
 @patch("homeassistant.components.mqtt.PLATFORMS", [Platform.BINARY_SENSOR])
 async def test_rapid_rediscover_unique(
     hass: HomeAssistant,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
 ) -> None:
     """Test immediate rediscover of removed component."""
-    await mqtt_mock_entry_no_yaml_config()
+    await mqtt_mock_entry()
     events = []
 
     @callback
@@ -628,10 +628,10 @@ async def test_rapid_rediscover_unique(
 @patch("homeassistant.components.mqtt.PLATFORMS", [Platform.BINARY_SENSOR])
 async def test_rapid_reconfigure(
     hass: HomeAssistant,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
 ) -> None:
     """Test immediate reconfigure of added component."""
-    await mqtt_mock_entry_no_yaml_config()
+    await mqtt_mock_entry()
     events = []
 
     @callback
@@ -684,11 +684,11 @@ async def test_rapid_reconfigure(
 @patch("homeassistant.components.mqtt.PLATFORMS", [Platform.BINARY_SENSOR])
 async def test_duplicate_removal(
     hass: HomeAssistant,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test for a non duplicate component."""
-    await mqtt_mock_entry_no_yaml_config()
+    await mqtt_mock_entry()
     async_fire_mqtt_message(
         hass,
         "homeassistant/binary_sensor/bla/config",
@@ -710,10 +710,10 @@ async def test_cleanup_device(
     hass_ws_client: WebSocketGenerator,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
 ) -> None:
     """Test discvered device is cleaned up when entry removed from device."""
-    mqtt_mock = await mqtt_mock_entry_no_yaml_config()
+    mqtt_mock = await mqtt_mock_entry()
     assert await async_setup_component(hass, "config", {})
     ws_client = await hass_ws_client(hass)
 
@@ -772,10 +772,10 @@ async def test_cleanup_device_mqtt(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
 ) -> None:
     """Test discvered device is cleaned up when removed through MQTT."""
-    mqtt_mock = await mqtt_mock_entry_no_yaml_config()
+    mqtt_mock = await mqtt_mock_entry()
     data = (
         '{ "device":{"identifiers":["0AFFD2"]},'
         '  "state_topic": "foobar/sensor",'
@@ -819,12 +819,12 @@ async def test_cleanup_device_multiple_config_entries(
     hass_ws_client: WebSocketGenerator,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
 ) -> None:
     """Test discovered device is cleaned up when entry removed from device."""
     assert await async_setup_component(hass, "config", {})
     await hass.async_block_till_done()
-    mqtt_mock = await mqtt_mock_entry_no_yaml_config()
+    mqtt_mock = await mqtt_mock_entry()
     ws_client = await hass_ws_client(hass)
 
     config_entry = MockConfigEntry(domain="test", data={})
@@ -924,10 +924,10 @@ async def test_cleanup_device_multiple_config_entries_mqtt(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
 ) -> None:
     """Test discovered device is cleaned up when removed through MQTT."""
-    mqtt_mock = await mqtt_mock_entry_no_yaml_config()
+    mqtt_mock = await mqtt_mock_entry()
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
     device_entry = device_registry.async_get_or_create(
@@ -1008,10 +1008,10 @@ async def test_cleanup_device_multiple_config_entries_mqtt(
 @patch("homeassistant.components.mqtt.PLATFORMS", [Platform.SWITCH])
 async def test_discovery_expansion(
     hass: HomeAssistant,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
 ) -> None:
     """Test expansion of abbreviated discovery payload."""
-    await mqtt_mock_entry_no_yaml_config()
+    await mqtt_mock_entry()
     data = (
         '{ "~": "some/base/topic",'
         '  "name": "DiscoveryExpansionTest1",'
@@ -1071,10 +1071,10 @@ async def test_discovery_expansion(
 @patch("homeassistant.components.mqtt.PLATFORMS", [Platform.SWITCH])
 async def test_discovery_expansion_2(
     hass: HomeAssistant,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
 ) -> None:
     """Test expansion of abbreviated discovery payload."""
-    await mqtt_mock_entry_no_yaml_config()
+    await mqtt_mock_entry()
     data = (
         '{ "~": "some/base/topic",'
         '  "name": "DiscoveryExpansionTest1",'
@@ -1117,11 +1117,11 @@ async def test_discovery_expansion_2(
 @pytest.mark.no_fail_on_log_exception
 async def test_discovery_expansion_3(
     hass: HomeAssistant,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test expansion of broken discovery payload."""
-    await mqtt_mock_entry_no_yaml_config()
+    await mqtt_mock_entry()
     data = (
         '{ "~": "some/base/topic",'
         '  "name": "DiscoveryExpansionTest1",'
@@ -1153,10 +1153,10 @@ async def test_discovery_expansion_3(
 
 async def test_discovery_expansion_without_encoding_and_value_template_1(
     hass: HomeAssistant,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
 ) -> None:
     """Test expansion of raw availability payload with a template as list."""
-    await mqtt_mock_entry_no_yaml_config()
+    await mqtt_mock_entry()
     data = (
         '{ "~": "some/base/topic",'
         '  "name": "DiscoveryExpansionTest1",'
@@ -1205,10 +1205,10 @@ async def test_discovery_expansion_without_encoding_and_value_template_1(
 @patch("homeassistant.components.mqtt.PLATFORMS", [Platform.SWITCH])
 async def test_discovery_expansion_without_encoding_and_value_template_2(
     hass: HomeAssistant,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
 ) -> None:
     """Test expansion of raw availability payload with a template directly."""
-    await mqtt_mock_entry_no_yaml_config()
+    await mqtt_mock_entry()
     data = (
         '{ "~": "some/base/topic",'
         '  "name": "DiscoveryExpansionTest1",'
@@ -1290,10 +1290,10 @@ ABBREVIATIONS_WHITE_LIST = [
 
 async def test_missing_discover_abbreviations(
     hass: HomeAssistant,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
 ) -> None:
     """Check MQTT platforms for missing abbreviations."""
-    await mqtt_mock_entry_no_yaml_config()
+    await mqtt_mock_entry()
     missing = []
     regex = re.compile(r"(CONF_[a-zA-Z\d_]*) *= *[\'\"]([a-zA-Z\d_]*)[\'\"]")
     for fil in Path(mqtt.__file__).parent.rglob("*.py"):
@@ -1319,10 +1319,10 @@ async def test_missing_discover_abbreviations(
 @patch("homeassistant.components.mqtt.PLATFORMS", [Platform.SWITCH])
 async def test_no_implicit_state_topic_switch(
     hass: HomeAssistant,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
 ) -> None:
     """Test no implicit state topic for switch."""
-    await mqtt_mock_entry_no_yaml_config()
+    await mqtt_mock_entry()
     data = '{ "name": "Test1", "command_topic": "cmnd" }'
 
     async_fire_mqtt_message(hass, "homeassistant/switch/bla/config", data)
@@ -1352,10 +1352,10 @@ async def test_no_implicit_state_topic_switch(
     ],
 )
 async def test_complex_discovery_topic_prefix(
-    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Tests handling of discovery topic prefix with multiple slashes."""
-    await mqtt_mock_entry_no_yaml_config()
+    await mqtt_mock_entry()
 
     async_fire_mqtt_message(
         hass,
@@ -1374,13 +1374,15 @@ async def test_complex_discovery_topic_prefix(
 
 
 @patch("homeassistant.components.mqtt.PLATFORMS", [])
+@patch("homeassistant.components.mqtt.client.INITIAL_SUBSCRIBE_COOLDOWN", 0.0)
+@patch("homeassistant.components.mqtt.client.SUBSCRIBE_COOLDOWN", 0.0)
 async def test_mqtt_integration_discovery_subscribe_unsubscribe(
     hass: HomeAssistant,
     mqtt_client_mock: MqttMockPahoClient,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
 ) -> None:
     """Check MQTT integration discovery subscribe and unsubscribe."""
-    mqtt_mock = await mqtt_mock_entry_no_yaml_config()
+    mqtt_mock = await mqtt_mock_entry()
     mock_entity_platform(hass, "config_flow.comp", None)
 
     entry = hass.config_entries.async_entries("mqtt")[0]
@@ -1391,6 +1393,7 @@ async def test_mqtt_integration_discovery_subscribe_unsubscribe(
         return_value={"comp": ["comp/discovery/#"]},
     ):
         await async_start(hass, "homeassistant", entry)
+        await hass.async_block_till_done()
         await hass.async_block_till_done()
 
     mqtt_client_mock.subscribe.assert_any_call("comp/discovery/#", 0)
@@ -1418,13 +1421,15 @@ async def test_mqtt_integration_discovery_subscribe_unsubscribe(
 
 
 @patch("homeassistant.components.mqtt.PLATFORMS", [])
+@patch("homeassistant.components.mqtt.client.INITIAL_SUBSCRIBE_COOLDOWN", 0.0)
+@patch("homeassistant.components.mqtt.client.SUBSCRIBE_COOLDOWN", 0.0)
 async def test_mqtt_discovery_unsubscribe_once(
     hass: HomeAssistant,
     mqtt_client_mock: MqttMockPahoClient,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
 ) -> None:
     """Check MQTT integration discovery unsubscribe once."""
-    mqtt_mock = await mqtt_mock_entry_no_yaml_config()
+    mqtt_mock = await mqtt_mock_entry()
     mock_entity_platform(hass, "config_flow.comp", None)
 
     entry = hass.config_entries.async_entries("mqtt")[0]
@@ -1435,6 +1440,7 @@ async def test_mqtt_discovery_unsubscribe_once(
         return_value={"comp": ["comp/discovery/#"]},
     ):
         await async_start(hass, "homeassistant", entry)
+        await hass.async_block_till_done()
         await hass.async_block_till_done()
 
     mqtt_client_mock.subscribe.assert_any_call("comp/discovery/#", 0)
@@ -1458,12 +1464,12 @@ async def test_mqtt_discovery_unsubscribe_once(
 @patch("homeassistant.components.mqtt.PLATFORMS", [Platform.SENSOR])
 async def test_clear_config_topic_disabled_entity(
     hass: HomeAssistant,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
     device_registry: dr.DeviceRegistry,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test the discovery topic is removed when a disabled entity is removed."""
-    mqtt_mock = await mqtt_mock_entry_no_yaml_config()
+    mqtt_mock = await mqtt_mock_entry()
     # discover an entity that is not enabled by default
     config = {
         "name": "sbfspot_12345",
@@ -1534,12 +1540,12 @@ async def test_clear_config_topic_disabled_entity(
 @patch("homeassistant.components.mqtt.PLATFORMS", [Platform.SENSOR])
 async def test_clean_up_registry_monitoring(
     hass: HomeAssistant,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
     device_registry: dr.DeviceRegistry,
     tmp_path: Path,
 ) -> None:
     """Test registry monitoring hook is removed after a reload."""
-    await mqtt_mock_entry_no_yaml_config()
+    await mqtt_mock_entry()
     hooks: dict = hass.data["mqtt"].discovery_registry_hooks
     # discover an entity that is not enabled by default
     config1 = {
@@ -1582,18 +1588,18 @@ async def test_clean_up_registry_monitoring(
 
     # Enload the entry
     # The monitoring should be cleared
-    await help_test_unload_config_entry(hass, tmp_path, {})
+    await help_test_unload_config_entry(hass)
     assert len(hooks) == 0
 
 
 @patch("homeassistant.components.mqtt.PLATFORMS", [Platform.SENSOR])
 async def test_unique_id_collission_has_priority(
     hass: HomeAssistant,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test the unique_id collision detection has priority over registry disabled items."""
-    await mqtt_mock_entry_no_yaml_config()
+    await mqtt_mock_entry()
     config = {
         "name": "sbfspot_12345",
         "state_topic": "homeassistant_test/sensor/sbfspot_0/sbfspot_12345/",
@@ -1637,10 +1643,10 @@ async def test_unique_id_collission_has_priority(
 @pytest.mark.xfail(raises=MultipleInvalid)
 @patch("homeassistant.components.mqtt.PLATFORMS", [Platform.SENSOR])
 async def test_update_with_bad_config_not_breaks_discovery(
-    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test a bad update does not break discovery."""
-    await mqtt_mock_entry_no_yaml_config()
+    await mqtt_mock_entry()
     # discover a sensor
     config1 = {
         "name": "sbfspot_12345",

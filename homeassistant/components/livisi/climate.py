@@ -3,6 +3,8 @@ from __future__ import annotations
 
 from typing import Any
 
+from aiolivisi.const import CAPABILITY_CONFIG
+
 from homeassistant.components.climate import (
     ClimateEntity,
     ClimateEntityFeature,
@@ -65,8 +67,6 @@ class LivisiClimate(LivisiEntity, ClimateEntity):
     _attr_hvac_mode = HVACMode.HEAT
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
-    _attr_target_temperature_high = MAX_TEMPERATURE
-    _attr_target_temperature_low = MIN_TEMPERATURE
 
     def __init__(
         self,
@@ -82,6 +82,10 @@ class LivisiClimate(LivisiEntity, ClimateEntity):
         self._target_temperature_capability = self.capabilities["RoomSetpoint"]
         self._temperature_capability = self.capabilities["RoomTemperature"]
         self._humidity_capability = self.capabilities["RoomHumidity"]
+
+        config = device.get(CAPABILITY_CONFIG, {}).get("RoomSetpoint", {})
+        self._attr_max_temp = config.get("maxTemperature", MAX_TEMPERATURE)
+        self._attr_min_temp = config.get("minTemperature", MIN_TEMPERATURE)
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
@@ -99,14 +103,15 @@ class LivisiClimate(LivisiEntity, ClimateEntity):
 
         await super().async_added_to_hass()
 
-        target_temperature = await self.coordinator.async_get_vrcc_target_temperature(
-            self._target_temperature_capability
+        target_temperature = await self.coordinator.async_get_device_state(
+            self._target_temperature_capability,
+            "setpointTemperature" if self.coordinator.is_avatar else "pointTemperature",
         )
-        temperature = await self.coordinator.async_get_vrcc_temperature(
-            self._temperature_capability
+        temperature = await self.coordinator.async_get_device_state(
+            self._temperature_capability, "temperature"
         )
-        humidity = await self.coordinator.async_get_vrcc_humidity(
-            self._humidity_capability
+        humidity = await self.coordinator.async_get_device_state(
+            self._humidity_capability, "humidity"
         )
         if temperature is None:
             self._attr_current_temperature = None
