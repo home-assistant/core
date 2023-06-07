@@ -604,15 +604,8 @@ class MqttTemperatureControlEntity(MqttEntity, ABC):
         return changed
 
     @abstractmethod
-    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
-        """Set hvac mode."""
-
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperatures."""
-        operation_mode: HVACMode | None
-        if (operation_mode := kwargs.get(ATTR_HVAC_MODE)) is not None:
-            await self.async_set_hvac_mode(operation_mode)
-
         changed = await self._set_climate_attribute(
             kwargs.get(ATTR_TEMPERATURE),
             CONF_TEMP_COMMAND_TOPIC,
@@ -966,6 +959,13 @@ class MqttClimate(MqttTemperatureControlEntity, ClimateEntity):
         )
 
         self.prepare_subscribe_topics(topics)
+
+    async def async_set_temperature(self, **kwargs: Any) -> None:
+        """Set new target temperatures."""
+        operation_mode: HVACMode | None
+        if (operation_mode := kwargs.get(ATTR_HVAC_MODE)) is not None:
+            await self.async_set_hvac_mode(operation_mode)
+        await super().async_set_temperature(**kwargs)
 
     async def async_set_humidity(self, humidity: int) -> None:
         """Set new target humidity."""
