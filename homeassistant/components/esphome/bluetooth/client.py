@@ -43,10 +43,6 @@ CCCD_UUID = "00002902-0000-1000-8000-00805f9b34fb"
 CCCD_NOTIFY_BYTES = b"\x01\x00"
 CCCD_INDICATE_BYTES = b"\x02\x00"
 
-MIN_BLUETOOTH_PROXY_VERSION_HAS_CACHE = 3
-MIN_BLUETOOTH_PROXY_HAS_PAIRING = 4
-MIN_BLUETOOTH_PROXY_HAS_CLEAR_CACHE = 5
-
 DEFAULT_MAX_WRITE_WITHOUT_RESPONSE = DEFAULT_MTU - GATT_HEADER_SIZE
 _LOGGER = logging.getLogger(__name__)
 
@@ -159,7 +155,7 @@ class ESPHomeClient(BaseBleakClient):
         self._disconnected_event: asyncio.Event | None = None
         device_info = self.entry_data.device_info
         assert device_info is not None
-        self._connection_version = device_info.legacy_bluetooth_proxy_version
+        self._device_info = device_info
         self._feature_flags = device_info.bluetooth_proxy_feature_flags_compat(
             self.entry_data.api_version
         )
@@ -323,7 +319,7 @@ class ESPHomeClient(BaseBleakClient):
                         _on_bluetooth_connection_state,
                         timeout=timeout,
                         has_cache=has_cache,
-                        version=self._connection_version,
+                        feature_flags=self._feature_flags,
                         address_type=self._address_type,
                     )
                 )
@@ -403,7 +399,8 @@ class ESPHomeClient(BaseBleakClient):
         """Attempt to pair."""
         if not self._feature_flags & BluetoothProxyFeature.PAIRING:
             raise NotImplementedError(
-                "Pairing is not available in ESPHome with version {self._connection_version}."
+                "Pairing is not available in this version ESPHome; "
+                f"Upgrade the ESPHome version on the {self._device_info.name} device."
             )
         response = await self._client.bluetooth_device_pair(self._address_as_int)
         if response.paired:
@@ -419,7 +416,8 @@ class ESPHomeClient(BaseBleakClient):
         """Attempt to unpair."""
         if not self._feature_flags & BluetoothProxyFeature.PAIRING:
             raise NotImplementedError(
-                "Unpairing is not available in ESPHome with version {self._connection_version}."
+                "Unpairing is not available in this version ESPHome; "
+                f"Upgrade the ESPHome version on the {self._device_info.name} device."
             )
         response = await self._client.bluetooth_device_unpair(self._address_as_int)
         if response.success:
@@ -530,10 +528,9 @@ class ESPHomeClient(BaseBleakClient):
         self.domain_data.clear_gatt_mtu_cache(self._address_as_int)
         if not self._feature_flags & BluetoothProxyFeature.CACHE_CLEARING:
             _LOGGER.warning(
-                "On device cache clear is not available with ESPHome Bluetooth version %s, "
-                "version %s is needed; Only memory cache will be cleared",
-                self._connection_version,
-                MIN_BLUETOOTH_PROXY_HAS_CLEAR_CACHE,
+                "On device cache clear is not available with this ESPHome version; "
+                "Upgrade the ESPHome version on the device %s; Only memory cache will be cleared",
+                self._device_info.name,
             )
             return True
         response = await self._client.bluetooth_device_clear_cache(self._address_as_int)
