@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-import logging
 from typing import Any
 
 import pydiscovergy
@@ -17,8 +16,6 @@ from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.httpx_client import get_async_client
 
 from .const import APP_NAME, DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 
 def make_schema(email: str = "", password: str = "") -> vol.Schema:
