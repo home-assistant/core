@@ -21,17 +21,17 @@ from .const import DOMAIN
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key=CONST.TEMP_STATUS_KEY,
-        name="Temperature",
+        translation_key=CONST.TEMP_STATUS_KEY,
         device_class=SensorDeviceClass.TEMPERATURE,
     ),
     SensorEntityDescription(
         key=CONST.HUMI_STATUS_KEY,
-        name="Humidity",
+        translation_key=CONST.HUMI_STATUS_KEY,
         device_class=SensorDeviceClass.HUMIDITY,
     ),
     SensorEntityDescription(
         key=CONST.LUX_STATUS_KEY,
-        name="Lux",
+        translation_key=CONST.LUX_STATUS_KEY,
         device_class=SensorDeviceClass.ILLUMINANCE,
     ),
 )
@@ -55,6 +55,7 @@ class AbodeSensor(AbodeDevice, SensorEntity):
     """A sensor implementation for Abode devices."""
 
     _device: AbodeSense
+    _attr_has_entity_name = True
 
     def __init__(
         self,
