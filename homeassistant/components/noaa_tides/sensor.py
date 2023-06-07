@@ -101,16 +101,16 @@ class NOAATidesAndCurrentsSensor(SensorEntity):
         attr = {}
         if self.data is None:
             return attr
-        if self.data["hi_lo"][1] == "H":
+        if self.data["type"][1] == "H":
             attr["high_tide_time"] = self.data.index[1].strftime("%Y-%m-%dT%H:%M")
-            attr["high_tide_height"] = self.data["predicted_wl"][1]
+            attr["high_tide_height"] = self.data["v"][1]
             attr["low_tide_time"] = self.data.index[2].strftime("%Y-%m-%dT%H:%M")
-            attr["low_tide_height"] = self.data["predicted_wl"][2]
-        elif self.data["hi_lo"][1] == "L":
+            attr["low_tide_height"] = self.data["v"][2]
+        elif self.data["type"][1] == "L":
             attr["low_tide_time"] = self.data.index[1].strftime("%Y-%m-%dT%H:%M")
-            attr["low_tide_height"] = self.data["predicted_wl"][1]
+            attr["low_tide_height"] = self.data["v"][1]
             attr["high_tide_time"] = self.data.index[2].strftime("%Y-%m-%dT%H:%M")
-            attr["high_tide_height"] = self.data["predicted_wl"][2]
+            attr["high_tide_height"] = self.data["v"][2]
         return attr
 
     @property
@@ -119,10 +119,10 @@ class NOAATidesAndCurrentsSensor(SensorEntity):
         if self.data is None:
             return None
         api_time = self.data.index[0]
-        if self.data["hi_lo"][0] == "H":
+        if self.data["type"][0] == "H":
             tidetime = api_time.strftime("%-I:%M %p")
             return f"High tide at {tidetime}"
-        if self.data["hi_lo"][0] == "L":
+        if self.data["type"][0] == "L":
             tidetime = api_time.strftime("%-I:%M %p")
             return f"Low tide at {tidetime}"
         return None
