@@ -1115,6 +1115,7 @@ async def test_ws_api(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator, payload
 ) -> None:
     """Test the Websocket conversation API."""
+    assert await async_setup_component(hass, "homeassistant", {})
     assert await async_setup_component(hass, "conversation", {})
     client = await hass_ws_client(hass)
 
@@ -1145,6 +1146,7 @@ async def test_ws_prepare(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator, agent_id
 ) -> None:
     """Test the Websocket prepare conversation API."""
+    assert await async_setup_component(hass, "homeassistant", {})
     assert await async_setup_component(hass, "conversation", {})
     agent = await conversation._get_agent_manager(hass).async_get_agent()
     assert isinstance(agent, conversation.DefaultAgent)
@@ -1273,6 +1275,7 @@ async def test_custom_sentences_config(
 async def test_prepare_reload(hass: HomeAssistant) -> None:
     """Test calling the reload service."""
     language = hass.config.language
+    assert await async_setup_component(hass, "homeassistant", {})
     assert await async_setup_component(hass, "conversation", {})
 
     # Load intents
@@ -1293,6 +1296,7 @@ async def test_prepare_reload(hass: HomeAssistant) -> None:
 
 async def test_prepare_fail(hass: HomeAssistant) -> None:
     """Test calling prepare with a non-existent language."""
+    assert await async_setup_component(hass, "homeassistant", {})
     assert await async_setup_component(hass, "conversation", {})
 
     # Load intents
@@ -1331,6 +1335,7 @@ async def test_language_region(hass: HomeAssistant, init_components) -> None:
 async def test_reload_on_new_component(hass: HomeAssistant) -> None:
     """Test intents being reloaded when a new component is loaded."""
     language = hass.config.language
+    assert await async_setup_component(hass, "homeassistant", {})
     assert await async_setup_component(hass, "conversation", {})
 
     # Load intents

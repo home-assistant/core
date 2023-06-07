@@ -2,7 +2,7 @@
   "config": {
     "abort": {
       "incorrect_province": "Incorrect subdivision from yaml import",
-      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+      "already_configured": "Workday has already been setup with chosen configuration"
     },
     "step": {
       "user": {
@@ -12,6 +12,7 @@
         }
       },
       "options": {
+        "description": "Set workday options for {name}",
         "data": {
           "excludes": "Excludes",
           "days_offset": "Offset",
@@ -26,7 +27,7 @@
           "workdays": "List of workdays",
           "add_holidays": "Add custom holidays as YYYY-MM-DD",
           "remove_holidays": "Remove holidays as YYYY-MM-DD or by using partial of name",
-          "province": "State, Terroritory, Province, Region of Country"
+          "province": "State, Territory, Province, Region of Country"
         }
       }
     },

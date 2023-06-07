@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name        = "homeassistant"
-version     = "2023.5.4"
+version     = "2023.6.0"
 license     = {text = "Apache-2.0"}
 description = "Open-source home automation platform running on Python 3."
 readme      = "README.rst"
@@ -36,19 +36,19 @@ dependencies    = [
     # httpcore, anyio, and h11 in gen_requirements_all
     "httpx==0.24.1",
     "home-assistant-bluetooth==1.10.0",
-    "ifaddr==0.1.7",
+    "ifaddr==0.2.0",
     "jinja2==3.1.2",
     "lru-dict==1.1.8",
-    "PyJWT==2.6.0",
+    "PyJWT==2.7.0",
     # PyJWT has loose dependency. We want the latest one.
     "cryptography==40.0.2",
     # pyOpenSSL 23.1.0 is required to work with cryptography 39+
     "pyOpenSSL==23.1.0",
-    "orjson==3.8.10",
+    "orjson==3.8.12",
     "pip>=21.0,<23.2",
     "python-slugify==4.0.1",
     "pyyaml==6.0",
-    "requests==2.28.2",
+    "requests==2.31.0",
     "typing-extensions>=4.5.0,<5.0",
     "ulid-transform==0.7.2",
     "voluptuous==0.13.1",
@@ -113,6 +113,7 @@ load-plugins = [
     "pylint.extensions.code_style",
     "pylint.extensions.typing",
     "hass_enforce_type_hints",
+    "hass_inheritance",
     "hass_imports",
     "hass_logger",
     "pylint_per_file_ignores",
@@ -283,6 +284,7 @@ voluptuous = "vol"
 "homeassistant.helpers.device_registry" = "dr"
 "homeassistant.helpers.entity_registry" = "er"
 "homeassistant.helpers.issue_registry" = "ir"
+"homeassistant.util.dt" = "dt_util"
 
 [tool.ruff.flake8-pytest-style]
 fixture-parentheses = false

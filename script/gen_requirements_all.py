@@ -24,7 +24,6 @@ COMMENT_REQUIREMENTS = (
     "atenpdu",  # depends on pysnmp which is not maintained at this time
     "avea",  # depends on bluepy
     "avion",
-    "azure-servicebus",  # depends on uamqp, which requires OpenSSL 1.1
     "beacontools",
     "beewi_smartclim",  # depends on bluepy
     "bluepy",
@@ -157,13 +156,9 @@ matplotlib==3.6.1
 # cryptography 40.0.1 is installed with botocore
 pyOpenSSL>=23.1.0
 
-# uamqp newer versions we currently can't build for armv7/armhf
-# Limit this to Python 3.10, to not block Python 3.11 dev for now
-uamqp==1.6.0;python_version<'3.11'
-
 # protobuf must be in package constraints for the wheel
 # builder to build binary wheels
-protobuf==4.22.3
+protobuf==4.23.1
 
 # faust-cchardet: Ensure we have a version we can build wheels
 # 2.1.18 is the first version that works with our wheel builder
@@ -184,6 +179,14 @@ pysnmplib==5.0.21
 # pysnmp is no longer maintained and does not work with newer
 # python
 pysnmp==1000000000.0.0
+
+# pyminiaudio 1.58 is missing files in the package
+# https://github.com/irmen/pyminiaudio/issues/67
+miniaudio==1.57
+
+# The get-mac package has been replaced with getmac. Installing get-mac alongside getmac
+# breaks getmac due to them both sharing the same python package name inside 'getmac'.
+get-mac==1000000000.0.0
 """
 
 IGNORE_PRE_COMMIT_HOOK_ID = (

@@ -1,16 +1,19 @@
 """Numeric integration of data coming from a source sensor over time."""
 from __future__ import annotations
 
-from decimal import Decimal, DecimalException
+from dataclasses import dataclass
+from decimal import Decimal, DecimalException, InvalidOperation
 import logging
-from typing import Final
+from typing import Any, Final
 
+from typing_extensions import Self
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA,
+    RestoreSensor,
     SensorDeviceClass,
-    SensorEntity,
+    SensorExtraStoredData,
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -28,7 +31,6 @@ from homeassistant.core import Event, HomeAssistant, State, callback
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
-from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import (
@@ -77,6 +79,53 @@ PLATFORM_SCHEMA = vol.All(
         }
     ),
 )
+
+
+@dataclass
+class IntegrationSensorExtraStoredData(SensorExtraStoredData):
+    """Object to hold extra stored data."""
+
+    source_entity: str | None
+    last_valid_state: Decimal | None
+
+    def as_dict(self) -> dict[str, Any]:
+        """Return a dict representation of the utility sensor data."""
+        data = super().as_dict()
+        data["source_entity"] = self.source_entity
+        data["last_valid_state"] = (
+            str(self.last_valid_state) if self.last_valid_state else None
+        )
+        return data
+
+    @classmethod
+    def from_dict(cls, restored: dict[str, Any]) -> Self | None:
+        """Initialize a stored sensor state from a dict."""
+        extra = SensorExtraStoredData.from_dict(restored)
+        if extra is None:
+            return None
+
+        source_entity = restored.get(ATTR_SOURCE_ID)
+
+        try:
+            last_valid_state = (
+                Decimal(str(restored.get("last_valid_state")))
+                if restored.get("last_valid_state")
+                else None
+            )
+        except InvalidOperation:
+            # last_period is corrupted
+            _LOGGER.error("Could not use last_valid_state")
+            return None
+
+        if last_valid_state is None:
+            return None
+
+        return cls(
+            extra.native_value,
+            extra.native_unit_of_measurement,
+            source_entity,
+            last_valid_state,
+        )
 
 
 async def async_setup_entry(
@@ -128,7 +177,8 @@ async def async_setup_platform(
     async_add_entities([integral])
 
 
-class IntegrationSensor(RestoreEntity, SensorEntity):
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
+class IntegrationSensor(RestoreSensor):
     """Representation of an integration sensor."""
 
     _attr_state_class = SensorStateClass.TOTAL
@@ -159,7 +209,8 @@ class IntegrationSensor(RestoreEntity, SensorEntity):
         self._unit_time = UNIT_TIME[unit_time]
         self._unit_time_str = unit_time
         self._attr_icon = "mdi:chart-histogram"
-        self._attr_extra_state_attributes = {ATTR_SOURCE_ID: source_entity}
+        self._source_entity: str = source_entity
+        self._last_valid_state: Decimal | None = None
 
     def _unit(self, source_unit: str) -> str:
         """Derive unit from the source sensor, SI prefix and time unit."""
@@ -174,10 +225,28 @@ class IntegrationSensor(RestoreEntity, SensorEntity):
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         await super().async_added_to_hass()
-        if (state := await self.async_get_last_state()) is not None:
-            if state.state == STATE_UNAVAILABLE:
-                self._attr_available = False
-            elif state.state != STATE_UNKNOWN:
+
+        if (last_sensor_data := await self.async_get_last_sensor_data()) is not None:
+            self._state = (
+                Decimal(str(last_sensor_data.native_value))
+                if last_sensor_data.native_value
+                else last_sensor_data.last_valid_state
+            )
+            self._attr_native_value = last_sensor_data.native_value
+            self._unit_of_measurement = last_sensor_data.native_unit_of_measurement
+            self._last_valid_state = last_sensor_data.last_valid_state
+
+            _LOGGER.debug(
+                "Restored state %s and last_valid_state %s",
+                self._state,
+                self._last_valid_state,
+            )
+        elif (state := await self.async_get_last_state()) is not None:
+            # legacy to be removed on 2023.10 (we are keeping this to avoid losing data during the transition)
+            if state.state in [STATE_UNAVAILABLE, STATE_UNKNOWN]:
+                if state.state == STATE_UNAVAILABLE:
+                    self._attr_available = False
+            else:
                 try:
                     self._state = Decimal(state.state)
                 except (DecimalException, ValueError) as err:
@@ -294,6 +363,7 @@ class IntegrationSensor(RestoreEntity, SensorEntity):
                     self._state += integral
                 else:
                     self._state = integral
+                self._last_valid_state = self._state
                 self.async_write_ha_state()
 
         self.async_on_remove(
@@ -313,3 +383,33 @@ class IntegrationSensor(RestoreEntity, SensorEntity):
     def native_unit_of_measurement(self) -> str | None:
         """Return the unit the value is expressed in."""
         return self._unit_of_measurement
+
+    @property
+    def extra_state_attributes(self) -> dict[str, str] | None:
+        """Return the state attributes of the sensor."""
+        state_attr = {
+            ATTR_SOURCE_ID: self._source_entity,
+        }
+
+        return state_attr
+
+    @property
+    def extra_restore_state_data(self) -> IntegrationSensorExtraStoredData:
+        """Return sensor specific state data to be restored."""
+        return IntegrationSensorExtraStoredData(
+            self.native_value,
+            self.native_unit_of_measurement,
+            self._source_entity,
+            self._last_valid_state,
+        )
+
+    async def async_get_last_sensor_data(
+        self,
+    ) -> IntegrationSensorExtraStoredData | None:
+        """Restore Utility Meter Sensor Extra Stored Data."""
+        if (restored_last_extra_data := await self.async_get_last_extra_data()) is None:
+            return None
+
+        return IntegrationSensorExtraStoredData.from_dict(
+            restored_last_extra_data.as_dict()
+        )

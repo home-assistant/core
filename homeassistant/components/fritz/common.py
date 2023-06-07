@@ -1049,10 +1049,9 @@ class FritzEntityDescription(EntityDescription, FritzRequireKeysMixin):
     """Fritz entity base description."""
 
 
-class FritzBoxBaseCoordinatorEntity(update_coordinator.CoordinatorEntity):
+class FritzBoxBaseCoordinatorEntity(update_coordinator.CoordinatorEntity[AvmWrapper]):
     """Fritz host coordinator entity base class."""
 
-    coordinator: AvmWrapper
     entity_description: FritzEntityDescription
     _attr_has_entity_name = True
 

@@ -17,16 +17,16 @@ def stringify_onvif_error(error: Exception) -> str:
     """Stringify ONVIF error."""
     if isinstance(error, Fault):
         message = error.message
-        if error.detail:
+        if error.detail is not None:  # checking true is deprecated
             # Detail may be a bytes object, so we need to convert it to string
             if isinstance(error.detail, bytes):
                 detail = error.detail.decode("utf-8", "replace")
             else:
                 detail = str(error.detail)
             message += ": " + detail
-        if error.code:
+        if error.code is not None:  # checking true is deprecated
             message += f" (code:{error.code})"
-        if error.subcodes:
+        if error.subcodes is not None:  # checking true is deprecated
             message += (
                 f" (subcodes:{','.join(extract_subcodes_as_strings(error.subcodes))})"
             )

@@ -1,10 +1,9 @@
 {
   "domain": "bluetooth",
   "name": "Bluetooth",
-  "after_dependencies": ["hassio"],
   "codeowners": ["@bdraco"],
   "config_flow": true,
-  "dependencies": ["usb"],
+  "dependencies": ["logger", "usb"],
   "documentation": "https://www.home-assistant.io/integrations/bluetooth",
   "iot_class": "local_push",
   "loggers": [
@@ -20,6 +19,6 @@
     "bluetooth-adapters==0.15.3",
     "bluetooth-auto-recovery==1.2.0",
     "bluetooth-data-tools==0.4.0",
-    "dbus-fast==1.85.0"
+    "dbus-fast==1.86.0"
   ]
 }

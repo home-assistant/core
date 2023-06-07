@@ -27,6 +27,54 @@
     }
   },
   "entity": {
+    "sensor": {
+      "cleaning_time": {
+        "name": "Cleaning time"
+      },
+      "main_brush_time_left": {
+        "name": "Main brush time left"
+      },
+      "side_brush_time_left": {
+        "name": "Side brush time left"
+      },
+      "filter_time_left": {
+        "name": "Filter time left"
+      },
+      "sensor_time_left": {
+        "name": "Sensor time left"
+      },
+      "status": {
+        "name": "Status",
+        "state": {
+          "starting": "Starting",
+          "charger_disconnected": "Charger disconnected",
+          "idle": "Idle",
+          "remote_control_active": "Remote control active",
+          "cleaning": "Cleaning",
+          "returning_home": "Returning home",
+          "manual_mode": "Manual mode",
+          "charging": "Charging",
+          "charging_problem": "Charging problem",
+          "paused": "Paused",
+          "spot_cleaning": "Spot cleaning",
+          "error": "Error",
+          "shutting_down": "Shutting down",
+          "updating": "Updating",
+          "docking": "Docking",
+          "going_to_target": "Going to target",
+          "zoned_cleaning": "Zoned cleaning",
+          "segment_cleaning": "Segment cleaning",
+          "emptying_the_bin": "Emptying the bin",
+          "washing_the_mop": "Washing the mop",
+          "going_to_wash_the_mop": "Going to wash the mop",
+          "charging_complete": "Charging complete",
+          "device_offline": "Device offline"
+        }
+      },
+      "total_cleaning_time": {
+        "name": "Total cleaning time"
+      }
+    },
     "select": {
       "mop_mode": {
         "name": "Mop mode",
@@ -34,17 +82,51 @@
           "standard": "Standard",
           "deep": "Deep",
           "deep_plus": "Deep+",
-          "custom": "Custom"
+          "custom": "Custom",
+          "fast": "Fast"
         }
       },
       "mop_intensity": {
         "name": "Mop intensity",
         "state": {
           "off": "Off",
+          "low": "Low",
           "mild": "Mild",
+          "medium": "Medium",
           "moderate": "Moderate",
+          "high": "High",
           "intense": "Intense",
           "custom": "Custom"
+        }
+      }
+    },
+    "switch": {
+      "child_lock": {
+        "name": "Child lock"
+      },
+      "status_indicator": {
+        "name": "Status indicator light"
+      }
+    },
+    "vacuum": {
+      "roborock": {
+        "state_attributes": {
+          "fan_speed": {
+            "state": {
+              "auto": "Auto",
+              "balanced": "Balanced",
+              "custom": "Custom",
+              "gentle": "Gentle",
+              "off": "Off",
+              "max": "Max",
+              "max_plus": "Max plus",
+              "medium": "Medium",
+              "quiet": "Quiet",
+              "silent": "Silent",
+              "standard": "Standard",
+              "turbo": "Turbo"
+            }
+          }
         }
       }
     }
