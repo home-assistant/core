@@ -67,3 +67,31 @@ _INVERTER_STATUS_CODES: Final[dict[int, InverterStatusCodeOption]] = {
 def get_inverter_status_message(code: StateType) -> InverterStatusCodeOption:
     """Return a status message for a given status code."""
     return _INVERTER_STATUS_CODES.get(code, InverterStatusCodeOption.INVALID)  # type: ignore[arg-type]
+
+
+class MeterLocationCodeOption(StrEnum):
+    """Meter location codes for Fronius meters."""
+
+    # these are keys for state translations - so snake_case is used
+    FEED_IN = "feed_in"
+    CONSUMPTION_PATH = "consumption_path"
+    GENERATOR = "external_generator"
+    SUBLOAD = "subload"
+
+
+def get_meter_location_description(code: StateType) -> MeterLocationCodeOption | None:
+    """Return a location_description for a given location code."""
+    try:
+        code = int(code)  # type: ignore[arg-type]
+    except ValueError:
+        return None
+    match code:
+        case 0:
+            return MeterLocationCodeOption.FEED_IN
+        case 1:
+            return MeterLocationCodeOption.CONSUMPTION_PATH
+        case 3:
+            return MeterLocationCodeOption.GENERATOR
+        case _ as _code if 256 <= _code <= 511:
+            return MeterLocationCodeOption.SUBLOAD
+    return None

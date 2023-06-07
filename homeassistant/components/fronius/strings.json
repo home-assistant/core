@@ -129,6 +129,15 @@
       "meter_location": {
         "name": "Meter location"
       },
+      "meter_location_description": {
+        "name": "Meter location description",
+        "state": {
+          "feed_in": "Grid interconnection point",
+          "consumption_path": "Consumption path",
+          "external_generator": "External generator",
+          "subload": "Subload"
+        }
+      },
       "power_apparent_phase_1": {
         "name": "Apparent power phase 1"
       },

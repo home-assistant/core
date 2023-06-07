@@ -35,7 +35,9 @@ from .const import (
     DOMAIN,
     SOLAR_NET_DISCOVERY_NEW,
     InverterStatusCodeOption,
+    MeterLocationCodeOption,
     get_inverter_status_message,
+    get_meter_location_description,
 )
 
 if TYPE_CHECKING:
@@ -323,6 +325,15 @@ METER_ENTITY_DESCRIPTIONS: list[FroniusSensorEntityDescription] = [
     FroniusSensorEntityDescription(
         key="meter_location",
         entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=int,  # type: ignore[arg-type]
+    ),
+    FroniusSensorEntityDescription(
+        key="meter_location_description",
+        response_key="meter_location",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        device_class=SensorDeviceClass.ENUM,
+        options=[opt.value for opt in MeterLocationCodeOption],
+        value_fn=get_meter_location_description,
     ),
     FroniusSensorEntityDescription(
         key="power_apparent_phase_1",
