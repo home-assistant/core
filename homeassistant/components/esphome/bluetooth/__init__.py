@@ -59,20 +59,15 @@ async def async_connect_scanner(
     source = str(entry.unique_id)
     new_info_callback = async_get_advertisement_callback(hass)
     assert entry_data.device_info is not None
-    device_info = entry_data.device_info
-
-    legacy_version = device_info.legacy_bluetooth_proxy_version
-    bluetooth_proxy_feature_flags = device_info.bluetooth_proxy_feature_flags
-    connectable = bool(
-        legacy_version > 2
-        or bluetooth_proxy_feature_flags & BluetoothProxyFeature.ACTIVE_CONNECTIONS
+    feature_flags = entry_data.device_info.bluetooth_proxy_feature_flags_compat(
+        entry_data.api_version
     )
+    connectable = feature_flags & BluetoothProxyFeature.ACTIVE_CONNECTIONS
     _LOGGER.debug(
-        "%s [%s]: Connecting scanner legacy_version=%s feature_flags=%s, connectable=%s",
+        "%s [%s]: Connecting scanner feature_flags=%s, connectable=%s",
         entry.title,
         source,
-        legacy_version,
-        bluetooth_proxy_feature_flags,
+        feature_flags,
         connectable,
     )
     connector = HaBluetoothConnector(
@@ -96,7 +91,7 @@ async def async_connect_scanner(
         async_register_scanner(hass, scanner, connectable),
         scanner.async_setup(),
     ]
-    if 1:  # feature flag has RAW_ADVERTISEMENTS
+    if feature_flags & BluetoothProxyFeature.RAW_ADVERTISEMENTS:
         await cli.subscribe_bluetooth_le_raw_advertisements(
             scanner.async_on_raw_advertisements
         )
