@@ -5,7 +5,7 @@ from collections.abc import Callable
 from functools import partial
 import logging
 
-from aioesphomeapi import APIClient
+from aioesphomeapi import APIClient, BluetoothProxyFeature
 
 from homeassistant.components.bluetooth import (
     HaBluetoothConnector,
@@ -59,14 +59,15 @@ async def async_connect_scanner(
     source = str(entry.unique_id)
     new_info_callback = async_get_advertisement_callback(hass)
     assert entry_data.device_info is not None
-    version = entry_data.device_info.legacy_bluetooth_proxy_version
-    _LOGGER.warning("version=%s", version)
-    connectable = version >= 2
+    bluetooth_proxy_feature_flags = entry_data.device_info.bluetooth_proxy_feature_flags
+    connectable = (
+        bluetooth_proxy_feature_flags & BluetoothProxyFeature.ACTIVE_CONNECTIONS
+    )
     _LOGGER.debug(
-        "%s [%s]: Connecting scanner version=%s, connectable=%s",
+        "%s [%s]: Connecting scanner feature_flags=%s, connectable=%s",
         entry.title,
         source,
-        version,
+        bluetooth_proxy_feature_flags,
         connectable,
     )
     connector = HaBluetoothConnector(
