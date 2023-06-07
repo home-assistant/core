@@ -213,6 +213,11 @@ class CloudGoogleConfig(AbstractConfig):
 
         async def on_hass_started(hass: HomeAssistant) -> None:
             if self._prefs.google_settings_version != GOOGLE_SETTINGS_VERSION:
+                _LOGGER.info(
+                    "Start migration of Google Assistant settings from v%s to v%s",
+                    self._prefs.google_settings_version,
+                    GOOGLE_SETTINGS_VERSION,
+                )
                 if self._prefs.google_settings_version < 2 or (
                     # Recover from a bug we had in 2023.5.0 where entities didn't get exposed
                     self._prefs.google_settings_version < 3
@@ -225,6 +230,11 @@ class CloudGoogleConfig(AbstractConfig):
                 ):
                     self._migrate_google_entity_settings_v1()
 
+                _LOGGER.info(
+                    "Finished migration of Google Assistant settings from v%s to v%s",
+                    self._prefs.google_settings_version,
+                    GOOGLE_SETTINGS_VERSION,
+                )
                 await self._prefs.async_update(
                     google_settings_version=GOOGLE_SETTINGS_VERSION
                 )
