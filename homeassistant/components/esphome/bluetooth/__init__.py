@@ -62,7 +62,7 @@ async def async_connect_scanner(
     feature_flags = entry_data.device_info.bluetooth_proxy_feature_flags_compat(
         entry_data.api_version
     )
-    connectable = feature_flags & BluetoothProxyFeature.ACTIVE_CONNECTIONS
+    connectable = bool(feature_flags & BluetoothProxyFeature.ACTIVE_CONNECTIONS)
     _LOGGER.debug(
         "%s [%s]: Connecting scanner feature_flags=%s, connectable=%s",
         entry.title,
