@@ -1,4 +1,4 @@
-"""This component provides basic support for Foscam IP cameras."""
+"""Component providing basic support for Foscam IP cameras."""
 from __future__ import annotations
 
 import asyncio

@@ -3,6 +3,11 @@
   "name": "Obihai",
   "codeowners": ["@dshokouhi", "@ejpenney"],
   "config_flow": true,
+  "dhcp": [
+    {
+      "macaddress": "9CADEF*"
+    }
+  ],
   "documentation": "https://www.home-assistant.io/integrations/obihai",
   "iot_class": "local_polling",
   "loggers": ["pyobihai"],

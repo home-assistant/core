@@ -26,12 +26,6 @@ remove_torrent:
       selector:
         config_entry:
           integration: transmission
-    name:
-      name: Name
-      description: Instance name as entered during entry config
-      example: Transmission
-      selector:
-        text:
     id:
       name: ID
       description: ID of a torrent
@@ -56,12 +50,6 @@ start_torrent:
       selector:
         config_entry:
           integration: transmission
-    name:
-      name: Name
-      description: Instance name as entered during entry config
-      example: Transmission
-      selector:
-        text:
     id:
       name: ID
       description: ID of a torrent
@@ -79,12 +67,6 @@ stop_torrent:
       selector:
         config_entry:
           integration: transmission
-    name:
-      name: Name
-      description: Instance name as entered during entry config
-      example: Transmission
-      selector:
-        text:
     id:
       name: ID
       description: ID of a torrent

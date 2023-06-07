@@ -3,26 +3,27 @@ from __future__ import annotations
 
 from functools import partial
 import logging
+from typing import Literal
 
 import openai
 from openai import error
 
 from homeassistant.components import conversation
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_API_KEY
+from homeassistant.const import CONF_API_KEY, MATCH_ALL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady, TemplateError
-from homeassistant.helpers import area_registry as ar, intent, template
+from homeassistant.helpers import intent, template
 from homeassistant.util import ulid
 
 from .const import (
+    CONF_CHAT_MODEL,
     CONF_MAX_TOKENS,
-    CONF_MODEL,
     CONF_PROMPT,
     CONF_TEMPERATURE,
     CONF_TOP_P,
+    DEFAULT_CHAT_MODEL,
     DEFAULT_MAX_TOKENS,
-    DEFAULT_MODEL,
     DEFAULT_PROMPT,
     DEFAULT_TEMPERATURE,
     DEFAULT_TOP_P,
@@ -63,26 +64,31 @@ class OpenAIAgent(conversation.AbstractConversationAgent):
         """Initialize the agent."""
         self.hass = hass
         self.entry = entry
-        self.history: dict[str, str] = {}
+        self.history: dict[str, list[dict]] = {}
 
     @property
     def attribution(self):
         """Return the attribution."""
         return {"name": "Powered by OpenAI", "url": "https://www.openai.com"}
 
+    @property
+    def supported_languages(self) -> list[str] | Literal["*"]:
+        """Return a list of supported languages."""
+        return MATCH_ALL
+
     async def async_process(
         self, user_input: conversation.ConversationInput
     ) -> conversation.ConversationResult:
         """Process a sentence."""
         raw_prompt = self.entry.options.get(CONF_PROMPT, DEFAULT_PROMPT)
-        model = self.entry.options.get(CONF_MODEL, DEFAULT_MODEL)
+        model = self.entry.options.get(CONF_CHAT_MODEL, DEFAULT_CHAT_MODEL)
         max_tokens = self.entry.options.get(CONF_MAX_TOKENS, DEFAULT_MAX_TOKENS)
         top_p = self.entry.options.get(CONF_TOP_P, DEFAULT_TOP_P)
         temperature = self.entry.options.get(CONF_TEMPERATURE, DEFAULT_TEMPERATURE)
 
         if user_input.conversation_id in self.history:
             conversation_id = user_input.conversation_id
-            prompt = self.history[conversation_id]
+            messages = self.history[conversation_id]
         else:
             conversation_id = ulid.ulid()
             try:
@@ -97,25 +103,16 @@ class OpenAIAgent(conversation.AbstractConversationAgent):
                 return conversation.ConversationResult(
                     response=intent_response, conversation_id=conversation_id
                 )
+            messages = [{"role": "system", "content": prompt}]
 
-        user_name = "User"
-        if (
-            user_input.context.user_id
-            and (
-                user := await self.hass.auth.async_get_user(user_input.context.user_id)
-            )
-            and user.name
-        ):
-            user_name = user.name
+        messages.append({"role": "user", "content": user_input.text})
 
-        prompt += f"\n{user_name}: {user_input.text}\nSmart home: "
-
-        _LOGGER.debug("Prompt for %s: %s", model, prompt)
+        _LOGGER.debug("Prompt for %s: %s", model, messages)
 
         try:
-            result = await openai.Completion.acreate(
-                engine=model,
-                prompt=prompt,
+            result = await openai.ChatCompletion.acreate(
+                model=model,
+                messages=messages,
                 max_tokens=max_tokens,
                 top_p=top_p,
                 temperature=temperature,
@@ -132,15 +129,12 @@ class OpenAIAgent(conversation.AbstractConversationAgent):
             )
 
         _LOGGER.debug("Response %s", result)
-        response = result["choices"][0]["text"].strip()
-        self.history[conversation_id] = prompt + response
-
-        stripped_response = response
-        if response.startswith("Smart home:"):
-            stripped_response = response[11:].strip()
+        response = result["choices"][0]["message"]
+        messages.append(response)
+        self.history[conversation_id] = messages
 
         intent_response = intent.IntentResponse(language=user_input.language)
-        intent_response.async_set_speech(stripped_response)
+        intent_response.async_set_speech(response["content"])
         return conversation.ConversationResult(
             response=intent_response, conversation_id=conversation_id
         )
@@ -150,7 +144,6 @@ class OpenAIAgent(conversation.AbstractConversationAgent):
         return template.Template(raw_prompt, self.hass).async_render(
             {
                 "ha_name": self.hass.config.location_name,
-                "areas": list(ar.async_get(self.hass).areas.values()),
             },
             parse_result=False,
         )

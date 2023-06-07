@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 from copy import deepcopy
+from datetime import datetime, timedelta
 import enum
 from typing import Any
 from unittest.mock import patch
@@ -72,8 +73,16 @@ EXPECTED_FEATURES = (
 class MockAyla(AylaApi):
     """Mocked AylaApi that doesn't do anything."""
 
+    desired_expiry = False
+
     async def async_sign_in(self):
         """Instead of signing in, just return."""
+
+    async def async_refresh_auth(self):
+        """Instead of refreshing auth, just return."""
+
+    async def async_sign_out(self):
+        """Instead of signing out, just return."""
 
     async def async_list_devices(self) -> list[dict]:
         """Return the device list."""
@@ -88,6 +97,18 @@ class MockAyla(AylaApi):
 
     async def async_request(self, http_method: str, url: str, **kwargs):
         """Don't make an HTTP request."""
+
+    @property
+    def token_expiring_soon(self) -> bool:
+        """Toggling Property for Token Expiration Flag."""
+        # Alternate expiry flag for each test
+        self.desired_expiry = not self.desired_expiry
+        return self.desired_expiry
+
+    @property
+    def auth_expiration(self) -> datetime:
+        """Sample expiration timestamp that is always 1200 seconds behind now()."""
+        return datetime.now() - timedelta(seconds=1200)
 
 
 class MockShark(SharkIqVacuum):

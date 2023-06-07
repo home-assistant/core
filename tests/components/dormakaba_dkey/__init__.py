@@ -1,9 +1,8 @@
 """Tests for the Dormakaba dKey integration."""
-from bleak.backends.device import BLEDevice
 
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
 
-from tests.components.bluetooth import generate_advertisement_data
+from tests.components.bluetooth import generate_advertisement_data, generate_ble_device
 
 DKEY_DISCOVERY_INFO = BluetoothServiceInfoBleak(
     name="00123456",
@@ -13,7 +12,7 @@ DKEY_DISCOVERY_INFO = BluetoothServiceInfoBleak(
     service_uuids=["e7a60000-6639-429f-94fd-86de8ea26897"],
     service_data={},
     source="local",
-    device=BLEDevice(address="AA:BB:CC:DD:EE:F0", name="00123456"),
+    device=generate_ble_device(address="AA:BB:CC:DD:EE:F0", name="00123456"),
     advertisement=generate_advertisement_data(
         service_uuids=["e7a60000-6639-429f-94fd-86de8ea26897"]
     ),
@@ -33,7 +32,7 @@ NOT_DKEY_DISCOVERY_INFO = BluetoothServiceInfoBleak(
     service_uuids=[],
     service_data={},
     source="local",
-    device=BLEDevice(address="AA:BB:CC:DD:EE:F2", name="Aug"),
+    device=generate_ble_device(address="AA:BB:CC:DD:EE:F2", name="Aug"),
     advertisement=generate_advertisement_data(),
     time=0,
     connectable=True,

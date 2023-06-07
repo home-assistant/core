@@ -25,6 +25,7 @@ from aioesphomeapi import (
     NumberInfo,
     SelectInfo,
     SensorInfo,
+    SensorState,
     SwitchInfo,
     TextSensorInfo,
     UserService,
@@ -39,6 +40,7 @@ from homeassistant.helpers.storage import Store
 
 from .dashboard import async_get_dashboard
 
+_SENTINEL = object()
 SAVE_DELAY = 120
 _LOGGER = logging.getLogger(__name__)
 
@@ -69,6 +71,10 @@ class RuntimeEntryData:
     client: APIClient
     store: Store
     state: dict[type[EntityState], dict[int, EntityState]] = field(default_factory=dict)
+    # When the disconnect callback is called, we mark all states
+    # as stale so we will always dispatch a state update when the
+    # device reconnects. This is the same format as state_subscriptions.
+    stale_state: set[tuple[type[EntityState], int]] = field(default_factory=set)
     info: dict[str, dict[int, EntityInfo]] = field(default_factory=dict)
 
     # A second list of EntityInfo objects
@@ -94,6 +100,10 @@ class RuntimeEntryData:
     _ble_connection_free_futures: list[asyncio.Future[int]] = field(
         default_factory=list
     )
+    assist_pipeline_update_callbacks: list[Callable[[], None]] = field(
+        default_factory=list
+    )
+    assist_pipeline_state: bool = False
 
     @property
     def name(self) -> str:
@@ -130,10 +140,15 @@ class RuntimeEntryData:
         )
         self.ble_connections_free = free
         self.ble_connections_limit = limit
-        if free:
-            for fut in self._ble_connection_free_futures:
+        if not free:
+            return
+        for fut in self._ble_connection_free_futures:
+            # If wait_for_ble_connections_free gets cancelled, it will
+            # leave a future in the list. We need to check if it's done
+            # before setting the result.
+            if not fut.done():
                 fut.set_result(free)
-            self._ble_connection_free_futures.clear()
+        self._ble_connection_free_futures.clear()
 
     async def wait_for_ble_connections_free(self) -> int:
         """Wait until there are free BLE connections."""
@@ -142,6 +157,24 @@ class RuntimeEntryData:
         fut: asyncio.Future[int] = asyncio.Future()
         self._ble_connection_free_futures.append(fut)
         return await fut
+
+    @callback
+    def async_set_assist_pipeline_state(self, state: bool) -> None:
+        """Set the assist pipeline state."""
+        self.assist_pipeline_state = state
+        for update_callback in self.assist_pipeline_update_callbacks:
+            update_callback()
+
+    def async_subscribe_assist_pipeline_update(
+        self, update_callback: Callable[[], None]
+    ) -> Callable[[], None]:
+        """Subscribe to assist pipeline updates."""
+
+        def _unsubscribe() -> None:
+            self.assist_pipeline_update_callbacks.remove(update_callback)
+
+        self.assist_pipeline_update_callbacks.append(update_callback)
+        return _unsubscribe
 
     @callback
     def async_remove_entity(
@@ -169,6 +202,10 @@ class RuntimeEntryData:
 
         if async_get_dashboard(hass):
             needed_platforms.add(Platform.UPDATE)
+
+        if self.device_info is not None and self.device_info.voice_assistant_version:
+            needed_platforms.add(Platform.BINARY_SENSOR)
+            needed_platforms.add(Platform.SELECT)
 
         for info in infos:
             for info_type, platform in INFO_TYPE_TO_PLATFORM.items():
@@ -198,16 +235,45 @@ class RuntimeEntryData:
     @callback
     def async_update_state(self, state: EntityState) -> None:
         """Distribute an update of state information to the target."""
-        subscription_key = (type(state), state.key)
-        self.state[type(state)][state.key] = state
+        key = state.key
+        state_type = type(state)
+        stale_state = self.stale_state
+        current_state_by_type = self.state[state_type]
+        current_state = current_state_by_type.get(key, _SENTINEL)
+        subscription_key = (state_type, key)
+        if (
+            current_state == state
+            and subscription_key not in stale_state
+            and not (
+                type(state) is SensorState  # pylint: disable=unidiomatic-typecheck
+                and (platform_info := self.info.get(Platform.SENSOR))
+                and (entity_info := platform_info.get(state.key))
+                and (cast(SensorInfo, entity_info)).force_update
+            )
+        ):
+            _LOGGER.debug(
+                "%s: ignoring duplicate update with key %s: %s",
+                self.name,
+                key,
+                state,
+            )
+            return
         _LOGGER.debug(
             "%s: dispatching update with key %s: %s",
             self.name,
-            subscription_key,
+            key,
             state,
         )
-        if subscription_key in self.state_subscriptions:
-            self.state_subscriptions[subscription_key]()
+        stale_state.discard(subscription_key)
+        current_state_by_type[key] = state
+        if subscription := self.state_subscriptions.get(subscription_key):
+            try:
+                subscription()
+            except Exception as ex:  # pylint: disable=broad-except
+                # If we allow this exception to raise it will
+                # make it all the way to data_received in aioesphomeapi
+                # which will cause the connection to be closed.
+                _LOGGER.exception("Error while calling subscription: %s", ex)
 
     @callback
     def async_update_device_state(self, hass: HomeAssistant) -> None:

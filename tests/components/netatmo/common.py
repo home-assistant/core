@@ -81,6 +81,7 @@ async def fake_post_request_no_data(*args, **kwargs):
 async def simulate_webhook(hass, webhook_id, response):
     """Simulate a webhook event."""
     request = MockRequest(
+        method="POST",
         content=bytes(json.dumps({**COMMON_RESPONSE, **response}), "utf-8"),
         mock_source="test",
     )

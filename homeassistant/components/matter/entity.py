@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from abc import abstractmethod
 from collections.abc import Callable
+from dataclasses import dataclass
 import logging
 from typing import TYPE_CHECKING, Any, cast
 
@@ -11,7 +12,7 @@ from matter_server.common.helpers.util import create_attribute_path
 from matter_server.common.models import EventType, ServerInfoMessage
 
 from homeassistant.core import callback
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity, EntityDescription
 
 from .const import DOMAIN, ID_TYPE_DEVICE_ID
 from .helpers import get_device_id
@@ -23,6 +24,14 @@ if TYPE_CHECKING:
     from .discovery import MatterEntityInfo
 
 LOGGER = logging.getLogger(__name__)
+
+
+@dataclass
+class MatterEntityDescription(EntityDescription):
+    """Describe the Matter entity."""
+
+    # convert the value from the primary attribute to the value used by HA
+    measurement_to_ha: Callable[[Any], Any] | None = None
 
 
 class MatterEntity(Entity):

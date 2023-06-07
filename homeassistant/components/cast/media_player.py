@@ -23,7 +23,6 @@ from pychromecast.socket_client import (
     CONNECTION_STATUS_CONNECTED,
     CONNECTION_STATUS_DISCONNECTED,
 )
-import voluptuous as vol
 import yarl
 
 from homeassistant.components import media_source, zeroconf
@@ -47,7 +46,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -82,15 +80,6 @@ _LOGGER = logging.getLogger(__name__)
 APP_IDS_UNRELIABLE_MEDIA_INFO = ("Netflix",)
 
 CAST_SPLASH = "https://www.home-assistant.io/images/cast/splash.png"
-
-ENTITY_SCHEMA = vol.All(
-    vol.Schema(
-        {
-            vol.Optional(CONF_UUID): cv.string,
-            vol.Optional(CONF_IGNORE_CEC): vol.All(cv.ensure_list, [cv.string]),
-        }
-    ),
-)
 
 
 @callback
@@ -819,7 +808,15 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
             return MediaType.MOVIE
         if media_status.media_is_musictrack:
             return MediaType.MUSIC
-        return None
+
+        chromecast = self._get_chromecast()
+        if chromecast.cast_type in (
+            pychromecast.const.CAST_TYPE_AUDIO,
+            pychromecast.const.CAST_TYPE_GROUP,
+        ):
+            return MediaType.MUSIC
+
+        return MediaType.VIDEO
 
     @property
     def media_duration(self):

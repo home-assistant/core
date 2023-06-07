@@ -153,6 +153,11 @@ async def test_websocket_supervisor_api(
     msg = await websocket_client.receive_json()
     assert msg["result"]["version_latest"] == "1.0.0"
 
+    assert aioclient_mock.mock_calls[-1][3] == {
+        "X-Hass-Source": "core.websocket_api",
+        "Authorization": "Bearer 123456",
+    }
+
 
 async def test_websocket_supervisor_api_error(
     hassio_env,

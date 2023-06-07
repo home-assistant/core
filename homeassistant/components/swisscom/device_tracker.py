@@ -36,7 +36,7 @@ def get_scanner(
 
 
 class SwisscomDeviceScanner(DeviceScanner):
-    """This class queries a router running Swisscom Internet-Box firmware."""
+    """Class which queries a router running Swisscom Internet-Box firmware."""
 
     def __init__(self, config):
         """Initialize the scanner."""

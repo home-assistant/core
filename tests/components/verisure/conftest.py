@@ -43,8 +43,22 @@ def mock_verisure_config_flow() -> Generator[None, MagicMock, None]:
     ) as verisure_mock:
         verisure = verisure_mock.return_value
         verisure.login.return_value = True
-        verisure.installations = [
-            {"giid": "12345", "alias": "ascending", "street": "12345th street"},
-            {"giid": "54321", "alias": "descending", "street": "54321th street"},
-        ]
+        verisure.get_installations.return_value = {
+            "data": {
+                "account": {
+                    "installations": [
+                        {
+                            "giid": "12345",
+                            "alias": "ascending",
+                            "address": {"street": "12345th street"},
+                        },
+                        {
+                            "giid": "54321",
+                            "alias": "descending",
+                            "address": {"street": "54321th street"},
+                        },
+                    ]
+                }
+            }
+        }
         yield verisure
