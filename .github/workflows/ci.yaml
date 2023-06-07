@@ -32,7 +32,7 @@ env:
   CACHE_VERSION: 5
   PIP_CACHE_VERSION: 4
   MYPY_CACHE_VERSION: 4
-  HA_SHORT_VERSION: 2023.5
+  HA_SHORT_VERSION: 2023.6
   DEFAULT_PYTHON: "3.10"
   ALL_PYTHON_VERSIONS: "['3.10', '3.11']"
   # 10.3 is the oldest supported version
@@ -209,7 +209,7 @@ jobs:
         uses: actions/checkout@v3.5.2
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
-        uses: actions/setup-python@v4.6.0
+        uses: actions/setup-python@v4.6.1
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
           check-latest: true
@@ -253,7 +253,7 @@ jobs:
       - name: Check out code from GitHub
         uses: actions/checkout@v3.5.2
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v4.6.0
+        uses: actions/setup-python@v4.6.1
         id: python
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
@@ -299,7 +299,7 @@ jobs:
       - name: Check out code from GitHub
         uses: actions/checkout@v3.5.2
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v4.6.0
+        uses: actions/setup-python@v4.6.1
         id: python
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
@@ -348,7 +348,7 @@ jobs:
       - name: Check out code from GitHub
         uses: actions/checkout@v3.5.2
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v4.6.0
+        uses: actions/setup-python@v4.6.1
         id: python
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
@@ -386,7 +386,7 @@ jobs:
       - name: Check out code from GitHub
         uses: actions/checkout@v3.5.2
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v4.6.0
+        uses: actions/setup-python@v4.6.1
         id: python
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
@@ -494,7 +494,7 @@ jobs:
         uses: actions/checkout@v3.5.2
       - name: Set up Python ${{ matrix.python-version }}
         id: python
-        uses: actions/setup-python@v4.6.0
+        uses: actions/setup-python@v4.6.1
         with:
           python-version: ${{ matrix.python-version }}
           check-latest: true
@@ -544,8 +544,8 @@ jobs:
           . venv/bin/activate
           python --version
           pip install --cache-dir=$PIP_CACHE -U "pip>=21.0,<23.2" setuptools wheel
-          pip install --cache-dir=$PIP_CACHE -r requirements_all.txt --use-deprecated=legacy-resolver
-          pip install --cache-dir=$PIP_CACHE -r requirements_test.txt --use-deprecated=legacy-resolver
+          pip install --cache-dir=$PIP_CACHE -r requirements_all.txt
+          pip install --cache-dir=$PIP_CACHE -r requirements_test.txt
           pip install -e .
 
   hassfest:
@@ -562,7 +562,7 @@ jobs:
         uses: actions/checkout@v3.5.2
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
-        uses: actions/setup-python@v4.6.0
+        uses: actions/setup-python@v4.6.1
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
           check-latest: true
@@ -594,7 +594,7 @@ jobs:
         uses: actions/checkout@v3.5.2
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
-        uses: actions/setup-python@v4.6.0
+        uses: actions/setup-python@v4.6.1
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
           check-latest: true
@@ -627,7 +627,7 @@ jobs:
         uses: actions/checkout@v3.5.2
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
-        uses: actions/setup-python@v4.6.0
+        uses: actions/setup-python@v4.6.1
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
           check-latest: true
@@ -671,7 +671,7 @@ jobs:
         uses: actions/checkout@v3.5.2
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
-        uses: actions/setup-python@v4.6.0
+        uses: actions/setup-python@v4.6.1
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
           check-latest: true
@@ -719,42 +719,6 @@ jobs:
           python --version
           mypy homeassistant/components/${{ needs.info.outputs.integrations_glob }}
 
-  pip-check:
-    runs-on: ubuntu-22.04
-    if: |
-      github.event.inputs.pylint-only != 'true'
-      && github.event.inputs.mypy-only != 'true'
-    needs:
-      - info
-      - base
-    strategy:
-      fail-fast: false
-      matrix:
-        python-version: ${{ fromJson(needs.info.outputs.python_versions) }}
-    name: Run pip check ${{ matrix.python-version }}
-    steps:
-      - name: Check out code from GitHub
-        uses: actions/checkout@v3.5.2
-      - name: Set up Python ${{ matrix.python-version }}
-        id: python
-        uses: actions/setup-python@v4.6.0
-        with:
-          python-version: ${{ matrix.python-version }}
-          check-latest: true
-      - name: Restore full Python ${{ matrix.python-version }} virtual environment
-        id: cache-venv
-        uses: actions/cache/restore@v3.3.1
-        with:
-          path: venv
-          fail-on-cache-miss: true
-          key: >-
-            ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
-            needs.info.outputs.python_cache_key }}
-      - name: Run pip check
-        run: |
-          . venv/bin/activate
-          ./script/pip_check $PIP_CACHE
-
   pytest:
     runs-on: ubuntu-22.04
     if: |
@@ -790,7 +754,7 @@ jobs:
         uses: actions/checkout@v3.5.2
       - name: Set up Python ${{ matrix.python-version }}
         id: python
-        uses: actions/setup-python@v4.6.0
+        uses: actions/setup-python@v4.6.1
         with:
           python-version: ${{ matrix.python-version }}
           check-latest: true
@@ -916,7 +880,7 @@ jobs:
         uses: actions/checkout@v3.5.2
       - name: Set up Python ${{ matrix.python-version }}
         id: python
-        uses: actions/setup-python@v4.6.0
+        uses: actions/setup-python@v4.6.1
         with:
           python-version: ${{ matrix.python-version }}
           check-latest: true
@@ -1024,7 +988,7 @@ jobs:
         uses: actions/checkout@v3.5.2
       - name: Set up Python ${{ matrix.python-version }}
         id: python
-        uses: actions/setup-python@v4.6.0
+        uses: actions/setup-python@v4.6.1
         with:
           python-version: ${{ matrix.python-version }}
           check-latest: true

@@ -7,14 +7,14 @@ from .backports.enum import StrEnum
 
 APPLICATION_NAME: Final = "HomeAssistant"
 MAJOR_VERSION: Final = 2023
-MINOR_VERSION: Final = 5
-PATCH_VERSION: Final = "4"
+MINOR_VERSION: Final = 6
+PATCH_VERSION: Final = "0"
 __short_version__: Final = f"{MAJOR_VERSION}.{MINOR_VERSION}"
 __version__: Final = f"{__short_version__}.{PATCH_VERSION}"
 REQUIRED_PYTHON_VER: Final[tuple[int, int, int]] = (3, 10, 0)
-REQUIRED_NEXT_PYTHON_VER: Final[tuple[int, int, int]] = (3, 10, 0)
+REQUIRED_NEXT_PYTHON_VER: Final[tuple[int, int, int]] = (3, 11, 0)
 # Truthy date string triggers showing related deprecation warning messages.
-REQUIRED_NEXT_PYTHON_HA_RELEASE: Final = ""
+REQUIRED_NEXT_PYTHON_HA_RELEASE: Final = "2023.8"
 
 # Format for platform files
 PLATFORM_FORMAT: Final = "{platform}.{domain}"
@@ -31,6 +31,8 @@ class Platform(StrEnum):
     CAMERA = "camera"
     CLIMATE = "climate"
     COVER = "cover"
+    DATE = "date"
+    DATETIME = "datetime"
     DEVICE_TRACKER = "device_tracker"
     FAN = "fan"
     GEO_LOCATION = "geo_location"
@@ -50,6 +52,7 @@ class Platform(StrEnum):
     STT = "stt"
     SWITCH = "switch"
     TEXT = "text"
+    TIME = "time"
     TTS = "tts"
     VACUUM = "vacuum"
     UPDATE = "update"
@@ -1162,6 +1165,11 @@ CAST_APP_ID_HOMEASSISTANT_LOVELACE: Final = "A078F6B0"
 HASSIO_USER_NAME = "Supervisor"
 
 SIGNAL_BOOTSTRAP_INTEGRATIONS = "bootstrap_integrations"
+
+# Date/Time formats
+FORMAT_DATE: Final = "%Y-%m-%d"
+FORMAT_TIME: Final = "%H:%M:%S"
+FORMAT_DATETIME: Final = f"{FORMAT_DATE} {FORMAT_TIME}"
 
 
 class EntityCategory(StrEnum):

@@ -40,7 +40,10 @@ from homeassistant.util import dt as dt_util, ensure_unique_string, slugify
 
 from . import device_registry as dr, entity_registry as er
 from .device_registry import DeviceEntryType
-from .event import async_track_entity_registry_updated_event
+from .event import (
+    async_track_device_registry_updated_event,
+    async_track_entity_registry_updated_event,
+)
 from .typing import StateType
 
 if TYPE_CHECKING:
@@ -264,6 +267,8 @@ class Entity(ABC):
 
     # Hold list for functions to call on remove.
     _on_remove: list[CALLBACK_TYPE] | None = None
+
+    _unsub_device_updates: CALLBACK_TYPE | None = None
 
     # Context
     _context: Context | None = None
@@ -770,8 +775,8 @@ class Entity(ABC):
             await self.parallel_updates.acquire()
 
         if warning:
-            update_warn = hass.loop.call_later(
-                SLOW_UPDATE_WARNING, self._async_slow_update_warning
+            update_warn = hass.loop.call_at(
+                hass.loop.time() + SLOW_UPDATE_WARNING, self._async_slow_update_warning
             )
 
         try:
@@ -926,6 +931,7 @@ class Entity(ABC):
                     self.hass, self.entity_id, self._async_registry_updated
                 )
             )
+            self._async_subscribe_device_updates()
 
     async def async_internal_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from hass.
@@ -945,6 +951,9 @@ class Entity(ABC):
 
         if data["action"] != "update":
             return
+
+        if "device_id" in data["changes"]:
+            self._async_subscribe_device_updates()
 
         ent_reg = er.async_get(self.hass)
         old = self.registry_entry
@@ -966,6 +975,51 @@ class Entity(ABC):
         assert self.platform is not None
         self.entity_id = self.registry_entry.entity_id
         await self.platform.async_add_entities([self])
+
+    @callback
+    def _async_unsubscribe_device_updates(self) -> None:
+        """Unsubscribe from device registry updates."""
+        if not self._unsub_device_updates:
+            return
+        self._unsub_device_updates()
+        self._unsub_device_updates = None
+
+    @callback
+    def _async_subscribe_device_updates(self) -> None:
+        """Subscribe to device registry updates."""
+        assert self.registry_entry
+
+        self._async_unsubscribe_device_updates()
+
+        if (device_id := self.registry_entry.device_id) is None:
+            return
+
+        if not self.has_entity_name:
+            return
+
+        @callback
+        def async_device_registry_updated(event: Event) -> None:
+            """Handle device registry update."""
+            data = event.data
+
+            if data["action"] != "update":
+                return
+
+            if "name" not in data["changes"] and "name_by_user" not in data["changes"]:
+                return
+
+            self.async_write_ha_state()
+
+        self._unsub_device_updates = async_track_device_registry_updated_event(
+            self.hass,
+            device_id,
+            async_device_registry_updated,
+        )
+        if (
+            not self._on_remove
+            or self._async_unsubscribe_device_updates not in self._on_remove
+        ):
+            self.async_on_remove(self._async_unsubscribe_device_updates)
 
     def __repr__(self) -> str:
         """Return the representation."""

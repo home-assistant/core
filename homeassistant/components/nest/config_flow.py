@@ -43,7 +43,6 @@ from .const import (
     DATA_NEST_CONFIG,
     DATA_SDM,
     DOMAIN,
-    INSTALLED_AUTH_DOMAIN,
     OAUTH2_AUTHORIZE,
     SDM_SCOPES,
 )
@@ -64,10 +63,6 @@ PUBSUB_API_URL = "https://console.cloud.google.com/apis/library/pubsub.googleapi
 # URLs for Configure Device Access Project step
 DEVICE_ACCESS_CONSOLE_URL = "https://console.nest.google.com/device-access/"
 
-# URLs for App Auth deprecation and upgrade
-UPGRADE_MORE_INFO_URL = (
-    "https://www.home-assistant.io/integrations/nest/#deprecated-app-auth-credentials"
-)
 DEVICE_ACCESS_CONSOLE_EDIT_URL = (
     "https://console.nest.google.com/device-access/project/{project_id}/information"
 )
@@ -161,7 +156,6 @@ class NestFlowHandler(
     def __init__(self) -> None:
         """Initialize NestFlowHandler."""
         super().__init__()
-        self._upgrade = False
         self._data: dict[str, Any] = {DATA_SDM: {}}
         # Possible name to use for config entry based on the Google Home name
         self._structure_config_title: str | None = None
@@ -233,37 +227,7 @@ class NestFlowHandler(
         assert self.config_mode != ConfigMode.LEGACY, "Step only supported for SDM API"
         if user_input is None:
             return self.async_show_form(step_id="reauth_confirm")
-        if self._data["auth_implementation"] == INSTALLED_AUTH_DOMAIN:
-            # The config entry points to an auth mechanism that no longer works and the
-            # user needs to take action in the google cloud console to resolve. First
-            # prompt to create app creds, then later ensure they've updated the device
-            # access console.
-            self._upgrade = True
-            implementations = await config_entry_oauth2_flow.async_get_implementations(
-                self.hass, self.DOMAIN
-            )
-            if not implementations:
-                return await self.async_step_auth_upgrade()
         return await self.async_step_user()
-
-    async def async_step_auth_upgrade(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """Give instructions for upgrade of deprecated app auth."""
-        assert self.config_mode != ConfigMode.LEGACY, "Step only supported for SDM API"
-        if user_input is None:
-            return self.async_show_form(
-                step_id="auth_upgrade",
-                description_placeholders={
-                    "more_info_url": UPGRADE_MORE_INFO_URL,
-                },
-            )
-        # Abort this flow and ask the user for application credentials. The frontend
-        # will restart a new config flow after the user finishes so schedule a new
-        # re-auth config flow for the same entry so the user may resume.
-        if reauth_entry := self._async_reauth_entry():
-            self.hass.async_add_job(reauth_entry.async_start_reauth, self.hass)
-        return self.async_abort(reason="missing_credentials")
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -356,39 +320,6 @@ class NestFlowHandler(
                 "more_info_url": MORE_INFO_URL,
             },
             errors=errors,
-        )
-
-    async def async_step_auth(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """Verify any last pre-requisites before sending user through OAuth flow."""
-        if user_input is None and self._upgrade:
-            # During app auth upgrade we need the user to update their device
-            # access project before we redirect to the authentication flow.
-            return await self.async_step_device_project_upgrade()
-        return await super().async_step_auth(user_input)
-
-    async def async_step_device_project_upgrade(
-        self, user_input: dict | None = None
-    ) -> FlowResult:
-        """Update the device access project."""
-        if user_input is not None:
-            # Resume OAuth2 redirects
-            return await super().async_step_auth()
-        if not isinstance(
-            self.flow_impl, config_entry_oauth2_flow.LocalOAuth2Implementation
-        ):
-            raise TypeError(f"Unexpected OAuth implementation: {self.flow_impl}")
-        client_id = self.flow_impl.client_id
-        return self.async_show_form(
-            step_id="device_project_upgrade",
-            description_placeholders={
-                "device_access_console_url": DEVICE_ACCESS_CONSOLE_EDIT_URL.format(
-                    project_id=self._data[CONF_PROJECT_ID]
-                ),
-                "more_info_url": UPGRADE_MORE_INFO_URL,
-                "client_id": client_id,
-            },
         )
 
     async def async_step_pubsub(

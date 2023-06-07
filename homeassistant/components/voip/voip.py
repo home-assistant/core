@@ -18,6 +18,7 @@ from homeassistant.components.assist_pipeline import (
     Pipeline,
     PipelineEvent,
     PipelineEventType,
+    PipelineNotFound,
     async_get_pipeline,
     async_pipeline_from_audio_stream,
     select as pipeline_select,
@@ -45,7 +46,11 @@ def make_protocol(
         DOMAIN,
         voip_device.voip_id,
     )
-    pipeline = async_get_pipeline(hass, pipeline_id)
+    try:
+        pipeline: Pipeline | None = async_get_pipeline(hass, pipeline_id)
+    except PipelineNotFound:
+        pipeline = None
+
     if (
         (pipeline is None)
         or (pipeline.stt_engine is None)
@@ -261,6 +266,8 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
                 await self._tts_done.wait()
 
             _LOGGER.debug("Pipeline finished")
+        except PipelineNotFound:
+            _LOGGER.warning("Pipeline not found")
         except asyncio.TimeoutError:
             # Expected after caller hangs up
             _LOGGER.debug("Pipeline timeout")
@@ -285,12 +292,12 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
             chunk = await self._audio_queue.get()
 
         while chunk:
+            chunk_buffer.append(chunk)
+
             segmenter.process(chunk)
             if segmenter.in_command:
+                # Buffer until command starts
                 return True
-
-            # Buffer until command starts
-            chunk_buffer.append(chunk)
 
             async with async_timeout.timeout(self.audio_timeout):
                 chunk = await self._audio_queue.get()
