@@ -1,6 +1,7 @@
 """Support for Fronius devices."""
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Final
 
@@ -103,6 +104,7 @@ class FroniusSensorEntityDescription(SensorEntityDescription):
     # Handling such values shall mitigate spikes in delta calculations.
     invalid_when_falsy: bool = False
     response_key: str | None = None
+    value_fn: Callable[[StateType], StateType] | None = None
 
 
 INVERTER_ENTITY_DESCRIPTIONS: list[FroniusSensorEntityDescription] = [
@@ -659,6 +661,8 @@ class _FroniusSensorEntity(CoordinatorEntity["FroniusCoordinatorBase"], SensorEn
             return self.entity_description.default_value
         if self.entity_description.invalid_when_falsy and not new_value:
             return None
+        if self.entity_description.value_fn is not None:
+            return self.entity_description.value_fn(new_value)
         if isinstance(new_value, float):
             return round(new_value, 4)
         return new_value
