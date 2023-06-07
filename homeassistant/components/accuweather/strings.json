@@ -24,14 +24,8 @@
   },
   "entity": {
     "sensor": {
-      "pressure_tendency": {
-        "state": {
-          "steady": "Steady",
-          "rising": "Rising",
-          "falling": "Falling"
-        }
-      },
       "air_quality": {
+        "name": "Air quality",
         "state": {
           "good": "Good",
           "hazardous": "Hazardous",
@@ -41,7 +35,14 @@
           "unhealthy": "Unhealthy"
         }
       },
+      "cloud_cover_day": {
+        "name": "Cloud cover day"
+      },
+      "cloud_cover_night": {
+        "name": "Cloud cover night"
+      },
       "grass_pollen": {
+        "name": "Grass pollen",
         "state_attributes": {
           "level": {
             "name": "Level",
@@ -56,7 +57,17 @@
           }
         }
       },
+      "hours_of_sun": {
+        "name": "Hours of sun"
+      },
+      "condition_day": {
+        "name": "Condition day"
+      },
+      "condition_night": {
+        "name": "Condition night"
+      },
       "mold_pollen": {
+        "name": "Mold pollen",
         "state_attributes": {
           "level": {
             "name": "Level",
@@ -72,6 +83,7 @@
         }
       },
       "ragweed_pollen": {
+        "name": "Ragweed pollen",
         "state_attributes": {
           "level": {
             "name": "Level",
@@ -86,7 +98,32 @@
           }
         }
       },
+      "real_feel_temperature_max": {
+        "name": "RealFeel temperature max"
+      },
+      "real_feel_temperature_min": {
+        "name": "RealFeel temperature min"
+      },
+      "real_feel_temperature_shade_max": {
+        "name": "RealFeel temperature shade max"
+      },
+      "real_feel_temperature_shade_min": {
+        "name": "RealFeel temperature shade min"
+      },
+      "solar_irradiance_day": {
+        "name": "Solar irradiance day"
+      },
+      "solar_irradiance_night": {
+        "name": "Solar irradiance night"
+      },
+      "thunderstorm_probability_day": {
+        "name": "Thunderstorm probability day"
+      },
+      "thunderstorm_probability_night": {
+        "name": "Thunderstorm probability night"
+      },
       "tree_pollen": {
+        "name": "Tree pollen",
         "state_attributes": {
           "level": {
             "name": "Level",
@@ -102,6 +139,7 @@
         }
       },
       "uv_index": {
+        "name": "UV index",
         "state_attributes": {
           "level": {
             "name": "Level",
@@ -114,6 +152,25 @@
               "unhealthy": "[%key:component::accuweather::entity::sensor::air_quality::state::unhealthy%]"
             }
           }
+        }
+      },
+      "wind_gust_day": {
+        "name": "Wind gust day"
+      },
+      "wind_gust_night": {
+        "name": "Wind gust night"
+      },
+      "wind_day": {
+        "name": "Wind day"
+      },
+      "wind_night": {
+        "name": "Wind night"
+      },
+      "pressure_tendency": {
+        "state": {
+          "steady": "Steady",
+          "rising": "Rising",
+          "falling": "Falling"
         }
       }
     }
