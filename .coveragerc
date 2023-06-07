@@ -202,6 +202,8 @@ omit =
     homeassistant/components/discogs/sensor.py
     homeassistant/components/discord/__init__.py
     homeassistant/components/discord/notify.py
+    homeassistant/components/discovergy/__init__.py
+    homeassistant/components/discovergy/sensor.py
     homeassistant/components/dlib_face_detect/image_processing.py
     homeassistant/components/dlib_face_identify/image_processing.py
     homeassistant/components/dlink/data.py
