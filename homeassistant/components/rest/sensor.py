@@ -124,7 +124,7 @@ class RestSensor(RestEntity, TemplateSensor):
 
     def _update_from_rest_data(self) -> None:
         """Update state from the rest data."""
-        value = self.rest.xml_to_json()
+        value = self.rest.data_without_xml()
 
         if self._json_attrs:
             self._attr_extra_state_attributes = {}

@@ -64,7 +64,7 @@ class RestData:
         """Set url."""
         self._resource = url
 
-    def xml_to_json(self) -> str | None:
+    def data_without_xml(self) -> str | None:
         """If the data is an XML string, convert it to a JSON string."""
         _LOGGER.debug("Data fetched from resource: %s", self.data)
         if (value := self.data) is None:
