@@ -5,9 +5,9 @@ from functools import cached_property
 
 from zigpy.zcl.clusters import lighting
 
-from . import AttrReportConfig, ClientClusterHandler, ClusterHandler
 from .. import registries
 from ..const import REPORT_CONFIG_DEFAULT
+from . import AttrReportConfig, ClientClusterHandler, ClusterHandler
 
 
 @registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(lighting.Ballast.cluster_id)
