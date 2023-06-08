@@ -145,7 +145,8 @@ class EvoZone(EvoChild, EvoClimateEntity):
         """Initialize a Honeywell TCC Zone."""
         super().__init__(evo_broker, evo_device)
 
-        if evo_device.modelType.startswith("VisionProWifi"):
+        if evo_device.modelType.startswith("VisionProWifi") \
+            or evo_device.modelType.startswith("FocusProWifiRetail"):
             # this system does not have a distinct ID for the zone
             self._attr_unique_id = f"{evo_device.zoneId}z"
         else:
