@@ -52,9 +52,24 @@ from homeassistant.util.unit_conversion import TemperatureConverter
 from . import subscription
 from .config import DEFAULT_RETAIN, MQTT_BASE_SCHEMA
 from .const import (
+    CONF_CURRENT_TEMP_TEMPLATE,
+    CONF_CURRENT_TEMP_TOPIC,
     CONF_ENCODING,
+    CONF_MODE_COMMAND_TEMPLATE,
+    CONF_MODE_COMMAND_TOPIC,
+    CONF_MODE_LIST,
+    CONF_MODE_STATE_TEMPLATE,
+    CONF_MODE_STATE_TOPIC,
+    CONF_PRECISION,
     CONF_QOS,
     CONF_RETAIN,
+    CONF_TEMP_COMMAND_TEMPLATE,
+    CONF_TEMP_COMMAND_TOPIC,
+    CONF_TEMP_INITIAL,
+    CONF_TEMP_MAX,
+    CONF_TEMP_MIN,
+    CONF_TEMP_STATE_TEMPLATE,
+    CONF_TEMP_STATE_TOPIC,
     DEFAULT_OPTIMISTIC,
     PAYLOAD_NONE,
 )
@@ -86,8 +101,6 @@ CONF_AWAY_MODE_STATE_TOPIC = "away_mode_state_topic"
 
 CONF_CURRENT_HUMIDITY_TEMPLATE = "current_humidity_template"
 CONF_CURRENT_HUMIDITY_TOPIC = "current_humidity_topic"
-CONF_CURRENT_TEMP_TEMPLATE = "current_temperature_template"
-CONF_CURRENT_TEMP_TOPIC = "current_temperature_topic"
 CONF_FAN_MODE_COMMAND_TEMPLATE = "fan_mode_command_template"
 CONF_FAN_MODE_COMMAND_TOPIC = "fan_mode_command_topic"
 CONF_FAN_MODE_LIST = "fan_modes"
@@ -107,11 +120,6 @@ CONF_HUMIDITY_STATE_TEMPLATE = "target_humidity_state_template"
 CONF_HUMIDITY_STATE_TOPIC = "target_humidity_state_topic"
 CONF_HUMIDITY_MAX = "max_humidity"
 CONF_HUMIDITY_MIN = "min_humidity"
-CONF_MODE_COMMAND_TEMPLATE = "mode_command_template"
-CONF_MODE_COMMAND_TOPIC = "mode_command_topic"
-CONF_MODE_LIST = "modes"
-CONF_MODE_STATE_TEMPLATE = "mode_state_template"
-CONF_MODE_STATE_TOPIC = "mode_state_topic"
 
 # CONF_POWER_COMMAND_TOPIC, CONF_POWER_STATE_TOPIC and CONF_POWER_STATE_TEMPLATE
 # are deprecated, support for CONF_POWER_STATE_TOPIC and CONF_POWER_STATE_TEMPLATE
@@ -120,7 +128,6 @@ CONF_MODE_STATE_TOPIC = "mode_state_topic"
 CONF_POWER_COMMAND_TOPIC = "power_command_topic"
 CONF_POWER_STATE_TEMPLATE = "power_state_template"
 CONF_POWER_STATE_TOPIC = "power_state_topic"
-CONF_PRECISION = "precision"
 CONF_PRESET_MODE_STATE_TOPIC = "preset_mode_state_topic"
 CONF_PRESET_MODE_COMMAND_TOPIC = "preset_mode_command_topic"
 CONF_PRESET_MODE_VALUE_TEMPLATE = "preset_mode_value_template"
@@ -133,8 +140,6 @@ CONF_SWING_MODE_COMMAND_TOPIC = "swing_mode_command_topic"
 CONF_SWING_MODE_LIST = "swing_modes"
 CONF_SWING_MODE_STATE_TEMPLATE = "swing_mode_state_template"
 CONF_SWING_MODE_STATE_TOPIC = "swing_mode_state_topic"
-CONF_TEMP_COMMAND_TEMPLATE = "temperature_command_template"
-CONF_TEMP_COMMAND_TOPIC = "temperature_command_topic"
 CONF_TEMP_HIGH_COMMAND_TEMPLATE = "temperature_high_command_template"
 CONF_TEMP_HIGH_COMMAND_TOPIC = "temperature_high_command_topic"
 CONF_TEMP_HIGH_STATE_TEMPLATE = "temperature_high_state_template"
@@ -143,11 +148,6 @@ CONF_TEMP_LOW_COMMAND_TEMPLATE = "temperature_low_command_template"
 CONF_TEMP_LOW_COMMAND_TOPIC = "temperature_low_command_topic"
 CONF_TEMP_LOW_STATE_TEMPLATE = "temperature_low_state_template"
 CONF_TEMP_LOW_STATE_TOPIC = "temperature_low_state_topic"
-CONF_TEMP_STATE_TEMPLATE = "temperature_state_template"
-CONF_TEMP_STATE_TOPIC = "temperature_state_topic"
-CONF_TEMP_INITIAL = "initial"
-CONF_TEMP_MAX = "max_temp"
-CONF_TEMP_MIN = "min_temp"
 CONF_TEMP_STEP = "temp_step"
 
 DEFAULT_INITIAL_TEMPERATURE = 21.0
@@ -475,7 +475,7 @@ class MqttTemperatureControlEntity(MqttEntity, ABC):
     ) -> None:
         """Add a subscription."""
         qos: int = self._config[CONF_QOS]
-        if self._topic[topic] is not None:
+        if topic in self._topic and self._topic[topic] is not None:
             topics[topic] = {
                 "topic": self._topic[topic],
                 "msg_callback": msg_callback,
