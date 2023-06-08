@@ -1371,9 +1371,6 @@ openhomedevice==2.2.0
 # homeassistant.components.opensensemap
 opensensemap-api==0.2.0
 
-# homeassistant.components.opentherm_web
-opentherm-web-api==0.1.6
-
 # homeassistant.components.enigma2
 openwebifpy==3.2.7
 

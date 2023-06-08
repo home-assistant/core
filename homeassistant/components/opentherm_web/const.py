@@ -9,3 +9,4 @@ HOST = "host"
 LOGGER = logging.getLogger(__package__)
 SCAN_INTERVAL = timedelta(seconds=30)
 SECRET = "password"
+TIMEOUT = 5
