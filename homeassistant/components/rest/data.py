@@ -64,24 +64,27 @@ class RestData:
         """Set url."""
         self._resource = url
 
-    def convert_data_if_xml(self) -> None:
+    def xml_to_json(self) -> str | None:
         """If the data is an XML string, convert it to a JSON string."""
         _LOGGER.debug("Data fetched from resource: %s", self.data)
+        if (value := self.data) is None:
+            return value
+
         if (
-            self.data is not None
             # If the http request failed, headers will be None
-            and self.headers is not None
+            self.headers is not None
             and (content_type := self.headers.get("content-type"))
             and content_type.startswith(XML_MIME_TYPES)
         ):
             try:
-                self.data = json_dumps(xmltodict.parse(self.data))
+                value = json_dumps(xmltodict.parse(value))
             except ExpatError:
                 _LOGGER.warning(
                     "REST xml result could not be parsed and converted to JSON"
                 )
             else:
                 _LOGGER.debug("JSON converted from XML: %s", self.data)
+        return value
 
     async def async_update(self, log_errors: bool = True) -> None:
         """Get the latest data from REST service with provided method."""
