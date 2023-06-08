@@ -1333,6 +1333,9 @@ async def test_get_target_temperature_low_high_with_templates(
                     # By default, just unquote the JSON-strings
                     "value_template": "{{ value_json }}",
                     "action_template": "{{ value_json }}",
+                    "current_humidity_template": "{{ value_json }}",
+                    "current_temperature_template": "{{ value_json }}",
+                    "temperature_state_template": "{{ value_json }}",
                     # Rendering to a bool for aux heat
                     "aux_state_template": "{{ value == 'switchmeon' }}",
                     # Rendering preset_mode
