@@ -1,0 +1,5 @@
+{
+  "domain": "nextcloud",
+  "name": "Nextcloud",
+  "integrations": ["caldav", "nextcloud"]
+}
