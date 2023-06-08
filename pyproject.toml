@@ -273,6 +273,8 @@ ignore = [
     "D407",  # Section name underlining
     "E501",  # line too long
     "E731",  # do not assign a lambda expression, use a def
+    "UP006", # keep type annotation style as is
+    "UP007", # keep type annotation style as is
     # Ignored due to performance: https://github.com/charliermarsh/ruff/issues/2923
     "UP038", # Use `X | Y` in `isinstance` call instead of `(X, Y)`
 ]
@@ -288,9 +290,6 @@ voluptuous = "vol"
 
 [tool.ruff.flake8-pytest-style]
 fixture-parentheses = false
-
-[tool.ruff.pyupgrade]
-keep-runtime-typing = true
 
 [tool.ruff.per-file-ignores]
 
