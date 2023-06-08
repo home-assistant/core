@@ -25,6 +25,23 @@ HASSIO_DATA = hassio.HassioServiceInfo(
 )
 
 
+@pytest.fixture(name="addon_info")
+def addon_info_fixture():
+    """Mock Supervisor add-on info."""
+    with patch(
+        "homeassistant.components.otbr.config_flow.async_get_addon_info",
+    ) as addon_info:
+        addon_info.return_value = {
+            "available": True,
+            "hostname": None,
+            "options": {},
+            "state": None,
+            "update_available": False,
+            "version": None,
+        }
+        yield addon_info
+
+
 async def test_user_flow(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
@@ -176,7 +193,7 @@ async def test_user_flow_connect_error(hass: HomeAssistant, error) -> None:
 
 
 async def test_hassio_discovery_flow(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, addon_info
 ) -> None:
     """Test the hassio discovery flow."""
     url = "http://core-silabs-multiprotocol:8081"
@@ -207,8 +224,97 @@ async def test_hassio_discovery_flow(
     assert config_entry.unique_id == HASSIO_DATA.uuid
 
 
+async def test_hassio_discovery_flow_yellow(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, addon_info
+) -> None:
+    """Test the hassio discovery flow."""
+    url = "http://core-silabs-multiprotocol:8081"
+    aioclient_mock.get(f"{url}/node/dataset/active", text="aa")
+
+    addon_info.return_value = {
+        "available": True,
+        "hostname": None,
+        "options": {"device": "/dev/TTYAMA1"},
+        "state": None,
+        "update_available": False,
+        "version": None,
+    }
+
+    with patch(
+        "homeassistant.components.otbr.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry, patch(
+        "homeassistant.components.otbr.config_flow.yellow_hardware.async_info"
+    ):
+        result = await hass.config_entries.flow.async_init(
+            otbr.DOMAIN, context={"source": "hassio"}, data=HASSIO_DATA
+        )
+
+    expected_data = {
+        "url": f"http://{HASSIO_DATA.config['host']}:{HASSIO_DATA.config['port']}",
+    }
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Home Assistant Yellow"
+    assert result["data"] == expected_data
+    assert result["options"] == {}
+    assert len(mock_setup_entry.mock_calls) == 1
+
+    config_entry = hass.config_entries.async_entries(otbr.DOMAIN)[0]
+    assert config_entry.data == expected_data
+    assert config_entry.options == {}
+    assert config_entry.title == "Home Assistant Yellow"
+    assert config_entry.unique_id == HASSIO_DATA.uuid
+
+
+async def test_hassio_discovery_flow_sky_connect(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, addon_info
+) -> None:
+    """Test the hassio discovery flow."""
+    url = "http://core-silabs-multiprotocol:8081"
+    aioclient_mock.get(f"{url}/node/dataset/active", text="aa")
+
+    addon_info.return_value = {
+        "available": True,
+        "hostname": None,
+        "options": {
+            "device": (
+                "/dev/serial/by-id/usb-Nabu_Casa_SkyConnect_v1.0_"
+                "9e2adbd75b8beb119fe564a0f320645d-if00-port0"
+            )
+        },
+        "state": None,
+        "update_available": False,
+        "version": None,
+    }
+
+    with patch(
+        "homeassistant.components.otbr.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result = await hass.config_entries.flow.async_init(
+            otbr.DOMAIN, context={"source": "hassio"}, data=HASSIO_DATA
+        )
+
+    expected_data = {
+        "url": f"http://{HASSIO_DATA.config['host']}:{HASSIO_DATA.config['port']}",
+    }
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Home Assistant SkyConnect"
+    assert result["data"] == expected_data
+    assert result["options"] == {}
+    assert len(mock_setup_entry.mock_calls) == 1
+
+    config_entry = hass.config_entries.async_entries(otbr.DOMAIN)[0]
+    assert config_entry.data == expected_data
+    assert config_entry.options == {}
+    assert config_entry.title == "Home Assistant SkyConnect"
+    assert config_entry.unique_id == HASSIO_DATA.uuid
+
+
 async def test_hassio_discovery_flow_router_not_setup(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, addon_info
 ) -> None:
     """Test the hassio discovery flow when the border router has no dataset.
 
@@ -260,7 +366,7 @@ async def test_hassio_discovery_flow_router_not_setup(
 
 
 async def test_hassio_discovery_flow_router_not_setup_has_preferred(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, addon_info
 ) -> None:
     """Test the hassio discovery flow when the border router has no dataset.
 
@@ -312,6 +418,7 @@ async def test_hassio_discovery_flow_router_not_setup_has_preferred_2(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     multiprotocol_addon_manager_mock,
+    addon_info,
 ) -> None:
     """Test the hassio discovery flow when the border router has no dataset.
 
