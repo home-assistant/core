@@ -10,6 +10,7 @@ from .const import (
     DOMAIN,
     MANUFACTURER,
     MODEL,
+    POWERWALL_API,
     POWERWALL_BASE_INFO,
     POWERWALL_COORDINATOR,
 )
@@ -25,6 +26,7 @@ class PowerWallEntity(CoordinatorEntity[DataUpdateCoordinator[PowerwallData]]):
         coordinator = powerwall_data[POWERWALL_COORDINATOR]
         assert coordinator is not None
         super().__init__(coordinator)
+        self.power_wall = powerwall_data[POWERWALL_API]
         # The serial numbers of the powerwalls are unique to every site
         self.base_unique_id = "_".join(base_info.serial_numbers)
         self._attr_device_info = DeviceInfo(

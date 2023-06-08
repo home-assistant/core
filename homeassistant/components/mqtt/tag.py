@@ -44,7 +44,7 @@ PLATFORM_SCHEMA = MQTT_BASE_SCHEMA.extend(
 
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
-    """Set up MQTT device automation dynamically through MQTT discovery."""
+    """Set up MQTT tag scanner dynamically through MQTT discovery."""
 
     setup = functools.partial(_async_setup_tag, hass, config_entry=config_entry)
     await async_setup_entry_helper(hass, TAG, setup, PLATFORM_SCHEMA)
@@ -54,7 +54,7 @@ async def _async_setup_tag(
     hass: HomeAssistant,
     config: ConfigType,
     config_entry: ConfigEntry,
-    discovery_data: dict,
+    discovery_data: DiscoveryInfoType,
 ) -> None:
     """Set up the MQTT tag scanner."""
     discovery_hash = discovery_data[ATTR_DISCOVERY_HASH]

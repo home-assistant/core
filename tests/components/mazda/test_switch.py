@@ -1,5 +1,4 @@
 """The switch tests for the Mazda Connected Services integration."""
-
 from homeassistant.components.switch import (
     DOMAIN as SWITCH_DOMAIN,
     SERVICE_TURN_OFF,
@@ -7,12 +6,13 @@ from homeassistant.components.switch import (
     STATE_ON,
 )
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_FRIENDLY_NAME, ATTR_ICON
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import init_integration
 
 
-async def test_switch_setup(hass):
+async def test_switch_setup(hass: HomeAssistant) -> None:
     """Test setup of the switch entity."""
     await init_integration(hass, electric_vehicle=True)
 
@@ -29,7 +29,7 @@ async def test_switch_setup(hass):
     assert state.state == STATE_ON
 
 
-async def test_start_charging(hass):
+async def test_start_charging(hass: HomeAssistant) -> None:
     """Test turning on the charging switch."""
     client_mock = await init_integration(hass, electric_vehicle=True)
 
@@ -49,7 +49,7 @@ async def test_start_charging(hass):
     client_mock.get_ev_vehicle_status.assert_called_once()
 
 
-async def test_stop_charging(hass):
+async def test_stop_charging(hass: HomeAssistant) -> None:
     """Test turning off the charging switch."""
     client_mock = await init_integration(hass, electric_vehicle=True)
 

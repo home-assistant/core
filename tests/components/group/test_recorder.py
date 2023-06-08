@@ -3,12 +3,14 @@ from __future__ import annotations
 
 from datetime import timedelta
 
+import pytest
+
 from homeassistant.components import group
 from homeassistant.components.group import ATTR_AUTO, ATTR_ENTITY_ID, ATTR_ORDER
-from homeassistant.components.recorder.db_schema import StateAttributes, States
-from homeassistant.components.recorder.util import session_scope
+from homeassistant.components.recorder import Recorder
+from homeassistant.components.recorder.history import get_significant_states
 from homeassistant.const import ATTR_FRIENDLY_NAME, STATE_ON
-from homeassistant.core import State
+from homeassistant.core import HomeAssistant, split_entity_id
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -16,8 +18,14 @@ from tests.common import async_fire_time_changed
 from tests.components.recorder.common import async_wait_recording_done
 
 
-async def test_exclude_attributes(recorder_mock, hass):
+@pytest.fixture(autouse=True)
+async def setup_homeassistant():
+    """Override the fixture in group.conftest."""
+
+
+async def test_exclude_attributes(recorder_mock: Recorder, hass: HomeAssistant) -> None:
     """Test number registered attributes to be excluded."""
+    now = dt_util.utcnow()
     hass.states.async_set("light.bowl", STATE_ON)
 
     assert await async_setup_component(hass, "light", {})
@@ -37,25 +45,14 @@ async def test_exclude_attributes(recorder_mock, hass):
     await hass.async_block_till_done()
     await async_wait_recording_done(hass)
 
-    def _fetch_states() -> list[State]:
-        with session_scope(hass=hass) as session:
-            native_states = []
-            attr_ids = {}
-            for db_state_attributes in session.query(StateAttributes):
-                attr_ids[
-                    db_state_attributes.attributes_id
-                ] = db_state_attributes.to_native()
-            for db_state, db_state_attributes in session.query(States, StateAttributes):
-                state = db_state.to_native()
-                state.attributes = attr_ids[db_state.attributes_id]
-                native_states.append(state)
-            return native_states
-
-    states: list[State] = await hass.async_add_executor_job(_fetch_states)
+    states = await hass.async_add_executor_job(
+        get_significant_states, hass, now, None, hass.states.async_entity_ids()
+    )
     assert len(states) > 1
-    for state in states:
-        if state.domain == group.DOMAIN:
-            assert ATTR_AUTO not in state.attributes
-            assert ATTR_ENTITY_ID not in state.attributes
-            assert ATTR_ORDER not in state.attributes
-            assert ATTR_FRIENDLY_NAME in state.attributes
+    for entity_states in states.values():
+        for state in entity_states:
+            if split_entity_id(state.entity_id)[0] == group.DOMAIN:
+                assert ATTR_AUTO not in state.attributes
+                assert ATTR_ENTITY_ID not in state.attributes
+                assert ATTR_ORDER not in state.attributes
+                assert ATTR_FRIENDLY_NAME in state.attributes

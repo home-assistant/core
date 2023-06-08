@@ -19,6 +19,7 @@ import yarl
 from . import config as conf_util, config_entries, core, loader
 from .components import http
 from .const import (
+    FORMAT_DATETIME,
     REQUIRED_NEXT_PYTHON_HA_RELEASE,
     REQUIRED_NEXT_PYTHON_VER,
     SIGNAL_BOOTSTRAP_INTEGRATIONS,
@@ -27,9 +28,12 @@ from .exceptions import HomeAssistantError
 from .helpers import (
     area_registry,
     device_registry,
+    entity,
     entity_registry,
     issue_registry,
     recorder,
+    restore_state,
+    template,
 )
 from .helpers.dispatcher import async_dispatcher_send
 from .helpers.typing import ConfigType
@@ -236,12 +240,16 @@ async def load_registries(hass: core.HomeAssistant) -> None:
         platform.uname().processor  # pylint: disable=expression-not-assigned
 
     # Load the registries and cache the result of platform.uname().processor
+    entity.async_setup(hass)
+    template.async_setup(hass)
     await asyncio.gather(
         area_registry.async_load(hass),
         device_registry.async_load(hass),
         entity_registry.async_load(hass),
         issue_registry.async_load(hass),
         hass.async_add_executor_job(_cache_uname_processor),
+        template.async_load_custom_templates(hass),
+        restore_state.async_load(hass),
     )
 
 
@@ -342,11 +350,10 @@ def async_enable_logging(
     fmt = (
         "%(asctime)s.%(msecs)03d %(levelname)s (%(threadName)s) [%(name)s] %(message)s"
     )
-    datefmt = "%Y-%m-%d %H:%M:%S"
 
     if not log_no_color:
         try:
-            # pylint: disable=import-outside-toplevel
+            # pylint: disable-next=import-outside-toplevel
             from colorlog import ColoredFormatter
 
             # basicConfig must be called after importing colorlog in order to
@@ -357,7 +364,7 @@ def async_enable_logging(
             logging.getLogger().handlers[0].setFormatter(
                 ColoredFormatter(
                     colorfmt,
-                    datefmt=datefmt,
+                    datefmt=FORMAT_DATETIME,
                     reset=True,
                     log_colors={
                         "DEBUG": "cyan",
@@ -373,19 +380,29 @@ def async_enable_logging(
 
     # If the above initialization failed for any reason, setup the default
     # formatting.  If the above succeeds, this will result in a no-op.
-    logging.basicConfig(format=fmt, datefmt=datefmt, level=logging.INFO)
+    logging.basicConfig(format=fmt, datefmt=FORMAT_DATETIME, level=logging.INFO)
+
+    # Capture warnings.warn(...) and friends messages in logs.
+    # The standard destination for them is stderr, which may end up unnoticed.
+    # This way they're where other messages are, and can be filtered as usual.
+    logging.captureWarnings(True)
 
     # Suppress overly verbose logs from libraries that aren't helpful
     logging.getLogger("requests").setLevel(logging.WARNING)
     logging.getLogger("urllib3").setLevel(logging.WARNING)
     logging.getLogger("aiohttp.access").setLevel(logging.WARNING)
+    logging.getLogger("httpx").setLevel(logging.WARNING)
 
     sys.excepthook = lambda *args: logging.getLogger(None).exception(
         "Uncaught exception", exc_info=args  # type: ignore[arg-type]
     )
     threading.excepthook = lambda args: logging.getLogger(None).exception(
         "Uncaught thread exception",
-        exc_info=(args.exc_type, args.exc_value, args.exc_traceback),  # type: ignore[arg-type]
+        exc_info=(  # type: ignore[arg-type]
+            args.exc_type,
+            args.exc_value,
+            args.exc_traceback,
+        ),
     )
 
     # Log errors to a file if we have write access to file or config dir
@@ -402,8 +419,10 @@ def async_enable_logging(
     if (err_path_exists and os.access(err_log_path, os.W_OK)) or (
         not err_path_exists and os.access(err_dir, os.W_OK)
     ):
-
-        err_handler: logging.handlers.RotatingFileHandler | logging.handlers.TimedRotatingFileHandler
+        err_handler: (
+            logging.handlers.RotatingFileHandler
+            | logging.handlers.TimedRotatingFileHandler
+        )
         if log_rotate_days:
             err_handler = logging.handlers.TimedRotatingFileHandler(
                 err_log_path, when="midnight", backupCount=log_rotate_days
@@ -419,7 +438,7 @@ def async_enable_logging(
             _LOGGER.error("Error rolling over log file: %s", err)
 
         err_handler.setLevel(logging.INFO if verbose else logging.WARNING)
-        err_handler.setFormatter(logging.Formatter(fmt, datefmt=datefmt))
+        err_handler.setFormatter(logging.Formatter(fmt, datefmt=FORMAT_DATETIME))
 
         logger = logging.getLogger("")
         logger.addHandler(err_handler)
@@ -462,7 +481,10 @@ def _get_domains(hass: core.HomeAssistant, config: dict[str, Any]) -> set[str]:
 
 
 async def _async_watch_pending_setups(hass: core.HomeAssistant) -> None:
-    """Periodic log of setups that are pending for longer than LOG_SLOW_STARTUP_INTERVAL."""
+    """Periodic log of setups that are pending.
+
+    Pending for longer than LOG_SLOW_STARTUP_INTERVAL.
+    """
     loop_count = 0
     setup_started: dict[str, datetime] = hass.data[DATA_SETUP_STARTED]
     previous_was_empty = True
@@ -497,19 +519,20 @@ async def async_setup_multi_components(
 ) -> None:
     """Set up multiple domains. Log on failure."""
     futures = {
-        domain: hass.async_create_task(async_setup_component(hass, domain, config))
+        domain: hass.async_create_task(
+            async_setup_component(hass, domain, config), f"setup component {domain}"
+        )
         for domain in domains
     }
-    await asyncio.wait(futures.values())
-    errors = [domain for domain in domains if futures[domain].exception()]
-    for domain in errors:
-        exception = futures[domain].exception()
-        assert exception is not None
-        _LOGGER.error(
-            "Error setting up integration %s - received exception",
-            domain,
-            exc_info=(type(exception), exception, exception.__traceback__),
-        )
+    results = await asyncio.gather(*futures.values(), return_exceptions=True)
+    for idx, domain in enumerate(futures):
+        result = results[idx]
+        if isinstance(result, BaseException):
+            _LOGGER.error(
+                "Error setting up integration %s - received exception",
+                domain,
+                exc_info=(type(result), result, result.__traceback__),
+            )
 
 
 async def _async_set_up_integrations(
@@ -614,6 +637,9 @@ async def _async_set_up_integrations(
         - stage_1_domains
     )
 
+    # Enables after dependencies when setting up stage 1 domains
+    async_set_domains_to_be_loaded(hass, stage_1_domains)
+
     # Start setup
     if stage_1_domains:
         _LOGGER.info("Setting up stage 1: %s", stage_1_domains)
@@ -625,7 +651,7 @@ async def _async_set_up_integrations(
         except asyncio.TimeoutError:
             _LOGGER.warning("Setup timed out for stage 1 - moving forward")
 
-    # Enables after dependencies
+    # Add after dependencies when setting up stage 2 domains
     async_set_domains_to_be_loaded(hass, stage_2_domains)
 
     if stage_2_domains:

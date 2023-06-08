@@ -86,7 +86,6 @@ class UnifiFlowHandler(config_entries.ConfigFlow, domain=UNIFI_DOMAIN):
         errors = {}
 
         if user_input is not None:
-
             self.config = {
                 CONF_HOST: user_input[CONF_HOST],
                 CONF_USERNAME: user_input[CONF_USERNAME],
@@ -148,7 +147,6 @@ class UnifiFlowHandler(config_entries.ConfigFlow, domain=UNIFI_DOMAIN):
     ) -> FlowResult:
         """Select site to control."""
         if user_input is not None:
-
             unique_id = user_input[CONF_SITE_ID]
             self.config[CONF_SITE_ID] = self.site_ids[unique_id]
 
@@ -315,6 +313,7 @@ class UnifiOptionsFlowHandler(config_entries.OptionsFlow):
                 f"{wlan.name}{wlan.name_combine_suffix}"
                 for wlan in self.controller.api.wlans.values()
                 if not wlan.name_combine_enabled
+                and wlan.name_combine_suffix is not None
             }
             | {
                 wlan["name"]

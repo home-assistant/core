@@ -6,16 +6,13 @@ from typing import Final, cast
 import voluptuous as vol
 
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 
 from . import commands, connection, const, decorators, http, messages  # noqa: F401
 from .connection import ActiveConnection, current_connection  # noqa: F401
 from .const import (  # noqa: F401
-    COMPRESSED_STATE_ATTRIBUTES,
-    COMPRESSED_STATE_LAST_CHANGED,
-    COMPRESSED_STATE_LAST_UPDATED,
-    COMPRESSED_STATE_STATE,
     ERR_HOME_ASSISTANT_ERROR,
     ERR_INVALID_FORMAT,
     ERR_NOT_FOUND,
@@ -44,6 +41,8 @@ from .messages import (  # noqa: F401
 DOMAIN: Final = const.DOMAIN
 
 DEPENDENCIES: Final[tuple[str]] = ("http",)
+
+CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 
 @bind_hass

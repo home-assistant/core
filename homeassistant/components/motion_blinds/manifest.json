@@ -1,12 +1,13 @@
 {
   "domain": "motion_blinds",
   "name": "Motion Blinds",
+  "codeowners": ["@starkillerOG"],
   "config_flow": true,
-  "documentation": "https://www.home-assistant.io/integrations/motion_blinds",
-  "requirements": ["motionblinds==0.6.15"],
   "dependencies": ["network"],
   "dhcp": [
-    { "registered_devices": true },
+    {
+      "registered_devices": true
+    },
     {
       "hostname": "motion_*"
     },
@@ -17,7 +18,8 @@
       "hostname": "connector_*"
     }
   ],
-  "codeowners": ["@starkillerOG"],
+  "documentation": "https://www.home-assistant.io/integrations/motion_blinds",
   "iot_class": "local_push",
-  "loggers": ["motionblinds"]
+  "loggers": ["motionblinds"],
+  "requirements": ["motionblinds==0.6.18"]
 }

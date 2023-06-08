@@ -10,7 +10,12 @@ from homeassistant.components import config
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa: F401
+from tests.typing import ClientSessionGenerator
+
+
+@pytest.fixture(autouse=True, name="stub_blueprint_populate")
+def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
+    """Stub copying the blueprints to the config folder."""
 
 
 @pytest.fixture(autouse=True)
@@ -20,7 +25,9 @@ async def setup_script(hass, script_config, stub_blueprint_populate):  # noqa: F
 
 
 @pytest.mark.parametrize("script_config", ({},))
-async def test_get_script_config(hass: HomeAssistant, hass_client, hass_config_store):
+async def test_get_script_config(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator, hass_config_store
+) -> None:
     """Test getting script config."""
     with patch.object(config, "SECTIONS", ["script"]):
         await async_setup_component(hass, "config", {})
@@ -42,8 +49,8 @@ async def test_get_script_config(hass: HomeAssistant, hass_client, hass_config_s
 
 @pytest.mark.parametrize("script_config", ({},))
 async def test_update_script_config(
-    hass: HomeAssistant, hass_client, hass_config_store
-):
+    hass: HomeAssistant, hass_client: ClientSessionGenerator, hass_config_store
+) -> None:
     """Test updating script config."""
     with patch.object(config, "SECTIONS", ["script"]):
         await async_setup_component(hass, "config", {})
@@ -73,8 +80,11 @@ async def test_update_script_config(
 
 @pytest.mark.parametrize("script_config", ({},))
 async def test_update_script_config_with_error(
-    hass: HomeAssistant, hass_client, hass_config_store, caplog
-):
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    hass_config_store,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test updating script config with errors."""
     with patch.object(config, "SECTIONS", ["script"]):
         await async_setup_component(hass, "config", {})
@@ -103,8 +113,8 @@ async def test_update_script_config_with_error(
 
 @pytest.mark.parametrize("script_config", ({},))
 async def test_update_remove_key_script_config(
-    hass: HomeAssistant, hass_client, hass_config_store
-):
+    hass: HomeAssistant, hass_client: ClientSessionGenerator, hass_config_store
+) -> None:
     """Test updating script config while removing a key."""
     with patch.object(config, "SECTIONS", ["script"]):
         await async_setup_component(hass, "config", {})
@@ -141,7 +151,9 @@ async def test_update_remove_key_script_config(
         },
     ),
 )
-async def test_delete_script(hass: HomeAssistant, hass_client, hass_config_store):
+async def test_delete_script(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator, hass_config_store
+) -> None:
     """Test deleting a script."""
     with patch.object(config, "SECTIONS", ["script"]):
         await async_setup_component(hass, "config", {})

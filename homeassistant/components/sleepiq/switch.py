@@ -28,7 +28,9 @@ async def async_setup_entry(
     )
 
 
-class SleepNumberPrivateSwitch(SleepIQBedEntity, SwitchEntity):
+class SleepNumberPrivateSwitch(
+    SleepIQBedEntity[SleepIQPauseUpdateCoordinator], SwitchEntity
+):
     """Representation of SleepIQ privacy mode."""
 
     def __init__(

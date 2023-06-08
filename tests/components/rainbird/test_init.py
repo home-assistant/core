@@ -1,34 +1,62 @@
 """Tests for rainbird initialization."""
 
-from http import HTTPStatus
+from __future__ import annotations
 
+import pytest
+
+from homeassistant.components.rainbird import DOMAIN
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
-from .conftest import URL, ComponentSetup
+from .conftest import CONFIG_ENTRY_DATA, UNAVAILABLE_RESPONSE, ComponentSetup
 
-from tests.test_util.aiohttp import AiohttpClientMocker, AiohttpClientMockResponse
-
-
-async def test_setup_success(
-    hass: HomeAssistant,
-    setup_integration: ComponentSetup,
-) -> None:
-    """Test successful setup and unload."""
-
-    assert await setup_integration()
+from tests.test_util.aiohttp import AiohttpClientMockResponse
 
 
-async def test_setup_communication_failure(
+@pytest.mark.parametrize(
+    ("yaml_config", "config_entry_data", "initial_response"),
+    [
+        ({}, CONFIG_ENTRY_DATA, None),
+    ],
+    ids=["config_entry"],
+)
+async def test_init_success(
     hass: HomeAssistant,
     setup_integration: ComponentSetup,
     responses: list[AiohttpClientMockResponse],
-    aioclient_mock: AiohttpClientMocker,
+    initial_response: AiohttpClientMockResponse | None,
+) -> None:
+    """Test successful setup and unload."""
+    if initial_response:
+        responses.insert(0, initial_response)
+
+    assert await setup_integration()
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    assert entries[0].state == ConfigEntryState.LOADED
+
+    await hass.config_entries.async_unload(entries[0].entry_id)
+    await hass.async_block_till_done()
+    assert entries[0].state is ConfigEntryState.NOT_LOADED
+
+
+@pytest.mark.parametrize(
+    ("yaml_config", "config_entry_data", "responses", "config_entry_states"),
+    [
+        ({}, CONFIG_ENTRY_DATA, [UNAVAILABLE_RESPONSE], [ConfigEntryState.SETUP_RETRY]),
+    ],
+    ids=["config_entry_failure"],
+)
+async def test_communication_failure(
+    hass: HomeAssistant,
+    setup_integration: ComponentSetup,
+    config_entry_states: list[ConfigEntryState],
 ) -> None:
     """Test unable to talk to server on startup, which permanently fails setup."""
 
-    responses.clear()
-    responses.append(
-        AiohttpClientMockResponse("POST", URL, status=HTTPStatus.SERVICE_UNAVAILABLE)
-    )
+    assert await setup_integration()
 
-    assert not await setup_integration()
+    assert [
+        entry.state for entry in hass.config_entries.async_entries(DOMAIN)
+    ] == config_entry_states

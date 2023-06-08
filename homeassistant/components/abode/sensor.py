@@ -3,7 +3,8 @@ from __future__ import annotations
 
 from typing import cast
 
-from abodepy.devices.sensor import CONST, AbodeSensor as AbodeSense
+from jaraco.abode.devices.sensor import Sensor as AbodeSense
+from jaraco.abode.helpers import constants as CONST
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -11,6 +12,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import LIGHT_LUX
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -70,7 +72,7 @@ class AbodeSensor(AbodeDevice, SensorEntity):
         elif description.key == CONST.HUMI_STATUS_KEY:
             self._attr_native_unit_of_measurement = device.humidity_unit
         elif description.key == CONST.LUX_STATUS_KEY:
-            self._attr_native_unit_of_measurement = device.lux_unit
+            self._attr_native_unit_of_measurement = LIGHT_LUX
 
     @property
     def native_value(self) -> float | None:

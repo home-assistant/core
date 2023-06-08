@@ -62,6 +62,15 @@
           "spf": "Pinch Detect At Startup"
         }
       }
+    },
+    "select": {
+      "brightness_level": {
+        "state": {
+          "low": "Low",
+          "medium": "Medium",
+          "high": "High"
+        }
+      }
     }
   }
 }

@@ -56,6 +56,14 @@ RUNTIME_ATTRIBUTES = {
     RUNTIME_OV: "Override",
 }
 
+SCHEDULE_PARTS: dict[int, str] = {
+    0: "morning",
+    1: "day",
+    2: "evening",
+    3: "night",
+    255: "inactive",
+}
+
 
 @dataclass
 class VenstarSensorTypeMixin:
@@ -76,31 +84,42 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up Vensar device binary_sensors based on a config entry."""
+    """Set up Venstar device sensors based on a config entry."""
     coordinator: VenstarDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
     entities: list[Entity] = []
 
-    if not (sensors := coordinator.client.get_sensor_list()):
-        return
-
-    for sensor_name in sensors:
-        entities.extend(
-            [
-                VenstarSensor(coordinator, config_entry, description, sensor_name)
-                for description in SENSOR_ENTITIES
-                if coordinator.client.get_sensor(sensor_name, description.key)
-                is not None
-            ]
-        )
-
-    runtimes = coordinator.runtimes[-1]
-    for sensor_name in runtimes:
-        if sensor_name in RUNTIME_DEVICES:
-            entities.append(
-                VenstarSensor(coordinator, config_entry, RUNTIME_ENTITY, sensor_name)
+    if sensors := coordinator.client.get_sensor_list():
+        for sensor_name in sensors:
+            entities.extend(
+                [
+                    VenstarSensor(coordinator, config_entry, description, sensor_name)
+                    for description in SENSOR_ENTITIES
+                    if coordinator.client.get_sensor(sensor_name, description.key)
+                    is not None
+                ]
             )
 
-    async_add_entities(entities)
+        runtimes = coordinator.runtimes[-1]
+        for sensor_name in runtimes:
+            if sensor_name in RUNTIME_DEVICES:
+                entities.append(
+                    VenstarSensor(
+                        coordinator, config_entry, RUNTIME_ENTITY, sensor_name
+                    )
+                )
+
+    for description in INFO_ENTITIES:
+        try:
+            # just checking if the key exists
+            coordinator.client.get_info(description.key)
+        except KeyError:
+            continue
+        entities.append(
+            VenstarSensor(coordinator, config_entry, description, description.key)
+        )
+
+    if entities:
+        async_add_entities(entities)
 
 
 def temperature_unit(coordinator: VenstarDataUpdateCoordinator) -> str:
@@ -209,4 +228,18 @@ RUNTIME_ENTITY = VenstarSensorEntityDescription(
     uom_fn=lambda _: UnitOfTime.MINUTES,
     value_fn=lambda coordinator, sensor_name: coordinator.runtimes[-1][sensor_name],
     name_fn=lambda coordinator, sensor_name: f"{coordinator.client.name} {RUNTIME_ATTRIBUTES[sensor_name]} Runtime",
+)
+
+INFO_ENTITIES: tuple[VenstarSensorEntityDescription, ...] = (
+    VenstarSensorEntityDescription(
+        key="schedulepart",
+        device_class=SensorDeviceClass.ENUM,
+        options=list(SCHEDULE_PARTS.values()),
+        translation_key="schedule_part",
+        uom_fn=lambda _: None,
+        value_fn=lambda coordinator, sensor_name: SCHEDULE_PARTS[
+            coordinator.client.get_info(sensor_name)
+        ],
+        name_fn=lambda coordinator, sensor_name: f"{coordinator.client.name} Schedule Part",
+    ),
 )

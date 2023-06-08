@@ -14,6 +14,7 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNKNOWN,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from .conftest import (
@@ -43,7 +44,7 @@ def switchbox_fixture():
     return (feature, "switch.switchbox_0_relay")
 
 
-async def test_switchbox_init(switchbox, hass, config):
+async def test_switchbox_init(switchbox, hass: HomeAssistant, config) -> None:
     """Test switch default state."""
 
     feature_mock, entity_id = switchbox
@@ -69,7 +70,7 @@ async def test_switchbox_init(switchbox, hass, config):
     assert device.sw_version == "1.23"
 
 
-async def test_switchbox_update_when_off(switchbox, hass):
+async def test_switchbox_update_when_off(switchbox, hass: HomeAssistant) -> None:
     """Test switch updating when off."""
 
     feature_mock, entity_id = switchbox
@@ -84,7 +85,7 @@ async def test_switchbox_update_when_off(switchbox, hass):
     assert state.state == STATE_OFF
 
 
-async def test_switchbox_update_when_on(switchbox, hass):
+async def test_switchbox_update_when_on(switchbox, hass: HomeAssistant) -> None:
     """Test switch updating when on."""
 
     feature_mock, entity_id = switchbox
@@ -99,7 +100,7 @@ async def test_switchbox_update_when_on(switchbox, hass):
     assert state.state == STATE_ON
 
 
-async def test_switchbox_on(switchbox, hass):
+async def test_switchbox_on(switchbox, hass: HomeAssistant) -> None:
     """Test turning switch on."""
 
     feature_mock, entity_id = switchbox
@@ -127,7 +128,7 @@ async def test_switchbox_on(switchbox, hass):
     assert state.state == STATE_ON
 
 
-async def test_switchbox_off(switchbox, hass):
+async def test_switchbox_off(switchbox, hass: HomeAssistant) -> None:
     """Test turning switch off."""
 
     feature_mock, entity_id = switchbox
@@ -188,7 +189,7 @@ def switchbox_d_fixture():
     return (features, ["switch.switchboxd_0_relay", "switch.switchboxd_1_relay"])
 
 
-async def test_switchbox_d_init(switchbox_d, hass):
+async def test_switchbox_d_init(switchbox_d, hass: HomeAssistant) -> None:
     """Test switch default state."""
 
     feature_mocks, entity_ids = switchbox_d
@@ -232,7 +233,7 @@ async def test_switchbox_d_init(switchbox_d, hass):
     assert device.sw_version == "1.23"
 
 
-async def test_switchbox_d_update_when_off(switchbox_d, hass):
+async def test_switchbox_d_update_when_off(switchbox_d, hass: HomeAssistant) -> None:
     """Test switch updating when off."""
 
     feature_mocks, entity_ids = switchbox_d
@@ -249,7 +250,9 @@ async def test_switchbox_d_update_when_off(switchbox_d, hass):
     assert hass.states.get(entity_ids[1]).state == STATE_OFF
 
 
-async def test_switchbox_d_update_when_second_off(switchbox_d, hass):
+async def test_switchbox_d_update_when_second_off(
+    switchbox_d, hass: HomeAssistant
+) -> None:
     """Test switch updating when off."""
 
     feature_mocks, entity_ids = switchbox_d
@@ -266,7 +269,7 @@ async def test_switchbox_d_update_when_second_off(switchbox_d, hass):
     assert hass.states.get(entity_ids[1]).state == STATE_OFF
 
 
-async def test_switchbox_d_turn_first_on(switchbox_d, hass):
+async def test_switchbox_d_turn_first_on(switchbox_d, hass: HomeAssistant) -> None:
     """Test turning switch on."""
 
     feature_mocks, entity_ids = switchbox_d
@@ -295,7 +298,7 @@ async def test_switchbox_d_turn_first_on(switchbox_d, hass):
     assert hass.states.get(entity_ids[1]).state == STATE_OFF
 
 
-async def test_switchbox_d_second_on(switchbox_d, hass):
+async def test_switchbox_d_second_on(switchbox_d, hass: HomeAssistant) -> None:
     """Test turning switch on."""
 
     feature_mocks, entity_ids = switchbox_d
@@ -324,7 +327,7 @@ async def test_switchbox_d_second_on(switchbox_d, hass):
     assert hass.states.get(entity_ids[1]).state == STATE_ON
 
 
-async def test_switchbox_d_first_off(switchbox_d, hass):
+async def test_switchbox_d_first_off(switchbox_d, hass: HomeAssistant) -> None:
     """Test turning switch on."""
 
     feature_mocks, entity_ids = switchbox_d
@@ -353,7 +356,7 @@ async def test_switchbox_d_first_off(switchbox_d, hass):
     assert hass.states.get(entity_ids[1]).state == STATE_ON
 
 
-async def test_switchbox_d_second_off(switchbox_d, hass):
+async def test_switchbox_d_second_off(switchbox_d, hass: HomeAssistant) -> None:
     """Test turning switch on."""
 
     feature_mocks, entity_ids = switchbox_d
@@ -385,7 +388,9 @@ ALL_SWITCH_FIXTURES = ["switchbox", "switchbox_d"]
 
 
 @pytest.mark.parametrize("feature", ALL_SWITCH_FIXTURES, indirect=["feature"])
-async def test_update_failure(feature, hass, caplog):
+async def test_update_failure(
+    feature, hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test that update failures are logged."""
 
     caplog.set_level(logging.ERROR)

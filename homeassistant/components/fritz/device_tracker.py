@@ -21,9 +21,6 @@ from .const import DATA_FRITZ, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-YAML_DEFAULT_HOST = "169.254.1.1"
-YAML_DEFAULT_USERNAME = "admin"
-
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
@@ -68,7 +65,7 @@ def _async_add_entities(
 
 
 class FritzBoxTracker(FritzDeviceBase, ScannerEntity):
-    """This class queries a FRITZ!Box device."""
+    """Class which queries a FRITZ!Box device."""
 
     def __init__(self, avm_wrapper: AvmWrapper, device: FritzDevice) -> None:
         """Initialize a FRITZ!Box device."""

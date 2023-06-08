@@ -72,7 +72,7 @@ class HueBridge:
     async def async_initialize_bridge(self) -> bool:
         """Initialize Connection with the Hue API."""
         try:
-            with async_timeout.timeout(10):
+            async with async_timeout.timeout(10):
                 await self.api.initialize()
 
         except (LinkButtonNotPressed, Unauthorized):

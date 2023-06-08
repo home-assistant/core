@@ -1,8 +1,6 @@
 """Support for Aranet sensors."""
 from __future__ import annotations
 
-from typing import Optional, Union
-
 from aranet4.client import Aranet4Advertisement
 from bleak.backends.device import BLEDevice
 
@@ -145,9 +143,7 @@ async def async_setup_entry(
 
 
 class Aranet4BluetoothSensorEntity(
-    PassiveBluetoothProcessorEntity[
-        PassiveBluetoothDataProcessor[Optional[Union[float, int]]]
-    ],
+    PassiveBluetoothProcessorEntity[PassiveBluetoothDataProcessor[float | int | None]],
     SensorEntity,
 ):
     """Representation of an Aranet sensor."""

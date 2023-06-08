@@ -1,9 +1,11 @@
 {
   "domain": "geo_json_events",
   "name": "GeoJSON",
-  "documentation": "https://www.home-assistant.io/integrations/geo_json_events",
-  "requirements": ["aio_geojson_generic_client==0.1"],
   "codeowners": ["@exxamalte"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/geo_json_events",
+  "integration_type": "service",
   "iot_class": "cloud_polling",
-  "loggers": ["aio_geojson_generic_client"]
+  "loggers": ["aio_geojson_generic_client"],
+  "requirements": ["aio-geojson-generic-client==0.3"]
 }

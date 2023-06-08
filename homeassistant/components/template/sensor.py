@@ -140,8 +140,11 @@ PLATFORM_SCHEMA = vol.All(
 
 @callback
 def _async_create_template_tracking_entities(
-    async_add_entities, hass, definitions: list[dict], unique_id_prefix: str | None
-):
+    async_add_entities: AddEntitiesCallback,
+    hass: HomeAssistant,
+    definitions: list[dict],
+    unique_id_prefix: str | None,
+) -> None:
     """Create the template sensors."""
     sensors = []
 

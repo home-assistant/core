@@ -2,14 +2,18 @@
 from unittest.mock import AsyncMock, patch
 
 from homeassistant.components.diagnostics import REDACTED
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from .common import fake_post_request
 
 from tests.components.diagnostics import get_diagnostics_for_config_entry
+from tests.typing import ClientSessionGenerator
 
 
-async def test_entry_diagnostics(hass, hass_client, config_entry):
+async def test_entry_diagnostics(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator, config_entry
+) -> None:
     """Test config entry diagnostics."""
     with patch(
         "homeassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth",

@@ -54,7 +54,7 @@ class AlarmDecoderFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize AlarmDecoder ConfigFlow."""
         self.protocol = None
 

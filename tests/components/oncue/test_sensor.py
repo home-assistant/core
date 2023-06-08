@@ -22,7 +22,7 @@ from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(
-    "patcher, connections",
+    ("patcher", "connections"),
     [
         [_patch_login_and_data, {("mac", "c9:24:22:6f:14:00")}],
         [_patch_login_and_data_offline_device, set()],
@@ -149,7 +149,7 @@ async def test_sensors(hass: HomeAssistant, patcher, connections) -> None:
 
 
 @pytest.mark.parametrize(
-    "patcher, connections",
+    ("patcher", "connections"),
     [
         [_patch_login_and_data_unavailable_device, set()],
         [_patch_login_and_data_unavailable, {("mac", "c9:24:22:6f:14:00")}],

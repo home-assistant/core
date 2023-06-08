@@ -1,5 +1,4 @@
 """Test HomematicIP Cloud setup process."""
-
 from unittest.mock import AsyncMock, Mock, patch
 
 from homematicip.base.base_connection import HmipConnectionError
@@ -15,14 +14,15 @@ from homeassistant.components.homematicip_cloud.const import (
 from homeassistant.components.homematicip_cloud.hap import HomematicipHAP
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_NAME
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 
 
 async def test_config_with_accesspoint_passed_to_config_entry(
-    hass, mock_connection, simple_mock_home
-):
+    hass: HomeAssistant, mock_connection, simple_mock_home
+) -> None:
     """Test that config for a accesspoint are loaded via config entry."""
 
     entry_config = {
@@ -55,8 +55,8 @@ async def test_config_with_accesspoint_passed_to_config_entry(
 
 
 async def test_config_already_registered_not_passed_to_config_entry(
-    hass, simple_mock_home
-):
+    hass: HomeAssistant, simple_mock_home
+) -> None:
     """Test that an already registered accesspoint does not get imported."""
 
     mock_config = {HMIPC_AUTHTOKEN: "123", HMIPC_HAPID: "ABC123", HMIPC_NAME: "name"}
@@ -99,8 +99,8 @@ async def test_config_already_registered_not_passed_to_config_entry(
 
 
 async def test_load_entry_fails_due_to_connection_error(
-    hass, hmip_config_entry, mock_connection_init
-):
+    hass: HomeAssistant, hmip_config_entry, mock_connection_init
+) -> None:
     """Test load entry fails due to connection error."""
     hmip_config_entry.add_to_hass(hass)
 
@@ -114,7 +114,9 @@ async def test_load_entry_fails_due_to_connection_error(
     assert hmip_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_load_entry_fails_due_to_generic_exception(hass, hmip_config_entry):
+async def test_load_entry_fails_due_to_generic_exception(
+    hass: HomeAssistant, hmip_config_entry
+) -> None:
     """Test load entry fails due to generic exception."""
     hmip_config_entry.add_to_hass(hass)
 
@@ -130,7 +132,7 @@ async def test_load_entry_fails_due_to_generic_exception(hass, hmip_config_entry
     assert hmip_config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
-async def test_unload_entry(hass):
+async def test_unload_entry(hass: HomeAssistant) -> None:
     """Test being able to unload an entry."""
     mock_config = {HMIPC_AUTHTOKEN: "123", HMIPC_HAPID: "ABC123", HMIPC_NAME: "name"}
     MockConfigEntry(domain=HMIPC_DOMAIN, data=mock_config).add_to_hass(hass)
@@ -155,12 +157,13 @@ async def test_unload_entry(hass):
     assert config_entries[0].state is ConfigEntryState.LOADED
     await hass.config_entries.async_unload(config_entries[0].entry_id)
     assert config_entries[0].state is ConfigEntryState.NOT_LOADED
-    assert mock_hap.return_value.mock_calls[2][0] == "async_reset"
     # entry is unloaded
     assert hass.data[HMIPC_DOMAIN] == {}
 
 
-async def test_hmip_dump_hap_config_services(hass, mock_hap_with_service):
+async def test_hmip_dump_hap_config_services(
+    hass: HomeAssistant, mock_hap_with_service
+) -> None:
     """Test dump configuration services."""
 
     with patch("pathlib.Path.write_text", return_value=Mock()) as write_mock:
@@ -173,7 +176,7 @@ async def test_hmip_dump_hap_config_services(hass, mock_hap_with_service):
         assert write_mock.mock_calls
 
 
-async def test_setup_services_and_unload_services(hass):
+async def test_setup_services_and_unload_services(hass: HomeAssistant) -> None:
     """Test setup services and unload services."""
     mock_config = {HMIPC_AUTHTOKEN: "123", HMIPC_HAPID: "ABC123", HMIPC_NAME: "name"}
     MockConfigEntry(domain=HMIPC_DOMAIN, data=mock_config).add_to_hass(hass)
@@ -202,7 +205,7 @@ async def test_setup_services_and_unload_services(hass):
     assert not hass.services.async_services().get(HMIPC_DOMAIN)
 
 
-async def test_setup_two_haps_unload_one_by_one(hass):
+async def test_setup_two_haps_unload_one_by_one(hass: HomeAssistant) -> None:
     """Test setup two access points and unload one by one and check services."""
 
     # Setup AP1

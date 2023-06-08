@@ -1,18 +1,24 @@
 """Test honeywell sensor."""
-from somecomfort import Device, Location
+from aiosomecomfort.device import Device
+from aiosomecomfort.location import Location
+import pytest
 
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
 
+@pytest.mark.parametrize(("unit", "temp"), [("C", "5"), ("F", "-15")])
 async def test_outdoor_sensor(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     location: Location,
     device_with_outdoor_sensor: Device,
-):
+    unit,
+    temp,
+) -> None:
     """Test outdoor temperature sensor."""
+    device_with_outdoor_sensor.temperature_unit = unit
     location.devices_by_id[
         device_with_outdoor_sensor.deviceid
     ] = device_with_outdoor_sensor
@@ -25,5 +31,5 @@ async def test_outdoor_sensor(
 
     assert temperature_state
     assert humidity_state
-    assert temperature_state.state == "5"
+    assert temperature_state.state == temp
     assert humidity_state.state == "25"

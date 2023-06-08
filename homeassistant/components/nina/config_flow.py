@@ -126,7 +126,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     user_input[CONF_REGIONS] += group_input
 
             if user_input[CONF_REGIONS]:
-
                 return self.async_create_entry(
                     title="NINA",
                     data=prepare_user_input(user_input, self._all_region_codes_sorted),
@@ -203,7 +202,6 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                     user_input[CONF_REGIONS] += group_input
 
             if user_input[CONF_REGIONS]:
-
                 user_input = prepare_user_input(
                     user_input, self._all_region_codes_sorted
                 )

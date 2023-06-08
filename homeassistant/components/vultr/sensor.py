@@ -84,7 +84,9 @@ def setup_platform(
 class VultrSensor(SensorEntity):
     """Representation of a Vultr subscription sensor."""
 
-    def __init__(self, vultr, subscription, name, description: SensorEntityDescription):
+    def __init__(
+        self, vultr, subscription, name, description: SensorEntityDescription
+    ) -> None:
         """Initialize a new Vultr sensor."""
         self.entity_description = description
         self._vultr = vultr

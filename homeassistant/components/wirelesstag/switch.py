@@ -77,7 +77,7 @@ def setup_platform(
 class WirelessTagSwitch(WirelessTagBaseSensor, SwitchEntity):
     """A switch implementation for Wireless Sensor Tags."""
 
-    def __init__(self, api, tag, description: SwitchEntityDescription):
+    def __init__(self, api, tag, description: SwitchEntityDescription) -> None:
         """Initialize a switch for Wireless Sensor Tag."""
         super().__init__(api, tag)
         self.entity_description = description

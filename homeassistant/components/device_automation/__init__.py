@@ -3,11 +3,12 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Awaitable, Callable, Coroutine, Iterable, Mapping
+from dataclasses import dataclass
 from enum import Enum
 from functools import wraps
 import logging
 from types import ModuleType
-from typing import TYPE_CHECKING, Any, Literal, NamedTuple, Union, overload
+from typing import TYPE_CHECKING, Any, Literal, TypeAlias, overload
 
 import voluptuous as vol
 import voluptuous_serialize
@@ -28,7 +29,10 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import IntegrationNotFound
-from homeassistant.requirements import async_get_integration_with_requirements
+from homeassistant.requirements import (
+    RequirementsNotFound,
+    async_get_integration_with_requirements,
+)
 
 from .const import (  # noqa: F401
     CONF_IS_OFF,
@@ -43,14 +47,17 @@ if TYPE_CHECKING:
     from .condition import DeviceAutomationConditionProtocol
     from .trigger import DeviceAutomationTriggerProtocol
 
-    DeviceAutomationPlatformType = Union[
-        ModuleType,
-        DeviceAutomationTriggerProtocol,
-        DeviceAutomationConditionProtocol,
-        DeviceAutomationActionProtocol,
-    ]
+    DeviceAutomationPlatformType: TypeAlias = (
+        ModuleType
+        | DeviceAutomationTriggerProtocol
+        | DeviceAutomationConditionProtocol
+        | DeviceAutomationActionProtocol
+    )
+
 
 DOMAIN = "device_automation"
+
+CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 DEVICE_TRIGGER_BASE_SCHEMA: vol.Schema = cv.TRIGGER_BASE_SCHEMA.extend(
     {
@@ -62,7 +69,8 @@ DEVICE_TRIGGER_BASE_SCHEMA: vol.Schema = cv.TRIGGER_BASE_SCHEMA.extend(
 )
 
 
-class DeviceAutomationDetails(NamedTuple):
+@dataclass
+class DeviceAutomationDetails:
     """Details for device automation."""
 
     section: str
@@ -120,7 +128,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 
 @overload
-async def async_get_device_automation_platform(  # noqa: D103
+async def async_get_device_automation_platform(
     hass: HomeAssistant,
     domain: str,
     automation_type: Literal[DeviceAutomationType.TRIGGER],
@@ -129,7 +137,7 @@ async def async_get_device_automation_platform(  # noqa: D103
 
 
 @overload
-async def async_get_device_automation_platform(  # noqa: D103
+async def async_get_device_automation_platform(
     hass: HomeAssistant,
     domain: str,
     automation_type: Literal[DeviceAutomationType.CONDITION],
@@ -138,7 +146,7 @@ async def async_get_device_automation_platform(  # noqa: D103
 
 
 @overload
-async def async_get_device_automation_platform(  # noqa: D103
+async def async_get_device_automation_platform(
     hass: HomeAssistant,
     domain: str,
     automation_type: Literal[DeviceAutomationType.ACTION],
@@ -147,15 +155,15 @@ async def async_get_device_automation_platform(  # noqa: D103
 
 
 @overload
-async def async_get_device_automation_platform(  # noqa: D103
+async def async_get_device_automation_platform(
     hass: HomeAssistant, domain: str, automation_type: DeviceAutomationType
-) -> "DeviceAutomationPlatformType":
+) -> DeviceAutomationPlatformType:
     ...
 
 
 async def async_get_device_automation_platform(
     hass: HomeAssistant, domain: str, automation_type: DeviceAutomationType
-) -> "DeviceAutomationPlatformType":
+) -> DeviceAutomationPlatformType:
     """Load device automation platform for integration.
 
     Throws InvalidDeviceAutomationConfig if the integration is not found or does not support device automation.
@@ -167,6 +175,10 @@ async def async_get_device_automation_platform(
     except IntegrationNotFound as err:
         raise InvalidDeviceAutomationConfig(
             f"Integration '{domain}' not found"
+        ) from err
+    except RequirementsNotFound as err:
+        raise InvalidDeviceAutomationConfig(
+            f"Integration '{domain}' could not be loaded"
         ) from err
     except ImportError as err:
         raise InvalidDeviceAutomationConfig(

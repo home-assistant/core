@@ -35,6 +35,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
 
+from .const import DEFAULT_PORT, DEFAULT_TIMEOUT
+
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_DRIVE = "Drive"
@@ -56,9 +58,6 @@ ATTR_VOLUME_SIZE = "Volume Size"
 CONF_DRIVES = "drives"
 CONF_NICS = "nics"
 CONF_VOLUMES = "volumes"
-DEFAULT_NAME = "QNAP"
-DEFAULT_PORT = 8080
-DEFAULT_TIMEOUT = 5
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=1)
 
@@ -319,7 +318,9 @@ class QNAPStatsAPI:
 class QNAPSensor(SensorEntity):
     """Base class for a QNAP sensor."""
 
-    def __init__(self, api, description: SensorEntityDescription, monitor_device=None):
+    def __init__(
+        self, api, description: SensorEntityDescription, monitor_device=None
+    ) -> None:
         """Initialize the sensor."""
         self.entity_description = description
         self.monitor_device = monitor_device

@@ -7,9 +7,7 @@ from dataclasses import dataclass
 from enum import Enum
 from functools import partial, wraps
 import logging
-from typing import Any, TypeVar
-
-from typing_extensions import Concatenate, ParamSpec
+from typing import Any, Concatenate, ParamSpec, TypeVar
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -33,18 +31,20 @@ _AddonManagerT = TypeVar("_AddonManagerT", bound="AddonManager")
 _R = TypeVar("_R")
 _P = ParamSpec("_P")
 
+_FuncType = Callable[Concatenate[_AddonManagerT, _P], Awaitable[_R]]
+_ReturnFuncType = Callable[Concatenate[_AddonManagerT, _P], Coroutine[Any, Any, _R]]
+
 
 def api_error(
     error_message: str,
 ) -> Callable[
-    [Callable[Concatenate[_AddonManagerT, _P], Awaitable[_R]]],
-    Callable[Concatenate[_AddonManagerT, _P], Coroutine[Any, Any, _R]],
+    [_FuncType[_AddonManagerT, _P, _R]], _ReturnFuncType[_AddonManagerT, _P, _R]
 ]:
     """Handle HassioAPIError and raise a specific AddonError."""
 
     def handle_hassio_api_error(
-        func: Callable[Concatenate[_AddonManagerT, _P], Awaitable[_R]]
-    ) -> Callable[Concatenate[_AddonManagerT, _P], Coroutine[Any, Any, _R]]:
+        func: _FuncType[_AddonManagerT, _P, _R]
+    ) -> _ReturnFuncType[_AddonManagerT, _P, _R]:
         """Handle a HassioAPIError."""
 
         @wraps(func)

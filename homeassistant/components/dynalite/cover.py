@@ -1,6 +1,5 @@
 """Support for the Dynalite channels as covers."""
 
-from contextlib import suppress
 from typing import Any
 
 from homeassistant.components.cover import (
@@ -11,6 +10,7 @@ from homeassistant.components.cover import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.util.enum import try_parse_enum
 
 from .dynalitebase import DynaliteBase, async_setup_entry_base
 
@@ -39,10 +39,8 @@ class DynaliteCover(DynaliteBase, CoverEntity):
     @property
     def device_class(self) -> CoverDeviceClass:
         """Return the class of the device."""
-        if device_class := self._device.device_class:
-            with suppress(ValueError):
-                return CoverDeviceClass(device_class)
-        return CoverDeviceClass.SHUTTER
+        device_class = try_parse_enum(CoverDeviceClass, self._device.device_class)
+        return device_class or CoverDeviceClass.SHUTTER
 
     @property
     def current_cover_position(self) -> int:

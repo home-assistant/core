@@ -405,11 +405,11 @@ class EvoBroker:
 
     def __init__(
         self,
-        hass,
+        hass: HomeAssistant,
         client: evohomeasync2.EvohomeClient,
         client_v1: evohomeasync.EvohomeClient | None,
         store: Store[dict[str, Any]],
-        params,
+        params: ConfigType,
     ) -> None:
         """Initialize the evohome client and its data structure."""
         self.hass = hass

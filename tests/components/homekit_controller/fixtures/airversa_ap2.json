@@ -1,0 +1,517 @@
+[
+  {
+    "aid": 1,
+    "services": [
+      {
+        "iid": 1,
+        "type": "0000003E-0000-1000-8000-0026BB765291",
+        "characteristics": [
+          {
+            "type": "00000014-0000-1000-8000-0026BB765291",
+            "iid": 2,
+            "perms": ["pw"],
+            "format": "bool",
+            "description": "Identify"
+          },
+          {
+            "type": "00000020-0000-1000-8000-0026BB765291",
+            "iid": 3,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "Sleekpoint Innovations",
+            "description": "Manufacturer",
+            "maxLen": 64
+          },
+          {
+            "type": "00000021-0000-1000-8000-0026BB765291",
+            "iid": 4,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "AP2",
+            "description": "Model",
+            "maxLen": 64
+          },
+          {
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "iid": 5,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "Airversa AP2 1808",
+            "description": "Name",
+            "maxLen": 64
+          },
+          {
+            "type": "00000030-0000-1000-8000-0026BB765291",
+            "iid": 6,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "1234",
+            "description": "Serial Number",
+            "maxLen": 64
+          },
+          {
+            "type": "00000052-0000-1000-8000-0026BB765291",
+            "iid": 7,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "0.8.16",
+            "description": "Firmware Revision",
+            "maxLen": 64
+          },
+          {
+            "type": "00000053-0000-1000-8000-0026BB765291",
+            "iid": 8,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "0.1",
+            "description": "Hardware Revision",
+            "maxLen": 64
+          },
+          {
+            "type": "34AB8811-AC7F-4340-BAC3-FD6A85F9943B",
+            "iid": 9,
+            "perms": ["pr", "hd"],
+            "format": "string",
+            "value": "\"6.1\";72ca72be",
+            "maxLen": 64
+          },
+          {
+            "type": "00000220-0000-1000-8000-0026BB765291",
+            "iid": 10,
+            "perms": ["pr"],
+            "format": "data",
+            "value": "2646e00091f99a29"
+          }
+        ]
+      },
+      {
+        "iid": 16,
+        "type": "000000A2-0000-1000-8000-0026BB765291",
+        "characteristics": [
+          {
+            "type": "000000A5-0000-1000-8000-0026BB765291",
+            "iid": 17,
+            "perms": ["pr"],
+            "format": "data",
+            "value": null
+          },
+          {
+            "type": "00000037-0000-1000-8000-0026BB765291",
+            "iid": 18,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "1.2.0",
+            "description": "Version",
+            "maxLen": 64
+          }
+        ]
+      },
+      {
+        "iid": 32,
+        "type": "00000055-0000-1000-8000-0026BB765291",
+        "characteristics": [
+          {
+            "type": "0000004C-0000-1000-8000-0026BB765291",
+            "iid": 34,
+            "perms": [],
+            "format": "data",
+            "description": "Pair Setup"
+          },
+          {
+            "type": "0000004E-0000-1000-8000-0026BB765291",
+            "iid": 35,
+            "perms": [],
+            "format": "data",
+            "description": "Pair Verify"
+          },
+          {
+            "type": "0000004F-0000-1000-8000-0026BB765291",
+            "iid": 36,
+            "perms": [],
+            "format": "int",
+            "description": "Pairing Features"
+          },
+          {
+            "type": "00000050-0000-1000-8000-0026BB765291",
+            "iid": 37,
+            "perms": ["pr", "pw"],
+            "format": "data",
+            "value": null,
+            "description": "Pairing Pairings"
+          }
+        ]
+      },
+      {
+        "iid": 32832,
+        "type": "000000BB-0000-1000-8000-0026BB765291",
+        "characteristics": [
+          {
+            "type": "000000A5-0000-1000-8000-0026BB765291",
+            "iid": 32833,
+            "perms": ["pr"],
+            "format": "data",
+            "value": null
+          },
+          {
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "iid": 32834,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "AirPurifier",
+            "description": "Name",
+            "maxLen": 64
+          },
+          {
+            "type": "000000B0-0000-1000-8000-0026BB765291",
+            "iid": 32835,
+            "perms": ["pr", "pw", "ev"],
+            "format": "int",
+            "value": 0,
+            "description": "Active",
+            "minValue": 0,
+            "maxValue": 1
+          },
+          {
+            "type": "000000A9-0000-1000-8000-0026BB765291",
+            "iid": 32836,
+            "perms": ["pr", "ev"],
+            "format": "int",
+            "value": 0,
+            "description": "Current Air Purifier State",
+            "minValue": 0,
+            "maxValue": 2
+          },
+          {
+            "type": "000000A8-0000-1000-8000-0026BB765291",
+            "iid": 32837,
+            "perms": ["pr", "pw", "ev"],
+            "format": "int",
+            "value": 1,
+            "description": "Target Air Purifier State",
+            "minValue": 0,
+            "maxValue": 1
+          },
+          {
+            "type": "00000029-0000-1000-8000-0026BB765291",
+            "iid": 32838,
+            "perms": ["pr", "pw", "ev"],
+            "format": "float",
+            "value": 0.0,
+            "description": "Rotation Speed",
+            "unit": "percentage",
+            "minValue": 0.0,
+            "maxValue": 100.0,
+            "minStep": 20.0
+          },
+          {
+            "type": "000000A7-0000-1000-8000-0026BB765291",
+            "iid": 32839,
+            "perms": ["pr", "pw", "ev"],
+            "format": "int",
+            "value": 0,
+            "description": "Lock Physical Controls",
+            "minValue": 0,
+            "maxValue": 1
+          },
+          {
+            "type": "00000004-5E50-11EC-B400-0A80FF2603DE",
+            "iid": 32840,
+            "perms": ["pr", "pw", "ev"],
+            "format": "int",
+            "value": 255,
+            "minValue": 1,
+            "maxValue": 255
+          },
+          {
+            "type": "00000005-5E50-11EC-B400-0A80FF2603DE",
+            "iid": 32841,
+            "perms": ["pr", "pw", "ev"],
+            "format": "int",
+            "value": 255,
+            "minValue": 1,
+            "maxValue": 255
+          },
+          {
+            "type": "00000006-5E50-11EC-B400-0A80FF2603DE",
+            "iid": 32842,
+            "perms": ["pr", "pw", "ev"],
+            "format": "int",
+            "value": 0,
+            "minValue": 0,
+            "maxValue": 1
+          },
+          {
+            "type": "0000011A-0000-1000-8000-0026BB765291",
+            "iid": 32843,
+            "perms": ["pr", "pw", "ev"],
+            "format": "bool",
+            "value": true,
+            "description": "Mute"
+          },
+          {
+            "type": "00000401-5E50-11EC-B400-0A80FF2603DE",
+            "iid": 32844,
+            "perms": ["pr", "pw", "ev", "hd"],
+            "format": "int",
+            "value": 0,
+            "minValue": 0,
+            "maxValue": 2
+          },
+          {
+            "type": "00000501-5E50-11EC-B400-0A80FF2603DE",
+            "iid": 32845,
+            "perms": ["pr", "pw"],
+            "format": "data",
+            "value": "0000000000000000000000000000000000000000"
+          },
+          {
+            "type": "00000502-5E50-11EC-B400-0A80FF2603DE",
+            "iid": 32846,
+            "perms": ["pr", "pw", "ev"],
+            "format": "data",
+            "value": "0000000000000000"
+          },
+          {
+            "type": "00000402-5E50-11EC-B400-0A80FF2603DE",
+            "iid": 32847,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "Airversa AP2 1808",
+            "maxLen": 64
+          }
+        ]
+      },
+      {
+        "iid": 2576,
+        "type": "0000008D-0000-1000-8000-0026BB765291",
+        "characteristics": [
+          {
+            "type": "000000A5-0000-1000-8000-0026BB765291",
+            "iid": 2577,
+            "perms": ["pr"],
+            "format": "data",
+            "value": null
+          },
+          {
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "iid": 2578,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "Air Quality Sensor",
+            "description": "Name",
+            "maxLen": 64
+          },
+          {
+            "type": "00000095-0000-1000-8000-0026BB765291",
+            "iid": 2579,
+            "perms": ["pr", "ev"],
+            "format": "int",
+            "value": 1,
+            "description": "Air Quality",
+            "minValue": 0,
+            "maxValue": 5
+          },
+          {
+            "type": "000000C6-0000-1000-8000-0026BB765291",
+            "iid": 2580,
+            "perms": ["pr", "ev"],
+            "format": "float",
+            "value": 3.0,
+            "description": "PM2.5 Density",
+            "minValue": 0.0,
+            "maxValue": 1000.0,
+            "minStep": 1.0
+          },
+          {
+            "type": "00000601-5E50-11EC-B400-0A80FF2603DE",
+            "iid": 2581,
+            "perms": ["pr", "ev"],
+            "format": "data",
+            "value": "000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+          },
+          {
+            "type": "00000602-5E50-11EC-B400-0A80FF2603DE",
+            "iid": 2582,
+            "perms": ["pr", "pw", "ev"],
+            "format": "int",
+            "value": 0,
+            "minValue": 0,
+            "maxValue": 1
+          }
+        ]
+      },
+      {
+        "iid": 32896,
+        "type": "000000BA-0000-1000-8000-0026BB765291",
+        "characteristics": [
+          {
+            "type": "000000A5-0000-1000-8000-0026BB765291",
+            "iid": 32897,
+            "perms": ["pr"],
+            "format": "data",
+            "value": null
+          },
+          {
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "iid": 32898,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "Filter Maintenance",
+            "description": "Name",
+            "maxLen": 64
+          },
+          {
+            "type": "000000AC-0000-1000-8000-0026BB765291",
+            "iid": 32899,
+            "perms": ["pr", "ev"],
+            "format": "int",
+            "value": 0,
+            "description": "Filter Change Indication",
+            "minValue": 0,
+            "maxValue": 1
+          },
+          {
+            "type": "000000AB-0000-1000-8000-0026BB765291",
+            "iid": 32900,
+            "perms": ["pr", "ev"],
+            "format": "float",
+            "value": 100.0,
+            "description": "Filter Life Level",
+            "minValue": 0.0,
+            "maxValue": 100.0,
+            "minStep": 1.0
+          }
+        ]
+      },
+      {
+        "iid": 112,
+        "type": "00000701-0000-1000-8000-0026BB765291",
+        "characteristics": [
+          {
+            "type": "000000A5-0000-1000-8000-0026BB765291",
+            "iid": 113,
+            "perms": ["pr"],
+            "format": "data",
+            "value": null
+          },
+          {
+            "type": "00000706-0000-1000-8000-0026BB765291",
+            "iid": 116,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "OPENTHREAD/thread-reference-20200818-ncs1-rc3-560-g02e61a2ed; Zephyr; Feb 11 2022 08:26:44",
+            "maxLen": 64
+          },
+          {
+            "type": "00000702-0000-1000-8000-0026BB765291",
+            "iid": 115,
+            "perms": ["pr"],
+            "format": "int",
+            "value": 12,
+            "description": "Thread Node Capabilities",
+            "minValue": 0,
+            "maxValue": 31
+          },
+          {
+            "type": "00000703-0000-1000-8000-0026BB765291",
+            "iid": 117,
+            "perms": ["pr", "ev"],
+            "format": "int",
+            "value": 16,
+            "description": "Thread Status",
+            "minValue": 0,
+            "maxValue": 127
+          },
+          {
+            "type": "0000022B-0000-1000-8000-0026BB765291",
+            "iid": 118,
+            "perms": ["pr"],
+            "format": "bool",
+            "value": true
+          },
+          {
+            "type": "00000704-0000-1000-8000-0026BB765291",
+            "iid": 119,
+            "perms": ["pr", "pw"],
+            "format": "data",
+            "value": null
+          }
+        ]
+      },
+      {
+        "iid": 2560,
+        "type": "00000239-0000-1000-8000-0026BB765291",
+        "characteristics": [
+          {
+            "type": "000000A5-0000-1000-8000-0026BB765291",
+            "iid": 2564,
+            "perms": ["pr"],
+            "format": "data",
+            "value": null
+          },
+          {
+            "type": "0000023A-0000-1000-8000-0026BB765291",
+            "iid": 2561,
+            "perms": ["pr"],
+            "format": "int",
+            "value": 0,
+            "minValue": 0,
+            "maxValue": 67108863
+          },
+          {
+            "type": "0000023C-0000-1000-8000-0026BB765291",
+            "iid": 2562,
+            "perms": ["pr"],
+            "format": "data",
+            "value": null
+          },
+          {
+            "type": "0000024A-0000-1000-8000-0026BB765291",
+            "iid": 2565,
+            "perms": ["pr", "ev"],
+            "format": "int",
+            "value": 12
+          }
+        ]
+      },
+      {
+        "iid": 32960,
+        "type": "00000100-5E50-11EC-B400-0A80FF2603DE",
+        "characteristics": [
+          {
+            "type": "000000A5-0000-1000-8000-0026BB765291",
+            "iid": 32961,
+            "perms": ["pr"],
+            "format": "data",
+            "value": null
+          },
+          {
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "iid": 32962,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "Date Time",
+            "description": "Name",
+            "maxLen": 64
+          },
+          {
+            "type": "00000101-5E50-11EC-B400-0A80FF2603DE",
+            "iid": 32963,
+            "perms": ["pr", "pw", "ev"],
+            "format": "int",
+            "value": 0,
+            "minValue": -1200,
+            "maxValue": 1400
+          },
+          {
+            "type": "00000102-5E50-11EC-B400-0A80FF2603DE",
+            "iid": 32964,
+            "perms": ["pr", "pw"],
+            "format": "int",
+            "value": 0
+          }
+        ]
+      }
+    ]
+  }
+]

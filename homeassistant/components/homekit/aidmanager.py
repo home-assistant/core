@@ -1,5 +1,4 @@
-"""
-Manage allocation of accessory ID's.
+"""Manage allocation of accessory ID's.
 
 HomeKit needs to allocate unique numbers to each accessory. These need to
 be stable between reboots and upgrades.
@@ -14,7 +13,7 @@ from __future__ import annotations
 from collections.abc import Generator
 import random
 
-from fnvhash import fnv1a_32
+from fnv_hash_fast import fnv1a_32
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
@@ -60,8 +59,7 @@ def _generate_aids(unique_id: str | None, entity_id: str) -> Generator[int, None
 
 
 class AccessoryAidStorage:
-    """
-    Holds a map of entity ID to HomeKit ID.
+    """Holds a map of entity ID to HomeKit ID.
 
     Will generate new ID's, ensure they are unique and store them to make sure they
     persist over reboots.

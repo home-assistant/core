@@ -1,8 +1,14 @@
 {
   "common": {
+    "generic": {
+      "model": "Model",
+      "ui_managed": "Managed via UI"
+    },
     "state": {
       "off": "Off",
       "on": "On",
+      "yes": "Yes",
+      "no": "No",
       "open": "Open",
       "closed": "Closed",
       "connected": "Connected",
@@ -71,6 +77,7 @@
         "no_devices_found": "No devices found on the network",
         "webhook_not_internet_accessible": "Your Home Assistant instance needs to be accessible from the internet to receive webhook messages.",
         "oauth2_error": "Received invalid token data.",
+        "oauth2_timeout": "Timeout resolving OAuth token.",
         "oauth2_missing_configuration": "The component is not configured. Please follow the documentation.",
         "oauth2_missing_credentials": "The integration requires application credentials.",
         "oauth2_authorize_url_timeout": "Timeout generating authorize URL.",
@@ -80,6 +87,10 @@
         "unknown_authorize_url_generation": "Unknown error generating an authorize URL.",
         "cloud_not_connected": "Not connected to Home Assistant Cloud."
       }
+    },
+    "issues": {
+      "platform_integration_no_support_title": "Platform support not supported",
+      "platform_integration_no_support_description": "The {platform} platform for the {domain} integration does not support platform setup.\n\nPlease remove it from your configuration and restart Home Assistant to fix this issue."
     }
   }
 }

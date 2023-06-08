@@ -77,7 +77,7 @@ class GoogleOptionsFlow(config_entries.OptionsFlow):
             default_time = self.config_entry.options[CONF_ARRIVAL_TIME]
         else:
             default_time_type = DEPARTURE_TIME
-            default_time = self.config_entry.options.get(CONF_ARRIVAL_TIME, "")
+            default_time = self.config_entry.options.get(CONF_DEPARTURE_TIME, "")
 
         return self.async_show_form(
             step_id="init",

@@ -18,6 +18,8 @@ from homeassistant.components.climate import (
     FAN_OFF,
     PRESET_AWAY,
     PRESET_HOME,
+    SWING_OFF,
+    SWING_ON,
     HVACAction,
     HVACMode,
 )
@@ -151,11 +153,26 @@ TADO_TO_HA_FAN_MODE_MAP = {value: key for key, value in HA_TO_TADO_FAN_MODE_MAP.
 
 DEFAULT_TADO_PRECISION = 0.1
 
-SUPPORT_PRESET = [PRESET_AWAY, PRESET_HOME]
+# Constant for Auto Geolocation mode
+PRESET_AUTO = "auto"
 
+SUPPORT_PRESET_AUTO = [PRESET_AWAY, PRESET_HOME, PRESET_AUTO]
+SUPPORT_PRESET_MANUAL = [PRESET_AWAY, PRESET_HOME]
+
+SENSOR_DATA_CATEGORY_WEATHER = "weather"
+SENSOR_DATA_CATEGORY_GEOFENCE = "geofence"
 
 TADO_SWING_OFF = "OFF"
 TADO_SWING_ON = "ON"
+
+HA_TO_TADO_SWING_MODE_MAP = {
+    SWING_OFF: TADO_SWING_OFF,
+    SWING_ON: TADO_SWING_ON,
+}
+
+TADO_TO_HA_SWING_MODE_MAP = {
+    value: key for key, value in HA_TO_TADO_SWING_MODE_MAP.items()
+}
 
 DOMAIN = "tado"
 

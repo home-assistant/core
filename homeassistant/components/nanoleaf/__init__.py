@@ -41,7 +41,7 @@ class NanoleafEntryData:
     """Class for sharing data within the Nanoleaf integration."""
 
     device: Nanoleaf
-    coordinator: DataUpdateCoordinator
+    coordinator: DataUpdateCoordinator[None]
     event_listener: asyncio.Task
 
 

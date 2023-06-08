@@ -13,7 +13,8 @@ from homeassistant.components.shelly.const import (
 )
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import STATE_ON, STATE_UNAVAILABLE
-from homeassistant.helpers import device_registry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, format_mac
 from homeassistant.setup import async_setup_component
 
 from . import MOCK_MAC, init_integration
@@ -21,7 +22,9 @@ from . import MOCK_MAC, init_integration
 from tests.common import MockConfigEntry
 
 
-async def test_custom_coap_port(hass, mock_block_device, caplog):
+async def test_custom_coap_port(
+    hass: HomeAssistant, mock_block_device, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test custom coap port."""
     assert await async_setup_component(
         hass,
@@ -36,25 +39,27 @@ async def test_custom_coap_port(hass, mock_block_device, caplog):
 
 @pytest.mark.parametrize("gen", [1, 2])
 async def test_shared_device_mac(
-    hass, gen, mock_block_device, mock_rpc_device, device_reg, caplog
-):
+    hass: HomeAssistant,
+    gen,
+    mock_block_device,
+    mock_rpc_device,
+    device_reg,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test first time shared device with another domain."""
     config_entry = MockConfigEntry(domain="test", data={}, unique_id="some_id")
     config_entry.add_to_hass(hass)
     device_reg.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        connections={
-            (
-                device_registry.CONNECTION_NETWORK_MAC,
-                device_registry.format_mac(MOCK_MAC),
-            )
-        },
+        connections={(CONNECTION_NETWORK_MAC, format_mac(MOCK_MAC))},
     )
     await init_integration(hass, gen, sleep_period=1000)
     assert "will resume when device is online" in caplog.text
 
 
-async def test_setup_entry_not_shelly(hass, caplog):
+async def test_setup_entry_not_shelly(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test not Shelly entry."""
     entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
     entry.add_to_hass(hass)
@@ -67,8 +72,8 @@ async def test_setup_entry_not_shelly(hass, caplog):
 
 @pytest.mark.parametrize("gen", [1, 2])
 async def test_device_connection_error(
-    hass, gen, mock_block_device, mock_rpc_device, monkeypatch
-):
+    hass: HomeAssistant, gen, mock_block_device, mock_rpc_device, monkeypatch
+) -> None:
     """Test device connection error."""
     monkeypatch.setattr(
         mock_block_device, "initialize", AsyncMock(side_effect=DeviceConnectionError)
@@ -83,8 +88,8 @@ async def test_device_connection_error(
 
 @pytest.mark.parametrize("gen", [1, 2])
 async def test_device_auth_error(
-    hass, gen, mock_block_device, mock_rpc_device, monkeypatch
-):
+    hass: HomeAssistant, gen, mock_block_device, mock_rpc_device, monkeypatch
+) -> None:
     """Test device authentication error."""
     monkeypatch.setattr(
         mock_block_device, "initialize", AsyncMock(side_effect=InvalidAuthError)
@@ -108,21 +113,21 @@ async def test_device_auth_error(
     assert flow["context"].get("entry_id") == entry.entry_id
 
 
-@pytest.mark.parametrize("entry_sleep, device_sleep", [(None, 0), (1000, 1000)])
+@pytest.mark.parametrize(("entry_sleep", "device_sleep"), [(None, 0), (1000, 1000)])
 async def test_sleeping_block_device_online(
-    hass, entry_sleep, device_sleep, mock_block_device, device_reg, caplog
-):
+    hass: HomeAssistant,
+    entry_sleep,
+    device_sleep,
+    mock_block_device,
+    device_reg,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test sleeping block device online."""
     config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id="shelly")
     config_entry.add_to_hass(hass)
     device_reg.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        connections={
-            (
-                device_registry.CONNECTION_NETWORK_MAC,
-                device_registry.format_mac(MOCK_MAC),
-            )
-        },
+        connections={(CONNECTION_NETWORK_MAC, format_mac(MOCK_MAC))},
     )
 
     entry = await init_integration(hass, 1, sleep_period=entry_sleep)
@@ -133,10 +138,14 @@ async def test_sleeping_block_device_online(
     assert entry.data["sleep_period"] == device_sleep
 
 
-@pytest.mark.parametrize("entry_sleep, device_sleep", [(None, 0), (1000, 1000)])
+@pytest.mark.parametrize(("entry_sleep", "device_sleep"), [(None, 0), (1000, 1000)])
 async def test_sleeping_rpc_device_online(
-    hass, entry_sleep, device_sleep, mock_rpc_device, caplog
-):
+    hass: HomeAssistant,
+    entry_sleep,
+    device_sleep,
+    mock_rpc_device,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test sleeping RPC device online."""
     entry = await init_integration(hass, 2, sleep_period=entry_sleep)
     assert "will resume when device is online" in caplog.text
@@ -147,13 +156,15 @@ async def test_sleeping_rpc_device_online(
 
 
 @pytest.mark.parametrize(
-    "gen, entity_id",
+    ("gen", "entity_id"),
     [
         (1, "switch.test_name_channel_1"),
         (2, "switch.test_switch_0"),
     ],
 )
-async def test_entry_unload(hass, gen, entity_id, mock_block_device, mock_rpc_device):
+async def test_entry_unload(
+    hass: HomeAssistant, gen, entity_id, mock_block_device, mock_rpc_device
+) -> None:
     """Test entry unload."""
     entry = await init_integration(hass, gen)
 
@@ -168,15 +179,15 @@ async def test_entry_unload(hass, gen, entity_id, mock_block_device, mock_rpc_de
 
 
 @pytest.mark.parametrize(
-    "gen, entity_id",
+    ("gen", "entity_id"),
     [
         (1, "switch.test_name_channel_1"),
         (2, "switch.test_switch_0"),
     ],
 )
 async def test_entry_unload_device_not_ready(
-    hass, gen, entity_id, mock_block_device, mock_rpc_device
-):
+    hass: HomeAssistant, gen, entity_id, mock_block_device, mock_rpc_device
+) -> None:
     """Test entry unload when device is not ready."""
     entry = await init_integration(hass, gen, sleep_period=1000)
 
@@ -189,12 +200,13 @@ async def test_entry_unload_device_not_ready(
     assert entry.state is ConfigEntryState.NOT_LOADED
 
 
-async def test_entry_unload_not_connected(hass, mock_rpc_device, monkeypatch):
+async def test_entry_unload_not_connected(
+    hass: HomeAssistant, mock_rpc_device, monkeypatch
+) -> None:
     """Test entry unload when not connected."""
     with patch(
         "homeassistant.components.shelly.coordinator.async_stop_scanner"
     ) as mock_stop_scanner:
-
         entry = await init_integration(
             hass, 2, options={CONF_BLE_SCANNER_MODE: BLEScannerMode.ACTIVE}
         )
@@ -213,15 +225,14 @@ async def test_entry_unload_not_connected(hass, mock_rpc_device, monkeypatch):
     assert entry.state is ConfigEntryState.LOADED
 
 
-async def test_entry_unload_not_connected_but_we_with_we_are(
-    hass, mock_rpc_device, monkeypatch
-):
+async def test_entry_unload_not_connected_but_we_think_we_are(
+    hass: HomeAssistant, mock_rpc_device, monkeypatch
+) -> None:
     """Test entry unload when not connected but we think we are still connected."""
     with patch(
         "homeassistant.components.shelly.coordinator.async_stop_scanner",
         side_effect=DeviceConnectionError,
     ) as mock_stop_scanner:
-
         entry = await init_integration(
             hass, 2, options={CONF_BLE_SCANNER_MODE: BLEScannerMode.ACTIVE}
         )
@@ -238,3 +249,19 @@ async def test_entry_unload_not_connected_but_we_with_we_are(
 
     assert not mock_stop_scanner.call_count
     assert entry.state is ConfigEntryState.LOADED
+
+
+async def test_no_attempt_to_stop_scanner_with_sleepy_devices(
+    hass: HomeAssistant, mock_rpc_device
+) -> None:
+    """Test we do not try to stop the scanner if its disabled with a sleepy device."""
+    with patch(
+        "homeassistant.components.shelly.coordinator.async_stop_scanner",
+    ) as mock_stop_scanner:
+        entry = await init_integration(hass, 2, sleep_period=7200)
+        assert entry.state is ConfigEntryState.LOADED
+        assert not mock_stop_scanner.call_count
+
+        mock_rpc_device.mock_update()
+        await hass.async_block_till_done()
+        assert not mock_stop_scanner.call_count

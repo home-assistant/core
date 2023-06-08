@@ -55,6 +55,9 @@ class UpCloudConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 step_id="user", user_input=user_input, errors=errors
             )
 
+        self._abort_if_unique_id_configured(
+            updates={CONF_PASSWORD: user_input[CONF_PASSWORD]}
+        )
         return self.async_create_entry(title=user_input[CONF_USERNAME], data=user_input)
 
     @callback

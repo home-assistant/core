@@ -1,8 +1,0 @@
-{
-    "issues": {
-        "moved_yaml": {
-            "description": "La configuraci\u00f3 de Wake on Lan mitjan\u00e7ant YAML s'ha mogut a una integraci\u00f3.\n\nLa configuraci\u00f3 YAML actual continuar\u00e0 funcionant durant les dues pr\u00f2ximes versions de Home Assistant.\n\nMigra la teva configuraci\u00f3 YAML a la nova integraci\u00f3, consulta la documentaci\u00f3 per saber com fer-ho.",
-            "title": "La configuraci\u00f3 YAML de Wake on Lan s'ha mogut"
-        }
-    }
-}

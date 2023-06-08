@@ -1,6 +1,4 @@
 """Test the ibeacon device trackers."""
-
-
 from datetime import timedelta
 import time
 from unittest.mock import patch
@@ -24,6 +22,7 @@ from homeassistant.const import (
     STATE_NOT_HOME,
     STATE_UNAVAILABLE,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
 from . import (
@@ -46,7 +45,7 @@ def mock_bluetooth(enable_bluetooth):
     """Auto mock bluetooth."""
 
 
-async def test_device_tracker_fixed_address(hass):
+async def test_device_tracker_fixed_address(hass: HomeAssistant) -> None:
     """Test creating and updating device_tracker."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -79,7 +78,7 @@ async def test_device_tracker_fixed_address(hass):
     await hass.async_block_till_done()
 
 
-async def test_device_tracker_random_address(hass):
+async def test_device_tracker_random_address(hass: HomeAssistant) -> None:
     """Test creating and updating device_tracker."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -142,7 +141,9 @@ async def test_device_tracker_random_address(hass):
     assert tracker_attributes[ATTR_FRIENDLY_NAME] == "RandomAddress_1234"
 
 
-async def test_device_tracker_random_address_infrequent_changes(hass):
+async def test_device_tracker_random_address_infrequent_changes(
+    hass: HomeAssistant,
+) -> None:
     """Test creating and updating device_tracker with a random mac that only changes once per day."""
     entry = MockConfigEntry(
         domain=DOMAIN,

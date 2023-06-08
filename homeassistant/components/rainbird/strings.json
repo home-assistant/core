@@ -1,0 +1,31 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Configure Rain Bird",
+        "description": "Please enter the LNK WiFi module information for your Rain Bird device.",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      }
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "timeout_connect": "[%key:common::config_flow::error::timeout_connect%]"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Configure Rain Bird",
+        "data": {
+          "duration": "Default irrigation time in minutes"
+        }
+      }
+    }
+  }
+}

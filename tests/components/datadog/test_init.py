@@ -10,12 +10,13 @@ from homeassistant.const import (
     STATE_ON,
 )
 import homeassistant.core as ha
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import assert_setup_component
 
 
-async def test_invalid_config(hass):
+async def test_invalid_config(hass: HomeAssistant) -> None:
     """Test invalid configuration."""
     with assert_setup_component(0):
         assert not await async_setup_component(
@@ -23,7 +24,7 @@ async def test_invalid_config(hass):
         )
 
 
-async def test_datadog_setup_full(hass):
+async def test_datadog_setup_full(hass: HomeAssistant) -> None:
     """Test setup with all data."""
     config = {datadog.DOMAIN: {"host": "host", "port": 123, "rate": 1, "prefix": "foo"}}
     hass.bus.listen = MagicMock()
@@ -41,7 +42,7 @@ async def test_datadog_setup_full(hass):
     assert hass.bus.listen.call_args_list[1][0][0] == EVENT_STATE_CHANGED
 
 
-async def test_datadog_setup_defaults(hass):
+async def test_datadog_setup_defaults(hass: HomeAssistant) -> None:
     """Test setup with defaults."""
     hass.bus.listen = mock.MagicMock()
 
@@ -65,7 +66,7 @@ async def test_datadog_setup_defaults(hass):
     assert hass.bus.listen.called
 
 
-async def test_logbook_entry(hass):
+async def test_logbook_entry(hass: HomeAssistant) -> None:
     """Test event listener."""
     hass.bus.listen = mock.MagicMock()
 
@@ -99,7 +100,7 @@ async def test_logbook_entry(hass):
         mock_statsd.event.reset_mock()
 
 
-async def test_state_changed(hass):
+async def test_state_changed(hass: HomeAssistant) -> None:
     """Test event listener."""
     hass.bus.listen = mock.MagicMock()
 
