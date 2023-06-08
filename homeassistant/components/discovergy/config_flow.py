@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+import logging
 from typing import Any
 
 import pydiscovergy
@@ -16,6 +17,8 @@ from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.httpx_client import get_async_client
 
 from .const import APP_NAME, DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
 
 
 def make_schema(email: str = "", password: str = "") -> vol.Schema:
@@ -88,6 +91,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except discovergyError.InvalidLogin:
                 errors["base"] = "invalid_auth"
             except Exception:  # pylint: disable=broad-except
+                _LOGGER.exception("Unexpected error occurred while getting meters")
                 errors["base"] = "unknown"
             else:
                 if self.existing_entry:

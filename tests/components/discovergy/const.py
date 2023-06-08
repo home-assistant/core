@@ -1,13 +1,7 @@
-"""Tests for the Discovergy integration."""
+"""Constants for Discovergy integration tests."""
 import datetime
 
 from pydiscovergy.models import Meter, Reading
-
-from homeassistant.components.discovergy import DOMAIN
-from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
-from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 GET_METERS = [
     Meter(
@@ -53,17 +47,3 @@ LAST_READING = Reading(
         "voltage3": 239000.0,
     },
 )
-
-
-async def setup_mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
-    """Return a MockConfigEntry for testing."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        title="user@example.org",
-        unique_id="user@example.org",
-        data={CONF_EMAIL: "user@example.org", CONF_PASSWORD: "supersecretpassword"},
-    )
-    entry.add_to_hass(hass)
-    await hass.async_block_till_done()
-
-    return entry

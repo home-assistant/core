@@ -1,5 +1,5 @@
 """Test the Discovergy config flow."""
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from pydiscovergy.error import HTTPError, InvalidLogin
 
@@ -9,10 +9,10 @@ from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 
-from tests.components.discovergy import setup_mock_config_entry
+from tests.common import MockConfigEntry
 
 
-async def test_form(hass: HomeAssistant, mock_meters) -> None:
+async def test_form(hass: HomeAssistant, mock_meters: Mock) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -42,13 +42,13 @@ async def test_form(hass: HomeAssistant, mock_meters) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_reauth(hass: HomeAssistant, mock_meters) -> None:
+async def test_reauth(
+    hass: HomeAssistant, mock_meters: Mock, mock_config_entry: MockConfigEntry
+) -> None:
     """Test reauth flow."""
-    entry = await setup_mock_config_entry(hass)
-
     init_result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": SOURCE_REAUTH, "unique_id": entry.unique_id},
+        context={"source": SOURCE_REAUTH, "unique_id": mock_config_entry.unique_id},
         data=None,
     )
 
