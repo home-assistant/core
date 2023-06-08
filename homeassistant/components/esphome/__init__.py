@@ -82,13 +82,13 @@ DEFAULT_URL = f"https://esphome.io/changelog/{STABLE_BLE_VERSION_STR}.html"
 
 @callback
 def _async_check_firmware_version(
-    hass: HomeAssistant, device_info: EsphomeDeviceInfo
+    hass: HomeAssistant, device_info: EsphomeDeviceInfo, api_version: APIVersion
 ) -> None:
     """Create or delete an the ble_firmware_outdated issue."""
     # ESPHome device_info.mac_address is the unique_id
     issue = f"ble_firmware_outdated-{device_info.mac_address}"
     if (
-        not device_info.bluetooth_proxy_version
+        not device_info.bluetooth_proxy_feature_flags_compat(api_version)
         # If the device has a project name its up to that project
         # to tell them about the firmware version update so we don't notify here
         or (device_info.project_name and device_info.project_name not in PROJECT_URLS)
@@ -360,7 +360,7 @@ async def async_setup_entry(  # noqa: C901
             if entry_data.device_info.name:
                 reconnect_logic.name = entry_data.device_info.name
 
-            if device_info.bluetooth_proxy_version:
+            if device_info.bluetooth_proxy_feature_flags_compat(cli.api_version):
                 entry_data.disconnect_callbacks.append(
                     await async_connect_scanner(hass, entry, cli, entry_data)
                 )
@@ -391,7 +391,7 @@ async def async_setup_entry(  # noqa: C901
             # Re-connection logic will trigger after this
             await cli.disconnect()
         else:
-            _async_check_firmware_version(hass, device_info)
+            _async_check_firmware_version(hass, device_info, entry_data.api_version)
             _async_check_using_api_password(hass, device_info, bool(password))
 
     async def on_disconnect() -> None:

@@ -22,8 +22,8 @@ ha-av==10.1.0
 hass-nabucasa==0.67.1
 hassil==1.0.6
 home-assistant-bluetooth==1.10.0
-home-assistant-frontend==20230601.1
-home-assistant-intents==2023.5.30
+home-assistant-frontend==20230608.0
+home-assistant-intents==2023.6.5
 httpx==0.24.1
 ifaddr==0.2.0
 janus==1.0.0
@@ -128,9 +128,8 @@ authlib<1.0
 # Version 2.0 added typing, prevent accidental fallbacks
 backoff>=2.0
 
-# Breaking change in version
-# https://github.com/samuelcolvin/pydantic/issues/4092
-pydantic!=1.9.1
+# Require to avoid issues with decorators (#93904). v2 has breaking changes.
+pydantic>=1.10.8,<2.0
 
 # Breaks asyncio
 # https://github.com/pubnub/python/issues/130
