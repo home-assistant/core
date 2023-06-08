@@ -3,13 +3,18 @@ from __future__ import annotations
 
 import logging
 import ssl
+from xml.parsers.expat import ExpatError
 
 import httpx
+import xmltodict
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import template
 from homeassistant.helpers.httpx_client import create_async_httpx_client
+from homeassistant.helpers.json import json_dumps
 from homeassistant.util.ssl import SSLCipherList
+
+from .const import XML_MIME_TYPES
 
 DEFAULT_TIMEOUT = 10
 
@@ -58,6 +63,25 @@ class RestData:
     def set_url(self, url: str) -> None:
         """Set url."""
         self._resource = url
+
+    def convert_data_if_xml(self) -> None:
+        """If the data is an XML string, convert it to a JSON string."""
+        _LOGGER.debug("Data fetched from resource: %s", self.data)
+        if (
+            self.data is not None
+            # If the http request failed, headers will be None
+            and self.headers is not None
+            and (content_type := self.headers.get("content-type"))
+            and content_type.startswith(XML_MIME_TYPES)
+        ):
+            try:
+                self.data = json_dumps(xmltodict.parse(self.data))
+            except ExpatError:
+                _LOGGER.warning(
+                    "REST xml result could not be parsed and converted to JSON"
+                )
+            else:
+                _LOGGER.debug("JSON converted from XML: %s", self.data)
 
     async def async_update(self, log_errors: bool = True) -> None:
         """Get the latest data from REST service with provided method."""
