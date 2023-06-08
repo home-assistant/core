@@ -9,6 +9,7 @@ import voluptuous as vol
 
 from homeassistant.components import water_heater
 from homeassistant.components.water_heater import (
+    ATTR_OPERATION_MODE,
     DEFAULT_MIN_TEMP,
     STATE_ECO,
     STATE_ELECTRIC,
@@ -299,6 +300,13 @@ class MqttWaterHeater(MqttTemperatureControlEntity, WaterHeaterEntity):
         )
 
         self.prepare_subscribe_topics(topics)
+
+    async def async_set_temperature(self, **kwargs: Any) -> None:
+        """Set new target temperature."""
+        operation_mode: str | None
+        if (operation_mode := kwargs.get(ATTR_OPERATION_MODE)) is not None:
+            await self.async_set_operation_mode(operation_mode)
+        await super().async_set_temperature(**kwargs)
 
     async def async_set_operation_mode(self, operation_mode: str) -> None:
         """Set new operation mode."""

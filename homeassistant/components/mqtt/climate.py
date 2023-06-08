@@ -1,7 +1,7 @@
 """Support for MQTT climate devices."""
 from __future__ import annotations
 
-from abc import ABC
+from abc import ABC, abstractmethod
 from collections.abc import Callable
 import functools
 import logging
@@ -28,7 +28,6 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.components.water_heater import ATTR_OPERATION_MODE
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_TEMPERATURE,
