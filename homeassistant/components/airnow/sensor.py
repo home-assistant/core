@@ -37,10 +37,6 @@ ATTRIBUTION = "Data provided by AirNow"
 
 PARALLEL_UPDATES = 1
 
-SENSOR_AQI = "aqi"
-SENSOR_PM25 = "pm25"
-SENSOR_O3 = "o3"
-
 ATTR_DESCR = "description"
 ATTR_LEVEL = "level"
 
@@ -60,8 +56,8 @@ class AirNowEntityDescription(SensorEntityDescription, AirNowEntityDescriptionMi
 
 SENSOR_TYPES: tuple[AirNowEntityDescription, ...] = (
     AirNowEntityDescription(
-        key=SENSOR_AQI,
-        translation_key=SENSOR_AQI,
+        key=ATTR_API_AQI,
+        translation_key="aqi",
         icon="mdi:blur",
         native_unit_of_measurement="aqi",
         state_class=SensorStateClass.MEASUREMENT,
@@ -72,8 +68,8 @@ SENSOR_TYPES: tuple[AirNowEntityDescription, ...] = (
         },
     ),
     AirNowEntityDescription(
-        key=SENSOR_PM25,
-        translation_key=SENSOR_PM25,
+        key=ATTR_API_PM25,
+        translation_key="pm25",
         icon="mdi:blur",
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
@@ -81,8 +77,8 @@ SENSOR_TYPES: tuple[AirNowEntityDescription, ...] = (
         extra_state_attributes_fn=None,
     ),
     AirNowEntityDescription(
-        key=SENSOR_O3,
-        translation_key=SENSOR_O3,
+        key=ATTR_API_O3,
+        translation_key="o3",
         icon="mdi:blur",
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
         state_class=SensorStateClass.MEASUREMENT,
@@ -137,7 +133,7 @@ class AirNowSensor(CoordinatorEntity[AirNowDataUpdateCoordinator], SensorEntity)
         return self.entity_description.value_fn(self.coordinator.data)
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes."""
         if self.entity_description.extra_state_attributes_fn:
             return self.entity_description.extra_state_attributes_fn(
