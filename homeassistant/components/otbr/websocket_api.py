@@ -1,8 +1,10 @@
 """Websocket API for OTBR."""
-from typing import TYPE_CHECKING
+
+from typing import cast
 
 import python_otbr_api
 from python_otbr_api import tlv_parser
+from python_otbr_api.tlv_parser import MeshcopTLVType
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
@@ -11,9 +13,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 
 from .const import DEFAULT_CHANNEL, DOMAIN
-
-if TYPE_CHECKING:
-    from . import OTBRData
+from .util import OTBRData, get_allowed_channel, update_issues
 
 
 @callback
@@ -72,11 +72,8 @@ async def websocket_create_network(
         connection.send_error(msg["id"], "not_loaded", "No OTBR API loaded")
         return
 
-    # We currently have no way to know which channel zha is using, assume it's
-    # the default
-    zha_channel = DEFAULT_CHANNEL
-
     data: OTBRData = hass.data[DOMAIN]
+    channel = await get_allowed_channel(hass, data.url) or DEFAULT_CHANNEL
 
     try:
         await data.set_enabled(False)
@@ -85,9 +82,15 @@ async def websocket_create_network(
         return
 
     try:
+        await data.delete_active_dataset()
+    except HomeAssistantError as exc:
+        connection.send_error(msg["id"], "delete_active_dataset_failed", str(exc))
+        return
+
+    try:
         await data.create_active_dataset(
-            python_otbr_api.OperationalDataSet(
-                channel=zha_channel, network_name="home-assistant"
+            python_otbr_api.ActiveDataSet(
+                channel=channel, network_name="home-assistant"
             )
         )
     except HomeAssistantError as exc:
@@ -110,6 +113,9 @@ async def websocket_create_network(
         return
 
     await async_add_dataset(hass, DOMAIN, dataset_tlvs.hex())
+
+    # Update repair issues
+    await update_issues(hass, data, dataset_tlvs)
 
     connection.send_result(msg["id"])
 
@@ -136,23 +142,20 @@ async def websocket_set_network(
         connection.send_error(msg["id"], "unknown_dataset", "Unknown dataset")
         return
     dataset = tlv_parser.parse_tlv(dataset_tlv)
-    if channel_str := dataset.get(tlv_parser.MeshcopTLVType.CHANNEL):
-        thread_dataset_channel = int(channel_str, base=16)
+    if channel := dataset.get(MeshcopTLVType.CHANNEL):
+        thread_dataset_channel = cast(tlv_parser.Channel, channel).channel
 
-    # We currently have no way to know which channel zha is using, assume it's
-    # the default
-    zha_channel = DEFAULT_CHANNEL
+    data: OTBRData = hass.data[DOMAIN]
+    allowed_channel = await get_allowed_channel(hass, data.url)
 
-    if thread_dataset_channel != zha_channel:
+    if allowed_channel and thread_dataset_channel != allowed_channel:
         connection.send_error(
             msg["id"],
             "channel_conflict",
             f"Can't connect to network on channel {thread_dataset_channel}, ZHA is "
-            f"using channel {zha_channel}",
+            f"using channel {allowed_channel}",
         )
         return
-
-    data: OTBRData = hass.data[DOMAIN]
 
     try:
         await data.set_enabled(False)
@@ -171,6 +174,9 @@ async def websocket_set_network(
     except HomeAssistantError as exc:
         connection.send_error(msg["id"], "set_enabled_failed", str(exc))
         return
+
+    # Update repair issues
+    await update_issues(hass, data, bytes.fromhex(dataset_tlv))
 
     connection.send_result(msg["id"])
 

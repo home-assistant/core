@@ -437,7 +437,7 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
         except StopIteration:
             raise ValueError(f"Received an invalid fan mode: {fan_mode}") from None
 
-        await self.info.node.async_set_value(self._fan_mode, new_state)
+        await self._async_set_value(self._fan_mode, new_state)
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
@@ -451,7 +451,7 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
             )
             target_temp: float | None = kwargs.get(ATTR_TEMPERATURE)
             if target_temp is not None:
-                await self.info.node.async_set_value(setpoint, target_temp)
+                await self._async_set_value(setpoint, target_temp)
         elif len(self._current_mode_setpoint_enums) == 2:
             setpoint_low: ZwaveValue = self._setpoint_value_or_raise(
                 self._current_mode_setpoint_enums[0]
@@ -462,9 +462,9 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
             target_temp_low: float | None = kwargs.get(ATTR_TARGET_TEMP_LOW)
             target_temp_high: float | None = kwargs.get(ATTR_TARGET_TEMP_HIGH)
             if target_temp_low is not None:
-                await self.info.node.async_set_value(setpoint_low, target_temp_low)
+                await self._async_set_value(setpoint_low, target_temp_low)
             if target_temp_high is not None:
-                await self.info.node.async_set_value(setpoint_high, target_temp_high)
+                await self._async_set_value(setpoint_high, target_temp_high)
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
@@ -475,7 +475,7 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
             # Thermostat(valve) has no support for setting a mode, so we make it a no-op
             return
 
-        await self.info.node.async_set_value(self._current_mode, hvac_mode_id)
+        await self._async_set_value(self._current_mode, hvac_mode_id)
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new target preset mode."""
@@ -487,7 +487,7 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
         preset_mode_value = self._hvac_presets.get(preset_mode)
         if preset_mode_value is None:
             raise ValueError(f"Received an invalid preset mode: {preset_mode}")
-        await self.info.node.async_set_value(self._current_mode, preset_mode_value)
+        await self._async_set_value(self._current_mode, preset_mode_value)
 
 
 class DynamicCurrentTempClimate(ZWaveClimate):

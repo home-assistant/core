@@ -19,20 +19,6 @@ from tests.typing import ClientSessionGenerator, MqttMockHAClientGenerator
 default_config = {
     "birth_message": {},
     "broker": "mock-broker",
-    "discovery": True,
-    "discovery_prefix": "homeassistant",
-    "keepalive": 60,
-    "port": 1883,
-    "protocol": "3.1.1",
-    "transport": "tcp",
-    "ws_headers": {},
-    "ws_path": "/",
-    "will_message": {
-        "payload": "offline",
-        "qos": 0,
-        "retain": False,
-        "topic": "homeassistant/status",
-    },
 }
 
 
@@ -50,13 +36,14 @@ async def test_entry_diagnostics(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     hass_client: ClientSessionGenerator,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
 ) -> None:
     """Test config entry diagnostics."""
-    mqtt_mock = await mqtt_mock_entry_no_yaml_config()
+    mqtt_mock = await mqtt_mock_entry()
     config_entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
     mqtt_mock.connected = True
 
+    await get_diagnostics_for_config_entry(hass, hass_client, config_entry)
     assert await get_diagnostics_for_config_entry(hass, hass_client, config_entry) == {
         "connected": True,
         "devices": [],
@@ -173,10 +160,10 @@ async def test_redact_diagnostics(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     hass_client: ClientSessionGenerator,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
 ) -> None:
     """Test redacting diagnostics."""
-    mqtt_mock = await mqtt_mock_entry_no_yaml_config()
+    mqtt_mock = await mqtt_mock_entry()
     expected_config = dict(default_config)
     expected_config["password"] = "**REDACTED**"
     expected_config["username"] = "**REDACTED**"
@@ -267,6 +254,7 @@ async def test_redact_diagnostics(
         "name_by_user": None,
     }
 
+    await get_diagnostics_for_config_entry(hass, hass_client, config_entry)
     assert await get_diagnostics_for_config_entry(hass, hass_client, config_entry) == {
         "connected": True,
         "devices": [expected_device],

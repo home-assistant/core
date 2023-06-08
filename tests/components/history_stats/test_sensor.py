@@ -1,5 +1,5 @@
 """The test for the History Statistics sensor platform."""
-from datetime import timedelta
+from datetime import datetime, timedelta
 from unittest.mock import patch
 
 from freezegun import freeze_time
@@ -15,11 +15,14 @@ from homeassistant.components.recorder import Recorder
 from homeassistant.const import ATTR_DEVICE_CLASS, SERVICE_RELOAD, STATE_UNKNOWN
 import homeassistant.core as ha
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
 from tests.common import async_fire_time_changed, get_fixture_path
+from tests.components.recorder.common import async_wait_recording_done
+from tests.typing import RecorderInstanceGenerator
 
 
 async def test_setup(recorder_mock: Recorder, hass: HomeAssistant) -> None:
@@ -1367,13 +1370,20 @@ async def test_measure_cet(recorder_mock: Recorder, hass: HomeAssistant) -> None
 
 @pytest.mark.parametrize("time_zone", ["Europe/Berlin", "America/Chicago", "US/Hawaii"])
 async def test_end_time_with_microseconds_zeroed(
-    time_zone, recorder_mock: Recorder, hass: HomeAssistant
+    time_zone: str,
+    async_setup_recorder_instance: RecorderInstanceGenerator,
+    hass: HomeAssistant,
 ) -> None:
     """Test the history statistics sensor that has the end time microseconds zeroed out."""
     hass.config.set_time_zone(time_zone)
     start_of_today = dt_util.now().replace(
         day=9, month=7, year=1986, hour=0, minute=0, second=0, microsecond=0
     )
+    with freeze_time(start_of_today):
+        await async_setup_recorder_instance(hass)
+        await hass.async_block_till_done()
+        await async_wait_recording_done(hass)
+
     start_time = start_of_today + timedelta(minutes=60)
     t0 = start_time + timedelta(minutes=20)
     t1 = t0 + timedelta(minutes=10)
@@ -1434,7 +1444,7 @@ async def test_end_time_with_microseconds_zeroed(
         await hass.async_block_till_done()
         assert hass.states.get("sensor.heatpump_compressor_today").state == "1.83"
         hass.states.async_set("binary_sensor.heatpump_compressor_state", "on")
-        await hass.async_block_till_done()
+        await async_wait_recording_done(hass)
     time_600 = start_of_today + timedelta(hours=6)
     with freeze_time(time_600):
         async_fire_time_changed(hass, time_600)
@@ -1473,6 +1483,7 @@ async def test_end_time_with_microseconds_zeroed(
     )
     with freeze_time(rolled_to_next_day_plus_16_860000):
         hass.states.async_set("binary_sensor.heatpump_compressor_state", "off")
+        await async_wait_recording_done(hass)
         async_fire_time_changed(hass, rolled_to_next_day_plus_16_860000)
         await hass.async_block_till_done()
 
@@ -1524,3 +1535,80 @@ async def test_device_classes(recorder_mock: Recorder, hass: HomeAssistant) -> N
     assert hass.states.get("sensor.time").attributes[ATTR_DEVICE_CLASS] == "duration"
     assert ATTR_DEVICE_CLASS not in hass.states.get("sensor.ratio").attributes
     assert ATTR_DEVICE_CLASS not in hass.states.get("sensor.count").attributes
+
+
+async def test_history_stats_handles_floored_timestamps(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+) -> None:
+    """Test we account for microseconds when doing the data calculation."""
+    hass.config.set_time_zone("UTC")
+    utcnow = dt_util.utcnow()
+    start_time = utcnow.replace(hour=0, minute=0, second=0, microsecond=0)
+    last_times = None
+
+    def _fake_states(
+        hass: HomeAssistant, start: datetime, end: datetime | None, *args, **kwargs
+    ) -> dict[str, list[ha.State]]:
+        """Fake state changes."""
+        nonlocal last_times
+        last_times = (start, end)
+        return {
+            "binary_sensor.state": [
+                ha.State(
+                    "binary_sensor.state",
+                    "on",
+                    last_changed=start_time,
+                    last_updated=start_time,
+                ),
+            ]
+        }
+
+    with patch(
+        "homeassistant.components.recorder.history.state_changes_during_period",
+        _fake_states,
+    ), freeze_time(start_time):
+        await async_setup_component(
+            hass,
+            "sensor",
+            {
+                "sensor": [
+                    {
+                        "platform": "history_stats",
+                        "entity_id": "binary_sensor.state",
+                        "name": "sensor1",
+                        "state": "on",
+                        "start": "{{ utcnow().replace(hour=0, minute=0, second=0, microsecond=100) }}",
+                        "duration": {"hours": 2},
+                        "type": "time",
+                    }
+                ]
+            },
+        )
+        await hass.async_block_till_done()
+        await async_update_entity(hass, "sensor.sensor1")
+        await hass.async_block_till_done()
+
+    assert last_times == (start_time, start_time + timedelta(hours=2))
+
+
+async def test_unique_id(recorder_mock: Recorder, hass: HomeAssistant) -> None:
+    """Test unique_id property."""
+
+    config = {
+        "sensor": {
+            "platform": "history_stats",
+            "entity_id": "binary_sensor.test_id",
+            "state": "on",
+            "start": "{{ utcnow() }}",
+            "duration": "01:00",
+            "name": "Test",
+            "unique_id": "some_history_stats_unique_id",
+        },
+    }
+
+    assert await async_setup_component(hass, "sensor", config)
+    await hass.async_block_till_done()
+
+    registry = er.async_get(hass)
+    assert registry.async_get("sensor.test").unique_id == "some_history_stats_unique_id"

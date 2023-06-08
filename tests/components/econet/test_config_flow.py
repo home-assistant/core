@@ -20,14 +20,12 @@ async def test_bad_credentials(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == SOURCE_USER
+    assert result["step_id"] == "user"
 
     with patch(
         "pyeconet.EcoNetApiInterface.login",
         side_effect=InvalidCredentialsError(),
-    ), patch("homeassistant.components.econet.async_setup", return_value=True), patch(
-        "homeassistant.components.econet.async_setup_entry", return_value=True
-    ):
+    ), patch("homeassistant.components.econet.async_setup_entry", return_value=True):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={
@@ -50,14 +48,12 @@ async def test_generic_error_from_library(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == SOURCE_USER
+    assert result["step_id"] == "user"
 
     with patch(
         "pyeconet.EcoNetApiInterface.login",
         side_effect=PyeconetError(),
-    ), patch("homeassistant.components.econet.async_setup", return_value=True), patch(
-        "homeassistant.components.econet.async_setup_entry", return_value=True
-    ):
+    ), patch("homeassistant.components.econet.async_setup_entry", return_value=True):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={
@@ -80,14 +76,12 @@ async def test_auth_worked(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == SOURCE_USER
+    assert result["step_id"] == "user"
 
     with patch(
         "pyeconet.EcoNetApiInterface.login",
         return_value=EcoNetApiInterface,
-    ), patch("homeassistant.components.econet.async_setup", return_value=True), patch(
-        "homeassistant.components.econet.async_setup_entry", return_value=True
-    ):
+    ), patch("homeassistant.components.econet.async_setup_entry", return_value=True):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={
@@ -117,14 +111,12 @@ async def test_already_configured(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == SOURCE_USER
+    assert result["step_id"] == "user"
 
     with patch(
         "pyeconet.EcoNetApiInterface.login",
         return_value=EcoNetApiInterface,
-    ), patch("homeassistant.components.econet.async_setup", return_value=True), patch(
-        "homeassistant.components.econet.async_setup_entry", return_value=True
-    ):
+    ), patch("homeassistant.components.econet.async_setup_entry", return_value=True):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={

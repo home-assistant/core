@@ -169,6 +169,25 @@
         "unlocked": "[%key:common::state::unlocked%]",
         "ok": "[%key:component::binary_sensor::entity_component::problem::state::off%]",
         "problem": "[%key:component::binary_sensor::entity_component::problem::state::on%]"
+      },
+      "state_attributes": {
+        "entity_id": {
+          "name": "Members"
+        }
+      }
+    }
+  },
+  "selector": {
+    "type": {
+      "options": {
+        "min": "Minimum",
+        "max": "Maximum",
+        "mean": "Arithmetic mean",
+        "median": "Median",
+        "last": "Most recently updated",
+        "range": "Statistical range",
+        "sum": "Sum",
+        "product": "Product"
       }
     }
   }

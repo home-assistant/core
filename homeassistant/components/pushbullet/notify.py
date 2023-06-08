@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import logging
 import mimetypes
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from pushbullet import PushBullet, PushError
 from pushbullet.channel import Channel
@@ -15,22 +15,15 @@ from homeassistant.components.notify import (
     ATTR_TARGET,
     ATTR_TITLE,
     ATTR_TITLE_DEFAULT,
-    PLATFORM_SCHEMA,
     BaseNotificationService,
 )
-from homeassistant.config_entries import SOURCE_IMPORT
-from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import ATTR_FILE, ATTR_FILE_URL, ATTR_URL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({vol.Required(CONF_API_KEY): cv.string})
 
 
 async def async_get_service(
@@ -39,25 +32,8 @@ async def async_get_service(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> PushBulletNotificationService | None:
     """Get the Pushbullet notification service."""
-    if discovery_info is None:
-        async_create_issue(
-            hass,
-            DOMAIN,
-            "deprecated_yaml",
-            breaks_in_ha_version="2023.2.0",
-            is_fixable=False,
-            severity=IssueSeverity.WARNING,
-            translation_key="deprecated_yaml",
-        )
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": SOURCE_IMPORT},
-                data=config,
-            )
-        )
-        return None
-
+    if TYPE_CHECKING:
+        assert discovery_info is not None
     pushbullet: PushBullet = hass.data[DOMAIN][discovery_info["entry_id"]].pushbullet
     return PushBulletNotificationService(hass, pushbullet)
 

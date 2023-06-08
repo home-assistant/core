@@ -210,7 +210,7 @@ async def test_uptime_sensors(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     mock_unifi_websocket,
-    entity_registry_enabled_by_default,
+    entity_registry_enabled_by_default: None,
     initial_uptime,
     event_uptime,
     new_uptime,
@@ -296,7 +296,7 @@ async def test_remove_sensors(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     mock_unifi_websocket,
-    entity_registry_enabled_by_default,
+    entity_registry_enabled_by_default: None,
 ) -> None:
     """Verify removing of clients work as expected."""
     wired_client = {

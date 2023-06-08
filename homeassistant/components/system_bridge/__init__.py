@@ -53,7 +53,10 @@ SERVICE_SEND_KEYPRESS = "send_keypress"
 SERVICE_SEND_TEXT = "send_text"
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+) -> bool:
     """Set up System Bridge from a config entry."""
 
     # Check version before initialising
@@ -64,11 +67,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         session=async_get_clientsession(hass),
     )
     try:
-        if not await version.check_supported():
-            raise ConfigEntryNotReady(
-                "You are not running a supported version of System Bridge. Please"
-                f" update to {SUPPORTED_VERSION} or higher."
-            )
+        async with async_timeout.timeout(10):
+            if not await version.check_supported():
+                raise ConfigEntryNotReady(
+                    "You are not running a supported version of System Bridge. Please"
+                    f" update to {SUPPORTED_VERSION} or higher."
+                )
     except AuthenticationException as exception:
         _LOGGER.error("Authentication failed for %s: %s", entry.title, exception)
         raise ConfigEntryAuthFailed from exception
@@ -87,7 +91,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entry=entry,
     )
     try:
-        async with async_timeout.timeout(30):
+        async with async_timeout.timeout(10):
             await coordinator.async_get_data(MODULES)
     except AuthenticationException as exception:
         _LOGGER.error("Authentication failed for %s: %s", entry.title, exception)
@@ -105,8 +109,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     try:
         # Wait for initial data
-        async with async_timeout.timeout(30):
-            while not coordinator.is_ready():
+        async with async_timeout.timeout(10):
+            while not coordinator.is_ready:
                 _LOGGER.debug(
                     "Waiting for initial data from %s (%s)",
                     entry.title,

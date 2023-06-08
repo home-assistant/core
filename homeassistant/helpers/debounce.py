@@ -44,6 +44,7 @@ class Debouncer(Generic[_R_co]):
                 function, f"debouncer cooldown={cooldown}, immediate={immediate}"
             )
         )
+        self._shutdown_requested = False
 
     @property
     def function(self) -> Callable[[], _R_co] | None:
@@ -62,6 +63,11 @@ class Debouncer(Generic[_R_co]):
 
     async def async_call(self) -> None:
         """Call the function."""
+        if self._shutdown_requested:
+            self.logger.warning(
+                "Debouncer call ignored as shutdown has been requested."
+            )
+            return
         assert self._job is not None
 
         if self._timer_task:
@@ -115,6 +121,11 @@ class Debouncer(Generic[_R_co]):
             # Schedule a new timer to prevent new runs during cooldown
             self._schedule_timer()
 
+    async def async_shutdown(self) -> None:
+        """Cancel any scheduled call, and prevent new runs."""
+        self._shutdown_requested = True
+        self.async_cancel()
+
     @callback
     def async_cancel(self) -> None:
         """Cancel any scheduled call."""
@@ -137,4 +148,7 @@ class Debouncer(Generic[_R_co]):
     @callback
     def _schedule_timer(self) -> None:
         """Schedule a timer."""
-        self._timer_task = self.hass.loop.call_later(self.cooldown, self._on_debounce)
+        if not self._shutdown_requested:
+            self._timer_task = self.hass.loop.call_later(
+                self.cooldown, self._on_debounce
+            )

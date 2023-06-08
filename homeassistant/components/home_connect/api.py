@@ -74,6 +74,8 @@ class ConfigEntryAuth(homeconnect.HomeConnectAPI):
                 device = Dryer(self.hass, app)
             elif app.type == "Washer":
                 device = Washer(self.hass, app)
+            elif app.type == "WasherDryer":
+                device = WasherDryer(self.hass, app)
             elif app.type == "Dishwasher":
                 device = Dishwasher(self.hass, app)
             elif app.type == "FridgeFreezer":
@@ -145,11 +147,14 @@ class HomeConnectDevice:
 class DeviceWithPrograms(HomeConnectDevice):
     """Device with programs."""
 
-    PROGRAMS: list[dict[str, str]] = []
-
     def get_programs_available(self):
         """Get the available programs."""
-        return self.PROGRAMS
+        try:
+            programs_available = self.appliance.get_programs_available()
+        except (HomeConnectError, ValueError):
+            _LOGGER.debug("Unable to fetch available programs. Probably offline")
+            programs_available = []
+        return programs_available
 
     def get_program_switches(self):
         """Get a dictionary with info about program switches.
@@ -157,7 +162,7 @@ class DeviceWithPrograms(HomeConnectDevice):
         There will be one switch for each program.
         """
         programs = self.get_programs_available()
-        return [{ATTR_DEVICE: self, "program_name": p["name"]} for p in programs]
+        return [{ATTR_DEVICE: self, "program_name": p} for p in programs]
 
     def get_program_sensors(self):
         """Get a dictionary with info about program sensors.
@@ -265,27 +270,6 @@ class Dryer(
 ):
     """Dryer class."""
 
-    PROGRAMS = [
-        {"name": "LaundryCare.Dryer.Program.Cotton"},
-        {"name": "LaundryCare.Dryer.Program.Synthetic"},
-        {"name": "LaundryCare.Dryer.Program.Mix"},
-        {"name": "LaundryCare.Dryer.Program.Blankets"},
-        {"name": "LaundryCare.Dryer.Program.BusinessShirts"},
-        {"name": "LaundryCare.Dryer.Program.DownFeathers"},
-        {"name": "LaundryCare.Dryer.Program.Hygiene"},
-        {"name": "LaundryCare.Dryer.Program.Jeans"},
-        {"name": "LaundryCare.Dryer.Program.Outdoor"},
-        {"name": "LaundryCare.Dryer.Program.SyntheticRefresh"},
-        {"name": "LaundryCare.Dryer.Program.Towels"},
-        {"name": "LaundryCare.Dryer.Program.Delicates"},
-        {"name": "LaundryCare.Dryer.Program.Super40"},
-        {"name": "LaundryCare.Dryer.Program.Shirts15"},
-        {"name": "LaundryCare.Dryer.Program.Pillow"},
-        {"name": "LaundryCare.Dryer.Program.AntiShrink"},
-        {"name": "LaundryCare.Dryer.Program.TimeCold"},
-        {"name": "LaundryCare.Dryer.Program.TimeWarm"},
-    ]
-
     def get_entity_info(self):
         """Get a dictionary with infos about the associated entities."""
         door_entity = self.get_door_entity()
@@ -311,32 +295,6 @@ class Dishwasher(
 ):
     """Dishwasher class."""
 
-    PROGRAMS = [
-        {"name": "Dishcare.Dishwasher.Program.Auto1"},
-        {"name": "Dishcare.Dishwasher.Program.Auto2"},
-        {"name": "Dishcare.Dishwasher.Program.Auto3"},
-        {"name": "Dishcare.Dishwasher.Program.Eco50"},
-        {"name": "Dishcare.Dishwasher.Program.Quick45"},
-        {"name": "Dishcare.Dishwasher.Program.Intensiv70"},
-        {"name": "Dishcare.Dishwasher.Program.Normal65"},
-        {"name": "Dishcare.Dishwasher.Program.Glas40"},
-        {"name": "Dishcare.Dishwasher.Program.GlassCare"},
-        {"name": "Dishcare.Dishwasher.Program.PreRinse"},
-        {"name": "Dishcare.Dishwasher.Program.NightWash"},
-        {"name": "Dishcare.Dishwasher.Program.Quick65"},
-        {"name": "Dishcare.Dishwasher.Program.Normal45"},
-        {"name": "Dishcare.Dishwasher.Program.Intensiv45"},
-        {"name": "Dishcare.Dishwasher.Program.AutoHalfLoad"},
-        {"name": "Dishcare.Dishwasher.Program.IntensivPower"},
-        {"name": "Dishcare.Dishwasher.Program.MagicDaily"},
-        {"name": "Dishcare.Dishwasher.Program.Super60"},
-        {"name": "Dishcare.Dishwasher.Program.Kurz60"},
-        {"name": "Dishcare.Dishwasher.Program.ExpressSparkle65"},
-        {"name": "Dishcare.Dishwasher.Program.MachineCare"},
-        {"name": "Dishcare.Dishwasher.Program.SteamFresh"},
-        {"name": "Dishcare.Dishwasher.Program.MaximumCleaning"},
-    ]
-
     def get_entity_info(self):
         """Get a dictionary with infos about the associated entities."""
         door_entity = self.get_door_entity()
@@ -360,14 +318,6 @@ class Oven(
     DeviceWithRemoteStart,
 ):
     """Oven class."""
-
-    PROGRAMS = [
-        {"name": "Cooking.Oven.Program.HeatingMode.PreHeating"},
-        {"name": "Cooking.Oven.Program.HeatingMode.HotAir"},
-        {"name": "Cooking.Oven.Program.HeatingMode.TopBottomHeating"},
-        {"name": "Cooking.Oven.Program.HeatingMode.PizzaSetting"},
-        {"name": "Cooking.Oven.Program.Microwave.600Watt"},
-    ]
 
     power_off_state = BSH_POWER_STANDBY
 
@@ -395,29 +345,29 @@ class Washer(
 ):
     """Washer class."""
 
-    PROGRAMS = [
-        {"name": "LaundryCare.Washer.Program.Cotton"},
-        {"name": "LaundryCare.Washer.Program.Cotton.CottonEco"},
-        {"name": "LaundryCare.Washer.Program.EasyCare"},
-        {"name": "LaundryCare.Washer.Program.Mix"},
-        {"name": "LaundryCare.Washer.Program.DelicatesSilk"},
-        {"name": "LaundryCare.Washer.Program.Wool"},
-        {"name": "LaundryCare.Washer.Program.Sensitive"},
-        {"name": "LaundryCare.Washer.Program.Auto30"},
-        {"name": "LaundryCare.Washer.Program.Auto40"},
-        {"name": "LaundryCare.Washer.Program.Auto60"},
-        {"name": "LaundryCare.Washer.Program.Chiffon"},
-        {"name": "LaundryCare.Washer.Program.Curtains"},
-        {"name": "LaundryCare.Washer.Program.DarkWash"},
-        {"name": "LaundryCare.Washer.Program.Dessous"},
-        {"name": "LaundryCare.Washer.Program.Monsoon"},
-        {"name": "LaundryCare.Washer.Program.Outdoor"},
-        {"name": "LaundryCare.Washer.Program.PlushToy"},
-        {"name": "LaundryCare.Washer.Program.ShirtsBlouses"},
-        {"name": "LaundryCare.Washer.Program.SportFitness"},
-        {"name": "LaundryCare.Washer.Program.Towels"},
-        {"name": "LaundryCare.Washer.Program.WaterProof"},
-    ]
+    def get_entity_info(self):
+        """Get a dictionary with infos about the associated entities."""
+        door_entity = self.get_door_entity()
+        remote_control = self.get_remote_control()
+        remote_start = self.get_remote_start()
+        op_state_sensor = self.get_opstate_sensor()
+        program_sensors = self.get_program_sensors()
+        program_switches = self.get_program_switches()
+        return {
+            "binary_sensor": [door_entity, remote_control, remote_start],
+            "switch": program_switches,
+            "sensor": program_sensors + op_state_sensor,
+        }
+
+
+class WasherDryer(
+    DeviceWithDoor,
+    DeviceWithOpState,
+    DeviceWithPrograms,
+    DeviceWithRemoteControl,
+    DeviceWithRemoteStart,
+):
+    """WasherDryer class."""
 
     def get_entity_info(self):
         """Get a dictionary with infos about the associated entities."""
@@ -436,23 +386,6 @@ class Washer(
 
 class CoffeeMaker(DeviceWithOpState, DeviceWithPrograms, DeviceWithRemoteStart):
     """Coffee maker class."""
-
-    PROGRAMS = [
-        {"name": "ConsumerProducts.CoffeeMaker.Program.Beverage.Espresso"},
-        {"name": "ConsumerProducts.CoffeeMaker.Program.Beverage.EspressoMacchiato"},
-        {"name": "ConsumerProducts.CoffeeMaker.Program.Beverage.Coffee"},
-        {"name": "ConsumerProducts.CoffeeMaker.Program.Beverage.Cappuccino"},
-        {"name": "ConsumerProducts.CoffeeMaker.Program.Beverage.LatteMacchiato"},
-        {"name": "ConsumerProducts.CoffeeMaker.Program.Beverage.CaffeLatte"},
-        {"name": "ConsumerProducts.CoffeeMaker.Program.CoffeeWorld.Americano"},
-        {"name": "ConsumerProducts.CoffeeMaker.Program.Beverage.EspressoDoppio"},
-        {"name": "ConsumerProducts.CoffeeMaker.Program.CoffeeWorld.FlatWhite"},
-        {"name": "ConsumerProducts.CoffeeMaker.Program.CoffeeWorld.Galao"},
-        {"name": "ConsumerProducts.CoffeeMaker.Program.Beverage.MilkFroth"},
-        {"name": "ConsumerProducts.CoffeeMaker.Program.Beverage.WarmMilk"},
-        {"name": "ConsumerProducts.CoffeeMaker.Program.Beverage.Ristretto"},
-        {"name": "ConsumerProducts.CoffeeMaker.Program.CoffeeWorld.Cortado"},
-    ]
 
     power_off_state = BSH_POWER_STANDBY
 
@@ -478,12 +411,6 @@ class Hood(
     DeviceWithRemoteStart,
 ):
     """Hood class."""
-
-    PROGRAMS = [
-        {"name": "Cooking.Common.Program.Hood.Automatic"},
-        {"name": "Cooking.Common.Program.Hood.Venting"},
-        {"name": "Cooking.Common.Program.Hood.DelayedShutOff"},
-    ]
 
     def get_entity_info(self):
         """Get a dictionary with infos about the associated entities."""
@@ -531,8 +458,6 @@ class Freezer(DeviceWithDoor):
 
 class Hob(DeviceWithOpState, DeviceWithPrograms, DeviceWithRemoteControl):
     """Hob class."""
-
-    PROGRAMS = [{"name": "Cooking.Hob.Program.PowerLevelMode"}]
 
     def get_entity_info(self):
         """Get a dictionary with infos about the associated entities."""

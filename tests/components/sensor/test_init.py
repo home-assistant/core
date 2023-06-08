@@ -35,7 +35,10 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_system import METRIC_SYSTEM, US_CUSTOMARY_SYSTEM
 
-from tests.common import mock_restore_cache_with_extra_data
+from tests.common import (
+    async_mock_restore_state_shutdown_restart,
+    mock_restore_cache_with_extra_data,
+)
 
 
 @pytest.mark.parametrize(
@@ -397,7 +400,7 @@ async def test_restore_sensor_save_state(
     await hass.async_block_till_done()
 
     # Trigger saving state
-    await hass.async_stop()
+    await async_mock_restore_state_shutdown_restart(hass)
 
     assert len(hass_storage[RESTORE_STATE_KEY]["data"]) == 1
     state = hass_storage[RESTORE_STATE_KEY]["data"][0]["state"]
@@ -1758,6 +1761,7 @@ async def test_non_numeric_device_class_with_unit_of_measurement(
         SensorDeviceClass.SULPHUR_DIOXIDE,
         SensorDeviceClass.TEMPERATURE,
         SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
+        SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS_PARTS,
         SensorDeviceClass.VOLTAGE,
         SensorDeviceClass.VOLUME,
         SensorDeviceClass.WATER,
@@ -1803,20 +1807,20 @@ async def test_device_classes_with_invalid_unit_of_measurement(
     ],
 )
 @pytest.mark.parametrize(
-    ("native_value", "expected"),
+    "native_value",
     [
-        ("abc", "abc"),
-        ("13.7.1", "13.7.1"),
-        (datetime(2012, 11, 10, 7, 35, 1), "2012-11-10 07:35:01"),
-        (date(2012, 11, 10), "2012-11-10"),
+        "",
+        "abc",
+        "13.7.1",
+        datetime(2012, 11, 10, 7, 35, 1),
+        date(2012, 11, 10),
     ],
 )
-async def test_non_numeric_validation_warn(
+async def test_non_numeric_validation_error(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     enable_custom_integrations: None,
     native_value: Any,
-    expected: str,
     device_class: SensorDeviceClass | None,
     state_class: SensorStateClass | None,
     unit: str | None,
@@ -1837,11 +1841,11 @@ async def test_non_numeric_validation_warn(
     await hass.async_block_till_done()
 
     state = hass.states.get(entity0.entity_id)
-    assert state.state == expected
+    assert state is None
 
     assert (
         "thus indicating it has a numeric value; "
-        f"however, it has the non-numeric value: {native_value}"
+        f"however, it has the non-numeric value: '{native_value}'"
     ) in caplog.text
 
 
