@@ -14,12 +14,6 @@ from zigpy.zcl.foundation import Status
 from homeassistant.core import callback
 from homeassistant.helpers.event import async_call_later
 
-from . import (
-    AttrReportConfig,
-    ClientClusterHandler,
-    ClusterHandler,
-    parse_and_log_command,
-)
 from .. import registries
 from ..const import (
     REPORT_CONFIG_ASAP,
@@ -32,6 +26,12 @@ from ..const import (
     SIGNAL_MOVE_LEVEL,
     SIGNAL_SET_LEVEL,
     SIGNAL_UPDATE_DEVICE,
+)
+from . import (
+    AttrReportConfig,
+    ClientClusterHandler,
+    ClusterHandler,
+    parse_and_log_command,
 )
 from .helpers import is_hue_motion_sensor
 

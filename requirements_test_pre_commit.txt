@@ -2,6 +2,5 @@
 
 black==23.3.0
 codespell==2.2.2
-isort==5.12.0
 ruff==0.0.272
 yamllint==1.28.0
