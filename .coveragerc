@@ -808,6 +808,7 @@ omit =
     homeassistant/components/nextcloud/coordinator.py
     homeassistant/components/nextcloud/entity.py
     homeassistant/components/nextcloud/sensor.py
+    homeassistant/components/nextcloud/update.py
     homeassistant/components/nfandroidtv/__init__.py
     homeassistant/components/nfandroidtv/notify.py
     homeassistant/components/nibe_heatpump/__init__.py
