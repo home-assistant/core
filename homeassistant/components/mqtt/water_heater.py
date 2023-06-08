@@ -287,7 +287,7 @@ class MqttWaterHeater(MqttTemperatureControlEntity, WaterHeaterEntity):
         @callback
         @log_messages(self.hass, self.entity_id)
         def handle_current_mode_received(msg: ReceiveMessage) -> None:
-            """Handle receiving mode via MQTT."""
+            """Handle receiving operation mode via MQTT."""
             handle_mode_received(
                 msg,
                 CONF_MODE_STATE_TEMPLATE,
