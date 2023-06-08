@@ -6,7 +6,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import BOOLEAN_TRUE_VALUES, BOOLEN_VALUES, DOMAIN
+from .const import BOOLEAN_TRUE_VALUES, BOOLEN_VALUES, DOMAIN, IGNORE_SENSORS
 from .coordinator import NextcloudDataUpdateCoordinator
 from .entity import NextcloudEntity
 
@@ -20,7 +20,8 @@ async def async_setup_entry(
         [
             NextcloudBinarySensor(coordinator, name, entry, None)
             for name in coordinator.data
-            if isinstance(coordinator.data[name], bool)
+            if name not in IGNORE_SENSORS
+            and isinstance(coordinator.data[name], bool)
             or coordinator.data[name] in BOOLEN_VALUES
         ]
     )

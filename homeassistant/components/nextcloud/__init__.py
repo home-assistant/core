@@ -22,7 +22,7 @@ from homeassistant.helpers import config_validation as cv
 from .const import DOMAIN
 from .coordinator import NextcloudDataUpdateCoordinator
 
-PLATFORMS = (Platform.SENSOR, Platform.BINARY_SENSOR)
+PLATFORMS = (Platform.SENSOR, Platform.BINARY_SENSOR, Platform.UPDATE)
 
 CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
