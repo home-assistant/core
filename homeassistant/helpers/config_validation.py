@@ -1132,7 +1132,7 @@ def config_entry_only_config_schema(domain: str) -> Callable[[dict], dict]:
         domain,
         "config_entry_only",
         "config_entry_only",
-        {"add_integration": f"/config/integrations/add?domain={domain}"},
+        {"add_integration": f"/config/integrations/dashboard/add?domain={domain}"},
     )
 
 
