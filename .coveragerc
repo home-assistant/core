@@ -618,7 +618,6 @@ omit =
     homeassistant/components/kwb/sensor.py
     homeassistant/components/lacrosse/sensor.py
     homeassistant/components/lannouncer/notify.py
-    homeassistant/components/lastfm/sensor.py
     homeassistant/components/launch_library/__init__.py
     homeassistant/components/launch_library/sensor.py
     homeassistant/components/lcn/climate.py
