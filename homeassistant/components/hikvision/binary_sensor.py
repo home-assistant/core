@@ -21,6 +21,7 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_PORT,
     CONF_SSL,
+    CONF_VERIFY_SSL,
     CONF_USERNAME,
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
@@ -79,6 +80,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Required(CONF_HOST): cv.string,
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
         vol.Optional(CONF_SSL, default=False): cv.boolean,
+        vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
         vol.Optional(CONF_CUSTOMIZE, default={}): vol.Schema(
@@ -100,6 +102,7 @@ def setup_platform(
     port = config[CONF_PORT]
     username = config[CONF_USERNAME]
     password = config[CONF_PASSWORD]
+    verify_ssl = config[CONF_VERIFY_SSL]
 
     customize = config[CONF_CUSTOMIZE]
 
@@ -107,7 +110,7 @@ def setup_platform(
 
     url = f"{protocol}://{host}"
 
-    data = HikvisionData(hass, url, port, name, username, password)
+    data = HikvisionData(hass, url, port, name, username, password, verify_ssl)
 
     if data.sensors is None:
         _LOGGER.error("Hikvision event stream has no data, unable to set up")
@@ -145,16 +148,17 @@ def setup_platform(
 class HikvisionData:
     """Hikvision device event stream object."""
 
-    def __init__(self, hass, url, port, name, username, password):
+    def __init__(self, hass, url, port, name, username, password, verify_ssl):
         """Initialize the data object."""
         self._url = url
         self._port = port
         self._name = name
         self._username = username
         self._password = password
+        self._verfiy_ssl = verify_ssl
 
         # Establish camera
-        self.camdata = HikCamera(self._url, self._port, self._username, self._password)
+        self.camdata = HikCamera(self._url, self._port, self._username, self._password, self._verify_ssl)
 
         if self._name is None:
             self._name = self.camdata.get_name
