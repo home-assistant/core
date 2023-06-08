@@ -21,15 +21,6 @@ from .entity import AdGuardHomeEntity
 SCAN_INTERVAL = timedelta(seconds=300)
 PARALLEL_UPDATES = 4
 
-SENSOR_DNS_QUERIES = "dns_queries"
-SENSOR_DNS_QUERIES_BLOCKED = "dns_queries_blocked"
-SENSOR_DNS_QUERIES_BLOCKED_RATIO = "dns_queries_blocked_ratio"
-SENSOR_PARENTAL_CONTROL_BLOCKED = "parental_control_blocked"
-SENSOR_SAFE_BROWSING_BLOCKED = "safe_browsing_blocked"
-SENSOR_SAFE_SEARCHES_ENFORCED = "safe_searches_enforced"
-SENSOR_AVERAGE_PROCESSING_SPEED = "average_processing_speed"
-SENSOR_RULES_COUNT = "rules_count"
-
 
 @dataclass
 class AdGuardHomeEntityDescriptionMixin:
@@ -47,57 +38,57 @@ class AdGuardHomeEntityDescription(
 
 SENSORS: tuple[AdGuardHomeEntityDescription, ...] = (
     AdGuardHomeEntityDescription(
-        key=SENSOR_DNS_QUERIES,
-        translation_key=SENSOR_DNS_QUERIES,
+        key="dns_queries",
+        translation_key="dns_queries",
         icon="mdi:magnify",
         native_unit_of_measurement="queries",
         value_fn=lambda adguard: adguard.stats.dns_queries(),
     ),
     AdGuardHomeEntityDescription(
-        key=SENSOR_DNS_QUERIES_BLOCKED,
-        translation_key=SENSOR_DNS_QUERIES_BLOCKED,
+        key="blocked_filtering",
+        translation_key="dns_queries_blocked",
         icon="mdi:magnify-close",
         native_unit_of_measurement="queries",
         value_fn=lambda adguard: adguard.stats.blocked_filtering(),
     ),
     AdGuardHomeEntityDescription(
-        key=SENSOR_DNS_QUERIES_BLOCKED_RATIO,
-        translation_key=SENSOR_DNS_QUERIES_BLOCKED_RATIO,
+        key="blocked_percentage",
+        translation_key="dns_queries_blocked_ratio",
         icon="mdi:magnify-close",
         native_unit_of_measurement=PERCENTAGE,
         value_fn=lambda adguard: adguard.stats.blocked_percentage(),
     ),
     AdGuardHomeEntityDescription(
-        key=SENSOR_PARENTAL_CONTROL_BLOCKED,
-        translation_key=SENSOR_PARENTAL_CONTROL_BLOCKED,
+        key="blocked_parental",
+        translation_key="parental_control_blocked",
         icon="mdi:human-male-girl",
         native_unit_of_measurement="requests",
         value_fn=lambda adguard: adguard.stats.replaced_parental(),
     ),
     AdGuardHomeEntityDescription(
-        key=SENSOR_SAFE_BROWSING_BLOCKED,
-        translation_key=SENSOR_SAFE_BROWSING_BLOCKED,
+        key="blocked_safebrowsing",
+        translation_key="safe_browsing_blocked",
         icon="mdi:shield-half-full",
         native_unit_of_measurement="requests",
         value_fn=lambda adguard: adguard.stats.replaced_safebrowsing(),
     ),
     AdGuardHomeEntityDescription(
-        key=SENSOR_SAFE_SEARCHES_ENFORCED,
-        translation_key=SENSOR_SAFE_SEARCHES_ENFORCED,
+        key="enforced_safesearch",
+        translation_key="safe_searches_enforced",
         icon="mdi:shield-search",
         native_unit_of_measurement="requests",
         value_fn=lambda adguard: adguard.stats.replaced_safesearch(),
     ),
     AdGuardHomeEntityDescription(
-        key=SENSOR_AVERAGE_PROCESSING_SPEED,
-        translation_key=SENSOR_AVERAGE_PROCESSING_SPEED,
+        key="average_speed",
+        translation_key="average_processing_speed",
         icon="mdi:speedometer",
         native_unit_of_measurement=UnitOfTime.MILLISECONDS,
         value_fn=lambda adguard: adguard.stats.avg_processing_time(),
     ),
     AdGuardHomeEntityDescription(
-        key=SENSOR_RULES_COUNT,
-        translation_key=SENSOR_RULES_COUNT,
+        key="rules_count",
+        translation_key="rules_count",
         icon="mdi:counter",
         native_unit_of_measurement="rules",
         value_fn=lambda adguard: adguard.filtering.rules_count(allowlist=False),
