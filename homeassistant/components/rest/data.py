@@ -67,13 +67,11 @@ class RestData:
     def data_without_xml(self) -> str | None:
         """If the data is an XML string, convert it to a JSON string."""
         _LOGGER.debug("Data fetched from resource: %s", self.data)
-        if (value := self.data) is None:
-            return value
-
         if (
+            (value := self.data) is not None
             # If the http request failed, headers will be None
-            self.headers is not None
-            and (content_type := self.headers.get("content-type"))
+            and (headers := self.headers) is not None
+            and (content_type := headers.get("content-type"))
             and content_type.startswith(XML_MIME_TYPES)
         ):
             try:
