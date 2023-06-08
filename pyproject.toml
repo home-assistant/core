@@ -77,20 +77,6 @@ include = ["homeassistant*"]
 [tool.black]
 extend-exclude = "/generated/"
 
-[tool.isort]
-# https://github.com/PyCQA/isort/wiki/isort-Settings
-profile = "black"
-# will group `import x` and `from x import` of the same module.
-force_sort_within_sections = true
-known_first_party = [
-    "homeassistant",
-    "tests",
-]
-forced_separate = [
-    "tests",
-]
-combine_as_imports = true
-
 [tool.pylint.MAIN]
 py-version = "3.10"
 ignore = [
@@ -248,6 +234,7 @@ select = [
     "D",  # docstrings
     "E",  # pycodestyle
     "F",  # pyflakes/autoflake
+    "I",  # isort
     "ICN001", # import concentions; {name} should be imported as {asname}
     "PGH004",  # Use specific rule codes when using noqa
     "PLC0414", # Useless import alias. Import alias does not rename original package.
@@ -307,6 +294,13 @@ voluptuous = "vol"
 
 [tool.ruff.flake8-pytest-style]
 fixture-parentheses = false
+
+[tool.ruff.isort]
+force-sort-within-sections = true
+known-first-party = [
+    "homeassistant",
+]
+combine-as-imports = true
 
 [tool.ruff.per-file-ignores]
 
