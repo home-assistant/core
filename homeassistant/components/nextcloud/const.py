@@ -7,6 +7,8 @@ DEFAULT_VERIFY_SSL = True
 
 IGNORE_SENSORS = (
     "system apps app_updates",
+    "system update",
+    "system update available",
     "system update available_version",
     "system version",
 )
