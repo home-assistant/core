@@ -147,6 +147,7 @@ SENSORS: tuple[RensonSensorEntityDescription, ...] = (
         name="Filter change",
         field=FILTER_REMAIN_FIELD,
         raw_format=False,
+        device_class=SensorDeviceClass.DURATION
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTime.DAYS,
     ),
