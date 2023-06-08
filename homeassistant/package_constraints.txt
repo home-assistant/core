@@ -129,7 +129,7 @@ authlib<1.0
 backoff>=2.0
 
 # Require to avoid issues with decorators (#93904). v2 has breaking changes.
-pydantic>=1.10.9,<2.0
+pydantic>=1.10.8,<2.0
 
 # Breaks asyncio
 # https://github.com/pubnub/python/issues/130
