@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from typing import Any
 
-from opentherm_web_api import OpenThermWebApi
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -12,6 +11,7 @@ from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 
 from .const import DOMAIN, HOST, LOGGER, SECRET
+from .opentherm_web_api import OpenThermWebApi
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {

@@ -7,7 +7,7 @@
   "documentation": "https://www.home-assistant.io/integrations/opentherm_web",
   "homekit": {},
   "iot_class": "local_polling",
-  "requirements": ["opentherm-web-api==0.1.6"],
+  "requirements": [],
   "ssdp": [],
   "zeroconf": []
 }

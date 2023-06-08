@@ -3,16 +3,15 @@ from __future__ import annotations
 
 from typing import NamedTuple
 
-from opentherm_web_api import OpenThermWebApi
-
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN, HOST, LOGGER, SCAN_INTERVAL, SECRET
+from .opentherm_web_api import OpenThermWebApi
 
-PLATFORMS: list[Platform] = [Platform.CLIMATE]
+PLATFORMS: list[Platform] = [Platform.CLIMATE, Platform.WATER_HEATER]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
