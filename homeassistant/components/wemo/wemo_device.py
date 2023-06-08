@@ -57,6 +57,7 @@ class OptionsValidationError(Exception):
           field_key: Name of the options.step.init.data key that corresponds to this error.
             field_key must also match one of the field names inside the Options class.
           error_key: Name of the options.error key that corresponds to this error.
+          message: Message for the Exception class.
         """
         super().__init__(message)
         self.field_key = field_key
