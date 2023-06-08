@@ -18,8 +18,9 @@ from .const import (
     PLATFORM_FORMAT,
     Platform,
 )
-from .core import CALLBACK_TYPE
+from .core import CALLBACK_TYPE, DOMAIN as HOMEASSISTANT_DOMAIN
 from .exceptions import DependencyError, HomeAssistantError
+from .helpers.issue_registry import IssueSeverity, async_create_issue
 from .helpers.typing import ConfigType
 from .util import dt as dt_util, ensure_unique_string
 
@@ -227,6 +228,7 @@ async def _async_setup_component(
         domain in processed_config
         and not hasattr(component, "async_setup")
         and not hasattr(component, "setup")
+        and not hasattr(component, "CONFIG_SCHEMA")
     ):
         _LOGGER.error(
             (
@@ -234,6 +236,16 @@ async def _async_setup_component(
                 "your configuration"
             ),
             domain,
+        )
+        async_create_issue(
+            hass,
+            HOMEASSISTANT_DOMAIN,
+            f"config_entry_only{domain}",
+            is_fixable=False,
+            severity=IssueSeverity.ERROR,
+            issue_domain=domain,
+            translation_key="config_entry_only",
+            translation_placeholders={"domain": domain},
         )
 
     start = timer()

@@ -316,7 +316,7 @@ def _remove_empty_listener() -> None:
 def _remove_listener(
     hass: HomeAssistant,
     listeners_key: str,
-    keys: list[str],
+    keys: Iterable[str],
     job: HassJob[[Event], Any],
     callbacks: dict[str, list[HassJob[[Event], Any]]],
 ) -> None:
