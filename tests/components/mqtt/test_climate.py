@@ -342,7 +342,12 @@ async def test_set_operation_pessimistic(
     hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test setting operation mode in pessimistic mode."""
-    await mqtt_mock_entry()
+    mqtt_mock = await mqtt_mock_entry()
+
+    # Last mode is unknown, mode will default to heat
+    await common.async_turn_on(hass, ENTITY_CLIMATE)
+    mqtt_mock.async_publish.assert_called_once_with("mode-topic", "heat", 0, False)
+    mqtt_mock.reset_mock()
 
     state = hass.states.get(ENTITY_CLIMATE)
     assert state.state == "unknown"
@@ -358,6 +363,20 @@ async def test_set_operation_pessimistic(
     async_fire_mqtt_message(hass, "mode-state", "bogus mode")
     state = hass.states.get(ENTITY_CLIMATE)
     assert state.state == "cool"
+    mqtt_mock.reset_mock()
+
+    await common.async_turn_off(hass, ENTITY_CLIMATE)
+    mqtt_mock.async_publish.assert_called_once_with("mode-topic", "off", 0, False)
+    mqtt_mock.reset_mock()
+    async_fire_mqtt_message(hass, "mode-state", "off")
+    state = hass.states.get(ENTITY_CLIMATE)
+    assert state.state == "off"
+    mqtt_mock.reset_mock()
+
+    # Last mode is cool, mode should default to cool
+    await common.async_turn_on(hass, ENTITY_CLIMATE)
+    mqtt_mock.async_publish.assert_called_once_with("mode-topic", "cool", 0, False)
+    mqtt_mock.reset_mock()
 
 
 @pytest.mark.parametrize(

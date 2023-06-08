@@ -811,9 +811,11 @@ class MqttClimate(MqttTemperatureControlEntity, ClimateEntity):
 
             if payload not in self._config[mode_list]:
                 _LOGGER.error("Invalid %s mode: %s", mode_list, payload)
-            else:
-                setattr(self, attr, payload)
-                get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
+                return
+            setattr(self, attr, payload)
+            get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
+            if attr == "_attr_hvac_mode" and payload != HVACMode.OFF.value:
+                self._last_active_mode = HVACMode(str(payload))
 
         @callback
         @log_messages(self.hass, self.entity_id)
