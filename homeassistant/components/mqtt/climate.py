@@ -15,9 +15,7 @@ from homeassistant.components.climate import (
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
     DEFAULT_MAX_HUMIDITY,
-    DEFAULT_MAX_TEMP,
     DEFAULT_MIN_HUMIDITY,
-    DEFAULT_MIN_TEMP,
     FAN_AUTO,
     FAN_HIGH,
     FAN_LOW,
@@ -42,19 +40,36 @@ from homeassistant.const import (
     PRECISION_HALVES,
     PRECISION_TENTHS,
     PRECISION_WHOLE,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.util.unit_conversion import TemperatureConverter
 
 from . import subscription
 from .config import DEFAULT_RETAIN, MQTT_BASE_SCHEMA
 from .const import (
+    CONF_CURRENT_TEMP_TEMPLATE,
+    CONF_CURRENT_TEMP_TOPIC,
     CONF_ENCODING,
+    CONF_MODE_COMMAND_TEMPLATE,
+    CONF_MODE_COMMAND_TOPIC,
+    CONF_MODE_LIST,
+    CONF_MODE_STATE_TEMPLATE,
+    CONF_MODE_STATE_TOPIC,
+    CONF_PRECISION,
     CONF_QOS,
     CONF_RETAIN,
+    CONF_TEMP_COMMAND_TEMPLATE,
+    CONF_TEMP_COMMAND_TOPIC,
+    CONF_TEMP_INITIAL,
+    CONF_TEMP_MAX,
+    CONF_TEMP_MIN,
+    CONF_TEMP_STATE_TEMPLATE,
+    CONF_TEMP_STATE_TOPIC,
     DEFAULT_OPTIMISTIC,
     PAYLOAD_NONE,
 )
@@ -86,8 +101,6 @@ CONF_AWAY_MODE_STATE_TOPIC = "away_mode_state_topic"
 
 CONF_CURRENT_HUMIDITY_TEMPLATE = "current_humidity_template"
 CONF_CURRENT_HUMIDITY_TOPIC = "current_humidity_topic"
-CONF_CURRENT_TEMP_TEMPLATE = "current_temperature_template"
-CONF_CURRENT_TEMP_TOPIC = "current_temperature_topic"
 CONF_FAN_MODE_COMMAND_TEMPLATE = "fan_mode_command_template"
 CONF_FAN_MODE_COMMAND_TOPIC = "fan_mode_command_topic"
 CONF_FAN_MODE_LIST = "fan_modes"
@@ -107,11 +120,6 @@ CONF_HUMIDITY_STATE_TEMPLATE = "target_humidity_state_template"
 CONF_HUMIDITY_STATE_TOPIC = "target_humidity_state_topic"
 CONF_HUMIDITY_MAX = "max_humidity"
 CONF_HUMIDITY_MIN = "min_humidity"
-CONF_MODE_COMMAND_TEMPLATE = "mode_command_template"
-CONF_MODE_COMMAND_TOPIC = "mode_command_topic"
-CONF_MODE_LIST = "modes"
-CONF_MODE_STATE_TEMPLATE = "mode_state_template"
-CONF_MODE_STATE_TOPIC = "mode_state_topic"
 
 # CONF_POWER_COMMAND_TOPIC, CONF_POWER_STATE_TOPIC and CONF_POWER_STATE_TEMPLATE
 # are deprecated, support for CONF_POWER_STATE_TOPIC and CONF_POWER_STATE_TEMPLATE
@@ -120,7 +128,6 @@ CONF_MODE_STATE_TOPIC = "mode_state_topic"
 CONF_POWER_COMMAND_TOPIC = "power_command_topic"
 CONF_POWER_STATE_TEMPLATE = "power_state_template"
 CONF_POWER_STATE_TOPIC = "power_state_topic"
-CONF_PRECISION = "precision"
 CONF_PRESET_MODE_STATE_TOPIC = "preset_mode_state_topic"
 CONF_PRESET_MODE_COMMAND_TOPIC = "preset_mode_command_topic"
 CONF_PRESET_MODE_VALUE_TEMPLATE = "preset_mode_value_template"
@@ -133,8 +140,6 @@ CONF_SWING_MODE_COMMAND_TOPIC = "swing_mode_command_topic"
 CONF_SWING_MODE_LIST = "swing_modes"
 CONF_SWING_MODE_STATE_TEMPLATE = "swing_mode_state_template"
 CONF_SWING_MODE_STATE_TOPIC = "swing_mode_state_topic"
-CONF_TEMP_COMMAND_TEMPLATE = "temperature_command_template"
-CONF_TEMP_COMMAND_TOPIC = "temperature_command_topic"
 CONF_TEMP_HIGH_COMMAND_TEMPLATE = "temperature_high_command_template"
 CONF_TEMP_HIGH_COMMAND_TOPIC = "temperature_high_command_topic"
 CONF_TEMP_HIGH_STATE_TEMPLATE = "temperature_high_state_template"
@@ -143,12 +148,9 @@ CONF_TEMP_LOW_COMMAND_TEMPLATE = "temperature_low_command_template"
 CONF_TEMP_LOW_COMMAND_TOPIC = "temperature_low_command_topic"
 CONF_TEMP_LOW_STATE_TEMPLATE = "temperature_low_state_template"
 CONF_TEMP_LOW_STATE_TOPIC = "temperature_low_state_topic"
-CONF_TEMP_STATE_TEMPLATE = "temperature_state_template"
-CONF_TEMP_STATE_TOPIC = "temperature_state_topic"
-CONF_TEMP_INITIAL = "initial"
-CONF_TEMP_MAX = "max_temp"
-CONF_TEMP_MIN = "min_temp"
 CONF_TEMP_STEP = "temp_step"
+
+DEFAULT_INITIAL_TEMPERATURE = 21.0
 
 MQTT_CLIMATE_ATTRIBUTES_BLOCKED = frozenset(
     {
@@ -338,9 +340,9 @@ _PLATFORM_SCHEMA_BASE = MQTT_BASE_SCHEMA.extend(
         ): cv.ensure_list,
         vol.Optional(CONF_SWING_MODE_STATE_TEMPLATE): cv.template,
         vol.Optional(CONF_SWING_MODE_STATE_TOPIC): valid_subscribe_topic,
-        vol.Optional(CONF_TEMP_INITIAL, default=21): cv.positive_int,
-        vol.Optional(CONF_TEMP_MIN, default=DEFAULT_MIN_TEMP): vol.Coerce(float),
-        vol.Optional(CONF_TEMP_MAX, default=DEFAULT_MAX_TEMP): vol.Coerce(float),
+        vol.Optional(CONF_TEMP_INITIAL): cv.positive_int,
+        vol.Optional(CONF_TEMP_MIN): vol.Coerce(float),
+        vol.Optional(CONF_TEMP_MAX): vol.Coerce(float),
         vol.Optional(CONF_TEMP_STEP, default=1.0): vol.Coerce(float),
         vol.Optional(CONF_TEMP_COMMAND_TEMPLATE): cv.template,
         vol.Optional(CONF_TEMP_COMMAND_TOPIC): valid_publish_topic,
@@ -443,6 +445,9 @@ class MqttTemperatureControlEntity(MqttEntity, ABC):
     climate and water_heater platforms.
     """
 
+    _attr_target_temperature_low: float | None
+    _attr_target_temperature_high: float | None
+
     _optimistic: bool
     _topic: dict[str, Any]
 
@@ -470,7 +475,7 @@ class MqttTemperatureControlEntity(MqttEntity, ABC):
     ) -> None:
         """Add a subscription."""
         qos: int = self._config[CONF_QOS]
-        if self._topic[topic] is not None:
+        if topic in self._topic and self._topic[topic] is not None:
             topics[topic] = {
                 "topic": self._topic[topic],
                 "msg_callback": msg_callback,
@@ -599,15 +604,8 @@ class MqttTemperatureControlEntity(MqttEntity, ABC):
         return changed
 
     @abstractmethod
-    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
-        """Set hvac mode."""
-
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperatures."""
-        operation_mode: HVACMode | None
-        if (operation_mode := kwargs.get(ATTR_HVAC_MODE)) is not None:
-            await self.async_set_hvac_mode(operation_mode)
-
         changed = await self._set_climate_attribute(
             kwargs.get(ATTR_TEMPERATURE),
             CONF_TEMP_COMMAND_TOPIC,
@@ -637,7 +635,7 @@ class MqttTemperatureControlEntity(MqttEntity, ABC):
         self.async_write_ha_state()
 
 
-class MqttClimate(MqttTemperatureControlEntity, ClimateEntity):  # type: ignore[misc]
+class MqttClimate(MqttTemperatureControlEntity, ClimateEntity):
     """Representation of an MQTT climate device."""
 
     _entity_id_format = climate.ENTITY_ID_FORMAT
@@ -668,28 +666,41 @@ class MqttClimate(MqttTemperatureControlEntity, ClimateEntity):  # type: ignore[
     def _setup_from_config(self, config: ConfigType) -> None:
         """(Re)Setup the entity."""
         self._attr_hvac_modes = config[CONF_MODE_LIST]
-        self._attr_min_temp = config[CONF_TEMP_MIN]
-        self._attr_max_temp = config[CONF_TEMP_MAX]
-        self._attr_min_humidity = config[CONF_HUMIDITY_MIN]
-        self._attr_max_humidity = config[CONF_HUMIDITY_MAX]
-        self._attr_precision = config.get(CONF_PRECISION, super().precision)
-        self._attr_fan_modes = config[CONF_FAN_MODE_LIST]
-        self._attr_swing_modes = config[CONF_SWING_MODE_LIST]
-        self._attr_target_temperature_step = config[CONF_TEMP_STEP]
+        # Make sure the min an max temp is converted to the correct when not set
         self._attr_temperature_unit = config.get(
             CONF_TEMPERATURE_UNIT, self.hass.config.units.temperature_unit
         )
+        if (min_temp := config.get(CONF_TEMP_MIN)) is not None:
+            self._attr_min_temp = min_temp
+        if (max_temp := config.get(CONF_TEMP_MAX)) is not None:
+            self._attr_max_temp = max_temp
+        self._attr_min_humidity = config[CONF_HUMIDITY_MIN]
+        self._attr_max_humidity = config[CONF_HUMIDITY_MAX]
+        if (precision := config.get(CONF_PRECISION)) is not None:
+            self._attr_precision = precision
+        self._attr_fan_modes = config[CONF_FAN_MODE_LIST]
+        self._attr_swing_modes = config[CONF_SWING_MODE_LIST]
+        self._attr_target_temperature_step = config[CONF_TEMP_STEP]
 
         self._topic = {key: config.get(key) for key in TOPIC_KEYS}
 
         self._optimistic = config[CONF_OPTIMISTIC]
 
+        # Set init temp, if it is missing convert the default to the temperature units
+        init_temp: float = config.get(
+            CONF_TEMP_INITIAL,
+            TemperatureConverter.convert(
+                DEFAULT_INITIAL_TEMPERATURE,
+                UnitOfTemperature.CELSIUS,
+                self.temperature_unit,
+            ),
+        )
         if self._topic[CONF_TEMP_STATE_TOPIC] is None or self._optimistic:
-            self._attr_target_temperature = config[CONF_TEMP_INITIAL]
+            self._attr_target_temperature = init_temp
         if self._topic[CONF_TEMP_LOW_STATE_TOPIC] is None or self._optimistic:
-            self._attr_target_temperature_low = config[CONF_TEMP_INITIAL]
+            self._attr_target_temperature_low = init_temp
         if self._topic[CONF_TEMP_HIGH_STATE_TOPIC] is None or self._optimistic:
-            self._attr_target_temperature_high = config[CONF_TEMP_INITIAL]
+            self._attr_target_temperature_high = init_temp
 
         if self._topic[CONF_FAN_MODE_STATE_TOPIC] is None or self._optimistic:
             self._attr_fan_mode = FAN_LOW
@@ -948,6 +959,13 @@ class MqttClimate(MqttTemperatureControlEntity, ClimateEntity):  # type: ignore[
         )
 
         self.prepare_subscribe_topics(topics)
+
+    async def async_set_temperature(self, **kwargs: Any) -> None:
+        """Set new target temperatures."""
+        operation_mode: HVACMode | None
+        if (operation_mode := kwargs.get(ATTR_HVAC_MODE)) is not None:
+            await self.async_set_hvac_mode(operation_mode)
+        await super().async_set_temperature(**kwargs)
 
     async def async_set_humidity(self, humidity: int) -> None:
         """Set new target humidity."""
