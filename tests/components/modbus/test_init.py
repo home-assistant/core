@@ -607,7 +607,7 @@ async def mock_modbus_read_pymodbus_fixture(
     [
         [ReadResult([1]), None, STATE_ON, "1"],
         [IllegalFunctionRequest(0x99), None, STATE_UNAVAILABLE, STATE_UNAVAILABLE],
-        [ExceptionResponse(0x99), None, STATE_UNKNOWN, STATE_UNAVAILABLE],
+        [ExceptionResponse(0x99), None, STATE_UNAVAILABLE, STATE_UNAVAILABLE],
         [
             ReadResult([1]),
             ModbusException("fail read_"),
