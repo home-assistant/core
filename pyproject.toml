@@ -251,6 +251,23 @@ select = [
     "ICN001", # import concentions; {name} should be imported as {asname}
     "PGH004",  # Use specific rule codes when using noqa
     "PLC0414", # Useless import alias. Import alias does not rename original package.
+    "S103",  # bad-file-permissions
+    "S108",  # hardcoded-temp-file
+    "S306",  # suspicious-mktemp-usage
+    "S307",  # suspicious-eval-usage
+    "S313",  # suspicious-xmlc-element-tree-usage
+    "S314",  # suspicious-xml-element-tree-usage
+    "S315",  # suspicious-xml-expat-reader-usage
+    "S316",  # suspicious-xml-expat-builder-usage
+    "S317",  # suspicious-xml-sax-usage
+    "S318",  # suspicious-xml-mini-dom-usage
+    "S319",  # suspicious-xml-pull-dom-usage
+    "S320",  # suspicious-xmle-tree-usage
+    "S601",  # paramiko-call
+    "S602",  # subprocess-popen-with-shell-equals-true
+    "S604",  # call-with-shell-equals-true
+    "S608",  # hardcoded-sql-expression
+    "S609",  # unix-command-wildcard-injection
     "SIM105", # Use contextlib.suppress({exception}) instead of try-except-pass
     "SIM117", # Merge with-statements that use the same scope
     "SIM118", # Use {key} in {dict} instead of {key} in {dict}.keys()
