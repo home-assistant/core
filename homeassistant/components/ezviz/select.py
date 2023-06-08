@@ -36,7 +36,7 @@ class EzvizSelectEntityDescription(
 
 SELECT_TYPE = EzvizSelectEntityDescription(
     key="alarm_sound_mod",
-    name="Warning sound",
+    translation_key="alarm_sound_mode",
     icon="mdi:alarm",
     entity_category=EntityCategory.CONFIG,
     options=["soft", "intensive", "silent"],
