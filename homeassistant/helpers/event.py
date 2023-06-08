@@ -312,6 +312,25 @@ def _remove_empty_listener() -> None:
     """Remove a listener that does nothing."""
 
 
+@callback
+def _remove_listener(
+    hass: HomeAssistant,
+    listeners_key: str,
+    keys: Iterable[str],
+    job: HassJob[[Event], Any],
+    callbacks: dict[str, list[HassJob[[Event], Any]]],
+) -> None:
+    """Remove listener."""
+    for key in keys:
+        callbacks[key].remove(job)
+        if len(callbacks[key]) == 0:
+            del callbacks[key]
+
+    if not callbacks:
+        hass.data[listeners_key]()
+        del hass.data[listeners_key]
+
+
 def _async_track_event(
     hass: HomeAssistant,
     keys: str | Iterable[str],
@@ -333,12 +352,16 @@ def _async_track_event(
     if isinstance(keys, str):
         keys = [keys]
 
-    callbacks: dict[str, list[HassJob[[Event], Any]]] = hass.data.setdefault(
-        callbacks_key, {}
-    )
+    hass_data = hass.data
 
-    if listeners_key not in hass.data:
-        hass.data[listeners_key] = hass.bus.async_listen(
+    callbacks: dict[str, list[HassJob[[Event], Any]]] | None = hass_data.get(
+        callbacks_key
+    )
+    if not callbacks:
+        callbacks = hass_data[callbacks_key] = {}
+
+    if listeners_key not in hass_data:
+        hass_data[listeners_key] = hass.bus.async_listen(
             event_type,
             callback(ft.partial(dispatcher_callable, hass, callbacks)),
             event_filter=callback(ft.partial(filter_callable, hass, callbacks)),
@@ -347,21 +370,13 @@ def _async_track_event(
     job = HassJob(action, f"track {event_type} event {keys}")
 
     for key in keys:
-        callbacks.setdefault(key, []).append(job)
+        callback_list = callbacks.get(key)
+        if callback_list:
+            callback_list.append(job)
+        else:
+            callbacks[key] = [job]
 
-    @callback
-    def remove_listener() -> None:
-        """Remove listener."""
-        for key in keys:
-            callbacks[key].remove(job)
-            if len(callbacks[key]) == 0:
-                del callbacks[key]
-
-        if not callbacks:
-            hass.data[listeners_key]()
-            del hass.data[listeners_key]
-
-    return remove_listener
+    return ft.partial(_remove_listener, hass, listeners_key, keys, job, callbacks)
 
 
 @callback

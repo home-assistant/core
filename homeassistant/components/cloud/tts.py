@@ -1,4 +1,4 @@
-"""Support for the cloud for text to speech service."""
+"""Support for the cloud for text-to-speech service."""
 from __future__ import annotations
 
 import logging
