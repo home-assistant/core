@@ -173,7 +173,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     platforms: list[Platform] = []
     for platform_config in command_line_config:
         for platform, _config in platform_config.items():
-            platforms.append(PLATFORM_MAPPING[platform])
+            if (mapped_platform := PLATFORM_MAPPING[platform]) not in platforms:
+                platforms.append(mapped_platform)
             _LOGGER.debug(
                 "Loading config %s for platform %s",
                 platform_config,
