@@ -66,7 +66,7 @@ class ReolinkUpdateEntity(
         if isinstance(self.coordinator.data, str):
             return self.coordinator.data
 
-        self.coordinator.data.version_string
+        return self.coordinator.data.version_string
 
     async def async_install(
         self, version: str | None, backup: bool, **kwargs: Any
