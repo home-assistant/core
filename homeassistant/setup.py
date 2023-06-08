@@ -245,7 +245,10 @@ async def _async_setup_component(
             severity=IssueSeverity.ERROR,
             issue_domain=domain,
             translation_key="integration_key_no_support",
-            translation_placeholders={"domain": domain},
+            translation_placeholders={
+                "domain": domain,
+                "add_integration": f"/config/integrations/dashboard/add?domain={domain}",
+            },
         )
 
     start = timer()
