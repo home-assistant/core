@@ -67,13 +67,16 @@ def _get_accessory_diagnostics(
     hass: HomeAssistant, accessory: HomeAccessory
 ) -> dict[str, Any]:
     """Return diagnostics for an accessory."""
-    return {
+    entity_state = None
+    if accessory.entity_id:
+        entity_state = hass.states.get(accessory.entity_id)
+    data = {
         "aid": accessory.aid,
         "config": accessory.config,
         "category": accessory.category,
         "name": accessory.display_name,
         "entity_id": accessory.entity_id,
-        "entity_state": async_redact_data(
-            hass.states.get(accessory.entity_id), TO_REDACT
-        ),
     }
+    if entity_state:
+        data["entity_state"] = async_redact_data(entity_state, TO_REDACT)
+    return data

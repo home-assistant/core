@@ -24,7 +24,7 @@ from homeassistant.core import (
     callback as hass_callback,
 )
 from homeassistant.data_entry_flow import BaseServiceInfo
-from homeassistant.helpers import discovery_flow, system_info
+from homeassistant.helpers import config_validation as cv, discovery_flow, system_info
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import USBMatcher, async_get_usb
@@ -47,6 +47,8 @@ __all__ = [
     "UsbServiceInfo",
 ]
 
+CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
+
 
 class USBCallbackMatcher(USBMatcher):
     """Callback matcher for the USB integration."""
@@ -59,6 +61,18 @@ def async_register_scan_request_callback(
     """Register to receive a callback when a scan should be initiated."""
     discovery: USBDiscovery = hass.data[DOMAIN]
     return discovery.async_register_scan_request_callback(callback)
+
+
+@hass_callback
+def async_register_initial_scan_callback(
+    hass: HomeAssistant, callback: CALLBACK_TYPE
+) -> CALLBACK_TYPE:
+    """Register to receive a callback when the initial USB scan is done.
+
+    If the initial scan is already done, the callback is called immediately.
+    """
+    discovery: USBDiscovery = hass.data[DOMAIN]
+    return discovery.async_register_initial_scan_callback(callback)
 
 
 @hass_callback
@@ -89,7 +103,7 @@ def async_is_plugged_in(hass: HomeAssistant, matcher: USBCallbackMatcher) -> boo
     )
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(slots=True)
 class UsbServiceInfo(BaseServiceInfo):
     """Prepared info from usb entries."""
 
@@ -186,15 +200,23 @@ class USBDiscovery:
         self.observer_active = False
         self._request_debouncer: Debouncer[Coroutine[Any, Any, None]] | None = None
         self._request_callbacks: list[CALLBACK_TYPE] = []
+        self.initial_scan_done = False
+        self._initial_scan_callbacks: list[CALLBACK_TYPE] = []
 
     async def async_setup(self) -> None:
         """Set up USB Discovery."""
         await self._async_start_monitor()
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, self.async_start)
+        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.async_stop)
 
     async def async_start(self, event: Event) -> None:
         """Start USB Discovery and run a manual scan."""
         await self._async_scan_serial()
+
+    async def async_stop(self, event: Event) -> None:
+        """Stop USB Discovery."""
+        if self._request_debouncer:
+            await self._request_debouncer.async_shutdown()
 
     async def _async_start_monitor(self) -> None:
         """Start monitoring hardware with pyudev."""
@@ -249,12 +271,32 @@ class USBDiscovery:
         self,
         _callback: CALLBACK_TYPE,
     ) -> CALLBACK_TYPE:
-        """Register a callback."""
+        """Register a scan request callback."""
         self._request_callbacks.append(_callback)
 
         @hass_callback
         def _async_remove_callback() -> None:
             self._request_callbacks.remove(_callback)
+
+        return _async_remove_callback
+
+    @hass_callback
+    def async_register_initial_scan_callback(
+        self,
+        callback: CALLBACK_TYPE,
+    ) -> CALLBACK_TYPE:
+        """Register an initial scan callback."""
+        if self.initial_scan_done:
+            callback()
+            return lambda: None
+
+        self._initial_scan_callbacks.append(callback)
+
+        @hass_callback
+        def _async_remove_callback() -> None:
+            if callback not in self._initial_scan_callbacks:
+                return
+            self._initial_scan_callbacks.remove(callback)
 
         return _async_remove_callback
 
@@ -307,6 +349,12 @@ class USBDiscovery:
     async def _async_scan_serial(self) -> None:
         """Scan serial ports."""
         self._async_process_ports(await self.hass.async_add_executor_job(comports))
+        if self.initial_scan_done:
+            return
+
+        self.initial_scan_done = True
+        while self._initial_scan_callbacks:
+            self._initial_scan_callbacks.pop()()
 
     async def _async_scan(self) -> None:
         """Scan for USB devices and notify callbacks to scan as well."""

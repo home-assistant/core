@@ -5,17 +5,12 @@ from .model import Config, Integration
 from .serializer import format_python_namespace
 
 
-def generate_and_validate(integrations: list[dict[str, str]]) -> str:
+def generate_and_validate(integrations: dict[str, Integration]) -> str:
     """Validate and generate usb data."""
     match_list = []
 
     for domain in sorted(integrations):
-        integration = integrations[domain]
-
-        if not integration.manifest or not integration.config_flow:
-            continue
-
-        match_types = integration.manifest.get("usb", [])
+        match_types = integrations[domain].manifest.get("usb", [])
 
         if not match_types:
             continue

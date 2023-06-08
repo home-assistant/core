@@ -28,7 +28,11 @@ async def test_button(hass: HomeAssistant) -> None:
     assert button.press.called
 
 
-async def test_custom_integration(hass, caplog, enable_custom_integrations):
+async def test_custom_integration(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    enable_custom_integrations: None,
+) -> None:
     """Test we integration."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
     platform.init()
@@ -51,7 +55,9 @@ async def test_custom_integration(hass, caplog, enable_custom_integrations):
     assert "The button has been pressed" in caplog.text
 
 
-async def test_restore_state(hass, enable_custom_integrations):
+async def test_restore_state(
+    hass: HomeAssistant, enable_custom_integrations: None
+) -> None:
     """Test we restore state integration."""
     mock_restore_cache(hass, (State("button.button_1", "2021-01-01T23:59:59+00:00"),))
 

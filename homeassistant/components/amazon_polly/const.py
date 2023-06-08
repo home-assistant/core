@@ -34,73 +34,85 @@ CONF_TEXT_TYPE: Final = "text_type"
 
 SUPPORTED_VOICES: Final[list[str]] = [
     "Aditi",  # Hindi
-    "Amy",
-    "Aria",
+    "Amy",  # English (British)
+    "Aria",  # English (New Zealand), Neural
+    "Arlet",  # Catalan, Neural
     "Arthur",  # English, Neural
     "Astrid",  # Swedish
-    "Ayanda",
+    "Ayanda",  # English (South African), Neural
     "Bianca",  # Italian
-    "Brian",
+    "Brian",  # English (British)
     "Camila",  # Portuguese, Brazilian
-    "Carla",
+    "Carla",  # Italian
     "Carmen",  # Romanian
-    "Celine",
+    "Celine",  # French
     "Chantal",  # French Canadian
-    "Conchita",
-    "Cristiano",
+    "Conchita",  # Spanish (European)
+    "Cristiano",  # Portuguese (European)
     "Daniel",  # German, Neural
     "Dora",  # Icelandic
+    "Elin",  # Swedish, Neural
     "Emma",  # English
-    "Enrique",
-    "Ewa",
+    "Enrique",  # Spanish (European)
+    "Ewa",  # Polish
     "Filiz",  # Turkish
-    "Gabrielle",
+    "Gabrielle",  # French (Canadian)
     "Geraint",  # English Welsh
-    "Giorgio",
+    "Giorgio",  # Italian
     "Gwyneth",  # Welsh
-    "Hans",
+    "Hala",  # Arabic (Gulf), Neural
+    "Hannah",  # German (Austrian), Neural
+    "Hans",  # German
+    "Hiujin",  # Chinese (Cantonese), Neural
+    "Ida",  # Norwegian, Neural
     "Ines",  # Portuguese, European
-    "Ivy",
-    "Jacek",
-    "Jan",
-    "Joanna",
-    "Joey",
-    "Justin",
-    "Karl",
-    "Kendra",
-    "Kevin",
-    "Kimberly",
+    "Ivy",  # English
+    "Jacek",  # Polish
+    "Jan",  # Polish
+    "Joanna",  # English
+    "Joey",  # English
+    "Justin",  # English
+    "Kajal",  # English (Indian)/Hindi (Bilingual ), Neural
+    "Karl",  # Icelandic
+    "Kendra",  # English
+    "Kevin",  # English, Neural
+    "Kimberly",  # English
+    "Laura",  # Dutch, Neural
     "Lea",  # French
     "Liam",  # Canadian French, Neural
     "Liv",  # Norwegian
     "Lotte",  # Dutch
     "Lucia",  # Spanish European
     "Lupe",  # Spanish US
-    "Mads",
+    "Mads",  # Danish
     "Maja",  # Polish
-    "Marlene",
-    "Mathieu",
-    "Matthew",
-    "Maxim",
+    "Marlene",  # German
+    "Mathieu",  # French
+    "Matthew",  # English
+    "Maxim",  # Russian
     "Mia",  # Spanish Mexican
     "Miguel",  # Spanish US
     "Mizuki",  # Japanese
     "Naja",  # Danish
     "Nicole",  # English Australian
+    "Ola",  # Polish, Neural
     "Olivia",  # Female, Australian, Neural
     "Penelope",  # Spanish US
     "Pedro",  # Spanish US, Neural
     "Raveena",  # English, Indian
-    "Ricardo",
-    "Ruben",
-    "Russell",
+    "Ricardo",  # Portuguese (Brazilian)
+    "Ruben",  # Dutch
+    "Russell",  # English (Australian)
+    "Ruth",  # English, Neural
     "Salli",  # English
     "Seoyeon",  # Korean
-    "Takumi",
+    "Stephen",  # English, Neural
+    "Suvi",  # Finnish
+    "Takumi",  # Japanese
     "Tatyana",  # Russian
     "Vicki",  # German
     "Vitoria",  # Portuguese, Brazilian
-    "Zeina",
+    "Zeina",  # Arabic
     "Zhiyu",  # Chinese
 ]
 

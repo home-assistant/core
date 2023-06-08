@@ -1,8 +1,8 @@
-# Describes the format for available Android TV and Fire TV services
+# Describes the format for available Android and Fire TV services
 
 adb_command:
   name: ADB command
-  description: Send an ADB command to an Android TV / Fire TV device.
+  description: Send an ADB command to an Android / Fire TV device.
   target:
     entity:
       integration: androidtv
@@ -17,7 +17,7 @@ adb_command:
         text:
 download:
   name: Download
-  description: Download a file from your Android TV / Fire TV device to your Home Assistant instance.
+  description: Download a file from your Android / Fire TV device to your Home Assistant instance.
   target:
     entity:
       integration: androidtv
@@ -25,7 +25,7 @@ download:
   fields:
     device_path:
       name: Device path
-      description: The filepath on the Android TV / Fire TV device.
+      description: The filepath on the Android / Fire TV device.
       required: true
       example: "/storage/emulated/0/Download/example.txt"
       selector:
@@ -39,7 +39,7 @@ download:
         text:
 upload:
   name: Upload
-  description: Upload a file from your Home Assistant instance to an Android TV / Fire TV device.
+  description: Upload a file from your Home Assistant instance to an Android / Fire TV device.
   target:
     entity:
       integration: androidtv
@@ -47,7 +47,7 @@ upload:
   fields:
     device_path:
       name: Device path
-      description: The filepath on the Android TV / Fire TV device.
+      description: The filepath on the Android / Fire TV device.
       required: true
       example: "/storage/emulated/0/Download/example.txt"
       selector:

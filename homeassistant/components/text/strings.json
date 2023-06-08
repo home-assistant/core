@@ -1,0 +1,37 @@
+{
+  "title": "Text",
+  "device_automation": {
+    "action_type": {
+      "set_value": "Set value for {entity_name}"
+    }
+  },
+  "entity_component": {
+    "_": {
+      "name": "[%key:component::text::title%]",
+      "state_attributes": {
+        "max": {
+          "name": "Max length"
+        },
+        "min": {
+          "name": "Min length"
+        },
+        "mode": {
+          "name": "Mode",
+          "state": {
+            "text": "Text",
+            "password": "Password"
+          }
+        },
+        "pattern": {
+          "name": "Pattern"
+        }
+      }
+    }
+  },
+  "issues": {
+    "platform_integration_no_support": {
+      "title": "[%key:common::issues::platform_integration_no_support_title%]",
+      "description": "[%key:common::issues::platform_integration_no_support_description%]"
+    }
+  }
+}

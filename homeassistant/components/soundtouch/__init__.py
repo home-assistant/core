@@ -43,6 +43,8 @@ SERVICE_REMOVE_ZONE_SCHEMA = vol.Schema(
 
 PLATFORMS = [Platform.MEDIA_PLAYER]
 
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
 
 class SoundTouchData:
     """SoundTouch data stored in the Home Assistant data object."""
@@ -131,7 +133,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = SoundTouchData(device)
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
 

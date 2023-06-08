@@ -36,8 +36,7 @@ async def test_full_user_flow(
     )
 
     assert result.get("type") == FlowResultType.FORM
-    assert result.get("step_id") == SOURCE_USER
-    assert "flow_id" in result
+    assert result.get("step_id") == "user"
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -82,8 +81,7 @@ async def test_full_flow_with_authentication_error(
     )
 
     assert result.get("type") == FlowResultType.FORM
-    assert result.get("step_id") == SOURCE_USER
-    assert "flow_id" in result
+    assert result.get("step_id") == "user"
 
     mock_mjpeg_requests.get(
         "https://example.com/mjpeg", text="Access Denied!", status_code=401
@@ -99,9 +97,8 @@ async def test_full_flow_with_authentication_error(
     )
 
     assert result2.get("type") == FlowResultType.FORM
-    assert result2.get("step_id") == SOURCE_USER
+    assert result2.get("step_id") == "user"
     assert result2.get("errors") == {"username": "invalid_auth"}
-    assert "flow_id" in result2
 
     assert len(mock_setup_entry.mock_calls) == 0
     assert mock_mjpeg_requests.call_count == 2
@@ -144,8 +141,7 @@ async def test_connection_error(
     )
 
     assert result.get("type") == FlowResultType.FORM
-    assert result.get("step_id") == SOURCE_USER
-    assert "flow_id" in result
+    assert result.get("step_id") == "user"
 
     # Test connectione error on MJPEG url
     mock_mjpeg_requests.get(
@@ -161,9 +157,8 @@ async def test_connection_error(
     )
 
     assert result2.get("type") == FlowResultType.FORM
-    assert result2.get("step_id") == SOURCE_USER
+    assert result2.get("step_id") == "user"
     assert result2.get("errors") == {"mjpeg_url": "cannot_connect"}
-    assert "flow_id" in result2
 
     assert len(mock_setup_entry.mock_calls) == 0
     assert mock_mjpeg_requests.call_count == 1
@@ -185,9 +180,8 @@ async def test_connection_error(
     )
 
     assert result3.get("type") == FlowResultType.FORM
-    assert result3.get("step_id") == SOURCE_USER
+    assert result3.get("step_id") == "user"
     assert result3.get("errors") == {"still_image_url": "cannot_connect"}
-    assert "flow_id" in result3
 
     assert len(mock_setup_entry.mock_calls) == 0
     assert mock_mjpeg_requests.call_count == 3
@@ -233,7 +227,6 @@ async def test_already_configured(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    assert "flow_id" in result
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -257,7 +250,6 @@ async def test_options_flow(
 
     assert result.get("type") == FlowResultType.FORM
     assert result.get("step_id") == "init"
-    assert "flow_id" in result
 
     # Register a second camera
     mock_mjpeg_requests.get("https://example.com/second_camera", text="resp")
@@ -287,7 +279,6 @@ async def test_options_flow(
     assert result2.get("type") == FlowResultType.FORM
     assert result2.get("step_id") == "init"
     assert result2.get("errors") == {"mjpeg_url": "already_configured"}
-    assert "flow_id" in result2
 
     assert mock_mjpeg_requests.call_count == 1
 
@@ -306,7 +297,6 @@ async def test_options_flow(
     assert result3.get("type") == FlowResultType.FORM
     assert result3.get("step_id") == "init"
     assert result3.get("errors") == {"mjpeg_url": "cannot_connect"}
-    assert "flow_id" in result3
 
     assert mock_mjpeg_requests.call_count == 2
 
@@ -325,7 +315,6 @@ async def test_options_flow(
     assert result4.get("type") == FlowResultType.FORM
     assert result4.get("step_id") == "init"
     assert result4.get("errors") == {"still_image_url": "cannot_connect"}
-    assert "flow_id" in result4
 
     assert mock_mjpeg_requests.call_count == 4
 
@@ -345,7 +334,6 @@ async def test_options_flow(
     assert result5.get("type") == FlowResultType.FORM
     assert result5.get("step_id") == "init"
     assert result5.get("errors") == {"username": "invalid_auth"}
-    assert "flow_id" in result5
 
     assert mock_mjpeg_requests.call_count == 6
 

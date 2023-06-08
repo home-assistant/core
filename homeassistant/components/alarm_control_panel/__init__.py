@@ -133,7 +133,9 @@ class AlarmControlPanelEntity(Entity):
     _attr_changed_by: str | None = None
     _attr_code_arm_required: bool = True
     _attr_code_format: CodeFormat | None = None
-    _attr_supported_features: int
+    _attr_supported_features: AlarmControlPanelEntityFeature = (
+        AlarmControlPanelEntityFeature(0)
+    )
 
     @property
     def code_format(self) -> CodeFormat | None:
@@ -207,7 +209,7 @@ class AlarmControlPanelEntity(Entity):
         await self.hass.async_add_executor_job(self.alarm_arm_custom_bypass, code)
 
     @property
-    def supported_features(self) -> int:
+    def supported_features(self) -> AlarmControlPanelEntityFeature:
         """Return the list of supported features."""
         return self._attr_supported_features
 

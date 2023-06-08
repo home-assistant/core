@@ -31,9 +31,10 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.json import JSON_DECODE_EXCEPTIONS, json_dumps, json_loads
+from homeassistant.helpers.json import json_dumps
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, TemplateVarsType
+from homeassistant.util.json import JSON_DECODE_EXCEPTIONS, json_loads_object
 
 from . import subscription
 from .config import MQTT_RW_SCHEMA
@@ -49,13 +50,7 @@ from .const import (
     PAYLOAD_NONE,
 )
 from .debug_info import log_messages
-from .mixins import (
-    MQTT_ENTITY_COMMON_SCHEMA,
-    MqttEntity,
-    async_setup_entry_helper,
-    async_setup_platform_helper,
-    warn_for_legacy_schema,
-)
+from .mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity, async_setup_entry_helper
 from .models import (
     MqttCommandTemplate,
     MqttValueTemplate,
@@ -68,7 +63,6 @@ from .util import get_mqtt_data
 DEFAULT_NAME = "MQTT Siren"
 DEFAULT_PAYLOAD_ON = "ON"
 DEFAULT_PAYLOAD_OFF = "OFF"
-DEFAULT_OPTIMISTIC = False
 
 ENTITY_ID_FORMAT = siren.DOMAIN + ".{}"
 
@@ -87,7 +81,6 @@ PLATFORM_SCHEMA_MODERN = MQTT_RW_SCHEMA.extend(
         vol.Optional(CONF_COMMAND_TEMPLATE): cv.template,
         vol.Optional(CONF_COMMAND_OFF_TEMPLATE): cv.template,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
         vol.Optional(CONF_PAYLOAD_OFF, default=DEFAULT_PAYLOAD_OFF): cv.string,
         vol.Optional(CONF_PAYLOAD_ON, default=DEFAULT_PAYLOAD_ON): cv.string,
         vol.Optional(CONF_STATE_OFF): cv.string,
@@ -97,12 +90,6 @@ PLATFORM_SCHEMA_MODERN = MQTT_RW_SCHEMA.extend(
         vol.Optional(CONF_SUPPORT_VOLUME_SET, default=True): cv.boolean,
     },
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
-
-# Configuring MQTT Sirens under the siren platform key is deprecated in HA Core 2022.6
-PLATFORM_SCHEMA = vol.All(
-    cv.PLATFORM_SCHEMA.extend(PLATFORM_SCHEMA_MODERN.schema),
-    warn_for_legacy_schema(siren.DOMAIN),
-)
 
 DISCOVERY_SCHEMA = vol.All(PLATFORM_SCHEMA_MODERN.extend({}, extra=vol.REMOVE_EXTRA))
 
@@ -126,29 +113,12 @@ SUPPORTED_ATTRIBUTES = {
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Set up MQTT sirens configured under the fan platform key (deprecated)."""
-    # Deprecated in HA Core 2022.6
-    await async_setup_platform_helper(
-        hass,
-        siren.DOMAIN,
-        discovery_info or config,
-        async_add_entities,
-        _async_setup_entity,
-    )
-
-
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up MQTT siren through configuration.yaml and dynamically through MQTT discovery."""
+    """Set up MQTT siren through YAML and through MQTT discovery."""
     setup = functools.partial(
         _async_setup_entity, hass, async_add_entities, config_entry=config_entry
     )
@@ -171,7 +141,6 @@ class MqttSiren(MqttEntity, SirenEntity):
 
     _entity_id_format = ENTITY_ID_FORMAT
     _attributes_extra_blocked = MQTT_SIREN_ATTRIBUTES_BLOCKED
-    _attr_supported_features: int
 
     _command_templates: dict[
         str, Callable[[PublishPayloadType, TemplateVarsType], PublishPayloadType] | None
@@ -199,15 +168,15 @@ class MqttSiren(MqttEntity, SirenEntity):
     def _setup_from_config(self, config: ConfigType) -> None:
         """(Re)Setup the entity."""
 
-        state_on = config.get(CONF_STATE_ON)
+        state_on: str | None = config.get(CONF_STATE_ON)
         self._state_on = state_on if state_on else config[CONF_PAYLOAD_ON]
 
-        state_off = config.get(CONF_STATE_OFF)
+        state_off: str | None = config.get(CONF_STATE_OFF)
         self._state_off = state_off if state_off else config[CONF_PAYLOAD_OFF]
 
         self._attr_extra_state_attributes = {}
 
-        _supported_features: int = SUPPORTED_BASE
+        _supported_features = SUPPORTED_BASE
         if config[CONF_SUPPORT_DURATION]:
             _supported_features |= SirenEntityFeature.DURATION
             self._attr_extra_state_attributes[ATTR_DURATION] = None
@@ -266,15 +235,21 @@ class MqttSiren(MqttEntity, SirenEntity):
                 json_payload = {STATE: payload}
             else:
                 try:
-                    json_payload = json_loads(payload)
+                    json_payload = json_loads_object(payload)
                     _LOGGER.debug(
-                        "JSON payload detected after processing payload '%s' on topic %s",
+                        (
+                            "JSON payload detected after processing payload '%s' on"
+                            " topic %s"
+                        ),
                         json_payload,
                         msg.topic,
                     )
                 except JSON_DECODE_EXCEPTIONS:
                     _LOGGER.warning(
-                        "No valid (JSON) payload detected after processing payload '%s' on topic %s",
+                        (
+                            "No valid (JSON) payload detected after processing payload"
+                            " '%s' on topic %s"
+                        ),
                         json_payload,
                         msg.topic,
                     )
@@ -401,4 +376,6 @@ class MqttSiren(MqttEntity, SirenEntity):
         """Update the extra siren state attributes."""
         for attribute, support in SUPPORTED_ATTRIBUTES.items():
             if self._attr_supported_features & support and attribute in data:
-                self._attr_extra_state_attributes[attribute] = data[attribute]  # type: ignore[literal-required]
+                self._attr_extra_state_attributes[attribute] = data[
+                    attribute  # type: ignore[literal-required]
+                ]

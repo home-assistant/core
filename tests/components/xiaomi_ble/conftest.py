@@ -20,7 +20,6 @@ class MockBleakClient:
 
     def __init__(self, *args, **kwargs):
         """Mock BleakClient."""
-        pass
 
     async def __aenter__(self, *args, **kwargs):
         """Mock BleakClient.__aenter__."""
@@ -28,15 +27,12 @@ class MockBleakClient:
 
     async def __aexit__(self, *args, **kwargs):
         """Mock BleakClient.__aexit__."""
-        pass
 
     async def connect(self, *args, **kwargs):
         """Mock BleakClient.connect."""
-        pass
 
     async def disconnect(self, *args, **kwargs):
         """Mock BleakClient.disconnect."""
-        pass
 
 
 class MockBleakClientBattery5(MockBleakClient):

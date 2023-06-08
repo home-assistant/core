@@ -6,6 +6,7 @@ import logging
 from typing import Any
 
 from PyViCare.PyViCareUtils import (
+    PyViCareCommandError,
     PyViCareInvalidDataError,
     PyViCareNotSupportedFeatureError,
     PyViCareRateLimitError,
@@ -27,7 +28,7 @@ from homeassistant.const import (
     ATTR_TEMPERATURE,
     PRECISION_TENTHS,
     PRECISION_WHOLE,
-    TEMP_CELSIUS,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_platform
@@ -147,7 +148,7 @@ class ViCareClimate(ClimateEntity):
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
     )
-    _attr_temperature_unit = TEMP_CELSIUS
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
     def __init__(self, name, api, circuit, device_config, heating_type):
         """Initialize the climate device."""
@@ -354,7 +355,10 @@ class ViCareClimate(ClimateEntity):
         _LOGGER.debug("Setting preset to %s / %s", preset_mode, vicare_program)
         if self._current_program != VICARE_PROGRAM_NORMAL:
             # We can't deactivate "normal"
-            self._circuit.deactivateProgram(self._current_program)
+            try:
+                self._circuit.deactivateProgram(self._current_program)
+            except PyViCareCommandError:
+                _LOGGER.debug("Unable to deactivate program %s", self._current_program)
         if vicare_program != VICARE_PROGRAM_NORMAL:
             # And we can't explicitly activate normal, either
             self._circuit.activateProgram(vicare_program)

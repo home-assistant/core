@@ -15,6 +15,7 @@ from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv, selector
 
 from .const import (
+    CONF_AUTHOR,
     CONF_BLUEPRINT,
     CONF_HOMEASSISTANT,
     CONF_INPUT,
@@ -73,6 +74,7 @@ BLUEPRINT_SCHEMA = vol.Schema(
                 vol.Optional(CONF_DESCRIPTION): str,
                 vol.Required(CONF_DOMAIN): str,
                 vol.Optional(CONF_SOURCE_URL): cv.url,
+                vol.Optional(CONF_AUTHOR): str,
                 vol.Optional(CONF_HOMEASSISTANT): {
                     vol.Optional(CONF_MIN_VERSION): version_validator
                 },

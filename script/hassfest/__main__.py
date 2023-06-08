@@ -1,4 +1,6 @@
 """Validate manifests."""
+from __future__ import annotations
+
 import argparse
 import pathlib
 import sys
@@ -55,7 +57,7 @@ ALL_PLUGIN_NAMES = [
 ]
 
 
-def valid_integration_path(integration_path):
+def valid_integration_path(integration_path: pathlib.Path | str) -> pathlib.Path:
     """Test if it's a valid integration."""
     path = pathlib.Path(integration_path)
     if not path.is_dir():
@@ -124,7 +126,7 @@ def get_config() -> Config:
     )
 
 
-def main():
+def main() -> int:
     """Validate manifests."""
     try:
         config = get_config()
@@ -218,7 +220,12 @@ def main():
     return 1
 
 
-def print_integrations_status(config, integrations, *, show_fixable_errors=True):
+def print_integrations_status(
+    config: Config,
+    integrations: list[Integration],
+    *,
+    show_fixable_errors: bool = True,
+) -> None:
     """Print integration status."""
     for integration in sorted(integrations, key=lambda itg: itg.domain):
         extra = f" - {integration.path}" if config.specific_integrations else ""

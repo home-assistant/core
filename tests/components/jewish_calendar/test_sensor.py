@@ -5,6 +5,7 @@ import pytest
 
 from homeassistant.components import jewish_calendar
 from homeassistant.components.binary_sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
@@ -19,7 +20,7 @@ from . import (
 from tests.common import async_fire_time_changed
 
 
-async def test_jewish_calendar_min_config(hass):
+async def test_jewish_calendar_min_config(hass: HomeAssistant) -> None:
     """Test minimum jewish calendar configuration."""
     assert await async_setup_component(
         hass, jewish_calendar.DOMAIN, {"jewish_calendar": {}}
@@ -28,7 +29,7 @@ async def test_jewish_calendar_min_config(hass):
     assert hass.states.get("sensor.jewish_calendar_date") is not None
 
 
-async def test_jewish_calendar_hebrew(hass):
+async def test_jewish_calendar_hebrew(hass: HomeAssistant) -> None:
     """Test jewish calendar sensor with language set to hebrew."""
     assert await async_setup_component(
         hass, jewish_calendar.DOMAIN, {"jewish_calendar": {"language": "hebrew"}}
@@ -137,7 +138,7 @@ TEST_IDS = [
 
 
 @pytest.mark.parametrize(
-    [
+    (
         "now",
         "tzname",
         "latitude",
@@ -146,12 +147,12 @@ TEST_IDS = [
         "sensor",
         "diaspora",
         "result",
-    ],
+    ),
     TEST_PARAMS,
     ids=TEST_IDS,
 )
 async def test_jewish_calendar_sensor(
-    hass,
+    hass: HomeAssistant,
     now,
     tzname,
     latitude,
@@ -160,7 +161,7 @@ async def test_jewish_calendar_sensor(
     sensor,
     diaspora,
     result,
-):
+) -> None:
     """Test Jewish calendar sensor output."""
     time_zone = dt_util.get_time_zone(tzname)
     test_time = now.replace(tzinfo=time_zone)
@@ -480,7 +481,7 @@ SHABBAT_TEST_IDS = [
 
 @pytest.mark.parametrize("language", ["english", "hebrew"])
 @pytest.mark.parametrize(
-    [
+    (
         "now",
         "candle_lighting",
         "havdalah",
@@ -489,12 +490,12 @@ SHABBAT_TEST_IDS = [
         "latitude",
         "longitude",
         "result",
-    ],
+    ),
     SHABBAT_PARAMS,
     ids=SHABBAT_TEST_IDS,
 )
 async def test_shabbat_times_sensor(
-    hass,
+    hass: HomeAssistant,
     language,
     now,
     candle_lighting,
@@ -504,7 +505,7 @@ async def test_shabbat_times_sensor(
     latitude,
     longitude,
     result,
-):
+) -> None:
     """Test sensor output for upcoming shabbat/yomtov times."""
     time_zone = dt_util.get_time_zone(tzname)
     test_time = now.replace(tzinfo=time_zone)
@@ -590,8 +591,8 @@ OMER_TEST_IDS = [
 ]
 
 
-@pytest.mark.parametrize(["test_time", "result"], OMER_PARAMS, ids=OMER_TEST_IDS)
-async def test_omer_sensor(hass, test_time, result):
+@pytest.mark.parametrize(("test_time", "result"), OMER_PARAMS, ids=OMER_TEST_IDS)
+async def test_omer_sensor(hass: HomeAssistant, test_time, result) -> None:
     """Test Omer Count sensor output."""
     test_time = test_time.replace(tzinfo=dt_util.get_time_zone(hass.config.time_zone))
 
@@ -624,8 +625,8 @@ DAFYOMI_TEST_IDS = [
 ]
 
 
-@pytest.mark.parametrize(["test_time", "result"], DAFYOMI_PARAMS, ids=DAFYOMI_TEST_IDS)
-async def test_dafyomi_sensor(hass, test_time, result):
+@pytest.mark.parametrize(("test_time", "result"), DAFYOMI_PARAMS, ids=DAFYOMI_TEST_IDS)
+async def test_dafyomi_sensor(hass: HomeAssistant, test_time, result) -> None:
     """Test Daf Yomi sensor output."""
     test_time = test_time.replace(tzinfo=dt_util.get_time_zone(hass.config.time_zone))
 
@@ -642,7 +643,9 @@ async def test_dafyomi_sensor(hass, test_time, result):
     assert hass.states.get("sensor.test_daf_yomi").state == result
 
 
-async def test_no_discovery_info(hass, caplog):
+async def test_no_discovery_info(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test setup without discovery info."""
     assert SENSOR_DOMAIN not in hass.config.components
     assert await async_setup_component(

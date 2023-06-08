@@ -175,9 +175,10 @@ class ProtectCamera(ProtectDeviceEntity, Camera):
         self._stream_source = (  # pylint: disable=attribute-defined-outside-init
             None if disable_stream else rtsp_url
         )
-        self._attr_supported_features: int = (
-            CameraEntityFeature.STREAM if self._stream_source else 0
-        )
+        if self._stream_source:
+            self._attr_supported_features = CameraEntityFeature.STREAM
+        else:
+            self._attr_supported_features = CameraEntityFeature(0)
 
     @callback
     def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:

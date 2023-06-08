@@ -11,12 +11,7 @@ from typing import Any
 from life360 import Life360, Life360Error, LoginError
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    LENGTH_FEET,
-    LENGTH_KILOMETERS,
-    LENGTH_METERS,
-    LENGTH_MILES,
-)
+from homeassistant.const import UnitOfLength
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -211,7 +206,7 @@ class Life360DataUpdateCoordinator(DataUpdateCoordinator[Life360Data]):
                 speed = max(0, float(loc["speed"]) * SPEED_FACTOR_MPH)
                 if self._hass.config.units is METRIC_SYSTEM:
                     speed = DistanceConverter.convert(
-                        speed, LENGTH_MILES, LENGTH_KILOMETERS
+                        speed, UnitOfLength.MILES, UnitOfLength.KILOMETERS
                     )
 
                 data.members[member_id] = Life360Member(
@@ -225,7 +220,9 @@ class Life360DataUpdateCoordinator(DataUpdateCoordinator[Life360Data]):
                     # gps_accuracy in meters.
                     round(
                         DistanceConverter.convert(
-                            float(loc["accuracy"]), LENGTH_FEET, LENGTH_METERS
+                            float(loc["accuracy"]),
+                            UnitOfLength.FEET,
+                            UnitOfLength.METERS,
                         )
                     ),
                     dt_util.utc_from_timestamp(int(loc["timestamp"])),

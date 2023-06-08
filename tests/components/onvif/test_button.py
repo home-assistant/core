@@ -3,12 +3,13 @@ from unittest.mock import AsyncMock
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonDeviceClass
 from homeassistant.const import ATTR_DEVICE_CLASS, ATTR_ENTITY_ID, STATE_UNKNOWN
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import MAC, setup_onvif_integration
 
 
-async def test_reboot_button(hass):
+async def test_reboot_button(hass: HomeAssistant) -> None:
     """Test states of the Reboot button."""
     await setup_onvif_integration(hass)
 
@@ -23,10 +24,10 @@ async def test_reboot_button(hass):
     assert entry.unique_id == f"{MAC}_reboot"
 
 
-async def test_reboot_button_press(hass):
+async def test_reboot_button_press(hass: HomeAssistant) -> None:
     """Test Reboot button press."""
     _, camera, _ = await setup_onvif_integration(hass)
-    devicemgmt = camera.create_devicemgmt_service()
+    devicemgmt = await camera.create_devicemgmt_service()
     devicemgmt.SystemReboot = AsyncMock(return_value=True)
 
     await hass.services.async_call(
@@ -40,7 +41,7 @@ async def test_reboot_button_press(hass):
     devicemgmt.SystemReboot.assert_called_once()
 
 
-async def test_set_dateandtime_button(hass):
+async def test_set_dateandtime_button(hass: HomeAssistant) -> None:
     """Test states of the SetDateAndTime button."""
     await setup_onvif_integration(hass)
 
@@ -54,7 +55,7 @@ async def test_set_dateandtime_button(hass):
     assert entry.unique_id == f"{MAC}_setsystemdatetime"
 
 
-async def test_set_dateandtime_button_press(hass):
+async def test_set_dateandtime_button_press(hass: HomeAssistant) -> None:
     """Test SetDateAndTime button press."""
     _, camera, device = await setup_onvif_integration(hass)
     device.async_manually_set_date_and_time = AsyncMock(return_value=True)

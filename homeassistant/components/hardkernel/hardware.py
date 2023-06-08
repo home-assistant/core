@@ -9,10 +9,11 @@ from homeassistant.exceptions import HomeAssistantError
 from .const import DOMAIN
 
 BOARD_NAMES = {
-    "odroid-c2": "Hardkernel Odroid-C2",
-    "odroid-c4": "Hardkernel Odroid-C4",
-    "odroid-n2": "Home Assistant Blue / Hardkernel Odroid-N2",
-    "odroid-xu4": "Hardkernel Odroid-XU4",
+    "odroid-c2": "Hardkernel ODROID-C2",
+    "odroid-c4": "Hardkernel ODROID-C4",
+    "odroid-m1": "Hardkernel ODROID-M1",
+    "odroid-n2": "Home Assistant Blue / Hardkernel ODROID-N2/N2+",
+    "odroid-xu4": "Hardkernel ODROID-XU4",
 }
 
 
@@ -21,7 +22,7 @@ def async_info(hass: HomeAssistant) -> list[HardwareInfo]:
     """Return board info."""
     if (os_info := get_os_info(hass)) is None:
         raise HomeAssistantError
-    board: str
+    board: str | None
     if (board := os_info.get("board")) is None:
         raise HomeAssistantError
     if not board.startswith("odroid"):

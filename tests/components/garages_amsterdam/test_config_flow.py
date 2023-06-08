@@ -18,7 +18,6 @@ async def test_full_flow(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result.get("type") == FlowResultType.FORM
-    assert "flow_id" in result
 
     with patch(
         "homeassistant.components.garages_amsterdam.async_setup_entry",
@@ -38,7 +37,7 @@ async def test_full_flow(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "side_effect,reason",
+    ("side_effect", "reason"),
     [
         (RuntimeError, "unknown"),
         (
@@ -53,7 +52,7 @@ async def test_error_handling(
     """Test we get the form."""
 
     with patch(
-        "homeassistant.components.garages_amsterdam.config_flow.GaragesAmsterdam.all_garages",
+        "homeassistant.components.garages_amsterdam.config_flow.ODPAmsterdam.all_garages",
         side_effect=side_effect,
     ):
         result = await hass.config_entries.flow.async_init(

@@ -1,4 +1,6 @@
 """Facebook platform for notify component."""
+from __future__ import annotations
+
 from http import HTTPStatus
 import json
 import logging
@@ -13,7 +15,9 @@ from homeassistant.components.notify import (
     BaseNotificationService,
 )
 from homeassistant.const import CONTENT_TYPE_JSON
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,7 +29,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def get_service(hass, config, discovery_info=None):
+def get_service(
+    hass: HomeAssistant,
+    config: ConfigType,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> FacebookNotificationService:
     """Get the Facebook notification service."""
     return FacebookNotificationService(config[CONF_PAGE_ACCESS_TOKEN])
 

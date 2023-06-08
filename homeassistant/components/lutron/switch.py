@@ -21,7 +21,7 @@ def setup_platform(
     devs = []
 
     # Add Lutron Switches
-    for (area_name, device) in hass.data[LUTRON_DEVICES]["switch"]:
+    for area_name, device in hass.data[LUTRON_DEVICES]["switch"]:
         dev = LutronSwitch(area_name, device, hass.data[LUTRON_CONTROLLER])
         devs.append(dev)
 
@@ -107,8 +107,5 @@ class LutronLed(LutronDevice, SwitchEntity):
 
     def update(self) -> None:
         """Call when forcing a refresh of the device."""
-        if self._lutron_device.last_state is not None:
-            return
-
         # The following property getter actually triggers an update in Lutron
         self._lutron_device.state  # pylint: disable=pointless-statement

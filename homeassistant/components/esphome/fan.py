@@ -22,12 +22,8 @@ from homeassistant.util.percentage import (
     ranged_value_to_percentage,
 )
 
-from . import (
-    EsphomeEntity,
-    EsphomeEnumMapper,
-    esphome_state_property,
-    platform_async_setup_entry,
-)
+from . import EsphomeEntity, esphome_state_property, platform_async_setup_entry
+from .enum_mapper import EsphomeEnumMapper
 
 ORDERED_NAMED_FAN_SPEEDS = [FanSpeed.LOW, FanSpeed.MEDIUM, FanSpeed.HIGH]
 
@@ -158,9 +154,9 @@ class EsphomeFan(EsphomeEntity[FanInfo, FanState], FanEntity):
         return _FAN_DIRECTIONS.from_esphome(self._state.direction)
 
     @property
-    def supported_features(self) -> int:
+    def supported_features(self) -> FanEntityFeature:
         """Flag supported features."""
-        flags = 0
+        flags = FanEntityFeature(0)
         if self._static_info.supports_oscillation:
             flags |= FanEntityFeature.OSCILLATE
         if self._static_info.supports_speed:

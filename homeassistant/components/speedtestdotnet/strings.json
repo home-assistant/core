@@ -13,8 +13,6 @@
     "step": {
       "init": {
         "data": {
-          "scan_interval": "Update frequency (minutes)",
-          "manual": "Disable auto update",
           "server_name": "Select test server"
         }
       }

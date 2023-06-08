@@ -50,7 +50,6 @@ CONF_LON_NE = "lon_ne"
 CONF_LON_SW = "lon_sw"
 CONF_NEW_AREA = "new_area"
 CONF_PUBLIC_MODE = "mode"
-CONF_UUID = "uuid"
 CONF_WEATHER_AREAS = "weather_areas"
 
 OAUTH2_AUTHORIZE = "https://api.netatmo.com/oauth2/authorize"
@@ -64,7 +63,6 @@ DATA_PERSONS = "netatmo_persons"
 DATA_SCHEDULES = "netatmo_schedules"
 
 NETATMO_EVENT = "netatmo_event"
-NETATMO_WEBHOOK_URL = None
 
 DEFAULT_DISCOVERY = True
 DEFAULT_PERSON = "unknown"

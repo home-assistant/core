@@ -34,7 +34,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import CoreState
+from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
@@ -112,7 +112,7 @@ async def setup_comp(hass, config_count):
 
 
 @pytest.mark.parametrize("config_count", [(CONFIG_ATTRIBUTES, 1)])
-async def test_state(hass, setup_comp):
+async def test_state(hass: HomeAssistant, setup_comp) -> None:
     """Test handling of state.
 
     The group state is on if at least one group member is on.
@@ -208,7 +208,7 @@ async def test_state(hass, setup_comp):
 
 
 @pytest.mark.parametrize("config_count", [(CONFIG_ATTRIBUTES, 1)])
-async def test_attributes(hass, setup_comp):
+async def test_attributes(hass: HomeAssistant, setup_comp) -> None:
     """Test handling of state attributes."""
     state = hass.states.get(FAN_GROUP)
     assert state.state == STATE_UNAVAILABLE
@@ -269,7 +269,7 @@ async def test_attributes(hass, setup_comp):
 
 
 @pytest.mark.parametrize("config_count", [(CONFIG_FULL_SUPPORT, 2)])
-async def test_direction_oscillating(hass, setup_comp):
+async def test_direction_oscillating(hass: HomeAssistant, setup_comp) -> None:
     """Test handling of direction and oscillating attributes."""
 
     hass.states.async_set(
@@ -385,14 +385,14 @@ async def test_direction_oscillating(hass, setup_comp):
 
 
 @pytest.mark.parametrize("config_count", [(CONFIG_MISSING_FAN, 2)])
-async def test_state_missing_entity_id(hass, setup_comp):
+async def test_state_missing_entity_id(hass: HomeAssistant, setup_comp) -> None:
     """Test we can still setup with a missing entity id."""
     state = hass.states.get(FAN_GROUP)
     await hass.async_block_till_done()
     assert state.state == STATE_OFF
 
 
-async def test_setup_before_started(hass):
+async def test_setup_before_started(hass: HomeAssistant) -> None:
     """Test we can setup before starting."""
     hass.state = CoreState.stopped
     assert await async_setup_component(hass, DOMAIN, CONFIG_MISSING_FAN)
@@ -405,7 +405,7 @@ async def test_setup_before_started(hass):
 
 
 @pytest.mark.parametrize("config_count", [(CONFIG_MISSING_FAN, 2)])
-async def test_reload(hass, setup_comp):
+async def test_reload(hass: HomeAssistant, setup_comp) -> None:
     """Test the ability to reload fans."""
     await hass.async_block_till_done()
     await hass.async_start()
@@ -428,7 +428,7 @@ async def test_reload(hass, setup_comp):
 
 
 @pytest.mark.parametrize("config_count", [(CONFIG_FULL_SUPPORT, 2)])
-async def test_service_calls(hass, setup_comp):
+async def test_service_calls(hass: HomeAssistant, setup_comp) -> None:
     """Test calling services."""
     await hass.services.async_call(
         DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: FAN_GROUP}, blocking=True
@@ -534,7 +534,7 @@ async def test_service_calls(hass, setup_comp):
     assert fan_group_state.attributes[ATTR_DIRECTION] == DIRECTION_REVERSE
 
 
-async def test_nested_group(hass):
+async def test_nested_group(hass: HomeAssistant) -> None:
     """Test nested fan group."""
     await async_setup_component(
         hass,

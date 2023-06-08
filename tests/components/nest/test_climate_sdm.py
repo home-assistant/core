@@ -1,5 +1,4 @@
-"""
-Test for Nest climate platform for the Smart Device Management API.
+"""Test for Nest climate platform for the Smart Device Management API.
 
 These tests fake out the subscriber/devicemanager, and are not using a real
 pubsub subscriber.
@@ -114,7 +113,7 @@ async def test_climate_devices(
 
 async def test_thermostat_off(
     hass: HomeAssistant, setup_platform: PlatformSetup, create_device: CreateDevice
-):
+) -> None:
     """Test a thermostat that is not running."""
     create_device.create(
         {
@@ -153,7 +152,7 @@ async def test_thermostat_off(
 
 async def test_thermostat_heat(
     hass: HomeAssistant, setup_platform: PlatformSetup, create_device: CreateDevice
-):
+) -> None:
     """Test a thermostat that is heating."""
     create_device.create(
         {
@@ -195,7 +194,7 @@ async def test_thermostat_heat(
 
 async def test_thermostat_cool(
     hass: HomeAssistant, setup_platform: PlatformSetup, create_device: CreateDevice
-):
+) -> None:
     """Test a thermostat that is cooling."""
     create_device.create(
         {
@@ -237,7 +236,7 @@ async def test_thermostat_cool(
 
 async def test_thermostat_heatcool(
     hass: HomeAssistant, setup_platform: PlatformSetup, create_device: CreateDevice
-):
+) -> None:
     """Test a thermostat that is cooling in heatcool mode."""
     create_device.create(
         {
@@ -1259,8 +1258,12 @@ async def test_thermostat_missing_temperature_trait(
     assert ATTR_FAN_MODE not in thermostat.attributes
     assert ATTR_FAN_MODES not in thermostat.attributes
 
-    await common.async_set_temperature(hass, temperature=24.0)
+    with pytest.raises(HomeAssistantError) as e_info:
+        await common.async_set_temperature(hass, temperature=24.0)
     await hass.async_block_till_done()
+    assert "temperature" in str(e_info)
+    assert "climate.my_thermostat" in str(e_info)
+    assert "24.0" in str(e_info)
     assert thermostat.attributes[ATTR_TEMPERATURE] is None
 
 
@@ -1428,6 +1431,9 @@ async def test_thermostat_hvac_mode_failure(
                 "availableModes": ["HEAT", "COOL", "HEATCOOL", "OFF"],
                 "mode": "COOL",
             },
+            "sdm.devices.traits.ThermostatTemperatureSetpoint": {
+                "coolCelsius": 25.0,
+            },
             "sdm.devices.traits.Fan": {
                 "timerMode": "OFF",
                 "timerTimeout": "2019-05-10T03:22:54Z",
@@ -1449,31 +1455,41 @@ async def test_thermostat_hvac_mode_failure(
     assert thermostat.attributes[ATTR_HVAC_ACTION] == HVACAction.IDLE
 
     auth.responses = [aiohttp.web.Response(status=HTTPStatus.BAD_REQUEST)]
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(HomeAssistantError) as e_info:
         await common.async_set_hvac_mode(hass, HVACMode.HEAT)
         await hass.async_block_till_done()
+    assert "HVAC mode" in str(e_info)
+    assert "climate.my_thermostat" in str(e_info)
+    assert HVACMode.HEAT in str(e_info)
 
     auth.responses = [aiohttp.web.Response(status=HTTPStatus.BAD_REQUEST)]
-    with pytest.raises(HomeAssistantError):
-        await common.async_set_temperature(
-            hass, hvac_mode=HVACMode.HEAT, temperature=25.0
-        )
+    with pytest.raises(HomeAssistantError) as e_info:
+        await common.async_set_temperature(hass, temperature=25.0)
         await hass.async_block_till_done()
+    assert "temperature" in str(e_info)
+    assert "climate.my_thermostat" in str(e_info)
+    assert "25.0" in str(e_info)
 
     auth.responses = [aiohttp.web.Response(status=HTTPStatus.BAD_REQUEST)]
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(HomeAssistantError) as e_info:
         await common.async_set_fan_mode(hass, FAN_ON)
         await hass.async_block_till_done()
+    assert "fan mode" in str(e_info)
+    assert "climate.my_thermostat" in str(e_info)
+    assert FAN_ON in str(e_info)
 
     auth.responses = [aiohttp.web.Response(status=HTTPStatus.BAD_REQUEST)]
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(HomeAssistantError) as e_info:
         await common.async_set_preset_mode(hass, PRESET_ECO)
         await hass.async_block_till_done()
+    assert "preset mode" in str(e_info)
+    assert "climate.my_thermostat" in str(e_info)
+    assert PRESET_ECO in str(e_info)
 
 
 async def test_thermostat_available(
     hass: HomeAssistant, setup_platform: PlatformSetup, create_device: CreateDevice
-):
+) -> None:
     """Test a thermostat that is available."""
     create_device.create(
         {
@@ -1503,7 +1519,7 @@ async def test_thermostat_available(
 
 async def test_thermostat_unavailable(
     hass: HomeAssistant, setup_platform: PlatformSetup, create_device: CreateDevice
-):
+) -> None:
     """Test a thermostat that is unavailable."""
     create_device.create(
         {

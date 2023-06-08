@@ -17,14 +17,13 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_MONITORED_CONDITIONS,
     CONF_NAME,
-    STATE_UNKNOWN,
-    TIME_DAYS,
+    UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.util import Throttle, dt
+from homeassistant.util import Throttle, dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -75,7 +74,7 @@ SENSOR_TYPES: tuple[GoogleWifiSensorEntityDescription, ...] = (
         key=ATTR_UPTIME,
         primary_key="system",
         sensor_key="uptime",
-        native_unit_of_measurement=TIME_DAYS,
+        native_unit_of_measurement=UnitOfTime.DAYS,
         icon="mdi:timelapse",
     ),
     GoogleWifiSensorEntityDescription(
@@ -172,12 +171,12 @@ class GoogleWifiAPI:
         self.raw_data = None
         self.conditions = conditions
         self.data = {
-            ATTR_CURRENT_VERSION: STATE_UNKNOWN,
-            ATTR_NEW_VERSION: STATE_UNKNOWN,
-            ATTR_UPTIME: STATE_UNKNOWN,
-            ATTR_LAST_RESTART: STATE_UNKNOWN,
-            ATTR_LOCAL_IP: STATE_UNKNOWN,
-            ATTR_STATUS: STATE_UNKNOWN,
+            ATTR_CURRENT_VERSION: None,
+            ATTR_NEW_VERSION: None,
+            ATTR_UPTIME: None,
+            ATTR_LAST_RESTART: None,
+            ATTR_LOCAL_IP: None,
+            ATTR_STATUS: None,
         }
         self.available = True
         self.update()
@@ -213,7 +212,7 @@ class GoogleWifiAPI:
                     elif attr_key == ATTR_UPTIME:
                         sensor_value = round(sensor_value / (3600 * 24), 2)
                     elif attr_key == ATTR_LAST_RESTART:
-                        last_restart = dt.now() - timedelta(seconds=sensor_value)
+                        last_restart = dt_util.now() - timedelta(seconds=sensor_value)
                         sensor_value = last_restart.strftime("%Y-%m-%d %H:%M:%S")
                     elif attr_key == ATTR_STATUS:
                         if sensor_value:
@@ -223,14 +222,16 @@ class GoogleWifiAPI:
                     elif (
                         attr_key == ATTR_LOCAL_IP and not self.raw_data["wan"]["online"]
                     ):
-                        sensor_value = STATE_UNKNOWN
+                        sensor_value = None
 
                     self.data[attr_key] = sensor_value
             except KeyError:
                 _LOGGER.error(
-                    "Router does not support %s field. "
-                    "Please remove %s from monitored_conditions",
+                    (
+                        "Router does not support %s field. "
+                        "Please remove %s from monitored_conditions"
+                    ),
                     description.sensor_key,
                     attr_key,
                 )
-                self.data[attr_key] = STATE_UNKNOWN
+                self.data[attr_key] = None

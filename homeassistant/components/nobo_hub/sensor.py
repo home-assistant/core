@@ -16,7 +16,7 @@ from homeassistant.const import (
     ATTR_NAME,
     ATTR_SUGGESTED_AREA,
     ATTR_VIA_DEVICE,
-    TEMP_CELSIUS,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import DeviceInfo
@@ -47,7 +47,7 @@ class NoboTemperatureSensor(SensorEntity):
     """A Nobø device with a temperature sensor."""
 
     _attr_device_class = SensorDeviceClass.TEMPERATURE
-    _attr_native_unit_of_measurement = TEMP_CELSIUS
+    _attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
     _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_should_poll = False
 

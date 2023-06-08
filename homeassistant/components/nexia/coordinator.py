@@ -14,7 +14,7 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_UPDATE_RATE = 120
 
 
-class NexiaDataUpdateCoordinator(DataUpdateCoordinator):
+class NexiaDataUpdateCoordinator(DataUpdateCoordinator[None]):
     """DataUpdateCoordinator for nexia homes."""
 
     def __init__(

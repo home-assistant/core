@@ -6,6 +6,7 @@ from requests import RequestException
 
 from homeassistant import data_entry_flow
 from homeassistant.components.soma import DOMAIN, config_flow
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
@@ -13,7 +14,7 @@ MOCK_HOST = "123.45.67.89"
 MOCK_PORT = 3000
 
 
-async def test_form(hass):
+async def test_form(hass: HomeAssistant) -> None:
     """Test user form showing."""
     flow = config_flow.SomaFlowHandler()
     flow.hass = hass
@@ -21,7 +22,7 @@ async def test_form(hass):
     assert result["type"] == data_entry_flow.FlowResultType.FORM
 
 
-async def test_import_abort(hass):
+async def test_import_abort(hass: HomeAssistant) -> None:
     """Test configuration from YAML aborting with existing entity."""
     flow = config_flow.SomaFlowHandler()
     flow.hass = hass
@@ -31,7 +32,7 @@ async def test_import_abort(hass):
     assert result["reason"] == "already_setup"
 
 
-async def test_import_create(hass):
+async def test_import_create(hass: HomeAssistant) -> None:
     """Test configuration from YAML."""
     flow = config_flow.SomaFlowHandler()
     flow.hass = hass
@@ -40,7 +41,7 @@ async def test_import_create(hass):
     assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
 
 
-async def test_error_status(hass):
+async def test_error_status(hass: HomeAssistant) -> None:
     """Test Connect successfully returning error status."""
     flow = config_flow.SomaFlowHandler()
     flow.hass = hass
@@ -50,7 +51,7 @@ async def test_error_status(hass):
     assert result["reason"] == "result_error"
 
 
-async def test_key_error(hass):
+async def test_key_error(hass: HomeAssistant) -> None:
     """Test Connect returning empty string."""
     flow = config_flow.SomaFlowHandler()
     flow.hass = hass
@@ -60,7 +61,7 @@ async def test_key_error(hass):
     assert result["reason"] == "connection_error"
 
 
-async def test_exception(hass):
+async def test_exception(hass: HomeAssistant) -> None:
     """Test if RequestException fires when no connection can be made."""
     flow = config_flow.SomaFlowHandler()
     flow.hass = hass
@@ -70,7 +71,7 @@ async def test_exception(hass):
     assert result["reason"] == "connection_error"
 
 
-async def test_full_flow(hass):
+async def test_full_flow(hass: HomeAssistant) -> None:
     """Check classic use case."""
     hass.data[DOMAIN] = {}
     flow = config_flow.SomaFlowHandler()

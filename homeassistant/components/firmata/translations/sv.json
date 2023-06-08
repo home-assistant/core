@@ -1,7 +1,0 @@
-{
-    "config": {
-        "abort": {
-            "cannot_connect": "Det gick inte att ansluta."
-        }
-    }
-}

@@ -4,11 +4,12 @@ from unittest.mock import patch
 from homeassistant import data_entry_flow
 from homeassistant.components.vesync import DOMAIN, config_flow
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
 
-async def test_abort_already_setup(hass):
+async def test_abort_already_setup(hass: HomeAssistant) -> None:
     """Test if we abort because component is already setup."""
     flow = config_flow.VeSyncFlowHandler()
     flow.hass = hass
@@ -21,7 +22,7 @@ async def test_abort_already_setup(hass):
     assert result["reason"] == "single_instance_allowed"
 
 
-async def test_invalid_login_error(hass):
+async def test_invalid_login_error(hass: HomeAssistant) -> None:
     """Test if we return error for invalid username and password."""
     test_dict = {CONF_USERNAME: "user", CONF_PASSWORD: "pass"}
     flow = config_flow.VeSyncFlowHandler()
@@ -33,7 +34,7 @@ async def test_invalid_login_error(hass):
     assert result["errors"] == {"base": "invalid_auth"}
 
 
-async def test_config_flow_user_input(hass):
+async def test_config_flow_user_input(hass: HomeAssistant) -> None:
     """Test config flow with user input."""
     flow = config_flow.VeSyncFlowHandler()
     flow.hass = hass

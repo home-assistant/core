@@ -1,10 +1,10 @@
 {
   "domain": "vilfo",
   "name": "Vilfo Router",
+  "codeowners": ["@ManneW"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/vilfo",
-  "requirements": ["vilfo-api-client==0.3.2"],
-  "codeowners": ["@ManneW"],
   "iot_class": "local_polling",
-  "loggers": ["vilfo"]
+  "loggers": ["vilfo"],
+  "requirements": ["vilfo-api-client==0.4.1"]
 }

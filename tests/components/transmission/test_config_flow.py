@@ -2,7 +2,11 @@
 from unittest.mock import MagicMock, patch
 
 import pytest
-from transmissionrpc.error import TransmissionError
+from transmission_rpc.error import (
+    TransmissionAuthError,
+    TransmissionConnectError,
+    TransmissionError,
+)
 
 from homeassistant import config_entries
 from homeassistant.components import transmission
@@ -18,7 +22,7 @@ from tests.common import MockConfigEntry
 @pytest.fixture(autouse=True)
 def mock_api():
     """Mock an api."""
-    with patch("transmissionrpc.Client") as api:
+    with patch("transmission_rpc.Client") as api:
         yield api
 
 
@@ -67,7 +71,7 @@ async def test_device_already_configured(
     assert result2["reason"] == "already_configured"
 
 
-async def test_name_already_configured(hass):
+async def test_name_already_configured(hass: HomeAssistant) -> None:
     """Test name is already configured."""
     entry = MockConfigEntry(
         domain=transmission.DOMAIN,
@@ -125,7 +129,7 @@ async def test_error_on_wrong_credentials(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    mock_api.side_effect = TransmissionError("401: Unauthorized")
+    mock_api.side_effect = TransmissionAuthError()
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         MOCK_CONFIG_DATA,
@@ -137,6 +141,21 @@ async def test_error_on_wrong_credentials(
     }
 
 
+async def test_unexpected_error(hass: HomeAssistant, mock_api: MagicMock) -> None:
+    """Test we handle unexpected error."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    mock_api.side_effect = TransmissionError()
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        MOCK_CONFIG_DATA,
+    )
+    assert result2["type"] == FlowResultType.FORM
+    assert result2["errors"] == {"base": "cannot_connect"}
+
+
 async def test_error_on_connection_failure(
     hass: HomeAssistant, mock_api: MagicMock
 ) -> None:
@@ -145,7 +164,7 @@ async def test_error_on_connection_failure(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    mock_api.side_effect = TransmissionError("111: Connection refused")
+    mock_api.side_effect = TransmissionConnectError()
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         MOCK_CONFIG_DATA,
@@ -213,7 +232,7 @@ async def test_reauth_failed(hass: HomeAssistant, mock_api: MagicMock) -> None:
     assert result["step_id"] == "reauth_confirm"
     assert result["description_placeholders"] == {"username": "user"}
 
-    mock_api.side_effect = TransmissionError("401: Unauthorized")
+    mock_api.side_effect = TransmissionAuthError()
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
@@ -248,7 +267,7 @@ async def test_reauth_failed_connection_error(
     assert result["step_id"] == "reauth_confirm"
     assert result["description_placeholders"] == {"username": "user"}
 
-    mock_api.side_effect = TransmissionError("111: Connection refused")
+    mock_api.side_effect = TransmissionConnectError()
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {

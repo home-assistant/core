@@ -26,7 +26,7 @@ class SurePetcareEntity(CoordinatorEntity[SurePetcareDataCoordinator]):
 
         self._id = surepetcare_id
 
-        surepy_entity: SurepyEntity = coordinator.data[surepetcare_id]
+        surepy_entity = coordinator.data[surepetcare_id]
 
         if surepy_entity.name:
             self._device_name = surepy_entity.name.capitalize()

@@ -2,18 +2,13 @@
 from __future__ import annotations
 
 import dataclasses
+from importlib.metadata import version
 from typing import Any
 
-import bellows
-import pkg_resources
-import zigpy
 from zigpy.config import CONF_NWK_EXTENDED_PAN_ID
 from zigpy.profiles import PROFILES
+from zigpy.types import Channels
 from zigpy.zcl import Cluster
-import zigpy_deconz
-import zigpy_xbee
-import zigpy_zigate
-import zigpy_znp
 
 from homeassistant.components.diagnostics.util import async_redact_data
 from homeassistant.config_entries import ConfigEntry
@@ -69,23 +64,31 @@ def shallow_asdict(obj: Any) -> dict:
 
 async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, config_entry: ConfigEntry
-) -> dict:
+) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
     config: dict = hass.data[DATA_ZHA].get(DATA_ZHA_CONFIG, {})
     gateway: ZHAGateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
+
+    energy_scan = await gateway.application_controller.energy_scan(
+        channels=Channels.ALL_CHANNELS, duration_exp=4, count=1
+    )
+
     return async_redact_data(
         {
             "config": config,
             "config_entry": config_entry.as_dict(),
             "application_state": shallow_asdict(gateway.application_controller.state),
+            "energy_scan": {
+                channel: 100 * energy / 255 for channel, energy in energy_scan.items()
+            },
             "versions": {
-                "bellows": bellows.__version__,
-                "zigpy": zigpy.__version__,
-                "zigpy_deconz": zigpy_deconz.__version__,
-                "zigpy_xbee": zigpy_xbee.__version__,
-                "zigpy_znp": zigpy_znp.__version__,
-                "zigpy_zigate": zigpy_zigate.__version__,
-                "zhaquirks": pkg_resources.get_distribution("zha-quirks").version,
+                "bellows": version("bellows"),
+                "zigpy": version("zigpy"),
+                "zigpy_deconz": version("zigpy-deconz"),
+                "zigpy_xbee": version("zigpy-xbee"),
+                "zigpy_znp": version("zigpy_znp"),
+                "zigpy_zigate": version("zigpy-zigate"),
+                "zhaquirks": version("zha-quirks"),
             },
         },
         KEYS_TO_REDACT,
@@ -94,7 +97,7 @@ async def async_get_config_entry_diagnostics(
 
 async def async_get_device_diagnostics(
     hass: HomeAssistant, config_entry: ConfigEntry, device: dr.DeviceEntry
-) -> dict:
+) -> dict[str, Any]:
     """Return diagnostics for a device."""
     zha_device: ZHADevice = async_get_zha_device(hass, device.id)
     device_info: dict[str, Any] = zha_device.zha_device_info

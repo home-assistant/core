@@ -129,7 +129,6 @@ class DemoLight(LightEntity):
         self._ct = ct or random.choice(LIGHT_TEMPS)
         self._effect = effect
         self._effect_list = effect_list
-        self._features = 0
         self._hs_color = hs_color
         self._attr_name = name
         self._rgbw_color = rgbw_color
@@ -148,7 +147,7 @@ class DemoLight(LightEntity):
             supported_color_modes = SUPPORT_DEMO
         self._color_modes = supported_color_modes
         if self._effect_list is not None:
-            self._features |= LightEntityFeature.EFFECT
+            self._attr_supported_features |= LightEntityFeature.EFFECT
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -217,11 +216,6 @@ class DemoLight(LightEntity):
     def is_on(self) -> bool:
         """Return true if light is on."""
         return self._state
-
-    @property
-    def supported_features(self) -> int:
-        """Flag supported features."""
-        return self._features
 
     @property
     def supported_color_modes(self) -> set[ColorMode]:

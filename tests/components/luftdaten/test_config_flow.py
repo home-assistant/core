@@ -24,8 +24,7 @@ async def test_duplicate_error(
     )
 
     assert result.get("type") == FlowResultType.FORM
-    assert result.get("step_id") == SOURCE_USER
-    assert "flow_id" in result
+    assert result.get("step_id") == "user"
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -45,8 +44,7 @@ async def test_communication_error(
     )
 
     assert result.get("type") == FlowResultType.FORM
-    assert result.get("step_id") == SOURCE_USER
-    assert "flow_id" in result
+    assert result.get("step_id") == "user"
 
     mock_luftdaten_config_flow.get_data.side_effect = LuftdatenConnectionError
     result2 = await hass.config_entries.flow.async_configure(
@@ -55,9 +53,8 @@ async def test_communication_error(
     )
 
     assert result2.get("type") == FlowResultType.FORM
-    assert result2.get("step_id") == SOURCE_USER
+    assert result2.get("step_id") == "user"
     assert result2.get("errors") == {CONF_SENSOR_ID: "cannot_connect"}
-    assert "flow_id" in result2
 
     mock_luftdaten_config_flow.get_data.side_effect = None
     result3 = await hass.config_entries.flow.async_configure(
@@ -82,8 +79,7 @@ async def test_invalid_sensor(
     )
 
     assert result.get("type") == FlowResultType.FORM
-    assert result.get("step_id") == SOURCE_USER
-    assert "flow_id" in result
+    assert result.get("step_id") == "user"
 
     mock_luftdaten_config_flow.validate_sensor.return_value = False
     result2 = await hass.config_entries.flow.async_configure(
@@ -92,9 +88,8 @@ async def test_invalid_sensor(
     )
 
     assert result2.get("type") == FlowResultType.FORM
-    assert result2.get("step_id") == SOURCE_USER
+    assert result2.get("step_id") == "user"
     assert result2.get("errors") == {CONF_SENSOR_ID: "invalid_sensor"}
-    assert "flow_id" in result2
 
     mock_luftdaten_config_flow.validate_sensor.return_value = True
     result3 = await hass.config_entries.flow.async_configure(
@@ -121,8 +116,7 @@ async def test_step_user(
     )
 
     assert result.get("type") == FlowResultType.FORM
-    assert result.get("step_id") == SOURCE_USER
-    assert "flow_id" in result
+    assert result.get("step_id") == "user"
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],

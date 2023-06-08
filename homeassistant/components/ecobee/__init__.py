@@ -29,8 +29,7 @@ CONFIG_SCHEMA = vol.Schema(
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """
-    Ecobee uses config flow for configuration.
+    """Ecobee uses config flow for configuration.
 
     But, an "ecobee:" entry in configuration.yaml will trigger an import flow
     if a config entry doesn't already exist. If ecobee.conf exists, the import
@@ -87,13 +86,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 
 class EcobeeData:
-    """
-    Handle getting the latest data from ecobee.com so platforms can use it.
+    """Handle getting the latest data from ecobee.com so platforms can use it.
 
     Also handle refreshing tokens and updating config entry with refreshed tokens.
     """
 
-    def __init__(self, hass, entry, api_key, refresh_token):
+    def __init__(
+        self, hass: HomeAssistant, entry: ConfigEntry, api_key: str, refresh_token: str
+    ) -> None:
         """Initialize the Ecobee data object."""
         self._hass = hass
         self._entry = entry

@@ -71,7 +71,7 @@ class UpbLight(UpbAttachedEntity, LightEntity):
         return {self.color_mode}
 
     @property
-    def supported_features(self) -> int:
+    def supported_features(self) -> LightEntityFeature:
         """Flag supported features."""
         if self._element.dimmable:
             return LightEntityFeature.TRANSITION | LightEntityFeature.FLASH

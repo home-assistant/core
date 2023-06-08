@@ -62,6 +62,7 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.typing import WebSocketGenerator
 
 MAIN_ENTITY_ID = f"{MP_DOMAIN}.my_roku_3"
 TV_ENTITY_ID = f"{MP_DOMAIN}.58_onn_roku_tv"
@@ -509,7 +510,7 @@ async def test_services_play_media(
 
 
 @pytest.mark.parametrize(
-    "content_type, content_id, resolved_name, resolved_format",
+    ("content_type", "content_id", "resolved_name", "resolved_format"),
     [
         (MediaType.URL, "http://localhost/media.m4a", "media.m4a", "m4a"),
         (MediaType.MUSIC, "http://localhost/media.m4a", "media.m4a", "m4a"),
@@ -554,7 +555,7 @@ async def test_services_play_media_audio(
 
 
 @pytest.mark.parametrize(
-    "content_type, content_id, resolved_name, resolved_format",
+    ("content_type", "content_id", "resolved_name", "resolved_format"),
     [
         (MediaType.URL, "http://localhost/media.mp4", "media.mp4", "mp4"),
         (MediaType.VIDEO, "http://localhost/media.m4v", "media.m4v", "mp4"),
@@ -709,11 +710,11 @@ async def test_tv_services(
 
 
 async def test_media_browse(
-    hass,
+    hass: HomeAssistant,
     init_integration,
     mock_roku,
-    hass_ws_client,
-):
+    hass_ws_client: WebSocketGenerator,
+) -> None:
     """Test browsing media."""
     client = await hass_ws_client(hass)
 
@@ -769,11 +770,11 @@ async def test_media_browse(
 
 
 async def test_media_browse_internal(
-    hass,
+    hass: HomeAssistant,
     init_integration,
     mock_roku,
-    hass_ws_client,
-):
+    hass_ws_client: WebSocketGenerator,
+) -> None:
     """Test browsing media with internal url."""
     await async_process_ha_core_config(
         hass,
@@ -821,11 +822,11 @@ async def test_media_browse_internal(
 
 
 async def test_media_browse_local_source(
-    hass,
+    hass: HomeAssistant,
     init_integration,
     mock_roku,
-    hass_ws_client,
-):
+    hass_ws_client: WebSocketGenerator,
+) -> None:
     """Test browsing local media source."""
     local_media = hass.config.path("media")
     await async_process_ha_core_config(
@@ -863,7 +864,7 @@ async def test_media_browse_local_source(
     assert msg["result"]["children"][0]["title"] == "Apps"
     assert msg["result"]["children"][0]["media_content_type"] == MediaType.APPS
 
-    assert msg["result"]["children"][1]["title"] == "Local Media"
+    assert msg["result"]["children"][1]["title"] == "My media"
     assert msg["result"]["children"][1]["media_class"] == MediaClass.DIRECTORY
     assert msg["result"]["children"][1]["media_content_type"] is None
     assert (
@@ -891,7 +892,7 @@ async def test_media_browse_local_source(
     assert msg["success"]
 
     assert msg["result"]
-    assert msg["result"]["title"] == "Local Media"
+    assert msg["result"]["title"] == "My media"
     assert msg["result"]["media_class"] == MediaClass.DIRECTORY
     assert msg["result"]["media_content_type"] is None
     assert len(msg["result"]["children"]) == 2
@@ -943,11 +944,11 @@ async def test_media_browse_local_source(
 
 @pytest.mark.parametrize("mock_device", ["roku/rokutv-7820x.json"], indirect=True)
 async def test_tv_media_browse(
-    hass,
+    hass: HomeAssistant,
     init_integration,
     mock_roku,
-    hass_ws_client,
-):
+    hass_ws_client: WebSocketGenerator,
+) -> None:
     """Test browsing media."""
     client = await hass_ws_client(hass)
 

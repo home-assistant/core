@@ -1,4 +1,4 @@
-"""This platform provides support for sensor data from RainMachine."""
+"""Support for sensor data from RainMachine."""
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -14,9 +14,8 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import VOLUME_CUBIC_METERS, VOLUME_LITERS
+from homeassistant.const import EntityCategory, UnitOfVolume
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.dt import utc_from_timestamp, utcnow
 
@@ -72,7 +71,7 @@ SENSOR_DESCRIPTIONS = (
         key=TYPE_FLOW_SENSOR_CLICK_M3,
         name="Flow sensor clicks per cubic meter",
         icon="mdi:water-pump",
-        native_unit_of_measurement=f"clicks/{VOLUME_CUBIC_METERS}",
+        native_unit_of_measurement=f"clicks/{UnitOfVolume.CUBIC_METERS}",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
@@ -83,8 +82,9 @@ SENSOR_DESCRIPTIONS = (
         key=TYPE_FLOW_SENSOR_CONSUMED_LITERS,
         name="Flow sensor consumed liters",
         icon="mdi:water-pump",
+        device_class=SensorDeviceClass.WATER,
         entity_category=EntityCategory.DIAGNOSTIC,
-        native_unit_of_measurement=VOLUME_LITERS,
+        native_unit_of_measurement=UnitOfVolume.LITERS,
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.TOTAL_INCREASING,
         api_category=DATA_PROVISION_SETTINGS,
@@ -105,8 +105,9 @@ SENSOR_DESCRIPTIONS = (
         key=TYPE_FLOW_SENSOR_LEAK_VOLUME,
         name="Flow sensor leak volume",
         icon="mdi:pipe-leak",
+        device_class=SensorDeviceClass.WATER,
         entity_category=EntityCategory.DIAGNOSTIC,
-        native_unit_of_measurement=VOLUME_LITERS,
+        native_unit_of_measurement=UnitOfVolume.LITERS,
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.TOTAL_INCREASING,
         api_category=DATA_PROVISION_SETTINGS,

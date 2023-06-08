@@ -6,7 +6,7 @@
         "data": {
           "hapid": "Access point ID (SGTIN)",
           "pin": "[%key:common::config_flow::data::pin%]",
-          "name": "[%key:common::config_flow::data::name%] (optional, used as name prefix for all devices)"
+          "name": "Name (optional, used as name prefix for all devices)"
         }
       },
       "link": {
@@ -16,7 +16,7 @@
     },
     "error": {
       "register_failed": "Failed to register, please try again.",
-      "invalid_sgtin_or_pin": "Invalid SGTIN or [%key:common::config_flow::data::pin%], please try again.",
+      "invalid_sgtin_or_pin": "Invalid SGTIN or PIN code, please try again.",
       "press_the_button": "Please press the blue button.",
       "timeout_button": "Blue button press timeout, please try again."
     },

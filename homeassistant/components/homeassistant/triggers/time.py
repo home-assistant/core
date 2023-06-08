@@ -26,7 +26,9 @@ import homeassistant.util.dt as dt_util
 _TIME_TRIGGER_SCHEMA = vol.Any(
     cv.time,
     vol.All(str, cv.entity_domain(["input_datetime", "sensor"])),
-    msg="Expected HH:MM, HH:MM:SS or Entity ID with domain 'input_datetime' or 'sensor'",
+    msg=(
+        "Expected HH:MM, HH:MM:SS or Entity ID with domain 'input_datetime' or 'sensor'"
+    ),
 )
 
 TRIGGER_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
@@ -47,7 +49,7 @@ async def async_attach_trigger(
     trigger_data = trigger_info["trigger_data"]
     entities: dict[str, CALLBACK_TYPE] = {}
     removes = []
-    job = HassJob(action)
+    job = HassJob(action, f"time trigger {trigger_info}")
 
     @callback
     def time_automation_listener(description, now, *, entity_id=None):

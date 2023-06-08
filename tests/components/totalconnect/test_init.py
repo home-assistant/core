@@ -5,6 +5,7 @@ from total_connect_client.exceptions import AuthenticationError
 
 from homeassistant.components.totalconnect.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from .common import CONFIG_DATA
@@ -12,7 +13,7 @@ from .common import CONFIG_DATA
 from tests.common import MockConfigEntry
 
 
-async def test_reauth_started(hass):
+async def test_reauth_started(hass: HomeAssistant) -> None:
     """Test that reauth is started when we have login errors."""
     mock_entry = MockConfigEntry(
         domain=DOMAIN,

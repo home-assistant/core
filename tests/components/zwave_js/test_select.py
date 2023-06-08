@@ -7,9 +7,8 @@ from zwave_js_server.model.node import Node
 
 from homeassistant.components.zwave_js.helpers import ZwaveValueMatcher
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_UNKNOWN
+from homeassistant.const import STATE_UNKNOWN, EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 import homeassistant.helpers.entity_registry as er
 
 from .common import replace_value_of_zwave_value
@@ -211,7 +210,9 @@ async def test_protection_select(
     assert state.state == STATE_UNKNOWN
 
 
-async def test_multilevel_switch_select(hass, client, fortrezz_ssa1_siren, integration):
+async def test_multilevel_switch_select(
+    hass: HomeAssistant, client, fortrezz_ssa1_siren, integration
+) -> None:
     """Test Multilevel Switch CC based select entity."""
     node = fortrezz_ssa1_siren
     state = hass.states.get(MULTILEVEL_SWITCH_SELECT_ENTITY)
@@ -272,8 +273,8 @@ async def test_multilevel_switch_select(hass, client, fortrezz_ssa1_siren, integ
 
 
 async def test_multilevel_switch_select_no_value(
-    hass, client, fortrezz_ssa1_siren_state, integration
-):
+    hass: HomeAssistant, client, fortrezz_ssa1_siren_state, integration
+) -> None:
     """Test Multilevel Switch CC based select entity with primary value is None."""
     node_state = replace_value_of_zwave_value(
         fortrezz_ssa1_siren_state,
@@ -293,3 +294,29 @@ async def test_multilevel_switch_select_no_value(
 
     assert state
     assert state.state == STATE_UNKNOWN
+
+
+async def test_config_parameter_select(
+    hass: HomeAssistant, climate_adc_t3000, integration
+) -> None:
+    """Test config parameter select is created."""
+    select_entity_id = "select.adc_t3000_hvac_system_type"
+    ent_reg = er.async_get(hass)
+    entity_entry = ent_reg.async_get(select_entity_id)
+    assert entity_entry
+    assert entity_entry.disabled
+    assert entity_entry.entity_category == EntityCategory.CONFIG
+
+    updated_entry = ent_reg.async_update_entity(
+        select_entity_id, **{"disabled_by": None}
+    )
+    assert updated_entry != entity_entry
+    assert updated_entry.disabled is False
+
+    # reload integration and check if entity is correctly there
+    await hass.config_entries.async_reload(integration.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(select_entity_id)
+    assert state
+    assert state.state == "Normal"

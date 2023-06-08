@@ -1,21 +1,26 @@
 """Typing Helpers for Home Assistant."""
 from __future__ import annotations
 
+from collections.abc import Callable
+from functools import lru_cache
+
 from homeassistant.const import (
+    CONCENTRATION_PARTS_PER_BILLION,
+    CONCENTRATION_PARTS_PER_MILLION,
+    PERCENTAGE,
     UNIT_NOT_RECOGNIZED_TEMPLATE,
-    VOLUME_CUBIC_FEET,
-    VOLUME_CUBIC_METERS,
-    VOLUME_FLUID_OUNCE,
-    VOLUME_GALLONS,
-    VOLUME_LITERS,
-    VOLUME_MILLILITERS,
+    UnitOfDataRate,
+    UnitOfElectricCurrent,
+    UnitOfElectricPotential,
     UnitOfEnergy,
+    UnitOfInformation,
     UnitOfLength,
     UnitOfMass,
     UnitOfPower,
     UnitOfPressure,
     UnitOfSpeed,
     UnitOfTemperature,
+    UnitOfVolume,
     UnitOfVolumetricFlux,
 )
 from homeassistant.exceptions import HomeAssistantError
@@ -38,7 +43,8 @@ _DAYS_TO_SECS = 24 * _HRS_TO_SECS  # 1 day = 24 hours = 86400 seconds
 
 # Mass conversion constants
 _POUND_TO_G = 453.59237
-_OUNCE_TO_G = _POUND_TO_G / 16
+_OUNCE_TO_G = _POUND_TO_G / 16  # 16 ounces to a pound
+_STONE_TO_G = _POUND_TO_G * 14  # 14 pounds to a stone
 
 # Pressure conversion constants
 _STANDARD_GRAVITY = 9.80665
@@ -56,38 +62,79 @@ class BaseUnitConverter:
     """Define the format of a conversion utility."""
 
     UNIT_CLASS: str
-    NORMALIZED_UNIT: str
-    VALID_UNITS: set[str]
+    NORMALIZED_UNIT: str | None
+    VALID_UNITS: set[str | None]
 
-    _UNIT_CONVERSION: dict[str, float]
+    _UNIT_CONVERSION: dict[str | None, float]
 
     @classmethod
-    def convert(cls, value: float, from_unit: str, to_unit: str) -> float:
+    def convert(cls, value: float, from_unit: str | None, to_unit: str | None) -> float:
         """Convert one unit of measurement to another."""
-        if from_unit == to_unit:
-            return value
-
-        try:
-            from_ratio = cls._UNIT_CONVERSION[from_unit]
-        except KeyError as err:
-            raise HomeAssistantError(
-                UNIT_NOT_RECOGNIZED_TEMPLATE.format(from_unit, cls.UNIT_CLASS)
-            ) from err
-
-        try:
-            to_ratio = cls._UNIT_CONVERSION[to_unit]
-        except KeyError as err:
-            raise HomeAssistantError(
-                UNIT_NOT_RECOGNIZED_TEMPLATE.format(to_unit, cls.UNIT_CLASS)
-            ) from err
-
-        new_value = value / from_ratio
-        return new_value * to_ratio
+        return cls.converter_factory(from_unit, to_unit)(value)
 
     @classmethod
-    def get_unit_ratio(cls, from_unit: str, to_unit: str) -> float:
+    @lru_cache
+    def converter_factory(
+        cls, from_unit: str | None, to_unit: str | None
+    ) -> Callable[[float], float]:
+        """Return a function to convert one unit of measurement to another."""
+        if from_unit == to_unit:
+            return lambda value: value
+        from_ratio, to_ratio = cls._get_from_to_ratio(from_unit, to_unit)
+        return lambda val: (val / from_ratio) * to_ratio
+
+    @classmethod
+    def _get_from_to_ratio(
+        cls, from_unit: str | None, to_unit: str | None
+    ) -> tuple[float, float]:
         """Get unit ratio between units of measurement."""
-        return cls._UNIT_CONVERSION[from_unit] / cls._UNIT_CONVERSION[to_unit]
+        unit_conversion = cls._UNIT_CONVERSION
+        try:
+            return unit_conversion[from_unit], unit_conversion[to_unit]
+        except KeyError as err:
+            raise HomeAssistantError(
+                UNIT_NOT_RECOGNIZED_TEMPLATE.format(err.args[0], cls.UNIT_CLASS)
+            ) from err
+
+    @classmethod
+    @lru_cache
+    def converter_factory_allow_none(
+        cls, from_unit: str | None, to_unit: str | None
+    ) -> Callable[[float | None], float | None]:
+        """Return a function to convert one unit of measurement to another which allows None."""
+        if from_unit == to_unit:
+            return lambda value: value
+        from_ratio, to_ratio = cls._get_from_to_ratio(from_unit, to_unit)
+        return lambda val: None if val is None else (val / from_ratio) * to_ratio
+
+    @classmethod
+    @lru_cache
+    def get_unit_ratio(cls, from_unit: str | None, to_unit: str | None) -> float:
+        """Get unit ratio between units of measurement."""
+        from_ratio, to_ratio = cls._get_from_to_ratio(from_unit, to_unit)
+        return from_ratio / to_ratio
+
+
+class DataRateConverter(BaseUnitConverter):
+    """Utility to convert data rate values."""
+
+    UNIT_CLASS = "data_rate"
+    NORMALIZED_UNIT = UnitOfDataRate.BITS_PER_SECOND
+    # Units in terms of bits
+    _UNIT_CONVERSION: dict[str | None, float] = {
+        UnitOfDataRate.BITS_PER_SECOND: 1,
+        UnitOfDataRate.KILOBITS_PER_SECOND: 1 / 1e3,
+        UnitOfDataRate.MEGABITS_PER_SECOND: 1 / 1e6,
+        UnitOfDataRate.GIGABITS_PER_SECOND: 1 / 1e9,
+        UnitOfDataRate.BYTES_PER_SECOND: 1 / 8,
+        UnitOfDataRate.KILOBYTES_PER_SECOND: 1 / 8e3,
+        UnitOfDataRate.MEGABYTES_PER_SECOND: 1 / 8e6,
+        UnitOfDataRate.GIGABYTES_PER_SECOND: 1 / 8e9,
+        UnitOfDataRate.KIBIBYTES_PER_SECOND: 1 / 2**13,
+        UnitOfDataRate.MEBIBYTES_PER_SECOND: 1 / 2**23,
+        UnitOfDataRate.GIBIBYTES_PER_SECOND: 1 / 2**33,
+    }
+    VALID_UNITS = set(UnitOfDataRate)
 
 
 class DistanceConverter(BaseUnitConverter):
@@ -95,7 +142,7 @@ class DistanceConverter(BaseUnitConverter):
 
     UNIT_CLASS = "distance"
     NORMALIZED_UNIT = UnitOfLength.METERS
-    _UNIT_CONVERSION: dict[str, float] = {
+    _UNIT_CONVERSION: dict[str | None, float] = {
         UnitOfLength.METERS: 1,
         UnitOfLength.MILLIMETERS: 1 / _MM_TO_M,
         UnitOfLength.CENTIMETERS: 1 / _CM_TO_M,
@@ -117,23 +164,84 @@ class DistanceConverter(BaseUnitConverter):
     }
 
 
+class ElectricCurrentConverter(BaseUnitConverter):
+    """Utility to convert electric current values."""
+
+    UNIT_CLASS = "electric_current"
+    NORMALIZED_UNIT = UnitOfElectricCurrent.AMPERE
+    _UNIT_CONVERSION: dict[str | None, float] = {
+        UnitOfElectricCurrent.AMPERE: 1,
+        UnitOfElectricCurrent.MILLIAMPERE: 1e3,
+    }
+    VALID_UNITS = set(UnitOfElectricCurrent)
+
+
+class ElectricPotentialConverter(BaseUnitConverter):
+    """Utility to convert electric potential values."""
+
+    UNIT_CLASS = "voltage"
+    NORMALIZED_UNIT = UnitOfElectricPotential.VOLT
+    _UNIT_CONVERSION: dict[str | None, float] = {
+        UnitOfElectricPotential.VOLT: 1,
+        UnitOfElectricPotential.MILLIVOLT: 1e3,
+    }
+    VALID_UNITS = {
+        UnitOfElectricPotential.VOLT,
+        UnitOfElectricPotential.MILLIVOLT,
+    }
+
+
 class EnergyConverter(BaseUnitConverter):
     """Utility to convert energy values."""
 
     UNIT_CLASS = "energy"
     NORMALIZED_UNIT = UnitOfEnergy.KILO_WATT_HOUR
-    _UNIT_CONVERSION: dict[str, float] = {
+    _UNIT_CONVERSION: dict[str | None, float] = {
         UnitOfEnergy.WATT_HOUR: 1 * 1000,
         UnitOfEnergy.KILO_WATT_HOUR: 1,
         UnitOfEnergy.MEGA_WATT_HOUR: 1 / 1000,
+        UnitOfEnergy.MEGA_JOULE: 3.6,
         UnitOfEnergy.GIGA_JOULE: 3.6 / 1000,
     }
     VALID_UNITS = {
         UnitOfEnergy.WATT_HOUR,
         UnitOfEnergy.KILO_WATT_HOUR,
         UnitOfEnergy.MEGA_WATT_HOUR,
+        UnitOfEnergy.MEGA_JOULE,
         UnitOfEnergy.GIGA_JOULE,
     }
+
+
+class InformationConverter(BaseUnitConverter):
+    """Utility to convert information values."""
+
+    UNIT_CLASS = "information"
+    NORMALIZED_UNIT = UnitOfInformation.BITS
+    # Units in terms of bits
+    _UNIT_CONVERSION: dict[str | None, float] = {
+        UnitOfInformation.BITS: 1,
+        UnitOfInformation.KILOBITS: 1 / 1e3,
+        UnitOfInformation.MEGABITS: 1 / 1e6,
+        UnitOfInformation.GIGABITS: 1 / 1e9,
+        UnitOfInformation.BYTES: 1 / 8,
+        UnitOfInformation.KILOBYTES: 1 / 8e3,
+        UnitOfInformation.MEGABYTES: 1 / 8e6,
+        UnitOfInformation.GIGABYTES: 1 / 8e9,
+        UnitOfInformation.TERABYTES: 1 / 8e12,
+        UnitOfInformation.PETABYTES: 1 / 8e15,
+        UnitOfInformation.EXABYTES: 1 / 8e18,
+        UnitOfInformation.ZETTABYTES: 1 / 8e21,
+        UnitOfInformation.YOTTABYTES: 1 / 8e24,
+        UnitOfInformation.KIBIBYTES: 1 / 2**13,
+        UnitOfInformation.MEBIBYTES: 1 / 2**23,
+        UnitOfInformation.GIBIBYTES: 1 / 2**33,
+        UnitOfInformation.TEBIBYTES: 1 / 2**43,
+        UnitOfInformation.PEBIBYTES: 1 / 2**53,
+        UnitOfInformation.EXBIBYTES: 1 / 2**63,
+        UnitOfInformation.ZEBIBYTES: 1 / 2**73,
+        UnitOfInformation.YOBIBYTES: 1 / 2**83,
+    }
+    VALID_UNITS = set(UnitOfInformation)
 
 
 class MassConverter(BaseUnitConverter):
@@ -141,13 +249,14 @@ class MassConverter(BaseUnitConverter):
 
     UNIT_CLASS = "mass"
     NORMALIZED_UNIT = UnitOfMass.GRAMS
-    _UNIT_CONVERSION: dict[str, float] = {
+    _UNIT_CONVERSION: dict[str | None, float] = {
         UnitOfMass.MICROGRAMS: 1 * 1000 * 1000,
         UnitOfMass.MILLIGRAMS: 1 * 1000,
         UnitOfMass.GRAMS: 1,
         UnitOfMass.KILOGRAMS: 1 / 1000,
         UnitOfMass.OUNCES: 1 / _OUNCE_TO_G,
         UnitOfMass.POUNDS: 1 / _POUND_TO_G,
+        UnitOfMass.STONES: 1 / _STONE_TO_G,
     }
     VALID_UNITS = {
         UnitOfMass.GRAMS,
@@ -156,6 +265,7 @@ class MassConverter(BaseUnitConverter):
         UnitOfMass.MICROGRAMS,
         UnitOfMass.OUNCES,
         UnitOfMass.POUNDS,
+        UnitOfMass.STONES,
     }
 
 
@@ -164,7 +274,7 @@ class PowerConverter(BaseUnitConverter):
 
     UNIT_CLASS = "power"
     NORMALIZED_UNIT = UnitOfPower.WATT
-    _UNIT_CONVERSION: dict[str, float] = {
+    _UNIT_CONVERSION: dict[str | None, float] = {
         UnitOfPower.WATT: 1,
         UnitOfPower.KILO_WATT: 1 / 1000,
     }
@@ -179,7 +289,7 @@ class PressureConverter(BaseUnitConverter):
 
     UNIT_CLASS = "pressure"
     NORMALIZED_UNIT = UnitOfPressure.PA
-    _UNIT_CONVERSION: dict[str, float] = {
+    _UNIT_CONVERSION: dict[str | None, float] = {
         UnitOfPressure.PA: 1,
         UnitOfPressure.HPA: 1 / 100,
         UnitOfPressure.KPA: 1 / 1000,
@@ -210,7 +320,7 @@ class SpeedConverter(BaseUnitConverter):
 
     UNIT_CLASS = "speed"
     NORMALIZED_UNIT = UnitOfSpeed.METERS_PER_SECOND
-    _UNIT_CONVERSION: dict[str, float] = {
+    _UNIT_CONVERSION: dict[str | None, float] = {
         UnitOfVolumetricFlux.INCHES_PER_DAY: _DAYS_TO_SECS / _IN_TO_M,
         UnitOfVolumetricFlux.INCHES_PER_HOUR: _HRS_TO_SECS / _IN_TO_M,
         UnitOfVolumetricFlux.MILLIMETERS_PER_DAY: _DAYS_TO_SECS / _MM_TO_M,
@@ -251,7 +361,37 @@ class TemperatureConverter(BaseUnitConverter):
     }
 
     @classmethod
-    def convert(cls, value: float, from_unit: str, to_unit: str) -> float:
+    @lru_cache(maxsize=8)
+    def converter_factory(
+        cls, from_unit: str | None, to_unit: str | None
+    ) -> Callable[[float], float]:
+        """Return a function to convert a temperature from one unit to another."""
+        if from_unit == to_unit:
+            # Return a function that does nothing. This is not
+            # in _converter_factory because we do not want to wrap
+            # it with the None check in converter_factory_allow_none.
+            return lambda value: value
+
+        return cls._converter_factory(from_unit, to_unit)
+
+    @classmethod
+    @lru_cache(maxsize=8)
+    def converter_factory_allow_none(
+        cls, from_unit: str | None, to_unit: str | None
+    ) -> Callable[[float | None], float | None]:
+        """Return a function to convert a temperature from one unit to another which allows None."""
+        if from_unit == to_unit:
+            # Return a function that does nothing. This is not
+            # in _converter_factory because we do not want to wrap
+            # it with the None check in this case.
+            return lambda value: value
+        convert = cls._converter_factory(from_unit, to_unit)
+        return lambda value: None if value is None else convert(value)
+
+    @classmethod
+    def _converter_factory(
+        cls, from_unit: str | None, to_unit: str | None
+    ) -> Callable[[float], float]:
         """Convert a temperature from one unit to another.
 
         eg. 10°C will return 50°F
@@ -259,34 +399,31 @@ class TemperatureConverter(BaseUnitConverter):
         For converting an interval between two temperatures, please use
         `convert_interval` instead.
         """
-        # We cannot use the implementation from BaseUnitConverter here because the temperature
-        # units do not use the same floor: 0°C, 0°F and 0K do not align
-        if from_unit == to_unit:
-            return value
-
+        # We cannot use the implementation from BaseUnitConverter here because the
+        # temperature units do not use the same floor: 0°C, 0°F and 0K do not align
         if from_unit == UnitOfTemperature.CELSIUS:
             if to_unit == UnitOfTemperature.FAHRENHEIT:
-                return cls._celsius_to_fahrenheit(value)
+                return cls._celsius_to_fahrenheit
             if to_unit == UnitOfTemperature.KELVIN:
-                return cls._celsius_to_kelvin(value)
+                return cls._celsius_to_kelvin
             raise HomeAssistantError(
                 UNIT_NOT_RECOGNIZED_TEMPLATE.format(to_unit, cls.UNIT_CLASS)
             )
 
         if from_unit == UnitOfTemperature.FAHRENHEIT:
             if to_unit == UnitOfTemperature.CELSIUS:
-                return cls._fahrenheit_to_celsius(value)
+                return cls._fahrenheit_to_celsius
             if to_unit == UnitOfTemperature.KELVIN:
-                return cls._celsius_to_kelvin(cls._fahrenheit_to_celsius(value))
+                return cls._fahrenheit_to_kelvin
             raise HomeAssistantError(
                 UNIT_NOT_RECOGNIZED_TEMPLATE.format(to_unit, cls.UNIT_CLASS)
             )
 
         if from_unit == UnitOfTemperature.KELVIN:
             if to_unit == UnitOfTemperature.CELSIUS:
-                return cls._kelvin_to_celsius(value)
+                return cls._kelvin_to_celsius
             if to_unit == UnitOfTemperature.FAHRENHEIT:
-                return cls._celsius_to_fahrenheit(cls._kelvin_to_celsius(value))
+                return cls._kelvin_to_fahrenheit
             raise HomeAssistantError(
                 UNIT_NOT_RECOGNIZED_TEMPLATE.format(to_unit, cls.UNIT_CLASS)
             )
@@ -305,7 +442,17 @@ class TemperatureConverter(BaseUnitConverter):
         """
         # We use BaseUnitConverter implementation here because we are only interested
         # in the ratio between the units.
-        return super().convert(interval, from_unit, to_unit)
+        return super().converter_factory(from_unit, to_unit)(interval)
+
+    @classmethod
+    def _kelvin_to_fahrenheit(cls, kelvin: float) -> float:
+        """Convert a temperature in Kelvin to Fahrenheit."""
+        return (kelvin - 273.15) * 1.8 + 32.0
+
+    @classmethod
+    def _fahrenheit_to_kelvin(cls, fahrenheit: float) -> float:
+        """Convert a temperature in Fahrenheit to Kelvin."""
+        return 273.15 + ((fahrenheit - 32.0) / 1.8)
 
     @classmethod
     def _fahrenheit_to_celsius(cls, fahrenheit: float) -> float:
@@ -328,25 +475,44 @@ class TemperatureConverter(BaseUnitConverter):
         return celsius + 273.15
 
 
+class UnitlessRatioConverter(BaseUnitConverter):
+    """Utility to convert unitless ratios."""
+
+    UNIT_CLASS = "unitless"
+    NORMALIZED_UNIT = None
+    _UNIT_CONVERSION: dict[str | None, float] = {
+        None: 1,
+        CONCENTRATION_PARTS_PER_BILLION: 1000000000,
+        CONCENTRATION_PARTS_PER_MILLION: 1000000,
+        PERCENTAGE: 100,
+    }
+    VALID_UNITS = {
+        None,
+        PERCENTAGE,
+    }
+
+
 class VolumeConverter(BaseUnitConverter):
     """Utility to convert volume values."""
 
     UNIT_CLASS = "volume"
-    NORMALIZED_UNIT = VOLUME_CUBIC_METERS
+    NORMALIZED_UNIT = UnitOfVolume.CUBIC_METERS
     # Units in terms of m³
-    _UNIT_CONVERSION: dict[str, float] = {
-        VOLUME_LITERS: 1 / _L_TO_CUBIC_METER,
-        VOLUME_MILLILITERS: 1 / _ML_TO_CUBIC_METER,
-        VOLUME_GALLONS: 1 / _GALLON_TO_CUBIC_METER,
-        VOLUME_FLUID_OUNCE: 1 / _FLUID_OUNCE_TO_CUBIC_METER,
-        VOLUME_CUBIC_METERS: 1,
-        VOLUME_CUBIC_FEET: 1 / _CUBIC_FOOT_TO_CUBIC_METER,
+    _UNIT_CONVERSION: dict[str | None, float] = {
+        UnitOfVolume.LITERS: 1 / _L_TO_CUBIC_METER,
+        UnitOfVolume.MILLILITERS: 1 / _ML_TO_CUBIC_METER,
+        UnitOfVolume.GALLONS: 1 / _GALLON_TO_CUBIC_METER,
+        UnitOfVolume.FLUID_OUNCES: 1 / _FLUID_OUNCE_TO_CUBIC_METER,
+        UnitOfVolume.CUBIC_METERS: 1,
+        UnitOfVolume.CUBIC_FEET: 1 / _CUBIC_FOOT_TO_CUBIC_METER,
+        UnitOfVolume.CENTUM_CUBIC_FEET: 1 / (100 * _CUBIC_FOOT_TO_CUBIC_METER),
     }
     VALID_UNITS = {
-        VOLUME_LITERS,
-        VOLUME_MILLILITERS,
-        VOLUME_GALLONS,
-        VOLUME_FLUID_OUNCE,
-        VOLUME_CUBIC_METERS,
-        VOLUME_CUBIC_FEET,
+        UnitOfVolume.LITERS,
+        UnitOfVolume.MILLILITERS,
+        UnitOfVolume.GALLONS,
+        UnitOfVolume.FLUID_OUNCES,
+        UnitOfVolume.CUBIC_METERS,
+        UnitOfVolume.CUBIC_FEET,
+        UnitOfVolume.CENTUM_CUBIC_FEET,
     }

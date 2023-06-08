@@ -9,12 +9,13 @@ from pysma.exceptions import (
 
 from homeassistant.components.sma.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
+from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from . import MOCK_DEVICE, MOCK_USER_INPUT, _patch_async_setup_entry
 
 
-async def test_form(hass):
+async def test_form(hass: HomeAssistant) -> None:
     """Test we get the form."""
 
     result = await hass.config_entries.flow.async_init(
@@ -39,7 +40,7 @@ async def test_form(hass):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_cannot_connect(hass):
+async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -58,7 +59,7 @@ async def test_form_cannot_connect(hass):
     assert len(mock_setup_entry.mock_calls) == 0
 
 
-async def test_form_invalid_auth(hass):
+async def test_form_invalid_auth(hass: HomeAssistant) -> None:
     """Test we handle invalid auth error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -77,7 +78,7 @@ async def test_form_invalid_auth(hass):
     assert len(mock_setup_entry.mock_calls) == 0
 
 
-async def test_form_cannot_retrieve_device_info(hass):
+async def test_form_cannot_retrieve_device_info(hass: HomeAssistant) -> None:
     """Test we handle cannot retrieve device info error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -96,7 +97,7 @@ async def test_form_cannot_retrieve_device_info(hass):
     assert len(mock_setup_entry.mock_calls) == 0
 
 
-async def test_form_unexpected_exception(hass):
+async def test_form_unexpected_exception(hass: HomeAssistant) -> None:
     """Test we handle unexpected exception."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -115,7 +116,7 @@ async def test_form_unexpected_exception(hass):
     assert len(mock_setup_entry.mock_calls) == 0
 
 
-async def test_form_already_configured(hass, mock_config_entry):
+async def test_form_already_configured(hass: HomeAssistant, mock_config_entry) -> None:
     """Test starting a flow by user when already configured."""
     mock_config_entry.add_to_hass(hass)
 
@@ -128,7 +129,6 @@ async def test_form_already_configured(hass, mock_config_entry):
     ), patch(
         "pysma.SMA.close_session", return_value=True
     ), _patch_async_setup_entry() as mock_setup_entry:
-
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             MOCK_USER_INPUT,

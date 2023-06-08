@@ -1,13 +1,13 @@
 """Test the repairs websocket API."""
-from collections.abc import Awaitable, Callable
 from unittest.mock import AsyncMock, Mock
 
-from aiohttp import ClientWebSocketResponse
-from freezegun import freeze_time
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
+from homeassistant.components.repairs import repairs_flow_manager
 from homeassistant.components.repairs.const import DOMAIN
 from homeassistant.components.repairs.issue_handler import (
+    RepairsFlowManager,
     async_process_repairs_platforms,
 )
 from homeassistant.const import __version__ as ha_version
@@ -23,10 +23,13 @@ from homeassistant.helpers.issue_registry import (
 from homeassistant.setup import async_setup_component
 
 from tests.common import mock_platform
+from tests.typing import WebSocketGenerator
 
 
-@freeze_time("2022-07-19 07:53:05")
-async def test_create_update_issue(hass: HomeAssistant, hass_ws_client) -> None:
+@pytest.mark.freeze_time("2022-07-19 07:53:05")
+async def test_create_update_issue(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test creating and updating issues."""
     assert await async_setup_component(hass, DOMAIN, {})
 
@@ -123,7 +126,7 @@ async def test_create_update_issue(hass: HomeAssistant, hass_ws_client) -> None:
 
 @pytest.mark.parametrize("ha_version", ("2022.9.cat", "In the future: 2023.1.1"))
 async def test_create_issue_invalid_version(
-    hass: HomeAssistant, hass_ws_client, ha_version
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, ha_version
 ) -> None:
     """Test creating an issue with invalid breaks in version."""
     assert await async_setup_component(hass, DOMAIN, {})
@@ -162,8 +165,10 @@ async def test_create_issue_invalid_version(
     assert msg["result"] == {"issues": []}
 
 
-@freeze_time("2022-07-19 07:53:05")
-async def test_ignore_issue(hass: HomeAssistant, hass_ws_client) -> None:
+@pytest.mark.freeze_time("2022-07-19 07:53:05")
+async def test_ignore_issue(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test ignoring issues."""
     assert await async_setup_component(hass, DOMAIN, {})
 
@@ -329,7 +334,12 @@ async def test_ignore_issue(hass: HomeAssistant, hass_ws_client) -> None:
     }
 
 
-async def test_delete_issue(hass: HomeAssistant, hass_ws_client, freezer) -> None:
+@pytest.mark.freeze_time("2022-07-19 07:53:05")
+async def test_delete_issue(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    freezer: FrozenDateTimeFactory,
+) -> None:
     """Test we can delete an issue."""
     freezer.move_to("2022-07-19 07:53:05")
     assert await async_setup_component(hass, DOMAIN, {})
@@ -453,11 +463,13 @@ async def test_delete_issue(hass: HomeAssistant, hass_ws_client, freezer) -> Non
     }
 
 
-async def test_non_compliant_platform(hass: HomeAssistant, hass_ws_client) -> None:
+async def test_non_compliant_platform(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test non-compliant platforms are not registered."""
 
     hass.config.components.add("fake_integration")
-    hass.config.components.add("integration_without_diagnostics")
+    hass.config.components.add("integration_without_repairs")
     mock_platform(
         hass,
         "fake_integration.repairs",
@@ -465,7 +477,7 @@ async def test_non_compliant_platform(hass: HomeAssistant, hass_ws_client) -> No
     )
     mock_platform(
         hass,
-        "integration_without_diagnostics.repairs",
+        "integration_without_repairs.repairs",
         Mock(spec=[]),
     )
     assert await async_setup_component(hass, DOMAIN, {})
@@ -475,10 +487,10 @@ async def test_non_compliant_platform(hass: HomeAssistant, hass_ws_client) -> No
     assert list(hass.data[DOMAIN]["platforms"].keys()) == ["fake_integration"]
 
 
-@freeze_time("2022-07-21 08:22:00")
+@pytest.mark.freeze_time("2022-07-21 08:22:00")
 async def test_sync_methods(
     hass: HomeAssistant,
-    hass_ws_client: Callable[[HomeAssistant], Awaitable[ClientWebSocketResponse]],
+    hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test sync method for creating and deleting an issue."""
 
@@ -538,3 +550,14 @@ async def test_sync_methods(
 
     assert msg["success"]
     assert msg["result"] == {"issues": []}
+
+
+async def test_flow_manager_helper(hass: HomeAssistant) -> None:
+    """Test accessing the repairs flow manager with the helper."""
+    assert repairs_flow_manager(hass) is None
+
+    assert await async_setup_component(hass, DOMAIN, {})
+
+    flow_manager = repairs_flow_manager(hass)
+    assert flow_manager is not None
+    assert isinstance(flow_manager, RepairsFlowManager)

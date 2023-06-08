@@ -1,8 +1,8 @@
 {
   "domain": "push",
   "name": "Push",
-  "documentation": "https://www.home-assistant.io/integrations/push",
-  "dependencies": ["webhook"],
   "codeowners": ["@dgomes"],
+  "dependencies": ["webhook"],
+  "documentation": "https://www.home-assistant.io/integrations/push",
   "iot_class": "local_push"
 }

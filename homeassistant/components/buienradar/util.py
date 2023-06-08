@@ -27,6 +27,7 @@ from buienradar.constants import (
 from buienradar.urls import JSON_FEED_URL, json_precipitation_forecast_url
 
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
+from homeassistant.core import CALLBACK_TYPE
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util import dt as dt_util
@@ -65,6 +66,7 @@ class BrData:
         self.hass = hass
         self.coordinates = coordinates
         self.timeframe = timeframe
+        self.unsub_schedule_update: CALLBACK_TYPE | None = None
 
     async def update_devices(self):
         """Update all devices/sensors."""
@@ -79,7 +81,9 @@ class BrData:
         """Schedule an update after minute minutes."""
         _LOGGER.debug("Scheduling next update in %s minutes", minute)
         nxt = dt_util.utcnow() + timedelta(minutes=minute)
-        async_track_point_in_utc_time(self.hass, self.async_update, nxt)
+        self.unsub_schedule_update = async_track_point_in_utc_time(
+            self.hass, self.async_update, nxt
+        )
 
     async def get_data(self, url):
         """Load data from specified url."""

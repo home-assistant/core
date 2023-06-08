@@ -107,7 +107,6 @@ class RiscoAlarm(AlarmControlPanelEntity):
         self._code_disarm_required = options[CONF_CODE_DISARM_REQUIRED]
         self._risco_to_ha = options[CONF_RISCO_STATES_TO_HA]
         self._ha_to_risco = options[CONF_HA_STATES_TO_RISCO]
-        self._attr_supported_features = 0
         self._attr_has_entity_name = True
         self._attr_name = None
         for state in self._ha_to_risco:

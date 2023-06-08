@@ -5,6 +5,7 @@ from unittest.mock import patch
 from homeassistant import config as hass_config, setup
 from homeassistant.components.trend.const import DOMAIN
 from homeassistant.const import SERVICE_RELOAD, STATE_UNKNOWN
+from homeassistant.core import HomeAssistant
 import homeassistant.util.dt as dt_util
 
 from tests.common import (
@@ -378,7 +379,7 @@ class TestTrendBinarySensor:
         assert self.hass.states.all("binary_sensor") == []
 
 
-async def test_reload(hass):
+async def test_reload(hass: HomeAssistant) -> None:
     """Verify we can reload trend sensors."""
     hass.states.async_set("sensor.test_state", 1234)
 

@@ -38,9 +38,11 @@ async def async_setup_entry(
 ) -> None:
     """Set up from config entry."""
 
-    coordinator: DataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator: DataUpdateCoordinator[SyncThru] = hass.data[DOMAIN][
+        config_entry.entry_id
+    ]
 
-    name = config_entry.data[CONF_NAME]
+    name: str = config_entry.data[CONF_NAME]
     entities = [
         SyncThruOnlineSensor(coordinator, name),
         SyncThruProblemSensor(coordinator, name),
@@ -49,14 +51,16 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class SyncThruBinarySensor(CoordinatorEntity, BinarySensorEntity):
+class SyncThruBinarySensor(
+    CoordinatorEntity[DataUpdateCoordinator[SyncThru]], BinarySensorEntity
+):
     """Implementation of an abstract Samsung Printer binary sensor platform."""
 
-    def __init__(self, coordinator, name):
+    def __init__(self, coordinator: DataUpdateCoordinator[SyncThru], name: str) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
-        self.syncthru: SyncThru = coordinator.data
-        self._name = name
+        self.syncthru = coordinator.data
+        self._attr_name = name
         self._id_suffix = ""
 
     @property
@@ -64,11 +68,6 @@ class SyncThruBinarySensor(CoordinatorEntity, BinarySensorEntity):
         """Return unique ID for the sensor."""
         serial = self.syncthru.serial_number()
         return f"{serial}{self._id_suffix}" if serial else None
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
 
     @property
     def device_info(self) -> DeviceInfo | None:
@@ -85,9 +84,9 @@ class SyncThruOnlineSensor(SyncThruBinarySensor):
 
     _attr_device_class = BinarySensorDeviceClass.CONNECTIVITY
 
-    def __init__(self, syncthru, name):
+    def __init__(self, coordinator: DataUpdateCoordinator[SyncThru], name: str) -> None:
         """Initialize the sensor."""
-        super().__init__(syncthru, name)
+        super().__init__(coordinator, name)
         self._id_suffix = "_online"
 
     @property
