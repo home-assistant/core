@@ -76,7 +76,7 @@ class SouthernCompanyCoordinator(DataUpdateCoordinator):
             usage_statistic_id = f"{DOMAIN}:energy_" f"usage_" f"{account.number}"
 
             last_stats = await get_instance(self.hass).async_add_executor_job(
-                get_last_statistics, self.hass, 1, usage_statistic_id, True, {}
+                get_last_statistics, self.hass, 1, usage_statistic_id, True, set()
             )
             if not last_stats:
                 # First time we insert 1 year of data (if available)

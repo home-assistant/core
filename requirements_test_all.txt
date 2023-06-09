@@ -1757,7 +1757,7 @@ somfy-mylink-synergy==1.0.6
 sonos-websocket==0.1.2
 
 # homeassistant.components.southern_company
-southern-company-api==0.6.2
+southern-company-api==0.6.4
 
 # homeassistant.components.marytts
 speak2mary==1.4.0

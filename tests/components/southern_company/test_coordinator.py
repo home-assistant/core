@@ -12,7 +12,7 @@ from homeassistant.components.southern_company.coordinator import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import UpdateFailed
-from homeassistant.util import dt
+import homeassistant.util.dt as dt_util
 
 from . import HOURLY_DATA, HOURLY_DATA_MISSING, MockedApi, async_init_integration
 
@@ -78,7 +78,7 @@ async def test_statistic_insert(recorder_mock: Recorder, hass: HomeAssistant) ->
         assert stat["sum"] == _sum
     await hass.async_block_till_done()
     # Check that everything works correctly when last_stats does exist.
-    async_fire_time_changed(hass, dt.utcnow() + timedelta(minutes=61))
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=61))
     await hass.async_block_till_done()
 
 
