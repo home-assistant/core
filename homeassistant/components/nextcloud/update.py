@@ -31,11 +31,7 @@ class NextcloudUpdateSensor(NextcloudEntity, UpdateEntity):
     def latest_version(self) -> str | None:
         """Latest version available for install."""
         return self.coordinator.data.get(
-            "system update available_version",
-            self.installed_version
-            # needed for Nextcloud serverinfo app pre 1.18.0
-            if any(x.startswith("system update") for x in self.coordinator.data)
-            else None,
+            "system update available_version", self.installed_version
         )
 
     @property
