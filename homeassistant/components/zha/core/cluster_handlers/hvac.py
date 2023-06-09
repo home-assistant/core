@@ -14,7 +14,6 @@ from zigpy.zcl.foundation import Status
 
 from homeassistant.core import callback
 
-from . import AttrReportConfig, ClusterHandler
 from .. import registries
 from ..const import (
     REPORT_CONFIG_MAX_INT,
@@ -22,6 +21,7 @@ from ..const import (
     REPORT_CONFIG_OP,
     SIGNAL_ATTR_UPDATED,
 )
+from . import AttrReportConfig, ClusterHandler
 
 AttributeUpdateRecord = namedtuple("AttributeUpdateRecord", "attr_id, attr_name, value")
 REPORT_CONFIG_CLIMATE = (REPORT_CONFIG_MIN_INT, REPORT_CONFIG_MAX_INT, 25)
