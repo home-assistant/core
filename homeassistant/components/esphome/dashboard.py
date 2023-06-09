@@ -64,9 +64,9 @@ class ESPHomeDashboardManager:
     async def async_setup(self) -> None:
         """Restore the dashboard from storage."""
         self._data = await self._store.async_load()
-        if data := self._data:
+        if (data := self._data) and (info := data.get("info")):
             await self.async_set_dashboard_info(
-                data["addon_slug"], data["host"], data["port"]
+                info["addon_slug"], info["host"], info["port"]
             )
 
     @callback
@@ -110,7 +110,7 @@ class ESPHomeDashboardManager:
             EVENT_HOMEASSISTANT_STOP, on_hass_stop
         )
 
-        new_data = {"addon_slug": addon_slug, "host": host, "port": port}
+        new_data = {"info": {"addon_slug": addon_slug, "host": host, "port": port}}
         if self._data != new_data:
             await self._store.async_save(new_data)
 
