@@ -90,6 +90,7 @@ _GET_UNIT_RATIO: dict[type[BaseUnitConverter], tuple[str | None, str | None, flo
     InformationConverter: (UnitOfInformation.BITS, UnitOfInformation.BYTES, 8),
     MassConverter: (UnitOfMass.STONES, UnitOfMass.KILOGRAMS, 0.157473),
     PowerConverter: (UnitOfPower.WATT, UnitOfPower.KILO_WATT, 1000),
+    PowerConverter: (UnitOfPower.WATT, UnitOfPower.MEGA_WATT, 1000000),
     PressureConverter: (UnitOfPressure.HPA, UnitOfPressure.INHG, 33.86389),
     SpeedConverter: (
         UnitOfSpeed.KILOMETERS_PER_HOUR,
@@ -274,6 +275,8 @@ _CONVERTED_VALUE: dict[
         (1, UnitOfMass.STONES, 224, UnitOfMass.OUNCES),
     ],
     PowerConverter: [
+        (10, UnitOfPower.MEGA_WATT, 1000000, UnitOfPower.WATT),
+        (10, UnitOfPower.WATT, 0.000001, UnitOfPower.MEGA_WATT),
         (10, UnitOfPower.KILO_WATT, 10000, UnitOfPower.WATT),
         (10, UnitOfPower.WATT, 0.01, UnitOfPower.KILO_WATT),
     ],

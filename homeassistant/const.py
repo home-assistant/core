@@ -500,6 +500,7 @@ class UnitOfPower(StrEnum):
 
     WATT = "W"
     KILO_WATT = "kW"
+    MEGA_WATT = "MW"
     BTU_PER_HOUR = "BTU/h"
 
 

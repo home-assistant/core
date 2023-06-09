@@ -277,10 +277,12 @@ class PowerConverter(BaseUnitConverter):
     _UNIT_CONVERSION: dict[str | None, float] = {
         UnitOfPower.WATT: 1,
         UnitOfPower.KILO_WATT: 1 / 1000,
+        UnitOfPower.MEGA_WATT: 1 / 1000000
     }
     VALID_UNITS = {
         UnitOfPower.WATT,
         UnitOfPower.KILO_WATT,
+        UnitOfPower.MEGA_WATT
     }
 
 
