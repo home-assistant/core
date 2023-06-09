@@ -1117,18 +1117,46 @@ async def test_warn_using_async_update_ha_state(
     ent.hass = hass
     ent.platform = MockEntityPlatform(hass)
     ent.entity_id = "hello.world"
+    error_message = "is using self.async_update_ha_state()"
 
     # When forcing, it should not trigger the warning
     caplog.clear()
     await ent.async_update_ha_state(force_refresh=True)
-    assert "is using self.async_update_ha_state()" not in caplog.text
+    assert error_message not in caplog.text
 
     # When not forcing, it should trigger the warning
     caplog.clear()
     await ent.async_update_ha_state()
-    assert "is using self.async_update_ha_state()" in caplog.text
+    assert error_message in caplog.text
 
     # When not forcing, it should not trigger the warning again
     caplog.clear()
     await ent.async_update_ha_state()
-    assert "is using self.async_update_ha_state()" not in caplog.text
+    assert error_message not in caplog.text
+
+
+async def test_warn_no_platform(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test we warn am entity does not have a platform."""
+    ent = entity.Entity()
+    ent.hass = hass
+    ent.platform = MockEntityPlatform(hass)
+    ent.entity_id = "hello.world"
+    error_message = "does not have a platform"
+
+    # No warning if the entity has a platform
+    caplog.clear()
+    ent.async_write_ha_state()
+    assert error_message not in caplog.text
+
+    # Without a platform, it should trigger the warning
+    ent.platform = None
+    caplog.clear()
+    ent.async_write_ha_state()
+    assert error_message in caplog.text
+
+    # Without a platform, it should not trigger the warning again
+    caplog.clear()
+    ent.async_write_ha_state()
+    assert error_message not in caplog.text

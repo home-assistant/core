@@ -258,6 +258,9 @@ class Entity(ABC):
     # it should be using async_write_ha_state.
     _async_update_ha_state_reported = False
 
+    # If we reported this entity was added without its platform set
+    _no_platform_reported = False
+
     # Protect for multiple updates
     _update_staged = False
 
@@ -582,6 +585,22 @@ class Entity(ABC):
         """Write the state to the state machine."""
         if self.hass is None:
             raise RuntimeError(f"Attribute hass is None for {self}")
+
+        # The check for self.platform guards against integrations not using an
+        # EntityComponent and can be removed in HA Core 2024.1
+        if self.platform is None and not self._no_platform_reported:  # type: ignore[unreachable]
+            report_issue = self._suggest_report_issue()  # type: ignore[unreachable]
+            _LOGGER.warning(
+                (
+                    "Entity %s (%s) does not have a platform, this may be caused by "
+                    "adding it manually instead of with an EntityComponent helper"
+                    ", please %s"
+                ),
+                self.entity_id,
+                type(self),
+                report_issue,
+            )
+            self._no_platform_reported = True
 
         if self.entity_id is None:
             raise NoEntitySpecifiedError(
