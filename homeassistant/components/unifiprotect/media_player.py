@@ -131,6 +131,28 @@ class ProtectMediaPlayer(ProtectDeviceEntity, MediaPlayerEntity):
             await self.device.stop_audio()
             self._async_updated_event(self.device)
 
+    @callback
+    def _make_local_url(self, media_url: str) -> str:
+        # ffmpeg streams audio from current machine
+        # so it should not route outside of localhost
+        host = "localhost"
+        scheme = "https" if self.hass.http.ssl_certificate else "http"
+        if self.hass.http.server_host:
+            host = self.hass.http.server_host[0]
+
+        if self.hass.config.internal_url is not None:
+            media_url = media_url.replace(
+                self.hass.config.internal_url.strip("/"),
+                f"{scheme}://{host}:{self.hass.http.server_port}",
+            )
+        if self.hass.config.external_url is not None:
+            media_url = media_url.replace(
+                self.hass.config.external_url.strip("/"),
+                f"{scheme}://{host}:{self.hass.http.server_port}",
+            )
+
+        return media_url
+
     async def async_play_media(
         self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
@@ -145,6 +167,7 @@ class ProtectMediaPlayer(ProtectDeviceEntity, MediaPlayerEntity):
         if media_type != MediaType.MUSIC:
             raise HomeAssistantError("Only music media type is supported")
 
+        media_id = self._make_local_url(media_id)
         _LOGGER.debug(
             "Playing Media %s for %s Speaker", media_id, self.device.display_name
         )
