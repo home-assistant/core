@@ -19,6 +19,9 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import DOMAIN
 
+_LOGGER = logging.getLogger(__name__)
+
+
 KEY_DASHBOARD_MANAGER = "esphome_dashboard_manager"
 
 STORAGE_KEY = "esphome.dashboard"
@@ -98,7 +101,7 @@ class ESPHomeDashboardManager:
         try:
             await dashboard.async_request_refresh()
         except UpdateFailed as err:
-            logging.getLogger(__name__).error("Ignoring dashboard info: %s", err)
+            _LOGGER.error("Ignoring dashboard info: %s", err)
             return
 
         self._current_dashboard = dashboard
@@ -125,6 +128,9 @@ class ESPHomeDashboardManager:
             for flow in hass.config_entries.flow.async_progress()
             if flow["handler"] == DOMAIN and flow["context"]["source"] == SOURCE_REAUTH
         ]
+        _LOGGER.debug(
+            "Reloading %s and re-authenticating %s", len(reloads), len(reauths)
+        )
         if reloads or reauths:
             await asyncio.gather(*reloads, *reauths)
 
@@ -158,7 +164,7 @@ class ESPHomeDashboard(DataUpdateCoordinator[dict[str, ConfiguredDevice]]):
         """Initialize."""
         super().__init__(
             hass,
-            logging.getLogger(__name__),
+            _LOGGER,
             name="ESPHome Dashboard",
             update_interval=timedelta(minutes=5),
         )
