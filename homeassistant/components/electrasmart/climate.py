@@ -250,7 +250,7 @@ class ElectraClimateEntity(ClimateEntity):
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
             raise ValueError("No target temperature provided")
 
-        self._electra_ac_device.set_temperature(temperature)
+        self._electra_ac_device.set_temperature(int(temperature))
         await self._async_operate_electra_ac()
 
     def _update_device_attrs(self) -> None:
