@@ -514,13 +514,14 @@ async def test_get_states(hass: HomeAssistant, websocket_client) -> None:
 
 async def test_get_services(hass: HomeAssistant, websocket_client) -> None:
     """Test get_services command."""
-    await websocket_client.send_json({"id": 5, "type": "get_services"})
+    for id_ in (5, 6):
+        await websocket_client.send_json({"id": id_, "type": "get_services"})
 
-    msg = await websocket_client.receive_json()
-    assert msg["id"] == 5
-    assert msg["type"] == const.TYPE_RESULT
-    assert msg["success"]
-    assert msg["result"] == hass.services.async_services()
+        msg = await websocket_client.receive_json()
+        assert msg["id"] == id_
+        assert msg["type"] == const.TYPE_RESULT
+        assert msg["success"]
+        assert msg["result"] == hass.services.async_services()
 
 
 async def test_get_config(hass: HomeAssistant, websocket_client) -> None:

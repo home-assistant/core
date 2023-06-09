@@ -5,7 +5,7 @@ import pytest
 from roombapy import RoombaConnectionError, RoombaInfo
 
 from homeassistant import config_entries, data_entry_flow
-from homeassistant.components import dhcp
+from homeassistant.components import dhcp, zeroconf
 from homeassistant.components.roomba import config_flow
 from homeassistant.components.roomba.const import CONF_BLID, CONF_CONTINUOUS, DOMAIN
 from homeassistant.const import CONF_DELAY, CONF_HOST, CONF_PASSWORD
@@ -16,16 +16,46 @@ from tests.common import MockConfigEntry
 MOCK_IP = "1.2.3.4"
 VALID_CONFIG = {CONF_HOST: MOCK_IP, CONF_BLID: "BLID", CONF_PASSWORD: "password"}
 
-DHCP_DISCOVERY_DEVICES = [
-    dhcp.DhcpServiceInfo(
-        ip=MOCK_IP,
-        macaddress="50:14:79:DD:EE:FF",
-        hostname="irobot-blid",
+DISCOVERY_DEVICES = [
+    (
+        config_entries.SOURCE_DHCP,
+        dhcp.DhcpServiceInfo(
+            ip=MOCK_IP,
+            macaddress="50:14:79:DD:EE:FF",
+            hostname="irobot-blid",
+        ),
     ),
-    dhcp.DhcpServiceInfo(
-        ip=MOCK_IP,
-        macaddress="80:A5:89:DD:EE:FF",
-        hostname="roomba-blid",
+    (
+        config_entries.SOURCE_DHCP,
+        dhcp.DhcpServiceInfo(
+            ip=MOCK_IP,
+            macaddress="80:A5:89:DD:EE:FF",
+            hostname="roomba-blid",
+        ),
+    ),
+    (
+        config_entries.SOURCE_ZEROCONF,
+        zeroconf.ZeroconfServiceInfo(
+            host=MOCK_IP,
+            hostname="irobot-blid.local.",
+            name="irobot-blid._amzn-alexa._tcp.local.",
+            type="_amzn-alexa._tcp.local.",
+            port=443,
+            properties={},
+            addresses=[MOCK_IP],
+        ),
+    ),
+    (
+        config_entries.SOURCE_ZEROCONF,
+        zeroconf.ZeroconfServiceInfo(
+            host=MOCK_IP,
+            hostname="roomba-blid.local.",
+            name="roomba-blid._amzn-alexa._tcp.local.",
+            type="_amzn-alexa._tcp.local.",
+            port=443,
+            properties={},
+            addresses=[MOCK_IP],
+        ),
     ),
 ]
 
@@ -625,9 +655,10 @@ async def test_form_user_discovery_and_password_fetch_gets_connection_refused(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-@pytest.mark.parametrize("discovery_data", DHCP_DISCOVERY_DEVICES)
+@pytest.mark.parametrize("discovery_data", DISCOVERY_DEVICES)
 async def test_dhcp_discovery_and_roomba_discovery_finds(
-    hass: HomeAssistant, discovery_data
+    hass: HomeAssistant,
+    discovery_data: tuple[str, dhcp.DhcpServiceInfo | zeroconf.ZeroconfServiceInfo],
 ) -> None:
     """Test we can process the discovery from dhcp and roomba discovery matches the device."""
 
@@ -635,14 +666,15 @@ async def test_dhcp_discovery_and_roomba_discovery_finds(
         roomba_connected=True,
         master_state={"state": {"reported": {"name": "myroomba"}}},
     )
+    source, discovery = discovery_data
 
     with patch(
         "homeassistant.components.roomba.config_flow.RoombaDiscovery", _mocked_discovery
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
-            context={"source": config_entries.SOURCE_DHCP},
-            data=discovery_data,
+            context={"source": source},
+            data=discovery,
         )
         await hass.async_block_till_done()
 

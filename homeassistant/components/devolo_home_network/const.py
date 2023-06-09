@@ -9,16 +9,7 @@ from devolo_plc_api.device_api import (
     WIFI_VAP_MAIN_AP,
 )
 
-from homeassistant.const import Platform
-
 DOMAIN = "devolo_home_network"
-PLATFORMS = [
-    Platform.BINARY_SENSOR,
-    Platform.DEVICE_TRACKER,
-    Platform.SENSOR,
-    Platform.SWITCH,
-]
-
 PRODUCT = "product"
 SERIAL_NUMBER = "serial_number"
 TITLE = "title"
@@ -29,7 +20,11 @@ SHORT_UPDATE_INTERVAL = timedelta(seconds=15)
 CONNECTED_PLC_DEVICES = "connected_plc_devices"
 CONNECTED_TO_ROUTER = "connected_to_router"
 CONNECTED_WIFI_CLIENTS = "connected_wifi_clients"
+IDENTIFY = "identify"
 NEIGHBORING_WIFI_NETWORKS = "neighboring_wifi_networks"
+PAIRING = "pairing"
+RESTART = "restart"
+START_WPS = "start_wps"
 SWITCH_GUEST_WIFI = "switch_guest_wifi"
 SWITCH_LEDS = "switch_leds"
 

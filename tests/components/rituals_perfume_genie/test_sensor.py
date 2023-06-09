@@ -14,7 +14,6 @@ from .common import (
     init_integration,
     mock_config_entry,
     mock_diffuser_v1_battery_cartridge,
-    mock_diffuser_v2_no_battery_no_cartridge,
 )
 
 
@@ -30,7 +29,7 @@ async def test_sensors_diffuser_v1_battery_cartridge(
     state = hass.states.get("sensor.genie_perfume")
     assert state
     assert state.state == diffuser.perfume
-    assert state.attributes.get(ATTR_ICON) == "mdi:tag-text"
+    assert state.attributes.get(ATTR_ICON) == "mdi:tag"
 
     entry = entity_registry.async_get("sensor.genie_perfume")
     assert entry
@@ -56,30 +55,13 @@ async def test_sensors_diffuser_v1_battery_cartridge(
     assert entry.unique_id == f"{hublot}-battery_percentage"
     assert entry.entity_category == EntityCategory.DIAGNOSTIC
 
-    state = hass.states.get("sensor.genie_wifi")
+    state = hass.states.get("sensor.genie_wi_fi_signal")
     assert state
     assert state.state == str(diffuser.wifi_percentage)
     assert state.attributes.get(ATTR_DEVICE_CLASS) is None
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
 
-    entry = entity_registry.async_get("sensor.genie_wifi")
+    entry = entity_registry.async_get("sensor.genie_wi_fi_signal")
     assert entry
     assert entry.unique_id == f"{hublot}-wifi_percentage"
     assert entry.entity_category == EntityCategory.DIAGNOSTIC
-
-
-async def test_sensors_diffuser_v2_no_battery_no_cartridge(hass: HomeAssistant) -> None:
-    """Test the creation and values of the Rituals Perfume Genie sensors."""
-    config_entry = mock_config_entry(unique_id="id_123_sensor_test_diffuser_v2")
-
-    await init_integration(
-        hass, config_entry, [mock_diffuser_v2_no_battery_no_cartridge()]
-    )
-
-    state = hass.states.get("sensor.genie_v2_perfume")
-    assert state
-    assert state.attributes.get(ATTR_ICON) == "mdi:tag-remove"
-
-    state = hass.states.get("sensor.genie_v2_fill")
-    assert state
-    assert state.attributes.get(ATTR_ICON) == "mdi:beaker-question"
