@@ -277,10 +277,12 @@ _CONVERTED_VALUE: dict[
         (1, UnitOfMass.STONES, 224, UnitOfMass.OUNCES),
     ],
     PowerConverter: [
-        (10, UnitOfPower.MEGA_WATT, 1000000, UnitOfPower.WATT),
+        (10, UnitOfPower.WATT, 0.001, UnitOfPower.KILO_WATT),
         (10, UnitOfPower.WATT, 0.000001, UnitOfPower.MEGA_WATT),
         (10, UnitOfPower.KILO_WATT, 10000, UnitOfPower.WATT),
-        (10, UnitOfPower.WATT, 0.01, UnitOfPower.KILO_WATT),
+        (10, UnitOfPower.KILO_WATT, 0.001, UnitOfPower.MEGA_WATT),
+        (10, UnitOfPower.MEGA_WATT, 1000000, UnitOfPower.WATT),
+        (10, UnitOfPower.MEGA_WATT, 1000, UnitOfPower.KILO_WATT),
     ],
     PressureConverter: [
         (1000, UnitOfPressure.HPA, 14.5037743897, UnitOfPressure.PSI),
