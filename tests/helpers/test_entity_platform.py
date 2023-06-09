@@ -1,5 +1,6 @@
 """Tests for the EntityPlatform helper."""
 import asyncio
+from collections.abc import Iterable
 from datetime import timedelta
 import logging
 from typing import Any
@@ -1666,6 +1667,77 @@ async def test_entity_name_influences_entity_id(
 
     assert await entity_platform.async_setup_entry(config_entry)
     await hass.async_block_till_done()
+
+    assert len(hass.states.async_entity_ids()) == 1
+    assert registry.async_get(expected_entity_id) is not None
+
+
+@pytest.mark.parametrize(
+    ("language", "has_entity_name", "expected_entity_id"),
+    (
+        ("en", False, "test_domain.test_qwer"),  # Set to <platform>_<unique_id>
+        ("en", True, "test_domain.device_bla_english_name"),
+        ("sv", True, "test_domain.device_bla_swedish_name"),
+        # Chinese uses english for entity_id
+        ("cn", True, "test_domain.device_bla_english_name"),
+    ),
+)
+async def test_translated_entity_name_influences_entity_id(
+    hass: HomeAssistant,
+    language: str,
+    has_entity_name: bool,
+    expected_entity_id: str,
+) -> None:
+    """Test entity_id is influenced by translated entity name."""
+    registry = er.async_get(hass)
+
+    translations = {
+        "en": {"component.test.entity.test_domain.test.name": "English name"},
+        "sv": {"component.test.entity.test_domain.test.name": "Swedish name"},
+        "cn": {"component.test.entity.test_domain.test.name": "Chinese name"},
+    }
+    hass.config.language = language
+
+    async def async_get_translations(
+        hass: HomeAssistant,
+        language: str,
+        category: str,
+        integrations: Iterable[str] | None = None,
+        config_flow: bool | None = None,
+    ) -> dict[str, Any]:
+        """Return all backend translations."""
+        return translations[language]
+
+    async def async_setup_entry(hass, config_entry, async_add_entities):
+        """Mock setup entry method."""
+        async_add_entities(
+            [
+                MockEntity(
+                    unique_id="qwer",
+                    device_info={
+                        "identifiers": {("hue", "1234")},
+                        "connections": {(dr.CONNECTION_NETWORK_MAC, "abcd")},
+                        "name": "Device Bla",
+                    },
+                    has_entity_name=has_entity_name,
+                    translation_key="test",
+                ),
+            ]
+        )
+        return True
+
+    platform = MockPlatform(async_setup_entry=async_setup_entry)
+    config_entry = MockConfigEntry(entry_id="super-mock-id")
+    entity_platform = MockEntityPlatform(
+        hass, platform_name=config_entry.domain, platform=platform
+    )
+
+    with patch(
+        "homeassistant.helpers.entity_platform.translation.async_get_translations",
+        side_effect=async_get_translations,
+    ):
+        assert await entity_platform.async_setup_entry(config_entry)
+        await hass.async_block_till_done()
 
     assert len(hass.states.async_entity_ids()) == 1
     assert registry.async_get(expected_entity_id) is not None
