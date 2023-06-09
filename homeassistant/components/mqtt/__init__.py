@@ -5,7 +5,7 @@ import asyncio
 from collections.abc import Callable
 from datetime import datetime
 import logging
-from typing import Any, cast
+from typing import Any, TypeVar, cast
 
 import jinja2
 import voluptuous as vol
@@ -42,7 +42,7 @@ from .client import (  # noqa: F401
     publish,
     subscribe,
 )
-from .config_integration import PLATFORM_CONFIG_SCHEMA_BASE
+from .config_integration import CONFIG_SCHEMA_BASE
 from .const import (  # noqa: F401
     ATTR_PAYLOAD,
     ATTR_QOS,
@@ -130,25 +130,45 @@ CONFIG_ENTRY_CONFIG_KEYS = [
     CONF_WILL_MESSAGE,
 ]
 
+_T = TypeVar("_T")
+
+REMOVED_OPTIONS = vol.All(
+    cv.removed(CONF_BIRTH_MESSAGE),  # Removed in HA Core 2023.4
+    cv.removed(CONF_BROKER),  # Removed in HA Core 2023.4
+    cv.removed(CONF_CERTIFICATE),  # Removed in HA Core 2023.4
+    cv.removed(CONF_CLIENT_ID),  # Removed in HA Core 2023.4
+    cv.removed(CONF_CLIENT_CERT),  # Removed in HA Core 2023.4
+    cv.removed(CONF_CLIENT_KEY),  # Removed in HA Core 2023.4
+    cv.removed(CONF_DISCOVERY),  # Removed in HA Core 2022.3
+    cv.removed(CONF_DISCOVERY_PREFIX),  # Removed in HA Core 2023.4
+    cv.removed(CONF_KEEPALIVE),  # Removed in HA Core 2023.4
+    cv.removed(CONF_PASSWORD),  # Removed in HA Core 2023.4
+    cv.removed(CONF_PORT),  # Removed in HA Core 2023.4
+    cv.removed(CONF_PROTOCOL),  # Removed in HA Core 2023.4
+    cv.removed(CONF_TLS_INSECURE),  # Removed in HA Core 2023.4
+    cv.removed(CONF_USERNAME),  # Removed in HA Core 2023.4
+    cv.removed(CONF_WILL_MESSAGE),  # Removed in HA Core 2023.4
+)
+
+
+def _warn_config_style(config: list[Any] | _T) -> list[Any] | _T:
+    """Detect not conformant yaml configuration."""
+    if not isinstance(config, list):
+        _LOGGER.debug(
+            "Your MQTT configuration format does not comply ADR 0007. Expected a list, got %s. See also https://github.com/home-assistant/architecture/discussions/906",
+            type(config),
+        )
+    return config
+
+
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.All(
-            cv.removed(CONF_BIRTH_MESSAGE),  # Removed in HA Core 2023.4
-            cv.removed(CONF_BROKER),  # Removed in HA Core 2023.4
-            cv.removed(CONF_CERTIFICATE),  # Removed in HA Core 2023.4
-            cv.removed(CONF_CLIENT_ID),  # Removed in HA Core 2023.4
-            cv.removed(CONF_CLIENT_CERT),  # Removed in HA Core 2023.4
-            cv.removed(CONF_CLIENT_KEY),  # Removed in HA Core 2023.4
-            cv.removed(CONF_DISCOVERY),  # Removed in HA Core 2022.3
-            cv.removed(CONF_DISCOVERY_PREFIX),  # Removed in HA Core 2023.4
-            cv.removed(CONF_KEEPALIVE),  # Removed in HA Core 2023.4
-            cv.removed(CONF_PASSWORD),  # Removed in HA Core 2023.4
-            cv.removed(CONF_PORT),  # Removed in HA Core 2023.4
-            cv.removed(CONF_PROTOCOL),  # Removed in HA Core 2023.4
-            cv.removed(CONF_TLS_INSECURE),  # Removed in HA Core 2023.4
-            cv.removed(CONF_USERNAME),  # Removed in HA Core 2023.4
-            cv.removed(CONF_WILL_MESSAGE),  # Removed in HA Core 2023.4
-            PLATFORM_CONFIG_SCHEMA_BASE,
+            _warn_config_style,
+            cv.ensure_list,
+            cv.remove_falsy,
+            [REMOVED_OPTIONS],
+            [CONFIG_SCHEMA_BASE],
         )
     },
     extra=vol.ALLOW_EXTRA,
@@ -190,7 +210,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         # Fetch configuration
         conf = dict(entry.data)
         hass_config = await conf_util.async_hass_config_yaml(hass)
-        mqtt_yaml = PLATFORM_CONFIG_SCHEMA_BASE(hass_config.get(DOMAIN, {}))
+        mqtt_yaml = CONFIG_SCHEMA(hass_config).get(DOMAIN, [])
         await async_create_certificate_temp_files(hass, conf)
         client = MQTT(hass, entry, conf)
         if DOMAIN in hass.data:
