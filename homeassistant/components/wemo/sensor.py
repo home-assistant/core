@@ -28,6 +28,10 @@ from .wemo_device import DeviceCoordinator
 class AttributeSensorDescription(SensorEntityDescription):
     """SensorEntityDescription for WeMo AttributeSensor entities."""
 
+    # AttributeSensor does not support UNDEFINED
+    # the assert satisfies the type checker and will catch attempts
+    # to use UNDEFINED in the entity descriptions.
+    name: str | None = None
     state_conversion: Callable[[StateType], StateType] | None = None
     unique_id_suffix: str | None = None
 

@@ -14,6 +14,7 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import UNDEFINED
 
 from .const import DOMAIN
 from .entity import BalboaEntity
@@ -83,6 +84,9 @@ class BalboaBinarySensorEntity(BalboaEntity, BinarySensorEntity):
         self, spa: SpaClient, description: BalboaBinarySensorEntityDescription
     ) -> None:
         """Initialize a Balboa binary sensor entity."""
+        # The assert satisfies the type checker and will catch attempts
+        # to use UNDEFINED in the entity descriptions.
+        assert description.name is not UNDEFINED
         super().__init__(spa, description.name)
         self.entity_description = description
 

@@ -14,6 +14,7 @@ from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.typing import UNDEFINED
 
 from .const import DOMAIN, LOGGER
 from .discovery import ZwaveDiscoveryInfo
@@ -162,6 +163,10 @@ class ZWaveBaseEntity(Entity):
             and self.entity_description
             and self.entity_description.name
         ):
+            # It's not possible to do string manipulations on UNDEFINED
+            # the assert satisfies the type checker and will catch attempts
+            # to use UNDEFINED in the entity descriptions.
+            assert self.entity_description.name is not UNDEFINED
             name = self.entity_description.name
 
         if name_prefix:

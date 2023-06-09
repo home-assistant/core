@@ -28,6 +28,10 @@ class IncomfortSensorEntityDescription(SensorEntityDescription):
     """Describes Incomfort sensor entity."""
 
     extra_key: str | None = None
+    # IncomfortSensor does not support UNDEFINED
+    # Restrict the type to satisfy the type checker and catch attempts
+    # to use UNDEFINED in the entity descriptions.
+    name: str | None = None
 
 
 SENSOR_TYPES: tuple[IncomfortSensorEntityDescription, ...] = (

@@ -30,6 +30,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import UNDEFINED
 
 from .const import DOMAIN
 
@@ -105,6 +106,13 @@ def sensor_update_to_bluetooth_data_update(
     adv: Aranet4Advertisement,
 ) -> PassiveBluetoothDataUpdate:
     """Convert a sensor update to a Bluetooth data update."""
+    entity_names: dict[PassiveBluetoothEntityKey, str | None] = {}
+    for key, desc in SENSOR_DESCRIPTIONS.items():
+        # PassiveBluetoothDataUpdate does not support UNDEFINED
+        # the assert satisfies the type checker and will catch attempts
+        # to use UNDEFINED in the entity descriptions.
+        assert desc.name is not UNDEFINED
+        entity_names[_device_key_to_bluetooth_entity_key(adv.device, key)] = desc.name
     return PassiveBluetoothDataUpdate(
         devices={adv.device.address: _sensor_device_info_to_hass(adv)},
         entity_descriptions={
@@ -117,10 +125,7 @@ def sensor_update_to_bluetooth_data_update(
             )
             for key in SENSOR_DESCRIPTIONS
         },
-        entity_names={
-            _device_key_to_bluetooth_entity_key(adv.device, key): desc.name
-            for key, desc in SENSOR_DESCRIPTIONS.items()
-        },
+        entity_names=entity_names,
     )
 
 

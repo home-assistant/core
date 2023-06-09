@@ -24,6 +24,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import DeviceInfo, EntityDescription
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import UNDEFINED
 
 from .const import DOMAIN
 from .entity import ISYAuxControlEntity, ISYNodeEntity, ISYProgramEntity
@@ -146,6 +147,9 @@ class ISYEnableSwitchEntity(ISYAuxControlEntity, SwitchEntity):
             description=description,
             device_info=device_info,
         )
+        # The assert satisfies the type checker and will catch attempts
+        # to use UNDEFINED in the entity descriptions.
+        assert description.name is not UNDEFINED
         self._attr_name = description.name  # Override super
         self._change_handler: EventListener = None
 
