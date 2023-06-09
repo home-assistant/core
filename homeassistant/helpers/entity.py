@@ -235,13 +235,15 @@ class Entity(ABC):
     # this class. These may be used to customize the behavior of the entity.
     entity_id: str = None  # type: ignore[assignment]
 
-    # Owning hass instance. Will be set by EntityPlatform
+    # Owning hass instance. Set by EntityPlatform by calling add_to_platform_start
     # While not purely typed, it makes typehinting more useful for us
     # and removes the need for constant None checks or asserts.
     hass: HomeAssistant = None  # type: ignore[assignment]
 
-    # Owning platform instance. Will be set by EntityPlatform
-    platform: EntityPlatform | None = None
+    # Owning platform instance. Set by EntityPlatform by calling add_to_platform_start
+    # While not purely typed, it makes typehinting more useful for us
+    # and removes the need for constant None checks or asserts.
+    platform: EntityPlatform = None  # type: ignore[assignment]
 
     # Entity description instance for this Entity
     entity_description: EntityDescription
@@ -840,7 +842,7 @@ class Entity(ABC):
         self._call_on_remove_callbacks()
 
         self.hass = None  # type: ignore[assignment]
-        self.platform = None
+        self.platform = None  # type: ignore[assignment]
         self.parallel_updates = None
 
     async def add_to_platform_finish(self) -> None:
