@@ -15,7 +15,7 @@ from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.storage import Store
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN
 
@@ -101,10 +101,9 @@ class ESPHomeDashboardManager:
         dashboard = ESPHomeDashboard(
             hass, addon_slug, url, async_get_clientsession(hass)
         )
-        try:
-            await dashboard.async_request_refresh()
-        except UpdateFailed as err:
-            _LOGGER.error("Ignoring dashboard info: %s", err)
+        await dashboard.async_request_refresh()
+        if not dashboard.last_update_success:
+            _LOGGER.error("Ignoring dashboard info: %s", dashboard.last_exception)
             return
 
         self._current_dashboard = dashboard
