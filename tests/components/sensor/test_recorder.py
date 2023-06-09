@@ -2745,6 +2745,8 @@ def test_compile_hourly_statistics_changing_units_3(
         ("%", None, "unitless", 13.050847, -10, 30, 0.01),
         ("W", "kW", "power", 13.050847, -10, 30, 0.001),
         ("kW", "W", "power", 13.050847, -10, 30, 1000),
+        ("W", "MW", "power", 13.050847, -10, 30, 0.000001),
+        ("MW", "W", "power", 13.050847, -10, 30, 1000000),
     ],
 )
 def test_compile_hourly_statistics_convert_units_1(
@@ -4051,8 +4053,8 @@ def record_states(
 @pytest.mark.parametrize(
     ("units", "attributes", "unit", "unit2", "supported_unit"),
     [
-        (US_CUSTOMARY_SYSTEM, POWER_SENSOR_ATTRIBUTES, "W", "kW", "W, kW"),
-        (METRIC_SYSTEM, POWER_SENSOR_ATTRIBUTES, "W", "kW", "W, kW"),
+        (US_CUSTOMARY_SYSTEM, POWER_SENSOR_ATTRIBUTES, "W", "kW", "MW", "W, kW, MW"),
+        (METRIC_SYSTEM, POWER_SENSOR_ATTRIBUTES, "W", "kW", "MW", "W, kW, MW"),
         (
             US_CUSTOMARY_SYSTEM,
             TEMPERATURE_SENSOR_ATTRIBUTES,
@@ -4254,8 +4256,8 @@ async def test_validate_statistics_unit_ignore_device_class(
 @pytest.mark.parametrize(
     ("units", "attributes", "unit", "unit2", "supported_unit"),
     [
-        (US_CUSTOMARY_SYSTEM, POWER_SENSOR_ATTRIBUTES, "W", "kW", "W, kW"),
-        (METRIC_SYSTEM, POWER_SENSOR_ATTRIBUTES, "W", "kW", "W, kW"),
+        (US_CUSTOMARY_SYSTEM, POWER_SENSOR_ATTRIBUTES, "W", "kW", "MW", "W, kW, MW"),
+        (METRIC_SYSTEM, POWER_SENSOR_ATTRIBUTES, "W", "kW", "MW", "W, kW, MW"),
         (
             US_CUSTOMARY_SYSTEM,
             TEMPERATURE_SENSOR_ATTRIBUTES,

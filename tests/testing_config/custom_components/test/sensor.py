@@ -44,7 +44,7 @@ UNITS_OF_MEASUREMENT = {
     SensorDeviceClass.SULPHUR_DIOXIDE: CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,  # µg/m³ of sulphur dioxide
     SensorDeviceClass.TEMPERATURE: "C",  # temperature (C/F)
     SensorDeviceClass.PRESSURE: UnitOfPressure.HPA,  # pressure (hPa/mbar)
-    SensorDeviceClass.POWER: "kW",  # power (W/kW)
+    SensorDeviceClass.POWER: "kW",  # power (W/kW/MW)
     SensorDeviceClass.CURRENT: "A",  # current (A)
     SensorDeviceClass.ENERGY: "kWh",  # energy (Wh/kWh/MWh)
     SensorDeviceClass.FREQUENCY: FREQUENCY_GIGAHERTZ,  # energy (Hz/kHz/MHz/GHz)
