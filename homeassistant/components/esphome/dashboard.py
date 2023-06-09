@@ -55,16 +55,16 @@ class ESPHomeDashboardManager:
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the dashboard manager."""
-        self.hass = hass
-        self.store: Store[dict[str, Any]] = Store(hass, STORAGE_VERSION, STORAGE_KEY)
-        self.data: dict[str, Any] | None = None
-        self.current_dashboard: ESPHomeDashboard | None = None
+        self._hass = hass
+        self._store: Store[dict[str, Any]] = Store(hass, STORAGE_VERSION, STORAGE_KEY)
+        self._data: dict[str, Any] | None = None
+        self._current_dashboard: ESPHomeDashboard | None = None
         self._cancel_shutdown: CALLBACK_TYPE | None = None
 
     async def async_setup(self) -> None:
         """Restore the dashboard from storage."""
-        self.data = await self.store.async_load()
-        if data := self.data:
+        self._data = await self._store.async_load()
+        if data := self._data:
             await self.async_set_dashboard_info(
                 data["addon_slug"], data["host"], data["port"]
             )
@@ -72,17 +72,16 @@ class ESPHomeDashboardManager:
     @callback
     def async_get(self) -> ESPHomeDashboard | None:
         """Get the current dashboard."""
-        return self.current_dashboard
+        return self._current_dashboard
 
     async def async_set_dashboard_info(
         self, addon_slug: str, host: str, port: int
     ) -> None:
         """Set the dashboard info."""
         url = f"http://{host}:{port}"
-        hass = self.hass
-        cur_dashboard = self.current_dashboard
+        hass = self._hass
 
-        if cur_dashboard is not None:
+        if cur_dashboard := self._current_dashboard:
             if cur_dashboard.addon_slug == addon_slug and cur_dashboard.url == url:
                 # Do nothing if we already have this data.
                 return
@@ -91,7 +90,7 @@ class ESPHomeDashboardManager:
             if self._cancel_shutdown is not None:
                 self._cancel_shutdown()
                 self._cancel_shutdown = None
-            self.current_dashboard = None
+            self._current_dashboard = None
 
         dashboard = ESPHomeDashboard(
             hass, addon_slug, url, async_get_clientsession(hass)
@@ -102,7 +101,7 @@ class ESPHomeDashboardManager:
             logging.getLogger(__name__).error("Ignoring dashboard info: %s", err)
             return
 
-        self.current_dashboard = dashboard
+        self._current_dashboard = dashboard
 
         async def on_hass_stop(_: Event) -> None:
             await dashboard.async_shutdown()
@@ -112,8 +111,8 @@ class ESPHomeDashboardManager:
         )
 
         new_data = {"addon_slug": addon_slug, "host": host, "port": port}
-        if self.data != new_data:
-            await self.store.async_save(new_data)
+        if self._data != new_data:
+            await self._store.async_save(new_data)
 
         reloads = [
             hass.config_entries.async_reload(entry.entry_id)
