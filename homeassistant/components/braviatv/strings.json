@@ -44,5 +44,15 @@
       "not_bravia_device": "The device is not a Bravia TV.",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
+  },
+  "entity": {
+    "button": {
+      "restart": {
+        "name": "[%key:component::button::entity_component::restart::name%]"
+      },
+      "terminate_apps": {
+        "name": "Terminate apps"
+      }
+    }
   }
 }

@@ -26,10 +26,10 @@ TEST_ENTITY = "calendar.light_schedule"
 class FakeStore(LocalCalendarStore):
     """Mock storage implementation."""
 
-    def __init__(self, hass: HomeAssistant, path: Path) -> None:
+    def __init__(self, hass: HomeAssistant, path: Path, ics_content: str) -> None:
         """Initialize FakeStore."""
         super().__init__(hass, path)
-        self._content = ""
+        self._content = ics_content
 
     def _load(self) -> str:
         """Read from calendar storage."""
@@ -40,15 +40,21 @@ class FakeStore(LocalCalendarStore):
         self._content = ics_content
 
 
+@pytest.fixture(name="ics_content", autouse=True)
+def mock_ics_content() -> str:
+    """Fixture to allow tests to set initial ics content for the calendar store."""
+    return ""
+
+
 @pytest.fixture(name="store", autouse=True)
-def mock_store() -> Generator[None, None, None]:
+def mock_store(ics_content: str) -> Generator[None, None, None]:
     """Test cleanup, remove any media storage persisted during the test."""
 
     stores: dict[Path, FakeStore] = {}
 
     def new_store(hass: HomeAssistant, path: Path) -> FakeStore:
         if path not in stores:
-            stores[path] = FakeStore(hass, path)
+            stores[path] = FakeStore(hass, path, ics_content)
         return stores[path]
 
     with patch(

@@ -23,9 +23,9 @@ from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 
-from . import AUTH_PROVIDER_SCHEMA, AUTH_PROVIDERS, AuthProvider, LoginFlow
 from .. import InvalidAuthError
 from ..models import Credentials, RefreshToken, UserMeta
+from . import AUTH_PROVIDER_SCHEMA, AUTH_PROVIDERS, AuthProvider, LoginFlow
 
 IPAddress = IPv4Address | IPv6Address
 IPNetwork = IPv4Network | IPv6Network
@@ -46,7 +46,7 @@ CONFIG_SCHEMA = AUTH_PROVIDER_SCHEMA.extend(
                     [
                         vol.Or(
                             cv.uuid4_hex,
-                            vol.Schema({vol.Required(CONF_GROUP): cv.uuid4_hex}),
+                            vol.Schema({vol.Required(CONF_GROUP): str}),
                         )
                     ],
                 )

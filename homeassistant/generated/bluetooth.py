@@ -328,6 +328,21 @@ BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
         "service_data_uuid": "0000fdcd-0000-1000-8000-00805f9b34fb",
     },
     {
+        "domain": "rapt_ble",
+        "manufacturer_data_start": [
+            80,
+            84,
+        ],
+        "manufacturer_id": 16722,
+    },
+    {
+        "domain": "rapt_ble",
+        "manufacturer_data_start": [
+            71,
+        ],
+        "manufacturer_id": 17739,
+    },
+    {
         "connectable": False,
         "domain": "ruuvitag_ble",
         "manufacturer_id": 1177,

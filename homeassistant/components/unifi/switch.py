@@ -131,7 +131,9 @@ async def async_poe_port_control_fn(
     """Control poe state."""
     mac, _, index = obj_id.partition("_")
     device = api.devices[mac]
-    state = "auto" if target else "off"
+    port = api.ports[obj_id]
+    on_state = "auto" if port.raw["poe_caps"] != 8 else "passthrough"
+    state = on_state if target else "off"
     await api.request(DeviceSetPoePortModeRequest.create(device, int(index), state))
 
 
@@ -247,8 +249,9 @@ async def async_setup_entry(
 
     for mac in controller.option_block_clients:
         if mac not in controller.api.clients and mac in controller.api.clients_all:
-            client = controller.api.clients_all[mac]
-            controller.api.clients.process_raw([client.raw])
+            controller.api.clients.process_raw(
+                [dict(controller.api.clients_all[mac].raw)]
+            )
 
     controller.register_platform_add_entities(
         UnifiSwitchEntity, ENTITY_DESCRIPTIONS, async_add_entities

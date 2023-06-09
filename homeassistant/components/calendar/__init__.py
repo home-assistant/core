@@ -31,7 +31,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.template import DATE_STR_FORMAT
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.util import dt
+from homeassistant.util import dt as dt_util
 
 from .const import (
     CONF_EVENT,
@@ -66,6 +66,13 @@ SCAN_INTERVAL = datetime.timedelta(seconds=60)
 
 # Don't support rrules more often than daily
 VALID_FREQS = {"DAILY", "WEEKLY", "MONTHLY", "YEARLY"}
+
+# Ensure events created in Home Assistant have a positive duration
+MIN_NEW_EVENT_DURATION = datetime.timedelta(seconds=1)
+
+# Events must have a non-negative duration e.g. Google Calendar can create zero
+# duration events in the UI.
+MIN_EVENT_DURATION = datetime.timedelta(seconds=0)
 
 
 def _has_timezone(*keys: Any) -> Callable[[dict[str, Any]], dict[str, Any]]:
@@ -110,23 +117,24 @@ def _as_local_timezone(*keys: Any) -> Callable[[dict[str, Any]], dict[str, Any]]
         """Convert all keys that are datetime values to local timezone."""
         for k in keys:
             if (value := obj.get(k)) and isinstance(value, datetime.datetime):
-                obj[k] = dt.as_local(value)
+                obj[k] = dt_util.as_local(value)
         return obj
 
     return validate
 
 
-def _has_duration(
-    start_key: str, end_key: str
+def _has_min_duration(
+    start_key: str, end_key: str, min_duration: datetime.timedelta
 ) -> Callable[[dict[str, Any]], dict[str, Any]]:
-    """Verify that the time span between start and end is positive."""
+    """Verify that the time span between start and end has a minimum duration."""
 
     def validate(obj: dict[str, Any]) -> dict[str, Any]:
-        """Test that all keys in the dict are in order."""
         if (start := obj.get(start_key)) and (end := obj.get(end_key)):
             duration = end - start
-            if duration.total_seconds() <= 0:
-                raise vol.Invalid(f"Expected positive event duration ({start}, {end})")
+            if duration < min_duration:
+                raise vol.Invalid(
+                    f"Expected minimum event duration of {min_duration} ({start}, {end})"
+                )
         return obj
 
     return validate
@@ -156,7 +164,7 @@ def _validate_rrule(value: Any) -> str:
     try:
         rrulestr(value)
     except ValueError as err:
-        raise vol.Invalid(f"Invalid rrule: {str(err)}") from err
+        raise vol.Invalid(f"Invalid rrule '{value}': {err}") from err
 
     # Example format: FREQ=DAILY;UNTIL=...
     rule_parts = dict(s.split("=", 1) for s in value.split(";"))
@@ -204,8 +212,8 @@ CREATE_EVENT_SCHEMA = vol.All(
     ),
     _has_consistent_timezone(EVENT_START_DATETIME, EVENT_END_DATETIME),
     _as_local_timezone(EVENT_START_DATETIME, EVENT_END_DATETIME),
-    _has_duration(EVENT_START_DATE, EVENT_END_DATE),
-    _has_duration(EVENT_START_DATETIME, EVENT_END_DATETIME),
+    _has_min_duration(EVENT_START_DATE, EVENT_END_DATE, MIN_NEW_EVENT_DURATION),
+    _has_min_duration(EVENT_START_DATETIME, EVENT_END_DATETIME, MIN_NEW_EVENT_DURATION),
 )
 
 WEBSOCKET_EVENT_SCHEMA = vol.Schema(
@@ -221,7 +229,7 @@ WEBSOCKET_EVENT_SCHEMA = vol.Schema(
         _has_same_type(EVENT_START, EVENT_END),
         _has_consistent_timezone(EVENT_START, EVENT_END),
         _as_local_timezone(EVENT_START, EVENT_END),
-        _has_duration(EVENT_START, EVENT_END),
+        _has_min_duration(EVENT_START, EVENT_END, MIN_NEW_EVENT_DURATION),
     )
 )
 
@@ -236,9 +244,8 @@ CALENDAR_EVENT_SCHEMA = vol.Schema(
         },
         _has_same_type("start", "end"),
         _has_timezone("start", "end"),
-        _has_consistent_timezone("start", "end"),
         _as_local_timezone("start", "end"),
-        _has_duration("start", "end"),
+        _has_min_duration("start", "end", MIN_EVENT_DURATION),
     ),
     extra=vol.ALLOW_EXTRA,
 )
@@ -287,14 +294,14 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 def get_date(date: dict[str, Any]) -> datetime.datetime:
     """Get the dateTime from date or dateTime as a local."""
     if "date" in date:
-        parsed_date = dt.parse_date(date["date"])
+        parsed_date = dt_util.parse_date(date["date"])
         assert parsed_date
-        return dt.start_of_local_day(
+        return dt_util.start_of_local_day(
             datetime.datetime.combine(parsed_date, datetime.time.min)
         )
-    parsed_datetime = dt.parse_datetime(date["dateTime"])
+    parsed_datetime = dt_util.parse_datetime(date["dateTime"])
     assert parsed_datetime
-    return dt.as_local(parsed_datetime)
+    return dt_util.as_local(parsed_datetime)
 
 
 @dataclasses.dataclass
@@ -346,6 +353,16 @@ class CalendarEvent:
                 f"Failed to validate CalendarEvent: {err}"
             ) from err
 
+        # It is common to set a start an end date to be the same thing for
+        # an all day event, but that is not a valid duration. Fix to have a
+        # duration of one day.
+        if (
+            not isinstance(self.start, datetime.datetime)
+            and not isinstance(self.end, datetime.datetime)
+            and self.start == self.end
+        ):
+            self.end = self.start + datetime.timedelta(days=1)
+
 
 def _event_dict_factory(obj: Iterable[tuple[str, Any]]) -> dict[str, str]:
     """Convert CalendarEvent dataclass items to dictionary of attributes."""
@@ -363,7 +380,7 @@ def _api_event_dict_factory(obj: Iterable[tuple[str, Any]]) -> dict[str, Any]:
     result: dict[str, Any] = {}
     for name, value in obj:
         if isinstance(value, datetime.datetime):
-            result[name] = {"dateTime": dt.as_local(value).isoformat()}
+            result[name] = {"dateTime": dt_util.as_local(value).isoformat()}
         elif isinstance(value, datetime.date):
             result[name] = {"date": value.isoformat()}
         else:
@@ -376,14 +393,14 @@ def _get_datetime_local(
 ) -> datetime.datetime:
     """Convert a calendar event date/datetime to a datetime if needed."""
     if isinstance(dt_or_d, datetime.datetime):
-        return dt.as_local(dt_or_d)
-    return dt.start_of_local_day(dt_or_d)
+        return dt_util.as_local(dt_or_d)
+    return dt_util.start_of_local_day(dt_or_d)
 
 
 def _get_api_date(dt_or_d: datetime.datetime | datetime.date) -> dict[str, str]:
     """Convert a calendar event date/datetime to a datetime if needed."""
     if isinstance(dt_or_d, datetime.datetime):
-        return {"dateTime": dt.as_local(dt_or_d).isoformat()}
+        return {"dateTime": dt_util.as_local(dt_or_d).isoformat()}
     return {"date": dt_or_d.isoformat()}
 
 
@@ -416,7 +433,7 @@ def is_offset_reached(
     """Have we reached the offset time specified in the event title."""
     if offset_time == datetime.timedelta():
         return False
-    return start + offset_time <= dt.now(start.tzinfo)
+    return start + offset_time <= dt_util.now(start.tzinfo)
 
 
 class CalendarEntity(Entity):
@@ -450,7 +467,7 @@ class CalendarEntity(Entity):
         if (event := self.event) is None:
             return STATE_OFF
 
-        now = dt.now()
+        now = dt_util.now()
 
         if event.start_datetime_local <= now < event.end_datetime_local:
             return STATE_ON
@@ -512,8 +529,8 @@ class CalendarEventView(http.HomeAssistantView):
         if start is None or end is None:
             return web.Response(status=HTTPStatus.BAD_REQUEST)
         try:
-            start_date = dt.parse_datetime(start)
-            end_date = dt.parse_datetime(end)
+            start_date = dt_util.parse_datetime(start)
+            end_date = dt_util.parse_datetime(end)
         except (ValueError, AttributeError):
             return web.Response(status=HTTPStatus.BAD_REQUEST)
         if start_date is None or end_date is None:
@@ -523,7 +540,9 @@ class CalendarEventView(http.HomeAssistantView):
 
         try:
             calendar_event_list = await entity.async_get_events(
-                request.app["hass"], start_date, end_date
+                request.app["hass"],
+                dt_util.as_local(start_date),
+                dt_util.as_local(end_date),
             )
         except HomeAssistantError as err:
             _LOGGER.debug("Error reading events: %s", err)

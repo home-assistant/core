@@ -1,7 +1,7 @@
 """The test for remote device automation."""
 from datetime import timedelta
-from unittest.mock import patch
 
+from freezegun import freeze_time
 import pytest
 
 import homeassistant.components.automation as automation
@@ -21,7 +21,11 @@ from tests.common import (
     async_get_device_automations,
     async_mock_service,
 )
-from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa: F401
+
+
+@pytest.fixture(autouse=True, name="stub_blueprint_populate")
+def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
+    """Stub copying the blueprints to the config folder."""
 
 
 @pytest.fixture
@@ -232,8 +236,7 @@ async def test_if_fires_on_for_condition(
 
     ent1, ent2, ent3 = platform.ENTITIES
 
-    with patch("homeassistant.core.dt_util.utcnow") as mock_utcnow:
-        mock_utcnow.return_value = point1
+    with freeze_time(point1) as freezer:
         assert await async_setup_component(
             hass,
             automation.DOMAIN,
@@ -271,7 +274,7 @@ async def test_if_fires_on_for_condition(
         assert len(calls) == 0
 
         # Time travel 10 secs into the future
-        mock_utcnow.return_value = point2
+        freezer.move_to(point2)
         hass.bus.async_fire("test_event1")
         await hass.async_block_till_done()
         assert len(calls) == 0
@@ -282,7 +285,7 @@ async def test_if_fires_on_for_condition(
         assert len(calls) == 0
 
         # Time travel 20 secs into the future
-        mock_utcnow.return_value = point3
+        freezer.move_to(point3)
         hass.bus.async_fire("test_event1")
         await hass.async_block_till_done()
         assert len(calls) == 1

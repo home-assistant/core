@@ -22,6 +22,8 @@ import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
+API_FAILURE = -1
+
 DEFAULT_NAME = "NMBS"
 
 DEFAULT_ICON = "mdi:train"
@@ -162,14 +164,19 @@ class NMBSLiveBoard(SensorEntity):
         """Set the state equal to the next departure."""
         liveboard = self._api_client.get_liveboard(self._station)
 
-        if (
-            liveboard is None
-            or not liveboard.get("departures")
-            or liveboard.get("number") == "0"
-        ):
+        if liveboard == API_FAILURE:
+            _LOGGER.warning("API failed in NMBSLiveBoard")
             return
 
-        next_departure = liveboard["departures"]["departure"][0]
+        if not (departures := liveboard.get("departures")):
+            _LOGGER.warning("API returned invalid departures: %r", liveboard)
+            return
+
+        _LOGGER.debug("API returned departures: %r", departures)
+        if departures["number"] == "0":
+            # No trains are scheduled
+            return
+        next_departure = departures["departure"][0]
 
         self._attrs = next_departure
         self._state = (
@@ -288,13 +295,19 @@ class NMBSSensor(SensorEntity):
             self._station_from, self._station_to
         )
 
-        if connections is None or not connections.get("connection"):
+        if connections == API_FAILURE:
+            _LOGGER.warning("API failed in NMBSSensor")
             return
 
-        if int(connections["connection"][0]["departure"]["left"]) > 0:
-            next_connection = connections["connection"][1]
+        if not (connection := connections.get("connection")):
+            _LOGGER.warning("API returned invalid connection: %r", connections)
+            return
+
+        _LOGGER.debug("API returned connection: %r", connection)
+        if int(connection[0]["departure"]["left"]) > 0:
+            next_connection = connection[1]
         else:
-            next_connection = connections["connection"][0]
+            next_connection = connection[0]
 
         self._attrs = next_connection
 

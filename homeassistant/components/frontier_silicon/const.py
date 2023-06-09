@@ -4,6 +4,9 @@ DOMAIN = "frontier_silicon"
 CONF_WEBFSAPI_URL = "webfsapi_url"
 CONF_PIN = "pin"
 
+SSDP_ST = "urn:schemas-frontier-silicon-com:undok:fsapi:1"
+SSDP_ATTR_SPEAKER_NAME = "SPEAKER-NAME"
+
 DEFAULT_PIN = "1234"
 DEFAULT_PORT = 80
 

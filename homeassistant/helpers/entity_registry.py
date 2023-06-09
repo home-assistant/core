@@ -41,13 +41,12 @@ from homeassistant.core import (
     valid_entity_id,
 )
 from homeassistant.exceptions import MaxLengthExceeded
-from homeassistant.loader import bind_hass
 from homeassistant.util import slugify, uuid as uuid_util
 from homeassistant.util.json import format_unserializable_data
+from homeassistant.util.read_only_dict import ReadOnlyDict
 
 from . import device_registry as dr, storage
 from .device_registry import EVENT_DEVICE_REGISTRY_UPDATED
-from .frame import report
 from .json import JSON_DUMP, find_paths_unserializable_data
 from .typing import UNDEFINED, UndefinedType
 
@@ -103,12 +102,22 @@ class RegistryEntryHider(StrEnum):
 
 
 EntityOptionsType = Mapping[str, Mapping[str, Any]]
+ReadOnlyEntityOptionsType = ReadOnlyDict[str, Mapping[str, Any]]
 
 DISLAY_DICT_OPTIONAL = (
     ("ai", "area_id"),
     ("di", "device_id"),
     ("tk", "translation_key"),
 )
+
+
+def _protect_entity_options(
+    data: EntityOptionsType | None,
+) -> ReadOnlyEntityOptionsType:
+    """Protect entity options from being modified."""
+    if data is None:
+        return ReadOnlyDict({})
+    return ReadOnlyDict({key: ReadOnlyDict(val) for key, val in data.items()})
 
 
 @attr.s(slots=True, frozen=True)
@@ -132,9 +141,8 @@ class RegistryEntry:
     id: str = attr.ib(factory=uuid_util.random_uuid_hex)
     has_entity_name: bool = attr.ib(default=False)
     name: str | None = attr.ib(default=None)
-    options: EntityOptionsType = attr.ib(
-        default=None,
-        converter=attr.converters.default_if_none(factory=dict),  # type: ignore[misc]
+    options: ReadOnlyEntityOptionsType = attr.ib(
+        default=None, converter=_protect_entity_options
     )
     # As set by integration
     original_device_class: str | None = attr.ib(default=None)
@@ -930,7 +938,7 @@ class EntityRegistry:
         If the domain options are set to None, they will be removed.
         """
         old = self.entities[entity_id]
-        new_options = {
+        new_options: dict[str, Mapping] = {
             key: value for key, value in old.options.items() if key != domain
         }
         if options is not None:
@@ -1054,19 +1062,6 @@ async def async_load(hass: HomeAssistant) -> None:
     assert DATA_REGISTRY not in hass.data
     hass.data[DATA_REGISTRY] = EntityRegistry(hass)
     await hass.data[DATA_REGISTRY].async_load()
-
-
-@bind_hass
-async def async_get_registry(hass: HomeAssistant) -> EntityRegistry:
-    """Get entity registry.
-
-    This is deprecated and will be removed in the future. Use async_get instead.
-    """
-    report(
-        "uses deprecated `async_get_registry` to access entity registry, use async_get"
-        " instead"
-    )
-    return async_get(hass)
 
 
 @callback

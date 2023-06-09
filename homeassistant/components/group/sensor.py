@@ -54,6 +54,7 @@ ATTR_LAST = "last"
 ATTR_LAST_ENTITY_ID = "last_entity_id"
 ATTR_RANGE = "range"
 ATTR_SUM = "sum"
+ATTR_PRODUCT = "product"
 SENSOR_TYPES = {
     ATTR_MIN_VALUE: "min",
     ATTR_MAX_VALUE: "max",
@@ -62,6 +63,7 @@ SENSOR_TYPES = {
     ATTR_LAST: "last",
     ATTR_RANGE: "range",
     ATTR_SUM: "sum",
+    ATTR_PRODUCT: "product",
 }
 SENSOR_TYPE_TO_ATTR = {v: k for k, v in SENSOR_TYPES.items()}
 
@@ -226,6 +228,17 @@ def calc_sum(
     return {}, result
 
 
+def calc_product(
+    sensor_values: list[tuple[str, float, State]]
+) -> tuple[dict[str, str | None], float]:
+    """Calculate a product of values."""
+    result = 1.0
+    for _, sensor_value, _ in sensor_values:
+        result *= sensor_value
+
+    return {}, result
+
+
 CALC_TYPES: dict[
     str,
     Callable[
@@ -239,6 +252,7 @@ CALC_TYPES: dict[
     "last": calc_last,
     "range": calc_range,
     "sum": calc_sum,
+    "product": calc_product,
 }
 
 

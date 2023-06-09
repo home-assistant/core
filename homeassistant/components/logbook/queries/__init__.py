@@ -20,7 +20,7 @@ from .entities_and_devices import entities_devices_stmt
 def statement_for_request(
     start_day_dt: dt,
     end_day_dt: dt,
-    event_types: tuple[str, ...],
+    event_type_ids: tuple[int, ...],
     entity_ids: list[str] | None = None,
     states_metadata_ids: Collection[int] | None = None,
     device_ids: list[str] | None = None,
@@ -34,16 +34,11 @@ def statement_for_request(
     # limited by the context_id and the yaml configured filter
     if not entity_ids and not device_ids:
         context_id_bin = ulid_to_bytes_or_none(context_id)
-        states_entity_filter = (
-            filters.states_metadata_entity_filter() if filters else None
-        )
-        events_entity_filter = filters.events_entity_filter() if filters else None
         return all_stmt(
             start_day,
             end_day,
-            event_types,
-            states_entity_filter,
-            events_entity_filter,
+            event_type_ids,
+            filters,
             context_id_bin,
         )
 
@@ -57,7 +52,7 @@ def statement_for_request(
         return entities_devices_stmt(
             start_day,
             end_day,
-            event_types,
+            event_type_ids,
             states_metadata_ids or [],
             [json_dumps(entity_id) for entity_id in entity_ids],
             [json_dumps(device_id) for device_id in device_ids],
@@ -68,7 +63,7 @@ def statement_for_request(
         return entities_stmt(
             start_day,
             end_day,
-            event_types,
+            event_type_ids,
             states_metadata_ids or [],
             [json_dumps(entity_id) for entity_id in entity_ids],
         )
@@ -78,6 +73,6 @@ def statement_for_request(
     return devices_stmt(
         start_day,
         end_day,
-        event_types,
+        event_type_ids,
         [json_dumps(device_id) for device_id in device_ids],
     )
