@@ -129,7 +129,7 @@ class ESPHomeDashboardManager:
             if flow["handler"] == DOMAIN and flow["context"]["source"] == SOURCE_REAUTH
         ]
         _LOGGER.debug(
-            "Reloading %s and re-authenticating %s", len(reloads), len(reauths)
+            "Reloading %d and re-authenticating %d", len(reloads), len(reauths)
         )
         if reloads or reauths:
             await asyncio.gather(*reloads, *reauths)
