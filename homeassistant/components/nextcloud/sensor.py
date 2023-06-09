@@ -16,7 +16,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .const import BOOLEN_VALUES, DOMAIN, IGNORE_SENSORS
+from .const import BOOLEN_VALUES, DOMAIN
 from .coordinator import NextcloudDataUpdateCoordinator
 from .entity import NextcloudEntity
 
@@ -107,8 +107,7 @@ async def async_setup_entry(
                 ),
             )
             for name in coordinator.data
-            if name not in IGNORE_SENSORS
-            and not isinstance(coordinator.data[name], bool)
+            if not isinstance(coordinator.data[name], bool)
             and coordinator.data[name] not in BOOLEN_VALUES
         ]
     )
