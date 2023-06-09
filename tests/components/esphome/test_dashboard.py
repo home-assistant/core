@@ -11,6 +11,19 @@ from homeassistant.data_entry_flow import FlowResultType
 from . import VALID_NOISE_PSK
 
 
+async def test_dashboard_storage(
+    hass: HomeAssistant, init_integration, mock_dashboard, hass_storage
+) -> None:
+    """Test dashboard storage."""
+    assert hass_storage[dashboard.STORAGE_KEY]["data"] == {
+        "info": {"addon_slug": "mock-slug", "host": "mock-host", "port": 1234}
+    }
+    await dashboard.async_set_dashboard_info(hass, "test-slug", "new-host", 6052)
+    assert hass_storage[dashboard.STORAGE_KEY]["data"] == {
+        "info": {"addon_slug": "test-slug", "host": "new-host", "port": 6052}
+    }
+
+
 async def test_new_info_reload_config_entries(
     hass: HomeAssistant, init_integration, mock_dashboard
 ) -> None:
