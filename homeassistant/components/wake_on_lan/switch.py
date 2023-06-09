@@ -116,6 +116,8 @@ class WolSwitch(SwitchEntity):
             service_kwargs["ip_address"] = self._broadcast_address
         if self._broadcast_port is not None:
             service_kwargs["port"] = self._broadcast_port
+        if self._broadcast_interface is not None:
+            service_kwargs["interface"] = self._broadcast_interface
 
         _LOGGER.info(
             "Send magic packet to mac %s (broadcast: %s, port: %s)",
