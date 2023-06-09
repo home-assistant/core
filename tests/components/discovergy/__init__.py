@@ -1,1 +1,1 @@
-"""Test the Discovergy config flow."""
+"""Test the Discovergy integration."""
