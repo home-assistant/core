@@ -331,7 +331,6 @@ class Entity(ABC):
         if hasattr(self, "_attr_name"):
             return self._attr_name
         if self.translation_key is not None and self.has_entity_name:
-            assert self.platform
             name_translation_key = (
                 f"component.{self.platform.platform_name}.entity.{self.platform.domain}"
                 f".{self.translation_key}.name"
@@ -636,7 +635,6 @@ class Entity(ABC):
         if entry and entry.disabled_by:
             if not self._disabled_reported:
                 self._disabled_reported = True
-                assert self.platform is not None
                 _LOGGER.warning(
                     (
                         "Entity %s is incorrectly being triggered for updates while it"
@@ -908,19 +906,18 @@ class Entity(ABC):
 
         Not to be extended by integrations.
         """
-        if self.platform:
-            info = {
-                "domain": self.platform.platform_name,
-                "custom_component": "custom_components" in type(self).__module__,
-            }
+        info = {
+            "domain": self.platform.platform_name,
+            "custom_component": "custom_components" in type(self).__module__,
+        }
 
-            if self.platform.config_entry:
-                info["source"] = SOURCE_CONFIG_ENTRY
-                info["config_entry"] = self.platform.config_entry.entry_id
-            else:
-                info["source"] = SOURCE_PLATFORM_CONFIG
+        if self.platform.config_entry:
+            info["source"] = SOURCE_CONFIG_ENTRY
+            info["config_entry"] = self.platform.config_entry.entry_id
+        else:
+            info["source"] = SOURCE_PLATFORM_CONFIG
 
-            self.hass.data[DATA_ENTITY_SOURCE][self.entity_id] = info
+        self.hass.data[DATA_ENTITY_SOURCE][self.entity_id] = info
 
         if self.registry_entry is not None:
             # This is an assert as it should never happen, but helps in tests
@@ -940,8 +937,7 @@ class Entity(ABC):
 
         Not to be extended by integrations.
         """
-        if self.platform:
-            self.hass.data[DATA_ENTITY_SOURCE].pop(self.entity_id)
+        self.hass.data[DATA_ENTITY_SOURCE].pop(self.entity_id)
 
     async def _async_registry_updated(self, event: Event) -> None:
         """Handle entity registry update."""
@@ -974,7 +970,6 @@ class Entity(ABC):
 
         await self.async_remove(force_remove=True)
 
-        assert self.platform is not None
         self.entity_id = self.registry_entry.entity_id
         await self.platform.async_add_entities([self])
 
@@ -1047,11 +1042,8 @@ class Entity(ABC):
             report_issue = (
                 "create a bug report at "
                 "https://github.com/home-assistant/core/issues?q=is%3Aopen+is%3Aissue"
+                f"+label%3A%22integration%3A+{self.platform.platform_name}%22"
             )
-            if self.platform:
-                report_issue += (
-                    f"+label%3A%22integration%3A+{self.platform.platform_name}%22"
-                )
 
         return report_issue
 
