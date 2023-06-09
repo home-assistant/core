@@ -578,12 +578,14 @@ async def test_async_remove_no_platform(hass: HomeAssistant) -> None:
 
 
 async def test_async_remove_runs_callbacks(hass: HomeAssistant) -> None:
-    """Test async_remove method when no platform set."""
+    """Test async_remove runs on_remove callback."""
     result = []
 
+    platform = MockEntityPlatform(hass, domain="test")
     ent = entity.Entity()
     ent.hass = hass
     ent.entity_id = "test.test"
+    await platform.async_add_entities([ent])
     ent.async_on_remove(lambda: result.append(1))
     await ent.async_remove()
     assert len(result) == 1
@@ -593,11 +595,12 @@ async def test_async_remove_ignores_in_flight_polling(hass: HomeAssistant) -> No
     """Test in flight polling is ignored after removing."""
     result = []
 
+    platform = MockEntityPlatform(hass, domain="test")
     ent = entity.Entity()
     ent.hass = hass
     ent.entity_id = "test.test"
     ent.async_on_remove(lambda: result.append(1))
-    ent.async_write_ha_state()
+    await platform.async_add_entities([ent])
     assert hass.states.get("test.test").state == STATE_UNKNOWN
     await ent.async_remove()
     assert len(result) == 1
@@ -798,18 +801,18 @@ async def test_setup_source(hass: HomeAssistant) -> None:
 
 async def test_removing_entity_unavailable(hass: HomeAssistant) -> None:
     """Test removing an entity that is still registered creates an unavailable state."""
-    entry = er.RegistryEntry(
+    er.RegistryEntry(
         entity_id="hello.world",
         unique_id="test-unique-id",
         platform="test-platform",
         disabled_by=None,
     )
 
+    platform = MockEntityPlatform(hass, domain="hello")
     ent = entity.Entity()
-    ent.hass = hass
     ent.entity_id = "hello.world"
-    ent.registry_entry = entry
-    ent.async_write_ha_state()
+    ent._attr_unique_id = "test-unique-id"
+    await platform.async_add_entities([ent])
 
     state = hass.states.get("hello.world")
     assert state is not None
@@ -1112,6 +1115,7 @@ async def test_warn_using_async_update_ha_state(
     """Test we warn once when using async_update_ha_state without force_update."""
     ent = entity.Entity()
     ent.hass = hass
+    ent.platform = MockEntityPlatform(hass)
     ent.entity_id = "hello.world"
 
     # When forcing, it should not trigger the warning
