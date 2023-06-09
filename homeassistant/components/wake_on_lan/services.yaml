@@ -23,3 +23,9 @@ send_magic_packet:
         number:
           min: 1
           max: 65535
+    broadcast_interface:
+      name: Broadcast interface
+      description: Which network interface to send the magic packet to.
+      example: eth0
+      selector:
+        text:
