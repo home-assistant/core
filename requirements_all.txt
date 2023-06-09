@@ -2265,7 +2265,7 @@ regenmaschine==2023.05.1
 renault-api==0.1.13
 
 # homeassistant.components.reolink
-reolink-aio==0.5.16
+reolink-aio==0.6.0
 
 # homeassistant.components.idteck_prox
 rfk101py==0.0.1
