@@ -22,11 +22,13 @@ from homeassistant.helpers.selector import (
 )
 
 from .const import (
+    CONF_API_BASE_URL,
     CONF_CHAT_MODEL,
     CONF_MAX_TOKENS,
     CONF_PROMPT,
     CONF_TEMPERATURE,
     CONF_TOP_P,
+    DEFAULT_API_BASE_URL,
     DEFAULT_CHAT_MODEL,
     DEFAULT_MAX_TOKENS,
     DEFAULT_PROMPT,
@@ -39,6 +41,7 @@ _LOGGER = logging.getLogger(__name__)
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
+        vol.Required(CONF_API_BASE_URL, default=DEFAULT_API_BASE_URL): str,
         vol.Required(CONF_API_KEY): str,
     }
 )
@@ -59,8 +62,11 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
+
+    openai.api_base = data[CONF_API_BASE_URL]
     openai.api_key = data[CONF_API_KEY]
-    await hass.async_add_executor_job(partial(openai.Engine.list, request_timeout=10))
+
+    await hass.async_add_executor_job(partial(openai.ChatCompletion.create, model=DEFAULT_CHAT_MODEL, messages=[{"role": "user", "content": "Hello"}], timeout=10, request_timeout=10))
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):

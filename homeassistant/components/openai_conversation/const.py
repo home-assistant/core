@@ -1,6 +1,10 @@
 """Constants for the OpenAI Conversation integration."""
 
 DOMAIN = "openai_conversation"
+
+CONF_API_BASE_URL = "api_base_url"
+DEFAULT_API_BASE_URL = "https://api.openai.com/v1"
+
 CONF_PROMPT = "prompt"
 DEFAULT_PROMPT = """This smart home is controlled by Home Assistant.
 

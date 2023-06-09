@@ -17,11 +17,13 @@ from homeassistant.helpers import intent, template
 from homeassistant.util import ulid
 
 from .const import (
+    CONF_API_BASE_URL,
     CONF_CHAT_MODEL,
     CONF_MAX_TOKENS,
     CONF_PROMPT,
     CONF_TEMPERATURE,
     CONF_TOP_P,
+    DEFAULT_API_BASE_URL,
     DEFAULT_CHAT_MODEL,
     DEFAULT_MAX_TOKENS,
     DEFAULT_PROMPT,
@@ -34,12 +36,15 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up OpenAI Conversation from a config entry."""
+    
+    openai.api_base = entry.data[CONF_API_BASE_URL]
     openai.api_key = entry.data[CONF_API_KEY]
 
     try:
-        await hass.async_add_executor_job(
-            partial(openai.Engine.list, request_timeout=10)
-        )
+        await hass.async_add_executor_job(partial(openai.ChatCompletion.create, model=DEFAULT_CHAT_MODEL, messages=[{"role": "user", "content": "Hello"}], timeout=10, request_timeout=10))
+    except error.APIConnectionError:
+        _LOGGER.error("Failed to connect: %s", err)
+        return False
     except error.AuthenticationError as err:
         _LOGGER.error("Invalid API key: %s", err)
         return False
@@ -52,6 +57,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload OpenAI."""
+    openai.api_base = DEFAULT_API_BASE_URL
     openai.api_key = None
     conversation.async_unset_agent(hass, entry)
     return True
