@@ -859,6 +859,8 @@ class Entity(ABC):
         If the entity doesn't have a non disabled entry in the entity registry,
         or if force_remove=True, its state will be removed.
         """
+        # The check for self.platform guards against integrations not using an
+        # EntityComponent and can be removed in HA Core 2024.1
         if self.platform and self._platform_state != EntityPlatformState.ADDED:
             raise HomeAssistantError(
                 f"Entity {self.entity_id} async_remove called twice"
@@ -937,7 +939,10 @@ class Entity(ABC):
 
         Not to be extended by integrations.
         """
-        self.hass.data[DATA_ENTITY_SOURCE].pop(self.entity_id)
+        # The check for self.platform guards against integrations not using an
+        # EntityComponent and can be removed in HA Core 2024.1
+        if self.platform:
+            self.hass.data[DATA_ENTITY_SOURCE].pop(self.entity_id)
 
     async def _async_registry_updated(self, event: Event) -> None:
         """Handle entity registry update."""
@@ -1042,8 +1047,13 @@ class Entity(ABC):
             report_issue = (
                 "create a bug report at "
                 "https://github.com/home-assistant/core/issues?q=is%3Aopen+is%3Aissue"
-                f"+label%3A%22integration%3A+{self.platform.platform_name}%22"
             )
+            # The check for self.platform guards against integrations not using an
+            # EntityComponent and can be removed in HA Core 2024.1
+            if self.platform:
+                report_issue += (
+                    f"+label%3A%22integration%3A+{self.platform.platform_name}%22"
+                )
 
         return report_issue
 
