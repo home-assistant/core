@@ -951,7 +951,7 @@ mutesync==0.0.1
 ndms2-client==0.1.2
 
 # homeassistant.components.ness_alarm
-nessclient==0.10.0
+nessclient==1.0.0
 
 # homeassistant.components.nmap_tracker
 netmap==0.7.0.2
