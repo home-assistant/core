@@ -412,7 +412,11 @@ DEVICE_CLASS_UNITS: dict[NumberDeviceClass, set[type[StrEnum] | str | None]] = {
     NumberDeviceClass.PM10: {CONCENTRATION_MICROGRAMS_PER_CUBIC_METER},
     NumberDeviceClass.PM25: {CONCENTRATION_MICROGRAMS_PER_CUBIC_METER},
     NumberDeviceClass.POWER_FACTOR: {PERCENTAGE, None},
-    NumberDeviceClass.POWER: {UnitOfPower.WATT, UnitOfPower.KILO_WATT, UnitOfPower.MEGA_WATT},
+    NumberDeviceClass.POWER: {
+        UnitOfPower.WATT,
+        UnitOfPower.KILO_WATT,
+        UnitOfPower.MEGA_WATT,
+    },
     NumberDeviceClass.PRECIPITATION: set(UnitOfPrecipitationDepth),
     NumberDeviceClass.PRECIPITATION_INTENSITY: set(UnitOfVolumetricFlux),
     NumberDeviceClass.PRESSURE: set(UnitOfPressure),
