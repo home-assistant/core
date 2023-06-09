@@ -1388,7 +1388,7 @@ def test_whitespace() -> None:
 
     for value in (
         None,
-        "" "T",
+        "T",
         "negative",
         "lock",
         "tr  ue",

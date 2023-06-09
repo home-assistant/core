@@ -188,10 +188,10 @@ class CloudGoogleConfig(AbstractConfig):
             # Don't migrate if there's a YAML config
             return
 
-        for entity_id in {
+        for entity_id in (
             *self.hass.states.async_entity_ids(),
             *self._prefs.google_entity_configs,
-        }:
+        ):
             async_expose_entity(
                 self.hass,
                 CLOUD_GOOGLE,

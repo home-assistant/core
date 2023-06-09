@@ -727,7 +727,7 @@ class EntityPlatform:
 
         if already_exists:
             self.logger.error(
-                f"Entity id already exists - ignoring: {entity.entity_id}"
+                "Entity id already exists - ignoring: %s", entity.entity_id
             )
             entity.add_to_platform_abort()
             return

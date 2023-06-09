@@ -196,9 +196,8 @@ def expand_entity_ids(hass: HomeAssistant, entity_ids: Iterable[Any]) -> list[st
                     if ent_id not in found_ids
                 )
 
-            else:
-                if entity_id not in found_ids:
-                    found_ids.append(entity_id)
+            elif entity_id not in found_ids:
+                found_ids.append(entity_id)
 
         except AttributeError:
             # Raised by split_entity_id if entity_id is not a string
