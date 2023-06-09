@@ -93,6 +93,8 @@ CONF_ACTION_TOPIC = "action_topic"
 CONF_AUX_COMMAND_TOPIC = "aux_command_topic"
 CONF_AUX_STATE_TEMPLATE = "aux_state_template"
 CONF_AUX_STATE_TOPIC = "aux_state_topic"
+CONF_DEFAULT_MODE_STATE_TOPIC = "default_mode_state_topic"
+CONF_DEFAULT_MODE_STATE_TEMPLATE = "default_mode_state_template"
 
 CONF_CURRENT_HUMIDITY_TEMPLATE = "current_humidity_template"
 CONF_CURRENT_HUMIDITY_TOPIC = "current_humidity_topic"
@@ -167,6 +169,7 @@ VALUE_TEMPLATE_KEYS = (
     CONF_AUX_STATE_TEMPLATE,
     CONF_CURRENT_HUMIDITY_TEMPLATE,
     CONF_CURRENT_TEMP_TEMPLATE,
+    CONF_DEFAULT_MODE_STATE_TEMPLATE,
     CONF_FAN_MODE_STATE_TEMPLATE,
     CONF_HUMIDITY_STATE_TEMPLATE,
     CONF_MODE_STATE_TEMPLATE,
@@ -197,6 +200,7 @@ TOPIC_KEYS = (
     CONF_AUX_STATE_TOPIC,
     CONF_CURRENT_HUMIDITY_TOPIC,
     CONF_CURRENT_TEMP_TOPIC,
+    CONF_DEFAULT_MODE_STATE_TOPIC,
     CONF_FAN_MODE_COMMAND_TOPIC,
     CONF_FAN_MODE_STATE_TOPIC,
     CONF_HUMIDITY_COMMAND_TOPIC,
@@ -293,6 +297,8 @@ _PLATFORM_SCHEMA_BASE = MQTT_BASE_SCHEMA.extend(
                 HVACMode.FAN_ONLY,
             ],
         ): cv.ensure_list,
+        vol.Optional(CONF_DEFAULT_MODE_STATE_TOPIC): valid_subscribe_topic,
+        vol.Optional(CONF_DEFAULT_MODE_STATE_TEMPLATE): cv.template,
         vol.Optional(CONF_MODE_STATE_TEMPLATE): cv.template,
         vol.Optional(CONF_MODE_STATE_TOPIC): valid_subscribe_topic,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -602,7 +608,7 @@ class MqttClimate(MqttTemperatureControlEntity, ClimateEntity):
 
     _entity_id_format = climate.ENTITY_ID_FORMAT
     _attributes_extra_blocked = MQTT_CLIMATE_ATTRIBUTES_BLOCKED
-    _last_active_mode: HVACMode | None = None
+    _default_operation_mode: HVACMode | None = None
 
     def __init__(
         self,
@@ -814,8 +820,32 @@ class MqttClimate(MqttTemperatureControlEntity, ClimateEntity):
                 return
             setattr(self, attr, payload)
             get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
+            if CONF_DEFAULT_MODE_STATE_TOPIC in self._config:
+                return
             if attr == "_attr_hvac_mode" and payload != HVACMode.OFF.value:
-                self._last_active_mode = HVACMode(str(payload))
+                self._default_operation_mode = HVACMode(str(payload))
+
+        @callback
+        def handle_default_mode_received(msg: ReceiveMessage) -> None:
+            """Handle receiving listed mode via MQTT."""
+            payload = self.render_template(msg, CONF_DEFAULT_MODE_STATE_TEMPLATE)
+
+            mode_list: list[str] = self._config[CONF_MODE_LIST]
+            if payload not in mode_list:
+                _LOGGER.error(
+                    "'%s' is not a valid operation mode. Valid modes are: %s",
+                    payload,
+                    mode_list,
+                )
+                return
+            if (default_mode := HVACMode(str(payload))) == HVACMode.OFF:
+                _LOGGER.warning("Default mode cannot be off")
+                return
+            self._default_operation_mode = default_mode
+
+        self.add_subscription(
+            topics, CONF_DEFAULT_MODE_STATE_TOPIC, handle_default_mode_received
+        )
 
         @callback
         @log_messages(self.hass, self.entity_id)
@@ -976,8 +1006,11 @@ class MqttClimate(MqttTemperatureControlEntity, ClimateEntity):
         await self._publish(CONF_MODE_COMMAND_TOPIC, payload)
 
         if self._optimistic or self._topic[CONF_MODE_STATE_TOPIC] is None:
-            if hvac_mode != HVACMode.OFF:
-                self._last_active_mode = hvac_mode
+            if (
+                CONF_DEFAULT_MODE_STATE_TOPIC not in self._config
+                and hvac_mode != HVACMode.OFF
+            ):
+                self._default_operation_mode = hvac_mode
             self._attr_hvac_mode = hvac_mode
             self.async_write_ha_state()
 
@@ -1021,8 +1054,8 @@ class MqttClimate(MqttTemperatureControlEntity, ClimateEntity):
 
     async def async_turn_on(self) -> None:
         """Turn the climate on."""
-        if self._last_active_mode is not None:
-            await self.async_set_hvac_mode(self._last_active_mode)
+        if self._default_operation_mode is not None:
+            await self.async_set_hvac_mode(self._default_operation_mode)
             return
         for mode in (HVACMode.HEAT_COOL, HVACMode.HEAT, HVACMode.COOL):
             if mode not in self.hvac_modes:
