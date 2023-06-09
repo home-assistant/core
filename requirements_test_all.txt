@@ -1703,7 +1703,7 @@ sense-energy==0.11.2
 sense_energy==0.11.2
 
 # homeassistant.components.sensirion_ble
-sensirion-ble==0.0.1
+sensirion-ble==0.1.0
 
 # homeassistant.components.sensorpro
 sensorpro-ble==0.5.3
