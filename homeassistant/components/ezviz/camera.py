@@ -276,20 +276,20 @@ class EzvizCamera(EzvizEntity, Camera):
 
     def perform_sound_alarm(self, enable: int) -> None:
         """Sound the alarm on a camera."""
-        try:
-            self.coordinator.ezviz_client.sound_alarm(self._serial, enable)
-        except HTTPError as err:
-            raise HTTPError("Cannot sound alarm") from err
-
         ir.async_create_issue(
             self.hass,
             DOMAIN,
             "service_depreciation_sound_alarm",
-            breaks_in_ha_version="2023.8.0",
+            breaks_in_ha_version="2023.9.0",
             is_fixable=False,
             severity=ir.IssueSeverity.WARNING,
             translation_key="service_depreciation_sound_alarm",
         )
+
+        try:
+            self.coordinator.ezviz_client.sound_alarm(self._serial, enable)
+        except HTTPError as err:
+            raise HTTPError("Cannot sound alarm") from err
 
     def perform_wake_device(self) -> None:
         """Basically wakes the camera by querying the device."""

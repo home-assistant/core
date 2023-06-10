@@ -6,7 +6,11 @@ from typing import Any
 
 from pyezviz import HTTPError, PyEzvizError, SupportExt
 
-from homeassistant.components.siren import SirenEntity, SirenEntityFeature
+from homeassistant.components.siren import (
+    SirenEntity,
+    SirenEntityDescription,
+    SirenEntityFeature,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_ON
 from homeassistant.core import HomeAssistant, callback
@@ -21,6 +25,11 @@ from .entity import EzvizEntity
 
 PARALLEL_UPDATES = 1
 OFF_DELAY = timedelta(seconds=60)  # Camera firmware has hard coded turn off.
+
+SIREN_ENTITY_TYPE = SirenEntityDescription(
+    key="siren",
+    translation_key="siren",
+)
 
 
 async def async_setup_entry(
@@ -44,7 +53,6 @@ class EzvizSirenEntity(EzvizEntity, SirenEntity, RestoreEntity):
     """Representation of a EZVIZ Siren entity."""
 
     _attr_has_entity_name = True
-    _attr_name = "Siren"
     _attr_supported_features = SirenEntityFeature.TURN_ON | SirenEntityFeature.TURN_OFF
 
     def __init__(
@@ -54,7 +62,8 @@ class EzvizSirenEntity(EzvizEntity, SirenEntity, RestoreEntity):
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator, serial)
-        self._attr_unique_id = f"{serial}_{self._attr_name}"
+        self._attr_unique_id = f"{serial}_{SIREN_ENTITY_TYPE.key}"
+        self.entity_description = SIREN_ENTITY_TYPE
         self._attr_is_on = False
 
     async def async_added_to_hass(self) -> None:
