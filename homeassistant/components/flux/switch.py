@@ -124,7 +124,6 @@ async def async_setup_entry(
     sunset_colortemp = entry.data.get(CONF_SUNSET_CT)
     stop_colortemp = entry.data.get(CONF_STOP_CT)
 
-    # brightness = entry.data.get(CONF_BRIGHTNESS)
     brightness = None
     disable_brightness_adjust = not entry.data.get(CONF_ADJUST_BRIGHTNESS)
     mode = entry.data.get(CONF_MODE)
