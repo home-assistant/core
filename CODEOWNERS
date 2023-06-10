@@ -752,6 +752,7 @@ build.json @home-assistant/supervisor
 /tests/components/minecraft_server/ @elmurato
 /homeassistant/components/minio/ @tkislan
 /tests/components/minio/ @tkislan
+/homeassistant/components/miraie_ac/ @milothomas
 /homeassistant/components/moat/ @bdraco
 /tests/components/moat/ @bdraco
 /homeassistant/components/mobile_app/ @home-assistant/core

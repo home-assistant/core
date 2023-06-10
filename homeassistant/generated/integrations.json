@@ -3378,6 +3378,12 @@
       "config_flow": false,
       "iot_class": "cloud_push"
     },
+    "miraie_ac": {
+      "name": "MirAIe AC",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_push"
+    },
     "mitemp_bt": {
       "name": "Xiaomi Mijia BLE Temperature and Humidity Sensor",
       "integration_type": "hub",
