@@ -50,7 +50,7 @@
         "name": "Status of last order"
       },
       "last_order_max_order_time": {
-        "name": "Max order time of last slot"
+        "name": "Max order time of last order"
       },
       "last_order_delivery_time": {
         "name": "Last order delivery time"

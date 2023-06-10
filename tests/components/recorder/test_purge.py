@@ -1438,10 +1438,7 @@ async def _add_test_states(hass: HomeAssistant):
             state = f"dontpurgeme_{event_id}"
             attributes = {"dontpurgeme": True, **base_attributes}
 
-        with patch(
-            "homeassistant.components.recorder.core.dt_util.utcnow",
-            return_value=timestamp,
-        ):
+        with freeze_time(timestamp):
             await set_state("test.recorder2", state, attributes=attributes)
 
 
@@ -1602,6 +1599,7 @@ def _add_state_with_state_attributes(
     )
 
 
+@pytest.mark.timeout(30)
 async def test_purge_many_old_events(
     async_setup_recorder_instance: RecorderInstanceGenerator, hass: HomeAssistant
 ) -> None:

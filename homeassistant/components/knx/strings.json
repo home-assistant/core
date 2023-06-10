@@ -133,11 +133,13 @@
         "title": "Communication settings",
         "data": {
           "state_updater": "State updater",
-          "rate_limit": "Rate limit"
+          "rate_limit": "Rate limit",
+          "telegram_log_size": "Telegram history limit"
         },
         "data_description": {
           "state_updater": "Set default for reading states from the KNX Bus. When disabled, Home Assistant will not actively retrieve entity states from the KNX Bus. Can be overridden by `sync_state` entity options.",
-          "rate_limit": "Maximum outgoing telegrams per second.\n`0` to disable limit. Recommended: 0 or 20 to 40"
+          "rate_limit": "Maximum outgoing telegrams per second.\n`0` to disable limit. Recommended: 0 or 20 to 40",
+          "telegram_log_size": "Telegrams to keep in memory for KNX panel group monitor. Maximum: {telegram_log_size_max}"
         }
       },
       "connection_type": {
@@ -280,6 +282,11 @@
       "telegram_count": {
         "name": "Telegrams"
       }
+    }
+  },
+  "device_automation": {
+    "trigger_type": {
+      "telegram": "Telegram sent or received"
     }
   }
 }

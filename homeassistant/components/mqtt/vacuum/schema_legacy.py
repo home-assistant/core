@@ -8,7 +8,6 @@ import voluptuous as vol
 
 from homeassistant.components.vacuum import (
     ATTR_STATUS,
-    DOMAIN as VACUUM_DOMAIN,
     ENTITY_ID_FORMAT,
     VacuumEntity,
     VacuumEntityFeature,
@@ -26,7 +25,7 @@ from .. import subscription
 from ..config import MQTT_BASE_SCHEMA
 from ..const import CONF_COMMAND_TOPIC, CONF_ENCODING, CONF_QOS, CONF_RETAIN
 from ..debug_info import log_messages
-from ..mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity, warn_for_legacy_schema
+from ..mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity
 from ..models import (
     MqttValueTemplate,
     PayloadSentinel,
@@ -158,13 +157,6 @@ PLATFORM_SCHEMA_LEGACY_MODERN = (
     )
     .extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
     .extend(MQTT_VACUUM_SCHEMA.schema)
-)
-
-# Configuring MQTT Vacuums under the vacuum platform key was deprecated in
-# HA Core 2022.6;
-# Setup for the legacy YAML format was removed in HA Core 2022.12
-PLATFORM_SCHEMA_LEGACY = vol.All(
-    warn_for_legacy_schema(VACUUM_DOMAIN),
 )
 
 DISCOVERY_SCHEMA_LEGACY = PLATFORM_SCHEMA_LEGACY_MODERN.extend(
