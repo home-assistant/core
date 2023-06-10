@@ -27,7 +27,7 @@ from homeassistant.components.weather import (
     ATTR_FORECAST_TIME,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
+from homeassistant.const import CONF_LOCATION, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -46,7 +46,6 @@ from .const import (
     API_TEMPERATURE,
     API_VALUE,
     API_WEATHER_FORECAST,
-    CONF_LOCATION,
     DEFAULT_DISTRICT,
     DOMAIN,
     KEY_DISTRICT,

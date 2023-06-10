@@ -7,7 +7,6 @@ DISTRICT = "name"
 COORDINATOR = "coordinator"
 UPDATE_LISTENER = "update_listener"
 
-CONF_LOCATION = "location"
 KEY_LOCATION = "LOCATION"
 KEY_DISTRICT = "DISTRICT"
 

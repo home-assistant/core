@@ -1,7 +1,7 @@
 """Support for the HKO service."""
 from homeassistant.components.weather import WeatherEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import TEMP_CELSIUS
+from homeassistant.const import CONF_LOCATION, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -17,7 +17,6 @@ from .const import (
     API_HUMIDITY,
     API_TEMPERATURE,
     ATTRIBUTION,
-    CONF_LOCATION,
     DOMAIN,
     MANUFACTURER,
 )
@@ -81,7 +80,7 @@ class HKOEntity(CoordinatorEntity, WeatherEntity):
     @property
     def native_temperature_unit(self) -> str:
         """Return the unit of measurement."""
-        return TEMP_CELSIUS
+        return UnitOfTemperature.CELSIUS
 
     @property
     def humidity(self) -> int:
@@ -89,6 +88,6 @@ class HKOEntity(CoordinatorEntity, WeatherEntity):
         return self.coordinator.data[API_CURRENT][API_HUMIDITY]
 
     @property
-    def forecast(self) -> list:
+    def forecast(self):
         """Return the forecast array."""
         return self.coordinator.data[API_FORECAST]

@@ -9,12 +9,13 @@ from hko import HKO, LOCATIONS, HKOError
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.const import CONF_LOCATION
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import CONF_LOCATION, DEFAULT_LOCATION, DOMAIN
+from .const import DEFAULT_LOCATION, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
