@@ -39,7 +39,7 @@ async def test_attributes(hass: HomeAssistant) -> None:
 
     state = hass.states.get("sensor.environment_sensor_lux")
     assert state.state == "1.0"
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "lux"
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "lx"
 
     state = hass.states.get("sensor.environment_sensor_temperature")
     # Abodepy device JSON reports 19.5, but Home Assistant shows 19.4
