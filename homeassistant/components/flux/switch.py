@@ -8,8 +8,6 @@ from datetime import datetime, time, timedelta
 import logging
 from typing import Any
 
-import voluptuous as vol
-
 from homeassistant import config_entries
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -18,38 +16,34 @@ from homeassistant.components.light import (
     ATTR_TRANSITION,
     ATTR_XY_COLOR,
     DOMAIN as LIGHT_DOMAIN,
-    VALID_TRANSITION,
     is_on,
 )
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    CONF_BRIGHTNESS,
     CONF_LIGHTS,
     CONF_MODE,
     CONF_NAME,
-    CONF_PLATFORM,
     SERVICE_TURN_ON,
     STATE_ON,
     SUN_EVENT_SUNRISE,
     SUN_EVENT_SUNSET,
 )
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
-from homeassistant.helpers import config_validation as cv, entity_platform, event
+from homeassistant.helpers import entity_platform, event
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.sun import get_astral_event_date
 from homeassistant.util.color import (
     color_RGB_to_xy_brightness,
     color_temperature_kelvin_to_mired,
-    color_temperature_mired_to_kelvin,
     color_temperature_to_rgb,
 )
 from homeassistant.util.dt import as_local, parse_time, utcnow as dt_utcnow
 
 from .config_flow import UNDEFINED
 from .const import (
-    CONF_DISABLE_BRIGHTNESS_ADJUST,
+    CONF_ADJUST_BRIGHTNESS,
     CONF_INTERVAL,
     CONF_START_CT,
     CONF_START_TIME,
@@ -57,41 +51,11 @@ from .const import (
     CONF_STOP_TIME,
     CONF_SUNSET_CT,
     CONF_SUNSET_TIME,
-    DEFAULT_MODE,
-    MODE_MIRED,
     MODE_RGB,
     MODE_XY,
 )
 
 _LOGGER = logging.getLogger(__name__)
-
-PLATFORM_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_PLATFORM): "flux",
-        vol.Required(CONF_LIGHTS): cv.entity_ids,
-        vol.Optional(CONF_NAME, default="Flux"): cv.string,
-        vol.Optional(CONF_START_TIME): cv.time,
-        vol.Optional(CONF_STOP_TIME): cv.time,
-        vol.Optional(CONF_START_CT, default=4000): vol.All(
-            vol.Coerce(int), vol.Range(min=1000, max=40000)
-        ),
-        vol.Optional(CONF_SUNSET_CT, default=3000): vol.All(
-            vol.Coerce(int), vol.Range(min=1000, max=40000)
-        ),
-        vol.Optional(CONF_STOP_CT, default=1900): vol.All(
-            vol.Coerce(int), vol.Range(min=1000, max=40000)
-        ),
-        vol.Optional(CONF_BRIGHTNESS): vol.All(
-            vol.Coerce(int), vol.Range(min=0, max=255)
-        ),
-        vol.Optional(CONF_DISABLE_BRIGHTNESS_ADJUST): cv.boolean,
-        vol.Optional(CONF_MODE, default=DEFAULT_MODE): vol.Any(
-            MODE_XY, MODE_MIRED, MODE_RGB
-        ),
-        vol.Optional(CONF_INTERVAL, default=30): cv.positive_int,
-        vol.Optional(ATTR_TRANSITION, default=30): VALID_TRANSITION,
-    }
-)
 
 
 async def async_set_lights_xy(
@@ -156,18 +120,13 @@ async def async_setup_entry(
     sunset_time = parse_time_if_defined(entry.data.get(CONF_SUNSET_TIME))
     stop_time = parse_time_if_defined(entry.data.get(CONF_STOP_TIME))
 
-    start_colortemp = color_temperature_mired_to_kelvin(
-        float(entry.data.get(CONF_START_CT))  # type: ignore[arg-type]
-    )
-    sunset_colortemp = color_temperature_mired_to_kelvin(
-        float(entry.data.get(CONF_SUNSET_CT))  # type: ignore[arg-type]
-    )
-    stop_colortemp = color_temperature_mired_to_kelvin(
-        float(entry.data.get(CONF_STOP_CT))  # type: ignore[arg-type]
-    )
+    start_colortemp = entry.data.get(CONF_START_CT)
+    sunset_colortemp = entry.data.get(CONF_SUNSET_CT)
+    stop_colortemp = entry.data.get(CONF_STOP_CT)
 
-    brightness = entry.data.get(CONF_BRIGHTNESS)
-    disable_brightness_adjust = brightness is not None and brightness != UNDEFINED
+    # brightness = entry.data.get(CONF_BRIGHTNESS)
+    brightness = None
+    disable_brightness_adjust = not entry.data.get(CONF_ADJUST_BRIGHTNESS)
     mode = entry.data.get(CONF_MODE)
     interval = timedelta(**entry.data.get(CONF_INTERVAL))  # type: ignore[arg-type]
     transition = timedelta(**entry.data.get(ATTR_TRANSITION))  # type: ignore[arg-type]
