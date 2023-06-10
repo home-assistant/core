@@ -336,7 +336,7 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
         for item in self._async_current_entries():
             if item.data.get(CONF_TYPE) == ATTR_TYPE_CLOUD:
                 self.context["title_placeholders"] = {ATTR_SERIAL: item.title}
-                entry = await self.async_set_unique_id(item.title)
+                entry = await self.async_set_unique_id(item.unique_id)
 
         if not entry:
             return self.async_abort(reason="ezviz_cloud_account_missing")
@@ -374,7 +374,9 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
 
         data_schema = vol.Schema(
             {
-                vol.Required(CONF_USERNAME, default=entry.title): vol.In([entry.title]),
+                vol.Required(CONF_USERNAME, default=entry.unique_id): vol.In(
+                    [entry.unique_id]
+                ),
                 vol.Required(CONF_PASSWORD): str,
             }
         )
