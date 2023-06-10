@@ -116,10 +116,8 @@ class OptionsFlow(config_entries.OptionsFlow):
     def reset_values_to_default(self, user_input):
         """Hacky method to reset saved values and use the default again."""
         time_that_signals_to_reset_to_defeault = "13:37:00"
-        brightness_that_signals_to_reset_to_defeault = 123
         values_that_signal_to_reset_to_default = [
             time_that_signals_to_reset_to_defeault,
-            brightness_that_signals_to_reset_to_defeault,
         ]
 
         return {

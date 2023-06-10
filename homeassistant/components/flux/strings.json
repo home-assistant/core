@@ -28,7 +28,7 @@
           "start_colortemp": "The color temperature at the start.",
           "sunset_colortemp": "The sunset color temperature.",
           "stop_colortemp": "The color temperature at the end.",
-          "brightness": "Specifing a constant brightness here will disable flux from automatically adjusting the brightness of the lights. Set to 123 to reset (and re-enable automatic brightness updates).",
+          "adjust_brightness": "Adjust the brightness of the lights.",
           "mode": "Select how color temperature is passed to lights.",
           "transition": "Transition time in seconds for the light changes ",
           "interval": "Frequency in seconds at which the lights should be updated."
