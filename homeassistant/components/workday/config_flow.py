@@ -243,7 +243,9 @@ class WorkdayConfigFlow(ConfigFlow, domain=DOMAIN):
                 combined_input[CONF_LANGUAGE] = None
 
             try:
-                await self.hass.async_add_executor_job(validate_custom_dates, combined_input)
+                await self.hass.async_add_executor_job(
+                    validate_custom_dates, combined_input
+                )
             except AddDatesError:
                 errors["add_holidays"] = "add_holiday_error"
             except RemoveDatesError:
@@ -306,7 +308,9 @@ class WorkdayOptionsFlowHandler(OptionsFlowWithConfigEntry):
                 combined_input[CONF_LANGUAGE] = None
 
             try:
-                await self.hass.async_add_executor_job(validate_custom_dates, combined_input)
+                await self.hass.async_add_executor_job(
+                    validate_custom_dates, combined_input
+                )
             except AddDatesError:
                 errors["add_holidays"] = "add_holiday_error"
             except RemoveDatesError:

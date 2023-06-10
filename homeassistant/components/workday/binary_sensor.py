@@ -7,10 +7,10 @@ from typing import Any
 from holidays import (
     DateLike,
     HolidayBase,
+    __version__ as python_holidays_version,
     country_holidays,
     list_localized_countries,
     list_supported_countries,
-    __version__ as python_holidays_version
 )
 import voluptuous as vol
 
@@ -139,7 +139,7 @@ async def async_setup_entry(
         LOGGER.error("Language %s is not supported", language)
         return
 
-    obj_holidays: HolidayBase  = country_holidays(
+    obj_holidays: HolidayBase = country_holidays(
         country, years=year, subdiv=province, language=language
     )
 
