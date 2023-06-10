@@ -49,7 +49,7 @@ async def test_update_connected_wifi_clients(
     assert state is not None
     assert state.state == "1"
     assert (
-        state.attributes[ATTR_FRIENDLY_NAME] == f"{entry.title} Connected Wifi clients"
+        state.attributes[ATTR_FRIENDLY_NAME] == f"{entry.title} Connected Wi-Fi clients"
     )
     assert state.attributes["state_class"] == SensorStateClass.MEASUREMENT
 
@@ -92,7 +92,7 @@ async def test_update_neighboring_wifi_networks(
     assert state.state == "1"
     assert (
         state.attributes[ATTR_FRIENDLY_NAME]
-        == f"{entry.title} Neighboring Wifi networks"
+        == f"{entry.title} Neighboring Wi-Fi networks"
     )
     assert (
         entity_registry.async_get(state_key).entity_category
