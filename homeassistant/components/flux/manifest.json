@@ -2,9 +2,10 @@
   "domain": "flux",
   "name": "Flux",
   "after_dependencies": ["light"],
-  "codeowners": [],
+  "codeowners": ["@schelv"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/flux",
+  "integration_type": "hub",
   "iot_class": "calculated",
   "quality_scale": "internal"
 }
