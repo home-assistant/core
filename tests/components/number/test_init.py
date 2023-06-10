@@ -34,7 +34,11 @@ from homeassistant.helpers.restore_state import STORAGE_KEY as RESTORE_STATE_KEY
 from homeassistant.setup import async_setup_component
 from homeassistant.util.unit_system import METRIC_SYSTEM, US_CUSTOMARY_SYSTEM
 
-from tests.common import mock_restore_cache_with_extra_data
+from tests.common import (
+    MockEntityPlatform,
+    async_mock_restore_state_shutdown_restart,
+    mock_restore_cache_with_extra_data,
+)
 
 
 class MockDefaultNumberEntity(NumberEntity):
@@ -243,6 +247,7 @@ async def test_deprecation_warnings(
     """Test overriding the deprecated attributes is possible and warnings are logged."""
     number = MockDefaultNumberEntityDeprecated()
     number.hass = hass
+    number.platform = MockEntityPlatform(hass)
     assert number.max_value == 100.0
     assert number.min_value == 0.0
     assert number.step == 1.0
@@ -251,6 +256,7 @@ async def test_deprecation_warnings(
 
     number_2 = MockNumberEntityDeprecated()
     number_2.hass = hass
+    number_2.platform = MockEntityPlatform(hass)
     assert number_2.max_value == 0.5
     assert number_2.min_value == -0.5
     assert number_2.step == 0.1
@@ -259,6 +265,7 @@ async def test_deprecation_warnings(
 
     number_3 = MockNumberEntityAttrDeprecated()
     number_3.hass = hass
+    number_3.platform = MockEntityPlatform(hass)
     assert number_3.max_value == 1000.0
     assert number_3.min_value == -1000.0
     assert number_3.step == 100.0
@@ -267,6 +274,7 @@ async def test_deprecation_warnings(
 
     number_4 = MockNumberEntityDescrDeprecated()
     number_4.hass = hass
+    number_4.platform = MockEntityPlatform(hass)
     assert number_4.max_value == 10.0
     assert number_4.min_value == -10.0
     assert number_4.step == 2.0
@@ -635,7 +643,7 @@ async def test_restore_number_save_state(
     await hass.async_block_till_done()
 
     # Trigger saving state
-    await hass.async_stop()
+    await async_mock_restore_state_shutdown_restart(hass)
 
     assert len(hass_storage[RESTORE_STATE_KEY]["data"]) == 1
     state = hass_storage[RESTORE_STATE_KEY]["data"][0]["state"]

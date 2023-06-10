@@ -10,7 +10,6 @@ import zigpy.zcl
 
 from homeassistant.core import callback
 
-from . import AttrReportConfig, ClientClusterHandler, ClusterHandler
 from .. import registries
 from ..const import (
     ATTR_ATTRIBUTE_ID,
@@ -24,6 +23,7 @@ from ..const import (
     SIGNAL_ATTR_UPDATED,
     UNKNOWN,
 )
+from . import AttrReportConfig, ClientClusterHandler, ClusterHandler
 
 if TYPE_CHECKING:
     from ..endpoint import Endpoint

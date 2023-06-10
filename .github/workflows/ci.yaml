@@ -32,7 +32,7 @@ env:
   CACHE_VERSION: 5
   PIP_CACHE_VERSION: 4
   MYPY_CACHE_VERSION: 4
-  HA_SHORT_VERSION: 2023.6
+  HA_SHORT_VERSION: 2023.7
   DEFAULT_PYTHON: "3.10"
   ALL_PYTHON_VERSIONS: "['3.10', '3.11']"
   # 10.3 is the oldest supported version
@@ -209,7 +209,7 @@ jobs:
         uses: actions/checkout@v3.5.2
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
-        uses: actions/setup-python@v4.6.0
+        uses: actions/setup-python@v4.6.1
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
           check-latest: true
@@ -253,7 +253,7 @@ jobs:
       - name: Check out code from GitHub
         uses: actions/checkout@v3.5.2
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v4.6.0
+        uses: actions/setup-python@v4.6.1
         id: python
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
@@ -299,7 +299,7 @@ jobs:
       - name: Check out code from GitHub
         uses: actions/checkout@v3.5.2
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v4.6.0
+        uses: actions/setup-python@v4.6.1
         id: python
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
@@ -338,44 +338,6 @@ jobs:
           shopt -s globstar
           pre-commit run --hook-stage manual ruff --files {homeassistant,tests}/components/${{ needs.info.outputs.integrations_glob }}/{*,**/*} --show-diff-on-failure
 
-  lint-isort:
-    name: Check isort
-    runs-on: ubuntu-22.04
-    needs:
-      - info
-      - pre-commit
-    steps:
-      - name: Check out code from GitHub
-        uses: actions/checkout@v3.5.2
-      - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v4.6.0
-        id: python
-        with:
-          python-version: ${{ env.DEFAULT_PYTHON }}
-          check-latest: true
-      - name: Restore base Python virtual environment
-        id: cache-venv
-        uses: actions/cache/restore@v3.3.1
-        with:
-          path: venv
-          fail-on-cache-miss: true
-          key: >-
-            ${{ runner.os }}-${{ steps.python.outputs.python-version }}-venv-${{
-              needs.info.outputs.pre-commit_cache_key }}
-      - name: Restore pre-commit environment from cache
-        id: cache-precommit
-        uses: actions/cache/restore@v3.3.1
-        with:
-          path: ${{ env.PRE_COMMIT_CACHE }}
-          fail-on-cache-miss: true
-          key: >-
-            ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
-              needs.info.outputs.pre-commit_cache_key }}
-      - name: Run isort
-        run: |
-          . venv/bin/activate
-          pre-commit run --hook-stage manual isort --all-files --show-diff-on-failure
-
   lint-other:
     name: Check other linters
     runs-on: ubuntu-22.04
@@ -386,7 +348,7 @@ jobs:
       - name: Check out code from GitHub
         uses: actions/checkout@v3.5.2
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v4.6.0
+        uses: actions/setup-python@v4.6.1
         id: python
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
@@ -468,19 +430,6 @@ jobs:
         with:
           args: hadolint Dockerfile.dev
 
-      - name: Run bandit (fully)
-        if: needs.info.outputs.test_full_suite == 'true'
-        run: |
-          . venv/bin/activate
-          pre-commit run --hook-stage manual bandit --all-files --show-diff-on-failure
-      - name: Run bandit (partially)
-        if: needs.info.outputs.test_full_suite == 'false'
-        shell: bash
-        run: |
-          . venv/bin/activate
-          shopt -s globstar
-          pre-commit run --hook-stage manual bandit --files {homeassistant,tests}/components/${{ needs.info.outputs.integrations_glob }}/{*,**/*} --show-diff-on-failure
-
   base:
     name: Prepare dependencies
     runs-on: ubuntu-22.04
@@ -494,7 +443,7 @@ jobs:
         uses: actions/checkout@v3.5.2
       - name: Set up Python ${{ matrix.python-version }}
         id: python
-        uses: actions/setup-python@v4.6.0
+        uses: actions/setup-python@v4.6.1
         with:
           python-version: ${{ matrix.python-version }}
           check-latest: true
@@ -562,7 +511,7 @@ jobs:
         uses: actions/checkout@v3.5.2
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
-        uses: actions/setup-python@v4.6.0
+        uses: actions/setup-python@v4.6.1
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
           check-latest: true
@@ -594,7 +543,7 @@ jobs:
         uses: actions/checkout@v3.5.2
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
-        uses: actions/setup-python@v4.6.0
+        uses: actions/setup-python@v4.6.1
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
           check-latest: true
@@ -627,7 +576,7 @@ jobs:
         uses: actions/checkout@v3.5.2
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
-        uses: actions/setup-python@v4.6.0
+        uses: actions/setup-python@v4.6.1
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
           check-latest: true
@@ -671,7 +620,7 @@ jobs:
         uses: actions/checkout@v3.5.2
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
-        uses: actions/setup-python@v4.6.0
+        uses: actions/setup-python@v4.6.1
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
           check-latest: true
@@ -732,7 +681,6 @@ jobs:
       - base
       - gen-requirements-all
       - hassfest
-      - lint-isort
       - lint-other
       - lint-ruff
       - mypy
@@ -754,7 +702,7 @@ jobs:
         uses: actions/checkout@v3.5.2
       - name: Set up Python ${{ matrix.python-version }}
         id: python
-        uses: actions/setup-python@v4.6.0
+        uses: actions/setup-python@v4.6.1
         with:
           python-version: ${{ matrix.python-version }}
           check-latest: true
@@ -857,7 +805,6 @@ jobs:
       - base
       - gen-requirements-all
       - hassfest
-      - lint-isort
       - lint-other
       - lint-ruff
       - mypy
@@ -880,7 +827,7 @@ jobs:
         uses: actions/checkout@v3.5.2
       - name: Set up Python ${{ matrix.python-version }}
         id: python
-        uses: actions/setup-python@v4.6.0
+        uses: actions/setup-python@v4.6.1
         with:
           python-version: ${{ matrix.python-version }}
           check-latest: true
@@ -965,7 +912,6 @@ jobs:
       - base
       - gen-requirements-all
       - hassfest
-      - lint-isort
       - lint-other
       - lint-ruff
       - mypy
@@ -988,7 +934,7 @@ jobs:
         uses: actions/checkout@v3.5.2
       - name: Set up Python ${{ matrix.python-version }}
         id: python
-        uses: actions/setup-python@v4.6.0
+        uses: actions/setup-python@v4.6.1
         with:
           python-version: ${{ matrix.python-version }}
           check-latest: true

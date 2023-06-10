@@ -87,7 +87,6 @@ SENSOR_DESCRIPTIONS: dict[tuple[Units, bool], SensorEntityDescription] = {
     ),
     (Units.NONE, False): SensorEntityDescription(
         key=f"{Units.NONE}_{False}",
-        state_class=SensorStateClass.MEASUREMENT,
     ),
 }
 

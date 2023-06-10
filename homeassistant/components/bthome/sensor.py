@@ -5,9 +5,7 @@ from bthome_ble import SensorDeviceClass as BTHomeSensorDeviceClass, SensorUpdat
 
 from homeassistant import config_entries
 from homeassistant.components.bluetooth.passive_update_processor import (
-    PassiveBluetoothDataProcessor,
     PassiveBluetoothDataUpdate,
-    PassiveBluetoothProcessorCoordinator,
     PassiveBluetoothProcessorEntity,
 )
 from homeassistant.components.sensor import (
@@ -42,6 +40,10 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.sensor import sensor_device_info_to_hass_device_info
 
 from .const import DOMAIN
+from .coordinator import (
+    BTHomePassiveBluetoothDataProcessor,
+    BTHomePassiveBluetoothProcessorCoordinator,
+)
 from .device import device_key_to_bluetooth_entity_key
 
 SENSOR_DESCRIPTIONS = {
@@ -343,10 +345,12 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the BTHome BLE sensors."""
-    coordinator: PassiveBluetoothProcessorCoordinator = hass.data[DOMAIN][
+    coordinator: BTHomePassiveBluetoothProcessorCoordinator = hass.data[DOMAIN][
         entry.entry_id
     ]
-    processor = PassiveBluetoothDataProcessor(sensor_update_to_bluetooth_data_update)
+    processor = BTHomePassiveBluetoothDataProcessor(
+        sensor_update_to_bluetooth_data_update
+    )
     entry.async_on_unload(
         processor.async_add_entities_listener(
             BTHomeBluetoothSensorEntity, async_add_entities
@@ -356,7 +360,7 @@ async def async_setup_entry(
 
 
 class BTHomeBluetoothSensorEntity(
-    PassiveBluetoothProcessorEntity[PassiveBluetoothDataProcessor[float | int | None]],
+    PassiveBluetoothProcessorEntity[BTHomePassiveBluetoothDataProcessor],
     SensorEntity,
 ):
     """Representation of a BTHome BLE sensor."""
@@ -365,3 +369,11 @@ class BTHomeBluetoothSensorEntity(
     def native_value(self) -> int | float | None:
         """Return the native value."""
         return self.processor.entity_data.get(self.entity_key)
+
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        coordinator: BTHomePassiveBluetoothProcessorCoordinator = (
+            self.processor.coordinator
+        )
+        return coordinator.device_data.sleepy_device or super().available

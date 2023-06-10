@@ -1,6 +1,6 @@
 """Test fixtures for the Home Assistant SkyConnect integration."""
 from collections.abc import Generator
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -30,6 +30,17 @@ def mock_zha():
     ), patch(
         "homeassistant.components.zha.async_setup_entry",
         return_value=True,
+    ):
+        yield
+
+
+@pytest.fixture(autouse=True)
+def mock_zha_get_last_network_settings() -> Generator[None, None, None]:
+    """Mock zha.api.async_get_last_network_settings."""
+
+    with patch(
+        "homeassistant.components.zha.api.async_get_last_network_settings",
+        AsyncMock(return_value=None),
     ):
         yield
 
