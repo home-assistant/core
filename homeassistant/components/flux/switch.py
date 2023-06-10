@@ -48,7 +48,6 @@ from homeassistant.util.color import (
 )
 from homeassistant.util.dt import as_local, parse_time, utcnow as dt_utcnow
 
-from .config_flow import UNDEFINED
 from .const import (
     CONF_ADJUST_BRIGHTNESS,
     CONF_INTERVAL,
@@ -167,9 +166,9 @@ async def async_setup_platform(
         name,  # type: ignore[arg-type]
         hass,
         lights,
-        start_time,  # type: ignore[arg-type]
-        sunset_time,  # type: ignore[arg-type]
-        stop_time,  # type: ignore[arg-type]
+        start_time,
+        sunset_time,
+        stop_time,
         start_colortemp,
         sunset_colortemp,
         stop_colortemp,
@@ -198,14 +197,9 @@ async def async_setup_entry(
     name = entry.data.get(CONF_NAME, entry.title)
     lights = entry.data.get(CONF_LIGHTS)
 
-    def parse_time_if_defined(config_value):
-        if config_value != UNDEFINED:
-            return parse_time(str(config_value))
-        return None
-
-    start_time = parse_time_if_defined(entry.data.get(CONF_START_TIME))
-    sunset_time = parse_time_if_defined(entry.data.get(CONF_SUNSET_TIME))
-    stop_time = parse_time_if_defined(entry.data.get(CONF_STOP_TIME))
+    start_time = parse_time(entry.data.get(CONF_START_TIME))  # type: ignore[arg-type]
+    sunset_time = parse_time(entry.data.get(CONF_SUNSET_TIME))  # type: ignore[arg-type]
+    stop_time = parse_time(entry.data.get(CONF_STOP_TIME))  # type: ignore[arg-type]
 
     start_colortemp = entry.data.get(CONF_START_CT)
     sunset_colortemp = entry.data.get(CONF_SUNSET_CT)
@@ -257,9 +251,9 @@ class FluxSwitch(SwitchEntity, RestoreEntity):
         name: str,
         hass: HomeAssistant,
         lights,
-        start_time: time,
-        sunset_time: time,
-        stop_time: time,
+        start_time: time | None,
+        sunset_time: time | None,
+        stop_time: time | None,
         start_colortemp,
         sunset_colortemp,
         stop_colortemp,

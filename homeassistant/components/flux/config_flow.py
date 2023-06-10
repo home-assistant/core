@@ -140,12 +140,17 @@ class OptionsFlow(config_entries.OptionsFlow):
 
         return user_input
 
+    def remove_undefined(self, user_input):
+        """Remove keys with values that are UNDEFINED."""
+        return {key: value for key, value in user_input.items() if value != UNDEFINED}
+
     async def async_step_init(self, user_input=None) -> FlowResult:
         """Configure the options."""
         errors: dict[str, str] = {}
         if user_input is not None:
             user_input = self.reset_values_to_default(user_input)
             user_input = self.convert_mired_stuff_to_kelvin(user_input)
+            user_input = self.remove_undefined(user_input)
 
             # modify the existing entry...
             self.hass.config_entries.async_update_entry(
@@ -197,7 +202,7 @@ class OptionsFlow(config_entries.OptionsFlow):
                             float(settings.get(CONF_STOP_CT))  # type: ignore[arg-type]
                         ),
                     ): ColorTempSelector(allowed_colortemp_range),
-                    # disable_brightness_adjust
+                    # adjust_brightness
                     vol.Optional(
                         CONF_ADJUST_BRIGHTNESS,
                         default=settings.get(CONF_ADJUST_BRIGHTNESS),
