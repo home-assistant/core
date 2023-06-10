@@ -39,7 +39,6 @@ async def async_setup_entry(
         # Otherwise, add all the entities we found
         entities = [
             ElmaxArea(
-                panel=coordinator.panel_entry,
                 elmax_device=area,
                 panel_version=panel_status.release,
                 coordinator=coordinator,

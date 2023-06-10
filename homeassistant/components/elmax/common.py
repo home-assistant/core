@@ -5,6 +5,7 @@ import asyncio
 from datetime import timedelta
 import logging
 from logging import Logger
+import ssl
 
 from elmax_api.exceptions import (
     ElmaxApiError,
@@ -13,12 +14,14 @@ from elmax_api.exceptions import (
     ElmaxNetworkError,
     ElmaxPanelBusyError,
 )
-from elmax_api.http import Elmax
+from elmax_api.http import GenericElmax
 from elmax_api.model.actuator import Actuator
 from elmax_api.model.area import Area
 from elmax_api.model.cover import Cover
 from elmax_api.model.endpoint import DeviceEndpoint
 from elmax_api.model.panel import PanelEntry, PanelStatus
+from httpx import ConnectError, ConnectTimeout
+from packaging import version
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
@@ -29,9 +32,48 @@ from homeassistant.helpers.update_coordinator import (
     UpdateFailed,
 )
 
-from .const import DEFAULT_TIMEOUT, DOMAIN
+from .const import (
+    DEFAULT_TIMEOUT,
+    DOMAIN,
+    ELMAX_LOCAL_API_PATH,
+    MIN_APIV2_SUPPORTED_VERSION,
+)
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def get_direct_api_url(host: str, port: int, use_ssl: bool) -> str:
+    """Return the direct API url given the base URI."""
+    schema = "https" if use_ssl else "http"
+    return f"{schema}://{host}:{port}/{ELMAX_LOCAL_API_PATH}"
+
+
+def build_direct_ssl_context(cadata: str) -> ssl.SSLContext:
+    """Create a custom SSL context for direct-api verification."""
+    context = ssl.SSLContext(protocol=ssl.PROTOCOL_TLS_CLIENT)
+    context.check_hostname = False
+    context.verify_mode = ssl.CERT_REQUIRED
+    context.load_verify_locations(cadata=cadata)
+    return context
+
+
+def check_local_version_supported(api_version: str | None) -> bool:
+    """Check whether the given API version is supported."""
+    if api_version is None:
+        return False
+    return version.parse(api_version) >= version.parse(MIN_APIV2_SUPPORTED_VERSION)
+
+
+class DummyPanel(PanelEntry):
+    """Helper class for wrapping a directly accessed Elmax Panel."""
+
+    def __init__(self, panel_uri):
+        """Construct the object."""
+        super().__init__(panel_uri, True, {})
+
+    def get_name_by_user(self, username: str) -> str:
+        """Return the panel name."""
+        return f"Direct Panel {self.hash}"
 
 
 class ElmaxCoordinator(DataUpdateCoordinator[PanelStatus]):
@@ -41,18 +83,14 @@ class ElmaxCoordinator(DataUpdateCoordinator[PanelStatus]):
         self,
         hass: HomeAssistant,
         logger: Logger,
-        username: str,
-        password: str,
-        panel_id: str,
-        panel_pin: str,
+        elmax_api_client: GenericElmax,
+        panel: PanelEntry,
         name: str,
         update_interval: timedelta,
     ) -> None:
         """Instantiate the object."""
-        self._client = Elmax(username=username, password=password)
-        self._panel_id = panel_id
-        self._panel_pin = panel_pin
-        self._panel_entry = None
+        self._client = elmax_api_client
+        self._panel_entry = panel
         self._state_by_endpoint = None
         super().__init__(
             hass=hass, logger=logger, name=name, update_interval=update_interval
@@ -92,37 +130,24 @@ class ElmaxCoordinator(DataUpdateCoordinator[PanelStatus]):
         """Return the current http client being used by this instance."""
         return self._client
 
+    @http_client.setter
+    def http_client(self, client: GenericElmax):
+        """Set the client library instance for Elmax API."""
+        self._client = client
+
     async def _async_update_data(self):
         try:
-            async with asyncio.timeout(DEFAULT_TIMEOUT):
-                # Retrieve the panel online status first
-                panels = await self._client.list_control_panels()
-                panel = next(
-                    (panel for panel in panels if panel.hash == self._panel_id), None
-                )
+            async with async_timeout.timeout(DEFAULT_TIMEOUT):
+                # The following command might fail in case of the panel is offline.
+                # In this case, just print a warning and return None: listeners will assume the panel
+                # offline.
+                status = await self._client.get_current_panel_status()
 
-                # If the panel is no more available within the given. Raise config error as the user must
-                # reconfigure it in order to  make it work again
-                if not panel:
-                    raise ConfigEntryAuthFailed(
-                        f"Panel ID {self._panel_id} is no more linked to this user"
-                        " account"
-                    )
-
-                self._panel_entry = panel
-
-                # If the panel is online, proceed with fetching its state
-                # and return it right away
-                if panel.online:
-                    status = await self._client.get_panel_status(
-                        control_panel_id=panel.hash, pin=self._panel_pin
-                    )  # type: PanelStatus
-
-                    # Store a dictionary for fast endpoint state access
-                    self._state_by_endpoint = {
-                        k.endpoint_id: k for k in status.all_endpoints
-                    }
-                    return status
+                # Store a dictionary for fast endpoint state access
+                self._state_by_endpoint = {
+                    k.endpoint_id: k for k in status.all_endpoints
+                }
+                return status
 
                 # Otherwise, return None. Listeners will know that this means the device is offline
                 return None
@@ -130,16 +155,19 @@ class ElmaxCoordinator(DataUpdateCoordinator[PanelStatus]):
         except ElmaxBadPinError as err:
             raise ConfigEntryAuthFailed("Control panel pin was refused") from err
         except ElmaxBadLoginError as err:
-            raise ConfigEntryAuthFailed("Refused username/password") from err
+            raise ConfigEntryAuthFailed("Refused username/password/pin") from err
         except ElmaxApiError as err:
             raise UpdateFailed(f"Error communicating with ELMAX API: {err}") from err
         except ElmaxPanelBusyError as err:
             raise UpdateFailed(
                 "Communication with the panel failed, as it is currently busy"
             ) from err
-        except ElmaxNetworkError as err:
+        except (ConnectError, ConnectTimeout, ElmaxNetworkError) as err:
             raise UpdateFailed(
-                "A network error occurred while communicating with Elmax cloud."
+                "A network error occurred while communicating with Cloud/Elmax Panel."
+                "If connecting against the Cloud, make sure HA can reach the internet."
+                "If connecting directly to the Elmax Panel, make sure the panel is online and "
+                "no firewall is blocking it."
             ) from err
 
 
@@ -148,14 +176,12 @@ class ElmaxEntity(CoordinatorEntity[ElmaxCoordinator]):
 
     def __init__(
         self,
-        panel: PanelEntry,
         elmax_device: DeviceEndpoint,
         panel_version: str,
         coordinator: ElmaxCoordinator,
     ) -> None:
         """Construct the object."""
         super().__init__(coordinator=coordinator)
-        self._panel = panel
         self._device = elmax_device
         self._attr_unique_id = elmax_device.endpoint_id
         self._attr_name = elmax_device.name
@@ -172,4 +198,4 @@ class ElmaxEntity(CoordinatorEntity[ElmaxCoordinator]):
     @property
     def available(self) -> bool:
         """Return if entity is available."""
-        return super().available and self._panel.online
+        return super().available and self.coordinator.panel_entry.online
