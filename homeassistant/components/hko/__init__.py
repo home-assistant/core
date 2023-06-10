@@ -54,9 +54,8 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
-SCAN_INTERVAL = timedelta(minutes=30)
 
-PLATFORMS = Platform.WEATHER
+PLATFORMS: list[Platform] = [Platform.WEATHER]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -67,9 +66,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         (item for item in LOCATIONS if item[KEY_LOCATION] == location),
         {KEY_DISTRICT: DEFAULT_DISTRICT},
     )[KEY_DISTRICT]
+    websession = async_get_clientsession(hass)
 
-    session = async_get_clientsession(hass)
-    coordinator = HKOUpdateCoordinator(hass, session, district, location)
+    coordinator = HKOUpdateCoordinator(hass, websession, district, location)
     await coordinator.async_config_entry_first_refresh()
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = coordinator
@@ -81,9 +80,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_forward_entry_unload(entry, PLATFORMS)
-    if unload_ok:
-        del hass.data[DOMAIN][entry.entry_id]
+    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
+        hass.data[DOMAIN].pop(entry.entry_id)
+
     return unload_ok
 
 
@@ -96,7 +95,14 @@ class HKOUpdateCoordinator(DataUpdateCoordinator):
         self.district = district
         self.hko = HKO(session)
 
-        super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=SCAN_INTERVAL)
+        update_interval = timedelta(minutes=10)
+        super().__init__(
+            hass,
+            _LOGGER,
+            name=DOMAIN,
+            # update_method=self._async_update_data(),
+            update_interval=update_interval,
+        )
 
     async def _async_update_data(self):
         """Update data via HKO library."""
