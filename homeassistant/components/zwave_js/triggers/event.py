@@ -218,8 +218,8 @@ async def async_attach_trigger(
         if not nodes:
             entry_id = config[ATTR_CONFIG_ENTRY_ID]
             client: Client = hass.data[DOMAIN][entry_id][DATA_CLIENT]
-            assert client.driver
             driver = client.driver
+            assert driver
             drivers.add(driver)
             if event_source == "controller":
                 unsubs.append(driver.controller.on(event_name, async_on_event))
@@ -227,8 +227,8 @@ async def async_attach_trigger(
                 unsubs.append(driver.on(event_name, async_on_event))
 
         for node in nodes:
-            assert node.client.driver is not None  # The node comes from the driver.
             driver = node.client.driver
+            assert driver is not None  # The node comes from the driver.
             drivers.add(driver)
             device_identifier = get_device_id(driver, node)
             device = dev_reg.async_get_device({device_identifier})
