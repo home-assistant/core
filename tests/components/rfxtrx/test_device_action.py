@@ -3,8 +3,8 @@ from __future__ import annotations
 
 from typing import Any, NamedTuple
 
-import RFXtrx
 import pytest
+import RFXtrx
 
 import homeassistant.components.automation as automation
 from homeassistant.components.device_automation import DeviceAutomationType

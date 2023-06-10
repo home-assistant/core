@@ -93,11 +93,6 @@ CONF_ACTION_TOPIC = "action_topic"
 CONF_AUX_COMMAND_TOPIC = "aux_command_topic"
 CONF_AUX_STATE_TEMPLATE = "aux_state_template"
 CONF_AUX_STATE_TOPIC = "aux_state_topic"
-# AWAY and HOLD mode topics and templates are no longer supported,
-# support was removed with release 2022.9
-CONF_AWAY_MODE_COMMAND_TOPIC = "away_mode_command_topic"
-CONF_AWAY_MODE_STATE_TEMPLATE = "away_mode_state_template"
-CONF_AWAY_MODE_STATE_TOPIC = "away_mode_state_topic"
 
 CONF_CURRENT_HUMIDITY_TEMPLATE = "current_humidity_template"
 CONF_CURRENT_HUMIDITY_TOPIC = "current_humidity_topic"
@@ -106,13 +101,6 @@ CONF_FAN_MODE_COMMAND_TOPIC = "fan_mode_command_topic"
 CONF_FAN_MODE_LIST = "fan_modes"
 CONF_FAN_MODE_STATE_TEMPLATE = "fan_mode_state_template"
 CONF_FAN_MODE_STATE_TOPIC = "fan_mode_state_topic"
-# AWAY and HOLD mode topics and templates are no longer supported,
-# support was removed with release 2022.9
-CONF_HOLD_COMMAND_TEMPLATE = "hold_command_template"
-CONF_HOLD_COMMAND_TOPIC = "hold_command_topic"
-CONF_HOLD_STATE_TEMPLATE = "hold_state_template"
-CONF_HOLD_STATE_TOPIC = "hold_state_topic"
-CONF_HOLD_LIST = "hold_modes"
 
 CONF_HUMIDITY_COMMAND_TEMPLATE = "target_humidity_command_template"
 CONF_HUMIDITY_COMMAND_TOPIC = "target_humidity_command_topic"
@@ -133,8 +121,6 @@ CONF_PRESET_MODE_COMMAND_TOPIC = "preset_mode_command_topic"
 CONF_PRESET_MODE_VALUE_TEMPLATE = "preset_mode_value_template"
 CONF_PRESET_MODE_COMMAND_TEMPLATE = "preset_mode_command_template"
 CONF_PRESET_MODES_LIST = "preset_modes"
-# Support CONF_SEND_IF_OFF is removed with release 2022.9
-CONF_SEND_IF_OFF = "send_if_off"
 CONF_SWING_MODE_COMMAND_TEMPLATE = "swing_mode_command_template"
 CONF_SWING_MODE_COMMAND_TOPIC = "swing_mode_command_topic"
 CONF_SWING_MODE_LIST = "swing_modes"
@@ -362,18 +348,6 @@ _PLATFORM_SCHEMA_BASE = MQTT_BASE_SCHEMA.extend(
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
 
 PLATFORM_SCHEMA_MODERN = vol.All(
-    # Support CONF_SEND_IF_OFF is removed with release 2022.9
-    cv.removed(CONF_SEND_IF_OFF),
-    # AWAY and HOLD mode topics and templates are no longer supported,
-    # support was removed with release 2022.9
-    cv.removed(CONF_AWAY_MODE_COMMAND_TOPIC),
-    cv.removed(CONF_AWAY_MODE_STATE_TEMPLATE),
-    cv.removed(CONF_AWAY_MODE_STATE_TOPIC),
-    cv.removed(CONF_HOLD_COMMAND_TEMPLATE),
-    cv.removed(CONF_HOLD_COMMAND_TOPIC),
-    cv.removed(CONF_HOLD_STATE_TEMPLATE),
-    cv.removed(CONF_HOLD_STATE_TOPIC),
-    cv.removed(CONF_HOLD_LIST),
     # CONF_POWER_COMMAND_TOPIC, CONF_POWER_STATE_TOPIC and CONF_POWER_STATE_TEMPLATE
     # are deprecated, support for CONF_POWER_STATE_TOPIC and CONF_POWER_STATE_TEMPLATE
     # was already removed or never added support was deprecated with release 2023.2
@@ -391,18 +365,6 @@ _DISCOVERY_SCHEMA_BASE = _PLATFORM_SCHEMA_BASE.extend({}, extra=vol.REMOVE_EXTRA
 
 DISCOVERY_SCHEMA = vol.All(
     _DISCOVERY_SCHEMA_BASE,
-    # Support CONF_SEND_IF_OFF is removed with release 2022.9
-    cv.removed(CONF_SEND_IF_OFF),
-    # AWAY and HOLD mode topics and templates are no longer supported,
-    # support was removed with release 2022.9
-    cv.removed(CONF_AWAY_MODE_COMMAND_TOPIC),
-    cv.removed(CONF_AWAY_MODE_STATE_TEMPLATE),
-    cv.removed(CONF_AWAY_MODE_STATE_TOPIC),
-    cv.removed(CONF_HOLD_COMMAND_TEMPLATE),
-    cv.removed(CONF_HOLD_COMMAND_TOPIC),
-    cv.removed(CONF_HOLD_STATE_TEMPLATE),
-    cv.removed(CONF_HOLD_STATE_TOPIC),
-    cv.removed(CONF_HOLD_LIST),
     # CONF_POWER_COMMAND_TOPIC, CONF_POWER_STATE_TOPIC and CONF_POWER_STATE_TEMPLATE are deprecated,
     # support for CONF_POWER_STATE_TOPIC and CONF_POWER_STATE_TEMPLATE was already removed or never added
     # support was deprecated with release 2023.2 and will be removed with release 2023.8
