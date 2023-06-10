@@ -219,50 +219,34 @@ def _get_statistic_to_display_unit_converter(
     if display_unit == statistic_unit:
         return None
 
-    convert = converter.convert
-
-    def _from_normalized_unit(val: float | None) -> float | None:
-        """Return val."""
-        if val is None:
-            return val
-        return convert(val, statistic_unit, display_unit)
-
-    return _from_normalized_unit
+    return converter.converter_factory_allow_none(
+        from_unit=statistic_unit, to_unit=display_unit
+    )
 
 
 def _get_display_to_statistic_unit_converter(
     display_unit: str | None,
     statistic_unit: str | None,
-) -> Callable[[float], float]:
+) -> Callable[[float], float] | None:
     """Prepare a converter from the display unit to the statistics unit."""
-
-    def no_conversion(val: float) -> float:
-        """Return val."""
-        return val
-
-    if (converter := STATISTIC_UNIT_TO_UNIT_CONVERTER.get(statistic_unit)) is None:
-        return no_conversion
-
-    return partial(converter.convert, from_unit=display_unit, to_unit=statistic_unit)
+    if (
+        display_unit == statistic_unit
+        or (converter := STATISTIC_UNIT_TO_UNIT_CONVERTER.get(statistic_unit)) is None
+    ):
+        return None
+    return converter.converter_factory(from_unit=display_unit, to_unit=statistic_unit)
 
 
 def _get_unit_converter(
     from_unit: str, to_unit: str
-) -> Callable[[float | None], float | None]:
+) -> Callable[[float | None], float | None] | None:
     """Prepare a converter from a unit to another unit."""
-
-    def convert_units(
-        val: float | None, conv: type[BaseUnitConverter], from_unit: str, to_unit: str
-    ) -> float | None:
-        """Return converted val."""
-        if val is None:
-            return val
-        return conv.convert(val, from_unit=from_unit, to_unit=to_unit)
-
     for conv in STATISTIC_UNIT_TO_UNIT_CONVERTER.values():
         if from_unit in conv.VALID_UNITS and to_unit in conv.VALID_UNITS:
-            return partial(
-                convert_units, conv=conv, from_unit=from_unit, to_unit=to_unit
+            if from_unit == to_unit:
+                return None
+            return conv.converter_factory_allow_none(
+                from_unit=from_unit, to_unit=to_unit
             )
     raise HomeAssistantError
 
@@ -1494,7 +1478,9 @@ def statistic_during_period(
         state_unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
     convert = _get_statistic_to_display_unit_converter(unit, state_unit, units)
 
-    return {key: convert(value) if convert else value for key, value in result.items()}
+    if not convert:
+        return result
+    return {key: convert(value) for key, value in result.items()}
 
 
 _type_column_mapping = {
@@ -2290,10 +2276,10 @@ def adjust_statistics(
             return True
 
         statistic_unit = metadata[statistic_id][1]["unit_of_measurement"]
-        convert = _get_display_to_statistic_unit_converter(
+        if convert := _get_display_to_statistic_unit_converter(
             adjustment_unit, statistic_unit
-        )
-        sum_adjustment = convert(sum_adjustment)
+        ):
+            sum_adjustment = convert(sum_adjustment)
 
         _adjust_sum_statistics(
             session,
@@ -2360,7 +2346,14 @@ def change_statistics_unit(
 
         metadata_id = metadata[0]
 
-        convert = _get_unit_converter(old_unit, new_unit)
+        if not (convert := _get_unit_converter(old_unit, new_unit)):
+            _LOGGER.warning(
+                "Statistics unit of measurement for %s is already %s",
+                statistic_id,
+                new_unit,
+            )
+            return
+
         tables: tuple[type[StatisticsBase], ...] = (
             Statistics,
             StatisticsShortTerm,
@@ -2407,7 +2400,7 @@ def cleanup_statistics_timestamp_migration(instance: Recorder) -> bool:
             with session_scope(session=instance.get_session()) as session:
                 session.connection().execute(
                     text(
-                        f"update {table} set start = NULL, created = NULL, last_reset = NULL;"
+                        f"update {table} set start = NULL, created = NULL, last_reset = NULL;"  # noqa: S608
                     )
                 )
     elif engine.dialect.name == SupportedDialect.MYSQL:
@@ -2417,7 +2410,7 @@ def cleanup_statistics_timestamp_migration(instance: Recorder) -> bool:
                     session.connection()
                     .execute(
                         text(
-                            f"UPDATE {table} set start=NULL, created=NULL, last_reset=NULL where start is not NULL LIMIT 100000;"
+                            f"UPDATE {table} set start=NULL, created=NULL, last_reset=NULL where start is not NULL LIMIT 100000;"  # noqa: S608
                         )
                     )
                     .rowcount
@@ -2432,7 +2425,7 @@ def cleanup_statistics_timestamp_migration(instance: Recorder) -> bool:
                     session.connection()
                     .execute(
                         text(
-                            f"UPDATE {table} set start=NULL, created=NULL, last_reset=NULL "  # nosec
+                            f"UPDATE {table} set start=NULL, created=NULL, last_reset=NULL "  # noqa: S608
                             f"where id in (select id from {table} where start is not NULL LIMIT 100000)"
                         )
                     )

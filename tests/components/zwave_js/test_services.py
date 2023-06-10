@@ -430,6 +430,7 @@ async def test_bulk_set_config_parameters(
     assert args["nodeId"] == 52
     assert args["valueId"] == {
         "commandClass": 112,
+        "endpoint": 0,
         "property": 102,
     }
     assert args["value"] == 241
@@ -457,6 +458,7 @@ async def test_bulk_set_config_parameters(
     assert args["nodeId"] == 52
     assert args["valueId"] == {
         "commandClass": 112,
+        "endpoint": 0,
         "property": 102,
     }
     assert args["value"] == 241
@@ -486,6 +488,7 @@ async def test_bulk_set_config_parameters(
     assert args["nodeId"] == 52
     assert args["valueId"] == {
         "commandClass": 112,
+        "endpoint": 0,
         "property": 102,
     }
     assert args["value"] == 241
@@ -516,6 +519,7 @@ async def test_bulk_set_config_parameters(
     assert args["nodeId"] == 52
     assert args["valueId"] == {
         "commandClass": 112,
+        "endpoint": 0,
         "property": 102,
     }
     assert args["value"] == 241
@@ -545,6 +549,7 @@ async def test_bulk_set_config_parameters(
     assert args["nodeId"] == 52
     assert args["valueId"] == {
         "commandClass": 112,
+        "endpoint": 0,
         "property": 102,
     }
     assert args["value"] == 241
@@ -577,6 +582,7 @@ async def test_bulk_set_config_parameters(
     assert args["nodeId"] == 52
     assert args["valueId"] == {
         "commandClass": 112,
+        "endpoint": 0,
         "property": 102,
     }
     assert args["value"] == 241
@@ -609,6 +615,7 @@ async def test_bulk_set_config_parameters(
     assert args["nodeId"] == 52
     assert args["valueId"] == {
         "commandClass": 112,
+        "endpoint": 0,
         "property": 102,
     }
     assert args["value"] == 241
@@ -648,6 +655,7 @@ async def test_bulk_set_config_parameters_gather(
     assert args["nodeId"] == 52
     assert args["valueId"] == {
         "commandClass": 112,
+        "endpoint": 0,
         "property": 102,
     }
     assert args["value"] == 241
@@ -1528,6 +1536,18 @@ async def test_ping(
             DOMAIN,
             SERVICE_PING,
             {},
+            blocking=True,
+        )
+
+    client.async_send_command.reset_mock()
+    client.async_send_command.side_effect = FailedZWaveCommand("test", 1, "test")
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_PING,
+            {
+                ATTR_ENTITY_ID: CLIMATE_RADIO_THERMOSTAT_ENTITY,
+            },
             blocking=True,
         )
 
