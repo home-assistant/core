@@ -4,8 +4,14 @@ from __future__ import annotations
 from datetime import date, timedelta
 from typing import Any
 
-import holidays
-from holidays import DateLike, HolidayBase
+from holidays import (
+    DateLike,
+    HolidayBase,
+    country_holidays,
+    list_localized_countries,
+    list_supported_countries,
+    __version__ as python_holidays_version
+)
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
@@ -28,6 +34,7 @@ from .const import (
     CONF_ADD_HOLIDAYS,
     CONF_COUNTRY,
     CONF_EXCLUDES,
+    CONF_LANGUAGE,
     CONF_OFFSET,
     CONF_PROVINCE,
     CONF_REMOVE_HOLIDAYS,
@@ -44,7 +51,7 @@ from .const import (
 def valid_country(value: Any) -> str:
     """Validate that the given country is supported."""
     value = cv.string(value)
-    all_supported_countries = holidays.list_supported_countries()
+    all_supported_countries = list_supported_countries()
 
     try:
         raw_value = value.encode("utf-8")
@@ -68,6 +75,7 @@ PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_OFFSET, default=DEFAULT_OFFSET): vol.Coerce(int),
         vol.Optional(CONF_PROVINCE): cv.string,
+        vol.Optional(CONF_LANGUAGE): cv.string,
         vol.Optional(CONF_WORKDAYS, default=DEFAULT_WORKDAYS): vol.All(
             cv.ensure_list, [vol.In(ALLOWED_DAYS)]
         ),
@@ -117,18 +125,23 @@ async def async_setup_entry(
     days_offset: int = int(entry.options[CONF_OFFSET])
     excludes: list[str] = entry.options[CONF_EXCLUDES]
     province: str | None = entry.options.get(CONF_PROVINCE)
+    language: str | None = entry.options.get(CONF_LANGUAGE)
     sensor_name: str = entry.options[CONF_NAME]
     workdays: list[str] = entry.options[CONF_WORKDAYS]
 
     year: int = (dt_util.now() + timedelta(days=days_offset)).year
-    obj_holidays: HolidayBase = getattr(holidays, country)(years=year)
 
-    if province:
-        try:
-            obj_holidays = getattr(holidays, country)(subdiv=province, years=year)
-        except NotImplementedError:
-            LOGGER.error("There is no subdivision %s in country %s", province, country)
-            return
+    if province and province not in list_supported_countries()[country]:
+        LOGGER.error("There is no subdivision %s in country %s", province, country)
+        return
+
+    if language and language not in list_localized_countries()[country]:
+        LOGGER.error("Language %s is not supported", language)
+        return
+
+    obj_holidays: HolidayBase  = country_holidays(
+        country, years=year, subdiv=province, language=language
+    )
 
     # Add custom holidays
     try:
@@ -203,7 +216,7 @@ class IsWorkdaySensor(BinarySensorEntity):
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, entry_id)},
             manufacturer="python-holidays",
-            model=holidays.__version__,
+            model=python_holidays_version,
             name=name,
         )
 
