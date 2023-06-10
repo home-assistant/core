@@ -8,6 +8,7 @@ from homeassistant.components.workday.const import (
     CONF_ADD_HOLIDAYS,
     CONF_COUNTRY,
     CONF_EXCLUDES,
+    CONF_LANGUAGE,
     CONF_OFFSET,
     CONF_PROVINCE,
     CONF_REMOVE_HOLIDAYS,
@@ -66,10 +67,11 @@ async def test_form(hass: HomeAssistant) -> None:
         "add_holidays": [],
         "remove_holidays": [],
         "province": None,
+        "language": "de",
     }
 
 
-async def test_form_no_subdivision(hass: HomeAssistant) -> None:
+async def test_form_no_subdivision_no_language(hass: HomeAssistant) -> None:
     """Test we get the forms correctly without subdivision."""
 
     result = await hass.config_entries.flow.async_init(
@@ -108,6 +110,7 @@ async def test_form_no_subdivision(hass: HomeAssistant) -> None:
         "add_holidays": [],
         "remove_holidays": [],
         "province": None,
+        "language": "sv",
     }
 
 
@@ -125,6 +128,7 @@ async def test_options_form(hass: HomeAssistant) -> None:
             "add_holidays": [],
             "remove_holidays": [],
             "province": None,
+            "language": None,
         },
     )
 
@@ -139,6 +143,7 @@ async def test_options_form(hass: HomeAssistant) -> None:
             "add_holidays": [],
             "remove_holidays": [],
             "province": "BW",
+            "language": "en_US",
         },
     )
 
@@ -152,6 +157,7 @@ async def test_options_form(hass: HomeAssistant) -> None:
         "add_holidays": [],
         "remove_holidays": [],
         "province": "BW",
+        "language": "en_US",
     }
 
 
@@ -207,8 +213,9 @@ async def test_form_incorrect_dates(hass: HomeAssistant) -> None:
             CONF_OFFSET: DEFAULT_OFFSET,
             CONF_WORKDAYS: DEFAULT_WORKDAYS,
             CONF_ADD_HOLIDAYS: ["2022-12-12"],
-            CONF_REMOVE_HOLIDAYS: ["Christmas"],
+            CONF_REMOVE_HOLIDAYS: ["Weihnachtstag"],
             CONF_PROVINCE: "none",
+            CONF_LANGUAGE: "de",
         },
     )
     await hass.async_block_till_done()
@@ -222,8 +229,9 @@ async def test_form_incorrect_dates(hass: HomeAssistant) -> None:
         "days_offset": 0,
         "workdays": ["mon", "tue", "wed", "thu", "fri"],
         "add_holidays": ["2022-12-12"],
-        "remove_holidays": ["Christmas"],
+        "remove_holidays": ["Weihnachtstag"],
         "province": None,
+        "language": "de",
     }
 
 
@@ -281,8 +289,71 @@ async def test_options_form_incorrect_dates(hass: HomeAssistant) -> None:
             "days_offset": 0,
             "workdays": ["mon", "tue", "wed", "thu", "fri"],
             "add_holidays": ["2022-12-12"],
+            "remove_holidays": ["Weihnachtstag"],
+            "province": "BW",
+            "language": "en_US",
+        },
+    )
+
+    assert result2["errors"] == {"remove_holidays": "remove_holiday_error"}
+
+
+async def test_options_form_dates_with_language(hass: HomeAssistant) -> None:
+    """Test errors in options."""
+
+    entry = await init_integration(
+        hass,
+        {
+            "name": "Workday Sensor",
+            "country": "DE",
+            "excludes": ["sat", "sun", "holiday"],
+            "days_offset": 0,
+            "workdays": ["mon", "tue", "wed", "thu", "fri"],
+            "add_holidays": [],
+            "remove_holidays": [],
+            "province": None,
+            "language": None,
+        },
+    )
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            "excludes": ["sat", "sun", "holiday"],
+            "days_offset": 0,
+            "workdays": ["mon", "tue", "wed", "thu", "fri"],
+            "add_holidays": ["2022-12-12"],
+            "remove_holidays": ["Weihnachtstag"],
+            "province": "BW",
+            "language": "de",
+        },
+    )
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["data"] == {
+        "name": "Workday Sensor",
+        "country": "DE",
+        "excludes": ["sat", "sun", "holiday"],
+        "days_offset": 0,
+        "workdays": ["mon", "tue", "wed", "thu", "fri"],
+        "add_holidays": ["2022-12-12"],
+        "remove_holidays": ["Weihnachtstag"],
+        "province": "BW",
+        "language": "de",
+    }
+
+    result2 = await hass.config_entries.options.async_init(entry.entry_id)
+    result2 = await hass.config_entries.options.async_configure(
+        result2["flow_id"],
+        user_input={
+            "excludes": ["sat", "sun", "holiday"],
+            "days_offset": 0,
+            "workdays": ["mon", "tue", "wed", "thu", "fri"],
+            "add_holidays": ["2022-12-12"],
             "remove_holidays": ["Christmas"],
             "province": "BW",
+            "language": "en_US",
         },
     )
 
@@ -296,6 +367,34 @@ async def test_options_form_incorrect_dates(hass: HomeAssistant) -> None:
         "add_holidays": ["2022-12-12"],
         "remove_holidays": ["Christmas"],
         "province": "BW",
+        "language": "en_US",
+    }
+
+    result3 = await hass.config_entries.options.async_init(entry.entry_id)
+    result3 = await hass.config_entries.options.async_configure(
+        result3["flow_id"],
+        user_input={
+            "excludes": ["sat", "sun", "holiday"],
+            "days_offset": 0,
+            "workdays": ["mon", "tue", "wed", "thu", "fri"],
+            "add_holidays": ["2022-12-12"],
+            "remove_holidays": ["Перший день Різдва"],
+            "province": "BW",
+            "language": "uk",
+        },
+    )
+
+    assert result3["type"] == FlowResultType.CREATE_ENTRY
+    assert result3["data"] == {
+        "name": "Workday Sensor",
+        "country": "DE",
+        "excludes": ["sat", "sun", "holiday"],
+        "days_offset": 0,
+        "workdays": ["mon", "tue", "wed", "thu", "fri"],
+        "add_holidays": ["2022-12-12"],
+        "remove_holidays": ["Перший день Різдва"],
+        "province": "BW",
+        "language": "uk",
     }
 
 
@@ -313,6 +412,7 @@ async def test_options_form_abort_duplicate(hass: HomeAssistant) -> None:
             "add_holidays": [],
             "remove_holidays": [],
             "province": None,
+            "language": None,
         },
         entry_id="1",
     )
@@ -327,6 +427,7 @@ async def test_options_form_abort_duplicate(hass: HomeAssistant) -> None:
             "add_holidays": ["2023-03-28"],
             "remove_holidays": [],
             "province": None,
+            "language": None,
         },
         entry_id="2",
     )
@@ -342,6 +443,7 @@ async def test_options_form_abort_duplicate(hass: HomeAssistant) -> None:
             "add_holidays": [],
             "remove_holidays": [],
             "province": "none",
+            "language": "none",
         },
     )
 

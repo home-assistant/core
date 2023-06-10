@@ -14,6 +14,7 @@ PLATFORMS = [Platform.BINARY_SENSOR]
 
 CONF_COUNTRY = "country"
 CONF_PROVINCE = "province"
+CONF_LANGUAGE = "language"
 CONF_WORKDAYS = "workdays"
 CONF_EXCLUDES = "excludes"
 CONF_OFFSET = "days_offset"
