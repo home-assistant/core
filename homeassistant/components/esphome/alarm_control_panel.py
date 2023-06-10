@@ -95,7 +95,7 @@ class EsphomeAlarmControlPanel(
     @property
     def code_arm_required(self) -> bool:
         """Whether the code is required for arm actions."""
-        return self._static_info.requires_code_to_arm
+        return bool(self._static_info.requires_code_to_arm)
 
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
@@ -131,4 +131,10 @@ class EsphomeAlarmControlPanel(
         """Send arm away command."""
         await self._client.alarm_control_panel_command(
             self._static_info.key, AlarmControlPanelCommand.ARM_VACATION, code
+        )
+
+    async def async_alarm_trigger(self, code: str | None = None) -> None:
+        """Send alarm trigger command."""
+        await self._client.alarm_control_panel_command(
+            self._static_info.key, AlarmControlPanelCommand.TRIGGER, code
         )
