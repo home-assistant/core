@@ -170,8 +170,8 @@ class FlowManager(abc.ABC):
 
         A flow with the same handler, context, and data.
 
-        If context is passed, only return flows with a context that is a
-        superset of context.
+        If match_context is passed, only return flows with a context that is a
+        superset of match_context.
         """
         return any(
             flow
