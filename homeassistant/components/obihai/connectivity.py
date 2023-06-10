@@ -48,11 +48,12 @@ class ObihaiConnection:
         self.host = host
         self.username = username
         self.password = password
-        self.serial: str
+        self.serial: str = ""
         self.services: list = []
         self.line_services: list = []
         self.call_direction: list = []
         self.pyobihai: PyObihai = None
+        self.available: bool = True
 
     def update(self) -> bool:
         """Validate connection and retrieve a list of sensors."""
