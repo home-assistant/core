@@ -11,7 +11,7 @@ ATTR_AWAY = "AWAY_MODE"
 ATTR_TYPE_CLOUD = "EZVIZ_CLOUD_ACCOUNT"
 ATTR_TYPE_CAMERA = "CAMERA_ACCOUNT"
 CONF_SESSION_ID = "session_id"
-CONF_RFSESSION_ID = "rf_session_id"
+CONF_RF_SESSION_ID = "rf_session_id"
 CONF_EZVIZ_ACCOUNT = "ezviz_account"
 
 # Services data

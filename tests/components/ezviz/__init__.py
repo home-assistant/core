@@ -6,7 +6,7 @@ from homeassistant.components.ezviz.const import (
     ATTR_TYPE_CAMERA,
     ATTR_TYPE_CLOUD,
     CONF_FFMPEG_ARGUMENTS,
-    CONF_RFSESSION_ID,
+    CONF_RF_SESSION_ID,
     CONF_SESSION_ID,
     DEFAULT_FFMPEG_ARGUMENTS,
     DEFAULT_TIMEOUT,
@@ -26,7 +26,7 @@ from tests.common import MockConfigEntry
 
 ENTRY_CONFIG = {
     CONF_SESSION_ID: "test-username",
-    CONF_RFSESSION_ID: "test-password",
+    CONF_RF_SESSION_ID: "test-password",
     CONF_URL: "apiieu.ezvizlife.com",
     CONF_TYPE: ATTR_TYPE_CLOUD,
 }
@@ -76,7 +76,7 @@ TEST = {
 
 API_LOGIN_RETURN_VALIDATE = {
     CONF_SESSION_ID: "fake_token",
-    CONF_RFSESSION_ID: "fake_rf_token",
+    CONF_RF_SESSION_ID: "fake_rf_token",
     CONF_URL: "apiieu.ezvizlife.com",
     CONF_TYPE: ATTR_TYPE_CLOUD,
 }

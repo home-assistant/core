@@ -34,7 +34,7 @@ from .const import (
     ATTR_TYPE_CAMERA,
     ATTR_TYPE_CLOUD,
     CONF_FFMPEG_ARGUMENTS,
-    CONF_RFSESSION_ID,
+    CONF_RF_SESSION_ID,
     CONF_SESSION_ID,
     DEFAULT_CAMERA_USERNAME,
     DEFAULT_FFMPEG_ARGUMENTS,
@@ -67,7 +67,7 @@ def _validate_and_create_auth(data: dict) -> dict[str, Any]:
 
     auth_data = {
         CONF_SESSION_ID: ezviz_token[CONF_SESSION_ID],
-        CONF_RFSESSION_ID: ezviz_token[CONF_RFSESSION_ID],
+        CONF_RF_SESSION_ID: ezviz_token[CONF_RF_SESSION_ID],
         CONF_URL: ezviz_token["api_url"],
         CONF_TYPE: ATTR_TYPE_CLOUD,
     }
@@ -85,6 +85,21 @@ def _test_camera_rtsp_creds(data: dict) -> None:
     test_rtsp.main()
 
 
+def _wake_camera(data, ezviz_token, ezviz_timeout):
+    """Wake up hibernating camera and test."""
+    ezviz_client = EzvizClient(token=ezviz_token, timeout=ezviz_timeout)
+
+    # We need to wake hibernating cameras.
+    # First create EZVIZ API instance.
+    ezviz_client.login()
+
+    # Secondly try to wake hybernating camera.
+    ezviz_client.get_detection_sensibility(data[ATTR_SERIAL])
+
+    # Thirdly attempts an authenticated RTSP DESCRIBE request.
+    _test_camera_rtsp_creds(data)
+
+
 class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for EZVIZ."""
 
@@ -96,7 +111,7 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
         # Get EZVIZ cloud credentials from config entry
         ezviz_token = {
             CONF_SESSION_ID: None,
-            CONF_RFSESSION_ID: None,
+            CONF_RF_SESSION_ID: None,
             "api_url": None,
         }
         ezviz_timeout = DEFAULT_TIMEOUT
@@ -105,7 +120,7 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
             if item.data.get(CONF_TYPE) == ATTR_TYPE_CLOUD:
                 ezviz_token = {
                     CONF_SESSION_ID: item.data.get(CONF_SESSION_ID),
-                    CONF_RFSESSION_ID: item.data.get(CONF_RFSESSION_ID),
+                    CONF_RF_SESSION_ID: item.data.get(CONF_RF_SESSION_ID),
                     "api_url": item.data.get(CONF_URL),
                 }
                 ezviz_timeout = item.data.get(CONF_TIMEOUT, DEFAULT_TIMEOUT)
@@ -114,19 +129,9 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
         if ezviz_token.get(CONF_SESSION_ID) is None:
             return self.async_abort(reason="ezviz_cloud_account_missing")
 
-        ezviz_client = EzvizClient(token=ezviz_token, timeout=ezviz_timeout)
-
-        # We need to wake hibernating cameras.
-        # First create EZVIZ API instance.
-        await self.hass.async_add_executor_job(ezviz_client.login)
-
-        # Secondly try to wake hybernating camera.
         await self.hass.async_add_executor_job(
-            ezviz_client.get_detection_sensibility, data[ATTR_SERIAL]
+            _wake_camera, data, ezviz_token, ezviz_timeout
         )
-
-        # Thirdly attempts an authenticated RTSP DESCRIBE request.
-        await self.hass.async_add_executor_job(_test_camera_rtsp_creds, data)
 
         return self.async_create_entry(
             title=data[ATTR_SERIAL],
