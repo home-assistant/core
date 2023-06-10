@@ -40,7 +40,6 @@ async def async_setup_entry(
             if actuator.endpoint_id in known_devices:
                 continue
             entity = ElmaxSwitch(
-                panel=coordinator.panel_entry,
                 elmax_device=actuator,
                 panel_version=panel_status.release,
                 coordinator=coordinator,
