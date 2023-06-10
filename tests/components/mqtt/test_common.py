@@ -9,17 +9,14 @@ from typing import Any
 from unittest.mock import ANY, MagicMock, patch
 
 import pytest
-import voluptuous as vol
 import yaml
 
 from homeassistant import config as module_hass_config
 from homeassistant.components import mqtt
 from homeassistant.components.mqtt import debug_info
-from homeassistant.components.mqtt.config_integration import PLATFORM_CONFIG_SCHEMA_BASE
 from homeassistant.components.mqtt.const import MQTT_DISCONNECTED
 from homeassistant.components.mqtt.mixins import MQTT_ATTRIBUTES_BLOCKED
 from homeassistant.components.mqtt.models import PublishPayloadType
-from homeassistant.config import async_log_exception
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
@@ -70,8 +67,6 @@ _MqttMessageType = list[tuple[str, str]]
 _AttributesType = list[tuple[str, Any]]
 _StateDataType = list[tuple[_MqttMessageType, str | None, _AttributesType | None]]
 
-MQTT_YAML_SCHEMA = vol.Schema({mqtt.DOMAIN: PLATFORM_CONFIG_SCHEMA_BASE})
-
 
 def help_all_subscribe_calls(mqtt_client_mock: MqttMockPahoClient) -> list[Any]:
     """Test of a call."""
@@ -80,20 +75,6 @@ def help_all_subscribe_calls(mqtt_client_mock: MqttMockPahoClient) -> list[Any]:
         for call in calls[1]:
             all_calls.extend(call)
     return all_calls
-
-
-def help_test_validate_platform_config(
-    hass: HomeAssistant, config: ConfigType
-) -> ConfigType | None:
-    """Test the schema validation."""
-    try:
-        # validate the schema
-        MQTT_YAML_SCHEMA(config)
-        return True
-    except vol.Error as exc:
-        # log schema exceptions
-        async_log_exception(exc, mqtt.DOMAIN, config, hass)
-        return False
 
 
 async def help_setup_component(
@@ -428,10 +409,14 @@ async def help_test_default_availability_list_single(
         {"topic": "availability-topic1"},
     ]
     config[mqtt.DOMAIN][domain]["availability_topic"] = "availability-topic"
-    help_test_validate_platform_config(hass, config)
+
+    entry = MockConfigEntry(domain=mqtt.DOMAIN, data={mqtt.CONF_BROKER: "test-broker"})
+    entry.add_to_hass(hass)
+    with patch("homeassistant.config.load_yaml_config_file", return_value=config):
+        await entry.async_setup(hass)
 
     assert (
-        "Invalid config for [mqtt]: two or more values in the same group of exclusion 'availability'"
+        "two or more values in the same group of exclusion 'availability'"
         in caplog.text
     )
 

@@ -10,11 +10,11 @@ from sqlalchemy.orm.session import Session
 from homeassistant.core import Event
 from homeassistant.util.json import JSON_ENCODE_EXCEPTIONS
 
-from . import BaseLRUTableManager
 from ..const import SQLITE_MAX_BIND_VARS
 from ..db_schema import EventData
 from ..queries import get_shared_event_datas
 from ..util import chunked, execute_stmt_lambda_element
+from . import BaseLRUTableManager
 
 if TYPE_CHECKING:
     from ..core import Recorder

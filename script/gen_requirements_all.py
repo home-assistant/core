@@ -132,9 +132,8 @@ authlib<1.0
 # Version 2.0 added typing, prevent accidental fallbacks
 backoff>=2.0
 
-# Breaking change in version
-# https://github.com/samuelcolvin/pydantic/issues/4092
-pydantic!=1.9.1
+# Require to avoid issues with decorators (#93904). v2 has breaking changes.
+pydantic>=1.10.8,<2.0
 
 # Breaks asyncio
 # https://github.com/pubnub/python/issues/130
@@ -179,10 +178,6 @@ pysnmplib==5.0.21
 # pysnmp is no longer maintained and does not work with newer
 # python
 pysnmp==1000000000.0.0
-
-# pyminiaudio 1.58 is missing files in the package
-# https://github.com/irmen/pyminiaudio/issues/67
-miniaudio==1.57
 
 # The get-mac package has been replaced with getmac. Installing get-mac alongside getmac
 # breaks getmac due to them both sharing the same python package name inside 'getmac'.

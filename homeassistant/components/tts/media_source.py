@@ -165,7 +165,6 @@ class TTSMediaSource(MediaSource):
             raise BrowseError("Unknown provider")
 
         if isinstance(engine_instance, TextToSpeechEntity):
-            assert engine_instance.platform is not None
             engine_domain = engine_instance.platform.domain
         else:
             engine_domain = engine
