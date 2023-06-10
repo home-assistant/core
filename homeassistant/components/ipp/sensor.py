@@ -1,14 +1,22 @@
 """Support for IPP sensors."""
 from __future__ import annotations
 
+from collections.abc import Callable
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import Any
 
-from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
+from homeassistant.components.sensor import (
+    RestoreSensor,
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+)
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_LOCATION, PERCENTAGE
-from homeassistant.core import HomeAssistant
+from homeassistant.const import ATTR_LOCATION, PERCENTAGE, EntityCategory
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import StateType
 from homeassistant.util.dt import utcnow
 
 from .const import (
@@ -27,6 +35,61 @@ from .coordinator import IPPDataUpdateCoordinator
 from .entity import IPPEntity
 
 
+@dataclass
+class IPPSensorEntityDescriptionMixin:
+    """Mixin for required keys."""
+
+    value_fn: Callable[[Any], StateType | datetime]
+
+
+@dataclass
+class IPPSensorEntityDescription(
+    SensorEntityDescription, IPPSensorEntityDescriptionMixin
+):
+    """Describes IPP sensor entity."""
+
+    attributes_fn: Callable[[Any], dict[Any, StateType]] = lambda _: {}
+
+
+PRINTER_SENSORS: tuple[IPPSensorEntityDescription, ...] = (
+    IPPSensorEntityDescription(
+        key="printer",
+        translation_key="printer",
+        icon="mdi:printer",
+        device_class=SensorDeviceClass.ENUM,
+        options=["idle", "printing", "stopped"],
+        attributes_fn=lambda printer: {
+            ATTR_INFO: printer.info.printer_info,
+            ATTR_SERIAL: printer.info.serial,
+            ATTR_LOCATION: printer.info.location,
+            ATTR_STATE_MESSAGE: printer.state.message,
+            ATTR_STATE_REASON: printer.state.reasons,
+            ATTR_COMMAND_SET: printer.info.command_set,
+            ATTR_URI_SUPPORTED: printer.info.printer_uri_supported,
+        },
+        value_fn=lambda printer: printer.state.printer_state,
+    ),
+    IPPSensorEntityDescription(
+        key="uptime",
+        name="Uptime",
+        icon="mdi:clock-outline",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        attributes_fn=lambda printer: {
+            ATTR_INFO: printer.info.printer_info,
+            ATTR_SERIAL: printer.info.serial,
+            ATTR_LOCATION: printer.info.location,
+            ATTR_STATE_MESSAGE: printer.state.message,
+            ATTR_STATE_REASON: printer.state.reasons,
+            ATTR_COMMAND_SET: printer.info.command_set,
+            ATTR_URI_SUPPORTED: printer.info.printer_uri_supported,
+        },
+        value_fn=lambda printer: (utcnow() - timedelta(seconds=printer.info.uptime)),
+    ),
+)
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
@@ -41,160 +104,118 @@ async def async_setup_entry(
 
     sensors: list[SensorEntity] = []
 
-    sensors.append(IPPPrinterSensor(entry.entry_id, unique_id, coordinator))
-    sensors.append(IPPUptimeSensor(entry.entry_id, unique_id, coordinator))
+    sensors.extend(
+        [
+            IPPSensor(
+                unique_id,
+                coordinator,
+                description,
+            )
+            for description in PRINTER_SENSORS
+        ]
+    )
 
-    for marker_index in range(len(coordinator.data.markers)):
+    for index, marker in enumerate(coordinator.data.markers):
         sensors.append(
-            IPPMarkerSensor(entry.entry_id, unique_id, coordinator, marker_index)
+            IPPMarkerSensor(
+                index,
+                unique_id,
+                coordinator,
+                IPPSensorEntityDescription(
+                    key=f"marker_{index}",
+                    name=marker.name,
+                    icon="mdi:water",
+                    native_unit_of_measurement=PERCENTAGE,
+                    attributes_fn=lambda marker: {
+                        ATTR_MARKER_HIGH_LEVEL: marker.high_level,
+                        ATTR_MARKER_LOW_LEVEL: marker.low_level,
+                        ATTR_MARKER_TYPE: marker.marker_type,
+                    },
+                    value_fn=lambda marker: marker.level,
+                ),
+            )
         )
 
-    async_add_entities(sensors, True)
+    async_add_entities(sensors)
 
 
 class IPPSensor(IPPEntity, SensorEntity):
     """Defines an IPP sensor."""
 
+    entity_description: IPPSensorEntityDescription
+
+    _attr_has_entity_name = True
+
     def __init__(
         self,
-        *,
+        device_id: str,
         coordinator: IPPDataUpdateCoordinator,
-        enabled_default: bool = True,
-        entry_id: str,
-        unique_id: str,
-        icon: str,
-        key: str,
-        name: str,
-        unit_of_measurement: str | None = None,
-        translation_key: str | None = None,
+        description: IPPSensorEntityDescription,
     ) -> None:
         """Initialize IPP sensor."""
-        self._key = key
-        self._attr_unique_id = f"{unique_id}_{key}"
-        self._attr_native_unit_of_measurement = unit_of_measurement
-        self._attr_translation_key = translation_key
+        self.entity_description = description
 
         super().__init__(
-            entry_id=entry_id,
-            device_id=unique_id,
-            coordinator=coordinator,
-            name=name,
-            icon=icon,
-            enabled_default=enabled_default,
+            device_id,
+            coordinator,
         )
 
+        self._attr_unique_id = f"{device_id}_{description.key}"
 
-class IPPMarkerSensor(IPPSensor):
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return the state attributes of the entity."""
+        return self.entity_description.attributes_fn(self.coordinator.data)
+
+    @property
+    def native_value(self) -> StateType | datetime:
+        """Return the state of the sensor."""
+        return self.entity_description.value_fn(self.coordinator.data)
+
+
+class IPPMarkerSensor(IPPEntity, RestoreSensor):
     """Defines an IPP marker sensor."""
+
+    entity_description: IPPSensorEntityDescription
+
+    _attr_has_entity_name = True
 
     def __init__(
         self,
-        entry_id: str,
-        unique_id: str,
-        coordinator: IPPDataUpdateCoordinator,
         marker_index: int,
+        device_id: str,
+        coordinator: IPPDataUpdateCoordinator,
+        description: IPPSensorEntityDescription,
     ) -> None:
         """Initialize IPP marker sensor."""
+        self.entity_description = description
         self.marker_index = marker_index
 
         super().__init__(
-            coordinator=coordinator,
-            entry_id=entry_id,
-            unique_id=unique_id,
-            icon="mdi:water",
-            key=f"marker_{marker_index}",
-            name=(
-                f"{coordinator.data.info.name} {coordinator.data.markers[marker_index].name}"
-            ),
-            unit_of_measurement=PERCENTAGE,
+            device_id,
+            coordinator,
         )
 
-    @property
-    def extra_state_attributes(self) -> dict[str, Any] | None:
-        """Return the state attributes of the entity."""
-        return {
-            ATTR_MARKER_HIGH_LEVEL: self.coordinator.data.markers[
-                self.marker_index
-            ].high_level,
-            ATTR_MARKER_LOW_LEVEL: self.coordinator.data.markers[
-                self.marker_index
-            ].low_level,
-            ATTR_MARKER_TYPE: self.coordinator.data.markers[
-                self.marker_index
-            ].marker_type,
-        }
+        self._attr_unique_id = f"{device_id}_{description.key}"
 
-    @property
-    def native_value(self) -> int | None:
-        """Return the state of the sensor."""
-        level = self.coordinator.data.markers[self.marker_index].level
+    async def async_added_to_hass(self) -> None:
+        """Handle entity which will be added."""
+        await super().async_added_to_hass()
 
-        if level >= 0:
-            return level
+        if self.coordinator.data is None:
+            if (
+                last_sensor_data := await self.async_get_last_sensor_data()
+            ) is not None:
+                self._attr_native_value = last_sensor_data.native_value
 
-        return None
-
-
-class IPPPrinterSensor(IPPSensor):
-    """Defines an IPP printer sensor."""
-
-    _attr_device_class = SensorDeviceClass.ENUM
-    _attr_options = ["idle", "printing", "stopped"]
-
-    def __init__(
-        self, entry_id: str, unique_id: str, coordinator: IPPDataUpdateCoordinator
-    ) -> None:
-        """Initialize IPP printer sensor."""
-        super().__init__(
-            coordinator=coordinator,
-            entry_id=entry_id,
-            unique_id=unique_id,
-            icon="mdi:printer",
-            key="printer",
-            name=coordinator.data.info.name,
-            unit_of_measurement=None,
-            translation_key="printer",
-        )
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any] | None:
-        """Return the state attributes of the entity."""
-        return {
-            ATTR_INFO: self.coordinator.data.info.printer_info,
-            ATTR_SERIAL: self.coordinator.data.info.serial,
-            ATTR_LOCATION: self.coordinator.data.info.location,
-            ATTR_STATE_MESSAGE: self.coordinator.data.state.message,
-            ATTR_STATE_REASON: self.coordinator.data.state.reasons,
-            ATTR_COMMAND_SET: self.coordinator.data.info.command_set,
-            ATTR_URI_SUPPORTED: self.coordinator.data.info.printer_uri_supported,
-        }
-
-    @property
-    def native_value(self) -> str:
-        """Return the state of the sensor."""
-        return self.coordinator.data.state.printer_state
-
-
-class IPPUptimeSensor(IPPSensor):
-    """Defines a IPP uptime sensor."""
-
-    _attr_device_class = SensorDeviceClass.TIMESTAMP
-
-    def __init__(
-        self, entry_id: str, unique_id: str, coordinator: IPPDataUpdateCoordinator
-    ) -> None:
-        """Initialize IPP uptime sensor."""
-        super().__init__(
-            coordinator=coordinator,
-            enabled_default=False,
-            entry_id=entry_id,
-            unique_id=unique_id,
-            icon="mdi:clock-outline",
-            key="uptime",
-            name=f"{coordinator.data.info.name} Uptime",
-        )
-
-    @property
-    def native_value(self) -> datetime:
-        """Return the state of the sensor."""
-        return utcnow() - timedelta(seconds=self.coordinator.data.info.uptime)
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        if self.coordinator.data is not None:
+            self._attr_native_value = self.entity_description.value_fn(
+                self.coordinator.data.markers[self.marker_index]
+            )
+            self._attr_extra_state_attributes = self.entity_description.attributes_fn(
+                self.coordinator.data.markers[self.marker_index]
+            )
+            self.async_write_ha_state()

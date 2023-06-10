@@ -2,38 +2,40 @@
 from datetime import datetime
 from unittest.mock import patch
 
-from homeassistant.components.ipp.const import DOMAIN
-from homeassistant.components.sensor import (
-    ATTR_OPTIONS as SENSOR_ATTR_OPTIONS,
-    DOMAIN as SENSOR_DOMAIN,
+import pytest
+
+from homeassistant.components.ipp.const import (
+    ATTR_MARKER_HIGH_LEVEL,
+    ATTR_MARKER_LOW_LEVEL,
+    ATTR_MARKER_TYPE,
 )
-from homeassistant.const import ATTR_ICON, ATTR_UNIT_OF_MEASUREMENT, PERCENTAGE
-from homeassistant.core import HomeAssistant
+from homeassistant.components.sensor import ATTR_OPTIONS
+from homeassistant.const import (
+    ATTR_ICON,
+    ATTR_UNIT_OF_MEASUREMENT,
+    PERCENTAGE,
+    EntityCategory,
+)
+from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
 from . import init_integration, mock_connection
 
+from tests.common import mock_restore_cache_with_extra_data
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_sensors(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test the creation and values of the IPP sensors."""
     mock_connection(aioclient_mock)
 
     entry = await init_integration(hass, aioclient_mock, skip_setup=True)
-    registry = er.async_get(hass)
-
-    # Pre-create registry entries for disabled by default sensors
-    registry.async_get_or_create(
-        SENSOR_DOMAIN,
-        DOMAIN,
-        "cfe92100-67c4-11d4-a45f-f8d027761251_uptime",
-        suggested_object_id="epson_xp_6000_series_uptime",
-        disabled_by=None,
-    )
 
     test_time = datetime(2019, 11, 11, 9, 10, 32, tzinfo=dt_util.UTC)
     with patch("homeassistant.components.ipp.sensor.utcnow", return_value=test_time):
@@ -44,9 +46,9 @@ async def test_sensors(
     assert state
     assert state.attributes.get(ATTR_ICON) == "mdi:printer"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
-    assert state.attributes.get(SENSOR_ATTR_OPTIONS) == ["idle", "printing", "stopped"]
+    assert state.attributes.get(ATTR_OPTIONS) == ["idle", "printing", "stopped"]
 
-    entry = registry.async_get("sensor.epson_xp_6000_series")
+    entry = entity_registry.async_get("sensor.epson_xp_6000_series")
     assert entry
     assert entry.translation_key == "printer"
 
@@ -86,9 +88,10 @@ async def test_sensors(
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
     assert state.state == "2019-10-26T15:37:00+00:00"
 
-    entry = registry.async_get("sensor.epson_xp_6000_series_uptime")
+    entry = entity_registry.async_get("sensor.epson_xp_6000_series_uptime")
     assert entry
     assert entry.unique_id == "cfe92100-67c4-11d4-a45f-f8d027761251_uptime"
+    assert entry.entity_category == EntityCategory.DIAGNOSTIC
 
 
 async def test_disabled_by_default_sensors(
@@ -117,3 +120,67 @@ async def test_missing_entry_unique_id(
     entity = registry.async_get("sensor.epson_xp_6000_series")
     assert entity
     assert entity.unique_id == f"{entry.entry_id}_printer"
+
+
+@pytest.mark.parametrize(
+    (
+        "entity_id",
+        "restored_state",
+        "restored_native_value",
+        "initial_state",
+        "initial_attributes",
+    ),
+    (
+        (
+            "sensor.epson_xp_6000_series_black_ink",
+            "43",
+            43,
+            "43",
+            [
+                ATTR_ICON,
+                ATTR_MARKER_HIGH_LEVEL,
+                ATTR_MARKER_LOW_LEVEL,
+                ATTR_MARKER_TYPE,
+            ],
+        ),
+    ),
+)
+async def test_restore_marker_state(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    entity_id: str,
+    restored_state: str,
+    restored_native_value: str,
+    initial_state: str,
+    initial_attributes: list,
+) -> None:
+    """Test sensor restore state."""
+    restored_attributes = {
+        ATTR_ICON: "mdi:water",
+        ATTR_MARKER_HIGH_LEVEL: 100,
+        ATTR_MARKER_LOW_LEVEL: 10,
+        ATTR_MARKER_TYPE: "ink",
+    }
+
+    fake_state = State(
+        entity_id,
+        restored_state,
+        restored_attributes,
+    )
+
+    fake_extra_data = {
+        "native_value": restored_native_value,
+        "native_unit_of_measurement": PERCENTAGE,
+    }
+
+    mock_restore_cache_with_extra_data(hass, ((fake_state, fake_extra_data),))
+
+    await init_integration(hass, aioclient_mock, conn_error=True)
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == initial_state
+    for attr in restored_attributes.items():
+        if attr in initial_attributes:
+            assert state.attributes[attr] == restored_attributes[attr]
+        else:
+            assert attr not in state.attributes
