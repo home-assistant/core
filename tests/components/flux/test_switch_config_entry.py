@@ -173,19 +173,6 @@ async def test_valid_config_with_info(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
 
-# async def test_valid_config_no_name(hass: HomeAssistant) -> None:
-#     """Test configuration."""
-#     with assert_setup_component(1, "switch"):
-#         config_entry = MockConfigEntry(
-#             domain=DOMAIN,
-#             data=add_default_settings({"lights": ["light.desk", "light.lamp"]}),
-#         )
-#         config_entry.add_to_hass(hass)
-
-#         await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
-#         await hass.async_block_till_done()
-
-
 async def test_flux_when_switch_is_off(
     hass: HomeAssistant, enable_custom_integrations: None
 ) -> None:
@@ -361,7 +348,7 @@ async def test_flux_after_sunrise_before_sunset(
 
 # pylint: disable=invalid-name
 async def test_flux_after_sunrise_before_custom_sunset(
-    hass, enable_custom_integrations
+    hass: HomeAssistant, enable_custom_integrations: None
 ) -> None:
     """Test the flux switch after sunrise and before a configured sunset."""
     ent1 = (await setup_test_light_entities(hass, 1))[0]
