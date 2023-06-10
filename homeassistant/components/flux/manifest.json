@@ -4,8 +4,10 @@
   "after_dependencies": ["light"],
   "codeowners": ["@schelv"],
   "config_flow": true,
+  "dependencies": [],
   "documentation": "https://www.home-assistant.io/integrations/flux",
   "integration_type": "hub",
   "iot_class": "calculated",
-  "quality_scale": "internal"
+  "quality_scale": "internal",
+  "requirements": []
 }
