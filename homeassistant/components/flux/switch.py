@@ -337,7 +337,6 @@ class FluxSwitch(SwitchEntity, RestoreEntity):
 
         now = as_local(utcnow)
 
-        # sunset = get_astral_event_date(self.hass, SUN_EVENT_SUNSET, now.date())
         sunset_time = self.find_sunset_time(now)
         start_time = self.find_start_time(now)
         stop_time = self.find_stop_time(now)
