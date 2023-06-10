@@ -33,6 +33,9 @@ ATTR_STATUS: Final = "status"
 # Remove EVENT_PERSISTENT_NOTIFICATIONS_UPDATED in Home Assistant 2023.9
 EVENT_PERSISTENT_NOTIFICATIONS_UPDATED = "persistent_notifications_updated"
 
+EVENT_PERSISTENT_NOTIFICATION_CREATED = "persistent_notification_created"
+EVENT_PERSISTENT_NOTIFICATION_DISMISSED = "persistent_notification_dismissed"
+
 
 class Notification(TypedDict):
     """Persistent notification."""
@@ -105,9 +108,10 @@ def async_create(
         UpdateType.ADDED,
         {notification_id: notifications[notification_id]},
     )
-    notification_update = cast(dict[str, Any], notifications[notification_id])
-    notification_update["type"] = str(UpdateType.ADDED)
-    hass.bus.fire(EVENT_PERSISTENT_NOTIFICATIONS_UPDATED, notification_update)
+    hass.bus.fire(
+        EVENT_PERSISTENT_NOTIFICATION_CREATED,
+        cast(dict[str, Any], notifications[notification_id]),
+    )
 
 
 @callback
@@ -130,9 +134,9 @@ def async_dismiss(hass: HomeAssistant, notification_id: str) -> None:
         UpdateType.REMOVED,
         {notification_id: notification},
     )
-    notification_update = cast(dict[str, Any], notification)
-    notification_update["type"] = str(UpdateType.REMOVED)
-    hass.bus.fire(EVENT_PERSISTENT_NOTIFICATIONS_UPDATED, notification_update)
+    hass.bus.fire(
+        EVENT_PERSISTENT_NOTIFICATION_DISMISSED, cast(dict[str, Any], notification)
+    )
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
