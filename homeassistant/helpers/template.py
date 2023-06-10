@@ -89,7 +89,6 @@ _LOGGER = logging.getLogger(__name__)
 _SENTINEL = object()
 DATE_STR_FORMAT = "%Y-%m-%d %H:%M:%S"
 
-_RENDER_INFO = "template.render_info"
 _ENVIRONMENT = "template.environment"
 _ENVIRONMENT_LIMITED = "template.environment_limited"
 _ENVIRONMENT_STRICT = "template.environment_strict"
@@ -121,6 +120,9 @@ _P = ParamSpec("_P")
 
 ALL_STATES_RATE_LIMIT = timedelta(minutes=1)
 DOMAIN_STATES_RATE_LIMIT = timedelta(seconds=1)
+
+_render_info: ContextVar[RenderInfo | None] = ContextVar("_render_info", default=None)
+
 
 template_cv: ContextVar[tuple[str, str] | None] = ContextVar(
     "template_cv", default=None
@@ -326,6 +328,22 @@ _cached_literal_eval = lru_cache(maxsize=EVAL_CACHE_SIZE)(literal_eval)
 
 class RenderInfo:
     """Holds information about a template render."""
+
+    __slots__ = (
+        "template",
+        "filter_lifecycle",
+        "filter",
+        "_result",
+        "is_static",
+        "exception",
+        "all_states",
+        "all_states_lifecycle",
+        "domains",
+        "domains_lifecycle",
+        "entities",
+        "rate_limit",
+        "has_time",
+    )
 
     def __init__(self, template: Template) -> None:
         """Initialise."""
@@ -651,7 +669,7 @@ class Template:
     ) -> RenderInfo:
         """Render the template and collect an entity filter."""
         self._renders += 1
-        assert self.hass and _RENDER_INFO not in self.hass.data
+        assert self.hass and _render_info.get() is None
 
         render_info = RenderInfo(self)
 
@@ -661,13 +679,13 @@ class Template:
             render_info._freeze_static()
             return render_info
 
-        self.hass.data[_RENDER_INFO] = render_info
+        token = _render_info.set(render_info)
         try:
             render_info._result = self.async_render(variables, strict=strict, **kwargs)
         except TemplateError as ex:
             render_info.exception = ex
         finally:
-            del self.hass.data[_RENDER_INFO]
+            _render_info.reset(token)
 
         render_info._freeze()
         return render_info
@@ -807,13 +825,11 @@ class AllStates:
     __getitem__ = __getattr__
 
     def _collect_all(self) -> None:
-        render_info = self._hass.data.get(_RENDER_INFO)
-        if render_info is not None:
+        if (render_info := _render_info.get()) is not None:
             render_info.all_states = True
 
     def _collect_all_lifecycle(self) -> None:
-        render_info = self._hass.data.get(_RENDER_INFO)
-        if render_info is not None:
+        if (render_info := _render_info.get()) is not None:
             render_info.all_states_lifecycle = True
 
     def __iter__(self) -> Generator[TemplateState, None, None]:
@@ -869,14 +885,12 @@ class DomainStates:
     __getitem__ = __getattr__
 
     def _collect_domain(self) -> None:
-        entity_collect = self._hass.data.get(_RENDER_INFO)
-        if entity_collect is not None:
-            entity_collect.domains.add(self._domain)
+        if (entity_collect := _render_info.get()) is not None:
+            entity_collect.domains.add(self._domain)  # type: ignore[attr-defined]
 
     def _collect_domain_lifecycle(self) -> None:
-        entity_collect = self._hass.data.get(_RENDER_INFO)
-        if entity_collect is not None:
-            entity_collect.domains_lifecycle.add(self._domain)
+        if (entity_collect := _render_info.get()) is not None:
+            entity_collect.domains_lifecycle.add(self._domain)  # type: ignore[attr-defined]
 
     def __iter__(self) -> Generator[TemplateState, None, None]:
         """Return the iteration over all the states."""
@@ -913,8 +927,8 @@ class TemplateStateBase(State):
         self._as_dict: ReadOnlyDict[str, Collection[Any]] | None = None
 
     def _collect_state(self) -> None:
-        if self._collect and (_render_info := self._hass.data.get(_RENDER_INFO)):
-            _render_info.entities.add(self._entity_id)
+        if self._collect and (render_info := _render_info.get()):
+            render_info.entities.add(self._entity_id)  # type: ignore[attr-defined]
 
     # Jinja will try __getitem__ first and it avoids the need
     # to call is_safe_attribute
@@ -922,8 +936,8 @@ class TemplateStateBase(State):
         """Return a property as an attribute for jinja."""
         if item in _COLLECTABLE_STATE_ATTRIBUTES:
             # _collect_state inlined here for performance
-            if self._collect and (_render_info := self._hass.data.get(_RENDER_INFO)):
-                _render_info.entities.add(self._entity_id)
+            if self._collect and (render_info := _render_info.get()):
+                render_info.entities.add(self._entity_id)  # type: ignore[attr-defined]
             return getattr(self._state, item)
         if item == "entity_id":
             return self._entity_id
@@ -1057,8 +1071,8 @@ _create_template_state_no_collect = partial(TemplateState, collect=False)
 
 
 def _collect_state(hass: HomeAssistant, entity_id: str) -> None:
-    if (entity_collect := hass.data.get(_RENDER_INFO)) is not None:
-        entity_collect.entities.add(entity_id)
+    if (entity_collect := _render_info.get()) is not None:
+        entity_collect.entities.add(entity_id)  # type: ignore[attr-defined]
 
 
 def _state_generator(
@@ -1575,7 +1589,7 @@ def has_value(hass: HomeAssistant, entity_id: str) -> bool:
 
 def now(hass: HomeAssistant) -> datetime:
     """Record fetching now."""
-    if (render_info := hass.data.get(_RENDER_INFO)) is not None:
+    if (render_info := _render_info.get()) is not None:
         render_info.has_time = True
 
     return dt_util.now()
@@ -1583,7 +1597,7 @@ def now(hass: HomeAssistant) -> datetime:
 
 def utcnow(hass: HomeAssistant) -> datetime:
     """Record fetching utcnow."""
-    if (render_info := hass.data.get(_RENDER_INFO)) is not None:
+    if (render_info := _render_info.get()) is not None:
         render_info.has_time = True
 
     return dt_util.utcnow()
@@ -2081,7 +2095,7 @@ def random_every_time(context, values):
 
 def today_at(hass: HomeAssistant, time_str: str = "") -> datetime:
     """Record fetching now where the time has been replaced with value."""
-    if (render_info := hass.data.get(_RENDER_INFO)) is not None:
+    if (render_info := _render_info.get()) is not None:
         render_info.has_time = True
 
     today = dt_util.start_of_local_day()
@@ -2106,7 +2120,7 @@ def relative_time(hass: HomeAssistant, value: Any) -> Any:
 
     If the input are not a datetime object the input will be returned unmodified.
     """
-    if (render_info := hass.data.get(_RENDER_INFO)) is not None:
+    if (render_info := _render_info.get()) is not None:
         render_info.has_time = True
 
     if not isinstance(value, datetime):
