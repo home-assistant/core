@@ -16,7 +16,7 @@ from . import RensonCoordinator
 from .const import DOMAIN
 
 
-class RensonEntity(CoordinatorEntity):
+class RensonEntity(CoordinatorEntity[RensonCoordinator]):
     """Renson entity."""
 
     def __init__(

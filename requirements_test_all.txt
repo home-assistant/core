@@ -842,7 +842,7 @@ justnimbus==0.6.0
 kegtron-ble==0.4.0
 
 # homeassistant.components.knx
-knx-frontend==2023.5.31.141540
+knx-frontend==2023.6.9.195839
 
 # homeassistant.components.konnected
 konnected==1.2.0
@@ -1270,7 +1270,7 @@ pyialarm==2.2.0
 pyicloud==1.0.0
 
 # homeassistant.components.insteon
-pyinsteon==1.4.2
+pyinsteon==1.4.3
 
 # homeassistant.components.ipma
 pyipma==3.0.6
@@ -1598,7 +1598,7 @@ pytrafikverket==0.3.3
 pyudev==0.23.2
 
 # homeassistant.components.unifiprotect
-pyunifiprotect==4.10.2
+pyunifiprotect==4.10.3
 
 # homeassistant.components.uptimerobot
 pyuptimerobot==22.2.0
