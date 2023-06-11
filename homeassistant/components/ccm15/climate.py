@@ -19,9 +19,15 @@ from homeassistant.components.climate import (
     ClimateEntityFeature,
     HVACMode,
 )
-from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import (
+    ATTR_TEMPERATURE,
+    UnitOfTemperature,
+)
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import BASE_URL, CONF_URL_STATUS, DEFAULT_INTERVAL, DEFAULT_TIMEOUT
+from .const import BASE_URL, CONF_URL_STATUS, DEFAULT_INTERVAL, DEFAULT_TIMEOUT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -53,16 +59,20 @@ class CCM15Coordinator:
         self._ac_data: dict[int, dict[str, int]] = {}
         self._running = False
 
-    async def start(self):
+    async def init_async(self):
         """Start polling."""
+        if self._running:
+            return
         self._running = True
         while self._running:
             await self.poll_status_async()
             await asyncio.sleep(self._interval)
 
-    def stop(self):
+    async def deinit_async(self):
         """Stop polling."""
-        self._running = False
+        if self._running:
+            self._running = False
+            await self._poll_task
 
     def add_device(self, device):
         """Add a new device to the coordinator."""
@@ -72,6 +82,10 @@ class CCM15Coordinator:
         """Remove a device from the coordinator."""
         if ac_id in self._ac_devices:
             del self._ac_devices[ac_id]
+
+    def get_devices(self):
+        """Get all climate devices from the coordinator."""
+        return self._ac_devices
 
     async def poll_status_async(self):
         """Get the current status of all AC devices."""
@@ -272,3 +286,16 @@ class CCM15Climate(ClimateEntity):
         """Update the data from the thermostat."""
         self._coordinator.get_acdata(self._ac_name)
         self.schedule_update_ha_state()
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up all climate."""
+    coordinator = hass.data[DOMAIN][config_entry.entry_id]
+    entities = []
+    for ac_device in coordinator.get_devices():
+        entities.append(ac_device.CCM15Coordinator)
+    async_add_entities(entities, True)
