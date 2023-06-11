@@ -29,20 +29,14 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
-
-    # If your PyPI package is not built with async, pass your methods
-    # to the executor:
-    # await hass.async_add_executor_job(
-    #     your_validate_func, data["username"], data["password"]
-    # )
-
     try:
-        hub = OvosNotificationService(data["host"], data["ovos_port"])
+        hub: Any = await hass.async_add_executor_job(
+            OvosNotificationService(data["host"], data["ovos_port"]).authenticate()
+        )
+        if not await hub.authenticate():
+            raise InvalidAuth
     except Exception as exc:  # pylint: disable=broad-except
         raise CannotConnect() from exc
-
-    if not await hub.authenticate():
-        raise InvalidAuth
 
     # Return info that you want to store in the config entry.
     return {"host": hub.ovos_ip, "ovos_port": hub.ovos_port}
