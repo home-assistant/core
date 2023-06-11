@@ -1,8 +1,8 @@
 """Test the ViCare config flow."""
 from unittest.mock import AsyncMock, patch
 
-from PyViCare.PyViCareUtils import PyViCareInvalidCredentialsError
 import pytest
+from PyViCare.PyViCareUtils import PyViCareInvalidCredentialsError
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import dhcp
