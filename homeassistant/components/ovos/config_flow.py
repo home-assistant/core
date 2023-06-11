@@ -53,7 +53,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    async def async_step_host(self, user_input: dict[str, Any] | None = None) -> FlowResult:
+    async def async_step_host(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input is not None:
@@ -69,7 +71,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             else:
                 return self.async_create_entry(title=info["title"], data=user_input)
 
-        return self.async_show_form(step_id="host", data_schema=STEP_USER_DATA_SCHEMA, errors=errors)
+        return self.async_show_form(
+            step_id="host", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
+        )
 
 
 class CannotConnect(HomeAssistantError):
