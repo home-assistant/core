@@ -12,8 +12,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 
+from .climate import CCM15Coordinator
 from .const import DEFAULT_INTERVAL, DOMAIN
-from .coordinator import CCM15Coordinator
 
 _LOGGER = logging.getLogger(__name__)
 
