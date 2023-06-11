@@ -53,6 +53,7 @@ from homeassistant.core import Event, HomeAssistant, ServiceCall
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import async_get_platforms
+from homeassistant.helpers.reload import async_integration_yaml_config
 from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.typing import ConfigType
 
@@ -165,9 +166,33 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Command Line from yaml config."""
-    command_line_config: list[dict[str, dict[str, Any]]] = config.get(DOMAIN, [])
+
+    async def _reload_config(call: Event | ServiceCall) -> None:
+        """Reload Command Line."""
+        reload_config = await async_integration_yaml_config(hass, "command_line")
+        reset_platforms = async_get_platforms(hass, "command_line")
+        for reset_platform in reset_platforms:
+            _LOGGER.debug("Reload resetting platform: %s", reset_platform.domain)
+            await reset_platform.async_reset()
+        if not reload_config:
+            return
+        await async_load_platforms(hass, reload_config.get(DOMAIN, []), reload_config)
+
+    async_register_admin_service(hass, DOMAIN, SERVICE_RELOAD, _reload_config)
+
+    await async_load_platforms(hass, config.get(DOMAIN, []), config)
+
+    return True
+
+
+async def async_load_platforms(
+    hass: HomeAssistant,
+    command_line_config: list[dict[str, dict[str, Any]]],
+    config: ConfigType,
+) -> None:
+    """Load platforms from yaml."""
     if not command_line_config:
-        return True
+        return
 
     _LOGGER.debug("Full config loaded: %s", command_line_config)
 
@@ -194,34 +219,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 )
             )
 
-    async def _reload_config(call: Event | ServiceCall) -> None:
-        """Reload Command Line."""
-
-        reset_platforms = async_get_platforms(hass, "command_line")
-        for reset_platform in reset_platforms:
-            _LOGGER.debug("Reload resetting platform: %s", reset_platform.domain)
-            await reset_platform.async_reset()
-
-        reload_coroutines: list[Coroutine[Any, Any, None]] = []
-        for reload_platform, reload_config in reload_configs:
-            reload_coroutines.append(
-                discovery.async_load_platform(
-                    hass,
-                    reload_platform,
-                    DOMAIN,
-                    reload_config,
-                    config,
-                )
-            )
-
-        if reload_coroutines:
-            _LOGGER.debug("Loading platforms from reload: %s", platforms)
-            await asyncio.gather(*reload_coroutines)
-
-    async_register_admin_service(hass, DOMAIN, SERVICE_RELOAD, _reload_config)
-
     if load_coroutines:
         _LOGGER.debug("Loading platforms: %s", platforms)
         await asyncio.gather(*load_coroutines)
-
-    return True
