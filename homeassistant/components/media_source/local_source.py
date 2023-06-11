@@ -38,7 +38,7 @@ def async_setup(hass: HomeAssistant) -> None:
 class LocalSource(MediaSource):
     """Provide local directories as media sources."""
 
-    name: str = "Local Media"
+    name: str = "My media"
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize local source."""

@@ -8,7 +8,6 @@ import os
 import re
 from typing import NewType, TypedDict
 
-from PIL import Image
 import aiofiles.os
 from nio import AsyncClient, Event, MatrixRoom
 from nio.events.room_events import RoomMessageText
@@ -21,6 +20,7 @@ from nio.responses import (
     UploadError,
     UploadResponse,
 )
+from PIL import Image
 import voluptuous as vol
 
 from homeassistant.components.notify import ATTR_DATA, ATTR_MESSAGE, ATTR_TARGET

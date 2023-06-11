@@ -5,7 +5,6 @@ import re
 import tempfile
 from unittest.mock import patch
 
-from PIL import Image
 from nio import (
     AsyncClient,
     ErrorResponse,
@@ -17,6 +16,7 @@ from nio import (
     Response,
     UploadResponse,
 )
+from PIL import Image
 import pytest
 
 from homeassistant.components.matrix import (
