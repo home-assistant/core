@@ -5,8 +5,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SCAN_INTERVAL, Platform
 from homeassistant.core import HomeAssistant
 
+from .climate import CCM15Coordinator
 from .const import DOMAIN
-from .coordinator import CCM15Coordinator
 
 PLATFORMS: list[Platform] = [Platform.CLIMATE]
 
