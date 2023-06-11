@@ -1547,7 +1547,8 @@ omit =
     homeassistant/components/zwave_me/switch.py
     homeassistant/components/electrasmart/climate.py
     homeassistant/components/electrasmart/__init__.py
-
+    homeassistant/components/miraie_ac/climate.py
+    homeassistant/components/miraie_ac/__init__.py
 [report]
 # Regexes for lines to exclude from consideration
 exclude_lines =
