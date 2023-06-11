@@ -76,7 +76,7 @@ MOCK_MINIMAL_STATUS: Final = OrderedDict(
 )
 
 
-async def init_integration(
+async def async_init_integration(
     hass: HomeAssistant, host: str = "test", status=None
 ) -> MockConfigEntry:
     """Set up the APC UPS Daemon integration in HomeAssistant."""
