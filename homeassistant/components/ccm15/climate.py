@@ -80,11 +80,14 @@ class CCM15Coordinator:
         except httpx.RequestError as err:
             _LOGGER.exception("Exception retrieving API data %s", err)
         else:
-            _LOGGER.exception("Response %s", response.text)
             doc = xmltodict.parse(response.text)
             data = doc["response"]
+            _LOGGER.exception(
+                "Found %s items in host %s", data.items().Length, self._host
+            )
             for ac_name, ac_binary in data.items():
-                if len(ac_binary) > 1:
+                _LOGGER.exception("Found ac_name:'%s', data:'%s'", ac_name, ac_binary)
+                if ac_binary != "-":
                     ac_state = self.get_status_from(ac_binary)
                 if ac_state:
                     if ac_name in self._ac_devices:
@@ -95,6 +98,7 @@ class CCM15Coordinator:
     def get_status_from(self, ac_binary: str) -> dict[str, int]:
         """Parse the binary data and return a dictionary with AC status."""
         # Parse data from the binary stream
+
         return {}
 
     def update_climates_from_status(self, ac_status):
