@@ -105,7 +105,7 @@ class OAuth2FlowHandler(
             response = await self.hass.async_add_executor_job(
                 own_channel_request.execute
             )
-            if len(response["items"]) == 0:
+            if not response["items"]:
                 return self.async_abort(
                     reason="no_channel",
                     description_placeholders={"support_url": CHANNEL_CREATION_HELP_URL},
