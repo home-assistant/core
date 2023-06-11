@@ -68,7 +68,7 @@ class CCM15Coordinator:
             await self.poll_status_async()
             await asyncio.sleep(self._interval)
 
-    async def deinit_async(self):
+    async def terminate_async(self):
         """Stop polling."""
         if self._running:
             self._running = False
