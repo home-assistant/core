@@ -124,8 +124,12 @@ class CCM15Coordinator:
                 async with session.get(url, timeout=10) as response:
                     if response.status == 200:
                         return True
+                    _LOGGER.debug(
+                        "Test connection: Cannot connect : %s", response.status
+                    )
                     return False
         except (aiohttp.ClientError, asyncio.TimeoutError):
+            _LOGGER.debug("Test connection: Timeout")
             return False
 
 
