@@ -83,7 +83,7 @@ class CCM15Coordinator:
             doc = xmltodict.parse(response.text)
             data = doc["response"]
             _LOGGER.exception(
-                "Found %s items in host %s", data.items().Length, self._host
+                "Found %s items in host %s", len(data.items()), self._host
             )
             for ac_name, ac_binary in data.items():
                 _LOGGER.exception("Found ac_name:'%s', data:'%s'", ac_name, ac_binary)
@@ -98,8 +98,87 @@ class CCM15Coordinator:
     def get_status_from(self, ac_binary: str) -> dict[str, int]:
         """Parse the binary data and return a dictionary with AC status."""
         # Parse data from the binary stream
+        if ac_binary == "-":
+            return {}
 
-        return {}
+        locked_wind = 0
+        locked_mode = 0
+        mode_locked = 0
+        fan_locked = 0
+        ctl = 0
+        htl = 0
+        rml = 0
+        mode = 0
+        fan = 0
+        temp = 0
+        err = 0
+        settemp = 0
+
+        bytesarr = bytes.fromhex(ac_binary.strip(","))
+
+        buf = bytesarr[0]
+        is_farenheith = (buf >> 0) & 1
+        ctl = (buf >> 3) & 0x1F
+
+        buf = bytesarr[1]
+        htl = (buf >> 0) & 0x1F
+        locked_wind = (buf >> 5) & 7
+
+        buf = bytesarr[2]
+        locked_mode = (buf >> 0) & 3
+        err = (buf >> 2) & 0x3F
+
+        if locked_mode == 1:
+            locked_mode = 0
+        elif locked_mode == 2:
+            locked_mode = 1
+        else:
+            locked_mode = -1
+
+        buf = bytesarr[3]
+        mode = (buf >> 2) & 7
+        fan = (buf >> 5) & 7
+        buf = (buf >> 1) & 1
+        if buf != 0:
+            mode_locked = 1
+
+        buf = bytesarr[4]
+        settemp = (buf >> 3) & 0x1F
+        if is_farenheith:
+            settemp += 62
+            ctl += 62
+            htl += 62
+
+        buf = bytesarr[5]
+        if ((buf >> 3) & 1) == 0:
+            ctl = 0
+        if ((buf >> 4) & 1) == 0:
+            htl = 0
+        fan_locked = 0 if ((buf >> 5) & 1) == 0 else 1
+        if ((buf >> 6) & 1) != 0:
+            rml = 1
+
+        buf = bytesarr[6]
+        temp = buf if buf < 128 else buf - 256
+
+        ac_data = {}
+        ac_data["ac_mode"] = mode
+        ac_data["fan"] = fan
+        ac_data["temp"] = temp
+        ac_data["settemp"] = settemp
+        ac_data["err"] = err
+        ac_data["locked"] = 0
+        if mode_locked == 1 or fan_locked == 1 or ctl > 0 or htl > 0 or rml == 1:
+            ac_data["locked"] = 1
+        ac_data["l_rm"] = rml
+
+        ac_data["l_mode"] = 10 if mode_locked == 0 else locked_mode
+        ac_data["l_wind"] = 10 if fan_locked == 0 else locked_wind
+
+        ac_data["l_cool_temp"] = ctl
+        ac_data["l_heat_temp"] = htl
+
+        return ac_data
 
     def update_climates_from_status(self, ac_status):
         """Update climate devices from the latest status."""
