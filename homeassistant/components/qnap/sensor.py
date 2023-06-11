@@ -1,5 +1,6 @@
 """Support for QNAP NAS Sensors."""
 import voluptuous as vol
+import logging
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA,
@@ -26,10 +27,9 @@ from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.util import Throttle
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DEFAULT_PORT, DEFAULT_TIMEOUT
+from .const import DEFAULT_PORT, DEFAULT_TIMEOUT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -200,7 +200,7 @@ def setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the QNAP NAS sensor."""
-    coordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = hass.data[DOMAIN][config.entry_id]
 
     monitored_conditions = config[CONF_MONITORED_CONDITIONS]
     sensors: list[QNAPSensor] = []
