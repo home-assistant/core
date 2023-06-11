@@ -195,6 +195,8 @@ build.json @home-assistant/supervisor
 /tests/components/camera/ @home-assistant/core
 /homeassistant/components/cast/ @emontnemery
 /tests/components/cast/ @emontnemery
+/homeassistant/components/ccm15/ @ocalvo
+/tests/components/ccm15/ @ocalvo
 /homeassistant/components/cert_expiry/ @Cereal2nd @jjlawren
 /tests/components/cert_expiry/ @Cereal2nd @jjlawren
 /homeassistant/components/circuit/ @braam
