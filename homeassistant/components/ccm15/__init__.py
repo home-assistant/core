@@ -2,10 +2,10 @@
 from __future__ import annotations
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PORT, Platform
+from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SCAN_INTERVAL, Platform
 from homeassistant.core import HomeAssistant
 
-from .const import DEFAULT_INTERVAL, DOMAIN
+from .const import DOMAIN
 from .coordinator import CCM15Coordinator
 
 PLATFORMS: list[Platform] = [Platform.CLIMATE]
@@ -16,7 +16,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = CCM15Coordinator(
-        entry.data[CONF_HOST], entry.data[CONF_PORT], DEFAULT_INTERVAL
+        entry.data[CONF_HOST], entry.data[CONF_PORT], entry.data[CONF_SCAN_INTERVAL]
     )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
