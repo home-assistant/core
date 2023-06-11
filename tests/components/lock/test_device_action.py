@@ -16,11 +16,15 @@ from tests.common import (
     async_get_device_automations,
     async_mock_service,
 )
-from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa: F401
+
+
+@pytest.fixture(autouse=True, name="stub_blueprint_populate")
+def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
+    """Stub copying the blueprints to the config folder."""
 
 
 @pytest.mark.parametrize(
-    "set_state,features_reg,features_state,expected_action_types",
+    ("set_state", "features_reg", "features_state", "expected_action_types"),
     [
         (False, 0, 0, []),
         (False, LockEntityFeature.OPEN, 0, ["open"]),
@@ -84,7 +88,7 @@ async def test_get_actions(
 
 
 @pytest.mark.parametrize(
-    "hidden_by,entity_category",
+    ("hidden_by", "entity_category"),
     (
         (RegistryEntryHider.INTEGRATION, None),
         (RegistryEntryHider.USER, None),

@@ -1,74 +1,18 @@
 """The Home Assistant SkyConnect integration."""
 from __future__ import annotations
 
-import logging
-
 from homeassistant.components import usb
-from homeassistant.components.hassio import (
-    AddonError,
-    AddonInfo,
-    AddonManager,
-    AddonState,
-    is_hassio,
-)
 from homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon import (
-    get_addon_manager,
+    check_multi_pan_addon,
     get_zigbee_socket,
+    multi_pan_addon_using_device,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 
 from .const import DOMAIN
 from .util import get_usb_service_info
-
-_LOGGER = logging.getLogger(__name__)
-
-
-async def _wait_multi_pan_addon(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Wait for multi-PAN info to be available."""
-    if not is_hassio(hass):
-        return
-
-    addon_manager: AddonManager = get_addon_manager(hass)
-    try:
-        addon_info: AddonInfo = await addon_manager.async_get_addon_info()
-    except AddonError as err:
-        _LOGGER.error(err)
-        raise ConfigEntryNotReady from err
-
-    # Start the addon if it's not started
-    if addon_info.state == AddonState.NOT_RUNNING:
-        await addon_manager.async_start_addon()
-
-    if addon_info.state not in (AddonState.NOT_INSTALLED, AddonState.RUNNING):
-        _LOGGER.debug(
-            "Multi pan addon in state %s, delaying yellow config entry setup",
-            addon_info.state,
-        )
-        raise ConfigEntryNotReady
-
-
-async def _multi_pan_addon_info(
-    hass: HomeAssistant, entry: ConfigEntry
-) -> AddonInfo | None:
-    """Return AddonInfo if the multi-PAN addon is enabled for our SkyConnect."""
-    if not is_hassio(hass):
-        return None
-
-    addon_manager: AddonManager = get_addon_manager(hass)
-    addon_info: AddonInfo = await addon_manager.async_get_addon_info()
-
-    if addon_info.state != AddonState.RUNNING:
-        return None
-
-    usb_dev = entry.data["device"]
-    dev_path = await hass.async_add_executor_job(usb.get_serial_by_id, usb_dev)
-
-    if addon_info.options["device"] != dev_path:
-        return None
-
-    return addon_info
 
 
 async def _async_usb_scan_done(hass: HomeAssistant, entry: ConfigEntry) -> None:
@@ -87,9 +31,11 @@ async def _async_usb_scan_done(hass: HomeAssistant, entry: ConfigEntry) -> None:
         hass.async_create_task(hass.config_entries.async_remove(entry.entry_id))
         return
 
-    addon_info = await _multi_pan_addon_info(hass, entry)
+    usb_dev = entry.data["device"]
+    # The call to get_serial_by_id can be removed in HA Core 2024.1
+    dev_path = await hass.async_add_executor_job(usb.get_serial_by_id, usb_dev)
 
-    if not addon_info:
+    if not await multi_pan_addon_using_device(hass, dev_path):
         usb_info = get_usb_service_info(entry)
         await hass.config_entries.flow.async_init(
             "zha",
@@ -101,7 +47,7 @@ async def _async_usb_scan_done(hass: HomeAssistant, entry: ConfigEntry) -> None:
     hw_discovery_data = {
         "name": "SkyConnect Multi-PAN",
         "port": {
-            "path": get_zigbee_socket(hass, addon_info),
+            "path": get_zigbee_socket(),
         },
         "radio_type": "ezsp",
     }
@@ -115,7 +61,10 @@ async def _async_usb_scan_done(hass: HomeAssistant, entry: ConfigEntry) -> None:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a Home Assistant SkyConnect config entry."""
 
-    await _wait_multi_pan_addon(hass, entry)
+    try:
+        await check_multi_pan_addon(hass)
+    except HomeAssistantError as err:
+        raise ConfigEntryNotReady from err
 
     @callback
     def async_usb_scan_done() -> None:

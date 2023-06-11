@@ -14,7 +14,7 @@ from tests.common import async_fire_time_changed
 
 
 @pytest.mark.parametrize(
-    "entity_id, uid, name",
+    ("entity_id", "uid", "name"),
     [
         (
             "sensor.garden_humidity_sensor",

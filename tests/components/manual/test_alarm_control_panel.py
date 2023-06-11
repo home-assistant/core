@@ -26,6 +26,7 @@ from homeassistant.const import (
     STATE_ALARM_TRIGGERED,
 )
 from homeassistant.core import CoreState, HomeAssistant, State
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -44,7 +45,7 @@ async def test_setup_demo_platform(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "service,expected_state",
+    ("service", "expected_state"),
     [
         (SERVICE_ALARM_ARM_AWAY, STATE_ALARM_ARMED_AWAY),
         (SERVICE_ALARM_ARM_CUSTOM_BYPASS, STATE_ALARM_ARMED_CUSTOM_BYPASS),
@@ -53,7 +54,7 @@ async def test_setup_demo_platform(hass: HomeAssistant) -> None:
         (SERVICE_ALARM_ARM_VACATION, STATE_ALARM_ARMED_VACATION),
     ],
 )
-async def test_no_pending(hass, service, expected_state):
+async def test_no_pending(hass: HomeAssistant, service, expected_state) -> None:
     """Test no pending after arming."""
     assert await async_setup_component(
         hass,
@@ -85,7 +86,7 @@ async def test_no_pending(hass, service, expected_state):
 
 
 @pytest.mark.parametrize(
-    "service,expected_state",
+    ("service", "expected_state"),
     [
         (SERVICE_ALARM_ARM_AWAY, STATE_ALARM_ARMED_AWAY),
         (SERVICE_ALARM_ARM_CUSTOM_BYPASS, STATE_ALARM_ARMED_CUSTOM_BYPASS),
@@ -94,7 +95,9 @@ async def test_no_pending(hass, service, expected_state):
         (SERVICE_ALARM_ARM_VACATION, STATE_ALARM_ARMED_VACATION),
     ],
 )
-async def test_no_pending_when_code_not_req(hass, service, expected_state):
+async def test_no_pending_when_code_not_req(
+    hass: HomeAssistant, service, expected_state
+) -> None:
     """Test no pending when code not required."""
     assert await async_setup_component(
         hass,
@@ -127,7 +130,7 @@ async def test_no_pending_when_code_not_req(hass, service, expected_state):
 
 
 @pytest.mark.parametrize(
-    "service,expected_state",
+    ("service", "expected_state"),
     [
         (SERVICE_ALARM_ARM_AWAY, STATE_ALARM_ARMED_AWAY),
         (SERVICE_ALARM_ARM_CUSTOM_BYPASS, STATE_ALARM_ARMED_CUSTOM_BYPASS),
@@ -136,7 +139,7 @@ async def test_no_pending_when_code_not_req(hass, service, expected_state):
         (SERVICE_ALARM_ARM_VACATION, STATE_ALARM_ARMED_VACATION),
     ],
 )
-async def test_with_pending(hass, service, expected_state):
+async def test_with_pending(hass: HomeAssistant, service, expected_state) -> None:
     """Test with pending after arming."""
     assert await async_setup_component(
         hass,
@@ -192,7 +195,7 @@ async def test_with_pending(hass, service, expected_state):
 
 
 @pytest.mark.parametrize(
-    "service,expected_state",
+    ("service", "expected_state"),
     [
         (SERVICE_ALARM_ARM_AWAY, STATE_ALARM_ARMED_AWAY),
         (SERVICE_ALARM_ARM_CUSTOM_BYPASS, STATE_ALARM_ARMED_CUSTOM_BYPASS),
@@ -201,7 +204,7 @@ async def test_with_pending(hass, service, expected_state):
         (SERVICE_ALARM_ARM_VACATION, STATE_ALARM_ARMED_VACATION),
     ],
 )
-async def test_with_invalid_code(hass, service, expected_state):
+async def test_with_invalid_code(hass: HomeAssistant, service, expected_state) -> None:
     """Attempt to arm without a valid code."""
     assert await async_setup_component(
         hass,
@@ -222,18 +225,22 @@ async def test_with_invalid_code(hass, service, expected_state):
 
     assert hass.states.get(entity_id).state == STATE_ALARM_DISARMED
 
-    await hass.services.async_call(
-        alarm_control_panel.DOMAIN,
-        service,
-        {ATTR_ENTITY_ID: "alarm_control_panel.test", ATTR_CODE: CODE + "2"},
-        blocking=True,
-    )
+    with pytest.raises(HomeAssistantError, match=r"^Invalid alarm code provided$"):
+        await hass.services.async_call(
+            alarm_control_panel.DOMAIN,
+            service,
+            {
+                ATTR_ENTITY_ID: "alarm_control_panel.test",
+                ATTR_CODE: f"{CODE}2",
+            },
+            blocking=True,
+        )
 
     assert hass.states.get(entity_id).state == STATE_ALARM_DISARMED
 
 
 @pytest.mark.parametrize(
-    "service,expected_state",
+    ("service", "expected_state"),
     [
         (SERVICE_ALARM_ARM_AWAY, STATE_ALARM_ARMED_AWAY),
         (SERVICE_ALARM_ARM_CUSTOM_BYPASS, STATE_ALARM_ARMED_CUSTOM_BYPASS),
@@ -242,7 +249,7 @@ async def test_with_invalid_code(hass, service, expected_state):
         (SERVICE_ALARM_ARM_VACATION, STATE_ALARM_ARMED_VACATION),
     ],
 )
-async def test_with_template_code(hass, service, expected_state):
+async def test_with_template_code(hass: HomeAssistant, service, expected_state) -> None:
     """Attempt to arm with a template-based code."""
     assert await async_setup_component(
         hass,
@@ -275,7 +282,7 @@ async def test_with_template_code(hass, service, expected_state):
 
 
 @pytest.mark.parametrize(
-    "service,expected_state,",
+    ("service", "expected_state"),
     [
         (SERVICE_ALARM_ARM_AWAY, STATE_ALARM_ARMED_AWAY),
         (SERVICE_ALARM_ARM_CUSTOM_BYPASS, STATE_ALARM_ARMED_CUSTOM_BYPASS),
@@ -284,7 +291,9 @@ async def test_with_template_code(hass, service, expected_state):
         (SERVICE_ALARM_ARM_VACATION, STATE_ALARM_ARMED_VACATION),
     ],
 )
-async def test_with_specific_pending(hass, service, expected_state):
+async def test_with_specific_pending(
+    hass: HomeAssistant, service, expected_state
+) -> None:
     """Test arming with specific pending."""
     assert await async_setup_component(
         hass,
@@ -1078,7 +1087,8 @@ async def test_disarm_during_trigger_with_invalid_code(hass: HomeAssistant) -> N
 
     assert hass.states.get(entity_id).state == STATE_ALARM_PENDING
 
-    await common.async_alarm_disarm(hass, entity_id=entity_id)
+    with pytest.raises(HomeAssistantError, match=r"^Invalid alarm code provided$"):
+        await common.async_alarm_disarm(hass, entity_id=entity_id)
 
     assert hass.states.get(entity_id).state == STATE_ALARM_PENDING
 
@@ -1121,7 +1131,8 @@ async def test_disarm_with_template_code(hass: HomeAssistant) -> None:
     state = hass.states.get(entity_id)
     assert state.state == STATE_ALARM_ARMED_HOME
 
-    await common.async_alarm_disarm(hass, "def")
+    with pytest.raises(HomeAssistantError, match=r"^Invalid alarm code provided$"):
+        await common.async_alarm_disarm(hass, "def")
 
     state = hass.states.get(entity_id)
     assert state.state == STATE_ALARM_ARMED_HOME
@@ -1206,7 +1217,7 @@ async def test_arm_away_after_disabled_disarmed(hass: HomeAssistant) -> None:
         (STATE_ALARM_DISARMED),
     ],
 )
-async def test_restore_state(hass, expected_state):
+async def test_restore_state(hass: HomeAssistant, expected_state) -> None:
     """Ensure state is restored on startup."""
     mock_restore_cache(hass, (State("alarm_control_panel.test", expected_state),))
 
@@ -1243,7 +1254,7 @@ async def test_restore_state(hass, expected_state):
         (STATE_ALARM_ARMED_VACATION),
     ],
 )
-async def test_restore_state_arming(hass, expected_state):
+async def test_restore_state_arming(hass: HomeAssistant, expected_state) -> None:
     """Ensure ARMING state is restored on startup."""
     time = dt_util.utcnow() - timedelta(seconds=15)
     entity_id = "alarm_control_panel.test"
@@ -1299,7 +1310,7 @@ async def test_restore_state_arming(hass, expected_state):
         (STATE_ALARM_DISARMED),
     ],
 )
-async def test_restore_state_pending(hass, previous_state):
+async def test_restore_state_pending(hass: HomeAssistant, previous_state) -> None:
     """Ensure PENDING state is restored on startup."""
     time = dt_util.utcnow() - timedelta(seconds=15)
     entity_id = "alarm_control_panel.test"
@@ -1365,7 +1376,7 @@ async def test_restore_state_pending(hass, previous_state):
         (STATE_ALARM_DISARMED),
     ],
 )
-async def test_restore_state_triggered(hass, previous_state):
+async def test_restore_state_triggered(hass: HomeAssistant, previous_state) -> None:
     """Ensure PENDING state is resolved to TRIGGERED on startup."""
     time = dt_util.utcnow() - timedelta(seconds=75)
     entity_id = "alarm_control_panel.test"

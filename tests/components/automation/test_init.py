@@ -1,11 +1,9 @@
 """The tests for the automation component."""
 import asyncio
-from collections.abc import Awaitable, Callable
 from datetime import timedelta
 import logging
 from unittest.mock import Mock, patch
 
-from aiohttp import ClientWebSocketResponse
 import pytest
 
 import homeassistant.components.automation as automation
@@ -1354,7 +1352,7 @@ async def test_automation_not_trigger_on_bootstrap(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "broken_config, problem, details",
+    ("broken_config", "problem", "details"),
     (
         (
             {},
@@ -1437,7 +1435,7 @@ async def test_automation_bad_config_validation(
 async def test_automation_with_error_in_script(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
-    hass_ws_client: Callable[[HomeAssistant], Awaitable[ClientWebSocketResponse]],
+    hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test automation with an error in script."""
     assert await async_setup_component(
@@ -1541,6 +1539,7 @@ async def test_automation_restore_last_triggered_with_initial_state(
 
 async def test_extraction_functions(hass: HomeAssistant) -> None:
     """Test extraction functions."""
+    await async_setup_component(hass, "homeassistant", {})
     await async_setup_component(hass, "calendar", {"calendar": {"platform": "demo"}})
     assert await async_setup_component(
         hass,
@@ -1984,7 +1983,7 @@ async def test_blueprint_automation(hass: HomeAssistant, calls) -> None:
 
 
 @pytest.mark.parametrize(
-    "blueprint_inputs, problem, details",
+    ("blueprint_inputs", "problem", "details"),
     (
         (
             # No input
@@ -2193,7 +2192,7 @@ async def test_trigger_condition_explicit_id(hass: HomeAssistant, calls) -> None
 
 
 @pytest.mark.parametrize(
-    "automation_mode,automation_runs",
+    ("automation_mode", "automation_runs"),
     (
         (SCRIPT_MODE_PARALLEL, 2),
         (SCRIPT_MODE_QUEUED, 2),
@@ -2202,7 +2201,7 @@ async def test_trigger_condition_explicit_id(hass: HomeAssistant, calls) -> None
     ),
 )
 @pytest.mark.parametrize(
-    "script_mode,script_warning_msg",
+    ("script_mode", "script_warning_msg"),
     (
         (SCRIPT_MODE_PARALLEL, "script1: Maximum number of runs exceeded"),
         (SCRIPT_MODE_QUEUED, "script1: Disallowed recursion detected"),
@@ -2210,6 +2209,7 @@ async def test_trigger_condition_explicit_id(hass: HomeAssistant, calls) -> None
         (SCRIPT_MODE_SINGLE, "script1: Already running"),
     ),
 )
+@pytest.mark.parametrize("wait_for_stop_scripts_after_shutdown", [True])
 async def test_recursive_automation_starting_script(
     hass: HomeAssistant,
     automation_mode,
@@ -2320,6 +2320,7 @@ async def test_recursive_automation_starting_script(
 
 
 @pytest.mark.parametrize("automation_mode", SCRIPT_MODE_CHOICES)
+@pytest.mark.parametrize("wait_for_stop_scripts_after_shutdown", [True])
 async def test_recursive_automation(
     hass: HomeAssistant, automation_mode, caplog: pytest.LogCaptureFixture
 ) -> None:

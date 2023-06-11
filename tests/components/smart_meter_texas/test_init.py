@@ -13,6 +13,8 @@ from homeassistant.setup import async_setup_component
 
 from .conftest import TEST_ENTITY_ID, setup_integration
 
+from tests.test_util.aiohttp import AiohttpClientMocker
+
 
 async def test_setup_with_no_config(hass: HomeAssistant) -> None:
     """Test that no config is successful."""
@@ -23,21 +25,27 @@ async def test_setup_with_no_config(hass: HomeAssistant) -> None:
     assert len(hass.config_entries.flow.async_progress()) == 0
 
 
-async def test_auth_failure(hass, config_entry, aioclient_mock):
+async def test_auth_failure(
+    hass: HomeAssistant, config_entry, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test if user's username or password is not accepted."""
     await setup_integration(hass, config_entry, aioclient_mock, auth_fail=True)
 
     assert config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
-async def test_api_timeout(hass, config_entry, aioclient_mock):
+async def test_api_timeout(
+    hass: HomeAssistant, config_entry, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test that a timeout results in ConfigEntryNotReady."""
     await setup_integration(hass, config_entry, aioclient_mock, auth_timeout=True)
 
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_update_failure(hass, config_entry, aioclient_mock):
+async def test_update_failure(
+    hass: HomeAssistant, config_entry, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test that the coordinator handles a bad response."""
     await setup_integration(hass, config_entry, aioclient_mock, bad_reading=True)
     await async_setup_component(hass, HA_DOMAIN, {})
@@ -53,7 +61,9 @@ async def test_update_failure(hass, config_entry, aioclient_mock):
         updater.assert_called_once()
 
 
-async def test_unload_config_entry(hass, config_entry, aioclient_mock):
+async def test_unload_config_entry(
+    hass: HomeAssistant, config_entry, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test entry unloading."""
     await setup_integration(hass, config_entry, aioclient_mock)
 

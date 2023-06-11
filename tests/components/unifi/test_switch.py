@@ -30,9 +30,8 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity_registry import RegistryEntryDisabler
-from homeassistant.util import dt
+from homeassistant.util import dt as dt_util
 
 from .test_controller import (
     CONTROLLER_HOST,
@@ -139,6 +138,7 @@ DEVICE_1 = {
             "media": "GE",
             "name": "Port 1",
             "port_idx": 1,
+            "poe_caps": 7,
             "poe_class": "Class 4",
             "poe_enable": True,
             "poe_mode": "auto",
@@ -152,6 +152,7 @@ DEVICE_1 = {
             "media": "GE",
             "name": "Port 2",
             "port_idx": 2,
+            "poe_caps": 7,
             "poe_class": "Class 4",
             "poe_enable": True,
             "poe_mode": "auto",
@@ -165,6 +166,7 @@ DEVICE_1 = {
             "media": "GE",
             "name": "Port 3",
             "port_idx": 3,
+            "poe_caps": 7,
             "poe_class": "Unknown",
             "poe_enable": False,
             "poe_mode": "off",
@@ -178,6 +180,7 @@ DEVICE_1 = {
             "media": "GE",
             "name": "Port 4",
             "port_idx": 4,
+            "poe_caps": 7,
             "poe_class": "Unknown",
             "poe_enable": False,
             "poe_mode": "auto",
@@ -719,13 +722,10 @@ async def test_switches(
     assert aioclient_mock.call_count == 14
     assert aioclient_mock.mock_calls[13][2] == {"enabled": True}
 
-    # Make sure no duplicates arise on generic signal update
-    async_dispatcher_send(hass, controller.signal_update)
-    await hass.async_block_till_done()
-    assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 3
 
-
-async def test_remove_switches(hass, aioclient_mock, mock_unifi_websocket):
+async def test_remove_switches(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, mock_unifi_websocket
+) -> None:
     """Test the update_items function with some clients."""
     await setup_unifi_integration(
         hass,
@@ -756,7 +756,9 @@ async def test_remove_switches(hass, aioclient_mock, mock_unifi_websocket):
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 0
 
 
-async def test_block_switches(hass, aioclient_mock, mock_unifi_websocket):
+async def test_block_switches(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, mock_unifi_websocket
+) -> None:
     """Test the update_items function with some clients."""
     config_entry = await setup_unifi_integration(
         hass,
@@ -820,7 +822,9 @@ async def test_block_switches(hass, aioclient_mock, mock_unifi_websocket):
     }
 
 
-async def test_dpi_switches(hass, aioclient_mock, mock_unifi_websocket):
+async def test_dpi_switches(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, mock_unifi_websocket
+) -> None:
     """Test the update_items function with some clients."""
     await setup_unifi_integration(
         hass,
@@ -861,7 +865,9 @@ async def test_dpi_switches(hass, aioclient_mock, mock_unifi_websocket):
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 0
 
 
-async def test_dpi_switches_add_second_app(hass, aioclient_mock, mock_unifi_websocket):
+async def test_dpi_switches_add_second_app(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, mock_unifi_websocket
+) -> None:
     """Test the update_items function with some clients."""
     await setup_unifi_integration(
         hass,
@@ -917,7 +923,9 @@ async def test_dpi_switches_add_second_app(hass, aioclient_mock, mock_unifi_webs
     assert hass.states.get("switch.block_media_streaming").state == STATE_ON
 
 
-async def test_outlet_switches(hass, aioclient_mock, mock_unifi_websocket):
+async def test_outlet_switches(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, mock_unifi_websocket
+) -> None:
     """Test the outlet entities."""
     config_entry = await setup_unifi_integration(
         hass, aioclient_mock, devices_response=[OUTLET_UP1]
@@ -1002,8 +1010,8 @@ async def test_outlet_switches(hass, aioclient_mock, mock_unifi_websocket):
 
 
 async def test_new_client_discovered_on_block_control(
-    hass, aioclient_mock, mock_unifi_websocket
-):
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, mock_unifi_websocket
+) -> None:
     """Test if 2nd update has a new client."""
     await setup_unifi_integration(
         hass,
@@ -1097,7 +1105,9 @@ async def test_option_remove_switches(
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 0
 
 
-async def test_poe_port_switches(hass, aioclient_mock, mock_unifi_websocket):
+async def test_poe_port_switches(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, mock_unifi_websocket
+) -> None:
     """Test the update_items function with some clients."""
     config_entry = await setup_unifi_integration(
         hass, aioclient_mock, devices_response=[DEVICE_1]
@@ -1119,7 +1129,7 @@ async def test_poe_port_switches(hass, aioclient_mock, mock_unifi_websocket):
 
     async_fire_time_changed(
         hass,
-        dt.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1),
+        dt_util.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1),
     )
     await hass.async_block_till_done()
 

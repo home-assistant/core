@@ -2,6 +2,7 @@
 import datetime
 from unittest.mock import patch
 
+from freezegun import freeze_time
 import pytest
 import voluptuous as vol
 
@@ -304,7 +305,7 @@ async def test_set_target_temp(hass: HomeAssistant, setup_comp_2) -> None:
 
 
 @pytest.mark.parametrize(
-    "preset,temp",
+    ("preset", "temp"),
     [
         (PRESET_NONE, 23),
         (PRESET_AWAY, 16),
@@ -323,7 +324,7 @@ async def test_set_away_mode(hass: HomeAssistant, setup_comp_2, preset, temp) ->
 
 
 @pytest.mark.parametrize(
-    "preset,temp",
+    ("preset", "temp"),
     [
         (PRESET_NONE, 23),
         (PRESET_AWAY, 16),
@@ -350,7 +351,7 @@ async def test_set_away_mode_and_restore_prev_temp(
 
 
 @pytest.mark.parametrize(
-    "preset,temp",
+    ("preset", "temp"),
     [
         (PRESET_NONE, 23),
         (PRESET_AWAY, 16),
@@ -786,9 +787,7 @@ async def test_temp_change_ac_trigger_on_long_enough(
 ) -> None:
     """Test if temperature change turn ac on."""
     fake_changed = datetime.datetime(1970, 11, 11, 11, 11, 11, tzinfo=dt_util.UTC)
-    with patch(
-        "homeassistant.helpers.condition.dt_util.utcnow", return_value=fake_changed
-    ):
+    with freeze_time(fake_changed):
         calls = _setup_switch(hass, False)
     await common.async_set_temperature(hass, 25)
     _setup_sensor(hass, 30)
@@ -816,9 +815,7 @@ async def test_temp_change_ac_trigger_off_long_enough(
 ) -> None:
     """Test if temperature change turn ac on."""
     fake_changed = datetime.datetime(1970, 11, 11, 11, 11, 11, tzinfo=dt_util.UTC)
-    with patch(
-        "homeassistant.helpers.condition.dt_util.utcnow", return_value=fake_changed
-    ):
+    with freeze_time(fake_changed):
         calls = _setup_switch(hass, True)
     await common.async_set_temperature(hass, 30)
     _setup_sensor(hass, 25)
@@ -904,9 +901,7 @@ async def test_temp_change_ac_trigger_on_long_enough_2(
 ) -> None:
     """Test if temperature change turn ac on."""
     fake_changed = datetime.datetime(1970, 11, 11, 11, 11, 11, tzinfo=dt_util.UTC)
-    with patch(
-        "homeassistant.helpers.condition.dt_util.utcnow", return_value=fake_changed
-    ):
+    with freeze_time(fake_changed):
         calls = _setup_switch(hass, False)
     await common.async_set_temperature(hass, 25)
     _setup_sensor(hass, 30)
@@ -934,9 +929,7 @@ async def test_temp_change_ac_trigger_off_long_enough_2(
 ) -> None:
     """Test if temperature change turn ac on."""
     fake_changed = datetime.datetime(1970, 11, 11, 11, 11, 11, tzinfo=dt_util.UTC)
-    with patch(
-        "homeassistant.helpers.condition.dt_util.utcnow", return_value=fake_changed
-    ):
+    with freeze_time(fake_changed):
         calls = _setup_switch(hass, True)
     await common.async_set_temperature(hass, 30)
     _setup_sensor(hass, 25)
@@ -1032,9 +1025,7 @@ async def test_temp_change_heater_trigger_on_long_enough(
 ) -> None:
     """Test if temperature change turn heater on after min cycle."""
     fake_changed = datetime.datetime(1970, 11, 11, 11, 11, 11, tzinfo=dt_util.UTC)
-    with patch(
-        "homeassistant.helpers.condition.dt_util.utcnow", return_value=fake_changed
-    ):
+    with freeze_time(fake_changed):
         calls = _setup_switch(hass, False)
     await common.async_set_temperature(hass, 30)
     _setup_sensor(hass, 25)
@@ -1051,9 +1042,7 @@ async def test_temp_change_heater_trigger_off_long_enough(
 ) -> None:
     """Test if temperature change turn heater off after min cycle."""
     fake_changed = datetime.datetime(1970, 11, 11, 11, 11, 11, tzinfo=dt_util.UTC)
-    with patch(
-        "homeassistant.helpers.condition.dt_util.utcnow", return_value=fake_changed
-    ):
+    with freeze_time(fake_changed):
         calls = _setup_switch(hass, True)
     await common.async_set_temperature(hass, 25)
     _setup_sensor(hass, 30)

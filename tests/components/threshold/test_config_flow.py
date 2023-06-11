@@ -60,7 +60,7 @@ async def test_config_flow(hass: HomeAssistant) -> None:
     assert config_entry.title == "My threshold sensor"
 
 
-@pytest.mark.parametrize("extra_input_data,error", (({}, "need_lower_upper"),))
+@pytest.mark.parametrize(("extra_input_data", "error"), (({}, "need_lower_upper"),))
 async def test_fail(hass: HomeAssistant, extra_input_data, error) -> None:
     """Test not providing lower or upper limit fails."""
     input_sensor = "sensor.input"
@@ -86,7 +86,7 @@ async def test_fail(hass: HomeAssistant, extra_input_data, error) -> None:
 
 def get_suggested(schema, key):
     """Get suggested value for key in voluptuous schema."""
-    for k in schema.keys():
+    for k in schema:
         if k == key:
             if k.description is None or "suggested_value" not in k.description:
                 return None

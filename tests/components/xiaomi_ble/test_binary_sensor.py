@@ -253,16 +253,16 @@ async def test_smoke(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     assert len(hass.states.async_all()) == 1
 
-    smoke_sensor = hass.states.get("binary_sensor.thermometer_9cbc_smoke")
+    smoke_sensor = hass.states.get("binary_sensor.smoke_detector_9cbc_smoke")
     smoke_sensor_attribtes = smoke_sensor.attributes
     assert smoke_sensor.state == STATE_ON
-    assert smoke_sensor_attribtes[ATTR_FRIENDLY_NAME] == "Thermometer 9CBC Smoke"
+    assert smoke_sensor_attribtes[ATTR_FRIENDLY_NAME] == "Smoke Detector 9CBC Smoke"
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
 
 
-async def test_unavailable(hass):
+async def test_unavailable(hass: HomeAssistant) -> None:
     """Test normal device goes to unavailable after 60 minutes."""
     start_monotonic = time.monotonic()
 
@@ -314,7 +314,7 @@ async def test_unavailable(hass):
     await hass.async_block_till_done()
 
 
-async def test_sleepy_device(hass):
+async def test_sleepy_device(hass: HomeAssistant) -> None:
     """Test sleepy device does not go to unavailable after 60 minutes."""
     start_monotonic = time.monotonic()
 

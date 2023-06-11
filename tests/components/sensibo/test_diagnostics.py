@@ -10,7 +10,7 @@ from tests.typing import ClientSessionGenerator
 
 async def test_diagnostics(
     hass: HomeAssistant, hass_client: ClientSessionGenerator, load_int: ConfigEntry
-):
+) -> None:
     """Test generating diagnostics for a config entry."""
     entry = load_int
 

@@ -13,7 +13,11 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import condition, config_validation as cv, entity_registry
+from homeassistant.helpers import (
+    condition,
+    config_validation as cv,
+    entity_registry as er,
+)
 from homeassistant.helpers.config_validation import DEVICE_CONDITION_BASE_SCHEMA
 from homeassistant.helpers.entity import get_capability
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
@@ -38,7 +42,7 @@ async def async_get_conditions(
     hass: HomeAssistant, device_id: str
 ) -> list[dict[str, str]]:
     """List device conditions for Select devices."""
-    registry = entity_registry.async_get(hass)
+    registry = er.async_get(hass)
     return [
         {
             CONF_CONDITION: "device",
@@ -47,7 +51,7 @@ async def async_get_conditions(
             CONF_ENTITY_ID: entry.entity_id,
             CONF_TYPE: "selected_option",
         }
-        for entry in entity_registry.async_entries_for_device(registry, device_id)
+        for entry in er.async_entries_for_device(registry, device_id)
         if entry.domain == DOMAIN
     ]
 

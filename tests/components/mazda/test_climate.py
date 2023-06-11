@@ -62,7 +62,19 @@ async def test_climate_setup(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "region, hvac_on, target_temperature, temperature_unit, front_defroster, rear_defroster, current_temperature_celsius, expected_hvac_mode, expected_preset_mode, expected_min_temp, expected_max_temp",
+    (
+        "region",
+        "hvac_on",
+        "target_temperature",
+        "temperature_unit",
+        "front_defroster",
+        "rear_defroster",
+        "current_temperature_celsius",
+        "expected_hvac_mode",
+        "expected_preset_mode",
+        "expected_min_temp",
+        "expected_max_temp",
+    ),
     [
         # Test with HVAC off
         (
@@ -165,7 +177,7 @@ async def test_climate_setup(hass: HomeAssistant) -> None:
     ],
 )
 async def test_climate_state(
-    hass,
+    hass: HomeAssistant,
     region,
     hvac_on,
     target_temperature,
@@ -177,7 +189,7 @@ async def test_climate_state(
     expected_preset_mode,
     expected_min_temp,
     expected_max_temp,
-):
+) -> None:
     """Test getting the state of the climate entity."""
     if temperature_unit == "F":
         hass.config.units = US_CUSTOMARY_SYSTEM
@@ -262,13 +274,13 @@ async def test_climate_state(
 
 
 @pytest.mark.parametrize(
-    "hvac_mode, api_method",
+    ("hvac_mode", "api_method"),
     [
         (HVACMode.HEAT_COOL, "turn_on_hvac"),
         (HVACMode.OFF, "turn_off_hvac"),
     ],
 )
-async def test_set_hvac_mode(hass, hvac_mode, api_method):
+async def test_set_hvac_mode(hass: HomeAssistant, hvac_mode, api_method) -> None:
     """Test turning on and off the HVAC system."""
     client_mock = await init_integration(hass, electric_vehicle=True)
 
@@ -299,7 +311,7 @@ async def test_set_target_temperature(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "preset_mode, front_defroster, rear_defroster",
+    ("preset_mode", "front_defroster", "rear_defroster"),
     [
         (PRESET_DEFROSTER_OFF, False, False),
         (PRESET_DEFROSTER_FRONT, True, False),
@@ -307,7 +319,9 @@ async def test_set_target_temperature(hass: HomeAssistant) -> None:
         (PRESET_DEFROSTER_FRONT_AND_REAR, True, True),
     ],
 )
-async def test_set_preset_mode(hass, preset_mode, front_defroster, rear_defroster):
+async def test_set_preset_mode(
+    hass: HomeAssistant, preset_mode, front_defroster, rear_defroster
+) -> None:
     """Test turning on and off the front and rear defrosters."""
     client_mock = await init_integration(hass, electric_vehicle=True)
 

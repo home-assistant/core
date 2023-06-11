@@ -1,5 +1,6 @@
 """Test the AEH config flow."""
 import logging
+from unittest.mock import AsyncMock
 
 from azure.eventhub.exceptions import EventHubError
 import pytest
@@ -29,9 +30,11 @@ from tests.common import MockConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
+pytestmark = pytest.mark.usefixtures("mock_setup_entry")
+
 
 @pytest.mark.parametrize(
-    "step1_config, step_id, step2_config, data_config",
+    ("step1_config", "step_id", "step2_config", "data_config"),
     [
         (BASE_CONFIG_CS, STEP_CONN_STRING, CS_CONFIG, CS_CONFIG_FULL),
         (BASE_CONFIG_SAS, STEP_SAS, SAS_CONFIG, SAS_CONFIG_FULL),
@@ -40,7 +43,7 @@ _LOGGER = logging.getLogger(__name__)
 )
 async def test_form(
     hass: HomeAssistant,
-    mock_setup_entry,
+    mock_setup_entry: AsyncMock,
     mock_from_connection_string,
     step1_config,
     step_id,
@@ -70,7 +73,7 @@ async def test_form(
     mock_setup_entry.assert_called_once()
 
 
-async def test_import(hass: HomeAssistant, mock_setup_entry) -> None:
+async def test_import(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     """Test we get the form."""
 
     import_config = IMPORT_CONFIG.copy()
@@ -115,7 +118,7 @@ async def test_single_instance(hass: HomeAssistant, source) -> None:
 
 
 @pytest.mark.parametrize(
-    "side_effect, error_message",
+    ("side_effect", "error_message"),
     [(EventHubError("test"), "cannot_connect"), (Exception, "unknown")],
     ids=["cannot_connect", "unknown"],
 )
@@ -144,7 +147,7 @@ async def test_connection_error_sas(
 
 
 @pytest.mark.parametrize(
-    "side_effect, error_message",
+    ("side_effect", "error_message"),
     [(EventHubError("test"), "cannot_connect"), (Exception, "unknown")],
     ids=["cannot_connect", "unknown"],
 )

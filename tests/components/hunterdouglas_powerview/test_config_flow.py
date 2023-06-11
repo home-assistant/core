@@ -176,7 +176,7 @@ async def test_user_form_legacy(hass: HomeAssistant) -> None:
     assert result4["type"] == "abort"
 
 
-@pytest.mark.parametrize("source, discovery_info", DISCOVERY_DATA)
+@pytest.mark.parametrize(("source", "discovery_info"), DISCOVERY_DATA)
 async def test_form_homekit_and_dhcp_cannot_connect(
     hass: HomeAssistant, source, discovery_info
 ) -> None:
@@ -204,7 +204,7 @@ async def test_form_homekit_and_dhcp_cannot_connect(
     assert result["reason"] == "cannot_connect"
 
 
-@pytest.mark.parametrize("source, discovery_info", DISCOVERY_DATA)
+@pytest.mark.parametrize(("source", "discovery_info"), DISCOVERY_DATA)
 async def test_form_homekit_and_dhcp(
     hass: HomeAssistant, source, discovery_info
 ) -> None:

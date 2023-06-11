@@ -67,8 +67,12 @@ async def test_fan_available(
 
 @pytest.mark.parametrize(
     (
-        "service, service_data, device_state, expected_state, "
-        "expected_percentage, expected_preset_mode"
+        "service",
+        "service_data",
+        "device_state",
+        "expected_state",
+        "expected_percentage",
+        "expected_preset_mode",
     ),
     [
         (

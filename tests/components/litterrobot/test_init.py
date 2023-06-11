@@ -42,7 +42,7 @@ async def test_unload_entry(hass: HomeAssistant, mock_account) -> None:
 
 
 @pytest.mark.parametrize(
-    "side_effect,expected_state",
+    ("side_effect", "expected_state"),
     (
         (LitterRobotLoginException, ConfigEntryState.SETUP_ERROR),
         (LitterRobotException, ConfigEntryState.SETUP_RETRY),

@@ -56,7 +56,7 @@ async def setup_automation(hass, device_id, trigger_type):
     )
 
 
-async def test_get_triggers(hass, wemo_entity):
+async def test_get_triggers(hass: HomeAssistant, wemo_entity) -> None:
     """Test that the triggers appear for a supported device."""
     assert wemo_entity.device_id is not None
 

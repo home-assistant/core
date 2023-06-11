@@ -22,7 +22,7 @@ from .conftest import (
 from tests.common import MockConfigEntry
 
 
-async def test_setup_entry_encrypted(hass, mock_remote):
+async def test_setup_entry_encrypted(hass: HomeAssistant, mock_remote) -> None:
     """Test setup with encrypted config entry."""
     mock_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -45,7 +45,9 @@ async def test_setup_entry_encrypted(hass, mock_remote):
     assert state_remote.name == DEFAULT_NAME
 
 
-async def test_setup_entry_encrypted_missing_device_info(hass, mock_remote):
+async def test_setup_entry_encrypted_missing_device_info(
+    hass: HomeAssistant, mock_remote
+) -> None:
     """Test setup with encrypted config entry and missing device info."""
     mock_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -105,7 +107,7 @@ async def test_setup_entry_encrypted_missing_device_info_none(
         assert state_remote.name == DEFAULT_NAME
 
 
-async def test_setup_entry_unencrypted(hass, mock_remote):
+async def test_setup_entry_unencrypted(hass: HomeAssistant, mock_remote) -> None:
     """Test setup with unencrypted config entry."""
     mock_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -128,7 +130,9 @@ async def test_setup_entry_unencrypted(hass, mock_remote):
     assert state_remote.name == DEFAULT_NAME
 
 
-async def test_setup_entry_unencrypted_missing_device_info(hass, mock_remote):
+async def test_setup_entry_unencrypted_missing_device_info(
+    hass: HomeAssistant, mock_remote
+) -> None:
     """Test setup with unencrypted config entry and missing device info."""
     mock_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -209,7 +213,7 @@ async def test_setup_config_flow_initiated(hass: HomeAssistant) -> None:
     assert len(hass.config_entries.flow.async_progress()) == 1
 
 
-async def test_setup_unload_entry(hass, mock_remote):
+async def test_setup_unload_entry(hass: HomeAssistant, mock_remote) -> None:
     """Test if config entry is unloaded."""
     mock_entry = MockConfigEntry(
         domain=DOMAIN,

@@ -16,7 +16,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.entity_registry import async_entries_for_device
 from homeassistant.helpers.typing import ConfigType
 
-from . import const as zha_const, registries as zha_regs
 from .. import (  # noqa: F401 pylint: disable=unused-import,
     alarm_control_panel,
     binary_sensor,
@@ -33,12 +32,28 @@ from .. import (  # noqa: F401 pylint: disable=unused-import,
     siren,
     switch,
 )
-from .channels import base
+from . import const as zha_const, registries as zha_regs
+
+# importing cluster handlers updates registries
+from .cluster_handlers import (  # noqa: F401 pylint: disable=unused-import,
+    ClusterHandler,
+    closures,
+    general,
+    homeautomation,
+    hvac,
+    lighting,
+    lightlink,
+    manufacturerspecific,
+    measurement,
+    protocol,
+    security,
+    smartenergy,
+)
 
 if TYPE_CHECKING:
     from ..entity import ZhaEntity
-    from .channels import ChannelPool
     from .device import ZHADevice
+    from .endpoint import Endpoint
     from .gateway import ZHAGateway
     from .group import ZHAGroup
 
@@ -51,7 +66,7 @@ async def async_add_entities(
     entities: list[
         tuple[
             type[ZhaEntity],
-            tuple[str, ZHADevice, list[base.ZigbeeChannel]],
+            tuple[str, ZHADevice, list[ClusterHandler]],
         ]
     ],
 ) -> None:
@@ -65,45 +80,56 @@ async def async_add_entities(
 
 
 class ProbeEndpoint:
-    """All discovered channels and entities of an endpoint."""
+    """All discovered cluster handlers and entities of an endpoint."""
 
     def __init__(self) -> None:
         """Initialize instance."""
         self._device_configs: ConfigType = {}
 
     @callback
-    def discover_entities(self, channel_pool: ChannelPool) -> None:
+    def discover_entities(self, endpoint: Endpoint) -> None:
         """Process an endpoint on a zigpy device."""
-        self.discover_by_device_type(channel_pool)
-        self.discover_multi_entities(channel_pool)
-        self.discover_by_cluster_id(channel_pool)
-        self.discover_multi_entities(channel_pool, config_diagnostic_entities=True)
+        _LOGGER.debug(
+            "Discovering entities for endpoint: %s-%s",
+            str(endpoint.device.ieee),
+            endpoint.id,
+        )
+        self.discover_by_device_type(endpoint)
+        self.discover_multi_entities(endpoint)
+        self.discover_by_cluster_id(endpoint)
+        self.discover_multi_entities(endpoint, config_diagnostic_entities=True)
         zha_regs.ZHA_ENTITIES.clean_up()
 
     @callback
-    def discover_by_device_type(self, channel_pool: ChannelPool) -> None:
+    def discover_by_device_type(self, endpoint: Endpoint) -> None:
         """Process an endpoint on a zigpy device."""
 
-        unique_id = channel_pool.unique_id
+        unique_id = endpoint.unique_id
 
-        component: str | None = self._device_configs.get(unique_id, {}).get(CONF_TYPE)
-        if component is None:
-            ep_profile_id = channel_pool.endpoint.profile_id
-            ep_device_type = channel_pool.endpoint.device_type
-            component = zha_regs.DEVICE_CLASS[ep_profile_id].get(ep_device_type)
+        platform: str | None = self._device_configs.get(unique_id, {}).get(CONF_TYPE)
+        if platform is None:
+            ep_profile_id = endpoint.zigpy_endpoint.profile_id
+            ep_device_type = endpoint.zigpy_endpoint.device_type
+            platform = zha_regs.DEVICE_CLASS[ep_profile_id].get(ep_device_type)
 
-        if component and component in zha_const.PLATFORMS:
-            channels = channel_pool.unclaimed_channels()
-            entity_class, claimed = zha_regs.ZHA_ENTITIES.get_entity(
-                component, channel_pool.manufacturer, channel_pool.model, channels
+        if platform and platform in zha_const.PLATFORMS:
+            cluster_handlers = endpoint.unclaimed_cluster_handlers()
+            platform_entity_class, claimed = zha_regs.ZHA_ENTITIES.get_entity(
+                platform,
+                endpoint.device.manufacturer,
+                endpoint.device.model,
+                cluster_handlers,
+                endpoint.device.quirk_class,
             )
-            if entity_class is None:
+            if platform_entity_class is None:
                 return
-            channel_pool.claim_channels(claimed)
-            channel_pool.async_new_entity(component, entity_class, unique_id, claimed)
+            endpoint.claim_cluster_handlers(claimed)
+            endpoint.async_new_entity(
+                platform, platform_entity_class, unique_id, claimed
+            )
 
     @callback
-    def discover_by_cluster_id(self, channel_pool: ChannelPool) -> None:
+    def discover_by_cluster_id(self, endpoint: Endpoint) -> None:
         """Process an endpoint on a zigpy device."""
 
         items = zha_regs.SINGLE_INPUT_CLUSTER_DEVICE_CLASS.items()
@@ -112,119 +138,127 @@ class ProbeEndpoint:
             for cluster_class, match in items
             if not isinstance(cluster_class, int)
         }
-        remaining_channels = channel_pool.unclaimed_channels()
-        for channel in remaining_channels:
-            if channel.cluster.cluster_id in zha_regs.CHANNEL_ONLY_CLUSTERS:
-                channel_pool.claim_channels([channel])
+        remaining_cluster_handlers = endpoint.unclaimed_cluster_handlers()
+        for cluster_handler in remaining_cluster_handlers:
+            if (
+                cluster_handler.cluster.cluster_id
+                in zha_regs.CLUSTER_HANDLER_ONLY_CLUSTERS
+            ):
+                endpoint.claim_cluster_handlers([cluster_handler])
                 continue
 
-            component = zha_regs.SINGLE_INPUT_CLUSTER_DEVICE_CLASS.get(
-                channel.cluster.cluster_id
+            platform = zha_regs.SINGLE_INPUT_CLUSTER_DEVICE_CLASS.get(
+                cluster_handler.cluster.cluster_id
             )
-            if component is None:
+            if platform is None:
                 for cluster_class, match in single_input_clusters.items():
-                    if isinstance(channel.cluster, cluster_class):
-                        component = match
+                    if isinstance(cluster_handler.cluster, cluster_class):
+                        platform = match
                         break
 
-            self.probe_single_cluster(component, channel, channel_pool)
+            self.probe_single_cluster(platform, cluster_handler, endpoint)
 
         # until we can get rid of registries
-        self.handle_on_off_output_cluster_exception(channel_pool)
+        self.handle_on_off_output_cluster_exception(endpoint)
 
     @staticmethod
     def probe_single_cluster(
-        component: Platform | None,
-        channel: base.ZigbeeChannel,
-        ep_channels: ChannelPool,
+        platform: Platform | None,
+        cluster_handler: ClusterHandler,
+        endpoint: Endpoint,
     ) -> None:
         """Probe specified cluster for specific component."""
-        if component is None or component not in zha_const.PLATFORMS:
+        if platform is None or platform not in zha_const.PLATFORMS:
             return
-        channel_list = [channel]
-        unique_id = f"{ep_channels.unique_id}-{channel.cluster.cluster_id}"
+        cluster_handler_list = [cluster_handler]
+        unique_id = f"{endpoint.unique_id}-{cluster_handler.cluster.cluster_id}"
 
         entity_class, claimed = zha_regs.ZHA_ENTITIES.get_entity(
-            component, ep_channels.manufacturer, ep_channels.model, channel_list
+            platform,
+            endpoint.device.manufacturer,
+            endpoint.device.model,
+            cluster_handler_list,
+            endpoint.device.quirk_class,
         )
         if entity_class is None:
             return
-        ep_channels.claim_channels(claimed)
-        ep_channels.async_new_entity(component, entity_class, unique_id, claimed)
+        endpoint.claim_cluster_handlers(claimed)
+        endpoint.async_new_entity(platform, entity_class, unique_id, claimed)
 
-    def handle_on_off_output_cluster_exception(self, ep_channels: ChannelPool) -> None:
+    def handle_on_off_output_cluster_exception(self, endpoint: Endpoint) -> None:
         """Process output clusters of the endpoint."""
 
-        profile_id = ep_channels.endpoint.profile_id
-        device_type = ep_channels.endpoint.device_type
+        profile_id = endpoint.zigpy_endpoint.profile_id
+        device_type = endpoint.zigpy_endpoint.device_type
         if device_type in zha_regs.REMOTE_DEVICE_TYPES.get(profile_id, []):
             return
 
-        for cluster_id, cluster in ep_channels.endpoint.out_clusters.items():
-            component = zha_regs.SINGLE_OUTPUT_CLUSTER_DEVICE_CLASS.get(
+        for cluster_id, cluster in endpoint.zigpy_endpoint.out_clusters.items():
+            platform = zha_regs.SINGLE_OUTPUT_CLUSTER_DEVICE_CLASS.get(
                 cluster.cluster_id
             )
-            if component is None:
+            if platform is None:
                 continue
 
-            channel_class = zha_regs.ZIGBEE_CHANNEL_REGISTRY.get(
-                cluster_id, base.ZigbeeChannel
+            cluster_handler_class = zha_regs.ZIGBEE_CLUSTER_HANDLER_REGISTRY.get(
+                cluster_id, ClusterHandler
             )
-            channel = channel_class(cluster, ep_channels)
-            self.probe_single_cluster(component, channel, ep_channels)
+            cluster_handler = cluster_handler_class(cluster, endpoint)
+            self.probe_single_cluster(platform, cluster_handler, endpoint)
 
     @staticmethod
     @callback
     def discover_multi_entities(
-        channel_pool: ChannelPool,
+        endpoint: Endpoint,
         config_diagnostic_entities: bool = False,
     ) -> None:
         """Process an endpoint on and discover multiple entities."""
 
-        ep_profile_id = channel_pool.endpoint.profile_id
-        ep_device_type = channel_pool.endpoint.device_type
+        ep_profile_id = endpoint.zigpy_endpoint.profile_id
+        ep_device_type = endpoint.zigpy_endpoint.device_type
         cmpt_by_dev_type = zha_regs.DEVICE_CLASS[ep_profile_id].get(ep_device_type)
 
         if config_diagnostic_entities:
             matches, claimed = zha_regs.ZHA_ENTITIES.get_config_diagnostic_entity(
-                channel_pool.manufacturer,
-                channel_pool.model,
-                list(channel_pool.all_channels.values()),
+                endpoint.device.manufacturer,
+                endpoint.device.model,
+                list(endpoint.all_cluster_handlers.values()),
+                endpoint.device.quirk_class,
             )
         else:
             matches, claimed = zha_regs.ZHA_ENTITIES.get_multi_entity(
-                channel_pool.manufacturer,
-                channel_pool.model,
-                channel_pool.unclaimed_channels(),
+                endpoint.device.manufacturer,
+                endpoint.device.model,
+                endpoint.unclaimed_cluster_handlers(),
+                endpoint.device.quirk_class,
             )
 
-        channel_pool.claim_channels(claimed)
-        for component, ent_n_chan_list in matches.items():
-            for entity_and_channel in ent_n_chan_list:
+        endpoint.claim_cluster_handlers(claimed)
+        for platform, ent_n_handler_list in matches.items():
+            for entity_and_handler in ent_n_handler_list:
                 _LOGGER.debug(
                     "'%s' component -> '%s' using %s",
-                    component,
-                    entity_and_channel.entity_class.__name__,
-                    [ch.name for ch in entity_and_channel.claimed_channel],
+                    platform,
+                    entity_and_handler.entity_class.__name__,
+                    [ch.name for ch in entity_and_handler.claimed_cluster_handlers],
                 )
-        for component, ent_n_chan_list in matches.items():
-            for entity_and_channel in ent_n_chan_list:
-                if component == cmpt_by_dev_type:
-                    # for well known device types, like thermostats
-                    # we'll take only 1st class
-                    channel_pool.async_new_entity(
-                        component,
-                        entity_and_channel.entity_class,
-                        channel_pool.unique_id,
-                        entity_and_channel.claimed_channel,
+        for platform, ent_n_handler_list in matches.items():
+            for entity_and_handler in ent_n_handler_list:
+                if platform == cmpt_by_dev_type:
+                    # for well known device types, like thermostats we'll take only 1st class
+                    endpoint.async_new_entity(
+                        platform,
+                        entity_and_handler.entity_class,
+                        endpoint.unique_id,
+                        entity_and_handler.claimed_cluster_handlers,
                     )
                     break
-                first_ch = entity_and_channel.claimed_channel[0]
-                channel_pool.async_new_entity(
-                    component,
-                    entity_and_channel.entity_class,
-                    f"{channel_pool.unique_id}-{first_ch.cluster.cluster_id}",
-                    entity_and_channel.claimed_channel,
+                first_ch = entity_and_handler.claimed_cluster_handlers[0]
+                endpoint.async_new_entity(
+                    platform,
+                    entity_and_handler.entity_class,
+                    f"{endpoint.unique_id}-{first_ch.cluster.cluster_id}",
+                    entity_and_handler.claimed_cluster_handlers,
                 )
 
     def initialize(self, hass: HomeAssistant) -> None:

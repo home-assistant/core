@@ -80,7 +80,9 @@ async def test_validate_component_config(hass: HomeAssistant) -> None:
         )
 
 
-async def test_validate_platform_config(hass, caplog):
+async def test_validate_platform_config(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test validating platform configuration."""
     platform_schema = PLATFORM_SCHEMA.extend({"hello": str})
     platform_schema_base = PLATFORM_SCHEMA_BASE.extend({})
@@ -139,7 +141,9 @@ async def test_validate_platform_config(hass, caplog):
         assert not config["platform_conf"]  # empty
 
 
-async def test_validate_platform_config_2(hass, caplog):
+async def test_validate_platform_config_2(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test component PLATFORM_SCHEMA_BASE prio over PLATFORM_SCHEMA."""
     platform_schema = PLATFORM_SCHEMA.extend({"hello": str})
     platform_schema_base = PLATFORM_SCHEMA_BASE.extend({"hello": "world"})
@@ -171,7 +175,9 @@ async def test_validate_platform_config_2(hass, caplog):
         )
 
 
-async def test_validate_platform_config_3(hass, caplog):
+async def test_validate_platform_config_3(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test fallback to component PLATFORM_SCHEMA."""
     component_schema = PLATFORM_SCHEMA_BASE.extend({"hello": str})
     platform_schema = PLATFORM_SCHEMA.extend({"cheers": str, "hello": "world"})
@@ -500,7 +506,9 @@ async def test_platform_no_warn_slow(hass: HomeAssistant) -> None:
         assert len(mock_call.mock_calls) == 0
 
 
-async def test_platform_error_slow_setup(hass, caplog):
+async def test_platform_error_slow_setup(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Don't block startup more than SLOW_SETUP_MAX_WAIT."""
 
     with patch.object(setup, "SLOW_SETUP_MAX_WAIT", 0.1):
@@ -589,7 +597,7 @@ async def test_setup_import_blows_up(hass: HomeAssistant) -> None:
         assert not await setup.async_setup_component(hass, "sun", {})
 
 
-async def test_parallel_entry_setup(hass, mock_handlers):
+async def test_parallel_entry_setup(hass: HomeAssistant, mock_handlers) -> None:
     """Test config entries are set up in parallel."""
     MockConfigEntry(domain="comp", data={"value": 1}).add_to_hass(hass)
     MockConfigEntry(domain="comp", data={"value": 2}).add_to_hass(hass)
@@ -616,7 +624,9 @@ async def test_parallel_entry_setup(hass, mock_handlers):
     assert calls == [1, 2, 1, 2]
 
 
-async def test_integration_disabled(hass, caplog):
+async def test_integration_disabled(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test we can disable an integration."""
     disabled_reason = "Dependency contains code that breaks Home Assistant"
     mock_integration(
@@ -628,7 +638,9 @@ async def test_integration_disabled(hass, caplog):
     assert disabled_reason in caplog.text
 
 
-async def test_integration_logs_is_custom(hass, caplog):
+async def test_integration_logs_is_custom(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test we highlight it's a custom component when errors happen."""
     mock_integration(
         hass,
@@ -662,7 +674,9 @@ async def test_async_get_loaded_integrations(hass: HomeAssistant) -> None:
     }
 
 
-async def test_integration_no_setup(hass, caplog):
+async def test_integration_no_setup(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test we fail integration setup without setup functions."""
     mock_integration(
         hass,
@@ -714,3 +728,57 @@ async def test_async_start_setup_platforms(hass: HomeAssistant) -> None:
     assert "august" not in hass.data[setup.DATA_SETUP_STARTED]
     assert isinstance(hass.data[setup.DATA_SETUP_TIME]["august"], datetime.timedelta)
     assert "sensor" not in hass.data[setup.DATA_SETUP_TIME]
+
+
+async def test_setup_config_entry_from_yaml(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test attempting to setup an integration which only supports config_entries."""
+    expected_warning = (
+        "The test_integration_only_entry integration does not support YAML setup, "
+        "please remove it from your configuration"
+    )
+
+    mock_integration(
+        hass,
+        MockModule(
+            "test_integration_only_entry",
+            setup=False,
+            async_setup_entry=AsyncMock(return_value=True),
+        ),
+    )
+
+    assert await setup.async_setup_component(hass, "test_integration_only_entry", {})
+    assert expected_warning not in caplog.text
+    caplog.clear()
+    hass.data.pop(setup.DATA_SETUP)
+    hass.config.components.remove("test_integration_only_entry")
+
+    # There should be a warning, but setup should not fail
+    assert await setup.async_setup_component(
+        hass, "test_integration_only_entry", {"test_integration_only_entry": None}
+    )
+    assert expected_warning in caplog.text
+    caplog.clear()
+    hass.data.pop(setup.DATA_SETUP)
+    hass.config.components.remove("test_integration_only_entry")
+
+    # There should be a warning, but setup should not fail
+    assert await setup.async_setup_component(
+        hass, "test_integration_only_entry", {"test_integration_only_entry": {}}
+    )
+    assert expected_warning in caplog.text
+    caplog.clear()
+    hass.data.pop(setup.DATA_SETUP)
+    hass.config.components.remove("test_integration_only_entry")
+
+    # There should be a warning, but setup should not fail
+    assert await setup.async_setup_component(
+        hass,
+        "test_integration_only_entry",
+        {"test_integration_only_entry": {"hello": "world"}},
+    )
+    assert expected_warning in caplog.text
+    caplog.clear()
+    hass.data.pop(setup.DATA_SETUP)
+    hass.config.components.remove("test_integration_only_entry")

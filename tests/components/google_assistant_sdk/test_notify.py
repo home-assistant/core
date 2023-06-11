@@ -13,7 +13,7 @@ from .conftest import ComponentSetup, ExpectedCredentials
 
 
 @pytest.mark.parametrize(
-    "language_code,message,expected_command",
+    ("language_code", "message", "expected_command"),
     [
         ("en-US", "Dinner is served", "broadcast Dinner is served"),
         ("es-ES", "La cena está en la mesa", "Anuncia La cena está en la mesa"),
@@ -51,7 +51,7 @@ async def test_broadcast_no_targets(
 
 
 @pytest.mark.parametrize(
-    "language_code,message,target,expected_command",
+    ("language_code", "message", "target", "expected_command"),
     [
         (
             "en-US",

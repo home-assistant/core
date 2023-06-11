@@ -13,7 +13,7 @@ from homeassistant.setup import async_setup_component
         {"router": {"url": "not-a-url"}},
     ),
 )
-async def test_wrong_config(hass, config_to_try):
+async def test_wrong_config(hass: HomeAssistant, config_to_try) -> None:
     """Test setup with wrong configuration."""
     assert not await async_setup_component(
         hass, "panel_iframe", {"panel_iframe": config_to_try}

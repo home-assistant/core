@@ -107,11 +107,11 @@ async def test_async_setup_no_config(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    ["exception"],
+    "exception",
     [
-        [UnauthorizedException("401")],
-        [UnauthorizedException("401")],
-        [Exception("401, this is the message")],
+        UnauthorizedException("401"),
+        UnauthorizedException("401"),
+        Exception("401, this is the message"),
     ],
 )
 @patch("homeassistant.components.withings.common._RETRY_COEFFICIENT", 0)
@@ -119,7 +119,7 @@ async def test_auth_failure(
     hass: HomeAssistant,
     component_factory: ComponentFactory,
     exception: Exception,
-    current_request_with_host,
+    current_request_with_host: None,
 ) -> None:
     """Test auth failure."""
     person0 = new_profile_config(
@@ -165,7 +165,11 @@ async def test_set_config_unique_id(
 
     config_entry = MockConfigEntry(
         domain=DOMAIN,
-        data={"token": {"userid": "my_user_id"}, "profile": person0.profile},
+        data={
+            "token": {"userid": "my_user_id"},
+            "auth_implementation": "withings",
+            "profile": person0.profile,
+        },
     )
 
     with patch("homeassistant.components.withings.async_get_data_manager") as mock:

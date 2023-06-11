@@ -976,7 +976,7 @@ async def test_form_import_existing(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "source, data",
+    ("source", "data"),
     [
         (config_entries.SOURCE_DHCP, DHCP_DISCOVERY),
         (config_entries.SOURCE_INTEGRATION_DISCOVERY, ELK_DISCOVERY_INFO),
@@ -1006,7 +1006,7 @@ async def test_discovered_by_dhcp_or_discovery_mac_address_mismatch_host_already
 
 
 @pytest.mark.parametrize(
-    "source, data",
+    ("source", "data"),
     [
         (config_entries.SOURCE_DHCP, DHCP_DISCOVERY),
         (config_entries.SOURCE_INTEGRATION_DISCOVERY, ELK_DISCOVERY_INFO),

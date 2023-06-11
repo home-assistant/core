@@ -5,7 +5,7 @@ from collections.abc import Callable
 from functools import wraps
 from typing import Any
 
-from matter_server.client.exceptions import FailedCommand
+from matter_server.common.errors import MatterError
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
@@ -44,7 +44,7 @@ def async_get_matter_adapter(func: Callable) -> Callable:
 
 
 def async_handle_failed_command(func: Callable) -> Callable:
-    """Decorate function to handle FailedCommand and send relevant error."""
+    """Decorate function to handle MatterError and send relevant error."""
 
     @wraps(func)
     async def async_handle_failed_command_func(
@@ -54,11 +54,11 @@ def async_handle_failed_command(func: Callable) -> Callable:
         *args: Any,
         **kwargs: Any,
     ) -> None:
-        """Handle FailedCommand within function and send relevant error."""
+        """Handle MatterError within function and send relevant error."""
         try:
             await func(hass, connection, msg, *args, **kwargs)
-        except FailedCommand as err:
-            connection.send_error(msg[ID], err.error_code, err.args[0])
+        except MatterError as err:
+            connection.send_error(msg[ID], str(err.error_code), err.args[0])
 
     return async_handle_failed_command_func
 

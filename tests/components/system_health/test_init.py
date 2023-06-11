@@ -9,6 +9,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import get_system_health_info, mock_platform
+from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import WebSocketGenerator
 
 
@@ -119,7 +120,11 @@ async def test_info_endpoint_register_callback_exc(
     assert data == {"info": {"error": {"type": "failed", "error": "unknown"}}}
 
 
-async def test_platform_loading(hass, hass_ws_client, aioclient_mock):
+async def test_platform_loading(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
     """Test registering via platform."""
     aioclient_mock.get("http://example.com/status", text="")
     aioclient_mock.get("http://example.com/status_fail", exc=ClientError)

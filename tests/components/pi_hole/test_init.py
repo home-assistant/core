@@ -3,6 +3,7 @@ import logging
 from unittest.mock import AsyncMock
 
 from hole.exceptions import HoleError
+import pytest
 
 from homeassistant.components import pi_hole, switch
 from homeassistant.components.pi_hole.const import (
@@ -24,7 +25,7 @@ from . import (
 from tests.common import MockConfigEntry
 
 
-async def test_setup_with_defaults(hass: HomeAssistant):
+async def test_setup_with_defaults(hass: HomeAssistant) -> None:
     """Tests component setup with default config."""
     mocked_hole = _create_mocked_hole()
     entry = MockConfigEntry(
@@ -35,47 +36,47 @@ async def test_setup_with_defaults(hass: HomeAssistant):
         assert await hass.config_entries.async_setup(entry.entry_id)
 
     state = hass.states.get("sensor.pi_hole_ads_blocked_today")
-    assert state.name == "Pi-Hole Ads Blocked Today"
+    assert state.name == "Pi-Hole Ads blocked today"
     assert state.state == "0"
 
     state = hass.states.get("sensor.pi_hole_ads_percentage_blocked_today")
-    assert state.name == "Pi-Hole Ads Percentage Blocked Today"
+    assert state.name == "Pi-Hole Ads percentage blocked today"
     assert state.state == "0"
 
     state = hass.states.get("sensor.pi_hole_dns_queries_cached")
-    assert state.name == "Pi-Hole DNS Queries Cached"
+    assert state.name == "Pi-Hole DNS queries cached"
     assert state.state == "0"
 
     state = hass.states.get("sensor.pi_hole_dns_queries_forwarded")
-    assert state.name == "Pi-Hole DNS Queries Forwarded"
+    assert state.name == "Pi-Hole DNS queries forwarded"
     assert state.state == "0"
 
     state = hass.states.get("sensor.pi_hole_dns_queries_today")
-    assert state.name == "Pi-Hole DNS Queries Today"
+    assert state.name == "Pi-Hole DNS queries today"
     assert state.state == "0"
 
     state = hass.states.get("sensor.pi_hole_dns_unique_clients")
-    assert state.name == "Pi-Hole DNS Unique Clients"
+    assert state.name == "Pi-Hole DNS unique clients"
     assert state.state == "0"
 
     state = hass.states.get("sensor.pi_hole_dns_unique_domains")
-    assert state.name == "Pi-Hole DNS Unique Domains"
+    assert state.name == "Pi-Hole DNS unique domains"
     assert state.state == "0"
 
     state = hass.states.get("sensor.pi_hole_domains_blocked")
-    assert state.name == "Pi-Hole Domains Blocked"
+    assert state.name == "Pi-Hole Domains blocked"
     assert state.state == "0"
 
     state = hass.states.get("sensor.pi_hole_seen_clients")
-    assert state.name == "Pi-Hole Seen Clients"
+    assert state.name == "Pi-Hole Seen clients"
     assert state.state == "0"
 
-    state = hass.states.get("binary_sensor.pi_hole")
-    assert state.name == "Pi-Hole"
+    state = hass.states.get("binary_sensor.pi_hole_status")
+    assert state.name == "Pi-Hole Status"
     assert state.state == "off"
 
 
-async def test_setup_name_config(hass: HomeAssistant):
+async def test_setup_name_config(hass: HomeAssistant) -> None:
     """Tests component setup with a custom name."""
     mocked_hole = _create_mocked_hole()
     entry = MockConfigEntry(
@@ -89,11 +90,11 @@ async def test_setup_name_config(hass: HomeAssistant):
 
     assert (
         hass.states.get("sensor.custom_ads_blocked_today").name
-        == "Custom Ads Blocked Today"
+        == "Custom Ads blocked today"
     )
 
 
-async def test_switch(hass: HomeAssistant, caplog):
+async def test_switch(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -> None:
     """Test Pi-hole switch."""
     mocked_hole = _create_mocked_hole()
     entry = MockConfigEntry(domain=pi_hole.DOMAIN, data=CONFIG_DATA)
@@ -140,7 +141,7 @@ async def test_switch(hass: HomeAssistant, caplog):
         assert errors[-1].message == "Unable to disable Pi-hole: Error2"
 
 
-async def test_disable_service_call(hass: HomeAssistant):
+async def test_disable_service_call(hass: HomeAssistant) -> None:
     """Test disable service call with no Pi-hole named."""
 
     mocked_hole = _create_mocked_hole()
@@ -169,7 +170,7 @@ async def test_disable_service_call(hass: HomeAssistant):
         mocked_hole.disable.assert_called_with(1)
 
 
-async def test_unload(hass: HomeAssistant):
+async def test_unload(hass: HomeAssistant) -> None:
     """Test unload entities."""
     entry = MockConfigEntry(
         domain=pi_hole.DOMAIN,
@@ -188,7 +189,7 @@ async def test_unload(hass: HomeAssistant):
     assert entry.entry_id not in hass.data[pi_hole.DOMAIN]
 
 
-async def test_remove_obsolete(hass: HomeAssistant):
+async def test_remove_obsolete(hass: HomeAssistant) -> None:
     """Test removing obsolete config entry parameters."""
     mocked_hole = _create_mocked_hole()
     entry = MockConfigEntry(

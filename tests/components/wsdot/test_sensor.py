@@ -2,6 +2,8 @@
 from datetime import datetime, timedelta, timezone
 import re
 
+import requests_mock
+
 import homeassistant.components.wsdot.sensor as wsdot
 from homeassistant.components.wsdot.sensor import (
     ATTR_DESCRIPTION,
@@ -30,7 +32,7 @@ async def test_setup_with_config(hass: HomeAssistant) -> None:
     assert await async_setup_component(hass, "sensor", {"wsdot": config})
 
 
-async def test_setup(hass, requests_mock):
+async def test_setup(hass: HomeAssistant, requests_mock: requests_mock.Mocker) -> None:
     """Test for operational WSDOT sensor with proper attributes."""
     entities = []
 

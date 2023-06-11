@@ -305,8 +305,8 @@ class TelevisionMediaPlayer(RemoteInputSelectAccessory):
     def set_input_source(self, value):
         """Send input set value if call came from HomeKit."""
         _LOGGER.debug("%s: Set current input to %s", self.entity_id, value)
-        source = self.sources[value]
-        params = {ATTR_ENTITY_ID: self.entity_id, ATTR_INPUT_SOURCE: source}
+        source_name = self._mapped_sources[self.sources[value]]
+        params = {ATTR_ENTITY_ID: self.entity_id, ATTR_INPUT_SOURCE: source_name}
         self.async_call_service(DOMAIN, SERVICE_SELECT_SOURCE, params)
 
     def set_remote_key(self, value):

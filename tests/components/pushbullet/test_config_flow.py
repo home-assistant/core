@@ -119,16 +119,3 @@ async def test_flow_conn_error(hass: HomeAssistant) -> None:
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "cannot_connect"}
-
-
-async def test_import(hass: HomeAssistant, requests_mock_fixture) -> None:
-    """Test user initialized flow with unreachable server."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_IMPORT},
-        data=MOCK_CONFIG,
-    )
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == "pushbullet"
-    assert result["data"] == MOCK_CONFIG

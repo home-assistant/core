@@ -143,7 +143,8 @@ async def test_user_config_flow_success(hass: HomeAssistant, life360_api) -> Non
 
 
 @pytest.mark.parametrize(
-    "exception,error", [(LoginError, "invalid_auth"), (Life360Error, "cannot_connect")]
+    ("exception", "error"),
+    [(LoginError, "invalid_auth"), (Life360Error, "cannot_connect")],
 )
 async def test_user_config_flow_error(
     hass: HomeAssistant, life360_api, caplog: pytest.LogCaptureFixture, exception, error

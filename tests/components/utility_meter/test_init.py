@@ -66,7 +66,7 @@ async def test_restore_state(hass: HomeAssistant) -> None:
         "select.energy_bill",
     ),
 )
-async def test_services(hass, meter):
+async def test_services(hass: HomeAssistant, meter) -> None:
     """Test energy sensor reset service."""
     config = {
         "utility_meter": {
@@ -186,6 +186,7 @@ async def test_services_config_entry(hass: HomeAssistant) -> None:
             "name": "Energy bill",
             "net_consumption": False,
             "offset": 0,
+            "periodically_resetting": True,
             "source": "sensor.energy",
             "tariffs": ["peak", "offpeak"],
         },
@@ -202,6 +203,7 @@ async def test_services_config_entry(hass: HomeAssistant) -> None:
             "name": "Energy bill2",
             "net_consumption": False,
             "offset": 0,
+            "periodically_resetting": True,
             "source": "sensor.energy",
             "tariffs": ["peak", "offpeak"],
         },
@@ -380,7 +382,7 @@ async def test_setup_missing_discovery(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "tariffs,expected_entities",
+    ("tariffs", "expected_entities"),
     (
         (
             [],
@@ -413,6 +415,7 @@ async def test_setup_and_remove_config_entry(
             "name": "Electricity meter",
             "net_consumption": False,
             "offset": 0,
+            "periodically_resetting": True,
             "source": input_sensor_entity_id,
             "tariffs": tariffs,
         },

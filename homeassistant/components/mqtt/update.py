@@ -18,9 +18,9 @@ from homeassistant.const import CONF_DEVICE_CLASS, CONF_NAME, CONF_VALUE_TEMPLAT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.json import JSON_DECODE_EXCEPTIONS, json_loads
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.util.json import JSON_DECODE_EXCEPTIONS, json_loads
 
 from . import subscription
 from .config import DEFAULT_RETAIN, MQTT_RO_SCHEMA

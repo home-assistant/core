@@ -1,11 +1,11 @@
 """Constants for calendar components."""
 
-from enum import IntEnum
+from enum import IntFlag
 
 CONF_EVENT = "event"
 
 
-class CalendarEntityFeature(IntEnum):
+class CalendarEntityFeature(IntFlag):
     """Supported features of the calendar entity."""
 
     CREATE_EVENT = 1

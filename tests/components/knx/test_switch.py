@@ -23,7 +23,6 @@ async def test_switch_simple(hass: HomeAssistant, knx: KNXTestKit) -> None:
             }
         }
     )
-    assert len(hass.states.async_all()) == 1
 
     # turn on switch
     await hass.services.async_call(
@@ -66,7 +65,6 @@ async def test_switch_state(hass: HomeAssistant, knx: KNXTestKit) -> None:
             },
         }
     )
-    assert len(hass.states.async_all()) == 1
 
     # StateUpdater initialize state
     await knx.assert_read(_STATE_ADDRESS)

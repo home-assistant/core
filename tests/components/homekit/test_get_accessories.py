@@ -59,7 +59,7 @@ def test_not_supported_media_player() -> None:
 
 
 @pytest.mark.parametrize(
-    "config, name", [({CONF_NAME: "Customize Name"}, "Customize Name")]
+    ("config", "name"), [({CONF_NAME: "Customize Name"}, "Customize Name")]
 )
 def test_customize_options(config, name) -> None:
     """Test with customized options."""
@@ -73,7 +73,7 @@ def test_customize_options(config, name) -> None:
 
 
 @pytest.mark.parametrize(
-    "type_name, entity_id, state, attrs, config",
+    ("type_name", "entity_id", "state", "attrs", "config"),
     [
         ("Fan", "fan.test", "on", {}, {}),
         ("Light", "light.test", "on", {}, {}),
@@ -110,7 +110,7 @@ def test_types(type_name, entity_id, state, attrs, config) -> None:
 
 
 @pytest.mark.parametrize(
-    "type_name, entity_id, state, attrs",
+    ("type_name", "entity_id", "state", "attrs"),
     [
         (
             "GarageDoorOpener",
@@ -160,6 +160,15 @@ def test_types(type_name, entity_id, state, attrs, config) -> None:
                 )
             },
         ),
+        (
+            "Door",
+            "cover.door",
+            "open",
+            {
+                ATTR_DEVICE_CLASS: "door",
+                ATTR_SUPPORTED_FEATURES: cover.SUPPORT_SET_POSITION,
+            },
+        ),
     ],
 )
 def test_type_covers(type_name, entity_id, state, attrs) -> None:
@@ -172,7 +181,7 @@ def test_type_covers(type_name, entity_id, state, attrs) -> None:
 
 
 @pytest.mark.parametrize(
-    "type_name, entity_id, state, attrs, config",
+    ("type_name", "entity_id", "state", "attrs", "config"),
     [
         (
             "MediaPlayer",
@@ -206,7 +215,7 @@ def test_type_media_player(type_name, entity_id, state, attrs, config) -> None:
 
 
 @pytest.mark.parametrize(
-    "type_name, entity_id, state, attrs",
+    ("type_name", "entity_id", "state", "attrs"),
     [
         ("BinarySensor", "binary_sensor.opening", "on", {ATTR_DEVICE_CLASS: "opening"}),
         ("BinarySensor", "device_tracker.someone", "not_home", {}),
@@ -288,7 +297,7 @@ def test_type_sensors(type_name, entity_id, state, attrs) -> None:
 
 
 @pytest.mark.parametrize(
-    "type_name, entity_id, state, attrs, config",
+    ("type_name", "entity_id", "state", "attrs", "config"),
     [
         ("Outlet", "switch.test", "on", {}, {CONF_TYPE: TYPE_OUTLET}),
         ("Switch", "automation.test", "on", {}, {}),
@@ -318,7 +327,7 @@ def test_type_switches(type_name, entity_id, state, attrs, config) -> None:
 
 
 @pytest.mark.parametrize(
-    "type_name, entity_id, state, attrs",
+    ("type_name", "entity_id", "state", "attrs"),
     [
         (
             "Vacuum",
@@ -342,7 +351,7 @@ def test_type_vacuum(type_name, entity_id, state, attrs) -> None:
 
 
 @pytest.mark.parametrize(
-    "type_name, entity_id, state, attrs",
+    ("type_name", "entity_id", "state", "attrs"),
     [("Camera", "camera.basic", "on", {})],
 )
 def test_type_camera(type_name, entity_id, state, attrs) -> None:

@@ -215,13 +215,13 @@ def _mock_hue_endpoints(
     web_app = hass.http.app
     config = Config(hass, conf, "127.0.0.1")
     config.numbers = entity_numbers
-    HueUsernameView().register(web_app, web_app.router)
-    HueAllLightsStateView(config).register(web_app, web_app.router)
-    HueOneLightStateView(config).register(web_app, web_app.router)
-    HueOneLightChangeView(config).register(web_app, web_app.router)
-    HueAllGroupsStateView(config).register(web_app, web_app.router)
-    HueFullStateView(config).register(web_app, web_app.router)
-    HueConfigView(config).register(web_app, web_app.router)
+    HueUsernameView().register(hass, web_app, web_app.router)
+    HueAllLightsStateView(config).register(hass, web_app, web_app.router)
+    HueOneLightStateView(config).register(hass, web_app, web_app.router)
+    HueOneLightChangeView(config).register(hass, web_app, web_app.router)
+    HueAllGroupsStateView(config).register(hass, web_app, web_app.router)
+    HueFullStateView(config).register(hass, web_app, web_app.router)
+    HueConfigView(config).register(hass, web_app, web_app.router)
 
 
 @pytest.fixture
@@ -439,7 +439,7 @@ async def test_light_without_brightness_can_be_turned_on(hass_hue, hue_client) -
 
 
 @pytest.mark.parametrize(
-    "state,is_reachable",
+    ("state", "is_reachable"),
     [
         (const.STATE_UNAVAILABLE, False),
         (const.STATE_OK, True),

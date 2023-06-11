@@ -1,6 +1,6 @@
 """Test Waze Travel Time sensors."""
-from WazeRouteCalculator import WRCError
 import pytest
+from WazeRouteCalculator import WRCError
 
 from homeassistant.components.waze_travel_time.const import (
     CONF_AVOID_FERRIES,
@@ -49,7 +49,7 @@ def mock_update_keyerror_fixture(mock_wrc):
 
 
 @pytest.mark.parametrize(
-    "data,options",
+    ("data", "options"),
     [(MOCK_CONFIG, DEFAULT_OPTIONS)],
 )
 @pytest.mark.usefixtures("mock_update", "mock_config")
@@ -78,7 +78,7 @@ async def test_sensor(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "data,options",
+    ("data", "options"),
     [
         (
             MOCK_CONFIG,

@@ -24,7 +24,7 @@ from tests.common import async_fire_time_changed
 
 
 @pytest.mark.parametrize(
-    "entity_id, uid, name, model",
+    ("entity_id", "uid", "name", "model"),
     [
         (
             "cover.blind",
@@ -84,7 +84,7 @@ async def test_cover_get_state(
 
 
 @pytest.mark.parametrize(
-    "entity_id, uid, name, model",
+    ("entity_id", "uid", "name", "model"),
     [
         (
             "cover.blind",
@@ -139,7 +139,7 @@ async def test_cover_set_position(
 
 
 @pytest.mark.parametrize(
-    "entity_id, uid, name, model",
+    ("entity_id", "uid", "name", "model"),
     [
         (
             "cover.blind",
@@ -202,7 +202,7 @@ async def test_cover_close(
 
 
 @pytest.mark.parametrize(
-    "entity_id, uid, name, model",
+    ("entity_id", "uid", "name", "model"),
     [
         (
             "cover.blind",

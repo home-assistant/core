@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+import ssl
 from xml.parsers.expat import ExpatError
 
 from jsonpath import jsonpath
@@ -25,10 +26,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.json import json_dumps, json_loads
+from homeassistant.helpers.json import json_dumps
 from homeassistant.helpers.template_entity import TemplateSensor
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.util.json import json_loads
 
 from . import async_get_config_and_coordinator, create_rest_data_from_config
 from .const import CONF_JSON_ATTRS, CONF_JSON_ATTRS_PATH, DEFAULT_SENSOR_NAME
@@ -66,6 +68,13 @@ async def async_setup_platform(
 
     if rest.data is None:
         if rest.last_exception:
+            if isinstance(rest.last_exception, ssl.SSLError):
+                _LOGGER.error(
+                    "Error connecting %s failed with %s",
+                    rest.url,
+                    rest.last_exception,
+                )
+                return
             raise PlatformNotReady from rest.last_exception
         raise PlatformNotReady
 

@@ -102,7 +102,7 @@ SCALE_TEST_EXPECTED = [
 
 
 @pytest.mark.parametrize(
-    "image_width, image_height, input_width, input_height, scaling_factor",
+    ("image_width", "image_height", "input_width", "input_height", "scaling_factor"),
     SCALE_TEST_EXPECTED,
 )
 def test_find_supported_scaling_factor(

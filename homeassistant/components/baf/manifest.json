@@ -5,7 +5,7 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/baf",
   "iot_class": "local_push",
-  "requirements": ["aiobafi6==0.7.3"],
+  "requirements": ["aiobafi6==0.8.2"],
   "zeroconf": [
     {
       "type": "_api._tcp.local.",

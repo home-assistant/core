@@ -293,7 +293,7 @@ async def test_get_deconz_session(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "side_effect, raised_exception",
+    ("side_effect", "raised_exception"),
     [
         (asyncio.TimeoutError, CannotConnect),
         (pydeconz.RequestError, CannotConnect),

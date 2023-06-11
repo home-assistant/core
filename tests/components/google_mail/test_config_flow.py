@@ -71,7 +71,7 @@ async def test_full_flow(
 
 
 @pytest.mark.parametrize(
-    "fixture,abort_reason,placeholders,calls,access_token",
+    ("fixture", "abort_reason", "placeholders", "calls", "access_token"),
     [
         ("get_profile", "reauth_successful", None, 1, "updated-access-token"),
         (

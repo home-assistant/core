@@ -14,16 +14,16 @@ import voluptuous as vol
 from homeassistant.components import http, websocket_api
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import integration_platform
+from homeassistant.helpers import config_validation as cv, integration_platform
 from homeassistant.helpers.device_registry import DeviceEntry, async_get
-from homeassistant.helpers.json import ExtendedJSONEncoder
+from homeassistant.helpers.json import (
+    ExtendedJSONEncoder,
+    find_paths_unserializable_data,
+)
 from homeassistant.helpers.system_info import async_get_system_info
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_custom_components, async_get_integration
-from homeassistant.util.json import (
-    find_paths_unserializable_data,
-    format_unserializable_data,
-)
+from homeassistant.util.json import format_unserializable_data
 
 from .const import DOMAIN, REDACTED, DiagnosticsSubType, DiagnosticsType
 from .util import async_redact_data
@@ -33,7 +33,10 @@ __all__ = ["REDACTED", "async_redact_data"]
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
+CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
+
+
+@dataclass(slots=True)
 class DiagnosticsPlatformData:
     """Diagnostic platform data."""
 
@@ -46,7 +49,7 @@ class DiagnosticsPlatformData:
     ] | None
 
 
-@dataclass
+@dataclass(slots=True)
 class DiagnosticsData:
     """Diagnostic data."""
 

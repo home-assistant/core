@@ -88,7 +88,7 @@ async def test_field_not_supported(
 
 
 @pytest.mark.parametrize(
-    "test_input,expected,entity_id",
+    ("test_input", "expected", "entity_id"),
     [
         (TEST_FLOAT_SENSOR, "2.3", "temperature"),
         (TEST_STRING_SENSOR, "dry", "wet_dry"),

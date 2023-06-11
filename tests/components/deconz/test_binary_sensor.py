@@ -477,7 +477,7 @@ TEST_DATA = [
 ]
 
 
-@pytest.mark.parametrize("sensor_data, expected", TEST_DATA)
+@pytest.mark.parametrize(("sensor_data", "expected"), TEST_DATA)
 async def test_binary_sensors(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,

@@ -45,7 +45,7 @@ SENSE_SENSORS_WRITE = SENSE_SENSORS[:4]
 
 async def test_binary_sensor_camera_remove(
     hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera, unadopted_camera: Camera
-):
+) -> None:
     """Test removing and re-adding a camera device."""
 
     ufp.api.bootstrap.nvr.system_info.ustorage = None
@@ -59,7 +59,7 @@ async def test_binary_sensor_camera_remove(
 
 async def test_binary_sensor_light_remove(
     hass: HomeAssistant, ufp: MockUFPFixture, light: Light
-):
+) -> None:
     """Test removing and re-adding a light device."""
 
     ufp.api.bootstrap.nvr.system_info.ustorage = None
@@ -73,7 +73,7 @@ async def test_binary_sensor_light_remove(
 
 async def test_binary_sensor_sensor_remove(
     hass: HomeAssistant, ufp: MockUFPFixture, sensor_all: Sensor
-):
+) -> None:
     """Test removing and re-adding a light device."""
 
     ufp.api.bootstrap.nvr.system_info.ustorage = None
@@ -87,7 +87,7 @@ async def test_binary_sensor_sensor_remove(
 
 async def test_binary_sensor_setup_light(
     hass: HomeAssistant, ufp: MockUFPFixture, light: Light
-):
+) -> None:
     """Test binary_sensor entity setup for light devices."""
 
     await init_entry(hass, ufp, [light])
@@ -115,7 +115,7 @@ async def test_binary_sensor_setup_camera_all(
     ufp: MockUFPFixture,
     doorbell: Camera,
     unadopted_camera: Camera,
-):
+) -> None:
     """Test binary_sensor entity setup for camera devices (all features)."""
 
     ufp.api.bootstrap.nvr.system_info.ustorage = None
@@ -171,7 +171,7 @@ async def test_binary_sensor_setup_camera_all(
 
 async def test_binary_sensor_setup_camera_none(
     hass: HomeAssistant, ufp: MockUFPFixture, camera: Camera
-):
+) -> None:
     """Test binary_sensor entity setup for camera devices (no features)."""
 
     ufp.api.bootstrap.nvr.system_info.ustorage = None
@@ -197,7 +197,7 @@ async def test_binary_sensor_setup_camera_none(
 
 async def test_binary_sensor_setup_sensor(
     hass: HomeAssistant, ufp: MockUFPFixture, sensor_all: Sensor
-):
+) -> None:
     """Test binary_sensor entity setup for sensor devices."""
 
     await init_entry(hass, ufp, [sensor_all])
@@ -222,7 +222,7 @@ async def test_binary_sensor_setup_sensor(
 
 async def test_binary_sensor_setup_sensor_none(
     hass: HomeAssistant, ufp: MockUFPFixture, sensor: Sensor
-):
+) -> None:
     """Test binary_sensor entity setup for sensor with most sensors disabled."""
 
     sensor.mount_type = MountType.LEAK
@@ -258,7 +258,7 @@ async def test_binary_sensor_update_motion(
     doorbell: Camera,
     unadopted_camera: Camera,
     fixed_now: datetime,
-):
+) -> None:
     """Test binary_sensor motion entity."""
 
     await init_entry(hass, ufp, [doorbell, unadopted_camera])
@@ -301,7 +301,7 @@ async def test_binary_sensor_update_motion(
 
 async def test_binary_sensor_update_light_motion(
     hass: HomeAssistant, ufp: MockUFPFixture, light: Light, fixed_now: datetime
-):
+) -> None:
     """Test binary_sensor motion entity."""
 
     await init_entry(hass, ufp, [light])
@@ -344,7 +344,7 @@ async def test_binary_sensor_update_light_motion(
 
 async def test_binary_sensor_update_mount_type_window(
     hass: HomeAssistant, ufp: MockUFPFixture, sensor_all: Sensor
-):
+) -> None:
     """Test binary_sensor motion entity."""
 
     await init_entry(hass, ufp, [sensor_all])
@@ -376,7 +376,7 @@ async def test_binary_sensor_update_mount_type_window(
 
 async def test_binary_sensor_update_mount_type_garage(
     hass: HomeAssistant, ufp: MockUFPFixture, sensor_all: Sensor
-):
+) -> None:
     """Test binary_sensor motion entity."""
 
     await init_entry(hass, ufp, [sensor_all])

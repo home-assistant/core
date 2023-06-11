@@ -222,7 +222,7 @@ class AppleTVManager:
                 await self._connect(conf, raise_missing_credentials)
         except exceptions.AuthenticationError:
             self.config_entry.async_start_reauth(self.hass)
-            asyncio.create_task(self.disconnect())
+            await self.disconnect()
             _LOGGER.exception(
                 "Authentication failed for %s, try reconfiguring device",
                 self.config_entry.data[CONF_NAME],
