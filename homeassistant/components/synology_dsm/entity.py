@@ -121,6 +121,12 @@ class SynologyDSMDeviceEntity(
             self._device_model = disk["model"].strip()
             self._device_firmware = disk["firm"]
             self._device_type = disk["diskType"]
+        elif "device" in description.key or "partition" in description.key:
+            device = self._api.external_usb.get_device(self._device_id)
+            self._device_name = device.device_name
+            self._device_manufacturer = device.device_manufacturer
+            self._device_model = device.device_product_name
+            self._device_type = device.device_type
 
         self._attr_unique_id += f"_{self._device_id}"
         self._attr_device_info = DeviceInfo(
