@@ -37,7 +37,11 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
         raise CannotConnect
 
     # Return info that you want to store in the config entry.
-    return {"title": "Name of the device"}
+    return {
+        CONF_HOST: data[CONF_HOST],
+        CONF_PORT: data[CONF_PORT],
+        CONF_SCAN_INTERVAL: data[CONF_SCAN_INTERVAL],
+    }
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
