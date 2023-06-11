@@ -5,7 +5,7 @@ import aiohttp
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.ovos.const import DOMAIN
-from homeassistant.const import CONF_URL, CONF_PORT
+from homeassistant.const import CONF_PORT, CONF_URL
 from homeassistant.core import HomeAssistant
 
 FIXTURE_USER_INPUT = {CONF_URL: "http://localhost", CONF_PORT: 8181}
