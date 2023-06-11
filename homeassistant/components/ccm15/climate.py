@@ -295,6 +295,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up all climate."""
     coordinator = hass.data[DOMAIN][config_entry.entry_id]
+    await coordinator.poll_status_async()
     entities = []
     for ac_device in coordinator.get_devices():
         entities.append(ac_device.CCM15Coordinator)
