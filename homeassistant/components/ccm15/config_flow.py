@@ -20,8 +20,8 @@ _LOGGER = logging.getLogger(__name__)
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST): str,
-        vol.Optional(CONF_PORT, 80): int,
-        vol.Optional(CONF_SCAN_INTERVAL, DEFAULT_INTERVAL): int,
+        vol.Optional(CONF_PORT, default=80): int,
+        vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_INTERVAL): int,
     }
 )
 
