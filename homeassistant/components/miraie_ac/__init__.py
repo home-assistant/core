@@ -18,21 +18,13 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up MirAIe AC from a config entry."""
 
-    _LOGGER.debug("xxx")
     hass.data.setdefault(DOMAIN, {})
     entry.async_on_unload(entry.add_update_listener(update_listener))
 
     login_id = entry.data[CONFIG_KEY_USER_ID]
     password = entry.data[CONFIG_KEY_PASSWORD]
 
-    # async with MirAIeAPI(
-    #     auth_type=AuthType.MOBILE, login_id=login_id, password=password
-    # ) as api:
-    #     await api.initialize()
-    #     hass.data[DOMAIN][entry.entry_id] = api
-
     api = MirAIeAPI(auth_type=AuthType.MOBILE, login_id=login_id, password=password)
-    # await api.initialize()
     hass.data[DOMAIN][entry.entry_id] = api
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
