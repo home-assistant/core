@@ -113,7 +113,7 @@ class EzvizButtonEntity(EzvizEntity, ButtonEntity):
     ) -> None:
         """Initialize the button."""
         super().__init__(coordinator, serial)
-        self._attr_unique_id = f"{serial}_{description.name}"
+        self._attr_unique_id = f"{serial}_{description.key}"
         self.entity_description = description
 
     def press(self) -> None:
