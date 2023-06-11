@@ -22,7 +22,13 @@ from homeassistant.helpers.selector import (
     SelectSelectorConfig,
 )
 
-from .const import CONF_CHANNELS, DEFAULT_ACCESS, DOMAIN, LOGGER
+from .const import (
+    CHANNEL_CREATION_HELP_URL,
+    CONF_CHANNELS,
+    DEFAULT_ACCESS,
+    DOMAIN,
+    LOGGER,
+)
 
 
 async def get_resource(hass: HomeAssistant, token: str) -> Resource:
@@ -99,6 +105,11 @@ class OAuth2FlowHandler(
             response = await self.hass.async_add_executor_job(
                 own_channel_request.execute
             )
+            if not response["items"]:
+                return self.async_abort(
+                    reason="no_channel",
+                    description_placeholders={"support_url": CHANNEL_CREATION_HELP_URL},
+                )
             own_channel = response["items"][0]
         except HttpError as ex:
             error = ex.reason
