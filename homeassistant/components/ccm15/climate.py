@@ -82,14 +82,13 @@ class CCM15Coordinator:
         else:
             doc = xmltodict.parse(response.text)
             data = doc["response"]
-            _LOGGER.exception(
-                "Found %s items in host %s", len(data.items()), self._host
-            )
+            _LOGGER.debug("Found %s items in host %s", len(data.items()), self._host)
             for ac_name, ac_binary in data.items():
-                _LOGGER.exception("Found ac_name:'%s', data:'%s'", ac_name, ac_binary)
+                _LOGGER.debug("Found ac_name:'%s', data:'%s'", ac_name, ac_binary)
                 if ac_binary != "-":
                     ac_state = self.get_status_from(ac_binary)
                 if ac_state:
+                    _LOGGER.debug("Parsed data ac_state:'%s'", ac_state)
                     if ac_name in self._ac_devices:
                         self._ac_devices[ac_name].update_with_acdata(ac_state)
                     else:
