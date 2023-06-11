@@ -18,7 +18,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     coordinator = CCM15Coordinator(
         entry.data[CONF_HOST], entry.data[CONF_PORT], entry.data[CONF_SCAN_INTERVAL]
     )
-    await coordinator.init_async()
     hass.data[DOMAIN][entry.entry_id] = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
@@ -27,7 +26,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        coordinator = hass.data[DOMAIN].pop(entry.entry_id)
-        await coordinator.terminate_async()
+        hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
