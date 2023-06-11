@@ -25,20 +25,28 @@ def get_service(
 class OvosNotificationService(BaseNotificationService):
     """The OVOS Notification Service."""
 
-    def __init__(self, ovos_ip: str, ovos_port: int = 8181, **kwargs) -> None:
+    def __init__(self, host: str, ovos_port: int = 8181, **kwargs) -> None:
         """Initialize the service."""
-        self.ovos_ip = ovos_ip
+        self.ovos_ip = host
         self.ovos_port = ovos_port
+        self.client = MessageBusClient(host=self.ovos_ip, port=self.ovos_port, **kwargs)
+
+    async def authenticate(self):
+        """Authenticate.
+
+        There is not currently authentication for the OVOS message bus,
+        so always returns True.
+        """
+        return True
 
     def send_message(
         self, message: str = "", lang: str = "en-us", **kwargs: Any
     ) -> None:
         """Send a message to OVOS/Neon to speak on instance."""
         try:
-            client = MessageBusClient(host=self.ovos_ip, port=self.ovos_port, **kwargs)
-            client.run_in_thread()
-            client.emit(Message("speak", {"utterance": message, "lang": lang}))
-            client.close()
+            self.client.run_in_thread()
+            self.client.emit(Message("speak", {"utterance": message, "lang": lang}))
+            self.client.close()
         except ConnectionRefusedError:
             _LOGGER.log(
                 level=1, msg="Could not reach this instance of OVOS", exc_info=True
