@@ -57,22 +57,6 @@ class CCM15Coordinator:
         self._interval = interval
         self._ac_devices: dict[int, CCM15Climate] = {}
         self._ac_data: dict[int, dict[str, int]] = {}
-        self._running = False
-
-    async def init_async(self):
-        """Start polling."""
-        if self._running:
-            return
-        self._running = True
-        while self._running:
-            await self.poll_status_async()
-            await asyncio.sleep(self._interval)
-
-    async def terminate_async(self):
-        """Stop polling."""
-        if self._running:
-            self._running = False
-            await self._poll_task
 
     def add_device(self, device):
         """Add a new device to the coordinator."""
@@ -96,6 +80,7 @@ class CCM15Coordinator:
         except httpx.RequestError as err:
             _LOGGER.exception("Exception retrieving API data %s", err)
         else:
+            _LOGGER.exception("Response %s", response.text)
             doc = xmltodict.parse(response.text)
             data = doc["response"]
             for ac_name, ac_binary in data.items():
