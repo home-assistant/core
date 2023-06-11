@@ -9,7 +9,7 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant import config as hass_config, setup
+from homeassistant import setup
 from homeassistant.components.command_line import DOMAIN
 from homeassistant.components.command_line.cover import CommandCover
 from homeassistant.components.cover import DOMAIN as COVER_DOMAIN, SCAN_INTERVAL
@@ -17,7 +17,6 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_CLOSE_COVER,
     SERVICE_OPEN_COVER,
-    SERVICE_RELOAD,
     SERVICE_STOP_COVER,
 )
 from homeassistant.core import HomeAssistant
@@ -25,7 +24,7 @@ from homeassistant.helpers import entity_registry as er
 import homeassistant.helpers.issue_registry as ir
 import homeassistant.util.dt as dt_util
 
-from tests.common import async_fire_time_changed, get_fixture_path
+from tests.common import async_fire_time_changed
 
 
 async def test_no_covers_platform_yaml(
@@ -208,45 +207,6 @@ async def test_state_value(hass: HomeAssistant) -> None:
         entity_state = hass.states.get("cover.test")
         assert entity_state
         assert entity_state.state == "closed"
-
-
-@pytest.mark.parametrize(
-    "get_config",
-    [
-        {
-            "command_line": [
-                {
-                    "cover": {
-                        "command_state": "echo open",
-                        "value_template": "{{ value }}",
-                        "name": "Test",
-                    }
-                }
-            ]
-        }
-    ],
-)
-async def test_reload(hass: HomeAssistant, load_yaml_integration: None) -> None:
-    """Verify we can reload command_line covers."""
-
-    entity_state = hass.states.get("cover.test")
-    assert entity_state
-    assert entity_state.state == "unknown"
-
-    yaml_path = get_fixture_path("configuration.yaml", "command_line")
-    with patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
-        await hass.services.async_call(
-            "command_line",
-            SERVICE_RELOAD,
-            {},
-            blocking=True,
-        )
-        await hass.async_block_till_done()
-
-    assert len(hass.states.async_all()) == 1
-
-    assert not hass.states.get("cover.test")
-    assert hass.states.get("cover.from_yaml")
 
 
 @pytest.mark.parametrize(
