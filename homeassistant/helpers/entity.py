@@ -235,13 +235,15 @@ class Entity(ABC):
     # this class. These may be used to customize the behavior of the entity.
     entity_id: str = None  # type: ignore[assignment]
 
-    # Owning hass instance. Will be set by EntityPlatform
+    # Owning hass instance. Set by EntityPlatform by calling add_to_platform_start
     # While not purely typed, it makes typehinting more useful for us
     # and removes the need for constant None checks or asserts.
     hass: HomeAssistant = None  # type: ignore[assignment]
 
-    # Owning platform instance. Will be set by EntityPlatform
-    platform: EntityPlatform | None = None
+    # Owning platform instance. Set by EntityPlatform by calling add_to_platform_start
+    # While not purely typed, it makes typehinting more useful for us
+    # and removes the need for constant None checks or asserts.
+    platform: EntityPlatform = None  # type: ignore[assignment]
 
     # Entity description instance for this Entity
     entity_description: EntityDescription
@@ -255,6 +257,9 @@ class Entity(ABC):
     # If we reported this entity is using async_update_ha_state, while
     # it should be using async_write_ha_state.
     _async_update_ha_state_reported = False
+
+    # If we reported this entity was added without its platform set
+    _no_platform_reported = False
 
     # Protect for multiple updates
     _update_staged = False
@@ -329,7 +334,6 @@ class Entity(ABC):
         if hasattr(self, "_attr_name"):
             return self._attr_name
         if self.translation_key is not None and self.has_entity_name:
-            assert self.platform
             name_translation_key = (
                 f"component.{self.platform.platform_name}.entity.{self.platform.domain}"
                 f".{self.translation_key}.name"
@@ -582,6 +586,22 @@ class Entity(ABC):
         if self.hass is None:
             raise RuntimeError(f"Attribute hass is None for {self}")
 
+        # The check for self.platform guards against integrations not using an
+        # EntityComponent and can be removed in HA Core 2024.1
+        if self.platform is None and not self._no_platform_reported:  # type: ignore[unreachable]
+            report_issue = self._suggest_report_issue()  # type: ignore[unreachable]
+            _LOGGER.warning(
+                (
+                    "Entity %s (%s) does not have a platform, this may be caused by "
+                    "adding it manually instead of with an EntityComponent helper"
+                    ", please %s"
+                ),
+                self.entity_id,
+                type(self),
+                report_issue,
+            )
+            self._no_platform_reported = True
+
         if self.entity_id is None:
             raise NoEntitySpecifiedError(
                 f"No entity id specified for entity {self.name}"
@@ -634,7 +654,6 @@ class Entity(ABC):
         if entry and entry.disabled_by:
             if not self._disabled_reported:
                 self._disabled_reported = True
-                assert self.platform is not None
                 _LOGGER.warning(
                     (
                         "Entity %s is incorrectly being triggered for updates while it"
@@ -840,7 +859,7 @@ class Entity(ABC):
         self._call_on_remove_callbacks()
 
         self.hass = None  # type: ignore[assignment]
-        self.platform = None
+        self.platform = None  # type: ignore[assignment]
         self.parallel_updates = None
 
     async def add_to_platform_finish(self) -> None:
@@ -859,6 +878,8 @@ class Entity(ABC):
         If the entity doesn't have a non disabled entry in the entity registry,
         or if force_remove=True, its state will be removed.
         """
+        # The check for self.platform guards against integrations not using an
+        # EntityComponent and can be removed in HA Core 2024.1
         if self.platform and self._platform_state != EntityPlatformState.ADDED:
             raise HomeAssistantError(
                 f"Entity {self.entity_id} async_remove called twice"
@@ -906,19 +927,18 @@ class Entity(ABC):
 
         Not to be extended by integrations.
         """
-        if self.platform:
-            info = {
-                "domain": self.platform.platform_name,
-                "custom_component": "custom_components" in type(self).__module__,
-            }
+        info = {
+            "domain": self.platform.platform_name,
+            "custom_component": "custom_components" in type(self).__module__,
+        }
 
-            if self.platform.config_entry:
-                info["source"] = SOURCE_CONFIG_ENTRY
-                info["config_entry"] = self.platform.config_entry.entry_id
-            else:
-                info["source"] = SOURCE_PLATFORM_CONFIG
+        if self.platform.config_entry:
+            info["source"] = SOURCE_CONFIG_ENTRY
+            info["config_entry"] = self.platform.config_entry.entry_id
+        else:
+            info["source"] = SOURCE_PLATFORM_CONFIG
 
-            self.hass.data[DATA_ENTITY_SOURCE][self.entity_id] = info
+        self.hass.data[DATA_ENTITY_SOURCE][self.entity_id] = info
 
         if self.registry_entry is not None:
             # This is an assert as it should never happen, but helps in tests
@@ -938,6 +958,8 @@ class Entity(ABC):
 
         Not to be extended by integrations.
         """
+        # The check for self.platform guards against integrations not using an
+        # EntityComponent and can be removed in HA Core 2024.1
         if self.platform:
             self.hass.data[DATA_ENTITY_SOURCE].pop(self.entity_id)
 
@@ -972,7 +994,6 @@ class Entity(ABC):
 
         await self.async_remove(force_remove=True)
 
-        assert self.platform is not None
         self.entity_id = self.registry_entry.entity_id
         await self.platform.async_add_entities([self])
 
@@ -1046,6 +1067,8 @@ class Entity(ABC):
                 "create a bug report at "
                 "https://github.com/home-assistant/core/issues?q=is%3Aopen+is%3Aissue"
             )
+            # The check for self.platform guards against integrations not using an
+            # EntityComponent and can be removed in HA Core 2024.1
             if self.platform:
                 report_issue += (
                     f"+label%3A%22integration%3A+{self.platform.platform_name}%22"
