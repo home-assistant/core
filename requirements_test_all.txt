@@ -842,7 +842,7 @@ justnimbus==0.6.0
 kegtron-ble==0.4.0
 
 # homeassistant.components.knx
-knx-frontend==2023.5.31.141540
+knx-frontend==2023.6.9.195839
 
 # homeassistant.components.konnected
 konnected==1.2.0
@@ -1270,7 +1270,7 @@ pyialarm==2.2.0
 pyicloud==1.0.0
 
 # homeassistant.components.insteon
-pyinsteon==1.4.2
+pyinsteon==1.4.3
 
 # homeassistant.components.ipma
 pyipma==3.0.6
@@ -1563,7 +1563,7 @@ python-picnic-api==1.1.0
 python-qbittorrent==0.4.3
 
 # homeassistant.components.roborock
-python-roborock==0.23.4
+python-roborock==0.23.6
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.33
@@ -1598,7 +1598,7 @@ pytrafikverket==0.3.3
 pyudev==0.23.2
 
 # homeassistant.components.unifiprotect
-pyunifiprotect==4.10.1
+pyunifiprotect==4.10.3
 
 # homeassistant.components.uptimerobot
 pyuptimerobot==22.2.0
@@ -1651,8 +1651,11 @@ regenmaschine==2023.05.1
 # homeassistant.components.renault
 renault-api==0.1.13
 
+# homeassistant.components.renson
+renson-endura-delta==1.5.0
+
 # homeassistant.components.reolink
-reolink-aio==0.5.16
+reolink-aio==0.6.0
 
 # homeassistant.components.rflink
 rflink==0.0.65
@@ -1703,7 +1706,7 @@ sense-energy==0.11.2
 sense_energy==0.11.2
 
 # homeassistant.components.sensirion_ble
-sensirion-ble==0.0.1
+sensirion-ble==0.1.0
 
 # homeassistant.components.sensorpro
 sensorpro-ble==0.5.3
@@ -1964,7 +1967,7 @@ xiaomi-ble==0.17.2
 xknx==2.10.0
 
 # homeassistant.components.knx
-xknxproject==3.1.0
+xknxproject==3.1.1
 
 # homeassistant.components.bluesound
 # homeassistant.components.fritz
