@@ -244,6 +244,20 @@ class SetupEntity(Protocol):
         """Define setup_entities type."""
 
 
+@callback
+def async_handle_schema_error(
+    discovery_payload: MQTTDiscoveryPayload, err: vol.MultipleInvalid
+) -> None:
+    """Help handling schema errors on MQTT discovery messages."""
+    discovery_topic: str = discovery_payload.discovery_data[ATTR_DISCOVERY_TOPIC]
+    _LOGGER.error(
+        "Schema error: '%s' on MQTT discovery message '%s' received at topic '%s'",
+        err,
+        discovery_payload,
+        discovery_topic,
+    )
+
+
 async def async_setup_entry_helper(
     hass: HomeAssistant,
     domain: str,
@@ -275,15 +289,7 @@ async def async_setup_entry_helper(
             async_dispatcher_send(
                 hass, MQTT_DISCOVERY_DONE.format(discovery_hash), None
             )
-            discovery_topic: str = discovery_payload.discovery_data[
-                ATTR_DISCOVERY_TOPIC
-            ]
-            _LOGGER.error(
-                "Schema error: '%s' on discovery message received at '%s', message: '%s'",
-                err,
-                discovery_topic,
-                discovery_payload,
-            )
+            async_handle_schema_error(discovery_payload, err)
         except Exception:
             discovery_hash = discovery_data[ATTR_DISCOVERY_HASH]
             clear_discovery_hash(hass, discovery_hash)
@@ -1055,15 +1061,7 @@ class MqttEntity(
         try:
             config: DiscoveryInfoType = self.config_schema()(discovery_payload)
         except vol.MultipleInvalid as err:
-            discovery_topic: str = discovery_payload.discovery_data[
-                ATTR_DISCOVERY_TOPIC
-            ]
-            _LOGGER.error(
-                "Schema error: '%s' on discovery update received at '%s', message: '%s'",
-                err,
-                discovery_topic,
-                discovery_payload,
-            )
+            async_handle_schema_error(discovery_payload, err)
             return
         self._config = config
         self._setup_common_attributes_from_config(self._config)
