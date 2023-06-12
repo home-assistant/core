@@ -70,8 +70,8 @@ class FortiOSDeviceScanner(DeviceScanner):
 
     def __init__(self, fgt) -> None:
         """Initialize the scanner."""
-        self._clients = {}
-        self._clients_json = {}
+        self._clients: list[str] = []
+        self._clients_json: dict[str, Any] = {}
         self._fgt = fgt
 
     def update(self):
@@ -121,4 +121,3 @@ class FortiOSDeviceScanner(DeviceScanner):
                     return name
 
         return None
-    
