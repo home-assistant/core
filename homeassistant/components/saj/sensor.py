@@ -190,8 +190,10 @@ class SAJsensor(SensorEntity):
 
         if pysaj_sensor.name in ("current_power", "temperature"):
             self._attr_state_class = SensorStateClass.MEASUREMENT
-        if pysaj_sensor.name == "total_yield":
+        if pysaj_sensor.name == "today_yield":
             self._attr_state_class = SensorStateClass.TOTAL_INCREASING
+        if pysaj_sensor.name == "total_yield":
+            self._attr_state_class = SensorStateClass.TOTAL
 
     @property
     def name(self) -> str:
