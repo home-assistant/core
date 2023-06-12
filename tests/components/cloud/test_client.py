@@ -16,6 +16,7 @@ from homeassistant.components.cloud.const import (
 from homeassistant.components.homeassistant.exposed_entities import (
     DATA_EXPOSED_ENTITIES,
     ExposedEntities,
+    async_expose_entity,
 )
 from homeassistant.const import CONTENT_TYPE_JSON
 from homeassistant.core import HomeAssistant, State
@@ -267,9 +268,7 @@ async def test_google_config_expose_entity(
 
     assert gconf.should_expose(state)
 
-    exposed_entities.async_expose_entity(
-        "cloud.google_assistant", entity_entry.entity_id, False
-    )
+    async_expose_entity(hass, "cloud.google_assistant", entity_entry.entity_id, False)
 
     assert not gconf.should_expose(state)
 

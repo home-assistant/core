@@ -1,7 +1,12 @@
 """Support for Rituals Perfume Genie numbers."""
 from __future__ import annotations
 
-from homeassistant.components.select import SelectEntity
+from collections.abc import Awaitable, Callable
+from dataclasses import dataclass
+
+from pyrituals import Diffuser
+
+from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import AREA_SQUARE_METERS, EntityCategory
 from homeassistant.core import HomeAssistant
@@ -11,7 +16,36 @@ from .const import DOMAIN
 from .coordinator import RitualsDataUpdateCoordinator
 from .entity import DiffuserEntity
 
-ROOM_SIZE_SUFFIX = " Room Size"
+
+@dataclass
+class RitualsEntityDescriptionMixin:
+    """Mixin for required keys."""
+
+    current_fn: Callable[[Diffuser], str]
+    select_fn: Callable[[Diffuser, str], Awaitable[None]]
+
+
+@dataclass
+class RitualsSelectEntityDescription(
+    SelectEntityDescription, RitualsEntityDescriptionMixin
+):
+    """Class describing Rituals select entities."""
+
+
+ENTITY_DESCRIPTIONS = (
+    RitualsSelectEntityDescription(
+        key="room_size_square_meter",
+        translation_key="room_size_square_meter",
+        icon="mdi:ruler-square",
+        unit_of_measurement=AREA_SQUARE_METERS,
+        entity_category=EntityCategory.CONFIG,
+        options=["15", "30", "60", "100"],
+        current_fn=lambda diffuser: str(diffuser.room_size_square_meter),
+        select_fn=lambda diffuser, value: (
+            diffuser.set_room_size_square_meter(int(value))
+        ),
+    ),
+)
 
 
 async def async_setup_entry(
@@ -25,30 +59,33 @@ async def async_setup_entry(
     ]
 
     async_add_entities(
-        DiffuserRoomSize(coordinator) for coordinator in coordinators.values()
+        RitualsSelectEntity(coordinator, description)
+        for coordinator in coordinators.values()
+        for description in ENTITY_DESCRIPTIONS
     )
 
 
-class DiffuserRoomSize(DiffuserEntity, SelectEntity):
-    """Representation of a diffuser room size select entity."""
+class RitualsSelectEntity(DiffuserEntity, SelectEntity):
+    """Representation of a diffuser select entity."""
 
-    _attr_icon = "mdi:ruler-square"
-    _attr_unit_of_measurement = AREA_SQUARE_METERS
-    _attr_options = ["15", "30", "60", "100"]
-    _attr_entity_category = EntityCategory.CONFIG
+    entity_description: RitualsSelectEntityDescription
 
-    def __init__(self, coordinator: RitualsDataUpdateCoordinator) -> None:
+    def __init__(
+        self,
+        coordinator: RitualsDataUpdateCoordinator,
+        description: RitualsSelectEntityDescription,
+    ) -> None:
         """Initialize the diffuser room size select entity."""
-        super().__init__(coordinator, ROOM_SIZE_SUFFIX)
+        super().__init__(coordinator, description)
         self._attr_entity_registry_enabled_default = (
             self.coordinator.diffuser.has_battery
         )
 
     @property
     def current_option(self) -> str:
-        """Return the diffuser room size."""
-        return str(self.coordinator.diffuser.room_size_square_meter)
+        """Return the selected entity option to represent the entity state."""
+        return self.entity_description.current_fn(self.coordinator.diffuser)
 
     async def async_select_option(self, option: str) -> None:
-        """Change the diffuser room size."""
-        await self.coordinator.diffuser.set_room_size_square_meter(int(option))
+        """Change the selected option."""
+        await self.entity_description.select_fn(self.coordinator.diffuser, option)

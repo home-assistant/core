@@ -1,7 +1,7 @@
 """Base class for Rituals Perfume Genie diffuser entity."""
 from __future__ import annotations
 
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity import DeviceInfo, EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
@@ -15,23 +15,22 @@ MODEL2 = "The Perfume Genie 2.0"
 class DiffuserEntity(CoordinatorEntity[RitualsDataUpdateCoordinator]):
     """Representation of a diffuser entity."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self,
         coordinator: RitualsDataUpdateCoordinator,
-        entity_suffix: str,
+        description: EntityDescription,
     ) -> None:
         """Init from config, hookup diffuser and coordinator."""
         super().__init__(coordinator)
-        hublot = coordinator.diffuser.hublot
-        hubname = coordinator.diffuser.name
-
-        self._attr_name = f"{hubname}{entity_suffix}"
-        self._attr_unique_id = f"{hublot}{entity_suffix}"
+        self.entity_description = description
+        self._attr_unique_id = f"{coordinator.diffuser.hublot}-{description.key}"
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, hublot)},
+            identifiers={(DOMAIN, coordinator.diffuser.hublot)},
             manufacturer=MANUFACTURER,
             model=MODEL if coordinator.diffuser.has_battery else MODEL2,
-            name=hubname,
+            name=coordinator.diffuser.name,
             sw_version=coordinator.diffuser.version,
         )
 

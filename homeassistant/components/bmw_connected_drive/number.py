@@ -40,7 +40,6 @@ class BMWNumberEntityDescription(NumberEntityDescription, BMWRequiredKeysMixin):
 
     is_available: Callable[[MyBMWVehicle], bool] = lambda _: False
     dynamic_options: Callable[[MyBMWVehicle], list[str]] | None = None
-    mode: NumberMode = NumberMode.AUTO
 
 
 NUMBER_TYPES: list[BMWNumberEntityDescription] = [
@@ -99,7 +98,6 @@ class BMWNumber(BMWBaseEntity, NumberEntity):
         super().__init__(coordinator, vehicle)
         self.entity_description = description
         self._attr_unique_id = f"{vehicle.vin}-{description.key}"
-        self._attr_mode = description.mode
 
     @property
     def native_value(self) -> float | None:
@@ -118,3 +116,5 @@ class BMWNumber(BMWBaseEntity, NumberEntity):
             await self.entity_description.remote_service(self.vehicle, value)
         except MyBMWAPIError as ex:
             raise HomeAssistantError(ex) from ex
+
+        self.coordinator.async_update_listeners()

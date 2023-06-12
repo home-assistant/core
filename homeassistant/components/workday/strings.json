@@ -1,7 +1,8 @@
 {
   "config": {
     "abort": {
-      "incorrect_province": "Incorrect subdivision from yaml import"
+      "incorrect_province": "Incorrect subdivision from yaml import",
+      "already_configured": "Workday has already been setup with chosen configuration"
     },
     "step": {
       "user": {
@@ -11,6 +12,7 @@
         }
       },
       "options": {
+        "description": "Set workday options for {name}",
         "data": {
           "excludes": "Excludes",
           "days_offset": "Offset",
@@ -25,14 +27,13 @@
           "workdays": "List of workdays",
           "add_holidays": "Add custom holidays as YYYY-MM-DD",
           "remove_holidays": "Remove holidays as YYYY-MM-DD or by using partial of name",
-          "province": "State, Terroritory, Province, Region of Country"
+          "province": "State, Territory, Province, Region of Country"
         }
       }
     },
     "error": {
       "add_holiday_error": "Incorrect format on date (YYYY-MM-DD)",
-      "remove_holiday_error": "Incorrect format on date (YYYY-MM-DD) or holiday name not found",
-      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+      "remove_holiday_error": "Incorrect format on date (YYYY-MM-DD) or holiday name not found"
     }
   },
   "options": {
@@ -59,13 +60,7 @@
     "error": {
       "add_holiday_error": "Incorrect format on date (YYYY-MM-DD)",
       "remove_holiday_error": "Incorrect format on date (YYYY-MM-DD) or holiday name not found",
-      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
-    }
-  },
-  "issues": {
-    "deprecated_yaml": {
-      "title": "The Workday YAML configuration is being removed",
-      "description": "Configuring Workday using YAML is being removed.\n\nYour existing YAML configuration has been imported into the UI automatically.\n\nRemove the Workday YAML configuration from your configuration.yaml file and restart Home Assistant to fix this issue."
+      "already_configured": "Service with this configuration already exist"
     }
   },
   "selector": {

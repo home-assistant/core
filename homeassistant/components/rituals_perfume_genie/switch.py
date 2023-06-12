@@ -1,9 +1,13 @@
 """Support for Rituals Perfume Genie switches."""
 from __future__ import annotations
 
+from collections.abc import Awaitable, Callable
+from dataclasses import dataclass
 from typing import Any
 
-from homeassistant.components.switch import SwitchEntity
+from pyrituals import Diffuser
+
+from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -11,6 +15,33 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import DOMAIN
 from .coordinator import RitualsDataUpdateCoordinator
 from .entity import DiffuserEntity
+
+
+@dataclass
+class RitualsEntityDescriptionMixin:
+    """Mixin values for Rituals entities."""
+
+    is_on_fn: Callable[[Diffuser], bool]
+    turn_on_fn: Callable[[Diffuser], Awaitable[None]]
+    turn_off_fn: Callable[[Diffuser], Awaitable[None]]
+
+
+@dataclass
+class RitualsSwitchEntityDescription(
+    SwitchEntityDescription, RitualsEntityDescriptionMixin
+):
+    """Class describing Rituals switch entities."""
+
+
+ENTITY_DESCRIPTIONS = (
+    RitualsSwitchEntityDescription(
+        key="is_on",
+        icon="mdi:fan",
+        is_on_fn=lambda diffuser: diffuser.is_on,
+        turn_on_fn=lambda diffuser: diffuser.turn_on(),
+        turn_off_fn=lambda diffuser: diffuser.turn_off(),
+    ),
+)
 
 
 async def async_setup_entry(
@@ -24,34 +55,40 @@ async def async_setup_entry(
     ]
 
     async_add_entities(
-        DiffuserSwitch(coordinator) for coordinator in coordinators.values()
+        RitualsSwitchEntity(coordinator, description)
+        for coordinator in coordinators.values()
+        for description in ENTITY_DESCRIPTIONS
     )
 
 
-class DiffuserSwitch(DiffuserEntity, SwitchEntity):
+class RitualsSwitchEntity(DiffuserEntity, SwitchEntity):
     """Representation of a diffuser switch."""
 
-    _attr_icon = "mdi:fan"
+    entity_description: RitualsSwitchEntityDescription
 
-    def __init__(self, coordinator: RitualsDataUpdateCoordinator) -> None:
+    def __init__(
+        self,
+        coordinator: RitualsDataUpdateCoordinator,
+        description: RitualsSwitchEntityDescription,
+    ) -> None:
         """Initialize the diffuser switch."""
-        super().__init__(coordinator, "")
-        self._attr_is_on = self.coordinator.diffuser.is_on
+        super().__init__(coordinator, description)
+        self._attr_is_on = description.is_on_fn(coordinator.diffuser)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
-        """Turn the device on."""
-        await self.coordinator.diffuser.turn_on()
+        """Turn the switch on."""
+        await self.entity_description.turn_on_fn(self.coordinator.diffuser)
         self._attr_is_on = True
         self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
-        """Turn the device off."""
-        await self.coordinator.diffuser.turn_off()
+        """Turn the switch off."""
+        await self.entity_description.turn_off_fn(self.coordinator.diffuser)
         self._attr_is_on = False
         self.async_write_ha_state()
 
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        self._attr_is_on = self.coordinator.diffuser.is_on
-        self.async_write_ha_state()
+        self._attr_is_on = self.entity_description.is_on_fn(self.coordinator.diffuser)
+        super()._handle_coordinator_update()
