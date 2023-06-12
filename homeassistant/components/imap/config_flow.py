@@ -26,9 +26,8 @@ from homeassistant.helpers.selector import (
     SelectSelector,
     SelectSelectorConfig,
     SelectSelectorMode,
-    TextSelector,
-    TextSelectorConfig,
-    TextSelectorType,
+    TemplateSelector,
+    TemplateSelectorConfig,
 )
 from homeassistant.helpers.template import Template
 from homeassistant.util.ssl import SSLCipherList
@@ -57,9 +56,7 @@ CIPHER_SELECTOR = SelectSelector(
         translation_key=CONF_SSL_CIPHER_LIST,
     )
 )
-TEMPLATE_SELECTOR = TextSelector(
-    TextSelectorConfig(type=TextSelectorType.TEXT, multiline=True)
-)
+TEMPLATE_SELECTOR = TemplateSelector(TemplateSelectorConfig())
 
 CONFIG_SCHEMA = vol.Schema(
     {
