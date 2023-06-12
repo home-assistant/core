@@ -162,11 +162,8 @@ class ZWaveBaseEntity(Entity):
             hasattr(self, "entity_description")
             and self.entity_description
             and self.entity_description.name
+            and self.entity_description.name is not UNDEFINED
         ):
-            # It's not possible to do string manipulations on UNDEFINED
-            # the assert satisfies the type checker and will catch attempts
-            # to use UNDEFINED in the entity descriptions.
-            assert self.entity_description.name is not UNDEFINED
             name = self.entity_description.name
 
         if name_prefix:

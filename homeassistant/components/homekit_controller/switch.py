@@ -34,6 +34,10 @@ ATTR_REMAINING_DURATION = "remaining_duration"
 class DeclarativeSwitchEntityDescription(SwitchEntityDescription):
     """Describes Homekit button."""
 
+    # DeclarativeCharacteristicSwitch does not support UNDEFINED or None,
+    # restrict the type to str.
+    name: str = ""
+
     true_value: bool = True
     false_value: bool = False
 
@@ -170,7 +174,7 @@ class DeclarativeCharacteristicSwitch(CharacteristicEntity, SwitchEntity):
         """Return the name of the device if any."""
         if name := self.accessory.name:
             return f"{name} {self.entity_description.name}"
-        return f"{self.entity_description.name}"
+        return self.entity_description.name
 
     def get_characteristic_types(self) -> list[str]:
         """Define the homekit characteristics the entity cares about."""

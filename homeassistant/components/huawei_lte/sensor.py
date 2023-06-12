@@ -29,7 +29,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import UNDEFINED, StateType
+from homeassistant.helpers.typing import StateType
 
 from . import HuaweiLteBaseEntityWithDevice
 from .const import (
@@ -116,6 +116,10 @@ class HuaweiSensorGroup:
 @dataclass
 class HuaweiSensorEntityDescription(SensorEntityDescription):
     """Class describing Huawei LTE sensor entities."""
+
+    # HuaweiLteSensor does not support UNDEFINED or None,
+    # restrict the type to str.
+    name: str = ""
 
     format_fn: Callable[[str], tuple[StateType, str | None]] = format_default
     icon_fn: Callable[[StateType], str] | None = None
@@ -715,9 +719,6 @@ class HuaweiLteSensor(HuaweiLteBaseEntityWithDevice, SensorEntity):
 
     def __post_init__(self) -> None:
         """Initialize remaining attributes."""
-        # The assert satisfies the type checker and will catch attempts
-        # to use UNDEFINED in the entity descriptions.
-        assert self.entity_description.name is not UNDEFINED
         self._attr_name = self.entity_description.name or self.item
 
     async def async_added_to_hass(self) -> None:

@@ -202,11 +202,11 @@ class ProtectDeviceEntity(Entity):
         else:
             self.entity_description = description
             self._attr_unique_id = f"{self.device.mac}_{description.key}"
-            name = description.name or ""
-            # It's not possible to do string manipulations on UNDEFINED
-            # the assert satisfies the type checker and will catch attempts
-            # to use UNDEFINED in the entity descriptions.
-            assert name is not UNDEFINED
+            name = (
+                description.name
+                if description.name and description.name is not UNDEFINED
+                else ""
+            )
             self._attr_name = f"{self.device.display_name} {name.title()}"
             if isinstance(description, ProtectRequiredKeysMixin):
                 self._async_get_ufp_enabled = description.get_ufp_enabled

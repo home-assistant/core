@@ -35,9 +35,8 @@ class BondButtonEntityDescription(
 ):
     """Class to describe a Bond Button entity."""
 
-    # BondEntity does not support UNDEFINED
-    # Restrict the type to satisfy the type checker and catch attempts
-    # to use UNDEFINED in the entity descriptions.
+    # BondEntity does not support UNDEFINED,
+    # restrict the type to str | None
     name: str | None = None
 
 
