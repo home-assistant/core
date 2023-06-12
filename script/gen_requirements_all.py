@@ -132,9 +132,8 @@ authlib<1.0
 # Version 2.0 added typing, prevent accidental fallbacks
 backoff>=2.0
 
-# Breaking change in version
-# https://github.com/samuelcolvin/pydantic/issues/4092
-pydantic!=1.9.1
+# Require to avoid issues with decorators (#93904). v2 has breaking changes.
+pydantic>=1.10.8,<2.0
 
 # Breaks asyncio
 # https://github.com/pubnub/python/issues/130

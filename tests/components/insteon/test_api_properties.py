@@ -119,7 +119,7 @@ async def test_get_read_only_properties(
     mock_read_only = ExtendedProperty(
         "44.44.44", "mock_read_only", bool, is_read_only=True
     )
-    mock_read_only.load(False)
+    mock_read_only.set_value(False)
 
     ws_client, devices = await _setup(
         hass, hass_ws_client, "44.44.44", iolinc_properties_data
@@ -368,7 +368,7 @@ async def test_change_float_property(
     )
     device = devices["44.44.44"]
     delay_prop = device.configuration[MOMENTARY_DELAY]
-    delay_prop.load(0)
+    delay_prop.set_value(0)
     with patch.object(insteon.api.properties, "devices", devices):
         await ws_client.send_json(
             {

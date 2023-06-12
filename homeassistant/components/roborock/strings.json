@@ -33,6 +33,9 @@
       }
     },
     "sensor": {
+      "cleaning_area": {
+        "name": "Cleaning area"
+      },
       "cleaning_time": {
         "name": "Cleaning time"
       },
@@ -78,6 +81,9 @@
       },
       "total_cleaning_time": {
         "name": "Total cleaning time"
+      },
+      "total_cleaning_area": {
+        "name": "Total cleaning area"
       }
     },
     "select": {
