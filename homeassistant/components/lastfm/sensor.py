@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import hashlib
 
-from pylast import LastFMNetwork, Track, User, WSError, PyLastError
+from pylast import LastFMNetwork, Track, User, PyLastError
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
