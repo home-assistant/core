@@ -887,7 +887,7 @@ google-cloud-texttospeech==2.12.3
 google-generativeai==0.1.0rc2
 
 # homeassistant.components.nest
-google-nest-sdm==2.2.4
+google-nest-sdm==2.2.5
 
 # homeassistant.components.google_travel_time
 googlemaps==2.5.1
