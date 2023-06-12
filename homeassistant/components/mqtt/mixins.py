@@ -283,7 +283,7 @@ async def async_setup_entry_helper(
         try:
             config: DiscoveryInfoType = discovery_schema(discovery_payload)
             await async_setup(config, discovery_data=discovery_data)
-        except vol.MultipleInvalid as err:
+        except vol.Invalid as err:
             discovery_hash = discovery_data[ATTR_DISCOVERY_HASH]
             clear_discovery_hash(hass, discovery_hash)
             async_dispatcher_send(
@@ -1060,7 +1060,7 @@ class MqttEntity(
         """Handle updated discovery message."""
         try:
             config: DiscoveryInfoType = self.config_schema()(discovery_payload)
-        except vol.MultipleInvalid as err:
+        except vol.Invalid as err:
             async_handle_schema_error(discovery_payload, err)
             return
         self._config = config
