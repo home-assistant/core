@@ -43,7 +43,7 @@ class RoborockCoordinatedSwitchDescriptionMixIn:
     get_value: Callable[[RoborockCoordinatedEntity], bool]
     set_command: Callable[[RoborockCoordinatedEntity, bool], Coroutine[Any, Any, dict]]
     # Check support of this feature
-    check_support: Callable[[RoborockDataUpdateCoordinator], Coroutine[Any, Any, dict]]
+    check_support: Callable[[RoborockDataUpdateCoordinator], dict]
 
 
 @dataclass
