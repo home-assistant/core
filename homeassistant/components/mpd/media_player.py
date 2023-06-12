@@ -107,7 +107,6 @@ class MpdDevice(MediaPlayerEntity):
         self._media_image_hash = None
         # Track if the song changed so image doesn't have to be loaded every update.
         self._media_image_file = None
-        self._commands = None
 
         # set up MPD client
         self._client = MPDClient()
@@ -282,20 +281,26 @@ class MpdDevice(MediaPlayerEntity):
 
     async def async_get_media_image(self) -> tuple[bytes | None, str | None]:
         """Fetch media image of current playing track."""
-        if not (file := self._currentsong.get("file")):
-            return None, None
-        response = await self._async_get_file_image_response(file)
-        if response is None:
-            return None, None
+        async with self.connection():
+            if self._currentsong is None or not (file := self._currentsong.get("file")):
+                return None, None
 
-        image = bytes(response["binary"])
-        mime = response.get(
-            "type", "image/png"
-        )  # readpicture has type, albumart does not
-        return (image, mime)
+            with suppress(mpd.ConnectionError):
+                response = await self._async_get_file_image_response(file)
+            if response is None:
+                return None, None
+
+            image = bytes(response["binary"])
+            mime = response.get(
+                "type", "image/png"
+            )  # readpicture has type, albumart does not
+            return (image, mime)
 
     async def _async_update_media_image_hash(self):
         """Update the hash value for the media image."""
+        if self._currentsong is None:
+            return
+
         file = self._currentsong.get("file")
 
         if file == self._media_image_file:
@@ -318,16 +323,21 @@ class MpdDevice(MediaPlayerEntity):
         self._media_image_file = file
 
     async def _async_get_file_image_response(self, file):
-        # not all MPD implementations and versions support the `albumart` and `fetchpicture` commands
-        can_albumart = "albumart" in self._commands
-        can_readpicture = "readpicture" in self._commands
+        # not all MPD implementations and versions support the `albumart` and
+        # `fetchpicture` commands.
+        commands = []
+        with suppress(mpd.ConnectionError):
+            commands = list(await self._client.commands())
+        can_albumart = "albumart" in commands
+        can_readpicture = "readpicture" in commands
 
         response = None
 
         # read artwork embedded into the media file
         if can_readpicture:
             try:
-                response = await self._client.readpicture(file)
+                with suppress(mpd.ConnectionError):
+                    response = await self._client.readpicture(file)
             except mpd.CommandError as error:
                 if error.errno is not mpd.FailureResponseCode.NO_EXIST:
                     _LOGGER.warning(
@@ -338,7 +348,8 @@ class MpdDevice(MediaPlayerEntity):
         # read artwork contained in the media directory (cover.{jpg,png,tiff,bmp}) if none is embedded
         if can_albumart and not response:
             try:
-                response = await self._client.albumart(file)
+                with suppress(mpd.ConnectionError):
+                    response = await self._client.albumart(file)
             except mpd.CommandError as error:
                 if error.errno is not mpd.FailureResponseCode.NO_EXIST:
                     _LOGGER.warning(
@@ -396,8 +407,9 @@ class MpdDevice(MediaPlayerEntity):
         """Update available MPD playlists."""
         try:
             self._playlists = []
-            for playlist_data in await self._client.listplaylists():
-                self._playlists.append(playlist_data["playlist"])
+            with suppress(mpd.ConnectionError):
+                for playlist_data in await self._client.listplaylists():
+                    self._playlists.append(playlist_data["playlist"])
         except mpd.CommandError as error:
             self._playlists = None
             _LOGGER.warning("Playlists could not be updated: %s:", error)
