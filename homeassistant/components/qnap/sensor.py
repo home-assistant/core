@@ -272,7 +272,7 @@ def round_nicely(number):
     return round(number)
 
 
-class QNAPSensor(CoordinatorEntity, SensorEntity):
+class QNAPSensor(CoordinatorEntity[QnapCoordinator], SensorEntity):
     """Base class for a QNAP sensor."""
 
     def __init__(
