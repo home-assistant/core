@@ -11,6 +11,7 @@ from homeassistant.components.climate import (
     FAN_HIGH,
     FAN_LOW,
     FAN_MEDIUM,
+    FAN_OFF,
     SWING_BOTH,
     SWING_HORIZONTAL,
     SWING_OFF,
@@ -31,20 +32,17 @@ from .const import BASE_URL, CONF_URL_STATUS, DEFAULT_INTERVAL, DEFAULT_TIMEOUT,
 
 _LOGGER = logging.getLogger(__name__)
 
-CONST_MODE_MAP = {
-    "off": 0,
-    "cool": 2,
-    "dry": 3,
-    "fan_only": 4,
-    "heat": 6,
+CONST_STATE_CMD_MAP = {
+    HVACMode.COOL: 0,
+    HVACMode.HEAT: 1,
+    HVACMode.DRY: 2,
+    HVACMode.FAN_ONLY: 3,
+    HVACMode.OFF: 4,
+    HVACMode.AUTO: 5,
 }
-
-CONST_FAN_MAP = {
-    "auto": 0,
-    "high": 3,
-    "med": 2,
-    "low": 1,
-}
+CONST_CMD_STATE_MAP = {v: k for k, v in CONST_STATE_CMD_MAP.items()}
+CONST_FAN_CMD_MAP = {FAN_AUTO: 0, FAN_LOW: 2, FAN_MEDIUM: 3, FAN_HIGH: 4, FAN_OFF: 5}
+CONST_CMD_FAN_MAP = {v: k for k, v in CONST_FAN_CMD_MAP.items()}
 
 
 class CCM15Coordinator:
@@ -56,16 +54,6 @@ class CCM15Coordinator:
         self._port = port
         self._interval = interval
         self._ac_devices: dict[int, CCM15Climate] = {}
-        self._ac_data: dict[int, dict[str, int]] = {}
-
-    def add_device(self, device):
-        """Add a new device to the coordinator."""
-        self._ac_devices[device.ac_id] = device
-
-    def remove_device(self, ac_id):
-        """Remove a device from the coordinator."""
-        if ac_id in self._ac_devices:
-            del self._ac_devices[ac_id]
 
     def get_devices(self):
         """Get all climate devices from the coordinator."""
@@ -89,10 +77,10 @@ class CCM15Coordinator:
                     ac_state = self.get_status_from(ac_binary)
                 if ac_state:
                     _LOGGER.debug("Parsed data ac_state:'%s'", ac_state)
-                    if ac_name in self._ac_devices:
-                        self._ac_devices[ac_name].update_with_acdata(ac_state)
-                    else:
-                        _LOGGER.debug("AC device %s not registered", ac_name)
+                    if ac_name not in self._ac_devices:
+                        _LOGGER.debug("Creating new ac device '%s'", ac_name)
+                        self._ac_devices[ac_name] = CCM15Climate(ac_name, self)
+                    self._ac_devices[ac_name].update_from_ac_data(ac_state)
 
     def get_status_from(self, ac_binary: str) -> dict[str, int]:
         """Parse the binary data and return a dictionary with AC status."""
@@ -179,24 +167,6 @@ class CCM15Coordinator:
 
         return ac_data
 
-    def update_climates_from_status(self, ac_status):
-        """Update climate devices from the latest status."""
-        for ac_name in ac_status:
-            if not ac_status[ac_name]:
-                # Ignore empty entries
-                continue
-            if ac_name not in self._ac_devices:
-                # Create new climate entity if it doesn't exist
-                int(ac_status[ac_name]["id"])
-                self._ac_devices[ac_name] = CCM15Climate(
-                    ac_name, self._host, self._port, self
-                )
-                _LOGGER.debug("New climate created: %s", ac_name)
-            else:
-                # Update existing climate entity
-                self._ac_devices[ac_name].updateWithAcdata(ac_status[ac_name])
-                _LOGGER.debug("Climate updated: %s", ac_name)
-
     async def async_test_connection(self):
         """Test the connection to the CCM15 device."""
         url = f"http://{self._host}:{self._port}/{CONF_URL_STATUS}"
@@ -217,28 +187,31 @@ class CCM15Coordinator:
 class CCM15Climate(ClimateEntity):
     """Climate device for CCM15 coordinator."""
 
-    def __init__(
-        self, ac_name: str, host: str, port: int, coordinator: CCM15Coordinator
-    ) -> None:
+    def __init__(self, ac_name: str, coordinator: CCM15Coordinator) -> None:
         """Create a climate device managed from a coordinator."""
         self._ac_name = ac_name
-        self._host = host
-        self._port = port
         self._coordinator = coordinator
-        self._data: dict[str, int] = {}
         self._is_on = False
-        self._current_temp = None
-        self._target_temp = None
-        self._operation_mode = None
-        self._fan_mode = None
-        self._swing_mode = None
+        self._current_temp = 0
+        self._target_temp = 0
+        self._operation_mode = HVACMode.OFF
+        self._fan_mode = FAN_OFF
+        self._swing_mode = SWING_OFF
         self._available = False
-        self.update()
+
+    def update_from_ac_data(self, acdata: dict[str, int]):
+        """Update state from the ac_data."""
+
+        self._available = True
+        self._current_temp = acdata["temp"]
+        self._target_temp = acdata["settemp"]
+        self._operation_mode = CONST_CMD_STATE_MAP[acdata["ac_mode"]]
+        self._fan_mode = CONST_CMD_FAN_MAP[acdata["fan"]]
 
     @property
     def unique_id(self):
         """Return unique id."""
-        return f"{self._host}:{self._port}:{self._ac_name}"
+        return f"{self._ac_name}"
 
     @property
     def name(self):
