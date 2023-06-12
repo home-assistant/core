@@ -30,6 +30,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DEFAULT_PORT, DEFAULT_TIMEOUT, DOMAIN
+from .coordinator import QnapCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
