@@ -15,7 +15,6 @@ from pyunifiprotect.data import (
     ProtectDeviceModel,
     ProtectModelWithId,
     Sensor,
-    SmartDetectObjectType,
 )
 
 from homeassistant.components.sensor import (
@@ -528,10 +527,9 @@ EVENT_SENSORS: tuple[ProtectSensorEventEntityDescription, ...] = (
         name="License Plate Detected",
         icon="mdi:car",
         translation_key="license_plate",
-        ufp_smart_type=SmartDetectObjectType.LICENSE_PLATE,
         ufp_value="is_smart_detected",
         ufp_required_field="can_detect_license_plate",
-        ufp_event_obj="last_smart_detect_event",
+        ufp_event_obj="last_license_plate_detect_event",
     ),
 )
 
@@ -767,8 +765,7 @@ class ProtectEventSensor(EventEntityMixin, SensorEntity):
         EventEntityMixin._async_update_device_from_protect(self, device)
         is_on = self.entity_description.get_is_on(device)
         is_license_plate = (
-            self.entity_description.ufp_smart_type
-            == SmartDetectObjectType.LICENSE_PLATE
+            self.entity_description.ufp_event_obj == "last_license_plate_detect_event"
         )
         if (
             not is_on

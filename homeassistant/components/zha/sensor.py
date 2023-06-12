@@ -722,7 +722,9 @@ class PPBVOCLevel(Sensor):
     """VOC Level sensor."""
 
     SENSOR_ATTR = "measured_value"
-    _attr_device_class: SensorDeviceClass = SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS
+    _attr_device_class: SensorDeviceClass = (
+        SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS_PARTS
+    )
     _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
     _attr_name: str = "VOC level"
     _decimals = 0
@@ -736,6 +738,7 @@ class PM25(Sensor):
     """Particulate Matter 2.5 microns or less sensor."""
 
     SENSOR_ATTR = "measured_value"
+    _attr_device_class: SensorDeviceClass = SensorDeviceClass.PM25
     _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
     _attr_name: str = "Particulate matter"
     _decimals = 0

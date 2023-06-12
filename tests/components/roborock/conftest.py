@@ -12,7 +12,7 @@ from homeassistant.const import CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from .mock_data import BASE_URL, HOME_DATA, PROP, USER_DATA, USER_EMAIL
+from .mock_data import BASE_URL, HOME_DATA, NETWORK_INFO, PROP, USER_DATA, USER_EMAIL
 
 from tests.common import MockConfigEntry
 
@@ -54,7 +54,8 @@ async def setup_entry(
         "homeassistant.components.roborock.RoborockApiClient.get_home_data",
         return_value=HOME_DATA,
     ), patch(
-        "homeassistant.components.roborock.RoborockMqttClient.get_networking"
+        "homeassistant.components.roborock.RoborockMqttClient.get_networking",
+        return_value=NETWORK_INFO,
     ), patch(
         "homeassistant.components.roborock.coordinator.RoborockLocalClient.get_prop",
         return_value=PROP,
