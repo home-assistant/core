@@ -251,10 +251,10 @@ def async_handle_schema_error(
     """Help handling schema errors on MQTT discovery messages."""
     discovery_topic: str = discovery_payload.discovery_data[ATTR_DISCOVERY_TOPIC]
     _LOGGER.error(
-        "Schema error: '%s' on MQTT discovery message '%s' received at topic '%s'",
+        "Error '%s' when processing MQTT discovery message topic: '%s', message: '%s'",
         err,
-        discovery_payload,
         discovery_topic,
+        discovery_payload,
     )
 
 
