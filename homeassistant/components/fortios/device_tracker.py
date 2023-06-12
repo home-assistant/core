@@ -112,10 +112,11 @@ class FortiOSDeviceScanner(DeviceScanner):
             for client in data["results"]:
                 if "is_online" in client and "master_mac" in client:
                     if client["is_online"]:
-                        hostname = client["master_mac"].replace(":", "_")
-
+                        hostname = ""
                         if "hostname" in client:
                             hostname = client["hostname"]
+                        else:
+                            hostname = client["master_mac"].replace(":", "_")
 
                         devices[client["master_mac"]] = {
                             "mac": client["master_mac"].upper(),
