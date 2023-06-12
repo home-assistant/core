@@ -5,6 +5,7 @@ This component is part of the device_tracker platform.
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 from awesomeversion import AwesomeVersion
 from fortiosapi import FortiOSAPI
@@ -12,7 +13,7 @@ import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
     DOMAIN,
-    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as BASE_PLATFORM_SCHEMA,
     DeviceScanner,
 )
 from homeassistant.const import CONF_HOST, CONF_TOKEN, CONF_VERIFY_SSL
@@ -21,134 +22,104 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
+DEFAULT_VERIFY_SSL = False
 
-PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
+
+PLATFORM_SCHEMA = BASE_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Required(CONF_TOKEN): cv.string,
-        vol.Optional(CONF_VERIFY_SSL, default=False): cv.boolean,
+        vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
     }
 )
 
 
 def get_scanner(hass: HomeAssistant, config: ConfigType) -> FortiOSDeviceScanner | None:
-    """Validate the configuration and return a FortiOS scanner."""
-    scanner = FortiOSDeviceScanner(config[DOMAIN])
+    """Validate the configuration and return a FortiOSDeviceScanner."""
+    host = config[DOMAIN][CONF_HOST]
+    verify_ssl = config[DOMAIN][CONF_VERIFY_SSL]
+    token = config[DOMAIN][CONF_TOKEN]
 
-    return scanner if scanner.initialize() else None
+    fgt = FortiOSAPI()
+
+    try:
+        fgt.tokenlogin(host, token, verify_ssl, None, 12, "root")
+    except ConnectionError as ex:
+        _LOGGER.error("ConnectionError to FortiOS API: %s", ex)
+        return None
+    except Exception as ex:  # pylint: disable=broad-except
+        _LOGGER.error("Failed to login to FortiOS API: %s", ex)
+        return None
+
+    status_json = fgt.monitor("system/status", "")
+
+    current_version = AwesomeVersion(status_json["version"])
+    minimum_version = AwesomeVersion("6.4.3")
+    if current_version < minimum_version:
+        _LOGGER.error(
+            "Unsupported FortiOS version: %s. Version %s and newer are supported",
+            current_version,
+            minimum_version,
+        )
+        return None
+
+    return FortiOSDeviceScanner(fgt)
 
 
 class FortiOSDeviceScanner(DeviceScanner):
     """Class which queries a FortiOS unit for connected devices."""
 
-    def __init__(self, config):
+    def __init__(self, fgt) -> None:
         """Initialize the scanner."""
-        self.host = config[CONF_HOST]
-        self.token = config[CONF_TOKEN]
-        self.verify_ssl = config[CONF_VERIFY_SSL]
-        self.last_results = {}
-        self._fgt = None
+        self._clients = {}
+        self._clients_json = {}
+        self._fgt = fgt
 
-    def initialize(self) -> bool:
-        """Connect to the router and test it's accessible."""
-        self._fgt = self._get_fortios_obj()
-
-        if self._fgt is None:
-            return False
-
-        # Test the router is accessible.
-        data = self._get_fortios_data()
-        return data is not None
-
-    def scan_devices(self):
-        """Scan for new devices and return a list with found device IDs."""
-        _LOGGER.debug("scan_devices()")
-
-        self._update_info()
-        return [client["mac"] for client in self.last_results]
-
-    def get_device_name(self, device):
-        """Return the name of the given device or None if we don't know."""
-        _LOGGER.debug("get_device_name(%s)", device)
-
-        if not self.last_results:
-            _LOGGER.error("No last_results to get device names")
-            return None
-        for client in self.last_results:
-            if client["mac"] == device:
-                _LOGGER.debug("%s = get_device_name(%s)", client["name"], device)
-                return client["name"]
-        return None
-
-    def _update_info(self):
-        """Ensure the information from the FortiOS device is up to date.
-
-        Return boolean if scanning successful.
-        """
-        _LOGGER.debug("_update_info()")
-
-        if not (data := self._get_fortios_data()):
-            return False
-
-        self.last_results = data.values()
-
-        _LOGGER.debug("_update_info, last_results=%s", self.last_results)
-        return True
-
-    def _get_fortios_data(self):
-        """Retrieve data from FortiOS device and return parsed result."""
-        _LOGGER.debug("_get_fortios_data()")
-
-        data = self._fgt.monitor(
+    def update(self):
+        """Update clients from the device."""
+        clients_json = self._fgt.monitor(
             "user/device/query",
             "",
             parameters={"filter": "format=master_mac|hostname|is_online"},
         )
-        devices = {}
-        try:
-            for client in data["results"]:
-                if "is_online" in client and "master_mac" in client:
-                    if client["is_online"]:
-                        hostname = ""
-                        if "hostname" in client:
-                            hostname = client["hostname"]
-                        else:
-                            hostname = client["master_mac"].replace(":", "_")
 
-                        devices[client["master_mac"]] = {
-                            "mac": client["master_mac"].upper(),
-                            "name": hostname,
-                        }
-        except KeyError as kex:
-            _LOGGER.error("Key not found in clients: %s", kex)
+        self._clients_json = clients_json
 
-        return devices
+        self._clients = []
 
-    def _get_fortios_obj(self):
-        """Validate the configuration and return a FortiOSAPI object."""
-        _LOGGER.debug("_get_fortios_obj()")
+        if clients_json:
+            try:
+                for client in clients_json["results"]:
+                    if "is_online" in client and "master_mac" in client:
+                        if client["is_online"]:
+                            self._clients.append(client["master_mac"].upper())
+            except KeyError as kex:
+                _LOGGER.error("Key not found in clients: %s", kex)
 
-        fgt = FortiOSAPI()
+    def scan_devices(self):
+        """Scan for new devices and return a list with found device IDs."""
+        self.update()
+        return self._clients
 
-        try:
-            fgt.tokenlogin(self.host, self.token, self.verify_ssl, None, 12, "root")
-        except ConnectionError as ex:
-            _LOGGER.error("ConnectionError to FortiOS API: %s", ex)
-            return None
-        except Exception as ex:  # pylint: disable=broad-except
-            _LOGGER.error("Failed to login to FortiOS API: %s", ex)
+    def get_device_name(self, device):
+        """Return the name of the given device or None if we don't know."""
+        _LOGGER.debug("Getting name of device %s", device)
+
+        device = device.lower()
+
+        if (data := self._clients_json) == 0:
+            _LOGGER.error("No json results to get device names")
             return None
 
-        system_status = fgt.monitor("system/status", "")
+        for client in data["results"]:
+            if "master_mac" in client:
+                if client["master_mac"] == device:
+                    name = ""
+                    if "hostname" in client:
+                        name = client["hostname"]
+                    else:
+                        name = client["master_mac"].replace(":", "_")
+                    return name
 
-        current_version = AwesomeVersion(system_status["version"])
-        minimum_version = AwesomeVersion("6.4.3")
-        if current_version < minimum_version:
-            _LOGGER.error(
-                "Unsupported FortiOS version: %s. Version %s and newer are supported",
-                current_version,
-                minimum_version,
-            )
-            return None
-
-        return fgt
+        return None
+    
