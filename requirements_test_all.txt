@@ -697,7 +697,7 @@ google-cloud-pubsub==2.13.11
 google-generativeai==0.1.0rc2
 
 # homeassistant.components.nest
-google-nest-sdm==2.2.4
+google-nest-sdm==2.2.5
 
 # homeassistant.components.google_travel_time
 googlemaps==2.5.1
@@ -1195,7 +1195,7 @@ pycoolmasternet-async==0.1.5
 pycsspeechtts==1.0.8
 
 # homeassistant.components.daikin
-pydaikin==2.9.1
+pydaikin==2.9.0
 
 # homeassistant.components.deconz
 pydeconz==113
