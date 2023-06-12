@@ -515,7 +515,7 @@ easyenergy==0.3.0
 elgato==4.0.1
 
 # homeassistant.components.elkm1
-elkm1-lib==2.2.2
+elkm1-lib==2.2.5
 
 # homeassistant.components.elmax
 elmax_api==0.0.4
