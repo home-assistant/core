@@ -276,7 +276,7 @@ class QNAPSensor(CoordinatorEntity[QnapCoordinator], SensorEntity):
     """Base class for a QNAP sensor."""
 
     def __init__(
-        self, coordinator, description: SensorEntityDescription, monitor_device=None
+        self, coordinator: QnapCoordinator, description: SensorEntityDescription, monitor_device=None
     ) -> None:
         """Initialize the sensor."""
         self.coordinator = coordinator
