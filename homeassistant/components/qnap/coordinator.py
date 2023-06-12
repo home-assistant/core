@@ -23,7 +23,15 @@ class QnapCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
             hass, _LOGGER, name=DOMAIN, update_interval=UPDATE_INTERVAL
         )
 
-        self.api = api
+        protocol = "https" if config[CONF_SSL] else "http"
+        self._api = QNAPStats(
+            f"{protocol}://{config.get(CONF_HOST)}",
+            config.get(CONF_PORT),
+            config.get(CONF_USERNAME),
+            config.get(CONF_PASSWORD),
+            verify_ssl=config.get(CONF_VERIFY_SSL),
+            timeout=config.get(CONF_TIMEOUT),
+        )
 
     async def _async_update_data(self) -> None:
         """Get the latest data from the Qnap API."""
