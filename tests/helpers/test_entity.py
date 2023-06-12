@@ -602,10 +602,16 @@ async def test_async_remove_ignores_in_flight_polling(hass: HomeAssistant) -> No
     ent.async_on_remove(lambda: result.append(1))
     await platform.async_add_entities([ent])
     assert hass.states.get("test.test").state == STATE_UNKNOWN
+
+    # Remove the entity from the entity registry
     await ent.async_remove()
     assert len(result) == 1
     assert hass.states.get("test.test") is None
+
+    # Simulate an in-flight poll after the entity was removed
     ent.async_write_ha_state()
+    assert len(result) == 1
+    assert hass.states.get("test.test") is None
 
 
 async def test_set_context(hass: HomeAssistant) -> None:
