@@ -31,7 +31,7 @@ from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.util import slugify
+from homeassistant.util import dt as dt_util, slugify
 
 from .const import CONF_COMMAND_TIMEOUT, DEFAULT_TIMEOUT, DOMAIN, LOGGER
 from .utils import call_shell_with_timeout, check_output_or_log
@@ -219,6 +219,13 @@ class CommandCover(CoverEntity):
             if payload:
                 self._state = int(payload)
             await self.async_update_ha_state(True)
+
+    async def async_update(self) -> None:
+        """Update the entity.
+
+        Only used by the generic entity update service.
+        """
+        await self._update_entity_state(dt_util.now())
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
