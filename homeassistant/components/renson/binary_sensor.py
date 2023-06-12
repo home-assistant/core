@@ -1,4 +1,6 @@
 """Binary sensors for renson."""
+from __future__ import annotations
+
 from dataclasses import dataclass
 
 from renson_endura_delta.field_enum import (
