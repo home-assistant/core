@@ -75,7 +75,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 class KeyboardRemote:
     """Manage device connection/disconnection using inotify to asynchronously monitor."""
 
-    def __init__(self, hass, config):
+    def __init__(self, hass: HomeAssistant, config) -> None:
         """Create handlers and setup dictionaries to keep track of them."""
         self.hass = hass
         self.handlers_by_name = {}
@@ -110,6 +110,8 @@ class KeyboardRemote:
         connected, and start monitoring for device connection/disconnection.
         """
 
+        _LOGGER.debug("Start monitoring")
+
         # start watching
         self.watcher = aionotify.Watcher()
         self.watcher.watch(
@@ -134,7 +136,7 @@ class KeyboardRemote:
                 continue
 
             self.active_handlers_by_descriptor[descriptor] = handler
-            initial_start_monitoring.add(handler.async_start_monitoring(dev))
+            initial_start_monitoring.add(await handler.async_start_monitoring(dev))
 
         if initial_start_monitoring:
             await asyncio.wait(initial_start_monitoring)
@@ -153,7 +155,7 @@ class KeyboardRemote:
 
         handler_stop_monitoring = set()
         for handler in self.active_handlers_by_descriptor.values():
-            handler_stop_monitoring.add(handler.async_stop_monitoring())
+            handler_stop_monitoring.add(await handler.async_stop_monitoring())
 
         if handler_stop_monitoring:
             await asyncio.wait(handler_stop_monitoring)
@@ -215,7 +217,7 @@ class KeyboardRemote:
     class DeviceHandler:
         """Manage input events using evdev with asyncio."""
 
-        def __init__(self, hass, dev_block):
+        def __init__(self, hass: HomeAssistant, dev_block) -> None:
             """Fill configuration data."""
 
             self.hass = hass
@@ -250,6 +252,7 @@ class KeyboardRemote:
 
         async def async_start_monitoring(self, dev):
             """Start event monitoring task and issue event."""
+            _LOGGER.debug("Keyboard async_start_monitoring, %s", dev.name)
             if self.monitor_task is None:
                 self.dev = dev
                 self.monitor_task = self.hass.async_create_task(

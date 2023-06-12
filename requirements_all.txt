@@ -298,7 +298,7 @@ aiomusiccast==0.14.8
 aionanoleaf==0.2.1
 
 # homeassistant.components.keyboard_remote
-aionotify==0.2.0
+aionotify @ git+https://github.com/rickwierenga/aionotify@master
 
 # homeassistant.components.notion
 aionotion==2023.05.5
@@ -758,7 +758,7 @@ eternalegypt==0.0.16
 eufylife-ble-client==0.1.7
 
 # homeassistant.components.keyboard_remote
-# evdev==1.4.0
+evdev==1.6.1
 
 # homeassistant.components.evohome
 evohome-async==0.3.15
