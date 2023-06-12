@@ -35,7 +35,7 @@ class QnapCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
 
     async def _async_update_data(self) -> dict[str, dict[str, Any]]:
         """Get the latest data from the Qnap API."""
-        datas = {}
+        datas: dict[str, dict[str, Any]] = {}
         datas["system_stats"] = await self.hass.async_add_executor_job(self.api.get_system_stats)
         datas["system_health"] = await self.hass.async_add_executor_job(
             self.api.get_system_health
