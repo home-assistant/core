@@ -5,7 +5,6 @@ This component is part of the device_tracker platform.
 from __future__ import annotations
 
 import logging
-from typing import Any
 
 from awesomeversion import AwesomeVersion
 from fortiosapi import FortiOSAPI
@@ -122,5 +121,4 @@ class FortiOSDeviceScanner(DeviceScanner):
                     return name
 
         return None
-    
     
