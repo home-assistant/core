@@ -123,3 +123,4 @@ class FortiOSDeviceScanner(DeviceScanner):
 
         return None
     
+    
