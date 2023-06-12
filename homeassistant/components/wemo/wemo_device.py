@@ -8,7 +8,7 @@ import logging
 from typing import Literal
 
 from pywemo import Insight, LongPressMixin, WeMoDevice
-from pywemo.exceptions import ActionException
+from pywemo.exceptions import ActionException, PyWeMoException
 from pywemo.subscribe import EVENT_TYPE_LONG_PRESS
 
 from homeassistant.config_entries import ConfigEntry
@@ -158,9 +158,7 @@ class DeviceCoordinator(DataUpdateCoordinator[None]):
                 await self.hass.async_add_executor_job(
                     self.wemo.remove_long_press_virtual_device
                 )
-        # Temporarily handling all exceptions for #52996 & pywemo/pywemo/issues/276
-        # Replace this with `except: PyWeMoException` after upstream has been fixed.
-        except Exception:  # pylint: disable=broad-except
+        except PyWeMoException:
             _LOGGER.exception(
                 "Failed to enable long press support for device: %s", self.wemo.name
             )
