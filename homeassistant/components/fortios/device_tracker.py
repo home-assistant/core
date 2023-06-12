@@ -47,13 +47,18 @@ class FortiOSDeviceScanner(DeviceScanner):
         self.token = config[CONF_TOKEN]
         self.verify_ssl = config[CONF_VERIFY_SSL]
         self.last_results = {}
-        self.success_init = None
+        self._fgt = None
+
+    def initialize(self) -> bool:
+        """Connect to the router and test it's accessible."""
         self._fgt = self._get_fortios_obj()
 
-        if self._fgt is not None:
-            # Test the router is accessible.
-            data = self._get_fortios_data()
-            self.success_init = data is not None
+        if self._fgt is None:
+            return False
+
+        # Test the router is accessible.
+        data = self._get_fortios_data()
+        return data is not None
 
     def scan_devices(self):
         """Scan for new devices and return a list with found device IDs."""
