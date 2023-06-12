@@ -33,7 +33,7 @@ class QnapCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
             timeout=config.get(CONF_TIMEOUT),
         )
 
-    async def _async_update_data(self) -> None:
+    async def _async_update_data(self) -> dict[str, dict[str, Any]]:
         """Get the latest data from the Qnap API."""
         datas = {}
         datas["system_stats"] = await self.hass.async_add_executor_job(self.api.get_system_stats)
