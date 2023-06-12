@@ -1,0 +1,241 @@
+{
+  "nodeId": 2,
+  "index": 0,
+  "status": 4,
+  "ready": true,
+  "isListening": true,
+  "isRouting": true,
+  "isSecure": false,
+  "interviewAttempts": 1,
+  "endpoints": [
+    {
+      "nodeId": 2,
+      "index": 0,
+      "deviceClass": {
+        "basic": {
+          "key": 4,
+          "label": "Routing Slave"
+        },
+        "generic": {
+          "key": 6,
+          "label": "Appliance"
+        },
+        "specific": {
+          "key": 1,
+          "label": "General Appliance"
+        },
+        "mandatorySupportedCCs": [],
+        "mandatoryControlledCCs": []
+      },
+      "commandClasses": [
+        {
+          "id": 134,
+          "name": "Version",
+          "version": 1,
+          "isSecure": false
+        },
+        {
+          "id": 144,
+          "name": "Energy Production",
+          "version": 1,
+          "isSecure": false
+        }
+      ]
+    }
+  ],
+  "values": [
+    {
+      "endpoint": 0,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "firmwareVersions",
+      "propertyName": "firmwareVersions",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "string[]",
+        "readable": true,
+        "writeable": false,
+        "label": "Z-Wave chip firmware versions",
+        "stateful": true,
+        "secret": false
+      }
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "libraryType",
+      "propertyName": "libraryType",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Library type",
+        "states": {
+          "0": "Unknown",
+          "1": "Static Controller",
+          "2": "Controller",
+          "3": "Enhanced Slave",
+          "4": "Slave",
+          "5": "Installer",
+          "6": "Routing Slave",
+          "7": "Bridge Controller",
+          "8": "Device under Test",
+          "9": "N/A",
+          "10": "AV Remote",
+          "11": "AV Device"
+        },
+        "stateful": true,
+        "secret": false
+      }
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "protocolVersion",
+      "propertyName": "protocolVersion",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "string",
+        "readable": true,
+        "writeable": false,
+        "label": "Z-Wave protocol version",
+        "stateful": true,
+        "secret": false
+      }
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 144,
+      "commandClassName": "Energy Production",
+      "property": "value",
+      "propertyKey": 0,
+      "propertyName": "value",
+      "propertyKeyName": "0",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Power",
+        "ccSpecific": {
+          "parameter": 0,
+          "scale": 0
+        },
+        "unit": "W",
+        "stateful": true,
+        "secret": false
+      },
+      "value": 1.23
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 144,
+      "commandClassName": "Energy Production",
+      "property": "value",
+      "propertyKey": 1,
+      "propertyName": "value",
+      "propertyKeyName": "1",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Production Total",
+        "ccSpecific": {
+          "parameter": 1,
+          "scale": 0
+        },
+        "unit": "Wh",
+        "stateful": true,
+        "secret": false
+      },
+      "value": 1234.56
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 144,
+      "commandClassName": "Energy Production",
+      "property": "value",
+      "propertyKey": 2,
+      "propertyName": "value",
+      "propertyKeyName": "2",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Production Today",
+        "ccSpecific": {
+          "parameter": 2,
+          "scale": 0
+        },
+        "unit": "Wh",
+        "stateful": true,
+        "secret": false
+      },
+      "value": 123.45
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 144,
+      "commandClassName": "Energy Production",
+      "property": "value",
+      "propertyKey": 3,
+      "propertyName": "value",
+      "propertyKeyName": "3",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Total Time",
+        "ccSpecific": {
+          "parameter": 3,
+          "scale": 0
+        },
+        "unit": "seconds",
+        "stateful": true,
+        "secret": false
+      },
+      "value": 123456
+    }
+  ],
+  "isFrequentListening": false,
+  "maxDataRate": 100000,
+  "supportedDataRates": [40000, 9600, 100000],
+  "protocolVersion": 3,
+  "supportsBeaming": true,
+  "supportsSecurity": false,
+  "nodeType": 1,
+  "deviceClass": {
+    "basic": {
+      "key": 4,
+      "label": "Routing Slave"
+    },
+    "generic": {
+      "key": 6,
+      "label": "Appliance"
+    },
+    "specific": {
+      "key": 1,
+      "label": "General Appliance"
+    },
+    "mandatorySupportedCCs": [],
+    "mandatoryControlledCCs": []
+  },
+  "interviewStage": "Complete",
+  "statistics": {
+    "commandsTX": 10,
+    "commandsRX": 7,
+    "commandsDroppedRX": 0,
+    "commandsDroppedTX": 0,
+    "timeoutResponse": 1,
+    "rtt": 84.8
+  },
+  "highestSecurityClass": -1,
+  "isControllerNode": false,
+  "keepAwake": false
+}

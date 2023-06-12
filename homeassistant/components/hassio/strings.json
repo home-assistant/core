@@ -30,7 +30,20 @@
           }
         },
         "abort": {
-          "apply_suggestion_fail": "Could not apply the fix. Check the supervisor logs for more details."
+          "apply_suggestion_fail": "Could not apply the fix. Check the Supervisor logs for more details."
+        }
+      }
+    },
+    "issue_system_docker_config": {
+      "title": "Restart(s) required",
+      "fix_flow": {
+        "step": {
+          "system_execute_rebuild": {
+            "description": "The default configuration for add-ons and Home Assistant has changed. To update the configuration with the new defaults, a restart is required for the following:\n\n- {components}"
+          }
+        },
+        "abort": {
+          "apply_suggestion_fail": "One or more of the restarts failed. Check the Supervisor logs for more details."
         }
       }
     },
@@ -43,7 +56,7 @@
           }
         },
         "abort": {
-          "apply_suggestion_fail": "Could not rename the filesystem. Check the supervisor logs for more details."
+          "apply_suggestion_fail": "Could not rename the filesystem. Check the Supervisor logs for more details."
         }
       }
     },
@@ -56,7 +69,7 @@
           }
         },
         "abort": {
-          "apply_suggestion_fail": "Could not reboot the system. Check the supervisor logs for more details."
+          "apply_suggestion_fail": "Could not reboot the system. Check the Supervisor logs for more details."
         }
       }
     },

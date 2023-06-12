@@ -1,7 +1,8 @@
 """Support for custom shell commands to turn a switch on/off."""
 from __future__ import annotations
 
-import logging
+import asyncio
+from datetime import timedelta
 from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
@@ -20,6 +21,7 @@ from homeassistant.const import (
     CONF_ICON,
     CONF_ICON_TEMPLATE,
     CONF_NAME,
+    CONF_SCAN_INTERVAL,
     CONF_SWITCHES,
     CONF_UNIQUE_ID,
     CONF_VALUE_TEMPLATE,
@@ -27,16 +29,17 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.template_entity import ManualTriggerEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import slugify
 
-from .const import CONF_COMMAND_TIMEOUT, DEFAULT_TIMEOUT, DOMAIN
+from .const import CONF_COMMAND_TIMEOUT, DEFAULT_TIMEOUT, DOMAIN, LOGGER
 from .utils import call_shell_with_timeout, check_output_or_log
 
-_LOGGER = logging.getLogger(__name__)
+SCAN_INTERVAL = timedelta(seconds=30)
 
 SWITCH_SCHEMA = vol.Schema(
     {
@@ -112,11 +115,12 @@ async def async_setup_platform(
                 device_config.get(CONF_COMMAND_STATE),
                 value_template,
                 device_config[CONF_COMMAND_TIMEOUT],
+                device_config.get(CONF_SCAN_INTERVAL, SCAN_INTERVAL),
             )
         )
 
     if not switches:
-        _LOGGER.error("No switches added")
+        LOGGER.error("No switches added")
         return
 
     async_add_entities(switches)
@@ -124,6 +128,8 @@ async def async_setup_platform(
 
 class CommandSwitch(ManualTriggerEntity, SwitchEntity):
     """Representation a switch that can be toggled using shell commands."""
+
+    _attr_should_poll = False
 
     def __init__(
         self,
@@ -134,6 +140,7 @@ class CommandSwitch(ManualTriggerEntity, SwitchEntity):
         command_state: str | None,
         value_template: Template | None,
         timeout: int,
+        scan_interval: timedelta,
     ) -> None:
         """Initialize the switch."""
         super().__init__(self.hass, config)
@@ -144,11 +151,26 @@ class CommandSwitch(ManualTriggerEntity, SwitchEntity):
         self._command_state = command_state
         self._value_template = value_template
         self._timeout = timeout
-        self._attr_should_poll = bool(command_state)
+        self._scan_interval = scan_interval
+        self._process_updates: asyncio.Lock | None = None
+
+    async def async_added_to_hass(self) -> None:
+        """Call when entity about to be added to hass."""
+        await super().async_added_to_hass()
+        if self._command_state:
+            self.async_on_remove(
+                async_track_time_interval(
+                    self.hass,
+                    self._update_entity_state,
+                    self._scan_interval,
+                    name=f"Command Line Cover - {self.name}",
+                    cancel_on_shutdown=True,
+                ),
+            )
 
     async def _switch(self, command: str) -> bool:
         """Execute the actual commands."""
-        _LOGGER.info("Running command: %s", command)
+        LOGGER.info("Running command: %s", command)
 
         success = (
             await self.hass.async_add_executor_job(
@@ -158,18 +180,18 @@ class CommandSwitch(ManualTriggerEntity, SwitchEntity):
         )
 
         if not success:
-            _LOGGER.error("Command failed: %s", command)
+            LOGGER.error("Command failed: %s", command)
 
         return success
 
     def _query_state_value(self, command: str) -> str | None:
         """Execute state command for return value."""
-        _LOGGER.info("Running state value command: %s", command)
+        LOGGER.info("Running state value command: %s", command)
         return check_output_or_log(command, self._timeout)
 
     def _query_state_code(self, command: str) -> bool:
         """Execute state command for return code."""
-        _LOGGER.info("Running state code command: %s", command)
+        LOGGER.info("Running state code command: %s", command)
         return (
             call_shell_with_timeout(command, self._timeout, log_return_code=False) == 0
         )
@@ -188,7 +210,22 @@ class CommandSwitch(ManualTriggerEntity, SwitchEntity):
         if TYPE_CHECKING:
             return None
 
-    async def async_update(self) -> None:
+    async def _update_entity_state(self, now) -> None:
+        """Update the state of the entity."""
+        if self._process_updates is None:
+            self._process_updates = asyncio.Lock()
+        if self._process_updates.locked():
+            LOGGER.warning(
+                "Updating Command Line Switch %s took longer than the scheduled update interval %s",
+                self.name,
+                self._scan_interval,
+            )
+            return
+
+        async with self._process_updates:
+            await self._async_update()
+
+    async def _async_update(self) -> None:
         """Update device state."""
         if self._command_state:
             payload = str(await self.hass.async_add_executor_job(self._query_state))
@@ -201,15 +238,18 @@ class CommandSwitch(ManualTriggerEntity, SwitchEntity):
             if payload or value:
                 self._attr_is_on = (value or payload).lower() == "true"
             self._process_manual_data(payload)
+            await self.async_update_ha_state(True)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         if await self._switch(self._command_on) and not self._command_state:
             self._attr_is_on = True
             self.async_schedule_update_ha_state()
+        await self._update_entity_state(None)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         if await self._switch(self._command_off) and not self._command_state:
             self._attr_is_on = False
             self.async_schedule_update_ha_state()
+        await self._update_entity_state(None)
