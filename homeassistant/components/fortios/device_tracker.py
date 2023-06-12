@@ -87,9 +87,6 @@ class FortiOSDeviceScanner(DeviceScanner):
         """
         _LOGGER.debug("_update_info()")
 
-        if not self.success_init:
-            return False
-
         if not (data := self._get_fortios_data()):
             return False
 
