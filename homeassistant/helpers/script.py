@@ -46,6 +46,7 @@ from homeassistant.const import (
     CONF_MODE,
     CONF_PARALLEL,
     CONF_REPEAT,
+    CONF_RESULT_VARIABLE,
     CONF_SCENE,
     CONF_SEQUENCE,
     CONF_SERVICE,
@@ -617,7 +618,9 @@ class _ScriptRun:
                 task.cancel()
             unsub()
 
-    async def _async_run_long_action(self, long_task: asyncio.Task) -> None:
+    async def _async_run_long_action(
+        self, long_task: asyncio.Task, result_variable: str | None = None
+    ) -> None:
         """Run a long task while monitoring for stop request."""
 
         async def async_cancel_long_task() -> None:
@@ -645,7 +648,9 @@ class _ScriptRun:
             raise asyncio.CancelledError
         if long_task.done():
             # Propagate any exceptions that occurred.
-            long_task.result()
+            result = long_task.result()
+            if result_variable:
+                self._variables[result_variable] = result
         else:
             # Stopped before long task completed, so cancel it.
             await async_cancel_long_task()
@@ -663,6 +668,7 @@ class _ScriptRun:
             and params[CONF_SERVICE] == "trigger"
             or params[CONF_DOMAIN] in ("python_script", "script")
         )
+        result_variable = self._action.get(CONF_RESULT_VARIABLE)
         trace_set_result(params=params, running_script=running_script)
         await self._async_run_long_action(
             self._hass.async_create_task(
@@ -670,8 +676,10 @@ class _ScriptRun:
                     **params,
                     blocking=True,
                     context=self._context,
+                    return_values=(result_variable is not None),
                 )
-            )
+            ),
+            result_variable=result_variable,
         )
 
     async def _async_device_step(self):

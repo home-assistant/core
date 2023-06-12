@@ -329,6 +329,78 @@ async def test_calling_service_template(hass: HomeAssistant) -> None:
     )
 
 
+async def test_calling_service_return_values(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test the calling of a service with return values."""
+    context = Context()
+
+    def mock_service(_):  # pylint: disable=unnecessary-lambda
+        """Mock service call."""
+        return {"service_result": "some_value"}
+
+    hass.services.async_register("test", "script", mock_service)
+    sequence = cv.SCRIPT_SCHEMA(
+        [
+            {
+                "alias": "service step1",
+                "service": "test.script",
+                # Store the result of the service call as a variable
+                "result_variable": "my_result",
+            },
+            {
+                "alias": "service step2",
+                "service": "test.script",
+                "data_template": {
+                    # Result of previous service call
+                    "key": "{{ my_result.service_result }}"
+                },
+            },
+        ]
+    )
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+
+    await script_obj.async_run(context=context)
+    await hass.async_block_till_done()
+
+    assert "Executing step service step1" in caplog.text
+    assert "Executing step service step2" in caplog.text
+
+    assert_action_trace(
+        {
+            "0": [
+                {
+                    "result": {
+                        "params": {
+                            "domain": "test",
+                            "service": "script",
+                            "service_data": {},
+                            "target": {},
+                        },
+                        "running_script": False,
+                    }
+                }
+            ],
+            "1": [
+                {
+                    "result": {
+                        "params": {
+                            "domain": "test",
+                            "service": "script",
+                            "service_data": {"key": "some_value"},
+                            "target": {},
+                        },
+                        "running_script": False,
+                    },
+                    "variables": {
+                        "my_result": {"service_result": "some_value"},
+                    },
+                }
+            ],
+        }
+    )
+
+
 async def test_data_template_with_templated_key(hass: HomeAssistant) -> None:
     """Test the calling of a service with a data_template with a templated key."""
     context = Context()
