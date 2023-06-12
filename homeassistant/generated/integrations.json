@@ -2939,15 +2939,20 @@
     },
     "lifx": {
       "name": "LIFX",
-      "integration_type": "hub",
-      "config_flow": true,
-      "iot_class": "local_polling"
-    },
-    "lifx_cloud": {
-      "name": "LIFX Cloud",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "cloud_push"
+      "integrations": {
+        "lifx": {
+          "integration_type": "hub",
+          "config_flow": true,
+          "iot_class": "local_polling",
+          "name": "LIFX"
+        },
+        "lifx_cloud": {
+          "integration_type": "hub",
+          "config_flow": false,
+          "iot_class": "cloud_push",
+          "name": "LIFX Cloud"
+        }
+      }
     },
     "lightwave": {
       "name": "Lightwave",

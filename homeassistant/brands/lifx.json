@@ -1,0 +1,5 @@
+{
+  "domain": "lifx",
+  "name": "LIFX",
+  "integrations": ["lifx", "lifx_cloud"]
+}
