@@ -1027,7 +1027,7 @@ openai==0.27.2
 openerz-api==0.2.0
 
 # homeassistant.components.opower
-opower==0.0.9
+opower==0.0.10
 
 # homeassistant.components.oralb
 oralb-ble==0.17.6
