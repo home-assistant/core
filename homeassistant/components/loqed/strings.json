@@ -3,9 +3,9 @@
     "flow_title": "LOQED Touch Smartlock setup",
     "step": {
       "user": {
-        "description": "Visit {config_url} and: \n* Create an API-key by clicking 'add new api-key' \n* Copy the value of the 'Integration information' field by clicking on the copy button in the detail-page of the just created API-key.",
+        "description": "Login at {config_url} and: \n* Create an API-key by clicking 'Create' \n* Copy the created access token.",
         "data": {
-          "config": "Loqed Configuration copied from the API setup page"
+          "api_key": "[%key:common::config_flow::data::api_key%]"
         }
       }
     },

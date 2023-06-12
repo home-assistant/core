@@ -24,7 +24,7 @@ async def async_setup_entry(
     """Set up the Loqed lock platform."""
     coordinator = hass.data[DOMAIN][entry.entry_id]
 
-    async_add_entities([LoqedLock(coordinator)])
+    async_add_entities([LoqedLock(coordinator, entry.data["name"])])
 
 
 class LoqedLock(LoqedEntity, LockEntity):
@@ -32,12 +32,12 @@ class LoqedLock(LoqedEntity, LockEntity):
 
     _attr_supported_features = LockEntityFeature.OPEN
 
-    def __init__(self, coordinator: LoqedDataCoordinator) -> None:
+    def __init__(self, coordinator: LoqedDataCoordinator, name: str) -> None:
         """Initialize the lock."""
         super().__init__(coordinator)
         self._lock = coordinator.lock
         self._attr_unique_id = self._lock.id
-        self._attr_name = self._lock.name
+        self._attr_name = name
 
     @property
     def changed_by(self) -> str:

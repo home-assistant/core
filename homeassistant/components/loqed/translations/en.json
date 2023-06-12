@@ -1,20 +1,20 @@
 {
     "config": {
-        "flow_title": "LOQED Touch Smartlock setup ({host})",
         "abort": {
             "already_configured": "Device is already configured"
         },
         "error": {
-            "cannot_connect": "Failed to connect, did you copy the complete string with the copy button?",
+            "cannot_connect": "Failed to connect LOQED. Did you copy the correct access token?",
             "invalid_auth": "Invalid authentication",
             "unknown": "Unexpected error"
         },
+        "flow_title": "LOQED Touch Smartlock setup",
         "step": {
             "user": {
                 "data": {
-                    "config": "Lock-details: [Integration information] in the api-key details"
+                    "api_key": "API Key"
                 },
-                "description": "Visit {config_url} and: <BR/>* Create an API-key: [add new api-key] <BR/>* Copy the [Integration information] value by clicking on the copy button in the detail-page of the just created API-key."
+                "description": "Login at {config_url} and: \n* Create an API-key by clicking 'Create' \n* Copy the created access token."
             }
         }
     }
