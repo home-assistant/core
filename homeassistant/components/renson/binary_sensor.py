@@ -88,7 +88,7 @@ BINARY_SENSORS: tuple[RensonBinarySensorEntityDescription, ...] = (
 
 
 class RensonBinarySensor(RensonEntity, BinarySensorEntity):
-    """Get a sensor data from the Renson API and store it in the state of the class."""
+    """Get sensor data from the Renson API and store it in the state of the class."""
 
     def __init__(
         self,
