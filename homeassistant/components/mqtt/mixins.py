@@ -269,8 +269,23 @@ async def async_setup_entry_helper(
         try:
             config: DiscoveryInfoType = discovery_schema(discovery_payload)
             await async_setup(config, discovery_data=discovery_data)
+        except vol.MultipleInvalid as err:
+            discovery_hash = discovery_data[ATTR_DISCOVERY_HASH]
+            clear_discovery_hash(hass, discovery_hash)
+            async_dispatcher_send(
+                hass, MQTT_DISCOVERY_DONE.format(discovery_hash), None
+            )
+            discovery_topic: str = discovery_payload.discovery_data[
+                ATTR_DISCOVERY_TOPIC
+            ]
+            _LOGGER.error(
+                "Schema error: '%s' on discovery message received at '%s', message: '%s'",
+                err,
+                discovery_topic,
+                discovery_payload,
+            )
         except Exception:
-            discovery_hash: tuple[str, str] = discovery_data[ATTR_DISCOVERY_HASH]
+            discovery_hash = discovery_data[ATTR_DISCOVERY_HASH]
             clear_discovery_hash(hass, discovery_hash)
             async_dispatcher_send(
                 hass, MQTT_DISCOVERY_DONE.format(discovery_hash), None
@@ -1037,7 +1052,19 @@ class MqttEntity(
 
     async def discovery_update(self, discovery_payload: MQTTDiscoveryPayload) -> None:
         """Handle updated discovery message."""
-        config: DiscoveryInfoType = self.config_schema()(discovery_payload)
+        try:
+            config: DiscoveryInfoType = self.config_schema()(discovery_payload)
+        except vol.MultipleInvalid as err:
+            discovery_topic: str = discovery_payload.discovery_data[
+                ATTR_DISCOVERY_TOPIC
+            ]
+            _LOGGER.error(
+                "Schema error: '%s' on discovery update received at '%s', message: '%s'",
+                err,
+                discovery_topic,
+                discovery_payload,
+            )
+            return
         self._config = config
         self._setup_common_attributes_from_config(self._config)
         self._setup_from_config(self._config)
