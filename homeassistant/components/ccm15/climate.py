@@ -57,7 +57,7 @@ class CCM15Coordinator:
 
     def get_devices(self):
         """Get all climate devices from the coordinator."""
-        return self._ac_devices
+        return self._ac_devices.values()
 
     async def poll_status_async(self):
         """Get the current status of all AC devices."""
@@ -73,13 +73,14 @@ class CCM15Coordinator:
             _LOGGER.debug("Found %s items in host %s", len(data.items()), self._host)
             for ac_name, ac_binary in data.items():
                 _LOGGER.debug("Found ac_name:'%s', data:'%s'", ac_name, ac_binary)
-                if ac_binary != "-":
-                    ac_state = self.get_status_from(ac_binary)
+                ac_state = self.get_status_from(ac_binary)
                 if ac_state:
                     _LOGGER.debug("Parsed data ac_state:'%s'", ac_state)
                     if ac_name not in self._ac_devices:
                         _LOGGER.debug("Creating new ac device '%s'", ac_name)
-                        self._ac_devices[ac_name] = CCM15Climate(ac_name, self)
+                        self._ac_devices[ac_name] = CCM15Climate(
+                            self._host, ac_name, self
+                        )
                     self._ac_devices[ac_name].update_from_ac_data(ac_state)
 
     def get_status_from(self, ac_binary: str) -> dict[str, int]:
@@ -187,8 +188,11 @@ class CCM15Coordinator:
 class CCM15Climate(ClimateEntity):
     """Climate device for CCM15 coordinator."""
 
-    def __init__(self, ac_name: str, coordinator: CCM15Coordinator) -> None:
+    def __init__(
+        self, ac_host: str, ac_name: str, coordinator: CCM15Coordinator
+    ) -> None:
         """Create a climate device managed from a coordinator."""
+        self._ac_host = ac_host
         self._ac_name = ac_name
         self._coordinator = coordinator
         self._is_on = False
@@ -211,7 +215,7 @@ class CCM15Climate(ClimateEntity):
     @property
     def unique_id(self):
         """Return unique id."""
-        return f"{self._ac_name}"
+        return f"{self._ac_host}.{self._ac_name}"
 
     @property
     def name(self):
@@ -278,7 +282,6 @@ class CCM15Climate(ClimateEntity):
         """Return supported features."""
         return (
             ClimateEntityFeature.TARGET_TEMPERATURE
-            | ClimateEntityFeature.PRESET_MODE
             | ClimateEntityFeature.FAN_MODE
             | ClimateEntityFeature.SWING_MODE
         )
@@ -324,8 +327,6 @@ class CCM15Climate(ClimateEntity):
 
     def update(self):
         """Update the data from the thermostat."""
-        self._coordinator.get_acdata(self._ac_name)
-        self.schedule_update_ha_state()
 
 
 async def async_setup_entry(
@@ -338,5 +339,5 @@ async def async_setup_entry(
     await coordinator.poll_status_async()
     entities = []
     for ac_device in coordinator.get_devices():
-        entities.append(ac_device.CCM15Coordinator)
+        entities.append(ac_device)
     async_add_entities(entities, True)
