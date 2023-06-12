@@ -279,7 +279,7 @@ class QNAPSensor(CoordinatorEntity[QnapCoordinator], SensorEntity):
         self, coordinator: QnapCoordinator, description: SensorEntityDescription, monitor_device=None
     ) -> None:
         """Initialize the sensor."""
-        self.coordinator = coordinator
+        super().__init__(coordinator)
         self.entity_description = description
         self.monitor_device = monitor_device
         self.device_name = self.coordinator.data["system_stats"]["system"]["name"]
