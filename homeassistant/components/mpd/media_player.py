@@ -1,11 +1,13 @@
 """Support to interact with a Music Player Daemon."""
 from __future__ import annotations
 
-from contextlib import suppress
+from contextlib import suppress, asynccontextmanager
 from datetime import timedelta
+from socket import gaierror
 import hashlib
 import logging
 import os
+import asyncio
 from typing import Any
 
 import mpd
@@ -97,7 +99,7 @@ class MpdDevice(MediaPlayerEntity):
         self._currentsong = None
         self._playlists = None
         self._currentplaylist = None
-        self._is_connected = False
+        self._is_available = None
         self._muted = False
         self._muted_volume = None
         self._media_position_updated_at = None
@@ -110,62 +112,82 @@ class MpdDevice(MediaPlayerEntity):
         # set up MPD client
         self._client = MPDClient()
         self._client.timeout = 30
-        self._client.idletimeout = None
+        self._client.idletimeout = 10
+        self._client_lock = asyncio.Lock()
 
-    async def _connect(self):
-        """Connect to MPD."""
-        try:
-            await self._client.connect(self.server, self.port)
-
-            if self.password is not None:
-                await self._client.password(self.password)
-        except mpd.ConnectionError:
-            return
-
-        self._is_connected = True
-
-    def _disconnect(self):
-        """Disconnect from MPD."""
-        with suppress(mpd.ConnectionError):
-            self._client.disconnect()
-        self._is_connected = False
-        self._status = None
-
-    async def _fetch_status(self):
-        """Fetch status from MPD."""
-        self._status = await self._client.status()
-        self._currentsong = await self._client.currentsong()
-        await self._async_update_media_image_hash()
-
-        if (position := self._status.get("elapsed")) is None:
-            position = self._status.get("time")
-
-            if isinstance(position, str) and ":" in position:
-                position = position.split(":")[0]
-
-        if position is not None and self._media_position != position:
-            self._media_position_updated_at = dt_util.utcnow()
-            self._media_position = int(float(position))
-
-        await self._update_playlists()
-
-    @property
-    def available(self):
-        """Return true if MPD is available and connected."""
-        return self._is_connected
+    @asynccontextmanager
+    async def connection(self):
+        """Handle MPD connect and disconnect."""
+        async with self._client_lock:
+            try:
+                # MPDClient.connect() doesn't always respect its timeout. To
+                # prevent a deadlock, enforce an additional (slightly longer)
+                # timeout on the coroutine itself.
+                try:
+                    await asyncio.wait_for(
+                        self._client.connect(self.server, self.port),
+                        timeout=self._client.timeout + 5,
+                    )
+                except asyncio.TimeoutError as error:
+                    # TimeoutError has no message (which hinders logging further
+                    # down the line), so provide one.
+                    raise asyncio.TimeoutError(
+                        "Connection attempt timed out"
+                    ) from error
+                if self.password is not None:
+                    await self._client.password(self.password)
+                self._is_available = True
+                yield
+            except (
+                asyncio.TimeoutError,
+                gaierror,
+                mpd.ConnectionError,
+                OSError,
+            ) as error:
+                # Log a warning during startup or when previously connected; for
+                # subsequent errors a debug message is sufficient.
+                log_level = logging.DEBUG
+                if self._is_available is not False:
+                    log_level = logging.WARNING
+                _LOGGER.log(
+                    log_level, "Error connecting to '%s': %s", self.server, error
+                )
+                self._is_available = False
+                self._status = None
+                # Also yield on failure. Handling mpd.ConnectionErrors caused by
+                # attempting to control a disconnected client is the
+                # responsibility of the caller.
+                yield
+            finally:
+                with suppress(mpd.ConnectionError):
+                    self._client.disconnect()
 
     async def async_update(self) -> None:
-        """Get the latest data and update the state."""
-        try:
-            if not self._is_connected:
-                await self._connect()
-                self._commands = list(await self._client.commands())
+        """Get the latest data from MPD and update the state."""
+        async with self.connection():
+            try:
+                self._status = await self._client.status()
+                self._currentsong = await self._client.currentsong()
+                await self._async_update_media_image_hash()
 
-            await self._fetch_status()
-        except (mpd.ConnectionError, OSError, ValueError) as error:
-            # Cleanly disconnect in case connection is not in valid state
-            _LOGGER.debug("Error updating status: %s", error)
-            self._disconnect()
+                if (position := self._status.get("elapsed")) is None:
+                    position = self._status.get("time")
+
+                    if isinstance(position, str) and ":" in position:
+                        position = position.split(":")[0]
+
+                if position is not None and self._media_position != position:
+                    self._media_position_updated_at = dt_util.utcnow()
+                    self._media_position = int(float(position))
+
+                await self._update_playlists()
+            except (mpd.ConnectionError, ValueError) as error:
+                _LOGGER.debug("Error updating status: %s", error)
+
+    @property
+    def available(self) -> bool:
+        """Return true if MPD is available and connected."""
+        return self._is_available not in [None, False]
 
     @property
     def name(self):
