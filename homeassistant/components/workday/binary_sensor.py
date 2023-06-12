@@ -21,7 +21,7 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.util import dt
+from homeassistant.util import dt as dt_util
 
 from .const import (
     ALLOWED_DAYS,
@@ -120,7 +120,7 @@ async def async_setup_entry(
     sensor_name: str = entry.options[CONF_NAME]
     workdays: list[str] = entry.options[CONF_WORKDAYS]
 
-    year: int = (dt.now() + timedelta(days=days_offset)).year
+    year: int = (dt_util.now() + timedelta(days=days_offset)).year
     obj_holidays: HolidayBase = getattr(holidays, country)(years=year)
 
     if province:
@@ -140,7 +140,7 @@ async def async_setup_entry(
     for remove_holiday in remove_holidays:
         try:
             # is this formatted as a date?
-            if dt.parse_date(remove_holiday):
+            if dt_util.parse_date(remove_holiday):
                 # remove holiday by date
                 removed = obj_holidays.pop(remove_holiday)
                 LOGGER.debug("Removed %s", remove_holiday)
@@ -231,7 +231,7 @@ class IsWorkdaySensor(BinarySensorEntity):
         self._attr_is_on = False
 
         # Get ISO day of the week (1 = Monday, 7 = Sunday)
-        adjusted_date = dt.now() + timedelta(days=self._days_offset)
+        adjusted_date = dt_util.now() + timedelta(days=self._days_offset)
         day = adjusted_date.isoweekday() - 1
         day_of_week = ALLOWED_DAYS[day]
 

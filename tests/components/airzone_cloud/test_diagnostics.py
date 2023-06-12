@@ -7,6 +7,7 @@ from aioairzone_cloud.const import (
     API_DEVICES,
     API_GROUPS,
     API_WS_ID,
+    AZD_AIDOOS,
     AZD_INSTALLATIONS,
     AZD_SYSTEMS,
     AZD_WEBSERVERS,
@@ -109,6 +110,7 @@ async def test_config_entry_diagnostics(
     )
 
     assert list(diag["coord_data"]) >= [
+        AZD_AIDOOS,
         AZD_INSTALLATIONS,
         AZD_SYSTEMS,
         AZD_WEBSERVERS,

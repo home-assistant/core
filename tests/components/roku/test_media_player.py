@@ -864,7 +864,7 @@ async def test_media_browse_local_source(
     assert msg["result"]["children"][0]["title"] == "Apps"
     assert msg["result"]["children"][0]["media_content_type"] == MediaType.APPS
 
-    assert msg["result"]["children"][1]["title"] == "Local Media"
+    assert msg["result"]["children"][1]["title"] == "My media"
     assert msg["result"]["children"][1]["media_class"] == MediaClass.DIRECTORY
     assert msg["result"]["children"][1]["media_content_type"] is None
     assert (
@@ -892,7 +892,7 @@ async def test_media_browse_local_source(
     assert msg["success"]
 
     assert msg["result"]
-    assert msg["result"]["title"] == "Local Media"
+    assert msg["result"]["title"] == "My media"
     assert msg["result"]["media_class"] == MediaClass.DIRECTORY
     assert msg["result"]["media_content_type"] is None
     assert len(msg["result"]["children"]) == 2

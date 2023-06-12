@@ -46,6 +46,14 @@ set_config_parameter:
     entity:
       integration: zwave_js
   fields:
+    endpoint:
+      name: Endpoint
+      description: The configuration parameter's endpoint.
+      example: 1
+      default: 0
+      required: false
+      selector:
+        text:
     parameter:
       name: Parameter
       description: The (name or id of the) configuration parameter you want to configure.
@@ -53,17 +61,17 @@ set_config_parameter:
       required: true
       selector:
         text:
+    bitmask:
+      name: Bitmask
+      description: Target a specific bitmask (see the documentation for more information).
+      advanced: true
+      selector:
+        text:
     value:
       name: Value
       description: The new value to set for this configuration parameter.
       example: 5
       required: true
-      selector:
-        text:
-    bitmask:
-      name: Bitmask
-      description: Target a specific bitmask (see the documentation for more information).
-      advanced: true
       selector:
         text:
 
@@ -74,6 +82,14 @@ bulk_set_partial_config_parameters:
     entity:
       integration: zwave_js
   fields:
+    endpoint:
+      name: Endpoint
+      description: The configuration parameter's endpoint.
+      example: 1
+      default: 0
+      required: false
+      selector:
+        text:
     parameter:
       name: Parameter
       description: The id of the configuration parameter you want to configure.
