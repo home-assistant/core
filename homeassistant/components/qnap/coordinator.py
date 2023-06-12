@@ -17,7 +17,7 @@ _LOGGER = logging.getLogger(__name__)
 class QnapCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
     """Custom coordinator for the qnap integration."""
 
-    def __init__(self, hass: HomeAssistant, api: QNAPStats) -> None:
+    def __init__(self, hass: HomeAssistant, config: ConfigType) -> None:
         """Initialize the qnap coordinator."""
         super().__init__(
             hass, _LOGGER, name=DOMAIN, update_interval=UPDATE_INTERVAL
