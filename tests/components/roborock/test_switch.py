@@ -16,6 +16,7 @@ from tests.common import MockConfigEntry
     [
         ("switch.roborock_s7_maxv_child_lock"),
         ("switch.roborock_s7_maxv_status_indicator_light"),
+        ("switch.roborock_s7_maxv_do_not_disturb"),
     ],
 )
 async def test_update_success(
