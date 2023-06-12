@@ -4,6 +4,7 @@ from __future__ import annotations
 import logging
 from datetime import timedelta
 from qnapstats import QNAPStats
+from typing import Any, ConfigType
 
 from homeassistant.const import (
     CONF_HOST,
