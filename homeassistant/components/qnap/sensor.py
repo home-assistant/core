@@ -289,7 +289,7 @@ class QNAPSensor(CoordinatorEntity[QnapCoordinator], SensorEntity):
         """Return the name of the sensor, if any."""
         if self.monitor_device is not None:
             return (
-                f"{self.device_name} {self.monitor_device} - {self.entity_description.name}"
+                f"{self.device_name} {self.entity_description.name} ({self.monitor_device})"
             )
         return f"{self.device_name} {self.entity_description.name}"
 
