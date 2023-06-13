@@ -4,7 +4,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from py_miraie_ac import AuthType, MirAIeAPI
+from py_miraie_ac import AuthException, AuthType, MirAIeAPI
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -35,13 +35,13 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
         try:
             _LOGGER.debug("Initializing MirAIe API")
             await api.initialize()
-        except Exception as ex:
-            _LOGGER.error("Error connecting to MirAIe")
+        except AuthException as ex:
+            _LOGGER.error("Invalid user ID or password")
             raise InvalidAuth from ex
 
-    _LOGGER.debug("Connection successful!")
-    # Return info that you want to store in the config entry.
-    return {"title": "MirAIe"}
+        _LOGGER.debug("Connection successful!")
+        # Return info that you want to store in the config entry.
+        return {"title": "MirAIe"}
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
