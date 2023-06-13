@@ -13,7 +13,7 @@ from pyephember.pyephember import (
     zone_is_boost_active,
     zone_mode,
     zone_name,
-    zone_target_temperature
+    zone_target_temperature,
 )
 import voluptuous as vol
 
@@ -40,14 +40,14 @@ _LOGGER = logging.getLogger(__name__)
 # Return cached results if last scan was less then this time ago
 SCAN_INTERVAL = timedelta(seconds=120)
 
-OPERATION_LIST = [HVACMode.HEAT_COOL, HVACMode.HEAT, HVACMode.OFF]
+OPERATION_LIST = [HVACMode.AUTO, HVACMode.HEAT, HVACMode.OFF]
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {vol.Required(CONF_USERNAME): cv.string, vol.Required(CONF_PASSWORD): cv.string}
 )
 
 EPH_TO_HA_STATE = {
-    "AUTO": HVACMode.HEAT_COOL,
+    "AUTO": HVACMode.AUTO,
     "ON": HVACMode.HEAT,
     "OFF": HVACMode.OFF,
 }
@@ -89,9 +89,8 @@ class EphEmberThermostat(ClimateEntity):
         self._ember = ember
         self._zone_name = zone_name(zone)
         self._zone = zone
-        self._hot_water = False
-        self._immersion = zone['deviceType'] == 4
-        """4 is a specific device type for immersions returned by """
+        self._hot_water = zone['deviceType'] == 4
+        """4 is a specific device type for immersions returned by EPH. Hot Water temp cannot be changed"""
         
         self._attr_name = self._zone_name
 
@@ -180,7 +179,7 @@ class EphEmberThermostat(ClimateEntity):
         """Return the maximum temperature."""
         if self._hot_water:
             return zone_target_temperature(self._zone)
-        return 70.0
+        return 30.0
   
     def update(self) -> None:
         """Get the latest data."""
