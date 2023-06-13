@@ -82,6 +82,7 @@ class RoborockVacuum(RoborockCoordinatedEntity, StateVacuumEntity):
         | VacuumEntityFeature.STATE
         | VacuumEntityFeature.START
     )
+    _attr_translation_key = DOMAIN
 
     def __init__(
         self,
@@ -143,7 +144,6 @@ class RoborockVacuum(RoborockCoordinatedEntity, StateVacuumEntity):
             RoborockCommand.SET_CUSTOM_MODE,
             [self._device_status.fan_power.as_dict().get(fan_speed)],
         )
-        await self.coordinator.async_request_refresh()
 
     async def async_start_pause(self) -> None:
         """Start, pause or resume the cleaning task."""

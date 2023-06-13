@@ -2,10 +2,11 @@
 from collections import deque
 from collections.abc import Callable
 import datetime
+from functools import partial
 import json
 import logging
 from pathlib import Path
-from typing import Any, Final
+from typing import TYPE_CHECKING, Any, Final
 
 import orjson
 
@@ -55,6 +56,18 @@ def json_encoder_default(obj: Any) -> Any:
     raise TypeError
 
 
+if TYPE_CHECKING:
+
+    def json_bytes(obj: Any) -> bytes:
+        """Dump json bytes."""
+
+else:
+    json_bytes = partial(
+        orjson.dumps, option=orjson.OPT_NON_STR_KEYS, default=json_encoder_default
+    )
+    """Dump json bytes."""
+
+
 class ExtendedJSONEncoder(JSONEncoder):
     """JSONEncoder that supports Home Assistant objects and falls back to repr(o)."""
 
@@ -73,13 +86,6 @@ class ExtendedJSONEncoder(JSONEncoder):
             return super().default(o)
         except TypeError:
             return {"__type": str(type(o)), "repr": repr(o)}
-
-
-def json_bytes(data: Any) -> bytes:
-    """Dump json bytes."""
-    return orjson.dumps(
-        data, option=orjson.OPT_NON_STR_KEYS, default=json_encoder_default
-    )
 
 
 def _strip_null(obj: Any) -> Any:
@@ -119,9 +125,7 @@ def json_dumps(data: Any) -> str:
     with option |= orjson.OPT_PASSTHROUGH_DATACLASS and it
     will fallback to as_dict
     """
-    return orjson.dumps(
-        data, option=orjson.OPT_NON_STR_KEYS, default=json_encoder_default
-    ).decode("utf-8")
+    return json_bytes(data).decode("utf-8")
 
 
 def json_dumps_sorted(data: Any) -> str:

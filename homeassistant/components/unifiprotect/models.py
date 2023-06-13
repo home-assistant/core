@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
+from datetime import timedelta
 from enum import Enum
 import logging
 from typing import Any, Generic, TypeVar, cast
@@ -10,6 +11,7 @@ from typing import Any, Generic, TypeVar, cast
 from pyunifiprotect.data import NVR, Event, ProtectAdoptableDeviceModel
 
 from homeassistant.helpers.entity import EntityDescription
+from homeassistant.util import dt as dt_util
 
 from .utils import get_nested_attr
 
@@ -67,7 +69,6 @@ class ProtectEventMixin(ProtectRequiredKeysMixin[T]):
     """Mixin for events."""
 
     ufp_event_obj: str | None = None
-    ufp_smart_type: str | None = None
 
     def get_event_obj(self, obj: T) -> Event | None:
         """Return value from UniFi Protect device."""
@@ -79,23 +80,22 @@ class ProtectEventMixin(ProtectRequiredKeysMixin[T]):
     def get_is_on(self, obj: T) -> bool:
         """Return value if event is active."""
 
-        value = bool(self.get_ufp_value(obj))
-        if value:
-            event = self.get_event_obj(obj)
-            value = event is not None
-            if not value:
-                _LOGGER.debug("%s (%s): missing event", self.name, obj.mac)
+        event = self.get_event_obj(obj)
+        if event is None:
+            return False
 
-            if event is not None and self.ufp_smart_type is not None:
-                value = self.ufp_smart_type in event.smart_detect_types
-                if not value:
-                    _LOGGER.debug(
-                        "%s (%s): %s not in %s",
-                        self.name,
-                        obj.mac,
-                        self.ufp_smart_type,
-                        event.smart_detect_types,
-                    )
+        now = dt_util.utcnow()
+        value = now > event.start
+        if value and event.end is not None and now > event.end:
+            value = False
+            # only log if the recent ended recently
+            if event.end + timedelta(seconds=10) < now:
+                _LOGGER.debug(
+                    "%s (%s): end ended at %s",
+                    self.name,
+                    obj.mac,
+                    event.end.isoformat(),
+                )
 
         if value:
             _LOGGER.debug("%s (%s): value is on", self.name, obj.mac)

@@ -462,6 +462,22 @@ async def test_async_has_matching_flow(
     assert result["progress_action"] == "task_one"
     assert len(manager.async_progress()) == 1
     assert len(manager.async_progress_by_handler("test")) == 1
+    assert (
+        len(
+            manager.async_progress_by_handler(
+                "test", match_context={"source": config_entries.SOURCE_HOMEKIT}
+            )
+        )
+        == 1
+    )
+    assert (
+        len(
+            manager.async_progress_by_handler(
+                "test", match_context={"source": config_entries.SOURCE_BLUETOOTH}
+            )
+        )
+        == 0
+    )
     assert manager.async_get(result["flow_id"])["handler"] == "test"
 
     assert (
