@@ -40,11 +40,6 @@ class RoborockEntity(Entity):
 
         return response
 
-    @property
-    def api(self) -> RoborockLocalClient:
-        """Access the api client."""
-        return self._api
-
 
 class RoborockCoordinatedEntity(
     RoborockEntity, CoordinatorEntity[RoborockDataUpdateCoordinator]

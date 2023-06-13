@@ -119,10 +119,10 @@
     },
     "time": {
       "dnd_start_time": {
-        "name": "DnD begin"
+        "name": "DND begin"
       },
       "dnd_end_time": {
-        "name": "DnD end"
+        "name": "DND end"
       }
     },
     "vacuum": {
