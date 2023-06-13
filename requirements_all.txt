@@ -2307,7 +2307,7 @@ rpi-bad-power==0.1.0
 rtsp-to-webrtc==0.5.1
 
 # homeassistant.components.russound_rio
-russound-rio==0.1.8
+russound-rio==1.0.0
 
 # homeassistant.components.russound_rnet
 russound==0.1.9
