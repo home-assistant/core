@@ -11,10 +11,9 @@ from pyephember.pyephember import (
     zone_current_temperature,
     zone_is_active,
     zone_is_boost_active,
-    zone_is_hot_water,
     zone_mode,
     zone_name,
-    zone_target_temperature,
+    zone_target_temperature
 )
 import voluptuous as vol
 
@@ -68,10 +67,11 @@ def setup_platform(
 
     try:
         ember = EphEmber(username, password)
+        
         zones = ember.get_zones()
         for zone in zones:
             add_entities([EphEmberThermostat(ember, zone)])
-    except RuntimeError:
+    except RuntimeError as e:
         _LOGGER.error("Cannot connect to EphEmber")
         return
 
@@ -89,8 +89,10 @@ class EphEmberThermostat(ClimateEntity):
         self._ember = ember
         self._zone_name = zone_name(zone)
         self._zone = zone
-        self._hot_water = zone_is_hot_water(zone)
-
+        self._hot_water = False
+        # self._immersion = False
+        self._immersion = zone['deviceType'] == 4
+        
         self._attr_name = self._zone_name
 
         self._attr_supported_features = (
@@ -141,13 +143,13 @@ class EphEmberThermostat(ClimateEntity):
 
     def turn_aux_heat_on(self) -> None:
         """Turn auxiliary heater on."""
-        self._ember.activate_boost_by_name(
+        self._ember.activate_zone_boost(
             self._zone_name, zone_target_temperature(self._zone)
         )
 
     def turn_aux_heat_off(self) -> None:
         """Turn auxiliary heater off."""
-        self._ember.deactivate_boost_by_name(self._zone_name)
+        self._ember.deactivate_zone_boost(self._zone_name)
 
     def set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
@@ -163,7 +165,7 @@ class EphEmberThermostat(ClimateEntity):
         if temperature > self.max_temp or temperature < self.min_temp:
             return
 
-        self._ember.set_target_temperture_by_name(self._zone_name, temperature)
+        self._ember.set_zone_target_temperature(self._zone_name, temperature)
 
     @property
     def min_temp(self):
@@ -179,6 +181,9 @@ class EphEmberThermostat(ClimateEntity):
         """Return the maximum temperature."""
         if self._hot_water:
             return zone_target_temperature(self._zone)
+
+        if self._immersion:
+            return 90.0
 
         return 35.0
 
