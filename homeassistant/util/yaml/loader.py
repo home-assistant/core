@@ -203,12 +203,16 @@ def _parse_yaml(
     secrets: Secrets | None = None,
 ) -> JSON_TYPE:
     """Load a YAML file."""
-    # If configuration file is empty YAML returns None
-    # We convert that to an empty dict
-    return (
-        yaml.load(content, Loader=lambda stream: loader(stream, secrets))
-        or NodeDictClass()
-    )
+    doc = yaml.load(content, Loader=lambda stream: loader(stream, secrets))
+    if doc is None:
+        # If configuration file is empty, YAML returns `None
+        # We convert that to an empty dict
+        # This means we don't support a document whose only value is `null`,
+        # Adding `None` checks didn't seem worth it, and `wrap_for_setattr`
+        # doesn't work with `NoneType` as it is not a valid base type
+        return NodeDictClass()
+
+    return doc
 
 
 @overload

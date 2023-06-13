@@ -109,12 +109,30 @@ def test_invalid_environment_variable(try_both_loaders) -> None:
 
 
 @pytest.mark.parametrize(
+    ("hass_config_yaml", "expected"),
+    [
+        ("", {}),
+        ("null", {}),
+        ("''", ""),
+        ("0", 0),
+    ],
+)
+def test_parse_yaml_falsey_values(
+    try_both_loaders, hass_config_yaml: str, expected: Any
+) -> None:
+    """Test load yaml falsey values."""
+    doc = yaml_loader.parse_yaml(hass_config_yaml)
+    assert doc == expected
+
+
+@pytest.mark.parametrize(
     ("hass_config_yaml_files", "value"),
     [
         ({"test.yaml": "value"}, "value"),
         ({"test.yaml": None}, {}),  # missing file
         ({"test.yaml": ""}, {}),  # empty file
         ({"test.yaml": "null"}, {}),  # null document
+        ({"test.yaml": "0"}, 0),  # falsey value
         ({"test.yaml": "1.0"}, 1.0),
     ],
 )
