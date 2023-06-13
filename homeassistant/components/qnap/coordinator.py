@@ -1,10 +1,11 @@
 """Data coordinator for the qnap integration."""
 from __future__ import annotations
 
-import logging
 from datetime import timedelta
-from qnapstats import QNAPStats
+import logging
 from typing import Any
+
+from qnapstats import QNAPStats
 
 from homeassistant.const import (
     CONF_HOST,
@@ -16,8 +17,8 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN
 
