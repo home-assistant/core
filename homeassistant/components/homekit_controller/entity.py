@@ -183,7 +183,7 @@ class HomeKitEntity(Entity):
             # If the service name is an exact superset of the device name, we can safely chop
             # the prefix off and return the service name.
             if device_name.startswith(accessory_name):
-                return device_name[len(accessory_name):].strip()
+                return device_name[len(accessory_name) :].strip()
 
             # Otherwise, the service name strongly overlaps the device name but we can't safely
             # unpick them
