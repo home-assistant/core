@@ -59,7 +59,7 @@ def battery_time_remaining(data: SystemBridgeCoordinatorData) -> datetime | None
 def cpu_power_package(data: SystemBridgeCoordinatorData) -> float | None:
     """Return the CPU package power."""
     if data.cpu.power_package is not None:
-        return round(data.cpu.power_package, 2)
+        return data.cpu.power_package
     return None
 
 
@@ -69,7 +69,7 @@ def cpu_power_per_cpu(
 ) -> float | None:
     """Return CPU power per CPU."""
     if (value := getattr(data.cpu, f"power_per_cpu_{cpu}", None)) is not None:
-        return round(value, 2)
+        return value
     return None
 
 
@@ -149,8 +149,9 @@ BASE_SENSOR_TYPES: tuple[SystemBridgeSensorEntityDescription, ...] = (
     SystemBridgeSensorEntityDescription(
         key="cpu_power_package",
         name="CPU Package Power",
-        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfPower.WATT,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=2,
         icon="mdi:chip",
         value=cpu_power_package,
     ),
@@ -546,8 +547,9 @@ async def async_setup_entry(
                         key=f"cpu_power_core_{index}",
                         name=f"CPU Core {index} Power",
                         entity_registry_enabled_default=False,
-                        state_class=SensorStateClass.MEASUREMENT,
                         native_unit_of_measurement=UnitOfPower.WATT,
+                        state_class=SensorStateClass.MEASUREMENT,
+                        suggested_display_precision=2,
                         icon="mdi:chip",
                         value=lambda data, k=index: cpu_power_per_cpu(data, k),
                     ),
