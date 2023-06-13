@@ -44,20 +44,16 @@ class QnapCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
             timeout=config.get(CONF_TIMEOUT),
         )
 
+    def _sync_update(self) -> dict[str, dict[str, Any]]:
+        """Get the latest data from the Qnap API."""
+        return {
+            "system_stats": self._api.get_system_stats(),
+            "system_health": self._api.get_system_health()
+            "smart_drive_health": self._api.get_smart_disk_health()
+            "volumes": self._api.get_volumes()
+            "bandwidth": self._api.get_bandwidth()
+        }
+
     async def _async_update_data(self) -> dict[str, dict[str, Any]]:
         """Get the latest data from the Qnap API."""
-        datas: dict[str, dict[str, Any]] = {}
-        datas["system_stats"] = await self.hass.async_add_executor_job(
-            self._api.get_system_stats
-        )
-        datas["system_health"] = await self.hass.async_add_executor_job(
-            self._api.get_system_health
-        )
-        datas["smart_drive_health"] = await self.hass.async_add_executor_job(
-            self._api.get_smart_disk_health
-        )
-        datas["volumes"] = await self.hass.async_add_executor_job(self._api.get_volumes)
-        datas["bandwidth"] = await self.hass.async_add_executor_job(
-            self._api.get_bandwidth
-        )
-        return datas
+        return await self.hass.async_add_executor_job(self._sync_update)
