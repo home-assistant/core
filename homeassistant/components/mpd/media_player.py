@@ -1,13 +1,13 @@
 """Support to interact with a Music Player Daemon."""
 from __future__ import annotations
 
-from contextlib import suppress, asynccontextmanager
+import asyncio
+from contextlib import asynccontextmanager, suppress
 from datetime import timedelta
-from socket import gaierror
 import hashlib
 import logging
 import os
-import asyncio
+from socket import gaierror
 from typing import Any
 
 import mpd
