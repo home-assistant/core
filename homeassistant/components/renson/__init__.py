@@ -23,6 +23,7 @@ PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.SENSOR,
     Platform.FAN,
+    Platform.SENSOR,
 ]
 
 
