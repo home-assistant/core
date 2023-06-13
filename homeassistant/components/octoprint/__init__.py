@@ -23,7 +23,7 @@ from homeassistant.const import (
     CONF_SENSORS,
     CONF_SSL,
     CONF_VERIFY_SSL,
-    EVENT_HOMEASSISTANT_CLOSE,
+    EVENT_HOMEASSISTANT_STOP,
     Platform,
 )
 from homeassistant.core import Event, HomeAssistant, callback
@@ -175,7 +175,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         """Close websession."""
         session.detach()
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_CLOSE, _async_close_websession)
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_close_websession)
 
     client = OctoprintClient(
         host=entry.data[CONF_HOST],

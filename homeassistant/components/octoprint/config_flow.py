@@ -21,7 +21,7 @@ from homeassistant.const import (
     CONF_SSL,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
-    EVENT_HOMEASSISTANT_CLOSE,
+    EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.data_entry_flow import FlowResult
 import homeassistant.helpers.config_validation as cv
@@ -275,7 +275,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             session.detach()
 
         self.hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_CLOSE, _async_close_websession
+            EVENT_HOMEASSISTANT_STOP, _async_close_websession
         )
 
         return OctoprintClient(
