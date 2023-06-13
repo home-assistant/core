@@ -1,9 +1,11 @@
 """Climate device for CCM15 coordinator."""
 import asyncio
 from dataclasses import dataclass
+import datetime
 import logging
 
 import aiohttp
+import async_timeout
 import httpx
 import xmltodict
 
@@ -28,6 +30,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import BASE_URL, CONF_URL_STATUS, DEFAULT_INTERVAL, DEFAULT_TIMEOUT, DOMAIN
 
@@ -53,21 +56,42 @@ class CCM15DeviceState:
     devices: list[dict[int, str]]
 
 
-class CCM15Coordinator:
+class CCM15Coordinator(DataUpdateCoordinator[CCM15DeviceState]):
     """Class to coordinate multiple CCM15Climate devices."""
 
-    def __init__(self, host: str, port: int, interval: int = DEFAULT_INTERVAL) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        host: str,
+        port: int,
+        interval: int = DEFAULT_INTERVAL,
+    ) -> None:
         """Initialize the coordinator."""
+        super().__init__(
+            hass,
+            _LOGGER,
+            name=host,
+            update_method=self._async_update_data,
+            update_interval=datetime.timedelta(seconds=interval),
+        )
         self._host = host
         self._port = port
-        self._interval = interval
-        self._ac_devices: dict[int, CCM15Climate] = {}
+        self._ac_devices: list[CCM15Climate]
 
     def get_devices(self):
         """Get all climate devices from the coordinator."""
-        return self._ac_devices.values()
+        return self._ac_devices
 
-    async def poll_status_async(self):
+    async def _async_update_data(self) -> CCM15DeviceState:
+        """Fetch data from Rain Bird device."""
+        try:
+            async with async_timeout.timeout(DEFAULT_TIMEOUT):
+                return await self._fetch_data()
+        except httpx.RequestError as err:
+            _LOGGER.exception("Exception retrieving API data %s", err)
+            raise UpdateFailed(f"Error communicating with Device: {err}") from err
+
+    async def _fetch_data(self) -> CCM15DeviceState:
         """Get the current status of all AC devices."""
         try:
             url = BASE_URL.format(self._host, self._port, CONF_URL_STATUS)
@@ -75,21 +99,30 @@ class CCM15Coordinator:
                 response = await client.get(url, timeout=DEFAULT_TIMEOUT)
         except httpx.RequestError as err:
             _LOGGER.exception("Exception retrieving API data %s", err)
-        else:
-            doc = xmltodict.parse(response.text)
-            data = doc["response"]
-            _LOGGER.debug("Found %s items in host %s", len(data.items()), self._host)
-            for ac_name, ac_binary in data.items():
-                _LOGGER.debug("Found ac_name:'%s', data:'%s'", ac_name, ac_binary)
-                ac_state = self.get_status_from(ac_binary)
-                if ac_state:
-                    _LOGGER.debug("Parsed data ac_state:'%s'", ac_state)
-                    if ac_name not in self._ac_devices:
-                        _LOGGER.debug("Creating new ac device '%s'", ac_name)
-                        self._ac_devices[ac_name] = CCM15Climate(
-                            self._host, ac_name, self
-                        )
-                    self._ac_devices[ac_name].update_from_ac_data(ac_state)
+            raise UpdateFailed(f"Error communicating with Device: {err}") from err
+
+        doc = xmltodict.parse(response.text)
+        data = doc["response"]
+        _LOGGER.debug("Found %s items in host %s", len(data.items()), self._host)
+        ac_index = 0
+        ac_data: list[dict[str, int]] = []
+        for ac_name, ac_binary in data.items():
+            _LOGGER.debug("Found ac_name:'%s', data:'%s'", ac_name, ac_binary)
+            ac_state = self.get_status_from(ac_binary)
+            if ac_state:
+                _LOGGER.debug("Parsed data ac_state:'%s'", ac_state)
+                if ac_name not in self._ac_devices:
+                    _LOGGER.debug("Creating new ac device '%s'", ac_name)
+                    self._ac_devices[ac_index] = CCM15Climate(
+                        self._host, ac_index, self
+                    )
+                ac_data.insert(ac_index, ac_state)
+                ac_index += 1
+            else:
+                break
+        data = CCM15DeviceState
+        data.devices = ac_state
+        return data
 
     def get_status_from(self, ac_binary: str) -> dict[str, int]:
         """Parse the binary data and return a dictionary with AC status."""
@@ -197,11 +230,12 @@ class CCM15Climate(ClimateEntity):
     """Climate device for CCM15 coordinator."""
 
     def __init__(
-        self, ac_host: str, ac_name: str, coordinator: CCM15Coordinator
+        self, ac_host: str, ac_index: int, coordinator: CCM15Coordinator
     ) -> None:
         """Create a climate device managed from a coordinator."""
         self._ac_host = ac_host
-        self._ac_name = ac_name
+        self._ac_index = ac_index
+        self._ac_name = f"ac{self._ac_index}"
         self._coordinator = coordinator
         self._is_on = False
         self._current_temp = 0
