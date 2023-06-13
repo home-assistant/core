@@ -24,6 +24,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -201,7 +202,9 @@ def setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the QNAP NAS sensor."""
-    coordinator = hass.data[DOMAIN][config.entry_id]
+    coordinator = QnapCoordinator(hass)
+    if not coordinator:
+        raise PlatformNotReady
 
     monitored_conditions = config[CONF_MONITORED_CONDITIONS]
     sensors: list[QNAPSensor] = []
