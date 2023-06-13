@@ -451,7 +451,7 @@ bluetooth-auto-recovery==1.2.0
 # homeassistant.components.esphome
 # homeassistant.components.ld2410_ble
 # homeassistant.components.led_ble
-bluetooth-data-tools==0.4.0
+bluetooth-data-tools==1.0.0
 
 # homeassistant.components.bond
 bond-async==0.1.23
@@ -1324,7 +1324,7 @@ pylibrespot-java==0.1.1
 pylitejet==0.5.0
 
 # homeassistant.components.litterrobot
-pylitterbot==2023.4.0
+pylitterbot==2023.4.2
 
 # homeassistant.components.lutron_caseta
 pylutron-caseta==0.18.1
@@ -1982,7 +1982,7 @@ yalesmartalarmclient==0.3.9
 
 # homeassistant.components.august
 # homeassistant.components.yalexs_ble
-yalexs-ble==2.1.17
+yalexs-ble==2.1.18
 
 # homeassistant.components.august
 yalexs==1.5.1
@@ -2000,7 +2000,7 @@ youless-api==1.0.1
 zamg==0.2.2
 
 # homeassistant.components.zeroconf
-zeroconf==0.64.0
+zeroconf==0.66.0
 
 # homeassistant.components.zeversolar
 zeversolar==0.3.1
