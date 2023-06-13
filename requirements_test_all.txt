@@ -1751,7 +1751,7 @@ soco==0.29.1
 solaredge==0.0.2
 
 # homeassistant.components.solax
-solax==0.3.0
+solax==0.3.2
 
 # homeassistant.components.somfy_mylink
 somfy-mylink-synergy==1.0.6
