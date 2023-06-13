@@ -173,7 +173,6 @@ class EphEmberThermostat(ClimateEntity):
         # Hot water temp doesn't support being changed
         if self._hot_water:
             return zone_target_temperature(self._zone)
-
         return 5.0
 
     @property
@@ -181,6 +180,7 @@ class EphEmberThermostat(ClimateEntity):
         """Return the maximum temperature."""
         if self._hot_water:
             return zone_target_temperature(self._zone)
+        return 70.0
   
     def update(self) -> None:
         """Get the latest data."""
