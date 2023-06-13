@@ -202,7 +202,8 @@ def setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the QNAP NAS sensor."""
-    if not coordinator := QnapCoordinator(hass, config):
+    coordinator = QnapCoordinator(hass, config)
+    if not coordinator:
         raise PlatformNotReady
 
     monitored_conditions = config[CONF_MONITORED_CONDITIONS]
