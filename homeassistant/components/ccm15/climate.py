@@ -236,7 +236,9 @@ class CCM15Coordinator(DataUpdateCoordinator[CCM15DeviceState]):
             _LOGGER.debug("Test connection: Timeout")
             return False
 
-    async def async_update(self, ac_id: int, state_cmd: int, fan_cmd: int, temp: int):
+    async def async_set_states(
+        self, ac_id: int, state_cmd: int, fan_cmd: int, temp: int
+    ):
         """Set new target states."""
 
         url = BASE_URL.format(
@@ -261,6 +263,16 @@ class CCM15Coordinator(DataUpdateCoordinator[CCM15DeviceState]):
                 _LOGGER.exception("Error doing API request")
             else:
                 _LOGGER.debug("API request ok %d", response.status_code)
+                await self.async_request_refresh()
+
+    async def async_set_hvac_mode(self, ac_index, hvac_mode):
+        """Set the hvac mode."""
+        await self.async_set_states(
+            ac_index,
+            CONST_STATE_CMD_MAP[hvac_mode],
+            self.data[ac_index]["fan"],
+            self.data[ac_index]["temp"],
+        )
 
 
 class CCM15Climate(CoordinatorEntity[CCM15Coordinator], ClimateEntity):
@@ -357,22 +369,18 @@ class CCM15Climate(CoordinatorEntity[CCM15Coordinator], ClimateEntity):
         if temperature is None:
             return
         await self.coordinator.async_set_temperature(self._ac_index, temperature)
-        await self.coordinator.async_request_refresh()
 
     async def async_set_hvac_mode(self, hvac_mode):
         """Set the hvac mode."""
-        await self.coordinator.async_set_operation_mode(self._ac_name, hvac_mode)
-        await self.coordinator.async_request_refresh()
+        await self.coordinator.async_set_hvac_mode(self._ac_index, hvac_mode)
 
     async def async_set_fan_mode(self, fan_mode):
         """Set the fan mode."""
-        await self.coordinator.async_set_fan_mode(self._ac_name, fan_mode)
-        await self.coordinator.async_request_refresh()
+        await self.coordinator.async_set_fan_mode(self._ac_index, fan_mode)
 
     async def async_set_swing_mode(self, swing_mode):
         """Set the swing mode."""
-        await self.coordinator.async_set_swing_mode(self._ac_name, swing_mode)
-        await self.coordinator.async_request_refresh()
+        await self.coordinator.async_set_swing_mode(self._ac_index, swing_mode)
 
     async def async_turn_off(self):
         """Turn off."""
