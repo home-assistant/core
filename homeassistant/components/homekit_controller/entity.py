@@ -165,6 +165,11 @@ class HomeKitEntity(Entity):
             ):
                 return device_name
 
+            # Handle cases like VOCOlinc-Flowerbud-0d324b FLOWERBUD
+            # (service name is FLOWERBUD)
+            if folded_device_name in folded_accessory_name:
+                return None
+
             # If the service name is an exact superset of the device name, we can safely chop
             # the prefix off and return the service name.
             if device_name.startswith(accessory_name):

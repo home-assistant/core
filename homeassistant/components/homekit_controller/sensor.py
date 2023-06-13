@@ -345,6 +345,19 @@ class HomeKitSensor(HomeKitEntity, SensorEntity):
 
     _attr_state_class = SensorStateClass.MEASUREMENT
 
+    @property
+    def name(self) -> str | None:
+        """Return the name of the device."""
+        full_name = super().name
+        default_name = self.default_name
+        if (
+            default_name
+            and full_name
+            and folded_name(default_name) not in folded_name(full_name)
+        ):
+            return f"{full_name} {default_name}"
+        return full_name
+
 
 class HomeKitHumiditySensor(HomeKitSensor):
     """Representation of a Homekit humidity sensor."""
