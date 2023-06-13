@@ -11,5 +11,30 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     }
+  },
+  "entity": {
+    "binary_sensor": {
+      "frost_protection_active": {
+        "name": "Frost protection active"
+      },
+      "breeze": {
+        "name": "Breeze"
+      },
+      "breeze_conditions_met": {
+        "name": "Breeze conditions met"
+      },
+      "humidity_control": {
+        "name": "Humidity control"
+      },
+      "air_quality_control": {
+        "name": "Air quality control"
+      },
+      "co2_control": {
+        "name": "CO2 control"
+      },
+      "preheater": {
+        "name": "Preheater"
+      }
+    }
   }
 }

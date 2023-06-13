@@ -46,51 +46,73 @@ class RensonBinarySensorEntityDescription(
 
 BINARY_SENSORS: tuple[RensonBinarySensorEntityDescription, ...] = (
     RensonBinarySensorEntityDescription(
-        name="Frost protection active",
+        translation_key="frost_protection_active",
         key="FROST_PROTECTION_FIELD",
         field=FROST_PROTECTION_FIELD,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     RensonBinarySensorEntityDescription(
         key="BREEZE_ENABLE_FIELD",
-        name="Breeze",
+        translation_key="breeze",
         field=BREEZE_ENABLE_FIELD,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     RensonBinarySensorEntityDescription(
         key="BREEZE_MET_FIELD",
-        name="Breeze conditions met",
+        translation_key="breeze_conditions_met",
         field=BREEZE_MET_FIELD,
     ),
     RensonBinarySensorEntityDescription(
         key="HUMIDITY_CONTROL_FIELD",
-        name="Humidity control",
+        translation_key="humidity_control",
         field=HUMIDITY_CONTROL_FIELD,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     RensonBinarySensorEntityDescription(
         key="AIR_QUALITY_CONTROL_FIELD",
-        name="Air quality control",
+        translation_key="air_quality_control",
         field=AIR_QUALITY_CONTROL_FIELD,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     RensonBinarySensorEntityDescription(
         key="CO2_CONTROL_FIELD",
-        name="CO2 control",
+        translation_key="co2_control",
         field=CO2_CONTROL_FIELD,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     RensonBinarySensorEntityDescription(
         key="PREHEATER_FIELD",
-        name="Preheater",
+        translation_key="preheater",
         field=PREHEATER_FIELD,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
 )
 
 
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Call the Renson integration to setup."""
+
+    api: RensonVentilation = hass.data[DOMAIN][config_entry.entry_id].api
+    coordinator: RensonCoordinator = hass.data[DOMAIN][
+        config_entry.entry_id
+    ].coordinator
+
+    entities: list = []
+    for description in BINARY_SENSORS:
+        entities.append(RensonBinarySensor(description, api, coordinator))
+
+    async_add_entities(entities)
+
+
 class RensonBinarySensor(RensonEntity, BinarySensorEntity):
     """Get sensor data from the Renson API and store it in the state of the class."""
+
+    _attr_has_entity_name = True
+    _attr_name = None
 
     def __init__(
         self,
@@ -114,22 +136,3 @@ class RensonBinarySensor(RensonEntity, BinarySensorEntity):
         self._attr_is_on = self.api.parse_value(value, DataType.BOOLEAN)
 
         self.async_write_ha_state()
-
-
-async def async_setup_entry(
-    hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
-) -> None:
-    """Call the Renson integration to setup."""
-
-    api: RensonVentilation = hass.data[DOMAIN][config_entry.entry_id].api
-    coordinator: RensonCoordinator = hass.data[DOMAIN][
-        config_entry.entry_id
-    ].coordinator
-
-    entities: list = []
-    for description in BINARY_SENSORS:
-        entities.append(RensonBinarySensor(description, api, coordinator))
-
-    async_add_entities(entities)
