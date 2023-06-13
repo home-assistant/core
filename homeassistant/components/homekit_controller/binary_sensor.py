@@ -113,17 +113,11 @@ class HomeKitBatteryLowSensor(HomeKitEntity, BinarySensorEntity):
 
     _attr_device_class = BinarySensorDeviceClass.BATTERY
     _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_name = "Low Battery"
 
     def get_characteristic_types(self) -> list[str]:
         """Define the homekit characteristics the entity is tracking."""
         return [CharacteristicsTypes.STATUS_LO_BATT]
-
-    @property
-    def name(self) -> str:
-        """Return the name of the sensor."""
-        if name := self.accessory.name:
-            return f"{name} Low Battery"
-        return "Low Battery"
 
     @property
     def is_on(self) -> bool:

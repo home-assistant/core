@@ -345,19 +345,6 @@ class HomeKitSensor(HomeKitEntity, SensorEntity):
 
     _attr_state_class = SensorStateClass.MEASUREMENT
 
-    @property
-    def name(self) -> str | None:
-        """Return the name of the device."""
-        full_name = super().name
-        default_name = self.default_name
-        if (
-            default_name
-            and full_name
-            and folded_name(default_name) not in folded_name(full_name)
-        ):
-            return f"{full_name} {default_name}"
-        return full_name
-
 
 class HomeKitHumiditySensor(HomeKitSensor):
     """Representation of a Homekit humidity sensor."""
@@ -532,13 +519,6 @@ class SimpleSensor(CharacteristicEntity, SensorEntity):
         return [self._char.type]
 
     @property
-    def name(self) -> str:
-        """Return the name of the device if any."""
-        if name := self.accessory.name:
-            return f"{name} {self.entity_description.name}"
-        return f"{self.entity_description.name}"
-
-    @property
     def native_value(self) -> str | int | float:
         """Return the current sensor value."""
         val = self._char.value
@@ -567,7 +547,6 @@ class RSSISensor(HomeKitEntity, SensorEntity):
     _attr_device_class = SensorDeviceClass.SIGNAL_STRENGTH
     _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_entity_registry_enabled_default = False
-    _attr_has_entity_name = True
     _attr_native_unit_of_measurement = SIGNAL_STRENGTH_DECIBELS_MILLIWATT
     _attr_should_poll = False
 

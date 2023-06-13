@@ -111,13 +111,6 @@ class HomeKitButton(CharacteristicEntity, ButtonEntity):
         """Define the homekit characteristics the entity is tracking."""
         return [self._char.type]
 
-    @property
-    def name(self) -> str:
-        """Return the name of the device if any."""
-        if name := self.accessory.name:
-            return f"{name} {self.entity_description.name}"
-        return f"{self.entity_description.name}"
-
     async def async_press(self) -> None:
         """Press the button."""
         key = self.entity_description.key
@@ -128,17 +121,11 @@ class HomeKitButton(CharacteristicEntity, ButtonEntity):
 class HomeKitEcobeeClearHoldButton(CharacteristicEntity, ButtonEntity):
     """Representation of a Button control for Ecobee clear hold request."""
 
+    _attr_name = "Clear Hold"
+
     def get_characteristic_types(self) -> list[str]:
         """Define the homekit characteristics the entity is tracking."""
         return []
-
-    @property
-    def name(self) -> str:
-        """Return the name of the device if any."""
-        prefix = ""
-        if name := super().name:
-            prefix = name
-        return f"{prefix} Clear Hold"
 
     async def async_press(self) -> None:
         """Press the button."""
@@ -158,18 +145,11 @@ class HomeKitProvisionPreferredThreadCredentials(CharacteristicEntity, ButtonEnt
     """A button users can press to migrate their HomeKit BLE device to Thread."""
 
     _attr_entity_category = EntityCategory.CONFIG
+    _attr_name = "Provision Preferred Thread Credentials"
 
     def get_characteristic_types(self) -> list[str]:
         """Define the homekit characteristics the entity is tracking."""
         return []
-
-    @property
-    def name(self) -> str:
-        """Return the name of the device if any."""
-        prefix = ""
-        if name := super().name:
-            prefix = name
-        return f"{prefix} Provision Preferred Thread Credentials"
 
     async def async_press(self) -> None:
         """Press the button."""

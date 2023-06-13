@@ -23,6 +23,7 @@ class HomeKitEntity(Entity):
     """Representation of a Home Assistant HomeKit device."""
 
     _attr_should_poll = False
+    _attr_has_entity_name = True
 
     def __init__(self, accessory: HKDevice, devinfo: ConfigType) -> None:
         """Initialise a generic HomeKit device."""
@@ -144,20 +145,36 @@ class HomeKitEntity(Entity):
         accessory_name = self.accessory.name
         # If the service has a name char, use that, if not
         # fallback to the default name provided by the subclass
-        device_name = self._char_name or self.default_name
+        if entity_description := getattr(self, "entity_description", None):
+            device_name = entity_description.name
+        else:
+            device_name = self._char_name or self.default_name
+
         folded_device_name = folded_name(device_name or "")
         folded_accessory_name = folded_name(accessory_name)
+
+        if folded_device_name == folded_accessory_name:
+            return None
+
         if device_name:
-            # Sometimes the device name includes the accessory
-            # name already like My ecobee Occupancy / My ecobee
-            if folded_device_name.startswith(folded_accessory_name):
-                return device_name
+            # If there is definitely no overlap between the name characteristic
+            # and the device name, return the contents of the name characteristic
             if (
                 folded_accessory_name not in folded_device_name
                 and folded_device_name not in folded_accessory_name
             ):
-                return f"{accessory_name} {device_name}"
-        return accessory_name
+                return device_name
+
+            # If the service name is an exact superset of the device name, we can safely chop
+            # the prefix off and return the service name.
+            if device_name.startswith(accessory_name):
+                return device_name[len(accessory_name):].strip()
+
+            # Otherwise, the service name strongly overlaps the device name but we can't safely
+            # unpick them
+            return device_name
+
+        return None
 
     @property
     def available(self) -> bool:

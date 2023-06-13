@@ -26,13 +26,7 @@ class EcobeeModeSelect(CharacteristicEntity, SelectEntity):
 
     _attr_options = ["home", "sleep", "away"]
     _attr_translation_key = "ecobee_mode"
-
-    @property
-    def name(self) -> str:
-        """Return the name of the device if any."""
-        if name := super().name:
-            return f"{name} Current Mode"
-        return "Current Mode"
+    _attr_name = "Current Mode"
 
     def get_characteristic_types(self) -> list[str]:
         """Define the homekit characteristics the entity cares about."""
