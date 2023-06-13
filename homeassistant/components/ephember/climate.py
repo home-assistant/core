@@ -131,7 +131,7 @@ class EphEmberThermostat(ClimateEntity):
         """Set the operation mode."""
         mode = self.map_mode_hass_eph(hvac_mode)
         if mode is not None:
-            self._ember.set_mode_by_name(self._zone_name, mode)
+            self._ember.set_zone_mode(self._zone_name, mode)
         else:
             _LOGGER.error("Invalid operation mode provided %s", hvac_mode)
 
