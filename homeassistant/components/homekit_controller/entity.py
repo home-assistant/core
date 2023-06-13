@@ -143,14 +143,16 @@ class HomeKitEntity(Entity):
     def name(self) -> str | None:
         """Return the name of the device if any."""
         accessory_name = self.accessory.name
-        # If the service has a name char, use that, if not
-        # fallback to the default name provided by the subclass
-        if device_name := getattr(self, "_attr_name", None):
-            pass
-        elif entity_description := getattr(self, "entity_description", None):
-            device_name = entity_description.name
-        else:
-            device_name = self._char_name or self.default_name
+
+        # If entity has _attr_name, don't try and use service Name characteristic
+        if entity_name := getattr(self, "_attr_name", None):
+            return entity_name
+
+        # If entity has entity description, don't try and use service Name characteristic
+        if entity_description := getattr(self, "entity_description", None):
+            return entity_description.name
+
+        device_name = self._char_name or self.default_name
 
         folded_device_name = folded_name(device_name or "")
         folded_accessory_name = folded_name(accessory_name)
