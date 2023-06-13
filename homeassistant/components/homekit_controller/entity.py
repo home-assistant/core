@@ -154,13 +154,19 @@ class HomeKitEntity(Entity):
 
         device_name = self._char_name or self.default_name
 
-        folded_device_name = folded_name(device_name or "")
-        folded_accessory_name = folded_name(accessory_name)
+        # For entities backed by a "Service" (like an outlet) there are devices where an accessory
+        # can have multiple instances of that service (for example, a 4-way power bank). We want to defer
+        # to the Name characteristic of that service in those cases.
 
-        if folded_device_name == folded_accessory_name:
-            return None
+        # However, in those cases we might find the device name is fully or partially repeated in the Service
+        # name. And that could lead to friendly names like "VOCOlinc-Flowerbud-0d324b VOCOlinc-Flowerbud-0d324b Oulet"
+
+        # Try to respect the Service name where possible, filtering out the duplicate parts of the name.
 
         if device_name:
+            folded_device_name = folded_name(device_name)
+            folded_accessory_name = folded_name(accessory_name)
+
             # If there is definitely no overlap between the name characteristic
             # and the device name, return the contents of the name characteristic
             if (
