@@ -5,7 +5,6 @@ import datetime
 import logging
 
 import aiohttp
-import async_timeout
 import httpx
 import xmltodict
 
@@ -40,7 +39,6 @@ from .const import (
     BASE_URL,
     CONF_URL_CTRL,
     CONF_URL_STATUS,
-    DEFAULT_INTERVAL,
     DEFAULT_TIMEOUT,
     DOMAIN,
 )
@@ -64,18 +62,14 @@ CONST_CMD_FAN_MAP = {v: k for k, v in CONST_FAN_CMD_MAP.items()}
 class CCM15DeviceState:
     """Data retrieved from a CCM15 device."""
 
-    devices: list[dict[int, str]]
+    devices: list[dict[str, int]]
 
 
 class CCM15Coordinator(DataUpdateCoordinator[CCM15DeviceState]):
     """Class to coordinate multiple CCM15Climate devices."""
 
     def __init__(
-        self,
-        hass: HomeAssistant,
-        host: str,
-        port: int,
-        interval: int = DEFAULT_INTERVAL,
+        self, host: str, port: int, interval: int, hass: HomeAssistant
     ) -> None:
         """Initialize the coordinator."""
         super().__init__(
@@ -87,7 +81,7 @@ class CCM15Coordinator(DataUpdateCoordinator[CCM15DeviceState]):
         )
         self._host = host
         self._port = port
-        self._ac_devices: list[CCM15Climate]
+        self._ac_devices: list[CCM15Climate] = []
 
     def get_devices(self):
         """Get all climate devices from the coordinator."""
@@ -96,22 +90,16 @@ class CCM15Coordinator(DataUpdateCoordinator[CCM15DeviceState]):
     async def _async_update_data(self) -> CCM15DeviceState:
         """Fetch data from Rain Bird device."""
         try:
-            async with async_timeout.timeout(DEFAULT_TIMEOUT):
-                return await self._fetch_data()
+            return await self._fetch_data()
         except httpx.RequestError as err:
-            _LOGGER.exception("Exception retrieving API data %s", err)
             raise UpdateFailed(f"Error communicating with Device: {err}") from err
 
     async def _fetch_data(self) -> CCM15DeviceState:
         """Get the current status of all AC devices."""
-        try:
-            url = BASE_URL.format(self._host, self._port, CONF_URL_STATUS)
-            async with httpx.AsyncClient() as client:
-                response = await client.get(url, timeout=DEFAULT_TIMEOUT)
-        except httpx.RequestError as err:
-            _LOGGER.exception("Exception retrieving API data %s", err)
-            raise UpdateFailed(f"Error communicating with Device: {err}") from err
-
+        url = BASE_URL.format(self._host, self._port, CONF_URL_STATUS)
+        _LOGGER.debug("Querying url:'%s'", url)
+        async with httpx.AsyncClient() as client:
+            response = await client.get(url, timeout=DEFAULT_TIMEOUT)
         doc = xmltodict.parse(response.text)
         data = doc["response"]
         _LOGGER.debug("Found %s items in host %s", len(data.items()), self._host)
@@ -121,18 +109,19 @@ class CCM15Coordinator(DataUpdateCoordinator[CCM15DeviceState]):
             _LOGGER.debug("Found ac_name:'%s', data:'%s'", ac_name, ac_binary)
             ac_state = self.get_status_from(ac_binary)
             if ac_state:
-                _LOGGER.debug("Parsed data ac_state:'%s'", ac_state)
-                if self._ac_devices[ac_index] is None:
-                    _LOGGER.debug("Creating new ac device '%s'", ac_name)
-                    self._ac_devices[ac_index] = CCM15Climate(
-                        self._host, ac_index, self
+                _LOGGER.debug("Index: %s, state:'%s'", ac_index, ac_state)
+                if len(self._ac_devices) == ac_index:
+                    _LOGGER.debug("Creating new ac device at index '%s'", ac_index)
+                    self._ac_devices.insert(
+                        ac_index, CCM15Climate(self._host, ac_index, self)
                     )
                 ac_data.insert(ac_index, ac_state)
                 ac_index += 1
             else:
                 break
         data = CCM15DeviceState
-        data.devices = ac_state
+        data.devices = ac_data
+        _LOGGER.debug("Found data '%s'", data.devices)
         return data
 
     def get_status_from(self, ac_binary: str) -> dict[str, int]:
@@ -255,7 +244,7 @@ class CCM15Coordinator(DataUpdateCoordinator[CCM15DeviceState]):
             + "&temp="
             + str(temp),
         )
-        _LOGGER.info("Set state=%s", url)
+        _LOGGER.debug("Set state=%s", url)
 
         async with httpx.AsyncClient() as client:
             response = await client.get(url, timeout=DEFAULT_TIMEOUT)
@@ -265,13 +254,31 @@ class CCM15Coordinator(DataUpdateCoordinator[CCM15DeviceState]):
                 _LOGGER.debug("API request ok %d", response.status_code)
                 await self.async_request_refresh()
 
+    def get_ac_data(self, ac_index: int) -> dict[str, int]:
+        """Get ac data from the ac_index."""
+        _LOGGER.debug("Getting data '%s' at index '%s'", self.data.devices, ac_index)
+        data = self.data.devices[ac_index]
+        _LOGGER.debug("Data '%s'", data)
+        return data
+
     async def async_set_hvac_mode(self, ac_index, hvac_mode):
         """Set the hvac mode."""
+        data = self.get_ac_data(ac_index)
         await self.async_set_states(
             ac_index,
             CONST_STATE_CMD_MAP[hvac_mode],
-            self.data[ac_index]["fan"],
-            self.data[ac_index]["temp"],
+            data["fan"],
+            data["temp"],
+        )
+
+    async def async_set_fan_mode(self, ac_index, fan_mode):
+        """Set the fan mode."""
+        data = self.get_ac_data(ac_index)
+        await self.async_set_states(
+            ac_index,
+            data["mode"],
+            CONST_FAN_CMD_MAP[fan_mode],
+            data["temp"],
         )
 
 
@@ -325,9 +332,10 @@ class CCM15Climate(CoordinatorEntity[CCM15Coordinator], ClimateEntity):
     @property
     def hvac_mode(self):
         """Return hvac mode."""
-        return CONST_CMD_STATE_MAP[
-            self.coordinator.data.devices[self._ac_index]["ac_mode"]
-        ]
+        data = self.coordinator.get_ac_data(self._ac_index)
+        mode = data["ac_mode"]
+        _LOGGER.debug("Hvac mode '%s'", mode)
+        return CONST_CMD_STATE_MAP[mode]
 
     @property
     def hvac_modes(self):
