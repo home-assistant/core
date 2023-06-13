@@ -67,21 +67,24 @@ async def test_service_unloaded_entry(
 
     assert device_entry
 
-    await hass.services.async_call(
-        DOMAIN,
-        SERVICE_LOAD_URL,
-        {ATTR_DEVICE_ID: [device_entry.id], ATTR_URL: "https://nabucasa.com"},
-        blocking=True,
-    )
-
+    with pytest.raises(HomeAssistantError) as excinfo:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_LOAD_URL,
+            {ATTR_DEVICE_ID: [device_entry.id], ATTR_URL: "https://nabucasa.com"},
+            blocking=True,
+        )
+    assert "Test device is not loaded" in str(excinfo)
     mock_fully_kiosk.loadUrl.assert_not_called()
 
-    await hass.services.async_call(
-        DOMAIN,
-        SERVICE_START_APPLICATION,
-        {ATTR_DEVICE_ID: [device_entry.id], ATTR_APPLICATION: "de.ozerov.fully"},
-        blocking=True,
-    )
+    with pytest.raises(HomeAssistantError) as excinfo:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_START_APPLICATION,
+            {ATTR_DEVICE_ID: [device_entry.id], ATTR_APPLICATION: "de.ozerov.fully"},
+            blocking=True,
+        )
+    assert "Test device is not loaded" in str(excinfo)
     mock_fully_kiosk.startApplication.assert_not_called()
 
 
