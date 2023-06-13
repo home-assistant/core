@@ -48,9 +48,9 @@ class QnapCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
         """Get the latest data from the Qnap API."""
         return {
             "system_stats": self._api.get_system_stats(),
-            "system_health": self._api.get_system_health()
-            "smart_drive_health": self._api.get_smart_disk_health()
-            "volumes": self._api.get_volumes()
+            "system_health": self._api.get_system_health(),
+            "smart_drive_health": self._api.get_smart_disk_health(),
+            "volumes": self._api.get_volumes(),
             "bandwidth": self._api.get_bandwidth()
         }
 
