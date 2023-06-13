@@ -145,7 +145,9 @@ class HomeKitEntity(Entity):
         accessory_name = self.accessory.name
         # If the service has a name char, use that, if not
         # fallback to the default name provided by the subclass
-        if entity_description := getattr(self, "entity_description", None):
+        if device_name := getattr(self, "_attr_name", None):
+            pass
+        elif entity_description := getattr(self, "entity_description", None):
             device_name = entity_description.name
         else:
             device_name = self._char_name or self.default_name

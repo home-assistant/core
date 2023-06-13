@@ -244,7 +244,7 @@ async def test_config_entry(
                         "icon": None,
                         "original_device_class": None,
                         "original_icon": None,
-                        "original_name": "Koogeek-LS1-20833F Identify",
+                        "original_name": "Identify",
                         "state": {
                             "attributes": {
                                 "friendly_name": "Koogeek-LS1-20833F Identify"
@@ -264,7 +264,7 @@ async def test_config_entry(
                         "icon": None,
                         "original_device_class": None,
                         "original_icon": None,
-                        "original_name": "Koogeek-LS1-20833F Light Strip",
+                        "original_name": "Light Strip",
                         "state": {
                             "attributes": {
                                 "friendly_name": "Koogeek-LS1-20833F Light Strip",
@@ -517,7 +517,7 @@ async def test_device(
                     "icon": None,
                     "original_device_class": None,
                     "original_icon": None,
-                    "original_name": "Koogeek-LS1-20833F Identify",
+                    "original_name": "Identify",
                     "state": {
                         "attributes": {
                             "friendly_name": "Koogeek-LS1-20833F " "Identify"
@@ -537,7 +537,7 @@ async def test_device(
                     "icon": None,
                     "original_device_class": None,
                     "original_icon": None,
-                    "original_name": "Koogeek-LS1-20833F Light Strip",
+                    "original_name": "Light Strip",
                     "state": {
                         "attributes": {
                             "friendly_name": "Koogeek-LS1-20833F Light Strip",

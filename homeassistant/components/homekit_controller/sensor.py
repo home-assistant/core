@@ -350,6 +350,8 @@ class HomeKitSensor(HomeKitEntity, SensorEntity):
         """Return the name of the device."""
         full_name = super().name
         default_name = self.default_name
+        if not full_name:
+            return default_name
         if (
             default_name
             and full_name
