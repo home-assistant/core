@@ -23,10 +23,10 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
     EVENT_HOMEASSISTANT_STOP,
 )
+from homeassistant.core import Event, callback
 from homeassistant.data_entry_flow import FlowResult
 import homeassistant.helpers.config_validation as cv
 
-from homeassistant.core import Event, callback
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
