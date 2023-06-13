@@ -204,7 +204,8 @@ def setup_platform(
 ) -> None:
     """Set up the QNAP NAS sensor."""
     coordinator = QnapCoordinator(hass, config)
-    if not coordinator:
+    await coordinator.async_refresh()
+    if not coordinator.last_update_success:
         raise PlatformNotReady
 
     monitored_conditions = config[CONF_MONITORED_CONDITIONS]
