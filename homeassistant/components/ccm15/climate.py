@@ -226,11 +226,11 @@ class CCM15Coordinator(DataUpdateCoordinator[CCM15DeviceState]):
             return False
 
     async def async_set_states(
-        self, ac_id: int, state_cmd: int, fan_cmd: int, temp: int
+        self, ac_index: int, state_cmd: int, fan_cmd: int, temp: int
     ):
         """Set new target states."""
-        _LOGGER.debug("Calling async_set_states for ac index '%s'", ac_id)
-
+        _LOGGER.debug("Calling async_set_states for ac index '%s'", ac_index)
+        ac_id: int = 2**ac_index
         url = BASE_URL.format(
             self._host,
             self._port,
