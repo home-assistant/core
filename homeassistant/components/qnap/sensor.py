@@ -1,6 +1,6 @@
 """Support for QNAP NAS Sensors."""
-import voluptuous as vol
 import logging
+import voluptuous as vol
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA,
@@ -282,7 +282,7 @@ class QNAPSensor(CoordinatorEntity[QnapCoordinator], SensorEntity):
         self,
         coordinator: QnapCoordinator,
         description: SensorEntityDescription,
-        monitor_device=None
+        monitor_device=None,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
@@ -294,7 +294,7 @@ class QNAPSensor(CoordinatorEntity[QnapCoordinator], SensorEntity):
     def name(self):
         """Return the name of the sensor, if any."""
         if self.monitor_device is not None:
-            return (f"{self.device_name} {self.entity_description.name} ({self.monitor_device})")
+            return f"{self.device_name} {self.entity_description.name} ({self.monitor_device})"
         return f"{self.device_name} {self.entity_description.name}"
 
 
