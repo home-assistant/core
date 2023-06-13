@@ -48,10 +48,9 @@ async def async_setup_services(hass: HomeAssistant) -> None:
                 )
         coordinators = list[FullyKioskDataUpdateCoordinator]()
         for config_entry in config_entries:
-            if config_entry.state == ConfigEntryState.LOADED:
-                coordinators.append(hass.data[DOMAIN][config_entry.entry_id])
-            else:
-                LOGGER.warning("Config for %s is not loaded", config_entry.title)
+            if config_entry.state != ConfigEntryState.LOADED:
+                raise HomeAssistantError(f"{config_entry.title} is not loaded")
+            coordinators.append(hass.data[DOMAIN][config_entry.entry_id])
         return coordinators
 
     async def async_load_url(call: ServiceCall) -> None:
