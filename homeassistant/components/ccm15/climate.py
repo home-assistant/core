@@ -1,5 +1,6 @@
 """Climate device for CCM15 coordinator."""
 import asyncio
+from dataclasses import dataclass
 import logging
 
 import aiohttp
@@ -43,6 +44,13 @@ CONST_STATE_CMD_MAP = {
 CONST_CMD_STATE_MAP = {v: k for k, v in CONST_STATE_CMD_MAP.items()}
 CONST_FAN_CMD_MAP = {FAN_AUTO: 0, FAN_LOW: 2, FAN_MEDIUM: 3, FAN_HIGH: 4, FAN_OFF: 5}
 CONST_CMD_FAN_MAP = {v: k for k, v in CONST_FAN_CMD_MAP.items()}
+
+
+@dataclass
+class CCM15DeviceState:
+    """Data retrieved from a CCM15 device."""
+
+    devices: list[dict[int, str]]
 
 
 class CCM15Coordinator:
