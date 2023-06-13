@@ -50,10 +50,6 @@ from .utils import folded_name
 class HomeKitSensorEntityDescription(SensorEntityDescription):
     """Describes Homekit sensor."""
 
-    # SimpleSensor does not support UNDEFINED or None,
-    # restrict the type to str.
-    name: str = ""
-
     probe: Callable[[Characteristic], bool] | None = None
     format: Callable[[Characteristic], str] | None = None
 
@@ -540,7 +536,7 @@ class SimpleSensor(CharacteristicEntity, SensorEntity):
         """Return the name of the device if any."""
         if name := self.accessory.name:
             return f"{name} {self.entity_description.name}"
-        return self.entity_description.name
+        return f"{self.entity_description.name}"
 
     @property
     def native_value(self) -> str | int | float:

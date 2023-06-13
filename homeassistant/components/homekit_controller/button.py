@@ -32,10 +32,6 @@ _LOGGER = logging.getLogger(__name__)
 class HomeKitButtonEntityDescription(ButtonEntityDescription):
     """Describes Homekit button."""
 
-    # HomeKitButton does not support UNDEFINED or None,
-    # restrict the type to str.
-    name: str = ""
-
     write_value: int | str | None = None
 
 
@@ -120,7 +116,7 @@ class HomeKitButton(CharacteristicEntity, ButtonEntity):
         """Return the name of the device if any."""
         if name := self.accessory.name:
             return f"{name} {self.entity_description.name}"
-        return self.entity_description.name
+        return f"{self.entity_description.name}"
 
     async def async_press(self) -> None:
         """Press the button."""
