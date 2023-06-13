@@ -132,7 +132,9 @@ class KeyboardRemote:
                 continue
 
             self.active_handlers_by_descriptor[descriptor] = handler
-            initial_start_monitoring.add(handler.async_device_start_monitoring(dev))
+            initial_start_monitoring.add(
+                asyncio.create_task(handler.async_device_start_monitoring(dev))
+            )
 
         if initial_start_monitoring:
             await asyncio.wait(initial_start_monitoring)
@@ -155,7 +157,9 @@ class KeyboardRemote:
 
         handler_stop_monitoring = set()
         for handler in self.active_handlers_by_descriptor.values():
-            handler_stop_monitoring.add(handler.async_device_stop_monitoring())
+            handler_stop_monitoring.add(
+                asyncio.create_task(handler.async_device_stop_monitoring())
+            )
         if handler_stop_monitoring:
             await asyncio.wait(handler_stop_monitoring)
 
