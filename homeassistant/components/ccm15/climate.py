@@ -229,6 +229,7 @@ class CCM15Coordinator(DataUpdateCoordinator[CCM15DeviceState]):
         self, ac_id: int, state_cmd: int, fan_cmd: int, temp: int
     ):
         """Set new target states."""
+        _LOGGER.debug("Calling async_set_states for ac index '%s'", ac_id)
 
         url = BASE_URL.format(
             self._host,
@@ -244,7 +245,7 @@ class CCM15Coordinator(DataUpdateCoordinator[CCM15DeviceState]):
             + "&temp="
             + str(temp),
         )
-        _LOGGER.debug("Set state=%s", url)
+        _LOGGER.debug("Url:'%s'", url)
 
         async with httpx.AsyncClient() as client:
             response = await client.get(url, timeout=DEFAULT_TIMEOUT)
