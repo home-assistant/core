@@ -14,6 +14,7 @@ from . import websocket_api
 from .const import (
     ATTR_LEVEL,
     DOMAIN,
+    EVENT_LOGGING_CHANGED,  # noqa: F401
     LOGGER_DEFAULT,
     LOGGER_FILTERS,
     LOGGER_LOGS,
@@ -21,7 +22,6 @@ from .const import (
     SERVICE_SET_DEFAULT_LEVEL,
     SERVICE_SET_LEVEL,
 )
-from .const import EVENT_LOGGING_CHANGED  # noqa: F401
 from .helpers import (
     LoggerDomainConfig,
     LoggerSettings,
