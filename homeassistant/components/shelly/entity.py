@@ -275,6 +275,10 @@ def async_setup_entry_rest(
 class BlockEntityDescription(EntityDescription):
     """Class to describe a BLOCK entity."""
 
+    # BlockEntity does not support UNDEFINED or None,
+    # restrict the type to str.
+    name: str = ""
+
     icon_fn: Callable[[dict], str] | None = None
     unit_fn: Callable[[dict], str] | None = None
     value: Callable[[Any], Any] = lambda val: val
@@ -295,6 +299,10 @@ class RpcEntityRequiredKeysMixin:
 class RpcEntityDescription(EntityDescription, RpcEntityRequiredKeysMixin):
     """Class to describe a RPC entity."""
 
+    # BlockEntity does not support UNDEFINED or None,
+    # restrict the type to str.
+    name: str = ""
+
     value: Callable[[Any, Any], Any] | None = None
     available: Callable[[dict], bool] | None = None
     removal_condition: Callable[[dict, dict, str], bool] | None = None
@@ -306,6 +314,10 @@ class RpcEntityDescription(EntityDescription, RpcEntityRequiredKeysMixin):
 @dataclass
 class RestEntityDescription(EntityDescription):
     """Class to describe a REST entity."""
+
+    # BlockEntity does not support UNDEFINED or None,
+    # restrict the type to str.
+    name: str = ""
 
     value: Callable[[dict, Any], Any] | None = None
     extra_state_attributes: Callable[[dict], dict | None] | None = None
