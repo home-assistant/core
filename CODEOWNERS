@@ -885,6 +885,7 @@ build.json @home-assistant/supervisor
 /homeassistant/components/opengarage/ @danielhiversen
 /tests/components/opengarage/ @danielhiversen
 /homeassistant/components/openhome/ @bazwilliams
+/tests/components/openhome/ @bazwilliams
 /homeassistant/components/opensky/ @joostlek
 /homeassistant/components/opentherm_gw/ @mvn23
 /tests/components/opentherm_gw/ @mvn23
