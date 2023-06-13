@@ -5,7 +5,8 @@ from contextlib import suppress
 import logging
 import os
 
-import aionotify
+# import aionotify
+from asyncinotify import Inotify, Mask
 from evdev import InputDevice, categorize, ecodes, list_devices
 import voluptuous as vol
 
@@ -75,12 +76,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 class KeyboardRemote:
     """Manage device connection/disconnection using inotify to asynchronously monitor."""
 
-    def __init__(self, hass: HomeAssistant, config: ConfigType) -> None:
+    def __init__(self, hass: HomeAssistant, config) -> None:
         """Create handlers and setup dictionaries to keep track of them."""
         self.hass = hass
         self.handlers_by_name = {}
         self.handlers_by_descriptor = {}
-        self.active_handlers_by_descriptor = {}
+        self.active_handlers_by_descriptor: dict[str, asyncio.Future] = {}
+        self.inotify = None
         self.watcher = None
         self.monitor_task = None
 
@@ -112,16 +114,10 @@ class KeyboardRemote:
 
         _LOGGER.debug("Start monitoring")
 
-        # start watching
-        self.watcher = aionotify.Watcher()
-        self.watcher.watch(
-            alias="devinput",
-            path=DEVINPUT,
-            flags=aionotify.Flags.CREATE
-            | aionotify.Flags.ATTRIB
-            | aionotify.Flags.DELETE,
+        self.inotify = Inotify()
+        self.watcher = self.inotify.add_watch(
+            DEVINPUT, Mask.CREATE | Mask.ATTRIB | Mask.DELETE
         )
-        await self.watcher.setup(self.hass.loop)
 
         # add initial devices (do this AFTER starting watcher in order to
         # avoid race conditions leading to missing device connections)
@@ -136,9 +132,7 @@ class KeyboardRemote:
                 continue
 
             self.active_handlers_by_descriptor[descriptor] = handler
-            initial_start_monitoring.add(
-                await handler.async_device_start_monitoring(dev)
-            )
+            initial_start_monitoring.add(handler.async_device_start_monitoring(dev))
 
         if initial_start_monitoring:
             await asyncio.wait(initial_start_monitoring)
@@ -150,6 +144,10 @@ class KeyboardRemote:
 
         _LOGGER.debug("Cleanup on shutdown")
 
+        if self.inotify and self.watcher:
+            self.inotify.rm_watch(self.watcher)
+            self.watcher = None
+
         if self.monitor_task is not None:
             if not self.monitor_task.done():
                 self.monitor_task.cancel()
@@ -157,10 +155,13 @@ class KeyboardRemote:
 
         handler_stop_monitoring = set()
         for handler in self.active_handlers_by_descriptor.values():
-            handler_stop_monitoring.add(await handler.async_device_stop_monitoring())
-
+            handler_stop_monitoring.add(handler.async_device_stop_monitoring())
         if handler_stop_monitoring:
             await asyncio.wait(handler_stop_monitoring)
+
+        if self.inotify:
+            self.inotify.close()
+            self.inotify = None
 
     def get_device_handler(self, descriptor):
         """Find the correct device handler given a descriptor (path)."""
@@ -191,20 +192,21 @@ class KeyboardRemote:
     async def async_monitor_devices(self):
         """Monitor asynchronously for device connection/disconnection or permissions changes."""
 
+        _LOGGER.debug("Start monitoring loop")
+
         try:
-            while True:
-                event = await self.watcher.get_event()
+            async for event in self.inotify:
                 descriptor = f"{DEVINPUT}/{event.name}"
+                _LOGGER.debug("got events for %s: %s", descriptor, event.mask)
 
                 descriptor_active = descriptor in self.active_handlers_by_descriptor
 
-                if (event.flags & aionotify.Flags.DELETE) and descriptor_active:
+                if (event.mask & Mask.DELETE) and descriptor_active:
                     handler = self.active_handlers_by_descriptor[descriptor]
                     del self.active_handlers_by_descriptor[descriptor]
                     await handler.async_device_stop_monitoring()
                 elif (
-                    (event.flags & aionotify.Flags.CREATE)
-                    or (event.flags & aionotify.Flags.ATTRIB)
+                    (event.mask & Mask.CREATE) or (event.mask & Mask.ATTRIB)
                 ) and not descriptor_active:
                     dev, handler = await self.hass.async_add_executor_job(
                         self.get_device_handler, descriptor
@@ -214,6 +216,7 @@ class KeyboardRemote:
                     self.active_handlers_by_descriptor[descriptor] = handler
                     await handler.async_device_start_monitoring(dev)
         except asyncio.CancelledError:
+            _LOGGER.debug("Monitoring canceled")
             return
 
     class DeviceHandler:
@@ -300,6 +303,7 @@ class KeyboardRemote:
                 _LOGGER.debug("Start device monitoring")
                 await self.hass.async_add_executor_job(dev.grab)
                 async for event in dev.async_read_loop():
+                    # pylint: disable=no-member
                     if event.type is ecodes.EV_KEY:
                         if event.value in self.key_values:
                             _LOGGER.debug(categorize(event))
