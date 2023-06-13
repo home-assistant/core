@@ -30,7 +30,11 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+    UpdateFailed,
+)
 
 from .const import BASE_URL, CONF_URL_STATUS, DEFAULT_INTERVAL, DEFAULT_TIMEOUT, DOMAIN
 
@@ -226,33 +230,17 @@ class CCM15Coordinator(DataUpdateCoordinator[CCM15DeviceState]):
             return False
 
 
-class CCM15Climate(ClimateEntity):
+class CCM15Climate(CoordinatorEntity[CCM15Coordinator], ClimateEntity):
     """Climate device for CCM15 coordinator."""
 
     def __init__(
         self, ac_host: str, ac_index: int, coordinator: CCM15Coordinator
     ) -> None:
         """Create a climate device managed from a coordinator."""
+        super().__init__(coordinator)
         self._ac_host = ac_host
         self._ac_index = ac_index
         self._ac_name = f"ac{self._ac_index}"
-        self._coordinator = coordinator
-        self._is_on = False
-        self._current_temp = 0
-        self._target_temp = 0
-        self._operation_mode = HVACMode.OFF
-        self._fan_mode = FAN_OFF
-        self._swing_mode = SWING_OFF
-        self._available = False
-
-    def update_from_ac_data(self, acdata: dict[str, int]):
-        """Update state from the ac_data."""
-
-        self._available = True
-        self._current_temp = acdata["temp"]
-        self._target_temp = acdata["settemp"]
-        self._operation_mode = CONST_CMD_STATE_MAP[acdata["ac_mode"]]
-        self._fan_mode = CONST_CMD_FAN_MAP[acdata["fan"]]
 
     @property
     def unique_id(self):
@@ -277,12 +265,12 @@ class CCM15Climate(ClimateEntity):
     @property
     def current_temperature(self):
         """Return current temperature."""
-        return self._current_temp
+        return self.coordinator.data.devices[self._ac_index]["temp"]
 
     @property
     def target_temperature(self):
         """Return target temperature."""
-        return self._target_temp
+        return self.coordinator.data.devices[self._ac_index]["settemp"]
 
     @property
     def target_temperature_step(self):
@@ -292,7 +280,9 @@ class CCM15Climate(ClimateEntity):
     @property
     def hvac_mode(self):
         """Return hvac mode."""
-        return self._operation_mode
+        return CONST_CMD_STATE_MAP[
+            self.coordinator.data.devices[self._ac_index]["ac_mode"]
+        ]
 
     @property
     def hvac_modes(self):
@@ -302,7 +292,7 @@ class CCM15Climate(ClimateEntity):
     @property
     def fan_mode(self):
         """Return fan mode."""
-        return self._fan_mode
+        return CONST_CMD_FAN_MAP[self.coordinator.data.devices[self._ac_index]["fan"]]
 
     @property
     def fan_modes(self):
@@ -312,7 +302,7 @@ class CCM15Climate(ClimateEntity):
     @property
     def swing_mode(self):
         """Return swing mode."""
-        return self._swing_mode
+        return SWING_OFF
 
     @property
     def swing_modes(self) -> list[str]:
@@ -328,47 +318,36 @@ class CCM15Climate(ClimateEntity):
             | ClimateEntityFeature.SWING_MODE
         )
 
-    def set_temperature(self, **kwargs):
+    async def async_set_temperature(self, **kwargs):
         """Set the target temperature."""
         temperature = kwargs.get(ATTR_TEMPERATURE)
         if temperature is None:
             return
-        self._target_temp = temperature
-        self._coordinator.set_temperature(self._ac_name, temperature)
-        self.schedule_update_ha_state()
+        await self.coordinator.async_set_temperature(self._ac_index, temperature)
+        await self.coordinator.async_request_refresh()
 
-    def set_hvac_mode(self, hvac_mode):
+    async def async_set_hvac_mode(self, hvac_mode):
         """Set the hvac mode."""
-        self._operation_mode = hvac_mode
-        self._coordinator.set_operation_mode(self._ac_name, hvac_mode)
-        self.schedule_update_ha_state()
+        await self.coordinator.async_set_operation_mode(self._ac_name, hvac_mode)
+        await self.coordinator.async_request_refresh()
 
-    def set_fan_mode(self, fan_mode):
+    async def async_set_fan_mode(self, fan_mode):
         """Set the fan mode."""
-        self._fan_mode = fan_mode
-        self._coordinator.set_fan_mode(self._ac_name, fan_mode)
-        self.schedule_update_ha_state()
+        await self.coordinator.async_set_fan_mode(self._ac_name, fan_mode)
+        await self.coordinator.async_request_refresh()
 
-    def set_swing_mode(self, swing_mode):
+    async def async_set_swing_mode(self, swing_mode):
         """Set the swing mode."""
-        self._swing_mode = swing_mode
-        self._coordinator.set_swing_mode(self._ac_name, swing_mode)
-        self.schedule_update_ha_state()
+        await self.coordinator.set_swing_mode(self._ac_name, swing_mode)
+        await self.coordinator.async_request_refresh()
 
-    def turn_off(self):
+    async def async_turn_off(self):
         """Turn off."""
-        self._is_on = False
-        self._coordinator.turn_off(self._ac_name)
-        self.schedule_update_ha_state()
+        await self.async_set_hvac_mode(HVACMode.OFF)
 
-    def turn_on(self):
+    async def async_turn_on(self):
         """Turn on."""
-        self._is_on = True
-        self._coordinator.turn_on(self._ac_name)
-        self.schedule_update_ha_state()
-
-    def update(self):
-        """Update the data from the thermostat."""
+        await self.async_set_hvac_mode(HVACMode.AUTO)
 
 
 async def async_setup_entry(
@@ -378,7 +357,6 @@ async def async_setup_entry(
 ) -> None:
     """Set up all climate."""
     coordinator = hass.data[DOMAIN][config_entry.entry_id]
-    await coordinator.poll_status_async()
     entities = []
     for ac_device in coordinator.get_devices():
         entities.append(ac_device)
