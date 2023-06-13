@@ -75,7 +75,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 class KeyboardRemote:
     """Manage device connection/disconnection using inotify to asynchronously monitor."""
 
-    def __init__(self, hass: HomeAssistant, config) -> None:
+    def __init__(self, hass: HomeAssistant, config: ConfigType) -> None:
         """Create handlers and setup dictionaries to keep track of them."""
         self.hass = hass
         self.handlers_by_name = {}
@@ -136,7 +136,9 @@ class KeyboardRemote:
                 continue
 
             self.active_handlers_by_descriptor[descriptor] = handler
-            initial_start_monitoring.add(await handler.async_start_monitoring(dev))
+            initial_start_monitoring.add(
+                await handler.async_device_start_monitoring(dev)
+            )
 
         if initial_start_monitoring:
             await asyncio.wait(initial_start_monitoring)
@@ -155,7 +157,7 @@ class KeyboardRemote:
 
         handler_stop_monitoring = set()
         for handler in self.active_handlers_by_descriptor.values():
-            handler_stop_monitoring.add(await handler.async_stop_monitoring())
+            handler_stop_monitoring.add(await handler.async_device_stop_monitoring())
 
         if handler_stop_monitoring:
             await asyncio.wait(handler_stop_monitoring)
@@ -199,7 +201,7 @@ class KeyboardRemote:
                 if (event.flags & aionotify.Flags.DELETE) and descriptor_active:
                     handler = self.active_handlers_by_descriptor[descriptor]
                     del self.active_handlers_by_descriptor[descriptor]
-                    await handler.async_stop_monitoring()
+                    await handler.async_device_stop_monitoring()
                 elif (
                     (event.flags & aionotify.Flags.CREATE)
                     or (event.flags & aionotify.Flags.ATTRIB)
@@ -210,7 +212,7 @@ class KeyboardRemote:
                     if handler is None:
                         continue
                     self.active_handlers_by_descriptor[descriptor] = handler
-                    await handler.async_start_monitoring(dev)
+                    await handler.async_device_start_monitoring(dev)
         except asyncio.CancelledError:
             return
 
@@ -234,7 +236,7 @@ class KeyboardRemote:
             self.monitor_task = None
             self.dev = None
 
-        async def async_keyrepeat(self, path, name, code, delay, repeat):
+        async def async_device_keyrepeat(self, path, name, code, delay, repeat):
             """Emulate keyboard delay/repeat behaviour by sending key events on a timer."""
 
             await asyncio.sleep(delay)
@@ -250,9 +252,9 @@ class KeyboardRemote:
                 )
                 await asyncio.sleep(repeat)
 
-        async def async_start_monitoring(self, dev):
+        async def async_device_start_monitoring(self, dev):
             """Start event monitoring task and issue event."""
-            _LOGGER.debug("Keyboard async_start_monitoring, %s", dev.name)
+            _LOGGER.debug("Keyboard async_device_start_monitoring, %s", dev.name)
             if self.monitor_task is None:
                 self.dev = dev
                 self.monitor_task = self.hass.async_create_task(
@@ -264,7 +266,7 @@ class KeyboardRemote:
                 )
                 _LOGGER.debug("Keyboard (re-)connected, %s", dev.name)
 
-        async def async_stop_monitoring(self):
+        async def async_device_stop_monitoring(self):
             """Stop event monitoring task and issue event."""
             if self.monitor_task is not None:
                 with suppress(OSError):
@@ -316,7 +318,7 @@ class KeyboardRemote:
                             and self.emulate_key_hold
                         ):
                             repeat_tasks[event.code] = self.hass.async_create_task(
-                                self.async_keyrepeat(
+                                self.async_device_keyrepeat(
                                     dev.path,
                                     dev.name,
                                     event.code,
