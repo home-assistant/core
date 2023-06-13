@@ -36,7 +36,14 @@ from homeassistant.helpers.update_coordinator import (
     UpdateFailed,
 )
 
-from .const import BASE_URL, CONF_URL_STATUS, DEFAULT_INTERVAL, DEFAULT_TIMEOUT, DOMAIN
+from .const import (
+    BASE_URL,
+    CONF_URL_CTRL,
+    CONF_URL_STATUS,
+    DEFAULT_INTERVAL,
+    DEFAULT_TIMEOUT,
+    DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -229,6 +236,32 @@ class CCM15Coordinator(DataUpdateCoordinator[CCM15DeviceState]):
             _LOGGER.debug("Test connection: Timeout")
             return False
 
+    async def async_update(self, ac_id: int, state_cmd: int, fan_cmd: int, temp: int):
+        """Set new target states."""
+
+        url = BASE_URL.format(
+            self._host,
+            self._port,
+            CONF_URL_CTRL
+            + "?ac0="
+            + str(ac_id)
+            + "&ac1=0"
+            + "&mode="
+            + str(state_cmd)
+            + "&fan="
+            + str(fan_cmd)
+            + "&temp="
+            + str(temp),
+        )
+        _LOGGER.info("Set state=%s", url)
+
+        async with httpx.AsyncClient() as client:
+            response = await client.get(url, timeout=DEFAULT_TIMEOUT)
+            if response.status_code != httpx.codes.OK:
+                _LOGGER.exception("Error doing API request")
+            else:
+                _LOGGER.debug("API request ok %d", response.status_code)
+
 
 class CCM15Climate(CoordinatorEntity[CCM15Coordinator], ClimateEntity):
     """Climate device for CCM15 coordinator."""
@@ -338,7 +371,7 @@ class CCM15Climate(CoordinatorEntity[CCM15Coordinator], ClimateEntity):
 
     async def async_set_swing_mode(self, swing_mode):
         """Set the swing mode."""
-        await self.coordinator.set_swing_mode(self._ac_name, swing_mode)
+        await self.coordinator.async_set_swing_mode(self._ac_name, swing_mode)
         await self.coordinator.async_request_refresh()
 
     async def async_turn_off(self):
