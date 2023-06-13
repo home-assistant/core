@@ -1,5 +1,6 @@
 """Support for QNAP NAS Sensors."""
 import logging
+
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
