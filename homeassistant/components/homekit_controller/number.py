@@ -5,6 +5,8 @@ characteristics that don't map to a Home Assistant feature.
 """
 from __future__ import annotations
 
+from dataclasses import dataclass
+
 from aiohomekit.model.characteristics import Characteristic, CharacteristicsTypes
 
 from homeassistant.components.number import (
@@ -24,26 +26,36 @@ from . import KNOWN_DEVICES
 from .connection import HKDevice
 from .entity import CharacteristicEntity
 
-NUMBER_ENTITIES: dict[str, NumberEntityDescription] = {
-    CharacteristicsTypes.VENDOR_VOCOLINC_HUMIDIFIER_SPRAY_LEVEL: NumberEntityDescription(
+
+@dataclass
+class HomeKitNumberEntityDescription(NumberEntityDescription):
+    """Describes Homekit number."""
+
+    # HomeKitNumber does not support UNDEFINED or None,
+    # restrict the type to str.
+    name: str = ""
+
+
+NUMBER_ENTITIES: dict[str, HomeKitNumberEntityDescription] = {
+    CharacteristicsTypes.VENDOR_VOCOLINC_HUMIDIFIER_SPRAY_LEVEL: HomeKitNumberEntityDescription(
         key=CharacteristicsTypes.VENDOR_VOCOLINC_HUMIDIFIER_SPRAY_LEVEL,
         name="Spray Quantity",
         icon="mdi:water",
         entity_category=EntityCategory.CONFIG,
     ),
-    CharacteristicsTypes.VENDOR_EVE_DEGREE_ELEVATION: NumberEntityDescription(
+    CharacteristicsTypes.VENDOR_EVE_DEGREE_ELEVATION: HomeKitNumberEntityDescription(
         key=CharacteristicsTypes.VENDOR_EVE_DEGREE_ELEVATION,
         name="Elevation",
         icon="mdi:elevation-rise",
         entity_category=EntityCategory.CONFIG,
     ),
-    CharacteristicsTypes.VENDOR_AQARA_GATEWAY_VOLUME: NumberEntityDescription(
+    CharacteristicsTypes.VENDOR_AQARA_GATEWAY_VOLUME: HomeKitNumberEntityDescription(
         key=CharacteristicsTypes.VENDOR_AQARA_GATEWAY_VOLUME,
         name="Volume",
         icon="mdi:volume-high",
         entity_category=EntityCategory.CONFIG,
     ),
-    CharacteristicsTypes.VENDOR_AQARA_E1_GATEWAY_VOLUME: NumberEntityDescription(
+    CharacteristicsTypes.VENDOR_AQARA_E1_GATEWAY_VOLUME: HomeKitNumberEntityDescription(
         key=CharacteristicsTypes.VENDOR_AQARA_E1_GATEWAY_VOLUME,
         name="Volume",
         icon="mdi:volume-high",
@@ -85,12 +97,14 @@ async def async_setup_entry(
 class HomeKitNumber(CharacteristicEntity, NumberEntity):
     """Representation of a Number control on a homekit accessory."""
 
+    entity_description: HomeKitNumberEntityDescription
+
     def __init__(
         self,
         conn: HKDevice,
         info: ConfigType,
         char: Characteristic,
-        description: NumberEntityDescription,
+        description: HomeKitNumberEntityDescription,
     ) -> None:
         """Initialise a HomeKit number control."""
         self.entity_description = description
@@ -101,7 +115,7 @@ class HomeKitNumber(CharacteristicEntity, NumberEntity):
         """Return the name of the device if any."""
         if name := self.accessory.name:
             return f"{name} {self.entity_description.name}"
-        return f"{self.entity_description.name}"
+        return self.entity_description.name
 
     def get_characteristic_types(self) -> list[str]:
         """Define the homekit characteristics the entity is tracking."""
