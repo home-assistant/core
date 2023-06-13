@@ -196,6 +196,21 @@ async def test_actions(
                         "value": 1,
                     },
                 },
+                {
+                    "trigger": {
+                        "platform": "event",
+                        "event_type": "test_event_set_config_parameter_no_endpoint",
+                    },
+                    "action": {
+                        "domain": DOMAIN,
+                        "type": "set_config_parameter",
+                        "device_id": device.id,
+                        "parameter": 1,
+                        "bitmask": None,
+                        "subtype": "3 (Beeper)",
+                        "value": 1,
+                    },
+                },
             ]
         },
     )
@@ -237,6 +252,18 @@ async def test_actions(
         "homeassistant.components.zwave_js.services.async_set_config_parameter"
     ) as mock_call:
         hass.bus.async_fire("test_event_set_config_parameter")
+        await hass.async_block_till_done()
+        mock_call.assert_called_once()
+        args = mock_call.call_args_list[0][0]
+        assert len(args) == 3
+        assert args[0].node_id == 13
+        assert args[1] == 1
+        assert args[2] == 1
+
+    with patch(
+        "homeassistant.components.zwave_js.services.async_set_config_parameter"
+    ) as mock_call:
+        hass.bus.async_fire("test_event_set_config_parameter_no_endpoint")
         await hass.async_block_till_done()
         mock_call.assert_called_once()
         args = mock_call.call_args_list[0][0]
