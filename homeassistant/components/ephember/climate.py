@@ -71,7 +71,7 @@ def setup_platform(
         zones = ember.get_zones()
         for zone in zones:
             add_entities([EphEmberThermostat(ember, zone)])
-    except RuntimeError as e:
+    except RuntimeError:
         _LOGGER.error("Cannot connect to EphEmber")
         return
 
@@ -90,8 +90,8 @@ class EphEmberThermostat(ClimateEntity):
         self._zone_name = zone_name(zone)
         self._zone = zone
         self._hot_water = False
-        # self._immersion = False
         self._immersion = zone['deviceType'] == 4
+        """4 is a specific device type for immersions returned by """
         
         self._attr_name = self._zone_name
 
@@ -181,12 +181,7 @@ class EphEmberThermostat(ClimateEntity):
         """Return the maximum temperature."""
         if self._hot_water:
             return zone_target_temperature(self._zone)
-
-        if self._immersion:
-            return 90.0
-
-        return 35.0
-
+  
     def update(self) -> None:
         """Get the latest data."""
         self._zone = self._ember.get_zone(self._zone_name)
