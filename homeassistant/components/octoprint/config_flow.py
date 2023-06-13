@@ -21,13 +21,12 @@ from homeassistant.const import (
     CONF_SSL,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
+    EVENT_HOMEASSISTANT_CLOSE,
 )
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.helpers.aiohttp_client import (
-    _async_register_default_clientsession_shutdown,
-)
 import homeassistant.helpers.config_validation as cv
 
+from ...core import Event, callback
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -269,7 +268,15 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             ssl=False if not verify_ssl else None,
         )
         session = aiohttp.ClientSession(connector=connector)
-        _async_register_default_clientsession_shutdown(self.hass, session)
+
+        @callback
+        def _async_close_websession(event: Event) -> None:
+            """Close websession."""
+            session.detach()
+
+        self.hass.bus.async_listen_once(
+            EVENT_HOMEASSISTANT_CLOSE, _async_close_websession
+        )
 
         return OctoprintClient(
             host=user_input[CONF_HOST],
