@@ -1005,6 +1005,8 @@ build.json @home-assistant/supervisor
 /tests/components/remote/ @home-assistant/core
 /homeassistant/components/renault/ @epenet
 /tests/components/renault/ @epenet
+/homeassistant/components/renson/ @jimmyd-be
+/tests/components/renson/ @jimmyd-be
 /homeassistant/components/reolink/ @starkillerOG
 /tests/components/reolink/ @starkillerOG
 /homeassistant/components/repairs/ @home-assistant/core
