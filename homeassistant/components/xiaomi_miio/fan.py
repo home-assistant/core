@@ -275,9 +275,7 @@ async def async_setup_entry(
             if not entity_method:
                 continue
             await entity_method(**params)
-            update_tasks.append(
-                hass.async_create_task(entity.async_update_ha_state(True))
-            )
+            update_tasks.append(asyncio.create_task(entity.async_update_ha_state(True)))
 
         if update_tasks:
             await asyncio.wait(update_tasks)

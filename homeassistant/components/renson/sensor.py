@@ -46,7 +46,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import RensonCoordinator
+from . import RensonCoordinator, RensonData
 from .const import DOMAIN
 from .entity import RensonEntity
 
@@ -305,13 +305,10 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Renson sensor platform."""
 
-    api: RensonVentilation = hass.data[DOMAIN][config_entry.entry_id].api
-    coordinator: RensonCoordinator = hass.data[DOMAIN][
-        config_entry.entry_id
-    ].coordinator
+    data: RensonData = hass.data[DOMAIN][config_entry.entry_id]
 
-    entities: list = []
-    for description in SENSORS:
-        entities.append(RensonSensor(description, api, coordinator))
+    entities = [
+        RensonSensor(description, data.api, data.coordinator) for description in SENSORS
+    ]
 
     async_add_entities(entities)

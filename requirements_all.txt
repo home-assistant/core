@@ -713,7 +713,7 @@ elgato==4.0.1
 eliqonline==1.2.2
 
 # homeassistant.components.elkm1
-elkm1-lib==2.2.2
+elkm1-lib==2.2.5
 
 # homeassistant.components.elmax
 elmax-api==0.0.4
@@ -887,7 +887,7 @@ google-cloud-texttospeech==2.12.3
 google-generativeai==0.1.0rc2
 
 # homeassistant.components.nest
-google-nest-sdm==2.2.4
+google-nest-sdm==2.2.5
 
 # homeassistant.components.google_travel_time
 googlemaps==2.5.1
@@ -1275,7 +1275,7 @@ niko-home-control==0.2.1
 niluclient==0.1.2
 
 # homeassistant.components.noaa_tides
-noaa-coops==0.1.8
+noaa-coops==0.1.9
 
 # homeassistant.components.nfandroidtv
 notifications-android-tv==0.1.5
@@ -1616,7 +1616,7 @@ pycsspeechtts==1.0.8
 # pycups==1.9.73
 
 # homeassistant.components.daikin
-pydaikin==2.9.1
+pydaikin==2.9.0
 
 # homeassistant.components.danfoss_air
 pydanfossair==0.1.0
@@ -1724,7 +1724,7 @@ pyialarm==2.2.0
 pyicloud==1.0.0
 
 # homeassistant.components.insteon
-pyinsteon==1.4.2
+pyinsteon==1.4.3
 
 # homeassistant.components.intesishome
 pyintesishome==1.8.0
@@ -2184,7 +2184,7 @@ pytrafikverket==0.3.3
 pyudev==0.23.2
 
 # homeassistant.components.unifiprotect
-pyunifiprotect==4.10.2
+pyunifiprotect==4.10.3
 
 # homeassistant.components.uptimerobot
 pyuptimerobot==22.2.0
