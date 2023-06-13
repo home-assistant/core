@@ -111,7 +111,7 @@ class CCM15Coordinator(DataUpdateCoordinator[CCM15DeviceState]):
             ac_state = self.get_status_from(ac_binary)
             if ac_state:
                 _LOGGER.debug("Parsed data ac_state:'%s'", ac_state)
-                if ac_name not in self._ac_devices:
+                if self._ac_devices[ac_index] is None:
                     _LOGGER.debug("Creating new ac device '%s'", ac_name)
                     self._ac_devices[ac_index] = CCM15Climate(
                         self._host, ac_index, self
