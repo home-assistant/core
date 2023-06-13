@@ -14,7 +14,6 @@ from .const import (
     ATTR_APPLICATION,
     ATTR_URL,
     DOMAIN,
-    LOGGER,
     SERVICE_LOAD_URL,
     SERVICE_START_APPLICATION,
 )
