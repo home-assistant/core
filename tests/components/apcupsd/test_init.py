@@ -44,7 +44,7 @@ async def test_async_setup_entry(hass: HomeAssistant, status: OrderedDict) -> No
 )
 async def test_device_entry(hass: HomeAssistant, status: OrderedDict) -> None:
     """Test successful setup of device entries."""
-    await init_integration(hass, status=status)
+    await async_init_integration(hass, status=status)
 
     # Verify device info is properly set up.
     device_entries = dr.async_get(hass)
