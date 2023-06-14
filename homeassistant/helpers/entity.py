@@ -44,7 +44,7 @@ from .event import (
     async_track_device_registry_updated_event,
     async_track_entity_registry_updated_event,
 )
-from .typing import StateType
+from .typing import UNDEFINED, StateType, UndefinedType
 
 if TYPE_CHECKING:
     from .entity_platform import EntityPlatform
@@ -222,7 +222,7 @@ class EntityDescription:
     force_update: bool = False
     icon: str | None = None
     has_entity_name: bool = False
-    name: str | None = None
+    name: str | UndefinedType | None = UNDEFINED
     translation_key: str | None = None
     unit_of_measurement: str | None = None
 
@@ -328,6 +328,22 @@ class Entity(ABC):
             return self.entity_description.has_entity_name
         return False
 
+    def _device_class_name(self) -> str | None:
+        """Return a translated name of the entity based on its device class."""
+        assert self.platform
+        if not self.has_entity_name:
+            return None
+        device_class_key = self.device_class or "_"
+        name_translation_key = (
+            f"component.{self.platform.domain}.entity_component."
+            f"{device_class_key}.name"
+        )
+        return self.platform.component_translations.get(name_translation_key)
+
+    def _default_to_device_class_name(self) -> bool:
+        """Return True if an unnamed entity should be named by its device class."""
+        return False
+
     @property
     def name(self) -> str | None:
         """Return the name of the entity."""
@@ -338,11 +354,21 @@ class Entity(ABC):
                 f"component.{self.platform.platform_name}.entity.{self.platform.domain}"
                 f".{self.translation_key}.name"
             )
-            if name_translation_key in self.platform.entity_translations:
-                name: str = self.platform.entity_translations[name_translation_key]
+            if name_translation_key in self.platform.platform_translations:
+                name: str = self.platform.platform_translations[name_translation_key]
                 return name
         if hasattr(self, "entity_description"):
-            return self.entity_description.name
+            description_name = self.entity_description.name
+            if description_name is UNDEFINED and self._default_to_device_class_name():
+                return self._device_class_name()
+            if description_name is not UNDEFINED:
+                return description_name
+            return None
+
+        # The entity has no name set by _attr_name, translation_key or entity_description
+        # Check if the entity should be named by its device class
+        if self._default_to_device_class_name():
+            return self._device_class_name()
         return None
 
     @property
