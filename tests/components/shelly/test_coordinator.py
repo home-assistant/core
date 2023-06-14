@@ -326,6 +326,14 @@ async def test_rpc_reload_on_cfg_change(
 
     assert hass.states.get("switch.test_switch_0") is not None
 
+    # Wait for debouncer
+    async_fire_time_changed(
+        hass, dt_util.utcnow() + timedelta(seconds=ENTRY_RELOAD_COOLDOWN)
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.get("switch.test_switch_0") is None
+
 
 async def test_rpc_reload_with_invalid_auth(
     hass: HomeAssistant, mock_rpc_device, monkeypatch
