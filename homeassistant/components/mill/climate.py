@@ -91,6 +91,7 @@ class MillHeater(CoordinatorEntity[MillDataUpdateCoordinator], ClimateEntity):
     """Representation of a Mill Thermostat device."""
 
     _attr_fan_modes = [FAN_ON, FAN_OFF]
+    _attr_has_entity_name = True
     _attr_max_temp = MAX_TEMP
     _attr_min_temp = MIN_TEMP
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
@@ -106,12 +107,12 @@ class MillHeater(CoordinatorEntity[MillDataUpdateCoordinator], ClimateEntity):
 
         self._id = heater.device_id
         self._attr_unique_id = heater.device_id
-        self._attr_name = heater.name
+        self._attr_name = None
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, heater.device_id)},
             manufacturer=MANUFACTURER,
             model=f"Generation {heater.generation}",
-            name=self.name,
+            name=heater.name,
         )
         if heater.is_gen1:
             self._attr_hvac_modes = [HVACMode.HEAT]
@@ -202,6 +203,7 @@ class MillHeater(CoordinatorEntity[MillDataUpdateCoordinator], ClimateEntity):
 class LocalMillHeater(CoordinatorEntity[MillDataUpdateCoordinator], ClimateEntity):
     """Representation of a Mill Thermostat device."""
 
+    _attr_has_entity_name = True
     _attr_hvac_mode = HVACMode.HEAT
     _attr_hvac_modes = [HVACMode.HEAT]
     _attr_max_temp = MAX_TEMP
@@ -213,7 +215,7 @@ class LocalMillHeater(CoordinatorEntity[MillDataUpdateCoordinator], ClimateEntit
     def __init__(self, coordinator: MillDataUpdateCoordinator) -> None:
         """Initialize the thermostat."""
         super().__init__(coordinator)
-        self._attr_name = coordinator.mill_data_connection.name
+        self._attr_name = None
         if mac := coordinator.mill_data_connection.mac_address:
             self._attr_unique_id = mac
             self._attr_device_info = DeviceInfo(
