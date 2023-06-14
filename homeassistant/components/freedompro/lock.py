@@ -33,6 +33,8 @@ async def async_setup_entry(
 class Device(CoordinatorEntity[FreedomproDataUpdateCoordinator], LockEntity):
     """Representation of an Freedompro lock."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self,
         hass: HomeAssistant,
@@ -45,7 +47,7 @@ class Device(CoordinatorEntity[FreedomproDataUpdateCoordinator], LockEntity):
         self._hass = hass
         self._session = aiohttp_client.async_get_clientsession(self._hass)
         self._api_key = api_key
-        self._attr_name = device["name"]
+        self._attr_name = None
         self._attr_unique_id = device["uid"]
         self._type = device["type"]
         self._characteristics = device["characteristics"]
@@ -55,7 +57,7 @@ class Device(CoordinatorEntity[FreedomproDataUpdateCoordinator], LockEntity):
             },
             manufacturer="Freedompro",
             model=self._type,
-            name=self.name,
+            name=device["name"],
         )
 
     @callback
