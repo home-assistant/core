@@ -1,5 +1,8 @@
 """Config flow to configure qnap component."""
+from __future__ import annotations
+
 import logging
+from typing import Any
 
 from qnapstats import QNAPStats
 from requests.exceptions import ConnectTimeout
@@ -15,6 +18,7 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 from homeassistant.helpers import config_validation as cv
+from homeassistant.data_entry_flow import FlowResult
 
 from .const import (
     DEFAULT_PORT,
@@ -43,12 +47,14 @@ class QnapConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-
     async def async_step_import(self, import_info):
         """Set the config entry up from yaml."""
         return await self.async_step_user(import_info)
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self,
+        user_input: dict[str, Any] | None = None,
+    ) -> FlowResult:
         """Handle a flow initialized by the user."""
         errors = {}
         if user_input is not None:
