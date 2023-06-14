@@ -5,7 +5,6 @@ from contextlib import suppress
 import logging
 import os
 
-# import aionotify
 from asyncinotify import Inotify, Mask
 from evdev import InputDevice, categorize, ecodes, list_devices
 import voluptuous as vol
