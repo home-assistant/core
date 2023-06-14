@@ -53,7 +53,7 @@ ENTITY_HEATPUMP = "climate.heatpump"
 
 
 @pytest.fixture
-async def climate_only(hass: HomeAssistant) -> None:
+async def climate_only() -> None:
     """Enable only the climate platform."""
     with patch(
         "homeassistant.components.demo.COMPONENTS_WITH_CONFIG_ENTRY_DEMO_PLATFORM",

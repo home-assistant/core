@@ -17,7 +17,7 @@ ENTITY_SPEED = "select.speed"
 
 
 @pytest.fixture
-async def select_only(hass: HomeAssistant) -> None:
+async def select_only() -> None:
     """Enable only the select platform."""
     with patch(
         "homeassistant.components.demo.COMPONENTS_WITH_CONFIG_ENTRY_DEMO_PLATFORM",

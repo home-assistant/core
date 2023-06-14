@@ -24,7 +24,7 @@ ENTITY_SMALL_RANGE = "number.small_range"
 
 
 @pytest.fixture
-async def number_only(hass: HomeAssistant) -> None:
+async def number_only() -> None:
     """Enable only the number platform."""
     with patch(
         "homeassistant.components.demo.COMPONENTS_WITH_CONFIG_ENTRY_DEMO_PLATFORM",

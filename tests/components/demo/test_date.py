@@ -12,7 +12,7 @@ ENTITY_DATE = "date.date"
 
 
 @pytest.fixture
-async def date_only(hass: HomeAssistant) -> None:
+async def date_only() -> None:
     """Enable only the date platform."""
     with patch(
         "homeassistant.components.demo.COMPONENTS_WITH_CONFIG_ENTRY_DEMO_PLATFORM",

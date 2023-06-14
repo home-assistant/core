@@ -26,7 +26,7 @@ ENTITY_LIGHT = "light.bed_light"
 
 
 @pytest.fixture
-async def light_only(hass: HomeAssistant) -> None:
+async def light_only() -> None:
     """Enable only the light platform."""
     with patch(
         "homeassistant.components.demo.COMPONENTS_WITH_CONFIG_ENTRY_DEMO_PLATFORM",

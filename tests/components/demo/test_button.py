@@ -14,7 +14,7 @@ ENTITY_PUSH = "button.push"
 
 
 @pytest.fixture
-async def button_only(hass: HomeAssistant) -> None:
+async def button_only() -> None:
     """Enable only the button platform."""
     with patch(
         "homeassistant.components.demo.COMPONENTS_WITH_CONFIG_ENTRY_DEMO_PLATFORM",
