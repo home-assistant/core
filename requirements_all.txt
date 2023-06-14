@@ -222,9 +222,6 @@ aiomusiccast==0.14.8
 # homeassistant.components.nanoleaf
 aionanoleaf==0.2.1
 
-# homeassistant.components.keyboard_remote
-aionotify==0.2.0
-
 # homeassistant.components.notion
 aionotion==2023.05.5
 
@@ -381,6 +378,9 @@ asterisk_mbox==0.5.0
 # homeassistant.components.upnp
 # homeassistant.components.yeelight
 async-upnp-client==0.33.2
+
+# homeassistant.components.keyboard_remote
+asyncinotify==4.0.2
 
 # homeassistant.components.supla
 asyncpysupla==0.0.5
@@ -695,7 +695,7 @@ eternalegypt==0.0.16
 eufylife_ble_client==0.1.7
 
 # homeassistant.components.keyboard_remote
-# evdev==1.4.0
+# evdev==1.6.1
 
 # homeassistant.components.evohome
 evohome-async==0.3.15
