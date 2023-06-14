@@ -23,7 +23,7 @@ ENTITY_CAMERA = "camera.demo_camera"
 
 
 @pytest.fixture(autouse=True)
-async def demo_camera(hass):
+async def demo_camera(hass, disable_platforms):
     """Initialize a demo camera platform."""
     assert await async_setup_component(
         hass, CAMERA_DOMAIN, {CAMERA_DOMAIN: {"platform": DOMAIN}}
