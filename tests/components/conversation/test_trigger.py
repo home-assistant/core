@@ -1,5 +1,5 @@
 """Test sentence triggers."""
-import asyncio
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -21,10 +21,7 @@ async def init_components(hass: HomeAssistant):
 
 async def test_register_trigger(hass: HomeAssistant, init_components) -> None:
     """Test registering/unregistering/matching a few trigger sentences."""
-    triggered = asyncio.Event()
-
-    def callback():
-        triggered.set()
+    callback = MagicMock()
 
     trigger_sentences = ["It's party time", "It is time to party"]
     trigger_response = "Cowabunga!"
@@ -54,3 +51,5 @@ async def test_register_trigger(hass: HomeAssistant, init_components) -> None:
         assert (
             result.response.response_type == intent.IntentResponseType.ERROR
         ), sentence
+
+    assert len(callback.mock_calls) == 2
