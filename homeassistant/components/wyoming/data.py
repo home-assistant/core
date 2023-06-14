@@ -54,7 +54,7 @@ async def load_wyoming_info(
     for _ in range(retries + 1):
         try:
             async with AsyncTcpClient(host, port) as client:
-                with async_timeout.timeout(timeout):
+                async with async_timeout.timeout(timeout):
                     # Describe -> Info
                     await client.write_event(Describe().event())
                     while True:
