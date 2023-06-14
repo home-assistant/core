@@ -17,7 +17,7 @@ ENTITY_TEXT = "text.text"
 
 
 @pytest.fixture(autouse=True)
-async def setup_demo_text(hass):
+async def setup_demo_text(hass, disable_platforms):
     """Initialize setup demo text."""
     assert await async_setup_component(hass, DOMAIN, {"text": {"platform": "demo"}})
     await hass.async_block_till_done()
