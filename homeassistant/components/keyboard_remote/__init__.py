@@ -225,7 +225,7 @@ class KeyboardRemote:
     class DeviceHandler:
         """Manage input events using evdev with asyncio."""
 
-        def __init__(self, hass: HomeAssistant, dev_block) -> None:
+        def __init__(self, hass: HomeAssistant, dev_block: dict[str, Any]) -> None:
             """Fill configuration data."""
 
             self.hass = hass
