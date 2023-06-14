@@ -258,6 +258,9 @@ aiohomekit==2.6.5
 # homeassistant.components.http
 aiohttp-cors==0.7.0
 
+# homeassistant.components.emoncms
+aiohttp==3.8.4
+
 # homeassistant.components.hue
 aiohue==4.6.2
 

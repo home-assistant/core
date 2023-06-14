@@ -120,6 +120,7 @@ FLOWS = {
         "elgato",
         "elkm1",
         "elmax",
+        "emoncms",
         "emonitor",
         "emulated_roku",
         "energyzero",

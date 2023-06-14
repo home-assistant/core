@@ -329,7 +329,7 @@ build.json @home-assistant/supervisor
 /tests/components/elmax/ @albertogeniola
 /homeassistant/components/elv/ @majuss
 /homeassistant/components/emby/ @mezz64
-/homeassistant/components/emoncms/ @borpin
+/homeassistant/components/emoncms/ @borpin @arnyminerz
 /homeassistant/components/emonitor/ @bdraco
 /tests/components/emonitor/ @bdraco
 /homeassistant/components/emulated_hue/ @bdraco @Tho85

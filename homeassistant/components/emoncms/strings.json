@@ -1,0 +1,17 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "host": "Server Hostname (e.g. https://emoncms.org)",
+          "api_key": "API Key"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Could not connect to the target server",
+      "invalid_auth": "The API key is invalid",
+      "unknown": "An unknown error occurred while trying to fetch the server"
+    }
+  }
+}
