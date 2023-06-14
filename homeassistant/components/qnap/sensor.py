@@ -1,7 +1,6 @@
 """Support for QNAP NAS Sensors."""
 from __future__ import annotations
 
-from dataclasses import dataclass
 import logging
 
 from homeassistant import config_entries
@@ -59,7 +58,7 @@ async def async_setup_entry(
     sensors: list[QNAPSensor] = []
 
     sensors.extend(
-        [QNAPSystemSensor(coordinator, description, uid) for description in _SYSTEM_SENSORS]
+        [QNAPSystemSensor(coordinator, description, uid) for description in _SYS_SENSORS]
     )
 
     sensors.extend(
@@ -67,7 +66,7 @@ async def async_setup_entry(
     )
 
     sensors.extend(
-        [QNAPMemorySensor(coordinator, description, uid) for description in _MEMORY_SENSORS]
+        [QNAPMemorySensor(coordinator, description, uid) for description in _MEM_SENSORS]
     )
 
     # Network sensors
@@ -75,7 +74,7 @@ async def async_setup_entry(
         [
             QNAPNetworkSensor(coordinator, description, uid, nic)
             for nic in coordinator.data["system_stats"]["nics"]
-            for description in _NETWORK_SENSORS
+            for description in _NET_SENSORS
         ]
     )
 
@@ -84,7 +83,7 @@ async def async_setup_entry(
         [
             QNAPDriveSensor(coordinator, description, uid, drive)
             for drive in coordinator.data["smart_drive_health"]
-            for description in _DRIVE_SENSORS
+            for description in _DRI_SENSORS
         ]
     )
 
@@ -93,7 +92,7 @@ async def async_setup_entry(
         [
             QNAPVolumeSensor(coordinator, description, uid, volume)
             for volume in coordinator.data["volumes"]
-            for description in _VOLUME_SENSORS
+            for description in _VOL_SENSORS
         ]
     )
     async_add_entities(sensors)
@@ -109,7 +108,7 @@ def round_nicely(number):
     return round(number)
 
 
-_SYSTEM_SENSORS: tuple[SensorEntityDescription, ...] = (
+_SYS_SENSORS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="status",
         name="Status",
@@ -142,7 +141,7 @@ _CPU_SENSORS: tuple[SensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
     ),
 )
-_MEMORY_SENSORS: tuple[SensorEntityDescription, ...] = (
+_MEM_SENSORS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="memory_free",
         name="Memory Available",
@@ -167,7 +166,7 @@ _MEMORY_SENSORS: tuple[SensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
     ),
 )
-_NETWORK_SENSORS: tuple[SensorEntityDescription, ...] = (
+_NET_SENSORS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="network_link_status",
         name="Network Link",
@@ -190,7 +189,7 @@ _NETWORK_SENSORS: tuple[SensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
     ),
 )
-_DRIVE_SENSORS: tuple[SensorEntityDescription, ...] = (
+_DRI_SENSORS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="drive_smart_status",
         name="SMART Status",
@@ -206,7 +205,7 @@ _DRIVE_SENSORS: tuple[SensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
     ),
 )
-_VOLUME_SENSORS: tuple[SensorEntityDescription, ...] = (
+_VOL_SENSORS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="volume_size_used",
         name="Used Space",
