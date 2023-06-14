@@ -59,15 +59,15 @@ async def async_setup_entry(
     sensors: list[QNAPSensor] = []
 
     sensors.extend(
-        [QNAPSystemSensor(coordinator, description, uid) for description in BAS_SENSOR]
+        [QNAPSystemSensor(coordinator, description, uid) for description in _SYSTEM_SENSORS]
     )
 
     sensors.extend(
-        [QNAPCPUSensor(coordinator, description, uid) for description in CPU_SENSOR]
+        [QNAPCPUSensor(coordinator, description, uid) for description in _CPU_SENSORS]
     )
 
     sensors.extend(
-        [QNAPMemorySensor(coordinator, description, uid) for description in MEM_SENSOR]
+        [QNAPMemorySensor(coordinator, description, uid) for description in _MEMORY_SENSORS]
     )
 
     # Network sensors
@@ -75,7 +75,7 @@ async def async_setup_entry(
         [
             QNAPNetworkSensor(coordinator, description, uid, nic)
             for nic in coordinator.data["system_stats"]["nics"]
-            for description in NET_SENSOR
+            for description in _NETWORK_SENSORS
         ]
     )
 
@@ -84,7 +84,7 @@ async def async_setup_entry(
         [
             QNAPDriveSensor(coordinator, description, uid, drive)
             for drive in coordinator.data["smart_drive_health"]
-            for description in DRI_SENSOR
+            for description in _DRIVE_SENSORS
         ]
     )
 
@@ -93,7 +93,7 @@ async def async_setup_entry(
         [
             QNAPVolumeSensor(coordinator, description, uid, volume)
             for volume in coordinator.data["volumes"]
-            for description in VOL_SENSOR
+            for description in _VOLUME_SENSORS
         ]
     )
     async_add_entities(sensors)
@@ -109,22 +109,13 @@ def round_nicely(number):
     return round(number)
 
 
-@dataclass
-class QNapSensorEntityDescription(SensorEntityDescription):
-    """Represents an Flow Sensor."""
-
-    stype: str | None = None
-
-
-SENSOR_TYPES: tuple[QNapSensorEntityDescription, ...] = (
-    QNapSensorEntityDescription(
-        stype="basic",
+_SYSTEM_SENSORS: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
         key="status",
         name="Status",
         icon="mdi:checkbox-marked-circle-outline",
     ),
-    QNapSensorEntityDescription(
-        stype="basic",
+    SensorEntityDescription(
         key="system_temp",
         name="System Temperature",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
@@ -132,8 +123,9 @@ SENSOR_TYPES: tuple[QNapSensorEntityDescription, ...] = (
         icon="mdi:thermometer",
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    QNapSensorEntityDescription(
-        stype="cpu",
+)
+_CPU_SENSORS: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
         key="cpu_temp",
         name="CPU Temperature",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
@@ -142,16 +134,16 @@ SENSOR_TYPES: tuple[QNapSensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    QNapSensorEntityDescription(
-        stype="cpu",
+    SensorEntityDescription(
         key="cpu_usage",
         name="CPU Usage",
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:chip",
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    QNapSensorEntityDescription(
-        stype="memory",
+)
+_MEMORY_SENSORS: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
         key="memory_free",
         name="Memory Available",
         native_unit_of_measurement=UnitOfInformation.GIBIBYTES,
@@ -159,8 +151,7 @@ SENSOR_TYPES: tuple[QNapSensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    QNapSensorEntityDescription(
-        stype="memory",
+    SensorEntityDescription(
         key="memory_used",
         name="Memory Used",
         native_unit_of_measurement=UnitOfInformation.GIBIBYTES,
@@ -168,22 +159,21 @@ SENSOR_TYPES: tuple[QNapSensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    QNapSensorEntityDescription(
-        stype="memory",
+    SensorEntityDescription(
         key="memory_percent_used",
         name="Memory Usage",
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:memory",
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    QNapSensorEntityDescription(
-        stype="network",
+)
+_NETWORK_SENSORS: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
         key="network_link_status",
         name="Network Link",
         icon="mdi:checkbox-marked-circle-outline",
     ),
-    QNapSensorEntityDescription(
-        stype="network",
+    SensorEntityDescription(
         key="network_tx",
         name="Network Up",
         native_unit_of_measurement=UnitOfDataRate.MEBIBYTES_PER_SECOND,
@@ -191,8 +181,7 @@ SENSOR_TYPES: tuple[QNapSensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    QNapSensorEntityDescription(
-        stype="network",
+    SensorEntityDescription(
         key="network_rx",
         name="Network Down",
         native_unit_of_measurement=UnitOfDataRate.MEBIBYTES_PER_SECOND,
@@ -200,15 +189,15 @@ SENSOR_TYPES: tuple[QNapSensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    QNapSensorEntityDescription(
-        stype="drive",
+)
+_DRIVE_SENSORS: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
         key="drive_smart_status",
         name="SMART Status",
         icon="mdi:checkbox-marked-circle-outline",
         entity_registry_enabled_default=False,
     ),
-    QNapSensorEntityDescription(
-        stype="drive",
+    SensorEntityDescription(
         key="drive_temp",
         name="Temperature",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
@@ -216,8 +205,9 @@ SENSOR_TYPES: tuple[QNapSensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    QNapSensorEntityDescription(
-        stype="volume",
+)
+_VOLUME_SENSORS: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
         key="volume_size_used",
         name="Used Space",
         native_unit_of_measurement=UnitOfInformation.GIBIBYTES,
@@ -225,8 +215,7 @@ SENSOR_TYPES: tuple[QNapSensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    QNapSensorEntityDescription(
-        stype="volume",
+    SensorEntityDescription(
         key="volume_size_free",
         name="Free Space",
         native_unit_of_measurement=UnitOfInformation.GIBIBYTES,
@@ -234,8 +223,7 @@ SENSOR_TYPES: tuple[QNapSensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    QNapSensorEntityDescription(
-        stype="volume",
+    SensorEntityDescription(
         key="volume_percentage_used",
         name="Volume Used",
         native_unit_of_measurement=PERCENTAGE,
@@ -243,12 +231,6 @@ SENSOR_TYPES: tuple[QNapSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
     ),
 )
-BAS_SENSOR = [desc for desc in SENSOR_TYPES if desc.stype == "basic"]
-CPU_SENSOR = [desc for desc in SENSOR_TYPES if desc.stype == "cpu"]
-MEM_SENSOR = [desc for desc in SENSOR_TYPES if desc.stype == "memory"]
-NET_SENSOR = [desc for desc in SENSOR_TYPES if desc.stype == "network"]
-DRI_SENSOR = [desc for desc in SENSOR_TYPES if desc.stype == "drive"]
-VOL_SENSOR = [desc for desc in SENSOR_TYPES if desc.stype == "volume"]
 
 
 class QNAPSensor(CoordinatorEntity[QnapCoordinator], SensorEntity):
