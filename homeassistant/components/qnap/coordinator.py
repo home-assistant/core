@@ -34,14 +34,14 @@ class QnapCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
         """Initialize the qnap coordinator."""
         super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=UPDATE_INTERVAL)
 
-        protocol = "https" if config[CONF_SSL] else "http"
+        protocol = "https" if config.data[CONF_SSL] else "http"
         self._api = QNAPStats(
-            f"{protocol}://{config.get(CONF_HOST)}",
-            config.get(CONF_PORT),
-            config.get(CONF_USERNAME),
-            config.get(CONF_PASSWORD),
-            verify_ssl=config.get(CONF_VERIFY_SSL),
-            timeout=config.get(CONF_TIMEOUT),
+            f"{protocol}://{config.data.get(CONF_HOST)}",
+            config.data.get(CONF_PORT),
+            config.data.get(CONF_USERNAME),
+            config.data.get(CONF_PASSWORD),
+            verify_ssl=config.data.get(CONF_VERIFY_SSL),
+            timeout=config.data.get(CONF_TIMEOUT),
         )
 
     def _sync_update(self) -> dict[str, dict[str, Any]]:
