@@ -307,20 +307,21 @@ async def async_setup_entry(
                         )
         else:
             for sensor in sensors:
-                sensor_description = SENSOR_TYPES[(sensor_type, sensor)]
-                _migrate_old_unique_ids(
-                    hass,
-                    f"{coordinator.host}-{name}  {sensor_description.name_suffix}",
-                    f"-{sensor_description.key}",
-                )
-                entities.append(
-                    GlancesSensor(
-                        coordinator,
-                        name,
-                        "",
-                        sensor_description,
+                sensor_description = SENSOR_TYPES.get((sensor_type, sensor))
+                if sensor_description is not None:
+                    _migrate_old_unique_ids(
+                        hass,
+                        f"{coordinator.host}-{name}  {sensor_description.name_suffix}",
+                        f"-{sensor_description.key}",
                     )
-                )
+                    entities.append(
+                        GlancesSensor(
+                            coordinator,
+                            name,
+                            "",
+                            sensor_description,
+                        )
+                    )
 
     async_add_entities(entities)
 
