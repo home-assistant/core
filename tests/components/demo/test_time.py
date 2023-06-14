@@ -10,7 +10,7 @@ ENTITY_TIME = "time.time"
 
 
 @pytest.fixture(autouse=True)
-async def setup_demo_datetime(hass: HomeAssistant) -> None:
+async def setup_demo_datetime(hass: HomeAssistant, disable_platforms) -> None:
     """Initialize setup demo time."""
     assert await async_setup_component(hass, DOMAIN, {"time": {"platform": "demo"}})
     await hass.async_block_till_done()
