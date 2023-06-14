@@ -28,8 +28,10 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
+# 3rd Party Imports
+from sma_manager_api import SMA
+
 # Local Imports
-from .SMA import SMA
 from .const import DOMAIN
 
 

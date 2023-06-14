@@ -11,11 +11,13 @@
 # Home Assistant Imports
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
+
+# 3rd Party Imports
+from sma_manager_api import SMA
 
 # Local Imports
 from .const import DOMAIN, CONF_NAME, CONF_HOST, CONF_PORT, CONF_REFRESH_INTERVAL
-from .SMA import SMA
-
 
 PLATFORMS: list[str] = ["sensor"]
 
@@ -31,12 +33,23 @@ async def async_setup_entry(hass: HomeAssistant, config: ConfigEntry) -> bool:
 
     # Save to SMA object to state machine
     data = config.data
-    hass.data.setdefault(DOMAIN, {})[config.entry_id] = SMA(
+    sma = SMA(
         data[CONF_NAME], data[CONF_HOST], data[CONF_PORT], data[CONF_REFRESH_INTERVAL]
     )
 
+    # Check if available/ready
+    if not sma.available:
+        raise ConfigEntryNotReady(
+            f"Timeout while connecting socket at {data[CONF_HOST]}"
+        )
+
+    hass.data.setdefault(DOMAIN, {})[config.entry_id] = sma
+
     # Configure platforms
-    hass.config_entries.async_setup_platforms(config, PLATFORMS)
+    for platform in PLATFORMS:
+        hass.async_create_task(
+            hass.config_entries.async_forward_entry_setup(config, platform)
+        )
     return True
 
 

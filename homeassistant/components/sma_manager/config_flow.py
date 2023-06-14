@@ -17,10 +17,10 @@ from homeassistant import config_entries
 
 # 3rd-Party Imports
 from voluptuous import Schema, Required
+from sma_manager_api import SMA
 
 # Local Imports
 from .const import DOMAIN, CONF_NAME, CONF_HOST, CONF_PORT, CONF_REFRESH_INTERVAL
-from .SMA import SMA
 
 
 _LOGGER = logging.getLogger(__name__)

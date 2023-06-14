@@ -5,7 +5,7 @@
     "dependencies": [],
     "documentation": "",
     "iot_class": "local_polling",
-    "requirements": [],
+    "requirements": ["sma-manager~=2.0.0"],
     "version": "0.0.0",
     "config_flow": true
 }
