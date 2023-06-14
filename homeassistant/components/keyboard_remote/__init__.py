@@ -1,10 +1,12 @@
 """Receive signals from a keyboard and use it as a remote control."""
 # pylint: disable=import-error
+from __future__ import annotations
+
 import asyncio
 from contextlib import suppress
 import logging
 import os
-from __future__ import annotations
+from typing import Any
 
 from asyncinotify import Inotify, Mask
 from evdev import InputDevice, categorize, ecodes, list_devices
@@ -65,9 +67,9 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the keyboard_remote."""
-    config = config[DOMAIN]
+    domain_config: list[dict[str, Any]] = config[DOMAIN]
 
-    remote = KeyboardRemote(hass, config)
+    remote = KeyboardRemote(hass, domain_config)
     remote.setup()
 
     return True
@@ -76,7 +78,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 class KeyboardRemote:
     """Manage device connection/disconnection using inotify to asynchronously monitor."""
 
-    def __init__(self, hass: HomeAssistant, config) -> None:
+    def __init__(self, hass: HomeAssistant, config: list[dict[str, Any]]) -> None:
         """Create handlers and setup dictionaries to keep track of them."""
         self.hass = hass
         self.handlers_by_name = {}
@@ -231,15 +233,15 @@ class KeyboardRemote:
 
             self.hass = hass
 
-            key_types = dev_block.get(TYPE)
+            key_types = dev_block[TYPE]
 
             self.key_values = set()
             for key_type in key_types:
                 self.key_values.add(KEY_VALUE[key_type])
 
-            self.emulate_key_hold = dev_block.get(EMULATE_KEY_HOLD)
-            self.emulate_key_hold_delay = dev_block.get(EMULATE_KEY_HOLD_DELAY)
-            self.emulate_key_hold_repeat = dev_block.get(EMULATE_KEY_HOLD_REPEAT)
+            self.emulate_key_hold = dev_block[EMULATE_KEY_HOLD]
+            self.emulate_key_hold_delay = dev_block[EMULATE_KEY_HOLD_DELAY]
+            self.emulate_key_hold_repeat = dev_block[EMULATE_KEY_HOLD_REPEAT]
             self.monitor_task = None
             self.dev = None
 
