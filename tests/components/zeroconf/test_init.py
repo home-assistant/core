@@ -910,6 +910,7 @@ async def test_info_from_service_non_utf8(hass: HomeAssistant) -> None:
     info = zeroconf.info_from_service(
         get_service_info_mock(service_type, f"test.{service_type}")
     )
+    assert NON_ASCII_KEY.decode("ascii", "replace") in info.properties
     assert "non-utf8-value" in info.properties
     assert info.properties["non-utf8-value"] == NON_UTF8_VALUE.decode(
         "utf-8", "replace"
