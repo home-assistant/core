@@ -9,7 +9,7 @@ from loqedAPI import loqed
 import pytest
 
 from homeassistant.components.loqed import DOMAIN
-from homeassistant.const import CONF_WEBHOOK_ID
+from homeassistant.const import CONF_API_TOKEN, CONF_NAME, CONF_WEBHOOK_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -33,6 +33,8 @@ def config_entry_fixture() -> MockConfigEntry:
             "lock_key_local_id": int(json_config["lock_key_local_id"]),
             "lock_key_key": json_config["lock_key_key"],
             CONF_WEBHOOK_ID: "Webhook_id",
+            CONF_API_TOKEN: "Token",
+            CONF_NAME: "Home",
         },
     )
 
@@ -54,7 +56,7 @@ async def integration_fixture(
     hass: HomeAssistant, config_entry: MockConfigEntry, lock: loqed.Lock
 ) -> AsyncGenerator[MockConfigEntry, None]:
     """Set up the loqed integration with a config entry."""
-    config: dict[str, Any] = {DOMAIN: {"config": ""}}
+    config: dict[str, Any] = {DOMAIN: {CONF_API_TOKEN: ""}}
     config_entry.add_to_hass(hass)
 
     lock_status = json.loads(load_fixture("loqed/status_ok.json"))

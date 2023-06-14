@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+import re
 from typing import Any
 
 import aiohttp
@@ -11,7 +12,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.components import webhook
 from homeassistant.components.zeroconf import ZeroconfServiceInfo
-from homeassistant.const import CONF_API_TOKEN, CONF_HOST, CONF_WEBHOOK_ID
+from homeassistant.const import CONF_API_TOKEN, CONF_HOST, CONF_NAME, CONF_WEBHOOK_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
@@ -29,17 +30,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     DOMAIN = DOMAIN
     _host: str | None = None
 
-    @property
-    def logger(self) -> logging.Logger:
-        """Return logger."""
-        return logging.getLogger(__name__)
-
     async def validate_input(
         self, hass: HomeAssistant, data: dict[str, Any]
     ) -> dict[str, Any]:
         """Validate the user input allows us to connect."""
-
-        newdata = data
 
         # 1. Checking loqed-connection
         try:
@@ -50,9 +44,15 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 headers={"Authorization": f"Bearer {data[CONF_API_TOKEN]}"},
             )
             lock_data = await res.json()
+        except aiohttp.ClientError:
+            _LOGGER.error("HTTP Connection error to loqed API")
+            raise CannotConnect from aiohttp.ClientError
 
+        try:
             selected_lock = next(
-                lock for lock in lock_data["data"] if lock["bridge_ip"] == self._host
+                lock
+                for lock in lock_data["data"]
+                if lock["bridge_ip"] == self._host or lock["name"] == data.get("name")
             )
 
             apiclient = loqed.APIClient(session, f"http://{selected_lock['bridge_ip']}")
@@ -63,7 +63,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 selected_lock["local_id"],
                 selected_lock["bridge_ip"],
             )
-            newdata["id"] = lock.id
+
             # checking getWebooks to check the bridgeKey
             await lock.getWebhooks()
             return {
@@ -75,7 +75,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 "name": selected_lock["name"],
                 "id": selected_lock["id"],
             }
-
+        except StopIteration:
+            raise InvalidAuth from StopIteration
         except aiohttp.ClientError:
             _LOGGER.error("HTTP Connection error to loqed lock")
             raise CannotConnect from aiohttp.ClientError
@@ -102,11 +103,21 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Show userform to user."""
-        user_data_schema = vol.Schema(
-            {
-                vol.Required(CONF_API_TOKEN): str,
-            }
+        user_data_schema = (
+            vol.Schema(
+                {
+                    vol.Required(CONF_API_TOKEN): str,
+                }
+            )
+            if self._host
+            else vol.Schema(
+                {
+                    vol.Required(CONF_NAME): str,
+                    vol.Required(CONF_API_TOKEN): str,
+                }
+            )
         )
+
         if user_input is None:
             return self.async_show_form(
                 step_id="user",
@@ -124,11 +135,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors["base"] = "cannot_connect"
         except InvalidAuth:
             errors["base"] = "invalid_auth"
-        except Exception:  # pylint: disable=broad-except
-            _LOGGER.exception("Unexpected exception")
-            errors["base"] = "unknown"
         else:
-            await self.async_set_unique_id(info["id"])
+            await self.async_set_unique_id(
+                re.sub(r"LOQED-([a-f0-9]+)\.local", r"\1", info["bridge_mdns_hostname"])
+            )
             self._abort_if_unique_id_configured()
 
             return self.async_create_entry(
