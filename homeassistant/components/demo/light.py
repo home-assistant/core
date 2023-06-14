@@ -146,8 +146,12 @@ class DemoLight(LightEntity):
             self._color_mode = ColorMode.RGBW
         elif rgbww_color:
             self._color_mode = ColorMode.RGBWW
-        else:
+        elif ct:
             self._color_mode = ColorMode.COLOR_TEMP
+        elif supported_color_modes and ColorMode.BRIGHTNESS in supported_color_modes:
+            self._color_mode = ColorMode.BRIGHTNESS
+        else:
+            self._color_mode = ColorMode.ONOFF
         if not supported_color_modes:
             supported_color_modes = SUPPORT_DEMO
         self._color_modes = supported_color_modes
