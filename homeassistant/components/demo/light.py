@@ -140,6 +140,9 @@ class DemoLight(LightEntity):
         self._rgbww_color = rgbww_color
         self._state = state
         self._unique_id = unique_id
+        if not supported_color_modes:
+            supported_color_modes = SUPPORT_DEMO
+        self._color_modes = supported_color_modes
         if hs_color:
             self._color_mode = ColorMode.HS
         elif rgbw_color:
@@ -150,11 +153,10 @@ class DemoLight(LightEntity):
             self._color_mode = ColorMode.COLOR_TEMP
         elif supported_color_modes and ColorMode.BRIGHTNESS in supported_color_modes:
             self._color_mode = ColorMode.BRIGHTNESS
-        else:
+        elif supported_color_modes and ColorMode.ONOFF in supported_color_modes:
             self._color_mode = ColorMode.ONOFF
-        if not supported_color_modes:
-            supported_color_modes = SUPPORT_DEMO
-        self._color_modes = supported_color_modes
+        else:
+            self._color_mode = ColorMode.COLOR_TEMP
         if self._effect_list is not None:
             self._attr_supported_features |= LightEntityFeature.EFFECT
         self._attr_device_info = DeviceInfo(
