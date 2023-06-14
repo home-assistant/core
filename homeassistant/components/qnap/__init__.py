@@ -1,76 +1,29 @@
 """The qnap component."""
-from datetime import timedelta
-import logging
+from __future__ import annotations
 
-from qnapstats import QNAPStats
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_PASSWORD,
-    CONF_PORT,
-    CONF_SSL,
-    CONF_USERNAME,
-    CONF_VERIFY_SSL,
-    Platform,
-)
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
-
-from .const import DEFAULT_PORT, DEFAULT_TIMEOUT, DOMAIN
-
-UPDATE_INTERVAL = timedelta(minutes=1)
-
-_LOGGER = logging.getLogger(__name__)
+from .const import DOMAIN
+from .coordinator import QnapCoordinator
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import PlatformNotReady
 
 PLATFORMS: list[Platform] = [
     Platform.SENSOR,
 ]
 
 
-async def async_setup_entry(hass, config_entry):
+async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Set the config entry up."""
     hass.data.setdefault(DOMAIN, {})
-    host = config_entry.data[CONF_HOST]
-    protocol = "https" if config_entry.data.get(CONF_SSL) else "http"
-    api = QNAPStats(
-        host=f"{protocol}://{host}",
-        port=config_entry.data.get(CONF_PORT, DEFAULT_PORT),
-        username=config_entry.data[CONF_USERNAME],
-        password=config_entry.data[CONF_PASSWORD],
-        verify_ssl=config_entry.data.get(CONF_VERIFY_SSL),
-        timeout=DEFAULT_TIMEOUT,
-    )
-
-    async def async_update_data():
-        datas = {}
-        datas["system_stats"] = await hass.async_add_executor_job(api.get_system_stats)
-        datas["system_health"] = await hass.async_add_executor_job(
-            api.get_system_health
-        )
-        datas["smart_drive_health"] = await hass.async_add_executor_job(
-            api.get_smart_disk_health
-        )
-        datas["volumes"] = await hass.async_add_executor_job(api.get_volumes)
-        datas["bandwidth"] = await hass.async_add_executor_job(api.get_bandwidth)
-        return datas
-
-    coordinator = DataUpdateCoordinator(
-        hass,
-        _LOGGER,
-        name="sensor",
-        update_method=async_update_data,
-        update_interval=UPDATE_INTERVAL,
-    )
-
+    coordinator = QnapCoordinator(hass, config_entry)
     # Fetch initial data so we have data when entities subscribe
     await coordinator.async_config_entry_first_refresh()
-
+    if not coordinator.last_update_success:
+        raise PlatformNotReady
     hass.data[DOMAIN][config_entry.entry_id] = coordinator
-
-    for component in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(config_entry, component)
-        )
-
+    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
     return True
 
 
