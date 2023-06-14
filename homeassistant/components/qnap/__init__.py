@@ -3,11 +3,11 @@ from __future__ import annotations
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import PlatformNotReady
 
 from .const import DOMAIN
 from .coordinator import QnapCoordinator
-from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import PlatformNotReady
 
 PLATFORMS: list[Platform] = [
     Platform.SENSOR,
