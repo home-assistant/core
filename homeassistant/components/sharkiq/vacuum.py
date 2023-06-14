@@ -69,6 +69,7 @@ class SharkVacuumEntity(CoordinatorEntity[SharkIqUpdateCoordinator], StateVacuum
 
     _attr_fan_speed_list = list(FAN_SPEEDS_MAP)
     _attr_has_entity_name = True
+    _attr_name = None
     _attr_supported_features = (
         VacuumEntityFeature.BATTERY
         | VacuumEntityFeature.FAN_SPEED
@@ -87,7 +88,6 @@ class SharkVacuumEntity(CoordinatorEntity[SharkIqUpdateCoordinator], StateVacuum
         """Create a new SharkVacuumEntity."""
         super().__init__(coordinator)
         self.sharkiq = sharkiq
-        self._attr_name = None
         self._attr_unique_id = sharkiq.serial_number
         self._serial_number = sharkiq.serial_number
 
