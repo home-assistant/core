@@ -297,9 +297,6 @@ aiomusiccast==0.14.8
 # homeassistant.components.nanoleaf
 aionanoleaf==0.2.1
 
-# homeassistant.components.keyboard_remote
-aionotify==0.2.0
-
 # homeassistant.components.notion
 aionotion==2023.05.5
 
@@ -451,6 +448,9 @@ asterisk-mbox==0.5.0
 # homeassistant.components.yeelight
 async-upnp-client==0.33.2
 
+# homeassistant.components.keyboard_remote
+asyncinotify==4.0.2
+
 # homeassistant.components.supla
 asyncpysupla==0.0.5
 
@@ -540,7 +540,7 @@ bluetooth-auto-recovery==1.2.0
 # homeassistant.components.esphome
 # homeassistant.components.ld2410_ble
 # homeassistant.components.led_ble
-bluetooth-data-tools==1.0.0
+bluetooth-data-tools==1.1.0
 
 # homeassistant.components.bond
 bond-async==0.1.23
@@ -758,7 +758,7 @@ eternalegypt==0.0.16
 eufylife-ble-client==0.1.7
 
 # homeassistant.components.keyboard_remote
-# evdev==1.4.0
+# evdev==1.6.1
 
 # homeassistant.components.evohome
 evohome-async==0.3.15
@@ -2409,7 +2409,7 @@ solaredge-local==0.2.3
 solaredge==0.0.2
 
 # homeassistant.components.solax
-solax==0.3.0
+solax==0.3.2
 
 # homeassistant.components.somfy_mylink
 somfy-mylink-synergy==1.0.6
