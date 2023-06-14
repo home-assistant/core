@@ -110,10 +110,16 @@ def test_invalid_environment_variable(try_both_loaders) -> None:
 
 @pytest.mark.parametrize(
     ("hass_config_yaml_files", "value"),
-    [({"test.yaml": "value"}, "value"), ({"test.yaml": None}, {})],
+    [
+        ({"test.yaml": "value"}, "value"),
+        ({"test.yaml": None}, {}),  # missing file
+        ({"test.yaml": ""}, {}),  # empty file
+        ({"test.yaml": "null"}, {}),  # null document
+        ({"test.yaml": "1.0"}, 1.0),
+    ],
 )
 def test_include_yaml(
-    try_both_loaders, mock_hass_config_yaml: None, value: Any
+    try_both_loaders, mock_hass_config_yaml: None, hass_config_yaml_files, value: Any
 ) -> None:
     """Test include yaml."""
     conf = "key: !include test.yaml"

@@ -10,12 +10,22 @@ class NodeListClass(list):
     """Wrapper class to be able to add attributes on a list."""
 
 
-class NodeStrClass(str):
-    """Wrapper class to be able to add attributes on a string."""
-
-
 class NodeDictClass(dict):
     """Wrapper class to be able to add attributes on a dict."""
+
+
+def wrap_for_setattr(obj):  # type: ignore[no-untyped-def]
+    """Wrap an arbitrary object to be able to add attributes to it."""
+    if isinstance(obj, list):
+        return NodeListClass(obj)
+
+    typ = type(obj)
+
+    # Create a subclass of `typ` to be able to add attributes
+    cls = type(f"DynamicNode{typ.__name__.capitalize()}Class", (typ,), {})
+
+    # Return an instance of `cls` with value `obj`
+    return cls(obj)
 
 
 @dataclass(slots=True, frozen=True)

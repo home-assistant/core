@@ -24,11 +24,14 @@ except ImportError:
 from homeassistant.exceptions import HomeAssistantError
 
 from .const import SECRET_YAML
-from .objects import Input, NodeDictClass, NodeListClass, NodeStrClass
+from .objects import Input, NodeDictClass, NodeListClass, wrap_for_setattr
 
 # mypy: allow-untyped-calls, no-warn-return-any
 
-JSON_TYPE = list | dict | str  # pylint: disable=invalid-name
+# NOTE: Scalar type alias is incomplete for YAML
+#       All YAML types: https://pyyaml.org/wiki/PyYAMLDocumentation#yaml-tags-and-python-types
+JSON_SCALAR_TYPE = str | int | float  # pylint: disable=invalid-name
+JSON_TYPE = list | dict | JSON_SCALAR_TYPE  # pylint: disable=invalid-name
 _DictT = TypeVar("_DictT", bound=dict)
 
 _LOGGER = logging.getLogger(__name__)
@@ -219,10 +222,10 @@ def _add_reference(
 
 @overload
 def _add_reference(
-    obj: str | NodeStrClass,
+    obj: JSON_SCALAR_TYPE,
     loader: LoaderType,
     node: yaml.nodes.Node,
-) -> NodeStrClass:
+) -> JSON_SCALAR_TYPE:
     ...
 
 
@@ -235,12 +238,17 @@ def _add_reference(  # type: ignore[no-untyped-def]
     obj, loader: LoaderType, node: yaml.nodes.Node
 ):
     """Add file reference information to an object."""
-    if isinstance(obj, list):
-        obj = NodeListClass(obj)
-    if isinstance(obj, str):
-        obj = NodeStrClass(obj)
-    setattr(obj, "__config_file__", loader.get_name())
-    setattr(obj, "__line__", node.start_mark.line)
+
+    def set_ref_attrs(obj: Any) -> None:
+        setattr(obj, "__config_file__", loader.get_name())
+        setattr(obj, "__line__", node.start_mark.line)
+
+    try:
+        set_ref_attrs(obj)
+    except AttributeError:
+        obj = wrap_for_setattr(obj)
+        set_ref_attrs(obj)
+
     return obj
 
 
