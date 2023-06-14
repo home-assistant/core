@@ -1,4 +1,6 @@
 """Support for QNAP NAS Sensors."""
+from __future__ import annotations
+
 from dataclasses import dataclass
 import logging
 
@@ -19,6 +21,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.exceptions import PlatformNotReady
 
 from .const import (
     ATTR_DRIVE,
@@ -37,7 +40,9 @@ from .const import (
     ATTR_VOLUME_SIZE,
     DEFAULT_NAME,
     DOMAIN,
+
 )
+from .coordinator import QnapCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -48,7 +53,10 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up entry."""
-    coordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = QnapCoordinator(hass, config_entry)
+    await coordinator.async_refresh()
+    if not coordinator.last_update_success:
+        raise PlatformNotReady
     uid = config_entry.unique_id
     sensors: list[QNAPSensor] = []
 
@@ -245,14 +253,18 @@ DRI_SENSOR = [desc for desc in SENSOR_TYPES if desc.stype == "drive"]
 VOL_SENSOR = [desc for desc in SENSOR_TYPES if desc.stype == "volume"]
 
 
-class QNAPSensor(CoordinatorEntity, SensorEntity):
+class QNAPSensor(CoordinatorEntity[QnapCoordinator], SensorEntity):
     """Base class for a QNAP sensor."""
 
     def __init__(
-        self, coordinator, description, uid, monitor_device=None, monitor_subdevice=None
+        self, 
+        coordinator: QnapCoordinator,
+        description,
+        uid,
+        monitor_device=None,
+        monitor_subdevice=None,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(self)
         self.coordinator = coordinator
         self.entity_description = description
         self.uid = uid
@@ -264,17 +276,17 @@ class QNAPSensor(CoordinatorEntity, SensorEntity):
     def unique_id(self):
         """Return unique_id."""
         return f"{self.uid}_{self.name}"
-
+    
     @property
     def coordinator_context(self):
-        """helpers/update_coordinator."""
+        """helpers update_coordinator."""
         return None
 
     @property
     def name(self):
         """Return the name of the sensor, if any."""
         if self.monitor_device is not None:
-            return f"{self.device_name} {self.monitor_device} - {self.entity_description.name}"
+            return f"{self.device_name} {self.entity_description.name} ({self.monitor_device})"
         return f"{self.device_name} {self.entity_description.name}"
 
     @property
