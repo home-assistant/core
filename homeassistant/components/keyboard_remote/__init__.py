@@ -4,6 +4,7 @@ import asyncio
 from contextlib import suppress
 import logging
 import os
+from __future__ import annotations
 
 from asyncinotify import Inotify, Mask
 from evdev import InputDevice, categorize, ecodes, list_devices
