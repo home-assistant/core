@@ -1054,6 +1054,8 @@ async def test_device_class_switch(
     )
     sensor.hass = hass
     sensor.entity_id = "switch.demo_sensor"
+    sensor._attr_device_info = None
+    sensor._attr_name = "Demo Sensor"
     sensor.async_write_ha_state()
 
     result = await sh.async_handle_message(
