@@ -189,8 +189,6 @@ class DeviceFilterSelectorConfig(TypedDict, total=False):
     integration: str
     manufacturer: str
     model: str
-    entity: EntityFilterSelectorConfig | list[EntityFilterSelectorConfig]
-    filter: DeviceFilterSelectorConfig | list[DeviceFilterSelectorConfig]
 
 
 class ActionSelectorConfig(TypedDict):
@@ -286,6 +284,28 @@ class AreaSelector(Selector[AreaSelectorConfig]):
         return [vol.Schema(str)(val) for val in data]
 
 
+class AssistPipelineSelectorConfig(TypedDict, total=False):
+    """Class to represent an assist pipeline selector config."""
+
+
+@SELECTORS.register("assist_pipeline")
+class AssistPipelineSelector(Selector[AssistPipelineSelectorConfig]):
+    """Selector for an assist pipeline."""
+
+    selector_type = "assist_pipeline"
+
+    CONFIG_SCHEMA = vol.Schema({})
+
+    def __init__(self, config: AssistPipelineSelectorConfig) -> None:
+        """Instantiate a selector."""
+        super().__init__(config)
+
+    def __call__(self, data: Any) -> str:
+        """Validate the passed selection."""
+        pipeline: str = vol.Schema(str)(data)
+        return pipeline
+
+
 class AttributeSelectorConfig(TypedDict, total=False):
     """Class to represent an attribute selector config."""
 
@@ -316,6 +336,28 @@ class AttributeSelector(Selector[AttributeSelectorConfig]):
         """Validate the passed selection."""
         attribute: str = vol.Schema(str)(data)
         return attribute
+
+
+class BackupLocationSelectorConfig(TypedDict, total=False):
+    """Class to represent a backup location selector config."""
+
+
+@SELECTORS.register("backup_location")
+class BackupLocationSelector(Selector[BackupLocationSelectorConfig]):
+    """Selector of a backup location."""
+
+    selector_type = "backup_location"
+
+    CONFIG_SCHEMA = vol.Schema({})
+
+    def __init__(self, config: BackupLocationSelectorConfig | None = None) -> None:
+        """Instantiate a selector."""
+        super().__init__(config)
+
+    def __call__(self, data: Any) -> str:
+        """Validate the passed selection."""
+        name: str = vol.Match(r"^(?:\/backup|\w+)$")(data)
+        return name
 
 
 class BooleanSelectorConfig(TypedDict):
@@ -502,14 +544,12 @@ class DateTimeSelector(Selector[DateTimeSelectorConfig]):
         return data
 
 
-class DeviceSelectorConfig(TypedDict, total=False):
+class DeviceSelectorConfig(DeviceFilterSelectorConfig, total=False):
     """Class to represent a device selector config."""
 
-    integration: str
-    manufacturer: str
-    model: str
     entity: EntityFilterSelectorConfig | list[EntityFilterSelectorConfig]
     multiple: bool
+    filter: DeviceFilterSelectorConfig | list[DeviceFilterSelectorConfig]
 
 
 @SELECTORS.register("device")
@@ -578,6 +618,7 @@ class EntitySelectorConfig(EntityFilterSelectorConfig, total=False):
     exclude_entities: list[str]
     include_entities: list[str]
     multiple: bool
+    filter: EntityFilterSelectorConfig | list[EntityFilterSelectorConfig]
 
 
 @SELECTORS.register("entity")
@@ -657,6 +698,40 @@ class IconSelector(Selector[IconSelectorConfig]):
         """Validate the passed selection."""
         icon: str = vol.Schema(str)(data)
         return icon
+
+
+class LanguageSelectorConfig(TypedDict, total=False):
+    """Class to represent an language selector config."""
+
+    languages: list[str]
+    native_name: bool
+    no_sort: bool
+
+
+@SELECTORS.register("language")
+class LanguageSelector(Selector[LanguageSelectorConfig]):
+    """Selector for an language."""
+
+    selector_type = "language"
+
+    CONFIG_SCHEMA = vol.Schema(
+        {
+            vol.Optional("languages"): [str],
+            vol.Optional("native_name", default=False): cv.boolean,
+            vol.Optional("no_sort", default=False): cv.boolean,
+        }
+    )
+
+    def __init__(self, config: LanguageSelectorConfig) -> None:
+        """Instantiate a selector."""
+        super().__init__(config)
+
+    def __call__(self, data: Any) -> str:
+        """Validate the passed selection."""
+        language: str = vol.Schema(str)(data)
+        if "languages" in self.config and language not in self.config["languages"]:
+            raise vol.Invalid(f"Value {language} is not a valid option")
+        return language
 
 
 class LocationSelectorConfig(TypedDict, total=False):

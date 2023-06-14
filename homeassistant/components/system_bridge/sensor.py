@@ -46,6 +46,10 @@ PIXELS: Final = "px"
 class SystemBridgeSensorEntityDescription(SensorEntityDescription):
     """Class describing System Bridge sensor entities."""
 
+    # SystemBridgeSensor does not support UNDEFINED or None,
+    # restrict the type to str.
+    name: str = ""
+
     value: Callable = round
 
 

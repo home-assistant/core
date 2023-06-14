@@ -294,10 +294,10 @@ class ConfigEntry:
         self.disabled_by = disabled_by
 
         # Supports unload
-        self.supports_unload = False
+        self.supports_unload: bool | None = None
 
         # Supports remove device
-        self.supports_remove_device = False
+        self.supports_remove_device: bool | None = None
 
         # Listeners to call on update
         self.update_listeners: list[
@@ -340,10 +340,12 @@ class ConfigEntry:
         if self.domain == integration.domain:
             self.async_set_state(hass, ConfigEntryState.SETUP_IN_PROGRESS, None)
 
-        self.supports_unload = await support_entry_unload(hass, self.domain)
-        self.supports_remove_device = await support_remove_from_device(
-            hass, self.domain
-        )
+        if self.supports_unload is None:
+            self.supports_unload = await support_entry_unload(hass, self.domain)
+        if self.supports_remove_device is None:
+            self.supports_remove_device = await support_remove_from_device(
+                hass, self.domain
+            )
 
         try:
             component = integration.get_component()
@@ -743,9 +745,10 @@ class ConfigEntry:
         """Get any active flows of certain sources for this entry."""
         return (
             flow
-            for flow in hass.config_entries.flow.async_progress_by_handler(self.domain)
+            for flow in hass.config_entries.flow.async_progress_by_handler(
+                self.domain, match_context={"entry_id": self.entry_id}
+            )
             if flow["context"].get("source") in sources
-            and flow["context"].get("entry_id") == self.entry_id
         )
 
     @callback
@@ -1084,16 +1087,9 @@ class ConfigEntries:
         # If the configuration entry is removed during reauth, it should
         # abort any reauth flow that is active for the removed entry.
         for progress_flow in self.hass.config_entries.flow.async_progress_by_handler(
-            entry.domain
+            entry.domain, match_context={"entry_id": entry_id, "source": SOURCE_REAUTH}
         ):
-            context = progress_flow.get("context")
-            if (
-                context
-                and context["source"] == SOURCE_REAUTH
-                and "entry_id" in context
-                and context["entry_id"] == entry_id
-                and "flow_id" in progress_flow
-            ):
+            if "flow_id" in progress_flow:
                 self.hass.config_entries.flow.async_abort(progress_flow["flow_id"])
 
         # After we have fully removed an "ignore" config entry we can try and rediscover
@@ -1356,26 +1352,6 @@ class ConfigEntries:
             self.hass, SIGNAL_CONFIG_ENTRY_CHANGED, change_type, entry
         )
 
-    @callback
-    def async_setup_platforms(
-        self, entry: ConfigEntry, platforms: Iterable[Platform | str]
-    ) -> None:
-        """Forward the setup of an entry to platforms."""
-        report(
-            (
-                "called async_setup_platforms instead of awaiting"
-                " async_forward_entry_setups; this will fail in version 2023.3"
-            ),
-            # Raise this to warning once all core integrations have been migrated
-            level=logging.WARNING,
-            error_if_core=False,
-        )
-        for platform in platforms:
-            self.hass.async_create_task(
-                self.async_forward_entry_setup(entry, platform),
-                f"config entry forward setup {entry.title} {entry.domain} {entry.entry_id} {platform}",
-            )
-
     async def async_forward_entry_setups(
         self, entry: ConfigEntry, platforms: Iterable[Platform | str]
     ) -> None:
@@ -1595,17 +1571,20 @@ class ConfigFlow(data_entry_flow.FlowHandler):
             return None
 
         if raise_on_progress:
-            for progress in self._async_in_progress(include_uninitialized=True):
-                if progress["context"].get("unique_id") == unique_id:
-                    raise data_entry_flow.AbortFlow("already_in_progress")
+            if self._async_in_progress(
+                include_uninitialized=True, match_context={"unique_id": unique_id}
+            ):
+                raise data_entry_flow.AbortFlow("already_in_progress")
 
         self.context["unique_id"] = unique_id
 
         # Abort discoveries done using the default discovery unique id
         if unique_id != DEFAULT_DISCOVERY_UNIQUE_ID:
-            for progress in self._async_in_progress(include_uninitialized=True):
-                if progress["context"].get("unique_id") == DEFAULT_DISCOVERY_UNIQUE_ID:
-                    self.hass.config_entries.flow.async_abort(progress["flow_id"])
+            for progress in self._async_in_progress(
+                include_uninitialized=True,
+                match_context={"unique_id": DEFAULT_DISCOVERY_UNIQUE_ID},
+            ):
+                self.hass.config_entries.flow.async_abort(progress["flow_id"])
 
         for entry in self._async_current_entries(include_ignore=True):
             if entry.unique_id == unique_id:
@@ -1651,13 +1630,17 @@ class ConfigFlow(data_entry_flow.FlowHandler):
 
     @callback
     def _async_in_progress(
-        self, include_uninitialized: bool = False
+        self,
+        include_uninitialized: bool = False,
+        match_context: dict[str, Any] | None = None,
     ) -> list[data_entry_flow.FlowResult]:
         """Return other in progress flows for current domain."""
         return [
             flw
             for flw in self.hass.config_entries.flow.async_progress_by_handler(
-                self.handler, include_uninitialized=include_uninitialized
+                self.handler,
+                include_uninitialized=include_uninitialized,
+                match_context=match_context,
             )
             if flw["flow_id"] != self.flow_id
         ]
@@ -1731,11 +1714,10 @@ class ConfigFlow(data_entry_flow.FlowHandler):
         """Abort the config flow."""
         # Remove reauth notification if no reauth flows are in progress
         if self.source == SOURCE_REAUTH and not any(
-            ent["context"]["source"] == SOURCE_REAUTH
+            ent["flow_id"] != self.flow_id
             for ent in self.hass.config_entries.flow.async_progress_by_handler(
-                self.handler
+                self.handler, match_context={"source": SOURCE_REAUTH}
             )
-            if ent["flow_id"] != self.flow_id
         ):
             persistent_notification.async_dismiss(
                 self.hass, RECONFIGURE_NOTIFICATION_ID

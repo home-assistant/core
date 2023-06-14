@@ -16,10 +16,8 @@ from homeassistant.const import (
 from homeassistant.core import Context, State
 import homeassistant.util.dt as dt_util
 
-from .state_attributes import decode_attributes_from_row
+from .state_attributes import decode_attributes_from_source
 from .time import process_timestamp
-
-# pylint: disable=invalid-name
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -55,6 +53,7 @@ class LazyState(State):
         entity_id: str,
         state: str,
         last_updated_ts: float | None,
+        no_attributes: bool,
     ) -> None:
         """Init the lazy state."""
         self._row = row
@@ -70,7 +69,9 @@ class LazyState(State):
     def attributes(self) -> dict[str, Any]:
         """State attributes."""
         if self._attributes is None:
-            self._attributes = decode_attributes_from_row(self._row, self.attr_cache)
+            self._attributes = decode_attributes_from_source(
+                getattr(self._row, "attributes", None), self.attr_cache
+            )
         return self._attributes
 
     @attributes.setter
@@ -143,12 +144,14 @@ def row_to_compressed_state(
     entity_id: str,
     state: str,
     last_updated_ts: float | None,
+    no_attributes: bool,
 ) -> dict[str, Any]:
-    """Convert a database row to a compressed state schema 31 and later."""
-    comp_state: dict[str, Any] = {
-        COMPRESSED_STATE_STATE: state,
-        COMPRESSED_STATE_ATTRIBUTES: decode_attributes_from_row(row, attr_cache),
-    }
+    """Convert a database row to a compressed state schema 41 and later."""
+    comp_state: dict[str, Any] = {COMPRESSED_STATE_STATE: state}
+    if not no_attributes:
+        comp_state[COMPRESSED_STATE_ATTRIBUTES] = decode_attributes_from_source(
+            getattr(row, "attributes", None), attr_cache
+        )
     row_last_updated_ts: float = last_updated_ts or start_time_ts  # type: ignore[assignment]
     comp_state[COMPRESSED_STATE_LAST_UPDATED] = row_last_updated_ts
     if (

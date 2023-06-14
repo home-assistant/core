@@ -33,7 +33,11 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    entity_registry as er,
+)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.issue_registry import (
@@ -114,6 +118,8 @@ CONNECT_TIMEOUT = 10
 DATA_CLIENT_LISTEN_TASK = "client_listen_task"
 DATA_DRIVER_EVENTS = "driver_events"
 DATA_START_CLIENT_TASK = "start_client_task"
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -209,6 +215,9 @@ async def start_client(
     LOGGER.info("Connection to Zwave JS Server initialized")
 
     assert client.driver
+    async_dispatcher_send(
+        hass, f"{DOMAIN}_{client.driver.controller.home_id}_connected_to_server"
+    )
 
     await driver_events.setup(client.driver)
 
@@ -321,10 +330,25 @@ class ControllerEvents:
 
     async def async_on_node_added(self, node: ZwaveNode) -> None:
         """Handle node added event."""
+        # Every node including the controller will have at least one sensor
+        await self.driver_events.async_setup_platform(Platform.SENSOR)
+
+        # Remove stale entities that may exist from a previous interview when an
+        # interview is started.
+        base_unique_id = get_valueless_base_unique_id(self.driver_events.driver, node)
+        self.config_entry.async_on_unload(
+            node.on(
+                "interview started",
+                lambda _: async_dispatcher_send(
+                    self.hass,
+                    f"{DOMAIN}_{base_unique_id}_remove_entity_on_interview_started",
+                ),
+            )
+        )
+
         # No need for a ping button or node status sensor for controller nodes
         if not node.is_controller_node:
             # Create a node status sensor for each device
-            await self.driver_events.async_setup_platform(Platform.SENSOR)
             async_dispatcher_send(
                 self.hass,
                 f"{DOMAIN}_{self.config_entry.entry_id}_add_node_status_sensor",
@@ -338,6 +362,13 @@ class ControllerEvents:
                 f"{DOMAIN}_{self.config_entry.entry_id}_add_ping_button_entity",
                 node,
             )
+
+        # Create statistics sensors for each device
+        async_dispatcher_send(
+            self.hass,
+            f"{DOMAIN}_{self.config_entry.entry_id}_add_statistics_sensors",
+            node,
+        )
 
         LOGGER.debug("Node added: %s", node.node_id)
 
@@ -455,7 +486,6 @@ class NodeEvents:
     async def async_on_node_ready(self, node: ZwaveNode) -> None:
         """Handle node ready event."""
         LOGGER.debug("Processing node %s", node)
-        driver = self.controller_events.driver_events.driver
         # register (or update) node in device registry
         device = self.controller_events.register_node_in_dev_reg(node)
         # We only want to create the defaultdict once, even on reinterviews
@@ -464,15 +494,6 @@ class NodeEvents:
 
         # Remove any old value ids if this is a reinterview.
         self.controller_events.discovered_value_ids.pop(device.id, None)
-        # Remove stale entities that may exist from a previous interview.
-        async_dispatcher_send(
-            self.hass,
-            (
-                f"{DOMAIN}_"
-                f"{get_valueless_base_unique_id(driver, node)}_"
-                "remove_entity_on_ready_node"
-            ),
-        )
 
         value_updates_disc_info: dict[str, ZwaveDiscoveryInfo] = {}
 

@@ -1,4 +1,5 @@
 """The tests for the MQTT discovery."""
+import asyncio
 import copy
 import json
 from pathlib import Path
@@ -28,7 +29,7 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.service_info.mqtt import MqttServiceInfo
 from homeassistant.setup import async_setup_component
 
-from .test_common import help_test_unload_config_entry
+from .test_common import help_all_subscribe_calls, help_test_unload_config_entry
 
 from tests.common import (
     MockConfigEntry,
@@ -1114,7 +1115,6 @@ async def test_discovery_expansion_2(
 
 
 @patch("homeassistant.components.mqtt.PLATFORMS", [Platform.SWITCH])
-@pytest.mark.no_fail_on_log_exception
 async def test_discovery_expansion_3(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
@@ -1145,10 +1145,7 @@ async def test_discovery_expansion_3(
     assert hass.states.get("switch.DiscoveryExpansionTest1") is None
     # Make sure the malformed availability data does not trip up discovery by asserting
     # there are schema valdiation errors in the log
-    assert (
-        "voluptuous.error.MultipleInvalid: expected a dictionary @ data['availability'][0]"
-        in caplog.text
-    )
+    assert "expected a dictionary @ data['availability'][0]" in caplog.text
 
 
 async def test_discovery_expansion_without_encoding_and_value_template_1(
@@ -1376,6 +1373,7 @@ async def test_complex_discovery_topic_prefix(
 @patch("homeassistant.components.mqtt.PLATFORMS", [])
 @patch("homeassistant.components.mqtt.client.INITIAL_SUBSCRIBE_COOLDOWN", 0.0)
 @patch("homeassistant.components.mqtt.client.SUBSCRIBE_COOLDOWN", 0.0)
+@patch("homeassistant.components.mqtt.client.UNSUBSCRIBE_COOLDOWN", 0.0)
 async def test_mqtt_integration_discovery_subscribe_unsubscribe(
     hass: HomeAssistant,
     mqtt_client_mock: MqttMockPahoClient,
@@ -1396,7 +1394,7 @@ async def test_mqtt_integration_discovery_subscribe_unsubscribe(
         await hass.async_block_till_done()
         await hass.async_block_till_done()
 
-    mqtt_client_mock.subscribe.assert_any_call("comp/discovery/#", 0)
+    assert ("comp/discovery/#", 0) in help_all_subscribe_calls(mqtt_client_mock)
     assert not mqtt_client_mock.unsubscribe.called
 
     class TestFlow(config_entries.ConfigFlow):
@@ -1407,15 +1405,18 @@ async def test_mqtt_integration_discovery_subscribe_unsubscribe(
             return self.async_abort(reason="already_configured")
 
     with patch.dict(config_entries.HANDLERS, {"comp": TestFlow}):
-        mqtt_client_mock.subscribe.assert_any_call("comp/discovery/#", 0)
+        await asyncio.sleep(0.1)
+        assert ("comp/discovery/#", 0) in help_all_subscribe_calls(mqtt_client_mock)
         assert not mqtt_client_mock.unsubscribe.called
 
         async_fire_mqtt_message(hass, "comp/discovery/bla/config", "")
+        await asyncio.sleep(0.1)
         await hass.async_block_till_done()
-        mqtt_client_mock.unsubscribe.assert_called_once_with("comp/discovery/#")
+        mqtt_client_mock.unsubscribe.assert_called_once_with(["comp/discovery/#"])
         mqtt_client_mock.unsubscribe.reset_mock()
 
         async_fire_mqtt_message(hass, "comp/discovery/bla/config", "")
+        await asyncio.sleep(0.1)
         await hass.async_block_till_done()
         assert not mqtt_client_mock.unsubscribe.called
 
@@ -1423,6 +1424,7 @@ async def test_mqtt_integration_discovery_subscribe_unsubscribe(
 @patch("homeassistant.components.mqtt.PLATFORMS", [])
 @patch("homeassistant.components.mqtt.client.INITIAL_SUBSCRIBE_COOLDOWN", 0.0)
 @patch("homeassistant.components.mqtt.client.SUBSCRIBE_COOLDOWN", 0.0)
+@patch("homeassistant.components.mqtt.client.UNSUBSCRIBE_COOLDOWN", 0.0)
 async def test_mqtt_discovery_unsubscribe_once(
     hass: HomeAssistant,
     mqtt_client_mock: MqttMockPahoClient,
@@ -1443,7 +1445,7 @@ async def test_mqtt_discovery_unsubscribe_once(
         await hass.async_block_till_done()
         await hass.async_block_till_done()
 
-    mqtt_client_mock.subscribe.assert_any_call("comp/discovery/#", 0)
+    assert ("comp/discovery/#", 0) in help_all_subscribe_calls(mqtt_client_mock)
     assert not mqtt_client_mock.unsubscribe.called
 
     class TestFlow(config_entries.ConfigFlow):
@@ -1456,9 +1458,10 @@ async def test_mqtt_discovery_unsubscribe_once(
     with patch.dict(config_entries.HANDLERS, {"comp": TestFlow}):
         async_fire_mqtt_message(hass, "comp/discovery/bla/config", "")
         async_fire_mqtt_message(hass, "comp/discovery/bla/config", "")
+        await asyncio.sleep(0.1)
         await hass.async_block_till_done()
         await hass.async_block_till_done()
-        mqtt_client_mock.unsubscribe.assert_called_once_with("comp/discovery/#")
+        mqtt_client_mock.unsubscribe.assert_called_once_with(["comp/discovery/#"])
 
 
 @patch("homeassistant.components.mqtt.PLATFORMS", [Platform.SENSOR])

@@ -14,12 +14,6 @@ from zigpy.zcl.foundation import Status
 from homeassistant.core import callback
 from homeassistant.helpers.event import async_call_later
 
-from . import (
-    AttrReportConfig,
-    ClientClusterHandler,
-    ClusterHandler,
-    parse_and_log_command,
-)
 from .. import registries
 from ..const import (
     REPORT_CONFIG_ASAP,
@@ -32,6 +26,12 @@ from ..const import (
     SIGNAL_MOVE_LEVEL,
     SIGNAL_SET_LEVEL,
     SIGNAL_UPDATE_DEVICE,
+)
+from . import (
+    AttrReportConfig,
+    ClientClusterHandler,
+    ClusterHandler,
+    parse_and_log_command,
 )
 from .helpers import is_hue_motion_sensor
 
@@ -347,7 +347,7 @@ class OnOffClientClusterHandler(ClientClusterHandler):
 class OnOffClusterHandler(ClusterHandler):
     """Cluster handler for the OnOff Zigbee cluster."""
 
-    ON_OFF = 0
+    ON_OFF = general.OnOff.attributes_by_name["on_off"].id
     REPORT_CONFIG = (AttrReportConfig(attr="on_off", config=REPORT_CONFIG_IMMEDIATE),)
     ZCL_INIT_ATTRS = {
         "start_up_on_off": True,
@@ -373,6 +373,15 @@ class OnOffClusterHandler(ClusterHandler):
             self.ZCL_INIT_ATTRS["power_on_state"] = True
             if self.cluster.endpoint.model == "TS011F":
                 self.ZCL_INIT_ATTRS["child_lock"] = True
+
+    @classmethod
+    def matches(cls, cluster: zigpy.zcl.Cluster, endpoint: Endpoint) -> bool:
+        """Filter the cluster match for specific devices."""
+        return not (
+            cluster.endpoint.device.manufacturer == "Konke"
+            and cluster.endpoint.device.model
+            in ("3AFE280100510001", "3AFE170100510001")
+        )
 
     @property
     def on_off(self) -> bool | None:

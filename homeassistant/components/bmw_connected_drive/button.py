@@ -54,12 +54,6 @@ BUTTON_TYPES: tuple[BMWButtonEntityDescription, ...] = (
         remote_function=lambda vehicle: vehicle.remote_services.trigger_remote_air_conditioning(),
     ),
     BMWButtonEntityDescription(
-        key="deactivate_air_conditioning",
-        icon="mdi:hvac-off",
-        name="Deactivate air conditioning",
-        remote_function=lambda vehicle: vehicle.remote_services.trigger_remote_air_conditioning_stop(),
-    ),
-    BMWButtonEntityDescription(
         key="find_vehicle",
         icon="mdi:crosshairs-question",
         name="Find vehicle",
@@ -128,7 +122,4 @@ class BMWButton(BMWBaseEntity, ButtonEntity):
             )
             await self.entity_description.account_function(self.coordinator)
 
-        # Always update HA states after a button was executed.
-        # BMW remote services that change the vehicle's state update the local object
-        # when executing the service, so only the HA state machine needs further updates.
         self.coordinator.async_update_listeners()

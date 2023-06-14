@@ -2,26 +2,18 @@
 from __future__ import annotations
 
 from datetime import date, timedelta
-from typing import Any
 
 import holidays
 from holidays import DateLike, HolidayBase
-import voluptuous as vol
 
-from homeassistant.components.binary_sensor import (
-    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
-    BinarySensorEntity,
-)
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.util import dt
+from homeassistant.util import dt as dt_util
 
 from .const import (
     ALLOWED_DAYS,
@@ -32,79 +24,9 @@ from .const import (
     CONF_PROVINCE,
     CONF_REMOVE_HOLIDAYS,
     CONF_WORKDAYS,
-    DEFAULT_EXCLUDES,
-    DEFAULT_NAME,
-    DEFAULT_OFFSET,
-    DEFAULT_WORKDAYS,
     DOMAIN,
     LOGGER,
 )
-
-
-def valid_country(value: Any) -> str:
-    """Validate that the given country is supported."""
-    value = cv.string(value)
-    all_supported_countries = holidays.list_supported_countries()
-
-    try:
-        raw_value = value.encode("utf-8")
-    except UnicodeError as err:
-        raise vol.Invalid(
-            "The country name or the abbreviation must be a valid UTF-8 string."
-        ) from err
-    if not raw_value:
-        raise vol.Invalid("Country name or the abbreviation must not be empty.")
-    if value not in all_supported_countries:
-        raise vol.Invalid("Country is not supported.")
-    return value
-
-
-PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_COUNTRY): valid_country,
-        vol.Optional(CONF_EXCLUDES, default=DEFAULT_EXCLUDES): vol.All(
-            cv.ensure_list, [vol.In(ALLOWED_DAYS)]
-        ),
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_OFFSET, default=DEFAULT_OFFSET): vol.Coerce(int),
-        vol.Optional(CONF_PROVINCE): cv.string,
-        vol.Optional(CONF_WORKDAYS, default=DEFAULT_WORKDAYS): vol.All(
-            cv.ensure_list, [vol.In(ALLOWED_DAYS)]
-        ),
-        vol.Optional(CONF_ADD_HOLIDAYS, default=[]): vol.All(
-            cv.ensure_list, [cv.string]
-        ),
-        vol.Optional(CONF_REMOVE_HOLIDAYS, default=[]): vol.All(
-            cv.ensure_list, [cv.string]
-        ),
-    }
-)
-
-
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Set up the Workday sensor."""
-    async_create_issue(
-        hass,
-        DOMAIN,
-        "deprecated_yaml",
-        breaks_in_ha_version="2023.7.0",
-        is_fixable=False,
-        severity=IssueSeverity.WARNING,
-        translation_key="deprecated_yaml",
-    )
-
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data=config,
-        )
-    )
 
 
 async def async_setup_entry(
@@ -120,7 +42,7 @@ async def async_setup_entry(
     sensor_name: str = entry.options[CONF_NAME]
     workdays: list[str] = entry.options[CONF_WORKDAYS]
 
-    year: int = (dt.now() + timedelta(days=days_offset)).year
+    year: int = (dt_util.now() + timedelta(days=days_offset)).year
     obj_holidays: HolidayBase = getattr(holidays, country)(years=year)
 
     if province:
@@ -140,7 +62,7 @@ async def async_setup_entry(
     for remove_holiday in remove_holidays:
         try:
             # is this formatted as a date?
-            if dt.parse_date(remove_holiday):
+            if dt_util.parse_date(remove_holiday):
                 # remove holiday by date
                 removed = obj_holidays.pop(remove_holiday)
                 LOGGER.debug("Removed %s", remove_holiday)
@@ -231,7 +153,7 @@ class IsWorkdaySensor(BinarySensorEntity):
         self._attr_is_on = False
 
         # Get ISO day of the week (1 = Monday, 7 = Sunday)
-        adjusted_date = dt.now() + timedelta(days=self._days_offset)
+        adjusted_date = dt_util.now() + timedelta(days=self._days_offset)
         day = adjusted_date.isoweekday() - 1
         day_of_week = ALLOWED_DAYS[day]
 

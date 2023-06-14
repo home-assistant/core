@@ -17,7 +17,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
-from homeassistant.util import dt
+from homeassistant.util import dt as dt_util
 
 from tests.common import async_fire_mqtt_message
 from tests.typing import MqttMockHAClient
@@ -110,7 +110,7 @@ async def test_room_update(hass: HomeAssistant, mqtt_mock: MqttMockHAClient) -> 
     await assert_state(hass, LIVING_ROOM)
     await assert_distance(hass, 1)
 
-    time = dt.utcnow() + datetime.timedelta(seconds=7)
+    time = dt_util.utcnow() + datetime.timedelta(seconds=7)
     with patch("homeassistant.helpers.condition.dt_util.utcnow", return_value=time):
         await send_message(hass, BEDROOM_TOPIC, FAR_MESSAGE)
         await assert_state(hass, BEDROOM)

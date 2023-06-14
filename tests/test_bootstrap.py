@@ -887,8 +887,8 @@ async def test_bootstrap_dependencies(
         ),
     )
 
-    # We mock the MQTT integration and integrations that depend on it
-    # to make sure that core tests will not fail when non core components are changed
+    # We patch the _import platform method to avoid loading the platform module
+    # to avoid depending on non core components in the tests.
     mqtt_integration._import_platform = Mock()
 
     integrations = {
