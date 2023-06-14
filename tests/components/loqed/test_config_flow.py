@@ -26,9 +26,7 @@ zeroconf_data = zeroconf.ZeroconfServiceInfo(
 )
 
 
-async def test_create_entry_zeoconf(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
-) -> None:
+async def test_create_entry_zeoconf(hass: HomeAssistant) -> None:
     """Test we get can create a lock via zeroconf."""
     lock_result = json.loads(load_fixture("loqed/status_ok.json"))
 
@@ -48,11 +46,10 @@ async def test_create_entry_zeoconf(
     mock_lock = Mock(spec=loqed.Lock, id="Foo")
     webhook_id = "Webhook_ID"
     all_locks_response = json.loads(load_fixture("loqed/get_all_locks.json"))
-    aioclient_mock.get(
-        "https://integrations.production.loqed.com/api/locks/", json=all_locks_response
-    )
 
     with patch(
+        "loqedAPI.loqed.LoqedCloudAPI.async_get_locks", return_value=all_locks_response
+    ), patch(
         "loqedAPI.loqed.LoqedAPI.async_get_lock",
         return_value=mock_lock,
     ), patch(
@@ -103,11 +100,10 @@ async def test_create_entry_user(
     webhook_id = "Webhook_ID"
     all_locks_response = json.loads(load_fixture("loqed/get_all_locks.json"))
     found_lock = all_locks_response["data"][0]
-    aioclient_mock.get(
-        "https://integrations.production.loqed.com/api/locks/", json=all_locks_response
-    )
 
     with patch(
+        "loqedAPI.loqed.LoqedCloudAPI.async_get_locks", return_value=all_locks_response
+    ), patch(
         "loqedAPI.loqed.LoqedAPI.async_get_lock",
         return_value=mock_lock,
     ), patch(
@@ -152,15 +148,14 @@ async def test_cannot_connect(
     assert result["type"] == FlowResultType.FORM
     assert result["errors"] is None
 
-    aioclient_mock.get(
-        "https://integrations.production.loqed.com/api/locks/", exc=aiohttp.ClientError
-    )
-
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_API_TOKEN: "eyadiuyfasiuasf", CONF_NAME: "MyLock"},
-    )
-    await hass.async_block_till_done()
+    with patch(
+        "loqedAPI.loqed.LoqedCloudAPI.async_get_locks", side_effect=aiohttp.ClientError
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_API_TOKEN: "eyadiuyfasiuasf", CONF_NAME: "MyLock"},
+        )
+        await hass.async_block_till_done()
 
     assert result2["type"] == FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
@@ -179,15 +174,15 @@ async def test_invalid_auth_when_lock_not_found(
     assert result["errors"] is None
 
     all_locks_response = json.loads(load_fixture("loqed/get_all_locks.json"))
-    aioclient_mock.get(
-        "https://integrations.production.loqed.com/api/locks/", json=all_locks_response
-    )
 
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_API_TOKEN: "eyadiuyfasiuasf", CONF_NAME: "MyLock2"},
-    )
-    await hass.async_block_till_done()
+    with patch(
+        "loqedAPI.loqed.LoqedCloudAPI.async_get_locks", return_value=all_locks_response
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_API_TOKEN: "eyadiuyfasiuasf", CONF_NAME: "MyLock2"},
+        )
+        await hass.async_block_till_done()
 
     assert result2["type"] == FlowResultType.FORM
     assert result2["errors"] == {"base": "invalid_auth"}
@@ -206,13 +201,10 @@ async def test_cannot_connect_when_lock_not_reachable(
     assert result["errors"] is None
 
     all_locks_response = json.loads(load_fixture("loqed/get_all_locks.json"))
-    aioclient_mock.get(
-        "https://integrations.production.loqed.com/api/locks/", json=all_locks_response
-    )
 
     with patch(
-        "loqedAPI.loqed.LoqedAPI.async_get_lock", side_effect=aiohttp.ClientError
-    ):
+        "loqedAPI.loqed.LoqedCloudAPI.async_get_locks", return_value=all_locks_response
+    ), patch("loqedAPI.loqed.LoqedAPI.async_get_lock", side_effect=aiohttp.ClientError):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {CONF_API_TOKEN: "eyadiuyfasiuasf", CONF_NAME: "MyLock"},

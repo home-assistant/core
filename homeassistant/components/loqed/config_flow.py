@@ -38,12 +38,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # 1. Checking loqed-connection
         try:
             session = async_get_clientsession(hass)
-            res = await session.request(
-                "GET",
-                "https://integrations.production.loqed.com/api/locks/",
-                headers={"Authorization": f"Bearer {data[CONF_API_TOKEN]}"},
+            cloud_api_client = loqed.APIClient(
+                session,
+                "https://integrations.production.loqed.com/",
+                data[CONF_API_TOKEN],
             )
-            lock_data = await res.json()
+            cloud_client = loqed.LoqedCloudAPI(cloud_api_client)
+            lock_data = await cloud_client.async_get_locks()
         except aiohttp.ClientError:
             _LOGGER.error("HTTP Connection error to loqed API")
             raise CannotConnect from aiohttp.ClientError
