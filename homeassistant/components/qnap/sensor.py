@@ -23,27 +23,26 @@ from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import (
-    ATTR_DRIVE,
-    ATTR_IP,
-    ATTR_MAC,
-    ATTR_MASK,
-    ATTR_MAX_SPEED,
-    ATTR_MEMORY_SIZE,
-    ATTR_MODEL,
-    ATTR_PACKETS_ERR,
-    ATTR_PACKETS_RX,
-    ATTR_PACKETS_TX,
-    ATTR_SERIAL,
-    ATTR_TYPE,
-    ATTR_UPTIME,
-    ATTR_VOLUME_SIZE,
-    DEFAULT_NAME,
-    DOMAIN,
-)
+from .const import DEFAULT_NAME, DOMAIN
 from .coordinator import QnapCoordinator
 
 _LOGGER = logging.getLogger(__name__)
+
+ATTR_DRIVE = "Drive"
+ATTR_ENABLED = "Sensor Enabled"
+ATTR_IP = "IP Address"
+ATTR_MAC = "MAC Address"
+ATTR_MASK = "Mask"
+ATTR_MAX_SPEED = "Max Speed"
+ATTR_MEMORY_SIZE = "Memory Size"
+ATTR_MODEL = "Model"
+ATTR_PACKETS_TX = "Packets (TX)"
+ATTR_PACKETS_RX = "Packets (RX)"
+ATTR_PACKETS_ERR = "Packets (Err)"
+ATTR_SERIAL = "Serial #"
+ATTR_TYPE = "Type"
+ATTR_UPTIME = "Uptime"
+ATTR_VOLUME_SIZE = "Volume Size"
 
 
 async def async_setup_entry(
