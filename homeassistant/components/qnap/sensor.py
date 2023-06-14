@@ -19,9 +19,9 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from homeassistant.exceptions import PlatformNotReady
 
 from .const import (
     ATTR_DRIVE,
@@ -40,7 +40,6 @@ from .const import (
     ATTR_VOLUME_SIZE,
     DEFAULT_NAME,
     DOMAIN,
-
 )
 from .coordinator import QnapCoordinator
 
@@ -257,7 +256,7 @@ class QNAPSensor(CoordinatorEntity[QnapCoordinator], SensorEntity):
     """Base class for a QNAP sensor."""
 
     def __init__(
-        self, 
+        self,
         coordinator: QnapCoordinator,
         description,
         uid,
@@ -276,10 +275,10 @@ class QNAPSensor(CoordinatorEntity[QnapCoordinator], SensorEntity):
     def unique_id(self):
         """Return unique_id."""
         return f"{self.uid}_{self.name}"
-    
+
     @property
     def coordinator_context(self):
-        """helpers update_coordinator."""
+        """Helpers update_coordinator."""
         return None
 
     @property
