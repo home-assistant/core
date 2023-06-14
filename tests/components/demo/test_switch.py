@@ -15,7 +15,7 @@ SWITCH_ENTITY_IDS = ["switch.decorative_lights", "switch.ac"]
 
 
 @pytest.fixture(autouse=True)
-async def setup_comp(hass):
+async def setup_comp(hass, disable_platforms):
     """Set up demo component."""
     assert await async_setup_component(
         hass, SWITCH_DOMAIN, {SWITCH_DOMAIN: {"platform": DOMAIN}}
