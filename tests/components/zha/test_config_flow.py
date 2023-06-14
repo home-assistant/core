@@ -49,6 +49,19 @@ def disable_platform_only():
 
 
 @pytest.fixture(autouse=True)
+def mock_multipan_platform():
+    """Mock the multipan platform."""
+    with patch(
+        "homeassistant.components.zha.silabs_multiprotocol.async_get_channel",
+        return_value=None,
+    ), patch(
+        "homeassistant.components.zha.silabs_multiprotocol.async_using_multipan",
+        return_value=False,
+    ):
+        yield
+
+
+@pytest.fixture(autouse=True)
 def reduce_reconnect_timeout():
     """Reduces reconnect timeout to speed up tests."""
     with patch("homeassistant.components.zha.radio_manager.CONNECT_DELAY_S", 0.01):
