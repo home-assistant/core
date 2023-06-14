@@ -48,6 +48,7 @@ from . import DOMAIN, PLATFORMS
 
 _LOGGER = logging.getLogger(__name__)
 
+FILTER_NAME_MEDIAN = "median"
 FILTER_NAME_RANGE = "range"
 FILTER_NAME_LOWPASS = "lowpass"
 FILTER_NAME_OUTLIER = "outlier"
@@ -134,6 +135,15 @@ FILTER_THROTTLE_SCHEMA = FILTER_SCHEMA.extend(
     }
 )
 
+FILTER_MEDIAN_SCHEMA = FILTER_SCHEMA.extend(
+    {
+        vol.Required(CONF_FILTER_NAME): FILTER_NAME_MEDIAN,
+        vol.Optional(CONF_FILTER_WINDOW_SIZE, default=DEFAULT_WINDOW_SIZE): vol.Coerce(
+            int
+        ),
+    }
+)
+
 FILTER_TIME_THROTTLE_SCHEMA = FILTER_SCHEMA.extend(
     {
         vol.Required(CONF_FILTER_NAME): FILTER_NAME_TIME_THROTTLE,
@@ -162,6 +172,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
                     FILTER_THROTTLE_SCHEMA,
                     FILTER_TIME_THROTTLE_SCHEMA,
                     FILTER_RANGE_SCHEMA,
+                    FILTER_MEDIAN_SCHEMA,
                 )
             ],
         ),
@@ -704,6 +715,39 @@ class ThrottleFilter(Filter, SensorEntity):
         else:
             self._skip_processing = True
 
+        return new_state
+
+
+@FILTERS.register(FILTER_NAME_MEDIAN)
+class MedianFilter(Filter, SensorEntity):
+    """Median filter.
+
+    The new state is the median of the window.
+    """
+
+    def __init__(
+        self,
+        *,
+        window_size: int,
+        entity: str,
+        precision: int | None = None,
+    ) -> None:
+        """Initialize Filter."""
+        super().__init__(
+            FILTER_NAME_MEDIAN, window_size, precision=precision, entity=entity
+        )
+
+    def _filter_state(self, new_state: FilterState) -> FilterState:
+        """Implement the median filter."""
+
+        # We can cast safely here thanks to self._only_numbers = True
+        previous_state_values = [cast(float, s.state) for s in self.states]
+        window_state_values = previous_state_values + [cast(float, new_state.state)]
+
+        # Calculate the median and update the new state
+        median = statistics.median(window_state_values) if self.states else 0
+        if len(self.states) == self.states.maxlen:
+            new_state.state = median
         return new_state
 
 

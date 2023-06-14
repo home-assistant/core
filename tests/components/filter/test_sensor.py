@@ -8,6 +8,7 @@ from homeassistant import config as hass_config
 from homeassistant.components.filter.sensor import (
     DOMAIN,
     LowPassFilter,
+    MedianFilter,
     OutlierFilter,
     RangeFilter,
     ThrottleFilter,
@@ -483,6 +484,26 @@ def test_time_sma(values: list[State]) -> None:
     for state in values:
         filtered = filt.filter_state(state)
     assert filtered.state == 21.5
+
+
+def test_median(values: list[State]) -> None:
+    """Test if median filter works."""
+    filt = MedianFilter(window_size=3, precision=3, entity=None)
+    for state in values:
+        filtered = filt.filter_state(state)
+    assert filtered.state == 18.625
+
+
+def test_unknown_state_median(values: list[State]) -> None:
+    """Test issue #32395."""
+    filt = MedianFilter(window_size=3, precision=3, entity=None)
+    out = State("sensor.test_monitored", "unknown")
+    for state in [out] + values + [out]:
+        try:
+            filtered = filt.filter_state(state)
+        except ValueError:
+            assert state.state == "unknown"
+    assert filtered.state == 18.625
 
 
 async def test_reload(recorder_mock: Recorder, hass: HomeAssistant) -> None:
