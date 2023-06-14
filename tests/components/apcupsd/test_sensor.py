@@ -119,7 +119,7 @@ async def test_sensor_disabled(hass: HomeAssistant) -> None:
 
 async def test_state_update(hass: HomeAssistant) -> None:
     """Ensure the sensor state changes after updating the data."""
-    await init_integration(hass)
+    await async_init_integration(hass)
 
     state = hass.states.get("sensor.ups_load")
     assert state
@@ -143,7 +143,7 @@ async def test_state_update(hass: HomeAssistant) -> None:
 
 async def test_manual_update_entity(hass: HomeAssistant) -> None:
     """Test manual update entity via service homeassistant/update_entity."""
-    await init_integration(hass)
+    await async_init_integration(hass)
 
     # Assert the initial state of sensor.ups_load.
     state = hass.states.get("sensor.ups_load")
@@ -190,7 +190,7 @@ async def test_multiple_manual_update_entity(hass: HomeAssistant) -> None:
 
     We should only do network call once for the multiple simultaneous update entity services.
     """
-    await init_integration(hass)
+    await async_init_integration(hass)
 
     # Setup HASS for calling the update_entity service.
     await async_setup_component(hass, "homeassistant", {})

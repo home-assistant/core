@@ -148,7 +148,7 @@ async def test_unload_remove_entry(hass: HomeAssistant) -> None:
 
 async def test_availability(hass: HomeAssistant) -> None:
     """Ensure that we mark the entity's availability properly when network is down / back up."""
-    await init_integration(hass)
+    await async_init_integration(hass)
 
     state = hass.states.get("sensor.ups_load")
     assert state
