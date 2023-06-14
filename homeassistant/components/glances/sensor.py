@@ -223,10 +223,17 @@ SENSOR_TYPES = {
         icon="mdi:docker",
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    ("raid", "used"): GlancesSensorEntityDescription(
-        key="used",
+    ("raid", "status"): GlancesSensorEntityDescription(
+        key="status",
         type="raid",
-        name_suffix="Raid used",
+        name_suffix="Raid status",
+        icon="mdi:harddisk",
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    ("raid", "type"): GlancesSensorEntityDescription(
+        key="type",
+        type="raid",
+        name_suffix="Raid type",
         icon="mdi:harddisk",
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -234,6 +241,20 @@ SENSOR_TYPES = {
         key="available",
         type="raid",
         name_suffix="Raid available",
+        icon="mdi:harddisk",
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    ("raid", "used"): GlancesSensorEntityDescription(
+        key="used",
+        type="raid",
+        name_suffix="Raid used",
+        icon="mdi:harddisk",
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    ("raid", "config"): GlancesSensorEntityDescription(
+        key="config",
+        type="raid",
+        name_suffix="Raid configuration",
         icon="mdi:harddisk",
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -269,20 +290,21 @@ async def async_setup_entry(
         if sensor_type in ["fs", "sensors", "raid"]:
             for sensor_label, params in sensors.items():
                 for param in params:
-                    sensor_description = SENSOR_TYPES[(sensor_type, param)]
-                    _migrate_old_unique_ids(
-                        hass,
-                        f"{coordinator.host}-{name} {sensor_label} {sensor_description.name_suffix}",
-                        f"{sensor_label}-{sensor_description.key}",
-                    )
-                    entities.append(
-                        GlancesSensor(
-                            coordinator,
-                            name,
-                            sensor_label,
-                            sensor_description,
+                    sensor_description = SENSOR_TYPES.get((sensor_type, param))
+                    if sensor_description is not None:
+                        _migrate_old_unique_ids(
+                            hass,
+                            f"{coordinator.host}-{name} {sensor_label} {sensor_description.name_suffix}",
+                            f"{sensor_label}-{sensor_description.key}",
                         )
-                    )
+                        entities.append(
+                            GlancesSensor(
+                                coordinator,
+                                name,
+                                sensor_label,
+                                sensor_description,
+                            )
+                        )
         else:
             for sensor in sensors:
                 sensor_description = SENSOR_TYPES[(sensor_type, sensor)]
