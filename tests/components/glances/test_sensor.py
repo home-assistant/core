@@ -35,6 +35,12 @@ async def test_sensor_states(hass: HomeAssistant) -> None:
         assert state.state == HA_SENSOR_DATA["docker"]["docker_cpu_use"]
     if state := hass.states.get("sensor.0_0_0_0_docker_memory_use"):
         assert state.state == HA_SENSOR_DATA["docker"]["docker_memory_use"]
+    if state := hass.states.get("sensor.0_0_0_0_md3_status"):
+        assert state.state == HA_SENSOR_DATA["raid"]["md3"]["status"]
+    if state := hass.states.get("sensor.0_0_0_0_md3_type"):
+        assert state.state == HA_SENSOR_DATA["raid"]["md3"]["type"]
+    if state := hass.states.get("sensor.0_0_0_0_md1_status"):
+        assert state.state == HA_SENSOR_DATA["raid"]["md1"]["status"]
 
 
 @pytest.mark.parametrize(
