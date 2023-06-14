@@ -49,6 +49,7 @@ class Device(CoordinatorEntity[FreedomproDataUpdateCoordinator], CoverEntity):
     """Representation of an Freedompro cover."""
 
     _attr_has_entity_name = True
+    _attr_name = None
 
     def __init__(
         self,
@@ -61,7 +62,6 @@ class Device(CoordinatorEntity[FreedomproDataUpdateCoordinator], CoverEntity):
         super().__init__(coordinator)
         self._session = aiohttp_client.async_get_clientsession(hass)
         self._api_key = api_key
-        self._attr_name = None
         self._attr_unique_id = device["uid"]
         self._attr_device_info = DeviceInfo(
             identifiers={

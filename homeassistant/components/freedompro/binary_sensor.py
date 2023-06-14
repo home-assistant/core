@@ -47,13 +47,13 @@ class Device(CoordinatorEntity[FreedomproDataUpdateCoordinator], BinarySensorEnt
     """Representation of an Freedompro binary_sensor."""
 
     _attr_has_entity_name = True
+    _attr_name = None
 
     def __init__(
         self, device: dict[str, Any], coordinator: FreedomproDataUpdateCoordinator
     ) -> None:
         """Initialize the Freedompro binary_sensor."""
         super().__init__(coordinator)
-        self._attr_name = None
         self._attr_unique_id = device["uid"]
         self._type = device["type"]
         self._attr_device_info = DeviceInfo(
