@@ -371,7 +371,7 @@ class ClimateEntity(Entity):
         return self._attr_hvac_modes
 
     @property
-    def hvac_action(self) -> HVACAction | str | None:
+    def hvac_action(self) -> HVACAction | None:
         """Return the current running hvac operation if supported."""
         return self._attr_hvac_action
 
