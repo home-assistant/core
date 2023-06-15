@@ -120,4 +120,7 @@ async def test_thumbnail(
         await hass.async_block_till_done()
     state = hass.states.get("sensor.google_for_developers_latest_upload")
     assert state
-    assert state.attributes["entity_picture"] == url
+    if url is not None:
+        assert state.attributes["entity_picture"] == url
+    else:
+        assert "entity_picture" not in state.attributes
