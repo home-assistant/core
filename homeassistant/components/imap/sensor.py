@@ -17,7 +17,11 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from . import ImapPollingDataUpdateCoordinator, ImapPushDataUpdateCoordinator
 from .const import DOMAIN
 
-IMAP_MAIL_COUNT = "imap_mail_count"
+IMAP_MAIL_COUNT_DESCRIPTION = SensorEntityDescription(
+    key="imap_mail_count",
+    state_class=SensorStateClass.MEASUREMENT,
+    suggested_display_precision=0,
+)
 
 
 async def async_setup_entry(
@@ -28,12 +32,7 @@ async def async_setup_entry(
     coordinator: ImapPushDataUpdateCoordinator | ImapPollingDataUpdateCoordinator = (
         hass.data[DOMAIN][entry.entry_id]
     )
-    description = SensorEntityDescription(
-        key=IMAP_MAIL_COUNT,
-        state_class=SensorStateClass.MEASUREMENT,
-        suggested_display_precision=0,
-    )
-    async_add_entities([ImapSensor(coordinator, description)])
+    async_add_entities([ImapSensor(coordinator, IMAP_MAIL_COUNT_DESCRIPTION)])
 
 
 class ImapSensor(
