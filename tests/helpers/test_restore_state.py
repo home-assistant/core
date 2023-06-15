@@ -27,6 +27,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
 
 from tests.common import (
+    MockEntityPlatform,
     MockModule,
     MockPlatform,
     async_fire_time_changed,
@@ -266,15 +267,16 @@ async def test_dump_data(hass: HomeAssistant) -> None:
         State("input_boolean.b5", "unavailable", {"restored": True}),
     ]
 
+    platform = MockEntityPlatform(hass, domain="input_boolean")
     entity = Entity()
     entity.hass = hass
     entity.entity_id = "input_boolean.b0"
-    await entity.async_internal_added_to_hass()
+    await platform.async_add_entities([entity])
 
     entity = RestoreEntity()
     entity.hass = hass
     entity.entity_id = "input_boolean.b1"
-    await entity.async_internal_added_to_hass()
+    await platform.async_add_entities([entity])
 
     data = async_get(hass)
     now = dt_util.utcnow()
@@ -340,15 +342,16 @@ async def test_dump_error(hass: HomeAssistant) -> None:
         State("input_boolean.b2", "on"),
     ]
 
+    platform = MockEntityPlatform(hass, domain="input_boolean")
     entity = Entity()
     entity.hass = hass
     entity.entity_id = "input_boolean.b0"
-    await entity.async_internal_added_to_hass()
+    await platform.async_add_entities([entity])
 
     entity = RestoreEntity()
     entity.hass = hass
     entity.entity_id = "input_boolean.b1"
-    await entity.async_internal_added_to_hass()
+    await platform.async_add_entities([entity])
 
     data = async_get(hass)
 
@@ -378,10 +381,11 @@ async def test_load_error(hass: HomeAssistant) -> None:
 
 async def test_state_saved_on_remove(hass: HomeAssistant) -> None:
     """Test that we save entity state on removal."""
+    platform = MockEntityPlatform(hass, domain="input_boolean")
     entity = RestoreEntity()
     entity.hass = hass
     entity.entity_id = "input_boolean.b0"
-    await entity.async_internal_added_to_hass()
+    await platform.async_add_entities([entity])
 
     now = dt_util.utcnow()
     hass.states.async_set(

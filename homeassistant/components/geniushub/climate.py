@@ -66,12 +66,12 @@ class GeniusClimateZone(GeniusHeatingZone, ClimateEntity):
         return "mdi:radiator"
 
     @property
-    def hvac_mode(self) -> str:
+    def hvac_mode(self) -> HVACMode:
         """Return hvac operation ie. heat, cool mode."""
         return GH_HVAC_TO_HA.get(self._zone.data["mode"], HVACMode.HEAT)
 
     @property
-    def hvac_modes(self) -> list[str]:
+    def hvac_modes(self) -> list[HVACMode]:
         """Return the list of available hvac operation modes."""
         return list(HA_HVAC_TO_GH)
 

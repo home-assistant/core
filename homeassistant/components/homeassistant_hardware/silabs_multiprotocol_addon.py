@@ -96,19 +96,29 @@ class MultiprotocolAddonManager(AddonManager):
     ) -> None:
         """Register a multipan platform."""
         self._platforms[integration_domain] = platform
-        if self._channel is not None or not await platform.async_using_multipan(hass):
+
+        channel = await platform.async_get_channel(hass)
+        using_multipan = await platform.async_using_multipan(hass)
+
+        _LOGGER.info(
+            "Registering new multipan platform '%s', using multipan: %s, channel: %s",
+            integration_domain,
+            using_multipan,
+            channel,
+        )
+
+        if self._channel is not None or not using_multipan:
             return
 
-        new_channel = await platform.async_get_channel(hass)
-        if new_channel is None:
+        if channel is None:
             return
 
         _LOGGER.info(
             "Setting multipan channel to %s (source: '%s')",
-            new_channel,
+            channel,
             integration_domain,
         )
-        self.async_set_channel(new_channel)
+        self.async_set_channel(channel)
 
     async def async_change_channel(
         self, channel: int, delay: float
