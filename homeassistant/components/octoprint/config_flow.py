@@ -4,7 +4,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Mapping
 import logging
-from typing import Any, List
+from typing import Any
 
 import aiohttp
 from pyoctoprintapi import ApiError, OctoprintClient, OctoprintException
@@ -58,7 +58,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle a config flow for OctoPrint."""
         self.discovery_schema = None
         self._user_input = None
-        self._sessions: List[aiohttp.ClientSession] = []
+        self._sessions: list[aiohttp.ClientSession] = []
 
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
