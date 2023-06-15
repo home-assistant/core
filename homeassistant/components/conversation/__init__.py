@@ -186,6 +186,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     websocket_api.async_register_command(hass, websocket_prepare)
     websocket_api.async_register_command(hass, websocket_get_agent_info)
     websocket_api.async_register_command(hass, websocket_list_agents)
+    websocket_api.async_register_command(hass, websocket_hass_agent_debug)
 
     return True
 
@@ -295,6 +296,65 @@ async def websocket_list_agents(
         agents.append(agent_dict)
 
     connection.send_message(websocket_api.result_message(msg["id"], {"agents": agents}))
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "conversation/agent/homeassistant/debug",
+        vol.Required("sentence"): vol.All(cv.ensure_list, [cv.string]),
+        vol.Optional("conversation_id"): vol.Any(str, None),
+        vol.Optional("language"): cv.string,
+        vol.Optional("device_id"): vol.Any(str, None),
+    }
+)
+@websocket_api.async_response
+async def websocket_hass_agent_debug(
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
+) -> None:
+    """Return intents that would be matched by the default agent for a list of sentences."""
+    sentences = msg["sentence"]
+
+    agent = await _get_agent_manager(hass).async_get_agent(HOME_ASSISTANT_AGENT)
+    assert isinstance(agent, DefaultAgent)
+    results = {
+        sentence: await agent.async_recognize(
+            ConversationInput(
+                text=sentence,
+                context=connection.context(msg),
+                conversation_id=msg.get("conversation_id"),
+                device_id=msg.get("device_id"),
+                language=msg.get("language", hass.config.language),
+            )
+        )
+        for sentence in sentences
+    }
+
+    # Return matching intent or empty dict for each sentence:
+    # {
+    #   "sentence text": {
+    #     "intent": "Name of intent",
+    #     "slots": {
+    #       "slot_name": slot_value,
+    #       ...
+    #     }
+    #   },
+    #   "non matching sentence": {},
+    #   ...
+    # }
+    connection.send_result(
+        msg["id"],
+        {
+            sentence: {
+                "intent": result.intent.name,
+                "slots": {
+                    name: entity.value for name, entity in result.entities.items()
+                },
+            }
+            if result is not None
+            else {}
+            for sentence, result in results.items()
+        },
+    )
 
 
 class ConversationProcessView(http.HomeAssistantView):

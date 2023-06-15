@@ -143,11 +143,12 @@ class DefaultAgent(AbstractConversationAgent):
             self.hass, DOMAIN, self._async_exposed_entities_updated
         )
 
-    async def async_process(self, user_input: ConversationInput) -> ConversationResult:
-        """Process a sentence."""
+    async def async_recognize(
+        self, user_input: ConversationInput
+    ) -> RecognizeResult | None:
+        """Recognize intent from user input."""
         language = user_input.language or self.hass.config.language
         lang_intents = self._lang_intents.get(language)
-        conversation_id = None  # Not supported
 
         # Reload intents if missing or new components
         if lang_intents is None or (
@@ -159,21 +160,26 @@ class DefaultAgent(AbstractConversationAgent):
         if lang_intents is None:
             # No intents loaded
             _LOGGER.warning("No intents were loaded for language: %s", language)
-            return _make_error_result(
-                language,
-                intent.IntentResponseErrorCode.NO_INTENT_MATCH,
-                _DEFAULT_ERROR_TEXT,
-                conversation_id,
-            )
+            return None
 
         slot_lists = self._make_slot_lists()
-
         result = await self.hass.async_add_executor_job(
             self._recognize,
             user_input,
             lang_intents,
             slot_lists,
         )
+
+        return result
+
+    async def async_process(self, user_input: ConversationInput) -> ConversationResult:
+        """Process a sentence."""
+        language = user_input.language or self.hass.config.language
+        conversation_id = None  # Not supported
+
+        result = await self.async_recognize(user_input)
+        lang_intents = self._lang_intents.get(language)
+
         if result is None:
             _LOGGER.debug("No intent was matched for '%s'", user_input.text)
             return _make_error_result(
@@ -182,6 +188,10 @@ class DefaultAgent(AbstractConversationAgent):
                 self._get_error_text(ResponseType.NO_INTENT, lang_intents),
                 conversation_id,
             )
+
+        # Will never happen because result will be None when no intents are
+        # loaded in async_recognize.
+        assert lang_intents is not None
 
         try:
             intent_response = await intent.async_handle(
@@ -585,9 +595,12 @@ class DefaultAgent(AbstractConversationAgent):
         return self._slot_lists
 
     def _get_error_text(
-        self, response_type: ResponseType, lang_intents: LanguageIntents
+        self, response_type: ResponseType, lang_intents: LanguageIntents | None
     ) -> str:
         """Get response error text by type."""
+        if lang_intents is None:
+            return _DEFAULT_ERROR_TEXT
+
         response_key = response_type.value
         response_str = lang_intents.error_responses.get(response_key)
         return response_str or _DEFAULT_ERROR_TEXT
