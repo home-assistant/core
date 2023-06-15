@@ -34,9 +34,6 @@
           "lock_code_digits": "Number of digits in PIN code for locks"
         }
       }
-    },
-    "error": {
-      "code_format_mismatch": "The code does not match the required number of digits"
     }
   },
   "entity": {

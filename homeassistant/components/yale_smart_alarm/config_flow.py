@@ -9,7 +9,7 @@ from yalesmartalarmclient.client import YaleSmartAlarmClient
 from yalesmartalarmclient.exceptions import AuthenticationError
 
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
-from homeassistant.const import CONF_CODE, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 import homeassistant.helpers.config_validation as cv
@@ -155,16 +155,10 @@ class YaleOptionsFlowHandler(OptionsFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Manage Yale options."""
-        errors = {}
+        errors: dict[str, Any] = {}
 
         if user_input:
-            if len(user_input.get(CONF_CODE, "")) not in [
-                0,
-                user_input[CONF_LOCK_CODE_DIGITS],
-            ]:
-                errors["base"] = "code_format_mismatch"
-            else:
-                return self.async_create_entry(title="", data=user_input)
+            return self.async_create_entry(data=user_input)
 
         return self.async_show_form(
             step_id="init",
@@ -172,9 +166,12 @@ class YaleOptionsFlowHandler(OptionsFlow):
                 {
                     vol.Optional(
                         CONF_LOCK_CODE_DIGITS,
-                        default=self.entry.options.get(
-                            CONF_LOCK_CODE_DIGITS, DEFAULT_LOCK_CODE_DIGITS
-                        ),
+                        description={
+                            "suggested_value": self.entry.options.get(
+                                CONF_LOCK_CODE_DIGITS
+                            )
+                            or DEFAULT_LOCK_CODE_DIGITS
+                        },
                     ): int,
                 }
             ),

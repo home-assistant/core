@@ -266,48 +266,8 @@ async def test_options_flow(hass: HomeAssistant) -> None:
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        user_input={"code": "123456", "lock_code_digits": 6},
+        user_input={"lock_code_digits": 6},
     )
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["data"] == {"code": "123456", "lock_code_digits": 6}
-
-
-async def test_options_flow_format_mismatch(hass: HomeAssistant) -> None:
-    """Test options config flow with a code format mismatch error."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id="test-username",
-        data={},
-    )
-    entry.add_to_hass(hass)
-
-    with patch(
-        "homeassistant.components.yale_smart_alarm.async_setup_entry",
-        return_value=True,
-    ):
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
-    result = await hass.config_entries.options.async_init(entry.entry_id)
-
-    assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "init"
-    assert result["errors"] == {}
-
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={"code": "123", "lock_code_digits": 6},
-    )
-
-    assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "init"
-    assert result["errors"] == {"base": "code_format_mismatch"}
-
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={"code": "123456", "lock_code_digits": 6},
-    )
-
-    assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["data"] == {"code": "123456", "lock_code_digits": 6}
+    assert result["data"] == {"lock_code_digits": 6}
