@@ -100,8 +100,12 @@ class ESPHomeDashboardManager:
             hass, addon_slug, url, async_get_clientsession(hass)
         )
         await dashboard.async_request_refresh()
-        if not dashboard.last_update_success:
-            _LOGGER.error("Ignoring dashboard info: %s", dashboard.last_exception)
+        if not cur_dashboard and not dashboard.last_update_success:
+            # If there was no previous dashboard and the new one is not available,
+            # we skip setup and wait for discovery.
+            _LOGGER.error(
+                "Dashboard unavailable; skipping setup: %s", dashboard.last_exception
+            )
             return
 
         self._current_dashboard = dashboard
@@ -123,11 +127,20 @@ class ESPHomeDashboardManager:
             if entry.state == ConfigEntryState.LOADED
         ]
         # Re-auth flows will check the dashboard for encryption key when the form is requested
-        reauths = [
-            hass.config_entries.flow.async_configure(flow["flow_id"])
-            for flow in hass.config_entries.flow.async_progress()
-            if flow["handler"] == DOMAIN and flow["context"]["source"] == SOURCE_REAUTH
-        ]
+        # but we only trigger reauth if the dashboard is available.
+        if dashboard.last_update_success:
+            reauths = [
+                hass.config_entries.flow.async_configure(flow["flow_id"])
+                for flow in hass.config_entries.flow.async_progress()
+                if flow["handler"] == DOMAIN
+                and flow["context"]["source"] == SOURCE_REAUTH
+            ]
+        else:
+            reauths = []
+            _LOGGER.error(
+                "Dashboard unavailable; skipping reauth: %s", dashboard.last_exception
+            )
+
         _LOGGER.debug(
             "Reloading %d and re-authenticating %d", len(reloads), len(reauths)
         )

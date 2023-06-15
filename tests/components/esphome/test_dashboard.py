@@ -48,7 +48,7 @@ async def test_restore_dashboard_storage(
 async def test_setup_dashboard_fails(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry, hass_storage
 ) -> MockConfigEntry:
-    """Test that nothing is stored on failed dashboard setup."""
+    """Test that nothing is stored on failed dashboard setup when there was no dashboard before."""
     with patch.object(
         dashboard.ESPHomeDashboardAPI, "get_devices", side_effect=asyncio.TimeoutError
     ) as mock_get_devices:
@@ -59,6 +59,37 @@ async def test_setup_dashboard_fails(
         assert mock_get_devices.call_count == 1
 
     assert dashboard.STORAGE_KEY not in hass_storage
+
+
+async def test_setup_dashboard_fails_when_already_setup(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, hass_storage
+) -> MockConfigEntry:
+    """Test failed dashboard setup still reloads entries if one existed before."""
+    with patch.object(dashboard.ESPHomeDashboardAPI, "get_devices") as mock_get_devices:
+        await dashboard.async_set_dashboard_info(
+            hass, "test-slug", "working-host", 6052
+        )
+        await hass.async_block_till_done()
+
+    assert mock_get_devices.call_count == 1
+    assert dashboard.STORAGE_KEY in hass_storage
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    with patch.object(
+        dashboard.ESPHomeDashboardAPI, "get_devices", side_effect=asyncio.TimeoutError
+    ) as mock_get_devices, patch(
+        "homeassistant.components.esphome.async_setup_entry", return_value=True
+    ) as mock_setup:
+        await dashboard.async_set_dashboard_info(hass, "test-slug", "test-host", 6052)
+        await hass.async_block_till_done()
+
+    assert mock_config_entry.state == ConfigEntryState.LOADED
+    assert mock_get_devices.call_count == 1
+    # We still setup, and reload, but we do not do the reauths
+    assert dashboard.STORAGE_KEY in hass_storage
+    assert len(mock_setup.mock_calls) == 1
 
 
 async def test_new_info_reload_config_entries(
