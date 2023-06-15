@@ -328,7 +328,6 @@ async def test_action(hass: HomeAssistant, device_ias, device_inovelli) -> None:
                 5,
                 expect_reply=False,
                 manufacturer=4151,
-                tries=1,
                 tsn=None,
             )
             in cluster.request.call_args_list
@@ -345,7 +344,6 @@ async def test_action(hass: HomeAssistant, device_ias, device_inovelli) -> None:
                 5,
                 expect_reply=False,
                 manufacturer=4151,
-                tries=1,
                 tsn=None,
             )
             in cluster.request.call_args_list
