@@ -1,7 +1,6 @@
 """Debounce helper."""
 from __future__ import annotations
 
-from abc import abstractmethod
 import asyncio
 from collections.abc import Callable
 from logging import Logger
@@ -83,13 +82,12 @@ class DebouncerBase(Generic[_R_co]):
                 self.cooldown, self._on_debounce
             )
 
-    def _execute_job_schedule_next(
-        self, raise_exception: bool
-    ) -> asyncio.Future[Any] | None:
+    async def _execute_job(self, raise_exception: bool) -> asyncio.Future[Any] | None:
         """Execute the job and schedule the next call."""
         assert self._job is not None
         try:
-            return self.hass.async_run_hass_job(self._job)
+            if task := self.hass.async_run_hass_job(self._job):
+                await task
         except Exception:  # pylint: disable=broad-except
             if raise_exception:
                 raise
@@ -100,9 +98,9 @@ class DebouncerBase(Generic[_R_co]):
         return None
 
     @callback
-    @abstractmethod
     def _on_debounce(self) -> None:
         """Create job, but only if pending."""
+        self._timer_task = None
 
 
 class Debouncer(DebouncerBase[_R_co]):
@@ -148,8 +146,12 @@ class Debouncer(DebouncerBase[_R_co]):
             # Abort if timer got set while we're waiting for the lock.
             if self._timer_task:
                 return
-            if task := self._execute_job_schedule_next(True):
-                await task
+            assert self._job is not None
+            try:
+                if task := self.hass.async_run_hass_job(self._job):
+                    await task
+            finally:
+                self._schedule_timer()
 
     async def _handle_timer_finish(self) -> None:
         """Handle a finished timer."""
@@ -163,13 +165,19 @@ class Debouncer(DebouncerBase[_R_co]):
             # Abort if timer got set while we're waiting for the lock.
             if self._timer_task:
                 return
-            if task := self._execute_job_schedule_next(False):
-                await task
+            assert self._job is not None
+            try:
+                if task := self.hass.async_run_hass_job(self._job):
+                    await task
+            except Exception:  # pylint: disable=broad-except
+                self.logger.exception("Unexpected exception from %s", self.function)
+            finally:
+                self._schedule_timer()
 
     @callback
     def _on_debounce(self) -> None:
         """Create job task, but only if pending."""
-        self._timer_task = None
+        super()._on_debounce()
         if self._execute_at_end_of_timer:
             self.hass.async_create_task(
                 self._handle_timer_finish(),
@@ -214,13 +222,23 @@ class CallbackDebouncer(DebouncerBase[_R_co]):
             self._schedule_timer()
             return
 
-        self._execute_job_schedule_next(True)
+        assert self._job is not None
+        try:
+            self.hass.async_run_hass_job(self._job)
+        finally:
+            self._schedule_timer()
 
     @callback
     def _on_debounce(self) -> None:
         """Create job, but only if pending."""
-        self._timer_task = None
+        super()._on_debounce()
         if not self._execute_at_end_of_timer:
             return
         self._execute_at_end_of_timer = False
-        self._execute_job_schedule_next(False)
+        assert self._job is not None
+        try:
+            self.hass.async_run_hass_job(self._job)
+        except Exception:  # pylint: disable=broad-except
+            self.logger.exception("Unexpected exception from %s", self.function)
+        finally:
+            self._schedule_timer()
