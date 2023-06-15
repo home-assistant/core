@@ -173,10 +173,10 @@ async def async_setup_scanner(
                     rssi = await hass.async_add_executor_job(client.request_rssi)
                     client.close()
 
-                tasks.append(see_device(hass, async_see, mac, friendly_name, rssi))
+                tasks.append(asyncio.create_task(see_device(hass, async_see, mac, friendly_name, rssi)))
 
             if tasks:
-                await asyncio.wait(tasks)
+                await asyncio.wait(tasks, return_when=asyncio.ALL_COMPLETED)
 
         except bluetooth.BluetoothError:
             _LOGGER.exception("Error looking up Bluetooth device")
