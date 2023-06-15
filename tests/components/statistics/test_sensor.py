@@ -784,12 +784,8 @@ async def test_unitless_source_sensor(hass: HomeAssistant) -> None:
 async def test_state_characteristics(hass: HomeAssistant) -> None:
     """Test configured state characteristic for value and unit."""
     now = dt_util.utcnow()
+    current_time = datetime(now.year + 1, 8, 2, 12, 23, 42, tzinfo=dt_util.UTC)
     start_datetime = datetime(now.year + 1, 8, 2, 12, 23, 42, tzinfo=dt_util.UTC)
-    mock_data = {"return_time": start_datetime}
-
-    def mock_now():
-        return mock_data["return_time"]
-
     characteristics: Sequence[dict[str, Any]] = (
         {
             "source_sensor_domain": "sensor",
@@ -1118,9 +1114,7 @@ async def test_state_characteristics(hass: HomeAssistant) -> None:
             }
         )
 
-    with patch(
-        "homeassistant.components.statistics.sensor.dt_util.utcnow", new=mock_now
-    ):
+    with freeze_time(current_time) as freezer:
         assert await async_setup_component(
             hass,
             "sensor",
@@ -1131,8 +1125,9 @@ async def test_state_characteristics(hass: HomeAssistant) -> None:
         # With all values in buffer
 
         for i in range(len(VALUES_NUMERIC)):
-            mock_data["return_time"] += timedelta(minutes=1)
-            async_fire_time_changed(hass, mock_data["return_time"])
+            current_time += timedelta(minutes=1)
+            freezer.move_to(current_time)
+            async_fire_time_changed(hass, current_time)
             hass.states.async_set(
                 "sensor.test_monitored",
                 str(VALUES_NUMERIC[i]),
@@ -1166,8 +1161,9 @@ async def test_state_characteristics(hass: HomeAssistant) -> None:
 
         # With single value in buffer
 
-        mock_data["return_time"] += timedelta(minutes=8)
-        async_fire_time_changed(hass, mock_data["return_time"])
+        current_time += timedelta(minutes=8)
+        freezer.move_to(current_time)
+        async_fire_time_changed(hass, current_time)
         await hass.async_block_till_done()
 
         for characteristic in characteristics:
@@ -1188,8 +1184,9 @@ async def test_state_characteristics(hass: HomeAssistant) -> None:
 
         # With empty buffer
 
-        mock_data["return_time"] += timedelta(minutes=1)
-        async_fire_time_changed(hass, mock_data["return_time"])
+        current_time += timedelta(minutes=1)
+        freezer.move_to(current_time)
+        async_fire_time_changed(hass, current_time)
         await hass.async_block_till_done()
 
         for characteristic in characteristics:
@@ -1294,12 +1291,7 @@ async def test_initialize_from_database_with_maxage(
 ) -> None:
     """Test initializing the statistics from the database."""
     now = dt_util.utcnow()
-    mock_data = {
-        "return_time": datetime(now.year + 1, 8, 2, 12, 23, 42, tzinfo=dt_util.UTC)
-    }
-
-    def mock_now():
-        return mock_data["return_time"]
+    current_time = datetime(now.year + 1, 8, 2, 12, 23, 42, tzinfo=dt_util.UTC)
 
     # Testing correct retrieval from recorder, thus we do not
     # want purging to occur within the class itself.
@@ -1310,9 +1302,9 @@ async def test_initialize_from_database_with_maxage(
     await hass.async_block_till_done()
     await async_wait_recording_done(hass)
 
-    with patch(
-        "homeassistant.components.statistics.sensor.dt_util.utcnow", new=mock_now
-    ), patch.object(StatisticsSensor, "_purge_old_states", mock_purge):
+    with freeze_time(current_time) as freezer, patch.object(
+        StatisticsSensor, "_purge_old_states", mock_purge
+    ):
         for value in VALUES_NUMERIC:
             hass.states.async_set(
                 "sensor.test_monitored",
@@ -1320,7 +1312,9 @@ async def test_initialize_from_database_with_maxage(
                 {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
             )
             await hass.async_block_till_done()
-            mock_data["return_time"] += timedelta(hours=1)
+            current_time += timedelta(hours=1)
+            freezer.move_to(current_time)
+
         await async_wait_recording_done(hass)
         # create the statistics component, get filled from database
         assert await async_setup_component(
@@ -1346,7 +1340,7 @@ async def test_initialize_from_database_with_maxage(
     assert state.attributes.get("age_coverage_ratio") == round(2 / 3, 2)
     # The max_age timestamp should be 1 hour before what we have right
     # now in mock_data['return_time'].
-    assert mock_data["return_time"] == datetime.strptime(
+    assert current_time == datetime.strptime(
         state.state, "%Y-%m-%dT%H:%M:%S%z"
     ) + timedelta(hours=1)
 

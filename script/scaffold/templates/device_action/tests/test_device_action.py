@@ -2,8 +2,8 @@
 import pytest
 
 from homeassistant.components import automation
-from homeassistant.components.NEW_DOMAIN import DOMAIN
 from homeassistant.components.device_automation import DeviceAutomationType
+from homeassistant.components.NEW_DOMAIN import DOMAIN
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er

@@ -115,13 +115,15 @@ class LgWebOSMediaPlayerEntity(RestoreEntity, MediaPlayerEntity):
     """Representation of a LG webOS Smart TV."""
 
     _attr_device_class = MediaPlayerDeviceClass.TV
+    _attr_has_entity_name = True
+    _attr_name = None
 
     def __init__(self, entry: ConfigEntry, client: WebOsClient) -> None:
         """Initialize the webos device."""
         self._entry = entry
         self._client = client
         self._attr_assumed_state = True
-        self._attr_name = entry.title
+        self._device_name = entry.title
         self._attr_unique_id = entry.unique_id
         self._sources = entry.options.get(CONF_SOURCES)
 
@@ -237,7 +239,7 @@ class LgWebOSMediaPlayerEntity(RestoreEntity, MediaPlayerEntity):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, cast(str, self.unique_id))},
             manufacturer="LG",
-            name=self.name,
+            name=self._device_name,
         )
 
         if self._client.system_info is not None or self.state != MediaPlayerState.OFF:
@@ -376,7 +378,9 @@ class LgWebOSMediaPlayerEntity(RestoreEntity, MediaPlayerEntity):
     async def async_select_source(self, source: str) -> None:
         """Select input source."""
         if (source_dict := self._source_list.get(source)) is None:
-            _LOGGER.warning("Source %s not found for %s", source, self.name)
+            _LOGGER.warning(
+                "Source %s not found for %s", source, self._friendly_name_internal()
+            )
             return
         if source_dict.get("title"):
             await self._client.launch_app(source_dict["id"])

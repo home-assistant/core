@@ -17,6 +17,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import Context, HomeAssistant, HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity, entity_registry as er
+from homeassistant.helpers.typing import UNDEFINED
 
 from tests.common import (
     MockConfigEntry,
@@ -578,12 +579,14 @@ async def test_async_remove_no_platform(hass: HomeAssistant) -> None:
 
 
 async def test_async_remove_runs_callbacks(hass: HomeAssistant) -> None:
-    """Test async_remove method when no platform set."""
+    """Test async_remove runs on_remove callback."""
     result = []
 
+    platform = MockEntityPlatform(hass, domain="test")
     ent = entity.Entity()
     ent.hass = hass
     ent.entity_id = "test.test"
+    await platform.async_add_entities([ent])
     ent.async_on_remove(lambda: result.append(1))
     await ent.async_remove()
     assert len(result) == 1
@@ -593,16 +596,23 @@ async def test_async_remove_ignores_in_flight_polling(hass: HomeAssistant) -> No
     """Test in flight polling is ignored after removing."""
     result = []
 
+    platform = MockEntityPlatform(hass, domain="test")
     ent = entity.Entity()
     ent.hass = hass
     ent.entity_id = "test.test"
     ent.async_on_remove(lambda: result.append(1))
-    ent.async_write_ha_state()
+    await platform.async_add_entities([ent])
     assert hass.states.get("test.test").state == STATE_UNKNOWN
+
+    # Remove the entity from the entity registry
     await ent.async_remove()
     assert len(result) == 1
     assert hass.states.get("test.test") is None
+
+    # Simulate an in-flight poll after the entity was removed
     ent.async_write_ha_state()
+    assert len(result) == 1
+    assert hass.states.get("test.test") is None
 
 
 async def test_set_context(hass: HomeAssistant) -> None:
@@ -798,18 +808,18 @@ async def test_setup_source(hass: HomeAssistant) -> None:
 
 async def test_removing_entity_unavailable(hass: HomeAssistant) -> None:
     """Test removing an entity that is still registered creates an unavailable state."""
-    entry = er.RegistryEntry(
+    er.RegistryEntry(
         entity_id="hello.world",
         unique_id="test-unique-id",
         platform="test-platform",
         disabled_by=None,
     )
 
+    platform = MockEntityPlatform(hass, domain="hello")
     ent = entity.Entity()
-    ent.hass = hass
     ent.entity_id = "hello.world"
-    ent.registry_entry = entry
-    ent.async_write_ha_state()
+    ent._attr_unique_id = "test-unique-id"
+    await platform.async_add_entities([ent])
 
     state = hass.states.get("hello.world")
     assert state is not None
@@ -939,22 +949,198 @@ async def test_entity_description_fallback() -> None:
         assert getattr(ent, field.name) == getattr(ent_with_description, field.name)
 
 
-@pytest.mark.parametrize(
-    ("has_entity_name", "entity_name", "expected_friendly_name"),
-    (
-        (False, "Entity Blu", "Entity Blu"),
-        (False, None, None),
-        (True, "Entity Blu", "Device Bla Entity Blu"),
-        (True, None, "Device Bla"),
-    ),
-)
-async def test_friendly_name(
+async def _test_friendly_name(
     hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    ent: entity.Entity,
     has_entity_name: bool,
     entity_name: str | None,
     expected_friendly_name: str | None,
+    warn_implicit_name: bool,
 ) -> None:
-    """Test entity_id is influenced by entity name."""
+    """Test friendly name."""
+
+    expected_warning = (
+        f"Entity {ent.entity_id} ({type(ent)}) is implicitly using device name"
+    )
+
+    async def async_setup_entry(hass, config_entry, async_add_entities):
+        """Mock setup entry method."""
+        async_add_entities([ent])
+        return True
+
+    platform = MockPlatform(async_setup_entry=async_setup_entry)
+    config_entry = MockConfigEntry(entry_id="super-mock-id")
+    entity_platform = MockEntityPlatform(
+        hass, platform_name=config_entry.domain, platform=platform
+    )
+
+    assert await entity_platform.async_setup_entry(config_entry)
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_entity_ids()) == 1
+    state = hass.states.async_all()[0]
+    assert state.attributes.get(ATTR_FRIENDLY_NAME) == expected_friendly_name
+    assert (expected_warning in caplog.text) is warn_implicit_name
+
+
+@pytest.mark.parametrize(
+    ("has_entity_name", "entity_name", "expected_friendly_name", "warn_implicit_name"),
+    (
+        (False, "Entity Blu", "Entity Blu", False),
+        (False, None, None, False),
+        (True, "Entity Blu", "Device Bla Entity Blu", False),
+        (True, None, "Device Bla", False),
+    ),
+)
+async def test_friendly_name_attr(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    has_entity_name: bool,
+    entity_name: str | None,
+    expected_friendly_name: str | None,
+    warn_implicit_name: bool,
+) -> None:
+    """Test friendly name when the entity uses _attr_*."""
+
+    ent = MockEntity(
+        unique_id="qwer",
+        device_info={
+            "identifiers": {("hue", "1234")},
+            "connections": {(dr.CONNECTION_NETWORK_MAC, "abcd")},
+            "name": "Device Bla",
+        },
+    )
+    ent._attr_has_entity_name = has_entity_name
+    ent._attr_name = entity_name
+    await _test_friendly_name(
+        hass,
+        caplog,
+        ent,
+        has_entity_name,
+        entity_name,
+        expected_friendly_name,
+        warn_implicit_name,
+    )
+
+
+@pytest.mark.parametrize(
+    ("has_entity_name", "entity_name", "expected_friendly_name", "warn_implicit_name"),
+    (
+        (False, "Entity Blu", "Entity Blu", False),
+        (False, None, None, False),
+        (False, UNDEFINED, None, False),
+        (True, "Entity Blu", "Device Bla Entity Blu", False),
+        (True, None, "Device Bla", False),
+        (True, UNDEFINED, "Device Bla", True),
+    ),
+)
+async def test_friendly_name_description(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    has_entity_name: bool,
+    entity_name: str | None,
+    expected_friendly_name: str | None,
+    warn_implicit_name: bool,
+) -> None:
+    """Test friendly name when the entity has an entity description."""
+
+    ent = MockEntity(
+        unique_id="qwer",
+        device_info={
+            "identifiers": {("hue", "1234")},
+            "connections": {(dr.CONNECTION_NETWORK_MAC, "abcd")},
+            "name": "Device Bla",
+        },
+    )
+    ent.entity_description = entity.EntityDescription(
+        "test", has_entity_name=has_entity_name, name=entity_name
+    )
+    await _test_friendly_name(
+        hass,
+        caplog,
+        ent,
+        has_entity_name,
+        entity_name,
+        expected_friendly_name,
+        warn_implicit_name,
+    )
+
+
+@pytest.mark.parametrize(
+    ("has_entity_name", "entity_name", "expected_friendly_name", "warn_implicit_name"),
+    (
+        (False, "Entity Blu", "Entity Blu", False),
+        (False, None, None, False),
+        (False, UNDEFINED, None, False),
+        (True, "Entity Blu", "Device Bla Entity Blu", False),
+        (True, None, "Device Bla", False),
+        (True, UNDEFINED, "Device Bla", True),
+    ),
+)
+async def test_friendly_name_property(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    has_entity_name: bool,
+    entity_name: str | None,
+    expected_friendly_name: str | None,
+    warn_implicit_name: bool,
+) -> None:
+    """Test friendly name when the entity has overridden the name property."""
+
+    ent = MockEntity(
+        unique_id="qwer",
+        device_info={
+            "identifiers": {("hue", "1234")},
+            "connections": {(dr.CONNECTION_NETWORK_MAC, "abcd")},
+            "name": "Device Bla",
+        },
+        has_entity_name=has_entity_name,
+        name=entity_name,
+    )
+    await _test_friendly_name(
+        hass,
+        caplog,
+        ent,
+        has_entity_name,
+        entity_name,
+        expected_friendly_name,
+        warn_implicit_name,
+    )
+
+
+@pytest.mark.parametrize(
+    (
+        "entity_name",
+        "expected_friendly_name1",
+        "expected_friendly_name2",
+        "expected_friendly_name3",
+    ),
+    (
+        (
+            "Entity Blu",
+            "Device Bla Entity Blu",
+            "Device Bla2 Entity Blu",
+            "New Device Entity Blu",
+        ),
+        (
+            None,
+            "Device Bla",
+            "Device Bla2",
+            "New Device",
+        ),
+    ),
+)
+async def test_friendly_name_updated(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    entity_name: str | None,
+    expected_friendly_name1: str,
+    expected_friendly_name2: str,
+    expected_friendly_name3: str,
+) -> None:
+    """Test friendly name is updated when device or entity registry updates."""
 
     async def async_setup_entry(hass, config_entry, async_add_entities):
         """Mock setup entry method."""
@@ -967,7 +1153,7 @@ async def test_friendly_name(
                         "connections": {(dr.CONNECTION_NETWORK_MAC, "abcd")},
                         "name": "Device Bla",
                     },
-                    has_entity_name=has_entity_name,
+                    has_entity_name=True,
                     name=entity_name,
                 ),
             ]
@@ -985,7 +1171,25 @@ async def test_friendly_name(
 
     assert len(hass.states.async_entity_ids()) == 1
     state = hass.states.async_all()[0]
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == expected_friendly_name
+    assert state.attributes.get(ATTR_FRIENDLY_NAME) == expected_friendly_name1
+
+    device = device_registry.async_get_device(identifiers={("hue", "1234")})
+    device_registry.async_update_device(device.id, name_by_user="Device Bla2")
+    await hass.async_block_till_done()
+
+    state = hass.states.async_all()[0]
+    assert state.attributes.get(ATTR_FRIENDLY_NAME) == expected_friendly_name2
+
+    device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={("hue", "5678")},
+        name="New Device",
+    )
+    entity_registry.async_update_entity(state.entity_id, device_id=device.id)
+    await hass.async_block_till_done()
+
+    state = hass.states.async_all()[0]
+    assert state.attributes.get(ATTR_FRIENDLY_NAME) == expected_friendly_name3
 
 
 async def test_translation_key(hass: HomeAssistant) -> None:
@@ -1029,19 +1233,48 @@ async def test_warn_using_async_update_ha_state(
     """Test we warn once when using async_update_ha_state without force_update."""
     ent = entity.Entity()
     ent.hass = hass
+    ent.platform = MockEntityPlatform(hass)
     ent.entity_id = "hello.world"
+    error_message = "is using self.async_update_ha_state()"
 
     # When forcing, it should not trigger the warning
     caplog.clear()
     await ent.async_update_ha_state(force_refresh=True)
-    assert "is using self.async_update_ha_state()" not in caplog.text
+    assert error_message not in caplog.text
 
     # When not forcing, it should trigger the warning
     caplog.clear()
     await ent.async_update_ha_state()
-    assert "is using self.async_update_ha_state()" in caplog.text
+    assert error_message in caplog.text
 
     # When not forcing, it should not trigger the warning again
     caplog.clear()
     await ent.async_update_ha_state()
-    assert "is using self.async_update_ha_state()" not in caplog.text
+    assert error_message not in caplog.text
+
+
+async def test_warn_no_platform(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test we warn am entity does not have a platform."""
+    ent = entity.Entity()
+    ent.hass = hass
+    ent.platform = MockEntityPlatform(hass)
+    ent.entity_id = "hello.world"
+    error_message = "does not have a platform"
+
+    # No warning if the entity has a platform
+    caplog.clear()
+    ent.async_write_ha_state()
+    assert error_message not in caplog.text
+
+    # Without a platform, it should trigger the warning
+    ent.platform = None
+    caplog.clear()
+    ent.async_write_ha_state()
+    assert error_message in caplog.text
+
+    # Without a platform, it should not trigger the warning again
+    caplog.clear()
+    ent.async_write_ha_state()
+    assert error_message not in caplog.text

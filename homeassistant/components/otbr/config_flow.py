@@ -2,25 +2,61 @@
 from __future__ import annotations
 
 import asyncio
+from contextlib import suppress
 import logging
+from typing import cast
 
 import aiohttp
 import python_otbr_api
 from python_otbr_api import tlv_parser
+from python_otbr_api.tlv_parser import MeshcopTLVType
 import voluptuous as vol
 import yarl
 
-from homeassistant.components.hassio import HassioServiceInfo
+from homeassistant.components.hassio import (
+    HassioAPIError,
+    HassioServiceInfo,
+    async_get_addon_info,
+)
+from homeassistant.components.homeassistant_yellow import hardware as yellow_hardware
 from homeassistant.components.thread import async_get_preferred_dataset
 from homeassistant.config_entries import SOURCE_HASSIO, ConfigFlow
 from homeassistant.const import CONF_URL
+from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DEFAULT_CHANNEL, DOMAIN
 from .util import get_allowed_channel
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def _is_yellow(hass: HomeAssistant) -> bool:
+    """Return True if Home Assistant is running on a Home Assistant Yellow."""
+    try:
+        yellow_hardware.async_info(hass)
+    except HomeAssistantError:
+        return False
+    return True
+
+
+async def _title(hass: HomeAssistant, discovery_info: HassioServiceInfo) -> str:
+    """Return config entry title."""
+    device: str | None = None
+
+    with suppress(HassioAPIError):
+        addon_info = await async_get_addon_info(hass, discovery_info.slug)
+        device = addon_info.get("options", {}).get("device")
+
+    if _is_yellow(hass) and device == "/dev/TTYAMA1":
+        return "Home Assistant Yellow"
+
+    if device and "SkyConnect" in device:
+        return "Home Assistant SkyConnect"
+
+    return discovery_info.name
 
 
 class OTBRConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -38,8 +74,8 @@ class OTBRConfigFlow(ConfigFlow, domain=DOMAIN):
             thread_dataset_tlv = await async_get_preferred_dataset(self.hass)
             if thread_dataset_tlv:
                 dataset = tlv_parser.parse_tlv(thread_dataset_tlv)
-                if channel_str := dataset.get(tlv_parser.MeshcopTLVType.CHANNEL):
-                    thread_dataset_channel = int(channel_str, base=16)
+                if channel := dataset.get(MeshcopTLVType.CHANNEL):
+                    thread_dataset_channel = cast(tlv_parser.Channel, channel).channel
 
             if thread_dataset_tlv is not None and (
                 not allowed_channel or allowed_channel == thread_dataset_channel
@@ -50,7 +86,7 @@ class OTBRConfigFlow(ConfigFlow, domain=DOMAIN):
                     "not importing TLV with channel %s", thread_dataset_channel
                 )
                 await api.create_active_dataset(
-                    python_otbr_api.OperationalDataSet(
+                    python_otbr_api.ActiveDataSet(
                         channel=allowed_channel if allowed_channel else DEFAULT_CHANNEL,
                         network_name="home-assistant",
                     )
@@ -122,6 +158,6 @@ class OTBRConfigFlow(ConfigFlow, domain=DOMAIN):
 
         await self.async_set_unique_id(discovery_info.uuid)
         return self.async_create_entry(
-            title="Open Thread Border Router",
+            title=await _title(self.hass, discovery_info),
             data=config_entry_data,
         )

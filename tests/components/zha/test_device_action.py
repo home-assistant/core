@@ -24,7 +24,12 @@ from tests.common import (
     async_mock_service,
     mock_coro,
 )
-from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa: F401
+
+
+@pytest.fixture(autouse=True, name="stub_blueprint_populate")
+def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
+    """Stub copying the blueprints to the config folder."""
+
 
 SHORT_PRESS = "remote_button_short_press"
 COMMAND = "command"
@@ -323,7 +328,6 @@ async def test_action(hass: HomeAssistant, device_ias, device_inovelli) -> None:
                 5,
                 expect_reply=False,
                 manufacturer=4151,
-                tries=1,
                 tsn=None,
             )
             in cluster.request.call_args_list
@@ -340,7 +344,6 @@ async def test_action(hass: HomeAssistant, device_ias, device_inovelli) -> None:
                 5,
                 expect_reply=False,
                 manufacturer=4151,
-                tries=1,
                 tsn=None,
             )
             in cluster.request.call_args_list

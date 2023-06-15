@@ -3,12 +3,9 @@
 From http://doc.pytest.org/en/latest/example/simple.html#making-test-result-information-available-in-fixtures
 """
 from collections.abc import Generator
-from typing import Any
-from unittest.mock import MagicMock, patch
 
 import pytest
 
-from homeassistant.components.tts import _get_cache_files
 from homeassistant.config import async_process_ha_core_config
 from homeassistant.config_entries import ConfigFlow
 from homeassistant.core import HomeAssistant
@@ -38,71 +35,10 @@ def pytest_runtest_makereport(item, call):
     setattr(item, f"rep_{rep.when}", rep)
 
 
-@pytest.fixture(name="mock_tts_get_cache_files")
-def mock_tts_get_cache_files_fixture():
-    """Mock the list TTS cache function."""
-    with patch(
-        "homeassistant.components.tts._get_cache_files", return_value={}
-    ) as mock_cache_files:
-        yield mock_cache_files
-
-
-@pytest.fixture(name="mock_tts_init_cache_dir")
-def mock_tts_init_cache_dir_fixture(
-    init_tts_cache_dir_side_effect: Any,
-) -> Generator[MagicMock, None, None]:
-    """Mock the TTS cache dir in memory."""
-    with patch(
-        "homeassistant.components.tts._init_tts_cache_dir",
-        side_effect=init_tts_cache_dir_side_effect,
-    ) as mock_cache_dir:
-        yield mock_cache_dir
-
-
-@pytest.fixture(name="init_tts_cache_dir_side_effect")
-def init_tts_cache_dir_side_effect_fixture() -> Any:
-    """Return the cache dir."""
-    return None
-
-
-@pytest.fixture(name="mock_tts_cache_dir")
-def mock_tts_cache_dir_fixture(
-    tmp_path, mock_tts_init_cache_dir, mock_tts_get_cache_files, request
-):
-    """Mock the TTS cache dir with empty dir."""
-    mock_tts_init_cache_dir.return_value = str(tmp_path)
-
-    # Restore original get cache files behavior, we're working with a real dir.
-    mock_tts_get_cache_files.side_effect = _get_cache_files
-
-    yield tmp_path
-
-    if not hasattr(request.node, "rep_call") or request.node.rep_call.passed:
-        return
-
-    # Print contents of dir if failed
-    print("Content of dir for", request.node.nodeid)  # noqa: T201
-    for fil in tmp_path.iterdir():
-        print(fil.relative_to(tmp_path))  # noqa: T201
-
-    # To show the log.
-    pytest.fail("Test failed, see log for details")
-
-
 @pytest.fixture(autouse=True, name="mock_tts_cache_dir")
 def mock_tts_cache_dir_fixture_autouse(mock_tts_cache_dir):
     """Mock the TTS cache dir with empty dir."""
     return mock_tts_cache_dir
-
-
-@pytest.fixture(name="tts_mutagen_mock")
-def tts_mutagen_mock_fixture():
-    """Mock writing tags."""
-    with patch(
-        "homeassistant.components.tts.SpeechManager.write_tags",
-        side_effect=lambda *args: args[1],
-    ) as mock_write_tags:
-        yield mock_write_tags
 
 
 @pytest.fixture(autouse=True)
