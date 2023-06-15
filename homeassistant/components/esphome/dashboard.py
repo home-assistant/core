@@ -14,6 +14,7 @@ from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.singleton import singleton
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -43,16 +44,13 @@ def async_get_dashboard_manager(hass: HomeAssistant) -> ESPHomeDashboardManager 
     return manager
 
 
+@singleton(KEY_DASHBOARD_MANAGER)
 async def async_get_or_create_dashboard_manager(
     hass: HomeAssistant,
 ) -> ESPHomeDashboardManager:
     """Get the dashboard manager or create it."""
-    if KEY_DASHBOARD_MANAGER not in hass.data:
-        manager = ESPHomeDashboardManager(hass)
-        await manager.async_setup()
-        hass.data[KEY_DASHBOARD_MANAGER] = manager
-    else:
-        manager = hass.data[KEY_DASHBOARD_MANAGER]
+    manager = ESPHomeDashboardManager(hass)
+    await manager.async_setup()
     return manager
 
 
