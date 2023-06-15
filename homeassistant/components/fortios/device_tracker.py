@@ -115,12 +115,10 @@ class FortiOSDeviceScanner(DeviceScanner):
             return None
 
         for client in data["results"]:
-            if "master_mac" in client:
-                if client["master_mac"] == device:
-                    name = ""
-                    if "hostname" in client:
-                        name = client["hostname"]
-                    else:
-                        name = client["master_mac"].replace(":", "_")
-                    return name
+            if "master_mac" in client and client["master_mac"] == device:
+                if "hostname" in client:
+                    name = client["hostname"]
+                else:
+                    name = client["master_mac"].replace(":", "_")
+                return name
         return None
