@@ -1,7 +1,6 @@
 """Commands part of Websocket API."""
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Callable
 import datetime as dt
 from functools import lru_cache
@@ -222,9 +221,6 @@ async def handle_call_service(
     except HomeAssistantError as err:
         connection.logger.exception(err)
         connection.send_error(msg["id"], const.ERR_HOME_ASSISTANT_ERROR, str(err))
-    except asyncio.TimeoutError as err:
-        connection.logger.exception(err)
-        connection.send_error(msg["id"], const.ERR_TIMEOUT, str(err))
     except Exception as err:  # pylint: disable=broad-except
         connection.logger.exception(err)
         connection.send_error(msg["id"], const.ERR_UNKNOWN_ERROR, str(err))

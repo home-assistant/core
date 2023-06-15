@@ -677,12 +677,18 @@ class _ScriptRun:
                 **params,
                 blocking=True,
                 context=self._context,
-                limit=limit,
             )
         )
         if limit is not None:
             # There is a call limit, so just wait for it to finish.
-            await service_task
+            try:
+                async with async_timeout.timeout(limit):
+                    await service_task
+            except asyncio.TimeoutError as ex:
+                _LOGGER.debug("Service call timed out")
+                self._log(_TIMEOUT_MSG)
+                trace_set_result(limit=limit, timeout=True)
+                raise _AbortScript from ex
             return
 
         await self._async_run_long_action(service_task)

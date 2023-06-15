@@ -1,6 +1,8 @@
 """The Intent integration."""
+import asyncio
 import logging
 
+import async_timeout
 import voluptuous as vol
 
 from homeassistant.components import http
@@ -70,16 +72,23 @@ class OnOffIntentHandler(intent.ServiceIntentHandler):
         if state.domain == COVER_DOMAIN:
             # on = open
             # off = close
-            await hass.services.async_call(
-                COVER_DOMAIN,
-                SERVICE_OPEN_COVER
-                if self.service == SERVICE_TURN_ON
-                else SERVICE_CLOSE_COVER,
-                {ATTR_ENTITY_ID: state.entity_id},
-                context=intent_obj.context,
-                blocking=True,
-                limit=self.service_timeout,
+            task = hass.async_create_task(
+                hass.services.async_call(
+                    COVER_DOMAIN,
+                    SERVICE_OPEN_COVER
+                    if self.service == SERVICE_TURN_ON
+                    else SERVICE_CLOSE_COVER,
+                    {ATTR_ENTITY_ID: state.entity_id},
+                    context=intent_obj.context,
+                    blocking=True,
+                )
             )
+            # Block with a short timeout to (hopefully) catch validation errors
+            try:
+                async with async_timeout.timeout(self.service_timeout):
+                    await task
+            except asyncio.TimeoutError:
+                pass  # Expected
 
         elif not hass.services.has_service(state.domain, self.service):
             raise intent.IntentHandleError(

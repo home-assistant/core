@@ -9,6 +9,7 @@ from enum import Enum
 import logging
 from typing import Any, TypeVar
 
+import async_timeout
 import voluptuous as vol
 
 from homeassistant.components.homeassistant.exposed_entities import async_should_expose
@@ -493,14 +494,21 @@ class ServiceIntentHandler(IntentHandler):
     async def async_call_service(self, intent_obj: Intent, state: State) -> None:
         """Call service on entity."""
         hass = intent_obj.hass
-        await hass.services.async_call(
-            self.domain,
-            self.service,
-            {ATTR_ENTITY_ID: state.entity_id},
-            context=intent_obj.context,
-            blocking=True,
-            limit=self.service_timeout,
+        task = hass.async_create_task(
+            hass.services.async_call(
+                self.domain,
+                self.service,
+                {ATTR_ENTITY_ID: state.entity_id},
+                context=intent_obj.context,
+                blocking=False,
+            )
         )
+        # Block with a short timeout to (hopefully) catch validation errors
+        try:
+            async with async_timeout.timeout(self.service_timeout):
+                await task
+        except asyncio.TimeoutError:
+            pass  # Expected
 
 
 class IntentCategory(Enum):

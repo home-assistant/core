@@ -1807,7 +1807,6 @@ class ServiceRegistry:
         service_data: dict[str, Any] | None = None,
         blocking: bool = False,
         context: Context | None = None,
-        limit: float | None = SERVICE_CALL_LIMIT,
         target: dict[str, Any] | None = None,
     ) -> bool | None:
         """Call a service.
@@ -1815,9 +1814,7 @@ class ServiceRegistry:
         See description of async_call for details.
         """
         return asyncio.run_coroutine_threadsafe(
-            self.async_call(
-                domain, service, service_data, blocking, context, limit, target
-            ),
+            self.async_call(domain, service, service_data, blocking, context, target),
             self._hass.loop,
         ).result()
 
@@ -1828,17 +1825,11 @@ class ServiceRegistry:
         service_data: dict[str, Any] | None = None,
         blocking: bool = False,
         context: Context | None = None,
-        limit: float | None = SERVICE_CALL_LIMIT,
         target: dict[str, Any] | None = None,
     ) -> None:
         """Call a service.
 
         Specify blocking=True to wait until service is executed.
-        Waits a maximum of limit, which may be None for no timeout.
-
-        Will raise an asyncio.TimeoutError if the service was not executed
-        successfully within limit. Note: The service call is not cancelled and will
-        continue running.
 
         This method will fire an event to indicate the service has been called.
 
@@ -1891,31 +1882,7 @@ class ServiceRegistry:
             self._run_service_in_background(coro, service_call)
             return
 
-        task = self._hass.async_create_task(coro)
-        try:
-            await asyncio.wait({task}, timeout=limit)
-        except asyncio.CancelledError:
-            # Task calling us was cancelled, so cancel service call task, and wait for
-            # it to be cancelled, within reason, before leaving.
-            _LOGGER.debug("Service call was cancelled: %s", service_call)
-            task.cancel()
-            await asyncio.wait({task}, timeout=SERVICE_CALL_LIMIT)
-            raise
-
-        if task.cancelled():
-            # Service call task was cancelled some other way, such as during shutdown.
-            _LOGGER.debug("Service was cancelled: %s", service_call)
-            raise asyncio.CancelledError
-        if task.done():
-            # Propagate any exceptions that might have happened during service call.
-            task.result()
-            # Service call completed successfully!
-            return
-        # Service call task did not complete before timeout expired.
-        # Let it keep running in background.
-        self._run_service_in_background(task, service_call)
-        _LOGGER.debug("Service did not complete before timeout: %s", service_call)
-        raise asyncio.TimeoutError("Service did not complete before timeout")
+        await self._hass.async_create_task(coro)
 
     def _run_service_in_background(
         self,
