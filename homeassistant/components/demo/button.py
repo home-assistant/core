@@ -31,6 +31,7 @@ class DemoButton(ButtonEntity):
     """Representation of a demo button entity."""
 
     _attr_has_entity_name = True
+    _attr_name = None
     _attr_should_poll = False
 
     def __init__(

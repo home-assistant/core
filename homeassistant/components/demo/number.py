@@ -79,6 +79,7 @@ class DemoNumber(NumberEntity):
     """Representation of a demo Number entity."""
 
     _attr_has_entity_name = True
+    _attr_name = None
     _attr_should_poll = False
 
     def __init__(

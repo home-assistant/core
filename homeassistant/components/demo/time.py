@@ -25,6 +25,7 @@ class DemoTime(TimeEntity):
     """Representation of a Demo time entity."""
 
     _attr_has_entity_name = True
+    _attr_name = None
     _attr_should_poll = False
 
     def __init__(
