@@ -90,11 +90,12 @@ class Debouncer(Generic[_R_co]):
             if self._timer_task:
                 return
 
-            task = self.hass.async_run_hass_job(self._job)
-            if task:
-                await task
-
-            self._schedule_timer()
+            try:
+                task = self.hass.async_run_hass_job(self._job)
+                if task:
+                    await task
+            finally:
+                self._schedule_timer()
 
     async def _handle_timer_finish(self) -> None:
         """Handle a finished timer."""
@@ -117,9 +118,9 @@ class Debouncer(Generic[_R_co]):
                     await task
             except Exception:  # pylint: disable=broad-except
                 self.logger.exception("Unexpected exception from %s", self.function)
-
-            # Schedule a new timer to prevent new runs during cooldown
-            self._schedule_timer()
+            finally:
+                # Schedule a new timer to prevent new runs during cooldown
+                self._schedule_timer()
 
     async def async_shutdown(self) -> None:
         """Cancel any scheduled call, and prevent new runs."""
