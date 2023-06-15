@@ -17,6 +17,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import Context, HomeAssistant, HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity, entity_registry as er
+from homeassistant.helpers.typing import UNDEFINED
 
 from tests.common import (
     MockConfigEntry,
@@ -948,39 +949,24 @@ async def test_entity_description_fallback() -> None:
         assert getattr(ent, field.name) == getattr(ent_with_description, field.name)
 
 
-@pytest.mark.parametrize(
-    ("has_entity_name", "entity_name", "expected_friendly_name"),
-    (
-        (False, "Entity Blu", "Entity Blu"),
-        (False, None, None),
-        (True, "Entity Blu", "Device Bla Entity Blu"),
-        (True, None, "Device Bla"),
-    ),
-)
-async def test_friendly_name(
+async def _test_friendly_name(
     hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    ent: entity.Entity,
     has_entity_name: bool,
     entity_name: str | None,
     expected_friendly_name: str | None,
+    warn_implicit_name: bool,
 ) -> None:
-    """Test entity_id is influenced by entity name."""
+    """Test friendly name."""
+
+    expected_warning = (
+        f"Entity {ent.entity_id} ({type(ent)}) is implicitly using device name"
+    )
 
     async def async_setup_entry(hass, config_entry, async_add_entities):
         """Mock setup entry method."""
-        async_add_entities(
-            [
-                MockEntity(
-                    unique_id="qwer",
-                    device_info={
-                        "identifiers": {("hue", "1234")},
-                        "connections": {(dr.CONNECTION_NETWORK_MAC, "abcd")},
-                        "name": "Device Bla",
-                    },
-                    has_entity_name=has_entity_name,
-                    name=entity_name,
-                ),
-            ]
-        )
+        async_add_entities([ent])
         return True
 
     platform = MockPlatform(async_setup_entry=async_setup_entry)
@@ -995,6 +981,132 @@ async def test_friendly_name(
     assert len(hass.states.async_entity_ids()) == 1
     state = hass.states.async_all()[0]
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == expected_friendly_name
+    assert (expected_warning in caplog.text) is warn_implicit_name
+
+
+@pytest.mark.parametrize(
+    ("has_entity_name", "entity_name", "expected_friendly_name", "warn_implicit_name"),
+    (
+        (False, "Entity Blu", "Entity Blu", False),
+        (False, None, None, False),
+        (True, "Entity Blu", "Device Bla Entity Blu", False),
+        (True, None, "Device Bla", False),
+    ),
+)
+async def test_friendly_name_attr(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    has_entity_name: bool,
+    entity_name: str | None,
+    expected_friendly_name: str | None,
+    warn_implicit_name: bool,
+) -> None:
+    """Test friendly name when the entity uses _attr_*."""
+
+    ent = MockEntity(
+        unique_id="qwer",
+        device_info={
+            "identifiers": {("hue", "1234")},
+            "connections": {(dr.CONNECTION_NETWORK_MAC, "abcd")},
+            "name": "Device Bla",
+        },
+    )
+    ent._attr_has_entity_name = has_entity_name
+    ent._attr_name = entity_name
+    await _test_friendly_name(
+        hass,
+        caplog,
+        ent,
+        has_entity_name,
+        entity_name,
+        expected_friendly_name,
+        warn_implicit_name,
+    )
+
+
+@pytest.mark.parametrize(
+    ("has_entity_name", "entity_name", "expected_friendly_name", "warn_implicit_name"),
+    (
+        (False, "Entity Blu", "Entity Blu", False),
+        (False, None, None, False),
+        (False, UNDEFINED, None, False),
+        (True, "Entity Blu", "Device Bla Entity Blu", False),
+        (True, None, "Device Bla", False),
+        (True, UNDEFINED, "Device Bla", True),
+    ),
+)
+async def test_friendly_name_description(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    has_entity_name: bool,
+    entity_name: str | None,
+    expected_friendly_name: str | None,
+    warn_implicit_name: bool,
+) -> None:
+    """Test friendly name when the entity has an entity description."""
+
+    ent = MockEntity(
+        unique_id="qwer",
+        device_info={
+            "identifiers": {("hue", "1234")},
+            "connections": {(dr.CONNECTION_NETWORK_MAC, "abcd")},
+            "name": "Device Bla",
+        },
+    )
+    ent.entity_description = entity.EntityDescription(
+        "test", has_entity_name=has_entity_name, name=entity_name
+    )
+    await _test_friendly_name(
+        hass,
+        caplog,
+        ent,
+        has_entity_name,
+        entity_name,
+        expected_friendly_name,
+        warn_implicit_name,
+    )
+
+
+@pytest.mark.parametrize(
+    ("has_entity_name", "entity_name", "expected_friendly_name", "warn_implicit_name"),
+    (
+        (False, "Entity Blu", "Entity Blu", False),
+        (False, None, None, False),
+        (False, UNDEFINED, None, False),
+        (True, "Entity Blu", "Device Bla Entity Blu", False),
+        (True, None, "Device Bla", False),
+        (True, UNDEFINED, "Device Bla", True),
+    ),
+)
+async def test_friendly_name_property(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    has_entity_name: bool,
+    entity_name: str | None,
+    expected_friendly_name: str | None,
+    warn_implicit_name: bool,
+) -> None:
+    """Test friendly name when the entity has overridden the name property."""
+
+    ent = MockEntity(
+        unique_id="qwer",
+        device_info={
+            "identifiers": {("hue", "1234")},
+            "connections": {(dr.CONNECTION_NETWORK_MAC, "abcd")},
+            "name": "Device Bla",
+        },
+        has_entity_name=has_entity_name,
+        name=entity_name,
+    )
+    await _test_friendly_name(
+        hass,
+        caplog,
+        ent,
+        has_entity_name,
+        entity_name,
+        expected_friendly_name,
+        warn_implicit_name,
+    )
 
 
 @pytest.mark.parametrize(
@@ -1028,7 +1140,7 @@ async def test_friendly_name_updated(
     expected_friendly_name2: str,
     expected_friendly_name3: str,
 ) -> None:
-    """Test entity_id is influenced by entity name."""
+    """Test friendly name is updated when device or entity registry updates."""
 
     async def async_setup_entry(hass, config_entry, async_add_entities):
         """Mock setup entry method."""

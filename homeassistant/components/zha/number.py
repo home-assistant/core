@@ -15,6 +15,7 @@ from homeassistant.const import EntityCategory, Platform, UnitOfMass, UnitOfTemp
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import UndefinedType
 
 from .core import discovery
 from .core.const import (
@@ -334,7 +335,7 @@ class ZhaNumber(ZhaEntity, NumberEntity):
         return super().native_step
 
     @property
-    def name(self) -> str | None:
+    def name(self) -> str | UndefinedType | None:
         """Return the name of the number entity."""
         description = self._analog_output_cluster_handler.description
         if description is not None and len(description) > 0:
