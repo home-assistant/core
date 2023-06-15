@@ -28,7 +28,17 @@ from homeassistant.const import __version__
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.util.ulid import ulid
 
-from .const import CHANNELS, DOMAIN, RATE, RTP_AUDIO_SETTINGS, WIDTH
+from .const import (
+    CHANNELS,
+    DOMAIN,
+    RATE,
+    RTP_AUDIO_SETTINGS,
+    SILENCE_AGGRESSIVE,
+    SILENCE_DEFAULT,
+    SILENCE_RELAXED,
+    WIDTH,
+)
+from .devices import VadSensitivity
 
 if TYPE_CHECKING:
     from .devices import VoIPDevice, VoIPDevices
@@ -199,7 +209,13 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
 
         try:
             # Wait for speech before starting pipeline
-            segmenter = VoiceCommandSegmenter()
+            silence_seconds = SILENCE_DEFAULT
+            if self.voip_device.vad_sensitivity == VadSensitivity.RELAXED:
+                silence_seconds = SILENCE_RELAXED
+            elif self.voip_device.vad_sensitivity == VadSensitivity.AGGRESSIVE:
+                silence_seconds = SILENCE_AGGRESSIVE
+
+            segmenter = VoiceCommandSegmenter(silence_seconds=silence_seconds)
             chunk_buffer: deque[bytes] = deque(
                 maxlen=self.buffered_chunks_before_speech,
             )
