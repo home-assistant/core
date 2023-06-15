@@ -299,10 +299,10 @@ class BaseHaRemoteScanner(BaseHaScanner):
         manufacturer_data: dict[int, bytes],
         tx_power: int | None,
         details: dict[Any, Any],
+        advertisement_monotonic_time: float,
     ) -> None:
         """Call the registered callback."""
-        now = MONOTONIC_TIME()
-        self._last_detection = now
+        self._last_detection = advertisement_monotonic_time
         if prev_discovery := self._discovered_device_advertisement_datas.get(address):
             # Merge the new data with the old data
             # to function the same as BlueZ which
@@ -365,7 +365,7 @@ class BaseHaRemoteScanner(BaseHaScanner):
             device,
             advertisement_data,
         )
-        self._discovered_device_timestamps[address] = now
+        self._discovered_device_timestamps[address] = advertisement_monotonic_time
         self._new_info_callback(
             BluetoothServiceInfoBleak(
                 name=local_name or address,
@@ -378,7 +378,7 @@ class BaseHaRemoteScanner(BaseHaScanner):
                 device=device,
                 advertisement=advertisement_data,
                 connectable=self.connectable,
-                time=now,
+                time=advertisement_monotonic_time,
             )
         )
 

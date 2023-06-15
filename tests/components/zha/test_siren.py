@@ -69,7 +69,7 @@ async def test_siren(hass: HomeAssistant, siren) -> None:
 
     zha_device, cluster = siren
     assert cluster is not None
-    entity_id = await find_entity_id(Platform.SIREN, zha_device, hass)
+    entity_id = find_entity_id(Platform.SIREN, zha_device, hass)
     assert entity_id is not None
 
     assert hass.states.get(entity_id).state == STATE_OFF
