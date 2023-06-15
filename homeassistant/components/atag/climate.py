@@ -58,7 +58,7 @@ class AtagThermostat(AtagEntity, ClimateEntity):
         return try_parse_enum(HVACMode, self.coordinator.data.climate.hvac_mode)
 
     @property
-    def hvac_action(self) -> str | None:
+    def hvac_action(self) -> HVACAction | None:
         """Return the current running hvac operation."""
         is_active = self.coordinator.data.climate.status
         return HVACAction.HEATING if is_active else HVACAction.IDLE
