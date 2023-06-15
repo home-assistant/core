@@ -90,9 +90,12 @@ class FortiOSDeviceScanner(DeviceScanner):
         if clients_json:
             try:
                 for client in clients_json["results"]:
-                    if "is_online" in client and "master_mac" in client:
-                        if client["is_online"]:
-                            self._clients.append(client["master_mac"].upper())
+                    if (
+                        "is_online" in client
+                        and "master_mac" in client
+                        and client["is_online"]
+                    ):
+                        self._clients.append(client["master_mac"].upper())
             except KeyError as kex:
                 _LOGGER.error("Key not found in clients: %s", kex)
 
