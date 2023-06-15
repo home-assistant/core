@@ -61,18 +61,18 @@ async def async_setup_entry(
     sensors.extend(
         [
             QNAPSystemSensor(coordinator, description, uid)
-            for description in _SYS_SENSORS
+            for description in _SYSTEM_MON_COND
         ]
     )
 
     sensors.extend(
-        [QNAPCPUSensor(coordinator, description, uid) for description in _CPU_SENSORS]
+        [QNAPCPUSensor(coordinator, description, uid) for description in _CPU_MON_COND]
     )
 
     sensors.extend(
         [
             QNAPMemorySensor(coordinator, description, uid)
-            for description in _MEM_SENSORS
+            for description in _MEMORY_MON_COND
         ]
     )
 
@@ -81,7 +81,7 @@ async def async_setup_entry(
         [
             QNAPNetworkSensor(coordinator, description, uid, nic)
             for nic in coordinator.data["system_stats"]["nics"]
-            for description in _NET_SENSORS
+            for description in _NETWORK_MON_COND
         ]
     )
 
@@ -90,7 +90,7 @@ async def async_setup_entry(
         [
             QNAPDriveSensor(coordinator, description, uid, drive)
             for drive in coordinator.data["smart_drive_health"]
-            for description in _DRI_SENSORS
+            for description in _DRIVE_MON_COND
         ]
     )
 
@@ -99,7 +99,7 @@ async def async_setup_entry(
         [
             QNAPVolumeSensor(coordinator, description, uid, volume)
             for volume in coordinator.data["volumes"]
-            for description in _VOL_SENSORS
+            for description in _VOLUME_MON_COND
         ]
     )
     async_add_entities(sensors)
@@ -115,7 +115,7 @@ def round_nicely(number):
     return round(number)
 
 
-_SYS_SENSORS: tuple[SensorEntityDescription, ...] = (
+_SYSTEM_MON_COND: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="status",
         name="Status",
@@ -130,7 +130,7 @@ _SYS_SENSORS: tuple[SensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
     ),
 )
-_CPU_SENSORS: tuple[SensorEntityDescription, ...] = (
+_CPU_MON_COND: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="cpu_temp",
         name="CPU Temperature",
@@ -148,7 +148,7 @@ _CPU_SENSORS: tuple[SensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
     ),
 )
-_MEM_SENSORS: tuple[SensorEntityDescription, ...] = (
+_MEMORY_MON_COND: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="memory_free",
         name="Memory Available",
@@ -173,7 +173,7 @@ _MEM_SENSORS: tuple[SensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
     ),
 )
-_NET_SENSORS: tuple[SensorEntityDescription, ...] = (
+_NETWORK_MON_COND: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="network_link_status",
         name="Network Link",
@@ -196,7 +196,7 @@ _NET_SENSORS: tuple[SensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
     ),
 )
-_DRI_SENSORS: tuple[SensorEntityDescription, ...] = (
+_DRIVE_MON_COND: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="drive_smart_status",
         name="SMART Status",
@@ -212,7 +212,7 @@ _DRI_SENSORS: tuple[SensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
     ),
 )
-_VOL_SENSORS: tuple[SensorEntityDescription, ...] = (
+_VOLUME_MON_COND: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="volume_size_used",
         name="Used Space",
@@ -256,8 +256,8 @@ class QNAPSensor(CoordinatorEntity[QnapCoordinator], SensorEntity):
         self.entity_description = description
         self.uid = uid
         self.device_name = self.coordinator.data["system_stats"]["system"]["name"]
-        self.monitor_device = monitor_device
-        self.monitor_subdevice = monitor_subdevice
+        self.monitor_device: str = monitor_device
+        self.monitor_subdevice: str = monitor_subdevice
         self.coordinator_context = None
         self._attr_unique_id = f"{self.uid}_{self.device_name}_{self.name}"
         self._attr_device_info = DeviceInfo(
