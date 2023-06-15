@@ -30,7 +30,7 @@ class YouTubeMixin:
     """Mixin for required keys."""
 
     value_fn: Callable[[Any], StateType]
-    entity_picture_fn: Callable[[Any], str]
+    entity_picture_fn: Callable[[Any], str | None]
     attributes_fn: Callable[[Any], dict[str, Any]] | None
 
 
@@ -87,7 +87,7 @@ class YouTubeSensor(YouTubeChannelEntity, SensorEntity):
         return self.entity_description.value_fn(self.coordinator.data[self._channel_id])
 
     @property
-    def entity_picture(self) -> str:
+    def entity_picture(self) -> str | None:
         """Return the value reported by the sensor."""
         return self.entity_description.entity_picture_fn(
             self.coordinator.data[self._channel_id]

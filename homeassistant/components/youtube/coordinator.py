@@ -92,8 +92,9 @@ class YouTubeDataUpdateCoordinator(DataUpdateCoordinator):
             }
         return data
 
-    def _get_thumbnail(self, video: dict[str, Any]) -> str:
+    def _get_thumbnail(self, video: dict[str, Any]) -> str | None:
         thumbnails = video["snippet"]["thumbnails"]
-        for size in ["standard", "high", "medium", "default"]:
+        for size in ("standard", "high", "medium", "default"):
             if size in thumbnails:
                 return thumbnails[size]["url"]
+        return
