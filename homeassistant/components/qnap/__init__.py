@@ -20,8 +20,6 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     coordinator = QnapCoordinator(hass, config_entry)
     # Fetch initial data so we have data when entities subscribe
     await coordinator.async_config_entry_first_refresh()
-    if not coordinator.last_update_success:
-        raise PlatformNotReady
     hass.data[DOMAIN][config_entry.entry_id] = coordinator
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
     return True
