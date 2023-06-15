@@ -15,7 +15,6 @@ LOGGER = logging.getLogger(__package__)
 
 CONF_GIID = "giid"
 CONF_LOCK_CODE_DIGITS = "lock_code_digits"
-CONF_LOCK_DEFAULT_CODE = "lock_default_code"
 
 DEFAULT_SCAN_INTERVAL = timedelta(minutes=1)
 DEFAULT_LOCK_CODE_DIGITS = 4
