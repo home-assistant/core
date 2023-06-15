@@ -67,7 +67,7 @@ class FanClusterHandler(ClusterHandler):
         await self.get_attribute_value("fan_mode", from_cache=False)
 
     @callback
-    def attribute_updated(self, attrid: int, value: Any) -> None:
+    def attribute_updated(self, attrid: int, value: Any, _: Any) -> None:
         """Handle attribute update from fan cluster."""
         attr_name = self._get_attribute_name(attrid)
         self.debug(
@@ -109,7 +109,7 @@ class ThermostatClusterHandler(ClusterHandler):
         AttrReportConfig(attr="pi_cooling_demand", config=REPORT_CONFIG_CLIMATE_DEMAND),
         AttrReportConfig(attr="pi_heating_demand", config=REPORT_CONFIG_CLIMATE_DEMAND),
     )
-    ZCL_INIT_ATTRS: dict[int | str, bool] = {
+    ZCL_INIT_ATTRS: dict[str, bool] = {
         "abs_min_heat_setpoint_limit": True,
         "abs_max_heat_setpoint_limit": True,
         "abs_min_cool_setpoint_limit": True,
@@ -234,7 +234,7 @@ class ThermostatClusterHandler(ClusterHandler):
         return self.cluster.get("unoccupied_heating_setpoint")
 
     @callback
-    def attribute_updated(self, attrid, value):
+    def attribute_updated(self, attrid: int, value: Any, _: Any) -> None:
         """Handle attribute update cluster."""
         attr_name = self._get_attribute_name(attrid)
         self.debug(

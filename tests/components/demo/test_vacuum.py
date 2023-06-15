@@ -52,7 +52,7 @@ ENTITY_VACUUM_STATE = f"{DOMAIN}.{DEMO_VACUUM_STATE}".lower()
 
 
 @pytest.fixture(autouse=True)
-async def setup_demo_vacuum(hass):
+async def setup_demo_vacuum(hass, disable_platforms):
     """Initialize setup demo vacuum."""
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "demo"}})
     await hass.async_block_till_done()

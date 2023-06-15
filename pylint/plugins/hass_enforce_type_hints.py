@@ -573,7 +573,7 @@ _ENTITY_MATCH: list[TypeHintMatch] = [
     ),
     TypeHintMatch(
         function_name="name",
-        return_type=["str", None],
+        return_type=["str", "UndefinedType", None],
     ),
     TypeHintMatch(
         function_name="state",
