@@ -19,6 +19,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -256,6 +257,14 @@ class QNAPSensor(CoordinatorEntity[QnapCoordinator], SensorEntity):
         self.device_name = self.coordinator.data["system_stats"]["system"]["name"]
         self.monitor_device = monitor_device
         self.monitor_subdevice = monitor_subdevice
+        self.coordinator_context=None
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self.uid)},
+            name=self.device_name,
+            model=self.coordinator.data["system_stats"]["system"]["model"],
+            sw_version=self.coordinator.data["system_stats"]["firmware"]["version"],
+            manufacturer=DEFAULT_NAME,
+        )
 
     @property
     def unique_id(self):
@@ -268,17 +277,6 @@ class QNAPSensor(CoordinatorEntity[QnapCoordinator], SensorEntity):
         if self.monitor_device is not None:
             return f"{self.device_name} {self.entity_description.name} ({self.monitor_device})"
         return f"{self.device_name} {self.entity_description.name}"
-
-    @property
-    def device_info(self):
-        """Return device information."""
-        return {
-            "identifiers": {(DOMAIN, self.uid)},
-            "name": self.device_name,
-            "model": self.coordinator.data["system_stats"]["system"]["model"],
-            "sw_version": self.coordinator.data["system_stats"]["firmware"]["version"],
-            "manufacturer": DEFAULT_NAME,
-        }
 
 
 class QNAPCPUSensor(QNAPSensor):
