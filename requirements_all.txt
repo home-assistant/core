@@ -222,9 +222,6 @@ aiomusiccast==0.14.8
 # homeassistant.components.nanoleaf
 aionanoleaf==0.2.1
 
-# homeassistant.components.keyboard_remote
-aionotify==0.2.0
-
 # homeassistant.components.notion
 aionotion==2023.05.5
 
@@ -381,6 +378,9 @@ asterisk_mbox==0.5.0
 # homeassistant.components.upnp
 # homeassistant.components.yeelight
 async-upnp-client==0.33.2
+
+# homeassistant.components.keyboard_remote
+asyncinotify==4.0.2
 
 # homeassistant.components.supla
 asyncpysupla==0.0.5
@@ -650,7 +650,7 @@ elgato==4.0.1
 eliqonline==1.2.2
 
 # homeassistant.components.elkm1
-elkm1-lib==2.2.2
+elkm1-lib==2.2.5
 
 # homeassistant.components.elmax
 elmax_api==0.0.4
@@ -695,7 +695,7 @@ eternalegypt==0.0.16
 eufylife_ble_client==0.1.7
 
 # homeassistant.components.keyboard_remote
-# evdev==1.4.0
+# evdev==1.6.1
 
 # homeassistant.components.evohome
 evohome-async==0.3.15
@@ -1032,7 +1032,7 @@ kegtron-ble==0.4.0
 kiwiki-client==0.1.1
 
 # homeassistant.components.knx
-knx_frontend==2023.5.31.141540
+knx-frontend==2023.6.9.195839
 
 # homeassistant.components.konnected
 konnected==1.2.0
@@ -1218,7 +1218,7 @@ niko-home-control==0.2.1
 niluclient==0.1.2
 
 # homeassistant.components.noaa_tides
-noaa-coops==0.1.8
+noaa-coops==0.1.9
 
 # homeassistant.components.nfandroidtv
 notifications-android-tv==0.1.5
@@ -1576,7 +1576,7 @@ pycsspeechtts==1.0.8
 # pycups==1.9.73
 
 # homeassistant.components.daikin
-pydaikin==2.9.1
+pydaikin==2.9.0
 
 # homeassistant.components.danfoss_air
 pydanfossair==0.1.0
@@ -1699,7 +1699,7 @@ pyialarm==2.2.0
 pyicloud==1.0.0
 
 # homeassistant.components.insteon
-pyinsteon==1.4.2
+pyinsteon==1.4.3
 
 # homeassistant.components.intesishome
 pyintesishome==1.8.0
@@ -1771,7 +1771,7 @@ pylibrespot-java==0.1.1
 pylitejet==0.5.0
 
 # homeassistant.components.litterrobot
-pylitterbot==2023.4.0
+pylitterbot==2023.4.2
 
 # homeassistant.components.lutron_caseta
 pylutron-caseta==0.18.1
@@ -1861,7 +1861,7 @@ pyopenuv==2023.02.0
 pyopnsense==0.2.0
 
 # homeassistant.components.opple
-pyoppleio==1.0.5
+pyoppleio-legacy==1.0.8
 
 # homeassistant.components.opentherm_gw
 pyotgw==2.1.3
@@ -2168,7 +2168,7 @@ pytrafikverket==0.3.3
 pyudev==0.23.2
 
 # homeassistant.components.unifiprotect
-pyunifiprotect==4.10.2
+pyunifiprotect==4.10.3
 
 # homeassistant.components.uptimerobot
 pyuptimerobot==22.2.0
@@ -2246,7 +2246,7 @@ rapt-ble==0.1.1
 raspyrfm-client==1.2.8
 
 # homeassistant.components.rainmachine
-regenmaschine==2023.05.1
+regenmaschine==2023.06.0
 
 # homeassistant.components.renault
 renault-api==0.1.13
@@ -2293,11 +2293,11 @@ rpi-bad-power==0.1.0
 # homeassistant.components.rtsp_to_webrtc
 rtsp-to-webrtc==0.5.1
 
+# homeassistant.components.russound_rio
+russound-rio==1.0.0
+
 # homeassistant.components.russound_rnet
 russound==0.1.9
-
-# homeassistant.components.russound_rio
-russound_rio==0.1.8
 
 # homeassistant.components.ruuvitag_ble
 ruuvitag-ble==0.1.1
@@ -2367,7 +2367,7 @@ simplepush==2.1.1
 simplisafe-python==2023.05.0
 
 # homeassistant.components.sisyphus
-sisyphus-control==3.1.2
+sisyphus-control==3.1.3
 
 # homeassistant.components.slack
 slackclient==2.5.0
@@ -2680,7 +2680,7 @@ xiaomi-ble==0.17.2
 xknx==2.10.0
 
 # homeassistant.components.knx
-xknxproject==3.1.0
+xknxproject==3.1.1
 
 # homeassistant.components.bluesound
 # homeassistant.components.fritz
@@ -2698,7 +2698,7 @@ yalesmartalarmclient==0.3.9
 
 # homeassistant.components.august
 # homeassistant.components.yalexs_ble
-yalexs-ble==2.1.17
+yalexs-ble==2.1.18
 
 # homeassistant.components.august
 yalexs==1.5.1

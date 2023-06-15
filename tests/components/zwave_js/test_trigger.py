@@ -1109,3 +1109,101 @@ def test_get_trigger_platform_failure() -> None:
     """Test _get_trigger_platform."""
     with pytest.raises(ValueError):
         _get_trigger_platform({CONF_PLATFORM: "zwave_js.invalid"})
+
+
+async def test_server_reconnect_event(
+    hass: HomeAssistant, client, lock_schlage_be469, integration
+) -> None:
+    """Test that when we reconnect to server, event triggers reattach."""
+    trigger_type = f"{DOMAIN}.event"
+    node: Node = lock_schlage_be469
+    dev_reg = async_get_dev_reg(hass)
+    device = dev_reg.async_get_device(
+        {get_device_id(client.driver, lock_schlage_be469)}
+    )
+    assert device
+
+    event_name = "interview stage completed"
+
+    original_len = len(node._listeners.get(event_name, []))
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": {
+                        "platform": trigger_type,
+                        "entity_id": SCHLAGE_BE469_LOCK_ENTITY,
+                        "event_source": "node",
+                        "event": event_name,
+                    },
+                    "action": {
+                        "event": "blah",
+                    },
+                },
+            ]
+        },
+    )
+
+    assert len(node._listeners.get(event_name, [])) == original_len + 1
+    old_listener = node._listeners.get(event_name, [])[original_len]
+
+    await hass.config_entries.async_reload(integration.entry_id)
+    await hass.async_block_till_done()
+
+    # Make sure there is still a listener added for the trigger
+    assert len(node._listeners.get(event_name, [])) == original_len + 1
+
+    # Make sure the old listener was removed
+    assert old_listener not in node._listeners.get(event_name, [])
+
+
+async def test_server_reconnect_value_updated(
+    hass: HomeAssistant, client, lock_schlage_be469, integration
+) -> None:
+    """Test that when we reconnect to server, value_updated triggers reattach."""
+    trigger_type = f"{DOMAIN}.value_updated"
+    node: Node = lock_schlage_be469
+    dev_reg = async_get_dev_reg(hass)
+    device = dev_reg.async_get_device(
+        {get_device_id(client.driver, lock_schlage_be469)}
+    )
+    assert device
+
+    event_name = "value updated"
+
+    original_len = len(node._listeners.get(event_name, []))
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": {
+                        "platform": trigger_type,
+                        "entity_id": SCHLAGE_BE469_LOCK_ENTITY,
+                        "command_class": CommandClass.DOOR_LOCK.value,
+                        "property": "latchStatus",
+                    },
+                    "action": {
+                        "event": "no_value_filter",
+                    },
+                },
+            ]
+        },
+    )
+
+    assert len(node._listeners.get(event_name, [])) == original_len + 1
+    old_listener = node._listeners.get(event_name, [])[original_len]
+
+    await hass.config_entries.async_reload(integration.entry_id)
+    await hass.async_block_till_done()
+
+    # Make sure there is still a listener added for the trigger
+    assert len(node._listeners.get(event_name, [])) == original_len + 1
+
+    # Make sure the old listener was removed
+    assert old_listener not in node._listeners.get(event_name, [])
