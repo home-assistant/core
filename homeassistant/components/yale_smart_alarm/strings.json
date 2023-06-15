@@ -31,7 +31,6 @@
     "step": {
       "init": {
         "data": {
-          "code": "Default code for locks, used if none is given",
           "lock_code_digits": "Number of digits in PIN code for locks"
         }
       }
