@@ -1,8 +1,11 @@
 """Test diagnostics."""
-from unittest.mock import ANY
+from unittest.mock import ANY, patch
+
+import pytest
 
 from homeassistant import setup
 from homeassistant.components import google_assistant as ga, switch
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -10,6 +13,16 @@ from .test_http import DUMMY_CONFIG
 
 from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.typing import ClientSessionGenerator
+
+
+@pytest.fixture(autouse=True)
+async def switch_only() -> None:
+    """Enable only the switch platform."""
+    with patch(
+        "homeassistant.components.demo.COMPONENTS_WITH_CONFIG_ENTRY_DEMO_PLATFORM",
+        [Platform.SWITCH],
+    ):
+        yield
 
 
 async def test_diagnostics(
