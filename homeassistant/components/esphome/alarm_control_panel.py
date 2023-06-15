@@ -29,7 +29,24 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import EsphomeEntity, platform_async_setup_entry
+from . import EsphomeEntity, EsphomeEnumMapper, platform_async_setup_entry
+
+_ESPHOME_ACP_STATE_TO_HASS_STATE: EsphomeEnumMapper[
+    AlarmControlPanelState, str
+] = EsphomeEnumMapper(
+    {
+        AlarmControlPanelState.DISARMED: STATE_ALARM_DISARMED,
+        AlarmControlPanelState.ARMED_HOME: STATE_ALARM_ARMED_HOME,
+        AlarmControlPanelState.ARMED_AWAY: STATE_ALARM_ARMED_AWAY,
+        AlarmControlPanelState.ARMED_NIGHT: STATE_ALARM_ARMED_NIGHT,
+        AlarmControlPanelState.ARMED_VACATION: STATE_ALARM_ARMED_VACATION,
+        AlarmControlPanelState.ARMED_CUSTOM_BYPASS: STATE_ALARM_ARMED_CUSTOM_BYPASS,
+        AlarmControlPanelState.PENDING: STATE_ALARM_PENDING,
+        AlarmControlPanelState.ARMING: STATE_ALARM_ARMING,
+        AlarmControlPanelState.DISARMING: STATE_ALARM_DISARMING,
+        AlarmControlPanelState.TRIGGERED: STATE_ALARM_TRIGGERED,
+    }
+)
 
 
 async def async_setup_entry(
@@ -56,34 +73,12 @@ class EsphomeAlarmControlPanel(
     @property
     def state(self) -> str | None:
         """Return the state of the device."""
-
-        states = {
-            AlarmControlPanelState.DISARMED: STATE_ALARM_DISARMED,
-            AlarmControlPanelState.ARMED_HOME: STATE_ALARM_ARMED_HOME,
-            AlarmControlPanelState.ARMED_AWAY: STATE_ALARM_ARMED_AWAY,
-            AlarmControlPanelState.ARMED_NIGHT: STATE_ALARM_ARMED_NIGHT,
-            AlarmControlPanelState.ARMED_VACATION: STATE_ALARM_ARMED_VACATION,
-            AlarmControlPanelState.ARMED_CUSTOM_BYPASS: STATE_ALARM_ARMED_CUSTOM_BYPASS,
-            AlarmControlPanelState.PENDING: STATE_ALARM_PENDING,
-            AlarmControlPanelState.ARMING: STATE_ALARM_ARMING,
-            AlarmControlPanelState.DISARMING: STATE_ALARM_DISARMING,
-            AlarmControlPanelState.TRIGGERED: STATE_ALARM_TRIGGERED,
-        }
-
-        return_state = states.get(self._state.state)
-        if return_state:
-            return return_state
-        return STATE_ALARM_DISARMED
+        return _ESPHOME_ACP_STATE_TO_HASS_STATE.from_esphome(self._state.state)
 
     @property
     def supported_features(self) -> AlarmControlPanelEntityFeature:
         """Return the list of supported features."""
-        if self._static_info.supported_features:
-            return AlarmControlPanelEntityFeature(self._static_info.supported_features)
-        return (
-            AlarmControlPanelEntityFeature.ARM_HOME
-            | AlarmControlPanelEntityFeature.ARM_AWAY
-        )
+        return AlarmControlPanelEntityFeature(self._static_info.supported_features)
 
     @property
     def code_format(self) -> CodeFormat | None:
