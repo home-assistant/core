@@ -27,7 +27,7 @@ UPDATE_INTERVAL = timedelta(minutes=1)
 _LOGGER = logging.getLogger(__name__)
 
 
-class QnapCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
+class QnapCoordinator(DataUpdateCoordinator[None]):
     """Custom coordinator for the qnap integration."""
 
     def __init__(self, hass: HomeAssistant, config: ConfigType) -> None:
