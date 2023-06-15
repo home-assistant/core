@@ -27,7 +27,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.generated.mqtt import MQTT
 from homeassistant.helpers import (
-    config_validation as cv,
     device_registry as dr,
     entity_registry as er,
 )
@@ -35,7 +34,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from tests.common import MockConfigEntry, async_fire_mqtt_message
-from tests.typing import MqttMockHAClient, MqttMockHAClientGenerator, MqttMockPahoClient
+from tests.typing import MqttMockHAClientGenerator, MqttMockPahoClient
 
 DEFAULT_CONFIG_DEVICE_INFO_ID = {
     "identifiers": ["helloworld"],
@@ -75,39 +74,6 @@ def help_all_subscribe_calls(mqtt_client_mock: MqttMockPahoClient) -> list[Any]:
         for call in calls[1]:
             all_calls.extend(call)
     return all_calls
-
-
-async def help_setup_component(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator | None,
-    domain: str,
-    config: ConfigType,
-    use_discovery: bool = False,
-) -> MqttMockHAClient | None:
-    """Help to set up the MQTT component."""
-    # `async_setup_component` will call `async_setup` and
-    # after that it will also start the entry `async_start_entry`
-    # when `async_setup` removed mqtt_mock_entry_with_no_config should be awaited.
-
-    if use_discovery:
-        comp_config = cv.ensure_list(config[mqtt.DOMAIN][domain])
-        item = 0
-        assert mqtt_mock_entry is not None
-        mqtt_mock = await mqtt_mock_entry()
-        for comp in comp_config:
-            item += 1
-            topic = f"homeassistant/{domain}/item_{item}/config"
-            async_fire_mqtt_message(hass, topic, json.dumps(comp))
-        await hass.async_block_till_done()
-    else:
-        entry = MockConfigEntry(
-            domain=mqtt.DOMAIN, data={mqtt.CONF_BROKER: "test-broker"}
-        )
-        entry.add_to_hass(hass)
-        with patch("homeassistant.config.load_yaml_config_file", return_value=config):
-            await entry.async_setup(hass)
-        mqtt_mock = None
-    return mqtt_mock
 
 
 def help_custom_config(
@@ -170,7 +136,7 @@ async def help_test_availability_without_topic(
 
 async def help_test_default_availability_payload(
     hass: HomeAssistant,
-    mqtt_mock_entry_with_no_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
     domain: str,
     config: ConfigType,
     no_assumed_state: bool = False,
@@ -185,7 +151,8 @@ async def help_test_default_availability_payload(
     config = copy.deepcopy(config)
     config[mqtt.DOMAIN][domain]["availability_topic"] = "availability-topic"
 
-    await help_setup_component(hass, mqtt_mock_entry_with_no_config, domain, config)
+    with patch("homeassistant.config.load_yaml_config_file", return_value=config):
+        await mqtt_mock_entry()
 
     state = hass.states.get(f"{domain}.test")
     assert state and state.state == STATE_UNAVAILABLE
@@ -233,7 +200,8 @@ async def help_test_default_availability_list_payload(
         {"topic": "availability-topic1"},
         {"topic": "availability-topic2"},
     ]
-    await help_setup_component(hass, mqtt_mock_entry, domain, config)
+    with patch("homeassistant.config.load_yaml_config_file", return_value=config):
+        await mqtt_mock_entry()
 
     state = hass.states.get(f"{domain}.test")
     assert state and state.state == STATE_UNAVAILABLE
@@ -294,7 +262,8 @@ async def help_test_default_availability_list_payload_all(
         {"topic": "availability-topic1"},
         {"topic": "availability-topic2"},
     ]
-    await help_setup_component(hass, mqtt_mock_entry, domain, config)
+    with patch("homeassistant.config.load_yaml_config_file", return_value=config):
+        await mqtt_mock_entry()
 
     state = hass.states.get(f"{domain}.test")
     assert state and state.state == STATE_UNAVAILABLE
@@ -356,7 +325,8 @@ async def help_test_default_availability_list_payload_any(
         {"topic": "availability-topic1"},
         {"topic": "availability-topic2"},
     ]
-    await help_setup_component(hass, mqtt_mock_entry, domain, config)
+    with patch("homeassistant.config.load_yaml_config_file", return_value=config):
+        await mqtt_mock_entry()
 
     state = hass.states.get(f"{domain}.test")
     assert state and state.state == STATE_UNAVAILABLE
@@ -439,7 +409,8 @@ async def help_test_custom_availability_payload(
     config[mqtt.DOMAIN][domain]["availability_topic"] = "availability-topic"
     config[mqtt.DOMAIN][domain]["payload_available"] = "good"
     config[mqtt.DOMAIN][domain]["payload_not_available"] = "nogood"
-    await help_setup_component(hass, mqtt_mock_entry, domain, config)
+    with patch("homeassistant.config.load_yaml_config_file", return_value=config):
+        await mqtt_mock_entry()
 
     state = hass.states.get(f"{domain}.test")
     assert state and state.state == STATE_UNAVAILABLE
@@ -559,7 +530,8 @@ async def help_test_setting_attribute_via_mqtt_json_message(
     # Add JSON attributes settings to config
     config = copy.deepcopy(config)
     config[mqtt.DOMAIN][domain]["json_attributes_topic"] = "attr-topic"
-    await help_setup_component(hass, mqtt_mock_entry, domain, config)
+    with patch("homeassistant.config.load_yaml_config_file", return_value=config):
+        await mqtt_mock_entry()
 
     async_fire_mqtt_message(hass, "attr-topic", '{ "val": "100" }')
     state = hass.states.get(f"{domain}.test")
@@ -616,7 +588,8 @@ async def help_test_setting_attribute_with_template(
     config[mqtt.DOMAIN][domain][
         "json_attributes_template"
     ] = "{{ value_json['Timer1'] | tojson }}"
-    await help_setup_component(hass, mqtt_mock_entry, domain, config)
+    with patch("homeassistant.config.load_yaml_config_file", return_value=config):
+        await mqtt_mock_entry()
 
     async_fire_mqtt_message(
         hass, "attr-topic", json.dumps({"Timer1": {"Arm": 0, "Time": "22:18"}})
@@ -642,7 +615,8 @@ async def help_test_update_with_json_attrs_not_dict(
     # Add JSON attributes settings to config
     config = copy.deepcopy(config)
     config[mqtt.DOMAIN][domain]["json_attributes_topic"] = "attr-topic"
-    await help_setup_component(hass, mqtt_mock_entry, domain, config)
+    with patch("homeassistant.config.load_yaml_config_file", return_value=config):
+        await mqtt_mock_entry()
 
     async_fire_mqtt_message(hass, "attr-topic", '[ "list", "of", "things"]')
     state = hass.states.get(f"{domain}.test")
@@ -665,7 +639,8 @@ async def help_test_update_with_json_attrs_bad_json(
     # Add JSON attributes settings to config
     config = copy.deepcopy(config)
     config[mqtt.DOMAIN][domain]["json_attributes_topic"] = "attr-topic"
-    await help_setup_component(hass, mqtt_mock_entry, domain, config)
+    with patch("homeassistant.config.load_yaml_config_file", return_value=config):
+        await mqtt_mock_entry()
 
     async_fire_mqtt_message(hass, "attr-topic", "This is not JSON")
 
@@ -1162,9 +1137,8 @@ async def help_test_entity_id_update_subscriptions(
     assert len(topics) > 0
     entity_registry = er.async_get(hass)
 
-    mqtt_mock = await help_setup_component(
-        hass, mqtt_mock_entry, domain, config, use_discovery=True
-    )
+    with patch("homeassistant.config.load_yaml_config_file", return_value=config):
+        mqtt_mock = await mqtt_mock_entry()
     assert mqtt_mock is not None
 
     state = hass.states.get(f"{domain}.test")

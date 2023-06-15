@@ -292,6 +292,7 @@ class DeviceRegistry:
 
     devices: DeviceRegistryItems[DeviceEntry]
     deleted_devices: DeviceRegistryItems[DeletedDeviceEntry]
+    _device_data: dict[str, DeviceEntry]
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the device registry."""
@@ -306,8 +307,12 @@ class DeviceRegistry:
 
     @callback
     def async_get(self, device_id: str) -> DeviceEntry | None:
-        """Get device."""
-        return self.devices.get(device_id)
+        """Get device.
+
+        We retrieve the DeviceEntry from the underlying dict to avoid
+        the overhead of the UserDict __getitem__.
+        """
+        return self._device_data.get(device_id)
 
     @callback
     def async_get_device(
@@ -641,6 +646,7 @@ class DeviceRegistry:
 
         self.devices = devices
         self.deleted_devices = deleted_devices
+        self._device_data = devices.data
 
     @callback
     def async_schedule_save(self) -> None:

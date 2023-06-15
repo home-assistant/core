@@ -581,26 +581,9 @@ def _stringify_ip_address(ip_addr: IPv4Address | IPv6Address) -> str:
 
 def info_from_service(service: AsyncServiceInfo) -> ZeroconfServiceInfo | None:
     """Return prepared info from mDNS entries."""
-    properties: dict[str, Any] = {"_raw": {}}
-
-    for key, value in service.properties.items():
-        # See https://ietf.org/rfc/rfc6763.html#section-6.4 and
-        # https://ietf.org/rfc/rfc6763.html#section-6.5 for expected encodings
-        # for property keys and values
-        try:
-            key = key.decode("ascii")
-        except UnicodeDecodeError:
-            _LOGGER.debug(
-                "Ignoring invalid key provided by [%s]: %s", service.name, key
-            )
-            continue
-
-        properties["_raw"][key] = value
-
-        with suppress(UnicodeDecodeError):
-            if isinstance(value, bytes):
-                properties[key] = value.decode("utf-8")
-
+    # See https://ietf.org/rfc/rfc6763.html#section-6.4 and
+    # https://ietf.org/rfc/rfc6763.html#section-6.5 for expected encodings
+    # for property keys and values
     if not (ip_addresses := service.ip_addresses_by_version(IPVersion.All)):
         return None
     host: str | None = None
@@ -610,6 +593,12 @@ def info_from_service(service: AsyncServiceInfo) -> ZeroconfServiceInfo | None:
             break
     if not host:
         return None
+    properties: dict[str, Any] = {
+        k.decode("ascii", "replace"): None
+        if v is None
+        else v.decode("utf-8", "replace")
+        for k, v in service.properties.items()
+    }
 
     assert service.server is not None, "server cannot be none if there are addresses"
     return ZeroconfServiceInfo(
