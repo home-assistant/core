@@ -370,18 +370,6 @@ class SensorDeviceClass(StrEnum):
     USCS/imperial units are currently assumed to be US volumes)
     """
 
-    VOLUME_STORAGE = "volume_storage"
-    """Generic stored volume.
-
-    Use this device class for sensors measuring stored volume, for example the amount
-    of fuel in a fuel tank.
-
-    Unit of measurement: `VOLUME_*` units
-    - SI / metric: `mL`, `L`, `m³`
-    - USCS / imperial: `ft³`, `CCF`, `fl. oz.`, `gal` (warning: volumes expressed in
-    USCS/imperial units are currently assumed to be US volumes)
-    """
-
     VOLUME_RATE = "volume_rate"
     """Generic volume rate.
     
@@ -391,6 +379,18 @@ class SensorDeviceClass(StrEnum):
     Unit of measurement: `UnitOfVolumeFlowRate` enum values
     - SI / metric: `m³/h`, `L/m`
     - USCS / imperial: `ft³/m"` (warning: volumes expressed in
+    USCS/imperial units are currently assumed to be US volumes)
+    """
+
+    VOLUME_STORAGE = "volume_storage"
+    """Generic stored volume.
+
+    Use this device class for sensors measuring stored volume, for example the amount
+    of fuel in a fuel tank.
+
+    Unit of measurement: `VOLUME_*` units
+    - SI / metric: `mL`, `L`, `m³`
+    - USCS / imperial: `ft³`, `CCF`, `fl. oz.`, `gal` (warning: volumes expressed in
     USCS/imperial units are currently assumed to be US volumes)
     """
 
@@ -612,8 +612,8 @@ DEVICE_CLASS_STATE_CLASSES: dict[SensorDeviceClass, set[SensorStateClass]] = {
         SensorStateClass.TOTAL,
         SensorStateClass.TOTAL_INCREASING,
     },
-    SensorDeviceClass.VOLUME_STORAGE: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.VOLUME_RATE: {SensorStateClass.MEASUREMENT},
+    SensorDeviceClass.VOLUME_STORAGE: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.WATER: {
         SensorStateClass.TOTAL,
         SensorStateClass.TOTAL_INCREASING,
