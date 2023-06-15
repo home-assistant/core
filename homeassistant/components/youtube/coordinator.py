@@ -97,4 +97,4 @@ class YouTubeDataUpdateCoordinator(DataUpdateCoordinator):
         for size in ("standard", "high", "medium", "default"):
             if size in thumbnails:
                 return thumbnails[size]["url"]
-        return
+        return None
