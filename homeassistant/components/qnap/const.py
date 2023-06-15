@@ -1,5 +1,4 @@
 """The Qnap constants."""
-from __future__ import annotations
 
 DEFAULT_NAME = "QNAP"
 DEFAULT_PORT = 8080
