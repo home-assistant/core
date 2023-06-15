@@ -4,7 +4,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, List
 
 import aiohttp
 from pyoctoprintapi import ApiError, OctoprintClient, OctoprintException
@@ -60,6 +60,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle a config flow for OctoPrint."""
         self.discovery_schema = None
         self._user_input = None
+        self._sessions: List[aiohttp.ClientSession] = []
 
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
@@ -268,15 +269,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             ssl=False if not verify_ssl else None,
         )
         session = aiohttp.ClientSession(connector=connector)
-
-        @callback
-        def _async_close_websession(event: Event) -> None:
-            """Close websession."""
-            session.detach()
-
-        self.hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_STOP, _async_close_websession
-        )
+        self._sessions.append(session)
 
         return OctoprintClient(
             host=user_input[CONF_HOST],
@@ -285,6 +278,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             ssl=user_input[CONF_SSL],
             path=user_input[CONF_PATH],
         )
+
+    def async_remove(self):
+        """Detach the session."""
+        for session in self._sessions:
+            session.detach()
 
 
 class CannotConnect(exceptions.HomeAssistantError):
