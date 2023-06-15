@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from datetime import datetime
 import logging
-from typing import Any
+from typing import Any, cast
 
 from pyatv import exceptions
 from pyatv.const import (
@@ -16,7 +16,7 @@ from pyatv.const import (
     ShuffleState,
 )
 from pyatv.helpers import is_streamable
-from pyatv.interface import AppleTV, Playing
+from pyatv.interface import AppleTV, OutputDevice, Playing
 
 from homeassistant.components import media_source
 from homeassistant.components.media_player import (
@@ -36,14 +36,18 @@ import homeassistant.util.dt as dt_util
 
 from . import AppleTVEntity, AppleTVManager
 from .browse_media import build_app_list
-from .const import DOMAIN
+from .const import DOMAIN, KNOWN_PLAYERS
 
 _LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 0
 
 # We always consider these to be supported
-SUPPORT_BASE = MediaPlayerEntityFeature.TURN_ON | MediaPlayerEntityFeature.TURN_OFF
+SUPPORT_BASE = (
+    MediaPlayerEntityFeature.TURN_ON
+    | MediaPlayerEntityFeature.TURN_OFF
+    | MediaPlayerEntityFeature.GROUPING
+)
 
 # This is the "optimistic" view of supported features and will be returned until the
 # actual set of supported feature have been determined (will always be all or a subset
@@ -109,13 +113,47 @@ class AppleTvMediaPlayer(AppleTVEntity, MediaPlayerEntity):
     def __init__(self, name: str, identifier: str, manager: AppleTVManager) -> None:
         """Initialize the Apple TV media player."""
         super().__init__(name, identifier, manager)
-        self._playing: Playing | None = None
+        self.playing: Playing | None = None
         self._app_list: dict[str, str] = {}
+        self._group_leader: AppleTvMediaPlayer | None = None
+        self._group: list[AppleTvMediaPlayer] = []
+        self._group_entities: list[str] = []
+        self._group_members_missing: set[str] = set()
+
+    async def async_added_to_hass(self) -> None:
+        """Run when this Entity has been added to HA."""
+        self.hass.data[DOMAIN].setdefault(KNOWN_PLAYERS, []).append(self)
+        await super().async_added_to_hass()
+
+        output_devices_feature = self.atv.features.in_state(
+            FeatureState.Available, FeatureName.OutputDevices
+        )
+        if output_devices_feature:
+            self._update_group(self.atv.audio.output_devices)
+        else:
+            # initial values, these will be further updated by a leader
+            self._group = [self]
+            self._group_entities = [self.entity_id]
+        if not output_devices_feature or not self.atv.audio.output_devices:
+            # another player is/may be the leader
+            output_device_id = self.atv.device_info.output_device_id
+            for player in cast(
+                list[AppleTvMediaPlayer], self.hass.data[DOMAIN][KNOWN_PLAYERS]
+            ):
+                # pylint: disable-next=protected-access
+                if output_device_id in player._group_members_missing:
+                    # pylint: disable-next=protected-access
+                    player._update_group(player.atv.audio.output_devices)
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Entity being removed from hass."""
+        await super().async_will_remove_from_hass()
+        self.hass.data[DOMAIN][KNOWN_PLAYERS].remove(self)
 
     @callback
     def async_device_connected(self, atv: AppleTV) -> None:
         """Handle when connection is made to device."""
-        # NB: Do not use _is_feature_available here as it only works when playing
+        # NB: Do not use is_feature_available here as it only works when playing
         if self.atv.features.in_state(FeatureState.Available, FeatureName.PushUpdates):
             self.atv.push_updater.listener = self
             self.atv.push_updater.start()
@@ -160,10 +198,72 @@ class AppleTvMediaPlayer(AppleTVEntity, MediaPlayerEntity):
             }
             self.async_write_ha_state()
 
+    def _update_group(self, group_devices: list[OutputDevice]) -> None:
+        """Update group topology."""
+        group_uids: list[str] = [device.identifier for device in group_devices]
+        uid_players: dict[str, AppleTvMediaPlayer] = {
+            player.atv.device_info.output_device_id: player
+            for player in self.hass.data[DOMAIN][KNOWN_PLAYERS]
+        }
+
+        for uid, player in uid_players.items():
+            if player.group_leader is self and uid not in group_uids:
+                # pylint: disable-next=protected-access
+                player._update_group_member(None, [player], [player.entity_id])
+
+        if not group_uids:
+            # not the leader
+            return
+
+        self_uid = self.atv.device_info.output_device_id
+        if self_uid not in group_uids:
+            # playing to other devices, still part of group
+            group_uids = [self_uid] + group_uids
+
+        group: list[AppleTvMediaPlayer] = []
+        group_entities: list[str] = []
+        group_members_missing: set[str] = set()
+        for uid in group_uids:
+            if uid in uid_players:
+                player = uid_players[uid]
+                group.append(player)
+                group_entities.append(player.entity_id)
+            else:
+                group_members_missing.add(uid)
+                _LOGGER.debug("group member unavailable (%s), will try again", uid)
+
+        self._group_members_missing = group_members_missing
+        self._update_group_member(None, group, group_entities)
+        self.async_write_ha_state()
+
+        for joined_uid in group_uids[1:]:
+            if joined_player := uid_players.get(joined_uid):
+                # pylint: disable-next=protected-access
+                joined_player._update_group_member(self, group, group_entities)
+
+        _LOGGER.debug("Regrouped: %s", group_entities)
+
+    def _update_group_member(
+        self,
+        leader: AppleTvMediaPlayer | None,
+        group: list[AppleTvMediaPlayer],
+        entities: list[str],
+    ) -> None:
+        self._group_leader = leader
+        self._group = group
+        self._group_entities = entities
+        self._group_members_missing.clear()
+        self.async_write_ha_state()
+
     @callback
     def async_device_disconnected(self) -> None:
         """Handle when connection was lost to device."""
         self._attr_supported_features = SUPPORT_APPLE_TV
+
+    @property
+    def group_leader(self) -> AppleTvMediaPlayer:
+        """Return the current leader AppleTvMediaPlayer."""
+        return self._group_leader or self
 
     @property
     def state(self) -> MediaPlayerState | None:
@@ -173,12 +273,12 @@ class AppleTvMediaPlayer(AppleTVEntity, MediaPlayerEntity):
         if self.atv is None:
             return MediaPlayerState.OFF
         if (
-            self._is_feature_available(FeatureName.PowerState)
+            self.is_feature_available(FeatureName.PowerState)
             and self.atv.power.power_state == PowerState.Off
         ):
             return MediaPlayerState.STANDBY
-        if self._playing:
-            state = self._playing.device_state
+        if self.group_leader.playing:
+            state = self.group_leader.playing.device_state
             if state in (DeviceState.Idle, DeviceState.Loading):
                 return MediaPlayerState.IDLE
             if state == DeviceState.Playing:
@@ -191,15 +291,17 @@ class AppleTvMediaPlayer(AppleTVEntity, MediaPlayerEntity):
     @callback
     def playstatus_update(self, _, playing: Playing) -> None:
         """Print what is currently playing when it changes."""
-        self._playing = playing
-        self.async_write_ha_state()
+        self.playing = playing
+        for player in self._group:
+            player.async_write_ha_state()
 
     @callback
     def playstatus_error(self, _, exception: Exception) -> None:
         """Inform about an error and restart push updates."""
         _LOGGER.warning("A %s error occurred: %s", exception.__class__, exception)
-        self._playing = None
-        self.async_write_ha_state()
+        self.playing = None
+        for player in self._group:
+            player.async_write_ha_state()
 
     @callback
     def powerstate_update(self, old_state: PowerState, new_state: PowerState) -> None:
@@ -211,17 +313,24 @@ class AppleTvMediaPlayer(AppleTVEntity, MediaPlayerEntity):
         """Update volume when it changes."""
         self.async_write_ha_state()
 
+    @callback
+    def outputdevices_update(
+        self, old_devices: list[OutputDevice], new_devices: list[OutputDevice]
+    ) -> None:
+        """Update group members when they change."""
+        self._update_group(new_devices)
+
     @property
     def app_id(self) -> str | None:
         """ID of the current running app."""
-        if self._is_feature_available(FeatureName.App):
+        if self.is_feature_available(FeatureName.App):
             return self.atv.metadata.app.identifier
         return None
 
     @property
     def app_name(self) -> str | None:
         """Name of the current running app."""
-        if self._is_feature_available(FeatureName.App):
+        if self.is_feature_available(FeatureName.App):
             return self.atv.metadata.app.name
         return None
 
@@ -233,40 +342,40 @@ class AppleTvMediaPlayer(AppleTVEntity, MediaPlayerEntity):
     @property
     def media_content_type(self) -> MediaType | None:
         """Content type of current playing media."""
-        if self._playing:
+        if self.group_leader.playing:
             return {
                 AppleMediaType.Video: MediaType.VIDEO,
                 AppleMediaType.Music: MediaType.MUSIC,
                 AppleMediaType.TV: MediaType.TVSHOW,
-            }.get(self._playing.media_type)
+            }.get(self.group_leader.playing.media_type)
         return None
 
     @property
     def media_content_id(self) -> str | None:
         """Content ID of current playing media."""
-        if self._playing:
-            return self._playing.content_identifier
+        if self.group_leader.playing:
+            return self.group_leader.playing.content_identifier
         return None
 
     @property
     def volume_level(self) -> float | None:
         """Volume level of the media player (0..1)."""
-        if self._is_feature_available(FeatureName.Volume):
+        if self.is_feature_available(FeatureName.Volume):
             return self.atv.audio.volume / 100.0  # from percent
         return None
 
     @property
     def media_duration(self) -> int | None:
         """Duration of current playing media in seconds."""
-        if self._playing:
-            return self._playing.total_time
+        if self.group_leader.playing:
+            return self.group_leader.playing.total_time
         return None
 
     @property
     def media_position(self) -> int | None:
         """Position of current playing media in seconds."""
-        if self._playing:
-            return self._playing.position
+        if self.group_leader.playing:
+            return self.group_leader.playing.position
         return None
 
     @property
@@ -275,6 +384,11 @@ class AppleTvMediaPlayer(AppleTVEntity, MediaPlayerEntity):
         if self.state in {MediaPlayerState.PLAYING, MediaPlayerState.PAUSED}:
             return dt_util.utcnow()
         return None
+
+    @property
+    def group_members(self) -> list[str] | None:
+        """List of entity_ids which are currently grouped together."""
+        return self._group_entities
 
     async def async_play_media(
         self, media_type: MediaType | str, media_id: str, **kwargs: Any
@@ -293,14 +407,14 @@ class AppleTvMediaPlayer(AppleTVEntity, MediaPlayerEntity):
             media_id = async_process_play_media_url(self.hass, play_item.url)
             media_type = MediaType.MUSIC
 
-        if self._is_feature_available(FeatureName.StreamFile) and (
+        if self.group_leader.is_feature_available(FeatureName.StreamFile) and (
             media_type == MediaType.MUSIC or await is_streamable(media_id)
         ):
             _LOGGER.debug("Streaming %s via RAOP", media_id)
-            await self.atv.stream.stream_file(media_id)
-        elif self._is_feature_available(FeatureName.PlayUrl):
+            await self.group_leader.atv.stream.stream_file(media_id)
+        elif self.group_leader.is_feature_available(FeatureName.PlayUrl):
             _LOGGER.debug("Playing %s via AirPlay", media_id)
-            await self.atv.stream.play_url(media_id)
+            await self.group_leader.atv.stream.play_url(media_id)
         else:
             _LOGGER.error("Media streaming is not possible with current configuration")
 
@@ -309,18 +423,21 @@ class AppleTvMediaPlayer(AppleTVEntity, MediaPlayerEntity):
         """Hash value for media image."""
         state = self.state
         if (
-            self._playing
-            and self._is_feature_available(FeatureName.Artwork)
+            self.group_leader.playing
+            and self.group_leader.is_feature_available(FeatureName.Artwork)
             and state not in {None, MediaPlayerState.OFF, MediaPlayerState.IDLE}
         ):
-            return self.atv.metadata.artwork_id
+            return self.group_leader.atv.metadata.artwork_id
         return None
 
     async def async_get_media_image(self) -> tuple[bytes | None, str | None]:
         """Fetch media image of current playing image."""
         state = self.state
-        if self._playing and state not in {MediaPlayerState.OFF, MediaPlayerState.IDLE}:
-            artwork = await self.atv.metadata.artwork()
+        if self.group_leader.playing and state not in {
+            MediaPlayerState.OFF,
+            MediaPlayerState.IDLE,
+        }:
+            artwork = await self.group_leader.atv.metadata.artwork()
             if artwork:
                 return artwork.bytes, artwork.mimetype
 
@@ -329,65 +446,79 @@ class AppleTvMediaPlayer(AppleTVEntity, MediaPlayerEntity):
     @property
     def media_title(self) -> str | None:
         """Title of current playing media."""
-        if self._playing:
-            return self._playing.title
+        if self.group_leader.playing:
+            return self.group_leader.playing.title
         return None
 
     @property
     def media_artist(self) -> str | None:
         """Artist of current playing media, music track only."""
-        if self._playing and self._is_feature_available(FeatureName.Artist):
-            return self._playing.artist
+        if self.group_leader.playing and self.group_leader.is_feature_available(
+            FeatureName.Artist
+        ):
+            return self.group_leader.playing.artist
         return None
 
     @property
     def media_album_name(self) -> str | None:
         """Album name of current playing media, music track only."""
-        if self._playing and self._is_feature_available(FeatureName.Album):
-            return self._playing.album
+        if self.group_leader.playing and self.group_leader.is_feature_available(
+            FeatureName.Album
+        ):
+            return self.group_leader.playing.album
         return None
 
     @property
     def media_series_title(self) -> str | None:
         """Title of series of current playing media, TV show only."""
-        if self._playing and self._is_feature_available(FeatureName.SeriesName):
-            return self._playing.series_name
+        if self.group_leader.playing and self.group_leader.is_feature_available(
+            FeatureName.SeriesName
+        ):
+            return self.group_leader.playing.series_name
         return None
 
     @property
     def media_season(self) -> str | None:
         """Season of current playing media, TV show only."""
-        if self._playing and self._is_feature_available(FeatureName.SeasonNumber):
-            return str(self._playing.season_number)
+        if self.group_leader.playing and self.group_leader.is_feature_available(
+            FeatureName.SeasonNumber
+        ):
+            return str(self.group_leader.playing.season_number)
         return None
 
     @property
     def media_episode(self) -> str | None:
         """Episode of current playing media, TV show only."""
-        if self._playing and self._is_feature_available(FeatureName.EpisodeNumber):
-            return str(self._playing.episode_number)
+        if self.group_leader.playing and self.group_leader.is_feature_available(
+            FeatureName.EpisodeNumber
+        ):
+            return str(self.group_leader.playing.episode_number)
         return None
 
     @property
     def repeat(self) -> RepeatMode | None:
         """Return current repeat mode."""
-        if self._playing and self._is_feature_available(FeatureName.Repeat):
+        if self.group_leader.playing and self.group_leader.is_feature_available(
+            FeatureName.Repeat
+        ):
             return {
                 RepeatState.Track: RepeatMode.ONE,
                 RepeatState.All: RepeatMode.ALL,
-            }.get(self._playing.repeat, RepeatMode.OFF)
+            }.get(self.group_leader.playing.repeat, RepeatMode.OFF)
         return None
 
     @property
     def shuffle(self) -> bool | None:
         """Boolean if shuffle is enabled."""
-        if self._playing and self._is_feature_available(FeatureName.Shuffle):
-            return self._playing.shuffle != ShuffleState.Off
+        if self.group_leader.playing and self.group_leader.is_feature_available(
+            FeatureName.Shuffle
+        ):
+            return self.group_leader.playing.shuffle != ShuffleState.Off
         return None
 
-    def _is_feature_available(self, feature: FeatureName) -> bool:
+    def is_feature_available(self, feature: FeatureName) -> bool:
         """Return if a feature is available."""
-        if self.atv and self._playing:
+        if self.atv and self.playing:
             return self.atv.features.in_state(FeatureState.Available, feature)
         return False
 
@@ -400,8 +531,8 @@ class AppleTvMediaPlayer(AppleTVEntity, MediaPlayerEntity):
         if media_content_id == "apps" or (
             # If we can't stream files or URLs, we can't browse media.
             # In that case the `BROWSE_MEDIA` feature was added because of AppList/LaunchApp
-            not self._is_feature_available(FeatureName.PlayUrl)
-            and not self._is_feature_available(FeatureName.StreamFile)
+            not self.group_leader.is_feature_available(FeatureName.PlayUrl)
+            and not self.group_leader.is_feature_available(FeatureName.StreamFile)
         ):
             return build_app_list(self._app_list)
 
@@ -431,51 +562,51 @@ class AppleTvMediaPlayer(AppleTVEntity, MediaPlayerEntity):
 
     async def async_turn_on(self) -> None:
         """Turn the media player on."""
-        if self._is_feature_available(FeatureName.TurnOn):
+        if self.is_feature_available(FeatureName.TurnOn):
             await self.atv.power.turn_on()
 
     async def async_turn_off(self) -> None:
         """Turn the media player off."""
-        if (self._is_feature_available(FeatureName.TurnOff)) and (
-            not self._is_feature_available(FeatureName.PowerState)
+        if (self.is_feature_available(FeatureName.TurnOff)) and (
+            not self.is_feature_available(FeatureName.PowerState)
             or self.atv.power.power_state == PowerState.On
         ):
             await self.atv.power.turn_off()
 
     async def async_media_play_pause(self) -> None:
         """Pause media on media player."""
-        if self._playing:
-            await self.atv.remote_control.play_pause()
+        if self.group_leader.playing:
+            await self.group_leader.atv.remote_control.play_pause()
 
     async def async_media_play(self) -> None:
         """Play media."""
-        if self.atv:
-            await self.atv.remote_control.play()
+        if self.group_leader.atv:
+            await self.group_leader.atv.remote_control.play()
 
     async def async_media_stop(self) -> None:
         """Stop the media player."""
-        if self.atv:
-            await self.atv.remote_control.stop()
+        if self.group_leader.atv:
+            await self.group_leader.atv.remote_control.stop()
 
     async def async_media_pause(self) -> None:
         """Pause the media player."""
-        if self.atv:
-            await self.atv.remote_control.pause()
+        if self.group_leader.atv:
+            await self.group_leader.atv.remote_control.pause()
 
     async def async_media_next_track(self) -> None:
         """Send next track command."""
-        if self.atv:
-            await self.atv.remote_control.next()
+        if self.group_leader.atv:
+            await self.group_leader.atv.remote_control.next()
 
     async def async_media_previous_track(self) -> None:
         """Send previous track command."""
-        if self.atv:
-            await self.atv.remote_control.previous()
+        if self.group_leader.atv:
+            await self.group_leader.atv.remote_control.previous()
 
     async def async_media_seek(self, position: float) -> None:
         """Send seek command."""
-        if self.atv:
-            await self.atv.remote_control.set_position(position)
+        if self.group_leader.atv:
+            await self.group_leader.atv.remote_control.set_position(position)
 
     async def async_volume_up(self) -> None:
         """Turn volume up for media player."""
@@ -495,17 +626,17 @@ class AppleTvMediaPlayer(AppleTVEntity, MediaPlayerEntity):
 
     async def async_set_repeat(self, repeat: RepeatMode) -> None:
         """Set repeat mode."""
-        if self.atv:
+        if self.group_leader.atv:
             mode = {
                 RepeatMode.ONE: RepeatState.Track,
                 RepeatMode.ALL: RepeatState.All,
             }.get(repeat, RepeatState.Off)
-            await self.atv.remote_control.set_repeat(mode)
+            await self.group_leader.atv.remote_control.set_repeat(mode)
 
     async def async_set_shuffle(self, shuffle: bool) -> None:
         """Enable/disable shuffle mode."""
-        if self.atv:
-            await self.atv.remote_control.set_shuffle(
+        if self.group_leader.atv:
+            await self.group_leader.atv.remote_control.set_shuffle(
                 ShuffleState.Songs if shuffle else ShuffleState.Off
             )
 
@@ -513,3 +644,36 @@ class AppleTvMediaPlayer(AppleTVEntity, MediaPlayerEntity):
         """Select input source."""
         if app_id := self._app_list.get(source):
             await self.atv.apps.launch_app(app_id)
+
+    async def async_join_players(self, group_members: list[str]) -> None:
+        """Join `group_members` as a player group with the current player."""
+        if self.group_leader is self and not self.atv.features.in_state(
+            FeatureState.Available, FeatureName.AddOutputDevices
+        ):
+            _LOGGER.info(
+                "This device cannot be a group leader: %s", self.group_leader.entity_id
+            )
+            return
+
+        entity_id_mapping = {
+            player.entity_id: player.atv.device_info.output_device_id
+            for player in self.hass.data[DOMAIN][KNOWN_PLAYERS]
+        }
+
+        uids = []
+        for entity_id in group_members:
+            if uid := entity_id_mapping.get(entity_id):
+                uids.append(uid)
+            else:
+                _LOGGER.info("Not a known apple_tv entity_id: %s", entity_id)
+
+        await self.group_leader.atv.audio.add_output_devices(*uids)
+
+    async def async_unjoin_player(self) -> None:
+        """Remove this player from any group."""
+        if self.group_leader is self:
+            return
+
+        await self.group_leader.atv.audio.remove_output_devices(
+            self.atv.device_info.output_device_id
+        )
