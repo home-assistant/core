@@ -2,8 +2,8 @@
 from datetime import timedelta
 from unittest.mock import patch
 
-import pytest
 from google.auth.exceptions import RefreshError
+import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.youtube import DOMAIN
