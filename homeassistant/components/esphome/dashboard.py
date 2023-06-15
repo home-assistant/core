@@ -37,13 +37,6 @@ async def async_setup(hass: HomeAssistant) -> None:
     await async_get_or_create_dashboard_manager(hass)
 
 
-@callback
-def async_get_dashboard_manager(hass: HomeAssistant) -> ESPHomeDashboardManager | None:
-    """Get the dashboard manager if it already exists."""
-    manager: ESPHomeDashboardManager | None = hass.data.get(KEY_DASHBOARD_MANAGER)
-    return manager
-
-
 @singleton(KEY_DASHBOARD_MANAGER)
 async def async_get_or_create_dashboard_manager(
     hass: HomeAssistant,
@@ -151,9 +144,8 @@ class ESPHomeDashboardManager:
 @callback
 def async_get_dashboard(hass: HomeAssistant) -> ESPHomeDashboard | None:
     """Get an instance of the dashboard if set."""
-    if manager := async_get_dashboard_manager(hass):
-        return manager.async_get()
-    return None
+    manager: ESPHomeDashboardManager | None = hass.data.get(KEY_DASHBOARD_MANAGER)
+    return manager.async_get() if manager else None
 
 
 async def async_set_dashboard_info(
