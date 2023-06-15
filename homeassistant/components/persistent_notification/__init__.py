@@ -108,7 +108,7 @@ def async_create(
         UpdateType.ADDED,
         {notification_id: notifications[notification_id]},
     )
-    hass.bus.fire(
+    hass.bus.async_fire(
         EVENT_PERSISTENT_NOTIFICATION_CREATED,
         cast(dict[str, Any], notifications[notification_id]),
     )
@@ -134,7 +134,7 @@ def async_dismiss(hass: HomeAssistant, notification_id: str) -> None:
         UpdateType.REMOVED,
         {notification_id: notification},
     )
-    hass.bus.fire(
+    hass.bus.async_fire(
         EVENT_PERSISTENT_NOTIFICATION_DISMISSED, cast(dict[str, Any], notification)
     )
 
