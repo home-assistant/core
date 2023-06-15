@@ -2,6 +2,7 @@
 from datetime import timedelta
 from unittest.mock import patch
 
+import pytest
 from google.auth.exceptions import RefreshError
 
 from homeassistant import config_entries
@@ -87,3 +88,36 @@ async def test_sensor_reauth_trigger(
     assert flow["step_id"] == "reauth_confirm"
     assert flow["handler"] == DOMAIN
     assert flow["context"]["source"] == config_entries.SOURCE_REAUTH
+
+
+@pytest.mark.parametrize(
+    ("fixture", "url"),
+    [
+        ("standard", "https://i.ytimg.com/vi/wysukDrMdqU/sddefault.jpg"),
+        ("high", "https://i.ytimg.com/vi/wysukDrMdqU/hqdefault.jpg"),
+        ("medium", "https://i.ytimg.com/vi/wysukDrMdqU/mqdefault.jpg"),
+        ("default", "https://i.ytimg.com/vi/wysukDrMdqU/default.jpg"),
+        ("none", None),
+    ],
+)
+async def test_thumbnail(
+    hass: HomeAssistant,
+    setup_integration: ComponentSetup,
+    fixture: str,
+    url: str | None,
+) -> None:
+    """Test if right thumbnail is selected."""
+    await setup_integration()
+
+    with patch(
+        "homeassistant.components.youtube.api.build",
+        return_value=MockService(
+            playlist_items_fixture=f"youtube/thumbnail/{fixture}.json"
+        ),
+    ):
+        future = dt_util.utcnow() + timedelta(minutes=15)
+        async_fire_time_changed(hass, future)
+        await hass.async_block_till_done()
+    state = hass.states.get("sensor.google_for_developers_latest_upload")
+    assert state
+    assert state.attributes["entity_picture"] == url
