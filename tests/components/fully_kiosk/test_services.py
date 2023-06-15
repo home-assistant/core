@@ -103,3 +103,39 @@ async def test_service_bad_device_id(
         )
 
     assert "Device 'bad-device_id' not found in device registry" in str(excinfo)
+
+
+async def test_service_called_with_non_fkb_target_devices(
+    hass: HomeAssistant,
+    mock_fully_kiosk: MagicMock,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Services raise exception when no valid devices provided."""
+    device_registry = dr.async_get(hass)
+
+    other_domain = "NotFullyKiosk"
+    other_config_id = "555"
+    await hass.config_entries.async_add(
+        MockConfigEntry(
+            title="Not Fully Kiosk", domain=other_domain, unique_id=other_config_id
+        )
+    )
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=other_config_id,
+        identifiers={
+            (other_domain, 1),
+        },
+    )
+
+    with pytest.raises(HomeAssistantError) as excinfo:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_LOAD_URL,
+            {
+                ATTR_DEVICE_ID: [device_entry.id],
+                ATTR_URL: "https://example.com",
+            },
+            blocking=True,
+        )
+
+    assert f"Device '{device_entry.id}' is not a fully_kiosk device" in str(excinfo)
