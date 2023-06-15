@@ -46,7 +46,7 @@ PyYAML==6.0
 requests==2.31.0
 scapy==2.5.0
 SQLAlchemy==2.0.15
-typing_extensions>=4.5.0,<5.0
+typing_extensions>=4.6.3,<5.0
 ulid-transform==0.7.2
 voluptuous-serialize==2.6.0
 voluptuous==0.13.1
