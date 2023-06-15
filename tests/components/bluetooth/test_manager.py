@@ -11,6 +11,7 @@ import pytest
 
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import (
+    MONOTONIC_TIME,
     BaseHaRemoteScanner,
     BluetoothChange,
     BluetoothScanningMode,
@@ -711,6 +712,7 @@ async def test_goes_unavailable_connectable_only_and_recovers(
                 advertisement_data.manufacturer_data,
                 advertisement_data.tx_power,
                 {"scanner_specific_data": "test"},
+                MONOTONIC_TIME(),
             )
 
     new_info_callback = async_get_advertisement_callback(hass)
@@ -883,6 +885,7 @@ async def test_goes_unavailable_dismisses_discovery_and_makes_discoverable(
                 advertisement_data.manufacturer_data,
                 advertisement_data.tx_power,
                 {"scanner_specific_data": "test"},
+                MONOTONIC_TIME(),
             )
 
         def clear_all_devices(self) -> None:

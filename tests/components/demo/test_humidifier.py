@@ -30,7 +30,7 @@ ENTITY_HUMIDIFIER = "humidifier.humidifier"
 
 
 @pytest.fixture(autouse=True)
-async def setup_demo_humidifier(hass):
+async def setup_demo_humidifier(hass, disable_platforms):
     """Initialize setup demo humidifier."""
     assert await async_setup_component(
         hass, DOMAIN, {"humidifier": {"platform": "demo"}}
