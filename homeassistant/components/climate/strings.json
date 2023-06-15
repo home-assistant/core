@@ -54,6 +54,7 @@
           "name": "Current action",
           "state": {
             "off": "Off",
+            "preheating": "Preheating",
             "heating": "Heating",
             "cooling": "Cooling",
             "drying": "Drying",
