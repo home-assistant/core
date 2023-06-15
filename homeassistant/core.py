@@ -1830,14 +1830,15 @@ class ServiceRegistry:
         context: Context | None = None,
         limit: float | None = SERVICE_CALL_LIMIT,
         target: dict[str, Any] | None = None,
-    ) -> bool | None:
+    ) -> None:
         """Call a service.
 
         Specify blocking=True to wait until service is executed.
         Waits a maximum of limit, which may be None for no timeout.
 
-        If blocking = True, will return boolean if service executed
-        successfully within limit.
+        Will raise an asyncio.TimeoutError if the service was not executed
+        successfully within limit. Note: The service call is not cancelled and will
+        continue running.
 
         This method will fire an event to indicate the service has been called.
 
@@ -1888,7 +1889,7 @@ class ServiceRegistry:
         coro = self._execute_service(handler, service_call)
         if not blocking:
             self._run_service_in_background(coro, service_call)
-            return None
+            return
 
         task = self._hass.async_create_task(coro)
         try:
@@ -1909,12 +1910,12 @@ class ServiceRegistry:
             # Propagate any exceptions that might have happened during service call.
             task.result()
             # Service call completed successfully!
-            return True
+            return
         # Service call task did not complete before timeout expired.
         # Let it keep running in background.
         self._run_service_in_background(task, service_call)
         _LOGGER.debug("Service did not complete before timeout: %s", service_call)
-        return False
+        raise asyncio.TimeoutError("Service did not complete before timeout")
 
     def _run_service_in_background(
         self,

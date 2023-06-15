@@ -66,7 +66,7 @@ async def test_media_player_toggles(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
-    assert await hass.services.async_call(
+    await hass.services.async_call(
         "media_player",
         "turn_off",
         {"entity_id": MEDIA_PLAYER_ENTITY},
@@ -76,7 +76,7 @@ async def test_media_player_toggles(
 
     mock_api.send_key_command.assert_called_with("POWER", "SHORT")
 
-    assert await hass.services.async_call(
+    await hass.services.async_call(
         "media_player",
         "turn_on",
         {"entity_id": MEDIA_PLAYER_ENTITY},
@@ -95,7 +95,7 @@ async def test_media_player_volume(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
-    assert await hass.services.async_call(
+    await hass.services.async_call(
         "media_player",
         "volume_up",
         {"entity_id": MEDIA_PLAYER_ENTITY},
@@ -105,7 +105,7 @@ async def test_media_player_volume(
 
     mock_api.send_key_command.assert_called_with("VOLUME_UP", "SHORT")
 
-    assert await hass.services.async_call(
+    await hass.services.async_call(
         "media_player",
         "volume_down",
         {"entity_id": MEDIA_PLAYER_ENTITY},
@@ -115,7 +115,7 @@ async def test_media_player_volume(
 
     mock_api.send_key_command.assert_called_with("VOLUME_DOWN", "SHORT")
 
-    assert await hass.services.async_call(
+    await hass.services.async_call(
         "media_player",
         "volume_mute",
         {"entity_id": MEDIA_PLAYER_ENTITY, "is_volume_muted": True},
@@ -125,7 +125,7 @@ async def test_media_player_volume(
 
     mock_api.send_key_command.assert_called_with("VOLUME_MUTE", "SHORT")
 
-    assert await hass.services.async_call(
+    await hass.services.async_call(
         "media_player",
         "volume_mute",
         {"entity_id": MEDIA_PLAYER_ENTITY, "is_volume_muted": False},
@@ -144,7 +144,7 @@ async def test_media_player_controls(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
-    assert await hass.services.async_call(
+    await hass.services.async_call(
         "media_player",
         "media_play",
         {"entity_id": MEDIA_PLAYER_ENTITY},
@@ -153,7 +153,7 @@ async def test_media_player_controls(
 
     mock_api.send_key_command.assert_called_with("MEDIA_PLAY", "SHORT")
 
-    assert await hass.services.async_call(
+    await hass.services.async_call(
         "media_player",
         "media_pause",
         {"entity_id": MEDIA_PLAYER_ENTITY},
@@ -162,7 +162,7 @@ async def test_media_player_controls(
 
     mock_api.send_key_command.assert_called_with("MEDIA_PAUSE", "SHORT")
 
-    assert await hass.services.async_call(
+    await hass.services.async_call(
         "media_player",
         "media_play_pause",
         {"entity_id": MEDIA_PLAYER_ENTITY},
@@ -171,7 +171,7 @@ async def test_media_player_controls(
 
     mock_api.send_key_command.assert_called_with("MEDIA_PLAY_PAUSE", "SHORT")
 
-    assert await hass.services.async_call(
+    await hass.services.async_call(
         "media_player",
         "media_stop",
         {"entity_id": MEDIA_PLAYER_ENTITY},
@@ -180,7 +180,7 @@ async def test_media_player_controls(
 
     mock_api.send_key_command.assert_called_with("MEDIA_STOP", "SHORT")
 
-    assert await hass.services.async_call(
+    await hass.services.async_call(
         "media_player",
         "media_previous_track",
         {"entity_id": MEDIA_PLAYER_ENTITY},
@@ -189,7 +189,7 @@ async def test_media_player_controls(
 
     mock_api.send_key_command.assert_called_with("MEDIA_PREVIOUS", "SHORT")
 
-    assert await hass.services.async_call(
+    await hass.services.async_call(
         "media_player",
         "media_next_track",
         {"entity_id": MEDIA_PLAYER_ENTITY},
@@ -207,7 +207,7 @@ async def test_media_player_play_media(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
-    assert await hass.services.async_call(
+    await hass.services.async_call(
         "media_player",
         "play_media",
         {
@@ -246,7 +246,7 @@ async def test_media_player_play_media(
     )
     assert mock_api.send_key_command.call_count == 2
 
-    assert await hass.services.async_call(
+    await hass.services.async_call(
         "media_player",
         "play_media",
         {
@@ -259,7 +259,7 @@ async def test_media_player_play_media(
     mock_api.send_launch_app_command.assert_called_with("https://www.youtube.com")
 
     with pytest.raises(ValueError):
-        assert await hass.services.async_call(
+        await hass.services.async_call(
             "media_player",
             "play_media",
             {
@@ -271,7 +271,7 @@ async def test_media_player_play_media(
         )
 
     with pytest.raises(ValueError):
-        assert await hass.services.async_call(
+        await hass.services.async_call(
             "media_player",
             "play_media",
             {

@@ -96,7 +96,7 @@ async def test_fan_set_off(hass: HomeAssistant, init_integration) -> None:
     assert entry.unique_id == uid
 
     with patch("homeassistant.components.freedompro.fan.put_state") as mock_put_state:
-        assert await hass.services.async_call(
+        await hass.services.async_call(
             FAN_DOMAIN,
             SERVICE_TURN_OFF,
             {ATTR_ENTITY_ID: [entity_id]},
@@ -137,7 +137,7 @@ async def test_fan_set_on(hass: HomeAssistant, init_integration) -> None:
     assert entry.unique_id == uid
 
     with patch("homeassistant.components.freedompro.fan.put_state") as mock_put_state:
-        assert await hass.services.async_call(
+        await hass.services.async_call(
             FAN_DOMAIN,
             SERVICE_TURN_ON,
             {ATTR_ENTITY_ID: [entity_id]},
@@ -177,7 +177,7 @@ async def test_fan_set_percent(hass: HomeAssistant, init_integration) -> None:
     assert entry.unique_id == uid
 
     with patch("homeassistant.components.freedompro.fan.put_state") as mock_put_state:
-        assert await hass.services.async_call(
+        await hass.services.async_call(
             FAN_DOMAIN,
             SERVICE_SET_PERCENTAGE,
             {ATTR_ENTITY_ID: [entity_id], ATTR_PERCENTAGE: 40},

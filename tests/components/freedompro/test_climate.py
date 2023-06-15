@@ -101,7 +101,7 @@ async def test_climate_set_off(hass: HomeAssistant, init_integration) -> None:
     with patch(
         "homeassistant.components.freedompro.climate.put_state"
     ) as mock_put_state:
-        assert await hass.services.async_call(
+        await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_HVAC_MODE,
             {ATTR_ENTITY_ID: [entity_id], ATTR_HVAC_MODE: HVACMode.OFF},
@@ -156,7 +156,7 @@ async def test_climate_set_temperature(hass: HomeAssistant, init_integration) ->
     with patch(
         "homeassistant.components.freedompro.climate.put_state"
     ) as mock_put_state:
-        assert await hass.services.async_call(
+        await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_TEMPERATURE,
             {
@@ -200,7 +200,7 @@ async def test_climate_set_temperature_unsupported_hvac_mode(
     assert entry
     assert entry.unique_id == uid
 
-    assert await hass.services.async_call(
+    await hass.services.async_call(
         CLIMATE_DOMAIN,
         SERVICE_SET_TEMPERATURE,
         {

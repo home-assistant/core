@@ -49,7 +49,7 @@ async def test_switch_on(hass: HomeAssistant) -> None:
     await setup_platform(hass, SWITCH_DOMAIN)
 
     with patch("jaraco.abode.devices.switch.Switch.switch_on") as mock_switch_on:
-        assert await hass.services.async_call(
+        await hass.services.async_call(
             SWITCH_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: DEVICE_ID}, blocking=True
         )
         await hass.async_block_till_done()
@@ -62,7 +62,7 @@ async def test_switch_off(hass: HomeAssistant) -> None:
     await setup_platform(hass, SWITCH_DOMAIN)
 
     with patch("jaraco.abode.devices.switch.Switch.switch_off") as mock_switch_off:
-        assert await hass.services.async_call(
+        await hass.services.async_call(
             SWITCH_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: DEVICE_ID}, blocking=True
         )
         await hass.async_block_till_done()

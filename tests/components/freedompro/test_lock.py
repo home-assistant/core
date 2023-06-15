@@ -90,7 +90,7 @@ async def test_lock_set_unlock(hass: HomeAssistant, init_integration) -> None:
     assert entry.unique_id == uid
 
     with patch("homeassistant.components.freedompro.lock.put_state") as mock_put_state:
-        assert await hass.services.async_call(
+        await hass.services.async_call(
             LOCK_DOMAIN,
             SERVICE_UNLOCK,
             {ATTR_ENTITY_ID: [entity_id]},
@@ -127,7 +127,7 @@ async def test_lock_set_lock(hass: HomeAssistant, init_integration) -> None:
     assert entry.unique_id == uid
 
     with patch("homeassistant.components.freedompro.lock.put_state") as mock_put_state:
-        assert await hass.services.async_call(
+        await hass.services.async_call(
             LOCK_DOMAIN,
             SERVICE_LOCK,
             {ATTR_ENTITY_ID: [entity_id]},
