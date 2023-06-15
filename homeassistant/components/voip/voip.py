@@ -11,7 +11,13 @@ import time
 from typing import TYPE_CHECKING
 
 import async_timeout
-from voip_utils import CallInfo, RtpDatagramProtocol, SdpInfo, VoipDatagramProtocol
+from voip_utils import (
+    CallInfo,
+    RtcpState,
+    RtpDatagramProtocol,
+    SdpInfo,
+    VoipDatagramProtocol,
+)
 
 from homeassistant.components import stt, tts
 from homeassistant.components.assist_pipeline import (
@@ -46,7 +52,10 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def make_protocol(
-    hass: HomeAssistant, devices: VoIPDevices, call_info: CallInfo
+    hass: HomeAssistant,
+    devices: VoIPDevices,
+    call_info: CallInfo,
+    rtcp_state: RtcpState,
 ) -> VoipDatagramProtocol:
     """Plays a pre-recorded message if pipeline is misconfigured."""
     voip_device = devices.async_get_or_create(call_info)
@@ -70,6 +79,7 @@ def make_protocol(
             hass,
             "problem.pcm",
             opus_payload_type=call_info.opus_payload_type,
+            rtcp_state=rtcp_state,
         )
 
     vad_sensitivity = pipeline_select.get_vad_sensitivity(
@@ -86,6 +96,7 @@ def make_protocol(
         Context(user_id=devices.config_entry.data["user"]),
         opus_payload_type=call_info.opus_payload_type,
         silence_seconds=VadSensitivity.to_seconds(vad_sensitivity),
+        rtcp_state=rtcp_state,
     )
 
 
@@ -101,13 +112,14 @@ class HassVoipDatagramProtocol(VoipDatagramProtocol):
                 session_name="voip_hass",
                 version=__version__,
             ),
-            valid_protocol_factory=lambda call_info: make_protocol(
-                hass, devices, call_info
+            valid_protocol_factory=lambda call_info, rtcp_state: make_protocol(
+                hass, devices, call_info, rtcp_state
             ),
-            invalid_protocol_factory=lambda call_info: PreRecordMessageProtocol(
+            invalid_protocol_factory=lambda call_info, rtcp_state: PreRecordMessageProtocol(
                 hass,
                 "not_configured.pcm",
                 opus_payload_type=call_info.opus_payload_type,
+                rtcp_state=rtcp_state,
             ),
         )
         self.hass = hass
@@ -138,6 +150,7 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
         voip_device: VoIPDevice,
         context: Context,
         opus_payload_type: int,
+        rtcp_state: RtcpState,
         pipeline_timeout: float = 30.0,
         audio_timeout: float = 2.0,
         buffered_chunks_before_speech: int = 100,
@@ -150,6 +163,7 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
     ) -> None:
         """Set up pipeline RTP server."""
         super().__init__(
+            rtcp_state=rtcp_state,
             rate=RATE,
             width=WIDTH,
             channels=CHANNELS,
@@ -452,11 +466,13 @@ class PreRecordMessageProtocol(RtpDatagramProtocol):
         hass: HomeAssistant,
         file_name: str,
         opus_payload_type: int,
+        rtcp_state: RtcpState,
         message_delay: float = 1.0,
         loop_delay: float = 2.0,
     ) -> None:
         """Set up RTP server."""
         super().__init__(
+            rtcp_state=rtcp_state,
             rate=RATE,
             width=WIDTH,
             channels=CHANNELS,
