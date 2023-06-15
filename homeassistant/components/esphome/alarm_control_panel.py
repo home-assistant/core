@@ -6,6 +6,7 @@ from aioesphomeapi import (
     AlarmControlPanelEntityState,
     AlarmControlPanelInfo,
     AlarmControlPanelState,
+    APIIntEnum,
 )
 
 from homeassistant.components.alarm_control_panel import (
@@ -49,6 +50,17 @@ _ESPHOME_ACP_STATE_TO_HASS_STATE: EsphomeEnumMapper[
 )
 
 
+class EspHomeACPFeatures(APIIntEnum):
+    """ESPHome AlarmCintolPanel feature numbers."""
+
+    ARM_HOME = 1
+    ARM_AWAY = 2
+    ARM_NIGHT = 4
+    TRIGGER = 8
+    ARM_CUSTOM_BYPASS = 16
+    ARM_VACATION = 32
+
+
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
@@ -78,7 +90,20 @@ class EsphomeAlarmControlPanel(
     @property
     def supported_features(self) -> AlarmControlPanelEntityFeature:
         """Return the list of supported features."""
-        return AlarmControlPanelEntityFeature(self._static_info.supported_features)
+        feature = 0
+        if self._static_info.supported_features & EspHomeACPFeatures.ARM_HOME:
+            feature |= AlarmControlPanelEntityFeature.ARM_HOME
+        if self._static_info.supported_features & EspHomeACPFeatures.ARM_AWAY:
+            feature |= AlarmControlPanelEntityFeature.ARM_AWAY
+        if self._static_info.supported_features & EspHomeACPFeatures.ARM_NIGHT:
+            feature |= AlarmControlPanelEntityFeature.ARM_NIGHT
+        if self._static_info.supported_features & EspHomeACPFeatures.TRIGGER:
+            feature |= AlarmControlPanelEntityFeature.TRIGGER
+        if self._static_info.supported_features & EspHomeACPFeatures.ARM_CUSTOM_BYPASS:
+            feature |= AlarmControlPanelEntityFeature.ARM_CUSTOM_BYPASS
+        if self._static_info.supported_features & EspHomeACPFeatures.ARM_VACATION:
+            feature |= AlarmControlPanelEntityFeature.ARM_VACATION
+        return AlarmControlPanelEntityFeature(feature)
 
     @property
     def code_format(self) -> CodeFormat | None:
