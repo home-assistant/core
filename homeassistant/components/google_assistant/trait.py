@@ -914,37 +914,39 @@ class TemperatureControlTrait(_Trait):
 
     def sync_attributes(self):
         """Return temperature attributes for a sync request."""
+        response = {}
         domain = self.state.domain
+        attrs = self.state.attributes
         unit = self.hass.config.units.temperature_unit
+        response["temperatureUnitForUX"] = _google_temp_unit(unit)
+
         if domain == water_heater.DOMAIN:
-            min_temp = TemperatureConverter.convert(
-                self.state.attributes[water_heater.ATTR_MIN_TEMP],
-                unit,
-                UnitOfTemperature.CELSIUS,
+            min_temp = round(
+                TemperatureConverter.convert(
+                    float(attrs[water_heater.ATTR_MIN_TEMP]),
+                    unit,
+                    UnitOfTemperature.CELSIUS,
+                )
             )
-            max_temp = TemperatureConverter.convert(
-                self.state.attributes[water_heater.ATTR_MAX_TEMP],
-                unit,
-                UnitOfTemperature.CELSIUS,
+            max_temp = round(
+                TemperatureConverter.convert(
+                    float(attrs[water_heater.ATTR_MAX_TEMP]),
+                    unit,
+                    UnitOfTemperature.CELSIUS,
+                )
             )
-            if unit == UnitOfTemperature.FAHRENHEIT:
-                min_temp = round(min_temp)
-                max_temp = round(max_temp)
-            return {
-                "temperatureUnitForUX": _google_temp_unit(unit),
-                "temperatureRange": {
-                    "minThresholdCelsius": min_temp,
-                    "maxThresholdCelsius": max_temp,
-                },
+            response["temperatureRange"] = {
+                "minThresholdCelsius": min_temp,
+                "maxThresholdCelsius": max_temp,
             }
-        return {
-            "temperatureUnitForUX": _google_temp_unit(unit),
-            "queryOnlyTemperatureControl": True,
-            "temperatureRange": {
+        else:
+            response["queryOnlyTemperatureControl"] = True
+            response["temperatureRange"] = {
                 "minThresholdCelsius": -100,
                 "maxThresholdCelsius": 100,
-            },
-        }
+            }
+
+        return response
 
     def query_attributes(self):
         """Return temperature states."""
