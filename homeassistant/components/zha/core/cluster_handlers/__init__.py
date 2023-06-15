@@ -3,11 +3,12 @@ from __future__ import annotations
 
 import asyncio
 from enum import Enum
-from functools import partialmethod, wraps
+from functools import partialmethod
 import logging
 from typing import TYPE_CHECKING, Any, TypedDict
 
 import zigpy.exceptions
+import zigpy.util
 import zigpy.zcl
 from zigpy.zcl.foundation import (
     CommandSchema,
@@ -45,6 +46,8 @@ if TYPE_CHECKING:
 
 _LOGGER = logging.getLogger(__name__)
 
+retry_request = zigpy.util.retryable_request(tries=3)
+
 
 class AttrReportConfig(TypedDict, total=True):
     """Configuration to report for the attributes."""
@@ -73,35 +76,6 @@ def parse_and_log_command(cluster_handler, tsn, command_id, args):
     return name
 
 
-def decorate_command(cluster_handler, command):
-    """Wrap a cluster command to make it safe."""
-
-    @wraps(command)
-    async def wrapper(*args, **kwds):
-        try:
-            result = await command(*args, **kwds)
-            cluster_handler.debug(
-                "executed '%s' command with args: '%s' kwargs: '%s' result: %s",
-                command.__name__,
-                args,
-                kwds,
-                result,
-            )
-            return result
-
-        except (zigpy.exceptions.ZigbeeException, asyncio.TimeoutError) as ex:
-            cluster_handler.debug(
-                "command failed: '%s' args: '%s' kwargs '%s' exception: '%s'",
-                command.__name__,
-                args,
-                kwds,
-                str(ex),
-            )
-            return ex
-
-    return wrapper
-
-
 class ClusterHandlerStatus(Enum):
     """Status of a cluster handler."""
 
@@ -119,7 +93,7 @@ class ClusterHandler(LogMixin):
     # Dict of attributes to read on cluster handler initialization.
     # Dict keys -- attribute ID or names, with bool value indicating whether a cached
     # attribute read is acceptable.
-    ZCL_INIT_ATTRS: dict[int | str, bool] = {}
+    ZCL_INIT_ATTRS: dict[str, bool] = {}
 
     def __init__(self, cluster: zigpy.zcl.Cluster, endpoint: Endpoint) -> None:
         """Initialize ClusterHandler."""
@@ -396,7 +370,7 @@ class ClusterHandler(LogMixin):
         """Handle commands received to this cluster."""
 
     @callback
-    def attribute_updated(self, attrid, value):
+    def attribute_updated(self, attrid: int, value: Any, _: Any) -> None:
         """Handle attribute updates on this cluster."""
         self.async_send_signal(
             f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}",
@@ -462,7 +436,7 @@ class ClusterHandler(LogMixin):
     async def _get_attributes(
         self,
         raise_exceptions: bool,
-        attributes: list[int | str],
+        attributes: list[str],
         from_cache: bool = True,
         only_cache: bool = True,
     ) -> dict[int | str, Any]:
@@ -510,7 +484,8 @@ class ClusterHandler(LogMixin):
         if hasattr(self._cluster, name) and callable(getattr(self._cluster, name)):
             command = getattr(self._cluster, name)
             command.__name__ = name
-            return decorate_command(self, command)
+
+            return retry_request(command)
         return self.__getattribute__(name)
 
 
@@ -568,7 +543,7 @@ class ClientClusterHandler(ClusterHandler):
     """ClusterHandler for Zigbee client (output) clusters."""
 
     @callback
-    def attribute_updated(self, attrid, value):
+    def attribute_updated(self, attrid: int, value: Any, _: Any) -> None:
         """Handle an attribute updated on this cluster."""
 
         try:
