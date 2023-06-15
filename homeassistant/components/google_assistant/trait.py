@@ -963,7 +963,7 @@ class TemperatureControlTrait(_Trait):
                     ),
                     1,
                 )
-            if current_temp not in (STATE_UNKNOWN, STATE_UNAVAILABLE):
+            if current_temp is not None:
                 response["temperatureAmbientCelsius"] = round(
                     TemperatureConverter.convert(
                         float(current_temp),
