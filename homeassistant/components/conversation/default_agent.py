@@ -3,13 +3,13 @@ from __future__ import annotations
 
 import asyncio
 from collections import defaultdict
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
+import contextlib
 from dataclasses import dataclass
 import functools
 import logging
 from pathlib import Path
 import re
-import threading
 from typing import IO, Any
 
 from hassil.intents import Intents, ResponseType, SlotList, TextSlotList
@@ -44,6 +44,7 @@ _DEFAULT_ERROR_TEXT = "Sorry, I couldn't understand that"
 _ENTITY_REGISTRY_UPDATE_FIELDS = ["aliases", "name", "original_name"]
 
 REGEX_TYPE = type(re.compile(""))
+TRIGGER_CALLBACK_TYPE = Callable[[], str | None]  # pylint: disable=invalid-name
 
 
 def json_load(fp: IO[str]) -> JsonObjectType:
@@ -81,7 +82,7 @@ def _get_language_variations(language: str) -> Iterable[str]:
 class TriggerAction:
     """Action to take when a trigger sentence is matched."""
 
-    callback: core.CALLBACK_TYPE
+    callback: TRIGGER_CALLBACK_TYPE
     response: str | None = None
 
 
@@ -123,7 +124,6 @@ class DefaultAgent(AbstractConversationAgent):
         # Sentences that will trigger a callback (skipping intent recognition)
         self._trigger_sentences: dict[str, list[TriggerAction]] = defaultdict(list)
         self._trigger_intents: Intents | None = None
-        self._trigger_lock = threading.Lock()
 
     @property
     def supported_languages(self) -> list[str]:
@@ -623,15 +623,16 @@ class DefaultAgent(AbstractConversationAgent):
     def register_trigger(
         self,
         sentences: list[str],
-        callback: core.CALLBACK_TYPE,
+        callback: TRIGGER_CALLBACK_TYPE,
         response: str | None = None,
     ) -> core.CALLBACK_TYPE:
         """Register a list of sentences that will trigger a callback when recognized."""
         action = TriggerAction(callback, response=response)
-        with self._trigger_lock:
-            for sentence in sentences:
-                self._trigger_sentences[sentence].append(action)
-            self._rebuild_trigger_intents()
+        for sentence in sentences:
+            self._trigger_sentences[sentence].append(action)
+
+        # Force rebuild on next use
+        self._trigger_intents = None
 
         unregister = functools.partial(self._unregister_trigger, sentences, action)
         return unregister
@@ -646,20 +647,21 @@ class DefaultAgent(AbstractConversationAgent):
             },
         }
 
-        _LOGGER.debug("Rebuilt trigger intents: %s", intents_dict)
         self._trigger_intents = Intents.from_dict(intents_dict)
+        _LOGGER.debug("Rebuilt trigger intents: %s", intents_dict)
 
     def _unregister_trigger(self, sentences: list[str], action: TriggerAction) -> None:
         """Unregister a callback from a list of trigger sentences."""
-        with self._trigger_lock:
-            for sentence in sentences:
+        for sentence in sentences:
+            with contextlib.suppress(ValueError):
                 self._trigger_sentences[sentence].remove(action)
 
-                # Remove sentences with no callbacks
-                if not self._trigger_sentences[sentence]:
-                    self._trigger_sentences.pop(sentence)
+            # Remove sentences with no callbacks
+            if not self._trigger_sentences[sentence]:
+                self._trigger_sentences.pop(sentence, None)
 
-            self._rebuild_trigger_intents()
+        # Force rebuild on next use
+        self._trigger_intents = None
 
     def _match_triggers(self, sentence: str) -> ConversationResult | None:
         """Try to match sentence against registered trigger sentences.
@@ -667,26 +669,30 @@ class DefaultAgent(AbstractConversationAgent):
         Calls the registered callbacks if there's a match and returns a positive
         conversation result.
         """
-        with self._trigger_lock:
-            if self._trigger_intents is None:
-                # No triggers registered
-                return None
+        if not self._trigger_sentences:
+            # No triggers registered
+            return None
 
-            result = recognize(sentence, self._trigger_intents)
-            if result is None:
-                # No match
-                _LOGGER.debug("Sentence does match any triggers: %s", sentence)
-                return None
+        if self._trigger_intents is None:
+            # Need to rebuild intents before matching
+            self._rebuild_trigger_intents()
 
-            actions = self._trigger_sentences[result.intent.name]
+        assert self._trigger_intents is not None
+        result = recognize(sentence, self._trigger_intents)
+        if result is None:
+            # No match
+            _LOGGER.debug("Sentence does match any triggers: %s", sentence)
+            return None
+
+        actions = self._trigger_sentences[result.intent.name]
 
         # Call the registered callbacks for this sentence
         _LOGGER.debug("Running %s callback(s) for trigger", len(actions))
         speech = ""
         for action in actions:
-            action.callback()
-            if action.response is not None:
-                speech = action.response
+            action_response = action.callback()
+            if action_response is not None:
+                speech = action_response
 
         response = intent.IntentResponse(language=self.hass.config.language)
         response.response_type = intent.IntentResponseType.ACTION_DONE
