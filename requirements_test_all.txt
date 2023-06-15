@@ -1808,7 +1808,7 @@ sunwatcher==0.2.1
 surepy==0.8.0
 
 # homeassistant.components.system_bridge
-systembridgeconnector==3.4.8
+systembridgeconnector==3.4.9
 
 # homeassistant.components.tailscale
 tailscale==0.2.0
@@ -2006,7 +2006,7 @@ zeroconf==0.66.0
 zeversolar==0.3.1
 
 # homeassistant.components.zha
-zha-quirks==0.0.100
+zha-quirks==0.0.101
 
 # homeassistant.components.zha
 zigpy-deconz==0.21.0
@@ -2021,7 +2021,7 @@ zigpy-zigate==0.11.0
 zigpy-znp==0.11.1
 
 # homeassistant.components.zha
-zigpy==0.55.0
+zigpy==0.56.0
 
 # homeassistant.components.zwave_js
 zwave-js-server-python==0.49.0

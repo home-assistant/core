@@ -401,6 +401,7 @@ class ZHANumberConfigurationEntity(ZhaEntity, NumberEntity):
         cluster_handler = cluster_handlers[0]
         if (
             cls._zcl_attribute in cluster_handler.cluster.unsupported_attributes
+            or cls._zcl_attribute not in cluster_handler.cluster.attributes_by_name
             or cluster_handler.cluster.get(cls._zcl_attribute) is None
         ):
             _LOGGER.debug(
