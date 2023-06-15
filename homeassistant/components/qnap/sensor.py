@@ -58,7 +58,10 @@ async def async_setup_entry(
     sensors: list[QNAPSensor] = []
 
     sensors.extend(
-        [QNAPSystemSensor(coordinator, description, uid) for description in _SYS_SENSORS]
+        [
+            QNAPSystemSensor(coordinator, description, uid)
+            for description in _SYS_SENSORS
+        ]
     )
 
     sensors.extend(
@@ -66,7 +69,10 @@ async def async_setup_entry(
     )
 
     sensors.extend(
-        [QNAPMemorySensor(coordinator, description, uid) for description in _MEM_SENSORS]
+        [
+            QNAPMemorySensor(coordinator, description, uid)
+            for description in _MEM_SENSORS
+        ]
     )
 
     # Network sensors
