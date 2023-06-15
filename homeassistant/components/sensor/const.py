@@ -33,6 +33,7 @@ from homeassistant.const import (
     UnitOfTemperature,
     UnitOfTime,
     UnitOfVolume,
+    UnitOfVolumeFlowRate,
     UnitOfVolumetricFlux,
 )
 from homeassistant.util.unit_conversion import (
@@ -381,6 +382,18 @@ class SensorDeviceClass(StrEnum):
     USCS/imperial units are currently assumed to be US volumes)
     """
 
+    VOLUME_RATE = "volume_rate"
+    """Generic volume rate.
+    
+    Use this device class for sensors measuring a volume rate, for example the flow
+    rate of water, air or another substance.
+    
+    Unit of measurement: `UnitOfVolumeFlowRate` enum values
+    - SI / metric: `m³/h`, `L/m`
+    - USCS / imperial: `ft³/m"` (warning: volumes expressed in
+    USCS/imperial units are currently assumed to be US volumes)
+    """
+
     WATER = "water"
     """Water.
 
@@ -535,6 +548,7 @@ DEVICE_CLASS_UNITS: dict[SensorDeviceClass, set[type[StrEnum] | str | None]] = {
     },
     SensorDeviceClass.VOLTAGE: set(UnitOfElectricPotential),
     SensorDeviceClass.VOLUME: set(UnitOfVolume),
+    SensorDeviceClass.VOLUME_RATE: set(UnitOfVolumeFlowRate),
     SensorDeviceClass.WATER: {
         UnitOfVolume.CENTUM_CUBIC_FEET,
         UnitOfVolume.CUBIC_FEET,
@@ -599,6 +613,7 @@ DEVICE_CLASS_STATE_CLASSES: dict[SensorDeviceClass, set[SensorStateClass]] = {
         SensorStateClass.TOTAL_INCREASING,
     },
     SensorDeviceClass.VOLUME_STORAGE: {SensorStateClass.MEASUREMENT},
+    SensorDeviceClass.VOLUME_RATE: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.WATER: {
         SensorStateClass.TOTAL,
         SensorStateClass.TOTAL_INCREASING,
