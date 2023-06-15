@@ -57,8 +57,11 @@ class PhilipsTVRecordingTimeNext(
     @property
     def native_value(self) -> datetime | None:
         """Return sensor state."""
+        rec_scheduled = False
+
         for rec in self.coordinator.api.recordings_list["recordings"]:
             if rec["RecordingType"] == "RECORDING_SCHEDULED":
+                rec_scheduled = True
                 rec_time_planned = rec["StartTime"]
                 rec_margin_start = rec["MarginStart"]
                 rec_time = rec_time_planned - rec_margin_start
@@ -66,7 +69,7 @@ class PhilipsTVRecordingTimeNext(
                 if rec_time < self.next_time:
                     self.next_time = rec_time
 
-        if self.next_time == MAX_UNIX_TIME:
+        if (self.next_time == MAX_UNIX_TIME) or not rec_scheduled:
             return None
 
         return datetime.fromtimestamp(self.next_time, tz=timezone.utc)
