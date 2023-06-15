@@ -91,8 +91,7 @@ class Debouncer(Generic[_R_co]):
                 return
 
             try:
-                task = self.hass.async_run_hass_job(self._job)
-                if task:
+                if task := self.hass.async_run_hass_job(self._job):
                     await task
             finally:
                 self._schedule_timer()
@@ -113,8 +112,7 @@ class Debouncer(Generic[_R_co]):
                 return
 
             try:
-                task = self.hass.async_run_hass_job(self._job)
-                if task:
+                if task := self.hass.async_run_hass_job(self._job):
                     await task
             except Exception:  # pylint: disable=broad-except
                 self.logger.exception("Unexpected exception from %s", self.function)
