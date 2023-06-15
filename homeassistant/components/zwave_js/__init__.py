@@ -209,6 +209,9 @@ async def start_client(
     LOGGER.info("Connection to Zwave JS Server initialized")
 
     assert client.driver
+    async_dispatcher_send(
+        hass, f"{DOMAIN}_{client.driver.controller.home_id}_connected_to_server"
+    )
 
     await driver_events.setup(client.driver)
 

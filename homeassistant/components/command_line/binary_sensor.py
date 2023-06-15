@@ -30,6 +30,7 @@ from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.util import dt as dt_util
 
 from .const import CONF_COMMAND_TIMEOUT, DEFAULT_TIMEOUT, DOMAIN, LOGGER
 from .sensor import CommandSensorData
@@ -183,3 +184,10 @@ class CommandBinarySensor(BinarySensorEntity):
             self._attr_is_on = False
 
         self.async_write_ha_state()
+
+    async def async_update(self) -> None:
+        """Update the entity.
+
+        Only used by the generic entity update service.
+        """
+        await self._update_entity_state(dt_util.now())

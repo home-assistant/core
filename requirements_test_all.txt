@@ -515,7 +515,7 @@ easyenergy==0.3.0
 elgato==4.0.1
 
 # homeassistant.components.elkm1
-elkm1-lib==2.2.2
+elkm1-lib==2.2.5
 
 # homeassistant.components.elmax
 elmax_api==0.0.4
@@ -791,7 +791,7 @@ justnimbus==0.6.0
 kegtron-ble==0.4.0
 
 # homeassistant.components.knx
-knx_frontend==2023.5.31.141540
+knx-frontend==2023.6.9.195839
 
 # homeassistant.components.konnected
 konnected==1.2.0
@@ -1164,7 +1164,7 @@ pycoolmasternet-async==0.1.5
 pycsspeechtts==1.0.8
 
 # homeassistant.components.daikin
-pydaikin==2.9.1
+pydaikin==2.9.0
 
 # homeassistant.components.deconz
 pydeconz==112
@@ -1248,7 +1248,7 @@ pyialarm==2.2.0
 pyicloud==1.0.0
 
 # homeassistant.components.insteon
-pyinsteon==1.4.2
+pyinsteon==1.4.3
 
 # homeassistant.components.ipma
 pyipma==3.0.6
@@ -1302,7 +1302,7 @@ pylibrespot-java==0.1.1
 pylitejet==0.5.0
 
 # homeassistant.components.litterrobot
-pylitterbot==2023.4.0
+pylitterbot==2023.4.2
 
 # homeassistant.components.lutron_caseta
 pylutron-caseta==0.18.1
@@ -1579,7 +1579,7 @@ pytrafikverket==0.3.3
 pyudev==0.23.2
 
 # homeassistant.components.unifiprotect
-pyunifiprotect==4.10.2
+pyunifiprotect==4.10.3
 
 # homeassistant.components.uptimerobot
 pyuptimerobot==22.2.0
@@ -1630,7 +1630,7 @@ radiotherm==2.1.0
 rapt-ble==0.1.1
 
 # homeassistant.components.rainmachine
-regenmaschine==2023.05.1
+regenmaschine==2023.06.0
 
 # homeassistant.components.renault
 renault-api==0.1.13
@@ -1953,7 +1953,7 @@ xiaomi-ble==0.17.2
 xknx==2.10.0
 
 # homeassistant.components.knx
-xknxproject==3.1.0
+xknxproject==3.1.1
 
 # homeassistant.components.bluesound
 # homeassistant.components.fritz
@@ -1968,7 +1968,7 @@ yalesmartalarmclient==0.3.9
 
 # homeassistant.components.august
 # homeassistant.components.yalexs_ble
-yalexs-ble==2.1.17
+yalexs-ble==2.1.18
 
 # homeassistant.components.august
 yalexs==1.5.1
