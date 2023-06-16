@@ -507,7 +507,10 @@ class ServiceIntentHandler(IntentHandler):
         )
 
     async def _run_then_background(self, task: asyncio.Task) -> None:
-        """Run a task for a short timeout to (hopefully) catch validation errors, and then background it."""
+        """Run task with timeout to (hopefully) catch validation errors.
+
+        After the timeout the task will continue to run in the background.
+        """
         try:
             await asyncio.wait({task}, timeout=self.service_timeout)
         except asyncio.TimeoutError:
