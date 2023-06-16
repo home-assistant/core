@@ -380,7 +380,6 @@ class Entity(ABC):
 
     def _device_class_name(self) -> str | None:
         """Return a translated name of the entity based on its device class."""
-        assert self.platform
         if not self.has_entity_name:
             return None
         device_class_key = self.device_class or "_"
