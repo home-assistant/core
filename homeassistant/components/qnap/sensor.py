@@ -45,76 +45,6 @@ ATTR_UPTIME = "Uptime"
 ATTR_VOLUME_SIZE = "Volume Size"
 
 
-async def async_setup_entry(
-    hass: HomeAssistant,
-    config_entry: config_entries.ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
-) -> None:
-    """Set up entry."""
-    coordinator = QnapCoordinator(hass, config_entry)
-    await coordinator.async_refresh()
-    if not coordinator.last_update_success:
-        raise PlatformNotReady
-    uid = config_entry.unique_id
-    sensors: list[QNAPSensor] = []
-
-    sensors.extend(
-        [
-            QNAPSystemSensor(coordinator, description, uid)
-            for description in _SYSTEM_MON_COND
-        ]
-    )
-
-    sensors.extend(
-        [QNAPCPUSensor(coordinator, description, uid) for description in _CPU_MON_COND]
-    )
-
-    sensors.extend(
-        [
-            QNAPMemorySensor(coordinator, description, uid)
-            for description in _MEMORY_MON_COND
-        ]
-    )
-
-    # Network sensors
-    sensors.extend(
-        [
-            QNAPNetworkSensor(coordinator, description, uid, nic)
-            for nic in coordinator.data["system_stats"]["nics"]
-            for description in _NETWORK_MON_COND
-        ]
-    )
-
-    # Drive sensors
-    sensors.extend(
-        [
-            QNAPDriveSensor(coordinator, description, uid, drive)
-            for drive in coordinator.data["smart_drive_health"]
-            for description in _DRIVE_MON_COND
-        ]
-    )
-
-    # Volume sensors
-    sensors.extend(
-        [
-            QNAPVolumeSensor(coordinator, description, uid, volume)
-            for volume in coordinator.data["volumes"]
-            for description in _VOLUME_MON_COND
-        ]
-    )
-    async_add_entities(sensors)
-
-
-def round_nicely(number):
-    """Round a number based on its size (so it looks nice)."""
-    if number < 10:
-        return round(number, 2)
-    if number < 100:
-        return round(number, 1)
-
-    return round(number)
-
-
 _SYSTEM_MON_COND: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="status",
@@ -237,6 +167,76 @@ _VOLUME_MON_COND: tuple[SensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
     ),
 )
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: config_entries.ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up entry."""
+    coordinator = QnapCoordinator(hass, config_entry)
+    await coordinator.async_refresh()
+    if not coordinator.last_update_success:
+        raise PlatformNotReady
+    uid = config_entry.unique_id
+    sensors: list[QNAPSensor] = []
+
+    sensors.extend(
+        [
+            QNAPSystemSensor(coordinator, description, uid)
+            for description in _SYSTEM_MON_COND
+        ]
+    )
+
+    sensors.extend(
+        [QNAPCPUSensor(coordinator, description, uid) for description in _CPU_MON_COND]
+    )
+
+    sensors.extend(
+        [
+            QNAPMemorySensor(coordinator, description, uid)
+            for description in _MEMORY_MON_COND
+        ]
+    )
+
+    # Network sensors
+    sensors.extend(
+        [
+            QNAPNetworkSensor(coordinator, description, uid, nic)
+            for nic in coordinator.data["system_stats"]["nics"]
+            for description in _NETWORK_MON_COND
+        ]
+    )
+
+    # Drive sensors
+    sensors.extend(
+        [
+            QNAPDriveSensor(coordinator, description, uid, drive)
+            for drive in coordinator.data["smart_drive_health"]
+            for description in _DRIVE_MON_COND
+        ]
+    )
+
+    # Volume sensors
+    sensors.extend(
+        [
+            QNAPVolumeSensor(coordinator, description, uid, volume)
+            for volume in coordinator.data["volumes"]
+            for description in _VOLUME_MON_COND
+        ]
+    )
+    async_add_entities(sensors)
+
+
+def round_nicely(number):
+    """Round a number based on its size (so it looks nice)."""
+    if number < 10:
+        return round(number, 2)
+    if number < 100:
+        return round(number, 1)
+
+    return round(number)
 
 
 class QNAPSensor(CoordinatorEntity[QnapCoordinator], SensorEntity):
