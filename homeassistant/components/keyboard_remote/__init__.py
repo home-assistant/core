@@ -251,7 +251,8 @@ class KeyboardRemote:
             self.emulate_key_hold_repeat = dev_block[EMULATE_KEY_HOLD_REPEAT]
             self.monitor_task = None
             self.dev = None
-            self.descriptor = dev_block.get(DEVICE_DESCRIPTOR)
+            self.config_descriptor = dev_block.get(DEVICE_DESCRIPTOR)
+            self.descriptor = None
 
         async def async_device_keyrepeat(self, code, delay, repeat):
             """Emulate keyboard delay/repeat behaviour by sending key events on a timer."""
@@ -274,9 +275,12 @@ class KeyboardRemote:
             _LOGGER.debug("Keyboard async_device_start_monitoring, %s", dev.name)
             if self.monitor_task is None:
                 self.dev = dev
-                # only update descriptor if it is not set (if the device is being monitored by name vs path)
-                if not self.descriptor:
+                # set the descriptor to the one provided to the config if any, falling back to the device path if not set
+                if self.config_descriptor:
+                    self.descriptor = self.config_descriptor
+                else:
                     self.descriptor = self.dev.path
+
                 self.monitor_task = self.hass.async_create_task(
                     self.async_device_monitor_input()
                 )
@@ -312,6 +316,7 @@ class KeyboardRemote:
                 )
                 _LOGGER.debug("Keyboard disconnected, %s", self.dev.name)
                 self.dev = None
+                self.descriptor = self.config_descriptor
 
         async def async_device_monitor_input(self):
             """Event monitoring loop.
