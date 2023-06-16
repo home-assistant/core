@@ -36,10 +36,6 @@ class TrelloSensor(CoordinatorEntity[TrelloDataUpdateCoordinator], SensorEntity)
         self._attr_name = _list["name"]
         self._attr_has_entity_name = True
 
-    def update(self) -> None:
-        """Set the card count for the sensor's list."""
-        self._attr_native_value = self.coordinator.data[self.list_id]
-
     @property
     def native_value(self) -> int:
         """Return the card count of the sensor's list."""
