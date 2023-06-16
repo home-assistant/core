@@ -14,7 +14,7 @@ from . import TrelloAdapter
 from .const import (
     CONF_API_TOKEN,
     CONF_BOARD_IDS,
-    CONF_OPTIONS_BOARDS,
+    CONF_BOARDS,
     CONF_USER_EMAIL,
     CONF_USER_ID,
     DOMAIN,
@@ -84,7 +84,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured()
 
         config_data: dict[str, str] = self._get_config_data()
-        config_options = {CONF_OPTIONS_BOARDS: boards}
+        config_options = {CONF_BOARDS: boards}
 
         return self.async_create_entry(
             title=self.user_email, data=config_data, options=config_options
