@@ -244,7 +244,9 @@ async def test_trigger_sentences(hass: HomeAssistant, init_components) -> None:
     # Using different case and including punctuation
     test_sentences = ["it's party time!", "IT IS TIME TO PARTY."]
     for sentence in test_sentences:
+        callback.reset_mock()
         result = await conversation.async_converse(hass, sentence, None, Context())
+        callback.assert_called_once_with(sentence)
         assert (
             result.response.response_type == intent.IntentResponseType.ACTION_DONE
         ), sentence
@@ -255,10 +257,11 @@ async def test_trigger_sentences(hass: HomeAssistant, init_components) -> None:
     unregister()
 
     # Should produce errors now
+    callback.reset_mock()
     for sentence in test_sentences:
         result = await conversation.async_converse(hass, sentence, None, Context())
         assert (
             result.response.response_type == intent.IntentResponseType.ERROR
         ), sentence
 
-    assert len(callback.mock_calls) == 2
+    assert len(callback.mock_calls) == 0
