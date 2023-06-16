@@ -1,4 +1,6 @@
 """The Trello integration."""
+from __future__ import annotations
+
 from typing import Any
 
 from trello import Member, TrelloClient
@@ -42,6 +44,11 @@ class TrelloAdapter:
     def __init__(self, client: TrelloClient) -> None:
         """Initialize with Trello lib client."""
         self.client = client
+
+    @classmethod
+    def from_creds(cls, api_key: str, api_token: str) -> TrelloAdapter:
+        """Initialize with API Key and API Token."""
+        return cls(TrelloClient(api_key=api_key, api_secret=api_token))
 
     def get_member(self) -> Member:
         """Get member information."""

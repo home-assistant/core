@@ -1,7 +1,7 @@
 """Config flow for Trello integration."""
 from typing import Any
 
-from trello import Member, TrelloClient, Unauthorized
+from trello import Member, Unauthorized
 import voluptuous as vol
 from voluptuous.schema_builder import Schema
 
@@ -56,7 +56,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """
         self.api_key = user_input[CONF_API_KEY]
         self.api_token = user_input[CONF_API_TOKEN]
-        self.trello_adapter = _create_trello_adapter(
+        self.trello_adapter = TrelloAdapter.from_creds(
             user_input[CONF_API_KEY], user_input[CONF_API_TOKEN]
         )
 
@@ -130,10 +130,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def _get_current_member(self) -> Member:
         return await self.hass.async_add_executor_job(self.trello_adapter.get_member)
-
-
-def _create_trello_adapter(api_key: str, api_token: str) -> TrelloAdapter:
-    return TrelloAdapter(TrelloClient(api_key=api_key, api_secret=api_token))
 
 
 def _get_board_select_schema(boards: dict[str, dict]) -> Schema:

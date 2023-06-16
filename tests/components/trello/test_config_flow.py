@@ -31,6 +31,11 @@ class MockAdapter:
     def __init__(self, trello_client) -> None:
         """Init mock TrelloAdapter."""
 
+    @classmethod
+    def from_creds(cls, api_key: str, api_token: str):
+        """Init mock TrelloAdapter."""
+        return cls(None)
+
     def get_member(self):
         """Mock member object."""
         return SimpleNamespace(id=USER_ID, email=EMAIL_ADDR)
