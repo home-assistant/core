@@ -368,7 +368,7 @@ async def test_node_status_sensor_not_ready(
         },
         blocking=True,
     )
-
+    await hass.async_block_till_done()
     assert "There is no value to refresh for this entity" in caplog.text
 
 
@@ -755,7 +755,7 @@ async def test_statistics_sensors(
                 {ATTR_ENTITY_ID: entity_id},
                 blocking=True,
             )
-
+    await hass.async_block_till_done()
     assert caplog.text.count("There is no value to refresh for this entity") == len(
         [
             *CONTROLLER_STATISTICS_SUFFIXES,

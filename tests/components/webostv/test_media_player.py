@@ -221,7 +221,7 @@ async def test_button(hass: HomeAssistant, client) -> None:
         ATTR_BUTTON: "test",
     }
     await hass.services.async_call(DOMAIN, SERVICE_BUTTON, data, True)
-
+    await hass.async_block_till_done()
     client.button.assert_called_once()
     client.button.assert_called_with("test")
 
@@ -235,7 +235,7 @@ async def test_command(hass: HomeAssistant, client) -> None:
         ATTR_COMMAND: "test",
     }
     await hass.services.async_call(DOMAIN, SERVICE_COMMAND, data, True)
-
+    await hass.async_block_till_done()
     client.request.assert_called_with("test", payload=None)
 
 
@@ -249,7 +249,7 @@ async def test_command_with_optional_arg(hass: HomeAssistant, client) -> None:
         ATTR_PAYLOAD: {"target": "https://www.google.com"},
     }
     await hass.services.async_call(DOMAIN, SERVICE_COMMAND, data, True)
-
+    await hass.async_block_till_done()
     client.request.assert_called_with(
         "test", payload={"target": "https://www.google.com"}
     )
@@ -264,7 +264,7 @@ async def test_select_sound_output(hass: HomeAssistant, client) -> None:
         ATTR_SOUND_OUTPUT: "external_speaker",
     }
     await hass.services.async_call(DOMAIN, SERVICE_SELECT_SOUND_OUTPUT, data, True)
-
+    await hass.async_block_till_done()
     client.change_sound_output.assert_called_once_with("external_speaker")
 
 

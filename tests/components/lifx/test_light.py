@@ -683,7 +683,7 @@ async def test_matrix_flame_morph_effects(hass: HomeAssistant) -> None:
         {ATTR_ENTITY_ID: entity_id, ATTR_EFFECT: "effect_flame"},
         blocking=True,
     )
-
+    await hass.async_block_till_done()
     assert len(bulb.set_power.calls) == 1
     assert len(bulb.set_tile_effect.calls) == 1
 
@@ -824,7 +824,7 @@ async def test_lightstrip_move_effect(hass: HomeAssistant) -> None:
         {ATTR_ENTITY_ID: entity_id, ATTR_EFFECT: "effect_move"},
         blocking=True,
     )
-
+    await hass.async_block_till_done()
     assert len(bulb.set_power.calls) == 1
     assert len(bulb.set_multizone_effect.calls) == 1
 
@@ -881,6 +881,7 @@ async def test_lightstrip_move_effect(hass: HomeAssistant) -> None:
         {ATTR_ENTITY_ID: entity_id, ATTR_EFFECT: "effect_stop"},
         blocking=True,
     )
+    await hass.async_block_till_done()
     assert len(bulb.set_power.calls) == 0
     assert len(bulb.set_multizone_effect.calls) == 1
     call_dict = bulb.set_multizone_effect.calls[0][1]
