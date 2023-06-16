@@ -1086,8 +1086,9 @@ async def test_serviceregistry_callback_service_raise_exception(
 async def test_serviceregistry_return_values(hass: HomeAssistant) -> None:
     """Test service call for a service that has return values."""
 
-    def service_handler(_) -> ServiceResult:
+    def service_handler(call: ServiceCall) -> ServiceResult:
         """Service handler coroutine."""
+        assert call.return_values
         return {"test-reply": "test-value1"}
 
     hass.services.async_register(
