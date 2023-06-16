@@ -32,6 +32,7 @@ from .helpers import (
     entity_registry,
     issue_registry,
     recorder,
+    restore_state,
     template,
 )
 from .helpers.dispatcher import async_dispatcher_send
@@ -248,6 +249,7 @@ async def load_registries(hass: core.HomeAssistant) -> None:
         issue_registry.async_load(hass),
         hass.async_add_executor_job(_cache_uname_processor),
         template.async_load_custom_templates(hass),
+        restore_state.async_load(hass),
     )
 
 
@@ -389,6 +391,7 @@ def async_enable_logging(
     logging.getLogger("requests").setLevel(logging.WARNING)
     logging.getLogger("urllib3").setLevel(logging.WARNING)
     logging.getLogger("aiohttp.access").setLevel(logging.WARNING)
+    logging.getLogger("httpx").setLevel(logging.WARNING)
 
     sys.excepthook = lambda *args: logging.getLogger(None).exception(
         "Uncaught exception", exc_info=args  # type: ignore[arg-type]

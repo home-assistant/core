@@ -362,6 +362,7 @@ async def async_converse(
     context: core.Context,
     language: str | None = None,
     agent_id: str | None = None,
+    device_id: str | None = None,
 ) -> ConversationResult:
     """Process text and get intent."""
     agent = await _get_agent_manager(hass).async_get_agent(agent_id)
@@ -375,6 +376,7 @@ async def async_converse(
             text=text,
             context=context,
             conversation_id=conversation_id,
+            device_id=device_id,
             language=language,
         )
     )

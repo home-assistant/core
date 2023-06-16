@@ -25,7 +25,6 @@ async def test_create(hass: HomeAssistant) -> None:
     assert len(notifications) == 1
 
     notification = notifications[list(notifications)[0]]
-    assert notification["status"] == pn.STATUS_UNREAD
     assert notification["message"] == "Hello World 2"
     assert notification["title"] == "2 beers"
     assert notification["created_at"] is not None
@@ -66,39 +65,6 @@ async def test_dismiss_notification(hass: HomeAssistant) -> None:
     assert len(notifications) == 0
 
 
-async def test_mark_read(hass: HomeAssistant) -> None:
-    """Ensure notification is marked as Read."""
-    notifications = pn._async_get_or_create_notifications(hass)
-    assert len(notifications) == 0
-
-    await hass.services.async_call(
-        pn.DOMAIN,
-        "create",
-        {"notification_id": "Beer 2", "message": "test"},
-        blocking=True,
-    )
-
-    assert len(notifications) == 1
-    notification = notifications[list(notifications)[0]]
-    assert notification["status"] == pn.STATUS_UNREAD
-
-    await hass.services.async_call(
-        pn.DOMAIN, "mark_read", {"notification_id": "Beer 2"}, blocking=True
-    )
-
-    assert len(notifications) == 1
-    notification = notifications[list(notifications)[0]]
-    assert notification["status"] == pn.STATUS_READ
-
-    await hass.services.async_call(
-        pn.DOMAIN,
-        "dismiss",
-        {"notification_id": "Beer 2"},
-        blocking=True,
-    )
-    assert len(notifications) == 0
-
-
 async def test_ws_get_notifications(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
@@ -128,18 +94,7 @@ async def test_ws_get_notifications(
     assert notification["notification_id"] == "Beer 2"
     assert notification["message"] == "test"
     assert notification["title"] is None
-    assert notification["status"] == pn.STATUS_UNREAD
     assert notification["created_at"] is not None
-
-    # Mark Read
-    await hass.services.async_call(
-        pn.DOMAIN, "mark_read", {"notification_id": "Beer 2"}
-    )
-    await client.send_json({"id": 7, "type": "persistent_notification/get"})
-    msg = await client.receive_json()
-    notifications = msg["result"]
-    assert len(notifications) == 1
-    assert notifications[0]["status"] == pn.STATUS_READ
 
     # Dismiss
     pn.async_dismiss(hass, "Beer 2")
@@ -186,23 +141,7 @@ async def test_ws_get_subscribe(
     assert notification["notification_id"] == "Beer 2"
     assert notification["message"] == "test"
     assert notification["title"] is None
-    assert notification["status"] == pn.STATUS_UNREAD
     assert notification["created_at"] is not None
-
-    # Mark Read
-    await hass.services.async_call(
-        pn.DOMAIN, "mark_read", {"notification_id": "Beer 2"}
-    )
-    msg = await client.receive_json()
-    assert msg["id"] == 5
-    assert msg["type"] == "event"
-    assert msg["event"]
-    event = msg["event"]
-    assert event["type"] == "updated"
-    notifications = event["notifications"]
-    assert len(notifications) == 1
-    notification = notifications[list(notifications)[0]]
-    assert notification["status"] == pn.STATUS_READ
 
     # Dismiss
     pn.async_dismiss(hass, "Beer 2")
@@ -212,3 +151,27 @@ async def test_ws_get_subscribe(
     assert msg["event"]
     event = msg["event"]
     assert event["type"] == "removed"
+
+
+async def test_manual_notification_id_round_trip(hass: HomeAssistant) -> None:
+    """Test that a manual notification id can be round tripped."""
+    notifications = pn._async_get_or_create_notifications(hass)
+    assert len(notifications) == 0
+
+    await hass.services.async_call(
+        pn.DOMAIN,
+        "create",
+        {"notification_id": "synology_diskstation_hub_notification", "message": "test"},
+        blocking=True,
+    )
+
+    assert len(notifications) == 1
+
+    await hass.services.async_call(
+        pn.DOMAIN,
+        "dismiss",
+        {"notification_id": "synology_diskstation_hub_notification"},
+        blocking=True,
+    )
+
+    assert len(notifications) == 0

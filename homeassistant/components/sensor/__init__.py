@@ -443,8 +443,10 @@ class SensorEntity(Entity):
             return self._sensor_option_unit_of_measurement
 
         # Second priority, for non registered entities: unit suggested by integration
-        if not self.unique_id and self.suggested_unit_of_measurement:
-            return self.suggested_unit_of_measurement
+        if not self.unique_id and (
+            suggested_unit_of_measurement := self.suggested_unit_of_measurement
+        ):
+            return suggested_unit_of_measurement
 
         # Third priority: Legacy temperature conversion, which applies
         # to both registered and non registered entities
