@@ -1676,7 +1676,7 @@ class Service:
 class ServiceCall:
     """Representation of a call to a service."""
 
-    __slots__ = ["domain", "service", "data", "context"]
+    __slots__ = ["domain", "service", "data", "context", "return_values"]
 
     def __init__(
         self,
@@ -1684,12 +1684,14 @@ class ServiceCall:
         service: str,
         data: dict[str, Any] | None = None,
         context: Context | None = None,
+        return_values: bool = False,
     ) -> None:
         """Initialize a service call."""
         self.domain = domain.lower()
         self.service = service.lower()
         self.data = ReadOnlyDict(data or {})
         self.context = context or Context()
+        self.return_values = return_values
 
     def __repr__(self) -> str:
         """Return the representation of the service."""
@@ -1887,7 +1889,9 @@ class ServiceRegistry:
         else:
             processed_data = service_data
 
-        service_call = ServiceCall(domain, service, processed_data, context)
+        service_call = ServiceCall(
+            domain, service, processed_data, context, return_values
+        )
 
         self._hass.bus.async_fire(
             EVENT_CALL_SERVICE,
