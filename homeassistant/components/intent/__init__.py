@@ -95,8 +95,9 @@ class OnOffIntentHandler(intent.ServiceIntentHandler):
                 f"Service {self.service} does not support entity {state.entity_id}"
             )
 
-        # Fall back to homeassistant.turn_on/off
-        await super().async_call_service(intent_obj, state)
+        else:
+            # Fall back to homeassistant.turn_on/off
+            await super().async_call_service(intent_obj, state)
 
 
 class GetStateIntentHandler(intent.IntentHandler):
