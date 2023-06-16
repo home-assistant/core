@@ -120,7 +120,7 @@ class ImapMessage:
     @property
     def subject(self) -> str:
         """Decode the message subject."""
-        decoded_header = decode_header(self.email_message["Subject"])
+        decoded_header = decode_header(self.email_message["Subject"] or "")
         subject_header = make_header(decoded_header)
         return str(subject_header)
 

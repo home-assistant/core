@@ -127,7 +127,7 @@ async def test_update_entity_states(
         },
         blocking=True,
     )
-
+    await hass.async_block_till_done()
     assert "There is no value to refresh for this entity" in caplog.text
 
     client.async_send_command.return_value = {"updates": []}

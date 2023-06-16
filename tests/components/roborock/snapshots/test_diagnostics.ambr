@@ -225,10 +225,16 @@
               'enabled': 1,
               'endHour': 7,
               'endMinute': 0,
-              'endTime': '2023-06-02T07:00:00',
+              'endTime': dict({
+                '__type': "<class 'datetime.time'>",
+                'isoformat': '07:00:00',
+              }),
               'startHour': 22,
               'startMinute': 0,
-              'startTime': '2023-06-01T22:00:00',
+              'startTime': dict({
+                '__type': "<class 'datetime.time'>",
+                'isoformat': '22:00:00',
+              }),
             }),
             'lastCleanRecord': dict({
               'area': 20965000,
