@@ -443,14 +443,14 @@ class ReolinkHost:
                 channels = await self._api.pull_point_request()
             except Exception as ex:  # pylint: disable=broad-except
                 if not self._long_poll_error:
-                    _LOGGER.exception(f"Error while requesting ONVIF pull point: {ex}")
+                    _LOGGER.exception("Error while requesting ONVIF pull point: %s", ex)
                     await self._api.unsubscribe(sub_type=SubType.long_poll)
                 self._long_poll_error = True
                 await asyncio.sleep(30)
                 continue
 
             self._long_poll_error = False
-            
+
             if not self._long_poll_received and channels != []:
                 self._long_poll_received = True
                 ir.async_delete_issue(self._hass, DOMAIN, "webhook_url")
