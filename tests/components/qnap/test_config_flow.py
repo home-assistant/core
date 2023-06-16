@@ -53,7 +53,7 @@ async def test_config_flow_success(hass: HomeAssistant) -> None:
     )
 
     assert result["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
-    assert result["title"] == TEST_NAS_NAME.capitalize()
+    assert result["title"] == TEST_NAS_NAME
     assert result["data"] == STANDARD_RESULT
 
 
@@ -107,5 +107,5 @@ async def test_config_flow_import(hass: HomeAssistant) -> None:
     )
 
     assert result["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
-    assert result["title"] == TEST_NAS_NAME.capitalize()
+    assert result["title"] == TEST_NAS_NAME
     assert result["data"] == STANDARD_RESULT
