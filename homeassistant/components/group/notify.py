@@ -1,7 +1,6 @@
 """Group platform for notify component."""
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Mapping
 from copy import deepcopy
 from typing import Any
@@ -16,7 +15,7 @@ from homeassistant.components.notify import (
     BaseNotificationService,
 )
 from homeassistant.const import ATTR_SERVICE
-from homeassistant.core import HomeAssistant, ServiceResult
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -66,18 +65,11 @@ class GroupNotifyPlatform(BaseNotificationService):
         payload: dict[str, Any] = {ATTR_MESSAGE: message}
         payload.update({key: val for key, val in kwargs.items() if val})
 
-        tasks: list[asyncio.Task[ServiceResult]] = []
         for entity in self.entities:
             sending_payload = deepcopy(payload.copy())
             if (default_data := entity.get(ATTR_DATA)) is not None:
                 add_defaults(sending_payload, default_data)
-            tasks.append(
-                asyncio.create_task(
-                    self.hass.services.async_call(
-                        DOMAIN, entity[ATTR_SERVICE], sending_payload
-                    )
-                )
+            # This starts the call without blocking on the result
+            await self.hass.services.async_call(
+                DOMAIN, entity[ATTR_SERVICE], sending_payload
             )
-
-        if tasks:
-            await asyncio.wait(tasks)
