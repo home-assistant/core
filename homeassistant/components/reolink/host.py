@@ -192,13 +192,13 @@ class ReolinkHost:
             ir.async_delete_issue(self._hass, DOMAIN, "webhook_url")
             self._cancel_onvif_check = None
             return
-        elif self._api.supported(None, "initial_ONVIF_state"):
+        if self._api.supported(None, "initial_ONVIF_state"):
             _LOGGER.debug(
                 "Did not receive initial ONVIF state on webhook '%s' after %i seconds",
                 self._webhook_url,
                 FIRST_ONVIF_TIMEOUT,
             )
-        
+
         # ONVIF push is not received, start long polling and schedule check
         await self._async_start_long_polling()
         self._cancel_long_poll_check = async_call_later(
@@ -264,7 +264,7 @@ class ReolinkHost:
     async def _async_start_long_polling(self):
         """Start ONVIF long polling task."""
         if self._long_poll_task is None:
-            await self._api.subscribe(sub_type = SubType.long_poll)
+            await self._api.subscribe(sub_type=SubType.long_poll)
             self._long_poll_task = asyncio.create_task(self._async_long_polling())
 
     async def _async_stop_long_polling(self):
@@ -273,7 +273,7 @@ class ReolinkHost:
             self._long_poll_task.cancel()
             self._long_poll_task = None
 
-        await self._api.unsubscribe(sub_type = SubType.long_poll)
+        await self._api.unsubscribe(sub_type=SubType.long_poll)
 
     async def stop(self, event=None):
         """Disconnect the API."""
@@ -328,7 +328,7 @@ class ReolinkHost:
         else:
             self._lost_subscription = False
 
-    async def _renew(self, sub_type: Literal[SubType.push, SubType.long_poll]) -> None:
+    async def _renew(self, sub_type: SubType) -> None:
         """Execute the renew of the subscription."""
         if not self._api.subscribed(sub_type):
             _LOGGER.debug(
@@ -430,7 +430,7 @@ class ReolinkHost:
         self.webhook_id = None
 
     async def _async_long_polling(self, *_) -> None:
-        """Use ONVIF long polling to immediately receive events"""
+        """Use ONVIF long polling to immediately receive events."""
         # This task will be cancelled once _async_stop_long_polling is called
         while True:
             if self._webhook_reachable:
@@ -445,7 +445,7 @@ class ReolinkHost:
                 _LOGGER.exception(err)
                 continue
 
-            if not self._long_poll_received and channels != []
+            if not self._long_poll_received and channels != []:
                 self._long_poll_received = True
                 ir.async_delete_issue(self._hass, DOMAIN, "webhook_url")
 
@@ -453,11 +453,11 @@ class ReolinkHost:
             # update the binary sensors with async_write_ha_state
             # The same dispatch as for the webhook can be used
             if channels is None:
-                async_dispatcher_send(hass, f"{self.webhook_id}_all", {})
+                async_dispatcher_send(self._hass, f"{self.webhook_id}_all", {})
                 continue
 
             for channel in channels:
-                async_dispatcher_send(hass, f"{self.webhook_id}_{channel}", {})
+                async_dispatcher_send(self._hass, f"{self.webhook_id}_{channel}", {})
 
     async def _async_poll_all_motion(self, *_) -> None:
         """Poll motion and AI states until the first ONVIF push is received."""
