@@ -63,7 +63,7 @@ from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
-from homeassistant.util import dt
+from homeassistant.util import dt as dt_util
 
 from . import setup_webostv
 from .const import CHANNEL_2, ENTITY_ID, TV_NAME
@@ -479,7 +479,7 @@ async def test_client_disconnected(hass: HomeAssistant, client, monkeypatch) -> 
     monkeypatch.setattr(client, "is_connected", Mock(return_value=False))
     monkeypatch.setattr(client, "connect", Mock(side_effect=asyncio.TimeoutError))
 
-    async_fire_time_changed(hass, dt.utcnow() + timedelta(seconds=20))
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=20))
     await hass.async_block_till_done()
 
 
@@ -804,7 +804,7 @@ async def test_reauth_reconnect(hass: HomeAssistant, client, monkeypatch) -> Non
 
     assert entry.state == ConfigEntryState.LOADED
 
-    async_fire_time_changed(hass, dt.utcnow() + timedelta(seconds=20))
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=20))
     await hass.async_block_till_done()
 
     assert entry.state == ConfigEntryState.LOADED

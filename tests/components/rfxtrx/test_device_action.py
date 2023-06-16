@@ -3,8 +3,8 @@ from __future__ import annotations
 
 from typing import Any, NamedTuple
 
-import RFXtrx
 import pytest
+import RFXtrx
 
 import homeassistant.components.automation as automation
 from homeassistant.components.device_automation import DeviceAutomationType
@@ -86,6 +86,14 @@ async def test_get_actions(
     """Test we get the expected actions from a rfxtrx."""
     await setup_entry(hass, {device.code: {}})
 
+    device_entry = device_registry.async_get_device(device.device_identifiers, set())
+    assert device_entry
+
+    # Add alternate identifiers, to make sure we can handle future formats
+    identifiers: list[str] = list(*device_entry.identifiers)
+    device_registry.async_update_device(
+        device_entry.id, merge_identifiers={(identifiers[0], "_".join(identifiers[1:]))}
+    )
     device_entry = device_registry.async_get_device(device.device_identifiers, set())
     assert device_entry
 

@@ -28,7 +28,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.util import dt
+from homeassistant.util import dt as dt_util
 
 from .const import (
     ATTR_SERIAL,
@@ -158,7 +158,7 @@ class NoboZone(ClimateEntity):
     @callback
     def _read_state(self) -> None:
         """Read the current state from the hub. These are only local calls."""
-        state = self._nobo.get_current_zone_mode(self._id, dt.now())
+        state = self._nobo.get_current_zone_mode(self._id, dt_util.now())
         self._attr_hvac_mode = HVACMode.AUTO
         self._attr_preset_mode = PRESET_NONE
 

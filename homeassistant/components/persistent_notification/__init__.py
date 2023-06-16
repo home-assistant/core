@@ -29,8 +29,6 @@ ATTR_NOTIFICATION_ID: Final = "notification_id"
 ATTR_TITLE: Final = "title"
 ATTR_STATUS: Final = "status"
 
-STATUS_UNREAD = "unread"
-STATUS_READ = "read"
 
 # Remove EVENT_PERSISTENT_NOTIFICATIONS_UPDATED in Home Assistant 2023.9
 EVENT_PERSISTENT_NOTIFICATIONS_UPDATED = "persistent_notifications_updated"
@@ -43,7 +41,6 @@ class Notification(TypedDict):
     message: str
     notification_id: str
     title: str | None
-    status: str
 
 
 class UpdateType(StrEnum):
@@ -62,6 +59,8 @@ SCHEMA_SERVICE_NOTIFICATION = vol.Schema(
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 
 @bind_hass
@@ -96,7 +95,6 @@ def async_create(
     notifications[notification_id] = {
         ATTR_MESSAGE: message,
         ATTR_NOTIFICATION_ID: notification_id,
-        ATTR_STATUS: STATUS_UNREAD,
         ATTR_TITLE: title,
         ATTR_CREATED_AT: dt_util.utcnow(),
     }
@@ -133,7 +131,6 @@ def async_dismiss(hass: HomeAssistant, notification_id: str) -> None:
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the persistent notification component."""
-    notifications = _async_get_or_create_notifications(hass)
 
     @callback
     def create_service(call: ServiceCall) -> None:
@@ -150,29 +147,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         """Handle the dismiss notification service call."""
         async_dismiss(hass, call.data[ATTR_NOTIFICATION_ID])
 
-    @callback
-    def mark_read_service(call: ServiceCall) -> None:
-        """Handle the mark_read notification service call."""
-        notification_id = call.data.get(ATTR_NOTIFICATION_ID)
-        if notification_id not in notifications:
-            _LOGGER.error(
-                (
-                    "Marking persistent_notification read failed: "
-                    "Notification ID %s not found"
-                ),
-                notification_id,
-            )
-            return
-
-        notification = notifications[notification_id]
-        notification[ATTR_STATUS] = STATUS_READ
-        async_dispatcher_send(
-            hass,
-            SIGNAL_PERSISTENT_NOTIFICATIONS_UPDATED,
-            UpdateType.UPDATED,
-            {notification_id: notification},
-        )
-
     hass.services.async_register(
         DOMAIN,
         "create",
@@ -188,10 +162,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     hass.services.async_register(
         DOMAIN, "dismiss", dismiss_service, SCHEMA_SERVICE_NOTIFICATION
-    )
-
-    hass.services.async_register(
-        DOMAIN, "mark_read", mark_read_service, SCHEMA_SERVICE_NOTIFICATION
     )
 
     websocket_api.async_register_command(hass, websocket_get_notifications)

@@ -124,3 +124,5 @@ class BMWSelect(BMWBaseEntity, SelectEntity):
             option,
         )
         await self.entity_description.remote_service(self.vehicle, option)
+
+        self.coordinator.async_update_listeners()

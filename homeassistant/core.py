@@ -188,11 +188,6 @@ def valid_entity_id(entity_id: str) -> bool:
     return VALID_ENTITY_ID.match(entity_id) is not None
 
 
-def valid_state(state: str) -> bool:
-    """Test if a state is valid."""
-    return len(state) <= MAX_LENGTH_STATE_STATE
-
-
 def callback(func: _CallableT) -> _CallableT:
     """Annotation to mark method as safe to call from within the event loop."""
     setattr(func, "_hass_callback", True)
@@ -1256,7 +1251,7 @@ class State:
                 "Format should be <domain>.<object_id>"
             )
 
-        if not valid_state(state):
+        if len(state) > MAX_LENGTH_STATE_STATE:
             raise InvalidStateError(
                 f"Invalid state encountered for entity ID: {entity_id}. "
                 "State max length is 255 characters."

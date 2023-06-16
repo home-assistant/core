@@ -12,7 +12,7 @@ from homeassistant.components.sensor import DOMAIN, SensorStateClass
 from homeassistant.const import ATTR_FRIENDLY_NAME, STATE_UNAVAILABLE, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.util import dt
+from homeassistant.util import dt as dt_util
 
 from . import configure_integration
 from .mock import MockDevice
@@ -57,7 +57,7 @@ async def test_update_connected_wifi_clients(
     mock_device.device.async_get_wifi_connected_station = AsyncMock(
         side_effect=DeviceUnavailable
     )
-    async_fire_time_changed(hass, dt.utcnow() + SHORT_UPDATE_INTERVAL)
+    async_fire_time_changed(hass, dt_util.utcnow() + SHORT_UPDATE_INTERVAL)
     await hass.async_block_till_done()
 
     state = hass.states.get(state_key)
@@ -66,7 +66,7 @@ async def test_update_connected_wifi_clients(
 
     # Emulate state change
     mock_device.reset()
-    async_fire_time_changed(hass, dt.utcnow() + SHORT_UPDATE_INTERVAL)
+    async_fire_time_changed(hass, dt_util.utcnow() + SHORT_UPDATE_INTERVAL)
     await hass.async_block_till_done()
 
     state = hass.states.get(state_key)
@@ -103,7 +103,7 @@ async def test_update_neighboring_wifi_networks(
     mock_device.device.async_get_wifi_neighbor_access_points = AsyncMock(
         side_effect=DeviceUnavailable
     )
-    async_fire_time_changed(hass, dt.utcnow() + LONG_UPDATE_INTERVAL)
+    async_fire_time_changed(hass, dt_util.utcnow() + LONG_UPDATE_INTERVAL)
     await hass.async_block_till_done()
 
     state = hass.states.get(state_key)
@@ -112,7 +112,7 @@ async def test_update_neighboring_wifi_networks(
 
     # Emulate state change
     mock_device.reset()
-    async_fire_time_changed(hass, dt.utcnow() + LONG_UPDATE_INTERVAL)
+    async_fire_time_changed(hass, dt_util.utcnow() + LONG_UPDATE_INTERVAL)
     await hass.async_block_till_done()
 
     state = hass.states.get(state_key)
@@ -148,7 +148,7 @@ async def test_update_connected_plc_devices(
     mock_device.plcnet.async_get_network_overview = AsyncMock(
         side_effect=DeviceUnavailable
     )
-    async_fire_time_changed(hass, dt.utcnow() + LONG_UPDATE_INTERVAL)
+    async_fire_time_changed(hass, dt_util.utcnow() + LONG_UPDATE_INTERVAL)
     await hass.async_block_till_done()
 
     state = hass.states.get(state_key)
@@ -157,7 +157,7 @@ async def test_update_connected_plc_devices(
 
     # Emulate state change
     mock_device.reset()
-    async_fire_time_changed(hass, dt.utcnow() + LONG_UPDATE_INTERVAL)
+    async_fire_time_changed(hass, dt_util.utcnow() + LONG_UPDATE_INTERVAL)
     await hass.async_block_till_done()
 
     state = hass.states.get(state_key)

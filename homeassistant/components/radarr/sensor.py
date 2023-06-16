@@ -18,8 +18,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory, UnitOfInformation
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import RadarrEntity
 from .const import DOMAIN
@@ -102,24 +100,6 @@ BYTE_SIZES = [
 ]
 
 PARALLEL_UPDATES = 1
-
-
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Set up the Radarr platform."""
-    async_create_issue(
-        hass,
-        DOMAIN,
-        "removed_yaml",
-        breaks_in_ha_version="2022.12.0",
-        is_fixable=False,
-        severity=IssueSeverity.WARNING,
-        translation_key="removed_yaml",
-    )
 
 
 async def async_setup_entry(

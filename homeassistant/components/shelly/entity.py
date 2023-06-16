@@ -19,7 +19,6 @@ from homeassistant.helpers.entity_registry import (
     async_entries_for_config_entry,
     async_get as er_async_get,
 )
-from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -276,6 +275,10 @@ def async_setup_entry_rest(
 class BlockEntityDescription(EntityDescription):
     """Class to describe a BLOCK entity."""
 
+    # BlockEntity does not support UNDEFINED or None,
+    # restrict the type to str.
+    name: str = ""
+
     icon_fn: Callable[[dict], str] | None = None
     unit_fn: Callable[[dict], str] | None = None
     value: Callable[[Any], Any] = lambda val: val
@@ -296,6 +299,10 @@ class RpcEntityRequiredKeysMixin:
 class RpcEntityDescription(EntityDescription, RpcEntityRequiredKeysMixin):
     """Class to describe a RPC entity."""
 
+    # BlockEntity does not support UNDEFINED or None,
+    # restrict the type to str.
+    name: str = ""
+
     value: Callable[[Any, Any], Any] | None = None
     available: Callable[[dict], bool] | None = None
     removal_condition: Callable[[dict, dict, str], bool] | None = None
@@ -307,6 +314,10 @@ class RpcEntityDescription(EntityDescription, RpcEntityRequiredKeysMixin):
 @dataclass
 class RestEntityDescription(EntityDescription):
     """Class to describe a REST entity."""
+
+    # BlockEntity does not support UNDEFINED or None,
+    # restrict the type to str.
+    name: str = ""
 
     value: Callable[[dict, Any], Any] | None = None
     extra_state_attributes: Callable[[dict], dict | None] | None = None
@@ -552,7 +563,7 @@ class ShellyRpcAttributeEntity(ShellyRpcEntity, Entity):
         return self.entity_description.available(self.sub_status)
 
 
-class ShellySleepingBlockAttributeEntity(ShellyBlockAttributeEntity, RestoreEntity):
+class ShellySleepingBlockAttributeEntity(ShellyBlockAttributeEntity):
     """Represent a shelly sleeping block attribute entity."""
 
     # pylint: disable=super-init-not-called
@@ -589,11 +600,6 @@ class ShellySleepingBlockAttributeEntity(ShellyBlockAttributeEntity, RestoreEnti
             self._attr_unique_id = entry.unique_id
             self._attr_name = cast(str, entry.original_name)
 
-    async def async_added_to_hass(self) -> None:
-        """Handle entity which will be added."""
-        await super().async_added_to_hass()
-        self.last_state = await self.async_get_last_state()
-
     @callback
     def _update_callback(self) -> None:
         """Handle device update."""
@@ -629,7 +635,7 @@ class ShellySleepingBlockAttributeEntity(ShellyBlockAttributeEntity, RestoreEnti
                 return
 
 
-class ShellySleepingRpcAttributeEntity(ShellyRpcAttributeEntity, RestoreEntity):
+class ShellySleepingRpcAttributeEntity(ShellyRpcAttributeEntity):
     """Helper class to represent a sleeping rpc attribute."""
 
     entity_description: RpcEntityDescription
@@ -665,8 +671,3 @@ class ShellySleepingRpcAttributeEntity(ShellyRpcAttributeEntity, RestoreEntity):
             )
         elif entry is not None:
             self._attr_name = cast(str, entry.original_name)
-
-    async def async_added_to_hass(self) -> None:
-        """Handle entity which will be added."""
-        await super().async_added_to_hass()
-        self.last_state = await self.async_get_last_state()

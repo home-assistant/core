@@ -272,7 +272,7 @@ class InputDatetime(collection.CollectionEntity, RestoreEntity):
         if self.state is not None:
             return
 
-        default_value = py_datetime.datetime.today().strftime("%Y-%m-%d 00:00:00")
+        default_value = py_datetime.datetime.today().strftime(f"{FMT_DATE} 00:00:00")
 
         # Priority 2: Old state
         if (old_state := await self.async_get_last_state()) is None:

@@ -5,6 +5,7 @@ from zwave_js_server.const.command_class.thermostat import (
     THERMOSTAT_OPERATING_STATE_PROPERTY,
 )
 from zwave_js_server.event import Event
+from zwave_js_server.exceptions import FailedZWaveCommand
 from zwave_js_server.model.node import Node
 
 from homeassistant.components.climate import (
@@ -30,6 +31,7 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.components.zwave_js.climate import ATTR_FAN_STATE
+from homeassistant.components.zwave_js.const import DOMAIN, SERVICE_REFRESH_VALUE
 from homeassistant.components.zwave_js.helpers import ZwaveValueMatcher
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -49,7 +51,11 @@ from .common import (
 
 
 async def test_thermostat_v2(
-    hass: HomeAssistant, client, climate_radio_thermostat_ct100_plus, integration
+    hass: HomeAssistant,
+    client,
+    climate_radio_thermostat_ct100_plus,
+    integration,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test a thermostat v2 command class entity."""
     node = climate_radio_thermostat_ct100_plus
@@ -279,6 +285,20 @@ async def test_thermostat_v2(
             },
             blocking=True,
         )
+
+    # Refresh value should log an error when there is an issue
+    client.async_send_command.reset_mock()
+    client.async_send_command.side_effect = FailedZWaveCommand("test", 1, "test")
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_REFRESH_VALUE,
+        {
+            ATTR_ENTITY_ID: CLIMATE_RADIO_THERMOSTAT_ENTITY,
+        },
+        blocking=True,
+    )
+
+    assert "Error while refreshing value" in caplog.text
 
 
 async def test_thermostat_different_endpoints(
