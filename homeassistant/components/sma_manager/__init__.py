@@ -1,4 +1,4 @@
-"""SMA Manager Initializer"""
+"""THE SMA Manager integration."""
 
 #  Copyright (c) 2023.
 #  All rights reserved to the creator of the following script/program/app, please do not
