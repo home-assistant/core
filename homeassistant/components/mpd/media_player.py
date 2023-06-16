@@ -115,6 +115,10 @@ class MpdDevice(MediaPlayerEntity):
         self._client.idletimeout = 10
         self._client_lock = asyncio.Lock()
 
+    # Instead of relying on python-mpd2 to maintain a (persistent) connection to
+    # MPD, the below explicitly sets up a *non*-persistent connection. This is
+    # done to workaround the issue as described in:
+    #   <https://github.com/Mic92/python-mpd2/issues/31>
     @asynccontextmanager
     async def connection(self):
         """Handle MPD connect and disconnect."""
@@ -185,7 +189,7 @@ class MpdDevice(MediaPlayerEntity):
     @property
     def available(self) -> bool:
         """Return true if MPD is available and connected."""
-        return self._is_available not in [None, False]
+        return self._is_available is True
 
     @property
     def name(self):
