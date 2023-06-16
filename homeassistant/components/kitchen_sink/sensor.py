@@ -7,7 +7,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_BATTERY_LEVEL, UnitOfPower
+from homeassistant.const import UnitOfPower
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -86,6 +86,3 @@ class DemoSensor(SensorEntity):
             identifiers={(DOMAIN, unique_id)},
             name=name,
         )
-
-        if battery:
-            self._attr_extra_state_attributes = {ATTR_BATTERY_LEVEL: battery}
