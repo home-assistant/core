@@ -1,7 +1,7 @@
 """Support for Ness D8X/D16X devices."""
 from collections import namedtuple
 import datetime
-import logging                            
+import logging
 
 from nessclient import ArmingState, Client
 import voluptuous as vol
@@ -15,7 +15,6 @@ from homeassistant.const import (
     ATTR_STATE,
     CONF_HOST,
     CONF_SCAN_INTERVAL,
-    EVENT_HOMEASSISTANT_STARTED,                                                                
     EVENT_HOMEASSISTANT_STOP,
     Platform,
 )
@@ -24,9 +23,10 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.start import async_at_started
 
 _LOGGER = logging.getLogger(__name__)
-                                                                        
+
 DOMAIN = "ness_alarm"
 DATA_NESS = "ness_alarm"
 
@@ -115,11 +115,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     async def _started(event):
         # Force update for current arming status and current zone states (once Home Assistant has finished loading required sensors and panel)
-        _LOGGER.debug("%s event - invoking client keepalive() & update()", EVENT_HOMEASSISTANT_STARTED)
+        _LOGGER.debug("invoking client keepalive() & update()")
         hass.loop.create_task(client.keepalive())
         hass.loop.create_task(client.update())
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, _started)                              
+    async_at_started(hass, _started)
 
     hass.async_create_task(
         async_load_platform(
