@@ -131,7 +131,8 @@ DOMAIN = "homeassistant"
 # How long to wait to log tasks that are blocking
 BLOCK_LOG_TIMEOUT = 60
 
-ServiceResult = bool | JsonObjectType | None
+ServiceResult = JsonObjectType | None
+
 
 class ConfigSource(StrEnum):
     """Source of core configuration."""
@@ -1665,6 +1666,7 @@ class Service:
         schema: vol.Schema | None,
         domain: str,
         service: str,
+        context: Context | None = None,
     ) -> None:
         """Initialize a service."""
         self.job = HassJob(func, f"service {domain}.{service}")
@@ -1765,12 +1767,7 @@ class ServiceRegistry:
         """
         domain = domain.lower()
         service = service.lower()
-        service_obj = Service(
-            service_func,
-            schema,
-            domain,
-            service,
-        )
+        service_obj = Service(service_func, schema, domain, service)
 
         if domain in self._services:
             self._services[domain][service] = service_obj
@@ -1906,17 +1903,16 @@ class ServiceRegistry:
         coro = self._execute_service(handler, service_call)
         if not blocking:
             self._run_service_in_background(coro, service_call)
-            return
+            return None
 
         response_data = await coro
         if not return_values:
-            return
+            return None
         if not isinstance(response_data, dict):
             raise HomeAssistantError(
                 f"Service response data expected a dictionary, was {type(response_data)}"
             )
         return response_data
-
 
     def _run_service_in_background(
         self,
