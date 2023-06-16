@@ -37,7 +37,7 @@ async def async_attach_trigger(
     job = HassJob(action)
 
     @callback
-    def call_action() -> None:
+    def call_action(sentence: str) -> None:
         """Call action with right context."""
         hass.async_run_hass_job(
             job,
@@ -45,7 +45,7 @@ async def async_attach_trigger(
                 "trigger": {
                     **trigger_data,
                     "platform": DOMAIN,
-                    "sentences": sentences,
+                    "sentence": sentence,
                 }
             },
         )

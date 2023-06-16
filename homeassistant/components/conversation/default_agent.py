@@ -44,7 +44,7 @@ _DEFAULT_ERROR_TEXT = "Sorry, I couldn't understand that"
 _ENTITY_REGISTRY_UPDATE_FIELDS = ["aliases", "name", "original_name"]
 
 REGEX_TYPE = type(re.compile(""))
-TRIGGER_CALLBACK_TYPE = Callable[[], str | None]  # pylint: disable=invalid-name
+TRIGGER_CALLBACK_TYPE = Callable[[str], str | None]  # pylint: disable=invalid-name
 
 
 def json_load(fp: IO[str]) -> JsonObjectType:
@@ -690,7 +690,7 @@ class DefaultAgent(AbstractConversationAgent):
         _LOGGER.debug("Running %s callback(s) for trigger", len(actions))
         speech = ""
         for action in actions:
-            action_response = action.callback()
+            action_response = action.callback(sentence)
             if action_response is not None:
                 speech = action_response
 
