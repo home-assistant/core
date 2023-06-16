@@ -30,7 +30,6 @@ from homeassistant.core import (
     Context,
     HomeAssistant,
     ServiceCall,
-    ServiceResult,
     callback,
 )
 from homeassistant.exceptions import (
@@ -256,13 +255,7 @@ def call_from_config(
 ) -> None:
     """Call a service based on a config hash."""
     asyncio.run_coroutine_threadsafe(
-        async_call_from_config(
-            hass,
-            config,
-            blocking,
-            variables,
-            validate_config,
-        ),
+        async_call_from_config(hass, config, blocking, variables, validate_config),
         hass.loop,
     ).result()
 
@@ -693,9 +686,6 @@ async def entity_service_call(  # noqa: C901
     """Handle an entity service call.
 
     Calls all platforms simultaneously.
-
-    May return a dict results for services that support return values, however they are
-    only returned when this matches a single entity.
     """
     if call.context.user_id:
         user = await hass.auth.async_get_user(call.context.user_id)
@@ -811,7 +801,7 @@ async def entity_service_call(  # noqa: C901
         entities.append(entity)
 
     if not entities:
-        return None
+        return
 
     done, pending = await asyncio.wait(
         [
@@ -848,26 +838,24 @@ async def entity_service_call(  # noqa: C901
 async def _handle_entity_call(
     hass: HomeAssistant,
     entity: Entity,
-    func: str | Callable[..., Coroutine[Any, Any, ServiceResult] | None],
+    func: str | Callable[..., Any],
     data: dict | ServiceCall,
     context: Context,
-) -> ServiceResult:
+) -> None:
     """Handle calling service method."""
     entity.async_set_context(context)
 
-    task: asyncio.Future[ServiceResult] | None = None
     if isinstance(func, str):
-        task = hass.async_run_job(
+        result = hass.async_run_job(
             partial(getattr(entity, func), **data)  # type: ignore[arg-type]
         )
     else:
-        task = hass.async_run_job(func, entity, data)
+        result = hass.async_run_job(func, entity, data)
 
     # Guard because callback functions do not return a task when passed to
     # async_run_job.
-    result: ServiceResult = None
-    if task is not None:
-        result = await task
+    if result is not None:
+        await result
 
     if asyncio.iscoroutine(result):
         _LOGGER.error(
@@ -878,9 +866,7 @@ async def _handle_entity_call(
             func,
             entity.entity_id,
         )
-        result = await result
-
-    return result
+        await result
 
 
 @bind_hass
