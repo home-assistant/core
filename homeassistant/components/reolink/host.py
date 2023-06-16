@@ -8,7 +8,8 @@ from typing import Any
 
 import aiohttp
 from aiohttp.web import Request
-from reolink_aio.api import Host, PUSH, LONG_POLL
+from reolink_aio.api import Host
+from reolink_aio.enums import SubType
 from reolink_aio.exceptions import ReolinkError, SubscriptionError
 
 from homeassistant.components import webhook
@@ -263,7 +264,7 @@ class ReolinkHost:
     async def _async_start_long_polling(self):
         """Start ONVIF long polling task."""
         if self._long_poll_task is None:
-            await self._api.subscribe(sub_type = LONG_POLL)
+            await self._api.subscribe(sub_type = SubType.long_poll)
             self._long_poll_task = asyncio.create_task(self._async_long_polling())
 
     async def _async_stop_long_polling(self):
@@ -272,7 +273,7 @@ class ReolinkHost:
             self._long_poll_task.cancel()
             self._long_poll_task = None
 
-        await self._api.unsubscribe(sub_type = LONG_POLL)
+        await self._api.unsubscribe(sub_type = SubType.long_poll)
 
     async def stop(self, event=None):
         """Disconnect the API."""
@@ -294,7 +295,7 @@ class ReolinkHost:
         if self.webhook_id is None:
             self.register_webhook()
 
-        if self._api.subscribed(PUSH):
+        if self._api.subscribed(SubType.push):
             _LOGGER.debug(
                 "Host %s: is already subscribed to webhook %s",
                 self._api.host,
@@ -313,9 +314,9 @@ class ReolinkHost:
     async def renew(self) -> None:
         """Renew the subscription of motion events (lease time is 15 minutes)."""
         try:
-            await self._renew(PUSH)
+            await self._renew(SubType.push)
             if self._long_poll_task is not None:
-                await self._renew(LONG_POLL)
+                await self._renew(SubType.long_poll)
         except SubscriptionError as err:
             if not self._lost_subscription:
                 self._lost_subscription = True
@@ -327,7 +328,7 @@ class ReolinkHost:
         else:
             self._lost_subscription = False
 
-    async def _renew(self, sub_type: Literal[PUSH] | Literal[LONG_POLL]) -> None:
+    async def _renew(self, sub_type: Literal[SubType.push, SubType.long_poll]) -> None:
         """Execute the renew of the subscription."""
         if not self._api.subscribed(sub_type):
             _LOGGER.debug(
@@ -336,7 +337,7 @@ class ReolinkHost:
                 self._api.host,
                 sub_type,
             )
-            if sub_type == PUSH:
+            if sub_type == SubType.push:
                 await self.subscribe()
             else:
                 await self._api.subscribe(self._webhook_url, sub_type)
