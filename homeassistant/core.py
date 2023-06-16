@@ -130,9 +130,6 @@ DOMAIN = "homeassistant"
 # How long to wait to log tasks that are blocking
 BLOCK_LOG_TIMEOUT = 60
 
-# How long we wait for the result of a service call
-SERVICE_CALL_LIMIT = 10  # seconds
-
 
 class ConfigSource(StrEnum):
     """Source of core configuration."""
