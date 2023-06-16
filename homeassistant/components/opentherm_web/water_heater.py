@@ -33,7 +33,7 @@ async def async_setup_entry(
 
     # Add all entities to HA
     async_add_entities(
-        OpenThermWaterHeater(coordinator, web_api) for web_api in coordinator.data
+        OpenThermWaterHeater(hass, coordinator, web_api) for web_api in coordinator.data
     )
 
 
@@ -53,14 +53,17 @@ class OpenThermWaterHeater(
 
     controller: OpenThermController
     web_api: OpenThermWebApi
+    hass: HomeAssistant
 
     def __init__(
         self,
+        hass: HomeAssistant,
         coordinator: OpenThermWebCoordinator,
         web_api: OpenThermWebApi,
     ) -> None:
         """Initiatlize WaterHeater entity."""
         super().__init__(coordinator, context=web_api)
+        self.hass = hass
         self.web_api = web_api
         self.controller = web_api.get_controller()
         self._attr_unique_id = f"water_heater_{self.controller.device_id}"
@@ -100,3 +103,11 @@ class OpenThermWaterHeater(
     def turn_away_mode_off(self) -> None:
         """Turn off away mode."""
         self.web_api.set_away_mode(False)
+
+    async def async_turn_on(self) -> None:
+        """Turn on."""
+        await self.hass.async_add_executor_job(self.turn_away_mode_off)
+
+    async def async_turn_off(self) -> None:
+        """Turn off."""
+        await self.hass.async_add_executor_job(self.turn_away_mode_on)
