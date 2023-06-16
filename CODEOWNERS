@@ -94,8 +94,8 @@ build.json @home-assistant/supervisor
 /tests/components/apcupsd/ @yuxincs
 /homeassistant/components/api/ @home-assistant/core
 /tests/components/api/ @home-assistant/core
-/homeassistant/components/apple_tv/ @postlund
-/tests/components/apple_tv/ @postlund
+/homeassistant/components/apple_tv/ @postlund @michalmo
+/tests/components/apple_tv/ @postlund @michalmo
 /homeassistant/components/application_credentials/ @home-assistant/core
 /tests/components/application_credentials/ @home-assistant/core
 /homeassistant/components/apprise/ @caronc

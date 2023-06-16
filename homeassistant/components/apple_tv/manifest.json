@@ -1,7 +1,7 @@
 {
   "domain": "apple_tv",
   "name": "Apple TV",
-  "codeowners": ["@postlund"],
+  "codeowners": ["@postlund", "@michalmo"],
   "config_flow": true,
   "dependencies": ["zeroconf"],
   "documentation": "https://www.home-assistant.io/integrations/apple_tv",
