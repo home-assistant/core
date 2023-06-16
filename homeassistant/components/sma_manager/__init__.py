@@ -1,30 +1,21 @@
 """THE SMA Manager integration."""
 
-#  Copyright (c) 2023.
-#  All rights reserved to the creator of the following script/program/app, please do not
-#  use or distribute without prior authorization from the creator.
-#  Creator: Antonio Manuel Nunes Goncalves
-#  Email: amng835@gmail.com
-#  LinkedIn: https://www.linkedin.com/in/antonio-manuel-goncalves-983926142/
-#  Github: https://github.com/DEADSEC-SECURITY
-
 # Home Assistant Imports
+# 3rd Party Imports
+from sma_manager_api import SMA
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
-# 3rd Party Imports
-from sma_manager_api import SMA
-
 # Local Imports
-from .const import DOMAIN, CONF_NAME, CONF_HOST, CONF_PORT, CONF_REFRESH_INTERVAL
+from .const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_REFRESH_INTERVAL, DOMAIN
 
 PLATFORMS: list[str] = ["sensor"]
 
 
 async def async_setup_entry(hass: HomeAssistant, config: ConfigEntry) -> bool:
-    """
-    Configures the Integration
+    """Configure the Integration.
 
     @param hass:
     @param config:
@@ -54,8 +45,7 @@ async def async_setup_entry(hass: HomeAssistant, config: ConfigEntry) -> bool:
 
 
 async def async_unload_entry(hass: HomeAssistant, config: ConfigEntry) -> bool:
-    """
-    Unload config
+    """Unload config.
 
     This is called when an entry/configured device is to be removed. The class
     needs to unload itself, and remove callbacks. See the classes for further

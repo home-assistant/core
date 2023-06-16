@@ -1,18 +1,14 @@
-"""SMA Manager Sensor Entities"""
-
-#  Copyright (c) 2023.
-#  All rights reserved to the creator of the following script/program/app, please do not
-#  use or distribute without prior authorization from the creator.
-#  Creator: Antonio Manuel Nunes Goncalves
-#  Email: amng835@gmail.com
-#  LinkedIn: https://www.linkedin.com/in/antonio-manuel-goncalves-983926142/
-#  Github: https://github.com/DEADSEC-SECURITY
+"""SMA Manager Sensor Entities."""
 
 # Built-In Imports
-import logging
 from datetime import timedelta
+import logging
+
+# 3rd Party Imports
+from sma_manager_api import SMA
 
 # Home Assistant Imports
+# pylint: disable=hass-component-root-import
 from homeassistant.components.integration.const import METHOD_TRAPEZOIDAL
 from homeassistant.components.integration.sensor import IntegrationSensor
 from homeassistant.components.sensor import (
@@ -20,7 +16,9 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorStateClass,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfPower, UnitOfTime
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
@@ -28,22 +26,18 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
-# 3rd Party Imports
-from sma_manager_api import SMA
-
 # Local Imports
 from .const import DOMAIN
-
 
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
-    hass, config_entry, async_add_entities: AddEntitiesCallback
-):
-    """
-    Creates and sets up the entities and setup Riemann Integral version of the same entities, so
-    they can be used in the energy panel
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Create and sets up the entities and setup Riemann Integral version of the same entities, so they can be used in the energy panel.
 
     @param hass:
     @param config_entry:
@@ -94,11 +88,14 @@ async def async_setup_entry(
 
 
 class Coordinator(DataUpdateCoordinator):
-    """
-    Coordinates data fetching from the API
-    """
+    """Coordinates data fetching from the API."""
 
-    def __init__(self, hass, sma):
+    def __init__(self, hass: HomeAssistant, sma: SMA) -> None:
+        """Init the coordinator object.
+
+        @param hass:
+        @param sma:
+        """
         super().__init__(
             hass,
             _LOGGER,
@@ -108,15 +105,12 @@ class Coordinator(DataUpdateCoordinator):
         self.sma = sma
 
     async def _async_update_data(self):
-        """
-        Refresh data from SMA Manager
-        """
+        """Refresh data from SMA Manager."""
         await self.sma.refresh_data()
 
 
 class SensorBase(CoordinatorEntity, SensorEntity):
-    """
-    Base class for all sensors, any sensor should inherit from this class
+    """Base class for all sensors, any sensor should inherit from this class.
 
     @note: self._attr_name should be created in the child class prior to super().init() so the unique id can be generated
     """
@@ -126,9 +120,17 @@ class SensorBase(CoordinatorEntity, SensorEntity):
     _attr_device_class = SensorDeviceClass.POWER
     _attr_state_class = SensorStateClass.MEASUREMENT
 
+    _device: DeviceInfo
+
     def __init__(
         self, coordinator: DataUpdateCoordinator, sma: SMA, device: DeviceInfo
-    ):
+    ) -> None:
+        """Init the coordinator object.
+
+        @param coordinator:
+        @param sma: SMA API object
+        @param device:
+        """
         super().__init__(coordinator)
 
         # Generate unique id
@@ -139,8 +141,7 @@ class SensorBase(CoordinatorEntity, SensorEntity):
 
     @property
     def device_info(self) -> DeviceInfo:
-        """
-        Return information to link this entity with the correct device.
+        """Return information to link this entity with the correct device.
 
         @return:
         """
@@ -148,22 +149,33 @@ class SensorBase(CoordinatorEntity, SensorEntity):
 
     @property
     def available(self) -> bool:
-        """
-        Gets the available state from sma object
+        """Gets the available state from sma object.
 
         @return:
         """
         return self._sma.available
 
     @property
-    def native_value(self):
-        raise NotImplemented
+    def native_value(self) -> float:
+        """Native value of the sensor.
+
+        Should be implemented by the child class
+        """
+        raise NotImplementedError
 
 
 class GridConsumption(SensorBase):
+    """Grid Consumption Sensor."""
+
     def __init__(
         self, coordinator: DataUpdateCoordinator, sma: SMA, device: DeviceInfo
-    ):
+    ) -> None:
+        """Init the Grid Consumption object.
+
+        @param coordinator:
+        @param sma: SMA API object
+        @param device:
+        """
         self._attr_name = f"{sma.name} Grid Consumption"
 
         super().__init__(coordinator, sma, device)
@@ -171,14 +183,23 @@ class GridConsumption(SensorBase):
         self._state = self._sma.grid_consumption
 
     @property
-    def native_value(self):
+    def native_value(self) -> float:
+        """Native value of the sensor."""
         return self._sma.grid_consumption
 
 
 class GridFeed(SensorBase):
+    """Grid Feed Sensor."""
+
     def __init__(
         self, coordinator: DataUpdateCoordinator, sma: SMA, device: DeviceInfo
-    ):
+    ) -> None:
+        """Init the Grid Feed object.
+
+        @param coordinator:
+        @param sma: SMA API object
+        @param device:
+        """
         self._attr_name = f"{sma.name} Grid Feed"
 
         super().__init__(coordinator, sma, device)
@@ -186,14 +207,23 @@ class GridFeed(SensorBase):
         self._state = self._sma.grid_feed
 
     @property
-    def native_value(self):
+    def native_value(self) -> float:
+        """Native value of the sensor."""
         return self._sma.grid_feed
 
 
 class PhaseOneConsumption(SensorBase):
+    """Phase One Consumption Sensor."""
+
     def __init__(
         self, coordinator: DataUpdateCoordinator, sma: SMA, device: DeviceInfo
-    ):
+    ) -> None:
+        """Init the Phase One Consumption object.
+
+        @param coordinator:
+        @param sma: SMA API object
+        @param device:
+        """
         self._attr_name = f"{sma.name} Phase 1 Consumption"
 
         super().__init__(coordinator, sma, device)
@@ -201,14 +231,23 @@ class PhaseOneConsumption(SensorBase):
         self._state = self._sma.phase_one_consumption
 
     @property
-    def native_value(self):
+    def native_value(self) -> float:
+        """Native value of the sensor."""
         return self._sma.phase_one_consumption
 
 
 class PhaseOneFeed(SensorBase):
+    """Phase One Feed Sensor."""
+
     def __init__(
         self, coordinator: DataUpdateCoordinator, sma: SMA, device: DeviceInfo
-    ):
+    ) -> None:
+        """Init the Phase One Feed object.
+
+        @param coordinator:
+        @param sma: SMA API object
+        @param device:
+        """
         self._attr_name = f"{sma.name} Phase 1 Feed"
 
         super().__init__(coordinator, sma, device)
@@ -216,14 +255,23 @@ class PhaseOneFeed(SensorBase):
         self._state = self._sma.phase_one_feed
 
     @property
-    def native_value(self):
+    def native_value(self) -> float:
+        """Native value of the sensor."""
         return self._sma.phase_one_feed
 
 
 class PhaseTwoConsumption(SensorBase):
+    """Phase Two Consumption Sensor."""
+
     def __init__(
         self, coordinator: DataUpdateCoordinator, sma: SMA, device: DeviceInfo
-    ):
+    ) -> None:
+        """Init the Phase Two Consumption object.
+
+        @param coordinator:
+        @param sma: SMA API object
+        @param device:
+        """
         self._attr_name = f"{sma.name} Phase 2 Consumption"
 
         super().__init__(coordinator, sma, device)
@@ -231,14 +279,23 @@ class PhaseTwoConsumption(SensorBase):
         self._state = self._sma.phase_two_consumption
 
     @property
-    def native_value(self):
+    def native_value(self) -> float:
+        """Native value of the sensor."""
         return self._sma.phase_two_consumption
 
 
 class PhaseTwoFeed(SensorBase):
+    """Phase Two Feed Sensor."""
+
     def __init__(
         self, coordinator: DataUpdateCoordinator, sma: SMA, device: DeviceInfo
-    ):
+    ) -> None:
+        """Init the Phase One Feed object.
+
+        @param coordinator:
+        @param sma: SMA API object
+        @param device:
+        """
         self._attr_name = f"{sma.name} Phase 2 Feed"
 
         super().__init__(coordinator, sma, device)
@@ -246,14 +303,23 @@ class PhaseTwoFeed(SensorBase):
         self._state = self._sma.phase_two_feed
 
     @property
-    def native_value(self):
+    def native_value(self) -> float:
+        """Native value of the sensor."""
         return self._sma.phase_two_feed
 
 
 class PhaseThreeConsumption(SensorBase):
+    """Phase Three Consumption Sensor."""
+
     def __init__(
         self, coordinator: DataUpdateCoordinator, sma: SMA, device: DeviceInfo
-    ):
+    ) -> None:
+        """Init the Phase Three Consumption object.
+
+        @param coordinator:
+        @param sma: SMA API object
+        @param device:
+        """
         self._attr_name = f"{sma.name} Phase 3 Consumption"
 
         super().__init__(coordinator, sma, device)
@@ -261,14 +327,23 @@ class PhaseThreeConsumption(SensorBase):
         self._state = self._sma.phase_three_consumption
 
     @property
-    def native_value(self):
+    def native_value(self) -> float:
+        """Native value of the sensor."""
         return self._sma.phase_three_consumption
 
 
 class PhaseThreeFeed(SensorBase):
+    """Phase Three Feed Sensor."""
+
     def __init__(
         self, coordinator: DataUpdateCoordinator, sma: SMA, device: DeviceInfo
-    ):
+    ) -> None:
+        """Init the Phase Three Feed object.
+
+        @param coordinator:
+        @param sma: SMA API object
+        @param device:
+        """
         self._attr_name = f"{sma.name} Phase 3 Feed"
 
         super().__init__(coordinator, sma, device)
@@ -276,5 +351,6 @@ class PhaseThreeFeed(SensorBase):
         self._state = self._sma.phase_three_feed
 
     @property
-    def native_value(self):
+    def native_value(self) -> float:
+        """Native value of the sensor."""
         return self._sma.phase_three_feed
