@@ -1353,7 +1353,7 @@ def async_capture_events(hass: HomeAssistant, event_name: str) -> list[Event]:
     def capture_events(event: Event) -> None:
         events.append(event)
 
-    hass.bus.async_listen(event_name, capture_events)
+    hass.bus.async_listen(event_name, capture_events, run_immediately=True)
 
     return events
 

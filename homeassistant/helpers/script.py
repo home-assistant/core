@@ -64,7 +64,6 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
 )
 from homeassistant.core import (
-    SERVICE_CALL_LIMIT,
     Context,
     Event,
     HassJob,
@@ -664,28 +663,16 @@ class _ScriptRun:
             and params[CONF_SERVICE] == "trigger"
             or params[CONF_DOMAIN] in ("python_script", "script")
         )
-        # If this might start a script then disable the call timeout.
-        # Otherwise use the normal service call limit.
-        if running_script:
-            limit = None
-        else:
-            limit = SERVICE_CALL_LIMIT
-
-        trace_set_result(params=params, running_script=running_script, limit=limit)
-        service_task = self._hass.async_create_task(
-            self._hass.services.async_call(
-                **params,
-                blocking=True,
-                context=self._context,
-                limit=limit,
+        trace_set_result(params=params, running_script=running_script)
+        await self._async_run_long_action(
+            self._hass.async_create_task(
+                self._hass.services.async_call(
+                    **params,
+                    blocking=True,
+                    context=self._context,
+                )
             )
         )
-        if limit is not None:
-            # There is a call limit, so just wait for it to finish.
-            await service_task
-            return
-
-        await self._async_run_long_action(service_task)
 
     async def _async_device_step(self):
         """Perform the device automation specified in the action."""
