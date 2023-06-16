@@ -712,14 +712,15 @@ async def entity_service_call(  # noqa: C901
 
     if entity_perms is None:
         for platform in platforms:
+            platform_entities = platform.entities
             if target_all_entities:
-                entity_candidates.extend(platform.entities.values())
+                entity_candidates.extend(platform_entities.values())
             else:
                 assert all_referenced is not None
                 entity_candidates.extend(
                     [
-                        platform.entities[entity_id]
-                        for entity_id in all_referenced.intersection(platform.entities)
+                        platform_entities[entity_id]
+                        for entity_id in all_referenced.intersection(platform_entities)
                     ]
                 )
 
@@ -739,8 +740,9 @@ async def entity_service_call(  # noqa: C901
         assert all_referenced is not None
 
         for platform in platforms:
-            platform_entities = []
-            entity_id_matches = all_referenced.intersection(platform.entities)
+            platform_entities = platform.entities
+            platform_entity_candidates = []
+            entity_id_matches = all_referenced.intersection(platform_entities)
             for entity_id in entity_id_matches:
                 if not entity_perms(entity_id, POLICY_CONTROL):
                     raise Unauthorized(
@@ -749,9 +751,9 @@ async def entity_service_call(  # noqa: C901
                         permission=POLICY_CONTROL,
                     )
 
-                platform_entities.append(platform.entities[entity_id])
+                platform_entity_candidates.append(platform_entities[entity_id])
 
-            entity_candidates.extend(platform_entities)
+            entity_candidates.extend(platform_entity_candidates)
 
     if not target_all_entities:
         assert referenced is not None
