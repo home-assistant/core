@@ -22,7 +22,6 @@ from homeassistant.components.media_player import (
     async_process_play_media_url,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity import DeviceInfo
@@ -53,16 +52,7 @@ async def async_setup_entry(
 
     _LOGGER.debug("Setting up config entry: %s", config_entry.unique_id)
 
-    device = await hass.async_add_executor_job(Device, config_entry.data[CONF_HOST])
-
-    try:
-        await device.init()
-    except (asyncio.TimeoutError, aiohttp.ClientError, UpnpError):
-        return None
-
-    _LOGGER.debug("Initialised device: %s", device.uuid())
-
-    entity = OpenhomeDevice(hass, device)
+    entity = hass.data[DOMAIN][config_entry.entry_id]
 
     async_add_entities([entity])
 
