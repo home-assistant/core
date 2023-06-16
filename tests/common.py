@@ -248,6 +248,9 @@ async def async_test_home_assistant(event_loop, load_registries=True):
             )
         },
     )
+    hass.bus.async_listen_once(
+        EVENT_HOMEASSISTANT_STOP, hass.config_entries._async_shutdown
+    )
 
     # Load the registries
     entity.async_setup(hass)
