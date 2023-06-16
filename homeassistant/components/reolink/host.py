@@ -441,8 +441,8 @@ class ReolinkHost:
             try:
                 channels = await self._api.pull_point_request()
             except ReolinkError as err:
+                _LOGGER.exception(f"Reolink error from ONVIF pull point request: {err}")
                 await asyncio.sleep(30)
-                _LOGGER.exception(err)
                 continue
 
             if not self._long_poll_received and channels != []:
