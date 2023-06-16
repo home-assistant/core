@@ -204,6 +204,7 @@ omit =
     homeassistant/components/discord/notify.py
     homeassistant/components/discovergy/__init__.py
     homeassistant/components/discovergy/sensor.py
+    homeassistant/components/discovergy/coordinator.py
     homeassistant/components/dlib_face_detect/image_processing.py
     homeassistant/components/dlib_face_identify/image_processing.py
     homeassistant/components/dlink/data.py
@@ -618,7 +619,6 @@ omit =
     homeassistant/components/kwb/sensor.py
     homeassistant/components/lacrosse/sensor.py
     homeassistant/components/lannouncer/notify.py
-    homeassistant/components/lastfm/sensor.py
     homeassistant/components/launch_library/__init__.py
     homeassistant/components/launch_library/sensor.py
     homeassistant/components/lcn/climate.py
@@ -977,6 +977,10 @@ omit =
     homeassistant/components/rainmachine/switch.py
     homeassistant/components/rainmachine/update.py
     homeassistant/components/rainmachine/util.py
+    homeassistant/components/renson/__init__.py
+    homeassistant/components/renson/const.py
+    homeassistant/components/renson/entity.py
+    homeassistant/components/renson/sensor.py
     homeassistant/components/raspyrfm/*
     homeassistant/components/recollect_waste/sensor.py
     homeassistant/components/recorder/repack.py

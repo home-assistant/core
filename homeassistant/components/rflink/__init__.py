@@ -323,7 +323,6 @@ class RflinkDevice(Entity):
     Contains the common logic for Rflink entities.
     """
 
-    platform = None
     _state: bool | None = None
     _available = True
     _attr_should_poll = False

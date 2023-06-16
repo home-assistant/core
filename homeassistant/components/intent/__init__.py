@@ -70,18 +70,22 @@ class OnOffIntentHandler(intent.ServiceIntentHandler):
         if state.domain == COVER_DOMAIN:
             # on = open
             # off = close
-            await hass.services.async_call(
-                COVER_DOMAIN,
-                SERVICE_OPEN_COVER
-                if self.service == SERVICE_TURN_ON
-                else SERVICE_CLOSE_COVER,
-                {ATTR_ENTITY_ID: state.entity_id},
-                context=intent_obj.context,
-                blocking=True,
-                limit=self.service_timeout,
+            await self._run_then_background(
+                hass.async_create_task(
+                    hass.services.async_call(
+                        COVER_DOMAIN,
+                        SERVICE_OPEN_COVER
+                        if self.service == SERVICE_TURN_ON
+                        else SERVICE_CLOSE_COVER,
+                        {ATTR_ENTITY_ID: state.entity_id},
+                        context=intent_obj.context,
+                        blocking=True,
+                    )
+                )
             )
+            return
 
-        elif not hass.services.has_service(state.domain, self.service):
+        if not hass.services.has_service(state.domain, self.service):
             raise intent.IntentHandleError(
                 f"Service {self.service} does not support entity {state.entity_id}"
             )

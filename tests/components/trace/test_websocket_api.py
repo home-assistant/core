@@ -156,7 +156,6 @@ async def test_get_trace(
     }
 
     sun_action = {
-        "limit": 10,
         "params": {
             "domain": "test",
             "service": "automation",
@@ -1594,7 +1593,6 @@ async def test_trace_blueprint_automation(
         },
     }
     sun_action = {
-        "limit": 10,
         "params": {
             "domain": "test",
             "service": "automation",

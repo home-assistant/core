@@ -9,6 +9,7 @@ import pytest
 
 from homeassistant.components.imap import DOMAIN
 from homeassistant.components.imap.errors import InvalidAuth, InvalidFolder
+from homeassistant.components.sensor.const import SensorStateClass
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.util.dt import utcnow
@@ -135,6 +136,7 @@ async def test_receiving_message_successfully(
     # we should have received one message
     assert state is not None
     assert state.state == "1"
+    assert state.attributes["state_class"] == SensorStateClass.MEASUREMENT
 
     # we should have received one event
     assert len(event_called) == 1

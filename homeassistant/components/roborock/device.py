@@ -72,3 +72,13 @@ class RoborockCoordinatedEntity(
             if status:
                 return status
         return Status({})
+
+    async def send(
+        self,
+        command: RoborockCommand,
+        params: dict[str, Any] | list[Any] | None = None,
+    ) -> dict:
+        """Overloads normal send command but refreshes coordinator."""
+        res = await super().send(command, params)
+        await self.coordinator.async_refresh()
+        return res
