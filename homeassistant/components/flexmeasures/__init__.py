@@ -5,6 +5,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 import logging
+from datetime import datetime
+import pytz
 
 from .api import async_register_s2_api, S2FlexMeasuresClient
 from .const import DOMAIN
@@ -61,16 +63,33 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             print(schedule_id)
             hass.states.async_set(f"{DOMAIN}.schedule_id", schedule_id)
             # hass.states.set("schedule_id", schedule_id)
+        elif method == "trigger_and_get_schedule":
+            logging.info("trigger_schedule")
+            schedule = await getattr(client, method)(**call_dict)
+            print(schedule)
+            #hass.states.async_set(f"{DOMAIN}.schedule_id", schedule)
+            new_state = (
+                "ChargeScheduleAvailable" + datetime.now(tz=pytz.utc).isoformat()
+            )
+            print(new_state)
+            hass.states.async_set(
+                f"{DOMAIN}.charge_schedule", new_state=new_state, attributes=schedule
+            )
         elif method == "get_schedule":
             logging.info("get schedule")
             schedule = await getattr(client, method)(**call_dict)
             print(schedule)
-            hass.states.async_set(f"{DOMAIN}.schedule", new_state=schedule['start'])
-
+            # hass.states.async_set(f"{DOMAIN}.schedule", new_state=schedule['start'])
+            new_state = (
+                "ChargeScheduleAvailable" + datetime.now(tz=pytz.utc).isoformat()
+            )
+            print(new_state)
+            hass.states.async_set(
+                f"{DOMAIN}.charge_schedule", new_state=new_state, attributes=schedule
+            )
 
         elif method is not None and hasattr(client, method):
             await getattr(client, method)(**call_dict)
-
 
     def handle_s2(call):
         """Handle the service call to the FlexMeasures S2 websockets implementation."""

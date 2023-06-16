@@ -54,6 +54,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
             host=data["host"],
             email=data["username"],
             password=data["password"],
+            ssl=False
         )
     except Exception as e:
         raise CannotConnect(e)
