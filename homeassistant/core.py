@@ -130,9 +130,6 @@ DOMAIN = "homeassistant"
 # How long to wait to log tasks that are blocking
 BLOCK_LOG_TIMEOUT = 60
 
-# How long we wait for the result of a service call
-SERVICE_CALL_LIMIT = 10  # seconds
-
 
 class ConfigSource(StrEnum):
     """Source of core configuration."""
@@ -1807,7 +1804,6 @@ class ServiceRegistry:
         service_data: dict[str, Any] | None = None,
         blocking: bool = False,
         context: Context | None = None,
-        limit: float | None = SERVICE_CALL_LIMIT,
         target: dict[str, Any] | None = None,
     ) -> bool | None:
         """Call a service.
@@ -1815,9 +1811,7 @@ class ServiceRegistry:
         See description of async_call for details.
         """
         return asyncio.run_coroutine_threadsafe(
-            self.async_call(
-                domain, service, service_data, blocking, context, limit, target
-            ),
+            self.async_call(domain, service, service_data, blocking, context, target),
             self._hass.loop,
         ).result()
 
@@ -1828,16 +1822,11 @@ class ServiceRegistry:
         service_data: dict[str, Any] | None = None,
         blocking: bool = False,
         context: Context | None = None,
-        limit: float | None = SERVICE_CALL_LIMIT,
         target: dict[str, Any] | None = None,
-    ) -> bool | None:
+    ) -> None:
         """Call a service.
 
         Specify blocking=True to wait until service is executed.
-        Waits a maximum of limit, which may be None for no timeout.
-
-        If blocking = True, will return boolean if service executed
-        successfully within limit.
 
         This method will fire an event to indicate the service has been called.
 
@@ -1888,33 +1877,9 @@ class ServiceRegistry:
         coro = self._execute_service(handler, service_call)
         if not blocking:
             self._run_service_in_background(coro, service_call)
-            return None
+            return
 
-        task = self._hass.async_create_task(coro)
-        try:
-            await asyncio.wait({task}, timeout=limit)
-        except asyncio.CancelledError:
-            # Task calling us was cancelled, so cancel service call task, and wait for
-            # it to be cancelled, within reason, before leaving.
-            _LOGGER.debug("Service call was cancelled: %s", service_call)
-            task.cancel()
-            await asyncio.wait({task}, timeout=SERVICE_CALL_LIMIT)
-            raise
-
-        if task.cancelled():
-            # Service call task was cancelled some other way, such as during shutdown.
-            _LOGGER.debug("Service was cancelled: %s", service_call)
-            raise asyncio.CancelledError
-        if task.done():
-            # Propagate any exceptions that might have happened during service call.
-            task.result()
-            # Service call completed successfully!
-            return True
-        # Service call task did not complete before timeout expired.
-        # Let it keep running in background.
-        self._run_service_in_background(task, service_call)
-        _LOGGER.debug("Service did not complete before timeout: %s", service_call)
-        return False
+        await coro
 
     def _run_service_in_background(
         self,
