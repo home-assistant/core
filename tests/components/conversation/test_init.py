@@ -882,14 +882,40 @@ async def test_turn_on_intent(
     data = {conversation.ATTR_TEXT: sentence}
     if agent_id is not None:
         data[conversation.ATTR_AGENT_ID] = agent_id
-    await hass.services.async_call("conversation", "process", data)
-    await hass.async_block_till_done()
+    result = await hass.services.async_call(
+        "conversation",
+        "process",
+        data,
+        blocking=True,
+        return_values=True,
+    )
 
     assert len(calls) == 1
     call = calls[0]
     assert call.domain == LIGHT_DOMAIN
     assert call.service == "turn_on"
     assert call.data == {"entity_id": ["light.kitchen"]}
+
+    assert result == {
+        "conversation_id": None,
+        "response": {
+            "card": {},
+            "data": {
+                "failed": [],
+                "success": [
+                    {
+                        "id": "light.kitchen",
+                        "name": "kitchen",
+                        "type": intent.IntentResponseTargetType.ENTITY,
+                    }
+                ],
+                "targets": [],
+            },
+            "language": "en",
+            "response_type": "action_done",
+            "speech": {"plain": {"extra_data": None, "speech": "Turned on light"}},
+        },
+    }
 
 
 @pytest.mark.parametrize("sentence", ("turn off kitchen", "turn kitchen off"))

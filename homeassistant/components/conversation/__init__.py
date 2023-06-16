@@ -154,12 +154,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     if config_intents := config.get(DOMAIN, {}).get("intents"):
         hass.data[DATA_CONFIG] = config_intents
 
-    async def handle_process(service: core.ServiceCall) -> None:
+    async def handle_process(service: core.ServiceCall) -> core.ServiceResult:
         """Parse text into commands."""
         text = service.data[ATTR_TEXT]
         _LOGGER.debug("Processing: <%s>", text)
         try:
-            await async_converse(
+            result = await async_converse(
                 hass=hass,
                 text=text,
                 conversation_id=None,
@@ -167,8 +167,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 language=service.data.get(ATTR_LANGUAGE),
                 agent_id=service.data.get(ATTR_AGENT_ID),
             )
+            if service.return_values:
+                return result.as_dict()
         except intent.IntentHandleError as err:
             _LOGGER.error("Error processing %s: %s", text, err)
+
+        return None
 
     async def handle_reload(service: core.ServiceCall) -> None:
         """Reload intents."""
