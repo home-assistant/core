@@ -78,14 +78,6 @@ def _get_language_variations(language: str) -> Iterable[str]:
         yield lang
 
 
-@dataclass(slots=True)
-class TriggerAction:
-    """Action to take when a trigger sentence is matched."""
-
-    callback: TRIGGER_CALLBACK_TYPE
-    response: str | None = None
-
-
 @core.callback
 def async_setup(hass: core.HomeAssistant) -> None:
     """Set up entity registry listener for the default agent."""
@@ -122,7 +114,9 @@ class DefaultAgent(AbstractConversationAgent):
         self._slot_lists: dict[str, SlotList] | None = None
 
         # Sentences that will trigger a callback (skipping intent recognition)
-        self._trigger_sentences: dict[str, list[TriggerAction]] = defaultdict(list)
+        self._trigger_sentences: dict[str, list[TRIGGER_CALLBACK_TYPE]] = defaultdict(
+            list
+        )
         self._trigger_intents: Intents | None = None
 
     @property
@@ -624,17 +618,15 @@ class DefaultAgent(AbstractConversationAgent):
         self,
         sentences: list[str],
         callback: TRIGGER_CALLBACK_TYPE,
-        response: str | None = None,
     ) -> core.CALLBACK_TYPE:
         """Register a list of sentences that will trigger a callback when recognized."""
-        action = TriggerAction(callback, response=response)
         for sentence in sentences:
-            self._trigger_sentences[sentence].append(action)
+            self._trigger_sentences[sentence].append(callback)
 
         # Force rebuild on next use
         self._trigger_intents = None
 
-        unregister = functools.partial(self._unregister_trigger, sentences, action)
+        unregister = functools.partial(self._unregister_trigger, sentences, callback)
         return unregister
 
     def _rebuild_trigger_intents(self) -> None:
@@ -650,7 +642,9 @@ class DefaultAgent(AbstractConversationAgent):
         self._trigger_intents = Intents.from_dict(intents_dict)
         _LOGGER.debug("Rebuilt trigger intents: %s", intents_dict)
 
-    def _unregister_trigger(self, sentences: list[str], action: TriggerAction) -> None:
+    def _unregister_trigger(
+        self, sentences: list[str], action: TRIGGER_CALLBACK_TYPE
+    ) -> None:
         """Unregister a callback from a list of trigger sentences."""
         for sentence in sentences:
             with contextlib.suppress(ValueError):
@@ -690,8 +684,7 @@ class DefaultAgent(AbstractConversationAgent):
         _LOGGER.debug("Running %s callback(s) for trigger", len(actions))
         speech = ""
         for action in actions:
-            action_response = action.callback(sentence)
-            if action_response is not None:
+            if action_response := action(sentence):
                 speech = action_response
 
         response = intent.IntentResponse(language=self.hass.config.language)
