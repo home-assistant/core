@@ -384,7 +384,12 @@ class QNAPDriveSensor(QNAPSensor):
     @property
     def name(self):
         """Return the name of the sensor, if any."""
-        return f"{self.device_name} Drive {self.monitor_device} - {self.entity_description.name}"
+        server_name = self.coordinator.data["system_stats"]["system"]["name"]
+
+        return (
+            f"{server_name} {self.entity_description.name} (Drive"
+            f" {self.monitor_device})"
+        )
 
     @property
     def native_value(self):
