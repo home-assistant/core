@@ -33,7 +33,7 @@ from homeassistant.const import (
     __version__,
 )
 import homeassistant.core as ha
-from homeassistant.core import HassJob, HomeAssistant, ServiceResult, State
+from homeassistant.core import HassJob, HomeAssistant, ServiceCall, ServiceResult, State
 from homeassistant.exceptions import (
     HomeAssistantError,
     InvalidEntityFormatError,
@@ -1110,8 +1110,9 @@ async def test_serviceregistry_return_values(hass: HomeAssistant) -> None:
 async def test_serviceregistry_async_return_values(hass: HomeAssistant) -> None:
     """Test service call for an async service that has return values."""
 
-    async def service_handler(_) -> ServiceResult:
+    async def service_handler(call: ServiceCall) -> ServiceResult:
         """Service handler coroutine."""
+        assert call.return_values
         return {"test-reply": "test-value1"}
 
     hass.services.async_register(
@@ -1160,8 +1161,9 @@ async def test_serviceregistry_return_values_invalid(
 ) -> None:
     """Test service call return values are not returned when there is no result schema."""
 
-    def service_handler(_) -> ServiceResult:
+    def service_handler(call: ServiceCall) -> ServiceResult:
         """Service handler coroutine."""
+        assert call.return_values
         return return_value
 
     hass.services.async_register(
@@ -1178,6 +1180,29 @@ async def test_serviceregistry_return_values_invalid(
             return_values=True,
         )
         await hass.async_block_till_done()
+
+
+async def test_serviceregistry_no_return_values(hass: HomeAssistant) -> None:
+    """Test service call for a service that has return values."""
+
+    def service_handler(call: ServiceCall) -> None:
+        """Service handler coroutine."""
+        assert not call.return_values
+        return
+
+    hass.services.async_register(
+        "test_domain",
+        "test_service",
+        service_handler,
+    )
+    result = await hass.services.async_call(
+        "test_domain",
+        "test_service",
+        service_data={},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+    assert not result
 
 
 async def test_config_defaults() -> None:
