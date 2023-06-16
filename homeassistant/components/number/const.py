@@ -17,6 +17,7 @@ from homeassistant.const import (
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     UnitOfApparentPower,
     UnitOfDataRate,
+    UnitOfElectricCharge,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
     UnitOfEnergy,
@@ -239,6 +240,12 @@ class NumberDeviceClass(StrEnum):
     Unit of measurement: `W`, `kW`
     """
 
+    CHARGE = "charge"
+    """Charge.
+
+    Unit of measurement: `mAh`, `Ah`
+    """
+
     PRECIPITATION = "precipitation"
     """Accumulated precipitation.
 
@@ -413,6 +420,10 @@ DEVICE_CLASS_UNITS: dict[NumberDeviceClass, set[type[StrEnum] | str | None]] = {
     NumberDeviceClass.PM25: {CONCENTRATION_MICROGRAMS_PER_CUBIC_METER},
     NumberDeviceClass.POWER_FACTOR: {PERCENTAGE, None},
     NumberDeviceClass.POWER: {UnitOfPower.WATT, UnitOfPower.KILO_WATT},
+    NumberDeviceClass.CHARGE: {
+        UnitOfElectricCharge.MILLIAMPERE_HOUR,
+        UnitOfElectricCharge.AMPERE_HOUR,
+    },
     NumberDeviceClass.PRECIPITATION: set(UnitOfPrecipitationDepth),
     NumberDeviceClass.PRECIPITATION_INTENSITY: set(UnitOfVolumetricFlux),
     NumberDeviceClass.PRESSURE: set(UnitOfPressure),

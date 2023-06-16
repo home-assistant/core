@@ -13,6 +13,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PERCENTAGE,
     UnitOfApparentPower,
+    UnitOfElectricCharge,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
     UnitOfFrequency,
@@ -434,6 +435,8 @@ INFERRED_UNITS = {
     " Volt-Ampere": UnitOfApparentPower.VOLT_AMPERE,
     " VA": UnitOfApparentPower.VOLT_AMPERE,
     " Watts": UnitOfPower.WATT,
+    " Ampere hour": UnitOfElectricCharge.AMPERE_HOUR,
+    " milliampere hour": UnitOfElectricCharge.MILLIAMPERE_HOUR,
     " Hz": UnitOfFrequency.HERTZ,
     " C": UnitOfTemperature.CELSIUS,
     # APCUPSd reports data for "itemp" field (eventually represented by UPS Internal

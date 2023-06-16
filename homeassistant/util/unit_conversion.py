@@ -10,6 +10,7 @@ from homeassistant.const import (
     PERCENTAGE,
     UNIT_NOT_RECOGNIZED_TEMPLATE,
     UnitOfDataRate,
+    UnitOfElectricCharge,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
     UnitOfEnergy,
@@ -281,6 +282,21 @@ class PowerConverter(BaseUnitConverter):
     VALID_UNITS = {
         UnitOfPower.WATT,
         UnitOfPower.KILO_WATT,
+    }
+
+
+class ChargeConverter(BaseUnitConverter):
+    """Utility to convert charge values."""
+
+    UNIT_CLASS = "charge"
+    NORMALIZED_UNIT = UnitOfElectricCharge.AMPERE_HOUR
+    _UNIT_CONVERSION: dict[str | None, float] = {
+        UnitOfElectricCharge.MILLIAMPERE_HOUR: 1,
+        UnitOfElectricCharge.AMPERE_HOUR: 1 / 1000,
+    }
+    VALID_UNITS = {
+        UnitOfElectricCharge.MILLIAMPERE_HOUR,
+        UnitOfElectricCharge.AMPERE_HOUR,
     }
 
 

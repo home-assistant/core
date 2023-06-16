@@ -494,6 +494,13 @@ POWER_VOLT_AMPERE: Final = "VA"
 """Deprecated: please use UnitOfApparentPower.VOLT_AMPERE."""
 
 
+class UnitOfElectricCharge(StrEnum):
+    """Charge units."""
+
+    AMPERE_HOUR = "Ah"
+    MILLIAMPERE_HOUR = "mAh"
+
+
 # Power units
 class UnitOfPower(StrEnum):
     """Power units."""

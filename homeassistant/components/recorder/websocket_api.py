@@ -15,6 +15,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.json import JSON_DUMP
 from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_conversion import (
+    ChargeConverter,
     DataRateConverter,
     DistanceConverter,
     ElectricCurrentConverter,
@@ -62,6 +63,7 @@ UNIT_SCHEMA = vol.Schema(
         vol.Optional("information"): vol.In(InformationConverter.VALID_UNITS),
         vol.Optional("mass"): vol.In(MassConverter.VALID_UNITS),
         vol.Optional("power"): vol.In(PowerConverter.VALID_UNITS),
+        vol.Optional("charge"): vol.In(ChargeConverter.VALID_UNITS),
         vol.Optional("pressure"): vol.In(PressureConverter.VALID_UNITS),
         vol.Optional("speed"): vol.In(SpeedConverter.VALID_UNITS),
         vol.Optional("temperature"): vol.In(TemperatureConverter.VALID_UNITS),

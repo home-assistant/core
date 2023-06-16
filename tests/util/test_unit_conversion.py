@@ -11,6 +11,7 @@ from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     PERCENTAGE,
     UnitOfDataRate,
+    UnitOfElectricCharge,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
     UnitOfEnergy,
@@ -28,6 +29,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util import unit_conversion
 from homeassistant.util.unit_conversion import (
     BaseUnitConverter,
+    ChargeConverter,
     DataRateConverter,
     DistanceConverter,
     ElectricCurrentConverter,
@@ -60,6 +62,7 @@ _ALL_CONVERTERS: dict[type[BaseUnitConverter], list[str | None]] = {
         InformationConverter,
         MassConverter,
         PowerConverter,
+        ChargeConverter,
         PressureConverter,
         SpeedConverter,
         TemperatureConverter,
@@ -90,6 +93,11 @@ _GET_UNIT_RATIO: dict[type[BaseUnitConverter], tuple[str | None, str | None, flo
     InformationConverter: (UnitOfInformation.BITS, UnitOfInformation.BYTES, 8),
     MassConverter: (UnitOfMass.STONES, UnitOfMass.KILOGRAMS, 0.157473),
     PowerConverter: (UnitOfPower.WATT, UnitOfPower.KILO_WATT, 1000),
+    ChargeConverter: (
+        UnitOfElectricCharge.MILLIAMPERE_HOUR,
+        UnitOfElectricCharge.AMPERE_HOUR,
+        1000,
+    ),
     PressureConverter: (UnitOfPressure.HPA, UnitOfPressure.INHG, 33.86389),
     SpeedConverter: (
         UnitOfSpeed.KILOMETERS_PER_HOUR,
@@ -276,6 +284,20 @@ _CONVERTED_VALUE: dict[
     PowerConverter: [
         (10, UnitOfPower.KILO_WATT, 10000, UnitOfPower.WATT),
         (10, UnitOfPower.WATT, 0.01, UnitOfPower.KILO_WATT),
+    ],
+    ChargeConverter: [
+        (
+            10,
+            UnitOfElectricCharge.AMPERE_HOUR,
+            10000,
+            UnitOfElectricCharge.MILLIAMPERE_HOUR,
+        ),
+        (
+            10,
+            UnitOfElectricCharge.MILLIAMPERE_HOUR,
+            0.01,
+            UnitOfElectricCharge.AMPERE_HOUR,
+        ),
     ],
     PressureConverter: [
         (1000, UnitOfPressure.HPA, 14.5037743897, UnitOfPressure.PSI),

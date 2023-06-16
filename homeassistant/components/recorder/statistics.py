@@ -28,6 +28,7 @@ from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_conversion import (
     BaseUnitConverter,
+    ChargeConverter,
     DataRateConverter,
     DistanceConverter,
     ElectricCurrentConverter,
@@ -138,6 +139,7 @@ STATISTIC_UNIT_TO_UNIT_CONVERTER: dict[str | None, type[BaseUnitConverter]] = {
     **{unit: InformationConverter for unit in InformationConverter.VALID_UNITS},
     **{unit: MassConverter for unit in MassConverter.VALID_UNITS},
     **{unit: PowerConverter for unit in PowerConverter.VALID_UNITS},
+    **{unit: ChargeConverter for unit in ChargeConverter.VALID_UNITS},
     **{unit: PressureConverter for unit in PressureConverter.VALID_UNITS},
     **{unit: SpeedConverter for unit in SpeedConverter.VALID_UNITS},
     **{unit: TemperatureConverter for unit in TemperatureConverter.VALID_UNITS},

@@ -17,6 +17,7 @@ from homeassistant.const import (
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     UnitOfApparentPower,
     UnitOfDataRate,
+    UnitOfElectricCharge,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
     UnitOfEnergy,
@@ -37,6 +38,7 @@ from homeassistant.const import (
 )
 from homeassistant.util.unit_conversion import (
     BaseUnitConverter,
+    ChargeConverter,
     DataRateConverter,
     DistanceConverter,
     ElectricCurrentConverter,
@@ -277,6 +279,12 @@ class SensorDeviceClass(StrEnum):
     Unit of measurement: `W`, `kW`
     """
 
+    CHARGE = "charge"
+    """Charge.
+
+    Unit of measurement: `mAh`, `Ah`
+    """
+
     PRECIPITATION = "precipitation"
     """Accumulated precipitation.
 
@@ -460,6 +468,7 @@ UNIT_CONVERTERS: dict[SensorDeviceClass | str | None, type[BaseUnitConverter]] =
     SensorDeviceClass.ENERGY_STORAGE: EnergyConverter,
     SensorDeviceClass.GAS: VolumeConverter,
     SensorDeviceClass.POWER: PowerConverter,
+    SensorDeviceClass.CHARGE: ChargeConverter,
     SensorDeviceClass.POWER_FACTOR: UnitlessRatioConverter,
     SensorDeviceClass.PRECIPITATION: DistanceConverter,
     SensorDeviceClass.PRECIPITATION_INTENSITY: SpeedConverter,
@@ -514,6 +523,10 @@ DEVICE_CLASS_UNITS: dict[SensorDeviceClass, set[type[StrEnum] | str | None]] = {
     SensorDeviceClass.PM25: {CONCENTRATION_MICROGRAMS_PER_CUBIC_METER},
     SensorDeviceClass.POWER_FACTOR: {PERCENTAGE, None},
     SensorDeviceClass.POWER: {UnitOfPower.WATT, UnitOfPower.KILO_WATT},
+    SensorDeviceClass.CHARGE: {
+        UnitOfElectricCharge.MILLIAMPERE_HOUR,
+        UnitOfElectricCharge.AMPERE_HOUR,
+    },
     SensorDeviceClass.PRECIPITATION: set(UnitOfPrecipitationDepth),
     SensorDeviceClass.PRECIPITATION_INTENSITY: set(UnitOfVolumetricFlux),
     SensorDeviceClass.PRESSURE: set(UnitOfPressure),
