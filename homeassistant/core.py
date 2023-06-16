@@ -1760,8 +1760,7 @@ class ServiceRegistry:
     ) -> None:
         """Register a service.
 
-        Schema is called to coerce and validate the service data. The result schema (optional)
-        allows the service call to support dict return values and is used to validate the result.
+        Schema is called to coerce and validate the service data.
 
         This method must be run in the event loop.
         """
