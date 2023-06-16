@@ -30,6 +30,9 @@ HAP-python==4.6.0
 # homeassistant.components.tasmota
 HATasmota==0.6.5
 
+# homeassistant.components.hydrawise
+Hydrawiser==0.2
+
 # homeassistant.components.doods
 # homeassistant.components.generic
 # homeassistant.components.image_upload
