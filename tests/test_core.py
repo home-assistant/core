@@ -1183,7 +1183,7 @@ async def test_serviceregistry_return_values_invalid(
 
 
 async def test_serviceregistry_no_return_values(hass: HomeAssistant) -> None:
-    """Test service call for a service that has return values."""
+    """Test service call data when not asked for return values."""
 
     def service_handler(call: ServiceCall) -> None:
         """Service handler coroutine."""
