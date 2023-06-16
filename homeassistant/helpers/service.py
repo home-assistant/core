@@ -690,10 +690,10 @@ def async_set_service_schema(
 async def entity_service_call(  # noqa: C901
     hass: HomeAssistant,
     platforms: Iterable[EntityPlatform],
-    func: str | Callable[..., Coroutine[Any, Any, ServiceResult] | None],
+    func: str | Callable[..., Coroutine[Any, Any, None] | None],
     call: ServiceCall,
     required_features: Iterable[int] | None = None,
-) -> ServiceResult:
+) -> None:
     """Handle an entity service call.
 
     Calls all platforms simultaneously.
@@ -828,9 +828,8 @@ async def entity_service_call(  # noqa: C901
         ]
     )
     assert not pending
-    results: list[ServiceResult] = []
     for future in done:
-        results.append(future.result())  # pop exception if have
+        future.result()  # pop exception if have
 
     tasks = []
 
@@ -849,10 +848,6 @@ async def entity_service_call(  # noqa: C901
         for future in done:
             future.result()  # pop exception if have
 
-    # ServiceResult for multiple entities is ambiguous, so just return when
-    # a single entity is involved.
-    return results[0] if len(results) == 1 else None
-
 
 async def _handle_entity_call(
     hass: HomeAssistant,
@@ -860,7 +855,7 @@ async def _handle_entity_call(
     func: str | Callable[..., Coroutine[Any, Any, ServiceResult] | None],
     data: dict | ServiceCall,
     context: Context,
-) -> ServiceResult | None:
+) -> ServiceResult:
     """Handle calling service method."""
     entity.async_set_context(context)
 

@@ -22,7 +22,6 @@ from homeassistant.core import (
     CoreState,
     HomeAssistant,
     ServiceCall,
-    ServiceResult,
     callback,
     split_entity_id,
     valid_entity_id,
@@ -836,9 +835,9 @@ class EntityPlatform:
         if isinstance(schema, dict):
             schema = cv.make_entity_service_schema(schema)
 
-        async def handle_service(call: ServiceCall) -> ServiceResult:
+        async def handle_service(call: ServiceCall) -> None:
             """Handle the service."""
-            return await service.entity_service_call(
+            await service.entity_service_call(
                 self.hass,
                 [
                     plf
