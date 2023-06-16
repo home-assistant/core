@@ -6,7 +6,6 @@ from typing import Any
 from unittest.mock import ANY, Mock, patch
 
 import pytest
-import voluptuous as vol
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, PERCENTAGE
 from homeassistant.core import CoreState, HomeAssistant, callback
