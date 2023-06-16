@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable, Callable, Coroutine, Iterable
+from collections.abc import Awaitable, Callable, Iterable
 import dataclasses
 from enum import Enum
 from functools import cache, partial, wraps
@@ -26,12 +26,7 @@ from homeassistant.const import (
     ENTITY_MATCH_ALL,
     ENTITY_MATCH_NONE,
 )
-from homeassistant.core import (
-    Context,
-    HomeAssistant,
-    ServiceCall,
-    callback,
-)
+from homeassistant.core import Context, HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import (
     HomeAssistantError,
     TemplateError,
@@ -58,8 +53,6 @@ if TYPE_CHECKING:
 
     _EntityT = TypeVar("_EntityT", bound=Entity)
 
-
-_R = TypeVar("_R")
 
 CONF_SERVICE_ENTITY_ID = "entity_id"
 
@@ -679,7 +672,7 @@ def async_set_service_schema(
 async def entity_service_call(  # noqa: C901
     hass: HomeAssistant,
     platforms: Iterable[EntityPlatform],
-    func: str | Callable[..., Coroutine[Any, Any, None] | None],
+    func: str | Callable[..., Any],
     call: ServiceCall,
     required_features: Iterable[int] | None = None,
 ) -> None:
