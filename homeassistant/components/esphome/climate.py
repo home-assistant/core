@@ -152,7 +152,7 @@ class EsphomeClimateEntity(EsphomeEntity[ClimateInfo, ClimateState], ClimateEnti
         return PRECISION_TENTHS
 
     @property
-    def hvac_modes(self) -> list[str]:
+    def hvac_modes(self) -> list[HVACMode]:
         """Return the list of available operation modes."""
         return [
             _CLIMATE_MODES.from_esphome(mode)
@@ -217,13 +217,13 @@ class EsphomeClimateEntity(EsphomeEntity[ClimateInfo, ClimateState], ClimateEnti
 
     @property
     @esphome_state_property
-    def hvac_mode(self) -> str | None:
+    def hvac_mode(self) -> HVACMode | None:
         """Return current operation ie. heat, cool, idle."""
         return _CLIMATE_MODES.from_esphome(self._state.mode)
 
     @property
     @esphome_state_property
-    def hvac_action(self) -> str | None:
+    def hvac_action(self) -> HVACAction | None:
         """Return current action."""
         # HA has no support feature field for hvac_action
         if not self._static_info.supports_action:

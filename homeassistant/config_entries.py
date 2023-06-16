@@ -29,6 +29,7 @@ from .exceptions import (
     HomeAssistantError,
 )
 from .helpers import device_registry, entity_registry, storage
+from .helpers.debounce import Debouncer
 from .helpers.dispatcher import async_dispatcher_send
 from .helpers.event import (
     RANDOM_MICROSECOND_MAX,
@@ -87,6 +88,8 @@ STORAGE_VERSION = 1
 PATH_CONFIG = ".config_entries.json"
 
 SAVE_DELAY = 1
+
+DISCOVERY_COOLDOWN = 1
 
 _R = TypeVar("_R")
 
@@ -808,6 +811,13 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager):
         self._hass_config = hass_config
         self._pending_import_flows: dict[str, dict[str, asyncio.Future[None]]] = {}
         self._initialize_tasks: dict[str, list[asyncio.Task]] = {}
+        self._discovery_debouncer = Debouncer(
+            hass,
+            _LOGGER,
+            cooldown=DISCOVERY_COOLDOWN,
+            immediate=True,
+            function=self._async_discovery,
+        )
 
     async def async_wait_import_flow_initialized(self, handler: str) -> None:
         """Wait till all import flows in progress are initialized."""
@@ -883,6 +893,7 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager):
         for task_list in self._initialize_tasks.values():
             for task in task_list:
                 task.cancel()
+        await self._discovery_debouncer.async_shutdown()
 
     async def async_finish_flow(
         self, flow: data_entry_flow.FlowHandler, result: data_entry_flow.FlowResult
@@ -979,16 +990,7 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager):
 
         # Create notification.
         if source in DISCOVERY_SOURCES:
-            self.hass.bus.async_fire(EVENT_FLOW_DISCOVERED)
-            persistent_notification.async_create(
-                self.hass,
-                title="New devices discovered",
-                message=(
-                    "We have discovered new devices on your network. "
-                    "[Check it out](/config/integrations)."
-                ),
-                notification_id=DISCOVERY_NOTIFICATION_ID,
-            )
+            await self._discovery_debouncer.async_call()
         elif source == SOURCE_REAUTH:
             persistent_notification.async_create(
                 self.hass,
@@ -999,6 +1001,20 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager):
                 ),
                 notification_id=RECONFIGURE_NOTIFICATION_ID,
             )
+
+    @callback
+    def _async_discovery(self) -> None:
+        """Handle discovery."""
+        self.hass.bus.async_fire(EVENT_FLOW_DISCOVERED)
+        persistent_notification.async_create(
+            self.hass,
+            title="New devices discovered",
+            message=(
+                "We have discovered new devices on your network. "
+                "[Check it out](/config/integrations)."
+            ),
+            notification_id=DISCOVERY_NOTIFICATION_ID,
+        )
 
 
 class ConfigEntries:
