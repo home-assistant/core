@@ -850,10 +850,7 @@ class EntityPlatform:
             )
 
         self.hass.services.async_register(
-            self.platform_name,
-            name,
-            handle_service,
-            schema,
+            self.platform_name, name, handle_service, schema
         )
 
     async def _update_entity_states(self, now: datetime) -> None:
