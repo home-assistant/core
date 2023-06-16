@@ -839,7 +839,7 @@ jsonpath==0.82
 justnimbus==0.6.0
 
 # homeassistant.components.tplink
-kasa-crypt==0.1.2
+kasa-crypt==0.1.4
 
 # homeassistant.components.kegtron
 kegtron-ble==0.4.0
