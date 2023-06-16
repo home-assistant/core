@@ -1,11 +1,12 @@
 """Coordinator for Glances integration."""
+from datetime import timedelta
 import logging
 from typing import Any
 
 from glances_api import Glances, exceptions
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -29,7 +30,9 @@ class GlancesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             hass,
             _LOGGER,
             name=f"{DOMAIN} - {self.host}",
-            update_interval=DEFAULT_SCAN_INTERVAL,
+            update_interval=timedelta(
+                seconds=entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
+            ),
         )
 
     async def _async_update_data(self) -> dict[str, Any]:

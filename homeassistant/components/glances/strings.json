@@ -19,5 +19,15 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "description": "Interval in seconds how often data should be queried from glances API.",
+        "data": {
+          "scan_interval": "Update interval"
+        }
+      }
+    }
   }
 }
