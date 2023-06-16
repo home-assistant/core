@@ -52,14 +52,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
     if not hass.config_entries.async_entries(DOMAIN) and DOMAIN not in hass.data:
         # No config entry exists and configuration.yaml config exists; trigger the import flow.
+        data = {CONF_API_KEY: config[DOMAIN][CONF_ACCESS_TOKEN]}
+        if CONF_SCAN_INTERVAL in config[DOMAIN]:
+            data[CONF_SCAN_INTERVAL] = config[DOMAIN][CONF_SCAN_INTERVAL].seconds
         hass.async_create_task(
             hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": SOURCE_IMPORT},
-                data={
-                    CONF_API_KEY: config[DOMAIN][CONF_ACCESS_TOKEN],
-                    CONF_SCAN_INTERVAL: config[DOMAIN][CONF_SCAN_INTERVAL].seconds,
-                },
+                DOMAIN, context={"source": SOURCE_IMPORT}, data=data
             )
         )
     return True
