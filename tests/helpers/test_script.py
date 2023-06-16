@@ -23,7 +23,6 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
 )
 from homeassistant.core import (
-    SERVICE_CALL_LIMIT,
     Context,
     CoreState,
     HomeAssistant,
@@ -264,7 +263,6 @@ async def test_calling_service_basic(
             "0": [
                 {
                     "result": {
-                        "limit": SERVICE_CALL_LIMIT,
                         "params": {
                             "domain": "test",
                             "service": "script",
@@ -317,7 +315,6 @@ async def test_calling_service_template(hass: HomeAssistant) -> None:
             "0": [
                 {
                     "result": {
-                        "limit": SERVICE_CALL_LIMIT,
                         "params": {
                             "domain": "test",
                             "service": "script",
@@ -356,7 +353,6 @@ async def test_data_template_with_templated_key(hass: HomeAssistant) -> None:
             "0": [
                 {
                     "result": {
-                        "limit": SERVICE_CALL_LIMIT,
                         "params": {
                             "domain": "test",
                             "service": "script",
@@ -3338,7 +3334,6 @@ async def test_parallel_error(
             {
                 "error_type": ServiceNotFound,
                 "result": {
-                    "limit": 10,
                     "params": {
                         "domain": "epic",
                         "service": "failure",
@@ -3387,7 +3382,6 @@ async def test_propagate_error_service_not_found(hass: HomeAssistant) -> None:
             {
                 "error_type": ServiceNotFound,
                 "result": {
-                    "limit": 10,
                     "params": {
                         "domain": "test",
                         "service": "script",
@@ -3424,7 +3418,6 @@ async def test_propagate_error_invalid_service_data(hass: HomeAssistant) -> None
             {
                 "error_type": vol.MultipleInvalid,
                 "result": {
-                    "limit": 10,
                     "params": {
                         "domain": "test",
                         "service": "script",
@@ -3465,7 +3458,6 @@ async def test_propagate_error_service_exception(hass: HomeAssistant) -> None:
             {
                 "error_type": ValueError,
                 "result": {
-                    "limit": 10,
                     "params": {
                         "domain": "test",
                         "service": "script",
@@ -4343,7 +4335,6 @@ async def test_set_variable(
         "1": [
             {
                 "result": {
-                    "limit": SERVICE_CALL_LIMIT,
                     "params": {
                         "domain": "test",
                         "service": "script",
@@ -4386,7 +4377,6 @@ async def test_set_redefines_variable(
         "1": [
             {
                 "result": {
-                    "limit": SERVICE_CALL_LIMIT,
                     "params": {
                         "domain": "test",
                         "service": "script",
@@ -4402,7 +4392,6 @@ async def test_set_redefines_variable(
         "3": [
             {
                 "result": {
-                    "limit": SERVICE_CALL_LIMIT,
                     "params": {
                         "domain": "test",
                         "service": "script",
@@ -4936,7 +4925,6 @@ async def test_continue_on_error(hass: HomeAssistant) -> None:
             "1": [
                 {
                     "result": {
-                        "limit": 10,
                         "params": {
                             "domain": "broken",
                             "service": "service",
@@ -4952,7 +4940,6 @@ async def test_continue_on_error(hass: HomeAssistant) -> None:
                 {
                     "error_type": HomeAssistantError,
                     "result": {
-                        "limit": 10,
                         "params": {
                             "domain": "broken",
                             "service": "service",
@@ -5011,7 +4998,6 @@ async def test_continue_on_error_automation_issue(hass: HomeAssistant) -> None:
                 {
                     "error_type": ServiceNotFound,
                     "result": {
-                        "limit": 10,
                         "params": {
                             "domain": "service",
                             "service": "not_found",
@@ -5059,7 +5045,6 @@ async def test_continue_on_error_unknown_error(hass: HomeAssistant) -> None:
                 {
                     "error_type": MyLibraryError,
                     "result": {
-                        "limit": 10,
                         "params": {
                             "domain": "some",
                             "service": "service",

@@ -341,7 +341,7 @@ def get_next_departure(
                  {tomorrow_order}
                  origin_stop_time.departure_time
         LIMIT :limit
-        """
+        """  # noqa: S608
     result = schedule.engine.connect().execute(
         text(sql_query),
         {

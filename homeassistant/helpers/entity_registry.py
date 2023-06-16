@@ -425,6 +425,7 @@ class EntityRegistry:
     """Class to hold a registry of entities."""
 
     entities: EntityRegistryItems
+    _entities_data: dict[str, RegistryEntry]
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the registry."""
@@ -470,8 +471,12 @@ class EntityRegistry:
 
     @callback
     def async_get(self, entity_id: str) -> RegistryEntry | None:
-        """Get EntityEntry for an entity_id."""
-        return self.entities.get(entity_id)
+        """Get EntityEntry for an entity_id.
+
+        We retrieve the RegistryEntry from the underlying dict to avoid
+        the overhead of the UserDict __getitem__.
+        """
+        return self._entities_data.get(entity_id)
 
     @callback
     def async_get_entity_id(
@@ -991,6 +996,7 @@ class EntityRegistry:
                 )
 
         self.entities = entities
+        self._entities_data = entities.data
 
     @callback
     def async_schedule_save(self) -> None:

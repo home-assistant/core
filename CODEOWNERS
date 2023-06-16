@@ -275,6 +275,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/discogs/ @thibmaek
 /homeassistant/components/discord/ @tkdrob
 /tests/components/discord/ @tkdrob
+/homeassistant/components/discovergy/ @jpbede
+/tests/components/discovergy/ @jpbede
 /homeassistant/components/discovery/ @home-assistant/core
 /tests/components/discovery/ @home-assistant/core
 /homeassistant/components/dlink/ @tkdrob
@@ -783,11 +785,12 @@ build.json @home-assistant/supervisor
 /tests/components/mutesync/ @currentoor
 /homeassistant/components/my/ @home-assistant/core
 /tests/components/my/ @home-assistant/core
-/homeassistant/components/myq/ @bdraco @ehendrix23
-/tests/components/myq/ @bdraco @ehendrix23
+/homeassistant/components/myq/ @ehendrix23
+/tests/components/myq/ @ehendrix23
 /homeassistant/components/mysensors/ @MartinHjelmare @functionpointer
 /tests/components/mysensors/ @MartinHjelmare @functionpointer
 /homeassistant/components/mystrom/ @fabaff
+/tests/components/mystrom/ @fabaff
 /homeassistant/components/nam/ @bieniu
 /tests/components/nam/ @bieniu
 /homeassistant/components/nanoleaf/ @milanmeu
@@ -1004,6 +1007,8 @@ build.json @home-assistant/supervisor
 /tests/components/remote/ @home-assistant/core
 /homeassistant/components/renault/ @epenet
 /tests/components/renault/ @epenet
+/homeassistant/components/renson/ @jimmyd-be
+/tests/components/renson/ @jimmyd-be
 /homeassistant/components/reolink/ @starkillerOG
 /tests/components/reolink/ @starkillerOG
 /homeassistant/components/repairs/ @home-assistant/core
