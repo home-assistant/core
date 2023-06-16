@@ -112,7 +112,6 @@ async def async_setup_platform(
                 scan_interval,
             )
         ],
-        True,
     )
 
 

@@ -1,0 +1,13 @@
+{
+  "domain": "opentherm_web",
+  "name": "OpenTherm Web",
+  "codeowners": ["@Lake292"],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://www.home-assistant.io/integrations/opentherm_web",
+  "homekit": {},
+  "iot_class": "local_polling",
+  "requirements": [],
+  "ssdp": [],
+  "zeroconf": []
+}

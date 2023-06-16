@@ -202,6 +202,8 @@ omit =
     homeassistant/components/discogs/sensor.py
     homeassistant/components/discord/__init__.py
     homeassistant/components/discord/notify.py
+    homeassistant/components/discovergy/__init__.py
+    homeassistant/components/discovergy/sensor.py
     homeassistant/components/dlib_face_detect/image_processing.py
     homeassistant/components/dlib_face_identify/image_processing.py
     homeassistant/components/dlink/data.py
@@ -421,7 +423,6 @@ omit =
     homeassistant/components/gitlab_ci/sensor.py
     homeassistant/components/gitter/sensor.py
     homeassistant/components/glances/sensor.py
-    homeassistant/components/goalfeed/*
     homeassistant/components/goodwe/__init__.py
     homeassistant/components/goodwe/button.py
     homeassistant/components/goodwe/coordinator.py
@@ -859,6 +860,7 @@ omit =
     homeassistant/components/opentherm_gw/binary_sensor.py
     homeassistant/components/opentherm_gw/climate.py
     homeassistant/components/opentherm_gw/sensor.py
+    homeassistant/components/opentherm_web/climate.py
     homeassistant/components/openuv/__init__.py
     homeassistant/components/openuv/binary_sensor.py
     homeassistant/components/openuv/coordinator.py

@@ -63,7 +63,7 @@ def mock_device_info() -> DeviceInfo:
     return DeviceInfo(
         uses_password=False,
         name="test",
-        bluetooth_proxy_version=0,
+        legacy_bluetooth_proxy_version=0,
         mac_address="11:22:33:44:55:aa",
         esphome_version="1.0.0",
     )

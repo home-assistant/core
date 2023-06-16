@@ -169,10 +169,10 @@ aio-georss-gdacs==0.8
 aioairq==0.2.4
 
 # homeassistant.components.airzone_cloud
-aioairzone-cloud==0.1.7
+aioairzone-cloud==0.1.8
 
 # homeassistant.components.airzone
-aioairzone==0.6.1
+aioairzone==0.6.3
 
 # homeassistant.components.ambient_station
 aioambient==2023.04.0
@@ -187,7 +187,7 @@ aioasuswrt==1.4.0
 aioazuredevops==1.3.5
 
 # homeassistant.components.baf
-aiobafi6==0.8.0
+aiobafi6==0.8.2
 
 # homeassistant.components.aws
 aiobotocore==2.1.0
@@ -212,7 +212,7 @@ aioecowitt==2023.5.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==13.9.0
+aioesphomeapi==14.0.0
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -227,7 +227,7 @@ aioguardian==2022.07.0
 aioharmony==0.2.10
 
 # homeassistant.components.homekit_controller
-aiohomekit==2.6.4
+aiohomekit==2.6.5
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -335,7 +335,7 @@ aiosyncthing==0.5.1
 aiotractive==0.5.5
 
 # homeassistant.components.unifi
-aiounifi==47
+aiounifi==48
 
 # homeassistant.components.vlc_telnet
 aiovlc==0.1.0
@@ -767,10 +767,10 @@ hole==0.8.0
 holidays==0.21.13
 
 # homeassistant.components.frontend
-home-assistant-frontend==20230601.1
+home-assistant-frontend==20230608.0
 
 # homeassistant.components.conversation
-home-assistant-intents==2023.5.30
+home-assistant-intents==2023.6.5
 
 # homeassistant.components.home_connect
 homeconnect==0.7.2
@@ -899,7 +899,7 @@ mcstatus==6.0.0
 meater-python==0.0.8
 
 # homeassistant.components.melnor
-melnor-bluetooth==0.0.22
+melnor-bluetooth==0.0.25
 
 # homeassistant.components.meteo_france
 meteofrance-api==1.2.0
@@ -1203,6 +1203,9 @@ pydeconz==113
 # homeassistant.components.dexcom
 pydexcom==0.2.3
 
+# homeassistant.components.discovergy
+pydiscovergy==1.2.1
+
 # homeassistant.components.android_ip_webcam
 pydroid-ipcam==2.0.0
 
@@ -1219,7 +1222,7 @@ pyeverlights==0.1.0
 pyevilgenius==2.0.0
 
 # homeassistant.components.ezviz
-pyezviz==0.2.0.15
+pyezviz==0.2.0.17
 
 # homeassistant.components.fibaro
 pyfibaro==0.7.1
@@ -1273,7 +1276,7 @@ pyinsteon==1.4.2
 pyipma==3.0.6
 
 # homeassistant.components.ipp
-pyipp==0.13.0
+pyipp==0.14.0
 
 # homeassistant.components.iqvia
 pyiqvia==2022.04.0
@@ -1345,7 +1348,7 @@ pymeteoclimatic==0.0.6
 pymochad==0.2.0
 
 # homeassistant.components.modbus
-pymodbus==3.1.3
+pymodbus==3.3.1
 
 # homeassistant.components.monoprice
 pymonoprice==0.4
@@ -1363,7 +1366,7 @@ pynetgear==0.10.9
 pynobo==1.6.0
 
 # homeassistant.components.nuki
-pynuki==1.6.1
+pynuki==1.6.2
 
 # homeassistant.components.nut
 pynut2==2.1.2
@@ -1398,7 +1401,7 @@ pyotgw==2.1.3
 pyotp==2.8.0
 
 # homeassistant.components.overkiz
-pyoverkiz==1.7.9
+pyoverkiz==1.8.0
 
 # homeassistant.components.openweathermap
 pyowm==3.2.0
@@ -1543,21 +1546,24 @@ python-matter-server==3.4.1
 # homeassistant.components.xiaomi_miio
 python-miio==0.5.12
 
+# homeassistant.components.mystrom
+python-mystrom==2.2.0
+
 # homeassistant.components.nest
 python-nest==4.2.0
 
 # homeassistant.components.otbr
 # homeassistant.components.thread
-python-otbr-api==2.1.0
+python-otbr-api==2.2.0
 
 # homeassistant.components.picnic
 python-picnic-api==1.1.0
 
 # homeassistant.components.qbittorrent
-python-qbittorrent==0.4.2
+python-qbittorrent==0.4.3
 
 # homeassistant.components.roborock
-python-roborock==0.17.0
+python-roborock==0.23.4
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.33
@@ -1592,7 +1598,7 @@ pytrafikverket==0.3.3
 pyudev==0.23.2
 
 # homeassistant.components.unifiprotect
-pyunifiprotect==4.9.1
+pyunifiprotect==4.10.2
 
 # homeassistant.components.uptimerobot
 pyuptimerobot==22.2.0
@@ -1670,7 +1676,7 @@ rpi-bad-power==0.1.0
 rtsp-to-webrtc==0.5.1
 
 # homeassistant.components.ruuvitag_ble
-ruuvitag-ble==0.1.1
+ruuvitag-ble==0.1.2
 
 # homeassistant.components.yamaha
 rxv==0.7.0
@@ -1952,7 +1958,7 @@ wyoming==0.0.1
 xbox-webapi==2.0.11
 
 # homeassistant.components.xiaomi_ble
-xiaomi-ble==0.17.0
+xiaomi-ble==0.17.2
 
 # homeassistant.components.knx
 xknx==2.10.0
@@ -1991,7 +1997,7 @@ youless-api==1.0.1
 zamg==0.2.2
 
 # homeassistant.components.zeroconf
-zeroconf==0.63.0
+zeroconf==0.64.0
 
 # homeassistant.components.zeversolar
 zeversolar==0.3.1

@@ -12,6 +12,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import LIGHT_LUX
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -71,7 +72,7 @@ class AbodeSensor(AbodeDevice, SensorEntity):
         elif description.key == CONST.HUMI_STATUS_KEY:
             self._attr_native_unit_of_measurement = device.humidity_unit
         elif description.key == CONST.LUX_STATUS_KEY:
-            self._attr_native_unit_of_measurement = device.lux_unit
+            self._attr_native_unit_of_measurement = LIGHT_LUX
 
     @property
     def native_value(self) -> float | None:

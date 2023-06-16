@@ -1,7 +1,7 @@
 """The tests for lastfm."""
 from unittest.mock import patch
 
-from pylast import Track, WSError
+from pylast import PyLastError, Track
 
 from homeassistant.components.lastfm.const import CONF_MAIN_USER, CONF_USERS
 from homeassistant.const import CONF_API_KEY
@@ -65,7 +65,7 @@ class MockUser:
     def get_friends(self):
         """Get mock friends."""
         if self._has_friends is False:
-            raise WSError("network", "status", "Page not found")
+            raise PyLastError("network", "status", "Page not found")
         return [MockUser(None, None, True, USERNAME_2)]
 
 

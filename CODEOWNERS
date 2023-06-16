@@ -275,6 +275,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/discogs/ @thibmaek
 /homeassistant/components/discord/ @tkdrob
 /tests/components/discord/ @tkdrob
+/homeassistant/components/discovergy/ @jpbede
+/tests/components/discovergy/ @jpbede
 /homeassistant/components/discovery/ @home-assistant/core
 /tests/components/discovery/ @home-assistant/core
 /homeassistant/components/dlink/ @tkdrob
@@ -450,8 +452,8 @@ build.json @home-assistant/supervisor
 /tests/components/glances/ @engrbm87
 /homeassistant/components/goalzero/ @tkdrob
 /tests/components/goalzero/ @tkdrob
-/homeassistant/components/gogogate2/ @vangorra @bdraco
-/tests/components/gogogate2/ @vangorra @bdraco
+/homeassistant/components/gogogate2/ @vangorra
+/tests/components/gogogate2/ @vangorra
 /homeassistant/components/goodwe/ @mletenay @starkillerOG
 /tests/components/goodwe/ @mletenay @starkillerOG
 /homeassistant/components/google/ @allenporter
@@ -565,8 +567,8 @@ build.json @home-assistant/supervisor
 /tests/components/image_processing/ @home-assistant/core
 /homeassistant/components/image_upload/ @home-assistant/core
 /tests/components/image_upload/ @home-assistant/core
-/homeassistant/components/imap/ @engrbm87 @jbouwh
-/tests/components/imap/ @engrbm87 @jbouwh
+/homeassistant/components/imap/ @jbouwh
+/tests/components/imap/ @jbouwh
 /homeassistant/components/incomfort/ @zxdavb
 /homeassistant/components/influxdb/ @mdegat01
 /tests/components/influxdb/ @mdegat01
@@ -786,6 +788,7 @@ build.json @home-assistant/supervisor
 /homeassistant/components/mysensors/ @MartinHjelmare @functionpointer
 /tests/components/mysensors/ @MartinHjelmare @functionpointer
 /homeassistant/components/mystrom/ @fabaff
+/tests/components/mystrom/ @fabaff
 /homeassistant/components/nam/ @bieniu
 /tests/components/nam/ @bieniu
 /homeassistant/components/nanoleaf/ @milanmeu
@@ -883,6 +886,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/opensky/ @joostlek
 /homeassistant/components/opentherm_gw/ @mvn23
 /tests/components/opentherm_gw/ @mvn23
+/homeassistant/components/opentherm_web/ @Lake292
+/tests/components/opentherm_web/ @Lake292
 /homeassistant/components/openuv/ @bachya
 /tests/components/openuv/ @bachya
 /homeassistant/components/openweathermap/ @fabaff @freekode @nzapponi

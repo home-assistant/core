@@ -22,8 +22,8 @@ ha-av==10.1.0
 hass-nabucasa==0.67.1
 hassil==1.0.6
 home-assistant-bluetooth==1.10.0
-home-assistant-frontend==20230601.1
-home-assistant-intents==2023.5.30
+home-assistant-frontend==20230608.0
+home-assistant-intents==2023.6.5
 httpx==0.24.1
 ifaddr==0.2.0
 janus==1.0.0
@@ -52,7 +52,7 @@ voluptuous-serialize==2.6.0
 voluptuous==0.13.1
 webrtcvad==2.0.10
 yarl==1.9.2
-zeroconf==0.63.0
+zeroconf==0.64.0
 
 # Constrain pycryptodome to avoid vulnerability
 # see https://github.com/home-assistant/core/pull/16238
@@ -128,9 +128,8 @@ authlib<1.0
 # Version 2.0 added typing, prevent accidental fallbacks
 backoff>=2.0
 
-# Breaking change in version
-# https://github.com/samuelcolvin/pydantic/issues/4092
-pydantic!=1.9.1
+# Require to avoid issues with decorators (#93904). v2 has breaking changes.
+pydantic>=1.10.8,<2.0
 
 # Breaks asyncio
 # https://github.com/pubnub/python/issues/130
@@ -175,10 +174,6 @@ pysnmplib==5.0.21
 # pysnmp is no longer maintained and does not work with newer
 # python
 pysnmp==1000000000.0.0
-
-# pyminiaudio 1.58 is missing files in the package
-# https://github.com/irmen/pyminiaudio/issues/67
-miniaudio==1.57
 
 # The get-mac package has been replaced with getmac. Installing get-mac alongside getmac
 # breaks getmac due to them both sharing the same python package name inside 'getmac'.
