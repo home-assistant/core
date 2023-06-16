@@ -1,4 +1,16 @@
 {
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        }
+      }
+    },
+    "error": {
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    }
+  },
   "issues": {
     "deprecated_yaml": {
       "title": "The Hydrawise YAML configuration is being removed",
