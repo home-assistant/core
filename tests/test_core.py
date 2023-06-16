@@ -1149,7 +1149,9 @@ async def test_services_call_return_values_requires_blocking(
     [
         (True, "expected a dictionary"),
         (False, "expected a dictionary"),
+        (None, "expected a dictionary"),
         ("some-value", "expected a dictionary"),
+        (["some-list"], "expected a dictionary"),
     ],
 )
 async def test_serviceregistry_return_values_invalid(
