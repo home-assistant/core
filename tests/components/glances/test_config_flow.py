@@ -4,8 +4,9 @@ from unittest.mock import MagicMock
 from glances_api.exceptions import GlancesApiConnectionError
 import pytest
 
-from homeassistant import config_entries
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import glances
+from homeassistant.const import CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -67,3 +68,19 @@ async def test_form_already_configured(hass: HomeAssistant) -> None:
     )
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+async def test_options_flow(hass: HomeAssistant) -> None:
+    """Test config flow options."""
+    config_entry = MockConfigEntry(domain=glances.DOMAIN, data=MOCK_USER_INPUT)
+    config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={CONF_SCAN_INTERVAL: 42}
+    )
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert config_entry.options == {CONF_SCAN_INTERVAL: 42}
