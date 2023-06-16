@@ -62,6 +62,7 @@ class ReolinkHost:
         self._webhook_url: str = ""
         self._webhook_reachable: bool = False
         self._long_poll_received: bool = False
+        self._long_poll_error: bool = False
         self._cancel_poll: CALLBACK_TYPE | None = None
         self._cancel_onvif_check: CALLBACK_TYPE | None = None
         self._cancel_long_poll_check: CALLBACK_TYPE | None = None
@@ -440,14 +441,12 @@ class ReolinkHost:
 
             try:
                 channels = await self._api.pull_point_request()
-            except ReolinkError as err:
-                _LOGGER.exception(f"Reolink error from ONVIF pull point request: {err}")
+            except Exception as err:
+                if not self._long_poll_error:
+                    _LOGGER.exception(f"Error while requesting ONVIF pull point: {err}")
+                self._long_poll_error = True
                 await asyncio.sleep(30)
                 continue
-
-            if not self._long_poll_received and channels != []:
-                self._long_poll_received = True
-                ir.async_delete_issue(self._hass, DOMAIN, "webhook_url")
 
             # After receiving the new motion states in the upstream lib,
             # update the binary sensors with async_write_ha_state
@@ -458,6 +457,12 @@ class ReolinkHost:
 
             for channel in channels:
                 async_dispatcher_send(self._hass, f"{self.webhook_id}_{channel}", {})
+            
+            self._long_poll_error = False
+            
+            if not self._long_poll_received and channels != []:
+                self._long_poll_received = True
+                ir.async_delete_issue(self._hass, DOMAIN, "webhook_url")
 
     async def _async_poll_all_motion(self, *_) -> None:
         """Poll motion and AI states until the first ONVIF push is received."""
