@@ -1,40 +1,30 @@
-"""SMA Manager Config Flow for UI configuration"""
-
-#  Copyright (c) 2023.
-#  All rights reserved to the creator of the following script/program/app, please do not
-#  use or distribute without prior authorization from the creator.
-#  Creator: Antonio Manuel Nunes Goncalves
-#  Email: amng835@gmail.com
-#  LinkedIn: https://www.linkedin.com/in/antonio-manuel-goncalves-983926142/
-#  Github: https://github.com/DEADSEC-SECURITY
+"""SMA Manager Config Flow for UI configuration."""
 
 # Built-In Imports
 import logging
 import re
 
+# 3rd-Party Imports
+from sma_manager_api import SMA
+from voluptuous import Required, Schema
+
 # Home Assistant Imports
 from homeassistant import config_entries
 
-# 3rd-Party Imports
-from voluptuous import Schema, Required
-from sma_manager_api import SMA
-
 # Local Imports
-from .const import DOMAIN, CONF_NAME, CONF_HOST, CONF_PORT, CONF_REFRESH_INTERVAL
-
+from .const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_REFRESH_INTERVAL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
-    """
-    Enables the Integration to be configured in the UI
-    """
+    """Enables the Integration to be configured in the UI."""
 
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
 
     def __init__(self):
+        """Init Config Flow object with data default values."""
         self._data = {
             CONF_NAME: "SMA Manager",
             CONF_HOST: "239.12.255.254",
@@ -43,9 +33,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         }
 
     def _get_schema(self) -> Schema:
-        """
-        Generates a schema from data
-        """
+        """Generate a schema from data."""
 
         return Schema(
             {
@@ -59,8 +47,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_user(self, user_input=None):
-        """
-        UI form for adding integration
+        """UI form for adding integration.
 
         @param user_input:
         @return:
