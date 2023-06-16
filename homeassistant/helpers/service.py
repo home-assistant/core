@@ -286,11 +286,7 @@ async def async_call_from_config(
             raise
         _LOGGER.error(ex)
     else:
-        await hass.services.async_call(
-            **params,
-            blocking=blocking,
-            context=context,
-        )
+        await hass.services.async_call(**params, blocking=blocking, context=context)
 
 
 @callback
@@ -893,7 +889,7 @@ def async_register_admin_service(
     hass: HomeAssistant,
     domain: str,
     service: str,
-    service_func: Callable[[ServiceCall], Awaitable[ServiceResult] | None],
+    service_func: Callable[[ServiceCall], Awaitable[None] | None],
     schema: vol.Schema = vol.Schema({}, extra=vol.PREVENT_EXTRA),
 ) -> None:
     """Register a service that requires admin access."""
