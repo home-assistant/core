@@ -1,6 +1,4 @@
 """The Intent integration."""
-import asyncio
-import contextlib
 import logging
 
 import voluptuous as vol
@@ -72,29 +70,28 @@ class OnOffIntentHandler(intent.ServiceIntentHandler):
         if state.domain == COVER_DOMAIN:
             # on = open
             # off = close
-            task = hass.async_create_task(
-                hass.services.async_call(
-                    COVER_DOMAIN,
-                    SERVICE_OPEN_COVER
-                    if self.service == SERVICE_TURN_ON
-                    else SERVICE_CLOSE_COVER,
-                    {ATTR_ENTITY_ID: state.entity_id},
-                    context=intent_obj.context,
-                    blocking=True,
+            await self._run_then_background(
+                hass.async_create_task(
+                    hass.services.async_call(
+                        COVER_DOMAIN,
+                        SERVICE_OPEN_COVER
+                        if self.service == SERVICE_TURN_ON
+                        else SERVICE_CLOSE_COVER,
+                        {ATTR_ENTITY_ID: state.entity_id},
+                        context=intent_obj.context,
+                        blocking=True,
+                    )
                 )
             )
-            # Block with a short timeout to (hopefully) catch validation errors
-            with contextlib.suppress(asyncio.TimeoutError):
-                await asyncio.wait_for(task, timeout=self.service_timeout)
+            return
 
-        elif not hass.services.has_service(state.domain, self.service):
+        if not hass.services.has_service(state.domain, self.service):
             raise intent.IntentHandleError(
                 f"Service {self.service} does not support entity {state.entity_id}"
             )
 
-        else:
-            # Fall back to homeassistant.turn_on/off
-            await super().async_call_service(intent_obj, state)
+        # Fall back to homeassistant.turn_on/off
+        await super().async_call_service(intent_obj, state)
 
 
 class GetStateIntentHandler(intent.IntentHandler):

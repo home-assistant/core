@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Collection, Iterable
-import contextlib
 import dataclasses
 from dataclasses import dataclass
 from enum import Enum
@@ -494,18 +493,32 @@ class ServiceIntentHandler(IntentHandler):
     async def async_call_service(self, intent_obj: Intent, state: State) -> None:
         """Call service on entity."""
         hass = intent_obj.hass
-        task = hass.async_create_task(
-            hass.services.async_call(
-                self.domain,
-                self.service,
-                {ATTR_ENTITY_ID: state.entity_id},
-                context=intent_obj.context,
-                blocking=True,
+        await self._run_then_background(
+            hass.async_create_task(
+                hass.services.async_call(
+                    self.domain,
+                    self.service,
+                    {ATTR_ENTITY_ID: state.entity_id},
+                    context=intent_obj.context,
+                    blocking=True,
+                ),
+                f"intent_call_service_{self.domain}_{self.service}",
             )
         )
-        # Block with a short timeout to (hopefully) catch validation errors
-        with contextlib.suppress(asyncio.TimeoutError):
-            await asyncio.wait_for(task, timeout=self.service_timeout)
+
+    async def _run_then_background(self, task: asyncio.Task) -> None:
+        """Run a task for a short timeout to (hopefully) catch validation errors, and then background it."""
+        try:
+            await asyncio.wait({task}, timeout=self.service_timeout)
+        except asyncio.TimeoutError:
+            pass
+        except asyncio.CancelledError:
+            # Task calling us was cancelled, so cancel service call task, and wait for
+            # it to be cancelled, within reason, before leaving.
+            _LOGGER.debug("Service call was cancelled: %s", task.get_name())
+            task.cancel()
+            await asyncio.wait({task}, timeout=5)
+            raise
 
 
 class IntentCategory(Enum):
