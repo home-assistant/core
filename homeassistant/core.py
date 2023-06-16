@@ -1916,7 +1916,7 @@ class ServiceRegistry:
 
     def _run_service_in_background(
         self,
-        coro_or_task: Coroutine[Any, Any, ServiceResult] | asyncio.Task[ServiceResult],
+        coro_or_task: Coroutine[Any, Any, Any] | asyncio.Task[Any],
         service_call: ServiceCall,
     ) -> None:
         """Run service call in background, catching and logging any exceptions."""
