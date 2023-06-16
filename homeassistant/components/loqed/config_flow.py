@@ -6,7 +6,7 @@ import re
 from typing import Any
 
 import aiohttp
-from loqedAPI import loqed
+from loqedAPI import cloud_loqed, loqed
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -38,12 +38,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # 1. Checking loqed-connection
         try:
             session = async_get_clientsession(hass)
-            cloud_api_client = loqed.APIClient(
+            cloud_api_client = cloud_loqed.CloudAPIClient(
                 session,
-                "https://integrations.production.loqed.com/",
                 data[CONF_API_TOKEN],
             )
-            cloud_client = loqed.LoqedCloudAPI(cloud_api_client)
+            cloud_client = cloud_loqed.LoqedCloudAPI(cloud_api_client)
             lock_data = await cloud_client.async_get_locks()
         except aiohttp.ClientError:
             _LOGGER.error("HTTP Connection error to loqed API")
@@ -68,7 +67,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             # checking getWebooks to check the bridgeKey
             await lock.getWebhooks()
             return {
-                "lock_key_key": selected_lock["backend_key"],
+                "lock_key_key": selected_lock["key_secret"],
                 "bridge_key": selected_lock["bridge_key"],
                 "lock_key_local_id": selected_lock["local_id"],
                 "bridge_mdns_hostname": selected_lock["bridge_hostname"],

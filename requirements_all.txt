@@ -1149,7 +1149,7 @@ logi-circle==0.2.3
 london-tube-status==0.5
 
 # homeassistant.components.loqed
-loqedAPI==2.1.6
+loqedAPI==2.1.7
 
 # homeassistant.components.luftdaten
 luftdaten==0.7.4
