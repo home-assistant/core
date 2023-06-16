@@ -369,8 +369,8 @@ class UtilityMeterSensor(RestoreSensor):
         tariff,
         unique_id,
         suggested_entity_id=None,
-        device_info: DeviceInfo | None = None,
-    ) -> None:
+        device_info=None,
+    ):
         """Initialize the Utility Meter sensor."""
         self._attr_unique_id = unique_id
         self._attr_device_info = device_info
