@@ -19,7 +19,7 @@ from tests.components.recorder.common import async_wait_recording_done
 
 
 async def test_exclude_attributes(
-    recorder_mock: Recorder, hass: HomeAssistant, mock_image
+    recorder_mock: Recorder, hass: HomeAssistant, mock_image_platform
 ) -> None:
     """Test camera registered attributes to be excluded."""
     now = dt_util.utcnow()
