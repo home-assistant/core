@@ -3,13 +3,13 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Collection, Iterable
+import contextlib
 import dataclasses
 from dataclasses import dataclass
 from enum import Enum
 import logging
 from typing import Any, TypeVar
 
-import async_timeout
 import voluptuous as vol
 
 from homeassistant.components.homeassistant.exposed_entities import async_should_expose
@@ -500,15 +500,12 @@ class ServiceIntentHandler(IntentHandler):
                 self.service,
                 {ATTR_ENTITY_ID: state.entity_id},
                 context=intent_obj.context,
-                blocking=False,
+                blocking=True,
             )
         )
         # Block with a short timeout to (hopefully) catch validation errors
-        try:
-            async with async_timeout.timeout(self.service_timeout):
-                await task
-        except asyncio.TimeoutError:
-            pass  # Expected
+        with contextlib.suppress(asyncio.TimeoutError):
+            await asyncio.wait_for(task, timeout=self.service_timeout)
 
 
 class IntentCategory(Enum):

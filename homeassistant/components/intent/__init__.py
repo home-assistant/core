@@ -1,8 +1,8 @@
 """The Intent integration."""
 import asyncio
+import contextlib
 import logging
 
-import async_timeout
 import voluptuous as vol
 
 from homeassistant.components import http
@@ -84,11 +84,8 @@ class OnOffIntentHandler(intent.ServiceIntentHandler):
                 )
             )
             # Block with a short timeout to (hopefully) catch validation errors
-            try:
-                async with async_timeout.timeout(self.service_timeout):
-                    await task
-            except asyncio.TimeoutError:
-                pass  # Expected
+            with contextlib.suppress(asyncio.TimeoutError):
+                await asyncio.wait_for(task, timeout=self.service_timeout)
 
         elif not hass.services.has_service(state.domain, self.service):
             raise intent.IntentHandleError(
