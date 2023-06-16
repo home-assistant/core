@@ -370,6 +370,7 @@ async def test_notify_ws_not_confirming(
             "notify", "mobile_app_test", {"message": "Hello world 2"}, blocking=True
         )
         await hass.async_block_till_done()
+        await hass.async_block_till_done()
 
     # When we fail, all unconfirmed ones and failed one are sent via cloud
     assert len(aioclient_mock.mock_calls) == 2

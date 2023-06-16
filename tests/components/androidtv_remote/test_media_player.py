@@ -1,4 +1,5 @@
 """Tests for the Android TV Remote remote platform."""
+import asyncio
 from unittest.mock import MagicMock, call
 
 from androidtvremote2 import ConnectionClosed
@@ -234,6 +235,10 @@ async def test_media_player_play_media(
         },
         blocking=False,
     )
+
+    # Give background task time to run
+    await asyncio.sleep(0)
+
     await hass.services.async_call(
         "media_player",
         "play_media",

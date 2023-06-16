@@ -1882,7 +1882,7 @@ class ServiceRegistry:
             self._run_service_in_background(coro, service_call)
             return
 
-        await self._hass.async_create_task(coro)
+        await coro
 
     def _run_service_in_background(
         self,
