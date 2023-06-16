@@ -17,6 +17,10 @@
         "data": {
           "channels": "YouTube channels"
         }
+      },
+      "reauth_confirm": {
+        "title": "[%key:common::config_flow::title::reauth%]",
+        "description": "The YouTube integration needs to re-authenticate your account"
       }
     }
   },
