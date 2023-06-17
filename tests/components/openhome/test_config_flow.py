@@ -5,8 +5,9 @@ from homeassistant.components import ssdp
 from homeassistant.components.openhome.const import DOMAIN
 from homeassistant.components.ssdp import ATTR_UPNP_FRIENDLY_NAME, ATTR_UPNP_UDN
 from homeassistant.config_entries import SOURCE_SSDP
-from homeassistant.const import CONF_HOST, CONF_SOURCE
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_SOURCE
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
@@ -30,8 +31,14 @@ async def test_ssdp(hass: HomeAssistant) -> None:
         data=MOCK_DISCOVER,
     )
 
-    assert result["title"] == MOCK_FRIENDLY_NAME
-    assert result["data"] == {CONF_HOST: MOCK_SSDP_LOCATION}
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "confirm"
+
+    result2 = await hass.config_entries.flow.async_configure(result["flow_id"], None)
+
+    await hass.async_block_till_done()
+
+    assert result2["description_placeholders"] == {CONF_NAME: MOCK_FRIENDLY_NAME}
 
 
 async def test_device_exists(hass: HomeAssistant) -> None:

@@ -11,19 +11,29 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
-from .media_player import OpenhomeDevice
 
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [Platform.MEDIA_PLAYER]
 
 
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the component."""
+    hass.data[DOMAIN] = {}
+    return True
+
+
 async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
-    """Unload a config entry."""
-    # Forward to the same platform as async_setup_entry did
-    return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
+    """Cleanup before removing config entry."""
+    unload_ok = await hass.config_entries.async_unload_platforms(
+        config_entry, PLATFORMS
+    )
+    hass.data[DOMAIN].pop(config_entry.entry_id)
+
+    return unload_ok
 
 
 async def async_setup_entry(
@@ -42,9 +52,7 @@ async def async_setup_entry(
 
     _LOGGER.debug("Initialised device: %s", device.uuid())
 
-    entity = OpenhomeDevice(hass, device)
-
-    hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = entity
+    hass.data[DOMAIN][config_entry.entry_id] = device
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 

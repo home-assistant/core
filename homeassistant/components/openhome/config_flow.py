@@ -1,6 +1,7 @@
 """Config flow for Linn / OpenHome."""
 
 import logging
+from typing import Any
 
 from homeassistant.components.ssdp import (
     ATTR_UPNP_FRIENDLY_NAME,
@@ -8,7 +9,7 @@ from homeassistant.components.ssdp import (
     SsdpServiceInfo,
 )
 from homeassistant.config_entries import ConfigFlow
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.data_entry_flow import FlowResult
 
 from .const import DOMAIN
@@ -43,7 +44,23 @@ class OpenhomeConfigFlow(ConfigFlow, domain=DOMAIN):
             "async_step_ssdp: create entry %s", discovery_info.upnp[ATTR_UPNP_UDN]
         )
 
-        return self.async_create_entry(
-            title=discovery_info.upnp[ATTR_UPNP_FRIENDLY_NAME],
-            data={CONF_HOST: discovery_info.ssdp_location},
+        self.context[CONF_NAME] = discovery_info.upnp[ATTR_UPNP_FRIENDLY_NAME]
+        self.context[CONF_HOST] = discovery_info.ssdp_location
+
+        return await self.async_step_confirm()
+
+    async def async_step_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Handle user-confirmation of discovered node."""
+
+        if user_input is not None:
+            return self.async_create_entry(
+                title=self.context[CONF_NAME],
+                data={CONF_HOST: self.context[CONF_HOST]},
+            )
+
+        return self.async_show_form(
+            step_id="confirm",
+            description_placeholders={CONF_NAME: self.context[CONF_NAME]},
         )
