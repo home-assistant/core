@@ -17,7 +17,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 
-from . import API_KEY, USERNAME_1, MockUser
+from . import API_KEY, USERNAME_1, FailingMockUser, MockUser
 from .conftest import ComponentSetup
 
 from tests.common import MockConfigEntry
@@ -111,3 +111,21 @@ async def test_update_playing(
     assert state.attributes[ATTR_LAST_PLAYED] == "artist - title"
     assert state.attributes[ATTR_TOP_PLAYED] == "artist - title"
     assert state.attributes[ATTR_PLAY_COUNT] == 1
+
+
+async def test_update_failed(
+    hass: HomeAssistant,
+    setup_integration: ComponentSetup,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test handling exception after API is tested."""
+    await setup_integration(config_entry, FailingMockUser())
+
+    entity_id = "sensor.testaccount1"
+
+    state = hass.states.get(entity_id)
+
+    assert state.state == "unknown"
+    assert state.attributes[ATTR_LAST_PLAYED] is None
+    assert state.attributes[ATTR_TOP_PLAYED] is None
+    assert state.attributes[ATTR_PLAY_COUNT] is None

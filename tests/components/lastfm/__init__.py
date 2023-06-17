@@ -96,6 +96,14 @@ class MockUser:
         return self._friends
 
 
+class FailingMockUser(MockUser):
+    """Mock user built to pass verification but raise exception later."""
+
+    def get_image(self) -> str:
+        """Raise exception when get user image."""
+        raise PyLastError("network", "status", "Page not found")
+
+
 def patch_user(user: MockUser) -> MockUser:
     """Patch interface."""
     return patch("pylast.User", return_value=user)
