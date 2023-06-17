@@ -214,40 +214,6 @@ class CCM15Coordinator(DataUpdateCoordinator[CCM15DeviceState]):
                     response.status_code,
                 )
 
-    async def async_set_states(
-        self, ac_index: int, state_cmd: int, fan_cmd: int, temp: int
-    ):
-        """Set new target states."""
-        _LOGGER.debug("Calling async_set_states for ac index '%s'", ac_index)
-        ac_id: int = 2**ac_index
-        url = BASE_URL.format(
-            self._host,
-            self._port,
-            CONF_URL_CTRL
-            + "?ac0="
-            + str(ac_id)
-            + "&ac1=0"
-            + "&mode="
-            + str(state_cmd)
-            + "&fan="
-            + str(fan_cmd)
-            + "&temp="
-            + str(temp),
-        )
-        _LOGGER.debug("Url:'%s'", url)
-
-        async with httpx.AsyncClient() as client:
-            response = await client.get(url, timeout=DEFAULT_TIMEOUT)
-            if response.status_code != httpx.codes.OK:
-                _LOGGER.exception(
-                    "Error doing API request: url: %s, code: %s",
-                    url,
-                    response.status_code,
-                )
-            else:
-                _LOGGER.debug("API request ok %d", response.status_code)
-                await self.async_request_refresh()
-
     def get_ac_data(self, ac_index: int) -> CCM15SlaveDevice:
         """Get ac data from the ac_index."""
         data = self.data.devices[ac_index]
@@ -267,6 +233,11 @@ class CCM15Coordinator(DataUpdateCoordinator[CCM15DeviceState]):
         """Set the target temperature mode."""
         _LOGGER.debug("Set Temp[%s]='%s'", ac_index, temp)
         await self.async_set_state(ac_index, "temp", temp)
+
+    async def async_set_swing_mode(self, ac_index, swing_mode: int) -> None:
+        """Set the fan mode."""
+        _LOGGER.debug("Set Swing[%s]='%s'", ac_index, swing_mode)
+        await self.async_set_state(ac_index, "swing", swing_mode)
 
 
 class CCM15Climate(CoordinatorEntity[CCM15Coordinator], ClimateEntity):
@@ -386,6 +357,9 @@ class CCM15Climate(CoordinatorEntity[CCM15Coordinator], ClimateEntity):
 
     async def async_set_swing_mode(self, swing_mode: str) -> None:
         """Set the swing mode."""
+        await self.coordinator.async_set_swing_mode(
+            self._ac_index, 1 if swing_mode == SWING_ON else 0
+        )
 
     async def async_turn_off(self) -> None:
         """Turn off."""
