@@ -4,7 +4,6 @@ from __future__ import annotations
 import asyncio
 from collections import deque
 from collections.abc import Callable
-from contextlib import suppress
 import datetime as dt
 import logging
 from typing import TYPE_CHECKING, Any, Final
@@ -21,7 +20,6 @@ from homeassistant.util.json import json_loads
 
 from .auth import AuthPhase, auth_required_message
 from .const import (
-    CANCELLATION_ERRORS,
     DATA_CONNECTIONS,
     MAX_PENDING_MSG,
     PENDING_MSG_PEAK,
@@ -100,46 +98,53 @@ class WebSocketHandler:
         send_str = self.wsock.send_str
         loop = self.hass.loop
         debug = logger.debug
+        is_enabled_for = logger.isEnabledFor
+        logging_debug = logging.DEBUG
         # Exceptions if Socket disconnected or cancelled by connection handler
         try:
-            with suppress(RuntimeError, ConnectionResetError, *CANCELLATION_ERRORS):
-                while not self.wsock.closed:
-                    if (messages_remaining := len(message_queue)) == 0:
-                        self._ready_future = loop.create_future()
-                        await self._ready_future
-                        messages_remaining = len(message_queue)
+            while not self.wsock.closed:
+                if (messages_remaining := len(message_queue)) == 0:
+                    self._ready_future = loop.create_future()
+                    await self._ready_future
+                    messages_remaining = len(message_queue)
 
+                # A None message is used to signal the end of the connection
+                if (process := message_queue.popleft()) is None:
+                    return
+
+                messages_remaining -= 1
+                message = process if isinstance(process, str) else process()
+
+                if (
+                    not messages_remaining
+                    or not self.connection
+                    or not self.connection.can_coalesce
+                ):
+                    if is_enabled_for(logging_debug):
+                        debug("%s: Sending %s", self.description, message)
+                    await send_str(message)
+                    continue
+
+                messages: list[str] = [message]
+                while messages_remaining:
                     # A None message is used to signal the end of the connection
                     if (process := message_queue.popleft()) is None:
                         return
-
+                    messages.append(process if isinstance(process, str) else process())
                     messages_remaining -= 1
-                    message = process if isinstance(process, str) else process()
 
-                    if (
-                        not messages_remaining
-                        or not self.connection
-                        or not self.connection.can_coalesce
-                    ):
-                        debug("Sending %s", message)
-                        await send_str(message)
-                        continue
-
-                    messages: list[str] = [message]
-                    while messages_remaining:
-                        # A None message is used to signal the end of the connection
-                        if (process := message_queue.popleft()) is None:
-                            return
-                        messages.append(
-                            process if isinstance(process, str) else process()
-                        )
-                        messages_remaining -= 1
-
-                    joined_messages = ",".join(messages)
-                    coalesced_messages = f"[{joined_messages}]"
-                    debug("Sending %s", coalesced_messages)
-                    await send_str(coalesced_messages)
+                joined_messages = ",".join(messages)
+                coalesced_messages = f"[{joined_messages}]"
+                if is_enabled_for(logging_debug):
+                    debug("%s: Sending %s", self.description, coalesced_messages)
+                await send_str(coalesced_messages)
+        except asyncio.CancelledError:
+            debug("%s: Writer cancelled", self.description)
+            raise
+        except (RuntimeError, ConnectionResetError) as ex:
+            debug("%s: Unexpected error in writer: %s", self.description, ex)
         finally:
+            debug("%s: Writer done", self.description)
             # Clean up the peak checker when we shut down the writer
             self._cancel_peak_checker()
 
@@ -261,6 +266,9 @@ class WebSocketHandler:
         )
         connection = None
         disconnect_warn = None
+        debug = self._logger.debug
+        is_enabled_for = self._logger.isEnabledFor
+        logging_debug = logging.DEBUG
 
         try:
             self._send_message(auth_required_message())
@@ -286,7 +294,8 @@ class WebSocketHandler:
                 disconnect_warn = "Received invalid JSON."
                 raise Disconnect from err
 
-            self._logger.debug("Received %s", msg_data)
+            if is_enabled_for(logging_debug):
+                debug("%s: Received %s", self.description, msg_data)
             self.connection = connection = await auth.async_handle(msg_data)
             self.hass.data[DATA_CONNECTIONS] = (
                 self.hass.data.get(DATA_CONNECTIONS, 0) + 1
@@ -356,7 +365,9 @@ class WebSocketHandler:
                     disconnect_warn = "Received invalid JSON."
                     break
 
-                self._logger.debug("Received %s", msg_data)
+                if is_enabled_for(logging_debug):
+                    debug("%s: Received %s", self.description, msg_data)
+
                 if not isinstance(msg_data, list):
                     connection.async_handle(msg_data)
                     continue
@@ -365,13 +376,16 @@ class WebSocketHandler:
                     connection.async_handle(split_msg)
 
         except asyncio.CancelledError:
-            self._logger.info("Connection closed by client")
+            debug("%s: Connection cancelled", self.description)
+            raise
 
-        except Disconnect:
-            pass
+        except Disconnect as ex:
+            debug("%s: Connection closed by client: %s", self.description, ex)
 
         except Exception:  # pylint: disable=broad-except
-            self._logger.exception("Unexpected error inside websocket API")
+            self._logger.exception(
+                "%s: Unexpected error inside websocket API", self.description
+            )
 
         finally:
             unsub_stop()
@@ -391,7 +405,7 @@ class WebSocketHandler:
                 await wsock.close()
             finally:
                 if disconnect_warn is None:
-                    self._logger.debug("Disconnected")
+                    debug("Disconnected")
                 else:
                     self._logger.warning("Disconnected: %s", disconnect_warn)
 
