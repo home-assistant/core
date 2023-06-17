@@ -24,7 +24,11 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 
-from .common import DEHUMIDIFIER_ADC_T3000_ENTITY, HUMIDIFIER_ADC_T3000_ENTITY
+from .common import (
+    DEHUMIDIFIER_ADC_T3000_ENTITY,
+    HUMIDIFIER_ADC_T3000_ENTITY,
+    set_value_response,
+)
 
 
 async def test_humidifier(
@@ -43,6 +47,7 @@ async def test_humidifier(
     assert state.attributes[ATTR_MAX_HUMIDITY] == 70
 
     client.async_send_command.reset_mock()
+    set_value_response(client, True)
 
     # Test setting humidity
     await hass.services.async_call(
@@ -68,6 +73,7 @@ async def test_humidifier(
     assert args["value"] == 41
 
     client.async_send_command.reset_mock()
+    set_value_response(client, True)
 
     # Test de-humidify mode update from value updated event
     event = Event(
@@ -93,6 +99,7 @@ async def test_humidifier(
     assert state.state == STATE_OFF
 
     client.async_send_command.reset_mock()
+    set_value_response(client, True)
 
     # Test auto mode update from value updated event
     event = Event(
@@ -118,6 +125,7 @@ async def test_humidifier(
     assert state.state == STATE_ON
 
     client.async_send_command.reset_mock()
+    set_value_response(client, True)
 
     # Test off mode update from value updated event
     event = Event(
@@ -143,6 +151,7 @@ async def test_humidifier(
     assert state.state == STATE_OFF
 
     client.async_send_command.reset_mock()
+    set_value_response(client, True)
 
     # Test turning off when device is previously humidifying
     event = Event(
@@ -183,6 +192,7 @@ async def test_humidifier(
     assert args["value"] == int(HumidityControlMode.OFF)
 
     client.async_send_command.reset_mock()
+    set_value_response(client, True)
 
     # Test turning off when device is previously auto
     event = Event(
@@ -223,6 +233,7 @@ async def test_humidifier(
     assert args["value"] == int(HumidityControlMode.DEHUMIDIFY)
 
     client.async_send_command.reset_mock()
+    set_value_response(client, True)
 
     # Test turning off when device is previously de-humidifying
     event = Event(
@@ -254,6 +265,7 @@ async def test_humidifier(
     assert len(client.async_send_command.call_args_list) == 0
 
     client.async_send_command.reset_mock()
+    set_value_response(client, True)
 
     # Test turning off when device is previously off
     event = Event(
@@ -285,6 +297,7 @@ async def test_humidifier(
     assert len(client.async_send_command.call_args_list) == 0
 
     client.async_send_command.reset_mock()
+    set_value_response(client, True)
 
     # Test turning on when device is previously humidifying
     event = Event(
@@ -316,6 +329,7 @@ async def test_humidifier(
     assert len(client.async_send_command.call_args_list) == 0
 
     client.async_send_command.reset_mock()
+    set_value_response(client, True)
 
     # Test turning on when device is previously auto
     event = Event(
@@ -347,6 +361,7 @@ async def test_humidifier(
     assert len(client.async_send_command.call_args_list) == 0
 
     client.async_send_command.reset_mock()
+    set_value_response(client, True)
 
     # Test turning on when device is previously de-humidifying
     event = Event(
@@ -387,6 +402,7 @@ async def test_humidifier(
     assert args["value"] == int(HumidityControlMode.AUTO)
 
     client.async_send_command.reset_mock()
+    set_value_response(client, True)
 
     # Test turning on when device is previously off
     event = Event(
@@ -475,6 +491,7 @@ async def test_humidifier_missing_mode(
     assert state
 
     client.async_send_command.reset_mock()
+    set_value_response(client, True)
 
     # Test turning off when device is previously auto for a device which does not have de-humidify mode
     event = Event(
@@ -533,6 +550,7 @@ async def test_dehumidifier(
     assert state.attributes[ATTR_MAX_HUMIDITY] == 90
 
     client.async_send_command.reset_mock()
+    set_value_response(client, True)
 
     # Test setting humidity
     await hass.services.async_call(
@@ -558,6 +576,7 @@ async def test_dehumidifier(
     assert args["value"] == 41
 
     client.async_send_command.reset_mock()
+    set_value_response(client, True)
 
     # Test humidify mode update from value updated event
     event = Event(
@@ -583,6 +602,7 @@ async def test_dehumidifier(
     assert state.state == STATE_OFF
 
     client.async_send_command.reset_mock()
+    set_value_response(client, True)
 
     # Test auto mode update from value updated event
     event = Event(
@@ -608,6 +628,7 @@ async def test_dehumidifier(
     assert state.state == STATE_ON
 
     client.async_send_command.reset_mock()
+    set_value_response(client, True)
 
     # Test off mode update from value updated event
     event = Event(
@@ -633,6 +654,7 @@ async def test_dehumidifier(
     assert state.state == STATE_OFF
 
     client.async_send_command.reset_mock()
+    set_value_response(client, True)
 
     # Test turning off when device is previously de-humidifying
     event = Event(
@@ -673,6 +695,7 @@ async def test_dehumidifier(
     assert args["value"] == int(HumidityControlMode.OFF)
 
     client.async_send_command.reset_mock()
+    set_value_response(client, True)
 
     # Test turning off when device is previously auto
     event = Event(
@@ -713,6 +736,7 @@ async def test_dehumidifier(
     assert args["value"] == int(HumidityControlMode.HUMIDIFY)
 
     client.async_send_command.reset_mock()
+    set_value_response(client, True)
 
     # Test turning off when device is previously humidifying
     event = Event(
@@ -744,6 +768,7 @@ async def test_dehumidifier(
     assert len(client.async_send_command.call_args_list) == 0
 
     client.async_send_command.reset_mock()
+    set_value_response(client, True)
 
     # Test turning off when device is previously off
     event = Event(
@@ -775,6 +800,7 @@ async def test_dehumidifier(
     assert len(client.async_send_command.call_args_list) == 0
 
     client.async_send_command.reset_mock()
+    set_value_response(client, True)
 
     # Test turning on when device is previously de-humidifying
     event = Event(
@@ -806,6 +832,7 @@ async def test_dehumidifier(
     assert len(client.async_send_command.call_args_list) == 0
 
     client.async_send_command.reset_mock()
+    set_value_response(client, True)
 
     # Test turning on when device is previously auto
     event = Event(
@@ -837,6 +864,7 @@ async def test_dehumidifier(
     assert len(client.async_send_command.call_args_list) == 0
 
     client.async_send_command.reset_mock()
+    set_value_response(client, True)
 
     # Test turning on when device is previously humidifying
     event = Event(
@@ -877,6 +905,7 @@ async def test_dehumidifier(
     assert args["value"] == int(HumidityControlMode.AUTO)
 
     client.async_send_command.reset_mock()
+    set_value_response(client, True)
 
     # Test turning on when device is previously off
     event = Event(
@@ -942,6 +971,7 @@ async def test_dehumidifier(
     assert state.state == STATE_UNKNOWN
 
     client.async_send_command.reset_mock()
+    set_value_response(client, True)
 
     await hass.services.async_call(
         HUMIDIFIER_DOMAIN,

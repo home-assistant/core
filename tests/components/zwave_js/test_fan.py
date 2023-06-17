@@ -33,6 +33,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
+from .common import set_value_response
+
 
 async def test_generic_fan(
     hass: HomeAssistant, client, fan_generic, integration
@@ -44,6 +46,8 @@ async def test_generic_fan(
 
     assert state
     assert state.state == STATE_OFF
+
+    set_value_response(client, True)
 
     # Test turn on no speed
     await hass.services.async_call(
@@ -65,6 +69,7 @@ async def test_generic_fan(
     assert args["value"] == 255
 
     client.async_send_command.reset_mock()
+    set_value_response(client, True)
 
     # Due to optimistic updates, the state should be on even though the Z-Wave state
     # hasn't been updated yet
@@ -93,6 +98,7 @@ async def test_generic_fan(
     assert args["value"] == 66
 
     client.async_send_command.reset_mock()
+    set_value_response(client, True)
 
     # Test setting unknown speed
     with pytest.raises(MultipleInvalid):
@@ -104,6 +110,7 @@ async def test_generic_fan(
         )
 
     client.async_send_command.reset_mock()
+    set_value_response(client, True)
 
     # Test turning off
     await hass.services.async_call(
@@ -125,6 +132,7 @@ async def test_generic_fan(
     assert args["value"] == 0
 
     client.async_send_command.reset_mock()
+    set_value_response(client, True)
 
     # Test speed update from value updated event
     event = Event(
@@ -151,6 +159,7 @@ async def test_generic_fan(
     assert state.attributes[ATTR_PERCENTAGE] == 100
 
     client.async_send_command.reset_mock()
+    set_value_response(client, True)
 
     event = Event(
         type="value updated",
@@ -176,6 +185,7 @@ async def test_generic_fan(
     assert state.attributes[ATTR_PERCENTAGE] == 0
 
     client.async_send_command.reset_mock()
+    set_value_response(client, True)
 
     # Test setting percentage to 0
     await hass.services.async_call(
@@ -231,6 +241,8 @@ async def test_configurable_speeds_fan(
     async def get_zwave_speed_from_percentage(percentage):
         """Set the fan to a particular percentage and get the resulting Zwave speed."""
         client.async_send_command.reset_mock()
+        set_value_response(client, True)
+
         await hass.services.async_call(
             "fan",
             "turn_on",
@@ -356,6 +368,8 @@ async def test_ge_12730_fan(hass: HomeAssistant, client, ge_12730, integration) 
     async def get_zwave_speed_from_percentage(percentage):
         """Set the fan to a particular percentage and get the resulting Zwave speed."""
         client.async_send_command.reset_mock()
+        set_value_response(client, True)
+
         await hass.services.async_call(
             "fan",
             "turn_on",
@@ -448,6 +462,8 @@ async def test_inovelli_lzw36(
     async def get_zwave_speed_from_percentage(percentage):
         """Set the fan to a particular percentage and get the resulting Zwave speed."""
         client.async_send_command.reset_mock()
+        set_value_response(client, True)
+
         await hass.services.async_call(
             "fan",
             "turn_on",
@@ -518,6 +534,8 @@ async def test_inovelli_lzw36(
     assert state.attributes[ATTR_PERCENTAGE] is None
 
     client.async_send_command.reset_mock()
+    set_value_response(client, True)
+
     await hass.services.async_call(
         "fan",
         "turn_on",
@@ -553,6 +571,8 @@ async def test_leviton_zw4sf_fan(
     async def get_zwave_speed_from_percentage(percentage):
         """Set the fan to a particular percentage and get the resulting Zwave speed."""
         client.async_send_command.reset_mock()
+        set_value_response(client, True)
+
         await hass.services.async_call(
             "fan",
             "turn_on",
@@ -640,6 +660,7 @@ async def test_thermostat_fan(
     await hass.async_block_till_done()
 
     client.async_send_command.reset_mock()
+    set_value_response(client, True)
 
     state = hass.states.get(entity_id)
     assert state
@@ -668,6 +689,7 @@ async def test_thermostat_fan(
     assert args["value"] == 1
 
     client.async_send_command.reset_mock()
+    set_value_response(client, True)
 
     # Test setting unknown preset mode
     with pytest.raises(ValueError):
@@ -679,6 +701,7 @@ async def test_thermostat_fan(
         )
 
     client.async_send_command.reset_mock()
+    set_value_response(client, True)
 
     # Test turning off
     await hass.services.async_call(
@@ -700,6 +723,7 @@ async def test_thermostat_fan(
     assert args["value"]
 
     client.async_send_command.reset_mock()
+    set_value_response(client, True)
 
     # Test turning on
     await hass.services.async_call(
@@ -721,6 +745,7 @@ async def test_thermostat_fan(
     assert not args["value"]
 
     client.async_send_command.reset_mock()
+    set_value_response(client, True)
 
     # Test fan state update from value updated event
     event = Event(
@@ -746,6 +771,7 @@ async def test_thermostat_fan(
     assert state.attributes.get(ATTR_FAN_STATE) == "Circulation mode"
 
     client.async_send_command.reset_mock()
+    set_value_response(client, True)
 
     # Test unknown fan state update from value updated event
     event = Event(
@@ -771,6 +797,7 @@ async def test_thermostat_fan(
     assert not state.attributes.get(ATTR_FAN_STATE)
 
     client.async_send_command.reset_mock()
+    set_value_response(client, True)
 
     # Test fan mode update from value updated event
     event = Event(
@@ -796,6 +823,7 @@ async def test_thermostat_fan(
     assert state.attributes.get(ATTR_PRESET_MODE) == "Low"
 
     client.async_send_command.reset_mock()
+    set_value_response(client, True)
 
     # Test fan mode update from value updated event for an unknown mode
     event = Event(
@@ -821,6 +849,7 @@ async def test_thermostat_fan(
     assert not state.attributes.get(ATTR_PRESET_MODE)
 
     client.async_send_command.reset_mock()
+    set_value_response(client, True)
 
     # Test fan mode turned off update from value updated event
     event = Event(
@@ -951,6 +980,8 @@ async def test_honeywell_39358_fan(
     async def get_zwave_speed_from_percentage(percentage):
         """Set the fan to a particular percentage and get the resulting Zwave speed."""
         client.async_send_command.reset_mock()
+        set_value_response(client, True)
+
         await hass.services.async_call(
             "fan",
             "turn_on",

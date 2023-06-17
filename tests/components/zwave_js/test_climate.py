@@ -50,6 +50,7 @@ from .common import (
     CLIMATE_MAIN_HEAT_ACTIONNER,
     CLIMATE_RADIO_THERMOSTAT_ENTITY,
     replace_value_of_zwave_value,
+    set_value_response,
 )
 
 
@@ -88,6 +89,7 @@ async def test_thermostat_v2(
     )
 
     client.async_send_command.reset_mock()
+    set_value_response(client, True)
 
     # Test setting hvac mode
     await hass.services.async_call(
@@ -112,6 +114,7 @@ async def test_thermostat_v2(
     assert args["value"] == 2
 
     client.async_send_command.reset_mock()
+    set_value_response(client, True)
 
     # Test setting temperature
     await hass.services.async_call(
@@ -147,6 +150,7 @@ async def test_thermostat_v2(
     assert args["value"] == 77
 
     client.async_send_command.reset_mock()
+    set_value_response(client, True)
 
     # Test cool mode update from value updated event
     event = Event(
@@ -201,6 +205,7 @@ async def test_thermostat_v2(
     assert state.attributes[ATTR_TARGET_TEMP_LOW] == 22.2
 
     client.async_send_command.reset_mock()
+    set_value_response(client, True)
 
     # Test setting temperature with heat_cool
     await hass.services.async_call(
@@ -238,6 +243,7 @@ async def test_thermostat_v2(
     assert args["value"] == 86
 
     client.async_send_command.reset_mock()
+    set_value_response(client, True)
 
     # Test setting invalid hvac mode
     with pytest.raises(ValueError):
@@ -252,6 +258,7 @@ async def test_thermostat_v2(
         )
 
     client.async_send_command.reset_mock()
+    set_value_response(client, True)
 
     # Test setting fan mode
     await hass.services.async_call(
@@ -276,6 +283,7 @@ async def test_thermostat_v2(
     assert args["value"] == 1
 
     client.async_send_command.reset_mock()
+    set_value_response(client, True)
 
     # Test setting invalid fan mode
     with pytest.raises(ValueError):
@@ -572,6 +580,8 @@ async def test_preset_and_no_setpoint(
     assert state.state == HVACMode.HEAT
     assert state.attributes[ATTR_TEMPERATURE] == 22
 
+    set_value_response(client, True)
+
     # Test setting preset mode Full power
     await hass.services.async_call(
         CLIMATE_DOMAIN,
@@ -595,6 +605,7 @@ async def test_preset_and_no_setpoint(
     assert args["value"] == 15
 
     client.async_send_command.reset_mock()
+    set_value_response(client, True)
 
     # Test Full power preset update from value updated event
     event = Event(
@@ -636,6 +647,7 @@ async def test_preset_and_no_setpoint(
     assert len(client.async_send_command.call_args_list) == 0
 
     client.async_send_command.reset_mock()
+    set_value_response(client, True)
 
     # Restore hvac mode by setting preset None
     await hass.services.async_call(

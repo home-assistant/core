@@ -1715,7 +1715,7 @@ async def test_remove_node(
     assert len(client.async_send_command.call_args_list) == 1
     assert client.async_send_command.call_args[0][0] == {
         "command": "controller.begin_exclusion",
-        "strategy": 0,
+        "options": {"strategy": 0},
     }
 
     # Test FailedZWaveCommand is caught

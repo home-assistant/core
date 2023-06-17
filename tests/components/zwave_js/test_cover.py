@@ -40,7 +40,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 
-from .common import replace_value_of_zwave_value
+from .common import replace_value_of_zwave_value, set_value_response
 
 WINDOW_COVER_ENTITY = "cover.zws_12"
 GDC_COVER_ENTITY = "cover.aeon_labs_garage_door_controller_gen5"
@@ -64,6 +64,8 @@ async def test_window_cover(
     assert state.state == STATE_CLOSED
     assert state.attributes[ATTR_CURRENT_POSITION] == 0
 
+    set_value_response(client, True)
+
     # Test setting position
     await hass.services.async_call(
         DOMAIN,
@@ -84,6 +86,7 @@ async def test_window_cover(
     assert args["value"] == 50
 
     client.async_send_command.reset_mock()
+    set_value_response(client, True)
 
     # Test setting position
     await hass.services.async_call(
@@ -105,6 +108,7 @@ async def test_window_cover(
     assert args["value"] == 0
 
     client.async_send_command.reset_mock()
+    set_value_response(client, True)
 
     # Test opening
     await hass.services.async_call(
@@ -126,6 +130,8 @@ async def test_window_cover(
     assert args["value"]
 
     client.async_send_command.reset_mock()
+    set_value_response(client, True)
+
     # Test stop after opening
     await hass.services.async_call(
         DOMAIN,
@@ -165,6 +171,7 @@ async def test_window_cover(
     )
     node.receive_event(event)
     client.async_send_command.reset_mock()
+    set_value_response(client, True)
 
     state = hass.states.get(WINDOW_COVER_ENTITY)
     assert state.state == STATE_OPEN
@@ -188,6 +195,7 @@ async def test_window_cover(
     assert args["value"] == 0
 
     client.async_send_command.reset_mock()
+    set_value_response(client, True)
 
     # Test stop after closing
     await hass.services.async_call(
@@ -209,6 +217,7 @@ async def test_window_cover(
     assert not open_args["value"]
 
     client.async_send_command.reset_mock()
+    set_value_response(client, True)
 
     event = Event(
         type="value updated",
@@ -244,6 +253,8 @@ async def test_fibaro_fgr222_shutter_cover(
     assert state.state == STATE_OPEN
     assert state.attributes[ATTR_CURRENT_TILT_POSITION] == 0
 
+    set_value_response(client, True)
+
     # Test opening tilts
     await hass.services.async_call(
         DOMAIN,
@@ -265,6 +276,8 @@ async def test_fibaro_fgr222_shutter_cover(
     assert args["value"] == 99
 
     client.async_send_command.reset_mock()
+    set_value_response(client, True)
+
     # Test closing tilts
     await hass.services.async_call(
         DOMAIN,
@@ -286,6 +299,8 @@ async def test_fibaro_fgr222_shutter_cover(
     assert args["value"] == 0
 
     client.async_send_command.reset_mock()
+    set_value_response(client, True)
+
     # Test setting tilt position
     await hass.services.async_call(
         DOMAIN,
@@ -345,6 +360,8 @@ async def test_aeotec_nano_shutter_cover(
     assert state.state == STATE_CLOSED
     assert state.attributes[ATTR_CURRENT_POSITION] == 0
 
+    set_value_response(client, True)
+
     # Test opening
     await hass.services.async_call(
         DOMAIN,
@@ -365,6 +382,8 @@ async def test_aeotec_nano_shutter_cover(
     assert args["value"]
 
     client.async_send_command.reset_mock()
+    set_value_response(client, True)
+
     # Test stop after opening
     await hass.services.async_call(
         DOMAIN,
@@ -405,6 +424,7 @@ async def test_aeotec_nano_shutter_cover(
     node.receive_event(event)
 
     client.async_send_command.reset_mock()
+    set_value_response(client, True)
 
     state = hass.states.get(AEOTEC_SHUTTER_COVER_ENTITY)
     assert state.state == STATE_OPEN
@@ -428,6 +448,7 @@ async def test_aeotec_nano_shutter_cover(
     assert args["value"] == 0
 
     client.async_send_command.reset_mock()
+    set_value_response(client, True)
 
     # Test stop after closing
     await hass.services.async_call(
@@ -481,6 +502,8 @@ async def test_motor_barrier_cover(
 
     assert state.state == STATE_CLOSED
 
+    set_value_response(client, True)
+
     # Test open
     await hass.services.async_call(
         DOMAIN, SERVICE_OPEN_COVER, {ATTR_ENTITY_ID: GDC_COVER_ENTITY}, blocking=True
@@ -502,6 +525,7 @@ async def test_motor_barrier_cover(
     assert state.state == STATE_CLOSED
 
     client.async_send_command.reset_mock()
+    set_value_response(client, True)
 
     # Test close
     await hass.services.async_call(
@@ -524,6 +548,7 @@ async def test_motor_barrier_cover(
     assert state.state == STATE_CLOSED
 
     client.async_send_command.reset_mock()
+    set_value_response(client, True)
 
     # Barrier sends an opening state
     event = Event(
@@ -716,6 +741,8 @@ async def test_iblinds_v3_cover(
     assert ATTR_CURRENT_TILT_POSITION in state.attributes
     assert state.attributes[ATTR_CURRENT_TILT_POSITION] == 0
 
+    set_value_response(client, True)
+
     await hass.services.async_call(
         DOMAIN,
         SERVICE_CLOSE_COVER_TILT,
@@ -736,6 +763,7 @@ async def test_iblinds_v3_cover(
     assert args["value"] == 0
 
     client.async_send_command.reset_mock()
+    set_value_response(client, True)
 
     await hass.services.async_call(
         DOMAIN,
@@ -757,6 +785,7 @@ async def test_iblinds_v3_cover(
     assert args["value"] == 50
 
     client.async_send_command.reset_mock()
+    set_value_response(client, True)
 
     await hass.services.async_call(
         DOMAIN,
@@ -778,6 +807,7 @@ async def test_iblinds_v3_cover(
     assert args["value"] == 12
 
     client.async_send_command.reset_mock()
+    set_value_response(client, True)
 
     await hass.services.async_call(
         DOMAIN,
@@ -820,6 +850,8 @@ async def test_nice_ibt4zwave_cover(
     assert state.attributes[ATTR_CURRENT_POSITION] == 0
     assert state.attributes[ATTR_DEVICE_CLASS] == CoverDeviceClass.GATE
 
+    set_value_response(client, True)
+
     await hass.services.async_call(
         DOMAIN,
         SERVICE_CLOSE_COVER,
@@ -839,6 +871,7 @@ async def test_nice_ibt4zwave_cover(
     assert args["value"] == 0
 
     client.async_send_command.reset_mock()
+    set_value_response(client, True)
 
     await hass.services.async_call(
         DOMAIN,

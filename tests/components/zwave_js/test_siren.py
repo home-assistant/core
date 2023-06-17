@@ -9,6 +9,8 @@ from homeassistant.components.siren import (
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 
+from .common import set_value_response
+
 SIREN_ENTITY = "siren.indoor_siren_6_2"
 
 TONE_ID_VALUE_ID = {
@@ -106,6 +108,8 @@ async def test_siren(
         255: "default",
     }
 
+    set_value_response(client, True)
+
     # Test turn on with default
     await hass.services.async_call(
         "siren",
@@ -126,6 +130,7 @@ async def test_siren(
     assert args["value"] == 255
 
     client.async_send_command.reset_mock()
+    set_value_response(client, True)
 
     # Test value update from value updated event
     event = Event(
@@ -175,6 +180,7 @@ async def test_siren(
     assert args["options"] == {"volume": 50}
 
     client.async_send_command.reset_mock()
+    set_value_response(client, True)
 
     # Test turn on with specific tone ID and volume level
     await hass.services.async_call(
@@ -201,6 +207,7 @@ async def test_siren(
     assert args["options"] == {"volume": 50}
 
     client.async_send_command.reset_mock()
+    set_value_response(client, True)
 
     # Test turn off
     await hass.services.async_call(
@@ -222,6 +229,7 @@ async def test_siren(
     assert args["value"] == 0
 
     client.async_send_command.reset_mock()
+    set_value_response(client, True)
 
     # Test value update from value updated event
     event = Event(

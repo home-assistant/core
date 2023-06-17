@@ -31,7 +31,11 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
-from .common import SCHLAGE_BE469_LOCK_ENTITY, replace_value_of_zwave_value
+from .common import (
+    SCHLAGE_BE469_LOCK_ENTITY,
+    replace_value_of_zwave_value,
+    set_value_response,
+)
 
 
 async def test_door_lock(
@@ -43,6 +47,8 @@ async def test_door_lock(
 
     assert state
     assert state.state == STATE_UNLOCKED
+
+    set_value_response(client, True)
 
     # Test locking
     await hass.services.async_call(
@@ -64,6 +70,7 @@ async def test_door_lock(
     assert args["value"] == 255
 
     client.async_send_command.reset_mock()
+    set_value_response(client, True)
 
     # Test locked update from value updated event
     event = Event(
@@ -88,6 +95,7 @@ async def test_door_lock(
     assert hass.states.get(SCHLAGE_BE469_LOCK_ENTITY).state == STATE_LOCKED
 
     client.async_send_command.reset_mock()
+    set_value_response(client, True)
 
     # Test unlocking
     await hass.services.async_call(
@@ -109,6 +117,7 @@ async def test_door_lock(
     assert args["value"] == 0
 
     client.async_send_command.reset_mock()
+    set_value_response(client, True)
 
     # Test set usercode service
     await hass.services.async_call(
@@ -135,6 +144,7 @@ async def test_door_lock(
     assert args["value"] == "1234"
 
     client.async_send_command.reset_mock()
+    set_value_response(client, True)
 
     # Test clear usercode
     await hass.services.async_call(
@@ -157,6 +167,7 @@ async def test_door_lock(
     assert args["value"] == 0
 
     client.async_send_command.reset_mock()
+    set_value_response(client, True)
 
     client.async_send_command.side_effect = FailedZWaveCommand("test", 1, "test")
     # Test set usercode service error handling
@@ -182,6 +193,7 @@ async def test_door_lock(
         )
 
     client.async_send_command.reset_mock()
+    set_value_response(client, True)
 
     event = Event(
         type="dead",

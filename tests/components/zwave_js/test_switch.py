@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
-from .common import SWITCH_ENTITY, replace_value_of_zwave_value
+from .common import SWITCH_ENTITY, replace_value_of_zwave_value, set_value_response
 
 
 async def test_switch(
@@ -24,6 +24,8 @@ async def test_switch(
 
     assert state
     assert state.state == STATE_OFF
+
+    set_value_response(client, True)
 
     # Test turning on
     await hass.services.async_call(
@@ -63,6 +65,9 @@ async def test_switch(
     state = hass.states.get(SWITCH_ENTITY)
     assert state.state == "on"
 
+    client.async_send_command.reset_mock()
+    set_value_response(client, True)
+
     # Test turning off
     await hass.services.async_call(
         "switch", "turn_off", {"entity_id": SWITCH_ENTITY}, blocking=True
@@ -90,6 +95,8 @@ async def test_barrier_signaling_switch(
     assert state
     assert state.state == "on"
 
+    set_value_response(client, True)
+
     # Test turning off
     await hass.services.async_call(
         DOMAIN, SERVICE_TURN_OFF, {"entity_id": entity}, blocking=True
@@ -114,6 +121,7 @@ async def test_barrier_signaling_switch(
     assert state.state == STATE_OFF
 
     client.async_send_command.reset_mock()
+    set_value_response(client, True)
 
     # Test turning on
     await hass.services.async_call(
@@ -241,6 +249,7 @@ async def test_config_parameter_switch(
     assert state.state == STATE_ON
 
     client.async_send_command.reset_mock()
+    set_value_response(client, True)
 
     # Test turning on
     await hass.services.async_call(
@@ -259,6 +268,7 @@ async def test_config_parameter_switch(
     }
 
     client.async_send_command.reset_mock()
+    set_value_response(client, True)
 
     # Test turning off
     await hass.services.async_call(

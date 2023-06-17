@@ -341,7 +341,9 @@ async def test_update_entity_progress(
     assert attrs[ATTR_LATEST_VERSION] == "11.2.4"
 
     client.async_send_command.reset_mock()
-    client.async_send_command.return_value = {"success": False}
+    client.async_send_command.return_value = {
+        "result": {"status": 2, "success": False, "reInterview": False}
+    }
 
     # Test successful install call without a version
     install_task = hass.async_create_task(
@@ -437,7 +439,9 @@ async def test_update_entity_install_failed(
     assert attrs[ATTR_LATEST_VERSION] == "11.2.4"
 
     client.async_send_command.reset_mock()
-    client.async_send_command.return_value = {"success": False}
+    client.async_send_command.return_value = {
+        "result": {"status": 2, "success": False, "reInterview": False}
+    }
 
     # Test install call - we expect it to finish fail
     install_task = hass.async_create_task(
@@ -710,7 +714,9 @@ async def test_update_entity_full_restore_data_update_available(
     assert state.attributes[ATTR_SKIPPED_VERSION] is None
     assert state.attributes[ATTR_LATEST_VERSION] == "11.2.4"
 
-    client.async_send_command.return_value = {"success": True}
+    client.async_send_command.return_value = {
+        "result": {"status": 255, "success": True, "reInterview": False}
+    }
 
     # Test successful install call without a version
     install_task = hass.async_create_task(

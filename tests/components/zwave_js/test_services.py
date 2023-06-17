@@ -47,6 +47,7 @@ from .common import (
     CLIMATE_EUROTRONICS_SPIRIT_Z_ENTITY,
     CLIMATE_RADIO_THERMOSTAT_ENTITY,
     SCHLAGE_BE469_LOCK_ENTITY,
+    set_value_response,
 )
 
 from tests.common import MockConfigEntry
@@ -59,6 +60,8 @@ async def test_set_config_parameter(
     dev_reg = async_get_dev_reg(hass)
     ent_reg = async_get_ent_reg(hass)
     entity_entry = ent_reg.async_get(AIR_TEMPERATURE_SENSOR)
+
+    set_value_response(client, True)
 
     # Test setting config parameter by property and property_key
     await hass.services.async_call(
@@ -86,6 +89,7 @@ async def test_set_config_parameter(
     assert args["value"] == 1
 
     client.async_send_command_no_wait.reset_mock()
+    set_value_response(client, True)
 
     # Test setting config parameter value in hex
     await hass.services.async_call(
@@ -113,6 +117,7 @@ async def test_set_config_parameter(
     assert args["value"] == 1
 
     client.async_send_command_no_wait.reset_mock()
+    set_value_response(client, True)
 
     # Test setting parameter by property name
     await hass.services.async_call(
@@ -139,6 +144,7 @@ async def test_set_config_parameter(
     assert args["value"] == 1
 
     client.async_send_command_no_wait.reset_mock()
+    set_value_response(client, True)
 
     # Test setting parameter by property name and state label
     await hass.services.async_call(
@@ -165,6 +171,7 @@ async def test_set_config_parameter(
     assert args["value"] == 2
 
     client.async_send_command_no_wait.reset_mock()
+    set_value_response(client, True)
 
     # Test using area ID
     area_reg = async_get_area_reg(hass)
@@ -194,6 +201,7 @@ async def test_set_config_parameter(
     assert args["value"] == 2
 
     client.async_send_command_no_wait.reset_mock()
+    set_value_response(client, True)
 
     # Test setting parameter by property and bitmask
     await hass.services.async_call(
@@ -221,6 +229,7 @@ async def test_set_config_parameter(
     assert args["value"] == 1
 
     client.async_send_command_no_wait.reset_mock()
+    set_value_response(client, True)
 
     # Test groups get expanded
     assert await async_setup_component(hass, "group", {})
@@ -250,6 +259,7 @@ async def test_set_config_parameter(
     assert args["value"] == 1
 
     client.async_send_command_no_wait.reset_mock()
+    set_value_response(client, True)
 
     # Test that we can't include a bitmask value if parameter is a string
     with pytest.raises(vol.Invalid):
@@ -320,6 +330,7 @@ async def test_set_config_parameter(
     assert args["value"] == 1
 
     client.async_send_command_no_wait.reset_mock()
+    set_value_response(client, True)
 
     # Test that when a device is awake, we call async_send_command instead of
     # async_send_command_no_wait
@@ -414,6 +425,8 @@ async def test_bulk_set_config_parameters(
         identifiers={get_device_id(client.driver, multisensor_6)}
     )
     assert device
+    set_value_response(client, True)
+
     # Test setting config parameter by property and property_key
     await hass.services.async_call(
         DOMAIN,
@@ -438,6 +451,7 @@ async def test_bulk_set_config_parameters(
     assert args["value"] == 241
 
     client.async_send_command_no_wait.reset_mock()
+    set_value_response(client, True)
 
     # Test using area ID
     area_reg = async_get_area_reg(hass)
@@ -466,6 +480,7 @@ async def test_bulk_set_config_parameters(
     assert args["value"] == 241
 
     client.async_send_command_no_wait.reset_mock()
+    set_value_response(client, True)
 
     await hass.services.async_call(
         DOMAIN,
@@ -496,6 +511,7 @@ async def test_bulk_set_config_parameters(
     assert args["value"] == 241
 
     client.async_send_command_no_wait.reset_mock()
+    set_value_response(client, True)
 
     # Test using hex values for config parameter values
     await hass.services.async_call(
@@ -527,6 +543,7 @@ async def test_bulk_set_config_parameters(
     assert args["value"] == 241
 
     client.async_send_command_no_wait.reset_mock()
+    set_value_response(client, True)
 
     await hass.services.async_call(
         DOMAIN,
@@ -557,6 +574,7 @@ async def test_bulk_set_config_parameters(
     assert args["value"] == 241
 
     client.async_send_command_no_wait.reset_mock()
+    set_value_response(client, True)
 
     # Test that when a device is awake, we call async_send_command instead of
     # async_send_command_no_wait
@@ -590,6 +608,7 @@ async def test_bulk_set_config_parameters(
     assert args["value"] == 241
 
     client.async_send_command.reset_mock()
+    set_value_response(client, True)
 
     # Test groups get expanded
     assert await async_setup_component(hass, "group", {})
@@ -762,6 +781,7 @@ async def test_set_value(
         identifiers={get_device_id(client.driver, climate_danfoss_lc_13)}
     )
     assert device
+    set_value_response(client, True)
 
     await hass.services.async_call(
         DOMAIN,
@@ -787,6 +807,7 @@ async def test_set_value(
     assert args["value"] == 2
 
     client.async_send_command_no_wait.reset_mock()
+    set_value_response(client, True)
 
     # Test bitmask as value and non bool as bool
     await hass.services.async_call(
@@ -814,6 +835,7 @@ async def test_set_value(
     assert args["value"] == 2
 
     client.async_send_command.reset_mock()
+    set_value_response(client, True)
 
     # Test using area ID
     area_reg = async_get_area_reg(hass)
@@ -844,6 +866,7 @@ async def test_set_value(
     assert args["value"] == 2
 
     client.async_send_command.reset_mock()
+    set_value_response(client, True)
 
     # Test groups get expanded
     assert await async_setup_component(hass, "group", {})
@@ -875,7 +898,7 @@ async def test_set_value(
     client.async_send_command.reset_mock()
 
     # Test that when a command fails we raise an exception
-    client.async_send_command.return_value = {"success": False}
+    set_value_response(client, False)
 
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
@@ -924,7 +947,7 @@ async def test_set_value_string(
     hass: HomeAssistant, client, climate_danfoss_lc_13, lock_schlage_be469, integration
 ) -> None:
     """Test set_value service converts number to string when needed."""
-    client.async_send_command.return_value = {"success": True}
+    set_value_response(client, True)
 
     # Test that number gets converted to a string when needed
     await hass.services.async_call(
@@ -957,6 +980,8 @@ async def test_set_value_options(
     hass: HomeAssistant, client, aeon_smart_switch_6, integration
 ) -> None:
     """Test set_value service with options."""
+    set_value_response(client, True)
+
     await hass.services.async_call(
         DOMAIN,
         SERVICE_SET_VALUE,
@@ -993,6 +1018,8 @@ async def test_set_value_gather(
     integration,
 ) -> None:
     """Test the set_value service gather functionality."""
+    set_value_response(client, True)
+
     # Test setting value by property and validate that the first node
     # which triggers an error doesn't prevent the second one to be called.
     with pytest.raises(HomeAssistantError):
@@ -1036,6 +1063,8 @@ async def test_multicast_set_value(
     integration,
 ) -> None:
     """Test multicast_set_value service."""
+    set_value_response(client, True)
+
     # Test successful multicast call
     await hass.services.async_call(
         DOMAIN,
@@ -1068,6 +1097,7 @@ async def test_multicast_set_value(
     assert args["value"] == 2
 
     client.async_send_command.reset_mock()
+    set_value_response(client, True)
 
     # Test successful multicast call with hex value
     await hass.services.async_call(
@@ -1101,6 +1131,7 @@ async def test_multicast_set_value(
     assert args["value"] == 2
 
     client.async_send_command.reset_mock()
+    set_value_response(client, True)
 
     # Test using area ID
     dev_reg = async_get_dev_reg(hass)
@@ -1144,6 +1175,7 @@ async def test_multicast_set_value(
     assert args["value"] == 2
 
     client.async_send_command.reset_mock()
+    set_value_response(client, True)
 
     # Test groups get expanded for multicast call
     assert await async_setup_component(hass, "group", {})
@@ -1178,6 +1210,7 @@ async def test_multicast_set_value(
     assert args["value"] == 2
 
     client.async_send_command.reset_mock()
+    set_value_response(client, True)
 
     # Test successful broadcast call
     await hass.services.async_call(
@@ -1204,6 +1237,7 @@ async def test_multicast_set_value(
     assert args["value"] == 2
 
     client.async_send_command.reset_mock()
+    set_value_response(client, True)
 
     # Test sending one node without broadcast uses the node.set_value command instead
     await hass.services.async_call(
@@ -1224,6 +1258,7 @@ async def test_multicast_set_value(
     assert args["command"] == "node.set_value"
 
     client.async_send_command_no_wait.reset_mock()
+    set_value_response(client, True)
 
     # Test no device, entity, or broadcast flag raises error
     with pytest.raises(vol.Invalid):
@@ -1240,7 +1275,7 @@ async def test_multicast_set_value(
         )
 
     # Test that when a command is unsuccessful we raise an exception
-    client.async_send_command.return_value = {"success": False}
+    set_value_response(client, False)
 
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
@@ -1335,6 +1370,8 @@ async def test_multicast_set_value_options(
     integration,
 ) -> None:
     """Test multicast_set_value service with options."""
+    set_value_response(client, True)
+
     await hass.services.async_call(
         DOMAIN,
         SERVICE_MULTICAST_SET_VALUE,
@@ -1381,7 +1418,7 @@ async def test_multicast_set_value_string(
     integration,
 ) -> None:
     """Test multicast_set_value service converts number to string when needed."""
-    client.async_send_command.return_value = {"success": True}
+    client.async_send_command.return_value = {"result": {"status": 255}}
 
     # Test that number gets converted to a string when needed
     await hass.services.async_call(

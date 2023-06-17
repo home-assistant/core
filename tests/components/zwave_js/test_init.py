@@ -1014,7 +1014,7 @@ async def test_node_removed(
     old_device = dev_reg.async_get_device(identifiers={(DOMAIN, device_id)})
     assert old_device.id
 
-    event = {"node": node, "replaced": False}
+    event = {"node": node, "reason": 0}
 
     client.driver.controller.emit("node removed", event)
     await hass.async_block_till_done()
@@ -1047,14 +1047,14 @@ async def test_replace_same_node(
 
     assert hass.states.get(AIR_TEMPERATURE_SENSOR)
 
-    # A replace node event has the extra field "replaced" set to True
+    # A replace node event has the extra field "reason"
     # to distinguish it from an exclusion
     event = Event(
         type="node removed",
         data={
             "source": "controller",
             "event": "node removed",
-            "replaced": True,
+            "reason": 3,
             "node": multisensor_6_state,
         },
     )
@@ -1171,7 +1171,7 @@ async def test_replace_different_node(
         data={
             "source": "controller",
             "event": "node removed",
-            "replaced": True,
+            "reason": 3,
             "node": multisensor_6_state,
         },
     )
@@ -1345,7 +1345,7 @@ async def test_disabled_node_status_entity_on_node_replaced(
         data={
             "source": "controller",
             "event": "node removed",
-            "replaced": True,
+            "reason": 3,
             "node": zp3111_state,
         },
     )

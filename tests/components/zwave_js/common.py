@@ -48,6 +48,16 @@ DEHUMIDIFIER_ADC_T3000_ENTITY = "humidifier.adc_t3000_dehumidifier"
 
 PROPERTY_ULTRAVIOLET = "Ultraviolet"
 
+SET_VALUE_RESULT_MAP = {
+    True: {"result": {"success": True, "status": 255}},
+    False: {"result": {"status": 2, "message": "test"}},
+}
+
+
+def set_value_response(client, success):
+    """Set response for set_value command."""
+    client.async_send_command.return_value = SET_VALUE_RESULT_MAP[success]
+
 
 def replace_value_of_zwave_value(
     node_data: NodeDataType, matchers: list[ZwaveValueMatcher], new_value: Any

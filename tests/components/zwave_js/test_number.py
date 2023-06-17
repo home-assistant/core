@@ -9,7 +9,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
-from .common import BASIC_NUMBER_ENTITY
+from .common import BASIC_NUMBER_ENTITY, set_value_response
 
 from tests.common import MockConfigEntry
 
@@ -26,6 +26,8 @@ async def test_number(
 
     assert state
     assert state.state == "75.0"
+
+    set_value_response(client, True)
 
     # Test turn on setting value
     await hass.services.async_call(
@@ -47,6 +49,7 @@ async def test_number(
     assert args["value"] == 30.0
 
     client.async_send_command.reset_mock()
+    set_value_response(client, True)
 
     # Test value update from value updated event
     event = Event(
@@ -116,6 +119,8 @@ async def test_number_writeable(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
+    set_value_response(client, True)
+
     # Test turn on setting value
     await hass.services.async_call(
         "number",
@@ -151,6 +156,8 @@ async def test_volume_number(
     assert state.attributes["max"] == 1.0
     assert state.attributes["min"] == 0
 
+    set_value_response(client, True)
+
     # Test turn on setting value
     await hass.services.async_call(
         "number",
@@ -171,6 +178,7 @@ async def test_volume_number(
     assert args["value"] == 30
 
     client.async_send_command.reset_mock()
+    set_value_response(client, True)
 
     # Test value update from value updated event
     event = Event(

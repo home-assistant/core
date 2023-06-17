@@ -32,6 +32,7 @@ from .common import (
     BULB_6_MULTI_COLOR_LIGHT_ENTITY,
     EATON_RF9640_ENTITY,
     ZEN_31_ENTITY,
+    set_value_response,
 )
 
 HSM200_V1_ENTITY = "light.hsm200"
@@ -50,6 +51,8 @@ async def test_light(
     assert state.attributes[ATTR_MAX_MIREDS] == 370
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == LightEntityFeature.TRANSITION
     assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == ["color_temp", "hs"]
+
+    set_value_response(client, True)
 
     # Test turning on
     await hass.services.async_call(
@@ -78,6 +81,7 @@ async def test_light(
     assert state.state == STATE_ON
 
     client.async_send_command.reset_mock()
+    set_value_response(client, True)
 
     # Test turning on with transition
     await hass.services.async_call(
@@ -100,6 +104,7 @@ async def test_light(
     assert args["options"]["transitionDuration"] == "10s"
 
     client.async_send_command.reset_mock()
+    set_value_response(client, True)
 
     # Test brightness update from value updated event
     event = Event(
@@ -139,6 +144,7 @@ async def test_light(
     assert len(client.async_send_command.call_args_list) == 1
 
     client.async_send_command.reset_mock()
+    set_value_response(client, True)
 
     # Test turning on with brightness
     await hass.services.async_call(
@@ -161,6 +167,7 @@ async def test_light(
     assert args["options"]["transitionDuration"] == "default"
 
     client.async_send_command.reset_mock()
+    set_value_response(client, True)
 
     # Test turning on with brightness and transition
     await hass.services.async_call(
@@ -187,6 +194,7 @@ async def test_light(
     assert args["options"]["transitionDuration"] == "20s"
 
     client.async_send_command.reset_mock()
+    set_value_response(client, True)
 
     # Test turning on with rgb color
     await hass.services.async_call(
@@ -254,6 +262,7 @@ async def test_light(
     assert ATTR_COLOR_TEMP not in state.attributes
 
     client.async_send_command.reset_mock()
+    set_value_response(client, True)
 
     # Test turning on with same rgb color
     await hass.services.async_call(
@@ -266,6 +275,7 @@ async def test_light(
     assert len(client.async_send_command.call_args_list) == 2
 
     client.async_send_command.reset_mock()
+    set_value_response(client, True)
 
     # Test turning on with rgb color and transition
     await hass.services.async_call(
@@ -308,6 +318,7 @@ async def test_light(
     }
 
     client.async_send_command.reset_mock()
+    set_value_response(client, True)
 
     # Test color temp update from value updated event
     red_event = Event(
@@ -367,6 +378,7 @@ async def test_light(
     assert len(client.async_send_command.call_args_list) == 2
 
     client.async_send_command.reset_mock()
+    set_value_response(client, True)
 
     # Test turning on with color temp and transition
     await hass.services.async_call(
@@ -385,6 +397,7 @@ async def test_light(
     assert args["options"]["transitionDuration"] == "35s"
 
     client.async_send_command.reset_mock()
+    set_value_response(client, True)
 
     # Test turning off
     await hass.services.async_call(
@@ -406,6 +419,7 @@ async def test_light(
     assert args["value"] == 0
 
     client.async_send_command.reset_mock()
+    set_value_response(client, True)
 
     # Test brightness update to None from value updated event
     event = Event(
@@ -461,6 +475,8 @@ async def test_rgbw_light(hass: HomeAssistant, client, zen_31, integration) -> N
     assert state.state == STATE_ON
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == LightEntityFeature.TRANSITION
 
+    set_value_response(client, True)
+
     # Test turning on
     await hass.services.async_call(
         "light",
@@ -514,6 +530,8 @@ async def test_black_is_off(
     state = hass.states.get(HSM200_V1_ENTITY)
     assert state.state == STATE_ON
 
+    set_value_response(client, True)
+
     # Attempt to turn on the light and ensure it defaults to white
     await hass.services.async_call(
         LIGHT_DOMAIN,
@@ -533,6 +551,7 @@ async def test_black_is_off(
     assert args["value"] == {"red": 255, "green": 255, "blue": 255}
 
     client.async_send_command.reset_mock()
+    set_value_response(client, True)
 
     # Force the light to turn off
     event = Event(
@@ -614,6 +633,7 @@ async def test_black_is_off(
     assert args["value"] == {"red": 0, "green": 0, "blue": 0}
 
     client.async_send_command.reset_mock()
+    set_value_response(client, True)
 
     # Assert that the last color is restored
     await hass.services.async_call(
@@ -634,6 +654,7 @@ async def test_black_is_off(
     assert args["value"] == {"red": 0, "green": 255, "blue": 0}
 
     client.async_send_command.reset_mock()
+    set_value_response(client, True)
 
     # Force the light to turn on
     event = Event(
@@ -663,6 +684,7 @@ async def test_black_is_off(
     assert state.state == STATE_UNKNOWN
 
     client.async_send_command.reset_mock()
+    set_value_response(client, True)
 
     # Assert that call fails if attribute is added to service call
     await hass.services.async_call(
