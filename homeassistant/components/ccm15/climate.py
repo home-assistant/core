@@ -63,7 +63,6 @@ class CCM15SlaveDevice:
 
     def __init__(self, bytesarr: bytes) -> None:
         """Initialize the slave device."""
-        self.wind_mode = 0
         self.unit = UnitOfTemperature.CELSIUS
         buf = bytesarr[0]
         if (buf >> 0) & 1:
@@ -73,6 +72,7 @@ class CCM15SlaveDevice:
         buf = bytesarr[1]
         self.locked_heat_temperature: int = (buf >> 0) & 0x1F
         self.locked_wind: int = (buf >> 5) & 7
+        self.is_swing_on: bool = ((buf >> 3) & 1) == 0
 
         buf = bytesarr[2]
         self.locked_ac_mode: int = (buf >> 0) & 3
@@ -351,7 +351,9 @@ class CCM15Climate(CoordinatorEntity[CCM15Coordinator], ClimateEntity):
     @property
     def swing_mode(self) -> str:
         """Return swing mode."""
-        return SWING_OFF
+        data: CCM15SlaveDevice = self.coordinator.get_ac_data(self._ac_index)
+        _LOGGER.debug("is_swing_on[%s]=%s", self._ac_index, data.is_swing_on)
+        return SWING_ON if data.is_swing_on else SWING_OFF
 
     @property
     def swing_modes(self) -> list[str]:
