@@ -10,7 +10,7 @@ import pytest
 import voluptuous as vol
 
 from homeassistant.bootstrap import async_setup_component
-from homeassistant.components.calendar import DOMAIN
+from homeassistant.components.calendar import DOMAIN, SERVICE_LIST_EVENTS
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.util.dt as dt_util
@@ -384,3 +384,31 @@ async def test_create_event_service_invalid_params(
             target={"entity_id": "calendar.calendar_1"},
             blocking=True,
         )
+
+
+async def test_list_events_service(
+    hass: HomeAssistant,
+) -> None:
+    """Test listing events from the service call from the calendar demo."""
+    await async_setup_component(hass, "calendar", {"calendar": {"platform": "demo"}})
+    await hass.async_block_till_done()
+
+    start = dt_util.now()
+    end = start + timedelta(days=1)
+
+    response = await hass.services.async_call(
+        DOMAIN,
+        SERVICE_LIST_EVENTS,
+        {
+            "entity_id": "calendar.calendar_1",
+            "start": start,
+            "end": end,
+        },
+        blocking=True,
+        return_values=True,
+    )
+    assert response
+    assert "events" in response
+    events = response["events"]
+    assert len(events) == 1
+    assert events[0]["summary"] == "Future Event"

@@ -8,7 +8,7 @@ from http import HTTPStatus
 from itertools import groupby
 import logging
 import re
-from typing import Any, cast, final
+from typing import Any, Final, cast, final
 
 from aiohttp import web
 from dateutil.rrule import rrulestr
@@ -250,6 +250,12 @@ CALENDAR_EVENT_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
+SERVICE_LIST_EVENTS: Final = "list_events"
+SERVICE_LIST_EVENTS_SCHEMA: Final = {
+    vol.Required("start"): datetime.datetime,
+    vol.Required("end"): datetime.datetime,
+}
+
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Track states and offer events for calendars."""
@@ -274,7 +280,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         async_create_event,
         required_features=[CalendarEntityFeature.CREATE_EVENT],
     )
-
+    component.async_register_entity_service(
+        SERVICE_LIST_EVENTS,
+        SERVICE_LIST_EVENTS_SCHEMA,
+        async_list_events_service,
+    )
     await component.async_setup(config)
     return True
 
@@ -743,3 +753,22 @@ async def async_create_event(entity: CalendarEntity, call: ServiceCall) -> None:
         EVENT_END: end,
     }
     await entity.async_create_event(**params)
+
+
+async def async_list_events_service(
+    calendar: CalendarEntity, service_call: ServiceCall
+) -> dict[str, Any]:
+    """Handle snapshot services calls."""
+    if not service_call.return_values:
+        raise ValueError(
+            "Service call did not request response data, but the list_events service requires it"
+        )
+    start = service_call.data["start"]
+    end = service_call.data["end"]
+    calendar_event_list = await calendar.async_get_events(calendar.hass, start, end)
+    return {
+        "events": [
+            dataclasses.asdict(event, dict_factory=_event_dict_factory)
+            for event in calendar_event_list
+        ]
+    }
