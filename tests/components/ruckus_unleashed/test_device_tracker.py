@@ -1,8 +1,8 @@
 """The sensor tests for the Ruckus Unleashed platform."""
 from datetime import timedelta
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
-from homeassistant.components.ruckus_unleashed import API_MAC, DOMAIN
+from homeassistant.components.ruckus_unleashed.const import API_CLIENT_MAC, DOMAIN
 from homeassistant.const import STATE_HOME, STATE_NOT_HOME, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -12,8 +12,7 @@ from homeassistant.util import utcnow
 from . import (
     DEFAULT_AP_INFO,
     DEFAULT_SYSTEM_INFO,
-    DEFAULT_TITLE,
-    DEFAULT_UNIQUE_ID,
+    DEFAULT_UNIQUEID,
     TEST_CLIENT,
     TEST_CLIENT_ENTITY_ID,
     init_integration,
@@ -31,7 +30,7 @@ async def test_client_connected(hass: HomeAssistant) -> None:
     with patch(
         "homeassistant.components.ruckus_unleashed.RuckusUnleashedDataUpdateCoordinator._fetch_clients",
         return_value={
-            TEST_CLIENT[API_MAC]: TEST_CLIENT,
+            TEST_CLIENT[API_CLIENT_MAC]: TEST_CLIENT,
         },
     ):
         async_fire_time_changed(hass, future)
@@ -85,27 +84,23 @@ async def test_restoring_clients(hass: HomeAssistant) -> None:
     registry.async_get_or_create(
         "device_tracker",
         DOMAIN,
-        DEFAULT_UNIQUE_ID,
+        DEFAULT_UNIQUEID,
         suggested_object_id="ruckus_test_device",
         config_entry=entry,
     )
 
     with patch(
-        "homeassistant.components.ruckus_unleashed.Ruckus.connect",
-        return_value=None,
-    ), patch(
-        "homeassistant.components.ruckus_unleashed.Ruckus.mesh_name",
-        return_value=DEFAULT_TITLE,
-    ), patch(
-        "homeassistant.components.ruckus_unleashed.Ruckus.system_info",
-        return_value=DEFAULT_SYSTEM_INFO,
-    ), patch(
-        "homeassistant.components.ruckus_unleashed.Ruckus.ap_info",
-        return_value=DEFAULT_AP_INFO,
-    ), patch(
+        "homeassistant.components.ruckus_unleashed.RuckusApi.get_system_info",
+        new_callable=AsyncMock,
+    ) as async_mock_get_system_info, patch(
+        "homeassistant.components.ruckus_unleashed.RuckusApi.get_aps",
+        new_callable=AsyncMock,
+    ) as async_mock_get_aps, patch(
         "homeassistant.components.ruckus_unleashed.RuckusUnleashedDataUpdateCoordinator._fetch_clients",
         return_value={},
     ):
+        async_mock_get_system_info.return_value = DEFAULT_SYSTEM_INFO
+        async_mock_get_aps.return_value = DEFAULT_AP_INFO
         entry.add_to_hass(hass)
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()

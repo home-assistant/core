@@ -2,8 +2,6 @@
 from datetime import timedelta
 from unittest.mock import patch
 
-from pyruckus.exceptions import AuthenticationError
-
 from homeassistant import config_entries
 from homeassistant.components.ruckus_unleashed.const import DOMAIN
 from homeassistant.core import HomeAssistant
@@ -23,13 +21,7 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.ruckus_unleashed.Ruckus.connect",
-        return_value=None,
-    ), patch(
-        "homeassistant.components.ruckus_unleashed.Ruckus.mesh_name",
-        return_value=DEFAULT_TITLE,
-    ), patch(
-        "homeassistant.components.ruckus_unleashed.Ruckus.system_info",
+        "homeassistant.components.ruckus_unleashed.AjaxSession.api.get_system_info",
         return_value=DEFAULT_SYSTEM_INFO,
     ), patch(
         "homeassistant.components.ruckus_unleashed.async_setup_entry",
@@ -53,14 +45,10 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch(
-        "homeassistant.components.ruckus_unleashed.Ruckus.connect",
-        side_effect=AuthenticationError,
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            CONFIG,
-        )
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        CONFIG,
+    )
 
     assert result2["type"] == "form"
     assert result2["errors"] == {"base": "invalid_auth"}
@@ -72,14 +60,10 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch(
-        "homeassistant.components.ruckus_unleashed.Ruckus.connect",
-        side_effect=ConnectionError,
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            CONFIG,
-        )
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        CONFIG,
+    )
 
     assert result2["type"] == "form"
     assert result2["errors"] == {"base": "cannot_connect"}
@@ -91,14 +75,10 @@ async def test_form_unknown_error(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch(
-        "homeassistant.components.ruckus_unleashed.Ruckus.connect",
-        side_effect=Exception,
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            CONFIG,
-        )
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        CONFIG,
+    )
 
     assert result2["type"] == "form"
     assert result2["errors"] == {"base": "unknown"}
@@ -113,13 +93,7 @@ async def test_form_cannot_connect_unknown_serial(hass: HomeAssistant) -> None:
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.ruckus_unleashed.Ruckus.connect",
-        return_value=None,
-    ), patch(
-        "homeassistant.components.ruckus_unleashed.Ruckus.mesh_name",
-        return_value=DEFAULT_TITLE,
-    ), patch(
-        "homeassistant.components.ruckus_unleashed.Ruckus.system_info",
+        "homeassistant.components.ruckus_unleashed.AjaxSession.api.get_system_info",
         return_value={},
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -138,13 +112,7 @@ async def test_form_duplicate_error(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.ruckus_unleashed.Ruckus.connect",
-        return_value=None,
-    ), patch(
-        "homeassistant.components.ruckus_unleashed.Ruckus.mesh_name",
-        return_value=DEFAULT_TITLE,
-    ), patch(
-        "homeassistant.components.ruckus_unleashed.Ruckus.system_info",
+        "homeassistant.components.ruckus_unleashed.AjaxSession.api.get_system_info",
         return_value=DEFAULT_SYSTEM_INFO,
     ):
         await hass.config_entries.flow.async_configure(
