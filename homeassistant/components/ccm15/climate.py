@@ -224,7 +224,7 @@ class CCM15Coordinator(DataUpdateCoordinator[CCM15DeviceState]):
 
     async def async_set_hvac_mode(self, ac_index, hvac_mode):
         """Set the hvac mode."""
-        data = self.get_ac_data(ac_index)
+        data: CCM15SlaveDevice = self.get_ac_data(ac_index)
         await self.async_set_states(
             ac_index,
             CONST_STATE_CMD_MAP[hvac_mode],
@@ -234,7 +234,7 @@ class CCM15Coordinator(DataUpdateCoordinator[CCM15DeviceState]):
 
     async def async_set_fan_mode(self, ac_index, fan_mode):
         """Set the fan mode."""
-        data = self.get_ac_data(ac_index)
+        data: CCM15SlaveDevice = self.get_ac_data(ac_index)
         await self.async_set_states(
             ac_index,
             data["mode"],
@@ -273,12 +273,14 @@ class CCM15Climate(CoordinatorEntity[CCM15Coordinator], ClimateEntity):
     @property
     def temperature_unit(self):
         """Return temperature unit."""
-        return UnitOfTemperature.CELSIUS
+        data: CCM15SlaveDevice = self.coordinator.get_ac_data(self._ac_index)
+        return data.unit
 
     @property
     def current_temperature(self):
         """Return current temperature."""
-        return self.coordinator.data.devices[self._ac_index]["temp"]
+        data: CCM15SlaveDevice = self.coordinator.get_ac_data(self._ac_index)
+        return data["temp"]
 
     @property
     def target_temperature(self):
