@@ -43,7 +43,7 @@ async def async_setup_entry(
         registry, config_entry.options[CONF_SOURCE_SENSOR]
     )
     dev_reg = dr.async_get(hass)
-    # Validate + resolve devicers id of entity_id
+    # Resolve source entity device
     if (
         (source_entity is not None)
         and (source_entity.device_id is not None)
