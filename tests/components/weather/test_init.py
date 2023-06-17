@@ -57,7 +57,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
-from homeassistant.util import dt
+from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_conversion import (
     DistanceConverter,
     PressureConverter,
@@ -90,7 +90,7 @@ class MockWeatherEntity(WeatherEntity):
         self._attr_native_wind_speed_unit = UnitOfSpeed.METERS_PER_SECOND
         self._attr_forecast = [
             Forecast(
-                datetime=datetime(2022, 6, 20, 00, 00, 00, tzinfo=dt.UTC),
+                datetime=datetime(2022, 6, 20, 00, 00, 00, tzinfo=dt_util.UTC),
                 native_precipitation=1,
                 native_temperature=20,
                 native_dew_point=2,
@@ -98,7 +98,7 @@ class MockWeatherEntity(WeatherEntity):
         ]
         self._attr_forecast_twice_daily = [
             Forecast(
-                datetime=datetime(2022, 6, 20, 8, 00, 00, tzinfo=dt.UTC),
+                datetime=datetime(2022, 6, 20, 8, 00, 00, tzinfo=dt_util.UTC),
                 native_precipitation=10,
                 native_temperature=25,
             )
@@ -137,7 +137,7 @@ class MockWeatherEntityCompat(WeatherEntity):
         self._attr_wind_speed_unit = UnitOfSpeed.METERS_PER_SECOND
         self._attr_forecast = [
             Forecast(
-                datetime=datetime(2022, 6, 20, 0, 00, 00, tzinfo=dt.UTC),
+                datetime=datetime(2022, 6, 20, 0, 00, 00, tzinfo=dt_util.UTC),
                 precipitation=1,
                 temperature=20,
             )
@@ -1052,7 +1052,7 @@ async def test_attr_compatibility(hass: HomeAssistant) -> None:
 
     forecast_entry = [
         Forecast(
-            datetime=datetime(2022, 6, 20, 0, 00, 00, tzinfo=dt.UTC),
+            datetime=datetime(2022, 6, 20, 0, 00, 00, tzinfo=dt_util.UTC),
             precipitation=1,
             temperature=20,
         )
