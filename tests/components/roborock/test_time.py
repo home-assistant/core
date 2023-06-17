@@ -15,8 +15,8 @@ from tests.common import MockConfigEntry
 @pytest.mark.parametrize(
     ("entity_id"),
     [
-        ("switch.roborock_s7_maxv_dnd_begin"),
-        ("switch.roborock_s7_maxv_dnd_end"),
+        ("switch.roborock_s7_maxv_begin_do_not_disturb"),
+        ("switch.roborock_s7_maxv_end_do_not_disturb"),
     ],
 )
 async def test_update_success(
@@ -54,5 +54,5 @@ async def test_update_failure(
             SERVICE_SET_VALUE,
             service_data={"time": time(hour=1, minute=1)},
             blocking=True,
-            target={"entity_id": "time.roborock_s7_maxv_dnd_end"},
+            target={"entity_id": "time.roborock_s7_maxv_end_do_not_disturb"},
         )
