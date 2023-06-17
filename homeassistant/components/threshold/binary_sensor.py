@@ -80,11 +80,9 @@ async def async_setup_entry(
     )
 
     registry = er.async_get(hass)
-    source_entity = er.EntityRegistry.async_get(
-        registry, config_entry.options[CONF_ENTITY_ID]
-    )
+    source_entity = er.EntityRegistry.async_get(registry, entity_id)
     dev_reg = dr.async_get(hass)
-    # Validate + resolve devicers id of entity_id
+    # Resolve source entity device
     if (
         (source_entity is not None)
         and (source_entity.device_id is not None)
