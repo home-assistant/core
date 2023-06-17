@@ -46,7 +46,7 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up the configuration config entry."""
+    """Set up the Openhome config entry."""
 
     _LOGGER.debug("Setting up config entry: %s", config_entry.unique_id)
 
