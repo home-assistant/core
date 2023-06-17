@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from volvooncall.dashboard import Instrument
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import SensorEntity, SensorStateClass
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -66,6 +66,16 @@ class VolvoSensor(VolvoEntity, SensorEntity):
     def _update_value_and_unit(self) -> None:
         self._attr_native_value = self.instrument.state
         self._attr_native_unit_of_measurement = self.instrument.unit
+        if self.instrument.attr in ["odometer"]:
+            self._attr_state_class = SensorStateClass.TOTAL_INCREASING
+        elif self.instrument.attr in [
+            "averageFuelConsumption",
+            "fuelAmount",
+            "fuelAmountLevel",
+            "averageSpeed",
+            "hvBattery.hvBatteryLevel",
+        ]:
+            self._attr_state_class = SensorStateClass.MEASUREMENT
 
     @callback
     def _handle_coordinator_update(self) -> None:
