@@ -36,7 +36,7 @@ async def async_setup_services(hass: HomeAssistant) -> None:
                     entry = hass.config_entries.async_get_entry(entry_id)
                     if entry and entry.domain == DOMAIN:
                         device_entries.append(entry)
-                if len(device_entries) == 0:
+                if not device_entries:
                     raise HomeAssistantError(
                         f"Device '{target}' is not a {DOMAIN} device"
                     )

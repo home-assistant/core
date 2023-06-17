@@ -117,7 +117,7 @@ async def test_service_called_with_non_fkb_target_devices(
     other_config_id = "555"
     await hass.config_entries.async_add(
         MockConfigEntry(
-            title="Not Fully Kiosk", domain=other_domain, unique_id=other_config_id
+            title="Not Fully Kiosk", domain=other_domain, entry_id=other_config_id
         )
     )
     device_entry = device_registry.async_get_or_create(
