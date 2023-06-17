@@ -55,9 +55,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     registry = dr.async_get(hass)
     aps = await ruckus.api.get_aps()
     for access_point in aps:
-        _LOGGER.debug(
-            "prepping AP [%s] %s", access_point[API_AP_SERIALNUMBER], entry.entry_id
-        )
+        _LOGGER.debug("AP [%s] %s", access_point[API_AP_SERIALNUMBER], entry.entry_id)
         registry.async_get_or_create(
             config_entry_id=entry.entry_id,
             connections={(dr.CONNECTION_NETWORK_MAC, access_point[API_AP_MAC])},
