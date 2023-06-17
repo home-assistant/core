@@ -32,6 +32,7 @@ class BMWButtonEntityDescription(ButtonEntityDescription):
         [MyBMWVehicle], Coroutine[Any, Any, RemoteServiceStatus]
     ] | None = None
     account_function: Callable[[BMWDataUpdateCoordinator], Coroutine] | None = None
+    is_available: Callable[[MyBMWVehicle], bool] = lambda _: True
 
 
 BUTTON_TYPES: tuple[BMWButtonEntityDescription, ...] = (
@@ -52,6 +53,13 @@ BUTTON_TYPES: tuple[BMWButtonEntityDescription, ...] = (
         icon="mdi:hvac",
         name="Activate air conditioning",
         remote_function=lambda vehicle: vehicle.remote_services.trigger_remote_air_conditioning(),
+    ),
+    BMWButtonEntityDescription(
+        key="deactivate_air_conditioning",
+        icon="mdi:hvac-off",
+        name="Deactivate air conditioning",
+        remote_function=lambda vehicle: vehicle.remote_services.trigger_remote_air_conditioning_stop(),
+        is_available=lambda vehicle: vehicle.is_remote_climate_stop_enabled,
     ),
     BMWButtonEntityDescription(
         key="find_vehicle",
@@ -84,7 +92,7 @@ async def async_setup_entry(
             [
                 BMWButton(coordinator, vehicle, description)
                 for description in BUTTON_TYPES
-                if not coordinator.read_only
+                if (not coordinator.read_only and description.is_available(vehicle))
                 or (coordinator.read_only and description.enabled_when_read_only)
             ]
         )
