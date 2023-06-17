@@ -52,3 +52,22 @@ create_event:
       example: "Conference Room - F123, Bldg. 002"
       selector:
         text:
+list_events:
+  name: List event
+  description: List events on a calendar within a time range.
+  target:
+    entity:
+      domain: calendar
+  fields:
+    start_date_time:
+      name: Start time
+      description: Return events that are active after this time (exclusive).
+      example: "2022-03-22 20:00:00"
+      selector:
+        datetime:
+    end_date_time:
+      name: End time
+      description: Return events that are active before this time (exclusive).
+      example: "2022-03-22 22:00:00"
+      selector:
+        datetime:

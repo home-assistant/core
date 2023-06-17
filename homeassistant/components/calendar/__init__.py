@@ -252,8 +252,8 @@ CALENDAR_EVENT_SCHEMA = vol.Schema(
 
 SERVICE_LIST_EVENTS: Final = "list_events"
 SERVICE_LIST_EVENTS_SCHEMA: Final = {
-    vol.Required("start"): datetime.datetime,
-    vol.Required("end"): datetime.datetime,
+    vol.Required("start_date_time"): datetime.datetime,
+    vol.Required("end_date_time"): datetime.datetime,
 }
 
 
@@ -763,8 +763,8 @@ async def async_list_events_service(
         raise ValueError(
             "Service call did not request response data, but the list_events service requires it"
         )
-    start = service_call.data["start"]
-    end = service_call.data["end"]
+    start = service_call.data["start_date_time"]
+    end = service_call.data["end_date_time"]
     calendar_event_list = await calendar.async_get_events(calendar.hass, start, end)
     return {
         "events": [

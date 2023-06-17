@@ -401,8 +401,8 @@ async def test_list_events_service(
         SERVICE_LIST_EVENTS,
         {
             "entity_id": "calendar.calendar_1",
-            "start": start,
-            "end": end,
+            "start_date_time": start,
+            "end_date_time": end,
         },
         blocking=True,
         return_values=True,
