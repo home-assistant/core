@@ -46,7 +46,7 @@ from homeassistant.const import (
     CONF_MODE,
     CONF_PARALLEL,
     CONF_REPEAT,
-    CONF_RESULT_VARIABLE,
+    CONF_RESPONSE_VARIABLE,
     CONF_SCENE,
     CONF_SEQUENCE,
     CONF_SERVICE,
@@ -666,20 +666,20 @@ class _ScriptRun:
             and params[CONF_SERVICE] == "trigger"
             or params[CONF_DOMAIN] in ("python_script", "script")
         )
-        result_variable = self._action.get(CONF_RESULT_VARIABLE)
+        response_variable = self._action.get(CONF_RESPONSE_VARIABLE)
         trace_set_result(params=params, running_script=running_script)
-        result = await self._async_run_long_action(
+        response_data = await self._async_run_long_action(
             self._hass.async_create_task(
                 self._hass.services.async_call(
                     **params,
                     blocking=True,
                     context=self._context,
-                    return_values=(result_variable is not None),
+                    return_values=(response_variable is not None),
                 )
             ),
         )
-        if result_variable:
-            self._variables[result_variable] = result
+        if response_variable:
+            self._variables[response_variable] = response_data
 
     async def _async_device_step(self):
         """Perform the device automation specified in the action."""

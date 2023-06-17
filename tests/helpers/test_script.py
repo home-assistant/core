@@ -339,7 +339,7 @@ async def test_calling_service_return_values(
     def mock_service(call: ServiceCall) -> ServiceResult:
         """Mock service call."""
         if call.return_values:
-            return {"service_result": "some_value"}
+            return {"data": "value-12345"}
         return None
 
     hass.services.async_register("test", "script", mock_service)
@@ -349,14 +349,14 @@ async def test_calling_service_return_values(
                 "alias": "service step1",
                 "service": "test.script",
                 # Store the result of the service call as a variable
-                "result_variable": "my_result",
+                "response_variable": "my_response",
             },
             {
                 "alias": "service step2",
                 "service": "test.script",
                 "data_template": {
                     # Result of previous service call
-                    "key": "{{ my_result.service_result }}"
+                    "key": "{{ my_response.data }}"
                 },
             },
         ]
@@ -390,13 +390,13 @@ async def test_calling_service_return_values(
                         "params": {
                             "domain": "test",
                             "service": "script",
-                            "service_data": {"key": "some_value"},
+                            "service_data": {"key": "value-12345"},
                             "target": {},
                         },
                         "running_script": False,
                     },
                     "variables": {
-                        "my_result": {"service_result": "some_value"},
+                        "my_response": {"data": "value-12345"},
                     },
                 }
             ],
