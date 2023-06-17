@@ -114,7 +114,15 @@ def setup_platform(
                     [ATTR_CONDITION_SUNNY, 0.3, -14, -19, 0],
                     [ATTR_CONDITION_SUNNY, 0, -9, -12, 0],
                 ],
-                None,
+                [
+                    [ATTR_CONDITION_SNOWY, 2, -10, -15, 60, True],
+                    [ATTR_CONDITION_PARTLYCLOUDY, 1, -13, -14, 25, False],
+                    [ATTR_CONDITION_SUNNY, 0, -18, -22, 70, True],
+                    [ATTR_CONDITION_SUNNY, 0.1, -23, -23, 90, False],
+                    [ATTR_CONDITION_SNOWY, 4, -19, -20, 40, True],
+                    [ATTR_CONDITION_SUNNY, 0.3, -14, -19, 0, False],
+                    [ATTR_CONDITION_SUNNY, 0, -9, -12, 0, True],
+                ],
             ),
         ]
     )
