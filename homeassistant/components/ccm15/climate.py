@@ -226,8 +226,8 @@ class CCM15Coordinator(DataUpdateCoordinator[CCM15DeviceState]):
         await self.async_set_states(
             ac_index,
             CONST_STATE_CMD_MAP[hvac_mode],
-            data["fan"],
-            data["temp"],
+            data.fan_mode,
+            data.temperature,
         )
 
     async def async_set_fan_mode(self, ac_index, fan_mode):
