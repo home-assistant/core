@@ -14,7 +14,7 @@ from homeassistant.util import slugify
 
 from .const import DOMAIN
 from .coordinator import RoborockDataUpdateCoordinator
-from .device import RoborockCoordinatedEntity, RoborockEntity
+from .device import RoborockEntity
 
 
 @dataclass
@@ -75,7 +75,7 @@ async def async_setup_entry(
     )
 
 
-class RoborockNumberEntity(RoborockCoordinatedEntity, NumberEntity):
+class RoborockNumberEntity(RoborockEntity, NumberEntity):
     """A class to let you set options on a Roborock vacuum where the potential options are fixed."""
 
     entity_description: RoborockNumberDescription
@@ -88,7 +88,7 @@ class RoborockNumberEntity(RoborockCoordinatedEntity, NumberEntity):
     ) -> None:
         """Create a number entity."""
         self.entity_description = entity_description
-        super().__init__(unique_id, coordinator)
+        super().__init__(unique_id, coordinator.device_info, coordinator.api)
 
     async def async_set_native_value(self, value: float) -> None:
         """Set number value."""
