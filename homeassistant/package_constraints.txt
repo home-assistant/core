@@ -12,7 +12,7 @@ bleak-retry-connector==3.0.2
 bleak==0.20.2
 bluetooth-adapters==0.15.3
 bluetooth-auto-recovery==1.2.0
-bluetooth-data-tools==1.1.0
+bluetooth-data-tools==1.2.0
 certifi>=2021.5.30
 ciso8601==2.3.0
 cryptography==40.0.2
@@ -46,7 +46,7 @@ PyYAML==6.0
 requests==2.31.0
 scapy==2.5.0
 SQLAlchemy==2.0.15
-typing_extensions>=4.5.0,<5.0
+typing_extensions>=4.6.3,<5.0
 ulid-transform==0.7.2
 voluptuous-serialize==2.6.0
 voluptuous==0.13.1

@@ -139,6 +139,7 @@ _DRIVE_MON_COND: tuple[SensorEntityDescription, ...] = (
         key="drive_temp",
         name="Temperature",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
         icon="mdi:thermometer",
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,

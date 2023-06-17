@@ -74,7 +74,7 @@ class SomfyThermostat(OverkizEntity, ClimateEntity):
         )
 
     @property
-    def hvac_mode(self) -> str:
+    def hvac_mode(self) -> HVACMode:
         """Return hvac operation ie. heat, cool mode."""
         return OVERKIZ_TO_HVAC_MODES[
             cast(

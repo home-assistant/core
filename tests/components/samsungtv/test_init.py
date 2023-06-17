@@ -65,7 +65,7 @@ async def test_setup(hass: HomeAssistant) -> None:
     )
 
     # test host and port
-    assert await hass.services.async_call(
+    await hass.services.async_call(
         DOMAIN, SERVICE_VOLUME_UP, {ATTR_ENTITY_ID: ENTITY_ID}, True
     )
 

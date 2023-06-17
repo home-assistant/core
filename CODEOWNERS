@@ -783,8 +783,8 @@ build.json @home-assistant/supervisor
 /tests/components/mutesync/ @currentoor
 /homeassistant/components/my/ @home-assistant/core
 /tests/components/my/ @home-assistant/core
-/homeassistant/components/myq/ @bdraco @ehendrix23
-/tests/components/myq/ @bdraco @ehendrix23
+/homeassistant/components/myq/ @ehendrix23
+/tests/components/myq/ @ehendrix23
 /homeassistant/components/mysensors/ @MartinHjelmare @functionpointer
 /tests/components/mysensors/ @MartinHjelmare @functionpointer
 /homeassistant/components/mystrom/ @fabaff
