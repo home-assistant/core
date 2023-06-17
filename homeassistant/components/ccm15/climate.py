@@ -217,9 +217,7 @@ class CCM15Coordinator(DataUpdateCoordinator[CCM15DeviceState]):
 
     def get_ac_data(self, ac_index: int) -> CCM15SlaveDevice:
         """Get ac data from the ac_index."""
-        _LOGGER.debug("Getting data '%s' at index '%s'", self.data.devices, ac_index)
         data = self.data.devices[ac_index]
-        _LOGGER.debug("Data '%s'", data)
         return data
 
     async def async_set_hvac_mode(self, ac_index, hvac_mode):
@@ -237,9 +235,9 @@ class CCM15Coordinator(DataUpdateCoordinator[CCM15DeviceState]):
         data: CCM15SlaveDevice = self.get_ac_data(ac_index)
         await self.async_set_states(
             ac_index,
-            data["mode"],
-            CONST_FAN_CMD_MAP[fan_mode],
-            data["temp"],
+            data.ac_mode,
+            CONST_FAN_CMD_MAP[data.fan_mode],
+            data.temperature,
         )
 
 
@@ -251,17 +249,17 @@ class CCM15Climate(CoordinatorEntity[CCM15Coordinator], ClimateEntity):
     ) -> None:
         """Create a climate device managed from a coordinator."""
         super().__init__(coordinator)
-        self._ac_host = ac_host
-        self._ac_index = ac_index
-        self._ac_name = f"ac{self._ac_index}"
+        self._ac_host: str = ac_host
+        self._ac_index: int = ac_index
+        self._ac_name: str = f"ac{self._ac_index}"
 
     @property
-    def unique_id(self):
+    def unique_id(self) -> str:
         """Return unique id."""
         return f"{self._ac_host}.{self._ac_name}"
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return name."""
         return f"{self._ac_name} thermostat"
 
@@ -271,13 +269,13 @@ class CCM15Climate(CoordinatorEntity[CCM15Coordinator], ClimateEntity):
         return True
 
     @property
-    def temperature_unit(self):
+    def temperature_unit(self) -> UnitOfTemperature:
         """Return temperature unit."""
         data: CCM15SlaveDevice = self.coordinator.get_ac_data(self._ac_index)
         return data.unit
 
     @property
-    def current_temperature(self):
+    def current_temperature(self) -> int:
         """Return current temperature."""
         data: CCM15SlaveDevice = self.coordinator.get_ac_data(self._ac_index)
         return data.temperature
