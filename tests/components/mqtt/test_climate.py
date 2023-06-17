@@ -339,7 +339,7 @@ async def test_set_default_operation(
             (
                 {
                     "mode_state_topic": "mode-state",
-                    "default_mode_state_topic": "default-mode-state",
+                    "system_mode_state_topic": "default-mode-state",
                 },
             ),
         )
@@ -508,7 +508,7 @@ async def test_set_operation_optimistic_without_default_mode_topic(
             DEFAULT_CONFIG,
             (
                 {
-                    "default_mode_state_topic": "default-mode-state",
+                    "system_mode_state_topic": "default-mode-state",
                     "mode_state_topic": "mode-state",
                     "optimistic": True,
                 },
@@ -1547,13 +1547,13 @@ async def test_get_target_temperature_low_high_with_templates(
                     "current_temperature_template": "{{ value_json }}",
                     "temperature_state_template": "{{ value_json }}",
                     "mode_state_template": "{{ value_json }}",
-                    "default_mode_state_template": "{{ value_json }}",
+                    "system_mode_state_template": "{{ value_json }}",
                     # Rendering to a bool for aux heat
                     "aux_state_template": "{{ value == 'switchmeon' }}",
                     # Rendering preset_mode
                     "preset_mode_value_template": "{{ value_json.attribute }}",
                     "action_topic": "action",
-                    "default_mode_state_topic": "default-mode-state",
+                    "system_mode_state_topic": "default-mode-state",
                     "mode_state_topic": "mode-state",
                     "fan_mode_state_topic": "fan-state",
                     "swing_mode_state_topic": "swing-state",

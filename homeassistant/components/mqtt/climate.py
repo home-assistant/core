@@ -93,8 +93,8 @@ CONF_ACTION_TOPIC = "action_topic"
 CONF_AUX_COMMAND_TOPIC = "aux_command_topic"
 CONF_AUX_STATE_TEMPLATE = "aux_state_template"
 CONF_AUX_STATE_TOPIC = "aux_state_topic"
-CONF_DEFAULT_MODE_STATE_TOPIC = "default_mode_state_topic"
-CONF_DEFAULT_MODE_STATE_TEMPLATE = "default_mode_state_template"
+CONF_SYSTEM_MODE_STATE_TOPIC = "system_mode_state_topic"
+CONF_SYSTEM_MODE_STATE_TEMPLATE = "system_mode_state_template"
 
 CONF_CURRENT_HUMIDITY_TEMPLATE = "current_humidity_template"
 CONF_CURRENT_HUMIDITY_TOPIC = "current_humidity_topic"
@@ -169,7 +169,7 @@ VALUE_TEMPLATE_KEYS = (
     CONF_AUX_STATE_TEMPLATE,
     CONF_CURRENT_HUMIDITY_TEMPLATE,
     CONF_CURRENT_TEMP_TEMPLATE,
-    CONF_DEFAULT_MODE_STATE_TEMPLATE,
+    CONF_SYSTEM_MODE_STATE_TEMPLATE,
     CONF_FAN_MODE_STATE_TEMPLATE,
     CONF_HUMIDITY_STATE_TEMPLATE,
     CONF_MODE_STATE_TEMPLATE,
@@ -200,7 +200,7 @@ TOPIC_KEYS = (
     CONF_AUX_STATE_TOPIC,
     CONF_CURRENT_HUMIDITY_TOPIC,
     CONF_CURRENT_TEMP_TOPIC,
-    CONF_DEFAULT_MODE_STATE_TOPIC,
+    CONF_SYSTEM_MODE_STATE_TOPIC,
     CONF_FAN_MODE_COMMAND_TOPIC,
     CONF_FAN_MODE_STATE_TOPIC,
     CONF_HUMIDITY_COMMAND_TOPIC,
@@ -297,8 +297,8 @@ _PLATFORM_SCHEMA_BASE = MQTT_BASE_SCHEMA.extend(
                 HVACMode.FAN_ONLY,
             ],
         ): cv.ensure_list,
-        vol.Optional(CONF_DEFAULT_MODE_STATE_TOPIC): valid_subscribe_topic,
-        vol.Optional(CONF_DEFAULT_MODE_STATE_TEMPLATE): cv.template,
+        vol.Optional(CONF_SYSTEM_MODE_STATE_TOPIC): valid_subscribe_topic,
+        vol.Optional(CONF_SYSTEM_MODE_STATE_TEMPLATE): cv.template,
         vol.Optional(CONF_MODE_STATE_TEMPLATE): cv.template,
         vol.Optional(CONF_MODE_STATE_TOPIC): valid_subscribe_topic,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -820,7 +820,7 @@ class MqttClimate(MqttTemperatureControlEntity, ClimateEntity):
                 return
             setattr(self, attr, payload)
             get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
-            if CONF_DEFAULT_MODE_STATE_TOPIC in self._config:
+            if CONF_SYSTEM_MODE_STATE_TOPIC in self._config:
                 return
             if attr == "_attr_hvac_mode" and payload != HVACMode.OFF.value:
                 self._default_operation_mode = HVACMode(str(payload))
@@ -828,7 +828,7 @@ class MqttClimate(MqttTemperatureControlEntity, ClimateEntity):
         @callback
         def handle_default_mode_received(msg: ReceiveMessage) -> None:
             """Handle receiving listed mode via MQTT."""
-            payload = self.render_template(msg, CONF_DEFAULT_MODE_STATE_TEMPLATE)
+            payload = self.render_template(msg, CONF_SYSTEM_MODE_STATE_TEMPLATE)
 
             mode_list: list[str] = self._config[CONF_MODE_LIST]
             if payload not in mode_list:
@@ -844,7 +844,7 @@ class MqttClimate(MqttTemperatureControlEntity, ClimateEntity):
             self._default_operation_mode = default_mode
 
         self.add_subscription(
-            topics, CONF_DEFAULT_MODE_STATE_TOPIC, handle_default_mode_received
+            topics, CONF_SYSTEM_MODE_STATE_TOPIC, handle_default_mode_received
         )
 
         @callback
@@ -1007,7 +1007,7 @@ class MqttClimate(MqttTemperatureControlEntity, ClimateEntity):
 
         if self._optimistic or self._topic[CONF_MODE_STATE_TOPIC] is None:
             if (
-                CONF_DEFAULT_MODE_STATE_TOPIC not in self._config
+                CONF_SYSTEM_MODE_STATE_TOPIC not in self._config
                 and hvac_mode != HVACMode.OFF
             ):
                 self._default_operation_mode = hvac_mode
