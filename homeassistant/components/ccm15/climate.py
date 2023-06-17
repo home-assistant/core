@@ -59,10 +59,57 @@ CONST_CMD_FAN_MAP = {v: k for k, v in CONST_FAN_CMD_MAP.items()}
 
 
 @dataclass
+class CCM15SlaveDevice:
+    """Data retrieved from a CCM15 slave device."""
+
+    def __init__(self, bytesarr: bytes) -> None:
+        """Initialize the slave device."""
+        self.wind_mode = 0
+        self.unit = UnitOfTemperature.CELSIUS
+        buf = bytesarr[0]
+        if (buf >> 0) & 1:
+            self.unit = UnitOfTemperature.FAHRENHEIT
+        self.locked_cool_temperature: int = (buf >> 3) & 0x1F
+
+        buf = bytesarr[1]
+        self.locked_heat_temperature: int = (buf >> 0) & 0x1F
+        self.locked_wind: int = (buf >> 5) & 7
+
+        buf = bytesarr[2]
+        self.locked_ac_mode: int = (buf >> 0) & 3
+        self.error_code: int = (buf >> 2) & 0x3F
+
+        buf = bytesarr[3]
+        self.ac_mode: int = (buf >> 2) & 7
+        self.fan_mode: int = (buf >> 5) & 7
+
+        buf = (buf >> 1) & 1
+        self.is_ac_mode_locked: bool = buf != 0
+
+        buf = bytesarr[4]
+        self.temperature_setpoint: int = (buf >> 3) & 0x1F
+        if self.unit == UnitOfTemperature.FAHRENHEIT:
+            self.temperature_setpoint += 62
+            self.locked_cool_temperature += 62
+            self.locked_heat_temperature += 62
+
+        buf = bytesarr[5]
+        if ((buf >> 3) & 1) == 0:
+            self.locked_cool_temperature = 0
+        if ((buf >> 4) & 1) == 0:
+            self.locked_heat_temperature = 0
+        self.fan_locked: bool = buf >> 5 & 1 != 0
+        self.is_remote_locked: bool = ((buf >> 6) & 1) != 0
+
+        buf = bytesarr[6]
+        self.temperature: int = buf if buf < 128 else buf - 256
+
+
+@dataclass
 class CCM15DeviceState:
     """Data retrieved from a CCM15 device."""
 
-    devices: list[dict[str, int]]
+    devices: list[CCM15SlaveDevice]
 
 
 class CCM15Coordinator(DataUpdateCoordinator[CCM15DeviceState]):
@@ -104,109 +151,22 @@ class CCM15Coordinator(DataUpdateCoordinator[CCM15DeviceState]):
         data = doc["response"]
         _LOGGER.debug("Found %s items in host %s", len(data.items()), self._host)
         ac_index = 0
-        ac_data: list[dict[str, int]] = []
+        ac_data = CCM15DeviceState(devices=[])
         for ac_name, ac_binary in data.items():
             _LOGGER.debug("Found ac_name:'%s', data:'%s'", ac_name, ac_binary)
-            ac_state = self.get_status_from(ac_binary)
-            if ac_state:
-                _LOGGER.debug("Index: %s, state:'%s'", ac_index, ac_state)
-                if len(self._ac_devices) == ac_index:
-                    _LOGGER.debug("Creating new ac device at index '%s'", ac_index)
-                    self._ac_devices.insert(
-                        ac_index, CCM15Climate(self._host, ac_index, self)
-                    )
-                ac_data.insert(ac_index, ac_state)
-                ac_index += 1
-            else:
+            if ac_binary == "-":
                 break
-        data = CCM15DeviceState
-        data.devices = ac_data
-        _LOGGER.debug("Found data '%s'", data.devices)
-        return data
-
-    def get_status_from(self, ac_binary: str) -> dict[str, int]:
-        """Parse the binary data and return a dictionary with AC status."""
-        # Parse data from the binary stream
-        if ac_binary == "-":
-            return {}
-
-        locked_wind = 0
-        locked_mode = 0
-        mode_locked = 0
-        fan_locked = 0
-        ctl = 0
-        htl = 0
-        rml = 0
-        mode = 0
-        fan = 0
-        temp = 0
-        err = 0
-        settemp = 0
-
-        bytesarr = bytes.fromhex(ac_binary.strip(","))
-
-        buf = bytesarr[0]
-        is_farenheith = (buf >> 0) & 1
-        ctl = (buf >> 3) & 0x1F
-
-        buf = bytesarr[1]
-        htl = (buf >> 0) & 0x1F
-        locked_wind = (buf >> 5) & 7
-
-        buf = bytesarr[2]
-        locked_mode = (buf >> 0) & 3
-        err = (buf >> 2) & 0x3F
-
-        if locked_mode == 1:
-            locked_mode = 0
-        elif locked_mode == 2:
-            locked_mode = 1
-        else:
-            locked_mode = -1
-
-        buf = bytesarr[3]
-        mode = (buf >> 2) & 7
-        fan = (buf >> 5) & 7
-        buf = (buf >> 1) & 1
-        if buf != 0:
-            mode_locked = 1
-
-        buf = bytesarr[4]
-        settemp = (buf >> 3) & 0x1F
-        if is_farenheith:
-            settemp += 62
-            ctl += 62
-            htl += 62
-
-        buf = bytesarr[5]
-        if ((buf >> 3) & 1) == 0:
-            ctl = 0
-        if ((buf >> 4) & 1) == 0:
-            htl = 0
-        fan_locked = 0 if ((buf >> 5) & 1) == 0 else 1
-        if ((buf >> 6) & 1) != 0:
-            rml = 1
-
-        buf = bytesarr[6]
-        temp = buf if buf < 128 else buf - 256
-
-        ac_data = {}
-        ac_data["ac_mode"] = mode
-        ac_data["fan"] = fan
-        ac_data["temp"] = temp
-        ac_data["settemp"] = settemp
-        ac_data["err"] = err
-        ac_data["locked"] = 0
-        if mode_locked == 1 or fan_locked == 1 or ctl > 0 or htl > 0 or rml == 1:
-            ac_data["locked"] = 1
-        ac_data["l_rm"] = rml
-
-        ac_data["l_mode"] = 10 if mode_locked == 0 else locked_mode
-        ac_data["l_wind"] = 10 if fan_locked == 0 else locked_wind
-
-        ac_data["l_cool_temp"] = ctl
-        ac_data["l_heat_temp"] = htl
-
+            bytesarr = bytes.fromhex(ac_binary.strip(","))
+            ac_slave = CCM15SlaveDevice(bytesarr)
+            _LOGGER.debug("Index: %s, state:'%s'", ac_index, ac_slave)
+            if len(self._ac_devices) == ac_index:
+                _LOGGER.debug("Creating new ac device at index '%s'", ac_index)
+                self._ac_devices.insert(
+                    ac_index, CCM15Climate(self._host, ac_index, self)
+                )
+            ac_data.devices.insert(ac_index, ac_slave)
+            ac_index += 1
+        _LOGGER.debug("Found data '%s'", ac_data.devices)
         return ac_data
 
     async def async_test_connection(self):
@@ -255,7 +215,7 @@ class CCM15Coordinator(DataUpdateCoordinator[CCM15DeviceState]):
                 _LOGGER.debug("API request ok %d", response.status_code)
                 await self.async_request_refresh()
 
-    def get_ac_data(self, ac_index: int) -> dict[str, int]:
+    def get_ac_data(self, ac_index: int) -> CCM15SlaveDevice:
         """Get ac data from the ac_index."""
         _LOGGER.debug("Getting data '%s' at index '%s'", self.data.devices, ac_index)
         data = self.data.devices[ac_index]
