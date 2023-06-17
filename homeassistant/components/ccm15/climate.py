@@ -255,16 +255,19 @@ class CCM15Coordinator(DataUpdateCoordinator[CCM15DeviceState]):
         data = self.data.devices[ac_index]
         return data
 
-    async def async_set_hvac_mode(self, ac_index, hvac_mode) -> None:
+    async def async_set_hvac_mode(self, ac_index, hvac_mode: HVACMode) -> None:
         """Set the hvac mode."""
+        _LOGGER.debug("Set Hvac[%s]='%s'", ac_index, str(hvac_mode))
         await self.async_set_state(ac_index, "mode", CONST_STATE_CMD_MAP[hvac_mode])
 
-    async def async_set_fan_mode(self, ac_index, fan_mode) -> None:
+    async def async_set_fan_mode(self, ac_index, fan_mode: str) -> None:
         """Set the fan mode."""
+        _LOGGER.debug("Set Fan[%s]='%s'", ac_index, fan_mode)
         await self.async_set_state(ac_index, "fan", CONST_FAN_CMD_MAP[fan_mode])
 
     async def async_set_temperature(self, ac_index, temp) -> None:
         """Set the target temperature mode."""
+        _LOGGER.debug("Set Temp[%s]='%s'", ac_index, temp)
         await self.async_set_state(ac_index, "temp", temp)
 
 
