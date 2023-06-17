@@ -3,6 +3,7 @@ import asyncio
 from dataclasses import dataclass
 import datetime
 import logging
+from typing import Any
 
 import aiohttp
 import httpx
@@ -185,6 +186,29 @@ class CCM15Coordinator(DataUpdateCoordinator[CCM15DeviceState]):
             _LOGGER.debug("Test connection: Timeout")
             return False
 
+    async def async_set_state(self, ac_index: int, state: str, value: int) -> None:
+        """Set new target states."""
+        _LOGGER.debug("Calling async_set_states for ac index '%s'", ac_index)
+        ac_id: int = 2**ac_index
+        url = BASE_URL.format(
+            self._host,
+            self._port,
+            CONF_URL_CTRL + "?ac0=" + str(ac_id) + "&ac1=0" + "&" + state + str(value),
+        )
+        _LOGGER.debug("Url:'%s'", url)
+
+        async with httpx.AsyncClient() as client:
+            response = await client.get(url, timeout=DEFAULT_TIMEOUT)
+            if response.status_code in (httpx.codes.OK, httpx.codes.FOUND):
+                _LOGGER.debug("API request ok %d", response.status_code)
+                await self.async_request_refresh()
+            else:
+                _LOGGER.exception(
+                    "Error doing API request: url: %s, code: %s",
+                    url,
+                    response.status_code,
+                )
+
     async def async_set_states(
         self, ac_index: int, state_cmd: int, fan_cmd: int, temp: int
     ):
@@ -224,25 +248,17 @@ class CCM15Coordinator(DataUpdateCoordinator[CCM15DeviceState]):
         data = self.data.devices[ac_index]
         return data
 
-    async def async_set_hvac_mode(self, ac_index, hvac_mode):
+    async def async_set_hvac_mode(self, ac_index, hvac_mode) -> None:
         """Set the hvac mode."""
-        data: CCM15SlaveDevice = self.get_ac_data(ac_index)
-        await self.async_set_states(
-            ac_index,
-            CONST_STATE_CMD_MAP[hvac_mode],
-            data.fan_mode,
-            data.temperature,
-        )
+        await self.async_set_state(ac_index, "mode", CONST_STATE_CMD_MAP[hvac_mode])
 
-    async def async_set_fan_mode(self, ac_index, fan_mode):
+    async def async_set_fan_mode(self, ac_index, fan_mode) -> None:
         """Set the fan mode."""
-        data: CCM15SlaveDevice = self.get_ac_data(ac_index)
-        await self.async_set_states(
-            ac_index,
-            data.ac_mode,
-            CONST_FAN_CMD_MAP[data.fan_mode],
-            data.temperature,
-        )
+        await self.async_set_state(ac_index, "fan", CONST_FAN_CMD_MAP[fan_mode])
+
+    async def async_set_temperature(self, ac_index, temp) -> None:
+        """Set the target temperature mode."""
+        await self.async_set_state(ac_index, "temp", temp)
 
 
 class CCM15Climate(CoordinatorEntity[CCM15Coordinator], ClimateEntity):
@@ -287,19 +303,19 @@ class CCM15Climate(CoordinatorEntity[CCM15Coordinator], ClimateEntity):
         return data.temperature
 
     @property
-    def target_temperature(self):
+    def target_temperature(self) -> int:
         """Return target temperature."""
         data: CCM15SlaveDevice = self.coordinator.get_ac_data(self._ac_index)
         _LOGGER.debug("set_temp[%s]=%s", self._ac_index, data.temperature_setpoint)
         return data.temperature_setpoint
 
     @property
-    def target_temperature_step(self):
+    def target_temperature_step(self) -> int:
         """Return target temperature step."""
         return 1
 
     @property
-    def hvac_mode(self):
+    def hvac_mode(self) -> HVACMode:
         """Return hvac mode."""
         data: CCM15SlaveDevice = self.coordinator.get_ac_data(self._ac_index)
         mode = data.ac_mode
@@ -307,12 +323,12 @@ class CCM15Climate(CoordinatorEntity[CCM15Coordinator], ClimateEntity):
         return CONST_CMD_STATE_MAP[mode]
 
     @property
-    def hvac_modes(self):
+    def hvac_modes(self) -> list[HVACMode]:
         """Return hvac modes."""
         return [HVACMode.OFF, HVACMode.HEAT, HVACMode.COOL, HVACMode.DRY, HVACMode.AUTO]
 
     @property
-    def fan_mode(self):
+    def fan_mode(self) -> str:
         """Return fan mode."""
         data: CCM15SlaveDevice = self.coordinator.get_ac_data(self._ac_index)
         mode = data.fan_mode
@@ -320,12 +336,12 @@ class CCM15Climate(CoordinatorEntity[CCM15Coordinator], ClimateEntity):
         return CONST_CMD_FAN_MAP[mode]
 
     @property
-    def fan_modes(self):
+    def fan_modes(self) -> list[str]:
         """Return fan modes."""
         return [FAN_AUTO, FAN_LOW, FAN_MEDIUM, FAN_HIGH]
 
     @property
-    def swing_mode(self):
+    def swing_mode(self) -> str:
         """Return swing mode."""
         return SWING_OFF
 
@@ -335,7 +351,7 @@ class CCM15Climate(CoordinatorEntity[CCM15Coordinator], ClimateEntity):
         return [SWING_OFF, SWING_VERTICAL, SWING_HORIZONTAL, SWING_BOTH]
 
     @property
-    def supported_features(self):
+    def supported_features(self) -> ClimateEntityFeature:
         """Return supported features."""
         return (
             ClimateEntityFeature.TARGET_TEMPERATURE
@@ -343,30 +359,29 @@ class CCM15Climate(CoordinatorEntity[CCM15Coordinator], ClimateEntity):
             | ClimateEntityFeature.SWING_MODE
         )
 
-    async def async_set_temperature(self, **kwargs):
+    async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set the target temperature."""
         temperature = kwargs.get(ATTR_TEMPERATURE)
         if temperature is None:
             return
         await self.coordinator.async_set_temperature(self._ac_index, temperature)
 
-    async def async_set_hvac_mode(self, hvac_mode):
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set the hvac mode."""
         await self.coordinator.async_set_hvac_mode(self._ac_index, hvac_mode)
 
-    async def async_set_fan_mode(self, fan_mode):
+    async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set the fan mode."""
         await self.coordinator.async_set_fan_mode(self._ac_index, fan_mode)
 
-    async def async_set_swing_mode(self, swing_mode):
+    async def async_set_swing_mode(self, swing_mode: str) -> None:
         """Set the swing mode."""
-        await self.coordinator.async_set_swing_mode(self._ac_index, swing_mode)
 
-    async def async_turn_off(self):
+    async def async_turn_off(self) -> None:
         """Turn off."""
         await self.async_set_hvac_mode(HVACMode.OFF)
 
-    async def async_turn_on(self):
+    async def async_turn_on(self) -> None:
         """Turn on."""
         await self.async_set_hvac_mode(HVACMode.AUTO)
 
