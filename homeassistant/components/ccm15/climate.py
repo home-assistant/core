@@ -72,7 +72,6 @@ class CCM15SlaveDevice:
         buf = bytesarr[1]
         self.locked_heat_temperature: int = (buf >> 0) & 0x1F
         self.locked_wind: int = (buf >> 5) & 7
-        self.is_swing_on: bool = ((buf >> 3) & 1) == 0
 
         buf = bytesarr[2]
         self.locked_ac_mode: int = (buf >> 0) & 3
@@ -91,6 +90,7 @@ class CCM15SlaveDevice:
             self.temperature_setpoint += 62
             self.locked_cool_temperature += 62
             self.locked_heat_temperature += 62
+        self.is_swing_on: bool = (buf >> 1) & 1 != 0
 
         buf = bytesarr[5]
         if ((buf >> 3) & 1) == 0:
