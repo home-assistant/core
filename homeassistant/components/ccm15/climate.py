@@ -15,10 +15,8 @@ from homeassistant.components.climate import (
     FAN_LOW,
     FAN_MEDIUM,
     FAN_OFF,
-    SWING_BOTH,
-    SWING_HORIZONTAL,
     SWING_OFF,
-    SWING_VERTICAL,
+    SWING_ON,
     ClimateEntity,
     ClimateEntityFeature,
     HVACMode,
@@ -358,7 +356,7 @@ class CCM15Climate(CoordinatorEntity[CCM15Coordinator], ClimateEntity):
     @property
     def swing_modes(self) -> list[str]:
         """Return swing modes."""
-        return [SWING_OFF, SWING_VERTICAL, SWING_HORIZONTAL, SWING_BOTH]
+        return [SWING_OFF, SWING_ON]
 
     @property
     def supported_features(self) -> ClimateEntityFeature:
