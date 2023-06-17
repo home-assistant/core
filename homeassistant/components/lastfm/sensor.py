@@ -128,11 +128,4 @@ class LastFmSensor(SensorEntity):
                 ATTR_TOP_PLAYED: top_played,
             }
         except PyLastError:
-            self._attr_entity_picture = None
-            self._attr_native_value = None
-            self._attr_extra_state_attributes = {
-                ATTR_LAST_PLAYED: None,
-                ATTR_PLAY_COUNT: None,
-                ATTR_TOP_PLAYED: None,
-            }
             return

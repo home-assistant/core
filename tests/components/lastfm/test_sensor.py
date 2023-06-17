@@ -1,4 +1,5 @@
 """Tests for the lastfm sensor."""
+from datetime import timedelta
 from unittest.mock import patch
 
 from pylast import WSError
@@ -16,11 +17,12 @@ from homeassistant.const import CONF_API_KEY, CONF_PLATFORM, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
 
 from . import API_KEY, USERNAME_1, FailingMockUser, MockUser
 from .conftest import ComponentSetup
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 LEGACY_CONFIG = {
     Platform.SENSOR: [
@@ -117,15 +119,28 @@ async def test_update_failed(
     hass: HomeAssistant,
     setup_integration: ComponentSetup,
     config_entry: MockConfigEntry,
+    default_user: MockUser,
 ) -> None:
     """Test handling exception after API is tested."""
-    await setup_integration(config_entry, FailingMockUser())
+    await setup_integration(config_entry, default_user)
 
     entity_id = "sensor.testaccount1"
 
     state = hass.states.get(entity_id)
 
-    assert state.state == "unknown"
-    assert state.attributes[ATTR_LAST_PLAYED] is None
-    assert state.attributes[ATTR_TOP_PLAYED] is None
-    assert state.attributes[ATTR_PLAY_COUNT] is None
+    assert state.state == "artist - title"
+    assert state.attributes[ATTR_LAST_PLAYED] == "artist - title"
+    assert state.attributes[ATTR_TOP_PLAYED] == "artist - title"
+    assert state.attributes[ATTR_PLAY_COUNT] == 1
+
+    with patch("pylast.User", return_value=FailingMockUser()):
+        future = dt_util.utcnow() + timedelta(minutes=15)
+        async_fire_time_changed(hass, future)
+        await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+
+    assert state.state == "artist - title"
+    assert state.attributes[ATTR_LAST_PLAYED] == "artist - title"
+    assert state.attributes[ATTR_TOP_PLAYED] == "artist - title"
+    assert state.attributes[ATTR_PLAY_COUNT] == 1
