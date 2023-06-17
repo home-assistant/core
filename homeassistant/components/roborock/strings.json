@@ -119,10 +119,10 @@
     },
     "time": {
       "dnd_start_time": {
-        "name": "Begin do not disturb"
+        "name": "Do not disturb begin"
       },
       "dnd_end_time": {
-        "name": "End do not disturb"
+        "name": "Do not disturb end"
       }
     },
     "vacuum": {
