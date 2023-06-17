@@ -26,7 +26,7 @@ async def test_scan_clients_button_schedule(
             dt_util.utcnow() + timedelta(seconds=DEBOUNCE_TIMEOUT),
         )
 
-        assert await hass.services.async_call(
+        await hass.services.async_call(
             BUTTON_DOMAIN,
             SERVICE_PRESS,
             {
