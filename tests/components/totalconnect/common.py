@@ -189,7 +189,7 @@ ZONE_5 = {
 # 99 is an unknown ZoneType
 ZONE_6 = {
     "ZoneID": "6",
-    "ZoneDescription": "Medical",
+    "ZoneDescription": "Unknown",
     "ZoneStatus": ZoneStatus.NORMAL,
     "ZoneTypeId": 99,
     "PartitionId": "1",
