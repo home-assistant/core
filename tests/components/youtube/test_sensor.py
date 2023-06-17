@@ -91,13 +91,13 @@ async def test_sensor_reauth_trigger(
 
 
 @pytest.mark.parametrize(
-    ("fixture", "url"),
+    ("fixture", "url", "has_entity_picture"),
     [
-        ("standard", "https://i.ytimg.com/vi/wysukDrMdqU/sddefault.jpg"),
-        ("high", "https://i.ytimg.com/vi/wysukDrMdqU/hqdefault.jpg"),
-        ("medium", "https://i.ytimg.com/vi/wysukDrMdqU/mqdefault.jpg"),
-        ("default", "https://i.ytimg.com/vi/wysukDrMdqU/default.jpg"),
-        ("none", None),
+        ("standard", "https://i.ytimg.com/vi/wysukDrMdqU/sddefault.jpg", True),
+        ("high", "https://i.ytimg.com/vi/wysukDrMdqU/hqdefault.jpg", True),
+        ("medium", "https://i.ytimg.com/vi/wysukDrMdqU/mqdefault.jpg", True),
+        ("default", "https://i.ytimg.com/vi/wysukDrMdqU/default.jpg", True),
+        ("none", None, False),
     ],
 )
 async def test_thumbnail(
@@ -105,6 +105,7 @@ async def test_thumbnail(
     setup_integration: ComponentSetup,
     fixture: str,
     url: str | None,
+    has_entity_picture: bool,
 ) -> None:
     """Test if right thumbnail is selected."""
     await setup_integration()
@@ -120,7 +121,5 @@ async def test_thumbnail(
         await hass.async_block_till_done()
     state = hass.states.get("sensor.google_for_developers_latest_upload")
     assert state
-    if url is not None:
-        assert state.attributes["entity_picture"] == url
-    else:
-        assert "entity_picture" not in state.attributes
+    assert ("entity_picture" in state.attributes) is has_entity_picture
+    assert state.attributes.get("entity_picture") == url
