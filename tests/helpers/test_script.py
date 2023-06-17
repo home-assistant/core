@@ -27,6 +27,7 @@ from homeassistant.core import (
     CoreState,
     HomeAssistant,
     ServiceCall,
+    ServiceResult,
     callback,
 )
 from homeassistant.exceptions import ConditionError, HomeAssistantError, ServiceNotFound
@@ -335,9 +336,11 @@ async def test_calling_service_return_values(
     """Test the calling of a service with return values."""
     context = Context()
 
-    def mock_service(_):  # pylint: disable=unnecessary-lambda
+    def mock_service(call: ServiceCall) -> ServiceResult:
         """Mock service call."""
-        return {"service_result": "some_value"}
+        if call.return_values:
+            return {"service_result": "some_value"}
+        return None
 
     hass.services.async_register("test", "script", mock_service)
     sequence = cv.SCRIPT_SCHEMA(

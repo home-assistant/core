@@ -11,7 +11,7 @@ from functools import partial
 import itertools
 import logging
 from types import MappingProxyType
-from typing import Any, TypedDict, cast
+from typing import Any, TypedDict, TypeVar, cast
 
 import async_timeout
 import voluptuous as vol
@@ -99,6 +99,8 @@ from .trigger import async_initialize_triggers, async_validate_trigger_config
 from .typing import ConfigType
 
 # mypy: allow-untyped-calls, allow-untyped-defs, no-check-untyped-defs
+
+_T = TypeVar("_T")
 
 SCRIPT_MODE_PARALLEL = "parallel"
 SCRIPT_MODE_QUEUED = "queued"
@@ -618,9 +620,7 @@ class _ScriptRun:
                 task.cancel()
             unsub()
 
-    async def _async_run_long_action(
-        self, long_task: asyncio.Task, result_variable: str | None = None
-    ) -> None:
+    async def _async_run_long_action(self, long_task: asyncio.Task[_T]) -> _T | None:
         """Run a long task while monitoring for stop request."""
 
         async def async_cancel_long_task() -> None:
@@ -648,12 +648,10 @@ class _ScriptRun:
             raise asyncio.CancelledError
         if long_task.done():
             # Propagate any exceptions that occurred.
-            result = long_task.result()
-            if result_variable:
-                self._variables[result_variable] = result
-        else:
-            # Stopped before long task completed, so cancel it.
-            await async_cancel_long_task()
+            return long_task.result()
+        # Stopped before long task completed, so cancel it.
+        await async_cancel_long_task()
+        return None
 
     async def _async_call_service_step(self):
         """Call the service specified in the action."""
@@ -670,7 +668,7 @@ class _ScriptRun:
         )
         result_variable = self._action.get(CONF_RESULT_VARIABLE)
         trace_set_result(params=params, running_script=running_script)
-        await self._async_run_long_action(
+        result = await self._async_run_long_action(
             self._hass.async_create_task(
                 self._hass.services.async_call(
                     **params,
@@ -679,8 +677,9 @@ class _ScriptRun:
                     return_values=(result_variable is not None),
                 )
             ),
-            result_variable=result_variable,
         )
+        if result_variable:
+            self._variables[result_variable] = result
 
     async def _async_device_step(self):
         """Perform the device automation specified in the action."""
