@@ -210,7 +210,11 @@ class CCM15Coordinator(DataUpdateCoordinator[CCM15DeviceState]):
         async with httpx.AsyncClient() as client:
             response = await client.get(url, timeout=DEFAULT_TIMEOUT)
             if response.status_code != httpx.codes.OK:
-                _LOGGER.exception("Error doing API request")
+                _LOGGER.exception(
+                    "Error doing API request: url: %s, code: %s",
+                    url,
+                    response.status_code,
+                )
             else:
                 _LOGGER.debug("API request ok %d", response.status_code)
                 await self.async_request_refresh()
@@ -272,18 +276,21 @@ class CCM15Climate(CoordinatorEntity[CCM15Coordinator], ClimateEntity):
     def temperature_unit(self) -> UnitOfTemperature:
         """Return temperature unit."""
         data: CCM15SlaveDevice = self.coordinator.get_ac_data(self._ac_index)
+        _LOGGER.debug("unit[%s]=%s", self._ac_index, str(data.unit))
         return data.unit
 
     @property
     def current_temperature(self) -> int:
         """Return current temperature."""
         data: CCM15SlaveDevice = self.coordinator.get_ac_data(self._ac_index)
+        _LOGGER.debug("temp[%s]=%s", self._ac_index, data.temperature)
         return data.temperature
 
     @property
     def target_temperature(self):
         """Return target temperature."""
         data: CCM15SlaveDevice = self.coordinator.get_ac_data(self._ac_index)
+        _LOGGER.debug("set_temp[%s]=%s", self._ac_index, data.temperature_setpoint)
         return data.temperature_setpoint
 
     @property
@@ -296,7 +303,7 @@ class CCM15Climate(CoordinatorEntity[CCM15Coordinator], ClimateEntity):
         """Return hvac mode."""
         data: CCM15SlaveDevice = self.coordinator.get_ac_data(self._ac_index)
         mode = data.ac_mode
-        _LOGGER.debug("Hvac mode '%s'", mode)
+        _LOGGER.debug("hvac_mode[%s]=%s", self._ac_index, mode)
         return CONST_CMD_STATE_MAP[mode]
 
     @property
@@ -309,7 +316,7 @@ class CCM15Climate(CoordinatorEntity[CCM15Coordinator], ClimateEntity):
         """Return fan mode."""
         data: CCM15SlaveDevice = self.coordinator.get_ac_data(self._ac_index)
         mode = data.fan_mode
-        _LOGGER.debug("Fan mode '%s'", mode)
+        _LOGGER.debug("fan_mode[%s]=%s", self._ac_index, mode)
         return CONST_CMD_FAN_MAP[mode]
 
     @property
