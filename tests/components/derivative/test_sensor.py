@@ -349,7 +349,7 @@ async def test_suffix(hass: HomeAssistant) -> None:
 
 
 async def test_device_id(hass: HomeAssistant) -> None:
-    """Test integration sensor units using a power source."""
+    """Test for source entity device for Derivative."""
     device_registry = dr.async_get(hass)
     entity_registry = er.async_get(hass)
 
