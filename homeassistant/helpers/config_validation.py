@@ -59,6 +59,7 @@ from homeassistant.const import (
     CONF_PARALLEL,
     CONF_PLATFORM,
     CONF_REPEAT,
+    CONF_RESPONSE_VARIABLE,
     CONF_SCAN_INTERVAL,
     CONF_SCENE,
     CONF_SEQUENCE,
@@ -1265,6 +1266,7 @@ SERVICE_SCHEMA = vol.All(
             ),
             vol.Optional(CONF_ENTITY_ID): comp_entity_ids,
             vol.Optional(CONF_TARGET): vol.Any(TARGET_SERVICE_FIELDS, dynamic_template),
+            vol.Optional(CONF_RESPONSE_VARIABLE): str,
             # The frontend stores data here. Don't use in core.
             vol.Remove("metadata"): dict,
         }
