@@ -145,13 +145,9 @@ async def async_setup_entry(
         registry, config_entry.options[CONF_SOURCE_SENSOR]
     )
 
-    unit_prefix = config_entry.options[CONF_UNIT_PREFIX]
-    if unit_prefix == "none":
-        unit_prefix = None
-
     source_entity = er.EntityRegistry.async_get(registry, source_entity_id)
     dev_reg = dr.async_get(hass)
-    # Validate + resolve devicers id of entity_id
+    # Resolve source entity device
     if (
         (source_entity is not None)
         and (source_entity.device_id is not None)
@@ -169,6 +165,10 @@ async def async_setup_entry(
         )
     else:
         device_info = None
+
+    unit_prefix = config_entry.options[CONF_UNIT_PREFIX]
+    if unit_prefix == "none":
+        unit_prefix = None
 
     integral = IntegrationSensor(
         integration_method=config_entry.options[CONF_METHOD],

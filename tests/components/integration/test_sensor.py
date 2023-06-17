@@ -680,7 +680,7 @@ async def test_calc_errors(hass: HomeAssistant, method) -> None:
 
 
 async def test_device_id(hass: HomeAssistant) -> None:
-    """Test integration sensor units using a power source."""
+    """Test for source entity device for Riemann sum integral."""
     device_registry = dr.async_get(hass)
     entity_registry = er.async_get(hass)
 
