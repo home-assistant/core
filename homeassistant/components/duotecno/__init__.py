@@ -2,10 +2,12 @@
 from __future__ import annotations
 
 from duotecno.controller import PyDuotecno
+from duotecno.exceptions import InvallidPassword, LoadFailure
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import PlatformNotReady
 
 from .const import DOMAIN
 
@@ -18,10 +20,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})
     controller = PyDuotecno()
     hass.data[DOMAIN][entry.entry_id] = controller
-    await controller.connect(
-        entry.data[CONF_HOST], entry.data[CONF_PORT], entry.data[CONF_PASSWORD]
-    )
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    try:
+        await controller.connect(
+            entry.data[CONF_HOST], entry.data[CONF_PORT], entry.data[CONF_PASSWORD]
+        )
+        await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    except OSError as err:
+        raise PlatformNotReady from err
+    except InvallidPassword as err:
+        raise PlatformNotReady from err
+    except LoadFailure as err:
+        raise PlatformNotReady from err
 
     return True
 
