@@ -280,12 +280,13 @@ class CCM15Climate(CoordinatorEntity[CCM15Coordinator], ClimateEntity):
     def current_temperature(self):
         """Return current temperature."""
         data: CCM15SlaveDevice = self.coordinator.get_ac_data(self._ac_index)
-        return data["temp"]
+        return data.temperature
 
     @property
     def target_temperature(self):
         """Return target temperature."""
-        return self.coordinator.data.devices[self._ac_index]["settemp"]
+        data: CCM15SlaveDevice = self.coordinator.get_ac_data(self._ac_index)
+        return data.temperature_setpoint
 
     @property
     def target_temperature_step(self):
@@ -295,20 +296,23 @@ class CCM15Climate(CoordinatorEntity[CCM15Coordinator], ClimateEntity):
     @property
     def hvac_mode(self):
         """Return hvac mode."""
-        data = self.coordinator.get_ac_data(self._ac_index)
-        mode = data["ac_mode"]
+        data: CCM15SlaveDevice = self.coordinator.get_ac_data(self._ac_index)
+        mode = data.ac_mode
         _LOGGER.debug("Hvac mode '%s'", mode)
         return CONST_CMD_STATE_MAP[mode]
 
     @property
     def hvac_modes(self):
         """Return hvac modes."""
-        return [HVACMode.OFF, HVACMode.HEAT, HVACMode.COOL, HVACMode.AUTO]
+        return [HVACMode.OFF, HVACMode.HEAT, HVACMode.COOL, HVACMode.DRY, HVACMode.AUTO]
 
     @property
     def fan_mode(self):
         """Return fan mode."""
-        return CONST_CMD_FAN_MAP[self.coordinator.data.devices[self._ac_index]["fan"]]
+        data: CCM15SlaveDevice = self.coordinator.get_ac_data(self._ac_index)
+        mode = data.fan_mode
+        _LOGGER.debug("Fan mode '%s'", mode)
+        return CONST_CMD_FAN_MAP[mode]
 
     @property
     def fan_modes(self):
