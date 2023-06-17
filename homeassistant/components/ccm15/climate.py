@@ -193,7 +193,14 @@ class CCM15Coordinator(DataUpdateCoordinator[CCM15DeviceState]):
         url = BASE_URL.format(
             self._host,
             self._port,
-            CONF_URL_CTRL + "?ac0=" + str(ac_id) + "&ac1=0" + "&" + state + str(value),
+            CONF_URL_CTRL
+            + "?ac0="
+            + str(ac_id)
+            + "&ac1=0"
+            + "&"
+            + state
+            + "="
+            + str(value),
         )
         _LOGGER.debug("Url:'%s'", url)
 
