@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Final
 
 import voluptuous as vol
 
@@ -17,8 +18,8 @@ _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ("persistent_notification",)
 
-CONF_NOTIFICATION_ID = "notification_id"
-CONF_UPDATE_TYPE = "update_type"
+CONF_NOTIFICATION_ID: Final = "notification_id"
+CONF_UPDATE_TYPE: Final = "update_type"
 
 TRIGGER_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
     {
@@ -53,7 +54,10 @@ async def async_attach_trigger(
         for notification in notifications.values():
             if update_types and update_type not in update_types:
                 continue
-            if persistent_notification_id and notification[CONF_NOTIFICATION_ID] != persistent_notification_id:  # type: ignore[literal-required]
+            if (
+                persistent_notification_id
+                and notification[CONF_NOTIFICATION_ID] != persistent_notification_id
+            ):
                 continue
 
             hass.async_run_hass_job(
