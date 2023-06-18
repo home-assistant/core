@@ -540,7 +540,7 @@ bluetooth-auto-recovery==1.2.0
 # homeassistant.components.esphome
 # homeassistant.components.ld2410_ble
 # homeassistant.components.led_ble
-bluetooth-data-tools==1.1.0
+bluetooth-data-tools==1.2.0
 
 # homeassistant.components.bond
 bond-async==0.1.23
@@ -1565,7 +1565,7 @@ pyatag==0.3.5.3
 pyatmo==7.5.0
 
 # homeassistant.components.apple_tv
-pyatv==0.12.0
+pyatv==0.13.0
 
 # homeassistant.components.aussie_broadband
 pyaussiebb==0.0.15
@@ -2253,7 +2253,7 @@ radiotherm==2.1.0
 raincloudy==0.0.7
 
 # homeassistant.components.rapt_ble
-rapt-ble==0.1.1
+rapt-ble==0.1.2
 
 # homeassistant.components.raspyrfm
 raspyrfm-client==1.2.8
@@ -2268,7 +2268,7 @@ renault-api==0.1.13
 renson-endura-delta==1.5.0
 
 # homeassistant.components.reolink
-reolink-aio==0.7.0
+reolink-aio==0.7.1
 
 # homeassistant.components.idteck_prox
 rfk101py==0.0.1
@@ -2691,7 +2691,7 @@ xiaomi-ble==0.17.2
 xknx==2.10.0
 
 # homeassistant.components.knx
-xknxproject==3.1.1
+xknxproject==3.2.0
 
 # homeassistant.components.bluesound
 # homeassistant.components.fritz

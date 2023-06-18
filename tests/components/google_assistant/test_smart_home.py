@@ -744,6 +744,7 @@ async def test_execute_times_out(
 
         turn_on_wait.set()
         await hass.async_block_till_done()
+        await hass.async_block_till_done()
         # The remaining two calls should now have executed
         assert call_service_mock.call_count == 4
         expected_calls.extend(
