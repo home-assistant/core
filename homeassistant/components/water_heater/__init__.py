@@ -116,6 +116,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
     await component.async_setup(config)
 
+    component.async_register_entity_service(SERVICE_TURN_ON, {}, "async_turn_on")
+    component.async_register_entity_service(SERVICE_TURN_OFF, {}, "async_turn_off")
     component.async_register_entity_service(
         SERVICE_SET_AWAY_MODE, SET_AWAY_MODE_SCHEMA, async_service_away_mode
     )
@@ -293,6 +295,29 @@ class WaterHeaterEntity(Entity):
         await self.hass.async_add_executor_job(
             ft.partial(self.set_temperature, **kwargs)
         )
+
+    async def async_turn_on(self) -> None:
+        """Turn the entity on."""
+        if hasattr(self, "turn_on"):
+            await self.hass.async_add_executor_job(self.turn_on)
+            return
+
+        # Fake turn on
+        for mode in (STATE_HEAT_PUMP, STATE_GAS, STATE_ELECTRIC):
+            if self.operation_list is not None and mode not in self.operation_list:
+                continue
+            await self.async_set_operation_mode(mode)
+            break
+
+    async def async_turn_off(self) -> None:
+        """Turn the entity off."""
+        if hasattr(self, "turn_off"):
+            await self.hass.async_add_executor_job(self.turn_off)
+            return
+
+        # Fake turn off
+        if self.operation_list is not None and STATE_OFF in self.operation_list:
+            await self.async_set_operation_mode(STATE_OFF)
 
     def set_operation_mode(self, operation_mode: str) -> None:
         """Set new target operation mode."""
