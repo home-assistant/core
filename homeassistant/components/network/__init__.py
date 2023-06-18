@@ -120,7 +120,7 @@ async def async_get_ipv4_broadcast_addresses(hass: HomeAssistant) -> set[IPv4Add
 
 
 async def async_get_announce_addresses(hass: HomeAssistant) -> list[str]:
-    """Return a list of IP addresses to announce via zeroconf/ssdp/etc.
+    """Return a list of IP addresses to announce/use via zeroconf/ssdp/etc.
 
     The default ip address is always returned first if available.
     """
