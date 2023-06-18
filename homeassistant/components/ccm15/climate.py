@@ -348,7 +348,6 @@ class CCM15Climate(CoordinatorEntity[CCM15Coordinator], ClimateEntity):
             identifiers={
                 # Serial numbers are unique identifiers within a specific domain
                 (DOMAIN, self.unique_id),
-                (DOMAIN, str(self._ac_index)),
             },
             name=self.name,
             manufacturer="Midea",
@@ -359,7 +358,11 @@ class CCM15Climate(CoordinatorEntity[CCM15Coordinator], ClimateEntity):
     def extra_state_attributes(self):
         """Return the optional state attributes."""
         data: CCM15SlaveDevice = self.coordinator.get_ac_data(self._ac_index)
-        return {"error_code": data.error_code}
+        return {
+            "ac_index": self._ac_index,
+            "host": self._ac_host,
+            "error_code": data.error_code,
+        }
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set the target temperature."""
