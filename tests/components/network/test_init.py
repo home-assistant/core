@@ -774,7 +774,7 @@ _ADAPTERS_WITH_MANUAL_CONFIG = [
 ]
 
 
-async def test_async_get_announced_addresses(hass: HomeAssistant) -> None:
+async def test_async_get_announce_addresses(hass: HomeAssistant) -> None:
     """Test addresses for mDNS announcement."""
     first_ip = "172.16.1.5"
     with patch(
@@ -784,7 +784,7 @@ async def test_async_get_announced_addresses(hass: HomeAssistant) -> None:
         "homeassistant.components.network.async_get_adapters",
         return_value=_ADAPTERS_WITH_MANUAL_CONFIG,
     ):
-        actual = await network.async_get_announced_addresses(hass)
+        actual = await network.async_get_announce_addresses(hass)
     assert actual[0] == first_ip and actual == [
         first_ip,
         "2001:db8::",
@@ -801,7 +801,7 @@ async def test_async_get_announced_addresses(hass: HomeAssistant) -> None:
         "homeassistant.components.network.async_get_adapters",
         return_value=_ADAPTERS_WITH_MANUAL_CONFIG,
     ):
-        actual = await network.async_get_announced_addresses(hass)
+        actual = await network.async_get_announce_addresses(hass)
 
     assert actual[0] == first_ip and actual == [
         first_ip,
