@@ -14,7 +14,7 @@ from homeassistant.components.climate import (
     ClimateEntityFeature,
     HVACMode,
 )
-from homeassistant.const import PRECISION_TENTHS, UnitOfTemperature
+from homeassistant.const import PRECISION_HALVES, PRECISION_TENTHS, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -41,7 +41,9 @@ from .const import (
     EVO_CUSTOM,
     EVO_DAYOFF,
     EVO_FOLLOW,
+    EVO_HEAT,
     EVO_HEATOFF,
+    EVO_OFF,
     EVO_PERMOVER,
     EVO_RESET,
     EVO_TEMPOVER,
@@ -53,6 +55,13 @@ PRESET_RESET = "Reset"  # reset all child zones to EVO_FOLLOW
 PRESET_CUSTOM = "Custom"
 
 HA_HVAC_TO_TCS = {HVACMode.OFF: EVO_HEATOFF, HVACMode.HEAT: EVO_AUTO}
+
+HA_HVAC_TO_FPW = {
+    HVACMode.HEAT: EVO_HEAT,
+    HVACMode.OFF: EVO_OFF,
+}
+
+FPW_TO_HA_HVAC = {v: k for k, v in HA_HVAC_TO_FPW.items()}
 
 TCS_PRESET_TO_HA = {
     EVO_AWAY: PRESET_AWAY,
@@ -95,32 +104,37 @@ async def async_setup_platform(
         broker.params[CONF_LOCATION_IDX],
     )
 
-    entities: list[EvoClimateEntity] = [EvoController(broker, broker.tcs)]
+    entities: list[EvoClimateEntity] = []
 
-    for zone in broker.tcs.zones.values():
-        if zone.modelType == "HeatingZone" or zone.zoneType == "Thermostat":
-            _LOGGER.debug(
-                "Adding: %s (%s), id=%s, name=%s",
-                zone.zoneType,
-                zone.modelType,
-                zone.zoneId,
-                zone.name,
-            )
+    if broker.tcs.modelType.startswith("FocusProWifi"):
+        entities.append(EvoFocusProWifi(broker, broker.tcs))
+    else:
+        entities.append(EvoController(broker, broker.tcs))
 
-            new_entity = EvoZone(broker, zone)
-            entities.append(new_entity)
+        for zone in broker.tcs.zones.values():
+            if zone.modelType == "HeatingZone" or zone.zoneType == "Thermostat":
+                _LOGGER.debug(
+                    "Adding: %s (%s), id=%s, name=%s",
+                    zone.zoneType,
+                    zone.modelType,
+                    zone.zoneId,
+                    zone.name,
+                )
 
-        else:
-            _LOGGER.warning(
-                (
-                    "Ignoring: %s (%s), id=%s, name=%s: unknown/invalid zone type, "
-                    "report as an issue if you feel this zone type should be supported"
-                ),
-                zone.zoneType,
-                zone.modelType,
-                zone.zoneId,
-                zone.name,
-            )
+                new_entity = EvoZone(broker, zone)
+                entities.append(new_entity)
+
+            else:
+                _LOGGER.warning(
+                    (
+                        "Ignoring: %s (%s), id=%s, name=%s: unknown/invalid zone type, "
+                        "report as an issue if you feel this zone type should be supported"
+                    ),
+                    zone.zoneType,
+                    zone.modelType,
+                    zone.zoneId,
+                    zone.name,
+                )
 
     async_add_entities(entities, update_before_add=True)
 
@@ -403,3 +417,77 @@ class EvoController(EvoClimateEntity):
                 attrs["activeSystemFaults"] = getattr(self._evo_tcs, attr)
             else:
                 attrs[attr] = getattr(self._evo_tcs, attr)
+
+
+class EvoFocusProWifi(EvoClimateEntity):
+    """Base for a Honeywell TCC FocusProWifi."""
+
+    _attr_icon = "mdi:thermostat"
+    _attr_precision = PRECISION_HALVES
+    _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
+
+    def __init__(self, evo_broker, evo_device) -> None:
+        """Initialize a Honeywell TCC Controller/Location."""
+        super().__init__(evo_broker, evo_device)
+
+        self._zone = list(self._evo_tcs.zones.values())[0]  # FPS only has one zone
+
+        self._attr_unique_id = evo_device.systemId
+        self._attr_name = evo_device.location.name
+
+        self._attr_min_temp = self._zone.setpointCapabilities["minHeatSetpoint"]
+        self._attr_max_temp = self._zone.setpointCapabilities["maxHeatSetpoint"]
+
+        modes = [m["systemMode"] for m in evo_broker.config["allowedSystemModes"]]
+        self._attr_hvac_modes = [
+            FPW_TO_HA_HVAC[m] for m in modes if m in list(HA_HVAC_TO_FPW)
+        ]
+
+    async def async_set_temperature(self, **kwargs: Any) -> None:
+        """Set a new target temperature."""
+        temperature = kwargs["temperature"]
+
+        await self._evo_broker.call_client_api(
+            self._zone.set_temperature(temperature, until=None)
+        )
+
+    @property
+    def hvac_mode(self) -> str:
+        """Return the current operating mode of a FPW."""
+        tcs_mode = self._evo_tcs.systemModeStatus["mode"]
+        return FPW_TO_HA_HVAC[tcs_mode]
+
+    @property
+    def target_temperature(self) -> float:
+        """Return the target temperature of a Zone."""
+        return self._zone.setpointStatus["targetHeatTemperature"]
+
+    @property
+    def current_temperature(self) -> float | None:
+        """Return the current temperature of the FPW."""
+        if self._zone.temperatureStatus["isAvailable"]:
+            return self._zone.temperatureStatus["temperature"]
+
+        return None
+
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
+        """Set an operating mode for a FPW."""
+        if not (tcs_mode := HA_HVAC_TO_FPW.get(hvac_mode)):
+            raise HomeAssistantError(f"Invalid hvac_mode: {hvac_mode}")
+        await self._evo_broker.call_client_api(
+            self._evo_tcs.set_status(tcs_mode, until=None)
+        )
+
+    async def async_update(self) -> None:
+        """Get the latest state data for a FPW."""
+        self._device_state_attrs = {}
+
+        attrs = self._device_state_attrs
+        for attr in STATE_ATTRS_TCS:
+            if attr == "activeFaults":
+                attrs["activeSystemFaults"] = getattr(self._evo_tcs, attr)
+            else:
+                attrs[attr] = getattr(self._evo_tcs, attr)
+
+        for attr in STATE_ATTRS_ZONES:
+            self._device_state_attrs[attr] = getattr(self._zone, attr)
