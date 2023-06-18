@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 from collections import deque
 from collections.abc import Callable
+from concurrent import futures
 import datetime as dt
 import logging
 from typing import TYPE_CHECKING, Any, Final
@@ -138,6 +139,11 @@ class WebSocketHandler:
                 if is_enabled_for(logging_debug):
                     debug("%s: Sending %s", self.description, coalesced_messages)
                 await send_str(coalesced_messages)
+        except futures.CancelledError as ex:
+            # Originally, this was just asyncio.CancelledError, but issue #9546 showed
+            # that futures.CancelledErrors can also occur in some situations.
+            debug("%s: Writer cancelled by future cancellation", self.description)
+            raise asyncio.CancelledError from ex
         except asyncio.CancelledError:
             debug("%s: Writer cancelled", self.description)
             raise
