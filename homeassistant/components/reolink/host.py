@@ -558,10 +558,10 @@ class ReolinkHost:
         self._signal_write_ha_state(channels)
 
     def _signal_write_ha_state(self, channels: list[int]) -> None:
-        """Update the binary sensors with async_write_ha_state"""
+        """Update the binary sensors with async_write_ha_state."""
         if channels is None:
-            async_dispatcher_send(hass, f"{self.webhook_id}_all", {})
+            async_dispatcher_send(self._hass, f"{self.webhook_id}_all", {})
             return
 
         for channel in channels:
-            async_dispatcher_send(hass, f"{self.webhook_id}_{channel}", {})
+            async_dispatcher_send(self._hass, f"{self.webhook_id}_{channel}", {})
