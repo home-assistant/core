@@ -236,6 +236,7 @@ homeassistant.components.oncue.*
 homeassistant.components.onewire.*
 homeassistant.components.open_meteo.*
 homeassistant.components.openexchangerates.*
+homeassistant.components.opensky.*
 homeassistant.components.openuv.*
 homeassistant.components.otbr.*
 homeassistant.components.overkiz.*

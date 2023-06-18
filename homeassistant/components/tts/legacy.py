@@ -112,7 +112,7 @@ SCHEMA_SERVICE_SAY = vol.Schema(
 async def async_setup_legacy(
     hass: HomeAssistant, config: ConfigType
 ) -> list[Coroutine[Any, Any, None]]:
-    """Set up legacy text to speech providers."""
+    """Set up legacy text-to-speech providers."""
     tts: SpeechManager = hass.data[DATA_TTS_MANAGER]
 
     # Load service descriptions from tts/services.yaml
@@ -132,7 +132,7 @@ async def async_setup_legacy(
 
         platform = await async_prepare_setup_platform(hass, config, DOMAIN, p_type)
         if platform is None:
-            _LOGGER.error("Unknown text to speech platform specified")
+            _LOGGER.error("Unknown text-to-speech platform specified")
             return
 
         try:

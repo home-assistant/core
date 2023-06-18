@@ -5,6 +5,8 @@ import asyncio
 from collections.abc import Mapping
 from datetime import datetime, timedelta
 import email
+from email.header import decode_header, make_header
+from email.utils import parseaddr, parsedate_to_datetime
 import logging
 from typing import Any
 
@@ -16,6 +18,7 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_PORT,
     CONF_USERNAME,
+    CONF_VERIFY_SSL,
     CONTENT_TYPE_TEXT_PLAIN,
 )
 from homeassistant.core import HomeAssistant
@@ -27,7 +30,11 @@ from homeassistant.exceptions import (
 from homeassistant.helpers.json import json_bytes
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-from homeassistant.util.ssl import SSLCipherList, client_context
+from homeassistant.util.ssl import (
+    SSLCipherList,
+    client_context,
+    create_no_verify_ssl_context,
+)
 
 from .const import (
     CONF_CHARSET,
@@ -52,9 +59,11 @@ MAX_EVENT_DATA_BYTES = 32168
 
 async def connect_to_server(data: Mapping[str, Any]) -> IMAP4_SSL:
     """Connect to imap server and return client."""
-    ssl_context = client_context(
-        ssl_cipher_list=data.get(CONF_SSL_CIPHER_LIST, SSLCipherList.PYTHON_DEFAULT)
-    )
+    ssl_cipher_list: str = data.get(CONF_SSL_CIPHER_LIST, SSLCipherList.PYTHON_DEFAULT)
+    if data.get(CONF_VERIFY_SSL, True):
+        ssl_context = client_context(ssl_cipher_list=ssl_cipher_list)
+    else:
+        ssl_context = create_no_verify_ssl_context()
     client = IMAP4_SSL(data[CONF_SERVER], data[CONF_PORT], ssl_context=ssl_context)
 
     await client.wait_hello_from_server()
@@ -82,9 +91,9 @@ class ImapMessage:
         """Get the email headers."""
         header_base: dict[str, tuple[str,]] = {}
         for key, value in self.email_message.items():
-            header: tuple[str,] = (str(value),)
-            if header_base.setdefault(key, header) != header:
-                header_base[key] += header  # type: ignore[assignment]
+            header_instances: tuple[str,] = (str(value),)
+            if header_base.setdefault(key, header_instances) != header_instances:
+                header_base[key] += header_instances  # type: ignore[assignment]
         return header_base
 
     @property
@@ -94,23 +103,26 @@ class ImapMessage:
         date_str: str | None
         if (date_str := self.email_message["Date"]) is None:
             return None
-        # In some cases a timezone or comment is added in parenthesis after the date
-        # We want to strip that part to avoid parsing errors
-        return datetime.strptime(
-            date_str.split("(")[0].strip(), "%a, %d %b %Y %H:%M:%S %z"
-        )
+        try:
+            mail_dt_tm = parsedate_to_datetime(date_str)
+        except ValueError:
+            _LOGGER.debug(
+                "Parsed date %s is not compliant with rfc2822#section-3.3", date_str
+            )
+            return None
+        return mail_dt_tm
 
     @property
     def sender(self) -> str:
         """Get the parsed message sender from the email."""
-        return str(email.utils.parseaddr(self.email_message["From"])[1])
+        return str(parseaddr(self.email_message["From"])[1])
 
     @property
     def subject(self) -> str:
         """Decode the message subject."""
-        decoded_header = email.header.decode_header(self.email_message["Subject"])
-        header = email.header.make_header(decoded_header)
-        return str(header)
+        decoded_header = decode_header(self.email_message["Subject"] or "")
+        subject_header = make_header(decoded_header)
+        return str(subject_header)
 
     @property
     def text(self) -> str:

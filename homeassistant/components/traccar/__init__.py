@@ -11,7 +11,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_flow
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     ATTR_ACCURACY,
@@ -55,12 +54,6 @@ WEBHOOK_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass: HomeAssistant, hass_config: ConfigType) -> bool:
-    """Set up the Traccar component."""
-    hass.data[DOMAIN] = {"devices": set(), "unsub_device_tracker": {}}
-    return True
-
-
 async def handle_webhook(hass, webhook_id, request):
     """Handle incoming webhook with Traccar request."""
     try:
@@ -94,6 +87,7 @@ async def handle_webhook(hass, webhook_id, request):
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Configure based on config entry."""
+    hass.data.setdefault(DOMAIN, {"devices": set(), "unsub_device_tracker": {}})
     webhook.async_register(
         hass, DOMAIN, "Traccar", entry.data[CONF_WEBHOOK_ID], handle_webhook
     )

@@ -9,7 +9,7 @@ from homeassistant.components.wemo.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
-from homeassistant.util import dt
+from homeassistant.util import dt as dt_util
 
 from .conftest import (
     MOCK_FIRMWARE_VERSION,
@@ -138,9 +138,9 @@ async def test_discovery(hass: HomeAssistant, pywemo_registry) -> None:
         device.host = f"{MOCK_HOST}_{counter}"
         device.port = MOCK_PORT + counter
         device.name = f"{MOCK_NAME}_{counter}"
-        device.serialnumber = f"{MOCK_SERIAL_NUMBER}_{counter}"
+        device.serial_number = f"{MOCK_SERIAL_NUMBER}_{counter}"
         device.model_name = "Motion"
-        device.udn = f"uuid:{device.model_name}-1_0-{device.serialnumber}"
+        device.udn = f"uuid:{device.model_name}-1_0-{device.serial_number}"
         device.firmware_version = MOCK_FIRMWARE_VERSION
         device.get_state.return_value = 0  # Default to Off
         device.supports_long_press.return_value = False
@@ -164,7 +164,7 @@ async def test_discovery(hass: HomeAssistant, pywemo_registry) -> None:
         # Test that discovery runs periodically and the async_dispatcher_send code works.
         async_fire_time_changed(
             hass,
-            dt.utcnow()
+            dt_util.utcnow()
             + timedelta(seconds=WemoDiscovery.ADDITIONAL_SECONDS_BETWEEN_SCANS + 1),
         )
         await hass.async_block_till_done()

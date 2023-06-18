@@ -27,8 +27,11 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.components.mqtt.climate import MQTT_CLIMATE_ATTRIBUTES_BLOCKED
-from homeassistant.const import ATTR_TEMPERATURE, Platform
+from homeassistant.components.mqtt.climate import (
+    DEFAULT_INITIAL_TEMPERATURE,
+    MQTT_CLIMATE_ATTRIBUTES_BLOCKED,
+)
+from homeassistant.const import ATTR_TEMPERATURE, Platform, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 
 from .test_common import (
@@ -963,7 +966,7 @@ async def test_handle_action_received(
     hvac_action = state.attributes.get(ATTR_HVAC_ACTION)
     assert hvac_action is None
     # Redefine actions according to https://developers.home-assistant.io/docs/core/entity/climate/#hvac-action
-    actions = ["off", "heating", "cooling", "drying", "idle", "fan"]
+    actions = ["off", "preheating", "heating", "cooling", "drying", "idle", "fan"]
     assert all(elem in actions for elem in HVACAction)
     for action in actions:
         async_fire_mqtt_message(hass, "action", action)
@@ -1330,6 +1333,9 @@ async def test_get_target_temperature_low_high_with_templates(
                     # By default, just unquote the JSON-strings
                     "value_template": "{{ value_json }}",
                     "action_template": "{{ value_json }}",
+                    "current_humidity_template": "{{ value_json }}",
+                    "current_temperature_template": "{{ value_json }}",
+                    "temperature_state_template": "{{ value_json }}",
                     # Rendering to a bool for aux heat
                     "aux_state_template": "{{ value == 'switchmeon' }}",
                     # Rendering preset_mode
@@ -1690,10 +1696,95 @@ async def test_temperature_unit(
     """Test that setting temperature unit converts temperature values."""
     await mqtt_mock_entry()
 
+    state = hass.states.get(ENTITY_CLIMATE)
+    assert state.attributes.get("temperature") == DEFAULT_INITIAL_TEMPERATURE
+    assert state.attributes.get("min_temp") == DEFAULT_MIN_TEMP
+    assert state.attributes.get("max_temp") == DEFAULT_MAX_TEMP
+
     async_fire_mqtt_message(hass, "current_temperature", "77")
 
     state = hass.states.get(ENTITY_CLIMATE)
     assert state.attributes.get("current_temperature") == 25
+
+
+@pytest.mark.parametrize(
+    ("hass_config", "temperature_unit", "initial", "min", "max", "current"),
+    [
+        (
+            help_custom_config(
+                climate.DOMAIN,
+                DEFAULT_CONFIG,
+                (
+                    {
+                        "temperature_unit": "F",
+                        "current_temperature_topic": "current_temperature",
+                    },
+                ),
+            ),
+            UnitOfTemperature.CELSIUS,
+            DEFAULT_INITIAL_TEMPERATURE,
+            DEFAULT_MIN_TEMP,
+            DEFAULT_MAX_TEMP,
+            25,
+        ),
+        (
+            help_custom_config(
+                climate.DOMAIN,
+                DEFAULT_CONFIG,
+                (
+                    {
+                        "temperature_unit": "F",
+                        "current_temperature_topic": "current_temperature",
+                    },
+                ),
+            ),
+            UnitOfTemperature.KELVIN,
+            294,
+            280,
+            308,
+            298,
+        ),
+        (
+            help_custom_config(
+                climate.DOMAIN,
+                DEFAULT_CONFIG,
+                (
+                    {
+                        "temperature_unit": "F",
+                        "current_temperature_topic": "current_temperature",
+                    },
+                ),
+            ),
+            UnitOfTemperature.FAHRENHEIT,
+            70,
+            45,
+            95,
+            77,
+        ),
+    ],
+)
+async def test_alt_temperature_unit(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    temperature_unit: UnitOfTemperature,
+    initial: float,
+    min: float,
+    max: float,
+    current: float,
+) -> None:
+    """Test deriving the systems temperature unit."""
+    with patch.object(hass.config.units, "temperature_unit", temperature_unit):
+        await mqtt_mock_entry()
+
+        state = hass.states.get(ENTITY_CLIMATE)
+        assert state.attributes.get("temperature") == initial
+        assert state.attributes.get("min_temp") == min
+        assert state.attributes.get("max_temp") == max
+
+        async_fire_mqtt_message(hass, "current_temperature", "77")
+
+        state = hass.states.get(ENTITY_CLIMATE)
+        assert state.attributes.get("current_temperature") == current
 
 
 async def test_setting_attribute_via_mqtt_json_message(

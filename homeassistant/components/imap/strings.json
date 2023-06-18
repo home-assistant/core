@@ -10,7 +10,8 @@
           "charset": "Character set",
           "folder": "Folder",
           "search": "IMAP search",
-          "ssl_cipher_list": "SSL cipher list (Advanced)"
+          "ssl_cipher_list": "SSL cipher list (Advanced)",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
         }
       },
       "reauth_confirm": {

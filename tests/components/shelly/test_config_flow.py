@@ -858,7 +858,7 @@ async def test_options_flow_disabled_gen_1(
     await ws_client.send_json(
         {
             "id": 5,
-            "type": "config_entries/get_matching",
+            "type": "config_entries/get",
             "domain": "shelly",
         }
     )
@@ -879,7 +879,7 @@ async def test_options_flow_enabled_gen_2(
     await ws_client.send_json(
         {
             "id": 5,
-            "type": "config_entries/get_matching",
+            "type": "config_entries/get",
             "domain": "shelly",
         }
     )
@@ -900,7 +900,7 @@ async def test_options_flow_disabled_sleepy_gen_2(
     await ws_client.send_json(
         {
             "id": 5,
-            "type": "config_entries/get_matching",
+            "type": "config_entries/get",
             "domain": "shelly",
         }
     )

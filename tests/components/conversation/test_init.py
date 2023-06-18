@@ -1371,6 +1371,7 @@ async def test_non_default_response(hass: HomeAssistant, init_components) -> Non
             text="open the front door",
             context=Context(),
             conversation_id=None,
+            device_id=None,
             language=hass.config.language,
         )
     )

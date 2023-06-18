@@ -1,1 +1,1 @@
-"""Tests for the Microsoft Text-to-Speech component."""
+"""Tests for the Microsoft text-to-speech component."""
