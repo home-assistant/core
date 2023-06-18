@@ -30,7 +30,8 @@ from .const import (
     CONST_CMD_STATE_MAP,
     DOMAIN,
 )
-from .coordinator import CCM15Coordinator, CCM15SlaveDevice
+from .coordinator import CCM15Coordinator
+from .data_model import CCM15SlaveDevice
 
 _LOGGER = logging.getLogger(__name__)
 
