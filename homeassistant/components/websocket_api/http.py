@@ -377,6 +377,7 @@ class WebSocketHandler:
 
         except asyncio.CancelledError:
             debug("%s: Connection cancelled", self.description)
+            await wsock.close()  # try to clean up the connection
             raise
 
         except Disconnect as ex:
