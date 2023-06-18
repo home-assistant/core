@@ -26,7 +26,10 @@ async def async_setup_entry(
         config_entry.entry_id
     ]
 
-    if coordinator.api.json_feature_supported("recordings", "List"):
+    if (
+        coordinator.api.json_feature_supported("recordings", "List")
+        and coordinator.api.api_version == 6
+    ):
         async_add_entities([PhilipsTVRecordingTimeNext(coordinator)])
 
 
