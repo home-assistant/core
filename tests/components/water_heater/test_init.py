@@ -1,7 +1,7 @@
 """The tests for the water heater component."""
 from __future__ import annotations
 
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 import voluptuous as vol
@@ -73,6 +73,16 @@ async def test_sync_turn_on(hass: HomeAssistant) -> None:
     # STATE_HEAT_PUMP, STATE_GAS, STATE_ELECTRIC if any of there modes is available
     # pylint: disable-next=no-member
     assert water_heater.set_operation_mode.call_args[0][0] == "heat_pump"
+    # pylint: disable-next=no-member
+    water_heater.set_operation_mode.reset_mock()
+
+    with patch.object(water_heater, "_attr_operation_list", side_effect=["off", "eco"]):
+        await water_heater.async_turn_on()
+
+        # When turn on is called the first available active mode should be activated from
+        # STATE_HEAT_PUMP, STATE_GAS, STATE_ELECTRIC if any of there modes is available
+        # pylint: disable-next=no-member
+        assert water_heater.set_operation_mode.called is False
 
     # Test with turn_on method defined
     setattr(water_heater, "turn_on", MagicMock())
