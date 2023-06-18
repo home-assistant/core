@@ -27,6 +27,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -338,6 +339,20 @@ class CCM15Climate(CoordinatorEntity[CCM15Coordinator], ClimateEntity):
             ClimateEntityFeature.TARGET_TEMPERATURE
             | ClimateEntityFeature.FAN_MODE
             | ClimateEntityFeature.SWING_MODE
+        )
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return the device info."""
+        return DeviceInfo(
+            identifiers={
+                # Serial numbers are unique identifiers within a specific domain
+                (DOMAIN, self.unique_id),
+                (DOMAIN, str(self._ac_index)),
+            },
+            name=self.name,
+            manufacturer="Midea",
+            model="CCM15",
         )
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
