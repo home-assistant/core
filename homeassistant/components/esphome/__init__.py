@@ -56,10 +56,11 @@ from homeassistant.helpers.issue_registry import (
 )
 from homeassistant.helpers.service import async_set_service_schema
 from homeassistant.helpers.template import Template
+from homeassistant.helpers.typing import ConfigType
 
 from .bluetooth import async_connect_scanner
 from .const import DOMAIN
-from .dashboard import async_get_dashboard
+from .dashboard import async_get_dashboard, async_setup as async_setup_dashboard
 from .domain_data import DomainData
 
 # Import config flow so that it's added to the registry
@@ -72,23 +73,25 @@ CONF_NOISE_PSK = "noise_psk"
 _LOGGER = logging.getLogger(__name__)
 _R = TypeVar("_R")
 
-STABLE_BLE_VERSION_STR = "2023.4.0"
+STABLE_BLE_VERSION_STR = "2023.6.0"
 STABLE_BLE_VERSION = AwesomeVersion(STABLE_BLE_VERSION_STR)
 PROJECT_URLS = {
     "esphome.bluetooth-proxy": "https://esphome.github.io/bluetooth-proxies/",
 }
 DEFAULT_URL = f"https://esphome.io/changelog/{STABLE_BLE_VERSION_STR}.html"
 
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
 
 @callback
 def _async_check_firmware_version(
-    hass: HomeAssistant, device_info: EsphomeDeviceInfo
+    hass: HomeAssistant, device_info: EsphomeDeviceInfo, api_version: APIVersion
 ) -> None:
     """Create or delete an the ble_firmware_outdated issue."""
     # ESPHome device_info.mac_address is the unique_id
     issue = f"ble_firmware_outdated-{device_info.mac_address}"
     if (
-        not device_info.bluetooth_proxy_version
+        not device_info.bluetooth_proxy_feature_flags_compat(api_version)
         # If the device has a project name its up to that project
         # to tell them about the firmware version update so we don't notify here
         or (device_info.project_name and device_info.project_name not in PROJECT_URLS)
@@ -133,6 +136,12 @@ def _async_check_using_api_password(
             "name": device_info.name,
         },
     )
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the esphome component."""
+    await async_setup_dashboard(hass)
+    return True
 
 
 async def async_setup_entry(  # noqa: C901
@@ -360,7 +369,7 @@ async def async_setup_entry(  # noqa: C901
             if entry_data.device_info.name:
                 reconnect_logic.name = entry_data.device_info.name
 
-            if device_info.bluetooth_proxy_version:
+            if device_info.bluetooth_proxy_feature_flags_compat(cli.api_version):
                 entry_data.disconnect_callbacks.append(
                     await async_connect_scanner(hass, entry, cli, entry_data)
                 )
@@ -391,7 +400,7 @@ async def async_setup_entry(  # noqa: C901
             # Re-connection logic will trigger after this
             await cli.disconnect()
         else:
-            _async_check_firmware_version(hass, device_info)
+            _async_check_firmware_version(hass, device_info, entry_data.api_version)
             _async_check_using_api_password(hass, device_info, bool(password))
 
     async def on_disconnect() -> None:

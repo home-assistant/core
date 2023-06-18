@@ -240,12 +240,15 @@ async def _async_setup_component(
         async_create_issue(
             hass,
             HOMEASSISTANT_DOMAIN,
-            f"config_entry_only{domain}",
+            f"config_entry_only_{domain}",
             is_fixable=False,
             severity=IssueSeverity.ERROR,
             issue_domain=domain,
             translation_key="config_entry_only",
-            translation_placeholders={"domain": domain},
+            translation_placeholders={
+                "domain": domain,
+                "add_integration": f"/config/integrations/dashboard/add?domain={domain}",
+            },
         )
 
     start = timer()

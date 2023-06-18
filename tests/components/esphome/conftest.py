@@ -1,9 +1,10 @@
 """esphome session fixtures."""
 from __future__ import annotations
 
+from asyncio import Event
 from unittest.mock import AsyncMock, Mock, patch
 
-from aioesphomeapi import APIClient, APIVersion, DeviceInfo
+from aioesphomeapi import APIClient, APIVersion, DeviceInfo, ReconnectLogic
 import pytest
 from zeroconf import Zeroconf
 
@@ -63,7 +64,7 @@ def mock_device_info() -> DeviceInfo:
     return DeviceInfo(
         uses_password=False,
         name="test",
-        bluetooth_proxy_version=0,
+        legacy_bluetooth_proxy_version=0,
         mac_address="11:22:33:44:55:aa",
         esphome_version="1.0.0",
     )
@@ -160,10 +161,18 @@ async def mock_voice_assistant_entry(
         mock_client.device_info = AsyncMock(return_value=device_info)
         mock_client.subscribe_voice_assistant = AsyncMock(return_value=Mock())
 
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-        await hass.async_block_till_done()
-        await hass.async_block_till_done()
+        try_connect_done = Event()
+        real_try_connect = ReconnectLogic._try_connect
+
+        async def mock_try_connect(self):
+            """Set an event when ReconnectLogic._try_connect has been awaited."""
+            result = await real_try_connect(self)
+            try_connect_done.set()
+            return result
+
+        with patch.object(ReconnectLogic, "_try_connect", mock_try_connect):
+            await hass.config_entries.async_setup(entry.entry_id)
+            await try_connect_done.wait()
 
         return entry
 

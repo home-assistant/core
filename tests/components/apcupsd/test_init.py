@@ -9,7 +9,7 @@ from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 
-from . import CONF_DATA, MOCK_MINIMAL_STATUS, MOCK_STATUS, init_integration
+from . import CONF_DATA, MOCK_MINIMAL_STATUS, MOCK_STATUS, async_init_integration
 
 from tests.common import MockConfigEntry
 
@@ -19,7 +19,7 @@ async def test_async_setup_entry(hass: HomeAssistant, status: OrderedDict) -> No
     """Test a successful setup entry."""
     # Minimal status does not contain "SERIALNO" field, which is used to determine the
     # unique ID of this integration. But, the integration should work fine without it.
-    await init_integration(hass, status=status)
+    await async_init_integration(hass, status=status)
 
     # Verify successful setup by querying the status sensor.
     state = hass.states.get("binary_sensor.ups_online_status")
@@ -34,8 +34,8 @@ async def test_multiple_integrations(hass: HomeAssistant) -> None:
     status1 = MOCK_STATUS | {"LOADPCT": "15.0 Percent", "SERIALNO": "XXXXX1"}
     status2 = MOCK_STATUS | {"LOADPCT": "16.0 Percent", "SERIALNO": "XXXXX2"}
     entries = (
-        await init_integration(hass, host="test1", status=status1),
-        await init_integration(hass, host="test2", status=status2),
+        await async_init_integration(hass, host="test1", status=status1),
+        await async_init_integration(hass, host="test2", status=status2),
     )
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 2
@@ -70,8 +70,8 @@ async def test_unload_remove(hass: HomeAssistant) -> None:
     """Test successful unload of entry."""
     # Load two integrations from two mock hosts.
     entries = (
-        await init_integration(hass, host="test1", status=MOCK_STATUS),
-        await init_integration(hass, host="test2", status=MOCK_MINIMAL_STATUS),
+        await async_init_integration(hass, host="test1", status=MOCK_STATUS),
+        await async_init_integration(hass, host="test2", status=MOCK_MINIMAL_STATUS),
     )
 
     # Assert they are loaded.

@@ -22,6 +22,7 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.typing import UNDEFINED
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 from homeassistant.util.network import normalize_url
@@ -68,7 +69,7 @@ async def test_default_entity_attributes() -> None:
     entity = DefaultEntity()
 
     assert entity.hass is None
-    assert entity.name is None
+    assert entity.name is UNDEFINED
     assert entity.default_language == DEFAULT_LANG
     assert entity.supported_languages == SUPPORT_LANGUAGES
     assert entity.supported_options is None
