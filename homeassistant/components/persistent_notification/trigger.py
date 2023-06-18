@@ -38,7 +38,7 @@ async def async_attach_trigger(
     trigger_info: TriggerInfo,
 ) -> CALLBACK_TYPE:
     """Listen for state changes based on configuration."""
-    trigger_data: TriggerData = trigger_info.get("trigger_data", {})
+    trigger_data: TriggerData = trigger_info["trigger_data"]
     job = HassJob(action)
 
     persistent_notification_id = config.get(CONF_NOTIFICATION_ID)

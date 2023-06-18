@@ -1,13 +1,12 @@
 """The tests for the persistent notification component."""
-import pytest
-
 from typing import Any
+
+import pytest
 
 import homeassistant.components.persistent_notification as pn
 from homeassistant.components.persistent_notification import trigger
 from homeassistant.components.websocket_api.const import TYPE_RESULT
-from homeassistant.core import HomeAssistant, Context, callback
-from homeassistant.helpers.trigger import TriggerActionType, TriggerData
+from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.setup import async_setup_component
 
 from tests.typing import WebSocketGenerator
@@ -188,6 +187,8 @@ async def test_automation_with_pn_trigger(hass: HomeAssistant) -> None:
     result_dismissed = []
     result_id = []
 
+    trigger_info = {"trigger_data": {}}
+
     @callback
     def trigger_callback_any(
         run_variables: dict[str, Any], context: Context | None = None
@@ -195,7 +196,10 @@ async def test_automation_with_pn_trigger(hass: HomeAssistant) -> None:
         result_any.append(run_variables)
 
     await trigger.async_attach_trigger(
-        hass, {"platform": "persistent_notification"}, trigger_callback_any, {}
+        hass,
+        {"platform": "persistent_notification"},
+        trigger_callback_any,
+        trigger_info,
     )
 
     @callback
@@ -208,7 +212,7 @@ async def test_automation_with_pn_trigger(hass: HomeAssistant) -> None:
         hass,
         {"platform": "persistent_notification", "update_type": "removed"},
         trigger_callback_dismissed,
-        {},
+        trigger_info,
     )
 
     @callback
@@ -221,7 +225,7 @@ async def test_automation_with_pn_trigger(hass: HomeAssistant) -> None:
         hass,
         {"platform": "persistent_notification", "notification_id": "42"},
         trigger_callback_id,
-        {},
+        trigger_info,
     )
 
     await hass.services.async_call(
