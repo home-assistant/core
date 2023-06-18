@@ -455,15 +455,7 @@ class ReolinkHost:
                 self._long_poll_received = True
                 ir.async_delete_issue(self._hass, DOMAIN, "webhook_url")
 
-            # After receiving the new motion states in the upstream lib,
-            # update the binary sensors with async_write_ha_state
-            # The same dispatch as for the webhook can be used
-            if channels is None:
-                async_dispatcher_send(self._hass, f"{self.webhook_id}_all", {})
-                continue
-
-            for channel in channels:
-                async_dispatcher_send(self._hass, f"{self.webhook_id}_{channel}", {})
+            self._signal_write_ha_state(channels)
 
             # Cooldown to prevent CPU over usage on camera freezes
             await asyncio.sleep(0.75)
@@ -491,10 +483,7 @@ class ReolinkHost:
                     self._hass, POLL_INTERVAL_NO_PUSH, self._poll_job
                 )
 
-        # After receiving the new motion states in the upstream lib,
-        # update the binary sensors with async_write_ha_state
-        # The same dispatch as for the webhook can be used
-        async_dispatcher_send(self._hass, f"{self.webhook_id}_all", {})
+        self._signal_write_ha_state(None)
 
     async def handle_webhook(
         self, hass: HomeAssistant, webhook_id: str, request: Request
@@ -566,9 +555,13 @@ class ReolinkHost:
             )
             return
 
+        self._signal_write_ha_state(channels)
+
+    def _signal_write_ha_state(self, channels: list[int]) -> None:
+        """Update the binary sensors with async_write_ha_state"""
         if channels is None:
-            async_dispatcher_send(hass, f"{webhook_id}_all", {})
+            async_dispatcher_send(hass, f"{self.webhook_id}_all", {})
             return
 
         for channel in channels:
-            async_dispatcher_send(hass, f"{webhook_id}_{channel}", {})
+            async_dispatcher_send(hass, f"{self.webhook_id}_{channel}", {})
