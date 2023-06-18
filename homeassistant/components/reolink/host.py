@@ -465,6 +465,9 @@ class ReolinkHost:
             for channel in channels:
                 async_dispatcher_send(self._hass, f"{self.webhook_id}_{channel}", {})
 
+            # Cooldown to prevent CPU over usage on camera freezes
+            await asyncio.sleep(0.75)
+
     async def _async_poll_all_motion(self, *_) -> None:
         """Poll motion and AI states until the first ONVIF push is received."""
         if self._webhook_reachable or self._long_poll_received:
