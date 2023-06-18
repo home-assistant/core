@@ -3,8 +3,6 @@ import unittest
 
 import homeassistant.components.ccm15 as ccm15
 
-# from homeassistant.components.ccm15 import CCM15SlaveDevice
-
 
 class TestCCM15SlaveDevice(unittest.TestCase):
     """Test the CCM15SlaveDevice class."""
