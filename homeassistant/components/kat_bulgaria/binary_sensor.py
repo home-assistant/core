@@ -24,9 +24,9 @@ async def async_setup_entry(
 ) -> None:
     """Set up the platform from config_entry."""
 
-    person_name: str = str(entry.data.get(CONF_PERSON_NAME))
-    person_egn: str = str(entry.data.get(CONF_PERSON_EGN))
-    license_number: str = str(entry.data.get(CONF_DRIVING_LICENSE))
+    person_name: str = str(entry.data[CONF_PERSON_NAME])
+    person_egn: str = str(entry.data[CONF_PERSON_EGN])
+    license_number: str = str(entry.data[CONF_DRIVING_LICENSE])
 
     api: KatApi = hass.data[DOMAIN][entry.entry_id]
 
@@ -40,11 +40,6 @@ class KatObligationsSensor(BinarySensorEntity):
 
     _attr_has_entity_name = True
 
-    @property
-    def name(self) -> str | None:
-        """Name of the entity."""
-        return generate_entity_name(self.user_name)
-
     def __init__(self, api: KatApi, name: str, egn: str, license_number: str) -> None:
         """Initialize the sensor."""
 
@@ -53,6 +48,8 @@ class KatObligationsSensor(BinarySensorEntity):
         self.user_egn = egn
         self.user_license_number = license_number
         self.user_name = name
+
+        self._attr_name = generate_entity_name(self.user_name)
 
     async def async_update(self) -> None:
         """Fetch new state data for the sensor."""
@@ -64,4 +61,4 @@ class KatObligationsSensor(BinarySensorEntity):
         if resp.success:
             self._attr_is_on = resp.data
         else:
-            _LOGGER.info(resp.error_message)
+            _LOGGER.error(resp.error_message)

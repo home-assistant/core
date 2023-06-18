@@ -1,10 +1,8 @@
 """Test the KAT Bulgaria config flow."""
 from collections import namedtuple
-from collections.abc import Generator
-from unittest.mock import AsyncMock, patch
+from unittest.mock import patch
 
 from kat_bulgaria.obligations import KatApiResponse, KatErrorType
-import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.kat_bulgaria.common import generate_entity_name
@@ -17,25 +15,16 @@ from homeassistant.components.kat_bulgaria.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from .const import KAT_API_VERIFY_CREDENTIALS
-
-EGN_SAMPLE = "0011223344"
-EGN_SAMPLE_TWO = "1111119999"
-
-LICENSE_SAMPLE = "123456789"
-LICENSE_SAMPLE_TWO = "987654321"
-
-
-@pytest.fixture(autouse=True, name="mock_setup_entry")
-def override_async_setup_entry() -> Generator[AsyncMock, None, None]:
-    """Override async_setup_entry."""
-    with patch(
-        "homeassistant.components.kat_bulgaria.async_setup_entry", return_value=True
-    ) as mock_setup_entry:
-        yield mock_setup_entry
+from .const import (
+    EGN_SAMPLE,
+    EGN_SAMPLE_TWO,
+    KAT_API_VERIFY_CREDENTIALS,
+    LICENSE_SAMPLE,
+    LICENSE_SAMPLE_TWO,
+)
 
 
-async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
+async def test_form(hass: HomeAssistant) -> None:
     """Test successful setup."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -64,7 +53,6 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
         CONF_PERSON_EGN: EGN_SAMPLE,
         CONF_DRIVING_LICENSE: LICENSE_SAMPLE,
     }
-    assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_form_invalid_auth(hass: HomeAssistant) -> None:
@@ -89,8 +77,8 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.ABORT
-    assert result2["reason"] == "invalid_config"
+    assert result2["type"] == FlowResultType.FORM
+    assert result2["errors"]["base"] == "invalid_config"
 
 
 async def test_form_cannot_connect_website_down(hass: HomeAssistant) -> None:
@@ -115,8 +103,8 @@ async def test_form_cannot_connect_website_down(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.ABORT
-    assert result2["reason"] == "cannot_connect"
+    assert result2["type"] == FlowResultType.FORM
+    assert result2["errors"]["base"] == "cannot_connect"
 
 
 async def test_form_cannot_connect_timeout(hass: HomeAssistant) -> None:
@@ -139,8 +127,8 @@ async def test_form_cannot_connect_timeout(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.ABORT
-    assert result2["reason"] == "cannot_connect"
+    assert result2["type"] == FlowResultType.FORM
+    assert result2["errors"]["base"] == "cannot_connect"
 
 
 async def test_form_unknown_error_type(hass: HomeAssistant) -> None:
@@ -163,8 +151,8 @@ async def test_form_unknown_error_type(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.ABORT
-    assert result2["reason"] == "unknown"
+    assert result2["type"] == FlowResultType.FORM
+    assert result2["errors"]["base"] == "unknown"
 
 
 async def test_form_already_configured_with_existing(hass: HomeAssistant) -> None:
@@ -201,9 +189,7 @@ async def test_form_already_configured_with_existing(hass: HomeAssistant) -> Non
     assert result2["reason"] == "already_configured"
 
 
-async def test_form_already_configured_without_existing(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock
-) -> None:
+async def test_form_already_configured_without_existing(hass: HomeAssistant) -> None:
     """Test adding an entity when another one was configured, no conflicts."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -242,4 +228,3 @@ async def test_form_already_configured_without_existing(
             CONF_PERSON_EGN: EGN_SAMPLE,
             CONF_DRIVING_LICENSE: LICENSE_SAMPLE,
         }
-        assert len(mock_setup_entry.mock_calls) == 1

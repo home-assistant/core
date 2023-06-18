@@ -34,6 +34,8 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Handle the initial step."""
 
+        errors = {}
+
         # If no Input
         if user_input is None:
             return self.async_show_form(
@@ -54,15 +56,21 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         if not verify.success:
             if verify.error_type == KatErrorType.VALIDATION_ERROR:
-                return self.async_abort(reason="invalid_config")
-
-            if verify.error_type in (
+                errors["base"] = "invalid_config"
+            elif verify.error_type in (
                 KatErrorType.API_UNAVAILABLE,
                 KatErrorType.TIMEOUT,
             ):
-                return self.async_abort(reason="cannot_connect")
+                errors["base"] = "cannot_connect"
+            else:
+                msg = f"{verify.error_type}: {verify.error_message}"
+                _LOGGER.error(msg)
 
-            return self.async_abort(reason="unknown")
+                errors["base"] = "unknown"
+
+            return self.async_show_form(
+                step_id="user", data_schema=CONFIG_FLOW_DATA_SCHEMA, errors=errors
+            )
 
         # All good, set up entry
         title = generate_entity_name(user_name)
