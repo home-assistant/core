@@ -355,6 +355,12 @@ class CCM15Climate(CoordinatorEntity[CCM15Coordinator], ClimateEntity):
             model="CCM15",
         )
 
+    @property
+    def extra_state_attributes(self):
+        """Return the optional state attributes."""
+        data: CCM15SlaveDevice = self.coordinator.get_ac_data(self._ac_index)
+        return {"error_code": data.error_code}
+
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set the target temperature."""
         temperature = kwargs.get(ATTR_TEMPERATURE)
