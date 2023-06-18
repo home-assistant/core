@@ -36,6 +36,7 @@ from homeassistant.util import dt as dt_util
 from .const import (
     CONF_EVENT,
     EVENT_DESCRIPTION,
+    EVENT_DURATION,
     EVENT_END,
     EVENT_END_DATE,
     EVENT_END_DATETIME,
@@ -251,10 +252,18 @@ CALENDAR_EVENT_SCHEMA = vol.Schema(
 )
 
 SERVICE_LIST_EVENTS: Final = "list_events"
-SERVICE_LIST_EVENTS_SCHEMA: Final = {
-    vol.Required("start_date_time"): datetime.datetime,
-    vol.Required("end_date_time"): datetime.datetime,
-}
+SERVICE_LIST_EVENTS_SCHEMA: Final = vol.All(
+    cv.has_at_most_one_key(EVENT_END_DATETIME, EVENT_DURATION),
+    cv.make_entity_service_schema(
+        {
+            vol.Optional(EVENT_START_DATETIME): datetime.datetime,
+            vol.Optional(EVENT_END_DATETIME): datetime.datetime,
+            vol.Optional(EVENT_DURATION): vol.All(
+                cv.time_period, cv.positive_timedelta
+            ),
+        }
+    ),
+)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -763,8 +772,11 @@ async def async_list_events_service(
         raise ValueError(
             "Service call did not request response data, but the list_events service requires it"
         )
-    start = service_call.data["start_date_time"]
-    end = service_call.data["end_date_time"]
+    start = service_call.data.get(EVENT_START_DATETIME, dt_util.now())
+    if EVENT_DURATION in service_call.data:
+        end = start + service_call.data[EVENT_DURATION]
+    else:
+        end = service_call.data[EVENT_END_DATETIME]
     calendar_event_list = await calendar.async_get_events(calendar.hass, start, end)
     return {
         "events": [

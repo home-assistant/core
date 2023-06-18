@@ -61,13 +61,18 @@ list_events:
   fields:
     start_date_time:
       name: Start time
-      description: Return events that are active after this time (exclusive).
+      description: Return active events after this time (exclusive). When not set, defaults to now.
       example: "2022-03-22 20:00:00"
       selector:
         datetime:
     end_date_time:
       name: End time
-      description: Return events that are active before this time (exclusive).
+      description: Return active events before this time (exclusive). Cannot be used with 'in'.
       example: "2022-03-22 22:00:00"
       selector:
         datetime:
+    duration:
+      name: Duration
+      description: Return active events from start_date_time until the specified duration.
+      selector:
+        duration:
