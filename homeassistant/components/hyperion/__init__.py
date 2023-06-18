@@ -19,7 +19,6 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     CONF_INSTANCE_CLIENTS,
@@ -104,12 +103,6 @@ async def async_create_connect_hyperion_client(
     return hyperion_client
 
 
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up Hyperion component."""
-    hass.data[DOMAIN] = {}
-    return True
-
-
 @callback
 def listen_for_instance_updates(
     hass: HomeAssistant,
@@ -153,9 +146,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         with suppress(ValueError):
             if AwesomeVersion(version) < AwesomeVersion(HYPERION_VERSION_WARN_CUTOFF):
                 _LOGGER.warning(
-                    "Using a Hyperion server version < %s is not recommended -- "
-                    "some features may be unavailable or may not function correctly. "
-                    "Please consider upgrading: %s",
+                    (
+                        "Using a Hyperion server version < %s is not recommended --"
+                        " some features may be unavailable or may not function"
+                        " correctly. Please consider upgrading: %s"
+                    ),
                     HYPERION_VERSION_WARN_CUTOFF,
                     HYPERION_RELEASES_URL,
                 )
@@ -189,6 +184,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # We need 1 root client (to manage instances being removed/added) and then 1 client
     # per Hyperion server instance which is shared for all entities associated with
     # that instance.
+    hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = {
         CONF_ROOT_CLIENT: hyperion_client,
         CONF_INSTANCE_CLIENTS: {},
@@ -241,7 +237,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 instance_name,
             )
 
-        # Remove entities that are are not running instances on Hyperion.
+        # Remove entities that are not running instances on Hyperion.
         for instance_num in set(existing_instances) - running_instances:
             del existing_instances[instance_num]
             async_dispatcher_send(
@@ -257,7 +253,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         for device_entry in dr.async_entries_for_config_entry(
             device_registry, entry.entry_id
         ):
-            for (kind, key) in device_entry.identifiers:
+            for kind, key in device_entry.identifiers:
                 if kind == DOMAIN and key in known_devices:
                     break
             else:

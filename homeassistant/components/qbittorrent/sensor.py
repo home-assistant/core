@@ -9,30 +9,31 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA,
+    SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_NAME,
     CONF_PASSWORD,
     CONF_URL,
     CONF_USERNAME,
-    DATA_RATE_KIBIBYTES_PER_SECOND,
     STATE_IDLE,
+    UnitOfDataRate,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+
+from .const import DEFAULT_NAME, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 SENSOR_TYPE_CURRENT_STATUS = "current_status"
 SENSOR_TYPE_DOWNLOAD_SPEED = "download_speed"
 SENSOR_TYPE_UPLOAD_SPEED = "upload_speed"
-
-DEFAULT_NAME = "qBittorrent"
 
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
@@ -42,12 +43,18 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key=SENSOR_TYPE_DOWNLOAD_SPEED,
         name="Down Speed",
-        native_unit_of_measurement=DATA_RATE_KIBIBYTES_PER_SECOND,
+        icon="mdi:cloud-download",
+        device_class=SensorDeviceClass.DATA_RATE,
+        native_unit_of_measurement=UnitOfDataRate.KIBIBYTES_PER_SECOND,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=SENSOR_TYPE_UPLOAD_SPEED,
         name="Up Speed",
-        native_unit_of_measurement=DATA_RATE_KIBIBYTES_PER_SECOND,
+        icon="mdi:cloud-upload",
+        device_class=SensorDeviceClass.DATA_RATE,
+        native_unit_of_measurement=UnitOfDataRate.KIBIBYTES_PER_SECOND,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
 )
 
@@ -61,32 +68,18 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    config_entry: ConfigEntry,
+    async_add_entites: AddEntitiesCallback,
 ) -> None:
-    """Set up the qBittorrent sensors."""
-
-    try:
-        client = Client(config[CONF_URL])
-        client.login(config[CONF_USERNAME], config[CONF_PASSWORD])
-    except LoginRequired:
-        _LOGGER.error("Invalid authentication")
-        return
-    except RequestException as err:
-        _LOGGER.error("Connection failed")
-        raise PlatformNotReady from err
-
-    name = config.get(CONF_NAME)
-
+    """Set up qBittorrent sensor entries."""
+    client: Client = hass.data[DOMAIN][config_entry.entry_id]
     entities = [
-        QBittorrentSensor(description, client, name, LoginRequired)
+        QBittorrentSensor(description, client, config_entry)
         for description in SENSOR_TYPES
     ]
-
-    add_entities(entities, True)
+    async_add_entites(entities, True)
 
 
 def format_speed(speed):
@@ -101,16 +94,15 @@ class QBittorrentSensor(SensorEntity):
     def __init__(
         self,
         description: SensorEntityDescription,
-        qbittorrent_client,
-        client_name,
-        exception,
-    ):
+        qbittorrent_client: Client,
+        config_entry: ConfigEntry,
+    ) -> None:
         """Initialize the qBittorrent sensor."""
         self.entity_description = description
         self.client = qbittorrent_client
-        self._exception = exception
 
-        self._attr_name = f"{client_name} {description.name}"
+        self._attr_unique_id = f"{config_entry.entry_id}-{description.key}"
+        self._attr_name = f"{config_entry.title} {description.name}"
         self._attr_available = False
 
     def update(self) -> None:
@@ -122,7 +114,7 @@ class QBittorrentSensor(SensorEntity):
             _LOGGER.error("Connection lost")
             self._attr_available = False
             return
-        except self._exception:
+        except LoginRequired:
             _LOGGER.error("Invalid authentication")
             return
 

@@ -1,10 +1,14 @@
 """Test IQVIA diagnostics."""
 from homeassistant.components.diagnostics import REDACTED
+from homeassistant.core import HomeAssistant
 
 from tests.components.diagnostics import get_diagnostics_for_config_entry
+from tests.typing import ClientSessionGenerator
 
 
-async def test_entry_diagnostics(hass, config_entry, hass_client, setup_iqvia):
+async def test_entry_diagnostics(
+    hass: HomeAssistant, config_entry, hass_client: ClientSessionGenerator, setup_iqvia
+) -> None:
     """Test config entry diagnostics."""
     assert await get_diagnostics_for_config_entry(hass, hass_client, config_entry) == {
         "entry": {
@@ -180,7 +184,9 @@ async def test_entry_diagnostics(hass, config_entry, hass_client, setup_iqvia):
                                     "LGID": 1,
                                     "Name": "OZONE",
                                     "PPM": 42,
-                                    "Description": "Ozone (O3) is a odorless, colorless ....",
+                                    "Description": (
+                                        "Ozone (O3) is a odorless, colorless ...."
+                                    ),
                                 },
                                 {
                                     "LGID": 1,
@@ -192,7 +198,9 @@ async def test_entry_diagnostics(hass, config_entry, hass_client, setup_iqvia):
                                     "LGID": 1,
                                     "Name": "PM10",
                                     "PPM": 19,
-                                    "Description": "Coarse dust particles (PM10) are 2.5 ...",
+                                    "Description": (
+                                        "Coarse dust particles (PM10) are 2.5 ..."
+                                    ),
                                 },
                             ],
                             "Period": "0001-01-01T00:00:00",
@@ -212,13 +220,17 @@ async def test_entry_diagnostics(hass, config_entry, hass_client, setup_iqvia):
                                     "LGID": 2,
                                     "Name": "PM10",
                                     "PPM": 65,
-                                    "Description": "Coarse dust particles (PM10) are 2.5 ...",
+                                    "Description": (
+                                        "Coarse dust particles (PM10) are 2.5 ..."
+                                    ),
                                 },
                                 {
                                     "LGID": 1,
                                     "Name": "OZONE",
                                     "PPM": 42,
-                                    "Description": "Ozone (O3) is a odorless, colorless ...",
+                                    "Description": (
+                                        "Ozone (O3) is a odorless, colorless ..."
+                                    ),
                                 },
                             ],
                             "Period": "0001-01-01T00:00:00",

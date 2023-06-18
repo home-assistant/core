@@ -3,7 +3,7 @@
     "flow_title": "{name} ({type})",
     "step": {
       "user": {
-        "title": "Setup a new Apple TV",
+        "title": "Set up a new Apple TV",
         "description": "Start by entering the device name (e.g. Kitchen or Bedroom) or IP address of the Apple TV you want to add.\n\nIf you cannot see your device or experience any issues, try specifying the device IP address.",
         "data": {
           "device_input": "Device"

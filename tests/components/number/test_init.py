@@ -1,4 +1,5 @@
 """The tests for the Number component."""
+from typing import Any
 from unittest.mock import MagicMock
 
 import pytest
@@ -14,13 +15,18 @@ from homeassistant.components.number import (
     NumberEntity,
     NumberEntityDescription,
 )
-from homeassistant.components.sensor import SensorDeviceClass
+from homeassistant.components.number.const import (
+    DEVICE_CLASS_UNITS as NUMBER_DEVICE_CLASS_UNITS,
+)
+from homeassistant.components.sensor import (
+    DEVICE_CLASS_UNITS as SENSOR_DEVICE_CLASS_UNITS,
+    SensorDeviceClass,
+)
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_PLATFORM,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
@@ -28,7 +34,11 @@ from homeassistant.helpers.restore_state import STORAGE_KEY as RESTORE_STATE_KEY
 from homeassistant.setup import async_setup_component
 from homeassistant.util.unit_system import METRIC_SYSTEM, US_CUSTOMARY_SYSTEM
 
-from tests.common import mock_restore_cache_with_extra_data
+from tests.common import (
+    MockEntityPlatform,
+    async_mock_restore_state_shutdown_restart,
+    mock_restore_cache_with_extra_data,
+)
 
 
 class MockDefaultNumberEntity(NumberEntity):
@@ -231,10 +241,13 @@ async def test_attributes(hass: HomeAssistant) -> None:
     assert number_4.value is None
 
 
-async def test_deprecation_warnings(hass: HomeAssistant, caplog) -> None:
+async def test_deprecation_warnings(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test overriding the deprecated attributes is possible and warnings are logged."""
     number = MockDefaultNumberEntityDeprecated()
     number.hass = hass
+    number.platform = MockEntityPlatform(hass)
     assert number.max_value == 100.0
     assert number.min_value == 0.0
     assert number.step == 1.0
@@ -243,6 +256,7 @@ async def test_deprecation_warnings(hass: HomeAssistant, caplog) -> None:
 
     number_2 = MockNumberEntityDeprecated()
     number_2.hass = hass
+    number_2.platform = MockEntityPlatform(hass)
     assert number_2.max_value == 0.5
     assert number_2.min_value == -0.5
     assert number_2.step == 0.1
@@ -251,6 +265,7 @@ async def test_deprecation_warnings(hass: HomeAssistant, caplog) -> None:
 
     number_3 = MockNumberEntityAttrDeprecated()
     number_3.hass = hass
+    number_3.platform = MockEntityPlatform(hass)
     assert number_3.max_value == 1000.0
     assert number_3.min_value == -1000.0
     assert number_3.step == 100.0
@@ -259,6 +274,7 @@ async def test_deprecation_warnings(hass: HomeAssistant, caplog) -> None:
 
     number_4 = MockNumberEntityDescrDeprecated()
     number_4.hass = hass
+    number_4.platform = MockEntityPlatform(hass)
     assert number_4.max_value == 10.0
     assert number_4.min_value == -10.0
     assert number_4.step == 2.0
@@ -431,14 +447,26 @@ async def test_deprecated_methods(
 
 
 @pytest.mark.parametrize(
-    "unit_system, native_unit, state_unit, initial_native_value, initial_state_value, "
-    "updated_native_value, updated_state_value, native_max_value, state_max_value, "
-    "native_min_value, state_min_value, native_step, state_step",
+    (
+        "unit_system",
+        "native_unit",
+        "state_unit",
+        "initial_native_value",
+        "initial_state_value",
+        "updated_native_value",
+        "updated_state_value",
+        "native_max_value",
+        "state_max_value",
+        "native_min_value",
+        "state_min_value",
+        "native_step",
+        "state_step",
+    ),
     [
         (
             US_CUSTOMARY_SYSTEM,
-            TEMP_FAHRENHEIT,
-            TEMP_FAHRENHEIT,
+            UnitOfTemperature.FAHRENHEIT,
+            UnitOfTemperature.FAHRENHEIT,
             100,
             100,
             50,
@@ -452,8 +480,8 @@ async def test_deprecated_methods(
         ),
         (
             US_CUSTOMARY_SYSTEM,
-            TEMP_CELSIUS,
-            TEMP_FAHRENHEIT,
+            UnitOfTemperature.CELSIUS,
+            UnitOfTemperature.FAHRENHEIT,
             38,
             100,
             10,
@@ -467,8 +495,8 @@ async def test_deprecated_methods(
         ),
         (
             METRIC_SYSTEM,
-            TEMP_FAHRENHEIT,
-            TEMP_CELSIUS,
+            UnitOfTemperature.FAHRENHEIT,
+            UnitOfTemperature.CELSIUS,
             100,
             38,
             50,
@@ -482,8 +510,8 @@ async def test_deprecated_methods(
         ),
         (
             METRIC_SYSTEM,
-            TEMP_CELSIUS,
-            TEMP_CELSIUS,
+            UnitOfTemperature.CELSIUS,
+            UnitOfTemperature.CELSIUS,
             38,
             38,
             10,
@@ -498,8 +526,8 @@ async def test_deprecated_methods(
     ],
 )
 async def test_temperature_conversion(
-    hass,
-    enable_custom_integrations,
+    hass: HomeAssistant,
+    enable_custom_integrations: None,
     unit_system,
     native_unit,
     state_unit,
@@ -513,7 +541,7 @@ async def test_temperature_conversion(
     state_min_value,
     native_step,
     state_step,
-):
+) -> None:
     """Test temperature conversion."""
     hass.config.units = unit_system
     platform = getattr(hass.components, f"test.{DOMAIN}")
@@ -591,10 +619,10 @@ RESTORE_DATA = {
 
 
 async def test_restore_number_save_state(
-    hass,
-    hass_storage,
-    enable_custom_integrations,
-):
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    enable_custom_integrations: None,
+) -> None:
     """Test RestoreNumber."""
     platform = getattr(hass.components, "test.number")
     platform.init(empty=True)
@@ -604,7 +632,7 @@ async def test_restore_number_save_state(
             native_max_value=200.0,
             native_min_value=-10.0,
             native_step=2.0,
-            native_unit_of_measurement=TEMP_FAHRENHEIT,
+            native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
             native_value=123.0,
             device_class=NumberDeviceClass.TEMPERATURE,
         )
@@ -615,7 +643,7 @@ async def test_restore_number_save_state(
     await hass.async_block_till_done()
 
     # Trigger saving state
-    await hass.async_stop()
+    await async_mock_restore_state_shutdown_restart(hass)
 
     assert len(hass_storage[RESTORE_STATE_KEY]["data"]) == 1
     state = hass_storage[RESTORE_STATE_KEY]["data"][0]["state"]
@@ -626,7 +654,16 @@ async def test_restore_number_save_state(
 
 
 @pytest.mark.parametrize(
-    "native_max_value, native_min_value, native_step, native_value, native_value_type, extra_data, device_class, uom",
+    (
+        "native_max_value",
+        "native_min_value",
+        "native_step",
+        "native_value",
+        "native_value_type",
+        "extra_data",
+        "device_class",
+        "uom",
+    ),
     [
         (
             200.0,
@@ -654,9 +691,9 @@ async def test_restore_number_save_state(
     ],
 )
 async def test_restore_number_restore_state(
-    hass,
-    enable_custom_integrations,
-    hass_storage,
+    hass: HomeAssistant,
+    enable_custom_integrations: None,
+    hass_storage: dict[str, Any],
     native_max_value,
     native_min_value,
     native_step,
@@ -665,7 +702,7 @@ async def test_restore_number_restore_state(
     extra_data,
     device_class,
     uom,
-):
+) -> None:
     """Test RestoreNumber."""
     mock_restore_cache_with_extra_data(hass, ((State("number.test", ""), extra_data),))
 
@@ -694,45 +731,52 @@ async def test_restore_number_restore_state(
 
 
 @pytest.mark.parametrize(
-    "device_class,native_unit,custom_unit,state_unit,native_value,custom_value",
+    (
+        "device_class",
+        "native_unit",
+        "custom_unit",
+        "state_unit",
+        "native_value",
+        "custom_value",
+    ),
     [
         # Not a supported temperature unit
         (
             NumberDeviceClass.TEMPERATURE,
-            TEMP_CELSIUS,
+            UnitOfTemperature.CELSIUS,
             "my_temperature_unit",
-            TEMP_CELSIUS,
+            UnitOfTemperature.CELSIUS,
             1000,
             1000,
         ),
         (
             NumberDeviceClass.TEMPERATURE,
-            TEMP_CELSIUS,
-            TEMP_FAHRENHEIT,
-            TEMP_FAHRENHEIT,
+            UnitOfTemperature.CELSIUS,
+            UnitOfTemperature.FAHRENHEIT,
+            UnitOfTemperature.FAHRENHEIT,
             37.5,
             99.5,
         ),
         (
             NumberDeviceClass.TEMPERATURE,
-            TEMP_FAHRENHEIT,
-            TEMP_CELSIUS,
-            TEMP_CELSIUS,
+            UnitOfTemperature.FAHRENHEIT,
+            UnitOfTemperature.CELSIUS,
+            UnitOfTemperature.CELSIUS,
             100,
             38.0,
         ),
     ],
 )
 async def test_custom_unit(
-    hass,
-    enable_custom_integrations,
+    hass: HomeAssistant,
+    enable_custom_integrations: None,
     device_class,
     native_unit,
     custom_unit,
     state_unit,
     native_value,
     custom_value,
-):
+) -> None:
     """Test custom unit."""
     entity_registry = er.async_get(hass)
 
@@ -764,33 +808,49 @@ async def test_custom_unit(
 
 
 @pytest.mark.parametrize(
-    "native_unit, custom_unit, used_custom_unit, default_unit, native_value, custom_value, default_value",
+    (
+        "native_unit",
+        "custom_unit",
+        "used_custom_unit",
+        "default_unit",
+        "native_value",
+        "custom_value",
+        "default_value",
+    ),
     [
         (
-            TEMP_CELSIUS,
-            TEMP_FAHRENHEIT,
-            TEMP_FAHRENHEIT,
-            TEMP_CELSIUS,
+            UnitOfTemperature.CELSIUS,
+            UnitOfTemperature.FAHRENHEIT,
+            UnitOfTemperature.FAHRENHEIT,
+            UnitOfTemperature.CELSIUS,
             37.5,
             99.5,
             37.5,
         ),
         (
-            TEMP_FAHRENHEIT,
-            TEMP_FAHRENHEIT,
-            TEMP_FAHRENHEIT,
-            TEMP_CELSIUS,
+            UnitOfTemperature.FAHRENHEIT,
+            UnitOfTemperature.FAHRENHEIT,
+            UnitOfTemperature.FAHRENHEIT,
+            UnitOfTemperature.CELSIUS,
             100,
             100,
             38.0,
         ),
         # Not a supported temperature unit
-        (TEMP_CELSIUS, "no_unit", TEMP_CELSIUS, TEMP_CELSIUS, 1000, 1000, 1000),
+        (
+            UnitOfTemperature.CELSIUS,
+            "no_unit",
+            UnitOfTemperature.CELSIUS,
+            UnitOfTemperature.CELSIUS,
+            1000,
+            1000,
+            1000,
+        ),
     ],
 )
 async def test_custom_unit_change(
-    hass,
-    enable_custom_integrations,
+    hass: HomeAssistant,
+    enable_custom_integrations: None,
     native_unit,
     custom_unit,
     used_custom_unit,
@@ -798,7 +858,7 @@ async def test_custom_unit_change(
     native_value,
     custom_value,
     default_value,
-):
+) -> None:
     """Test custom unit changes are picked up."""
     entity_registry = er.async_get(hass)
     platform = getattr(hass.components, "test.number")
@@ -851,12 +911,13 @@ async def test_custom_unit_change(
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == default_unit
 
 
-def test_device_classes_aligned():
+def test_device_classes_aligned() -> None:
     """Make sure all sensor device classes are also available in NumberDeviceClass."""
 
     non_numeric_device_classes = {
         SensorDeviceClass.DATE,
         SensorDeviceClass.DURATION,
+        SensorDeviceClass.ENUM,
         SensorDeviceClass.TIMESTAMP,
     }
 
@@ -866,3 +927,11 @@ def test_device_classes_aligned():
 
         assert hasattr(NumberDeviceClass, device_class.name)
         assert getattr(NumberDeviceClass, device_class.name).value == device_class.value
+
+    for device_class in SENSOR_DEVICE_CLASS_UNITS:
+        if device_class in non_numeric_device_classes:
+            continue
+        assert (
+            SENSOR_DEVICE_CLASS_UNITS[device_class]
+            == NUMBER_DEVICE_CLASS_UNITS[device_class]
+        )

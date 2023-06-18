@@ -1,9 +1,9 @@
 {
   "domain": "stt",
-  "name": "Speech-to-Text (STT)",
-  "documentation": "https://www.home-assistant.io/integrations/stt",
+  "name": "Speech-to-text (STT)",
+  "codeowners": ["@home-assistant/core", "@pvizeli"],
   "dependencies": ["http"],
-  "codeowners": ["@pvizeli"],
-  "quality_scale": "internal",
-  "integration_type": "entity"
+  "documentation": "https://www.home-assistant.io/integrations/stt",
+  "integration_type": "entity",
+  "quality_scale": "internal"
 }

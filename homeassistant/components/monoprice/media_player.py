@@ -165,10 +165,7 @@ class MonopriceZone(MediaPlayerEntity):
         self._attr_volume_level = state.volume / MAX_VOLUME
         self._attr_is_volume_muted = state.mute
         idx = state.source
-        if idx in self._source_id_name:
-            self._attr_source = self._source_id_name[idx]
-        else:
-            self._attr_source = None
+        self._attr_source = self._source_id_name.get(idx)
 
     @property
     def entity_registry_enabled_default(self) -> bool:

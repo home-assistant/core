@@ -13,5 +13,25 @@
       "invalid_sensor": "Sensor not available or invalid",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     }
+  },
+  "entity": {
+    "sensor": {
+      "humidity": {
+        "name": "[%key:component::sensor::entity_component::humidity::name%]"
+      },
+      "pressure": {
+        "name": "[%key:component::sensor::entity_component::pressure::name%]"
+      },
+      "pressure_at_sealevel": { "name": "Pressure at sealevel" },
+      "pm10": {
+        "name": "[%key:component::sensor::entity_component::pm10::name%]"
+      },
+      "pm25": {
+        "name": "[%key:component::sensor::entity_component::pm25::name%]"
+      },
+      "temperature": {
+        "name": "[%key:component::sensor::entity_component::temperature::name%]"
+      }
+    }
   }
 }

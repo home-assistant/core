@@ -47,6 +47,13 @@ async def async_setup_scanner(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> bool:
     """Set up the MQTT JSON tracker."""
+    # Make sure MQTT integration is enabled and the client is available
+    # We cannot count on dependencies as the device_tracker platform setup
+    # also will be triggered when mqtt is loading the `device_tracker` platform
+    if not await mqtt.async_wait_for_mqtt_client(hass):
+        _LOGGER.error("MQTT integration is not available")
+        return False
+
     devices = config[CONF_DEVICES]
     qos = config[CONF_QOS]
 
@@ -59,8 +66,10 @@ async def async_setup_scanner(
                 data = GPS_JSON_PAYLOAD_SCHEMA(json.loads(msg.payload))
             except vol.MultipleInvalid:
                 _LOGGER.error(
-                    "Skipping update for following data "
-                    "because of missing or malformatted data: %s",
+                    (
+                        "Skipping update for following data "
+                        "because of missing or malformatted data: %s"
+                    ),
                     msg.payload,
                 )
                 return

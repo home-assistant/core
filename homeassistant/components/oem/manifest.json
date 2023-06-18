@@ -1,9 +1,9 @@
 {
   "domain": "oem",
   "name": "OpenEnergyMonitor WiFi Thermostat",
-  "documentation": "https://www.home-assistant.io/integrations/oem",
-  "requirements": ["oemthermostat==1.1.1"],
   "codeowners": [],
+  "documentation": "https://www.home-assistant.io/integrations/oem",
   "iot_class": "local_polling",
-  "loggers": ["oemthermostat"]
+  "loggers": ["oemthermostat"],
+  "requirements": ["oemthermostat==1.1.1"]
 }

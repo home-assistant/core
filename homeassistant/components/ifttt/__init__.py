@@ -77,7 +77,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             target_keys[target] = api_keys[target]
 
         try:
-
             for target, key in target_keys.items():
                 res = pyfttt.send_event(key, event, value1, value2, value3)
                 if res.status_code != HTTPStatus.OK:

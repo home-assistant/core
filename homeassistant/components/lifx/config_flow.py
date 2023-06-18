@@ -18,12 +18,19 @@ from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.typing import DiscoveryInfoType
 
-from .const import _LOGGER, CONF_SERIAL, DOMAIN, TARGET_ANY
+from .const import (
+    _LOGGER,
+    CONF_SERIAL,
+    DEFAULT_ATTEMPTS,
+    DOMAIN,
+    OVERALL_TIMEOUT,
+    TARGET_ANY,
+)
 from .discovery import async_discover_devices
 from .util import (
     async_entry_is_legacy,
-    async_execute_lifx,
     async_get_legacy_entry,
+    async_multi_execute_lifx_with_retries,
     formatted_serial,
     lifx_features,
     mac_matches_serial_number,
@@ -119,9 +126,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         assert self._discovered_device is not None
         discovered = self._discovered_device
         _LOGGER.debug(
-            "Confirming discovery: %s with serial %s",
+            "Confirming discovery of %s (%s) [%s]",
             discovered.label,
-            self.unique_id,
+            discovered.group,
+            discovered.mac_addr,
         )
         if user_input is not None or self._async_discovered_pending_migration():
             return self._async_create_entry_from_device(discovered)
@@ -130,8 +138,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._set_confirm_only()
         placeholders = {
             "label": discovered.label,
-            "host": discovered.ip_addr,
-            "serial": self.unique_id,
+            "group": discovered.group,
         }
         self.context["title_placeholders"] = placeholders
         return self.async_show_form(
@@ -224,12 +231,16 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             # get_hostfirmware required for MAC address offset
             # get_version required for lifx_features()
             # get_label required to log the name of the device
-            messages = await asyncio.gather(
-                *[
-                    async_execute_lifx(device.get_hostfirmware),
-                    async_execute_lifx(device.get_version),
-                    async_execute_lifx(device.get_label),
-                ]
+            # get_group required to populate suggested areas
+            messages = await async_multi_execute_lifx_with_retries(
+                [
+                    device.get_hostfirmware,
+                    device.get_version,
+                    device.get_label,
+                    device.get_group,
+                ],
+                DEFAULT_ATTEMPTS,
+                OVERALL_TIMEOUT,
             )
         except asyncio.TimeoutError:
             return None
@@ -237,7 +248,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             connection.async_stop()
         if (
             messages is None
-            or len(messages) != 3
+            or len(messages) != 4
             or lifx_features(device)["relays"] is True
             or device.host_firmware_version is None
         ):

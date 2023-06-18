@@ -15,17 +15,9 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    DATA_BYTES,
-    DATA_GIGABYTES,
-    DATA_KILOBYTES,
-    DATA_MEGABYTES,
-)
+from homeassistant.const import EntityCategory, UnitOfInformation
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import RadarrEntity
 from .const import DOMAIN
@@ -35,7 +27,7 @@ from .coordinator import RadarrDataUpdateCoordinator, T
 def get_space(data: list[Diskspace], name: str) -> str:
     """Get space."""
     space = [
-        mount.freeSpace / 1024 ** BYTE_SIZES.index(DATA_GIGABYTES)
+        mount.freeSpace / 1024 ** BYTE_SIZES.index(UnitOfInformation.GIGABYTES)
         for mount in data
         if name in mount.path
     ]
@@ -76,7 +68,8 @@ SENSOR_TYPES: dict[str, RadarrSensorEntityDescription[Any]] = {
     "disk_space": RadarrSensorEntityDescription(
         key="disk_space",
         name="Disk space",
-        native_unit_of_measurement=DATA_GIGABYTES,
+        native_unit_of_measurement=UnitOfInformation.GIGABYTES,
+        device_class=SensorDeviceClass.DATA_SIZE,
         icon="mdi:harddisk",
         value_fn=get_space,
         description_fn=get_modified_description,
@@ -100,31 +93,13 @@ SENSOR_TYPES: dict[str, RadarrSensorEntityDescription[Any]] = {
 }
 
 BYTE_SIZES = [
-    DATA_BYTES,
-    DATA_KILOBYTES,
-    DATA_MEGABYTES,
-    DATA_GIGABYTES,
+    UnitOfInformation.BYTES,
+    UnitOfInformation.KILOBYTES,
+    UnitOfInformation.MEGABYTES,
+    UnitOfInformation.GIGABYTES,
 ]
 
 PARALLEL_UPDATES = 1
-
-
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Set up the Radarr platform."""
-    async_create_issue(
-        hass,
-        DOMAIN,
-        "removed_yaml",
-        breaks_in_ha_version="2022.12.0",
-        is_fixable=False,
-        severity=IssueSeverity.WARNING,
-        translation_key="removed_yaml",
-    )
 
 
 async def async_setup_entry(

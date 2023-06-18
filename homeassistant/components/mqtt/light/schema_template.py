@@ -63,7 +63,6 @@ _LOGGER = logging.getLogger(__name__)
 DOMAIN = "mqtt_template"
 
 DEFAULT_NAME = "MQTT Template Light"
-DEFAULT_OPTIMISTIC = False
 
 CONF_BLUE_TEMPLATE = "blue_template"
 CONF_BRIGHTNESS_TEMPLATE = "brightness_template"
@@ -76,7 +75,6 @@ CONF_GREEN_TEMPLATE = "green_template"
 CONF_MAX_MIREDS = "max_mireds"
 CONF_MIN_MIREDS = "min_mireds"
 CONF_RED_TEMPLATE = "red_template"
-CONF_WHITE_VALUE_TEMPLATE = "white_value_template"
 
 COMMAND_TEMPLATES = (CONF_COMMAND_ON_TEMPLATE, CONF_COMMAND_OFF_TEMPLATE)
 VALUE_TEMPLATES = (
@@ -89,7 +87,7 @@ VALUE_TEMPLATES = (
     CONF_STATE_TEMPLATE,
 )
 
-_PLATFORM_SCHEMA_BASE = (
+PLATFORM_SCHEMA_MODERN_TEMPLATE = (
     MQTT_RW_SCHEMA.extend(
         {
             vol.Optional(CONF_BLUE_TEMPLATE): cv.template,
@@ -103,7 +101,6 @@ _PLATFORM_SCHEMA_BASE = (
             vol.Optional(CONF_MAX_MIREDS): cv.positive_int,
             vol.Optional(CONF_MIN_MIREDS): cv.positive_int,
             vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-            vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
             vol.Optional(CONF_RED_TEMPLATE): cv.template,
             vol.Optional(CONF_STATE_TEMPLATE): cv.template,
         }
@@ -112,21 +109,8 @@ _PLATFORM_SCHEMA_BASE = (
     .extend(MQTT_LIGHT_SCHEMA_SCHEMA.schema)
 )
 
-# Configuring MQTT Lights under the light platform key was deprecated in HA Core 2022.6
-PLATFORM_SCHEMA_TEMPLATE = vol.All(
-    cv.PLATFORM_SCHEMA.extend(_PLATFORM_SCHEMA_BASE.schema),
-)
-
 DISCOVERY_SCHEMA_TEMPLATE = vol.All(
-    # CONF_WHITE_VALUE_TEMPLATE is no longer supported, support was removed in 2022.9
-    cv.removed(CONF_WHITE_VALUE_TEMPLATE),
-    _PLATFORM_SCHEMA_BASE.extend({}, extra=vol.REMOVE_EXTRA),
-)
-
-PLATFORM_SCHEMA_MODERN_TEMPLATE = vol.All(
-    # CONF_WHITE_VALUE_TEMPLATE is no longer supported, support was removed in 2022.9
-    cv.removed(CONF_WHITE_VALUE_TEMPLATE),
-    _PLATFORM_SCHEMA_BASE,
+    PLATFORM_SCHEMA_MODERN_TEMPLATE.extend({}, extra=vol.REMOVE_EXTRA),
 )
 
 
@@ -243,11 +227,20 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
 
             if CONF_BRIGHTNESS_TEMPLATE in self._config:
                 try:
-                    self._attr_brightness = int(
+                    if brightness := int(
                         self._value_templates[CONF_BRIGHTNESS_TEMPLATE](msg.payload)
-                    )
+                    ):
+                        self._attr_brightness = brightness
+                    else:
+                        _LOGGER.debug(
+                            "Ignoring zero brightness value for entity %s",
+                            self.entity_id,
+                        )
+
                 except ValueError:
-                    _LOGGER.warning("Invalid brightness value received")
+                    _LOGGER.warning(
+                        "Invalid brightness value received from %s", msg.topic
+                    )
 
             if CONF_COLOR_TEMP_TEMPLATE in self._config:
                 try:

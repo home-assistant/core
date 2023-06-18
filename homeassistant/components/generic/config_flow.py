@@ -9,10 +9,10 @@ import io
 import logging
 from typing import Any
 
-import PIL
 from aiohttp import web
 from async_timeout import timeout
 from httpx import HTTPStatusError, RequestError, TimeoutException
+import PIL
 import voluptuous as vol
 import yarl
 
@@ -221,7 +221,7 @@ async def async_test_stream(
         return {}
     # Import from stream.worker as stream cannot reexport from worker
     # without forcing the av dependency on default_config
-    # pylint: disable=import-outside-toplevel
+    # pylint: disable-next=import-outside-toplevel
     from homeassistant.components.stream.worker import StreamWorkerError
 
     if not isinstance(stream_source, template_helper.Template):

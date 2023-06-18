@@ -20,7 +20,7 @@ if TYPE_CHECKING:
     from . import BluetoothChange, BluetoothScanningMode, BluetoothServiceInfoBleak
 
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass(slots=True, frozen=True)
 class PassiveBluetoothEntityKey:
     """Key for a passive bluetooth entity.
 
@@ -36,7 +36,7 @@ class PassiveBluetoothEntityKey:
 _T = TypeVar("_T")
 
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass(slots=True, frozen=True)
 class PassiveBluetoothDataUpdate(Generic[_T]):
     """Generic bluetooth data."""
 
@@ -285,8 +285,9 @@ class PassiveBluetoothDataProcessor(Generic[_T]):
 
         if not isinstance(new_data, PassiveBluetoothDataUpdate):
             self.last_update_success = False  # type: ignore[unreachable]
-            raise ValueError(
-                f"The update_method for {self.coordinator.name} returned {new_data} instead of a PassiveBluetoothDataUpdate"
+            raise TypeError(
+                f"The update_method for {self.coordinator.name} returned"
+                f" {new_data} instead of a PassiveBluetoothDataUpdate"
             )
 
         if not self.last_update_success:

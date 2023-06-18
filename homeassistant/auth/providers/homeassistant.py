@@ -16,8 +16,8 @@ from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.storage import Store
 
-from . import AUTH_PROVIDER_SCHEMA, AUTH_PROVIDERS, AuthProvider, LoginFlow
 from ..models import Credentials, UserMeta
+from . import AUTH_PROVIDER_SCHEMA, AUTH_PROVIDERS, AuthProvider, LoginFlow
 
 STORAGE_VERSION = 1
 STORAGE_KEY = "auth_provider.homeassistant"
@@ -93,9 +93,11 @@ class Data:
                 self.is_legacy = True
 
                 logging.getLogger(__name__).warning(
-                    "Home Assistant auth provider is running in legacy mode "
-                    "because we detected usernames that are case-insensitive"
-                    "equivalent. Please change the username: '%s'.",
+                    (
+                        "Home Assistant auth provider is running in legacy mode "
+                        "because we detected usernames that are case-insensitive"
+                        "equivalent. Please change the username: '%s'."
+                    ),
                     username,
                 )
 
@@ -108,9 +110,11 @@ class Data:
                 self.is_legacy = True
 
                 logging.getLogger(__name__).warning(
-                    "Home Assistant auth provider is running in legacy mode "
-                    "because we detected usernames that start or end in a "
-                    "space. Please change the username: '%s'.",
+                    (
+                        "Home Assistant auth provider is running in legacy mode "
+                        "because we detected usernames that start or end in a "
+                        "space. Please change the username: '%s'."
+                    ),
                     username,
                 )
 

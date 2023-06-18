@@ -1,10 +1,10 @@
 {
   "domain": "wolflink",
   "name": "Wolf SmartSet Service",
+  "codeowners": ["@adamkrol93"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/wolflink",
-  "requirements": ["wolf_smartset==0.1.11"],
-  "codeowners": ["@adamkrol93"],
   "iot_class": "cloud_polling",
-  "loggers": ["wolf_smartset"]
+  "loggers": ["wolf_smartset"],
+  "requirements": ["wolf-smartset==0.1.11"]
 }

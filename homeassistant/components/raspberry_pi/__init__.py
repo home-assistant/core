@@ -13,7 +13,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         # The hassio integration has not yet fetched data from the supervisor
         raise ConfigEntryNotReady
 
-    board: str
+    board: str | None
     if (board := os_info.get("board")) is None or not board.startswith("rpi"):
         # Not running on a Raspberry Pi, Home Assistant may have been migrated
         hass.async_create_task(hass.config_entries.async_remove(entry.entry_id))

@@ -16,7 +16,8 @@ from homeassistant.components.moon.sensor import (
     STATE_WAXING_CRESCENT,
     STATE_WAXING_GIBBOUS,
 )
-from homeassistant.const import ATTR_FRIENDLY_NAME, ATTR_ICON
+from homeassistant.components.sensor import ATTR_OPTIONS, SensorDeviceClass
+from homeassistant.const import ATTR_DEVICE_CLASS, ATTR_FRIENDLY_NAME, ATTR_ICON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -24,7 +25,7 @@ from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(
-    "moon_value,native_value,icon",
+    ("moon_value", "native_value", "icon"),
     [
         (0, STATE_NEW_MOON, MOON_ICONS[STATE_NEW_MOON]),
         (5, STATE_WAXING_CRESCENT, MOON_ICONS[STATE_WAXING_CRESCENT]),
@@ -57,11 +58,23 @@ async def test_moon_day(
     assert state.state == native_value
     assert state.attributes[ATTR_ICON] == icon
     assert state.attributes[ATTR_FRIENDLY_NAME] == "Moon Phase"
+    assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.ENUM
+    assert state.attributes[ATTR_OPTIONS] == [
+        STATE_NEW_MOON,
+        STATE_WAXING_CRESCENT,
+        STATE_FIRST_QUARTER,
+        STATE_WAXING_GIBBOUS,
+        STATE_FULL_MOON,
+        STATE_WANING_GIBBOUS,
+        STATE_LAST_QUARTER,
+        STATE_WANING_CRESCENT,
+    ]
 
     entity_registry = er.async_get(hass)
     entry = entity_registry.async_get("sensor.moon_phase")
     assert entry
     assert entry.unique_id == mock_config_entry.entry_id
+    assert entry.translation_key == "phase"
 
     device_registry = dr.async_get(hass)
     assert entry.device_id

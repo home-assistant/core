@@ -1,0 +1,6 @@
+{
+  "domain": "esera_onewire",
+  "name": "ESERA 1-Wire",
+  "integration_type": "virtual",
+  "supported_by": "onewire"
+}

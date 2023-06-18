@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Optional, cast
+from typing import cast
 
 from aiobafi6 import Device
 
@@ -41,7 +41,7 @@ OCCUPANCY_SENSORS = (
         key="occupancy",
         name="Occupancy",
         device_class=BinarySensorDeviceClass.OCCUPANCY,
-        value_fn=lambda device: cast(Optional[bool], device.fan_occupancy_detected),
+        value_fn=lambda device: cast(bool | None, device.fan_occupancy_detected),
     ),
 )
 

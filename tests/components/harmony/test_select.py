@@ -1,5 +1,4 @@
 """Test the Logitech Harmony Hub activity select."""
-
 from datetime import timedelta
 
 from homeassistant.components.harmony.const import DOMAIN
@@ -9,7 +8,6 @@ from homeassistant.components.select import (
     SERVICE_SELECT_OPTION,
 )
 from homeassistant.const import (
-    ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
     CONF_HOST,
     CONF_NAME,
@@ -17,6 +15,7 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.util import utcnow
 
 from .const import ENTITY_REMOTE, ENTITY_SELECT, HUB_NAME
@@ -25,8 +24,8 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_connection_state_changes(
-    harmony_client, mock_hc, hass, mock_write_config
-):
+    harmony_client, mock_hc, hass: HomeAssistant, mock_write_config
+) -> None:
     """Ensure connection changes are reflected in the switch states."""
     entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_HOST: "192.0.2.0", CONF_NAME: HUB_NAME}
@@ -56,7 +55,7 @@ async def test_connection_state_changes(
     assert hass.states.is_state(ENTITY_SELECT, "Watch TV")
 
 
-async def test_options(mock_hc, hass, mock_write_config):
+async def test_options(mock_hc, hass: HomeAssistant, mock_write_config) -> None:
     """Ensure calls to the switch modify the harmony state."""
     entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_HOST: "192.0.2.0", CONF_NAME: HUB_NAME}
@@ -74,10 +73,9 @@ async def test_options(mock_hc, hass, mock_write_config):
         "Play Music",
         "Watch TV",
     ]
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == "harmony__activities"
 
 
-async def test_select_option(mock_hc, hass, mock_write_config):
+async def test_select_option(mock_hc, hass: HomeAssistant, mock_write_config) -> None:
     """Ensure calls to the switch modify the harmony state."""
     entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_HOST: "192.0.2.0", CONF_NAME: HUB_NAME}

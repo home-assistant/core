@@ -1,0 +1,47 @@
+{
+  "config": {
+    "flow_title": "{name}",
+    "step": {
+      "manual": {
+        "data": {
+          "url": "[%key:common::config_flow::data::url%]"
+        }
+      },
+      "on_supervisor": {
+        "title": "Select connection method",
+        "description": "Do you want to use the official Matter Server Supervisor add-on?\n\nIf you are already running the Matter Server in another add-on, in a custom container, natively etc., then do not select this option.",
+        "data": {
+          "use_addon": "Use the official Matter Server Supervisor add-on"
+        }
+      },
+      "install_addon": {
+        "title": "The add-on installation has started"
+      },
+      "start_addon": {
+        "title": "Starting add-on."
+      },
+      "hassio_confirm": {
+        "title": "Set up the Matter integration with the Matter Server add-on"
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_server_version": "The Matter server is not the correct version",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "addon_get_discovery_info_failed": "Failed to get Matter Server add-on discovery info.",
+      "addon_info_failed": "Failed to get Matter Server add-on info.",
+      "addon_install_failed": "Failed to install the Matter Server add-on.",
+      "addon_start_failed": "Failed to start the Matter Server add-on.",
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
+      "not_matter_addon": "Discovered add-on is not the official Matter Server add-on.",
+      "reconfiguration_successful": "Successfully reconfigured the Matter integration."
+    },
+    "progress": {
+      "install_addon": "Please wait while the Matter Server add-on installation finishes. This can take several minutes.",
+      "start_addon": "Please wait while the Matter Server add-on starts. This add-on is what powers Matter in Home Assistant. This may take some seconds."
+    }
+  }
+}

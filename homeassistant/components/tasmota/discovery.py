@@ -85,7 +85,10 @@ def warn_if_topic_duplicated(
             for _, cfg in offenders
         ]
         _LOGGER.warning(
-            "Multiple Tasmota devices are sharing the same topic '%s'. Offending devices: %s",
+            (
+                "Multiple Tasmota devices are sharing the same topic '%s'. Offending"
+                " devices: %s"
+            ),
             command_topic,
             ", ".join(offender_strings),
         )
@@ -287,7 +290,7 @@ async def async_start(  # noqa: C901
 
         for platform in PLATFORMS:
             tasmota_entities = tasmota_get_entities_for_platform(payload, platform)
-            for (tasmota_entity_config, discovery_hash) in tasmota_entities:
+            for tasmota_entity_config, discovery_hash in tasmota_entities:
                 _discover_entity(tasmota_entity_config, discovery_hash, platform)
 
     async def async_sensors_discovered(
@@ -313,7 +316,7 @@ async def async_start(  # noqa: C901
             )
             if entry.domain == sensor.DOMAIN and entry.platform == DOMAIN
         }
-        for (tasmota_sensor_config, discovery_hash) in sensors:
+        for tasmota_sensor_config, discovery_hash in sensors:
             if tasmota_sensor_config:
                 orphaned_entities.discard(tasmota_sensor_config.unique_id)
             _discover_entity(tasmota_sensor_config, discovery_hash, platform)

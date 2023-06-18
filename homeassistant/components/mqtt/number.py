@@ -12,7 +12,7 @@ from homeassistant.components.number import (
     DEFAULT_MAX_VALUE,
     DEFAULT_MIN_VALUE,
     DEFAULT_STEP,
-    DEVICE_CLASSES_SCHEMA,
+    NumberDeviceClass,
     NumberMode,
     RestoreNumber,
 )
@@ -36,17 +36,13 @@ from .const import (
     CONF_COMMAND_TEMPLATE,
     CONF_COMMAND_TOPIC,
     CONF_ENCODING,
+    CONF_PAYLOAD_RESET,
     CONF_QOS,
     CONF_RETAIN,
     CONF_STATE_TOPIC,
 )
 from .debug_info import log_messages
-from .mixins import (
-    MQTT_ENTITY_COMMON_SCHEMA,
-    MqttEntity,
-    async_setup_entry_helper,
-    warn_for_legacy_schema,
-)
+from .mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity, async_setup_entry_helper
 from .models import (
     MqttCommandTemplate,
     MqttValueTemplate,
@@ -60,11 +56,9 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_MIN = "min"
 CONF_MAX = "max"
-CONF_PAYLOAD_RESET = "payload_reset"
 CONF_STEP = "step"
 
 DEFAULT_NAME = "MQTT Number"
-DEFAULT_OPTIMISTIC = False
 DEFAULT_PAYLOAD_RESET = "None"
 
 MQTT_NUMBER_ATTRIBUTES_BLOCKED = frozenset(
@@ -87,17 +81,18 @@ def validate_config(config: ConfigType) -> ConfigType:
 _PLATFORM_SCHEMA_BASE = MQTT_RW_SCHEMA.extend(
     {
         vol.Optional(CONF_COMMAND_TEMPLATE): cv.template,
-        vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
+        vol.Optional(CONF_DEVICE_CLASS): vol.Any(
+            vol.All(vol.Lower, vol.Coerce(NumberDeviceClass)), None
+        ),
         vol.Optional(CONF_MAX, default=DEFAULT_MAX_VALUE): vol.Coerce(float),
         vol.Optional(CONF_MIN, default=DEFAULT_MIN_VALUE): vol.Coerce(float),
         vol.Optional(CONF_MODE, default=NumberMode.AUTO): vol.Coerce(NumberMode),
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
         vol.Optional(CONF_PAYLOAD_RESET, default=DEFAULT_PAYLOAD_RESET): cv.string,
         vol.Optional(CONF_STEP, default=DEFAULT_STEP): vol.All(
             vol.Coerce(float), vol.Range(min=1e-3)
         ),
-        vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
+        vol.Optional(CONF_UNIT_OF_MEASUREMENT): vol.Any(cv.string, None),
         vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
     },
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
@@ -105,12 +100,6 @@ _PLATFORM_SCHEMA_BASE = MQTT_RW_SCHEMA.extend(
 PLATFORM_SCHEMA_MODERN = vol.All(
     _PLATFORM_SCHEMA_BASE,
     validate_config,
-)
-
-# Configuring MQTT Number under the number platform key was deprecated in HA Core 2022.6
-# Setup for the legacy YAML format was removed in HA Core 2022.12
-PLATFORM_SCHEMA = vol.All(
-    warn_for_legacy_schema(number.DOMAIN),
 )
 
 DISCOVERY_SCHEMA = vol.All(
@@ -124,7 +113,7 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up MQTT number through configuration.yaml and dynamically through MQTT discovery."""
+    """Set up MQTT number through YAML and through MQTT discovery."""
     setup = functools.partial(
         _async_setup_entity, hass, async_add_entities, config_entry=config_entry
     )

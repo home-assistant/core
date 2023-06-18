@@ -5,9 +5,8 @@ from contextlib import suppress
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import TIME_SECONDS
+from homeassistant.const import EntityCategory, UnitOfTime
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
@@ -21,7 +20,7 @@ ENTITY_TYPES: tuple[NumberEntityDescription, ...] = (
         native_max_value=9999,
         native_step=1,
         native_min_value=0,
-        native_unit_of_measurement=TIME_SECONDS,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
         entity_category=EntityCategory.CONFIG,
     ),
     NumberEntityDescription(
@@ -38,7 +37,7 @@ ENTITY_TYPES: tuple[NumberEntityDescription, ...] = (
         native_max_value=9999,
         native_step=1,
         native_min_value=0,
-        native_unit_of_measurement=TIME_SECONDS,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
         entity_category=EntityCategory.CONFIG,
     ),
     NumberEntityDescription(

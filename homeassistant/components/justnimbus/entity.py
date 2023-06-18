@@ -30,4 +30,4 @@ class JustNimbusEntity(
     @property
     def available(self) -> bool:
         """Return device availability."""
-        return super().available and getattr(self.coordinator.data, "error_code") == 0
+        return super().available and self.coordinator.data is not None

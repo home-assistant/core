@@ -284,4 +284,4 @@ class LoginFlow(data_entry_flow.FlowHandler):
 
     async def async_finish(self, flow_result: Any) -> FlowResult:
         """Handle the pass of login flow."""
-        return self.async_create_entry(title=self._auth_provider.name, data=flow_result)
+        return self.async_create_entry(data=flow_result)

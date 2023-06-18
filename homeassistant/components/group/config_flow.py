@@ -7,7 +7,7 @@ from typing import Any, cast
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_ENTITIES
+from homeassistant.const import CONF_ENTITIES, CONF_TYPE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er, selector
 from homeassistant.helpers.schema_config_entry_flow import (
@@ -21,11 +21,22 @@ from homeassistant.helpers.schema_config_entry_flow import (
 
 from . import DOMAIN
 from .binary_sensor import CONF_ALL
-from .const import CONF_HIDE_MEMBERS
+from .const import CONF_HIDE_MEMBERS, CONF_IGNORE_NON_NUMERIC
+
+_STATISTIC_MEASURES = [
+    "min",
+    "max",
+    "mean",
+    "median",
+    "last",
+    "range",
+    "sum",
+    "product",
+]
 
 
 async def basic_group_options_schema(
-    domain: str, handler: SchemaCommonFlowHandler
+    domain: str | list[str], handler: SchemaCommonFlowHandler
 ) -> vol.Schema:
     """Generate options schema."""
     return vol.Schema(
@@ -39,7 +50,7 @@ async def basic_group_options_schema(
     )
 
 
-def basic_group_config_schema(domain: str) -> vol.Schema:
+def basic_group_config_schema(domain: str | list[str]) -> vol.Schema:
     """Generate config schema."""
     return vol.Schema(
         {
@@ -67,6 +78,36 @@ BINARY_SENSOR_CONFIG_SCHEMA = basic_group_config_schema("binary_sensor").extend(
     }
 )
 
+SENSOR_CONFIG_EXTENDS = {
+    vol.Required(CONF_TYPE): selector.SelectSelector(
+        selector.SelectSelectorConfig(
+            options=_STATISTIC_MEASURES, translation_key=CONF_TYPE
+        ),
+    ),
+}
+SENSOR_OPTIONS = {
+    vol.Optional(CONF_IGNORE_NON_NUMERIC, default=False): selector.BooleanSelector(),
+    vol.Required(CONF_TYPE): selector.SelectSelector(
+        selector.SelectSelectorConfig(
+            options=_STATISTIC_MEASURES, translation_key=CONF_TYPE
+        ),
+    ),
+}
+
+
+async def sensor_options_schema(
+    domain: str, handler: SchemaCommonFlowHandler
+) -> vol.Schema:
+    """Generate options schema."""
+    return (
+        await basic_group_options_schema(["sensor", "number", "input_number"], handler)
+    ).extend(SENSOR_OPTIONS)
+
+
+SENSOR_CONFIG_SCHEMA = basic_group_config_schema(
+    ["sensor", "number", "input_number"]
+).extend(SENSOR_CONFIG_EXTENDS)
+
 
 async def light_switch_options_schema(
     domain: str, handler: SchemaCommonFlowHandler
@@ -88,6 +129,7 @@ GROUP_TYPES = [
     "light",
     "lock",
     "media_player",
+    "sensor",
     "switch",
 ]
 
@@ -139,6 +181,10 @@ CONFIG_FLOW = {
         basic_group_config_schema("media_player"),
         validate_user_input=set_group_type("media_player"),
     ),
+    "sensor": SchemaFlowFormStep(
+        SENSOR_CONFIG_SCHEMA,
+        validate_user_input=set_group_type("sensor"),
+    ),
     "switch": SchemaFlowFormStep(
         basic_group_config_schema("switch"),
         validate_user_input=set_group_type("switch"),
@@ -156,6 +202,7 @@ OPTIONS_FLOW = {
     "media_player": SchemaFlowFormStep(
         partial(basic_group_options_schema, "media_player")
     ),
+    "sensor": SchemaFlowFormStep(partial(sensor_options_schema, "sensor")),
     "switch": SchemaFlowFormStep(partial(light_switch_options_schema, "switch")),
 }
 

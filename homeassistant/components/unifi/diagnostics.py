@@ -11,11 +11,11 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import format_mac
 
-from .const import CONF_CONTROLLER, DOMAIN as UNIFI_DOMAIN
+from .const import DOMAIN as UNIFI_DOMAIN
 from .controller import UniFiController
 
-TO_REDACT = {CONF_CONTROLLER, CONF_PASSWORD}
-REDACT_CONFIG = {CONF_CONTROLLER, CONF_HOST, CONF_PASSWORD, CONF_USERNAME}
+TO_REDACT = {CONF_PASSWORD}
+REDACT_CONFIG = {CONF_HOST, CONF_PASSWORD, CONF_USERNAME}
 REDACT_CLIENTS = {"bssid", "essid"}
 REDACT_DEVICES = {
     "anon_id",

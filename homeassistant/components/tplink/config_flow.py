@@ -115,7 +115,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         }
         self._discovered_devices = await async_discover_devices(self.hass)
         devices_name = {
-            formatted_mac: f"{device.alias} {device.model} ({device.host}) {formatted_mac}"
+            formatted_mac: (
+                f"{device.alias} {device.model} ({device.host}) {formatted_mac}"
+            )
             for formatted_mac, device in self._discovered_devices.items()
             if formatted_mac not in configured_devices
         }

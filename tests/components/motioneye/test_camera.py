@@ -164,6 +164,7 @@ async def test_setup_camera_new_data_camera_removed(hass: HomeAssistant) -> None
     client.async_get_cameras = AsyncMock(return_value={KEY_CAMERAS: []})
     async_fire_time_changed(hass, dt_util.utcnow() + DEFAULT_SCAN_INTERVAL)
     await hass.async_block_till_done()
+    await hass.async_block_till_done()
     assert not hass.states.get(TEST_CAMERA_ENTITY_ID)
     assert not device_registry.async_get_device({TEST_CAMERA_DEVICE_IDENTIFIER})
     assert not device_registry.async_get_device({(DOMAIN, old_device_id)})

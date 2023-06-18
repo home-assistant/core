@@ -43,15 +43,17 @@ async def async_setup_entry(
     )
 
 
-class Device(CoordinatorEntity, BinarySensorEntity):
+class Device(CoordinatorEntity[FreedomproDataUpdateCoordinator], BinarySensorEntity):
     """Representation of an Freedompro binary_sensor."""
+
+    _attr_has_entity_name = True
+    _attr_name = None
 
     def __init__(
         self, device: dict[str, Any], coordinator: FreedomproDataUpdateCoordinator
     ) -> None:
         """Initialize the Freedompro binary_sensor."""
         super().__init__(coordinator)
-        self._attr_name = device["name"]
         self._attr_unique_id = device["uid"]
         self._type = device["type"]
         self._attr_device_info = DeviceInfo(
@@ -60,7 +62,7 @@ class Device(CoordinatorEntity, BinarySensorEntity):
             },
             manufacturer="Freedompro",
             model=device["type"],
-            name=self.name,
+            name=device["name"],
         )
         self._attr_device_class = DEVICE_CLASS_MAP[device["type"]]
 

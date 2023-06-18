@@ -33,7 +33,7 @@ def get_scanner(hass: HomeAssistant, config: ConfigType) -> ArrisDeviceScanner:
 
 
 class ArrisDeviceScanner(DeviceScanner):
-    """This class queries a Arris TG2492LG router for connected devices."""
+    """Class which queries a Arris TG2492LG router for connected devices."""
 
     def __init__(self, connect_box: ConnectBox) -> None:
         """Initialize the scanner."""

@@ -1,6 +1,6 @@
 """Support for SwitchBee scenario button."""
 
-from switchbee.api import SwitchBeeError
+from switchbee.api.central_unit import SwitchBeeError
 from switchbee.device import ApiStateCommand, DeviceType
 
 from homeassistant.components.button import ButtonEntity

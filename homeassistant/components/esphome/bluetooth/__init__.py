@@ -2,9 +2,10 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from functools import partial
 import logging
 
-from aioesphomeapi import APIClient
+from aioesphomeapi import APIClient, BluetoothProxyFeature
 
 from homeassistant.components.bluetooth import (
     HaBluetoothConnector,
@@ -32,7 +33,11 @@ def _async_can_connect_factory(
         """Check if a given source can make another connection."""
         can_connect = bool(entry_data.available and entry_data.ble_connections_free)
         _LOGGER.debug(
-            "%s: Checking can connect, available=%s, ble_connections_free=%s result=%s",
+            (
+                "%s [%s]: Checking can connect, available=%s, ble_connections_free=%s"
+                " result=%s"
+            ),
+            entry_data.name,
             source,
             entry_data.available,
             entry_data.ble_connections_free,
@@ -54,31 +59,44 @@ async def async_connect_scanner(
     source = str(entry.unique_id)
     new_info_callback = async_get_advertisement_callback(hass)
     assert entry_data.device_info is not None
-    version = entry_data.device_info.bluetooth_proxy_version
-    connectable = version >= 2
+    feature_flags = entry_data.device_info.bluetooth_proxy_feature_flags_compat(
+        entry_data.api_version
+    )
+    connectable = bool(feature_flags & BluetoothProxyFeature.ACTIVE_CONNECTIONS)
     _LOGGER.debug(
-        "%s: Connecting scanner version=%s, connectable=%s",
+        "%s [%s]: Connecting scanner feature_flags=%s, connectable=%s",
+        entry.title,
         source,
-        version,
+        feature_flags,
         connectable,
     )
     connector = HaBluetoothConnector(
-        client=ESPHomeClient,
+        # MyPy doesn't like partials, but this is correct
+        # https://github.com/python/mypy/issues/1484
+        client=partial(ESPHomeClient, config_entry=entry),  # type: ignore[arg-type]
         source=source,
         can_connect=_async_can_connect_factory(entry_data, source),
     )
     scanner = ESPHomeScanner(
         hass, source, entry.title, new_info_callback, connector, connectable
     )
+    if connectable:
+        # If its connectable be sure not to register the scanner
+        # until we know the connection is fully setup since otherwise
+        # there is a race condition where the connection can fail
+        await cli.subscribe_bluetooth_connections_free(
+            entry_data.async_update_ble_connection_limits
+        )
     unload_callbacks = [
         async_register_scanner(hass, scanner, connectable),
         scanner.async_setup(),
     ]
-    await cli.subscribe_bluetooth_le_advertisements(scanner.async_on_advertisement)
-    if connectable:
-        await cli.subscribe_bluetooth_connections_free(
-            entry_data.async_update_ble_connection_limits
+    if feature_flags & BluetoothProxyFeature.RAW_ADVERTISEMENTS:
+        await cli.subscribe_bluetooth_le_raw_advertisements(
+            scanner.async_on_raw_advertisements
         )
+    else:
+        await cli.subscribe_bluetooth_le_advertisements(scanner.async_on_advertisement)
 
     @hass_callback
     def _async_unload() -> None:

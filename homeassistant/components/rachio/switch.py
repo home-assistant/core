@@ -122,7 +122,7 @@ async def async_setup_entry(
             entity.entity_id: entity.zone_id for entity in zone_entities
         }
 
-        for (count, data) in enumerate(entity_id):
+        for count, data in enumerate(entity_id):
             if data in entity_to_zone_id:
                 # Time can be passed as a list per zone,
                 # or one time for all zones
@@ -399,7 +399,7 @@ class RachioZone(RachioSwitch):
         return self._entity_picture
 
     @property
-    def extra_state_attributes(self) -> dict:
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the optional state attributes."""
         props = {ATTR_ZONE_NUMBER: self._zone_number, ATTR_ZONE_SUMMARY: self._summary}
         if self._shade_type:
@@ -506,7 +506,7 @@ class RachioSchedule(RachioSwitch):
         return "mdi:water" if self.schedule_is_enabled else "mdi:water-off"
 
     @property
-    def extra_state_attributes(self) -> dict:
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the optional state attributes."""
         return {
             ATTR_SCHEDULE_SUMMARY: self._summary,

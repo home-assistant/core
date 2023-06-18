@@ -12,7 +12,7 @@ def integration():
     """Fixture for hassfest integration model."""
     integration = Integration(
         path=Path("homeassistant/components/test"),
-        manifest={
+        _manifest={
             "domain": "test",
             "documentation": "https://example.com",
             "name": "test",
@@ -20,10 +20,10 @@ def integration():
             "requirements": [],
         },
     )
-    yield integration
+    return integration
 
 
-def test_validate_requirements_format_with_space(integration: Integration):
+def test_validate_requirements_format_with_space(integration: Integration) -> None:
     """Test validate requirement with space around separator."""
     integration.manifest["requirements"] = ["test_package == 1"]
     assert not validate_requirements_format(integration)
@@ -33,7 +33,7 @@ def test_validate_requirements_format_with_space(integration: Integration):
     ]
 
 
-def test_validate_requirements_format_wrongly_pinned(integration: Integration):
+def test_validate_requirements_format_wrongly_pinned(integration: Integration) -> None:
     """Test requirement with loose pin."""
     integration.manifest["requirements"] = ["test_package>=1"]
     assert not validate_requirements_format(integration)
@@ -43,7 +43,9 @@ def test_validate_requirements_format_wrongly_pinned(integration: Integration):
     ]
 
 
-def test_validate_requirements_format_ignore_pin_for_custom(integration: Integration):
+def test_validate_requirements_format_ignore_pin_for_custom(
+    integration: Integration,
+) -> None:
     """Test requirement ignore pinning for custom."""
     integration.manifest["requirements"] = [
         "test_package>=1",
@@ -52,13 +54,14 @@ def test_validate_requirements_format_ignore_pin_for_custom(integration: Integra
         "test_package~=0.5.0",
         "test_package>=1.4.2,<1.4.99,>=1.7,<1.8.99",
         "test_package>=1.4.2,<1.9,!=1.5",
+        "test_package>=1.4.2;python_version<'3.11'",
     ]
     integration.path = Path("")
     assert validate_requirements_format(integration)
     assert len(integration.errors) == 0
 
 
-def test_validate_requirements_format_invalid_version(integration: Integration):
+def test_validate_requirements_format_invalid_version(integration: Integration) -> None:
     """Test requirement with invalid version."""
     integration.manifest["requirements"] = ["test_package==invalid"]
     assert not validate_requirements_format(integration)
@@ -68,7 +71,7 @@ def test_validate_requirements_format_invalid_version(integration: Integration):
     ]
 
 
-def test_validate_requirements_format_successful(integration: Integration):
+def test_validate_requirements_format_successful(integration: Integration) -> None:
     """Test requirement with successful result."""
     integration.manifest["requirements"] = [
         "test_package==1.2.3",

@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant
 def run(args):
     """Handle ensure config commandline script."""
     parser = argparse.ArgumentParser(
-        description=("Ensure a Home Assistant config exists, creates one if necessary.")
+        description="Ensure a Home Assistant config exists, creates one if necessary."
     )
     parser.add_argument(
         "-c",

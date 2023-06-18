@@ -12,31 +12,28 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import DOMAIN
 
 SUPPORT_FLAGS = ClimateEntityFeature(0)
 
 
-async def async_setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
+    config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the Demo climate devices."""
+    """Set up the demo climate platform."""
     async_add_entities(
         [
             DemoClimate(
                 unique_id="climate_1",
-                name="HeatPump",
+                device_name="HeatPump",
                 target_temperature=68,
-                unit_of_measurement=TEMP_FAHRENHEIT,
+                unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
                 preset=None,
                 current_temperature=77,
                 fan_mode=None,
@@ -52,9 +49,9 @@ async def async_setup_platform(
             ),
             DemoClimate(
                 unique_id="climate_2",
-                name="Hvac",
+                device_name="Hvac",
                 target_temperature=21,
-                unit_of_measurement=TEMP_CELSIUS,
+                unit_of_measurement=UnitOfTemperature.CELSIUS,
                 preset=None,
                 current_temperature=22,
                 fan_mode="On High",
@@ -70,9 +67,9 @@ async def async_setup_platform(
             ),
             DemoClimate(
                 unique_id="climate_3",
-                name="Ecobee",
+                device_name="Ecobee",
                 target_temperature=None,
-                unit_of_measurement=TEMP_CELSIUS,
+                unit_of_measurement=UnitOfTemperature.CELSIUS,
                 preset="home",
                 preset_modes=["home", "eco"],
                 current_temperature=23,
@@ -91,24 +88,17 @@ async def async_setup_platform(
     )
 
 
-async def async_setup_entry(
-    hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
-) -> None:
-    """Set up the Demo climate devices config entry."""
-    await async_setup_platform(hass, {}, async_add_entities)
-
-
 class DemoClimate(ClimateEntity):
     """Representation of a demo climate device."""
 
+    _attr_has_entity_name = True
     _attr_should_poll = False
+    _attr_translation_key = "ubercool"
 
     def __init__(
         self,
         unique_id: str,
-        name: str,
+        device_name: str,
         target_temperature: float | None,
         unit_of_measurement: str,
         preset: str | None,
@@ -127,7 +117,6 @@ class DemoClimate(ClimateEntity):
     ) -> None:
         """Initialize the climate device."""
         self._unique_id = unique_id
-        self._attr_name = name
         self._attr_supported_features = SUPPORT_FLAGS
         if target_temperature is not None:
             self._attr_supported_features |= ClimateEntityFeature.TARGET_TEMPERATURE
@@ -157,22 +146,15 @@ class DemoClimate(ClimateEntity):
         self._hvac_mode = hvac_mode
         self._aux = aux
         self._current_swing_mode = swing_mode
-        self._fan_modes = ["On Low", "On High", "Auto Low", "Auto High", "Off"]
+        self._fan_modes = ["on_low", "on_high", "auto_low", "auto_high", "off"]
         self._hvac_modes = hvac_modes
-        self._swing_modes = ["Auto", "1", "2", "3", "Off"]
+        self._swing_modes = ["auto", "1", "2", "3", "off"]
         self._target_temperature_high = target_temp_high
         self._target_temperature_low = target_temp_low
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device info."""
-        return DeviceInfo(
-            identifiers={
-                # Serial numbers are unique identifiers within a specific domain
-                (DOMAIN, self.unique_id)
-            },
-            name=self.name,
-        )
+        self._attr_device_info = {
+            "identifiers": {(DOMAIN, unique_id)},
+            "name": device_name,
+        }
 
     @property
     def unique_id(self) -> str:

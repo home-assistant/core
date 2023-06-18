@@ -1,15 +1,11 @@
 """Bluetooth scanner for esphome."""
 from __future__ import annotations
 
-import re
-from typing import Any
+from aioesphomeapi import BluetoothLEAdvertisement, BluetoothLERawAdvertisement
+from bluetooth_data_tools import int_to_bluetooth_address, parse_advertisement_data
 
-from aioesphomeapi import BluetoothLEAdvertisement
-
-from homeassistant.components.bluetooth import BaseHaRemoteScanner
+from homeassistant.components.bluetooth import MONOTONIC_TIME, BaseHaRemoteScanner
 from homeassistant.core import callback
-
-TWO_CHAR = re.compile("..")
 
 
 class ESPHomeScanner(BaseHaRemoteScanner):
@@ -18,9 +14,9 @@ class ESPHomeScanner(BaseHaRemoteScanner):
     @callback
     def async_on_advertisement(self, adv: BluetoothLEAdvertisement) -> None:
         """Call the registered callback."""
-        address = ":".join(TWO_CHAR.findall("%012X" % adv.address))  # must be upper
+        # The mac address is a uint64, but we need a string
         self._async_on_advertisement(
-            address,
+            int_to_bluetooth_address(adv.address),
             adv.rssi,
             adv.name,
             adv.service_uuids,
@@ -28,20 +24,25 @@ class ESPHomeScanner(BaseHaRemoteScanner):
             adv.manufacturer_data,
             None,
             {"address_type": adv.address_type},
+            MONOTONIC_TIME(),
         )
 
-    async def async_diagnostics(self) -> dict[str, Any]:
-        """Return diagnostic information about the scanner."""
-        return await super().async_diagnostics() | {
-            "type": self.__class__.__name__,
-            "discovered_devices_and_advertisement_data": [
-                {
-                    "name": device_adv[0].name,
-                    "address": device_adv[0].address,
-                    "rssi": device_adv[0].rssi,
-                    "advertisement_data": device_adv[1],
-                    "details": device_adv[0].details,
-                }
-                for device_adv in self.discovered_devices_and_advertisement_data.values()
-            ],
-        }
+    @callback
+    def async_on_raw_advertisements(
+        self, advertisements: list[BluetoothLERawAdvertisement]
+    ) -> None:
+        """Call the registered callback."""
+        now = MONOTONIC_TIME()
+        for adv in advertisements:
+            parsed = parse_advertisement_data((adv.data,))
+            self._async_on_advertisement(
+                int_to_bluetooth_address(adv.address),
+                adv.rssi,
+                parsed.local_name,
+                parsed.service_uuids,
+                parsed.service_data,
+                parsed.manufacturer_data,
+                None,
+                {"address_type": adv.address_type},
+                now,
+            )

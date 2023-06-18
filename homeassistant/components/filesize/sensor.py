@@ -13,10 +13,10 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_FILE_PATH, DATA_BYTES, DATA_MEGABYTES
+from homeassistant.const import CONF_FILE_PATH, EntityCategory, UnitOfInformation
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import DeviceInfo, EntityCategory
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -36,7 +36,8 @@ SENSOR_TYPES = (
         key="file",
         icon=ICON,
         name="Size",
-        native_unit_of_measurement=DATA_MEGABYTES,
+        native_unit_of_measurement=UnitOfInformation.MEGABYTES,
+        device_class=SensorDeviceClass.DATA_SIZE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
@@ -44,7 +45,8 @@ SENSOR_TYPES = (
         entity_registry_enabled_default=False,
         icon=ICON,
         name="Size bytes",
-        native_unit_of_measurement=DATA_BYTES,
+        native_unit_of_measurement=UnitOfInformation.BYTES,
+        device_class=SensorDeviceClass.DATA_SIZE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
@@ -54,7 +56,6 @@ SENSOR_TYPES = (
         icon=ICON,
         name="Last Updated",
         device_class=SensorDeviceClass.TIMESTAMP,
-        state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
 )
@@ -118,7 +119,6 @@ class FileSizeCoordinator(DataUpdateCoordinator):
 class FilesizeEntity(CoordinatorEntity[FileSizeCoordinator], SensorEntity):
     """Filesize sensor."""
 
-    entity_description: SensorEntityDescription
     _attr_has_entity_name = True
 
     def __init__(
@@ -131,7 +131,6 @@ class FilesizeEntity(CoordinatorEntity[FileSizeCoordinator], SensorEntity):
         """Initialize the Filesize sensor."""
         super().__init__(coordinator)
         base_name = path.split("/")[-1]
-        self._attr_name = description.name
         self._attr_unique_id = (
             entry_id if description.key == "file" else f"{entry_id}-{description.key}"
         )

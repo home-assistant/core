@@ -26,7 +26,6 @@ async def test_web_full_flow(hass: HomeAssistant) -> None:
     assert result.get("step_id") == "user"
     assert result.get("data_schema").schema.get("server_url") == str
     assert not result.get("errors")
-    assert "flow_id" in result
     with patch("rtsp_to_webrtc.client.Client.heartbeat"), patch(
         "homeassistant.components.rtsp_to_webrtc.async_setup_entry",
         return_value=True,
@@ -63,7 +62,6 @@ async def test_invalid_url(hass: HomeAssistant) -> None:
     assert result.get("step_id") == "user"
     assert result.get("data_schema").schema.get("server_url") == str
     assert not result.get("errors")
-    assert "flow_id" in result
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"server_url": "not-a-url"}
     )
@@ -81,7 +79,6 @@ async def test_server_unreachable(hass: HomeAssistant) -> None:
     assert result.get("type") == "form"
     assert result.get("step_id") == "user"
     assert not result.get("errors")
-    assert "flow_id" in result
     with patch(
         "rtsp_to_webrtc.client.Client.heartbeat",
         side_effect=rtsp_to_webrtc.exceptions.ClientError(),
@@ -102,7 +99,6 @@ async def test_server_failure(hass: HomeAssistant) -> None:
     assert result.get("type") == "form"
     assert result.get("step_id") == "user"
     assert not result.get("errors")
-    assert "flow_id" in result
     with patch(
         "rtsp_to_webrtc.client.Client.heartbeat",
         side_effect=rtsp_to_webrtc.exceptions.ResponseError(),
@@ -115,7 +111,7 @@ async def test_server_failure(hass: HomeAssistant) -> None:
         assert result.get("errors") == {"base": "server_failure"}
 
 
-async def test_hassio_discovery(hass):
+async def test_hassio_discovery(hass: HomeAssistant) -> None:
     """Test supervisor add-on discovery."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -127,6 +123,7 @@ async def test_hassio_discovery(hass):
             },
             name="RTSPtoWebRTC",
             slug="rtsp-to-webrtc",
+            uuid="1234",
         ),
         context={"source": config_entries.SOURCE_HASSIO},
     )
@@ -166,6 +163,7 @@ async def test_hassio_single_config_entry(hass: HomeAssistant) -> None:
             },
             name="RTSPtoWebRTC",
             slug="rtsp-to-webrtc",
+            uuid="1234",
         ),
         context={"source": config_entries.SOURCE_HASSIO},
     )
@@ -188,6 +186,7 @@ async def test_hassio_ignored(hass: HomeAssistant) -> None:
             },
             name="RTSPtoWebRTC",
             slug="rtsp-to-webrtc",
+            uuid="1234",
         ),
         context={"source": config_entries.SOURCE_HASSIO},
     )
@@ -207,6 +206,7 @@ async def test_hassio_discovery_server_failure(hass: HomeAssistant) -> None:
             },
             name="RTSPtoWebRTC",
             slug="rtsp-to-webrtc",
+            uuid="1234",
         ),
         context={"source": config_entries.SOURCE_HASSIO},
     )
@@ -214,7 +214,6 @@ async def test_hassio_discovery_server_failure(hass: HomeAssistant) -> None:
     assert result.get("type") == "form"
     assert result.get("step_id") == "hassio_confirm"
     assert not result.get("errors")
-    assert "flow_id" in result
 
     with patch(
         "rtsp_to_webrtc.client.Client.heartbeat",

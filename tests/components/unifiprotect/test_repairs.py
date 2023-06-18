@@ -1,5 +1,4 @@
 """Test repairs for unifiprotect."""
-
 from __future__ import annotations
 
 from copy import copy
@@ -22,13 +21,15 @@ from homeassistant.helpers import entity_registry as er
 
 from .utils import MockUFPFixture, init_entry
 
+from tests.typing import ClientSessionGenerator, WebSocketGenerator
+
 
 async def test_ea_warning_ignore(
     hass: HomeAssistant,
     ufp: MockUFPFixture,
-    hass_client,
-    hass_ws_client,
-):
+    hass_client: ClientSessionGenerator,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
     """Test EA warning is created if using prerelease version of Protect."""
 
     version = ufp.api.bootstrap.nvr.version
@@ -78,9 +79,9 @@ async def test_ea_warning_ignore(
 async def test_ea_warning_fix(
     hass: HomeAssistant,
     ufp: MockUFPFixture,
-    hass_client,
-    hass_ws_client,
-):
+    hass_client: ClientSessionGenerator,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
     """Test EA warning is created if using prerelease version of Protect."""
 
     version = ufp.api.bootstrap.nvr.version
@@ -129,8 +130,11 @@ async def test_ea_warning_fix(
 
 
 async def test_deprecate_smart_default(
-    hass: HomeAssistant, ufp: MockUFPFixture, hass_ws_client, doorbell: Camera
-):
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    hass_ws_client: WebSocketGenerator,
+    doorbell: Camera,
+) -> None:
     """Test Deprecate Sensor repair does not exist by default (new installs)."""
 
     await init_entry(hass, ufp, [doorbell])
@@ -149,9 +153,12 @@ async def test_deprecate_smart_default(
     assert issue is None
 
 
-async def test_deprecate_smart_active(
-    hass: HomeAssistant, ufp: MockUFPFixture, hass_ws_client, doorbell: Camera
-):
+async def test_deprecate_smart_no_automations(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    hass_ws_client: WebSocketGenerator,
+    doorbell: Camera,
+) -> None:
     """Test Deprecate Sensor repair exists for existing installs."""
 
     registry = er.async_get(hass)
@@ -175,4 +182,4 @@ async def test_deprecate_smart_active(
     for i in msg["result"]["issues"]:
         if i["issue_id"] == "deprecate_smart_sensor":
             issue = i
-    assert issue is not None
+    assert issue is None

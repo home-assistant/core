@@ -1,11 +1,15 @@
 """Tests for handling the device registry."""
+import requests_mock
 
 from homeassistant.components.plex.const import DOMAIN
 from homeassistant.const import Platform
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 
-async def test_cleanup_orphaned_devices(hass, entry, setup_plex_server):
+async def test_cleanup_orphaned_devices(
+    hass: HomeAssistant, entry, setup_plex_server
+) -> None:
     """Test cleaning up orphaned devices on startup."""
     test_device_id = {(DOMAIN, "temporary_device_123")}
 
@@ -38,8 +42,12 @@ async def test_cleanup_orphaned_devices(hass, entry, setup_plex_server):
 
 
 async def test_migrate_transient_devices(
-    hass, entry, setup_plex_server, requests_mock, player_plexweb_resources
-):
+    hass: HomeAssistant,
+    entry,
+    setup_plex_server,
+    requests_mock: requests_mock.Mocker,
+    player_plexweb_resources,
+) -> None:
     """Test cleaning up transient devices on startup."""
     plexweb_device_id = {(DOMAIN, "plexweb_id")}
     non_plexweb_device_id = {(DOMAIN, "1234567890123456-com-plexapp-android")}

@@ -83,6 +83,7 @@ class BleBoxEntity(Entity, Generic[_FeatureT]):
             model=product.model,
             name=product.name,
             sw_version=product.firmware_version,
+            configuration_url=f"http://{product.address}",
         )
 
     async def async_update(self) -> None:

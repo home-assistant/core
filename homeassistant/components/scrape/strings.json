@@ -16,14 +16,16 @@
           "password": "[%key:common::config_flow::data::password%]",
           "headers": "Headers",
           "method": "Method",
-          "timeout": "Timeout"
+          "timeout": "Timeout",
+          "encoding": "Character encoding"
         },
         "data_description": {
           "resource": "The URL to the website that contains the value",
           "authentication": "Type of the HTTP authentication. Either basic or digest",
           "verify_ssl": "Enables/disables verification of SSL/TLS certificate, for example if it is self-signed",
           "headers": "Headers to use for the web request",
-          "timeout": "Timeout for connection to website"
+          "timeout": "Timeout for connection to website",
+          "encoding": "Character encoding to use. Defaults to UTF-8"
         }
       },
       "sensor": {
@@ -110,22 +112,85 @@
           "password": "[%key:component::scrape::config::step::user::data::password%]",
           "headers": "[%key:component::scrape::config::step::user::data::headers%]",
           "verify_ssl": "[%key:component::scrape::config::step::user::data::verify_ssl%]",
-          "timeout": "[%key:component::scrape::config::step::user::data::timeout%]"
+          "timeout": "[%key:component::scrape::config::step::user::data::timeout%]",
+          "encoding": "[%key:component::scrape::config::step::user::data::encoding%]"
         },
         "data_description": {
           "resource": "[%key:component::scrape::config::step::user::data_description::resource%]",
           "authentication": "[%key:component::scrape::config::step::user::data_description::authentication%]",
           "headers": "[%key:component::scrape::config::step::user::data_description::headers%]",
           "verify_ssl": "[%key:component::scrape::config::step::user::data_description::verify_ssl%]",
-          "timeout": "[%key:component::scrape::config::step::user::data_description::timeout%]"
+          "timeout": "[%key:component::scrape::config::step::user::data_description::timeout%]",
+          "encoding": "[%key:component::scrape::config::step::user::data_description::encoding%]"
         }
       }
     }
   },
-  "issues": {
-    "moved_yaml": {
-      "title": "The Scrape YAML configuration has been moved",
-      "description": "Configuring Scrape using YAML has been moved to integration key.\n\nYour existing YAML configuration will be working for 2 more versions.\n\nMigrate your YAML configuration to the integration key according to the documentation."
+  "selector": {
+    "device_class": {
+      "options": {
+        "none": "No device class",
+        "date": "[%key:component::sensor::entity_component::date::name%]",
+        "duration": "[%key:component::sensor::entity_component::duration::name%]",
+        "apparent_power": "[%key:component::sensor::entity_component::apparent_power::name%]",
+        "aqi": "[%key:component::sensor::entity_component::aqi::name%]",
+        "atmospheric_pressure": "[%key:component::sensor::entity_component::atmospheric_pressure::name%]",
+        "battery": "[%key:component::sensor::entity_component::battery::name%]",
+        "carbon_monoxide": "[%key:component::sensor::entity_component::carbon_monoxide::name%]",
+        "carbon_dioxide": "[%key:component::sensor::entity_component::carbon_dioxide::name%]",
+        "current": "[%key:component::sensor::entity_component::current::name%]",
+        "data_rate": "[%key:component::sensor::entity_component::data_rate::name%]",
+        "data_size": "[%key:component::sensor::entity_component::data_size::name%]",
+        "distance": "[%key:component::sensor::entity_component::distance::name%]",
+        "energy": "[%key:component::sensor::entity_component::energy::name%]",
+        "energy_storage": "[%key:component::sensor::entity_component::energy_storage::name%]",
+        "frequency": "[%key:component::sensor::entity_component::frequency::name%]",
+        "gas": "[%key:component::sensor::entity_component::gas::name%]",
+        "humidity": "[%key:component::sensor::entity_component::humidity::name%]",
+        "illuminance": "[%key:component::sensor::entity_component::illuminance::name%]",
+        "irradiance": "[%key:component::sensor::entity_component::irradiance::name%]",
+        "moisture": "[%key:component::sensor::entity_component::moisture::name%]",
+        "monetary": "[%key:component::sensor::entity_component::monetary::name%]",
+        "nitrogen_dioxide": "[%key:component::sensor::entity_component::nitrogen_dioxide::name%]",
+        "nitrogen_monoxide": "[%key:component::sensor::entity_component::nitrogen_monoxide::name%]",
+        "nitrous_oxide": "[%key:component::sensor::entity_component::nitrous_oxide::name%]",
+        "ozone": "[%key:component::sensor::entity_component::ozone::name%]",
+        "pm1": "[%key:component::sensor::entity_component::pm1::name%]",
+        "pm10": "[%key:component::sensor::entity_component::pm10::name%]",
+        "pm25": "[%key:component::sensor::entity_component::pm25::name%]",
+        "power_factor": "[%key:component::sensor::entity_component::power_factor::name%]",
+        "power": "[%key:component::sensor::entity_component::power::name%]",
+        "precipitation": "[%key:component::sensor::entity_component::precipitation::name%]",
+        "precipitation_intensity": "[%key:component::sensor::entity_component::precipitation_intensity::name%]",
+        "pressure": "[%key:component::sensor::entity_component::pressure::name%]",
+        "reactive_power": "[%key:component::sensor::entity_component::reactive_power::name%]",
+        "signal_strength": "[%key:component::sensor::entity_component::signal_strength::name%]",
+        "sound_pressure": "[%key:component::sensor::entity_component::sound_pressure::name%]",
+        "speed": "[%key:component::sensor::entity_component::speed::name%]",
+        "sulphur_dioxide": "[%key:component::sensor::entity_component::sulphur_dioxide::name%]",
+        "temperature": "[%key:component::sensor::entity_component::temperature::name%]",
+        "timestamp": "[%key:component::sensor::entity_component::timestamp::name%]",
+        "volatile_organic_compounds": "[%key:component::sensor::entity_component::volatile_organic_compounds::name%]",
+        "voltage": "[%key:component::sensor::entity_component::voltage::name%]",
+        "volume": "[%key:component::sensor::entity_component::volume::name%]",
+        "volume_storage": "[%key:component::sensor::entity_component::volume_storage::name%]",
+        "water": "[%key:component::sensor::entity_component::water::name%]",
+        "weight": "[%key:component::sensor::entity_component::weight::name%]",
+        "wind_speed": "[%key:component::sensor::entity_component::wind_speed::name%]"
+      }
+    },
+    "state_class": {
+      "options": {
+        "none": "No state class",
+        "measurement": "[%key:component::sensor::entity_component::_::state_attributes::state_class::state::measurement%]",
+        "total": "[%key:component::sensor::entity_component::_::state_attributes::state_class::state::total%]",
+        "total_increasing": "[%key:component::sensor::entity_component::_::state_attributes::state_class::state::total_increasing%]"
+      }
+    },
+    "unit_of_measurement": {
+      "options": {
+        "none": "No unit of measurement"
+      }
     }
   }
 }

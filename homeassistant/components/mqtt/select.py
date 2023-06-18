@@ -28,12 +28,7 @@ from .const import (
     CONF_STATE_TOPIC,
 )
 from .debug_info import log_messages
-from .mixins import (
-    MQTT_ENTITY_COMMON_SCHEMA,
-    MqttEntity,
-    async_setup_entry_helper,
-    warn_for_legacy_schema,
-)
+from .mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity, async_setup_entry_helper
 from .models import (
     MqttCommandTemplate,
     MqttValueTemplate,
@@ -48,7 +43,6 @@ _LOGGER = logging.getLogger(__name__)
 CONF_OPTIONS = "options"
 
 DEFAULT_NAME = "MQTT Select"
-DEFAULT_OPTIMISTIC = False
 
 MQTT_SELECT_ATTRIBUTES_BLOCKED = frozenset(
     {
@@ -61,16 +55,10 @@ PLATFORM_SCHEMA_MODERN = MQTT_RW_SCHEMA.extend(
     {
         vol.Optional(CONF_COMMAND_TEMPLATE): cv.template,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
         vol.Required(CONF_OPTIONS): cv.ensure_list,
         vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
     },
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
-
-# Configuring MQTT Select under the select platform key was deprecated in HA Core 2022.6
-PLATFORM_SCHEMA = vol.All(
-    warn_for_legacy_schema(select.DOMAIN),
-)
 
 DISCOVERY_SCHEMA = vol.All(PLATFORM_SCHEMA_MODERN.extend({}, extra=vol.REMOVE_EXTRA))
 
@@ -80,7 +68,7 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up MQTT select through configuration.yaml and dynamically through MQTT discovery."""
+    """Set up MQTT select through YAML and through MQTT discovery."""
     setup = functools.partial(
         _async_setup_entity, hass, async_add_entities, config_entry=config_entry
     )
@@ -115,6 +103,7 @@ class MqttSelect(MqttEntity, SelectEntity, RestoreEntity):
         discovery_data: DiscoveryInfoType | None,
     ) -> None:
         """Initialize the MQTT select."""
+        self._attr_current_option = None
         SelectEntity.__init__(self)
         MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
 
@@ -125,7 +114,6 @@ class MqttSelect(MqttEntity, SelectEntity, RestoreEntity):
 
     def _setup_from_config(self, config: ConfigType) -> None:
         """(Re)Setup the entity."""
-        self._attr_current_option = None
         self._optimistic = config[CONF_OPTIMISTIC]
         self._attr_options = config[CONF_OPTIONS]
 

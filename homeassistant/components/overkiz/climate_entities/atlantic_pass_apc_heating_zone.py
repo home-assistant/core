@@ -15,22 +15,27 @@ from homeassistant.components.climate import (
     ClimateEntityFeature,
     HVACMode,
 )
-from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
+from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 
+from ..const import DOMAIN
 from ..coordinator import OverkizDataUpdateCoordinator
 from ..entity import OverkizEntity
 
-OVERKIZ_TO_HVAC_MODE: dict[str, str] = {
+OVERKIZ_TO_HVAC_MODE: dict[str, HVACMode] = {
     OverkizCommandParam.AUTO: HVACMode.AUTO,
     OverkizCommandParam.ECO: HVACMode.AUTO,
     OverkizCommandParam.MANU: HVACMode.HEAT,
     OverkizCommandParam.HEATING: HVACMode.HEAT,
     OverkizCommandParam.STOP: HVACMode.OFF,
+    OverkizCommandParam.EXTERNAL_SCHEDULING: HVACMode.AUTO,
     OverkizCommandParam.INTERNAL_SCHEDULING: HVACMode.AUTO,
     OverkizCommandParam.COMFORT: HVACMode.HEAT,
 }
 
 HVAC_MODE_TO_OVERKIZ = {v: k for k, v in OVERKIZ_TO_HVAC_MODE.items()}
+
+PRESET_EXTERNAL = "external"
+PRESET_FROST_PROTECTION = "frost_protection"
 
 OVERKIZ_TO_PRESET_MODES: dict[str, str] = {
     OverkizCommandParam.OFF: PRESET_ECO,
@@ -39,6 +44,8 @@ OVERKIZ_TO_PRESET_MODES: dict[str, str] = {
     OverkizCommandParam.COMFORT: PRESET_COMFORT,
     OverkizCommandParam.ABSENCE: PRESET_AWAY,
     OverkizCommandParam.ECO: PRESET_ECO,
+    OverkizCommandParam.FROSTPROTECTION: PRESET_FROST_PROTECTION,
+    OverkizCommandParam.EXTERNAL_SCHEDULING: PRESET_EXTERNAL,
     OverkizCommandParam.INTERNAL_SCHEDULING: PRESET_HOME,
 }
 
@@ -51,6 +58,8 @@ OVERKIZ_TO_PROFILE_MODES: dict[str, str] = {
     OverkizCommandParam.ABSENCE: PRESET_AWAY,
     OverkizCommandParam.MANU: PRESET_COMFORT,
     OverkizCommandParam.DEROGATION: PRESET_COMFORT,
+    OverkizCommandParam.EXTERNAL_SETPOINT: PRESET_EXTERNAL,
+    OverkizCommandParam.FROSTPROTECTION: PRESET_FROST_PROTECTION,
     OverkizCommandParam.COMFORT: PRESET_COMFORT,
 }
 
@@ -69,7 +78,8 @@ class AtlanticPassAPCHeatingZone(OverkizEntity, ClimateEntity):
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
     )
-    _attr_temperature_unit = TEMP_CELSIUS
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_translation_key = DOMAIN
 
     def __init__(
         self, device_url: str, coordinator: OverkizDataUpdateCoordinator
@@ -91,7 +101,7 @@ class AtlanticPassAPCHeatingZone(OverkizEntity, ClimateEntity):
         return None
 
     @property
-    def hvac_mode(self) -> str:
+    def hvac_mode(self) -> HVACMode:
         """Return hvac operation ie. heat, cool mode."""
         return OVERKIZ_TO_HVAC_MODE[
             cast(str, self.executor.select_state(OverkizState.IO_PASS_APC_HEATING_MODE))
@@ -125,7 +135,7 @@ class AtlanticPassAPCHeatingZone(OverkizEntity, ClimateEntity):
             OverkizCommand.REFRESH_PASS_APC_HEATING_PROFILE
         )
 
-    async def async_set_hvac_mode(self, hvac_mode: str) -> None:
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
         await self.async_set_heating_mode(HVAC_MODE_TO_OVERKIZ[hvac_mode])
 

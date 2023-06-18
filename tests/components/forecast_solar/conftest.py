@@ -60,7 +60,8 @@ def mock_forecast_solar(hass) -> Generator[None, MagicMock, None]:
     hass fixture included because it sets the time zone.
     """
     with patch(
-        "homeassistant.components.forecast_solar.ForecastSolar", autospec=True
+        "homeassistant.components.forecast_solar.coordinator.ForecastSolar",
+        autospec=True,
     ) as forecast_solar_mock:
         forecast_solar = forecast_solar_mock.return_value
         now = datetime(2021, 6, 27, 6, 0, tzinfo=dt_util.DEFAULT_TIME_ZONE)
@@ -71,6 +72,7 @@ def mock_forecast_solar(hass) -> Generator[None, MagicMock, None]:
         estimate.api_rate_limit = 60
         estimate.account_type.value = "public"
         estimate.energy_production_today = 100000
+        estimate.energy_production_today_remaining = 50000
         estimate.energy_production_tomorrow = 200000
         estimate.power_production_now = 300000
         estimate.power_highest_peak_time_today = datetime(
@@ -98,7 +100,7 @@ def mock_forecast_solar(hass) -> Generator[None, MagicMock, None]:
             datetime(2021, 6, 27, 13, 0, tzinfo=dt_util.DEFAULT_TIME_ZONE): 20,
             datetime(2022, 6, 27, 13, 0, tzinfo=dt_util.DEFAULT_TIME_ZONE): 200,
         }
-        estimate.wh_hours = {
+        estimate.wh_period = {
             datetime(2021, 6, 27, 13, 0, tzinfo=dt_util.DEFAULT_TIME_ZONE): 30,
             datetime(2022, 6, 27, 13, 0, tzinfo=dt_util.DEFAULT_TIME_ZONE): 300,
         }

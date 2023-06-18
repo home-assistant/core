@@ -5,6 +5,7 @@ from collections.abc import Mapping
 from typing import Any
 
 from pytrafikverket import TrafikverketFerry
+from pytrafikverket.exceptions import InvalidAuthentication, NoFerryFound
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -15,9 +16,6 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CONF_FROM, CONF_TIME, CONF_TO, DOMAIN
 from .util import create_unique_id
-
-ERROR_INVALID_AUTH = "Source: Security, message: Invalid authentication"
-ERROR_INVALID_ROUTE = "No FerryAnnouncement found"
 
 DATA_SCHEMA = vol.Schema(
     {
@@ -32,6 +30,7 @@ DATA_SCHEMA = vol.Schema(
                 options=WEEKDAYS,
                 multiple=True,
                 mode=selector.SelectSelectorMode.DROPDOWN,
+                translation_key=CONF_WEEKDAY,
             )
         ),
     }
@@ -80,13 +79,12 @@ class TVFerryConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 await self.validate_input(
                     api_key, self.entry.data[CONF_FROM], self.entry.data[CONF_TO]
                 )
-            except ValueError as err:
-                if str(err) == ERROR_INVALID_AUTH:
-                    errors["base"] = "invalid_auth"
-                elif str(err) == ERROR_INVALID_ROUTE:
-                    errors["base"] = "invalid_route"
-                else:
-                    errors["base"] = "cannot_connect"
+            except InvalidAuthentication:
+                errors["base"] = "invalid_auth"
+            except NoFerryFound:
+                errors["base"] = "invalid_route"
+            except Exception:  # pylint: disable=broad-exception-caught
+                errors["base"] = "cannot_connect"
             else:
                 self.hass.config_entries.async_update_entry(
                     self.entry,
@@ -125,13 +123,12 @@ class TVFerryConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             try:
                 await self.validate_input(api_key, ferry_from, ferry_to)
-            except ValueError as err:
-                if str(err) == ERROR_INVALID_AUTH:
-                    errors["base"] = "invalid_auth"
-                elif str(err) == ERROR_INVALID_ROUTE:
-                    errors["base"] = "invalid_route"
-                else:
-                    errors["base"] = "cannot_connect"
+            except InvalidAuthentication:
+                errors["base"] = "invalid_auth"
+            except NoFerryFound:
+                errors["base"] = "invalid_route"
+            except Exception:  # pylint: disable=broad-exception-caught
+                errors["base"] = "cannot_connect"
             else:
                 if not errors:
                     unique_id = create_unique_id(

@@ -1,0 +1,43 @@
+transition_on:
+  name: Transition on
+  description: Transition to a target volume level over time.
+  target:
+    entity:
+      integration: snooz
+      domain: fan
+  fields:
+    duration:
+      name: Transition duration
+      description: Time it takes to reach the target volume level.
+      selector:
+        number:
+          min: 1
+          max: 300
+          unit_of_measurement: seconds
+          mode: box
+    volume:
+      name: Target volume
+      description: If not specified, the volume level is read from the device.
+      selector:
+        number:
+          min: 1
+          max: 100
+          unit_of_measurement: "%"
+
+transition_off:
+  name: Transition off
+  description: Transition volume off over time.
+  target:
+    entity:
+      integration: snooz
+      domain: fan
+  fields:
+    duration:
+      name: Transition duration
+      description: Time it takes to turn off.
+      selector:
+        number:
+          min: 1
+          max: 300
+          unit_of_measurement: seconds
+          mode: box

@@ -59,7 +59,7 @@ class DaikinZoneSwitch(SwitchEntity):
     _attr_icon = ZONE_ICON
     _attr_has_entity_name = True
 
-    def __init__(self, daikin_api: DaikinApi, zone_id):
+    def __init__(self, daikin_api: DaikinApi, zone_id) -> None:
         """Initialize the zone."""
         self._api = daikin_api
         self._zone_id = zone_id
@@ -90,11 +90,11 @@ class DaikinZoneSwitch(SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the zone on."""
-        await self._api.device.set_zone(self._zone_id, "1")
+        await self._api.device.set_zone(self._zone_id, "zone_onoff", "1")
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the zone off."""
-        await self._api.device.set_zone(self._zone_id, "0")
+        await self._api.device.set_zone(self._zone_id, "zone_onoff", "0")
 
 
 class DaikinStreamerSwitch(SwitchEntity):

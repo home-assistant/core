@@ -29,7 +29,7 @@ async def test_load_unload_config_entry(
 
 
 @patch(
-    "homeassistant.components.forecast_solar.ForecastSolar.estimate",
+    "homeassistant.components.forecast_solar.coordinator.ForecastSolar.estimate",
     side_effect=ForecastSolarConnectionError,
 )
 async def test_config_entry_not_ready(

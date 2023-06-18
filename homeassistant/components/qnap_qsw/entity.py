@@ -145,7 +145,7 @@ class QswFirmwareEntity(CoordinatorEntity[QswFirmwareCoordinator]):
     def get_device_value(self, key: str, subkey: str) -> Any:
         """Return device value by key."""
         value = None
-        if key in self.coordinator.data:
+        if self.coordinator.data is not None and key in self.coordinator.data:
             data = self.coordinator.data[key]
             if subkey in data:
                 value = data[subkey]

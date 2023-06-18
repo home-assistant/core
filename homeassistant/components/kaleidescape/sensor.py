@@ -6,8 +6,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
-from homeassistant.const import PERCENTAGE
-from homeassistant.helpers.entity import EntityCategory
+from homeassistant.const import PERCENTAGE, EntityCategory
 
 from .const import DOMAIN as KALEIDESCAPE_DOMAIN
 from .entity import KaleidescapeEntity

@@ -1,10 +1,10 @@
 {
   "domain": "google_travel_time",
   "name": "Google Maps Travel Time",
-  "documentation": "https://www.home-assistant.io/integrations/google_travel_time",
-  "requirements": ["googlemaps==2.5.1"],
   "codeowners": ["@eifinger"],
   "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/google_travel_time",
   "iot_class": "cloud_polling",
-  "loggers": ["googlemaps"]
+  "loggers": ["googlemaps", "homeassistant.helpers.location"],
+  "requirements": ["googlemaps==2.5.1"]
 }

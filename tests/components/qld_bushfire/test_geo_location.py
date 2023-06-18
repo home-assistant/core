@@ -23,8 +23,9 @@ from homeassistant.const import (
     CONF_LONGITUDE,
     CONF_RADIUS,
     EVENT_HOMEASSISTANT_START,
-    LENGTH_KILOMETERS,
+    UnitOfLength,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -69,7 +70,7 @@ def _generate_mock_feed_entry(
     return feed_entry
 
 
-async def test_setup(hass):
+async def test_setup(hass: HomeAssistant) -> None:
     """Test the general setup of the platform."""
     # Set up some mock feed entries for this test.
     mock_entry_1 = _generate_mock_feed_entry(
@@ -124,7 +125,7 @@ async def test_setup(hass):
                     2018, 9, 22, 8, 10, tzinfo=datetime.timezone.utc
                 ),
                 ATTR_STATUS: "Status 1",
-                ATTR_UNIT_OF_MEASUREMENT: LENGTH_KILOMETERS,
+                ATTR_UNIT_OF_MEASUREMENT: UnitOfLength.KILOMETERS,
                 ATTR_SOURCE: "qld_bushfire",
                 ATTR_ICON: "mdi:fire",
             }
@@ -138,7 +139,7 @@ async def test_setup(hass):
                 ATTR_LATITUDE: 38.1,
                 ATTR_LONGITUDE: -3.1,
                 ATTR_FRIENDLY_NAME: "Title 2",
-                ATTR_UNIT_OF_MEASUREMENT: LENGTH_KILOMETERS,
+                ATTR_UNIT_OF_MEASUREMENT: UnitOfLength.KILOMETERS,
                 ATTR_SOURCE: "qld_bushfire",
                 ATTR_ICON: "mdi:fire",
             }
@@ -152,7 +153,7 @@ async def test_setup(hass):
                 ATTR_LATITUDE: 38.2,
                 ATTR_LONGITUDE: -3.2,
                 ATTR_FRIENDLY_NAME: "Title 3",
-                ATTR_UNIT_OF_MEASUREMENT: LENGTH_KILOMETERS,
+                ATTR_UNIT_OF_MEASUREMENT: UnitOfLength.KILOMETERS,
                 ATTR_SOURCE: "qld_bushfire",
                 ATTR_ICON: "mdi:fire",
             }
@@ -188,7 +189,7 @@ async def test_setup(hass):
             assert len(all_states) == 0
 
 
-async def test_setup_with_custom_location(hass):
+async def test_setup_with_custom_location(hass: HomeAssistant) -> None:
     """Test the setup with a custom location."""
     # Set up some mock feed entries for this test.
     mock_entry_1 = _generate_mock_feed_entry(

@@ -5,7 +5,7 @@ import pytest
 
 from homeassistant import setup
 from homeassistant.const import Platform
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import discovery
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
@@ -24,7 +24,7 @@ def mock_setup_component():
         yield mock
 
 
-async def test_listen(hass, mock_setup_component):
+async def test_listen(hass: HomeAssistant, mock_setup_component) -> None:
     """Test discovery listen/discover combo."""
     calls_single = []
 
@@ -50,7 +50,7 @@ async def test_listen(hass, mock_setup_component):
     assert calls_single[0] == ("test service", "discovery info")
 
 
-async def test_platform(hass, mock_setup_component):
+async def test_platform(hass: HomeAssistant, mock_setup_component) -> None:
     """Test discover platform method."""
     calls = []
 
@@ -104,7 +104,7 @@ async def test_platform(hass, mock_setup_component):
     assert len(calls) == 1
 
 
-async def test_circular_import(hass):
+async def test_circular_import(hass: HomeAssistant) -> None:
     """Test we don't break doing circular import.
 
     This test will have test_component discover the switch.test_circular
@@ -155,7 +155,7 @@ async def test_circular_import(hass):
     assert "switch" in hass.config.components
 
 
-async def test_1st_discovers_2nd_component(hass):
+async def test_1st_discovers_2nd_component(hass: HomeAssistant) -> None:
     """Test that we don't break if one component discovers the other.
 
     If the first component fires a discovery event to set up the
@@ -166,7 +166,6 @@ async def test_1st_discovers_2nd_component(hass):
 
     async def component1_setup(hass, config):
         """Set up mock component."""
-        print("component1 setup")
         await discovery.async_discover(
             hass, "test_component2", {}, "test_component2", {}
         )

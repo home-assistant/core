@@ -7,6 +7,7 @@ import homeassistant.components.automation as automation
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.homekit_controller.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
@@ -17,10 +18,13 @@ from tests.common import (
     async_get_device_automations,
     async_mock_service,
 )
-from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa: F401
 
 
-# pylint: disable=redefined-outer-name
+@pytest.fixture(autouse=True, name="stub_blueprint_populate")
+def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
+    """Stub copying the blueprints to the config folder."""
+
+
 @pytest.fixture
 def calls(hass):
     """Track calls to a mock service."""
@@ -82,7 +86,7 @@ def create_doorbell(accessory):
     battery.add_char(CharacteristicsTypes.BATTERY_LEVEL)
 
 
-async def test_enumerate_remote(hass, utcnow):
+async def test_enumerate_remote(hass: HomeAssistant, utcnow) -> None:
     """Test that remote is correctly enumerated."""
     await setup_test_component(hass, create_remote)
 
@@ -130,7 +134,7 @@ async def test_enumerate_remote(hass, utcnow):
     assert_lists_same(triggers, expected)
 
 
-async def test_enumerate_button(hass, utcnow):
+async def test_enumerate_button(hass: HomeAssistant, utcnow) -> None:
     """Test that a button is correctly enumerated."""
     await setup_test_component(hass, create_button)
 
@@ -177,7 +181,7 @@ async def test_enumerate_button(hass, utcnow):
     assert_lists_same(triggers, expected)
 
 
-async def test_enumerate_doorbell(hass, utcnow):
+async def test_enumerate_doorbell(hass: HomeAssistant, utcnow) -> None:
     """Test that a button is correctly enumerated."""
     await setup_test_component(hass, create_doorbell)
 
@@ -224,7 +228,7 @@ async def test_enumerate_doorbell(hass, utcnow):
     assert_lists_same(triggers, expected)
 
 
-async def test_handle_events(hass, utcnow, calls):
+async def test_handle_events(hass: HomeAssistant, utcnow, calls) -> None:
     """Test that events are handled."""
     helper = await setup_test_component(hass, create_remote)
 
@@ -341,7 +345,7 @@ async def test_handle_events(hass, utcnow, calls):
     assert len(calls) == 2
 
 
-async def test_handle_events_late_setup(hass, utcnow, calls):
+async def test_handle_events_late_setup(hass: HomeAssistant, utcnow, calls) -> None:
     """Test that events are handled when setup happens after startup."""
     helper = await setup_test_component(hass, create_remote)
 

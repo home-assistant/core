@@ -1,7 +1,0 @@
-{
-    "config": {
-        "error": {
-            "not_supported": "Apenas a API PrusaLink v2 \u00e9 suportada"
-        }
-    }
-}

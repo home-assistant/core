@@ -14,11 +14,11 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
+    EntityCategory,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry
-from homeassistant.helpers.entity import EntityCategory
-from homeassistant.util import dt
+from homeassistant.helpers import entity_registry as er
+from homeassistant.util import dt as dt_util
 
 from . import configure_integration
 from .const import PLCNET_ATTACHED
@@ -28,7 +28,7 @@ from tests.common import async_fire_time_changed
 
 
 @pytest.mark.usefixtures("mock_device")
-async def test_binary_sensor_setup(hass: HomeAssistant):
+async def test_binary_sensor_setup(hass: HomeAssistant) -> None:
     """Test default setup of the binary sensor component."""
     entry = configure_integration(hass)
     device_name = entry.title.replace(" ", "_").lower()
@@ -41,13 +41,13 @@ async def test_binary_sensor_setup(hass: HomeAssistant):
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_update_attached_to_router(hass: HomeAssistant, mock_device: MockDevice):
+async def test_update_attached_to_router(
+    hass: HomeAssistant, mock_device: MockDevice, entity_registry: er.EntityRegistry
+) -> None:
     """Test state change of a attached_to_router binary sensor device."""
     entry = configure_integration(hass)
     device_name = entry.title.replace(" ", "_").lower()
     state_key = f"{DOMAIN}.{device_name}_{CONNECTED_TO_ROUTER}"
-
-    er = entity_registry.async_get(hass)
 
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
@@ -57,13 +57,16 @@ async def test_update_attached_to_router(hass: HomeAssistant, mock_device: MockD
     assert state.state == STATE_OFF
     assert state.attributes[ATTR_FRIENDLY_NAME] == f"{entry.title} Connected to router"
 
-    assert er.async_get(state_key).entity_category == EntityCategory.DIAGNOSTIC
+    assert (
+        entity_registry.async_get(state_key).entity_category
+        == EntityCategory.DIAGNOSTIC
+    )
 
     # Emulate device failure
     mock_device.plcnet.async_get_network_overview = AsyncMock(
         side_effect=DeviceUnavailable
     )
-    async_fire_time_changed(hass, dt.utcnow() + LONG_UPDATE_INTERVAL)
+    async_fire_time_changed(hass, dt_util.utcnow() + LONG_UPDATE_INTERVAL)
     await hass.async_block_till_done()
 
     state = hass.states.get(state_key)
@@ -74,7 +77,7 @@ async def test_update_attached_to_router(hass: HomeAssistant, mock_device: MockD
     mock_device.plcnet.async_get_network_overview = AsyncMock(
         return_value=PLCNET_ATTACHED
     )
-    async_fire_time_changed(hass, dt.utcnow() + LONG_UPDATE_INTERVAL)
+    async_fire_time_changed(hass, dt_util.utcnow() + LONG_UPDATE_INTERVAL)
     await hass.async_block_till_done()
 
     state = hass.states.get(state_key)

@@ -12,10 +12,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import entity_registry as er, issue_registry as ir
-from homeassistant.helpers.issue_registry import IssueSeverity
-
-from .const import DOMAIN
+from homeassistant.helpers import entity_registry as er
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,23 +30,6 @@ async def async_migrate_data(
     await async_migrate_device_ids(hass, entry, protect)
     _LOGGER.debug("Completed Migrate: async_migrate_device_ids")
 
-    entity_registry = er.async_get(hass)
-    for entity in er.async_entries_for_config_entry(entity_registry, entry.entry_id):
-        if (
-            entity.domain == Platform.SENSOR
-            and entity.disabled_by is None
-            and "detected_object" in entity.unique_id
-        ):
-            ir.async_create_issue(
-                hass,
-                DOMAIN,
-                "deprecate_smart_sensor",
-                is_fixable=False,
-                breaks_in_ha_version="2023.2.0",
-                severity=IssueSeverity.WARNING,
-                translation_key="deprecate_smart_sensor",
-            )
-
 
 async def async_get_bootstrap(protect: ProtectApiClient) -> Bootstrap:
     """Get UniFi Protect bootstrap or raise appropriate HA error."""
@@ -65,8 +45,7 @@ async def async_get_bootstrap(protect: ProtectApiClient) -> Bootstrap:
 async def async_migrate_buttons(
     hass: HomeAssistant, entry: ConfigEntry, protect: ProtectApiClient
 ) -> None:
-    """
-    Migrate existing Reboot button unique IDs from {device_id} to {deivce_id}_reboot.
+    """Migrate existing Reboot button unique IDs from {device_id} to {deivce_id}_reboot.
 
     This allows for additional types of buttons that are outside of just a reboot button.
 
@@ -117,8 +96,7 @@ async def async_migrate_buttons(
 async def async_migrate_device_ids(
     hass: HomeAssistant, entry: ConfigEntry, protect: ProtectApiClient
 ) -> None:
-    """
-    Migrate unique IDs from {device_id}_{name} format to {mac}_{name} format.
+    """Migrate unique IDs from {device_id}_{name} format to {mac}_{name} format.
 
     This makes devices persist better with in HA. Anything a device is unadopted/readopted or
     the Protect instance has to rebuild the disk array, the device IDs of Protect devices
@@ -166,7 +144,10 @@ async def async_migrate_device_ids(
             registry.async_update_entity(entity.entity_id, new_unique_id=new_unique_id)
         except ValueError as err:
             _LOGGER.warning(
-                "Could not migrate entity %s (old unique_id: %s, new unique_id: %s): %s",
+                (
+                    "Could not migrate entity %s (old unique_id: %s, new unique_id:"
+                    " %s): %s"
+                ),
                 entity.entity_id,
                 entity.unique_id,
                 new_unique_id,

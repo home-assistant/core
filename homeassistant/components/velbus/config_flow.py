@@ -19,7 +19,7 @@ from .const import DOMAIN
 class VelbusConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
-    VERSION = 1
+    VERSION = 2
 
     def __init__(self) -> None:
         """Initialize the velbus config flow."""
@@ -74,9 +74,7 @@ class VelbusConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(
             f"{discovery_info.vid}:{discovery_info.pid}_{discovery_info.serial_number}_{discovery_info.manufacturer}_{discovery_info.description}"
         )
-        dev_path = await self.hass.async_add_executor_job(
-            usb.get_serial_by_id, discovery_info.device
-        )
+        dev_path = discovery_info.device
         # check if this device is not already configured
         self._async_abort_entries_match({CONF_PORT: dev_path})
         # check if we can make a valid velbus connection

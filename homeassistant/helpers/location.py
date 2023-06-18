@@ -50,8 +50,11 @@ def find_coordinates(
 ) -> str | None:
     """Try to resolve the a location from a supplied name or entity_id.
 
-    Will recursively resolve an entity if pointed to by the state of the supplied entity.
-    Returns coordinates in the form of '90.000,180.000', an address or the state of the last resolved entity.
+    Will recursively resolve an entity if pointed to by the state of the supplied
+    entity.
+
+    Returns coordinates in the form of '90.000,180.000', an address or
+    the state of the last resolved entity.
     """
     # Check if a friendly name of a zone was supplied
     if (zone_coords := resolve_zone(hass, name)) is not None:
@@ -70,7 +73,9 @@ def find_coordinates(
     zone_entity = hass.states.get(f"zone.{entity_state.state}")
     if has_location(zone_entity):  # type: ignore[arg-type]
         _LOGGER.debug(
-            "%s is in %s, getting zone location", name, zone_entity.entity_id  # type: ignore[union-attr]
+            "%s is in %s, getting zone location",
+            name,
+            zone_entity.entity_id,  # type: ignore[union-attr]
         )
         return _get_location_from_attributes(zone_entity)  # type: ignore[arg-type]
 
@@ -84,7 +89,10 @@ def find_coordinates(
     recursion_history.append(name)
     if entity_state.state in recursion_history:
         _LOGGER.error(
-            "Circular reference detected while trying to find coordinates of an entity. The state of %s has already been checked",
+            (
+                "Circular reference detected while trying to find coordinates of an"
+                " entity. The state of %s has already been checked"
+            ),
             entity_state.state,
         )
         return None
@@ -94,12 +102,16 @@ def find_coordinates(
         _LOGGER.debug("Resolving nested entity_id: %s", entity_state.state)
         return find_coordinates(hass, entity_state.state, recursion_history)
 
-    # Might be an address, coordinates or anything else. This has to be checked by the caller.
+    # Might be an address, coordinates or anything else.
+    # This has to be checked by the caller.
     return entity_state.state
 
 
 def resolve_zone(hass: HomeAssistant, zone_name: str) -> str | None:
-    """Get a lat/long from a zones friendly_name or None if no zone is found by that friendly_name."""
+    """Get a lat/long from a zones friendly_name.
+
+    None is returned if no zone is found by that friendly_name.
+    """
     states = hass.states.async_all("zone")
     for state in states:
         if state.name == zone_name:

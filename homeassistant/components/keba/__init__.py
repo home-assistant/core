@@ -235,7 +235,9 @@ class KebaHandler(KebaKeContact):
             self._set_fast_polling()
         except (KeyError, ValueError) as ex:
             _LOGGER.warning(
-                "Values are not correct for: failsafe_timeout, failsafe_fallback and/or "
-                "failsafe_persist: %s",
+                (
+                    "Values are not correct for: failsafe_timeout, failsafe_fallback"
+                    " and/or failsafe_persist: %s"
+                ),
                 ex,
             )

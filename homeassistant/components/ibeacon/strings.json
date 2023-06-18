@@ -2,7 +2,7 @@
   "config": {
     "step": {
       "user": {
-        "description": "Do you want to setup iBeacon Tracker?"
+        "description": "Do you want to set up iBeacon Tracker?"
       }
     },
     "abort": {

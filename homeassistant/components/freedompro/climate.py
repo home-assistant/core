@@ -15,7 +15,7 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, CONF_API_KEY, TEMP_CELSIUS
+from homeassistant.const import ATTR_TEMPERATURE, CONF_API_KEY, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.entity import DeviceInfo
@@ -60,8 +60,9 @@ async def async_setup_entry(
 class Device(CoordinatorEntity[FreedomproDataUpdateCoordinator], ClimateEntity):
     """Representation of an Freedompro climate."""
 
+    _attr_has_entity_name = True
     _attr_hvac_modes = SUPPORTED_HVAC_MODES
-    _attr_temperature_unit = TEMP_CELSIUS
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
     def __init__(
         self,
@@ -74,7 +75,7 @@ class Device(CoordinatorEntity[FreedomproDataUpdateCoordinator], ClimateEntity):
         super().__init__(coordinator)
         self._session = session
         self._api_key = api_key
-        self._attr_name = device["name"]
+        self._attr_name = None
         self._attr_unique_id = device["uid"]
         self._characteristics = device["characteristics"]
         self._attr_device_info = DeviceInfo(
@@ -83,7 +84,7 @@ class Device(CoordinatorEntity[FreedomproDataUpdateCoordinator], ClimateEntity):
             },
             manufacturer="Freedompro",
             model=device["type"],
-            name=self.name,
+            name=device["name"],
         )
         self._attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
         self._attr_current_temperature = 0

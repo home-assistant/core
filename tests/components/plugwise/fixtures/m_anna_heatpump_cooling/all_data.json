@@ -30,13 +30,14 @@
         "flame_state": false
       },
       "sensors": {
-        "water_temperature": 29.1,
-        "dhw_temperature": 46.3,
+        "water_temperature": 22.7,
+        "domestic_hot_water_setpoint": 60.0,
+        "dhw_temperature": 41.5,
         "intended_boiler_temperature": 0.0,
-        "modulation_level": 52,
-        "return_temperature": 25.1,
+        "modulation_level": 40,
+        "return_temperature": 23.8,
         "water_pressure": 1.57,
-        "outdoor_air_temperature": 3.0
+        "outdoor_air_temperature": 28.0
       },
       "switches": {
         "dhw_cm_switch": false

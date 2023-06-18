@@ -3,7 +3,7 @@
 from aiomusiccast.capabilities import EntityType
 
 from homeassistant.components.media_player import MediaClass, RepeatMode
-from homeassistant.helpers.entity import EntityCategory
+from homeassistant.const import EntityCategory
 
 DOMAIN = "yamaha_musiccast"
 
@@ -45,13 +45,13 @@ ENTITY_CATEGORY_MAPPING = {
     EntityType.DIAGNOSTIC: EntityCategory.DIAGNOSTIC,
 }
 
-DEVICE_CLASS_MAPPING = {
-    "DIMMER": "yamaha_musiccast__dimmer",
-    "zone_SLEEP": "yamaha_musiccast__zone_sleep",
-    "zone_TONE_CONTROL_mode": "yamaha_musiccast__zone_tone_control_mode",
-    "zone_SURR_DECODER_TYPE": "yamaha_musiccast__zone_surr_decoder_type",
-    "zone_EQUALIZER_mode": "yamaha_musiccast__zone_equalizer_mode",
-    "zone_LINK_AUDIO_QUALITY": "yamaha_musiccast__zone_link_audio_quality",
-    "zone_LINK_CONTROL": "yamaha_musiccast__zone_link_control",
-    "zone_LINK_AUDIO_DELAY": "yamaha_musiccast__zone_link_audio_delay",
+TRANSLATION_KEY_MAPPING = {
+    "DIMMER": "dimmer",
+    "zone_SLEEP": "zone_sleep",
+    "zone_TONE_CONTROL_mode": "zone_tone_control_mode",
+    "zone_SURR_DECODER_TYPE": "zone_surr_decoder_type",
+    "zone_EQUALIZER_mode": "zone_equalizer_mode",
+    "zone_LINK_AUDIO_QUALITY": "zone_link_audio_quality",
+    "zone_LINK_CONTROL": "zone_link_control",
+    "zone_LINK_AUDIO_DELAY": "zone_link_audio_delay",
 }

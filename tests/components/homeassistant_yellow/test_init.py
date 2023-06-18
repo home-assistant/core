@@ -13,7 +13,7 @@ from tests.common import MockConfigEntry, MockModule, mock_integration
 
 
 @pytest.mark.parametrize(
-    "onboarded, num_entries, num_flows", ((False, 1, 0), (True, 0, 1))
+    ("onboarded", "num_entries", "num_flows"), ((False, 1, 0), (True, 0, 1))
 )
 async def test_setup_entry(
     hass: HomeAssistant, onboarded, num_entries, num_flows, addon_store_info

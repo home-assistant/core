@@ -60,7 +60,9 @@ class IOSSensor(SensorEntity):
 
     _attr_should_poll = False
 
-    def __init__(self, device_name, device, description: SensorEntityDescription):
+    def __init__(
+        self, device_name, device, description: SensorEntityDescription
+    ) -> None:
         """Initialize the sensor."""
         self.entity_description = description
         self._device = device

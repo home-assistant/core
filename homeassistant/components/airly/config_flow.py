@@ -46,7 +46,7 @@ class AirlyFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     user_input["longitude"],
                 )
                 if not location_point_valid:
-                    await test_location(
+                    location_nearest_valid = await test_location(
                         websession,
                         user_input["api_key"],
                         user_input["latitude"],
@@ -60,6 +60,8 @@ class AirlyFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     errors["base"] = "wrong_location"
             else:
                 if not location_point_valid:
+                    if not location_nearest_valid:
+                        return self.async_abort(reason="wrong_location")
                     use_nearest = True
                 return self.async_create_entry(
                     title=user_input[CONF_NAME],

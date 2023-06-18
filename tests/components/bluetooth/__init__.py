@@ -17,6 +17,7 @@ from homeassistant.components.bluetooth import (
     async_get_advertisement_callback,
     models,
 )
+from homeassistant.components.bluetooth.base_scanner import BaseHaScanner
 from homeassistant.components.bluetooth.manager import BluetoothManager
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -32,6 +33,7 @@ __all__ = (
     "patch_all_discovered_devices",
     "patch_discovered_devices",
     "generate_advertisement_data",
+    "generate_ble_device",
     "MockBleakClient",
 )
 
@@ -45,6 +47,12 @@ ADVERTISEMENT_DATA_DEFAULTS = {
     "tx_power": -127,
 }
 
+BLE_DEVICE_DEFAULTS = {
+    "name": None,
+    "rssi": -127,
+    "details": None,
+}
+
 
 def generate_advertisement_data(**kwargs: Any) -> AdvertisementData:
     """Generate advertisement data with defaults."""
@@ -52,6 +60,28 @@ def generate_advertisement_data(**kwargs: Any) -> AdvertisementData:
     for key, value in ADVERTISEMENT_DATA_DEFAULTS.items():
         new.setdefault(key, value)
     return AdvertisementData(**new)
+
+
+def generate_ble_device(
+    address: str | None = None,
+    name: str | None = None,
+    details: Any | None = None,
+    rssi: int | None = None,
+    **kwargs: Any,
+) -> BLEDevice:
+    """Generate a BLEDevice with defaults."""
+    new = kwargs.copy()
+    if address is not None:
+        new["address"] = address
+    if name is not None:
+        new["name"] = name
+    if details is not None:
+        new["details"] = details
+    if rssi is not None:
+        new["rssi"] = rssi
+    for key, value in BLE_DEVICE_DEFAULTS.items():
+        new.setdefault(key, value)
+    return BLEDevice(**new)
 
 
 def _get_manager() -> BluetoothManager:
@@ -125,7 +155,7 @@ def inject_bluetooth_service_info_bleak(
         service_uuids=info.service_uuids,
         rssi=info.rssi,
     )
-    device = BLEDevice(  # type: ignore[no-untyped-call]
+    device = generate_ble_device(  # type: ignore[no-untyped-call]
         address=info.address,
         name=info.name,
         details={},
@@ -151,7 +181,7 @@ def inject_bluetooth_service_info(
         service_uuids=info.service_uuids,
         rssi=info.rssi,
     )
-    device = BLEDevice(  # type: ignore[no-untyped-call]
+    device = generate_ble_device(  # type: ignore[no-untyped-call]
         address=info.address,
         name=info.name,
         details={},
@@ -219,3 +249,23 @@ class MockBleakClient(BleakClient):
     async def get_services(self, *args, **kwargs):
         """Mock get_services."""
         return []
+
+    async def clear_cache(self, *args, **kwargs):
+        """Mock clear_cache."""
+        return True
+
+
+class FakeScanner(BaseHaScanner):
+    """Fake scanner."""
+
+    @property
+    def discovered_devices(self) -> list[BLEDevice]:
+        """Return a list of discovered devices."""
+        return []
+
+    @property
+    def discovered_devices_and_advertisement_data(
+        self,
+    ) -> dict[str, tuple[BLEDevice, AdvertisementData]]:
+        """Return a list of discovered devices and their advertisement data."""
+        return {}

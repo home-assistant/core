@@ -180,7 +180,10 @@ class RecorderOutput(StreamOutput):
                 write_transform_matrix_and_rename(video_path)
             except FileNotFoundError:
                 _LOGGER.error(
-                    "Error writing to '%s'. There are likely multiple recordings writing to the same file",
+                    (
+                        "Error writing to '%s'. There are likely multiple recordings"
+                        " writing to the same file"
+                    ),
                     video_path,
                 )
 

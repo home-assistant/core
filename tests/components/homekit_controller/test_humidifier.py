@@ -3,6 +3,7 @@ from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.services import ServicesTypes
 
 from homeassistant.components.humidifier import DOMAIN, MODE_AUTO, MODE_NORMAL
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .common import get_next_aid, setup_test_component
@@ -62,7 +63,7 @@ def create_dehumidifier_service(accessory):
     return service
 
 
-async def test_humidifier_active_state(hass, utcnow):
+async def test_humidifier_active_state(hass: HomeAssistant, utcnow) -> None:
     """Test that we can turn a HomeKit humidifier on and off again."""
     helper = await setup_test_component(hass, create_humidifier_service)
 
@@ -85,7 +86,7 @@ async def test_humidifier_active_state(hass, utcnow):
     )
 
 
-async def test_dehumidifier_active_state(hass, utcnow):
+async def test_dehumidifier_active_state(hass: HomeAssistant, utcnow) -> None:
     """Test that we can turn a HomeKit dehumidifier on and off again."""
     helper = await setup_test_component(hass, create_dehumidifier_service)
 
@@ -108,7 +109,7 @@ async def test_dehumidifier_active_state(hass, utcnow):
     )
 
 
-async def test_humidifier_read_humidity(hass, utcnow):
+async def test_humidifier_read_humidity(hass: HomeAssistant, utcnow) -> None:
     """Test that we can read the state of a HomeKit humidifier accessory."""
     helper = await setup_test_component(hass, create_humidifier_service)
 
@@ -142,7 +143,7 @@ async def test_humidifier_read_humidity(hass, utcnow):
     assert state.state == "off"
 
 
-async def test_dehumidifier_read_humidity(hass, utcnow):
+async def test_dehumidifier_read_humidity(hass: HomeAssistant, utcnow) -> None:
     """Test that we can read the state of a HomeKit dehumidifier accessory."""
     helper = await setup_test_component(hass, create_dehumidifier_service)
 
@@ -175,7 +176,7 @@ async def test_dehumidifier_read_humidity(hass, utcnow):
     assert state.attributes["humidity"] == 40
 
 
-async def test_humidifier_set_humidity(hass, utcnow):
+async def test_humidifier_set_humidity(hass: HomeAssistant, utcnow) -> None:
     """Test that we can set the state of a HomeKit humidifier accessory."""
     helper = await setup_test_component(hass, create_humidifier_service)
 
@@ -191,7 +192,7 @@ async def test_humidifier_set_humidity(hass, utcnow):
     )
 
 
-async def test_dehumidifier_set_humidity(hass, utcnow):
+async def test_dehumidifier_set_humidity(hass: HomeAssistant, utcnow) -> None:
     """Test that we can set the state of a HomeKit dehumidifier accessory."""
     helper = await setup_test_component(hass, create_dehumidifier_service)
 
@@ -207,7 +208,7 @@ async def test_dehumidifier_set_humidity(hass, utcnow):
     )
 
 
-async def test_humidifier_set_mode(hass, utcnow):
+async def test_humidifier_set_mode(hass: HomeAssistant, utcnow) -> None:
     """Test that we can set the mode of a HomeKit humidifier accessory."""
     helper = await setup_test_component(hass, create_humidifier_service)
 
@@ -240,7 +241,7 @@ async def test_humidifier_set_mode(hass, utcnow):
     )
 
 
-async def test_dehumidifier_set_mode(hass, utcnow):
+async def test_dehumidifier_set_mode(hass: HomeAssistant, utcnow) -> None:
     """Test that we can set the mode of a HomeKit dehumidifier accessory."""
     helper = await setup_test_component(hass, create_dehumidifier_service)
 
@@ -273,7 +274,7 @@ async def test_dehumidifier_set_mode(hass, utcnow):
     )
 
 
-async def test_humidifier_read_only_mode(hass, utcnow):
+async def test_humidifier_read_only_mode(hass: HomeAssistant, utcnow) -> None:
     """Test that we can read the state of a HomeKit humidifier accessory."""
     helper = await setup_test_component(hass, create_humidifier_service)
 
@@ -313,7 +314,7 @@ async def test_humidifier_read_only_mode(hass, utcnow):
     assert state.attributes["mode"] == "normal"
 
 
-async def test_dehumidifier_read_only_mode(hass, utcnow):
+async def test_dehumidifier_read_only_mode(hass: HomeAssistant, utcnow) -> None:
     """Test that we can read the state of a HomeKit dehumidifier accessory."""
     helper = await setup_test_component(hass, create_dehumidifier_service)
 
@@ -353,7 +354,7 @@ async def test_dehumidifier_read_only_mode(hass, utcnow):
     assert state.attributes["mode"] == "normal"
 
 
-async def test_humidifier_target_humidity_modes(hass, utcnow):
+async def test_humidifier_target_humidity_modes(hass: HomeAssistant, utcnow) -> None:
     """Test that we can read the state of a HomeKit humidifier accessory."""
     helper = await setup_test_component(hass, create_humidifier_service)
 
@@ -396,7 +397,7 @@ async def test_humidifier_target_humidity_modes(hass, utcnow):
     assert state.attributes["humidity"] == 37
 
 
-async def test_dehumidifier_target_humidity_modes(hass, utcnow):
+async def test_dehumidifier_target_humidity_modes(hass: HomeAssistant, utcnow) -> None:
     """Test that we can read the state of a HomeKit dehumidifier accessory."""
     helper = await setup_test_component(hass, create_dehumidifier_service)
 
@@ -439,7 +440,7 @@ async def test_dehumidifier_target_humidity_modes(hass, utcnow):
     assert state.attributes["humidity"] == 73
 
 
-async def test_migrate_entity_ids(hass, utcnow):
+async def test_migrate_entity_ids(hass: HomeAssistant, utcnow) -> None:
     """Test that we can migrate humidifier entity ids."""
     aid = get_next_aid()
 

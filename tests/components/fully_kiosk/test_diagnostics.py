@@ -1,8 +1,6 @@
 """Test the Fully Kiosk Browser diagnostics."""
 from unittest.mock import MagicMock
 
-from aiohttp import ClientSession
-
 from homeassistant.components.diagnostics import REDACTED
 from homeassistant.components.fully_kiosk.const import DOMAIN
 from homeassistant.components.fully_kiosk.diagnostics import (
@@ -14,11 +12,12 @@ from homeassistant.helpers import device_registry as dr
 
 from tests.common import MockConfigEntry
 from tests.components.diagnostics import get_diagnostics_for_device
+from tests.typing import ClientSessionGenerator
 
 
 async def test_diagnostics(
     hass: HomeAssistant,
-    hass_client: ClientSession,
+    hass_client: ClientSessionGenerator,
     mock_fully_kiosk: MagicMock,
     init_integration: MockConfigEntry,
 ) -> None:

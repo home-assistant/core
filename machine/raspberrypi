@@ -3,8 +3,7 @@ FROM homeassistant/armhf-homeassistant:$BUILD_VERSION
 
 RUN apk --no-cache add \
         raspberrypi \
-        raspberrypi-libs \
-        usbutils
+        raspberrypi-libs
 
 ##
 # Set symlinks for raspberry pi camera binaries.

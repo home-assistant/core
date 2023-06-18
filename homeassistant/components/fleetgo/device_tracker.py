@@ -53,7 +53,7 @@ def setup_scanner(
 class FleetGoDeviceScanner:
     """Define a scanner for the FleetGO platform."""
 
-    def __init__(self, config, see: SeeCallback):
+    def __init__(self, config, see: SeeCallback) -> None:
         """Initialize FleetGoDeviceScanner."""
         self._include = config.get(CONF_INCLUDE)
         self._see = see
@@ -86,7 +86,6 @@ class FleetGoDeviceScanner:
 
             for device in devices:
                 if not self._include or device.license_plate in self._include:
-
                     if device.active or device.current_address is None:
                         device.get_map_details()
 

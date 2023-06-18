@@ -24,8 +24,7 @@ async def test_full_user_flow(
     )
 
     assert result.get("type") == FlowResultType.FORM
-    assert result.get("step_id") == SOURCE_USER
-    assert "flow_id" in result
+    assert result.get("step_id") == "user"
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -61,8 +60,7 @@ async def test_full_flow_with_authentication_error(
     )
 
     assert result.get("type") == FlowResultType.FORM
-    assert result.get("step_id") == SOURCE_USER
-    assert "flow_id" in result
+    assert result.get("step_id") == "user"
 
     mock_tailscale_config_flow.devices.side_effect = TailscaleAuthenticationError
     result2 = await hass.config_entries.flow.async_configure(
@@ -74,9 +72,8 @@ async def test_full_flow_with_authentication_error(
     )
 
     assert result2.get("type") == FlowResultType.FORM
-    assert result2.get("step_id") == SOURCE_USER
+    assert result2.get("step_id") == "user"
     assert result2.get("errors") == {"base": "invalid_auth"}
-    assert "flow_id" in result2
 
     assert len(mock_setup_entry.mock_calls) == 0
     assert len(mock_tailscale_config_flow.devices.mock_calls) == 1
@@ -142,7 +139,6 @@ async def test_reauth_flow(
     )
     assert result.get("type") == FlowResultType.FORM
     assert result.get("step_id") == "reauth_confirm"
-    assert "flow_id" in result
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -185,7 +181,6 @@ async def test_reauth_with_authentication_error(
     )
     assert result.get("type") == FlowResultType.FORM
     assert result.get("step_id") == "reauth_confirm"
-    assert "flow_id" in result
 
     mock_tailscale_config_flow.devices.side_effect = TailscaleAuthenticationError
     result2 = await hass.config_entries.flow.async_configure(
@@ -197,7 +192,6 @@ async def test_reauth_with_authentication_error(
     assert result2.get("type") == FlowResultType.FORM
     assert result2.get("step_id") == "reauth_confirm"
     assert result2.get("errors") == {"base": "invalid_auth"}
-    assert "flow_id" in result2
 
     assert len(mock_setup_entry.mock_calls) == 0
     assert len(mock_tailscale_config_flow.devices.mock_calls) == 1
@@ -239,7 +233,6 @@ async def test_reauth_api_error(
     )
     assert result.get("type") == FlowResultType.FORM
     assert result.get("step_id") == "reauth_confirm"
-    assert "flow_id" in result
 
     mock_tailscale_config_flow.devices.side_effect = TailscaleConnectionError
     result2 = await hass.config_entries.flow.async_configure(

@@ -23,7 +23,9 @@ async def async_setup_entry(
 ) -> None:
     """Set up the light platform."""
 
-    coordinator = hass.data[DOMAIN][entry.entry_id][COORDINATOR]
+    coordinator: OmniLogicUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][
+        COORDINATOR
+    ]
     entities = []
 
     for item_id, item in coordinator.data.items():
@@ -94,9 +96,10 @@ class OmniLogicSwitch(OmniLogicEntity, SwitchEntity):
         """Return the on/off state of the switch."""
         state_int = 0
 
-        # The Omnilogic API has a significant delay in state reporting after calling for a
-        # change. This state delay will ensure that HA keeps an optimistic value of state
-        # during this period to improve the user experience and avoid confusion.
+        # The Omnilogic API has a significant delay in state reporting after
+        # calling for a change. This state delay will ensure that HA keeps an
+        # optimistic value of state during this period to improve the user
+        # experience and avoid confusion.
         if self._last_action < (time.time() - self._state_delay):
             state_int = int(self.coordinator.data[self._item_id][self._state_key])
 

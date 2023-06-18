@@ -16,7 +16,7 @@ from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
     ATTR_TEMPERATURE,
     PRECISION_HALVES,
-    TEMP_CELSIUS,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -70,7 +70,7 @@ class FritzboxThermostat(FritzBoxDeviceEntity, ClimateEntity):
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
     )
-    _attr_temperature_unit = TEMP_CELSIUS
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
     @property
     def current_temperature(self) -> float:
@@ -101,7 +101,7 @@ class FritzboxThermostat(FritzBoxDeviceEntity, ClimateEntity):
         await self.coordinator.async_refresh()
 
     @property
-    def hvac_mode(self) -> str:
+    def hvac_mode(self) -> HVACMode:
         """Return the current operation mode."""
         if self.data.target_temperature in (
             OFF_REPORT_SET_TEMPERATURE,

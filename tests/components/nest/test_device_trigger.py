@@ -233,7 +233,7 @@ async def test_no_triggers(
     assert triggers == []
 
 
-async def test_fires_on_camera_motion(hass, calls):
+async def test_fires_on_camera_motion(hass: HomeAssistant, calls) -> None:
     """Test camera_motion triggers firing."""
     assert await setup_automation(hass, DEVICE_ID, "camera_motion")
 
@@ -244,7 +244,7 @@ async def test_fires_on_camera_motion(hass, calls):
     assert calls[0].data == DATA_MESSAGE
 
 
-async def test_fires_on_camera_person(hass, calls):
+async def test_fires_on_camera_person(hass: HomeAssistant, calls) -> None:
     """Test camera_person triggers firing."""
     assert await setup_automation(hass, DEVICE_ID, "camera_person")
 
@@ -255,7 +255,7 @@ async def test_fires_on_camera_person(hass, calls):
     assert calls[0].data == DATA_MESSAGE
 
 
-async def test_fires_on_camera_sound(hass, calls):
+async def test_fires_on_camera_sound(hass: HomeAssistant, calls) -> None:
     """Test camera_person triggers firing."""
     assert await setup_automation(hass, DEVICE_ID, "camera_sound")
 
@@ -266,7 +266,7 @@ async def test_fires_on_camera_sound(hass, calls):
     assert calls[0].data == DATA_MESSAGE
 
 
-async def test_fires_on_doorbell_chime(hass, calls):
+async def test_fires_on_doorbell_chime(hass: HomeAssistant, calls) -> None:
     """Test doorbell_chime triggers firing."""
     assert await setup_automation(hass, DEVICE_ID, "doorbell_chime")
 
@@ -277,7 +277,7 @@ async def test_fires_on_doorbell_chime(hass, calls):
     assert calls[0].data == DATA_MESSAGE
 
 
-async def test_trigger_for_wrong_device_id(hass, calls):
+async def test_trigger_for_wrong_device_id(hass: HomeAssistant, calls) -> None:
     """Test for turn_on and turn_off triggers firing."""
     assert await setup_automation(hass, DEVICE_ID, "camera_motion")
 
@@ -291,7 +291,7 @@ async def test_trigger_for_wrong_device_id(hass, calls):
     assert len(calls) == 0
 
 
-async def test_trigger_for_wrong_event_type(hass, calls):
+async def test_trigger_for_wrong_event_type(hass: HomeAssistant, calls) -> None:
     """Test for turn_on and turn_off triggers firing."""
     assert await setup_automation(hass, DEVICE_ID, "camera_motion")
 

@@ -23,6 +23,7 @@ from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
 )
+from homeassistant.util.enum import try_parse_enum
 
 from . import HomeAssistantBSBLANData
 from .const import ATTR_TARGET_TEMPERATURE, DOMAIN, LOGGER
@@ -64,10 +65,11 @@ async def async_setup_entry(
     )
 
 
-class BSBLANClimate(BSBLANEntity, CoordinatorEntity, ClimateEntity):
+class BSBLANClimate(
+    BSBLANEntity, CoordinatorEntity[DataUpdateCoordinator[State]], ClimateEntity
+):
     """Defines a BSBLAN climate device."""
 
-    coordinator: DataUpdateCoordinator[State]
     _attr_has_entity_name = True
     # Determine preset modes
     _attr_supported_features = (
@@ -80,7 +82,7 @@ class BSBLANClimate(BSBLANEntity, CoordinatorEntity, ClimateEntity):
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator,
+        coordinator: DataUpdateCoordinator[State],
         client: BSBLAN,
         device: Device,
         info: Info,
@@ -111,12 +113,11 @@ class BSBLANClimate(BSBLANEntity, CoordinatorEntity, ClimateEntity):
         return float(self.coordinator.data.target_temperature.value)
 
     @property
-    def hvac_mode(self) -> str:
+    def hvac_mode(self) -> HVACMode | None:
         """Return hvac operation ie. heat, cool mode."""
         if self.coordinator.data.hvac_mode.value == PRESET_ECO:
             return HVACMode.AUTO
-
-        return self.coordinator.data.hvac_mode.value
+        return try_parse_enum(HVACMode, self.coordinator.data.hvac_mode.value)
 
     @property
     def preset_mode(self) -> str | None:
@@ -128,7 +129,7 @@ class BSBLANClimate(BSBLANEntity, CoordinatorEntity, ClimateEntity):
             return PRESET_ECO
         return PRESET_NONE
 
-    async def async_set_hvac_mode(self, hvac_mode: str) -> None:
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set hvac mode."""
         await self.async_set_data(hvac_mode=hvac_mode)
 

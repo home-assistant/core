@@ -1,4 +1,6 @@
 """Test reproduce state for Alarm control panel."""
+import pytest
+
 from homeassistant.const import (
     SERVICE_ALARM_ARM_AWAY,
     SERVICE_ALARM_ARM_CUSTOM_BYPASS,
@@ -15,13 +17,15 @@ from homeassistant.const import (
     STATE_ALARM_DISARMED,
     STATE_ALARM_TRIGGERED,
 )
-from homeassistant.core import State
+from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.state import async_reproduce_state
 
 from tests.common import async_mock_service
 
 
-async def test_reproducing_states(hass, caplog):
+async def test_reproducing_states(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test reproducing Alarm control panel states."""
     hass.states.async_set(
         "alarm_control_panel.entity_armed_away", STATE_ALARM_ARMED_AWAY, {}

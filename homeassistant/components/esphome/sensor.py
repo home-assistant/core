@@ -1,7 +1,6 @@
 """Support for esphome sensors."""
 from __future__ import annotations
 
-from contextlib import suppress
 from datetime import datetime
 import math
 
@@ -22,14 +21,11 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.util import dt
+from homeassistant.util import dt as dt_util
+from homeassistant.util.enum import try_parse_enum
 
-from . import (
-    EsphomeEntity,
-    EsphomeEnumMapper,
-    esphome_state_property,
-    platform_async_setup_entry,
-)
+from . import EsphomeEntity, esphome_state_property, platform_async_setup_entry
+from .enum_mapper import EsphomeEnumMapper
 
 
 async def async_setup_entry(
@@ -85,7 +81,7 @@ class EsphomeSensor(EsphomeEntity[SensorInfo, SensorState], SensorEntity):
         if self._state.missing_state:
             return None
         if self.device_class == SensorDeviceClass.TIMESTAMP:
-            return dt.utc_from_timestamp(self._state.state)
+            return dt_util.utc_from_timestamp(self._state.state)
         return f"{self._state.state:.{self._static_info.accuracy_decimals}f}"
 
     @property
@@ -98,9 +94,7 @@ class EsphomeSensor(EsphomeEntity[SensorInfo, SensorState], SensorEntity):
     @property
     def device_class(self) -> SensorDeviceClass | None:
         """Return the class of this device, from component DEVICE_CLASSES."""
-        with suppress(ValueError):
-            return SensorDeviceClass(self._static_info.device_class)
-        return None
+        return try_parse_enum(SensorDeviceClass, self._static_info.device_class)
 
     @property
     def state_class(self) -> SensorStateClass | None:
@@ -113,7 +107,8 @@ class EsphomeSensor(EsphomeEntity[SensorInfo, SensorState], SensorEntity):
             state_class == EsphomeSensorStateClass.MEASUREMENT
             and reset_type == LastResetType.AUTO
         ):
-            # Legacy, last_reset_type auto was the equivalent to the TOTAL_INCREASING state class
+            # Legacy, last_reset_type auto was the equivalent to the
+            # TOTAL_INCREASING state class
             return SensorStateClass.TOTAL_INCREASING
         return _STATE_CLASSES.from_esphome(self._static_info.state_class)
 

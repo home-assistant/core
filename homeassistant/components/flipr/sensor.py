@@ -8,7 +8,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ELECTRIC_POTENTIAL_MILLIVOLT, PERCENTAGE, TEMP_CELSIUS
+from homeassistant.const import PERCENTAGE, UnitOfElectricPotential, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -19,7 +19,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="chlorine",
         name="Chlorine",
-        native_unit_of_measurement=ELECTRIC_POTENTIAL_MILLIVOLT,
+        native_unit_of_measurement=UnitOfElectricPotential.MILLIVOLT,
         icon="mdi:pool",
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -33,7 +33,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key="temperature",
         name="Water Temp",
         device_class=SensorDeviceClass.TEMPERATURE,
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
@@ -44,7 +44,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="red_ox",
         name="Red OX",
-        native_unit_of_measurement=ELECTRIC_POTENTIAL_MILLIVOLT,
+        native_unit_of_measurement=UnitOfElectricPotential.MILLIVOLT,
         icon="mdi:pool",
         state_class=SensorStateClass.MEASUREMENT,
     ),

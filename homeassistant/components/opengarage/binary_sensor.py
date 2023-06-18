@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import cast
 
 from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
@@ -11,6 +12,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import OpenGarageDataUpdateCoordinator
 from .const import DOMAIN
 from .entity import OpenGarageEntity
 
@@ -28,12 +30,14 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the OpenGarage binary sensors."""
-    open_garage_data_coordinator = hass.data[DOMAIN][entry.entry_id]
+    open_garage_data_coordinator: OpenGarageDataUpdateCoordinator = hass.data[DOMAIN][
+        entry.entry_id
+    ]
     async_add_entities(
         [
             OpenGarageBinarySensor(
                 open_garage_data_coordinator,
-                entry.unique_id,
+                cast(str, entry.unique_id),
                 description,
             )
             for description in SENSOR_TYPES
@@ -44,10 +48,15 @@ async def async_setup_entry(
 class OpenGarageBinarySensor(OpenGarageEntity, BinarySensorEntity):
     """Representation of a OpenGarage binary sensor."""
 
-    def __init__(self, open_garage_data_coordinator, device_id, description):
+    def __init__(
+        self,
+        coordinator: OpenGarageDataUpdateCoordinator,
+        device_id: str,
+        description: BinarySensorEntityDescription,
+    ) -> None:
         """Initialize the entity."""
         self._available = False
-        super().__init__(open_garage_data_coordinator, device_id, description)
+        super().__init__(coordinator, device_id, description)
 
     @property
     def available(self) -> bool:

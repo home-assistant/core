@@ -20,7 +20,7 @@ from homeassistant.const import (
     CONF_RADIUS,
     CONF_SCAN_INTERVAL,
     EVENT_HOMEASSISTANT_START,
-    LENGTH_KILOMETERS,
+    UnitOfLength,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import aiohttp_client
@@ -48,7 +48,7 @@ CONF_MINIMUM_MAGNITUDE = "minimum_magnitude"
 
 DEFAULT_MINIMUM_MAGNITUDE = 0.0
 DEFAULT_RADIUS_IN_KM = 50.0
-DEFAULT_UNIT_OF_MEASUREMENT = LENGTH_KILOMETERS
+DEFAULT_UNIT_OF_MEASUREMENT = UnitOfLength.KILOMETERS
 
 SCAN_INTERVAL = timedelta(minutes=5)
 
@@ -165,7 +165,9 @@ class UsgsEarthquakesFeedEntityManager:
             await self.async_update()
 
         # Trigger updates at regular intervals.
-        async_track_time_interval(self._hass, update, self._scan_interval)
+        async_track_time_interval(
+            self._hass, update, self._scan_interval, cancel_on_shutdown=True
+        )
         _LOGGER.debug("Feed entity manager initialized")
 
     async def async_update(self) -> None:
@@ -195,7 +197,7 @@ class UsgsEarthquakesFeedEntityManager:
 
 
 class UsgsEarthquakesEvent(GeolocationEvent):
-    """This represents an external event with USGS Earthquake data."""
+    """Represents an external event with USGS Earthquake data."""
 
     _attr_icon = "mdi:pulse"
     _attr_should_poll = False

@@ -9,7 +9,6 @@ import pytest
 from homeassistant.components.scrape.const import DEFAULT_SCAN_INTERVAL
 from homeassistant.components.sensor import (
     CONF_STATE_CLASS,
-    DOMAIN as SENSOR_DOMAIN,
     SensorDeviceClass,
     SensorStateClass,
 )
@@ -18,13 +17,13 @@ from homeassistant.const import (
     CONF_UNIT_OF_MEASUREMENT,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
-    TEMP_CELSIUS,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
-from . import MockRestData, return_config, return_integration_config
+from . import MockRestData, return_integration_config
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -51,68 +50,6 @@ async def test_scrape_sensor(hass: HomeAssistant) -> None:
 
     state = hass.states.get("sensor.ha_version")
     assert state.state == "Current Version: 2021.12.10"
-
-
-async def test_scrape_sensor_platform_yaml(hass: HomeAssistant) -> None:
-    """Test Scrape sensor load from sensor platform."""
-    config = {
-        SENSOR_DOMAIN: [
-            return_config(
-                select=".return",
-                name="Auth page",
-                username="user@secret.com",
-                password="12345678",
-                authentication="digest",
-            ),
-            return_config(
-                select=".return",
-                name="Auth page2",
-                username="user@secret.com",
-                password="12345678",
-                template="{{value}}",
-            ),
-        ]
-    }
-
-    mocker = MockRestData("test_scrape_sensor_authentication")
-    with patch(
-        "homeassistant.components.rest.RestData",
-        return_value=mocker,
-    ):
-        assert await async_setup_component(hass, SENSOR_DOMAIN, config)
-        await hass.async_block_till_done()
-
-    state = hass.states.get("sensor.auth_page")
-    assert state.state == "secret text"
-    state2 = hass.states.get("sensor.auth_page2")
-    assert state2.state == "secret text"
-
-
-async def test_scrape_sensor_platform_yaml_no_data(hass: HomeAssistant, caplog) -> None:
-    """Test Scrape sensor load from sensor platform fetching no data."""
-    config = {
-        SENSOR_DOMAIN: [
-            return_config(
-                select=".return",
-                name="Auth page",
-                username="user@secret.com",
-                password="12345678",
-                authentication="digest",
-            ),
-        ]
-    }
-
-    mocker = MockRestData("test_scrape_sensor_no_data")
-    with patch(
-        "homeassistant.components.rest.RestData",
-        return_value=mocker,
-    ):
-        assert await async_setup_component(hass, SENSOR_DOMAIN, config)
-        await hass.async_block_till_done()
-
-    state = hass.states.get("sensor.auth_page")
-    assert not state
-    assert "Platform scrape not ready yet: None; Retrying in background" in caplog.text
 
 
 async def test_scrape_sensor_value_template(hass: HomeAssistant) -> None:
@@ -172,7 +109,7 @@ async def test_scrape_uom_and_classes(hass: HomeAssistant) -> None:
 
     state = hass.states.get("sensor.current_temp")
     assert state.state == "22.1"
-    assert state.attributes[CONF_UNIT_OF_MEASUREMENT] == TEMP_CELSIUS
+    assert state.attributes[CONF_UNIT_OF_MEASUREMENT] == UnitOfTemperature.CELSIUS
     assert state.attributes[CONF_DEVICE_CLASS] == SensorDeviceClass.TEMPERATURE
     assert state.attributes[CONF_STATE_CLASS] == SensorStateClass.MEASUREMENT
 
@@ -336,6 +273,119 @@ async def test_scrape_sensor_attribute_and_tag(hass: HomeAssistant) -> None:
     assert state.state == "['links']"
     state2 = hass.states.get("sensor.ha_template")
     assert state2.state == "Trying to get"
+
+
+async def test_scrape_sensor_device_date(hass: HomeAssistant) -> None:
+    """Test Scrape sensor with a device of type DATE."""
+    config = {
+        DOMAIN: [
+            return_integration_config(
+                sensors=[
+                    {
+                        "select": ".release-date",
+                        "name": "HA Date",
+                        "device_class": "date",
+                        "value_template": "{{ strptime(value, '%B %d, %Y').strftime('%Y-%m-%d') }}",
+                    }
+                ],
+            ),
+        ]
+    }
+
+    mocker = MockRestData("test_scrape_sensor")
+    with patch(
+        "homeassistant.components.rest.RestData",
+        return_value=mocker,
+    ):
+        assert await async_setup_component(hass, DOMAIN, config)
+        await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.ha_date")
+    assert state.state == "2022-01-17"
+
+
+async def test_scrape_sensor_device_date_errors(hass: HomeAssistant) -> None:
+    """Test Scrape sensor with a device of type DATE."""
+    config = {
+        DOMAIN: [
+            return_integration_config(
+                sensors=[
+                    {
+                        "select": ".current-version h1",
+                        "name": "HA Date",
+                        "device_class": "date",
+                    }
+                ],
+            ),
+        ]
+    }
+
+    mocker = MockRestData("test_scrape_sensor")
+    with patch(
+        "homeassistant.components.rest.RestData",
+        return_value=mocker,
+    ):
+        assert await async_setup_component(hass, DOMAIN, config)
+        await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.ha_date")
+    assert state.state == STATE_UNKNOWN
+
+
+async def test_scrape_sensor_device_timestamp(hass: HomeAssistant) -> None:
+    """Test Scrape sensor with a device of type TIMESTAMP."""
+    config = {
+        DOMAIN: [
+            return_integration_config(
+                sensors=[
+                    {
+                        "select": ".utc-time",
+                        "name": "HA Timestamp",
+                        "device_class": "timestamp",
+                    }
+                ],
+            ),
+        ]
+    }
+
+    mocker = MockRestData("test_scrape_sensor")
+    with patch(
+        "homeassistant.components.rest.RestData",
+        return_value=mocker,
+    ):
+        assert await async_setup_component(hass, DOMAIN, config)
+        await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.ha_timestamp")
+    assert state.state == "2022-12-22T13:15:30+00:00"
+
+
+async def test_scrape_sensor_device_timestamp_error(hass: HomeAssistant) -> None:
+    """Test Scrape sensor with a device of type TIMESTAMP."""
+    config = {
+        DOMAIN: [
+            return_integration_config(
+                sensors=[
+                    {
+                        "select": ".current-time",
+                        "name": "HA Timestamp",
+                        "device_class": "timestamp",
+                    }
+                ],
+            ),
+        ]
+    }
+
+    mocker = MockRestData("test_scrape_sensor")
+    with patch(
+        "homeassistant.components.rest.RestData",
+        return_value=mocker,
+    ):
+        assert await async_setup_component(hass, DOMAIN, config)
+        await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.ha_timestamp")
+    assert state.state == STATE_UNKNOWN
 
 
 async def test_scrape_sensor_errors(hass: HomeAssistant) -> None:

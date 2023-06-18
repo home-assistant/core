@@ -55,8 +55,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 await airq.validate()
             except ClientConnectionError:
                 _LOGGER.debug(
-                    "Failed to connect to device %s. Check the IP address / device ID "
-                    "as well as whether the device is connected to power and the WiFi",
+                    (
+                        "Failed to connect to device %s. Check the IP address / device"
+                        " ID as well as whether the device is connected to power and"
+                        " the WiFi"
+                    ),
                     user_input[CONF_IP_ADDRESS],
                 )
                 errors["base"] = "cannot_connect"
@@ -71,12 +74,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 )
 
                 device_info = await airq.fetch_device_info()
-                await self.async_set_unique_id(device_info.pop("id"))
+                await self.async_set_unique_id(device_info["id"])
                 self._abort_if_unique_id_configured()
 
                 return self.async_create_entry(
-                    title=device_info["name"],
-                    data=user_input | {"device_info": device_info},
+                    title=device_info["name"], data=user_input
                 )
 
         return self.async_show_form(

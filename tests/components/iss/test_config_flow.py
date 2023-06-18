@@ -10,7 +10,7 @@ from homeassistant.core import HomeAssistant
 from tests.common import MockConfigEntry
 
 
-async def test_create_entry(hass: HomeAssistant):
+async def test_create_entry(hass: HomeAssistant) -> None:
     """Test we can finish a config flow."""
 
     result = await hass.config_entries.flow.async_init(
@@ -18,10 +18,9 @@ async def test_create_entry(hass: HomeAssistant):
     )
 
     assert result.get("type") == data_entry_flow.FlowResultType.FORM
-    assert result.get("step_id") == SOURCE_USER
+    assert result.get("step_id") == "user"
 
     with patch("homeassistant.components.iss.async_setup_entry", return_value=True):
-
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {},
@@ -31,7 +30,7 @@ async def test_create_entry(hass: HomeAssistant):
         assert result.get("result").data == {}
 
 
-async def test_integration_already_exists(hass: HomeAssistant):
+async def test_integration_already_exists(hass: HomeAssistant) -> None:
     """Test we only allow a single config flow."""
 
     MockConfigEntry(
@@ -47,7 +46,7 @@ async def test_integration_already_exists(hass: HomeAssistant):
     assert result.get("reason") == "single_instance_allowed"
 
 
-async def test_options(hass: HomeAssistant):
+async def test_options(hass: HomeAssistant) -> None:
     """Test options flow."""
 
     config_entry = MockConfigEntry(

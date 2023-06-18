@@ -6,11 +6,13 @@ import logging
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import UNDEFINED, ConfigType, UndefinedType
 from homeassistant.loader import bind_hass
 
 from . import util
 from .const import (
+    DOMAIN,
     IPV4_BROADCAST_ADDR,
     LOOPBACK_TARGET_IP,
     MDNS_TARGET_IP,
@@ -20,6 +22,8 @@ from .models import Adapter
 from .network import Network, async_get_network
 
 _LOGGER = logging.getLogger(__name__)
+
+CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 
 @bind_hass
@@ -51,11 +55,13 @@ async def async_get_source_ip(
 
     if not all_ipv4s:
         _LOGGER.warning(
-            "Because the system does not have any enabled IPv4 addresses, source address detection may be inaccurate"
+            "Because the system does not have any enabled IPv4 addresses, source"
+            " address detection may be inaccurate"
         )
         if source_ip is None:
             raise HomeAssistantError(
-                "Could not determine source ip because the system does not have any enabled IPv4 addresses and creating a socket failed"
+                "Could not determine source ip because the system does not have any"
+                " enabled IPv4 addresses and creating a socket failed"
             )
         return source_ip
 

@@ -1,5 +1,4 @@
-"""
-Support Legacy API password auth provider.
+"""Support Legacy API password auth provider.
 
 It will be removed when auth system production ready
 """
@@ -16,8 +15,8 @@ from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 
-from . import AUTH_PROVIDER_SCHEMA, AUTH_PROVIDERS, AuthProvider, LoginFlow
 from ..models import Credentials, UserMeta
+from . import AUTH_PROVIDER_SCHEMA, AUTH_PROVIDERS, AuthProvider, LoginFlow
 
 AUTH_PROVIDER_TYPE = "legacy_api_password"
 CONF_API_PASSWORD = "api_password"
@@ -71,8 +70,7 @@ class LegacyApiPasswordAuthProvider(AuthProvider):
     async def async_user_meta_for_credentials(
         self, credentials: Credentials
     ) -> UserMeta:
-        """
-        Return info for the user.
+        """Return info for the user.
 
         Will be used to populate info when creating a new user.
         """
