@@ -1,9 +1,13 @@
 """The tests for the persistent notification component."""
 import pytest
 
+from typing import Any
+
 import homeassistant.components.persistent_notification as pn
+from homeassistant.components.persistent_notification import trigger
 from homeassistant.components.websocket_api.const import TYPE_RESULT
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, Context, callback
+from homeassistant.helpers.trigger import TriggerActionType, TriggerData
 from homeassistant.setup import async_setup_component
 
 from tests.typing import WebSocketGenerator
@@ -175,3 +179,99 @@ async def test_manual_notification_id_round_trip(hass: HomeAssistant) -> None:
     )
 
     assert len(notifications) == 0
+
+
+async def test_automation_with_pn_trigger(hass: HomeAssistant) -> None:
+    """Test automation with a persistent_notification trigger."""
+
+    result_any = []
+    result_dismissed = []
+    result_id = []
+
+    @callback
+    def trigger_callback_any(
+        run_variables: dict[str, Any], context: Context | None = None
+    ) -> None:
+        result_any.append(run_variables)
+
+    await trigger.async_attach_trigger(
+        hass, {"platform": "persistent_notification"}, trigger_callback_any, {}
+    )
+
+    @callback
+    def trigger_callback_dismissed(
+        run_variables: dict[str, Any], context: Context | None = None
+    ) -> None:
+        result_dismissed.append(run_variables)
+
+    await trigger.async_attach_trigger(
+        hass,
+        {"platform": "persistent_notification", "update_type": "removed"},
+        trigger_callback_dismissed,
+        {},
+    )
+
+    @callback
+    def trigger_callback_id(
+        run_variables: dict[str, Any], context: Context | None = None
+    ) -> None:
+        result_id.append(run_variables)
+
+    await trigger.async_attach_trigger(
+        hass,
+        {"platform": "persistent_notification", "notification_id": "42"},
+        trigger_callback_id,
+        {},
+    )
+
+    await hass.services.async_call(
+        pn.DOMAIN,
+        "create",
+        {"notification_id": "test_notification", "message": "test"},
+        blocking=True,
+    )
+
+    await hass.async_block_till_done()
+
+    t = result_any[0].get("trigger")
+    assert t.get("platform") == "persistent_notification"
+    assert t.get("update_type") == pn.UpdateType.ADDED
+    assert t.get("notification", {}).get("notification_id") == "test_notification"
+    assert t.get("notification", {}).get("message") == "test"
+
+    assert len(result_dismissed) == 0
+    assert len(result_id) == 0
+
+    await hass.services.async_call(
+        pn.DOMAIN,
+        "dismiss",
+        {"notification_id": "test_notification"},
+        blocking=True,
+    )
+
+    await hass.async_block_till_done()
+
+    t = result_any[1].get("trigger")
+    assert t.get("platform") == "persistent_notification"
+    assert t.get("update_type") == pn.UpdateType.REMOVED
+    assert t.get("notification", {}).get("notification_id") == "test_notification"
+    assert t.get("notification", {}).get("message") == "test"
+    assert result_any[1] == result_dismissed[0]
+
+    assert len(result_id) == 0
+
+    await hass.services.async_call(
+        pn.DOMAIN,
+        "create",
+        {"notification_id": "42", "message": "Forty Two"},
+        blocking=True,
+    )
+
+    await hass.async_block_till_done()
+
+    t = result_any[2].get("trigger")
+    assert t.get("platform") == "persistent_notification"
+    assert t.get("update_type") == pn.UpdateType.ADDED
+    assert t.get("notification", {}).get("notification_id") == "42"
+    assert t.get("notification", {}).get("message") == "Forty Two"
+    assert result_any[2] == result_id[0]
