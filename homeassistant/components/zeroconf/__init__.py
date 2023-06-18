@@ -284,7 +284,7 @@ async def _async_register_hass_zc_service(
         ZEROCONF_TYPE,
         name=f"{valid_location_name}.{ZEROCONF_TYPE}",
         server=f"{uuid}.local.",
-        parsed_addresses=await network.async_get_announced_addresses(hass),
+        parsed_addresses=await network.async_get_announce_addresses(hass),
         port=hass.http.server_port,
         properties=params,
     )
