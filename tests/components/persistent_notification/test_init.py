@@ -237,11 +237,11 @@ async def test_automation_with_pn_trigger(hass: HomeAssistant) -> None:
 
     await hass.async_block_till_done()
 
-    t = result_any[0].get("trigger")
-    assert t.get("platform") == "persistent_notification"
-    assert t.get("update_type") == pn.UpdateType.ADDED
-    assert t.get("notification", {}).get("notification_id") == "test_notification"
-    assert t.get("notification", {}).get("message") == "test"
+    result = result_any[0].get("trigger")
+    assert result.get("platform") == "persistent_notification"
+    assert result.get("update_type") == pn.UpdateType.ADDED
+    assert result.get("notification", {}).get("notification_id") == "test_notification"
+    assert result.get("notification", {}).get("message") == "test"
 
     assert len(result_dismissed) == 0
     assert len(result_id) == 0
@@ -255,11 +255,11 @@ async def test_automation_with_pn_trigger(hass: HomeAssistant) -> None:
 
     await hass.async_block_till_done()
 
-    t = result_any[1].get("trigger")
-    assert t.get("platform") == "persistent_notification"
-    assert t.get("update_type") == pn.UpdateType.REMOVED
-    assert t.get("notification", {}).get("notification_id") == "test_notification"
-    assert t.get("notification", {}).get("message") == "test"
+    result = result_any[1].get("trigger")
+    assert result.get("platform") == "persistent_notification"
+    assert result.get("update_type") == pn.UpdateType.REMOVED
+    assert result.get("notification", {}).get("notification_id") == "test_notification"
+    assert result.get("notification", {}).get("message") == "test"
     assert result_any[1] == result_dismissed[0]
 
     assert len(result_id) == 0
@@ -273,9 +273,9 @@ async def test_automation_with_pn_trigger(hass: HomeAssistant) -> None:
 
     await hass.async_block_till_done()
 
-    t = result_any[2].get("trigger")
-    assert t.get("platform") == "persistent_notification"
-    assert t.get("update_type") == pn.UpdateType.ADDED
-    assert t.get("notification", {}).get("notification_id") == "42"
-    assert t.get("notification", {}).get("message") == "Forty Two"
+    result = result_any[2].get("trigger")
+    assert result.get("platform") == "persistent_notification"
+    assert result.get("update_type") == pn.UpdateType.ADDED
+    assert result.get("notification", {}).get("notification_id") == "42"
+    assert result.get("notification", {}).get("message") == "Forty Two"
     assert result_any[2] == result_id[0]

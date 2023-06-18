@@ -42,7 +42,7 @@ async def async_attach_trigger(
     job = HassJob(action)
 
     persistent_notification_id = config.get(CONF_NOTIFICATION_ID)
-    persistent_notification_update_types = config.get(CONF_UPDATE_TYPE)
+    update_types = config.get(CONF_UPDATE_TYPE)
 
     @callback
     def persistent_notification_listener(
@@ -50,30 +50,28 @@ async def async_attach_trigger(
     ) -> None:
         """Listen for persistent_notification updates."""
 
-        for notification in list(notifications.values()):
-            if (
-                persistent_notification_id is None
-                or notification[CONF_NOTIFICATION_ID] == persistent_notification_id  # type: ignore[literal-required]
-            ) and (
-                persistent_notification_update_types is None
-                or update_type in persistent_notification_update_types
-            ):
-                hass.async_run_hass_job(
-                    job,
-                    {
-                        "trigger": {
-                            **trigger_data,  # type: ignore[arg-type]  # https://github.com/python/mypy/issues/9117
-                            "platform": "persistent_notification",
-                            "update_type": update_type,
-                            "notification": notification,
-                        }
-                    },
-                )
+        for notification in notifications.values():
+            if update_types and update_type not in update_types:
+                continue
+            if persistent_notification_id and notification[CONF_NOTIFICATION_ID] != persistent_notification_id:  # type: ignore[literal-required]
+                continue
+
+            hass.async_run_hass_job(
+                job,
+                {
+                    "trigger": {
+                        **trigger_data,  # type: ignore[arg-type]  # https://github.com/python/mypy/issues/9117
+                        "platform": "persistent_notification",
+                        "update_type": update_type,
+                        "notification": notification,
+                    }
+                },
+            )
 
     _LOGGER.debug(
         "Attaching persistent_notification trigger for ID: '%s', update_types: %s",
         persistent_notification_id,
-        persistent_notification_update_types,
+        update_types,
     )
 
     return async_register_callback(hass, persistent_notification_listener)
