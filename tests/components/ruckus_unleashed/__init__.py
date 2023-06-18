@@ -1,7 +1,6 @@
 """Tests for the Ruckus Unleashed integration."""
-from unittest.mock import AsyncMock, patch
-
 import asyncio
+from unittest.mock import AsyncMock, patch
 
 from homeassistant.components.ruckus_unleashed import DOMAIN, aioruckus
 from homeassistant.components.ruckus_unleashed.const import (
