@@ -193,7 +193,14 @@ class ActiveConnection:
     def async_handle_close(self) -> None:
         """Handle closing down connection."""
         for unsub in self.subscriptions.values():
-            unsub()
+            try:
+                unsub()
+            except Exception:  # pylint: disable=broad-except
+                # If one fails, make sure we still try the rest
+                self.logger.exception(
+                    "Error unsubscribing from subscription: %s", unsub
+                )
+        self.subscriptions.clear()
 
     @callback
     def async_handle_exception(self, msg: dict[str, Any], err: Exception) -> None:

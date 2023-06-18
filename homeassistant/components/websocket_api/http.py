@@ -383,7 +383,6 @@ class WebSocketHandler:
 
         except asyncio.CancelledError:
             debug("%s: Connection cancelled", self.description)
-            await wsock.close()  # try to clean up the connection
             raise
 
         except Disconnect as ex:
@@ -406,20 +405,25 @@ class WebSocketHandler:
             if self._ready_future and not self._ready_future.done():
                 self._ready_future.set_result(None)
 
+            # If the writer gets canceled we still need to close the websocket
+            # so we have another finally block to make sure we close the websocket
+            # if the writer gets canceled.
             try:
-                # Make sure all error messages are written before closing
                 await self._writer_task
-                await wsock.close()
             finally:
-                if disconnect_warn is None:
-                    debug("Disconnected")
-                else:
-                    self._logger.warning("Disconnected: %s", disconnect_warn)
+                try:
+                    # Make sure all error messages are written before closing
+                    await wsock.close()
+                finally:
+                    if disconnect_warn is None:
+                        debug("Disconnected")
+                    else:
+                        self._logger.warning("Disconnected: %s", disconnect_warn)
 
-                if connection is not None:
-                    self.hass.data[DATA_CONNECTIONS] -= 1
-                    self.connection = None
+                    if connection is not None:
+                        self.hass.data[DATA_CONNECTIONS] -= 1
+                        self.connection = None
 
-                async_dispatcher_send(self.hass, SIGNAL_WEBSOCKET_DISCONNECTED)
+                    async_dispatcher_send(self.hass, SIGNAL_WEBSOCKET_DISCONNECTED)
 
         return wsock
