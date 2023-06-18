@@ -244,6 +244,10 @@ class WebSocketHandler:
         """Handle a websocket response."""
         request = self.request
         wsock = self.wsock
+        debug = self._logger.debug
+        is_enabled_for = self._logger.isEnabledFor
+        logging_debug = logging.DEBUG
+
         try:
             async with async_timeout.timeout(10):
                 await wsock.prepare(request)
@@ -251,7 +255,7 @@ class WebSocketHandler:
             self._logger.warning("Timeout preparing request from %s", request.remote)
             return wsock
 
-        self._logger.debug("Connected from %s", request.remote)
+        debug("%s: Connected from %s", self.description, request.remote)
         self._handle_task = asyncio.current_task()
 
         @callback
@@ -272,9 +276,6 @@ class WebSocketHandler:
         )
         connection = None
         disconnect_warn = None
-        debug = self._logger.debug
-        is_enabled_for = self._logger.isEnabledFor
-        logging_debug = logging.DEBUG
 
         try:
             self._send_message(auth_required_message())
@@ -416,9 +417,11 @@ class WebSocketHandler:
                     await wsock.close()
                 finally:
                     if disconnect_warn is None:
-                        debug("Disconnected")
+                        debug("%s: Disconnected", self.description)
                     else:
-                        self._logger.warning("Disconnected: %s", disconnect_warn)
+                        self._logger.warning(
+                            "%s: Disconnected: %s", self.description, disconnect_warn
+                        )
 
                     if connection is not None:
                         self.hass.data[DATA_CONNECTIONS] -= 1
