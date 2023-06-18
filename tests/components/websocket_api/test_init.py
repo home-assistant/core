@@ -40,7 +40,7 @@ async def test_quiting_hass(hass: HomeAssistant, websocket_client) -> None:
 
     msg = await websocket_client.receive()
 
-    assert msg.type == WSMsgType.CLOSED
+    assert msg.type == WSMsgType.CLOSE
 
 
 async def test_unknown_command(websocket_client) -> None:

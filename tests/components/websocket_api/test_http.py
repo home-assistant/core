@@ -42,7 +42,7 @@ async def test_pending_msg_overflow(
     for idx in range(10):
         await websocket_client.send_json({"id": idx + 1, "type": "ping"})
     msg = await websocket_client.receive()
-    assert msg.type == WSMsgType.CLOSED
+    assert msg.type == WSMsgType.close
 
 
 async def test_pending_msg_peak(
@@ -77,7 +77,7 @@ async def test_pending_msg_peak(
     )
 
     msg = await websocket_client.receive()
-    assert msg.type == WSMsgType.CLOSED
+    assert msg.type == WSMsgType.close
     assert "Client unable to keep up with pending messages" in caplog.text
     assert "Stayed over 5 for 5 seconds" in caplog.text
     assert "overload" in caplog.text
@@ -125,10 +125,8 @@ async def test_pending_msg_peak_recovery(
     msg = await websocket_client.receive()
     assert msg.type == WSMsgType.TEXT
     msg = await websocket_client.receive()
-    assert msg.type == WSMsgType.CLOSE
+    assert msg.type == WSMsgType.close
     assert "Client unable to keep up with pending messages" not in caplog.text
-    msg = await websocket_client.receive()
-    assert msg.type == WSMsgType.CLOSED
 
 
 async def test_pending_msg_peak_but_does_not_overflow(

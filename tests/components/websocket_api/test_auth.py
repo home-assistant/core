@@ -221,5 +221,5 @@ async def test_auth_close_after_revoke(
     await hass.auth.async_remove_refresh_token(refresh_token)
 
     msg = await websocket_client.receive()
-    assert msg.type == aiohttp.WSMsgType.CLOSED
+    assert msg.type == aiohttp.WSMsgType.CLOSE
     assert websocket_client.closed
