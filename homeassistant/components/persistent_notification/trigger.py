@@ -52,7 +52,7 @@ async def async_attach_trigger(
 
         if (
             persistent_notification_id is None
-            or persistent_notification_id == notification[CONF_NOTIFICATION_ID]
+            or persistent_notification_id == notification[CONF_NOTIFICATION_ID]  # type: ignore[literal-required]
         ) and (
             persistent_notification_update_type is None
             or persistent_notification_update_type == update_type
@@ -61,7 +61,7 @@ async def async_attach_trigger(
                 job,
                 {
                     "trigger": {
-                        **trigger_data,
+                        **trigger_data,  # type: ignore[arg-type]  # https://github.com/python/mypy/issues/9117
                         "platform": "persistent_notification",
                         "update_type": update_type,
                         "notification": notification,
