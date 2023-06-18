@@ -251,17 +251,16 @@ class CCM15Climate(CoordinatorEntity[CCM15Coordinator], ClimateEntity):
         super().__init__(coordinator)
         self._ac_host: str = ac_host
         self._ac_index: int = ac_index
-        self._ac_name: str = f"ac{self._ac_index}"
 
     @property
     def unique_id(self) -> str:
         """Return unique id."""
-        return f"{self._ac_host}.{self._ac_name}"
+        return f"{self._ac_host}.{self._ac_index}"
 
     @property
     def name(self) -> str:
         """Return name."""
-        return f"{self._ac_name} thermostat"
+        return f"Climate{self._ac_index}"
 
     @property
     def should_poll(self) -> bool:
@@ -347,7 +346,7 @@ class CCM15Climate(CoordinatorEntity[CCM15Coordinator], ClimateEntity):
         return DeviceInfo(
             identifiers={
                 # Serial numbers are unique identifiers within a specific domain
-                (DOMAIN, self.unique_id),
+                (DOMAIN, f"{self._ac_host}.{self._ac_index}"),
             },
             name=self.name,
             manufacturer="Midea",
