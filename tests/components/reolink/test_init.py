@@ -44,11 +44,17 @@ pytestmark = pytest.mark.usefixtures("reolink_connect", "reolink_platforms")
             Mock(return_value=False),
             ConfigEntryState.LOADED,
         ),
+        (
+            "check_new_firmware",
+            AsyncMock(side_effect=ReolinkError("Test error")),
+            ConfigEntryState.LOADED,
+        ),
     ],
 )
 async def test_failures_parametrized(
     hass: HomeAssistant,
     reolink_connect: MagicMock,
+    reolink_ONVIF_wait: MagicMock,
     config_entry: MockConfigEntry,
     attr: str,
     value: Any,
@@ -64,33 +70,11 @@ async def test_failures_parametrized(
     assert config_entry.state == expected
 
 
-async def test_firmware_error_twice(
-    hass: HomeAssistant,
-    reolink_connect: MagicMock,
-    config_entry: MockConfigEntry,
-) -> None:
-    """Test when the firmware update fails 2 times."""
-    reolink_connect.check_new_firmware = AsyncMock(
-        side_effect=ReolinkError("Test error")
-    )
-    assert await hass.config_entries.async_setup(config_entry.entry_id) is True
-    await hass.async_block_till_done()
-
-    assert config_entry.state == ConfigEntryState.LOADED
-
-    firmware_coordinator = hass.data[const.DOMAIN][
-        config_entry.entry_id
-    ].firmware_coordinator
-
-    assert firmware_coordinator.last_update_success is True
-    await firmware_coordinator.async_refresh()
-    assert firmware_coordinator.last_update_success is False
-
-
 async def test_entry_reloading(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     reolink_connect: MagicMock,
+    reolink_ONVIF_wait: MagicMock,
 ) -> None:
     """Test the entry is reloaded correctly when settings change."""
     assert await hass.config_entries.async_setup(config_entry.entry_id)
@@ -107,7 +91,7 @@ async def test_entry_reloading(
 
 
 async def test_no_repair_issue(
-    hass: HomeAssistant, config_entry: MockConfigEntry
+    hass: HomeAssistant, config_entry: MockConfigEntry, reolink_ONVIF_wait: MagicMock
 ) -> None:
     """Test no repairs issue is raised when http local url is used."""
     await async_process_ha_core_config(
@@ -125,7 +109,7 @@ async def test_no_repair_issue(
 
 
 async def test_https_repair_issue(
-    hass: HomeAssistant, config_entry: MockConfigEntry
+    hass: HomeAssistant, config_entry: MockConfigEntry, reolink_ONVIF_wait: MagicMock
 ) -> None:
     """Test repairs issue is raised when https local url is used."""
     await async_process_ha_core_config(
@@ -144,6 +128,7 @@ async def test_port_repair_issue(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     reolink_connect: MagicMock,
+    reolink_ONVIF_wait: MagicMock,
     protocol: str,
 ) -> None:
     """Test repairs issue is raised when auto enable of ports fails."""
@@ -180,6 +165,7 @@ async def test_firmware_repair_issue(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     reolink_connect: MagicMock,
+    reolink_ONVIF_wait: MagicMock,
 ) -> None:
     """Test firmware issue is raised when too old firmware is used."""
     reolink_connect.sw_version_update_required = True
