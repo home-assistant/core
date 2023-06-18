@@ -856,9 +856,19 @@ def test_rgb_color_selector_schema(
             (None, "abc", [100]),
         ),
         (
+            {"min_mireds": 100, "max_mireds": 200},
+            (100, 200),
+            (99, 201),
+        ),
+        (
             {"min": 100, "max": 200},
             (100, 200),
             (99, 201),
+        ),
+        (
+            {"unit": "Kelvin"},
+            (3200, 5800),
+            (),
         ),
     ),
 )

@@ -258,7 +258,7 @@ turn_on:
       selector:
         object:
     color_temp:
-      name: Color temperature
+      name: Color temperature (mireds)
       description: Color temperature for the light in mireds.
       filter:
         attribute:

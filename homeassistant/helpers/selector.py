@@ -410,6 +410,8 @@ class ColorTempSelectorConfig(TypedDict, total=False):
     unit: str
     min: int
     max: int
+    max_mireds: int  # kept for legacy blueprint support
+    min_mireds: int  # kept for legacy blueprint support
 
 
 @SELECTORS.register("color_temp")
@@ -420,9 +422,15 @@ class ColorTempSelector(Selector[ColorTempSelectorConfig]):
 
     CONFIG_SCHEMA = vol.Schema(
         {
-            vol.Required("unit", default="Kelvin"): vol.Any("Kelvin", "Mired"),
+            vol.Required("unit", default="Mired"): vol.Any("Kelvin", "Mired"),
             vol.Optional("min"): vol.Coerce(int),
             vol.Optional("max"): vol.Coerce(int),
+            vol.Optional("min_mireds"): vol.Coerce(
+                int
+            ),  # kept for legacy blueprint support
+            vol.Optional("max_mireds"): vol.Coerce(
+                int
+            ),  # kept for legacy blueprint support
         }
     )
 
@@ -435,8 +443,12 @@ class ColorTempSelector(Selector[ColorTempSelectorConfig]):
         value: int = vol.All(
             vol.Coerce(int),
             vol.Range(
-                min=self.config.get("min"),
-                max=self.config.get("max"),
+                min=self.config.get("min")
+                if self.config.get("min") is not None
+                else self.config.get("min_mireds"),
+                max=self.config.get("max")
+                if self.config.get("max") is not None
+                else self.config.get("max_mireds"),
             ),
         )(data)
         return value
