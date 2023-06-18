@@ -306,7 +306,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     ip_address = conf.get(CONF_IP_ADDRESS, [None])
     advertise_ips: list[str] = conf.get(
         CONF_ADVERTISE_IP
-    ) or await network.async_get_announced_addresses(hass)
+    ) or await network.async_get_announce_addresses(hass)
 
     # exclude_accessory_mode is only used for config flow
     # to indicate that the config entry was setup after
