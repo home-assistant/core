@@ -48,15 +48,19 @@ async def async_attach_trigger(
     ) -> None:
         """Listen for persistent_notification updates."""
 
-        notification = list(notifications.values())[0]
-
         if (
             persistent_notification_id is None
-            or persistent_notification_id == notification[CONF_NOTIFICATION_ID]  # type: ignore[literal-required]
+            or persistent_notification_id in notifications.keys()
         ) and (
             persistent_notification_update_type is None
             or persistent_notification_update_type == update_type
         ):
+            notification_list = list(notifications.values())
+            notification = (
+                notification_list[0]
+                if len(notification_list) == 1
+                else notification_list
+            )
             hass.async_run_hass_job(
                 job,
                 {
