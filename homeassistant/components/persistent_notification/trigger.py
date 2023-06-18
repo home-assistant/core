@@ -24,7 +24,9 @@ TRIGGER_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_PLATFORM): "persistent_notification",
         vol.Optional(CONF_NOTIFICATION_ID): str,
-        vol.Optional(CONF_UPDATE_TYPE): vol.Coerce(UpdateType),
+        vol.Optional(CONF_UPDATE_TYPE): vol.All(
+            cv.ensure_list, [vol.Coerce(UpdateType)]
+        ),
     }
 )
 
@@ -40,7 +42,7 @@ async def async_attach_trigger(
     job = HassJob(action)
 
     persistent_notification_id = config.get(CONF_NOTIFICATION_ID)
-    persistent_notification_update_type = config.get(CONF_UPDATE_TYPE)
+    persistent_notification_update_types = config.get(CONF_UPDATE_TYPE)
 
     @callback
     def persistent_notification_listener(
@@ -50,10 +52,10 @@ async def async_attach_trigger(
 
         if (
             persistent_notification_id is None
-            or persistent_notification_id in notifications.keys()
+            or persistent_notification_id in notifications
         ) and (
-            persistent_notification_update_type is None
-            or persistent_notification_update_type == update_type
+            persistent_notification_update_types is None
+            or update_type in persistent_notification_update_types
         ):
             notification_list = list(notifications.values())
             notification = (
