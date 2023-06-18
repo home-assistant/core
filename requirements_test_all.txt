@@ -1655,7 +1655,7 @@ renault-api==0.1.13
 renson-endura-delta==1.5.0
 
 # homeassistant.components.reolink
-reolink-aio==0.6.0
+reolink-aio==0.7.1
 
 # homeassistant.components.rflink
 rflink==0.0.65
@@ -2000,7 +2000,7 @@ youless-api==1.0.1
 zamg==0.2.2
 
 # homeassistant.components.zeroconf
-zeroconf==0.66.0
+zeroconf==0.68.0
 
 # homeassistant.components.zeversolar
 zeversolar==0.3.1
