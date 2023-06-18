@@ -1,7 +1,9 @@
 """Tests for the Ruckus Unleashed integration."""
 from unittest.mock import AsyncMock, patch
 
-from homeassistant.components.ruckus_unleashed import DOMAIN  # , RuckusApi
+import asyncio
+
+from homeassistant.components.ruckus_unleashed import DOMAIN, aioruckus
 from homeassistant.components.ruckus_unleashed.const import (
     API_AP_DEVNAME,
     API_AP_MAC,
@@ -105,7 +107,8 @@ class MockAjaxSession:
         self.host = host
         self.username = username
         self.password = password
-        self.api = RuckusApi(self)
+        # self.api = RuckusApi(self)
+        self.api = aioruckus.RuckusAjaxApi(self)
 
     async def __aenter__(self, *args, **kwargs) -> "MockAjaxSession":
         """Async enter."""
@@ -142,10 +145,16 @@ async def init_integration(hass: HomeAssistant) -> MockConfigEntry:
             TEST_CLIENT[API_CLIENT_AP_MAC]: TEST_CLIENT,
         },
     ), patch(
-        "homeassistant.components.ruckus_unleashed.RuckusApi.get_system_info",
+        "homeassistant.components.ruckus_unleashed.aioruckus.AjaxSession.login",
+        return_value={
+            asyncio.Future(),
+        },
+    ), patch(
+        "homeassistant.components.ruckus_unleashed.aioruckus.RuckusAjaxApi.get_system_info",
         new_callable=AsyncMock,
     ) as async_mock_get_system_info, patch(
-        "homeassistant.components.ruckus_unleashed.AjaxSession", MockAjaxSession
+        "homeassistant.components.ruckus_unleashed.aioruckus.AbcSession",
+        MockAjaxSession,
     ):
         async_mock_get_system_info.return_value = DEFAULT_SYSTEM_INFO
         await hass.config_entries.async_setup(entry.entry_id)
