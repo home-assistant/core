@@ -189,7 +189,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up all climate."""
-    coordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator: CCM15Coordinator = hass.data[DOMAIN][config_entry.entry_id]
     entities = []
     for ac_device in coordinator.get_devices():
         entities.append(ac_device)
