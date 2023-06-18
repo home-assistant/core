@@ -1213,6 +1213,15 @@ async def test_serviceregistry_no_return_response(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     assert not result
 
+    with pytest.raises(ValueError, match="not support responses"):
+        await hass.services.async_call(
+            "test_domain",
+            "test_service",
+            service_data={},
+            blocking=True,
+            return_response=True,
+        )
+
 
 async def test_config_defaults() -> None:
     """Test config defaults."""
