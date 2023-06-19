@@ -206,6 +206,8 @@ class ActiveConnection:
                 )
         self.subscriptions.clear()
         self.send_message = self._connect_closed_error
+        current_request.set(None)
+        current_connection.set(None)
 
     @callback
     def _connect_closed_error(
