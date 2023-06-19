@@ -66,15 +66,15 @@ class WebSocketHandler:
 
     def __init__(self, hass: HomeAssistant, request: web.Request) -> None:
         """Initialize an active connection."""
-        self.hass = hass
-        self.request = request
-        self.wsock = web.WebSocketResponse(heartbeat=55)
+        self._hass = hass
+        self._request = request
+        self._wsock = web.WebSocketResponse(heartbeat=55)
         self._handle_task: asyncio.Task | None = None
         self._writer_task: asyncio.Task | None = None
         self._closing: bool = False
         self._logger = WebSocketAdapter(_WS_LOGGER, {"connid": id(self)})
         self._peak_checker_unsub: Callable[[], None] | None = None
-        self.connection: ActiveConnection | None = None
+        self._connection: ActiveConnection | None = None
 
         # The WebSocketHandler has a single consumer and path
         # to where messages are queued. This allows the implementation
@@ -86,23 +86,24 @@ class WebSocketHandler:
     @property
     def description(self) -> str:
         """Return a description of the connection."""
-        if self.connection is not None:
-            return self.connection.get_description(self.request)
-        return describe_request(self.request)
+        if connection := self._connection:
+            return connection.get_description(self._request)
+        return describe_request(self._request)
 
     async def _writer(self) -> None:
         """Write outgoing messages."""
         # Variables are set locally to avoid lookups in the loop
         message_queue = self._message_queue
         logger = self._logger
-        send_str = self.wsock.send_str
-        loop = self.hass.loop
+        wsock = self._wsock
+        send_str = wsock.send_str
+        loop = self._hass.loop
         debug = logger.debug
         is_enabled_for = logger.isEnabledFor
         logging_debug = logging.DEBUG
         # Exceptions if Socket disconnected or cancelled by connection handler
         try:
-            while not self.wsock.closed:
+            while not wsock.closed:
                 if (messages_remaining := len(message_queue)) == 0:
                     self._ready_future = loop.create_future()
                     await self._ready_future
@@ -118,8 +119,8 @@ class WebSocketHandler:
 
                 if (
                     not messages_remaining
-                    or not self.connection
-                    or not self.connection.can_coalesce
+                    or not (connection := self._connection)
+                    or not connection.can_coalesce
                 ):
                     if debug_enabled:
                         debug("%s: Sending %s", self.description, message)
@@ -201,7 +202,7 @@ class WebSocketHandler:
 
         if not peak_checker_active:
             self._peak_checker_unsub = async_call_later(
-                self.hass, PENDING_MSG_PEAK_TIME, self._check_write_peak
+                self._hass, PENDING_MSG_PEAK_TIME, self._check_write_peak
             )
 
     @callback
@@ -237,10 +238,12 @@ class WebSocketHandler:
 
     async def async_handle(self) -> web.WebSocketResponse:
         """Handle a websocket response."""
-        request = self.request
-        wsock = self.wsock
-        debug = self._logger.debug
-        is_enabled_for = self._logger.isEnabledFor
+        request = self._request
+        wsock = self._wsock
+        logger = self._logger
+        debug = logger.debug
+        hass = self._hass
+        is_enabled_for = logger.isEnabledFor
         logging_debug = logging.DEBUG
 
         try:
@@ -258,17 +261,13 @@ class WebSocketHandler:
             """Cancel this connection."""
             self._cancel()
 
-        unsub_stop = self.hass.bus.async_listen(
-            EVENT_HOMEASSISTANT_STOP, handle_hass_stop
-        )
+        unsub_stop = hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, handle_hass_stop)
 
         # As the webserver is now started before the start
         # event we do not want to block for websocket responses
         self._writer_task = asyncio.create_task(self._writer())
 
-        auth = AuthPhase(
-            self._logger, self.hass, self._send_message, self._cancel, request
-        )
+        auth = AuthPhase(logger, hass, self._send_message, self._cancel, request)
         connection = None
         disconnect_warn = None
 
@@ -298,11 +297,10 @@ class WebSocketHandler:
 
             if is_enabled_for(logging_debug):
                 debug("%s: Received %s", self.description, msg_data)
-            self.connection = connection = await auth.async_handle(msg_data)
-            self.hass.data[DATA_CONNECTIONS] = (
-                self.hass.data.get(DATA_CONNECTIONS, 0) + 1
-            )
-            async_dispatcher_send(self.hass, SIGNAL_WEBSOCKET_CONNECTED)
+            connection = await auth.async_handle(msg_data)
+            self._connection = connection
+            hass.data[DATA_CONNECTIONS] = hass.data.get(DATA_CONNECTIONS, 0) + 1
+            async_dispatcher_send(hass, SIGNAL_WEBSOCKET_CONNECTED)
 
             #
             #
@@ -421,15 +419,15 @@ class WebSocketHandler:
                         )
 
                     if connection is not None:
-                        self.hass.data[DATA_CONNECTIONS] -= 1
-                        self.connection = None
+                        hass.data[DATA_CONNECTIONS] -= 1
+                        self._connection = None
 
-                    async_dispatcher_send(self.hass, SIGNAL_WEBSOCKET_DISCONNECTED)
+                    async_dispatcher_send(hass, SIGNAL_WEBSOCKET_DISCONNECTED)
 
                     # Break reference cycles to make sure GC can happen sooner
-                    self.wsock = None  # type: ignore[assignment]
-                    self.request = None  # type: ignore[assignment]
-                    self.hass = None  # type: ignore[assignment]
+                    self._wsock = None  # type: ignore[assignment]
+                    self._request = None  # type: ignore[assignment]
+                    self._hass = None  # type: ignore[assignment]
                     self._logger = None  # type: ignore[assignment]
                     self._message_queue = None  # type: ignore[assignment]
                     self._handle_task = None
