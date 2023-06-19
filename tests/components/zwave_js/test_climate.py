@@ -297,7 +297,7 @@ async def test_thermostat_v2(
         },
         blocking=True,
     )
-
+    await hass.async_block_till_done()
     assert "Error while refreshing value" in caplog.text
 
 
