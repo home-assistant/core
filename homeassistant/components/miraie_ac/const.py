@@ -27,6 +27,9 @@ DOMAIN = "miraie_ac"
 CONFIG_KEY_USER_ID = "mobile"
 CONFIG_KEY_PASSWORD = "password"
 
+MAX_TEMP = 30.0
+MIN_TEMP = 16.0
+
 HVAC_MODE_MAP_TO_HASS = {
     MirAIeHVACMode.COOL: HVACMode.COOL,
     MirAIeHVACMode.AUTO: HVACMode.AUTO,

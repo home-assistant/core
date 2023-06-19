@@ -36,6 +36,8 @@ from .const import (
     FAN_MODE_MAP_TO_MIRAIE,
     HVAC_MODE_MAP_TO_HASS,
     HVAC_MODE_MAP_TO_MIRAIE,
+    MAX_TEMP,
+    MIN_TEMP,
     PRESET_MODE_MAP_TO_HASS,
     PRESET_MODE_MAP_TO_MIRAIE,
     SUPPORTED_FAN_MODES,
@@ -78,8 +80,8 @@ class MirAIeClimateEntity(ClimateEntity):
         self._attr_swing_modes = SUPPORTED_SWING_MODES
         self._attr_supported_features = SUPPORTED_FEATURES
         self._attr_fan_mode = FAN_OFF
-        self._attr_max_temp = 30.0
-        self._attr_min_temp = 16.0
+        self._attr_max_temp = MAX_TEMP
+        self._attr_min_temp = MIN_TEMP
         self._attr_temperature_unit = UnitOfTemperature.CELSIUS
         self._attr_precision = PRECISION_WHOLE
         self._attr_unique_id = device.device_id
@@ -127,7 +129,7 @@ class MirAIeClimateEntity(ClimateEntity):
         return self.device.status.is_online
 
     @property
-    def hvac_mode(self) -> HVACMode | str | None:
+    def hvac_mode(self) -> HVACMode | None:
         """Gets the current HVAC Mode."""
         power_mode = self.device.status.power_mode
         hvac_mode = self.device.status.hvac_mode
