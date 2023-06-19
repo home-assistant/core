@@ -10,6 +10,7 @@ from homeassistant.components.switch import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
@@ -68,6 +69,23 @@ async def async_setup_entry(
 class HydrawiseSwitch(HydrawiseEntity, SwitchEntity):
     """A switch implementation for Hydrawise device."""
 
+    def __init__(
+        self,
+        *,
+        coordinator: HydrawiseDataUpdateCoordinator,
+        controller_id: int,
+        relay_id: int,
+        description: EntityDescription,
+    ) -> None:
+        """Initiatlize."""
+        super().__init__(
+            coordinator=coordinator,
+            controller_id=controller_id,
+            relay_id=relay_id,
+            description=description,
+        )
+        self.update()
+
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         relay = self.coordinator.api.get_relay(self.controller_id, self.relay_id)
@@ -96,6 +114,10 @@ class HydrawiseSwitch(HydrawiseEntity, SwitchEntity):
         """Update device state."""
         super()._handle_coordinator_update()
 
+        self.update()
+
+    def update(self) -> None:
+        """Update state."""
         relay = self.coordinator.api.get_relay(self.controller_id, self.relay_id)
         if relay is None:
             return

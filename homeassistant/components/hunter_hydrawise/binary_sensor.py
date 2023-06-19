@@ -8,6 +8,7 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN, LOGGER
@@ -52,10 +53,31 @@ async def async_setup_entry(
 class HydrawiseBinarySensor(HydrawiseEntity, BinarySensorEntity):
     """A sensor implementation for Hydrawise device."""
 
+    def __init__(
+        self,
+        *,
+        coordinator: HydrawiseDataUpdateCoordinator,
+        controller_id: int,
+        relay_id: int,
+        description: EntityDescription,
+    ) -> None:
+        """Initialize."""
+        super().__init__(
+            coordinator=coordinator,
+            controller_id=controller_id,
+            relay_id=relay_id,
+            description=description,
+        )
+        self.update()
+
     @callback
     def _handle_coordinator_update(self) -> None:
         """Get the latest data and updates the state."""
         super()._handle_coordinator_update()
+        self.update()
+
+    def update(self) -> None:
+        """Update state."""
         relay = self.coordinator.api.get_relay(self.controller_id, self.relay_id)
         if relay is None:
             return
