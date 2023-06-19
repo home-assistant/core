@@ -86,7 +86,7 @@ PyRMVtransport==0.3.3
 PySocks==1.7.1
 
 # homeassistant.components.switchbot
-PySwitchbot==0.37.6
+PySwitchbot==0.38.0
 
 # homeassistant.components.syncthru
 PySyncThru==0.7.10
@@ -314,7 +314,7 @@ aiosenseme==0.6.1
 aiosenz==1.0.0
 
 # homeassistant.components.shelly
-aioshelly==5.3.2
+aioshelly==5.4.0
 
 # homeassistant.components.skybell
 aioskybell==22.7.0
@@ -451,7 +451,7 @@ bluetooth-auto-recovery==1.2.0
 # homeassistant.components.esphome
 # homeassistant.components.ld2410_ble
 # homeassistant.components.led_ble
-bluetooth-data-tools==1.1.0
+bluetooth-data-tools==1.2.0
 
 # homeassistant.components.bond
 bond-async==0.1.23
@@ -472,7 +472,7 @@ brottsplatskartan==0.0.1
 brunt==1.2.0
 
 # homeassistant.components.bthome
-bthome-ble==2.11.3
+bthome-ble==2.12.0
 
 # homeassistant.components.buienradar
 buienradar==1.0.5
@@ -1165,7 +1165,7 @@ pyatag==0.3.5.3
 pyatmo==7.5.0
 
 # homeassistant.components.apple_tv
-pyatv==0.12.0
+pyatv==0.13.0
 
 # homeassistant.components.aussie_broadband
 pyaussiebb==0.0.15
@@ -1643,7 +1643,7 @@ radios==0.1.1
 radiotherm==2.1.0
 
 # homeassistant.components.rapt_ble
-rapt-ble==0.1.1
+rapt-ble==0.1.2
 
 # homeassistant.components.rainmachine
 regenmaschine==2023.06.0
@@ -1655,7 +1655,7 @@ renault-api==0.1.13
 renson-endura-delta==1.5.0
 
 # homeassistant.components.reolink
-reolink-aio==0.6.0
+reolink-aio==0.7.1
 
 # homeassistant.components.rflink
 rflink==0.0.65
@@ -1967,7 +1967,7 @@ xiaomi-ble==0.17.2
 xknx==2.10.0
 
 # homeassistant.components.knx
-xknxproject==3.1.1
+xknxproject==3.2.0
 
 # homeassistant.components.bluesound
 # homeassistant.components.fritz
@@ -2000,7 +2000,7 @@ youless-api==1.0.1
 zamg==0.2.2
 
 # homeassistant.components.zeroconf
-zeroconf==0.66.0
+zeroconf==0.69.0
 
 # homeassistant.components.zeversolar
 zeversolar==0.3.1
