@@ -9,7 +9,9 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfTime
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN, LOGGER
 from .coordinator import HydrawiseDataUpdateCoordinator, HydrawiseEntity
@@ -19,13 +21,13 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="next_cycle",
         name="Next Cycle",
-        device_class=SensorDeviceClass.TIMESTAMP,
+        device_class=SensorDeviceClass.DATE,
     ),
     SensorEntityDescription(
         key="watering_time",
         name="Watering Time",
         icon="mdi:water-pump",
-        native_unit_of_measurement=UnitOfTime.MINUTES,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
     ),
 )
 
@@ -67,11 +69,32 @@ async def async_setup_entry(
 class HydrawiseSensor(HydrawiseEntity, SensorEntity):
     """A sensor implementation for Hydrawise device."""
 
+    def __init__(
+        self,
+        *,
+        coordinator: HydrawiseDataUpdateCoordinator,
+        controller_id: int,
+        relay_id: int,
+        description: EntityDescription,
+    ) -> None:
+        """Initialize."""
+        super().__init__(
+            coordinator=coordinator,
+            controller_id=controller_id,
+            relay_id=relay_id,
+            description=description,
+        )
+        self.update()
+
     @callback
     def _handle_coordinator_update(self) -> None:
         """Get the latest data and updates the states."""
         super()._handle_coordinator_update()
 
+        self.update()
+
+    def update(self) -> None:
+        """Update state."""
         relay = self.coordinator.api.get_relay(self.controller_id, self.relay_id)
         if relay is None:
             return
@@ -85,7 +108,13 @@ class HydrawiseSensor(HydrawiseEntity, SensorEntity):
                 self._attr_native_value,
             )
         else:  # _sensor_type == 'next_cycle'
-            self._attr_native_value = relay.timestr
+            if relay.timestr == "":
+                self._attr_native_value = None
+            else:
+                self._attr_native_value = dt_util.utc_from_timestamp(
+                    dt_util.as_timestamp(dt_util.now()) + relay.time
+                )
+
             LOGGER.debug(
                 "Updating NextCycle sensor for controller %s zone %s, next cycle %s",
                 self.controller_id,
