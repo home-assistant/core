@@ -1,7 +1,8 @@
 """The Ruckus Unleashed integration."""
 import logging
 
-import aioruckus
+from aioruckus import AjaxSession
+from aioruckus.exceptions import AuthenticationError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
@@ -32,7 +33,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Ruckus Unleashed from a config entry."""
 
     try:
-        ruckus = aioruckus.AjaxSession.async_create(
+        ruckus = AjaxSession.async_create(
             entry.data[CONF_HOST],
             entry.data[CONF_USERNAME],
             entry.data[CONF_PASSWORD],
@@ -41,7 +42,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except ConnectionError as conerr:
         _LOGGER.exception("ConnectionError: %s", conerr)
         raise ConfigEntryNotReady from conerr
-    except aioruckus.exceptions.AuthenticationError as autherr:
+    except AuthenticationError as autherr:
         _LOGGER.exception("AuthenticationError: %s", autherr)
         raise ConfigEntryAuthFailed from autherr
 
