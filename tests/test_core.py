@@ -957,9 +957,7 @@ async def test_serviceregistry_call_with_blocking_done_in_time(
     assert registered_events[0].data["domain"] == "test_domain"
     assert registered_events[0].data["service"] == "register_calls"
 
-    assert await hass.services.async_call(
-        "test_domain", "REGISTER_CALLS", blocking=True
-    )
+    await hass.services.async_call("test_domain", "REGISTER_CALLS", blocking=True)
     assert len(calls) == 1
 
 
@@ -981,9 +979,7 @@ async def test_serviceregistry_async_service(hass: HomeAssistant) -> None:
 
     hass.services.async_register("test_domain", "register_calls", service_handler)
 
-    assert await hass.services.async_call(
-        "test_domain", "REGISTER_CALLS", blocking=True
-    )
+    await hass.services.async_call("test_domain", "REGISTER_CALLS", blocking=True)
     assert len(calls) == 1
 
 
@@ -1000,9 +996,7 @@ async def test_serviceregistry_async_service_partial(hass: HomeAssistant) -> Non
     )
     await hass.async_block_till_done()
 
-    assert await hass.services.async_call(
-        "test_domain", "REGISTER_CALLS", blocking=True
-    )
+    await hass.services.async_call("test_domain", "REGISTER_CALLS", blocking=True)
     assert len(calls) == 1
 
 
@@ -1017,9 +1011,7 @@ async def test_serviceregistry_callback_service(hass: HomeAssistant) -> None:
 
     hass.services.async_register("test_domain", "register_calls", service_handler)
 
-    assert await hass.services.async_call(
-        "test_domain", "REGISTER_CALLS", blocking=True
-    )
+    await hass.services.async_call("test_domain", "REGISTER_CALLS", blocking=True)
     assert len(calls) == 1
 
 
@@ -1063,12 +1055,10 @@ async def test_serviceregistry_async_service_raise_exception(
     hass.services.async_register("test_domain", "register_calls", service_handler)
 
     with pytest.raises(ValueError):
-        assert await hass.services.async_call(
-            "test_domain", "REGISTER_CALLS", blocking=True
-        )
+        await hass.services.async_call("test_domain", "REGISTER_CALLS", blocking=True)
 
     # Non-blocking service call never throw exception
-    await hass.services.async_call("test_domain", "REGISTER_CALLS", blocking=False)
+    hass.services.async_call("test_domain", "REGISTER_CALLS", blocking=False)
     await hass.async_block_till_done()
 
 
@@ -1085,12 +1075,10 @@ async def test_serviceregistry_callback_service_raise_exception(
     hass.services.async_register("test_domain", "register_calls", service_handler)
 
     with pytest.raises(ValueError):
-        assert await hass.services.async_call(
-            "test_domain", "REGISTER_CALLS", blocking=True
-        )
+        await hass.services.async_call("test_domain", "REGISTER_CALLS", blocking=True)
 
     # Non-blocking service call never throw exception
-    await hass.services.async_call("test_domain", "REGISTER_CALLS", blocking=False)
+    hass.services.async_call("test_domain", "REGISTER_CALLS", blocking=False)
     await hass.async_block_till_done()
 
 
@@ -1357,42 +1345,6 @@ async def test_async_functions_with_callback(hass: HomeAssistant) -> None:
 
     await hass.services.async_call("test_domain", "test_service", blocking=True)
     assert len(runs) == 3
-
-
-@pytest.mark.parametrize("cancel_call", [True, False])
-async def test_cancel_service_task(hass: HomeAssistant, cancel_call) -> None:
-    """Test cancellation."""
-    service_called = asyncio.Event()
-    service_cancelled = False
-
-    async def service_handler(call):
-        nonlocal service_cancelled
-        service_called.set()
-        try:
-            await asyncio.sleep(10)
-        except asyncio.CancelledError:
-            service_cancelled = True
-            raise
-
-    hass.services.async_register("test_domain", "test_service", service_handler)
-    call_task = hass.async_create_task(
-        hass.services.async_call("test_domain", "test_service", blocking=True)
-    )
-
-    tasks_1 = asyncio.all_tasks()
-    await asyncio.wait_for(service_called.wait(), timeout=1)
-    tasks_2 = asyncio.all_tasks() - tasks_1
-    assert len(tasks_2) == 1
-    service_task = tasks_2.pop()
-
-    if cancel_call:
-        call_task.cancel()
-    else:
-        service_task.cancel()
-    with pytest.raises(asyncio.CancelledError):
-        await call_task
-
-    assert service_cancelled
 
 
 def test_valid_entity_id() -> None:

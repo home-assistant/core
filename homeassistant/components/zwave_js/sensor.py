@@ -48,7 +48,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import StateType
+from homeassistant.helpers.typing import UNDEFINED, StateType
 
 from .const import (
     ATTR_METER_TYPE,
@@ -610,7 +610,7 @@ class ZwaveSensor(ZWaveBaseEntity, SensorEntity):
 
         # Entity class attributes
         self._attr_force_update = True
-        if not entity_description.name:
+        if not entity_description.name or entity_description.name is UNDEFINED:
             self._attr_name = self.generate_name(include_value_name=True)
 
     @property
