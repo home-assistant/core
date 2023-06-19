@@ -1122,7 +1122,7 @@ async def test_zeroconf_sleeping_device_not_triggers_refresh(
 async def test_sleeping_device_gen2_with_new_firmware(
     hass: HomeAssistant, mock_rpc_device, monkeypatch
 ) -> None:
-    """Test sleeping device Gen2 with firmware 1.0.0 (no wakeup_period in Shelly.GetConfig response)."""
+    """Test sleeping device Gen2 with firmware 1.0.0 or later."""
     monkeypatch.setitem(mock_rpc_device.status["sys"], "wakeup_period", 666)
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
