@@ -45,6 +45,7 @@ class TrelloSensor(CoordinatorEntity[TrelloDataUpdateCoordinator], SensorEntity)
             self._attr_available = False
             return None
 
+        self._attr_name = board.lists[self.list_id].name
         return self.coordinator.data[self.board.id].lists[self.list_id].card_count
 
     @property
