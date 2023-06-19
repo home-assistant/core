@@ -56,10 +56,11 @@ from homeassistant.helpers.issue_registry import (
 )
 from homeassistant.helpers.service import async_set_service_schema
 from homeassistant.helpers.template import Template
+from homeassistant.helpers.typing import ConfigType
 
 from .bluetooth import async_connect_scanner
 from .const import DOMAIN
-from .dashboard import async_get_dashboard
+from .dashboard import async_get_dashboard, async_setup as async_setup_dashboard
 from .domain_data import DomainData
 
 # Import config flow so that it's added to the registry
@@ -72,12 +73,14 @@ CONF_NOISE_PSK = "noise_psk"
 _LOGGER = logging.getLogger(__name__)
 _R = TypeVar("_R")
 
-STABLE_BLE_VERSION_STR = "2023.4.0"
+STABLE_BLE_VERSION_STR = "2023.6.0"
 STABLE_BLE_VERSION = AwesomeVersion(STABLE_BLE_VERSION_STR)
 PROJECT_URLS = {
     "esphome.bluetooth-proxy": "https://esphome.github.io/bluetooth-proxies/",
 }
 DEFAULT_URL = f"https://esphome.io/changelog/{STABLE_BLE_VERSION_STR}.html"
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
 @callback
@@ -133,6 +136,12 @@ def _async_check_using_api_password(
             "name": device_info.name,
         },
     )
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the esphome component."""
+    await async_setup_dashboard(hass)
+    return True
 
 
 async def async_setup_entry(  # noqa: C901

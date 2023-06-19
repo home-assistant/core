@@ -35,6 +35,9 @@ async def async_setup_entry(
 class FreedomproFan(CoordinatorEntity[FreedomproDataUpdateCoordinator], FanEntity):
     """Representation of an Freedompro fan."""
 
+    _attr_has_entity_name = True
+    _attr_name = None
+
     def __init__(
         self,
         hass: HomeAssistant,
@@ -46,7 +49,6 @@ class FreedomproFan(CoordinatorEntity[FreedomproDataUpdateCoordinator], FanEntit
         super().__init__(coordinator)
         self._session = aiohttp_client.async_get_clientsession(hass)
         self._api_key = api_key
-        self._attr_name = device["name"]
         self._attr_unique_id = device["uid"]
         self._characteristics = device["characteristics"]
         self._attr_device_info = DeviceInfo(
@@ -55,7 +57,7 @@ class FreedomproFan(CoordinatorEntity[FreedomproDataUpdateCoordinator], FanEntit
             },
             manufacturer="Freedompro",
             model=device["type"],
-            name=self.name,
+            name=device["name"],
         )
         self._attr_is_on = False
         self._attr_percentage = 0

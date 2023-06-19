@@ -14,7 +14,7 @@ from homeassistant.components.camera import (
     async_get_image,
 )
 from homeassistant.components.demo import DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
@@ -22,8 +22,18 @@ from homeassistant.setup import async_setup_component
 ENTITY_CAMERA = "camera.demo_camera"
 
 
+@pytest.fixture
+async def camera_only() -> None:
+    """Enable only the button platform."""
+    with patch(
+        "homeassistant.components.demo.COMPONENTS_WITH_CONFIG_ENTRY_DEMO_PLATFORM",
+        [Platform.CAMERA],
+    ):
+        yield
+
+
 @pytest.fixture(autouse=True)
-async def demo_camera(hass):
+async def demo_camera(hass, camera_only):
     """Initialize a demo camera platform."""
     assert await async_setup_component(
         hass, CAMERA_DOMAIN, {CAMERA_DOMAIN: {"platform": DOMAIN}}
