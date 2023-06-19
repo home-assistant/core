@@ -134,7 +134,7 @@ class HumidifierEntity(ToggleEntity):
 
     entity_description: HumidifierEntityDescription
     _attr_available_modes: list[str] | None
-    _attr_current_humidity: int | None
+    _attr_current_humidity: int | None = None
     _attr_device_class: HumidifierDeviceClass | None
     _attr_max_humidity: int = DEFAULT_MAX_HUMIDITY
     _attr_min_humidity: int = DEFAULT_MIN_HUMIDITY
