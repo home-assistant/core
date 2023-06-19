@@ -212,7 +212,7 @@ class ActiveConnection:
         self, msg: str | dict[str, Any] | Callable[[], str]
     ) -> None:
         """Send a message when the connection is closed."""
-        raise RuntimeError("Connection is closed")
+        self.logger.debug("Tried to send message %s on closed connection", msg)
 
     @callback
     def async_handle_exception(self, msg: dict[str, Any], err: Exception) -> None:
