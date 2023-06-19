@@ -25,6 +25,7 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
+    STATE_UNAVAILABLE,
 )
 from homeassistant.core import (
     Context,
@@ -1428,8 +1429,13 @@ async def test_automation_bad_config_validation(
         f" {details}"
     ) in caplog.text
 
-    # Make sure one bad automation does not prevent other automations from setting up
-    assert hass.states.async_entity_ids("automation") == ["automation.good_automation"]
+    # Make sure both automations are setup
+    assert set(hass.states.async_entity_ids("automation")) == {
+        "automation.bad_automation",
+        "automation.good_automation",
+    }
+    # The automation failing validation should be unavailable
+    assert hass.states.get("automation.bad_automation").state == STATE_UNAVAILABLE
 
 
 async def test_automation_with_error_in_script(
