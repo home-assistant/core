@@ -99,6 +99,8 @@ STORAGE_VERSION = 1
 
 ENTITY_ID_SORTER = attrgetter("entity_id")
 
+ZONE_ENTITY_IDS = "zone_entity_ids"
+
 
 @bind_hass
 def async_active_zone(
@@ -111,9 +113,16 @@ def async_active_zone(
     # Sort entity IDs so that we are deterministic if equal distance to 2 zones
     min_dist = None
     closest = None
+    # This can be called before async_setup by device tracker
+    zone_entity_ids: list[str] = hass.data.get(ZONE_ENTITY_IDS, [])
 
-    for zone in sorted(hass.states.async_all(DOMAIN), key=ENTITY_ID_SORTER):
-        if zone.state == STATE_UNAVAILABLE or zone.attributes.get(ATTR_PASSIVE):
+    for entity_id in zone_entity_ids:
+        zone = hass.states.get(entity_id)
+        if (
+            not zone
+            or zone.state == STATE_UNAVAILABLE
+            or zone.attributes.get(ATTR_PASSIVE)
+        ):
             continue
 
         zone_dist = distance(
@@ -184,6 +193,9 @@ class ZoneStorageCollection(collection.DictStorageCollection):
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up configured zones as well as Home Assistant zone if necessary."""
+    zone_entity_ids: list[str] = []
+    hass.data[ZONE_ENTITY_IDS] = zone_entity_ids
+
     component = entity_component.EntityComponent[Zone](_LOGGER, DOMAIN, hass)
     id_manager = collection.IDManager()
 
@@ -373,6 +385,14 @@ class Zone(collection.CollectionEntity):
                 self._person_state_change_listener,
             ).async_remove
         )
+        zone_entity_ids: list[str] = self.hass.data[ZONE_ENTITY_IDS]
+        zone_entity_ids.append(self.entity_id)
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Run when entity is about to be removed from hass."""
+        await super().async_will_remove_from_hass()
+        zone_entity_ids: list[str] = self.hass.data[ZONE_ENTITY_IDS]
+        zone_entity_ids.remove(self.entity_id)
 
     @callback
     def _generate_attrs(self) -> None:
