@@ -165,7 +165,6 @@ def async_setup_track_zone_entity_ids(hass: HomeAssistant) -> None:
     def _async_remove_zone_entity_id(event_: Event) -> None:
         """Remove zone entity ID."""
         zone_entity_ids.remove(event_.data[ATTR_ENTITY_ID])
-        zone_entity_ids.sort()
 
     event.async_track_state_added_domain(hass, DOMAIN, _async_add_zone_entity_id)
     event.async_track_state_removed_domain(hass, DOMAIN, _async_remove_zone_entity_id)
