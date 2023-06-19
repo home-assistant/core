@@ -3,7 +3,7 @@
     "step": {
       "user": {
         "data": {
-          "mobile": "Phone Number",
+          "mobile": "Mobile Number (e.g. +91xxxxxxxxxx)",
           "password": "[%key:common::config_flow::data::password%]"
         }
       }
@@ -11,6 +11,7 @@
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "invalid_mobile": "Invalid mobile number. Please use the format +91XXXXXXXXXX",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {

@@ -6,7 +6,7 @@ import pytest
 from homeassistant import config_entries
 from homeassistant.components.miraie_ac.config_flow import (
     AuthException,
-    CannotConnect,
+    ValidationError,
 )
 from homeassistant.components.miraie_ac.const import (
     CONFIG_KEY_PASSWORD,
@@ -67,7 +67,7 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
     assert result2["errors"] == {"base": "invalid_auth"}
 
 
-async def test_form_cannot_connect(hass: HomeAssistant) -> None:
+async def test_form_invalid_mobile(hass: HomeAssistant) -> None:
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -75,15 +75,15 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.miraie_ac.config_flow.MirAIeAPI.initialize",
-        side_effect=CannotConnect,
+        side_effect=ValidationError,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONFIG_KEY_USER_ID: "+919876543219", CONFIG_KEY_PASSWORD: "P@ssw0rD"},
+            {CONFIG_KEY_USER_ID: "+9198765432", CONFIG_KEY_PASSWORD: "P@ssw0rD"},
         )
 
     assert result2["type"] == FlowResultType.FORM
-    assert result2["errors"] == {"base": "cannot_connect"}
+    assert result2["errors"] == {"base": "invalid_mobile"}
 
 
 async def test_form_unhandled_exception(hass: HomeAssistant) -> None:
