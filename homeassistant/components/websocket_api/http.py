@@ -392,6 +392,8 @@ class WebSocketHandler:
         finally:
             unsub_stop()
 
+            self._cancel_peak_checker()
+
             if connection is not None:
                 connection.async_handle_close()
 
@@ -423,5 +425,15 @@ class WebSocketHandler:
                         self.connection = None
 
                     async_dispatcher_send(self.hass, SIGNAL_WEBSOCKET_DISCONNECTED)
+
+                    # Break reference cycles to make sure GC can happen sooner
+                    self.wsock = None  # type: ignore[assignment]
+                    self.request = None  # type: ignore[assignment]
+                    self.hass = None  # type: ignore[assignment]
+                    self._logger = None  # type: ignore[assignment]
+                    self._message_queue = None  # type: ignore[assignment]
+                    self._handle_task = None
+                    self._writer_task = None
+                    self._ready_future = None
 
         return wsock
