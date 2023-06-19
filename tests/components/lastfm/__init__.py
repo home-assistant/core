@@ -101,6 +101,14 @@ class FailingMockUser(MockUser):
 
     amount_called = 0
 
+    def __init__(self):
+        """Initialize default user."""
+        super().__init__(
+            now_playing_result=Track("artist", "title", MockNetwork("lastfm")),
+            top_tracks=[Track("artist", "title", MockNetwork("lastfm"))],
+            recent_tracks=[Track("artist", "title", MockNetwork("lastfm"))],
+        )
+
     def get_image(self) -> str:
         """Raise exception when get user image."""
         self.amount_called += 1
