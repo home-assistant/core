@@ -104,6 +104,8 @@ class LastFmSensor(SensorEntity):
 
     def update(self) -> None:
         """Update device state."""
+        top_played = None
+        last_played = None
         try:
             play_count = self._user.get_playcount()
             self._attr_entity_picture = self._user.get_image()
@@ -111,18 +113,16 @@ class LastFmSensor(SensorEntity):
                 self._attr_native_value = format_track(now_playing)
             else:
                 self._attr_native_value = STATE_NOT_SCROBBLING
-            top_played = None
-            last_played = None
             if top_tracks := self._user.get_top_tracks(limit=1):
                 top_played = format_track(top_tracks[0].item)
             if last_tracks := self._user.get_recent_tracks(limit=1):
                 last_played = format_track(last_tracks[0].track)
-            self._attr_extra_state_attributes = {
-                ATTR_LAST_PLAYED: last_played,
-                ATTR_PLAY_COUNT: play_count,
-                ATTR_TOP_PLAYED: top_played,
-            }
         except PyLastError as exc:
             self._attr_available = False
             LOGGER.error("Failed to load LastFM user `%s`: %r", self._user.name, exc)
             return
+        self._attr_extra_state_attributes = {
+            ATTR_LAST_PLAYED: last_played,
+            ATTR_PLAY_COUNT: play_count,
+            ATTR_TOP_PLAYED: top_played,
+        }
