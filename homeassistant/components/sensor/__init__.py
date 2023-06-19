@@ -262,7 +262,7 @@ class SensorEntity(Entity):
 
         For sensors this is True if the entity has a device class.
         """
-        return self.device_class is not None
+        return self.device_class not in (None, SensorDeviceClass.ENUM)
 
     @property
     def device_class(self) -> SensorDeviceClass | None:
