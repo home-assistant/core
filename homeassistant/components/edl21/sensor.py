@@ -16,7 +16,6 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    CONF_NAME,
     DEGREE,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
@@ -304,12 +303,11 @@ class EDL21:
         self._registered_obis: set[tuple[str, str]] = set()
         self._hass = hass
         self._async_add_entities = async_add_entities
-        self._name = config.get(CONF_NAME)
+        self._serial_port = config[CONF_SERIAL_PORT]
         self._proto = SmlProtocol(config[CONF_SERIAL_PORT])
         self._proto.add_listener(self.event, ["SmlGetListResponse"])
         LOGGER.debug(
-            "Initialized EDL21 for %s on %s",
-            config.get(CONF_NAME),
+            "Initialized EDL21 on %s",
             config[CONF_SERIAL_PORT],
         )
 
@@ -320,12 +318,14 @@ class EDL21:
     def event(self, message_body) -> None:
         """Handle events from pysml."""
         assert isinstance(message_body, SmlGetListResponse)
-        LOGGER.debug("Received sml message for %s: %s", self._name, message_body)
+        LOGGER.debug("Received sml message on %s: %s", self._serial_port, message_body)
 
         electricity_id = message_body["serverId"]
 
         if electricity_id is None:
-            LOGGER.debug("No electricity id found in sml message for %s", self._name)
+            LOGGER.debug(
+                "No electricity id found in sml message on %s", self._serial_port
+            )
             return
         electricity_id = electricity_id.replace(" ", "")
 
@@ -341,14 +341,10 @@ class EDL21:
             else:
                 entity_description = SENSORS.get(obis)
                 if entity_description:
-                    # self._name is only used for backwards YAML compatibility
-                    # This needs to be cleaned up when YAML support is removed
-                    device_name = self._name or DEFAULT_DEVICE_NAME
                     new_entities.append(
                         EDL21Entity(
                             electricity_id,
                             obis,
-                            device_name,
                             entity_description,
                             telegram,
                         )
@@ -372,7 +368,7 @@ class EDL21Entity(SensorEntity):
     _attr_should_poll = False
     _attr_has_entity_name = True
 
-    def __init__(self, electricity_id, obis, device_name, entity_description, telegram):
+    def __init__(self, electricity_id, obis, entity_description, telegram):
         """Initialize an EDL21Entity."""
         self._electricity_id = electricity_id
         self._obis = obis
@@ -384,7 +380,7 @@ class EDL21Entity(SensorEntity):
         self._attr_unique_id = f"{electricity_id}_{obis}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._electricity_id)},
-            name=device_name,
+            name=DEFAULT_DEVICE_NAME,
         )
 
     async def async_added_to_hass(self) -> None:
