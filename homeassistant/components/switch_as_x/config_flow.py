@@ -22,6 +22,8 @@ TARGET_DOMAIN_OPTIONS = [
     selector.SelectOptionDict(value=Platform.LIGHT, label="Light"),
     selector.SelectOptionDict(value=Platform.LOCK, label="Lock"),
     selector.SelectOptionDict(value=Platform.SIREN, label="Siren"),
+    selector.SelectOptionDict(value=Platform.SWITCH, label="Inverse"),
+
 ]
 
 CONFIG_FLOW = {
