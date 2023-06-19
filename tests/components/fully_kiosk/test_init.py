@@ -139,7 +139,7 @@ async def test_multiple_kiosk_with_empty_mac(
 
 async def test_valid_global_mac_address() -> None:
     """Test valid_global_mac_address function."""
-    assert valid_global_mac_address("aa:bb:cc:dd:ee:ff")
+    assert valid_global_mac_address("a1:bb:cc:dd:ee:ff")
     assert not valid_global_mac_address("02:00:00:00:00:00")
     assert not valid_global_mac_address(None)
     assert not valid_global_mac_address("foobar")
