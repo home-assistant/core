@@ -2715,7 +2715,7 @@ yalexs-ble==2.1.18
 yalexs==1.5.1
 
 # homeassistant.components.yeelight
-yeelight==0.7.10
+yeelight==0.7.11
 
 # homeassistant.components.yeelightsunflower
 yeelightsunflower==0.0.10
