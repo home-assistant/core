@@ -86,7 +86,7 @@ class WebSocketHandler:
 
     def __repr__(self) -> str:
         """Return the representation."""
-        return f"<WebSocketHandler closing={self._closing} authenticated={self._authenticated} {self.description}>"
+        return f"<WebSocketHandler closing={self._closing} authenticated={self._authenticated} description={self.description}>"
 
     @property
     def description(self) -> str:
