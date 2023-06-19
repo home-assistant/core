@@ -51,14 +51,14 @@ class DemoImage(ImageEntity):
     ) -> None:
         """Initialize the image entity."""
         super().__init__()
+        self._attr_content_type = content_type
         self._attr_name = name
         self._attr_unique_id = unique_id
-        self.content_type = content_type
         self._image_filename = image
 
     async def async_added_to_hass(self):
         """Set the update time."""
-        self._attr_last_updated = dt_util.utcnow()
+        self._attr_image_last_updated = dt_util.utcnow()
 
     async def async_image(self) -> bytes | None:
         """Return bytes of image."""
