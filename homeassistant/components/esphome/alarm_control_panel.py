@@ -90,26 +90,20 @@ class EsphomeAlarmControlPanel(
     @property
     def supported_features(self) -> AlarmControlPanelEntityFeature:
         """Return the list of supported features."""
-        if self._attr_supported_features == AlarmControlPanelEntityFeature(0):
-            feature = 0
-            if self._static_info.supported_features & EspHomeACPFeatures.ARM_HOME:
-                feature |= AlarmControlPanelEntityFeature.ARM_HOME
-            if self._static_info.supported_features & EspHomeACPFeatures.ARM_AWAY:
-                feature |= AlarmControlPanelEntityFeature.ARM_AWAY
-            if self._static_info.supported_features & EspHomeACPFeatures.ARM_NIGHT:
-                feature |= AlarmControlPanelEntityFeature.ARM_NIGHT
-            if self._static_info.supported_features & EspHomeACPFeatures.TRIGGER:
-                feature |= AlarmControlPanelEntityFeature.TRIGGER
-            if (
-                self._static_info.supported_features
-                & EspHomeACPFeatures.ARM_CUSTOM_BYPASS
-            ):
-                feature |= AlarmControlPanelEntityFeature.ARM_CUSTOM_BYPASS
-            if self._static_info.supported_features & EspHomeACPFeatures.ARM_VACATION:
-                feature |= AlarmControlPanelEntityFeature.ARM_VACATION
-            self._attr_supported_features = AlarmControlPanelEntityFeature(feature)
-
-        return self._attr_supported_features
+        feature = 0
+        if self._static_info.supported_features & EspHomeACPFeatures.ARM_HOME:
+            feature |= AlarmControlPanelEntityFeature.ARM_HOME
+        if self._static_info.supported_features & EspHomeACPFeatures.ARM_AWAY:
+            feature |= AlarmControlPanelEntityFeature.ARM_AWAY
+        if self._static_info.supported_features & EspHomeACPFeatures.ARM_NIGHT:
+            feature |= AlarmControlPanelEntityFeature.ARM_NIGHT
+        if self._static_info.supported_features & EspHomeACPFeatures.TRIGGER:
+            feature |= AlarmControlPanelEntityFeature.TRIGGER
+        if self._static_info.supported_features & EspHomeACPFeatures.ARM_CUSTOM_BYPASS:
+            feature |= AlarmControlPanelEntityFeature.ARM_CUSTOM_BYPASS
+        if self._static_info.supported_features & EspHomeACPFeatures.ARM_VACATION:
+            feature |= AlarmControlPanelEntityFeature.ARM_VACATION
+        return AlarmControlPanelEntityFeature(feature)
 
     @property
     def code_format(self) -> CodeFormat | None:
