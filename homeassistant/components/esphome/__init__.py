@@ -712,7 +712,7 @@ async def platform_async_setup_entry(
                 old_infos.pop(info.key)
             else:
                 # Create new entity
-                entity = entity_type(entry_data, component_key, info.key, state_type)
+                entity = entity_type(entry_data, component_key, info, state_type)
                 add_entities.append(entity)
             new_infos[info.key] = info
 
@@ -789,14 +789,14 @@ class EsphomeEntity(Entity, Generic[_InfoT, _StateT]):
         self,
         entry_data: RuntimeEntryData,
         component_key: str,
-        key: int,
+        entity_info: EntityInfo,
         state_type: type[_StateT],
     ) -> None:
         """Initialize."""
         self._entry_data = entry_data
         self._component_key = component_key
-        self._key = key
-        self._static_info = entry_data.info[component_key][key]
+        self._key = entity_info.key
+        self._static_info = entity_info
         self._state_type = state_type
         if entry_data.device_info is not None and entry_data.device_info.friendly_name:
             self._attr_has_entity_name = True
