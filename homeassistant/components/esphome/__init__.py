@@ -784,6 +784,7 @@ class EsphomeEntity(Entity, Generic[_InfoT, _StateT]):
     """Define a base esphome entity."""
 
     _attr_should_poll = False
+    _static_info: _InfoT
 
     def __init__(
         self,
@@ -796,7 +797,7 @@ class EsphomeEntity(Entity, Generic[_InfoT, _StateT]):
         self._entry_data = entry_data
         self._component_key = component_key
         self._key = entity_info.key
-        self._static_info = entity_info
+        self._static_info = cast(_InfoT, entity_info)
         self._state_type = state_type
         if entry_data.device_info is not None and entry_data.device_info.friendly_name:
             self._attr_has_entity_name = True
@@ -842,7 +843,7 @@ class EsphomeEntity(Entity, Generic[_InfoT, _StateT]):
         This method can be overridden in child classes to know
         when the static info changes.
         """
-        self._static_info = static_infos[self._key]
+        self._static_info = cast(_InfoT, static_infos[self._key])
 
     @callback
     def _on_state_update(self) -> None:
