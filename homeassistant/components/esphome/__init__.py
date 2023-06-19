@@ -45,7 +45,10 @@ from homeassistant.helpers import template
 import homeassistant.helpers.config_validation as cv
 import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.device_registry import format_mac
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
 from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
@@ -722,8 +725,15 @@ async def platform_async_setup_entry(
         # Then update the actual info
         entry_data.info[component_key] = new_infos
 
-        # Add entities to Home Assistant
-        async_add_entities(add_entities)
+        async_dispatcher_send(
+            hass,
+            entry_data.signal_component_static_info_updated(component_key),
+            new_infos,
+        )
+
+        if add_entities:
+            # Add entities to Home Assistant
+            async_add_entities(add_entities)
 
     entry_data.cleanup_callbacks.append(
         async_dispatcher_connect(
@@ -786,6 +796,7 @@ class EsphomeEntity(Entity, Generic[_InfoT, _StateT]):
         self._entry_data = entry_data
         self._component_key = component_key
         self._key = key
+        self._static_info = entry_data.info[component_key][key]
         self._state_type = state_type
         if entry_data.device_info is not None and entry_data.device_info.friendly_name:
             self._attr_has_entity_name = True
@@ -814,6 +825,21 @@ class EsphomeEntity(Entity, Generic[_InfoT, _StateT]):
             )
         )
 
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                self._entry_data.signal_component_static_info_updated(
+                    self._component_key
+                ),
+                self._on_static_info_update,
+            )
+        )
+
+    @callback
+    def _on_static_info_update(self, static_infos: dict[int, EntityInfo]) -> None:
+        """Save the static info for this entity when it changes."""
+        self._static_info = static_infos[self._key]
+
     @callback
     def _on_state_update(self) -> None:
         # Behavior can be changed in child classes
@@ -836,16 +862,6 @@ class EsphomeEntity(Entity, Generic[_InfoT, _StateT]):
     @property
     def _api_version(self) -> APIVersion:
         return self._entry_data.api_version
-
-    @property
-    def _static_info(self) -> _InfoT:
-        # Check if value is in info database. Use a single lookup.
-        info = self._entry_data.info[self._component_key].get(self._key)
-        if info is not None:
-            return cast(_InfoT, info)
-        # This entity is in the removal project and has been removed from .info
-        # already, look in old_info
-        return cast(_InfoT, self._entry_data.old_info[self._component_key][self._key])
 
     @property
     def _device_info(self) -> EsphomeDeviceInfo:
