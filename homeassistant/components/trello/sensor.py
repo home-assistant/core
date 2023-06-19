@@ -5,13 +5,14 @@ from trello import TrelloClient
 
 from homeassistant.components.sensor import SensorEntity, SensorStateClass
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import CONF_BOARD_IDS, DOMAIN, Board, List
+from .const import CONF_API_TOKEN, CONF_BOARD_IDS, DOMAIN, Board, List
 from .coordinator import TrelloDataUpdateCoordinator
 
 
@@ -71,8 +72,8 @@ async def async_setup_entry(
         return
     config_data = config_entry.data
     trello_client = TrelloClient(
-        api_key=config_data["api_key"],
-        api_secret=config_data["api_token"],
+        api_key=config_data[CONF_API_KEY],
+        api_secret=config_data[CONF_API_TOKEN],
     )
     coordinator = TrelloDataUpdateCoordinator(hass, trello_client, config_boards)
     await coordinator.async_config_entry_first_refresh()
