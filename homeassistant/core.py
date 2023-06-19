@@ -1655,16 +1655,16 @@ class StateMachine:
         )
 
 
-class SupportsResponse(enum.Enum):
+class SupportsResponse(StrEnum):
     """Service call response configuration."""
 
-    NONE = enum.auto()
+    NONE = "none"
     """The service does not support responses (the default)"""
 
-    OPTIONAL = enum.auto()
+    OPTIONAL = "optional"
     """The service optionally returns response data when asked by the caller."""
 
-    ONLY = enum.auto()
+    ONLY = "only"
     """The service is read-only and the caller must always ask for response data."""
 
 
