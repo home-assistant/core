@@ -99,7 +99,7 @@ PyRMVtransport==0.3.3
 PySocks==1.7.1
 
 # homeassistant.components.switchbot
-PySwitchbot==0.37.6
+PySwitchbot==0.38.0
 
 # homeassistant.components.switchmate
 PySwitchmate==0.5.1
@@ -342,7 +342,7 @@ aiosenseme==0.6.1
 aiosenz==1.0.0
 
 # homeassistant.components.shelly
-aioshelly==5.3.2
+aioshelly==5.4.0
 
 # homeassistant.components.skybell
 aioskybell==22.7.0
@@ -2736,7 +2736,7 @@ zamg==0.2.2
 zengge==0.2
 
 # homeassistant.components.zeroconf
-zeroconf==0.68.0
+zeroconf==0.69.0
 
 # homeassistant.components.zeversolar
 zeversolar==0.3.1
