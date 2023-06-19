@@ -44,8 +44,6 @@ NUMBER_MODES: EsphomeEnumMapper[EsphomeNumberMode, NumberMode] = EsphomeEnumMapp
 class EsphomeNumber(EsphomeEntity[NumberInfo, NumberState], NumberEntity):
     """A number implementation for esphome."""
 
-    _static_info: NumberInfo
-
     @property
     def device_class(self) -> NumberDeviceClass | None:
         """Return the class of this entity."""
