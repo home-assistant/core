@@ -116,6 +116,24 @@ class FailingMockUser(MockUser):
             raise PyLastError("network", "status", "Page not found")
         return ""
 
+    def get_now_playing(self) -> Track:
+        """Get mock now playing."""
+        if self.amount_called > 1:
+            raise PyLastError("network", "status", "Page not found")
+        return self._now_playing_result
+
+    def get_recent_tracks(self, limit: int) -> list[MockLastTrack]:
+        """Get mock recent tracks."""
+        if self.amount_called > 1:
+            raise PyLastError("network", "status", "Page not found")
+        return [MockLastTrack(track) for track in self._recent_tracks]
+
+    def get_top_tracks(self, limit: int) -> list[MockTopTrack]:
+        """Get mock top tracks."""
+        if self.amount_called > 1:
+            raise PyLastError("network", "status", "Page not found")
+        return [MockTopTrack(track) for track in self._recent_tracks]
+
 
 def patch_user(user: MockUser) -> MockUser:
     """Patch interface."""

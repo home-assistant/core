@@ -112,14 +112,20 @@ class LastFmSensor(SensorEntity):
             return
         try:
             self._attr_entity_picture = self._user.get_image()
+        except PyLastError:
+            pass
+        try:
             if now_playing := self._user.get_now_playing():
                 self._attr_native_value = format_track(now_playing)
             else:
                 self._attr_native_value = STATE_NOT_SCROBBLING
-            top_played = None
+        except PyLastError:
+            pass
+        top_played = None
+        last_played = None
+        try:
             if top_tracks := self._user.get_top_tracks(limit=1):
                 top_played = format_track(top_tracks[0].item)
-            last_played = None
             if last_tracks := self._user.get_recent_tracks(limit=1):
                 last_played = format_track(last_tracks[0].track)
             self._attr_extra_state_attributes = {
@@ -128,4 +134,4 @@ class LastFmSensor(SensorEntity):
                 ATTR_TOP_PLAYED: top_played,
             }
         except PyLastError:
-            return
+            pass
