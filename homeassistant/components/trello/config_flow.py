@@ -14,7 +14,6 @@ from . import TrelloAdapter
 from .const import (
     CONF_API_TOKEN,
     CONF_BOARD_IDS,
-    CONF_BOARDS,
     CONF_USER_EMAIL,
     CONF_USER_ID,
     DOMAIN,
@@ -76,15 +75,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         :param user_input: User's selected boards
         """
-        boards: dict[str, dict] = await self._get_boards_lists(
-            user_input[CONF_BOARD_IDS]
-        )
+        board_ids = user_input[CONF_BOARD_IDS]
 
         await self.async_set_unique_id(self.user_id)
         self._abort_if_unique_id_configured()
 
         config_data: dict[str, str] = self._get_config_data()
-        config_options = {CONF_BOARDS: boards}
+        config_options = {CONF_BOARD_IDS: board_ids}
 
         return self.async_create_entry(
             title=self.user_email, data=config_data, options=config_options
@@ -122,11 +119,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def _fetch_all_boards(self) -> dict[str, dict[str, str]]:
         return await self.hass.async_add_executor_job(self.trello_adapter.get_boards)
-
-    async def _get_boards_lists(self, board_ids: list[str]) -> dict[str, dict]:
-        return await self.hass.async_add_executor_job(
-            self.trello_adapter.get_board_lists, self.ids_boards, board_ids
-        )
 
     async def _get_current_member(self) -> Member:
         return await self.hass.async_add_executor_job(self.trello_adapter.get_member)

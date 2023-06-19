@@ -87,7 +87,7 @@ async def test_flow_user(hass: HomeAssistant) -> None:
         "user_id": USER_ID,
         "user_email": EMAIL_ADDR,
     }
-    assert board_selection_result["options"] == {"boards": BOARD_ID_LISTS}
+    assert board_selection_result["options"] == {"board_ids": [BOARD_ID]}
     assert board_selection_result["result"].unique_id == USER_ID
     assert board_selection_result["result"].title == EMAIL_ADDR
 

@@ -14,8 +14,6 @@ CONF_USER_ID = "user_id"
 CONF_USER_EMAIL = "user_email"
 CONF_BOARD_IDS = "board_ids"
 
-CONF_BOARDS = "boards"
-
 
 @dataclass
 class Board:

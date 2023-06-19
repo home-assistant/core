@@ -9,7 +9,7 @@ from homeassistant.core import HomeAssistant
 async def test_sensor_setup_entry(hass: HomeAssistant) -> None:
     """Test sensors are set up as expected."""
     mock_config_entry = Mock(
-        options={"boards": {"": ""}}, data={"api_key": "", "api_token": ""}
+        options={"board_ids": ["a_board_id"]}, data={"api_key": "", "api_token": ""}
     )
     mock_add_entities = Mock()
 
@@ -50,9 +50,9 @@ async def test_sensor_setup_entry(hass: HomeAssistant) -> None:
 async def test_empty_sensor_setup_entry(hass: HomeAssistant) -> None:
     """Test integration sets up even with no sensors."""
     mock_config_entry = Mock(
-        options={"boards": {}}, data={"api_key": "", "api_token": ""}
+        options={"board_ids": []}, data={"api_key": "", "api_token": ""}
     )
-    mock_add_entities = Mock(options={"boards": []})
+    mock_add_entities = Mock()
 
     with patch("homeassistant.components.trello.sensor.TrelloClient"), patch(
         "homeassistant.components.trello.sensor.TrelloDataUpdateCoordinator",
