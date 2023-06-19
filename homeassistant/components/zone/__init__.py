@@ -114,8 +114,7 @@ def async_active_zone(
     min_dist = None
     closest = None
     # This can be called before async_setup by device tracker
-    zone_entity_ids: set[str] = hass.data.get(ZONE_ENTITY_IDS, set())
-
+    zone_entity_ids: list[str] = hass.data.get(ZONE_ENTITY_IDS, [])
     for entity_id in zone_entity_ids:
         zone = hass.states.get(entity_id)
         if (
@@ -153,18 +152,20 @@ def async_active_zone(
 @callback
 def async_setup_track_zone_entity_ids(hass: HomeAssistant) -> None:
     """Set up track of entity IDs for zones."""
-    zone_entity_ids: set[str] = set(hass.states.async_entity_ids(DOMAIN))
+    zone_entity_ids: list[str] = hass.states.async_entity_ids(DOMAIN)
     hass.data[ZONE_ENTITY_IDS] = zone_entity_ids
 
     @callback
     def _async_add_zone_entity_id(event_: Event) -> None:
         """Add zone entity ID."""
-        zone_entity_ids.add(event_.data[ATTR_ENTITY_ID])
+        zone_entity_ids.append(event_.data[ATTR_ENTITY_ID])
+        zone_entity_ids.sort()
 
     @callback
     def _async_remove_zone_entity_id(event_: Event) -> None:
         """Remove zone entity ID."""
         zone_entity_ids.remove(event_.data[ATTR_ENTITY_ID])
+        zone_entity_ids.sort()
 
     event.async_track_state_added_domain(hass, DOMAIN, _async_add_zone_entity_id)
     event.async_track_state_removed_domain(hass, DOMAIN, _async_remove_zone_entity_id)
