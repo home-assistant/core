@@ -1632,6 +1632,7 @@ async def test_ws_hass_agent_debug(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test homeassistant agent debug websocket command."""
     assert await async_setup_component(hass, "homeassistant", {})
@@ -1650,23 +1651,18 @@ async def test_ws_hass_agent_debug(
     await client.send_json_auto_id(
         {
             "type": "conversation/agent/homeassistant/debug",
-            "sentence": ["turn on my cool light", "turn my cool light off"],
+            "sentences": [
+                "turn on my cool light",
+                "turn my cool light off",
+                "this will not match anything",  # null in results
+            ],
         }
     )
 
     msg = await client.receive_json()
 
     assert msg["success"]
-    assert msg["result"] == {
-        "turn on my cool light": {
-            "intent": "HassTurnOn",
-            "slots": {"name": "my cool light"},
-        },
-        "turn my cool light off": {
-            "intent": "HassTurnOff",
-            "slots": {"name": "my cool light"},
-        },
-    }
+    assert msg["result"] == snapshot
 
     # Light state should not have been changed
     assert len(on_calls) == 0
