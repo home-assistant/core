@@ -29,7 +29,7 @@ class MockImageEntity(image.ImageEntity):
 
     async def async_added_to_hass(self):
         """Set the update time."""
-        self._attr_last_updated = dt_util.utcnow()
+        self._attr_image_last_updated = dt_util.utcnow()
 
     async def async_image(self) -> bytes | None:
         """Return bytes of image."""
@@ -53,7 +53,7 @@ class MockImageSyncEntity(image.ImageEntity):
 
     async def async_added_to_hass(self):
         """Set the update time."""
-        self._attr_last_updated = dt_util.utcnow()
+        self._attr_image_last_updated = dt_util.utcnow()
 
     def image(self) -> bytes | None:
         """Return bytes of image."""

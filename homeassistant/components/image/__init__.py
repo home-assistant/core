@@ -12,7 +12,6 @@ from typing import Final, final
 
 from aiohttp import hdrs, web
 import async_timeout
-import attr
 
 from homeassistant.components.http import KEY_AUTHENTICATED, HomeAssistantView
 from homeassistant.config_entries import ConfigEntry
@@ -47,12 +46,12 @@ class ImageEntityDescription(EntityDescription):
     """A class that describes image entities."""
 
 
-@attr.s
+@dataclass
 class Image:
     """Represent an image."""
 
-    content_type: str = attr.ib()
-    content: bytes = attr.ib()
+    content_type: str
+    content: bytes
 
 
 async def _async_get_image(image_entity: ImageEntity, timeout: int) -> Image:
@@ -114,15 +113,20 @@ class ImageEntity(Entity):
     """The base class for image entities."""
 
     # Entity Properties
-    _attr_last_updated: datetime | None = None
+    _attr_content_type: str = DEFAULT_CONTENT_TYPE
+    _attr_image_last_updated: datetime | None = None
     _attr_should_poll: bool = False  # No need to poll image entities
     _attr_state: None = None  # State is determined by last_updated
 
     def __init__(self) -> None:
         """Initialize an image entity."""
-        self.content_type: str = DEFAULT_CONTENT_TYPE
         self.access_tokens: collections.deque = collections.deque([], 2)
         self.async_update_token()
+
+    @property
+    def content_type(self) -> str:
+        """Image content type."""
+        return self._attr_content_type
 
     @property
     def entity_picture(self) -> str:
@@ -132,11 +136,9 @@ class ImageEntity(Entity):
         return ENTITY_IMAGE_URL.format(self.entity_id, self.access_tokens[-1])
 
     @property
-    def last_updated(self) -> datetime | None:
+    def image_last_updated(self) -> datetime | None:
         """The time when the image was last updated."""
-        if self._attr_last_updated is not None:
-            return self._attr_last_updated
-        return None
+        return self._attr_image_last_updated
 
     def image(self) -> bytes | None:
         """Return bytes of image."""
@@ -150,9 +152,9 @@ class ImageEntity(Entity):
     @final
     def state(self) -> str | None:
         """Return the state."""
-        if self.last_updated is None:
+        if self.image_last_updated is None:
             return None
-        return self.last_updated.isoformat()
+        return self.image_last_updated.isoformat()
 
     @final
     @property
