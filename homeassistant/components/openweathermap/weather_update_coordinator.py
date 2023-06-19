@@ -12,7 +12,7 @@ from homeassistant.components.weather import (
 from homeassistant.const import UnitOfTemperature
 from homeassistant.helpers import sun
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-from homeassistant.util import dt
+from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_conversion import TemperatureConverter
 
 from .const import (
@@ -159,7 +159,7 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
     def _convert_forecast(self, entry):
         """Convert the forecast data."""
         forecast = {
-            ATTR_API_FORECAST_TIME: dt.utc_from_timestamp(
+            ATTR_API_FORECAST_TIME: dt_util.utc_from_timestamp(
                 entry.reference_time("unix")
             ).isoformat(),
             ATTR_API_FORECAST_PRECIPITATION: self._calc_precipitation(
@@ -252,7 +252,7 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
         """Get weather condition from weather data."""
         if weather_code == WEATHER_CODE_SUNNY_OR_CLEAR_NIGHT:
             if timestamp:
-                timestamp = dt.utc_from_timestamp(timestamp)
+                timestamp = dt_util.utc_from_timestamp(timestamp)
 
             if sun.is_up(self.hass, timestamp):
                 return ATTR_CONDITION_SUNNY

@@ -70,6 +70,7 @@ CONF_IS_SULPHUR_DIOXIDE = "is_sulphur_dioxide"
 CONF_IS_TEMPERATURE = "is_temperature"
 CONF_IS_VALUE = "is_value"
 CONF_IS_VOLATILE_ORGANIC_COMPOUNDS = "is_volatile_organic_compounds"
+CONF_IS_VOLATILE_ORGANIC_COMPOUNDS_PARTS = "is_volatile_organic_compounds_parts"
 CONF_IS_VOLTAGE = "is_voltage"
 CONF_IS_VOLUME = "is_volume"
 CONF_IS_WATER = "is_water"
@@ -119,6 +120,9 @@ ENTITY_CONDITIONS = {
     SensorDeviceClass.TEMPERATURE: [{CONF_TYPE: CONF_IS_TEMPERATURE}],
     SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS: [
         {CONF_TYPE: CONF_IS_VOLATILE_ORGANIC_COMPOUNDS}
+    ],
+    SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS_PARTS: [
+        {CONF_TYPE: CONF_IS_VOLATILE_ORGANIC_COMPOUNDS_PARTS}
     ],
     SensorDeviceClass.VOLTAGE: [{CONF_TYPE: CONF_IS_VOLTAGE}],
     SensorDeviceClass.VOLUME: [{CONF_TYPE: CONF_IS_VOLUME}],
@@ -173,6 +177,7 @@ CONDITION_SCHEMA = vol.All(
                     CONF_IS_SULPHUR_DIOXIDE,
                     CONF_IS_TEMPERATURE,
                     CONF_IS_VOLATILE_ORGANIC_COMPOUNDS,
+                    CONF_IS_VOLATILE_ORGANIC_COMPOUNDS_PARTS,
                     CONF_IS_VOLTAGE,
                     CONF_IS_VOLUME,
                     CONF_IS_WATER,

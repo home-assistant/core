@@ -54,6 +54,8 @@ async def test_kira_empty_config(hass: HomeAssistant) -> None:
 async def test_kira_setup(hass: HomeAssistant) -> None:
     """Ensure platforms are loaded correctly."""
     await async_setup_component(hass, kira.DOMAIN, TEST_CONFIG)
+    await hass.async_block_till_done()
+
     assert len(hass.data[kira.DOMAIN]["sensor"]) == 2
     assert sorted(hass.data[kira.DOMAIN]["sensor"].keys()) == [
         "kira",

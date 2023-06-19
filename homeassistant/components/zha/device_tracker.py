@@ -49,6 +49,7 @@ class ZHADeviceScannerEntity(ScannerEntity, ZhaEntity):
     """Represent a tracked device."""
 
     _attr_should_poll = True  # BaseZhaEntity defaults to False
+    _attr_name: str = "Device scanner"
 
     def __init__(self, unique_id, zha_device, cluster_handlers, **kwargs):
         """Initialize the ZHA device tracker."""

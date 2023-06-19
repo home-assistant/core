@@ -4,6 +4,9 @@ import pytest
 import respx
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.bmw_connected_drive.coordinator import (
+    BMWDataUpdateCoordinator,
+)
 from homeassistant.core import HomeAssistant
 
 from . import setup_mocked_integration
@@ -28,7 +31,6 @@ async def test_entity_state_attrs(
     [
         ("select.i3_rex_charging_mode", "IMMEDIATE_CHARGING"),
         ("select.i4_edrive40_ac_charging_limit", "16"),
-        ("select.i4_edrive40_target_soc", "80"),
         ("select.i4_edrive40_charging_mode", "DELAYED_CHARGING"),
     ],
 )
@@ -42,6 +44,7 @@ async def test_update_triggers_success(
 
     # Setup component
     assert await setup_mocked_integration(hass)
+    BMWDataUpdateCoordinator.async_update_listeners.reset_mock()
 
     # Test
     await hass.services.async_call(
@@ -52,13 +55,13 @@ async def test_update_triggers_success(
         target={"entity_id": entity_id},
     )
     assert RemoteServices.trigger_remote_service.call_count == 1
+    assert BMWDataUpdateCoordinator.async_update_listeners.call_count == 1
 
 
 @pytest.mark.parametrize(
     ("entity_id", "value"),
     [
         ("select.i4_edrive40_ac_charging_limit", "17"),
-        ("select.i4_edrive40_target_soc", "81"),
     ],
 )
 async def test_update_triggers_fail(
@@ -71,6 +74,7 @@ async def test_update_triggers_fail(
 
     # Setup component
     assert await setup_mocked_integration(hass)
+    BMWDataUpdateCoordinator.async_update_listeners.reset_mock()
 
     # Test
     with pytest.raises(ValueError):
@@ -82,3 +86,4 @@ async def test_update_triggers_fail(
             target={"entity_id": entity_id},
         )
     assert RemoteServices.trigger_remote_service.call_count == 0
+    assert BMWDataUpdateCoordinator.async_update_listeners.call_count == 0

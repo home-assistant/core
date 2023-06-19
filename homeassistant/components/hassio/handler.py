@@ -262,6 +262,37 @@ async def async_apply_suggestion(hass: HomeAssistant, suggestion_uuid: str) -> b
     return await hassio.send_command(command, timeout=None)
 
 
+@api_data
+async def async_get_yellow_settings(hass: HomeAssistant) -> dict[str, bool]:
+    """Return settings specific to Home Assistant Yellow."""
+    hassio: HassIO = hass.data[DOMAIN]
+    return await hassio.send_command("/os/boards/yellow", method="get")
+
+
+@api_data
+async def async_set_yellow_settings(
+    hass: HomeAssistant, settings: dict[str, bool]
+) -> dict:
+    """Set settings specific to Home Assistant Yellow.
+
+    Returns an empty dict.
+    """
+    hassio: HassIO = hass.data[DOMAIN]
+    return await hassio.send_command(
+        "/os/boards/yellow", method="post", payload=settings
+    )
+
+
+@api_data
+async def async_reboot_host(hass: HomeAssistant) -> dict:
+    """Reboot the host.
+
+    Returns an empty dict.
+    """
+    hassio: HassIO = hass.data[DOMAIN]
+    return await hassio.send_command("/host/reboot", method="post", timeout=60)
+
+
 class HassIO:
     """Small API wrapper for Hass.io."""
 

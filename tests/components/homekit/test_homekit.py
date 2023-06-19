@@ -747,6 +747,7 @@ async def test_homekit_start_with_a_device(
     entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_NAME: "mock_name", CONF_PORT: 12345}
     )
+    assert await async_setup_component(hass, "homeassistant", {})
     assert await async_setup_component(hass, "demo", {"demo": {}})
     await hass.async_block_till_done()
 
@@ -1643,7 +1644,6 @@ async def test_homekit_ignored_missing_devices(
     light = entity_registry.async_get_or_create(
         "light", "powerwall", "demo", device_id=device_entry.id
     )
-    before_removal = entity_registry.entities.copy()
     # Delete the device to make sure we fallback
     # to using the platform
     device_registry.async_remove_device(device_entry.id)
@@ -1651,7 +1651,23 @@ async def test_homekit_ignored_missing_devices(
     await asyncio.sleep(0)
     await asyncio.sleep(0)
     # Restore the registry
-    entity_registry.entities = before_removal
+    entity_registry.async_get_or_create(
+        "binary_sensor",
+        "powerwall",
+        "battery_charging",
+        device_id=device_entry.id,
+        original_device_class=BinarySensorDeviceClass.BATTERY_CHARGING,
+    )
+    entity_registry.async_get_or_create(
+        "sensor",
+        "powerwall",
+        "battery",
+        device_id=device_entry.id,
+        original_device_class=SensorDeviceClass.BATTERY,
+    )
+    light = entity_registry.async_get_or_create(
+        "light", "powerwall", "demo", device_id=device_entry.id
+    )
 
     hass.states.async_set(light.entity_id, STATE_ON)
     hass.states.async_set("light.two", STATE_ON)

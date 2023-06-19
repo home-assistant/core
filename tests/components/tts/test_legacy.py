@@ -71,7 +71,7 @@ async def test_invalid_platform(
     )
     await hass.async_block_till_done()
 
-    assert "Unknown text to speech platform specified" in caplog.text
+    assert "Unknown text-to-speech platform specified" in caplog.text
 
 
 async def test_platform_setup_without_provider(
@@ -169,7 +169,7 @@ async def test_service_base_url_set(hass: HomeAssistant, mock_tts) -> None:
 
 
 async def test_service_without_cache_config(
-    hass: HomeAssistant, empty_cache_dir, mock_tts
+    hass: HomeAssistant, mock_tts_cache_dir, mock_tts
 ) -> None:
     """Set up a TTS platform without cache."""
     calls = async_mock_service(hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
@@ -191,5 +191,5 @@ async def test_service_without_cache_config(
     assert len(calls) == 1
     await hass.async_block_till_done()
     assert not (
-        empty_cache_dir / "42f18378fd4393d18c8dd11d03fa9563c1e54491_en-us_-_test.mp3"
+        mock_tts_cache_dir / "42f18378fd4393d18c8dd11d03fa9563c1e54491_en-us_-_test.mp3"
     ).is_file()

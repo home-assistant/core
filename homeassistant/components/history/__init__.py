@@ -12,6 +12,7 @@ from homeassistant.components import frontend
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.recorder import get_instance, history
 from homeassistant.components.recorder.util import session_scope
+from homeassistant.const import CONF_EXCLUDE, CONF_INCLUDE
 from homeassistant.core import HomeAssistant, valid_entity_id
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entityfilter import INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA
@@ -27,16 +28,16 @@ CONF_ORDER = "use_include_order"
 _ONE_DAY = timedelta(days=1)
 
 CONFIG_SCHEMA = vol.Schema(
-    vol.All(
-        cv.deprecated(DOMAIN),
-        {
-            DOMAIN: vol.All(
-                INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA.extend(
-                    {vol.Optional(CONF_ORDER, default=False): cv.boolean}
-                ),
-            )
-        },
-    ),
+    {
+        DOMAIN: vol.All(
+            cv.deprecated(CONF_INCLUDE),
+            cv.deprecated(CONF_EXCLUDE),
+            cv.deprecated(CONF_ORDER),
+            INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA.extend(
+                {vol.Optional(CONF_ORDER, default=False): cv.boolean}
+            ),
+        )
+    },
     extra=vol.ALLOW_EXTRA,
 )
 

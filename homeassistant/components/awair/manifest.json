@@ -11,7 +11,7 @@
   "documentation": "https://www.home-assistant.io/integrations/awair",
   "iot_class": "local_polling",
   "loggers": ["python_awair"],
-  "requirements": ["python_awair==0.2.4"],
+  "requirements": ["python-awair==0.2.4"],
   "zeroconf": [
     {
       "type": "_http._tcp.local.",

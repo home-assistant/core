@@ -1,4 +1,6 @@
 """Test ONVIF diagnostics."""
+from unittest.mock import ANY
+
 from homeassistant.core import HomeAssistant
 
 from . import (
@@ -37,7 +39,11 @@ async def test_diagnostics(
                 "password": "**REDACTED**",
                 "snapshot_auth": "digest",
             },
-            "options": {"extra_arguments": "-pred 1", "rtsp_transport": "tcp"},
+            "options": {
+                "extra_arguments": "-pred 1",
+                "rtsp_transport": "tcp",
+                "enable_webhooks": True,
+            },
             "pref_disable_new_entities": False,
             "pref_disable_polling": False,
             "source": "user",
@@ -71,6 +77,8 @@ async def test_diagnostics(
                     "video_source_token": None,
                 }
             ],
+            "services": ANY,
+            "xaddrs": ANY,
         },
         "events": {
             "pullpoint_manager_state": {

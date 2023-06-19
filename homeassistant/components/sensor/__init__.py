@@ -443,8 +443,10 @@ class SensorEntity(Entity):
             return self._sensor_option_unit_of_measurement
 
         # Second priority, for non registered entities: unit suggested by integration
-        if not self.unique_id and self.suggested_unit_of_measurement:
-            return self.suggested_unit_of_measurement
+        if not self.unique_id and (
+            suggested_unit_of_measurement := self.suggested_unit_of_measurement
+        ):
+            return suggested_unit_of_measurement
 
         # Third priority: Legacy temperature conversion, which applies
         # to both registered and non registered entities
@@ -548,7 +550,9 @@ class SensorEntity(Entity):
                 ) from err
 
         # Enum checks
-        if device_class == SensorDeviceClass.ENUM or self.options is not None:
+        if (
+            options := self.options
+        ) is not None or device_class == SensorDeviceClass.ENUM:
             if device_class != SensorDeviceClass.ENUM:
                 reason = "is missing the enum device class"
                 if device_class is not None:
@@ -557,7 +561,7 @@ class SensorEntity(Entity):
                     f"Sensor {self.entity_id} is providing enum options, but {reason}"
                 )
 
-            if (options := self.options) and value not in options:
+            if options and value not in options:
                 raise ValueError(
                     f"Sensor {self.entity_id} provides state value '{value}', "
                     "which is not in the list of options provided"
@@ -581,11 +585,11 @@ class SensorEntity(Entity):
                     numerical_value = float(value)  # type:ignore[arg-type]
             except (TypeError, ValueError) as err:
                 raise ValueError(
-                    f"Sensor {self.entity_id} has device class {device_class}, "
-                    f"state class {state_class} unit {unit_of_measurement} and "
-                    f"suggested precision {suggested_precision} thus indicating it "
+                    f"Sensor {self.entity_id} has device class '{device_class}', "
+                    f"state class '{state_class}' unit '{unit_of_measurement}' and "
+                    f"suggested precision '{suggested_precision}' thus indicating it "
                     f"has a numeric value; however, it has the non-numeric value: "
-                    f"{value} ({type(value)})"
+                    f"'{value}' ({type(value)})"
                 ) from err
         else:
             numerical_value = value

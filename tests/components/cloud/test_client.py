@@ -16,6 +16,7 @@ from homeassistant.components.cloud.const import (
 from homeassistant.components.homeassistant.exposed_entities import (
     DATA_EXPOSED_ENTITIES,
     ExposedEntities,
+    async_expose_entity,
 )
 from homeassistant.const import CONTENT_TYPE_JSON
 from homeassistant.core import HomeAssistant, State
@@ -267,9 +268,7 @@ async def test_google_config_expose_entity(
 
     assert gconf.should_expose(state)
 
-    exposed_entities.async_expose_entity(
-        "cloud.google_assistant", entity_entry.entity_id, False
-    )
+    async_expose_entity(hass, "cloud.google_assistant", entity_entry.entity_id, False)
 
     assert not gconf.should_expose(state)
 
@@ -307,7 +306,7 @@ async def test_set_username(hass: HomeAssistant) -> None:
     )
     client = CloudClient(hass, prefs, None, {}, {})
     client.cloud = MagicMock(is_logged_in=True, username="mock-username")
-    await client.cloud_started()
+    await client.on_cloud_connected()
 
     assert len(prefs.async_set_username.mock_calls) == 1
     assert prefs.async_set_username.mock_calls[0][1][0] == "mock-username"
@@ -327,7 +326,7 @@ async def test_login_recovers_bad_internet(
     client._alexa_config = Mock(
         async_enable_proactive_mode=Mock(side_effect=aiohttp.ClientError)
     )
-    await client.cloud_started()
+    await client.on_cloud_connected()
     assert len(client._alexa_config.async_enable_proactive_mode.mock_calls) == 1
     assert "Unable to activate Alexa Report State" in caplog.text
 

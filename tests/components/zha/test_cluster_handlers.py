@@ -1,11 +1,13 @@
 """Test ZHA Core cluster handlers."""
 import asyncio
 from collections.abc import Callable
+import logging
 import math
 from unittest import mock
 from unittest.mock import AsyncMock, patch
 
 import pytest
+import zigpy.device
 import zigpy.endpoint
 from zigpy.endpoint import Endpoint as ZigpyEndpoint
 import zigpy.profiles.zha
@@ -791,3 +793,41 @@ async def test_configure_reporting(hass: HomeAssistant, endpoint) -> None:
             }
         ),
     ]
+
+
+async def test_invalid_cluster_handler(hass: HomeAssistant, caplog) -> None:
+    """Test setting up a cluster handler that fails to match properly."""
+
+    class TestZigbeeClusterHandler(cluster_handlers.ClusterHandler):
+        REPORT_CONFIG = (
+            cluster_handlers.AttrReportConfig(attr="missing_attr", config=(1, 60, 1)),
+        )
+
+    mock_device = mock.AsyncMock(spec_set=zigpy.device.Device)
+    zigpy_ep = zigpy.endpoint.Endpoint(mock_device, endpoint_id=1)
+
+    cluster = zigpy_ep.add_input_cluster(zigpy.zcl.clusters.lighting.Color.cluster_id)
+    cluster.configure_reporting_multiple = AsyncMock(
+        spec_set=cluster.configure_reporting_multiple,
+        return_value=[
+            foundation.ConfigureReportingResponseRecord(
+                status=foundation.Status.SUCCESS
+            )
+        ],
+    )
+
+    mock_zha_device = mock.AsyncMock(spec_set=ZHADevice)
+    zha_endpoint = Endpoint(zigpy_ep, mock_zha_device)
+
+    # The cluster handler throws an error when matching this cluster
+    with pytest.raises(KeyError):
+        TestZigbeeClusterHandler(cluster, zha_endpoint)
+
+    # And one is also logged at runtime
+    with patch.dict(
+        registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY,
+        {cluster.cluster_id: TestZigbeeClusterHandler},
+    ), caplog.at_level(logging.WARNING):
+        zha_endpoint.add_all_cluster_handlers()
+
+    assert "missing_attr" in caplog.text

@@ -3,10 +3,11 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from typing import TYPE_CHECKING, Any, NamedTuple, TypeVar, cast
+from typing import TYPE_CHECKING, Any, Literal, NamedTuple, TypeVar, cast
 
 import voluptuous as vol
 import zigpy.backups
+from zigpy.config import CONF_DEVICE
 from zigpy.config.validators import cv_boolean
 from zigpy.types.named import EUI64
 from zigpy.zcl.clusters.security import IasAce
@@ -19,7 +20,11 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.service import async_register_admin_service
 
-from .api import async_get_active_network_settings, async_get_radio_type
+from .api import (
+    async_change_channel,
+    async_get_active_network_settings,
+    async_get_radio_type,
+)
 from .core.const import (
     ATTR_ARGS,
     ATTR_ATTRIBUTE,
@@ -93,6 +98,7 @@ ATTR_DURATION = "duration"
 ATTR_GROUP = "group"
 ATTR_IEEE_ADDRESS = "ieee_address"
 ATTR_INSTALL_CODE = "install_code"
+ATTR_NEW_CHANNEL = "new_channel"
 ATTR_SOURCE_IEEE = "source_ieee"
 ATTR_TARGET_IEEE = "target_ieee"
 ATTR_QR_CODE = "qr_code"
@@ -901,6 +907,7 @@ async def websocket_bind_devices(
         ATTR_TARGET_IEEE,
         target_ieee,
     )
+    connection.send_result(msg[ID])
 
 
 @websocket_api.require_admin
@@ -929,6 +936,7 @@ async def websocket_unbind_devices(
         ATTR_TARGET_IEEE,
         target_ieee,
     )
+    connection.send_result(msg[ID])
 
 
 @websocket_api.require_admin
@@ -945,13 +953,14 @@ async def websocket_bind_group(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Directly bind a device to a group."""
-    zha_gateway: ZHAGateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
+    zha_gateway: ZHAGateway = get_gateway(hass)
     source_ieee: EUI64 = msg[ATTR_SOURCE_IEEE]
     group_id: int = msg[GROUP_ID]
     bindings: list[ClusterBinding] = msg[BINDINGS]
     source_device = zha_gateway.get_device(source_ieee)
     assert source_device
     await source_device.async_bind_to_group(group_id, bindings)
+    connection.send_result(msg[ID])
 
 
 @websocket_api.require_admin
@@ -968,13 +977,19 @@ async def websocket_unbind_group(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Unbind a device from a group."""
-    zha_gateway: ZHAGateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
+    zha_gateway: ZHAGateway = get_gateway(hass)
     source_ieee: EUI64 = msg[ATTR_SOURCE_IEEE]
     group_id: int = msg[GROUP_ID]
     bindings: list[ClusterBinding] = msg[BINDINGS]
     source_device = zha_gateway.get_device(source_ieee)
     assert source_device
     await source_device.async_unbind_from_group(group_id, bindings)
+    connection.send_result(msg[ID])
+
+
+def get_gateway(hass: HomeAssistant) -> ZHAGateway:
+    """Return Gateway, mainly as fixture for mocking during testing."""
+    return hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
 
 
 async def async_binding_operation(
@@ -1131,6 +1146,7 @@ async def websocket_get_network_settings(
         msg[ID],
         {
             "radio_type": async_get_radio_type(hass, zha_gateway.config_entry).name,
+            "device": zha_gateway.application_controller.config[CONF_DEVICE],
             "settings": backup.as_dict(),
         },
     )
@@ -1202,6 +1218,23 @@ async def websocket_restore_network_backup(
         connection.send_error(msg[ID], websocket_api.const.ERR_INVALID_FORMAT, str(err))
     else:
         connection.send_result(msg[ID])
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        vol.Required(TYPE): "zha/network/change_channel",
+        vol.Required(ATTR_NEW_CHANNEL): vol.Any("auto", vol.Range(11, 26)),
+    }
+)
+@websocket_api.async_response
+async def websocket_change_channel(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Migrate the Zigbee network to a new channel."""
+    new_channel = cast(Literal["auto"] | int, msg[ATTR_NEW_CHANNEL])
+    await async_change_channel(hass, new_channel=new_channel)
+    connection.send_result(msg[ID])
 
 
 @callback
@@ -1280,6 +1313,9 @@ def async_load_api(hass: HomeAssistant) -> None:
                 cluster_type=cluster_type,
                 manufacturer=manufacturer,
             )
+        else:
+            raise ValueError(f"Device with IEEE {str(ieee)} not found")
+
         _LOGGER.debug(
             (
                 "Set attribute for: %s: [%s] %s: [%s] %s: [%s] %s: [%s] %s: [%s] %s:"
@@ -1527,6 +1563,7 @@ def async_load_api(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, websocket_list_network_backups)
     websocket_api.async_register_command(hass, websocket_create_network_backup)
     websocket_api.async_register_command(hass, websocket_restore_network_backup)
+    websocket_api.async_register_command(hass, websocket_change_channel)
 
 
 @callback

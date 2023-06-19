@@ -6,5 +6,5 @@
   "documentation": "https://www.home-assistant.io/integrations/prometheus",
   "iot_class": "assumed_state",
   "loggers": ["prometheus_client"],
-  "requirements": ["prometheus_client==0.7.1"]
+  "requirements": ["prometheus-client==0.7.1"]
 }

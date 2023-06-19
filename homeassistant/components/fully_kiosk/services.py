@@ -1,14 +1,12 @@
 """Services for the Fully Kiosk Browser integration."""
 from __future__ import annotations
 
-from collections.abc import Callable
-from typing import Any
-
-from fullykiosk import FullyKiosk
 import voluptuous as vol
 
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import ATTR_DEVICE_ID
 from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 import homeassistant.helpers.device_registry as dr
 
@@ -16,59 +14,53 @@ from .const import (
     ATTR_APPLICATION,
     ATTR_URL,
     DOMAIN,
-    LOGGER,
     SERVICE_LOAD_URL,
     SERVICE_START_APPLICATION,
 )
+from .coordinator import FullyKioskDataUpdateCoordinator
 
 
 async def async_setup_services(hass: HomeAssistant) -> None:
     """Set up the services for the Fully Kiosk Browser integration."""
 
-    async def execute_service(
-        call: ServiceCall,
-        fully_method: Callable,
-        *args: list[str],
-        **kwargs: dict[str, Any],
-    ) -> None:
-        """Execute a Fully service call.
-
-        :param call: {ServiceCall} HA service call.
-        :param fully_method: {Callable} A method of the FullyKiosk class.
-        :param args: Arguments for fully_method.
-        :param kwargs: Key-word arguments for fully_method.
-        :return: None
-        """
-        LOGGER.debug(
-            "Calling Fully service %s with args: %s, %s", ServiceCall, args, kwargs
-        )
+    async def collect_coordinators(
+        device_ids: list[str],
+    ) -> list[FullyKioskDataUpdateCoordinator]:
+        config_entries = list[ConfigEntry]()
         registry = dr.async_get(hass)
-        for target in call.data[ATTR_DEVICE_ID]:
+        for target in device_ids:
             device = registry.async_get(target)
             if device:
-                for key in device.config_entries:
-                    entry = hass.config_entries.async_get_entry(key)
-                    if not entry:
-                        continue
-                    if entry.domain != DOMAIN:
-                        continue
-                    coordinator = hass.data[DOMAIN][key]
-                    # fully_method(coordinator.fully, *args, **kwargs) would make
-                    # test_services.py fail.
-                    await getattr(coordinator.fully, fully_method.__name__)(
-                        *args, **kwargs
+                device_entries = list[ConfigEntry]()
+                for entry_id in device.config_entries:
+                    entry = hass.config_entries.async_get_entry(entry_id)
+                    if entry and entry.domain == DOMAIN:
+                        device_entries.append(entry)
+                if not device_entries:
+                    raise HomeAssistantError(
+                        f"Device '{target}' is not a {DOMAIN} device"
                     )
-                    break
+                config_entries.extend(device_entries)
+            else:
+                raise HomeAssistantError(
+                    f"Device '{target}' not found in device registry"
+                )
+        coordinators = list[FullyKioskDataUpdateCoordinator]()
+        for config_entry in config_entries:
+            if config_entry.state != ConfigEntryState.LOADED:
+                raise HomeAssistantError(f"{config_entry.title} is not loaded")
+            coordinators.append(hass.data[DOMAIN][config_entry.entry_id])
+        return coordinators
 
     async def async_load_url(call: ServiceCall) -> None:
         """Load a URL on the Fully Kiosk Browser."""
-        await execute_service(call, FullyKiosk.loadUrl, call.data[ATTR_URL])
+        for coordinator in await collect_coordinators(call.data[ATTR_DEVICE_ID]):
+            await coordinator.fully.loadUrl(call.data[ATTR_URL])
 
     async def async_start_app(call: ServiceCall) -> None:
         """Start an app on the device."""
-        await execute_service(
-            call, FullyKiosk.startApplication, call.data[ATTR_APPLICATION]
-        )
+        for coordinator in await collect_coordinators(call.data[ATTR_DEVICE_ID]):
+            await coordinator.fully.startApplication(call.data[ATTR_APPLICATION])
 
     # Register all the above services
     service_mapping = [

@@ -40,6 +40,11 @@ async def async_get_config_entry_diagnostics(
 
     diag["config_entry_data"] = async_redact_data(dict(config_entry.data), TO_REDACT)
 
+    if proj_info := knx_module.project.info:
+        diag["project_info"] = async_redact_data(proj_info, "name")
+    else:
+        diag["project_info"] = None
+
     raw_config = await conf_util.async_hass_config_yaml(hass)
     diag["configuration_yaml"] = raw_config.get(DOMAIN)
     try:

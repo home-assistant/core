@@ -496,7 +496,7 @@ async def test_supervisor_issues(
             {
                 "uuid": "1237",
                 "type": "should_not_be_repair",
-                "context": "fake",
+                "context": "os",
                 "reference": None,
             },
         ],

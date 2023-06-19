@@ -64,6 +64,8 @@ async def async_setup_entry(
 class Switch(ZhaEntity, SwitchEntity):
     """ZHA switch."""
 
+    _attr_name: str = "Switch"
+
     def __init__(
         self,
         unique_id: str,
@@ -190,6 +192,7 @@ class ZHASwitchConfigurationEntity(ZhaEntity, SwitchEntity):
         cluster_handler = cluster_handlers[0]
         if (
             cls._zcl_attribute in cluster_handler.cluster.unsupported_attributes
+            or cls._zcl_attribute not in cluster_handler.cluster.attributes_by_name
             or cluster_handler.cluster.get(cls._zcl_attribute) is None
         ):
             _LOGGER.debug(
@@ -286,6 +289,7 @@ class OnOffWindowDetectionFunctionConfigurationEntity(
 
     _zcl_attribute: str = "window_detection_function"
     _zcl_inverter_attribute: str = "window_detection_function_inverter"
+    _attr_name: str = "Invert window detection"
 
 
 @CONFIG_DIAGNOSTIC_MATCH(

@@ -1,5 +1,4 @@
 """Tests for the Voice Assistant integration."""
-
 MANY_LANGUAGES = [
     "ar",
     "bg",

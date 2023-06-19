@@ -11,13 +11,13 @@
   },
   "entity": {
     "binary_sensor": {
-      "call_active": {
-        "name": "Call Active"
+      "call_in_progress": {
+        "name": "Call in progress"
       }
     },
     "switch": {
       "allow_call": {
-        "name": "Allow Calls"
+        "name": "Allow calls"
       }
     },
     "select": {
@@ -25,6 +25,15 @@
         "name": "[%key:component::assist_pipeline::entity::select::pipeline::name%]",
         "state": {
           "preferred": "[%key:component::assist_pipeline::entity::select::pipeline::state::preferred%]"
+        }
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "sip_port": "SIP port"
         }
       }
     }

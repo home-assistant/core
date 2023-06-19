@@ -37,6 +37,7 @@ ALLOWED_CONDITION_BASED_SERVICE_KEYS = {
     "TIRE_WEAR_REAR",
     "VEHICLE_CHECK",
     "VEHICLE_TUV",
+    "WASHING_FLUID",
 }
 LOGGED_CONDITION_BASED_SERVICE_WARNINGS: set[str] = set()
 
@@ -188,6 +189,14 @@ SENSOR_TYPES: tuple[BMWBinarySensorEntityDescription, ...] = (
         device_class=BinarySensorDeviceClass.PLUG,
         icon="mdi:car-electric",
         value_fn=lambda v: v.fuel_and_battery.is_charger_connected,
+    ),
+    BMWBinarySensorEntityDescription(
+        key="is_pre_entry_climatization_enabled",
+        name="Pre entry climatization",
+        icon="mdi:car-seat-heater",
+        value_fn=lambda v: v.charging_profile.is_pre_entry_climatization_enabled
+        if v.charging_profile
+        else False,
     ),
 )
 

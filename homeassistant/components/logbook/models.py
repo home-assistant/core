@@ -16,7 +16,6 @@ from homeassistant.components.recorder.models import (
 )
 from homeassistant.const import ATTR_ICON, EVENT_STATE_CHANGED
 from homeassistant.core import Context, Event, State, callback
-from homeassistant.helpers.entityfilter import EntityFilter
 import homeassistant.util.dt as dt_util
 from homeassistant.util.json import json_loads
 from homeassistant.util.ulid import ulid_to_bytes
@@ -30,7 +29,7 @@ class LogbookConfig:
         str, tuple[str, Callable[[LazyEventPartialState], dict[str, Any]]]
     ]
     sqlalchemy_filter: Filters | None = None
-    entity_filter: EntityFilter | None = None
+    entity_filter: Callable[[str], bool] | None = None
 
 
 class LazyEventPartialState:

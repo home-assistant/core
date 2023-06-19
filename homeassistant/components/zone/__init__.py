@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 import logging
+from operator import attrgetter
 from typing import Any, cast
 
 from typing_extensions import Self
@@ -96,6 +97,8 @@ RELOAD_SERVICE_SCHEMA = vol.Schema({})
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
 
+ENTITY_ID_SORTER = attrgetter("entity_id")
+
 
 @bind_hass
 def async_active_zone(
@@ -106,15 +109,10 @@ def async_active_zone(
     This method must be run in the event loop.
     """
     # Sort entity IDs so that we are deterministic if equal distance to 2 zones
-    zones = (
-        cast(State, hass.states.get(entity_id))
-        for entity_id in sorted(hass.states.async_entity_ids(DOMAIN))
-    )
-
     min_dist = None
     closest = None
 
-    for zone in zones:
+    for zone in sorted(hass.states.async_all(DOMAIN), key=ENTITY_ID_SORTER):
         if zone.state == STATE_UNAVAILABLE or zone.attributes.get(ATTR_PASSIVE):
             continue
 

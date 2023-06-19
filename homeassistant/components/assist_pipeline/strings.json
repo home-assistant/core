@@ -1,8 +1,13 @@
 {
   "entity": {
+    "binary_sensor": {
+      "assist_in_progress": {
+        "name": "Assist in progress"
+      }
+    },
     "select": {
       "pipeline": {
-        "name": "Assist Pipeline",
+        "name": "Assist pipeline",
         "state": {
           "preferred": "Preferred"
         }

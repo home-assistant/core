@@ -34,6 +34,7 @@ async def test_diagnostics(
         },
         "data": {
             "energy_production_today": 100000,
+            "energy_production_today_remaining": 50000,
             "energy_production_tomorrow": 200000,
             "energy_current_hour": 800000,
             "power_production_now": 300000,

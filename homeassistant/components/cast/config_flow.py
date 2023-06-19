@@ -38,21 +38,6 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Get the options flow for this handler."""
         return CastOptionsFlowHandler(config_entry)
 
-    async def async_step_import(self, import_data=None):
-        """Import data."""
-        if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
-
-        media_player_config = import_data or []
-        for cfg in media_player_config:
-            if CONF_IGNORE_CEC in cfg:
-                self._ignore_cec.update(set(cfg[CONF_IGNORE_CEC]))
-            if CONF_UUID in cfg:
-                self._wanted_uuid.add(cfg[CONF_UUID])
-
-        data = self._get_data()
-        return self.async_create_entry(title="Google Cast", data=data)
-
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
         if self._async_current_entries():

@@ -44,6 +44,11 @@ class MockLock(MockEntity, LockEntity):
     """Mock Lock class."""
 
     @property
+    def code_format(self) -> str | None:
+        """Return code format."""
+        return self._handle("code_format")
+
+    @property
     def is_locked(self):
         """Return true if the lock is locked."""
         return self._handle("is_locked")

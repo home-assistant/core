@@ -19,13 +19,10 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.dt import utc_from_timestamp
 
+from .const import CONF_AGENCY, CONF_ROUTE, CONF_STOP
+from .util import listify, maybe_first
+
 _LOGGER = logging.getLogger(__name__)
-
-DOMAIN = "nextbus"
-
-CONF_AGENCY = "agency"
-CONF_ROUTE = "route"
-CONF_STOP = "stop"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -35,29 +32,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_NAME): cv.string,
     }
 )
-
-
-def listify(maybe_list):
-    """Return list version of whatever value is passed in.
-
-    This is used to provide a consistent way of interacting with the JSON
-    results from the API. There are several attributes that will either missing
-    if there are no values, a single dictionary if there is only one value, and
-    a list if there are multiple.
-    """
-    if maybe_list is None:
-        return []
-    if isinstance(maybe_list, list):
-        return maybe_list
-    return [maybe_list]
-
-
-def maybe_first(maybe_list):
-    """Return the first item out of a list or returns back the input."""
-    if isinstance(maybe_list, list) and maybe_list:
-        return maybe_list[0]
-
-    return maybe_list
 
 
 def validate_value(value_name, value, value_list):
@@ -134,40 +108,18 @@ class NextBusDepartureSensor(SensorEntity):
         self.agency = agency
         self.route = route
         self.stop = stop
-        self._custom_name = name
-        # Maybe pull a more user friendly name from the API here
-        self._name = f"{agency} {route}"
-        self._client = client
+        self._attr_extra_state_attributes = {}
 
-        # set up default state attributes
-        self._state = None
-        self._attributes = {}
+        # Maybe pull a more user friendly name from the API here
+        self._attr_name = f"{agency} {route}"
+        if name:
+            self._attr_name = name
+
+        self._client = client
 
     def _log_debug(self, message, *args):
         """Log debug message with prefix."""
         _LOGGER.debug(":".join((self.agency, self.route, self.stop, message)), *args)
-
-    @property
-    def name(self):
-        """Return sensor name.
-
-        Uses an auto generated name based on the data from the API unless a
-        custom name is provided in the configuration.
-        """
-        if self._custom_name:
-            return self._custom_name
-
-        return self._name
-
-    @property
-    def native_value(self):
-        """Return current state of the sensor."""
-        return self._state
-
-    @property
-    def extra_state_attributes(self):
-        """Return additional state attributes."""
-        return self._attributes
 
     def update(self) -> None:
         """Update sensor with new departures times."""
@@ -177,21 +129,22 @@ class NextBusDepartureSensor(SensorEntity):
         )
 
         self._log_debug("Predictions results: %s", results)
+        self._attr_attribution = results.get("copyright")
 
         if "Error" in results:
             self._log_debug("Could not get predictions: %s", results)
 
         if not results.get("predictions"):
             self._log_debug("No predictions available")
-            self._state = None
+            self._attr_native_value = None
             # Remove attributes that may now be outdated
-            self._attributes.pop("upcoming", None)
+            self._attr_extra_state_attributes.pop("upcoming", None)
             return
 
         results = results["predictions"]
 
         # Set detailed attributes
-        self._attributes.update(
+        self._attr_extra_state_attributes.update(
             {
                 "agency": results.get("agencyTitle"),
                 "route": results.get("routeTitle"),
@@ -202,13 +155,13 @@ class NextBusDepartureSensor(SensorEntity):
         # List all messages in the attributes
         messages = listify(results.get("message", []))
         self._log_debug("Messages: %s", messages)
-        self._attributes["message"] = " -- ".join(
+        self._attr_extra_state_attributes["message"] = " -- ".join(
             message.get("text", "") for message in messages
         )
 
         # List out all directions in the attributes
         directions = listify(results.get("direction", []))
-        self._attributes["direction"] = ", ".join(
+        self._attr_extra_state_attributes["direction"] = ", ".join(
             direction.get("title", "") for direction in directions
         )
 
@@ -222,14 +175,16 @@ class NextBusDepartureSensor(SensorEntity):
         # Short circuit if we don't have any actual bus predictions
         if not predictions:
             self._log_debug("No upcoming predictions available")
-            self._state = None
-            self._attributes["upcoming"] = "No upcoming predictions"
+            self._attr_native_value = None
+            self._attr_extra_state_attributes["upcoming"] = "No upcoming predictions"
             return
 
         # Generate list of upcoming times
-        self._attributes["upcoming"] = ", ".join(
+        self._attr_extra_state_attributes["upcoming"] = ", ".join(
             sorted((p["minutes"] for p in predictions), key=int)
         )
 
         latest_prediction = maybe_first(predictions)
-        self._state = utc_from_timestamp(int(latest_prediction["epochTime"]) / 1000)
+        self._attr_native_value = utc_from_timestamp(
+            int(latest_prediction["epochTime"]) / 1000
+        )

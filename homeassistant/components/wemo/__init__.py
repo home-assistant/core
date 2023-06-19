@@ -113,7 +113,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     wemo_dispatcher = WemoDispatcher(entry)
     wemo_discovery = WemoDiscovery(hass, wemo_dispatcher, static_conf)
 
-    async def async_stop_wemo(event: Event) -> None:
+    async def async_stop_wemo(_: Event | None = None) -> None:
         """Shutdown Wemo subscriptions and subscription thread on exit."""
         _LOGGER.debug("Shutting down WeMo event subscriptions")
         await hass.async_add_executor_job(registry.stop)
@@ -123,6 +123,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     entry.async_on_unload(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_stop_wemo)
     )
+    entry.async_on_unload(async_stop_wemo)
 
     # Need to do this at least once in case statistics are defined and discovery is disabled
     await wemo_discovery.discover_statics()
@@ -130,6 +131,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if config.get(CONF_DISCOVERY, DEFAULT_DISCOVERY):
         await wemo_discovery.async_discover_and_schedule()
 
+    return True
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unload a wemo config entry."""
+    # This makes sure that `entry.async_on_unload` routines run correctly on unload
     return True
 
 
@@ -147,14 +154,14 @@ class WemoDispatcher:
         self, hass: HomeAssistant, wemo: pywemo.WeMoDevice
     ) -> None:
         """Add a WeMo device to hass if it has not already been added."""
-        if wemo.serialnumber in self._added_serial_numbers:
+        if wemo.serial_number in self._added_serial_numbers:
             return
 
         try:
             coordinator = await async_register_device(hass, self._config_entry, wemo)
         except pywemo.PyWeMoException as err:
-            if wemo.serialnumber not in self._failed_serial_numbers:
-                self._failed_serial_numbers.add(wemo.serialnumber)
+            if wemo.serial_number not in self._failed_serial_numbers:
+                self._failed_serial_numbers.add(wemo.serial_number)
                 _LOGGER.error(
                     "Unable to add WeMo %s %s: %s", repr(wemo), wemo.host, err
                 )
@@ -187,8 +194,8 @@ class WemoDispatcher:
                     coordinator,
                 )
 
-        self._added_serial_numbers.add(wemo.serialnumber)
-        self._failed_serial_numbers.discard(wemo.serialnumber)
+        self._added_serial_numbers.add(wemo.serial_number)
+        self._failed_serial_numbers.discard(wemo.serial_number)
 
 
 class WemoDiscovery:
