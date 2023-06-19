@@ -201,6 +201,14 @@ class ActiveConnection:
                     "Error unsubscribing from subscription: %s", unsub
                 )
         self.subscriptions.clear()
+        self.send_message = self._connect_closed_error
+
+    @callback
+    def _connect_closed_error(
+        self, msg: str | dict[str, Any] | Callable[[], str]
+    ) -> None:
+        """Send a message when the connection is closed."""
+        raise RuntimeError("Connection is closed")
 
     @callback
     def async_handle_exception(self, msg: dict[str, Any], err: Exception) -> None:
