@@ -139,7 +139,7 @@ async def test_update_failed(
 
     state = hass.states.get(entity_id)
 
-    assert state.state == "artist - title"
-    assert state.attributes[ATTR_LAST_PLAYED] == "artist - title"
-    assert state.attributes[ATTR_TOP_PLAYED] == "artist - title"
-    assert state.attributes[ATTR_PLAY_COUNT] == 1
+    assert state.state == "unavailable"
+    assert ATTR_LAST_PLAYED not in state.attributes
+    assert ATTR_TOP_PLAYED not in state.attributes
+    assert ATTR_PLAY_COUNT not in state.attributes
