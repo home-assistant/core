@@ -11,7 +11,7 @@ import httpx
 import voluptuous as vol
 
 from homeassistant.components import image
-from homeassistant.components.image import ImageEntity
+from homeassistant.components.image import DEFAULT_CONTENT_TYPE, ImageEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, CONF_VALUE_TEMPLATE
 from homeassistant.core import HomeAssistant, callback
@@ -32,6 +32,7 @@ from .util import get_mqtt_data, valid_subscribe_topic
 
 _LOGGER = logging.getLogger(__name__)
 
+CONF_CONTENT_TYPE = "content_type"
 CONF_IMAGE_ENCODING = "image_encoding"
 CONF_FROM_URL = "from_url"
 
@@ -39,12 +40,23 @@ DEFAULT_NAME = "MQTT Image"
 
 MQTT_IMAGE_ATTRIBUTES_BLOCKED = frozenset({})  # type: ignore[var-annotated]
 
+
+def validate_content_type(content_type: str) -> str:
+    """Validate the config type is an image."""
+    if content_type.split("/")[0] != "image":
+        raise vol.Invalid(f"Content type {content_type} is not valid")
+    return content_type
+
+
 PLATFORM_SCHEMA_BASE = MQTT_BASE_SCHEMA.extend(
     {
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Required(CONF_TOPIC): valid_subscribe_topic,
         vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
         vol.Optional(CONF_IMAGE_ENCODING): "b64",
+        vol.Optional(CONF_CONTENT_TYPE, default=DEFAULT_CONTENT_TYPE): vol.All(
+            cv.string, validate_content_type
+        ),
         vol.Optional(CONF_FROM_URL, default=False): cv.boolean,
     }
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
@@ -107,8 +119,10 @@ class MqttImage(MqttEntity, ImageEntity):
 
     def _setup_from_config(self, config: ConfigType) -> None:
         """(Re)Setup the entity."""
+        if not config[CONF_FROM_URL]:
+            self._attr_content_type = config[CONF_CONTENT_TYPE]
         self._template = MqttValueTemplate(
-            self._config.get(CONF_VALUE_TEMPLATE), entity=self
+            config.get(CONF_VALUE_TEMPLATE), entity=self
         ).async_render_with_possible_json_value
 
     async def _async_load_image(self, url: str) -> None:
@@ -118,15 +132,19 @@ class MqttImage(MqttEntity, ImageEntity):
             _LOGGER.warning("Connection failed to url %s files: %s", url, ex)
             return
 
-        if response.headers["content-type"].split("/")[0] != "image":
+        try:
+            content_type = validate_content_type(response.headers["content-type"])
+        except vol.Invalid as err:
             _LOGGER.error(
-                "Content is not a valid image, url: %s, content_type: %s",
+                "Content is not a valid image, url: %s, content_type: %s, %s",
                 url,
                 response.headers["content-type"],
+                err,
             )
             return
+        self._attr_content_type = content_type
         self._last_image = response.content
-        self._attr_last_updated = dt_util.utcnow()
+        self._attr_image_last_updated = dt_util.utcnow()
         self.async_write_ha_state()
 
     def _prepare_subscribe_topics(self) -> None:
@@ -154,7 +172,7 @@ class MqttImage(MqttEntity, ImageEntity):
             else:
                 assert isinstance(msg.payload, bytes)
                 self._last_image = msg.payload
-            self._attr_last_updated = dt_util.utcnow()
+            self._attr_image_last_updated = dt_util.utcnow()
             get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
         self._sub_state = subscription.async_prepare_subscribe_topics(

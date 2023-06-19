@@ -103,6 +103,7 @@ async def test_run_image_setup(
                     "topic": "test/image",
                     "name": "Test",
                     "image_encoding": "b64",
+                    "content_type": "image/png",
                 }
             }
         }
