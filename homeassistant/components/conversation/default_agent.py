@@ -4,7 +4,6 @@ from __future__ import annotations
 import asyncio
 from collections import defaultdict
 from collections.abc import Callable, Iterable
-import contextlib
 from dataclasses import dataclass
 import functools
 import logging
@@ -13,7 +12,7 @@ import re
 from typing import IO, Any
 
 from hassil.intents import Intents, ResponseType, SlotList, TextSlotList
-from hassil.recognize import RecognizeResult, recognize, recognize_all
+from hassil.recognize import RecognizeResult, recognize_all
 from hassil.util import merge_dict
 from home_assistant_intents import get_domains_and_languages, get_intents
 import yaml
@@ -61,6 +60,14 @@ class LanguageIntents:
     intent_responses: dict[str, Any]
     error_responses: dict[str, Any]
     loaded_components: set[str]
+
+
+@dataclass(slots=True)
+class TriggerData:
+    """List of sentences and the callback for a trigger."""
+
+    sentences: list[str]
+    callback: TRIGGER_CALLBACK_TYPE
 
 
 def _get_language_variations(language: str) -> Iterable[str]:
@@ -114,9 +121,8 @@ class DefaultAgent(AbstractConversationAgent):
         self._slot_lists: dict[str, SlotList] | None = None
 
         # Sentences that will trigger a callback (skipping intent recognition)
-        self._trigger_sentences: dict[str, list[TRIGGER_CALLBACK_TYPE]] = defaultdict(
-            list
-        )
+        # trigger id -> sentences and callback
+        self._trigger_sentences: dict[str, TriggerData] = {}
         self._trigger_intents: Intents | None = None
 
     @property
@@ -616,17 +622,19 @@ class DefaultAgent(AbstractConversationAgent):
 
     def register_trigger(
         self,
+        trigger_id: str,
         sentences: list[str],
         callback: TRIGGER_CALLBACK_TYPE,
     ) -> core.CALLBACK_TYPE:
         """Register a list of sentences that will trigger a callback when recognized."""
-        for sentence in sentences:
-            self._trigger_sentences[sentence].append(callback)
+        self._trigger_sentences[trigger_id] = TriggerData(
+            sentences=sentences, callback=callback
+        )
 
         # Force rebuild on next use
         self._trigger_intents = None
 
-        unregister = functools.partial(self._unregister_trigger, sentences, callback)
+        unregister = functools.partial(self._unregister_trigger, trigger_id)
         return unregister
 
     def _rebuild_trigger_intents(self) -> None:
@@ -634,25 +642,17 @@ class DefaultAgent(AbstractConversationAgent):
         intents_dict = {
             "language": self.hass.config.language,
             "intents": {
-                sentence: {"data": [{"sentences": [sentence]}]}
-                for sentence in self._trigger_sentences
+                trigger_id: {"data": [{"sentences": trigger_data.sentences}]}
+                for trigger_id, trigger_data in self._trigger_sentences.items()
             },
         }
 
         self._trigger_intents = Intents.from_dict(intents_dict)
         _LOGGER.debug("Rebuilt trigger intents: %s", intents_dict)
 
-    def _unregister_trigger(
-        self, sentences: list[str], action: TRIGGER_CALLBACK_TYPE
-    ) -> None:
-        """Unregister a callback from a list of trigger sentences."""
-        for sentence in sentences:
-            with contextlib.suppress(ValueError):
-                self._trigger_sentences[sentence].remove(action)
-
-            # Remove sentences with no callbacks
-            if not self._trigger_sentences[sentence]:
-                self._trigger_sentences.pop(sentence, None)
+    def _unregister_trigger(self, trigger_id: str) -> None:
+        """Unregister a set of trigger sentences."""
+        self._trigger_sentences.pop(trigger_id, None)
 
         # Force rebuild on next use
         self._trigger_intents = None
@@ -672,24 +672,30 @@ class DefaultAgent(AbstractConversationAgent):
             self._rebuild_trigger_intents()
 
         assert self._trigger_intents is not None
-        result = recognize(sentence, self._trigger_intents)
-        if result is None:
-            # No match
-            _LOGGER.debug("Sentence does match any triggers: %s", sentence)
+
+        matched_triggers: list[str] = []
+        speech: str | None = None
+        for result in recognize_all(sentence, self._trigger_intents):
+            trigger_id = result.intent.name
+            matched_triggers.append(trigger_id)
+            trigger_data = self._trigger_sentences[trigger_id]
+            trigger_response = trigger_data.callback(sentence)
+            speech = speech or trigger_response
+
+        if not matched_triggers:
+            # Sentence did not match any trigger sentences
             return None
 
-        actions = self._trigger_sentences[result.intent.name]
-
-        # Call the registered callbacks for this sentence
-        _LOGGER.debug("Running %s callback(s) for trigger", len(actions))
-        speech = ""
-        for action in actions:
-            if action_response := action(sentence):
-                speech = action_response
+        _LOGGER.debug(
+            "'%s' matched %s trigger(s): %s",
+            sentence,
+            len(matched_triggers),
+            matched_triggers,
+        )
 
         response = intent.IntentResponse(language=self.hass.config.language)
         response.response_type = intent.IntentResponseType.ACTION_DONE
-        response.async_set_speech(speech)
+        response.async_set_speech(speech or "")
 
         return ConversationResult(response=response)
 
