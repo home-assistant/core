@@ -31,7 +31,6 @@ async def async_setup_entry(
                 None,
                 SensorStateClass.MEASUREMENT,
                 UnitOfPower.WATT,  # Not a volume unit
-                None,
             ),
             DemoSensor(
                 "statistics_issue_2",
@@ -40,7 +39,6 @@ async def async_setup_entry(
                 None,
                 SensorStateClass.MEASUREMENT,
                 "dogs",  # Can't be converted to cats
-                None,
             ),
             DemoSensor(
                 "statistics_issue_3",
@@ -49,7 +47,6 @@ async def async_setup_entry(
                 None,
                 None,  # Wrong state class
                 UnitOfPower.WATT,
-                None,
             ),
         ]
     )
@@ -68,9 +65,6 @@ class DemoSensor(SensorEntity):
         device_class: SensorDeviceClass | None,
         state_class: SensorStateClass | None,
         unit_of_measurement: str | None,
-        battery: StateType,
-        options: list[str] | None = None,
-        translation_key: str | None = None,
     ) -> None:
         """Initialize the sensor."""
         self._attr_device_class = device_class
@@ -79,8 +73,6 @@ class DemoSensor(SensorEntity):
         self._attr_native_value = state
         self._attr_state_class = state_class
         self._attr_unique_id = unique_id
-        self._attr_options = options
-        self._attr_translation_key = translation_key
 
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, unique_id)},
