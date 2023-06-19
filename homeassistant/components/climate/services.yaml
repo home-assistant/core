@@ -1,8 +1,8 @@
 # Describes the format for available climate services
 
 set_aux_heat:
-  name: Turn on/off auxiliary heater
-  description: Turn auxiliary heater on/off for climate device.
+  name: Turn on/off emergency heater
+  description: Turn emergency heater on/off for climate device.
   target:
     entity:
       domain: climate
@@ -10,8 +10,8 @@ set_aux_heat:
         - climate.ClimateEntityFeature.AUX_HEAT
   fields:
     aux_heat:
-      name: Auxiliary heating
-      description: New value of auxiliary heater.
+      name: Emergency heating
+      description: New value of emergency heater.
       required: true
       selector:
         boolean:
