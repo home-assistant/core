@@ -1655,6 +1655,19 @@ class StateMachine:
         )
 
 
+class SupportsResponse(enum.Enum):
+    """Service call response configuration."""
+
+    NONE = "none"
+    """The service does not support responses (the default)"""
+
+    OPTIONAL = "optional"
+    """The service optionally returns response data when asked by the caller."""
+
+    ONLY = "only"
+    """The service is read-only and the caller must always ask for response data."""
+
+
 class Service:
     """Representation of a callable service."""
 
@@ -1667,7 +1680,7 @@ class Service:
         domain: str,
         service: str,
         context: Context | None = None,
-        supports_response: bool = False,
+        supports_response: SupportsResponse = SupportsResponse.NONE,
     ) -> None:
         """Initialize a service."""
         self.job = HassJob(func, f"service {domain}.{service}")
@@ -1761,7 +1774,7 @@ class ServiceRegistry:
             [ServiceCall], Coroutine[Any, Any, ServiceResponse] | None
         ],
         schema: vol.Schema | None = None,
-        supports_response: bool = False,
+        supports_response: SupportsResponse = SupportsResponse.NONE,
     ) -> None:
         """Register a service.
 
@@ -1879,10 +1892,14 @@ class ServiceRegistry:
                 raise ValueError(
                     "Invalid argument return_response=True when blocking=False"
                 )
-            if not handler.supports_response:
+            if handler.supports_response == SupportsResponse.NONE:
                 raise ValueError(
                     "Invalid argument return_response=True when handler does not support responses"
                 )
+        elif handler.supports_response == SupportsResponse.ONLY:
+            raise ValueError(
+                "Service call requires responses but caller did not ask for responses"
+            )
 
         if target:
             service_data.update(target)
