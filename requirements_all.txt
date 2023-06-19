@@ -99,7 +99,7 @@ PyRMVtransport==0.3.3
 PySocks==1.7.1
 
 # homeassistant.components.switchbot
-PySwitchbot==0.37.6
+PySwitchbot==0.38.0
 
 # homeassistant.components.switchmate
 PySwitchmate==0.5.1
@@ -342,7 +342,7 @@ aiosenseme==0.6.1
 aiosenz==1.0.0
 
 # homeassistant.components.shelly
-aioshelly==5.3.2
+aioshelly==5.4.0
 
 # homeassistant.components.skybell
 aioskybell==22.7.0
@@ -568,7 +568,7 @@ brunt==1.2.0
 bt-proximity==0.2.1
 
 # homeassistant.components.bthome
-bthome-ble==2.11.3
+bthome-ble==2.12.0
 
 # homeassistant.components.bt_home_hub_5
 bthomehub5-devicelist==0.1.1
@@ -2253,7 +2253,7 @@ radiotherm==2.1.0
 raincloudy==0.0.7
 
 # homeassistant.components.rapt_ble
-rapt-ble==0.1.1
+rapt-ble==0.1.2
 
 # homeassistant.components.raspyrfm
 raspyrfm-client==1.2.8
@@ -2268,7 +2268,7 @@ renault-api==0.1.13
 renson-endura-delta==1.5.0
 
 # homeassistant.components.reolink
-reolink-aio==0.6.0
+reolink-aio==0.7.1
 
 # homeassistant.components.idteck_prox
 rfk101py==0.0.1
@@ -2736,7 +2736,7 @@ zamg==0.2.2
 zengge==0.2
 
 # homeassistant.components.zeroconf
-zeroconf==0.66.0
+zeroconf==0.69.0
 
 # homeassistant.components.zeversolar
 zeversolar==0.3.1
