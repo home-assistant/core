@@ -1,7 +1,6 @@
 """Sensor for Last.fm account status."""
 from __future__ import annotations
 
-import contextlib
 import hashlib
 
 from pylast import LastFMNetwork, PyLastError, Track, User
