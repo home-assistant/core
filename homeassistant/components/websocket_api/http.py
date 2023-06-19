@@ -67,7 +67,7 @@ class WebSocketHandler:
     def __init__(self, hass: HomeAssistant, request: web.Request) -> None:
         """Initialize an active connection."""
         self._hass = hass
-        self._request = request
+        self._request: web.Request = request
         self._wsock = web.WebSocketResponse(heartbeat=55)
         self._handle_task: asyncio.Task | None = None
         self._writer_task: asyncio.Task | None = None
@@ -93,7 +93,9 @@ class WebSocketHandler:
         """Return a description of the connection."""
         if connection := self._connection:
             return connection.get_description(self._request)
-        return describe_request(self._request)
+        if request := self._request:
+            return describe_request(request)
+        return "finished connection"
 
     async def _writer(self) -> None:
         """Write outgoing messages."""
