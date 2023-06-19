@@ -47,7 +47,3 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
         return self.async_show_form(step_id="user", data_schema=STEP_USER_DATA_SCHEMA)
-
-    async def async_step_import(self, data: dict[str, Any]) -> FlowResult:
-        """Handle the import step."""
-        return await self.async_step_user(user_input=data)

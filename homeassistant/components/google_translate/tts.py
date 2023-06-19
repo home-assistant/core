@@ -29,7 +29,6 @@ from .const import (
     SUPPORT_LANGUAGES,
     SUPPORT_TLD,
 )
-from .repairs import async_process_issue
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -49,7 +48,6 @@ async def async_get_engine(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> GoogleProvider:
     """Set up Google speech component."""
-    async_process_issue(hass, config)
     return GoogleProvider(hass, config[CONF_LANG], config[CONF_TLD])
 
 
