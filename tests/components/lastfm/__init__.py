@@ -104,7 +104,7 @@ class FailingMockUser(MockUser):
     def get_image(self) -> str:
         """Raise exception when get user image."""
         self.amount_called += 1
-        if self.amount_called > 0:
+        if self.amount_called > 1:
             raise PyLastError("network", "status", "Page not found")
         return ""
 
