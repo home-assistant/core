@@ -96,27 +96,6 @@ class MockUser:
         return self._friends
 
 
-class FailingMockUser(MockUser):
-    """Mock user built to pass verification but raise exception later."""
-
-    amount_called = 0
-
-    def __init__(self):
-        """Initialize default user."""
-        super().__init__(
-            now_playing_result=Track("artist", "title", MockNetwork("lastfm")),
-            top_tracks=[Track("artist", "title", MockNetwork("lastfm"))],
-            recent_tracks=[Track("artist", "title", MockNetwork("lastfm"))],
-        )
-
-    def get_image(self) -> str:
-        """Raise exception when get user image."""
-        self.amount_called += 1
-        if self.amount_called > 1:
-            raise PyLastError("network", "status", "Page not found")
-        return ""
-
-
 def patch_user(user: MockUser) -> MockUser:
     """Patch interface."""
     return patch("pylast.User", return_value=user)
