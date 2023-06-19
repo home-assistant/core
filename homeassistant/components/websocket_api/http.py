@@ -83,6 +83,10 @@ class WebSocketHandler:
         self._message_queue: deque = deque()
         self._ready_future: asyncio.Future[None] | None = None
 
+    def __repr__(self) -> str:
+        """Return the representation."""
+        return f"<WebSocketHandler {self.description}>"
+
     @property
     def description(self) -> str:
         """Return a description of the connection."""

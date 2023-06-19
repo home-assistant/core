@@ -56,6 +56,10 @@ class ActiveConnection:
         self.binary_handlers: list[BinaryHandler | None] = []
         current_connection.set(self)
 
+    def __repr__(self) -> str:
+        """Return the representation."""
+        return f"<ActiveConnection {self.get_description(None)}>"
+
     def set_supported_features(self, features: dict[str, float]) -> None:
         """Set supported features."""
         self.supported_features = features
