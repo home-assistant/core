@@ -837,7 +837,11 @@ class EsphomeEntity(Entity, Generic[_InfoT, _StateT]):
 
     @callback
     def _on_static_info_update(self, static_infos: dict[int, EntityInfo]) -> None:
-        """Save the static info for this entity when it changes."""
+        """Save the static info for this entity when it changes.
+
+        This method can be overridden in child classes to know
+        when the static info changes.
+        """
         self._static_info = static_infos[self._key]
 
     @callback
