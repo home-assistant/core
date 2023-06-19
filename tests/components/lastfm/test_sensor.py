@@ -122,7 +122,7 @@ async def test_update_failed(
     default_user: MockUser,
 ) -> None:
     """Test handling exception after API is tested."""
-    await setup_integration(config_entry, default_user)
+    await setup_integration(config_entry, FailingMockUser())
 
     entity_id = "sensor.testaccount1"
 
@@ -133,10 +133,9 @@ async def test_update_failed(
     assert state.attributes[ATTR_TOP_PLAYED] == "artist - title"
     assert state.attributes[ATTR_PLAY_COUNT] == 1
 
-    with patch("pylast.User", return_value=FailingMockUser()):
-        future = dt_util.utcnow() + timedelta(minutes=15)
-        async_fire_time_changed(hass, future)
-        await hass.async_block_till_done()
+    future = dt_util.utcnow() + timedelta(minutes=15)
+    async_fire_time_changed(hass, future)
+    await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
 

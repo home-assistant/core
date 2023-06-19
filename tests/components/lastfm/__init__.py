@@ -99,9 +99,14 @@ class MockUser:
 class FailingMockUser(MockUser):
     """Mock user built to pass verification but raise exception later."""
 
+    amount_called = 0
+
     def get_image(self) -> str:
         """Raise exception when get user image."""
-        raise PyLastError("network", "status", "Page not found")
+        self.amount_called += 1
+        if self.amount_called > 0:
+            raise PyLastError("network", "status", "Page not found")
+        return ""
 
 
 def patch_user(user: MockUser) -> MockUser:
