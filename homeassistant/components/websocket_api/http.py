@@ -72,6 +72,7 @@ class WebSocketHandler:
         self._handle_task: asyncio.Task | None = None
         self._writer_task: asyncio.Task | None = None
         self._closing: bool = False
+        self._authenticated: bool = False
         self._logger = WebSocketAdapter(_WS_LOGGER, {"connid": id(self)})
         self._peak_checker_unsub: Callable[[], None] | None = None
         self._connection: ActiveConnection | None = None
@@ -85,7 +86,7 @@ class WebSocketHandler:
 
     def __repr__(self) -> str:
         """Return the representation."""
-        return f"<WebSocketHandler {self.description}>"
+        return f"<WebSocketHandler closing={self._closing} authenticated={self._authenticated} {self.description}>"
 
     @property
     def description(self) -> str:
@@ -306,6 +307,7 @@ class WebSocketHandler:
             hass.data[DATA_CONNECTIONS] = hass.data.get(DATA_CONNECTIONS, 0) + 1
             async_dispatcher_send(hass, SIGNAL_WEBSOCKET_CONNECTED)
 
+            self._authenticated = True
             #
             #
             # Our websocket implementation is backed by an asyncio.Queue
