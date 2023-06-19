@@ -9,10 +9,10 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import LOGGER
+from .const import LOGGER, Board, List
 
 
-class TrelloDataUpdateCoordinator(DataUpdateCoordinator[dict[str, int]]):
+class TrelloDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Board]]):
     """Data update coordinator for the Trello integration."""
 
     config_entry: ConfigEntry
@@ -30,42 +30,57 @@ class TrelloDataUpdateCoordinator(DataUpdateCoordinator[dict[str, int]]):
         self.client = trello_client
         self.board_ids = board_ids
 
-    def _update(self) -> dict[str, int]:
+    def _update(self) -> dict[str, Board]:
         """Fetch data for all sensors using batch API endpoint."""
-        sub_query_params = "fields=name&cards=open&card_fields=none"
+        board_lists_query_params = "fields=name"
+        list_cards_query_params = "fields=name&cards=open&card_fields=idCard"
         urls = ",".join(
-            f"/boards/{board_id}/lists?{sub_query_params}"
+            f"/boards/{board_id}?{board_lists_query_params},/boards/{board_id}/lists?{list_cards_query_params}"
             for board_id in self.board_ids
         )
 
         LOGGER.debug("Fetching boards lists: %s", urls)
         batch_response = self.client.fetch_json("batch", query_params={"urls": urls})
 
-        return _get_lists_card_counts(batch_response, self.board_ids)
+        return _get_boards(batch_response, self.board_ids)
 
-    async def _async_update_data(self) -> dict[str, int]:
+    async def _async_update_data(self) -> dict[str, Board]:
         """Send request to the executor."""
         return await self.hass.async_add_executor_job(self._update)
 
 
-def _get_lists_card_counts(
-    batch_response: list[dict], board_ids: list[str]
-) -> dict[str, int]:
-    list_card_counts = {}
-    for i, board_lists_response in enumerate(batch_response):
-        if _is_success(board_lists_response):
-            lists = board_lists_response["200"]
-            for list_ in lists:
-                list_card_counts[list_["id"]] = len(list_["cards"])
+def _get_boards(batch_response: list[dict], board_ids: list[str]) -> dict[str, Board]:
+    board_id_boards: dict[str, Board] = {}
+    for i, batch_response_pair in enumerate(
+        zip(batch_response[::2], batch_response[1::2])
+    ):
+        board_response = batch_response_pair[0]
+        list_response = batch_response_pair[1]
+        if _is_success(board_response) and _is_success(list_response):
+            board = board_response["200"]
+            lists = list_response["200"]
+            board_id_boards[board["id"]] = _get_board(board, lists)
         else:
             LOGGER.error(
                 "Unable to fetch lists for board with ID '%s'. Response was: %s)",
                 board_ids[i],
-                board_lists_response,
+                board_response,
             )
+            board_id_boards[board_ids[i]] = Board(board_ids[i], "", {})
             continue
 
-    return list_card_counts
+    return board_id_boards
+
+
+def _get_board(board: dict, lists: dict) -> Board:
+    return Board(
+        board["id"],
+        board["name"],
+        {
+            list_["id"]: List(list_["id"], list_["name"], len(list_["cards"]))
+            for list_ in lists
+        },
+    )
 
 
 def _is_success(response: dict) -> bool:
