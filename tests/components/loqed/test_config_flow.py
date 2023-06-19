@@ -26,7 +26,7 @@ zeroconf_data = zeroconf.ZeroconfServiceInfo(
 )
 
 
-async def test_create_entry_zeoconf(hass: HomeAssistant) -> None:
+async def test_create_entry_zeroconf(hass: HomeAssistant) -> None:
     """Test we get can create a lock via zeroconf."""
     lock_result = json.loads(load_fixture("loqed/status_ok.json"))
 
@@ -72,7 +72,7 @@ async def test_create_entry_zeoconf(hass: HomeAssistant) -> None:
     assert result2["title"] == "LOQED Touch Smart Lock"
     assert result2["data"] == {
         "id": "Foo",
-        "lock_key_key": found_lock["backend_key"],
+        "lock_key_key": found_lock["key_secret"],
         "bridge_key": found_lock["bridge_key"],
         "lock_key_local_id": found_lock["local_id"],
         "bridge_mdns_hostname": found_lock["bridge_hostname"],
@@ -126,7 +126,7 @@ async def test_create_entry_user(
     assert result2["title"] == "LOQED Touch Smart Lock"
     assert result2["data"] == {
         "id": "Foo",
-        "lock_key_key": found_lock["backend_key"],
+        "lock_key_key": found_lock["key_secret"],
         "bridge_key": found_lock["bridge_key"],
         "lock_key_local_id": found_lock["local_id"],
         "bridge_mdns_hostname": found_lock["bridge_hostname"],
