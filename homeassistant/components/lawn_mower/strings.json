@@ -1,28 +1,22 @@
 {
   "title": "Lawn mower",
-  "device_automation": {
-    "condition_type": {
-      "is_docked": "{entity_name} is docked",
-      "is_mowing": "{entity_name} is mowing"
-    },
-    "trigger_type": {
-      "mowing": "{entity_name} started mowing",
-      "docked": "{entity_name} docked"
-    },
-    "action_type": {
-      "mow": "Let {entity_name} mow",
-      "dock": "Let {entity_name} return to the dock"
+  "entity_component": {
+    "_": {
+      "name": "[%key:component::lawn_mower::title%]",
+      "state": {
+        "mowing": "Mowing",
+        "docked": "Docked",
+        "error": "Error",
+        "idle": "[%key:common::state::idle%]",
+        "paused": "[%key:common::state::paused%]",
+        "returning": "Returning to dock"
+      }
     }
   },
-  "state": {
-    "_": {
-      "name": "Lawn mower",
-      "mowing": "Mowing",
-      "docked": "Docked",
-      "error": "Error",
-      "idle": "[%key:common::state::idle%]",
-      "paused": "[%key:common::state::paused%]",
-      "returning": "Returning to dock"
+  "issues": {
+    "platform_integration_no_support": {
+      "title": "[%key:common::issues::platform_integration_no_support_title%]",
+      "description": "[%key:common::issues::platform_integration_no_support_description%]"
     }
   }
 }

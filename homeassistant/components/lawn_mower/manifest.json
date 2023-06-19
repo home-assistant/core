@@ -3,5 +3,6 @@
   "name": "Lawn Mower",
   "codeowners": ["@home-assistant/core"],
   "documentation": "https://www.home-assistant.io/integrations/lawn_mower",
+  "integration_type": "entity",
   "quality_scale": "internal"
 }

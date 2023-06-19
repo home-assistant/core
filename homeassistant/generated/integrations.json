@@ -2915,10 +2915,6 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
-    "lawn_mower": {
-      "integration_type": "hub",
-      "config_flow": false
-    },
     "lcn": {
       "name": "LCN",
       "integration_type": "hub",

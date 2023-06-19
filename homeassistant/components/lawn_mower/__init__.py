@@ -9,7 +9,11 @@ import logging
 from typing import Any, final
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.config_validation import (  # noqa: F401
+    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA_BASE,
+)
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
@@ -26,12 +30,6 @@ SERVICE_ENABLE_SCHEDULE = "enable_schedule"
 SERVICE_DISABLE_SCHEDULE = "disable_schedule"
 SERVICE_DOCK = "dock"
 
-ERROR = "error"
-PAUSED = "paused"
-MOWING = "mowing"
-DOCKED_SCHEDULE_ENABLED = "docked_schedule_enabled"
-DOCKED_SCHEDULE_DISABLED = "docked_schedule_disabled"
-
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the lawn_mower component."""
@@ -41,16 +39,29 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     await component.async_setup(config)
 
     component.async_register_entity_service(
-        SERVICE_START_MOWING, {}, "async_service_start_mowing"
+        SERVICE_START_MOWING,
+        {},
+        "async_service_start_mowing",
+        [LawnMowerEntityFeature.START_MOWING],
     )
-    component.async_register_entity_service(SERVICE_PAUSE, {}, "async_service_pause")
     component.async_register_entity_service(
-        SERVICE_ENABLE_SCHEDULE, {}, "async_service_enable_schedule"
+        SERVICE_PAUSE, {}, "async_service_pause", [LawnMowerEntityFeature.PAUSE]
     )
     component.async_register_entity_service(
-        SERVICE_DISABLE_SCHEDULE, {}, "async_service_disable_schedule"
+        SERVICE_ENABLE_SCHEDULE,
+        {},
+        "async_service_enable_schedule",
+        [LawnMowerEntityFeature.ENABLE_SCHEDULE],
     )
-    component.async_register_entity_service(SERVICE_DOCK, {}, "async_service_dock")
+    component.async_register_entity_service(
+        SERVICE_DISABLE_SCHEDULE,
+        {},
+        "async_service_disable_schedule",
+        [LawnMowerEntityFeature.DISABLE_SCHEDULE],
+    )
+    component.async_register_entity_service(
+        SERVICE_DOCK, {}, "async_service_dock", [LawnMowerEntityFeature.DOCK]
+    )
 
     return True
 
@@ -73,8 +84,6 @@ class LawnMowerEntityFeature(IntFlag):
     DOCK = 4
     ENABLE_SCHEDULE = 8
     DISABLE_SCHEDULE = 16
-    BATTERY = 32
-    LINK = 64
 
 
 @dataclass
@@ -87,7 +96,7 @@ class LawnMowerEntity(Entity):
 
     entity_description: LawnMowerEntityEntityDescription
     _attr_activity: Activity | None = None
-    _attr_supported_features: int
+    _attr_supported_features: LawnMowerEntityFeature
 
     @final
     @property
@@ -96,7 +105,7 @@ class LawnMowerEntity(Entity):
         return self._attr_activity
 
     @property
-    def supported_features(self) -> int:
+    def supported_features(self) -> LawnMowerEntityFeature:
         """Flag lawn mower features that are supported."""
         return self._attr_supported_features
 
@@ -104,25 +113,25 @@ class LawnMowerEntity(Entity):
         """Start mowing."""
         raise NotImplementedError()
 
-    async def async_start_mowing(self, **kwargs: Any) -> None:
+    async def async_start_mowing(self) -> None:
         """Start mowing."""
-        await self.hass.async_add_executor_job(partial(self.start_mowing, **kwargs))
+        await self.hass.async_add_executor_job(partial(self.start_mowing))
 
     def dock(self) -> None:
         """Dock the mower."""
         raise NotImplementedError()
 
-    async def async_dock(self, **kwargs: Any) -> None:
+    async def async_dock(self) -> None:
         """Dock the mower."""
-        await self.hass.async_add_executor_job(partial(self.dock, **kwargs))
+        await self.hass.async_add_executor_job(partial(self.dock))
 
     def pause(self) -> None:
         """Pause the lawn mower."""
         raise NotImplementedError()
 
-    async def async_pause(self, **kwargs: Any) -> None:
+    async def async_pause(self) -> None:
         """Pause the lawn mower."""
-        await self.hass.async_add_executor_job(partial(self.pause, **kwargs))
+        await self.hass.async_add_executor_job(partial(self.pause))
 
     def enable_schedule(self) -> None:
         """Enable the schedule for the lawn mower."""
@@ -136,43 +145,9 @@ class LawnMowerEntity(Entity):
         """Disable the schedule for the lawn mower."""
         raise NotImplementedError()
 
-    async def async_disable_schedule(self, **kwargs: Any) -> None:
+    async def async_disable_schedule(self) -> None:
         """Disable the schedule for the lawn mower."""
-        await self.hass.async_add_executor_job(partial(self.disable_schedule, **kwargs))
-
-
-async def async_service_start_mowing(
-    entity: LawnMowerEntity, service: ServiceCall
-) -> None:
-    """Handle start mowing service."""
-    kwargs = dict(service.data.items())
-    await entity.async_start_mowing(**kwargs)
-
-
-async def async_service_dock(entity: LawnMowerEntity, service: ServiceCall) -> None:
-    """Handle dock service."""
-    await entity.async_dock()
-
-
-async def async_service_pause(entity: LawnMowerEntity, service: ServiceCall) -> None:
-    """Handle pause service."""
-    await entity.async_pause()
-
-
-async def async_service_enable_schedule(
-    entity: LawnMowerEntity, service: ServiceCall
-) -> None:
-    """Handle enable schedule service."""
-    kwargs = dict(service.data.items())
-    await entity.async_enable_schedule(**kwargs)
-
-
-async def async_service_disable_schedule(
-    entity: LawnMowerEntity, service: ServiceCall
-) -> None:
-    """Handle disable schedule service."""
-    kwargs = dict(service.data.items())
-    await entity.async_disable_schedule(**kwargs)
+        await self.hass.async_add_executor_job(partial(self.disable_schedule))
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
