@@ -28,7 +28,7 @@
         "fan_only": "Fan only"
       },
       "state_attributes": {
-        "aux_heat": { "name": "Aux heat" },
+        "aux_heat": { "name": "Emergency heat" },
         "current_humidity": { "name": "Current humidity" },
         "current_temperature": { "name": "Current temperature" },
         "fan_mode": {
