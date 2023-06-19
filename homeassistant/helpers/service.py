@@ -819,10 +819,10 @@ async def entity_service_call(  # noqa: C901
         response = task.result()  # pop exception if have
         if not call.return_values:
             continue
-        if not isinstance(response, dict):
-            raise HomeAssistantError(
-                f"Service response data expected a dictionary, was {type(response)}"
-            )
+        # if not isinstance(response, dict):
+        #    raise HomeAssistantError(
+        #        f"Service response data expected a dictionary, was {type(response)}"
+        #    )
         response_data[entity.entity_id] = response
 
     tasks: list[asyncio.Task[None]] = []
