@@ -1127,7 +1127,7 @@ async def test_serviceregistry_async_return_response(
 async def test_services_call_return_response_requires_blocking(
     hass: HomeAssistant,
 ) -> None:
-    """Test that non-blocking service calls cannot return values."""
+    """Test that non-blocking service calls cannot ask for response data."""
     async_mock_service(hass, "test_domain", "test_service")
     with pytest.raises(ValueError, match="when blocking=False"):
         await hass.services.async_call(
@@ -1152,7 +1152,7 @@ async def test_services_call_return_response_requires_blocking(
 async def test_serviceregistry_return_response_invalid(
     hass: HomeAssistant, response_data: Any, expected_error: str
 ) -> None:
-    """Test service call return values are required to be json serializable objects."""
+    """Test service call response data must be json serializable objects."""
 
     def service_handler(call: ServiceCall) -> ServiceResponse:
         """Service handler coroutine."""
@@ -1189,7 +1189,7 @@ async def test_serviceregistry_return_response_arguments(
     return_response: bool,
     expected_error: str,
 ) -> None:
-    """Test service call data when not asked for return values."""
+    """Test service call response data invalid arguments."""
 
     hass.services.async_register(
         "test_domain",
@@ -1220,7 +1220,7 @@ async def test_serviceregistry_return_response_optional(
     return_response: bool,
     expected_response_data: Any,
 ) -> None:
-    """Test service call return values are not returned when there is no result schema."""
+    """Test optional service call response data."""
 
     def service_handler(call: ServiceCall) -> ServiceResponse:
         """Service handler coroutine."""
