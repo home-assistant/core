@@ -305,6 +305,7 @@ omit =
     homeassistant/components/escea/climate.py
     homeassistant/components/escea/discovery.py
     homeassistant/components/esphome/__init__.py
+    homeassistant/components/esphome/alarm_control_panel.py
     homeassistant/components/esphome/binary_sensor.py
     homeassistant/components/esphome/bluetooth/*
     homeassistant/components/esphome/button.py
