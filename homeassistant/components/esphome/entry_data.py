@@ -129,9 +129,11 @@ class RuntimeEntryData:
         """Return the signal to listen to for updates on static info."""
         return f"esphome_{self.entry_id}_on_list"
 
-    def signal_component_static_info_updated(self, component_key: str) -> str:
-        """Return the signal to listen to for updates on static info for a specific component_key."""
-        return f"esphome_{self.entry_id}_static_info_updated_{component_key}"
+    def signal_component_key_static_info_updated(
+        self, component_key: str, key: int
+    ) -> str:
+        """Return the signal to listen to for updates on static info for a specific component_key and key."""
+        return f"esphome_{self.entry_id}_static_info_updated_{component_key}_{key}"
 
     @callback
     def async_update_ble_connection_limits(self, free: int, limit: int) -> None:

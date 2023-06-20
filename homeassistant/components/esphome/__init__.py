@@ -725,11 +725,12 @@ async def platform_async_setup_entry(
         # Then update the actual info
         entry_data.info[component_key] = new_infos
 
-        async_dispatcher_send(
-            hass,
-            entry_data.signal_component_static_info_updated(component_key),
-            new_infos,
-        )
+        for key, new_info in new_infos.items():
+            async_dispatcher_send(
+                hass,
+                entry_data.signal_component_key_static_info_updated(component_key, key),
+                new_info,
+            )
 
         if add_entities:
             # Add entities to Home Assistant
@@ -801,8 +802,7 @@ class EsphomeEntity(Entity, Generic[_InfoT, _StateT]):
         self._component_key = component_key
         self._key = entity_info.key
         self._state_type = state_type
-        self._static_info = cast(_InfoT, entity_info)
-        self._on_static_info_update()
+        self._on_static_info_update(entity_info)
         assert entry_data.device_info is not None
         device_info = entry_data.device_info
         self._device_info = device_info
@@ -839,29 +839,22 @@ class EsphomeEntity(Entity, Generic[_InfoT, _StateT]):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                self._entry_data.signal_component_static_info_updated(
-                    self._component_key
+                self._entry_data.signal_component_key_static_info_updated(
+                    self._component_key, self._key
                 ),
-                self._on_device_static_info_update,
+                self._on_static_info_update,
             )
         )
 
     @callback
-    def _on_device_static_info_update(
-        self, static_infos: dict[int, EntityInfo]
-    ) -> None:
-        """Call when static info for the device is updated."""
-        self._static_info = cast(_InfoT, static_infos[self._key])
-        self._on_static_info_update()
-
-    @callback
-    def _on_static_info_update(self) -> None:
+    def _on_static_info_update(self, static_info: EntityInfo) -> None:
         """Save the static info for this entity when it changes.
 
         This method can be overridden in child classes to know
         when the static info changes.
         """
-        static_info = self._static_info
+        static_info = cast(_InfoT, static_info)
+        self._static_info = static_info
         self._attr_unique_id = static_info.unique_id
         self._attr_entity_registry_enabled_default = not static_info.disabled_by_default
         self._attr_name = static_info.name

@@ -1,7 +1,7 @@
 """Support for ESPHome binary sensors."""
 from __future__ import annotations
 
-from aioesphomeapi import BinarySensorInfo, BinarySensorState
+from aioesphomeapi import BinarySensorInfo, BinarySensorState, EntityInfo
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -56,9 +56,9 @@ class EsphomeBinarySensor(
         return self._state.state
 
     @callback
-    def _on_static_info_update(self) -> None:
+    def _on_static_info_update(self, static_info: EntityInfo) -> None:
         """Set attrs from static info."""
-        super()._on_static_info_update()
+        super()._on_static_info_update(static_info)
         self._attr_device_class = try_parse_enum(
             BinarySensorDeviceClass, self._static_info.device_class
         )
