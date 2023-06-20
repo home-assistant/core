@@ -857,12 +857,14 @@ class EsphomeEntity(Entity, Generic[_InfoT, _StateT]):
         self._attr_unique_id = static_info.unique_id
         self._attr_entity_registry_enabled_default = not static_info.disabled_by_default
         self._attr_name = static_info.name
-        if static_info.entity_category:
-            self._attr_entity_category = ENTITY_CATEGORIES.from_esphome(
-                static_info.entity_category
-            )
-        if static_info.icon:
-            self._attr_icon = cast(str, ICON_SCHEMA(self._static_info.icon))
+        if entity_category := static_info.entity_category:
+            self._attr_entity_category = ENTITY_CATEGORIES.from_esphome(entity_category)
+        else:
+            self._attr_entity_category = None
+        if icon := static_info.icon:
+            self._attr_icon = cast(str, ICON_SCHEMA(icon))
+        else:
+            self._attr_icon = None
 
     @callback
     def _on_state_update(self) -> None:
