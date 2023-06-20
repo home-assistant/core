@@ -899,7 +899,7 @@ class EsphomeEntity(Entity, Generic[_InfoT, _StateT]):
     def _on_device_update(self) -> None:
         """Call when device updates or entry data changes."""
         self._on_entry_data_changed()
-        if not self.available:
+        if not self._entry_data.available:
             # Only write state if the device has gone unavailable
             # since _on_state_update will be called if the device
             # is available when the full state arrives
