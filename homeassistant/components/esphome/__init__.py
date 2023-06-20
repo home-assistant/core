@@ -893,7 +893,7 @@ class EsphomeEntity(Entity, Generic[_InfoT, _StateT]):
     def _on_device_update(self) -> None:
         """Update the entity state when device info has changed."""
         self._on_entry_data_changed()
-        if self._entry_data.available:
+        if not self._entry_data.available:
             # Don't update the HA state yet when the device comes online.
             # Only update the HA state when the full state arrives
             # through the next entity state packet.
