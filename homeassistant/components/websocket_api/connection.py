@@ -13,6 +13,7 @@ from homeassistant.auth.models import RefreshToken, User
 from homeassistant.components.http import current_request
 from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, Unauthorized
+from homeassistant.util.json import JsonValueType
 
 from . import const, messages
 from .util import describe_request
@@ -144,7 +145,7 @@ class ActiveConnection:
             self.binary_handlers[index] = None
 
     @callback
-    def async_handle(self, msg: dict[str, Any]) -> None:
+    def async_handle(self, msg: JsonValueType) -> None:
         """Handle a single incoming message."""
         if (
             # Not using isinstance as we don't care about children
@@ -157,10 +158,11 @@ class ActiveConnection:
                 or type(type_) is not str  # pylint: disable=unidiomatic-typecheck
             )
         ):
-            self.logger.error("Received invalid command", msg)
+            self.logger.error("Received invalid command: %s", msg)
+            id_ = msg.get("id") if isinstance(msg, dict) else 0
             self.send_message(
                 messages.error_message(
-                    msg.get("id"),
+                    id_,  # type: ignore[arg-type]
                     const.ERR_INVALID_FORMAT,
                     "Message incorrectly formatted.",
                 )
