@@ -801,7 +801,8 @@ class EsphomeEntity(Entity, Generic[_InfoT, _StateT]):
         self._component_key = component_key
         self._key = entity_info.key
         self._state_type = state_type
-        self._on_static_info_update(entry_data.info[component_key])
+        self._static_info = cast(_InfoT, entity_info)
+        self._on_static_info_update()
         assert entry_data.device_info is not None
         device_info = entry_data.device_info
         self._device_info = device_info
@@ -841,18 +842,25 @@ class EsphomeEntity(Entity, Generic[_InfoT, _StateT]):
                 self._entry_data.signal_component_static_info_updated(
                     self._component_key
                 ),
-                self._on_static_info_update,
+                self._on_device_static_info_update,
             )
         )
 
     @callback
-    def _on_static_info_update(self, static_infos: dict[int, EntityInfo]) -> None:
+    def _on_device_static_info_update(
+        self, static_infos: dict[int, EntityInfo]
+    ) -> None:
+        """Call when static info for the device is updated."""
+        self._static_info = cast(_InfoT, static_infos[self._key])
+        self._on_static_info_update()
+
+    @callback
+    def _on_static_info_update(self) -> None:
         """Save the static info for this entity when it changes.
 
         This method can be overridden in child classes to know
         when the static info changes.
         """
-        self._static_info = cast(_InfoT, static_infos[self._key])
         static_info = self._static_info
         self._attr_unique_id = static_info.unique_id
         self._attr_entity_registry_enabled_default = not static_info.disabled_by_default

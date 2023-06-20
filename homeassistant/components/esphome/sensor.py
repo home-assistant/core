@@ -5,7 +5,6 @@ from datetime import datetime
 import math
 
 from aioesphomeapi import (
-    EntityInfo,
     SensorInfo,
     SensorState,
     SensorStateClass as EsphomeSensorStateClass,
@@ -69,9 +68,9 @@ class EsphomeSensor(EsphomeEntity[SensorInfo, SensorState], SensorEntity):
     """A sensor implementation for esphome."""
 
     @callback
-    def _on_static_info_update(self, static_infos: dict[int, EntityInfo]) -> None:
+    def _on_static_info_update(self) -> None:
         """Set attrs from static info."""
-        super()._on_static_info_update(static_infos)
+        super()._on_static_info_update()
         static_info = self._static_info
         self._attr_force_update = static_info.force_update
         self._attr_native_unit_of_measurement = static_info.unit_of_measurement
