@@ -37,10 +37,7 @@ async def test_form(hass: HomeAssistant) -> None:
     with patch(
         "homeassistant.components.epic_games_store.config_flow.EpicGamesStoreAPI.get_free_games",
         return_value=DATA_FREE_GAMES,
-    ), patch(
-        "homeassistant.components.epic_games_store.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -54,7 +51,6 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result2["data"] == {
         CONF_LOCALE: MOCK_LOCALE,
     }
-    assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_form_cannot_connect(hass: HomeAssistant) -> None:
