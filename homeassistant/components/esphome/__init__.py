@@ -814,34 +814,34 @@ class EsphomeEntity(Entity, Generic[_InfoT, _StateT]):
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
+        entry_data = self._entry_data
+        hass = self.hass
+        component_key = self._component_key
+        key = self._key
+
         self.async_on_remove(
             async_dispatcher_connect(
-                self.hass,
-                f"esphome_{self._entry_id}_remove_{self._component_key}_{self._key}",
+                hass,
+                f"esphome_{self._entry_id}_remove_{component_key}_{key}",
                 functools.partial(self.async_remove, force_remove=True),
             )
         )
-
         self.async_on_remove(
             async_dispatcher_connect(
-                self.hass,
-                self._entry_data.signal_device_updated,
+                hass,
+                entry_data.signal_device_updated,
                 self._on_device_update,
             )
         )
-
         self.async_on_remove(
-            self._entry_data.async_subscribe_state_update(
-                self._state_type, self._key, self._on_state_update
+            entry_data.async_subscribe_state_update(
+                self._state_type, key, self._on_state_update
             )
         )
-
         self.async_on_remove(
             async_dispatcher_connect(
-                self.hass,
-                self._entry_data.signal_component_key_static_info_updated(
-                    self._component_key, self._key
-                ),
+                hass,
+                entry_data.signal_component_key_static_info_updated(component_key, key),
                 self._on_static_info_update,
             )
         )
