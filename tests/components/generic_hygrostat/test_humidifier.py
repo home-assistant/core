@@ -428,14 +428,12 @@ async def test_sensor_affects_attribute(hass: HomeAssistant, setup_comp_2) -> No
 
 async def test_sensor_bad_value(hass: HomeAssistant, setup_comp_2) -> None:
     """Test sensor that have None as state."""
-    state = hass.states.get(ENTITY)
-    humidity = state.attributes.get("current_humidity")
+    assert hass.states.get(ENTITY).state == STATE_ON
 
     _setup_sensor(hass, None)
     await hass.async_block_till_done()
 
-    state = hass.states.get(ENTITY)
-    assert humidity == state.attributes.get("current_humidity")
+    assert hass.states.get(ENTITY).state == STATE_UNAVAILABLE
 
 
 async def test_set_target_humidity_humidifier_on(
