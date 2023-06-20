@@ -16,6 +16,7 @@ class ConversationInput:
     text: str
     context: Context
     conversation_id: str | None
+    device_id: str | None
     language: str
 
 

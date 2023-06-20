@@ -159,7 +159,9 @@ SCHEMA_ADDON_STDIN = SCHEMA_ADDON.extend(
 
 SCHEMA_BACKUP_FULL = vol.Schema(
     {
-        vol.Optional(ATTR_NAME): cv.string,
+        vol.Optional(
+            ATTR_NAME, default=lambda: utcnow().strftime("%Y-%m-%d %H:%M:%S")
+        ): cv.string,
         vol.Optional(ATTR_PASSWORD): cv.string,
         vol.Optional(ATTR_COMPRESSED): cv.boolean,
         vol.Optional(ATTR_LOCATION): vol.All(
@@ -299,7 +301,7 @@ def get_supervisor_info(hass: HomeAssistant) -> dict[str, Any] | None:
 
 @callback
 @bind_hass
-def get_addons_info(hass):
+def get_addons_info(hass: HomeAssistant) -> dict[str, dict[str, Any]] | None:
     """Return Addons info.
 
     Async friendly.
@@ -365,6 +367,16 @@ def get_core_info(hass: HomeAssistant) -> dict[str, Any] | None:
     Async friendly.
     """
     return hass.data.get(DATA_CORE_INFO)
+
+
+@callback
+@bind_hass
+def get_issues_info(hass: HomeAssistant) -> SupervisorIssues | None:
+    """Return Supervisor issues info.
+
+    Async friendly.
+    """
+    return hass.data.get(DATA_KEY_SUPERVISOR_ISSUES)
 
 
 @callback
@@ -778,7 +790,7 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
 
         new_data: dict[str, Any] = {}
         supervisor_info = get_supervisor_info(self.hass) or {}
-        addons_info = get_addons_info(self.hass)
+        addons_info = get_addons_info(self.hass) or {}
         addons_stats = get_addons_stats(self.hass)
         addons_changelogs = get_addons_changelogs(self.hass)
         store_data = get_store(self.hass) or {}

@@ -11,16 +11,24 @@ import voluptuous as vol
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA as BINARY_SENSOR_DEVICE_CLASSES_SCHEMA,
     DOMAIN as BINARY_SENSOR_DOMAIN,
+    SCAN_INTERVAL as BINARY_SENSOR_DEFAULT_SCAN_INTERVAL,
 )
-from homeassistant.components.cover import DOMAIN as COVER_DOMAIN
+from homeassistant.components.cover import (
+    DOMAIN as COVER_DOMAIN,
+    SCAN_INTERVAL as COVER_DEFAULT_SCAN_INTERVAL,
+)
 from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
 from homeassistant.components.sensor import (
     CONF_STATE_CLASS,
     DEVICE_CLASSES_SCHEMA as SENSOR_DEVICE_CLASSES_SCHEMA,
     DOMAIN as SENSOR_DOMAIN,
+    SCAN_INTERVAL as SENSOR_DEFAULT_SCAN_INTERVAL,
     STATE_CLASSES_SCHEMA as SENSOR_STATE_CLASSES_SCHEMA,
 )
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.components.switch import (
+    DOMAIN as SWITCH_DOMAIN,
+    SCAN_INTERVAL as SWITCH_DEFAULT_SCAN_INTERVAL,
+)
 from homeassistant.const import (
     CONF_COMMAND,
     CONF_COMMAND_CLOSE,
@@ -34,15 +42,19 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PAYLOAD_OFF,
     CONF_PAYLOAD_ON,
+    CONF_SCAN_INTERVAL,
     CONF_UNIQUE_ID,
     CONF_UNIT_OF_MEASUREMENT,
     CONF_VALUE_TEMPLATE,
+    SERVICE_RELOAD,
     Platform,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Event, HomeAssistant, ServiceCall
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.reload import async_setup_reload_service
+from homeassistant.helpers.entity_platform import async_get_platforms
+from homeassistant.helpers.reload import async_integration_yaml_config
+from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_COMMAND_TIMEOUT, DEFAULT_TIMEOUT, DOMAIN
@@ -74,6 +86,9 @@ BINARY_SENSOR_SCHEMA = vol.Schema(
         vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
         vol.Optional(CONF_COMMAND_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
         vol.Optional(CONF_UNIQUE_ID): cv.string,
+        vol.Optional(
+            CONF_SCAN_INTERVAL, default=BINARY_SENSOR_DEFAULT_SCAN_INTERVAL
+        ): vol.All(cv.time_period, cv.positive_timedelta),
     }
 )
 COVER_SCHEMA = vol.Schema(
@@ -86,6 +101,9 @@ COVER_SCHEMA = vol.Schema(
         vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
         vol.Optional(CONF_COMMAND_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
         vol.Optional(CONF_UNIQUE_ID): cv.string,
+        vol.Optional(CONF_SCAN_INTERVAL, default=COVER_DEFAULT_SCAN_INTERVAL): vol.All(
+            cv.time_period, cv.positive_timedelta
+        ),
     }
 )
 NOTIFY_SCHEMA = vol.Schema(
@@ -106,6 +124,9 @@ SENSOR_SCHEMA = vol.Schema(
         vol.Optional(CONF_UNIQUE_ID): cv.string,
         vol.Optional(CONF_DEVICE_CLASS): SENSOR_DEVICE_CLASSES_SCHEMA,
         vol.Optional(CONF_STATE_CLASS): SENSOR_STATE_CLASSES_SCHEMA,
+        vol.Optional(CONF_SCAN_INTERVAL, default=SENSOR_DEFAULT_SCAN_INTERVAL): vol.All(
+            cv.time_period, cv.positive_timedelta
+        ),
     }
 )
 SWITCH_SCHEMA = vol.Schema(
@@ -118,6 +139,9 @@ SWITCH_SCHEMA = vol.Schema(
         vol.Optional(CONF_ICON): cv.template,
         vol.Optional(CONF_COMMAND_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
         vol.Optional(CONF_UNIQUE_ID): cv.string,
+        vol.Optional(CONF_SCAN_INTERVAL, default=SWITCH_DEFAULT_SCAN_INTERVAL): vol.All(
+            cv.time_period, cv.positive_timedelta
+        ),
     }
 )
 COMBINED_SCHEMA = vol.Schema(
@@ -142,22 +166,49 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Command Line from yaml config."""
-    command_line_config: list[dict[str, dict[str, Any]]] = config.get(DOMAIN, [])
+
+    async def _reload_config(call: Event | ServiceCall) -> None:
+        """Reload Command Line."""
+        reload_config = await async_integration_yaml_config(hass, "command_line")
+        reset_platforms = async_get_platforms(hass, "command_line")
+        for reset_platform in reset_platforms:
+            _LOGGER.debug("Reload resetting platform: %s", reset_platform.domain)
+            await reset_platform.async_reset()
+        if not reload_config:
+            return
+        await async_load_platforms(hass, reload_config.get(DOMAIN, []), reload_config)
+
+    async_register_admin_service(hass, DOMAIN, SERVICE_RELOAD, _reload_config)
+
+    await async_load_platforms(hass, config.get(DOMAIN, []), config)
+
+    return True
+
+
+async def async_load_platforms(
+    hass: HomeAssistant,
+    command_line_config: list[dict[str, dict[str, Any]]],
+    config: ConfigType,
+) -> None:
+    """Load platforms from yaml."""
     if not command_line_config:
-        return True
+        return
 
     _LOGGER.debug("Full config loaded: %s", command_line_config)
 
     load_coroutines: list[Coroutine[Any, Any, None]] = []
     platforms: list[Platform] = []
+    reload_configs: list[tuple] = []
     for platform_config in command_line_config:
         for platform, _config in platform_config.items():
-            platforms.append(PLATFORM_MAPPING[platform])
+            if (mapped_platform := PLATFORM_MAPPING[platform]) not in platforms:
+                platforms.append(mapped_platform)
             _LOGGER.debug(
                 "Loading config %s for platform %s",
                 platform_config,
                 PLATFORM_MAPPING[platform],
             )
+            reload_configs.append((PLATFORM_MAPPING[platform], _config))
             load_coroutines.append(
                 discovery.async_load_platform(
                     hass,
@@ -168,10 +219,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 )
             )
 
-    await async_setup_reload_service(hass, DOMAIN, platforms)
-
     if load_coroutines:
         _LOGGER.debug("Loading platforms: %s", platforms)
         await asyncio.gather(*load_coroutines)
-
-    return True

@@ -132,7 +132,7 @@ async def test_audio_pipeline(
     assert msg["event"]["data"] == snapshot
     events.append(msg["event"])
 
-    # text to speech
+    # text-to-speech
     msg = await client.receive_json()
     assert msg["event"]["type"] == "tts-start"
     assert msg["event"]["data"] == snapshot
@@ -532,7 +532,7 @@ async def test_tts_failed(
     init_components,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test pipeline run with text to speech error."""
+    """Test pipeline run with text-to-speech error."""
     events = []
     client = await hass_ws_client(hass)
 
@@ -595,7 +595,7 @@ async def test_tts_provider_missing(
     mock_tts_provider,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test pipeline run with text to speech error."""
+    """Test pipeline run with text-to-speech error."""
     client = await hass_ws_client(hass)
 
     with patch(
@@ -624,7 +624,7 @@ async def test_tts_provider_bad_options(
     mock_tts_provider,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test pipeline run with text to speech error."""
+    """Test pipeline run with text-to-speech error."""
     client = await hass_ws_client(hass)
 
     with patch(
@@ -1227,7 +1227,7 @@ async def test_audio_pipeline_debug(
     assert msg["event"]["data"] == snapshot
     events.append(msg["event"])
 
-    # text to speech
+    # text-to-speech
     msg = await client.receive_json()
     assert msg["event"]["type"] == "tts-start"
     assert msg["event"]["data"] == snapshot

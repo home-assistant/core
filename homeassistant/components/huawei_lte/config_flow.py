@@ -8,7 +8,6 @@ from urllib.parse import urlparse
 
 from huawei_lte_api.Client import Client
 from huawei_lte_api.Connection import Connection
-from huawei_lte_api.Session import GetResponseType
 from huawei_lte_api.exceptions import (
     LoginErrorPasswordWrongException,
     LoginErrorUsernamePasswordOverrunException,
@@ -16,6 +15,7 @@ from huawei_lte_api.exceptions import (
     LoginErrorUsernameWrongException,
     ResponseErrorException,
 )
+from huawei_lte_api.Session import GetResponseType
 from requests.exceptions import Timeout
 from url_normalize import url_normalize
 import voluptuous as vol

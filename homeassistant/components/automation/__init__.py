@@ -330,7 +330,7 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
         trace_config: ConfigType,
     ) -> None:
         """Initialize an automation entity."""
-        self._attr_name = name
+        self._name = name
         self._trigger_config = trigger_config
         self._async_detach_triggers: CALLBACK_TYPE | None = None
         self._cond_func = cond_func
@@ -347,6 +347,11 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
         self._blueprint_inputs = blueprint_inputs
         self._trace_config = trace_config
         self._attr_unique_id = automation_id
+
+    @property
+    def name(self) -> str:
+        """Return the name of the entity."""
+        return self._name
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:

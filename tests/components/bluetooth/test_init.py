@@ -8,7 +8,6 @@ from bleak import BleakError
 from bleak.backends.scanner import AdvertisementData, BLEDevice
 from bluetooth_adapters import DEFAULT_ADDRESS
 import pytest
-from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import (
@@ -2922,35 +2921,13 @@ async def test_discover_new_usb_adapters_with_firmware_fallback_delay(
     assert len(hass.config_entries.flow.async_progress(DOMAIN)) == 1
 
 
-async def test_issue_outdated_haos(
-    hass: HomeAssistant,
-    mock_bleak_scanner_start: MagicMock,
-    one_adapter: None,
-    operating_system_85: None,
-    snapshot: SnapshotAssertion,
-) -> None:
-    """Test we create an issue on outdated haos."""
-    entry = MockConfigEntry(
-        domain=bluetooth.DOMAIN, data={}, unique_id="00:00:00:00:00:01"
-    )
-    entry.add_to_hass(hass)
-    assert await async_setup_component(hass, bluetooth.DOMAIN, {})
-    await hass.async_block_till_done()
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
-    await hass.async_block_till_done()
-    registry = async_get_issue_registry(hass)
-    issue = registry.async_get_issue(DOMAIN, "haos_outdated")
-    assert issue is not None
-    assert issue == snapshot
-
-
-async def test_issue_outdated_haos_no_adapters(
+async def test_issue_outdated_haos_removed(
     hass: HomeAssistant,
     mock_bleak_scanner_start: MagicMock,
     no_adapters: None,
     operating_system_85: None,
 ) -> None:
-    """Test we do not create an issue on outdated haos if there are no adapters."""
+    """Test we do not create an issue on outdated haos anymore."""
     assert await async_setup_component(hass, bluetooth.DOMAIN, {})
     await hass.async_block_till_done()
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)

@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from enum import IntEnum
+from math import floor
 from typing import Any
 
 from chip.clusters import Objects as clusters
@@ -59,9 +60,18 @@ class MatterCover(MatterEntity, CoverEntity):
     entity_description: CoverEntityDescription
 
     @property
-    def is_closed(self) -> bool:
-        """Return true if cover is closed, else False."""
-        return self.current_cover_position == 0
+    def is_closed(self) -> bool | None:
+        """Return true if cover is closed, if there is no position report, return None."""
+        if not self._entity_info.endpoint.has_attribute(
+            None, clusters.WindowCovering.Attributes.CurrentPositionLiftPercent100ths
+        ):
+            return None
+
+        return (
+            self.current_cover_position == 0
+            if self.current_cover_position is not None
+            else None
+        )
 
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover movement."""
@@ -126,37 +136,45 @@ class MatterCover(MatterEntity, CoverEntity):
                 self._attr_is_opening = False
                 self._attr_is_closing = False
 
-        # current position is inverted in matter (100 is closed, 0 is open)
-        current_cover_position = self.get_matter_attribute_value(
-            clusters.WindowCovering.Attributes.CurrentPositionLiftPercentage
-        )
-        self._attr_current_cover_position = (
-            100 - current_cover_position if current_cover_position is not None else None
-        )
+        if self._entity_info.endpoint.has_attribute(
+            None, clusters.WindowCovering.Attributes.CurrentPositionLiftPercent100ths
+        ):
+            # current position is inverted in matter (100 is closed, 0 is open)
+            current_cover_position = self.get_matter_attribute_value(
+                clusters.WindowCovering.Attributes.CurrentPositionLiftPercent100ths
+            )
+            self._attr_current_cover_position = (
+                100 - floor(current_cover_position / 100)
+                if current_cover_position is not None
+                else None
+            )
 
-        LOGGER.debug(
-            "Current position for %s - raw: %s - corrected: %s",
-            self.entity_id,
-            current_cover_position,
-            self.current_cover_position,
-        )
+            LOGGER.debug(
+                "Current position for %s - raw: %s - corrected: %s",
+                self.entity_id,
+                current_cover_position,
+                self.current_cover_position,
+            )
 
-        # current tilt position is inverted in matter (100 is closed, 0 is open)
-        current_cover_tilt_position = self.get_matter_attribute_value(
-            clusters.WindowCovering.Attributes.CurrentPositionTiltPercentage
-        )
-        self._attr_current_cover_tilt_position = (
-            100 - current_cover_tilt_position
-            if current_cover_tilt_position is not None
-            else None
-        )
+        if self._entity_info.endpoint.has_attribute(
+            None, clusters.WindowCovering.Attributes.CurrentPositionTiltPercent100ths
+        ):
+            # current tilt position is inverted in matter (100 is closed, 0 is open)
+            current_cover_tilt_position = self.get_matter_attribute_value(
+                clusters.WindowCovering.Attributes.CurrentPositionTiltPercent100ths
+            )
+            self._attr_current_cover_tilt_position = (
+                100 - floor(current_cover_tilt_position / 100)
+                if current_cover_tilt_position is not None
+                else None
+            )
 
-        LOGGER.debug(
-            "Current tilt position for %s - raw: %s - corrected: %s",
-            self.entity_id,
-            current_cover_tilt_position,
-            self.current_cover_tilt_position,
-        )
+            LOGGER.debug(
+                "Current tilt position for %s - raw: %s - corrected: %s",
+                self.entity_id,
+                current_cover_tilt_position,
+                self.current_cover_tilt_position,
+            )
 
         # map matter type to HA deviceclass
         device_type: clusters.WindowCovering.Enums.Type = (
@@ -188,8 +206,8 @@ DISCOVERY_SCHEMAS = [
             clusters.WindowCovering.Attributes.Type,
         ),
         absent_attributes=(
-            clusters.WindowCovering.Attributes.CurrentPositionLiftPercentage,
-            clusters.WindowCovering.Attributes.CurrentPositionTiltPercentage,
+            clusters.WindowCovering.Attributes.CurrentPositionLiftPercent100ths,
+            clusters.WindowCovering.Attributes.CurrentPositionTiltPercent100ths,
         ),
     ),
     MatterDiscoverySchema(
@@ -199,10 +217,10 @@ DISCOVERY_SCHEMAS = [
         required_attributes=(
             clusters.WindowCovering.Attributes.OperationalStatus,
             clusters.WindowCovering.Attributes.Type,
-            clusters.WindowCovering.Attributes.CurrentPositionLiftPercentage,
+            clusters.WindowCovering.Attributes.CurrentPositionLiftPercent100ths,
         ),
         absent_attributes=(
-            clusters.WindowCovering.Attributes.CurrentPositionTiltPercentage,
+            clusters.WindowCovering.Attributes.CurrentPositionTiltPercent100ths,
         ),
     ),
     MatterDiscoverySchema(
@@ -212,10 +230,10 @@ DISCOVERY_SCHEMAS = [
         required_attributes=(
             clusters.WindowCovering.Attributes.OperationalStatus,
             clusters.WindowCovering.Attributes.Type,
-            clusters.WindowCovering.Attributes.CurrentPositionTiltPercentage,
+            clusters.WindowCovering.Attributes.CurrentPositionTiltPercent100ths,
         ),
         absent_attributes=(
-            clusters.WindowCovering.Attributes.CurrentPositionLiftPercentage,
+            clusters.WindowCovering.Attributes.CurrentPositionLiftPercent100ths,
         ),
     ),
     MatterDiscoverySchema(
@@ -227,8 +245,8 @@ DISCOVERY_SCHEMAS = [
         required_attributes=(
             clusters.WindowCovering.Attributes.OperationalStatus,
             clusters.WindowCovering.Attributes.Type,
-            clusters.WindowCovering.Attributes.CurrentPositionLiftPercentage,
-            clusters.WindowCovering.Attributes.CurrentPositionTiltPercentage,
+            clusters.WindowCovering.Attributes.CurrentPositionLiftPercent100ths,
+            clusters.WindowCovering.Attributes.CurrentPositionTiltPercent100ths,
         ),
     ),
 ]

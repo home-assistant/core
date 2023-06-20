@@ -167,7 +167,7 @@ async def test_fan(
 
     zha_device = await zha_device_joined_restored(zigpy_device)
     cluster = zigpy_device.endpoints.get(1).fan
-    entity_id = await find_entity_id(Platform.FAN, zha_device, hass)
+    entity_id = find_entity_id(Platform.FAN, zha_device, hass)
     assert entity_id is not None
 
     assert hass.states.get(entity_id).state == STATE_OFF
@@ -475,7 +475,7 @@ async def test_fan_init(
     cluster.PLUGGED_ATTR_READS = plug_read
 
     zha_device = await zha_device_joined_restored(zigpy_device)
-    entity_id = await find_entity_id(Platform.FAN, zha_device, hass)
+    entity_id = find_entity_id(Platform.FAN, zha_device, hass)
     assert entity_id is not None
     assert hass.states.get(entity_id).state == expected_state
     assert hass.states.get(entity_id).attributes[ATTR_PERCENTAGE] == expected_percentage
@@ -493,7 +493,7 @@ async def test_fan_update_entity(
     cluster.PLUGGED_ATTR_READS = {"fan_mode": 0}
 
     zha_device = await zha_device_joined_restored(zigpy_device)
-    entity_id = await find_entity_id(Platform.FAN, zha_device, hass)
+    entity_id = find_entity_id(Platform.FAN, zha_device, hass)
     assert entity_id is not None
     assert hass.states.get(entity_id).state == STATE_OFF
     assert hass.states.get(entity_id).attributes[ATTR_PERCENTAGE] == 0
@@ -562,7 +562,7 @@ async def test_fan_ikea(
     """Test ZHA fan Ikea platform."""
     zha_device = await zha_device_joined_restored(zigpy_device_ikea)
     cluster = zigpy_device_ikea.endpoints.get(1).ikea_airpurifier
-    entity_id = await find_entity_id(Platform.FAN, zha_device, hass)
+    entity_id = find_entity_id(Platform.FAN, zha_device, hass)
     assert entity_id is not None
 
     assert hass.states.get(entity_id).state == STATE_OFF
@@ -656,7 +656,7 @@ async def test_fan_ikea_init(
     cluster.PLUGGED_ATTR_READS = ikea_plug_read
 
     zha_device = await zha_device_joined_restored(zigpy_device_ikea)
-    entity_id = await find_entity_id(Platform.FAN, zha_device, hass)
+    entity_id = find_entity_id(Platform.FAN, zha_device, hass)
     assert entity_id is not None
     assert hass.states.get(entity_id).state == ikea_expected_state
     assert (
@@ -676,7 +676,7 @@ async def test_fan_ikea_update_entity(
     cluster.PLUGGED_ATTR_READS = {"fan_mode": 0}
 
     zha_device = await zha_device_joined_restored(zigpy_device_ikea)
-    entity_id = await find_entity_id(Platform.FAN, zha_device, hass)
+    entity_id = find_entity_id(Platform.FAN, zha_device, hass)
     assert entity_id is not None
     assert hass.states.get(entity_id).state == STATE_OFF
     assert hass.states.get(entity_id).attributes[ATTR_PERCENTAGE] == 0

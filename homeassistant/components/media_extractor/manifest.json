@@ -7,5 +7,5 @@
   "iot_class": "calculated",
   "loggers": ["youtube_dl"],
   "quality_scale": "internal",
-  "requirements": ["youtube_dl==2021.12.17"]
+  "requirements": ["youtube-dl==2021.12.17"]
 }

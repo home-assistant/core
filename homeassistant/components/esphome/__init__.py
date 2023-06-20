@@ -45,7 +45,10 @@ from homeassistant.helpers import template
 import homeassistant.helpers.config_validation as cv
 import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.device_registry import format_mac
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
 from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
@@ -56,10 +59,11 @@ from homeassistant.helpers.issue_registry import (
 )
 from homeassistant.helpers.service import async_set_service_schema
 from homeassistant.helpers.template import Template
+from homeassistant.helpers.typing import ConfigType
 
 from .bluetooth import async_connect_scanner
 from .const import DOMAIN
-from .dashboard import async_get_dashboard
+from .dashboard import async_get_dashboard, async_setup as async_setup_dashboard
 from .domain_data import DomainData
 
 # Import config flow so that it's added to the registry
@@ -72,23 +76,25 @@ CONF_NOISE_PSK = "noise_psk"
 _LOGGER = logging.getLogger(__name__)
 _R = TypeVar("_R")
 
-STABLE_BLE_VERSION_STR = "2023.4.0"
+STABLE_BLE_VERSION_STR = "2023.6.0"
 STABLE_BLE_VERSION = AwesomeVersion(STABLE_BLE_VERSION_STR)
 PROJECT_URLS = {
     "esphome.bluetooth-proxy": "https://esphome.github.io/bluetooth-proxies/",
 }
 DEFAULT_URL = f"https://esphome.io/changelog/{STABLE_BLE_VERSION_STR}.html"
 
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
 
 @callback
 def _async_check_firmware_version(
-    hass: HomeAssistant, device_info: EsphomeDeviceInfo
+    hass: HomeAssistant, device_info: EsphomeDeviceInfo, api_version: APIVersion
 ) -> None:
     """Create or delete an the ble_firmware_outdated issue."""
     # ESPHome device_info.mac_address is the unique_id
     issue = f"ble_firmware_outdated-{device_info.mac_address}"
     if (
-        not device_info.bluetooth_proxy_version
+        not device_info.bluetooth_proxy_feature_flags_compat(api_version)
         # If the device has a project name its up to that project
         # to tell them about the firmware version update so we don't notify here
         or (device_info.project_name and device_info.project_name not in PROJECT_URLS)
@@ -135,6 +141,12 @@ def _async_check_using_api_password(
     )
 
 
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the esphome component."""
+    await async_setup_dashboard(hass)
+    return True
+
+
 async def async_setup_entry(  # noqa: C901
     hass: HomeAssistant, entry: ConfigEntry
 ) -> bool:
@@ -143,7 +155,7 @@ async def async_setup_entry(  # noqa: C901
     port = entry.data[CONF_PORT]
     password = entry.data[CONF_PASSWORD]
     noise_psk = entry.data.get(CONF_NOISE_PSK)
-    device_id: str | None = None
+    device_id: str = None  # type: ignore[assignment]
 
     zeroconf_instance = await zeroconf.async_get_instance(hass)
 
@@ -302,7 +314,7 @@ async def async_setup_entry(  # noqa: C901
             voice_assistant_udp_server.close()
             voice_assistant_udp_server = None
 
-    async def _handle_pipeline_start() -> int | None:
+    async def _handle_pipeline_start(conversation_id: str, use_vad: bool) -> int | None:
         """Start a voice assistant pipeline."""
         nonlocal voice_assistant_udp_server
 
@@ -315,7 +327,11 @@ async def async_setup_entry(  # noqa: C901
         port = await voice_assistant_udp_server.start_server()
 
         hass.async_create_background_task(
-            voice_assistant_udp_server.run_pipeline(),
+            voice_assistant_udp_server.run_pipeline(
+                device_id=device_id,
+                conversation_id=conversation_id or None,
+                use_vad=use_vad,
+            ),
             "esphome.voice_assistant_udp_server.run_pipeline",
         )
         entry_data.async_set_assist_pipeline_state(True)
@@ -356,7 +372,7 @@ async def async_setup_entry(  # noqa: C901
             if entry_data.device_info.name:
                 reconnect_logic.name = entry_data.device_info.name
 
-            if device_info.bluetooth_proxy_version:
+            if device_info.bluetooth_proxy_feature_flags_compat(cli.api_version):
                 entry_data.disconnect_callbacks.append(
                     await async_connect_scanner(hass, entry, cli, entry_data)
                 )
@@ -387,7 +403,7 @@ async def async_setup_entry(  # noqa: C901
             # Re-connection logic will trigger after this
             await cli.disconnect()
         else:
-            _async_check_firmware_version(hass, device_info)
+            _async_check_firmware_version(hass, device_info, entry_data.api_version)
             _async_check_using_api_password(hass, device_info, bool(password))
 
     async def on_disconnect() -> None:
@@ -696,7 +712,7 @@ async def platform_async_setup_entry(
                 old_infos.pop(info.key)
             else:
                 # Create new entity
-                entity = entity_type(entry_data, component_key, info.key, state_type)
+                entity = entity_type(entry_data, component_key, info, state_type)
                 add_entities.append(entity)
             new_infos[info.key] = info
 
@@ -709,8 +725,15 @@ async def platform_async_setup_entry(
         # Then update the actual info
         entry_data.info[component_key] = new_infos
 
-        # Add entities to Home Assistant
-        async_add_entities(add_entities)
+        async_dispatcher_send(
+            hass,
+            entry_data.signal_component_static_info_updated(component_key),
+            new_infos,
+        )
+
+        if add_entities:
+            # Add entities to Home Assistant
+            async_add_entities(add_entities)
 
     entry_data.cleanup_callbacks.append(
         async_dispatcher_connect(
@@ -761,18 +784,20 @@ class EsphomeEntity(Entity, Generic[_InfoT, _StateT]):
     """Define a base esphome entity."""
 
     _attr_should_poll = False
+    _static_info: _InfoT
 
     def __init__(
         self,
         entry_data: RuntimeEntryData,
         component_key: str,
-        key: int,
+        entity_info: EntityInfo,
         state_type: type[_StateT],
     ) -> None:
         """Initialize."""
         self._entry_data = entry_data
         self._component_key = component_key
-        self._key = key
+        self._key = entity_info.key
+        self._static_info = cast(_InfoT, entity_info)
         self._state_type = state_type
         if entry_data.device_info is not None and entry_data.device_info.friendly_name:
             self._attr_has_entity_name = True
@@ -801,6 +826,25 @@ class EsphomeEntity(Entity, Generic[_InfoT, _StateT]):
             )
         )
 
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                self._entry_data.signal_component_static_info_updated(
+                    self._component_key
+                ),
+                self._on_static_info_update,
+            )
+        )
+
+    @callback
+    def _on_static_info_update(self, static_infos: dict[int, EntityInfo]) -> None:
+        """Save the static info for this entity when it changes.
+
+        This method can be overridden in child classes to know
+        when the static info changes.
+        """
+        self._static_info = cast(_InfoT, static_infos[self._key])
+
     @callback
     def _on_state_update(self) -> None:
         # Behavior can be changed in child classes
@@ -823,16 +867,6 @@ class EsphomeEntity(Entity, Generic[_InfoT, _StateT]):
     @property
     def _api_version(self) -> APIVersion:
         return self._entry_data.api_version
-
-    @property
-    def _static_info(self) -> _InfoT:
-        # Check if value is in info database. Use a single lookup.
-        info = self._entry_data.info[self._component_key].get(self._key)
-        if info is not None:
-            return cast(_InfoT, info)
-        # This entity is in the removal project and has been removed from .info
-        # already, look in old_info
-        return cast(_InfoT, self._entry_data.old_info[self._component_key][self._key])
 
     @property
     def _device_info(self) -> EsphomeDeviceInfo:
