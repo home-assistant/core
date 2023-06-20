@@ -136,6 +136,89 @@ async def test_cleanup_on_cancellation(
     assert len(subscriptions) == 0
 
 
+async def test_delayed_response_handler(
+    hass: HomeAssistant,
+    websocket_client: MockHAClientWebSocket,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a handler that responds after a connection has already been closed."""
+
+    subscriptions = None
+
+    # Register a handler that responds after it returns
+    @callback
+    @websocket_command(
+        {
+            "type": "late_responder",
+        }
+    )
+    def async_late_responder(
+        hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+    ) -> None:
+        msg_id: int = msg["id"]
+        nonlocal subscriptions
+        subscriptions = connection.subscriptions
+        connection.subscriptions[msg_id] = lambda: None
+        connection.send_result(msg_id)
+
+        async def _async_late_send_message():
+            await asyncio.sleep(0.05)
+            connection.send_event(msg_id, {"event": "any"})
+
+        hass.async_create_task(_async_late_send_message())
+
+    async_register_command(hass, async_late_responder)
+
+    await websocket_client.send_json({"id": 1, "type": "ping"})
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 1
+    assert msg["type"] == "pong"
+    assert not subscriptions
+    await websocket_client.send_json({"id": 2, "type": "late_responder"})
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 2
+    assert msg["type"] == "result"
+    assert len(subscriptions) == 2
+    assert await websocket_client.close()
+    await hass.async_block_till_done()
+    assert len(subscriptions) == 0
+
+    assert "Tried to send message" in caplog.text
+    assert "on closed connection" in caplog.text
+
+
+async def test_ensure_disconnect_invalid_json(
+    hass: HomeAssistant,
+    websocket_client: MockHAClientWebSocket,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test we get disconnected when sending invalid JSON."""
+
+    await websocket_client.send_json({"id": 1, "type": "ping"})
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 1
+    assert msg["type"] == "pong"
+    await websocket_client.send_str("[--INVALID-JSON--]")
+    msg = await websocket_client.receive()
+    assert msg.type == WSMsgType.CLOSE
+
+
+async def test_ensure_disconnect_invalid_binary(
+    hass: HomeAssistant,
+    websocket_client: MockHAClientWebSocket,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test we get disconnected when sending invalid bytes."""
+
+    await websocket_client.send_json({"id": 1, "type": "ping"})
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 1
+    assert msg["type"] == "pong"
+    await websocket_client.send_bytes(b"")
+    msg = await websocket_client.receive()
+    assert msg.type == WSMsgType.CLOSE
+
+
 async def test_pending_msg_peak(
     hass: HomeAssistant,
     mock_low_peak,
@@ -297,6 +380,58 @@ async def test_prepare_fail(
         await hass_ws_client(hass)
 
     assert "Timeout preparing request" in caplog.text
+
+
+async def test_enable_coalesce(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test enabling coalesce."""
+    websocket_client = await hass_ws_client(hass)
+
+    await websocket_client.send_json(
+        {
+            "id": 1,
+            "type": "supported_features",
+            "features": {const.FEATURE_COALESCE_MESSAGES: 1},
+        }
+    )
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 1
+    assert msg["success"] is True
+    send_tasks: list[asyncio.Future] = []
+    ids: set[int] = set()
+    start_id = 2
+
+    for idx in range(10):
+        id_ = idx + start_id
+        ids.add(id_)
+        send_tasks.append(websocket_client.send_json({"id": id_, "type": "ping"}))
+
+    await asyncio.gather(*send_tasks)
+    returned_ids: set[int] = set()
+    for _ in range(10):
+        msg = await websocket_client.receive_json()
+        assert msg["type"] == "pong"
+        returned_ids.add(msg["id"])
+
+    assert ids == returned_ids
+
+    # Now close
+    send_tasks_with_close: list[asyncio.Future] = []
+    start_id = 12
+    for idx in range(10):
+        id_ = idx + start_id
+        send_tasks_with_close.append(
+            websocket_client.send_json({"id": id_, "type": "ping"})
+        )
+
+    send_tasks_with_close.append(websocket_client.close())
+    send_tasks_with_close.append(websocket_client.send_json({"id": 50, "type": "ping"}))
+
+    with pytest.raises(ConnectionResetError):
+        await asyncio.gather(*send_tasks_with_close)
 
 
 async def test_binary_message(

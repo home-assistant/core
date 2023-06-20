@@ -674,7 +674,7 @@ class _ScriptRun:
                     **params,
                     blocking=True,
                     context=self._context,
-                    return_values=(response_variable is not None),
+                    return_response=(response_variable is not None),
                 )
             ),
         )
