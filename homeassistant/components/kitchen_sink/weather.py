@@ -54,7 +54,7 @@ async def async_setup_entry(
     async_add_entities(
         [
             DemoWeather(
-                "South",
+                "Legacy weather",
                 "Sunshine",
                 21.6414,
                 92,
@@ -76,8 +76,8 @@ async def async_setup_entry(
                 None,
                 None,
             ),
-            DemoWeather(  # Legacy and Daily
-                "South 2",
+            DemoWeather(
+                "Legacy + daily weather",
                 "Sunshine",
                 21.6414,
                 92,
@@ -108,7 +108,7 @@ async def async_setup_entry(
                 None,
             ),
             DemoWeather(
-                "North",
+                "Daily + hourly weather",
                 "Shower rain",
                 -12,
                 54,
@@ -139,7 +139,7 @@ async def async_setup_entry(
                 None,
             ),
             DemoWeather(
-                "West",
+                "Daily + bi-daily + hourly weather",
                 "Sunshine",
                 21.6414,
                 92,
@@ -178,7 +178,7 @@ async def async_setup_entry(
                 ],
             ),
             DemoWeather(
-                "East 2",
+                "Hourly + bi-daily weather",
                 "Sunshine",
                 21.6414,
                 92,
@@ -208,8 +208,8 @@ async def async_setup_entry(
                     [ATTR_CONDITION_FOG, 0.2, 21, 12, 100, True],
                 ],
             ),
-            DemoWeather(  # Bi-daily not working as "is_daytime" not set
-                "East",
+            DemoWeather(
+                "Daily + broken bi-daily weather",
                 "Sunshine",
                 21.6414,
                 92,
