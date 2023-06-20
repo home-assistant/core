@@ -159,7 +159,7 @@ class ActiveConnection:
             )
         ):
             self.logger.error("Received invalid command: %s", msg)
-            id_: int = msg.get("id") if isinstance(msg, dict) else 0
+            id_ = msg.get("id") if isinstance(msg, dict) else 0
             self.send_message(
                 messages.error_message(
                     id_,  # type: ignore[arg-type]
