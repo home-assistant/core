@@ -1662,7 +1662,19 @@ async def test_ws_hass_agent_debug(
     msg = await client.receive_json()
 
     assert msg["success"]
-    assert msg["result"] == snapshot
+    results = msg["result"]["results"]
+    assert len(results) == 3  # number of input sentences
+
+    # turn on my cool light
+    assert results[0]["intent"]["name"] == "HassTurnOn"
+    assert results[0]["entities"] == snapshot
+
+    # turn my cool light off
+    assert results[1]["intent"]["name"] == "HassTurnOff"
+    assert results[1]["entities"] == snapshot
+
+    # this will not match anything
+    assert results[2] is None
 
     # Light state should not have been changed
     assert len(on_calls) == 0

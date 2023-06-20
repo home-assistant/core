@@ -302,7 +302,7 @@ async def websocket_list_agents(
     {
         vol.Required("type"): "conversation/agent/homeassistant/debug",
         vol.Required("sentences"): [str],
-        vol.Optional("language"): cv.string,
+        vol.Optional("language"): str,
         vol.Optional("device_id"): vol.Any(str, None),
     }
 )
