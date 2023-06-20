@@ -386,8 +386,8 @@ class WebSocketHandler:
                     async_handle_str(command_msg_data)
                     continue
 
-                for _split_msg in command_msg_data:
-                    async_handle_str(_split_msg)
+                for split_msg in command_msg_data:
+                    async_handle_str(split_msg)
 
         except asyncio.CancelledError:
             debug("%s: Connection cancelled", self.description)
