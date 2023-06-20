@@ -2,6 +2,7 @@
 from unittest.mock import call, patch
 
 import pytest
+from pytest_unordered import unordered
 from zhaquirks.inovelli.VZM31SN import InovelliVZM31SNv11
 import zigpy.profiles.zha
 import zigpy.zcl.clusters.general as general
@@ -19,7 +20,6 @@ from homeassistant.setup import async_setup_component
 from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_TYPE
 
 from tests.common import (
-    assert_lists_same,
     async_get_device_automations,
     async_mock_service,
     mock_coro,
@@ -153,7 +153,7 @@ async def test_get_actions(hass: HomeAssistant, device_ias) -> None:
         ]
     )
 
-    assert_lists_same(actions, expected_actions)
+    assert actions == unordered(expected_actions)
 
 
 async def test_get_inovelli_actions(hass: HomeAssistant, device_inovelli) -> None:
@@ -233,7 +233,7 @@ async def test_get_inovelli_actions(hass: HomeAssistant, device_inovelli) -> Non
         },
     ]
 
-    assert_lists_same(actions, expected_actions)
+    assert actions == unordered(expected_actions)
 
 
 async def test_action(hass: HomeAssistant, device_ias, device_inovelli) -> None:
