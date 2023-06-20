@@ -457,7 +457,7 @@ bluetooth-data-tools==1.2.0
 bond-async==0.1.23
 
 # homeassistant.components.bosch_shc
-boschshcpy==0.2.35
+boschshcpy==0.2.57
 
 # homeassistant.components.broadlink
 broadlink==0.18.3
