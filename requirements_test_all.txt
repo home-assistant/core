@@ -13,7 +13,7 @@ AIOAladdinConnect==0.1.56
 Adax-local==0.1.5
 
 # homeassistant.components.homekit
-HAP-python==4.6.0
+HAP-python==4.7.0
 
 # homeassistant.components.flick_electric
 PyFlick==0.0.2

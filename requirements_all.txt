@@ -11,7 +11,7 @@ AIOAladdinConnect==0.1.56
 Adax-local==0.1.5
 
 # homeassistant.components.homekit
-HAP-python==4.6.0
+HAP-python==4.7.0
 
 # homeassistant.components.mastodon
 Mastodon.py==1.5.1
