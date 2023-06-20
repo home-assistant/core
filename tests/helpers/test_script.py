@@ -27,7 +27,7 @@ from homeassistant.core import (
     CoreState,
     HomeAssistant,
     ServiceCall,
-    ServiceResult,
+    ServiceResponse,
     callback,
 )
 from homeassistant.exceptions import ConditionError, HomeAssistantError, ServiceNotFound
@@ -330,19 +330,19 @@ async def test_calling_service_template(hass: HomeAssistant) -> None:
     )
 
 
-async def test_calling_service_return_values(
+async def test_calling_service_response_data(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test the calling of a service with return values."""
     context = Context()
 
-    def mock_service(call: ServiceCall) -> ServiceResult:
+    def mock_service(call: ServiceCall) -> ServiceResponse:
         """Mock service call."""
-        if call.return_values:
+        if call.return_response:
             return {"data": "value-12345"}
         return None
 
-    hass.services.async_register("test", "script", mock_service)
+    hass.services.async_register("test", "script", mock_service, supports_response=True)
     sequence = cv.SCRIPT_SCHEMA(
         [
             {
