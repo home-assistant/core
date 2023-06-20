@@ -966,7 +966,7 @@ ibeacon_ble==1.0.1
 ibmiotf==0.3.4
 
 # homeassistant.components.local_calendar
-ical==4.5.1
+ical==4.5.4
 
 # homeassistant.components.ping
 icmplib==3.0
