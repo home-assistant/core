@@ -1659,7 +1659,7 @@ class SupportsResponse(StrEnum):
     """Service call response configuration."""
 
     NONE = "none"
-    """The service does not support responses (the default)"""
+    """The service does not support responses (the default)."""
 
     OPTIONAL = "optional"
     """The service optionally returns response data when asked by the caller."""
