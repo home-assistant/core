@@ -2,6 +2,7 @@
 from unittest.mock import Mock, patch
 
 import pytest
+from pytest_unordered import unordered
 
 from homeassistant.components.automation import DOMAIN as AUTOMATION_DOMAIN
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
@@ -32,7 +33,6 @@ from homeassistant.setup import async_setup_component
 from .test_gateway import DECONZ_WEB_REQUEST, setup_deconz_integration
 
 from tests.common import (
-    assert_lists_same,
     async_get_device_automations,
     async_mock_service,
 )
@@ -148,7 +148,7 @@ async def test_get_triggers(
         },
     ]
 
-    assert_lists_same(triggers, expected_triggers)
+    assert triggers == unordered(expected_triggers)
 
 
 async def test_get_triggers_for_alarm_event(
@@ -240,7 +240,7 @@ async def test_get_triggers_for_alarm_event(
         },
     ]
 
-    assert_lists_same(triggers, expected_triggers)
+    assert triggers == unordered(expected_triggers)
 
 
 async def test_get_triggers_manage_unsupported_remotes(
@@ -283,7 +283,7 @@ async def test_get_triggers_manage_unsupported_remotes(
 
     expected_triggers = []
 
-    assert_lists_same(triggers, expected_triggers)
+    assert triggers == unordered(expected_triggers)
 
 
 async def test_functional_device_trigger(
