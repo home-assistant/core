@@ -135,7 +135,7 @@ class CloudClient(Interface):
 
         return self._google_config
 
-    async def on_cloud_connected(self) -> None:
+    async def cloud_connected(self) -> None:
         """When cloud is connected."""
         is_new_user = await self.prefs.async_set_username(self.cloud.username)
 
@@ -181,9 +181,6 @@ class CloudClient(Interface):
 
         if tasks:
             await asyncio.gather(*(task(None) for task in tasks))
-
-    async def cloud_connected(self) -> None:
-        """When cloud connected."""
 
     async def cloud_disconnected(self) -> None:
         """When cloud disconnected."""
