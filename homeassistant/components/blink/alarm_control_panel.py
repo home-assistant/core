@@ -67,7 +67,7 @@ class BlinkSyncModule(AlarmControlPanelEntity):
             )
             try:
                 await self.data.refresh()
-                self._attr_available = False
+                self._attr_available = True
             except asyncio.TimeoutError:
                 self._attr_available = False
 
