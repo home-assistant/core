@@ -4,7 +4,11 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Any
 
-from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -16,10 +20,12 @@ PARALLEL_UPDATES = 1
 
 SENSOR_DESCRIPTIONS: list[SensorEntityDescription] = [
     SensorEntityDescription(
+        device_class=SensorDeviceClass.DATE,
         key="free_games",
         name="Free games",
     ),
     SensorEntityDescription(
+        device_class=SensorDeviceClass.DATE,
         key="next_free_games",
         name="Next free games",
     ),
