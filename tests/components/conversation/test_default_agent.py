@@ -235,9 +235,8 @@ async def test_trigger_sentences(hass: HomeAssistant, init_components) -> None:
     )
     assert isinstance(agent, conversation.DefaultAgent)
 
-    trigger_id = "1234"
     callback = Mock(return_value=trigger_response)
-    unregister = agent.register_trigger(trigger_id, trigger_sentences, callback)
+    unregister = agent.register_trigger(trigger_sentences, callback)
 
     result = await conversation.async_converse(hass, "Not the trigger", None, Context())
     assert result.response.response_type == intent.IntentResponseType.ERROR

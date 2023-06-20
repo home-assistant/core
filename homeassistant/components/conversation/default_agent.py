@@ -34,6 +34,7 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.event import async_track_state_added_domain
 from homeassistant.util.json import JsonObjectType, json_loads_object
+from homeassistant.util.ulid import ulid
 
 from .agent import AbstractConversationAgent, ConversationInput, ConversationResult
 from .const import DEFAULT_EXPOSED_ATTRIBUTES, DOMAIN
@@ -622,11 +623,11 @@ class DefaultAgent(AbstractConversationAgent):
 
     def register_trigger(
         self,
-        trigger_id: str,
         sentences: list[str],
         callback: TRIGGER_CALLBACK_TYPE,
     ) -> core.CALLBACK_TYPE:
         """Register a list of sentences that will trigger a callback when recognized."""
+        trigger_id = ulid()
         self._trigger_sentences[trigger_id] = TriggerData(
             sentences=sentences, callback=callback
         )
@@ -679,8 +680,8 @@ class DefaultAgent(AbstractConversationAgent):
             trigger_id = result.intent.name
             matched_triggers.append(trigger_id)
             trigger_data = self._trigger_sentences[trigger_id]
-            trigger_response = trigger_data.callback(sentence)
-            speech = speech or trigger_response
+            if trigger_response := trigger_data.callback(sentence):
+                speech = speech or trigger_response
 
         if not matched_triggers:
             # Sentence did not match any trigger sentences

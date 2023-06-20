@@ -54,4 +54,4 @@ async def async_attach_trigger(
     default_agent = await _get_agent_manager(hass).async_get_agent(HOME_ASSISTANT_AGENT)
     assert isinstance(default_agent, DefaultAgent)
 
-    return default_agent.register_trigger(trigger_data["id"], sentences, call_action)
+    return default_agent.register_trigger(sentences, call_action)
