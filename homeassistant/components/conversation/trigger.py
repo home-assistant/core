@@ -5,10 +5,7 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.const import (
-    CONF_COMMAND,
-    CONF_PLATFORM,
-)
+from homeassistant.const import CONF_COMMAND, CONF_PLATFORM
 from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
@@ -46,13 +43,16 @@ async def async_attach_trigger(
             "platform": DOMAIN,
             "sentence": sentence,
         }
+
+        # Wait for the automation to complete
         if future := hass.async_run_hass_job(
             job,
             {"trigger": trigger_input},
         ):
             await future
-            if isinstance(future.result, str):
-                return future.result
+
+            # Return the result of the action (currently None)
+            return future.result()
 
         return None
 
