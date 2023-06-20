@@ -414,16 +414,26 @@ async def test_set_away_mode_twice_and_restore_prev_humidity(
     assert state.attributes.get("humidity") == 44
 
 
+async def test_sensor_affects_attribute(hass: HomeAssistant, setup_comp_2) -> None:
+    """Test that the sensor changes are reflected in the current_humidity attribute."""
+    state = hass.states.get(ENTITY)
+    assert state.attributes.get("current_humidity") == 45
+
+    _setup_sensor(hass, 47)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY)
+    assert state.attributes.get("current_humidity") == 47
+
+
 async def test_sensor_bad_value(hass: HomeAssistant, setup_comp_2) -> None:
     """Test sensor that have None as state."""
-    state = hass.states.get(ENTITY)
-    humidity = state.attributes.get("current_humidity")
+    assert hass.states.get(ENTITY).state == STATE_ON
 
     _setup_sensor(hass, None)
     await hass.async_block_till_done()
 
-    state = hass.states.get(ENTITY)
-    assert humidity == state.attributes.get("current_humidity")
+    assert hass.states.get(ENTITY).state == STATE_UNAVAILABLE
 
 
 async def test_set_target_humidity_humidifier_on(
