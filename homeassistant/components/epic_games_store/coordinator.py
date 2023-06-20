@@ -101,7 +101,7 @@ class EGSUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                         "url": game_url,
                         "img_portrait": game_img_portrait,
                         "img_landscape": game_img_landscape,
-                        "original_price": game_price,
+                        "original_price": game_price.replace("\xa0", " "),
                     }
                 )
 
