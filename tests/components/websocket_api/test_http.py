@@ -145,7 +145,7 @@ async def test_delayed_response_handler(
 
     subscriptions = None
 
-    # Register a handler that cancels in handler
+    # Register a handler that responds after it returns
     @callback
     @websocket_command(
         {
