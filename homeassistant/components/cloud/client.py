@@ -182,6 +182,12 @@ class CloudClient(Interface):
         if tasks:
             await asyncio.gather(*(task(None) for task in tasks))
 
+    async def cloud_connected(self) -> None:
+        """When cloud connected."""
+
+    async def cloud_disconnected(self) -> None:
+        """When cloud disconnected."""
+
     async def cloud_started(self) -> None:
         """When cloud is started."""
 
