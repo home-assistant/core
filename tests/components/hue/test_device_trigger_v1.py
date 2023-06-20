@@ -1,4 +1,6 @@
 """The tests for Philips Hue device triggers for V1 bridge."""
+from pytest_unordered import unordered
+
 from homeassistant.components import automation, hue
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.hue.v1 import device_trigger
@@ -8,7 +10,7 @@ from homeassistant.setup import async_setup_component
 from .conftest import setup_platform
 from .test_sensor_v1 import HUE_DIMMER_REMOTE_1, HUE_TAP_REMOTE_1
 
-from tests.common import assert_lists_same, async_get_device_automations
+from tests.common import async_get_device_automations
 
 REMOTES_RESPONSE = {"7": HUE_TAP_REMOTE_1, "8": HUE_DIMMER_REMOTE_1}
 
@@ -41,7 +43,7 @@ async def test_get_triggers(hass: HomeAssistant, mock_bridge_v1, device_reg) -> 
         }
         for t_type, t_subtype in device_trigger.HUE_TAP_REMOTE
     ]
-    assert_lists_same(triggers, expected_triggers)
+    assert triggers == unordered(expected_triggers)
 
     # Get triggers for specific dimmer switch
     hue_dimmer_device = device_reg.async_get_device(
@@ -73,7 +75,7 @@ async def test_get_triggers(hass: HomeAssistant, mock_bridge_v1, device_reg) -> 
             for t_type, t_subtype in device_trigger.HUE_DIMMER_REMOTE
         ),
     ]
-    assert_lists_same(triggers, expected_triggers)
+    assert triggers == unordered(expected_triggers)
 
 
 async def test_if_fires_on_state_change(
