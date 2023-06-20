@@ -204,6 +204,7 @@ omit =
     homeassistant/components/discord/notify.py
     homeassistant/components/discovergy/__init__.py
     homeassistant/components/discovergy/sensor.py
+    homeassistant/components/discovergy/coordinator.py
     homeassistant/components/dlib_face_detect/image_processing.py
     homeassistant/components/dlib_face_identify/image_processing.py
     homeassistant/components/dlink/data.py
@@ -304,6 +305,7 @@ omit =
     homeassistant/components/escea/climate.py
     homeassistant/components/escea/discovery.py
     homeassistant/components/esphome/__init__.py
+    homeassistant/components/esphome/alarm_control_panel.py
     homeassistant/components/esphome/binary_sensor.py
     homeassistant/components/esphome/bluetooth/*
     homeassistant/components/esphome/button.py
