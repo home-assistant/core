@@ -16,12 +16,12 @@ PARALLEL_UPDATES = 1
 
 SENSOR_DESCRIPTIONS: list[SensorEntityDescription] = [
     SensorEntityDescription(
-        key="free_game",
-        name="Free game",
+        key="free_games",
+        name="Free games",
     ),
     SensorEntityDescription(
-        key="next_free_game",
-        name="Next free game",
+        key="next_free_games",
+        name="Next free games",
     ),
 ]
 

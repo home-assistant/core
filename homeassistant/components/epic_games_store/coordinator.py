@@ -86,15 +86,15 @@ class EGSUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 promotion_data = upcoming_promotions[0]["promotionalOffers"][0]
 
             if promotion_data:
-                return_data[f"{prefix}free_game"] = return_data.get(
-                    f"{prefix}free_game",
+                return_data[f"{prefix}free_games"] = return_data.get(
+                    f"{prefix}free_games",
                     {
                         "start_at": dt_util.parse_datetime(promotion_data["startDate"]),
                         "end_at": dt_util.parse_datetime(promotion_data["endDate"]),
                         "games": [],
                     },
                 )
-                return_data[f"{prefix}free_game"]["games"].append(
+                return_data[f"{prefix}free_games"]["games"].append(
                     {
                         "title": game_title,
                         "publisher": game_publisher,
