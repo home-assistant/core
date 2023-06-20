@@ -153,7 +153,7 @@ async def _async_validate_config_item(
                     err,
                 )
             if raise_on_errors:
-                raise HomeAssistantError from err
+                raise HomeAssistantError(err) from err
             return _minimal_config()
 
     automation_name = "Unnamed automation"
