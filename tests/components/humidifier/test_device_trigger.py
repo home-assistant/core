@@ -65,6 +65,7 @@ async def test_get_triggers(
         STATE_ON,
         {
             const.ATTR_HUMIDITY: 23,
+            const.ATTR_CURRENT_HUMIDITY: 48,
             ATTR_MODE: "home",
             const.ATTR_AVAILABLE_MODES: ["home", "away"],
             ATTR_SUPPORTED_FEATURES: 1,
@@ -80,6 +81,7 @@ async def test_get_triggers(
             "metadata": {"secondary": False},
         }
         for trigger in [
+            "current_humidity_changed",
             "target_humidity_changed",
             "turned_off",
             "turned_on",
