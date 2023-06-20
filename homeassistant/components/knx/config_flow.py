@@ -49,12 +49,15 @@ from .const import (
     CONF_KNX_SECURE_USER_ID,
     CONF_KNX_SECURE_USER_PASSWORD,
     CONF_KNX_STATE_UPDATER,
+    CONF_KNX_TELEGRAM_LOG_SIZE,
     CONF_KNX_TUNNEL_ENDPOINT_IA,
     CONF_KNX_TUNNELING,
     CONF_KNX_TUNNELING_TCP,
     CONF_KNX_TUNNELING_TCP_SECURE,
     DEFAULT_ROUTING_IA,
     DOMAIN,
+    TELEGRAM_LOG_DEFAULT,
+    TELEGRAM_LOG_MAX,
     KNXConfigEntryData,
 )
 from .schema import ia_validator, ip_v4_validator
@@ -70,6 +73,7 @@ DEFAULT_ENTRY_DATA = KNXConfigEntryData(
     rate_limit=CONF_KNX_DEFAULT_RATE_LIMIT,
     route_back=False,
     state_updater=CONF_KNX_DEFAULT_STATE_UPDATER,
+    telegram_log_size=TELEGRAM_LOG_DEFAULT,
 )
 
 CONF_KEYRING_FILE: Final = "knxkeys_file"
@@ -203,7 +207,11 @@ class KNXCommonFlow(ABC, FlowHandler):
         )
 
     async def async_step_tunnel(self, user_input: dict | None = None) -> FlowResult:
-        """Select a tunnel from a list. Will be skipped if the gateway scan was unsuccessful or if only one gateway was found."""
+        """Select a tunnel from a list.
+
+        Will be skipped if the gateway scan was unsuccessful
+        or if only one gateway was found.
+        """
         if user_input is not None:
             if user_input[CONF_KNX_GATEWAY] == OPTION_MANUAL_TUNNEL:
                 if self._found_tunnels:
@@ -804,6 +812,7 @@ class KNXOptionsFlow(KNXCommonFlow, OptionsFlow):
             self.new_entry_data = KNXConfigEntryData(
                 state_updater=user_input[CONF_KNX_STATE_UPDATER],
                 rate_limit=user_input[CONF_KNX_RATE_LIMIT],
+                telegram_log_size=user_input[CONF_KNX_TELEGRAM_LOG_SIZE],
             )
             return self.finish_flow()
 
@@ -811,15 +820,13 @@ class KNXOptionsFlow(KNXCommonFlow, OptionsFlow):
             vol.Required(
                 CONF_KNX_STATE_UPDATER,
                 default=self.initial_data.get(
-                    CONF_KNX_STATE_UPDATER,
-                    CONF_KNX_DEFAULT_STATE_UPDATER,
+                    CONF_KNX_STATE_UPDATER, CONF_KNX_DEFAULT_STATE_UPDATER
                 ),
             ): selector.BooleanSelector(),
             vol.Required(
                 CONF_KNX_RATE_LIMIT,
                 default=self.initial_data.get(
-                    CONF_KNX_RATE_LIMIT,
-                    CONF_KNX_DEFAULT_RATE_LIMIT,
+                    CONF_KNX_RATE_LIMIT, CONF_KNX_DEFAULT_RATE_LIMIT
                 ),
             ): vol.All(
                 selector.NumberSelector(
@@ -831,9 +838,27 @@ class KNXOptionsFlow(KNXCommonFlow, OptionsFlow):
                 ),
                 vol.Coerce(int),
             ),
+            vol.Required(
+                CONF_KNX_TELEGRAM_LOG_SIZE,
+                default=self.initial_data.get(
+                    CONF_KNX_TELEGRAM_LOG_SIZE, TELEGRAM_LOG_DEFAULT
+                ),
+            ): vol.All(
+                selector.NumberSelector(
+                    selector.NumberSelectorConfig(
+                        min=0,
+                        max=TELEGRAM_LOG_MAX,
+                        mode=selector.NumberSelectorMode.BOX,
+                    ),
+                ),
+                vol.Coerce(int),
+            ),
         }
         return self.async_show_form(
             step_id="communication_settings",
             data_schema=vol.Schema(data_schema),
             last_step=True,
+            description_placeholders={
+                "telegram_log_size_max": f"{TELEGRAM_LOG_MAX}",
+            },
         )

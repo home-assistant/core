@@ -27,7 +27,7 @@ async def get_client(aiohttp_client, validator):
             """Test method."""
             return b""
 
-    TestView().register(app, app.router)
+    TestView().register(app["hass"], app, app.router)
     client = await aiohttp_client(app)
     return client
 

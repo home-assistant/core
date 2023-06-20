@@ -21,7 +21,7 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.util import dt
+from homeassistant.util import dt as dt_util
 from homeassistant.util.enum import try_parse_enum
 
 from . import EsphomeEntity, esphome_state_property, platform_async_setup_entry
@@ -81,7 +81,7 @@ class EsphomeSensor(EsphomeEntity[SensorInfo, SensorState], SensorEntity):
         if self._state.missing_state:
             return None
         if self.device_class == SensorDeviceClass.TIMESTAMP:
-            return dt.utc_from_timestamp(self._state.state)
+            return dt_util.utc_from_timestamp(self._state.state)
         return f"{self._state.state:.{self._static_info.accuracy_decimals}f}"
 
     @property

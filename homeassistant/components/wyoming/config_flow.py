@@ -69,6 +69,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured()
 
         self._hassio_discovery = discovery_info
+        self.context.update(
+            {
+                "title_placeholders": {"name": discovery_info.name},
+                "configuration_url": f"homeassistant://hassio/addon/{discovery_info.slug}/info",
+            }
+        )
         return await self.async_step_hassio_confirm()
 
     async def async_step_hassio_confirm(

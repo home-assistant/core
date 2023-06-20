@@ -48,12 +48,22 @@ class ActiveConnection:
         self.refresh_token_id = refresh_token.id
         self.subscriptions: dict[Hashable, Callable[[], Any]] = {}
         self.last_id = 0
+        self.can_coalesce = False
         self.supported_features: dict[str, float] = {}
         self.handlers: dict[str, tuple[MessageHandler, vol.Schema]] = self.hass.data[
             const.DOMAIN
         ]
         self.binary_handlers: list[BinaryHandler | None] = []
         current_connection.set(self)
+
+    def __repr__(self) -> str:
+        """Return the representation."""
+        return f"<ActiveConnection {self.get_description(None)}>"
+
+    def set_supported_features(self, features: dict[str, float]) -> None:
+        """Set supported features."""
+        self.supported_features = features
+        self.can_coalesce = const.FEATURE_COALESCE_MESSAGES in features
 
     def get_description(self, request: web.Request | None) -> str:
         """Return a description of the connection."""
@@ -187,7 +197,24 @@ class ActiveConnection:
     def async_handle_close(self) -> None:
         """Handle closing down connection."""
         for unsub in self.subscriptions.values():
-            unsub()
+            try:
+                unsub()
+            except Exception:  # pylint: disable=broad-except
+                # If one fails, make sure we still try the rest
+                self.logger.exception(
+                    "Error unsubscribing from subscription: %s", unsub
+                )
+        self.subscriptions.clear()
+        self.send_message = self._connect_closed_error
+        current_request.set(None)
+        current_connection.set(None)
+
+    @callback
+    def _connect_closed_error(
+        self, msg: str | dict[str, Any] | Callable[[], str]
+    ) -> None:
+        """Send a message when the connection is closed."""
+        self.logger.debug("Tried to send message %s on closed connection", msg)
 
     @callback
     def async_handle_exception(self, msg: dict[str, Any], err: Exception) -> None:

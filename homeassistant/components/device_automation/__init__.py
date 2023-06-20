@@ -57,6 +57,8 @@ if TYPE_CHECKING:
 
 DOMAIN = "device_automation"
 
+CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
+
 DEVICE_TRIGGER_BASE_SCHEMA: vol.Schema = cv.TRIGGER_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_PLATFORM): "device",

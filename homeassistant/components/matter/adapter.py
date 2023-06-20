@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, cast
 
+from matter_server.client.models.device_types import BridgedDevice
 from matter_server.common.models import EventType, ServerInfoMessage
 
 from homeassistant.config_entries import ConfigEntry
@@ -18,6 +19,14 @@ from .helpers import get_device_id
 if TYPE_CHECKING:
     from matter_server.client import MatterClient
     from matter_server.client.models.node import MatterEndpoint, MatterNode
+
+
+def get_clean_name(name: str | None) -> str | None:
+    """Strip spaces and null char from the name."""
+    if name is None:
+        return name
+    name = name.replace("\x00", "")
+    return name.strip() or None
 
 
 class MatterAdapter:
@@ -70,11 +79,27 @@ class MatterAdapter:
         server_info = cast(ServerInfoMessage, self.matter_client.server_info)
 
         basic_info = endpoint.device_info
-        name = basic_info.nodeLabel or basic_info.productLabel or basic_info.productName
+        # use (first) DeviceType of the endpoint as fallback product name
+        device_type = next(
+            (
+                x
+                for x in endpoint.device_types
+                if x.device_type != BridgedDevice.device_type
+            ),
+            None,
+        )
+        name = (
+            get_clean_name(basic_info.nodeLabel)
+            or get_clean_name(basic_info.productLabel)
+            or get_clean_name(basic_info.productName)
+            or device_type.__class__.__name__
+            if device_type
+            else None
+        )
 
         # handle bridged devices
         bridge_device_id = None
-        if endpoint.is_bridged_device:
+        if endpoint.is_bridged_device and endpoint.node.endpoints[0] != endpoint:
             bridge_device_id = get_device_id(
                 server_info,
                 endpoint.node.endpoints[0],
@@ -91,14 +116,19 @@ class MatterAdapter:
             # prefix identifier with 'serial_' to be able to filter it
             identifiers.add((DOMAIN, f"{ID_TYPE_SERIAL}_{basic_info.serialNumber}"))
 
+        model = (
+            get_clean_name(basic_info.productName) or device_type.__class__.__name__
+            if device_type
+            else None
+        )
         dr.async_get(self.hass).async_get_or_create(
             name=name,
             config_entry_id=self.config_entry.entry_id,
             identifiers=identifiers,
             hw_version=basic_info.hardwareVersionString,
             sw_version=basic_info.softwareVersionString,
-            manufacturer=basic_info.vendorName,
-            model=basic_info.productName,
+            manufacturer=basic_info.vendorName or endpoint.node.device_info.vendorName,
+            model=model,
             via_device=(DOMAIN, bridge_device_id) if bridge_device_id else None,
         )
 

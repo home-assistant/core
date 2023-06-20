@@ -84,7 +84,7 @@ async def test_long_press_event(
         "name": device.wemo.name,
         "params": "testing_params",
         "type": EVENT_TYPE_LONG_PRESS,
-        "unique_id": device.wemo.serialnumber,
+        "unique_id": device.wemo.serial_number,
     }
 
 

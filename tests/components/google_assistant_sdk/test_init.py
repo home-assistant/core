@@ -209,6 +209,7 @@ async def test_send_text_command_expired_token_refresh_failure(
     requires_reauth: ConfigEntryState,
 ) -> None:
     """Test failure refreshing token in send_text_command."""
+    await async_setup_component(hass, "homeassistant", {})
     await setup_integration()
 
     entries = hass.config_entries.async_entries(DOMAIN)
@@ -229,6 +230,7 @@ async def test_send_text_command_expired_token_refresh_failure(
             {"command": "turn on tv"},
             blocking=True,
         )
+    await hass.async_block_till_done()
 
     assert any(entry.async_get_active_flows(hass, {"reauth"})) == requires_reauth
 

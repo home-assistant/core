@@ -39,5 +39,26 @@
     "error": {
       "code_format_mismatch": "The code does not match the required number of digits"
     }
+  },
+  "entity": {
+    "binary_sensor": {
+      "power_loss": {
+        "name": "Power loss"
+      },
+      "battery": {
+        "name": "Battery"
+      },
+      "tamper": {
+        "name": "Tamper"
+      },
+      "jam": {
+        "name": "Jam"
+      }
+    },
+    "button": {
+      "panic": {
+        "name": "Panic button"
+      }
+    }
   }
 }

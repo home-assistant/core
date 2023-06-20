@@ -28,11 +28,5 @@
       "connection_error": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
     }
-  },
-  "issues": {
-    "deprecated_yaml": {
-      "title": "The Nextcloud YAML configuration has been deprecated",
-      "description": "Configuring Nextcloud using YAML has been deprecated.\n\nYour existing YAML configuration has been imported into the UI automatically.\n\nRemove the `nextcloud` YAML configuration from your configuration.yaml file and restart Home Assistant to fix this issue."
-    }
   }
 }

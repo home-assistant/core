@@ -8,8 +8,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import TelldusLiveClient
 from .. import tellduslive
+from . import TelldusLiveClient
 from .entry import TelldusLiveEntity
 
 

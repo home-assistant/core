@@ -218,7 +218,7 @@ class AxisNetworkDevice:
         """Stop stream."""
         if self.api.stream.state != State.STOPPED:
             self.api.stream.connection_status_callback.clear()
-            self.api.stream.stop()
+        self.api.stream.stop()
 
     async def shutdown(self, event) -> None:
         """Stop the event stream."""

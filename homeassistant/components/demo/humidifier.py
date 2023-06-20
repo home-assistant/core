@@ -29,12 +29,14 @@ async def async_setup_platform(
                 name="Humidifier",
                 mode=None,
                 target_humidity=68,
+                current_humidity=45,
                 device_class=HumidifierDeviceClass.HUMIDIFIER,
             ),
             DemoHumidifier(
                 name="Dehumidifier",
                 mode=None,
                 target_humidity=54,
+                current_humidity=59,
                 device_class=HumidifierDeviceClass.DEHUMIDIFIER,
             ),
             DemoHumidifier(
@@ -66,6 +68,7 @@ class DemoHumidifier(HumidifierEntity):
         name: str,
         mode: str | None,
         target_humidity: int,
+        current_humidity: int | None = None,
         available_modes: list[str] | None = None,
         is_on: bool = True,
         device_class: HumidifierDeviceClass | None = None,
@@ -77,6 +80,7 @@ class DemoHumidifier(HumidifierEntity):
         if mode is not None:
             self._attr_supported_features |= HumidifierEntityFeature.MODES
         self._attr_target_humidity = target_humidity
+        self._attr_current_humidity = current_humidity
         self._attr_mode = mode
         self._attr_available_modes = available_modes
         self._attr_device_class = device_class

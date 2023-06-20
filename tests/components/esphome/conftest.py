@@ -1,9 +1,10 @@
 """esphome session fixtures."""
 from __future__ import annotations
 
+from asyncio import Event
 from unittest.mock import AsyncMock, Mock, patch
 
-from aioesphomeapi import APIClient, APIVersion, DeviceInfo
+from aioesphomeapi import APIClient, APIVersion, DeviceInfo, ReconnectLogic
 import pytest
 from zeroconf import Zeroconf
 
@@ -15,6 +16,7 @@ from homeassistant.components.esphome import (
 )
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import HomeAssistant
+from homeassistant.setup import async_setup_component
 
 from . import DASHBOARD_HOST, DASHBOARD_PORT, DASHBOARD_SLUG
 
@@ -29,6 +31,12 @@ def mock_bluetooth(enable_bluetooth):
 @pytest.fixture(autouse=True)
 def esphome_mock_async_zeroconf(mock_async_zeroconf):
     """Auto mock zeroconf."""
+
+
+@pytest.fixture(autouse=True)
+async def load_homeassistant(hass) -> None:
+    """Load the homeassistant integration."""
+    assert await async_setup_component(hass, "homeassistant", {})
 
 
 @pytest.fixture
@@ -56,7 +64,7 @@ def mock_device_info() -> DeviceInfo:
     return DeviceInfo(
         uses_password=False,
         name="test",
-        bluetooth_proxy_version=0,
+        legacy_bluetooth_proxy_version=0,
         mac_address="11:22:33:44:55:aa",
         esphome_version="1.0.0",
     )
@@ -125,70 +133,59 @@ async def mock_dashboard(hass):
 
 
 @pytest.fixture
-async def mock_voice_assistant_v1_entry(
+async def mock_voice_assistant_entry(
     hass: HomeAssistant,
     mock_client,
 ) -> MockConfigEntry:
     """Set up an ESPHome entry with voice assistant."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            CONF_HOST: "test.local",
-            CONF_PORT: 6053,
-            CONF_PASSWORD: "",
-        },
-    )
-    entry.add_to_hass(hass)
 
-    device_info = DeviceInfo(
-        name="test",
-        friendly_name="Test",
-        voice_assistant_version=1,
-        mac_address="11:22:33:44:55:aa",
-        esphome_version="1.0.0",
-    )
+    async def _mock_voice_assistant_entry(version: int):
+        entry = MockConfigEntry(
+            domain=DOMAIN,
+            data={
+                CONF_HOST: "test.local",
+                CONF_PORT: 6053,
+                CONF_PASSWORD: "",
+            },
+        )
+        entry.add_to_hass(hass)
 
-    mock_client.device_info = AsyncMock(return_value=device_info)
-    mock_client.subscribe_voice_assistant = AsyncMock(return_value=Mock())
+        device_info = DeviceInfo(
+            name="test",
+            friendly_name="Test",
+            voice_assistant_version=version,
+            mac_address="11:22:33:44:55:aa",
+            esphome_version="1.0.0",
+        )
 
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
+        mock_client.device_info = AsyncMock(return_value=device_info)
+        mock_client.subscribe_voice_assistant = AsyncMock(return_value=Mock())
 
-    return entry
+        try_connect_done = Event()
+        real_try_connect = ReconnectLogic._try_connect
+
+        async def mock_try_connect(self):
+            """Set an event when ReconnectLogic._try_connect has been awaited."""
+            result = await real_try_connect(self)
+            try_connect_done.set()
+            return result
+
+        with patch.object(ReconnectLogic, "_try_connect", mock_try_connect):
+            await hass.config_entries.async_setup(entry.entry_id)
+            await try_connect_done.wait()
+
+        return entry
+
+    return _mock_voice_assistant_entry
 
 
 @pytest.fixture
-async def mock_voice_assistant_v2_entry(
-    hass: HomeAssistant,
-    mock_client,
-) -> MockConfigEntry:
+async def mock_voice_assistant_v1_entry(mock_voice_assistant_entry) -> MockConfigEntry:
     """Set up an ESPHome entry with voice assistant."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            CONF_HOST: "test.local",
-            CONF_PORT: 6053,
-            CONF_PASSWORD: "",
-        },
-    )
-    entry.add_to_hass(hass)
+    return await mock_voice_assistant_entry(version=1)
 
-    device_info = DeviceInfo(
-        name="test",
-        friendly_name="Test",
-        voice_assistant_version=2,
-        mac_address="11:22:33:44:55:aa",
-        esphome_version="1.0.0",
-    )
 
-    mock_client.device_info = AsyncMock(return_value=device_info)
-    mock_client.subscribe_voice_assistant = AsyncMock(return_value=Mock())
-
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
-
-    return entry
+@pytest.fixture
+async def mock_voice_assistant_v2_entry(mock_voice_assistant_entry) -> MockConfigEntry:
+    """Set up an ESPHome entry with voice assistant."""
+    return await mock_voice_assistant_entry(version=2)

@@ -15,7 +15,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import LENGTH, PERCENTAGE, VOLUME
+from homeassistant.const import LENGTH, PERCENTAGE, VOLUME, UnitOfElectricCurrent
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -53,6 +53,14 @@ def convert_and_round(
 
 SENSOR_TYPES: dict[str, BMWSensorEntityDescription] = {
     # --- Generic ---
+    "ac_current_limit": BMWSensorEntityDescription(
+        key="ac_current_limit",
+        name="AC current limit",
+        key_class="charging_profile",
+        unit_type=UnitOfElectricCurrent.AMPERE,
+        icon="mdi:current-ac",
+        entity_registry_enabled_default=False,
+    ),
     "charging_start_time": BMWSensorEntityDescription(
         key="charging_start_time",
         name="Charging start time",
@@ -72,6 +80,13 @@ SENSOR_TYPES: dict[str, BMWSensorEntityDescription] = {
         key_class="fuel_and_battery",
         icon="mdi:ev-station",
         value=lambda x, y: x.value,
+    ),
+    "charging_target": BMWSensorEntityDescription(
+        key="charging_target",
+        name="Charging target",
+        key_class="fuel_and_battery",
+        icon="mdi:battery-charging-high",
+        unit_type=PERCENTAGE,
     ),
     "remaining_battery_percent": BMWSensorEntityDescription(
         key="remaining_battery_percent",

@@ -1,34 +1,36 @@
-[
-  {
-    "id": 123456,
-    "uuid": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
-    "user": {
-      "id": 12345,
-      "email": "user@email.com"
-    },
-    "bridge": {
-      "id": 67890,
-      "hardware_id": "0x0000000000000000"
-    },
-    "last_bridge_hardware_id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
-    "name": "Sensor 1",
-    "location_id": 123456,
-    "system_id": 12345,
-    "hardware_id": "0x0000000000000000",
-    "hardware_revision": 5,
-    "firmware_version": "1.1.2",
-    "device_key": "0x0000000000000000",
-    "encryption_key": true,
-    "installed_at": "2019-06-28T22:12:51.209Z",
-    "calibrated_at": "2023-03-07T19:51:56.838Z",
-    "last_reported_at": "2023-04-19T18:09:40.479Z",
-    "missing_at": null,
-    "updated_at": "2023-03-28T13:33:33.801Z",
-    "created_at": "2019-06-28T22:12:20.256Z",
-    "signal_strength": 4,
-    "firmware": {
-      "status": "valid"
-    },
-    "surface_type": null
-  }
-]
+{
+  "sensors": [
+    {
+      "id": 123456,
+      "uuid": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+      "user": {
+        "id": 12345,
+        "email": "user@email.com"
+      },
+      "bridge": {
+        "id": 67890,
+        "hardware_id": "0x0000000000000000"
+      },
+      "last_bridge_hardware_id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+      "name": "Sensor 1",
+      "location_id": 123456,
+      "system_id": 12345,
+      "hardware_id": "0x0000000000000000",
+      "hardware_revision": 5,
+      "firmware_version": "1.1.2",
+      "device_key": "0x0000000000000000",
+      "encryption_key": true,
+      "installed_at": "2019-06-28T22:12:51.209Z",
+      "calibrated_at": "2023-03-07T19:51:56.838Z",
+      "last_reported_at": "2023-04-19T18:09:40.479Z",
+      "missing_at": null,
+      "updated_at": "2023-03-28T13:33:33.801Z",
+      "created_at": "2019-06-28T22:12:20.256Z",
+      "signal_strength": 4,
+      "firmware": {
+        "status": "valid"
+      },
+      "surface_type": null
+    }
+  ]
+}

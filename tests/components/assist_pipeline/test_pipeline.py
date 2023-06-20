@@ -25,6 +25,12 @@ from .conftest import MockSttPlatform, MockSttProvider, MockTTSPlatform, MockTTS
 from tests.common import MockModule, flush_store, mock_integration, mock_platform
 
 
+@pytest.fixture(autouse=True)
+async def load_homeassistant(hass) -> None:
+    """Load the homeassistant integration."""
+    assert await async_setup_component(hass, "homeassistant", {})
+
+
 async def test_load_datasets(hass: HomeAssistant, init_components) -> None:
     """Make sure that we can load/save data correctly."""
 

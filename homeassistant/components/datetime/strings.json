@@ -1,0 +1,8 @@
+{
+  "title": "Date/Time",
+  "entity_component": {
+    "_": {
+      "name": "[%key:component::datetime::title%]"
+    }
+  }
+}

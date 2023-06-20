@@ -45,7 +45,7 @@
     },
     "webhook_url": {
       "title": "Reolink webhook URL unreachable",
-      "description": "Did not receive initial ONVIF state from {name}. Most likely, the Reolink camera can not reach the current (local) Home Assistant URL `{base_url}`, please configure a (local) HTTP address under \"Home Assistant URL\" in the [network settings]({network_link}) that points to Home Assistant. For example `http://192.168.1.10:8123` where `192.168.1.10` is the IP of the Home Assistant device. Also, make sure the Reolink camera can reach that URL."
+      "description": "Did not receive initial ONVIF state from {name}. Most likely, the Reolink camera can not reach the current (local) Home Assistant URL `{base_url}`, please configure a (local) HTTP address under \"Home Assistant URL\" in the [network settings]({network_link}) that points to Home Assistant. For example `http://192.168.1.10:8123` where `192.168.1.10` is the IP of the Home Assistant device. Also, make sure the Reolink camera can reach that URL. Using fast motion/AI state polling until the first ONVIF push is received."
     },
     "enable_port": {
       "title": "Reolink port not enabled",

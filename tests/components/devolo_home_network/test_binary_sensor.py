@@ -18,7 +18,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.util import dt
+from homeassistant.util import dt as dt_util
 
 from . import configure_integration
 from .const import PLCNET_ATTACHED
@@ -66,7 +66,7 @@ async def test_update_attached_to_router(
     mock_device.plcnet.async_get_network_overview = AsyncMock(
         side_effect=DeviceUnavailable
     )
-    async_fire_time_changed(hass, dt.utcnow() + LONG_UPDATE_INTERVAL)
+    async_fire_time_changed(hass, dt_util.utcnow() + LONG_UPDATE_INTERVAL)
     await hass.async_block_till_done()
 
     state = hass.states.get(state_key)
@@ -77,7 +77,7 @@ async def test_update_attached_to_router(
     mock_device.plcnet.async_get_network_overview = AsyncMock(
         return_value=PLCNET_ATTACHED
     )
-    async_fire_time_changed(hass, dt.utcnow() + LONG_UPDATE_INTERVAL)
+    async_fire_time_changed(hass, dt_util.utcnow() + LONG_UPDATE_INTERVAL)
     await hass.async_block_till_done()
 
     state = hass.states.get(state_key)

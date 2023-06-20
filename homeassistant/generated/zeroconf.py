@@ -251,21 +251,6 @@ ZEROCONF = {
     "_airplay._tcp.local.": [
         {
             "domain": "apple_tv",
-            "properties": {
-                "model": "appletv*",
-            },
-        },
-        {
-            "domain": "apple_tv",
-            "properties": {
-                "model": "audioaccessory*",
-            },
-        },
-        {
-            "domain": "apple_tv",
-            "properties": {
-                "am": "airport*",
-            },
         },
         {
             "domain": "samsungtv",
@@ -277,6 +262,16 @@ ZEROCONF = {
     "_airport._tcp.local.": [
         {
             "domain": "apple_tv",
+        },
+    ],
+    "_amzn-alexa._tcp.local.": [
+        {
+            "domain": "roomba",
+            "name": "irobot-*",
+        },
+        {
+            "domain": "roomba",
+            "name": "roomba-*",
         },
     ],
     "_androidtvremote2._tcp.local.": [

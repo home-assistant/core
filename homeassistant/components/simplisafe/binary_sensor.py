@@ -27,6 +27,7 @@ SUPPORTED_BATTERY_SENSOR_TYPES = [
     DeviceTypes.MOTION,
     DeviceTypes.SIREN,
     DeviceTypes.SMOKE,
+    DeviceTypes.SMOKE_AND_CARBON_MONOXIDE,
     DeviceTypes.TEMPERATURE,
 ]
 
@@ -38,6 +39,9 @@ TRIGGERED_SENSOR_TYPES = {
     DeviceTypes.MOTION: BinarySensorDeviceClass.MOTION,
     DeviceTypes.SIREN: BinarySensorDeviceClass.SAFETY,
     DeviceTypes.SMOKE: BinarySensorDeviceClass.SMOKE,
+    # Although this sensor can technically apply to both smoke and carbon, we use the
+    # SMOKE device class for simplicity:
+    DeviceTypes.SMOKE_AND_CARBON_MONOXIDE: BinarySensorDeviceClass.SMOKE,
 }
 
 

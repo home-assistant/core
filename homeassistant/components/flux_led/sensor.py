@@ -36,7 +36,7 @@ class FluxPairedRemotes(FluxEntity, SensorEntity):
     """Representation of a Magic Home paired remotes sensor."""
 
     _attr_icon = "mdi:remote"
-    _attr_entity_category = EntityCategory.CONFIG
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
 
     @property
     def native_value(self) -> int:

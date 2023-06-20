@@ -27,7 +27,6 @@ class BAFNumberDescriptionMixin:
     """Required values for BAF sensors."""
 
     value_fn: Callable[[Device], int | None]
-    mode: NumberMode
 
 
 @dataclass
@@ -147,7 +146,6 @@ class BAFNumber(BAFEntity, NumberEntity):
         self.entity_description = description
         super().__init__(device, f"{device.name} {description.name}")
         self._attr_unique_id = f"{self._device.mac_address}-{description.key}"
-        self._attr_mode = description.mode
 
     @callback
     def _async_update_attrs(self) -> None:

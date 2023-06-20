@@ -28,5 +28,14 @@
         }
       }
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "sip_port": "SIP port"
+        }
+      }
+    }
   }
 }

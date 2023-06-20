@@ -22,6 +22,7 @@ from .core import discovery
 from .core.const import (
     CLUSTER_HANDLER_ACCELEROMETER,
     CLUSTER_HANDLER_BINARY_INPUT,
+    CLUSTER_HANDLER_HUE_OCCUPANCY,
     CLUSTER_HANDLER_OCCUPANCY,
     CLUSTER_HANDLER_ON_OFF,
     CLUSTER_HANDLER_ZONE,
@@ -130,6 +131,11 @@ class Occupancy(BinarySensor):
     _attr_device_class: BinarySensorDeviceClass = BinarySensorDeviceClass.OCCUPANCY
 
 
+@MULTI_MATCH(cluster_handler_names=CLUSTER_HANDLER_HUE_OCCUPANCY)
+class HueOccupancy(Occupancy):
+    """ZHA Hue occupancy."""
+
+
 @STRICT_MATCH(cluster_handler_names=CLUSTER_HANDLER_ON_OFF)
 class Opening(BinarySensor):
     """ZHA OnOff BinarySensor."""
@@ -228,6 +234,15 @@ class IASZone(BinarySensor):
         self._cluster_handler.cluster.update_attribute(
             IasZone.attributes_by_name[self.SENSOR_ATTR].id, migrated_state
         )
+
+
+@STRICT_MATCH(cluster_handler_names=CLUSTER_HANDLER_ZONE, models={"WL4200", "WL4200S"})
+class SinopeLeakStatus(BinarySensor):
+    """Sinope water leak sensor."""
+
+    SENSOR_ATTR = "leak_status"
+    _attr_name = "Moisture"
+    _attr_device_class = BinarySensorDeviceClass.MOISTURE
 
 
 @MULTI_MATCH(
