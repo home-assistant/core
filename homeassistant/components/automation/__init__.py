@@ -353,8 +353,11 @@ class BaseAutomationEntity(ToggleEntity, ABC):
         """Trigger automation."""
 
 
-class DisabledAutomationEntity(BaseAutomationEntity):
-    """Entity to show status of entity."""
+class UnavailableAutomationEntity(BaseAutomationEntity):
+    """A non-functional automation entity with its state set to unavailable.
+
+    This class is instatiated when an automation fails to validate.
+    """
 
     _attr_should_poll = False
     _attr_available = False
@@ -828,7 +831,7 @@ async def _create_automation_entities(
 
         if automation_config.validation_failed:
             entities.append(
-                DisabledAutomationEntity(
+                UnavailableAutomationEntity(
                     automation_id,
                     name,
                     automation_config.raw_config,
