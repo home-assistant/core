@@ -811,7 +811,6 @@ class EsphomeEntity(Entity, Generic[_InfoT, _StateT]):
             connections={(dr.CONNECTION_NETWORK_MAC, device_info.mac_address)}
         )
         self._entry_id = entry_data.entry_id
-        self._was_available = self.available
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
@@ -900,15 +899,12 @@ class EsphomeEntity(Entity, Generic[_InfoT, _StateT]):
     def _on_device_update(self) -> None:
         """Call when device updates or entry data changes."""
         self._on_entry_data_changed()
-        available = self.available
-        was_available = self._was_available
-        self._was_available = available
-        if was_available == available:
-            # Don't update the HA state yet when the device comes online.
-            # Only update the HA state when the full state arrives
+        if not self.available:
+            # Only write state if the device has gone unavailable
+            # since _on_state_update will be called if the device
+            # is available when the full state arrives
             # through the next entity state packet.
-            return
-        self.async_write_ha_state()
+            self.async_write_ha_state()
 
     @property
     def available(self) -> bool:
