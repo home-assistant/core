@@ -810,7 +810,8 @@ class EsphomeEntity(Entity, Generic[_InfoT, _StateT]):
         self._attr_device_info = DeviceInfo(
             connections={(dr.CONNECTION_NETWORK_MAC, device_info.mac_address)}
         )
-        self._entry_id = self._entry_data.entry_id
+        self._entry_id = entry_data.entry_id
+        self._was_available = self.available
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
@@ -890,21 +891,24 @@ class EsphomeEntity(Entity, Generic[_InfoT, _StateT]):
         self.async_write_ha_state()
 
     @callback
-    def _on_device_update(self) -> None:
-        """Update the entity state when device info has changed."""
-        self._on_entry_data_changed()
-        if self._entry_data.available:
-            # Don't update the HA state yet when the device comes online.
-            # Only update the HA state when the full state arrives
-            # through the next entity state packet.
-            self._on_state_update()
-
-    @callback
     def _on_entry_data_changed(self) -> None:
-        """Call when device updates or entry data changes."""
         entry_data = self._entry_data
         self._api_version = entry_data.api_version
         self._client = entry_data.client
+
+    @callback
+    def _on_device_update(self) -> None:
+        """Call when device updates or entry data changes."""
+        self._on_entry_data_changed()
+        available = self.available
+        was_available = self._was_available
+        self._was_available = available
+        if was_available == available:
+            # Don't update the HA state yet when the device comes online.
+            # Only update the HA state when the full state arrives
+            # through the next entity state packet.
+            return
+        self.async_write_ha_state()
 
     @property
     def available(self) -> bool:
