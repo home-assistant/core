@@ -1486,7 +1486,7 @@ py-dormakaba-dkey==1.0.4
 py-melissa-climate==2.1.4
 
 # homeassistant.components.miraie_ac
-py-miraie-ac==0.1.5
+py-miraie-ac==0.1.8
 
 # homeassistant.components.nextbus
 py-nextbusnext==0.1.5

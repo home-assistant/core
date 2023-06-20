@@ -5,7 +5,13 @@ import logging
 import re
 from typing import Any
 
-from py_miraie_ac import AuthException, AuthType, MirAIeAPI
+from py_miraie_ac import (
+    AuthException,
+    AuthType,
+    ConnectionException,
+    MirAIeAPI,
+    MobileNotRegisteredException,
+)
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -41,12 +47,18 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
                 raise ValidationError()
 
             await api.initialize()
-        except ValidationError as ex:
+        except ValidationError:
             _LOGGER.error("Invalid Mobile Number")
-            raise ValidationError from ex
-        except AuthException as ex:
+            raise
+        except AuthException:
             _LOGGER.error("Invalid user ID or password")
-            raise InvalidAuth from ex
+            raise
+        except ConnectionException:
+            _LOGGER.error("Error connecting to the MirAIe services")
+            raise
+        except MobileNotRegisteredException:
+            _LOGGER.error("Mobile number not registered with MirAIe")
+            raise
 
         _LOGGER.debug("Connection successful!")
         # Return info that you want to store in the config entry.
@@ -72,10 +84,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 info = await validate_input(self.hass, user_input)
-            except InvalidAuth:
+            except AuthException:
                 errors["base"] = "invalid_auth"
             except ValidationError:
                 errors["base"] = "invalid_mobile"
+            except ConnectionException:
+                errors["base"] = "cannot_connect"
+            except MobileNotRegisteredException:
+                errors["base"] = "mobile_not_registered"
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
@@ -85,14 +101,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
-
-
-class CannotConnect(HomeAssistantError):
-    """Error to indicate we cannot connect."""
-
-
-class InvalidAuth(HomeAssistantError):
-    """Error to indicate there is invalid auth."""
 
 
 class ValidationError(HomeAssistantError):

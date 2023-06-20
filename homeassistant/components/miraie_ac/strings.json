@@ -9,10 +9,11 @@
       }
     },
     "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "invalid_mobile": "Invalid mobile number. Please use the format +91XXXXXXXXXX",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
+      "cannot_connect": "There was an error connecting to the service. Please try again later or if the problem presists log an issue on https://github.com/home-assistant/core/issues?q=is%3Aissue+is%3Aopen+label%3A%22integration%3A+miraie_ac%22",
+      "invalid_auth": "Invalid Mobile Number or Password. Please try again.",
+      "invalid_mobile": "Invalid Mobile Number. Please use the format +91XXXXXXXXXX",
+      "mobile_not_registered": "The Mobile Number has not been registered. Please complete the registration on the MirAIe mobile app and try again.",
+      "unknown": "There was an unexpected error, please try again later or if the problem presists log an issue on https://github.com/home-assistant/core/issues?q=is%3Aissue+is%3Aopen+label%3A%22integration%3A+miraie_ac%22"
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"

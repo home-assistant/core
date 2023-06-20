@@ -7,7 +7,7 @@
   "documentation": "https://www.home-assistant.io/integrations/miraie_ac",
   "homekit": {},
   "iot_class": "cloud_push",
-  "requirements": ["py-miraie-ac==0.1.5"],
+  "requirements": ["py-miraie-ac==0.1.8"],
   "ssdp": [],
   "zeroconf": []
 }
