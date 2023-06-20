@@ -9,7 +9,7 @@ from epicstore_api import EpicGamesStoreAPI
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-from homeassistant.util import dt
+from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
 
@@ -89,8 +89,8 @@ class EGSUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 return_data[f"{prefix}free_game"] = return_data.get(
                     f"{prefix}free_game",
                     {
-                        "start_at": dt.parse_datetime(promotion_data["startDate"]),
-                        "end_at": dt.parse_datetime(promotion_data["endDate"]),
+                        "start_at": dt_util.parse_datetime(promotion_data["startDate"]),
+                        "end_at": dt_util.parse_datetime(promotion_data["endDate"]),
                         "games": [],
                     },
                 )
