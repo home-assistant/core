@@ -61,8 +61,6 @@ async def test_automation_with_pn_trigger(hass: HomeAssistant) -> None:
         blocking=True,
     )
 
-    await hass.async_block_till_done()
-
     result = result_any[0].get("trigger")
     assert result["platform"] == "persistent_notification"
     assert result["update_type"] == pn.UpdateType.ADDED
@@ -79,8 +77,6 @@ async def test_automation_with_pn_trigger(hass: HomeAssistant) -> None:
         blocking=True,
     )
 
-    await hass.async_block_till_done()
-
     result = result_any[1].get("trigger")
     assert result["platform"] == "persistent_notification"
     assert result["update_type"] == pn.UpdateType.REMOVED
@@ -96,8 +92,6 @@ async def test_automation_with_pn_trigger(hass: HomeAssistant) -> None:
         {"notification_id": "42", "message": "Forty Two"},
         blocking=True,
     )
-
-    await hass.async_block_till_done()
 
     result = result_any[2].get("trigger")
     assert result["platform"] == "persistent_notification"
