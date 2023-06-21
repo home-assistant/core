@@ -36,7 +36,6 @@ ZONE_BINARY_SENSOR_TYPES: Final[tuple[AirzoneBinarySensorEntityDescription, ...]
         device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
         key=AZD_PROBLEMS,
-        name="Problem",
     ),
 )
 
