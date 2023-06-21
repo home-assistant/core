@@ -82,12 +82,11 @@ async def test_run_image_setup(
     }
 
     async_fire_mqtt_message(hass, topic, b"grass")
-
     client = await hass_client_no_auth()
     resp = await client.get(state.attributes["entity_picture"])
     assert resp.status == HTTPStatus.OK
-    body = await resp.text()
-    assert body == "grass"
+    body = await resp.read()
+    assert body == b"grass"
 
     state = hass.states.get("image.test")
     assert state.state == "2023-04-01T00:00:00+00:00"
@@ -113,6 +112,7 @@ async def test_run_image_b64_encoded(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test that it fetches the given encoded payload."""
     topic = "test/image"
@@ -127,13 +127,20 @@ async def test_run_image_b64_encoded(
         "friendly_name": "Test",
     }
 
-    async_fire_mqtt_message(hass, topic, b64encode(b"grass"))
+    # Fire incorrect encoded message (utf-8 encoded string)
+    async_fire_mqtt_message(hass, topic, "grass")
+    client = await hass_client_no_auth()
+    resp = await client.get(state.attributes["entity_picture"])
+    assert resp.status == HTTPStatus.INTERNAL_SERVER_ERROR
+    assert "Error processing image data received at topic test/image" in caplog.text
 
+    # Fire correctly encoded message (b64 encoded payload)
+    async_fire_mqtt_message(hass, topic, b64encode(b"grass"))
     client = await hass_client_no_auth()
     resp = await client.get(state.attributes["entity_picture"])
     assert resp.status == HTTPStatus.OK
-    body = await resp.text()
-    assert body == "grass"
+    body = await resp.read()
+    assert body == b"grass"
 
     state = hass.states.get("image.test")
     assert state.state == "2023-04-01T00:00:00+00:00"
@@ -623,7 +630,7 @@ async def test_discovery_broken(
 ) -> None:
     """Test handling of bad discovery message."""
     data1 = '{ "name": "Beer" }'
-    data2 = '{ "name": "Milk", "topic": "test_topic"}'
+    data2 = '{ "name": "Milk", "from_url_topic": "test_topic"}'
 
     await help_test_discovery_broken(
         hass, mqtt_mock_entry, caplog, image.DOMAIN, data1, data2
@@ -699,7 +706,7 @@ async def test_entity_debug_info_message(
         DEFAULT_CONFIG,
         None,
         state_topic="test_topic",
-        state_payload="ON",
+        state_payload=b"ON",
     )
 
 

@@ -54,6 +54,13 @@ def validate_content_type(content_type: str) -> str:
     return content_type
 
 
+def validate_topic_required(config: ConfigType) -> ConfigType:
+    """Ensure at least one subscribe topic is configured."""
+    if CONF_TOPIC not in config and CONF_FROM_URL_TOPIC not in config:
+        raise vol.Invalid("Expected one of [`topic`, `from_url_topic`], got none")
+    return config
+
+
 PLATFORM_SCHEMA_BASE = MQTT_BASE_SCHEMA.extend(
     {
         vol.Optional(CONF_CONTENT_TYPE, default=DEFAULT_CONTENT_TYPE): vol.All(
@@ -67,11 +74,11 @@ PLATFORM_SCHEMA_BASE = MQTT_BASE_SCHEMA.extend(
     }
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
 
-PLATFORM_SCHEMA_MODERN = vol.All(
-    PLATFORM_SCHEMA_BASE.schema,
-)
+PLATFORM_SCHEMA_MODERN = vol.All(PLATFORM_SCHEMA_BASE.schema, validate_topic_required)
 
-DISCOVERY_SCHEMA = PLATFORM_SCHEMA_BASE.extend({}, extra=vol.REMOVE_EXTRA)
+DISCOVERY_SCHEMA = vol.All(
+    PLATFORM_SCHEMA_BASE.extend({}, extra=vol.REMOVE_EXTRA), validate_topic_required
+)
 
 
 async def async_setup_entry(
@@ -168,12 +175,18 @@ class MqttImage(MqttEntity, ImageEntity):
 
         def add_subscribe_topic(topic: str, msg_callback: MessageCallbackType) -> bool:
             """Add a topic to subscribe to."""
+            encoding: str | None
+            encoding = (
+                None
+                if CONF_TOPIC in self._config
+                else self._config[CONF_ENCODING] or None
+            )
             if has_topic := self._topic[topic] is not None:
                 topics[topic] = {
                     "topic": self._topic[topic],
                     "msg_callback": msg_callback,
                     "qos": self._config[CONF_QOS],
-                    "encoding": self._config[CONF_ENCODING] or None,
+                    "encoding": encoding,
                 }
             return has_topic
 
