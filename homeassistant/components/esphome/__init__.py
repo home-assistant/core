@@ -737,9 +737,7 @@ async def platform_async_setup_entry(
             async_add_entities(add_entities)
 
     entry_data.cleanup_callbacks.append(
-        async_dispatcher_connect(
-            hass, entry_data.signal_static_info_updated, async_list_entities
-        )
+        entry_data.async_register_static_info_callback(info_type, async_list_entities)
     )
 
 
