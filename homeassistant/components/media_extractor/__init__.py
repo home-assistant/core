@@ -148,7 +148,7 @@ class MediaExtractor:
             data[ATTR_ENTITY_ID] = entity_id
 
         self.hass.create_task(
-            self.hass.services.call(MEDIA_PLAYER_DOMAIN, SERVICE_PLAY_MEDIA, data)
+            self.hass.services.async_call(MEDIA_PLAYER_DOMAIN, SERVICE_PLAY_MEDIA, data)
         )
 
     def get_stream_query_for_entity(self, entity_id):
