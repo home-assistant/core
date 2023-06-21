@@ -9,6 +9,7 @@ from typing import Any, cast
 
 from aioesphomeapi import (
     COMPONENT_TYPE_TO_INFO,
+    AlarmControlPanelInfo,
     APIClient,
     APIVersion,
     BinarySensorInfo,
@@ -46,6 +47,7 @@ _LOGGER = logging.getLogger(__name__)
 
 # Mapping from ESPHome info type to HA platform
 INFO_TYPE_TO_PLATFORM: dict[type[EntityInfo], Platform] = {
+    AlarmControlPanelInfo: Platform.ALARM_CONTROL_PANEL,
     BinarySensorInfo: Platform.BINARY_SENSOR,
     ButtonInfo: Platform.BUTTON,
     CameraInfo: Platform.CAMERA,
@@ -126,6 +128,12 @@ class RuntimeEntryData:
     def signal_static_info_updated(self) -> str:
         """Return the signal to listen to for updates on static info."""
         return f"esphome_{self.entry_id}_on_list"
+
+    def signal_component_key_static_info_updated(
+        self, component_key: str, key: int
+    ) -> str:
+        """Return the signal to listen to for updates on static info for a specific component_key and key."""
+        return f"esphome_{self.entry_id}_static_info_updated_{component_key}_{key}"
 
     @callback
     def async_update_ble_connection_limits(self, free: int, limit: int) -> None:

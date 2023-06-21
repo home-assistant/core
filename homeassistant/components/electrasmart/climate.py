@@ -109,12 +109,13 @@ class ElectraClimateEntity(ClimateEntity):
     _attr_min_temp = MIN_TEMP
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_hvac_modes = ELECTRA_MODES
+    _attr_has_entity_name = True
+    _attr_name = None
 
     def __init__(self, device: ElectraAirConditioner, api: ElectraAPI) -> None:
         """Initialize Electra climate entity."""
         self._api = api
         self._electra_ac_device = device
-        self._attr_name = device.name
         self._attr_unique_id = device.mac
         self._attr_supported_features = (
             ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.FAN_MODE
@@ -140,7 +141,7 @@ class ElectraClimateEntity(ClimateEntity):
 
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._electra_ac_device.mac)},
-            name=self.name,
+            name=device.name,
             model=self._electra_ac_device.model,
             manufacturer=self._electra_ac_device.manufactor,
         )

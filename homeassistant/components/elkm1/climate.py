@@ -85,7 +85,7 @@ class ElkThermostat(ElkEntity, ClimateEntity):
     def __init__(self, element: Element, elk: Elk, elk_data: dict[str, Any]) -> None:
         """Initialize climate entity."""
         super().__init__(element, elk, elk_data)
-        self._state: str | None = None
+        self._state: HVACMode | None = None
 
     @property
     def temperature_unit(self) -> str:
@@ -130,7 +130,7 @@ class ElkThermostat(ElkEntity, ClimateEntity):
         return self._element.humidity
 
     @property
-    def hvac_mode(self) -> str | None:
+    def hvac_mode(self) -> HVACMode | None:
         """Return current operation ie. heat, cool, idle."""
         return self._state
 

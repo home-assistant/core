@@ -715,3 +715,21 @@ async def test_supervisor_remove_missing_issue_without_error(
     msg = await client.receive_json()
     assert msg["success"]
     await hass.async_block_till_done()
+
+
+async def test_system_is_not_ready(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Ensure hassio starts despite error."""
+    aioclient_mock.get(
+        "http://127.0.0.1/resolution/info",
+        json={
+            "result": "",
+            "message": "System is not ready with state: setup",
+        },
+    )
+
+    assert await async_setup_component(hass, "hassio", {})
+    assert "Failed to update supervisor issues" in caplog.text
