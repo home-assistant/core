@@ -116,7 +116,7 @@ async def test_cover_set_position(
     assert entry.unique_id == uid
 
     with patch("homeassistant.components.freedompro.cover.put_state") as mock_put_state:
-        assert await hass.services.async_call(
+        await hass.services.async_call(
             COVER_DOMAIN,
             SERVICE_SET_COVER_POSITION,
             {ATTR_ENTITY_ID: [entity_id], ATTR_POSITION: 33},
@@ -181,7 +181,7 @@ async def test_cover_close(
     assert entry.unique_id == uid
 
     with patch("homeassistant.components.freedompro.cover.put_state") as mock_put_state:
-        assert await hass.services.async_call(
+        await hass.services.async_call(
             COVER_DOMAIN,
             SERVICE_CLOSE_COVER,
             {ATTR_ENTITY_ID: [entity_id]},
@@ -234,7 +234,7 @@ async def test_cover_open(
     assert entry.unique_id == uid
 
     with patch("homeassistant.components.freedompro.cover.put_state") as mock_put_state:
-        assert await hass.services.async_call(
+        await hass.services.async_call(
             COVER_DOMAIN,
             SERVICE_OPEN_COVER,
             {ATTR_ENTITY_ID: [entity_id]},

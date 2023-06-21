@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from unittest.mock import ANY, AsyncMock, MagicMock, Mock, patch
+from uuid import uuid1
 
 from pyhap.accessory import Accessory
 from pyhap.const import CATEGORY_CAMERA, CATEGORY_TELEVISION
@@ -868,11 +869,11 @@ async def test_homekit_unpair(
         homekit.driver.aio_stop_event = MagicMock()
 
         state = homekit.driver.state
-        state.add_paired_client("client1", "any", b"1")
-        state.add_paired_client("client2", "any", b"0")
-        state.add_paired_client("client3", "any", b"1")
-        state.add_paired_client("client4", "any", b"0")
-        state.add_paired_client("client5", "any", b"0")
+        state.add_paired_client(str(uuid1()).encode("utf-8"), "any", b"1")
+        state.add_paired_client(str(uuid1()).encode("utf-8"), "any", b"0")
+        state.add_paired_client(str(uuid1()).encode("utf-8"), "any", b"1")
+        state.add_paired_client(str(uuid1()).encode("utf-8"), "any", b"0")
+        state.add_paired_client(str(uuid1()).encode("utf-8"), "any", b"0")
 
         formatted_mac = dr.format_mac(state.mac)
         hk_bridge_dev = device_registry.async_get_device(
@@ -917,7 +918,8 @@ async def test_homekit_unpair_missing_device_id(
         homekit.driver.aio_stop_event = MagicMock()
 
         state = homekit.driver.state
-        state.add_paired_client("client1", "any", b"1")
+        client_1 = str(uuid1()).encode("utf-8")
+        state.add_paired_client(client_1, "any", b"1")
         with pytest.raises(HomeAssistantError):
             await hass.services.async_call(
                 DOMAIN,
@@ -926,7 +928,7 @@ async def test_homekit_unpair_missing_device_id(
                 blocking=True,
             )
         await hass.async_block_till_done()
-        state.paired_clients = {"client1": "any"}
+        state.paired_clients = {client_1.decode("utf-8"): "any"}
         homekit.status = STATUS_STOPPED
 
 
@@ -967,7 +969,8 @@ async def test_homekit_unpair_not_homekit_device(
         )
 
         state = homekit.driver.state
-        state.add_paired_client("client1", "any", b"1")
+        client_1 = str(uuid1()).encode("utf-8")
+        state.add_paired_client(client_1, "any", b"1")
         with pytest.raises(HomeAssistantError):
             await hass.services.async_call(
                 DOMAIN,
@@ -976,7 +979,7 @@ async def test_homekit_unpair_not_homekit_device(
                 blocking=True,
             )
         await hass.async_block_till_done()
-        state.paired_clients = {"client1": "any"}
+        state.paired_clients = {client_1.decode("utf-8"): "any"}
         homekit.status = STATUS_STOPPED
 
 
@@ -1644,7 +1647,6 @@ async def test_homekit_ignored_missing_devices(
     light = entity_registry.async_get_or_create(
         "light", "powerwall", "demo", device_id=device_entry.id
     )
-    before_removal = entity_registry.entities.copy()
     # Delete the device to make sure we fallback
     # to using the platform
     device_registry.async_remove_device(device_entry.id)
@@ -1652,7 +1654,23 @@ async def test_homekit_ignored_missing_devices(
     await asyncio.sleep(0)
     await asyncio.sleep(0)
     # Restore the registry
-    entity_registry.entities = before_removal
+    entity_registry.async_get_or_create(
+        "binary_sensor",
+        "powerwall",
+        "battery_charging",
+        device_id=device_entry.id,
+        original_device_class=BinarySensorDeviceClass.BATTERY_CHARGING,
+    )
+    entity_registry.async_get_or_create(
+        "sensor",
+        "powerwall",
+        "battery",
+        device_id=device_entry.id,
+        original_device_class=SensorDeviceClass.BATTERY,
+    )
+    light = entity_registry.async_get_or_create(
+        "light", "powerwall", "demo", device_id=device_entry.id
+    )
 
     hass.states.async_set(light.entity_id, STATE_ON)
     hass.states.async_set("light.two", STATE_ON)

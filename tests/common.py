@@ -248,6 +248,9 @@ async def async_test_home_assistant(event_loop, load_registries=True):
             )
         },
     )
+    hass.bus.async_listen_once(
+        EVENT_HOMEASSISTANT_STOP, hass.config_entries._async_shutdown
+    )
 
     # Load the registries
     entity.async_setup(hass)
@@ -509,6 +512,7 @@ def mock_registry(
     if mock_entries is None:
         mock_entries = {}
     registry.entities = er.EntityRegistryItems()
+    registry._entities_data = registry.entities.data
     for key, entry in mock_entries.items():
         registry.entities[key] = entry
 
@@ -554,6 +558,7 @@ def mock_device_registry(
     """
     registry = dr.DeviceRegistry(hass)
     registry.devices = dr.DeviceRegistryItems()
+    registry._device_data = registry.devices.data
     if mock_entries is None:
         mock_entries = {}
     for key, entry in mock_entries.items():
@@ -1348,7 +1353,7 @@ def async_capture_events(hass: HomeAssistant, event_name: str) -> list[Event]:
     def capture_events(event: Event) -> None:
         events.append(event)
 
-    hass.bus.async_listen(event_name, capture_events)
+    hass.bus.async_listen(event_name, capture_events, run_immediately=True)
 
     return events
 

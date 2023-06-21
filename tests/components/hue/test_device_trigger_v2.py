@@ -1,5 +1,6 @@
 """The tests for Philips Hue device triggers for V2 bridge."""
 from aiohue.v2.models.button import ButtonEvent
+from pytest_unordered import unordered
 
 from homeassistant.components import hue
 from homeassistant.components.device_automation import DeviceAutomationType
@@ -10,7 +11,6 @@ from homeassistant.core import HomeAssistant
 from .conftest import setup_platform
 
 from tests.common import (
-    assert_lists_same,
     async_capture_events,
     async_get_device_automations,
 )
@@ -96,4 +96,4 @@ async def test_get_triggers(
         ),
     ]
 
-    assert_lists_same(triggers, expected_triggers)
+    assert triggers == unordered(expected_triggers)
