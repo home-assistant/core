@@ -141,7 +141,6 @@ def async_dismiss(hass: HomeAssistant, notification_id: str) -> None:
 
 
 @callback
-@bind_hass
 def async_dismiss_all(hass: HomeAssistant) -> None:
     """Remove all notifications."""
     notifications = _async_get_or_create_notifications(hass)
