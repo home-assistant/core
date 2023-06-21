@@ -1,15 +1,19 @@
 """Tests for tag triggers."""
-
 import pytest
 
 import homeassistant.components.automation as automation
 from homeassistant.components.tag import async_scan_tag
 from homeassistant.components.tag.const import DEVICE_ID, DOMAIN, TAG_ID
 from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import async_mock_service
-from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa: F401
+
+
+@pytest.fixture(autouse=True, name="stub_blueprint_populate")
+def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
+    """Stub copying the blueprints to the config folder."""
 
 
 @pytest.fixture
@@ -37,7 +41,7 @@ def calls(hass):
     return async_mock_service(hass, "test", "automation")
 
 
-async def test_triggers(hass, tag_setup, calls):
+async def test_triggers(hass: HomeAssistant, tag_setup, calls) -> None:
     """Test tag triggers."""
     assert await tag_setup()
     assert await async_setup_component(
@@ -82,7 +86,9 @@ async def test_triggers(hass, tag_setup, calls):
     assert len(calls) == 1
 
 
-async def test_exception_bad_trigger(hass, calls, caplog):
+async def test_exception_bad_trigger(
+    hass: HomeAssistant, calls, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test for exception on event triggers firing."""
 
     await async_setup_component(
@@ -104,7 +110,9 @@ async def test_exception_bad_trigger(hass, calls, caplog):
     assert "Unnamed automation could not be validated" in caplog.text
 
 
-async def test_multiple_tags_and_devices_trigger(hass, tag_setup, calls):
+async def test_multiple_tags_and_devices_trigger(
+    hass: HomeAssistant, tag_setup, calls
+) -> None:
     """Test multiple tags and devices triggers."""
     assert await tag_setup()
     assert await async_setup_component(

@@ -7,6 +7,7 @@ from typing import Any
 from aioairzone.const import (
     API_SYSTEM_ID,
     API_ZONE_ID,
+    AZD_AVAILABLE,
     AZD_FIRMWARE,
     AZD_FULL_NAME,
     AZD_ID,
@@ -65,6 +66,11 @@ class AirzoneSystemEntity(AirzoneEntity):
             via_device=(DOMAIN, f"{entry.entry_id}_ws"),
         )
         self._attr_unique_id = entry.unique_id or entry.entry_id
+
+    @property
+    def available(self) -> bool:
+        """Return system availability."""
+        return super().available and self.get_airzone_value(AZD_AVAILABLE)
 
     def get_airzone_value(self, key: str) -> Any:
         """Return system value by key."""
@@ -130,6 +136,11 @@ class AirzoneZoneEntity(AirzoneEntity):
         )
         self._attr_unique_id = entry.unique_id or entry.entry_id
 
+    @property
+    def available(self) -> bool:
+        """Return zone availability."""
+        return super().available and self.get_airzone_value(AZD_AVAILABLE)
+
     def get_airzone_value(self, key: str) -> Any:
         """Return zone value by key."""
         value = None
@@ -152,5 +163,5 @@ class AirzoneZoneEntity(AirzoneEntity):
             raise HomeAssistantError(
                 f"Failed to set zone {self.name}: {error}"
             ) from error
-        else:
-            self.coordinator.async_set_updated_data(self.coordinator.airzone.data())
+
+        self.coordinator.async_set_updated_data(self.coordinator.airzone.data())

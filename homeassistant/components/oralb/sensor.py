@@ -1,8 +1,6 @@
 """Support for OralB sensors."""
 from __future__ import annotations
 
-from typing import Optional, Union
-
 from oralb_ble import OralBSensor, SensorUpdate
 
 from homeassistant import config_entries
@@ -21,10 +19,10 @@ from homeassistant.components.sensor import (
 from homeassistant.const import (
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+    EntityCategory,
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.sensor import sensor_device_info_to_hass_device_info
 
@@ -117,9 +115,7 @@ async def async_setup_entry(
 
 
 class OralBBluetoothSensorEntity(
-    PassiveBluetoothProcessorEntity[
-        PassiveBluetoothDataProcessor[Optional[Union[str, int]]]
-    ],
+    PassiveBluetoothProcessorEntity[PassiveBluetoothDataProcessor[str | int | None]],
     SensorEntity,
 ):
     """Representation of a OralB sensor."""
@@ -128,3 +124,20 @@ class OralBBluetoothSensorEntity(
     def native_value(self) -> str | int | None:
         """Return the native value."""
         return self.processor.entity_data.get(self.entity_key)
+
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available.
+
+        The sensor is only created when the device is seen.
+
+        Since these are sleepy devices which stop broadcasting
+        when not in use, we can't rely on the last update time
+        so once we have seen the device we always return True.
+        """
+        return True
+
+    @property
+    def assumed_state(self) -> bool:
+        """Return True if the device is no longer broadcasting."""
+        return not self.processor.available

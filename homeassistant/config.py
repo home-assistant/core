@@ -61,7 +61,7 @@ from .helpers import (
 )
 from .helpers.entity_values import EntityValues
 from .helpers.typing import ConfigType
-from .loader import Integration, IntegrationNotFound
+from .loader import ComponentProtocol, Integration, IntegrationNotFound
 from .requirements import RequirementsNotFound, async_get_integration_with_requirements
 from .util.package import is_docker_env
 from .util.unit_system import get_unit_system, validate_unit_system
@@ -96,7 +96,7 @@ default_config:
 frontend:
   themes: !include_dir_merge_named themes
 
-# Text to speech
+# Text-to-speech
 tts:
   - platform: google_translate
 
@@ -330,7 +330,7 @@ async def async_ensure_config_exists(hass: HomeAssistant) -> bool:
     if os.path.isfile(config_path):
         return True
 
-    print(
+    print(  # noqa: T201
         "Unable to find configuration. Creating default one in", hass.config.config_dir
     )
     return await async_create_default_config(hass)
@@ -384,7 +384,7 @@ def _write_default_config(config_dir: str) -> bool:
         return True
 
     except OSError:
-        print("Unable to create default configuration file", config_path)
+        print("Unable to create default configuration file", config_path)  # noqa: T201
         return False
 
 
@@ -681,7 +681,7 @@ def _log_pkg_error(package: str, component: str, config: dict, message: str) -> 
     _LOGGER.error(message)
 
 
-def _identify_config_schema(module: ModuleType) -> str | None:
+def _identify_config_schema(module: ComponentProtocol) -> str | None:
     """Extract the schema and identify list or dict based."""
     if not isinstance(module.CONFIG_SCHEMA, vol.Schema):
         return None
@@ -976,7 +976,7 @@ async def async_check_ha_config_file(hass: HomeAssistant) -> str | None:
 
     This method is a coroutine.
     """
-    # pylint: disable=import-outside-toplevel
+    # pylint: disable-next=import-outside-toplevel
     from .helpers import check_config
 
     res = await check_config.async_check_ha_config_file(hass)
@@ -994,7 +994,7 @@ def async_notify_setup_error(
 
     This method must be run in the event loop.
     """
-    # pylint: disable=import-outside-toplevel
+    # pylint: disable-next=import-outside-toplevel
     from .components import persistent_notification
 
     if (errors := hass.data.get(DATA_PERSISTENT_ERRORS)) is None:

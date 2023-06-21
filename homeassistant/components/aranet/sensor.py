@@ -1,7 +1,7 @@
 """Support for Aranet sensors."""
 from __future__ import annotations
 
-from typing import Optional, Union
+from dataclasses import dataclass
 
 from aranet4.client import Aranet4Advertisement
 from bleak.backends.device import BLEDevice
@@ -35,43 +35,54 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 
+
+@dataclass
+class AranetSensorEntityDescription(SensorEntityDescription):
+    """Class to describe an Aranet sensor entity."""
+
+    # PassiveBluetoothDataUpdate does not support UNDEFINED
+    # Restrict the type to satisfy the type checker and catch attempts
+    # to use UNDEFINED in the entity descriptions.
+    name: str | None = None
+
+
 SENSOR_DESCRIPTIONS = {
-    "temperature": SensorEntityDescription(
+    "temperature": AranetSensorEntityDescription(
         key="temperature",
         name="Temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    "humidity": SensorEntityDescription(
+    "humidity": AranetSensorEntityDescription(
         key="humidity",
         name="Humidity",
         device_class=SensorDeviceClass.HUMIDITY,
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    "pressure": SensorEntityDescription(
+    "pressure": AranetSensorEntityDescription(
         key="pressure",
         name="Pressure",
         device_class=SensorDeviceClass.PRESSURE,
         native_unit_of_measurement=UnitOfPressure.HPA,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    "co2": SensorEntityDescription(
+    "co2": AranetSensorEntityDescription(
         key="co2",
         name="Carbon Dioxide",
         device_class=SensorDeviceClass.CO2,
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    "battery": SensorEntityDescription(
+    "battery": AranetSensorEntityDescription(
         key="battery",
         name="Battery",
         device_class=SensorDeviceClass.BATTERY,
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    "interval": SensorEntityDescription(
+    "interval": AranetSensorEntityDescription(
         key="update_interval",
         name="Update Interval",
         device_class=SensorDeviceClass.DURATION,
@@ -145,9 +156,7 @@ async def async_setup_entry(
 
 
 class Aranet4BluetoothSensorEntity(
-    PassiveBluetoothProcessorEntity[
-        PassiveBluetoothDataProcessor[Optional[Union[float, int]]]
-    ],
+    PassiveBluetoothProcessorEntity[PassiveBluetoothDataProcessor[float | int | None]],
     SensorEntity,
 ):
     """Representation of an Aranet sensor."""

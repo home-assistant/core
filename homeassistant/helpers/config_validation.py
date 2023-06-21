@@ -59,6 +59,7 @@ from homeassistant.const import (
     CONF_PARALLEL,
     CONF_PLATFORM,
     CONF_REPEAT,
+    CONF_RESPONSE_VARIABLE,
     CONF_SCAN_INTERVAL,
     CONF_SCENE,
     CONF_SEQUENCE,
@@ -85,7 +86,13 @@ from homeassistant.const import (
     WEEKDAYS,
     UnitOfTemperature,
 )
-from homeassistant.core import split_entity_id, valid_entity_id
+from homeassistant.core import (
+    DOMAIN as HOMEASSISTANT_DOMAIN,
+    HomeAssistant,
+    async_get_hass,
+    split_entity_id,
+    valid_entity_id,
+)
 from homeassistant.exceptions import TemplateError
 from homeassistant.generated import currencies
 from homeassistant.generated.countries import COUNTRIES
@@ -303,7 +310,7 @@ def entity_id_or_uuid(value: Any) -> str:
 def _entity_ids(value: str | list, allow_uuid: bool) -> list[str]:
     """Help validate entity IDs or UUIDs."""
     if value is None:
-        raise vol.Invalid("Entity IDs can not be None")
+        raise vol.Invalid("Entity IDs cannot be None")
     if isinstance(value, str):
         value = [ent_id.strip() for ent_id in value.split(",")]
 
@@ -386,6 +393,8 @@ def icon(value: Any) -> str:
     raise vol.Invalid('Icons should be specified in the form "prefix:name"')
 
 
+_TIME_PERIOD_DICT_KEYS = ("days", "hours", "minutes", "seconds", "milliseconds")
+
 time_period_dict = vol.All(
     dict,
     vol.Schema(
@@ -397,7 +406,7 @@ time_period_dict = vol.All(
             "milliseconds": vol.Coerce(float),
         }
     ),
-    has_at_least_one_key("days", "hours", "minutes", "seconds", "milliseconds"),
+    has_at_least_one_key(*_TIME_PERIOD_DICT_KEYS),
     lambda value: timedelta(**value),
 )
 
@@ -537,7 +546,7 @@ def schema_with_slug_keys(
         if not isinstance(value, dict):
             raise vol.Invalid("expected dictionary")
 
-        for key in value.keys():
+        for key in value:
             slug_validator(key)
 
         return cast(dict, schema(value))
@@ -559,6 +568,10 @@ def string(value: Any) -> str:
     """Coerce value to string, except for None."""
     if value is None:
         raise vol.Invalid("string value is None")
+
+    # This is expected to be the most common case, so check it first.
+    if type(value) is str:  # pylint: disable=unidiomatic-typecheck
+        return value
 
     if isinstance(value, template_helper.ResultWrapper):
         value = value.render_result
@@ -595,7 +608,11 @@ def template(value: Any | None) -> template_helper.Template:
     if isinstance(value, (list, dict, template_helper.Template)):
         raise vol.Invalid("template value should be a string")
 
-    template_value = template_helper.Template(str(value))
+    hass: HomeAssistant | None = None
+    with contextlib.suppress(LookupError):
+        hass = async_get_hass()
+
+    template_value = template_helper.Template(str(value), hass)
 
     try:
         template_value.ensure_valid()
@@ -613,7 +630,12 @@ def dynamic_template(value: Any | None) -> template_helper.Template:
     if not template_helper.is_template_string(str(value)):
         raise vol.Invalid("template value does not contain a dynamic template")
 
-    template_value = template_helper.Template(str(value))
+    hass: HomeAssistant | None = None
+    with contextlib.suppress(LookupError):
+        hass = async_get_hass()
+
+    template_value = template_helper.Template(str(value), hass)
+
     try:
         template_value.ensure_valid()
         return template_value
@@ -639,8 +661,24 @@ def template_complex(value: Any) -> Any:
     return value
 
 
+def _positive_time_period_template_complex(value: Any) -> Any:
+    """Do basic validation of a positive time period expressed as a templated dict."""
+    if not isinstance(value, dict) or not value:
+        raise vol.Invalid("template should be a dict")
+    for key, element in value.items():
+        if not isinstance(key, str):
+            raise vol.Invalid("key should be a string")
+        if not template_helper.is_template_string(key):
+            vol.In(_TIME_PERIOD_DICT_KEYS)(key)
+        if not isinstance(element, str) or (
+            isinstance(element, str) and not template_helper.is_template_string(element)
+        ):
+            vol.All(vol.Coerce(float), vol.Range(min=0))(element)
+    return template_complex(value)
+
+
 positive_time_period_template = vol.Any(
-    positive_time_period, template, template_complex
+    positive_time_period, dynamic_template, _positive_time_period_template_complex
 )
 
 
@@ -830,7 +868,7 @@ def _deprecated_or_removed(
 
             logger_func(warning, *arguments)
             value = config[key]
-            if replacement_key:
+            if replacement_key or option_removed:
                 config.pop(key)
         else:
             value = default
@@ -1009,6 +1047,107 @@ def expand_condition_shorthand(value: Any | None) -> Any:
 
 
 # Schemas
+def empty_config_schema(domain: str) -> Callable[[dict], dict]:
+    """Return a config schema which logs if there are configuration parameters."""
+
+    module = inspect.getmodule(inspect.stack(context=0)[2].frame)
+    if module is not None:
+        module_name = module.__name__
+    else:
+        # If Python is unable to access the sources files, the call stack frame
+        # will be missing information, so let's guard.
+        # https://github.com/home-assistant/core/issues/24982
+        module_name = __name__
+    logger_func = logging.getLogger(module_name).error
+
+    def validator(config: dict) -> dict:
+        if domain in config and config[domain]:
+            logger_func(
+                (
+                    "The %s integration does not support any configuration parameters, "
+                    "got %s. Please remove the configuration parameters from your "
+                    "configuration."
+                ),
+                domain,
+                config[domain],
+            )
+        return config
+
+    return validator
+
+
+def _no_yaml_config_schema(
+    domain: str,
+    issue_base: str,
+    translation_key: str,
+    translation_placeholders: dict[str, str],
+) -> Callable[[dict], dict]:
+    """Return a config schema which logs if attempted to setup from YAML."""
+
+    module = inspect.getmodule(inspect.stack(context=0)[2].frame)
+    if module is not None:
+        module_name = module.__name__
+    else:
+        # If Python is unable to access the sources files, the call stack frame
+        # will be missing information, so let's guard.
+        # https://github.com/home-assistant/core/issues/24982
+        module_name = __name__
+    logger_func = logging.getLogger(module_name).error
+
+    def raise_issue() -> None:
+        # pylint: disable-next=import-outside-toplevel
+        from .issue_registry import IssueSeverity, async_create_issue
+
+        with contextlib.suppress(LookupError):
+            hass = async_get_hass()
+            async_create_issue(
+                hass,
+                HOMEASSISTANT_DOMAIN,
+                f"{issue_base}_{domain}",
+                is_fixable=False,
+                issue_domain=domain,
+                severity=IssueSeverity.ERROR,
+                translation_key=translation_key,
+                translation_placeholders={"domain": domain} | translation_placeholders,
+            )
+
+    def validator(config: dict) -> dict:
+        if domain in config:
+            logger_func(
+                (
+                    "The %s integration does not support YAML setup, please remove it "
+                    "from your configuration file"
+                ),
+                domain,
+            )
+            raise_issue()
+        return config
+
+    return validator
+
+
+def config_entry_only_config_schema(domain: str) -> Callable[[dict], dict]:
+    """Return a config schema which logs if attempted to setup from YAML."""
+
+    return _no_yaml_config_schema(
+        domain,
+        "config_entry_only",
+        "config_entry_only",
+        {"add_integration": f"/config/integrations/dashboard/add?domain={domain}"},
+    )
+
+
+def platform_only_config_schema(domain: str) -> Callable[[dict], dict]:
+    """Return a config schema which logs if attempted to setup from YAML."""
+
+    return _no_yaml_config_schema(
+        domain,
+        "platform_only",
+        "platform_only",
+        {},
+    )
+
+
 PLATFORM_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_PLATFORM): string,
@@ -1074,7 +1213,7 @@ def make_entity_service_schema(
 
 SCRIPT_VARIABLES_SCHEMA = vol.All(
     vol.Schema({str: template_complex}),
-    # pylint: disable=unnecessary-lambda
+    # pylint: disable-next=unnecessary-lambda
     lambda val: script_variables_helper.ScriptVariables(val),
 )
 
@@ -1127,6 +1266,7 @@ SERVICE_SCHEMA = vol.All(
             ),
             vol.Optional(CONF_ENTITY_ID): comp_entity_ids,
             vol.Optional(CONF_TARGET): vol.Any(TARGET_SERVICE_FIELDS, dynamic_template),
+            vol.Optional(CONF_RESPONSE_VARIABLE): str,
             # The frontend stores data here. Don't use in core.
             vol.Remove("metadata"): dict,
         }
@@ -1166,7 +1306,7 @@ STATE_CONDITION_BASE_SCHEMA = {
         vol.Lower, vol.Any(ENTITY_MATCH_ALL, ENTITY_MATCH_ANY)
     ),
     vol.Optional(CONF_ATTRIBUTE): str,
-    vol.Optional(CONF_FOR): positive_time_period,
+    vol.Optional(CONF_FOR): positive_time_period_template,
     # To support use_trigger_value in automation
     # Deprecated 2016/04/25
     vol.Optional("from"): str,
@@ -1267,7 +1407,7 @@ AND_CONDITION_SCHEMA = vol.Schema(
         vol.Required(CONF_CONDITION): "and",
         vol.Required(CONF_CONDITIONS): vol.All(
             ensure_list,
-            # pylint: disable=unnecessary-lambda
+            # pylint: disable-next=unnecessary-lambda
             [lambda value: CONDITION_SCHEMA(value)],
         ),
     }
@@ -1278,7 +1418,7 @@ AND_CONDITION_SHORTHAND_SCHEMA = vol.Schema(
         **CONDITION_BASE_SCHEMA,
         vol.Required("and"): vol.All(
             ensure_list,
-            # pylint: disable=unnecessary-lambda
+            # pylint: disable-next=unnecessary-lambda
             [lambda value: CONDITION_SCHEMA(value)],
         ),
     }
@@ -1290,7 +1430,7 @@ OR_CONDITION_SCHEMA = vol.Schema(
         vol.Required(CONF_CONDITION): "or",
         vol.Required(CONF_CONDITIONS): vol.All(
             ensure_list,
-            # pylint: disable=unnecessary-lambda
+            # pylint: disable-next=unnecessary-lambda
             [lambda value: CONDITION_SCHEMA(value)],
         ),
     }
@@ -1301,7 +1441,7 @@ OR_CONDITION_SHORTHAND_SCHEMA = vol.Schema(
         **CONDITION_BASE_SCHEMA,
         vol.Required("or"): vol.All(
             ensure_list,
-            # pylint: disable=unnecessary-lambda
+            # pylint: disable-next=unnecessary-lambda
             [lambda value: CONDITION_SCHEMA(value)],
         ),
     }
@@ -1313,7 +1453,7 @@ NOT_CONDITION_SCHEMA = vol.Schema(
         vol.Required(CONF_CONDITION): "not",
         vol.Required(CONF_CONDITIONS): vol.All(
             ensure_list,
-            # pylint: disable=unnecessary-lambda
+            # pylint: disable-next=unnecessary-lambda
             [lambda value: CONDITION_SCHEMA(value)],
         ),
     }
@@ -1324,7 +1464,7 @@ NOT_CONDITION_SHORTHAND_SCHEMA = vol.Schema(
         **CONDITION_BASE_SCHEMA,
         vol.Required("not"): vol.All(
             ensure_list,
-            # pylint: disable=unnecessary-lambda
+            # pylint: disable-next=unnecessary-lambda
             [lambda value: CONDITION_SCHEMA(value)],
         ),
     }
@@ -1356,7 +1496,7 @@ CONDITION_SHORTHAND_SCHEMA = vol.Schema(
         **CONDITION_BASE_SCHEMA,
         vol.Required(CONF_CONDITION): vol.All(
             ensure_list,
-            # pylint: disable=unnecessary-lambda
+            # pylint: disable-next=unnecessary-lambda
             [lambda value: CONDITION_SCHEMA(value)],
         ),
     }

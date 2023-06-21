@@ -7,5 +7,22 @@
     "action_type": {
       "press": "Press {entity_name} button"
     }
+  },
+  "entity_component": {
+    "_": {
+      "name": "[%key:component::button::title%]"
+    },
+    "restart": {
+      "name": "Restart"
+    },
+    "update": {
+      "name": "Update"
+    }
+  },
+  "issues": {
+    "platform_integration_no_support": {
+      "title": "[%key:common::issues::platform_integration_no_support_title%]",
+      "description": "[%key:common::issues::platform_integration_no_support_description%]"
+    }
   }
 }

@@ -141,13 +141,13 @@ class FakeHarmonyClient:
         self._callbacks.disconnect(None)
 
 
-@pytest.fixture()
+@pytest.fixture
 def harmony_client():
     """Create the FakeHarmonyClient instance."""
     return FakeHarmonyClient()
 
 
-@pytest.fixture()
+@pytest.fixture
 def mock_hc(harmony_client):
     """Patch the real HarmonyClient with initialization side effect."""
 
@@ -158,7 +158,7 @@ def mock_hc(harmony_client):
         yield fake
 
 
-@pytest.fixture()
+@pytest.fixture
 def mock_write_config():
     """Patches write_config_file to remove side effects."""
     with patch(

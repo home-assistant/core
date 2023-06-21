@@ -5,7 +5,6 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
-from typing import cast
 
 from yalexs.activity import (
     ACTION_DOORBELL_CALL_MISSED,
@@ -13,8 +12,8 @@ from yalexs.activity import (
     Activity,
     ActivityType,
 )
-from yalexs.doorbell import DoorbellDetail
-from yalexs.lock import LockDoorStatus
+from yalexs.doorbell import Doorbell, DoorbellDetail
+from yalexs.lock import Lock, LockDoorStatus
 from yalexs.util import update_lock_detail_from_activity
 
 from homeassistant.components.binary_sensor import (
@@ -23,8 +22,8 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_call_later
 
@@ -50,6 +49,7 @@ def _retrieve_online_state(data: AugustData, detail: DoorbellDetail) -> bool:
 
 
 def _retrieve_motion_state(data: AugustData, detail: DoorbellDetail) -> bool:
+    assert data.activity_stream is not None
     latest = data.activity_stream.get_latest_device_activity(
         detail.device_id, {ActivityType.DOORBELL_MOTION}
     )
@@ -61,6 +61,7 @@ def _retrieve_motion_state(data: AugustData, detail: DoorbellDetail) -> bool:
 
 
 def _retrieve_image_capture_state(data: AugustData, detail: DoorbellDetail) -> bool:
+    assert data.activity_stream is not None
     latest = data.activity_stream.get_latest_device_activity(
         detail.device_id, {ActivityType.DOORBELL_IMAGE_CAPTURE}
     )
@@ -72,6 +73,7 @@ def _retrieve_image_capture_state(data: AugustData, detail: DoorbellDetail) -> b
 
 
 def _retrieve_ding_state(data: AugustData, detail: DoorbellDetail) -> bool:
+    assert data.activity_stream is not None
     latest = data.activity_stream.get_latest_device_activity(
         detail.device_id, {ActivityType.DOORBELL_DING}
     )
@@ -101,7 +103,16 @@ def _native_datetime() -> datetime:
 
 
 @dataclass
-class AugustRequiredKeysMixin:
+class AugustBinarySensorEntityDescription(BinarySensorEntityDescription):
+    """Describes August binary_sensor entity."""
+
+    # AugustBinarySensor does not support UNDEFINED or None,
+    # restrict the type to str.
+    name: str = ""
+
+
+@dataclass
+class AugustDoorbellRequiredKeysMixin:
     """Mixin for required keys."""
 
     value_fn: Callable[[AugustData, DoorbellDetail], bool]
@@ -109,41 +120,45 @@ class AugustRequiredKeysMixin:
 
 
 @dataclass
-class AugustBinarySensorEntityDescription(
-    BinarySensorEntityDescription, AugustRequiredKeysMixin
+class AugustDoorbellBinarySensorEntityDescription(
+    BinarySensorEntityDescription, AugustDoorbellRequiredKeysMixin
 ):
     """Describes August binary_sensor entity."""
 
+    # AugustDoorbellBinarySensor does not support UNDEFINED or None,
+    # restrict the type to str.
+    name: str = ""
 
-SENSOR_TYPE_DOOR = BinarySensorEntityDescription(
+
+SENSOR_TYPE_DOOR = AugustBinarySensorEntityDescription(
     key="door_open",
     name="Open",
 )
 
 
-SENSOR_TYPES_DOORBELL: tuple[AugustBinarySensorEntityDescription, ...] = (
-    AugustBinarySensorEntityDescription(
+SENSOR_TYPES_DOORBELL: tuple[AugustDoorbellBinarySensorEntityDescription, ...] = (
+    AugustDoorbellBinarySensorEntityDescription(
         key="doorbell_ding",
         name="Ding",
         device_class=BinarySensorDeviceClass.OCCUPANCY,
         value_fn=_retrieve_ding_state,
         is_time_based=True,
     ),
-    AugustBinarySensorEntityDescription(
+    AugustDoorbellBinarySensorEntityDescription(
         key="doorbell_motion",
         name="Motion",
         device_class=BinarySensorDeviceClass.MOTION,
         value_fn=_retrieve_motion_state,
         is_time_based=True,
     ),
-    AugustBinarySensorEntityDescription(
+    AugustDoorbellBinarySensorEntityDescription(
         key="doorbell_image_capture",
         name="Image Capture",
         icon="mdi:file-image",
         value_fn=_retrieve_image_capture_state,
         is_time_based=True,
     ),
-    AugustBinarySensorEntityDescription(
+    AugustDoorbellBinarySensorEntityDescription(
         key="doorbell_online",
         name="Online",
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
@@ -195,21 +210,24 @@ class AugustDoorBinarySensor(AugustEntityMixin, BinarySensorEntity):
 
     _attr_device_class = BinarySensorDeviceClass.DOOR
 
-    def __init__(self, data, device, description: BinarySensorEntityDescription):
+    def __init__(
+        self,
+        data: AugustData,
+        device: Lock,
+        description: AugustBinarySensorEntityDescription,
+    ) -> None:
         """Initialize the sensor."""
         super().__init__(data, device)
         self.entity_description = description
         self._data = data
         self._device = device
         self._attr_name = f"{device.device_name} {description.name}"
-        self._attr_unique_id = (
-            f"{self._device_id}_{cast(str, description.name).lower()}"
-        )
-        self._update_from_data()
+        self._attr_unique_id = f"{self._device_id}_{description.name.lower()}"
 
     @callback
     def _update_from_data(self):
         """Get the latest state of the sensor and update activity."""
+        assert self._data.activity_stream is not None
         door_activity = self._data.activity_stream.get_latest_device_activity(
             self._device_id, {ActivityType.DOOR_OPERATION}
         )
@@ -229,23 +247,30 @@ class AugustDoorBinarySensor(AugustEntityMixin, BinarySensorEntity):
         self._attr_available = self._detail.bridge_is_online
         self._attr_is_on = self._detail.door_state == LockDoorStatus.OPEN
 
+    async def async_added_to_hass(self) -> None:
+        """Set the initial state when adding to hass."""
+        self._update_from_data()
+        await super().async_added_to_hass()
+
 
 class AugustDoorbellBinarySensor(AugustEntityMixin, BinarySensorEntity):
     """Representation of an August binary sensor."""
 
-    entity_description: AugustBinarySensorEntityDescription
+    entity_description: AugustDoorbellBinarySensorEntityDescription
 
-    def __init__(self, data, device, description: AugustBinarySensorEntityDescription):
+    def __init__(
+        self,
+        data: AugustData,
+        device: Doorbell,
+        description: AugustDoorbellBinarySensorEntityDescription,
+    ) -> None:
         """Initialize the sensor."""
         super().__init__(data, device)
         self.entity_description = description
         self._check_for_off_update_listener = None
         self._data = data
         self._attr_name = f"{device.device_name} {description.name}"
-        self._attr_unique_id = (
-            f"{self._device_id}_{cast(str, description.name).lower()}"
-        )
-        self._update_from_data()
+        self._attr_unique_id = f"{self._device_id}_{description.name.lower()}"
 
     @callback
     def _update_from_data(self):
@@ -261,14 +286,8 @@ class AugustDoorbellBinarySensor(AugustEntityMixin, BinarySensorEntity):
 
     def _schedule_update_to_recheck_turn_off_sensor(self):
         """Schedule an update to recheck the sensor to see if it is ready to turn off."""
-
         # If the sensor is already off there is nothing to do
         if not self.is_on:
-            return
-
-        # self.hass is only available after setup is completed
-        # and we will recheck in async_added_to_hass
-        if not self.hass:
             return
 
         @callback
@@ -293,5 +312,10 @@ class AugustDoorbellBinarySensor(AugustEntityMixin, BinarySensorEntity):
 
     async def async_added_to_hass(self) -> None:
         """Call the mixin to subscribe and setup an async_track_point_in_utc_time to turn off the sensor if needed."""
-        self._schedule_update_to_recheck_turn_off_sensor()
+        self._update_from_data()
         await super().async_added_to_hass()
+
+    async def async_will_remove_from_hass(self) -> None:
+        """When removing cancel any scheduled updates."""
+        self._cancel_any_pending_updates()
+        await super().async_will_remove_from_hass()

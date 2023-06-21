@@ -8,13 +8,9 @@ from energyflip.const import (
     SOURCE_TYPE_GAS,
 )
 
-from homeassistant.const import UnitOfTime, UnitOfVolume
-
 DATA_COORDINATOR = "coordinator"
 
 DOMAIN = "huisbaasje"
-
-FLOW_CUBIC_METERS_PER_HOUR = f"{UnitOfVolume.CUBIC_METERS}/{UnitOfTime.HOURS}"
 
 """Interval in seconds between polls to huisbaasje."""
 POLLING_INTERVAL = 20

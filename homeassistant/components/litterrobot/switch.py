@@ -3,14 +3,14 @@ from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-from typing import Any, Generic, Union
+from typing import Any, Generic
 
 from pylitterbot import FeederRobot, LitterRobot
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
@@ -34,13 +34,13 @@ class RobotSwitchEntityDescription(SwitchEntityDescription, RequiredKeysMixin[_R
 
 
 ROBOT_SWITCHES = [
-    RobotSwitchEntityDescription[Union[LitterRobot, FeederRobot]](
+    RobotSwitchEntityDescription[LitterRobot | FeederRobot](
         key="night_light_mode_enabled",
         name="Night light mode",
         icons=("mdi:lightbulb-on", "mdi:lightbulb-off"),
         set_fn=lambda robot, value: robot.set_night_light(value),
     ),
-    RobotSwitchEntityDescription[Union[LitterRobot, FeederRobot]](
+    RobotSwitchEntityDescription[LitterRobot | FeederRobot](
         key="panel_lock_enabled",
         name="Panel lockout",
         icons=("mdi:lock", "mdi:lock-open"),

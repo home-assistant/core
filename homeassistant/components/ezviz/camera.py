@@ -20,7 +20,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import (
     config_validation as cv,
     discovery_flow,
-    entity_platform,
+    issue_registry as ir,
+)
+from homeassistant.helpers.entity_platform import (
+    AddEntitiesCallback,
+    async_get_current_platform,
 )
 
 from .const import (
@@ -34,7 +38,6 @@ from .const import (
     DATA_COORDINATOR,
     DEFAULT_CAMERA_USERNAME,
     DEFAULT_FFMPEG_ARGUMENTS,
-    DEFAULT_RTSP_PORT,
     DIR_DOWN,
     DIR_LEFT,
     DIR_RIGHT,
@@ -53,9 +56,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
-    hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: entity_platform.AddEntitiesCallback,
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up EZVIZ cameras based on a config entry."""
 
@@ -66,37 +67,27 @@ async def async_setup_entry(
     camera_entities = []
 
     for camera, value in coordinator.data.items():
-
         camera_rtsp_entry = [
             item
             for item in hass.config_entries.async_entries(DOMAIN)
             if item.unique_id == camera and item.source != SOURCE_IGNORE
         ]
 
-        # There seem to be a bug related to localRtspPort in EZVIZ API.
-        local_rtsp_port = (
-            value["local_rtsp_port"]
-            if value["local_rtsp_port"] != 0
-            else DEFAULT_RTSP_PORT
-        )
-
         if camera_rtsp_entry:
-
             ffmpeg_arguments = camera_rtsp_entry[0].options[CONF_FFMPEG_ARGUMENTS]
             camera_username = camera_rtsp_entry[0].data[CONF_USERNAME]
             camera_password = camera_rtsp_entry[0].data[CONF_PASSWORD]
 
-            camera_rtsp_stream = f"rtsp://{camera_username}:{camera_password}@{value['local_ip']}:{local_rtsp_port}{ffmpeg_arguments}"
+            camera_rtsp_stream = f"rtsp://{camera_username}:{camera_password}@{value['local_ip']}:{value['local_rtsp_port']}{ffmpeg_arguments}"
             _LOGGER.debug(
                 "Configuring Camera %s with ip: %s rtsp port: %s ffmpeg arguments: %s",
                 camera,
                 value["local_ip"],
-                local_rtsp_port,
+                value["local_rtsp_port"],
                 ffmpeg_arguments,
             )
 
         else:
-
             discovery_flow.async_create_flow(
                 hass,
                 DOMAIN,
@@ -128,14 +119,14 @@ async def async_setup_entry(
                 camera_username,
                 camera_password,
                 camera_rtsp_stream,
-                local_rtsp_port,
+                value["local_rtsp_port"],
                 ffmpeg_arguments,
             )
         )
 
     async_add_entities(camera_entities)
 
-    platform = entity_platform.async_get_current_platform()
+    platform = async_get_current_platform()
 
     platform.async_register_entity_service(
         SERVICE_PTZ,
@@ -316,3 +307,13 @@ class EzvizCamera(EzvizEntity, Camera):
             )
         except (HTTPError, PyEzvizError) as err:
             raise PyEzvizError("Cannot set detection sensitivity level") from err
+
+        ir.async_create_issue(
+            self.hass,
+            DOMAIN,
+            "service_depreciation_detection_sensibility",
+            breaks_in_ha_version="2023.8.0",
+            is_fixable=False,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="service_depreciation_detection_sensibility",
+        )

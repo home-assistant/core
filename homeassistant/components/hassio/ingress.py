@@ -3,20 +3,22 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Iterable
+from functools import lru_cache
 from ipaddress import ip_address
 import logging
-import os
+from urllib.parse import quote
 
 import aiohttp
 from aiohttp import ClientTimeout, hdrs, web
 from aiohttp.web_exceptions import HTTPBadGateway, HTTPBadRequest
 from multidict import CIMultiDict
+from yarl import URL
 
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import X_AUTH_TOKEN, X_INGRESS_PATH
+from .const import X_HASS_SOURCE, X_INGRESS_PATH
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -42,9 +44,19 @@ class HassIOIngress(HomeAssistantView):
         self._host = host
         self._websession = websession
 
+    @lru_cache
     def _create_url(self, token: str, path: str) -> str:
         """Create URL to service."""
-        return f"http://{self._host}/ingress/{token}/{path}"
+        base_path = f"/ingress/{token}/"
+        url = f"http://{self._host}{base_path}{quote(path)}"
+
+        try:
+            if not URL(url).path.startswith(base_path):
+                raise HTTPBadRequest()
+        except ValueError as err:
+            raise HTTPBadRequest() from err
+
+        return url
 
     async def _handle(
         self, request: web.Request, token: str, path: str
@@ -107,8 +119,8 @@ class HassIOIngress(HomeAssistantView):
             # Proxy requests
             await asyncio.wait(
                 [
-                    _websocket_forward(ws_server, ws_client),
-                    _websocket_forward(ws_client, ws_server),
+                    asyncio.create_task(_websocket_forward(ws_server, ws_client)),
+                    asyncio.create_task(_websocket_forward(ws_client, ws_server)),
                 ],
                 return_when=asyncio.FIRST_COMPLETED,
             )
@@ -185,10 +197,8 @@ def _init_header(request: web.Request, token: str) -> CIMultiDict | dict[str, st
             continue
         headers[name] = value
 
-    # Inject token / cleanup later on Supervisor
-    headers[X_AUTH_TOKEN] = os.environ.get("SUPERVISOR_TOKEN", "")
-
     # Ingress information
+    headers[X_HASS_SOURCE] = "core.ingress"
     headers[X_INGRESS_PATH] = f"/api/hassio_ingress/{token}"
 
     # Set X-Forwarded-For

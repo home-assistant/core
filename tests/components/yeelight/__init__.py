@@ -32,8 +32,10 @@ CAPABILITIES = {
     "model": MODEL,
     "fw_ver": FW_VER,
     "location": f"yeelight://{IP_ADDRESS}",
-    "support": "get_prop set_default set_power toggle set_bright start_cf stop_cf"
-    " set_scene cron_add cron_get cron_del set_ct_abx set_rgb",
+    "support": (
+        "get_prop set_default set_power toggle set_bright start_cf stop_cf"
+        " set_scene cron_add cron_get cron_del set_ct_abx set_rgb"
+    ),
     "name": "",
 }
 

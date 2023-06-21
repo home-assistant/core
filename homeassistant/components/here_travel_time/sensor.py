@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from datetime import timedelta
-from typing import Any, Union
+from typing import Any
 
 from homeassistant.components.sensor import (
     RestoreSensor,
@@ -104,7 +104,7 @@ async def async_setup_entry(
 
 class HERETravelTimeSensor(
     CoordinatorEntity[
-        Union[HERERoutingDataUpdateCoordinator, HERETransitDataUpdateCoordinator]
+        HERERoutingDataUpdateCoordinator | HERETransitDataUpdateCoordinator
     ],
     RestoreSensor,
 ):

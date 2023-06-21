@@ -208,7 +208,7 @@ class HueLight(HueBaseEntity, LightEntity):
 
         if flash is not None:
             await self.async_set_flash(flash)
-            # flash can not be sent with other commands at the same time or result will be flaky
+            # flash cannot be sent with other commands at the same time or result will be flaky
             # Hue's default behavior is that a light returns to its previous state for short
             # flash (identify) and the light is kept turned on for long flash (breathe effect)
             # Why is this flash alert/effect hidden in the turn_on/off commands ?
@@ -232,7 +232,7 @@ class HueLight(HueBaseEntity, LightEntity):
 
         if flash is not None:
             await self.async_set_flash(flash)
-            # flash can not be sent with other commands at the same time or result will be flaky
+            # flash cannot be sent with other commands at the same time or result will be flaky
             # Hue's default behavior is that a light returns to its previous state for short
             # flash (identify) and the light is kept turned on for long flash (breathe effect)
             return

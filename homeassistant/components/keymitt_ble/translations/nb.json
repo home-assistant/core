@@ -1,9 +1,0 @@
-{
-    "config": {
-        "abort": {
-            "already_configured_device": "Enheten er allerede konfigurert",
-            "cannot_connect": "Tilkobling mislyktes",
-            "unknown": "Uventet feil"
-        }
-    }
-}

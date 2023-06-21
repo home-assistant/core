@@ -1,6 +1,4 @@
 """The tests for the Google speech platform."""
-import os
-import shutil
 from unittest.mock import patch
 
 from gtts import gTTSError
@@ -13,11 +11,22 @@ from homeassistant.components.media_player import (
     SERVICE_PLAY_MEDIA,
 )
 from homeassistant.config import async_process_ha_core_config
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 
 from tests.common import async_mock_service
-from tests.components.tts.conftest import mutagen_mock  # noqa: F401
+
+
+@pytest.fixture(autouse=True)
+def tts_mutagen_mock_fixture_autouse(tts_mutagen_mock):
+    """Mock writing tags."""
+
+
+@pytest.fixture(autouse=True)
+def mock_tts_cache_dir_autouse(mock_tts_cache_dir):
+    """Mock the TTS cache dir with empty dir."""
+    return mock_tts_cache_dir
 
 
 async def get_media_source_url(hass, media_content_id):
@@ -27,15 +36,6 @@ async def get_media_source_url(hass, media_content_id):
 
     resolved = await media_source.async_resolve_media(hass, media_content_id, None)
     return resolved.url
-
-
-@pytest.fixture(autouse=True)
-def cleanup_cache(hass):
-    """Clean up TTS cache."""
-    yield
-    default_tts = hass.config.path(tts.DEFAULT_CACHE_DIR)
-    if os.path.isdir(default_tts):
-        shutil.rmtree(default_tts)
 
 
 @pytest.fixture
@@ -59,7 +59,7 @@ def mock_gtts():
         yield mock_gtts
 
 
-async def test_service_say(hass, mock_gtts, calls):
+async def test_service_say(hass: HomeAssistant, mock_gtts, calls) -> None:
     """Test service call say."""
 
     await async_setup_component(
@@ -88,7 +88,7 @@ async def test_service_say(hass, mock_gtts, calls):
     }
 
 
-async def test_service_say_german_config(hass, mock_gtts, calls):
+async def test_service_say_german_config(hass: HomeAssistant, mock_gtts, calls) -> None:
     """Test service call say with german code in the config."""
 
     await async_setup_component(
@@ -117,7 +117,9 @@ async def test_service_say_german_config(hass, mock_gtts, calls):
     }
 
 
-async def test_service_say_german_service(hass, mock_gtts, calls):
+async def test_service_say_german_service(
+    hass: HomeAssistant, mock_gtts, calls
+) -> None:
     """Test service call say with german code in the service."""
 
     config = {
@@ -147,7 +149,7 @@ async def test_service_say_german_service(hass, mock_gtts, calls):
     }
 
 
-async def test_service_say_en_uk_config(hass, mock_gtts, calls):
+async def test_service_say_en_uk_config(hass: HomeAssistant, mock_gtts, calls) -> None:
     """Test service call say with en-uk code in the config."""
 
     await async_setup_component(
@@ -176,7 +178,7 @@ async def test_service_say_en_uk_config(hass, mock_gtts, calls):
     }
 
 
-async def test_service_say_en_uk_service(hass, mock_gtts, calls):
+async def test_service_say_en_uk_service(hass: HomeAssistant, mock_gtts, calls) -> None:
     """Test service call say with en-uk code in the config."""
 
     await async_setup_component(
@@ -206,7 +208,7 @@ async def test_service_say_en_uk_service(hass, mock_gtts, calls):
     }
 
 
-async def test_service_say_en_couk(hass, mock_gtts, calls):
+async def test_service_say_en_couk(hass: HomeAssistant, mock_gtts, calls) -> None:
     """Test service call say in co.uk tld accent."""
 
     await async_setup_component(
@@ -236,7 +238,7 @@ async def test_service_say_en_couk(hass, mock_gtts, calls):
     }
 
 
-async def test_service_say_error(hass, mock_gtts, calls):
+async def test_service_say_error(hass: HomeAssistant, mock_gtts, calls) -> None:
     """Test service call say with http response 400."""
     mock_gtts.return_value.write_to_fp.side_effect = gTTSError
     await async_setup_component(

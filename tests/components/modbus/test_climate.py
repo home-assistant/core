@@ -33,7 +33,7 @@ from homeassistant.const import (
     CONF_SLAVE,
     STATE_UNAVAILABLE,
 )
-from homeassistant.core import State
+from homeassistant.core import HomeAssistant, State
 from homeassistant.setup import async_setup_component
 
 from .conftest import TEST_ENTITY_NAME, ReadResult, do_next_cycle
@@ -103,7 +103,7 @@ ENTITY_ID = f"{CLIMATE_DOMAIN}.{TEST_ENTITY_NAME}".replace(" ", "_")
         },
     ],
 )
-async def test_config_climate(hass, mock_modbus):
+async def test_config_climate(hass: HomeAssistant, mock_modbus) -> None:
     """Run configuration test for climate."""
     assert CLIMATE_DOMAIN in hass.config.components
 
@@ -134,7 +134,7 @@ async def test_config_climate(hass, mock_modbus):
         },
     ],
 )
-async def test_config_hvac_mode_register(hass, mock_modbus):
+async def test_config_hvac_mode_register(hass: HomeAssistant, mock_modbus) -> None:
     """Run configuration test for mode register."""
     state = hass.states.get(ENTITY_ID)
     assert HVACMode.OFF in state.attributes[ATTR_HVAC_MODES]
@@ -161,7 +161,7 @@ async def test_config_hvac_mode_register(hass, mock_modbus):
         },
     ],
 )
-async def test_config_hvac_onoff_register(hass, mock_modbus):
+async def test_config_hvac_onoff_register(hass: HomeAssistant, mock_modbus) -> None:
     """Run configuration test for On/Off register."""
     state = hass.states.get(ENTITY_ID)
     assert HVACMode.OFF in state.attributes[ATTR_HVAC_MODES]
@@ -185,7 +185,7 @@ async def test_config_hvac_onoff_register(hass, mock_modbus):
     ],
 )
 @pytest.mark.parametrize(
-    "register_words,expected",
+    ("register_words", "expected"),
     [
         (
             [0x00, 0x00],
@@ -193,13 +193,15 @@ async def test_config_hvac_onoff_register(hass, mock_modbus):
         ),
     ],
 )
-async def test_temperature_climate(hass, expected, mock_do_cycle):
+async def test_temperature_climate(
+    hass: HomeAssistant, expected, mock_do_cycle
+) -> None:
     """Run test for given config."""
     assert hass.states.get(ENTITY_ID).state == expected
 
 
 @pytest.mark.parametrize(
-    "do_config,result,register_words",
+    ("do_config", "result", "register_words"),
     [
         (
             {
@@ -277,8 +279,8 @@ async def test_temperature_climate(hass, expected, mock_do_cycle):
     ],
 )
 async def test_service_climate_update(
-    hass, mock_modbus, mock_ha, result, register_words
-):
+    hass: HomeAssistant, mock_modbus, mock_ha, result, register_words
+) -> None:
     """Run test for service homeassistant.update_entity."""
     mock_modbus.read_holding_registers.return_value = ReadResult(register_words)
     await hass.services.async_call(
@@ -289,7 +291,7 @@ async def test_service_climate_update(
 
 
 @pytest.mark.parametrize(
-    "temperature, result, do_config",
+    ("temperature", "result", "do_config"),
     [
         (
             35,
@@ -354,8 +356,8 @@ async def test_service_climate_update(
     ],
 )
 async def test_service_climate_set_temperature(
-    hass, temperature, result, mock_modbus, mock_ha
-):
+    hass: HomeAssistant, temperature, result, mock_modbus, mock_ha
+) -> None:
     """Test set_temperature."""
     mock_modbus.read_holding_registers.return_value = ReadResult(result)
     await hass.services.async_call(
@@ -370,7 +372,7 @@ async def test_service_climate_set_temperature(
 
 
 @pytest.mark.parametrize(
-    "hvac_mode, result, do_config",
+    ("hvac_mode", "result", "do_config"),
     [
         (
             HVACMode.COOL,
@@ -417,7 +419,9 @@ async def test_service_climate_set_temperature(
         ),
     ],
 )
-async def test_service_set_mode(hass, hvac_mode, result, mock_modbus, mock_ha):
+async def test_service_set_mode(
+    hass: HomeAssistant, hvac_mode, result, mock_modbus, mock_ha
+) -> None:
     """Test set mode."""
     mock_modbus.read_holding_registers.return_value = ReadResult(result)
     await hass.services.async_call(
@@ -455,7 +459,9 @@ test_value.attributes = {ATTR_TEMPERATURE: 37}
         },
     ],
 )
-async def test_restore_state_climate(hass, mock_test_state, mock_modbus):
+async def test_restore_state_climate(
+    hass: HomeAssistant, mock_test_state, mock_modbus
+) -> None:
     """Run test for sensor restore state."""
     state = hass.states.get(ENTITY_ID)
     assert state.state == HVACMode.AUTO
@@ -479,7 +485,7 @@ async def test_restore_state_climate(hass, mock_test_state, mock_modbus):
     ],
 )
 @pytest.mark.parametrize(
-    "register_words,do_exception,start_expect,end_expect",
+    ("register_words", "do_exception", "start_expect", "end_expect"),
     [
         (
             [0x8000],
@@ -489,7 +495,9 @@ async def test_restore_state_climate(hass, mock_test_state, mock_modbus):
         ),
     ],
 )
-async def test_lazy_error_climate(hass, mock_do_cycle, start_expect, end_expect):
+async def test_lazy_error_climate(
+    hass: HomeAssistant, mock_do_cycle, start_expect, end_expect
+) -> None:
     """Run test for sensor."""
     hass.states.async_set(ENTITY_ID, 17)
     await hass.async_block_till_done()
@@ -517,7 +525,7 @@ async def test_lazy_error_climate(hass, mock_do_cycle, start_expect, end_expect)
     ],
 )
 @pytest.mark.parametrize(
-    "config_addon,register_words",
+    ("config_addon", "register_words"),
     [
         (
             {
@@ -533,12 +541,14 @@ async def test_lazy_error_climate(hass, mock_do_cycle, start_expect, end_expect)
         ),
     ],
 )
-async def test_wrong_unpack_climate(hass, mock_do_cycle):
+async def test_wrong_unpack_climate(hass: HomeAssistant, mock_do_cycle) -> None:
     """Run test for sensor."""
     assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
 
 
-async def test_no_discovery_info_climate(hass, caplog):
+async def test_no_discovery_info_climate(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test setup without discovery info."""
     assert CLIMATE_DOMAIN not in hass.config.components
     assert await async_setup_component(

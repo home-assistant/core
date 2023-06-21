@@ -17,12 +17,12 @@ from homeassistant.core import HomeAssistant
 
 from .utils import MockUFPFixture, init_entry
 
-from tests.test_util.aiohttp import mock_aiohttp_client
+from tests.typing import ClientSessionGenerator
 
 
 async def test_thumbnail_bad_nvr_id(
     hass: HomeAssistant,
-    hass_client: mock_aiohttp_client,
+    hass_client: ClientSessionGenerator,
     ufp: MockUFPFixture,
     camera: Camera,
 ) -> None:
@@ -40,10 +40,10 @@ async def test_thumbnail_bad_nvr_id(
     ufp.api.get_event_thumbnail.assert_not_called
 
 
-@pytest.mark.parametrize("width,height", [("test", None), (None, "test")])
+@pytest.mark.parametrize(("width", "height"), [("test", None), (None, "test")])
 async def test_thumbnail_bad_params(
     hass: HomeAssistant,
-    hass_client: mock_aiohttp_client,
+    hass_client: ClientSessionGenerator,
     ufp: MockUFPFixture,
     camera: Camera,
     width: Any,
@@ -67,7 +67,7 @@ async def test_thumbnail_bad_params(
 
 async def test_thumbnail_bad_event(
     hass: HomeAssistant,
-    hass_client: mock_aiohttp_client,
+    hass_client: ClientSessionGenerator,
     ufp: MockUFPFixture,
     camera: Camera,
 ) -> None:
@@ -87,7 +87,7 @@ async def test_thumbnail_bad_event(
 
 async def test_thumbnail_no_data(
     hass: HomeAssistant,
-    hass_client: mock_aiohttp_client,
+    hass_client: ClientSessionGenerator,
     ufp: MockUFPFixture,
     camera: Camera,
 ) -> None:
@@ -107,7 +107,7 @@ async def test_thumbnail_no_data(
 
 async def test_thumbnail(
     hass: HomeAssistant,
-    hass_client: mock_aiohttp_client,
+    hass_client: ClientSessionGenerator,
     ufp: MockUFPFixture,
     camera: Camera,
 ) -> None:
@@ -129,7 +129,7 @@ async def test_thumbnail(
 
 async def test_thumbnail_entry_id(
     hass: HomeAssistant,
-    hass_client: mock_aiohttp_client,
+    hass_client: ClientSessionGenerator,
     ufp: MockUFPFixture,
     camera: Camera,
 ) -> None:
@@ -230,7 +230,7 @@ async def test_video_bad_perms(
 
 async def test_video_bad_nvr_id(
     hass: HomeAssistant,
-    hass_client: mock_aiohttp_client,
+    hass_client: ClientSessionGenerator,
     ufp: MockUFPFixture,
     camera: Camera,
     fixed_now: datetime,
@@ -264,7 +264,7 @@ async def test_video_bad_nvr_id(
 
 async def test_video_bad_camera_id(
     hass: HomeAssistant,
-    hass_client: mock_aiohttp_client,
+    hass_client: ClientSessionGenerator,
     ufp: MockUFPFixture,
     camera: Camera,
     fixed_now: datetime,
@@ -298,7 +298,7 @@ async def test_video_bad_camera_id(
 
 async def test_video_bad_camera_perms(
     hass: HomeAssistant,
-    hass_client: mock_aiohttp_client,
+    hass_client: ClientSessionGenerator,
     ufp: MockUFPFixture,
     camera: Camera,
     fixed_now: datetime,
@@ -332,10 +332,10 @@ async def test_video_bad_camera_perms(
     ufp.api.request.assert_not_called
 
 
-@pytest.mark.parametrize("start,end", [("test", None), (None, "test")])
+@pytest.mark.parametrize(("start", "end"), [("test", None), (None, "test")])
 async def test_video_bad_params(
     hass: HomeAssistant,
-    hass_client: mock_aiohttp_client,
+    hass_client: ClientSessionGenerator,
     ufp: MockUFPFixture,
     camera: Camera,
     fixed_now: datetime,
@@ -374,7 +374,7 @@ async def test_video_bad_params(
 
 async def test_video_bad_video(
     hass: HomeAssistant,
-    hass_client: mock_aiohttp_client,
+    hass_client: ClientSessionGenerator,
     ufp: MockUFPFixture,
     camera: Camera,
     fixed_now: datetime,
@@ -408,7 +408,7 @@ async def test_video_bad_video(
 
 async def test_video(
     hass: HomeAssistant,
-    hass_client: mock_aiohttp_client,
+    hass_client: ClientSessionGenerator,
     ufp: MockUFPFixture,
     camera: Camera,
     fixed_now: datetime,
@@ -451,7 +451,7 @@ async def test_video(
 
 async def test_video_entity_id(
     hass: HomeAssistant,
-    hass_client: mock_aiohttp_client,
+    hass_client: ClientSessionGenerator,
     ufp: MockUFPFixture,
     camera: Camera,
     fixed_now: datetime,

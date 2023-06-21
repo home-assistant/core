@@ -2,6 +2,9 @@
 from pypck.inputs import Input, ModSendKeysHost, ModStatusAccessControl
 from pypck.lcn_addr import LcnAddr
 from pypck.lcn_defs import AccessControlPeriphery, KeyAction, SendKeyCommand
+import pytest
+
+from homeassistant.core import HomeAssistant
 
 from tests.common import async_capture_events
 
@@ -11,7 +14,7 @@ LCN_TRANSMITTER = "lcn_transmitter"
 LCN_SEND_KEYS = "lcn_send_keys"
 
 
-async def test_fire_transponder_event(hass, lcn_connection):
+async def test_fire_transponder_event(hass: HomeAssistant, lcn_connection) -> None:
     """Test the transponder event is fired."""
     events = async_capture_events(hass, LCN_TRANSPONDER)
 
@@ -29,7 +32,7 @@ async def test_fire_transponder_event(hass, lcn_connection):
     assert events[0].data["code"] == "aabbcc"
 
 
-async def test_fire_fingerprint_event(hass, lcn_connection):
+async def test_fire_fingerprint_event(hass: HomeAssistant, lcn_connection) -> None:
     """Test the fingerprint event is fired."""
     events = async_capture_events(hass, LCN_FINGERPRINT)
 
@@ -47,7 +50,7 @@ async def test_fire_fingerprint_event(hass, lcn_connection):
     assert events[0].data["code"] == "aabbcc"
 
 
-async def test_fire_codelock_event(hass, lcn_connection):
+async def test_fire_codelock_event(hass: HomeAssistant, lcn_connection) -> None:
     """Test the codelock event is fired."""
     events = async_capture_events(hass, "lcn_codelock")
 
@@ -65,7 +68,7 @@ async def test_fire_codelock_event(hass, lcn_connection):
     assert events[0].data["code"] == "aabbcc"
 
 
-async def test_fire_transmitter_event(hass, lcn_connection):
+async def test_fire_transmitter_event(hass: HomeAssistant, lcn_connection) -> None:
     """Test the transmitter event is fired."""
     events = async_capture_events(hass, LCN_TRANSMITTER)
 
@@ -89,7 +92,7 @@ async def test_fire_transmitter_event(hass, lcn_connection):
     assert events[0].data["action"] == "hit"
 
 
-async def test_fire_sendkeys_event(hass, lcn_connection):
+async def test_fire_sendkeys_event(hass: HomeAssistant, lcn_connection) -> None:
     """Test the send_keys event is fired."""
     events = async_capture_events(hass, LCN_SEND_KEYS)
 
@@ -117,7 +120,9 @@ async def test_fire_sendkeys_event(hass, lcn_connection):
     assert events[3].data["action"] == "make"
 
 
-async def test_dont_fire_on_non_module_input(hass, lcn_connection):
+async def test_dont_fire_on_non_module_input(
+    hass: HomeAssistant, lcn_connection
+) -> None:
     """Test for no event is fired if a non-module input is received."""
     inp = Input()
 
@@ -133,7 +138,9 @@ async def test_dont_fire_on_non_module_input(hass, lcn_connection):
         assert len(events) == 0
 
 
-async def test_dont_fire_on_unknown_module(hass, lcn_connection):
+# This tests needs to be adjusted to remove lingering tasks
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
+async def test_dont_fire_on_unknown_module(hass: HomeAssistant, lcn_connection) -> None:
     """Test for no event is fired if an input from an unknown module is received."""
     inp = ModStatusAccessControl(
         LcnAddr(0, 10, False),  # unknown module

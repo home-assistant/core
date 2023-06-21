@@ -18,6 +18,8 @@ from . import (
     DEVICE_2_WIRELESS,
     DEVICE_3_DHCP_NUMERIC_NAME,
     DEVICE_3_WIRELESS,
+    DEVICE_4_DHCP,
+    DEVICE_4_WIFIWAVE2,
     DHCP_DATA,
     MOCK_DATA,
     MOCK_OPTIONS,
@@ -39,6 +41,7 @@ def mock_device_registry_devices(hass: HomeAssistant) -> None:
             "00:00:00:00:00:01",
             "00:00:00:00:00:02",
             "00:00:00:00:00:03",
+            "00:00:00:00:00:04",
         )
     ):
         dev_reg.async_get_or_create(
@@ -182,6 +185,26 @@ async def test_device_trackers_numerical_name(
     assert device_3.attributes["ip"] == "0.0.0.3"
     assert device_3.attributes["mac"] == "00:00:00:00:00:03"
     assert device_3.attributes["host_name"] == "123"
+
+
+async def test_hub_wifiwave2(hass: HomeAssistant, mock_device_registry_devices) -> None:
+    """Test device_trackers created when hub supports wifiwave2."""
+
+    await setup_mikrotik_entry(
+        hass,
+        dhcp_data=[DEVICE_4_DHCP],
+        wifiwave2_data=[DEVICE_4_WIFIWAVE2],
+        support_wireless=False,
+        support_wifiwave2=True,
+    )
+
+    device_4 = hass.states.get("device_tracker.device_4")
+    assert device_4
+    assert device_4.state == "home"
+    assert device_4.attributes["friendly_name"] == "Device_4"
+    assert device_4.attributes["ip"] == "0.0.0.4"
+    assert device_4.attributes["mac"] == "00:00:00:00:00:04"
+    assert device_4.attributes["host_name"] == "Device_4"
 
 
 async def test_restoring_devices(hass: HomeAssistant) -> None:

@@ -1,6 +1,7 @@
 """Support for Xiaomi Miio."""
 from __future__ import annotations
 
+from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
@@ -206,8 +207,7 @@ class VacuumCoordinatorData:
 
 @dataclass(init=False, frozen=True)
 class VacuumCoordinatorDataAttributes:
-    """
-    A class that holds attribute names for VacuumCoordinatorData.
+    """A class that holds attribute names for VacuumCoordinatorData.
 
     These attributes can be used in methods like `getattr` when a generic solutions is
     needed.
@@ -226,7 +226,9 @@ class VacuumCoordinatorDataAttributes:
     fan_speeds_reverse: str = "fan_speeds_reverse"
 
 
-def _async_update_data_vacuum(hass, device: RoborockVacuum):
+def _async_update_data_vacuum(
+    hass: HomeAssistant, device: RoborockVacuum
+) -> Callable[[], Coroutine[Any, Any, VacuumCoordinatorData]]:
     def update() -> VacuumCoordinatorData:
         timer = []
 
@@ -254,10 +256,10 @@ def _async_update_data_vacuum(hass, device: RoborockVacuum):
 
         return data
 
-    async def update_async():
+    async def update_async() -> VacuumCoordinatorData:
         """Fetch data from the device using async_add_executor_job."""
 
-        async def execute_update():
+        async def execute_update() -> VacuumCoordinatorData:
             async with async_timeout.timeout(POLLING_TIMEOUT_SEC):
                 state = await hass.async_add_executor_job(update)
                 _LOGGER.debug("Got new vacuum state: %s", state)
@@ -289,6 +291,7 @@ async def async_create_miio_device_and_coordinator(
     name = entry.title
     device: MiioDevice | None = None
     migrate = False
+    lazy_discover = False
     update_method = _async_update_data_default
     coordinator_class: type[DataUpdateCoordinator[Any]] = DataUpdateCoordinator
 
@@ -305,38 +308,41 @@ async def async_create_miio_device_and_coordinator(
 
     # Humidifiers
     if model in MODELS_HUMIDIFIER_MIOT:
-        device = AirHumidifierMiot(host, token)
+        device = AirHumidifierMiot(host, token, lazy_discover=lazy_discover)
         migrate = True
     elif model in MODELS_HUMIDIFIER_MJJSQ:
-        device = AirHumidifierMjjsq(host, token, model=model)
+        device = AirHumidifierMjjsq(
+            host, token, lazy_discover=lazy_discover, model=model
+        )
         migrate = True
     elif model in MODELS_HUMIDIFIER_MIIO:
-        device = AirHumidifier(host, token, model=model)
+        device = AirHumidifier(host, token, lazy_discover=lazy_discover, model=model)
         migrate = True
     # Airpurifiers and Airfresh
     elif model in MODELS_PURIFIER_MIOT:
-        device = AirPurifierMiot(host, token)
+        device = AirPurifierMiot(host, token, lazy_discover=lazy_discover)
     elif model.startswith("zhimi.airpurifier."):
-        device = AirPurifier(host, token)
+        device = AirPurifier(host, token, lazy_discover=lazy_discover)
     elif model.startswith("zhimi.airfresh."):
-        device = AirFresh(host, token)
+        device = AirFresh(host, token, lazy_discover=lazy_discover)
     elif model == MODEL_AIRFRESH_A1:
-        device = AirFreshA1(host, token)
+        device = AirFreshA1(host, token, lazy_discover=lazy_discover)
     elif model == MODEL_AIRFRESH_T2017:
-        device = AirFreshT2017(host, token)
+        device = AirFreshT2017(host, token, lazy_discover=lazy_discover)
     elif (
         model in MODELS_VACUUM
         or model.startswith(ROBOROCK_GENERIC)
         or model.startswith(ROCKROBO_GENERIC)
     ):
+        # TODO: add lazy_discover as argument when python-miio add support # pylint: disable=fixme
         device = RoborockVacuum(host, token)
         update_method = _async_update_data_vacuum
         coordinator_class = DataUpdateCoordinator[VacuumCoordinatorData]
     # Pedestal fans
     elif model in MODEL_TO_CLASS_MAP:
-        device = MODEL_TO_CLASS_MAP[model](host, token)
+        device = MODEL_TO_CLASS_MAP[model](host, token, lazy_discover=lazy_discover)
     elif model in MODELS_FAN_MIIO:
-        device = Fan(host, token, model=model)
+        device = Fan(host, token, lazy_discover=lazy_discover, model=model)
     else:
         _LOGGER.error(
             (
@@ -349,12 +355,14 @@ async def async_create_miio_device_and_coordinator(
         return
 
     if migrate:
-        # Removing fan platform entity for humidifiers and migrate the name to the config entry for migration
+        # Removing fan platform entity for humidifiers and migrate the name
+        # to the config entry for migration
         entity_registry = er.async_get(hass)
         assert entry.unique_id
         entity_id = entity_registry.async_get_entity_id("fan", DOMAIN, entry.unique_id)
         if entity_id:
-            # This check is entities that have a platform migration only and should be removed in the future
+            # This check is entities that have a platform migration only
+            # and should be removed in the future
             if (entity := entity_registry.async_get(entity_id)) and (
                 migrate_entity_name := entity.name
             ):

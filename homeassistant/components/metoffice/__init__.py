@@ -18,8 +18,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import entity_registry
-from homeassistant.helpers.device_registry import DeviceEntryType
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -53,7 +52,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     @callback
     def update_unique_id(
-        entity_entry: entity_registry.RegistryEntry,
+        entity_entry: er.RegistryEntry,
     ) -> dict[str, Any] | None:
         """Update unique ID of entity entry."""
 
@@ -86,7 +85,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             }
         return None
 
-    await entity_registry.async_migrate_entries(hass, entry.entry_id, update_unique_id)
+    await er.async_migrate_entries(hass, entry.entry_id, update_unique_id)
 
     connection = datapoint.connection(api_key=api_key)
 
@@ -154,7 +153,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 def get_device_info(coordinates: str, name: str) -> DeviceInfo:
     """Return device registry information."""
     return DeviceInfo(
-        entry_type=DeviceEntryType.SERVICE,
+        entry_type=dr.DeviceEntryType.SERVICE,
         identifiers={(DOMAIN, coordinates)},
         manufacturer="Met Office",
         name=f"Met Office {name}",

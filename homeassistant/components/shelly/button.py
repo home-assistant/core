@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-from typing import Any, Final, Generic, TypeVar, Union
+from typing import Any, Final, Generic, TypeVar
 
 from homeassistant.components.button import (
     ButtonDeviceClass,
@@ -11,19 +11,20 @@ from homeassistant.components.button import (
     ButtonEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
-from homeassistant.helpers.entity import DeviceInfo, EntityCategory
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import slugify
 
 from .const import SHELLY_GAS_MODELS
 from .coordinator import ShellyBlockCoordinator, ShellyRpcCoordinator, get_entry_data
-from .utils import get_block_device_name, get_device_entry_gen, get_rpc_device_name
+from .utils import get_device_entry_gen
 
 _ShellyCoordinatorT = TypeVar(
-    "_ShellyCoordinatorT", bound=Union[ShellyBlockCoordinator, ShellyRpcCoordinator]
+    "_ShellyCoordinatorT", bound=ShellyBlockCoordinator | ShellyRpcCoordinator
 )
 
 
@@ -44,7 +45,7 @@ class ShellyButtonDescription(
 
 
 BUTTONS: Final[list[ShellyButtonDescription[Any]]] = [
-    ShellyButtonDescription[Union[ShellyBlockCoordinator, ShellyRpcCoordinator]](
+    ShellyButtonDescription[ShellyBlockCoordinator | ShellyRpcCoordinator](
         key="reboot",
         name="Reboot",
         device_class=ButtonDeviceClass.RESTART,
@@ -53,7 +54,7 @@ BUTTONS: Final[list[ShellyButtonDescription[Any]]] = [
     ),
     ShellyButtonDescription[ShellyBlockCoordinator](
         key="self_test",
-        name="Self Test",
+        name="Self test",
         icon="mdi:progress-wrench",
         entity_category=EntityCategory.DIAGNOSTIC,
         press_action=lambda coordinator: coordinator.device.trigger_shelly_gas_self_test(),
@@ -102,7 +103,7 @@ async def async_setup_entry(
 
 
 class ShellyButton(
-    CoordinatorEntity[Union[ShellyRpcCoordinator, ShellyBlockCoordinator]], ButtonEntity
+    CoordinatorEntity[ShellyRpcCoordinator | ShellyBlockCoordinator], ButtonEntity
 ):
     """Defines a Shelly base button."""
 
@@ -121,12 +122,7 @@ class ShellyButton(
         super().__init__(coordinator)
         self.entity_description = description
 
-        if isinstance(coordinator, ShellyRpcCoordinator):
-            device_name = get_rpc_device_name(coordinator.device)
-        else:
-            device_name = get_block_device_name(coordinator.device)
-
-        self._attr_name = f"{device_name} {description.name}"
+        self._attr_name = f"{coordinator.device.name} {description.name}"
         self._attr_unique_id = slugify(self._attr_name)
         self._attr_device_info = DeviceInfo(
             connections={(CONNECTION_NETWORK_MAC, coordinator.mac)}

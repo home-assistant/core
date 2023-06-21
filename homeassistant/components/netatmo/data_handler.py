@@ -134,8 +134,10 @@ class NetatmoDataHandler:
 
     async def async_setup(self) -> None:
         """Set up the Netatmo data handler."""
-        async_track_time_interval(
-            self.hass, self.async_update, timedelta(seconds=SCAN_INTERVAL)
+        self.config_entry.async_on_unload(
+            async_track_time_interval(
+                self.hass, self.async_update, timedelta(seconds=SCAN_INTERVAL)
+            )
         )
 
         self.config_entry.async_on_unload(
@@ -156,8 +158,7 @@ class NetatmoDataHandler:
         await self.async_dispatch()
 
     async def async_update(self, event_time: datetime) -> None:
-        """
-        Update device.
+        """Update device.
 
         We do up to BATCH_SIZE calls in one update in order
         to minimize the calls on the api service.

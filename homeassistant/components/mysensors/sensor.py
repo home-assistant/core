@@ -165,6 +165,10 @@ SENSORS: dict[str, SensorEntityDescription] = {
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
     ),
+    "V_IR_RECORD": SensorEntityDescription(
+        key="V_IR_RECORD",
+        icon="mdi:remote",
+    ),
     "V_PH": SensorEntityDescription(
         key="V_PH",
         native_unit_of_measurement="pH",

@@ -10,20 +10,16 @@ from typing import TYPE_CHECKING, Any, TypeVar, cast
 import attr
 
 from homeassistant.backports.enum import StrEnum
-from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
+from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, RequiredParameterMissing
-from homeassistant.loader import bind_hass
-from homeassistant.util.json import (
-    find_paths_unserializable_data,
-    format_unserializable_data,
-)
+from homeassistant.util.json import format_unserializable_data
 import homeassistant.util.uuid as uuid_util
 
 from . import storage
 from .debounce import Debouncer
 from .frame import report
-from .json import JSON_DUMP
+from .json import JSON_DUMP, find_paths_unserializable_data
 from .typing import UNDEFINED, UndefinedType
 
 if TYPE_CHECKING:
@@ -296,6 +292,7 @@ class DeviceRegistry:
 
     devices: DeviceRegistryItems[DeviceEntry]
     deleted_devices: DeviceRegistryItems[DeletedDeviceEntry]
+    _device_data: dict[str, DeviceEntry]
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the device registry."""
@@ -310,8 +307,12 @@ class DeviceRegistry:
 
     @callback
     def async_get(self, device_id: str) -> DeviceEntry | None:
-        """Get device."""
-        return self.devices.get(device_id)
+        """Get device.
+
+        We retrieve the DeviceEntry from the underlying dict to avoid
+        the overhead of the UserDict __getitem__.
+        """
+        return self._device_data.get(device_id)
 
     @callback
     def async_get_device(
@@ -450,7 +451,7 @@ class DeviceRegistry:
     ) -> DeviceEntry | None:
         """Update device attributes."""
         # Circular dep
-        # pylint: disable=import-outside-toplevel
+        # pylint: disable-next=import-outside-toplevel
         from . import area_registry as ar
 
         old = self.devices[device_id]
@@ -645,6 +646,7 @@ class DeviceRegistry:
 
         self.devices = devices
         self.deleted_devices = deleted_devices
+        self._device_data = devices.data
 
     @callback
     def async_schedule_save(self) -> None:
@@ -750,19 +752,6 @@ async def async_load(hass: HomeAssistant) -> None:
     assert DATA_REGISTRY not in hass.data
     hass.data[DATA_REGISTRY] = DeviceRegistry(hass)
     await hass.data[DATA_REGISTRY].async_load()
-
-
-@bind_hass
-async def async_get_registry(hass: HomeAssistant) -> DeviceRegistry:
-    """Get device registry.
-
-    This is deprecated and will be removed in the future. Use async_get instead.
-    """
-    report(
-        "uses deprecated `async_get_registry` to access device registry, use async_get"
-        " instead"
-    )
-    return async_get(hass)
 
 
 @callback
@@ -909,6 +898,13 @@ def async_setup_cleanup(hass: HomeAssistant, dev_reg: DeviceRegistry) -> None:
         await debounced_cleanup.async_call()
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, startup_clean)
+
+    @callback
+    def _on_homeassistant_stop(event: Event) -> None:
+        """Cancel debounced cleanup."""
+        debounced_cleanup.async_cancel()
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _on_homeassistant_stop)
 
 
 def _normalize_connections(connections: set[tuple[str, str]]) -> set[tuple[str, str]]:

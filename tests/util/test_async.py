@@ -6,49 +6,13 @@ from unittest.mock import MagicMock, Mock, patch
 import pytest
 
 from homeassistant import block_async_io
+from homeassistant.core import HomeAssistant
 from homeassistant.util import async_ as hasync
 
 
-@patch("asyncio.coroutines.iscoroutine")
 @patch("concurrent.futures.Future")
 @patch("threading.get_ident")
-def test_fire_coroutine_threadsafe_from_inside_event_loop(
-    mock_ident, _, mock_iscoroutine
-):
-    """Testing calling fire_coroutine_threadsafe from inside an event loop."""
-    coro = MagicMock()
-    loop = MagicMock()
-
-    loop._thread_ident = None
-    mock_ident.return_value = 5
-    mock_iscoroutine.return_value = True
-    hasync.fire_coroutine_threadsafe(coro, loop)
-    assert len(loop.call_soon_threadsafe.mock_calls) == 1
-
-    loop._thread_ident = 5
-    mock_ident.return_value = 5
-    mock_iscoroutine.return_value = True
-    with pytest.raises(RuntimeError):
-        hasync.fire_coroutine_threadsafe(coro, loop)
-    assert len(loop.call_soon_threadsafe.mock_calls) == 1
-
-    loop._thread_ident = 1
-    mock_ident.return_value = 5
-    mock_iscoroutine.return_value = False
-    with pytest.raises(TypeError):
-        hasync.fire_coroutine_threadsafe(coro, loop)
-    assert len(loop.call_soon_threadsafe.mock_calls) == 1
-
-    loop._thread_ident = 1
-    mock_ident.return_value = 5
-    mock_iscoroutine.return_value = True
-    hasync.fire_coroutine_threadsafe(coro, loop)
-    assert len(loop.call_soon_threadsafe.mock_calls) == 2
-
-
-@patch("concurrent.futures.Future")
-@patch("threading.get_ident")
-def test_run_callback_threadsafe_from_inside_event_loop(mock_ident, _):
+def test_run_callback_threadsafe_from_inside_event_loop(mock_ident, _) -> None:
     """Testing calling run_callback_threadsafe from inside an event loop."""
     callback = MagicMock()
 
@@ -75,13 +39,13 @@ def banned_function():
     """Mock banned function."""
 
 
-async def test_check_loop_async():
+async def test_check_loop_async() -> None:
     """Test check_loop detects when called from event loop without integration context."""
     with pytest.raises(RuntimeError):
         hasync.check_loop(banned_function)
 
 
-async def test_check_loop_async_integration(caplog):
+async def test_check_loop_async_integration(caplog: pytest.LogCaptureFixture) -> None:
     """Test check_loop detects and raises when called from event loop from integration context."""
     with pytest.raises(RuntimeError), patch(
         "homeassistant.util.async_.extract_stack",
@@ -112,7 +76,9 @@ async def test_check_loop_async_integration(caplog):
     )
 
 
-async def test_check_loop_async_integration_non_strict(caplog):
+async def test_check_loop_async_integration_non_strict(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test check_loop detects when called from event loop from integration context."""
     with patch(
         "homeassistant.util.async_.extract_stack",
@@ -143,7 +109,7 @@ async def test_check_loop_async_integration_non_strict(caplog):
     )
 
 
-async def test_check_loop_async_custom(caplog):
+async def test_check_loop_async_custom(caplog: pytest.LogCaptureFixture) -> None:
     """Test check_loop detects when called from event loop with custom component context."""
     with pytest.raises(RuntimeError), patch(
         "homeassistant.util.async_.extract_stack",
@@ -167,20 +133,20 @@ async def test_check_loop_async_custom(caplog):
     ):
         hasync.check_loop(banned_function)
     assert (
-        "Detected blocking call to banned_function inside the event loop. This is "
-        "causing stability issues. Please report issue to the custom integration author "
-        "for hue doing blocking calls at custom_components/hue/light.py, line 23: "
-        "self.light.is_on" in caplog.text
-    )
+        "Detected blocking call to banned_function inside the event loop. This is"
+        " causing stability issues. Please report issue to the custom integration"
+        " author for hue doing blocking calls at custom_components/hue/light.py, line"
+        " 23: self.light.is_on"
+    ) in caplog.text
 
 
-def test_check_loop_sync(caplog):
+def test_check_loop_sync(caplog: pytest.LogCaptureFixture) -> None:
     """Test check_loop does nothing when called from thread."""
     hasync.check_loop(banned_function)
     assert "Detected blocking call inside the event loop" not in caplog.text
 
 
-def test_protect_loop_sync():
+def test_protect_loop_sync() -> None:
     """Test protect_loop calls check_loop."""
     func = Mock()
     with patch("homeassistant.util.async_.check_loop") as mock_check_loop:
@@ -189,7 +155,7 @@ def test_protect_loop_sync():
     func.assert_called_once_with(1, test=2)
 
 
-async def test_protect_loop_debugger_sleep(caplog):
+async def test_protect_loop_debugger_sleep(caplog: pytest.LogCaptureFixture) -> None:
     """Test time.sleep injected by the debugger is not reported."""
     block_async_io.enable()
 
@@ -217,7 +183,7 @@ async def test_protect_loop_debugger_sleep(caplog):
     assert "Detected blocking call inside the event loop" not in caplog.text
 
 
-async def test_gather_with_concurrency():
+async def test_gather_with_concurrency() -> None:
     """Test gather_with_concurrency limits the number of running tasks."""
 
     runs = 0
@@ -239,7 +205,7 @@ async def test_gather_with_concurrency():
     assert results == [2, 2, -1, -1]
 
 
-async def test_shutdown_run_callback_threadsafe(hass):
+async def test_shutdown_run_callback_threadsafe(hass: HomeAssistant) -> None:
     """Test we can shutdown run_callback_threadsafe."""
     hasync.shutdown_run_callback_threadsafe(hass.loop)
     callback = MagicMock()
@@ -248,7 +214,7 @@ async def test_shutdown_run_callback_threadsafe(hass):
         hasync.run_callback_threadsafe(hass.loop, callback)
 
 
-async def test_run_callback_threadsafe(hass):
+async def test_run_callback_threadsafe(hass: HomeAssistant) -> None:
     """Test run_callback_threadsafe runs code in the event loop."""
     it_ran = False
 
@@ -265,7 +231,7 @@ async def test_run_callback_threadsafe(hass):
     assert it_ran is True
 
 
-async def test_callback_is_always_scheduled(hass):
+async def test_callback_is_always_scheduled(hass: HomeAssistant) -> None:
     """Test run_callback_threadsafe always calls call_soon_threadsafe before checking for shutdown."""
     # We have to check the shutdown state AFTER the callback is scheduled otherwise
     # the function could continue on and the caller call `future.result()` after

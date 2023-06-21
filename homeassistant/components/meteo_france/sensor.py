@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, TypeVar, Union
+from typing import Any, TypeVar
 
 from meteofrance_api.helpers import (
     get_warning_text_status_from_indice_color,
@@ -49,7 +49,7 @@ from .const import (
     MODEL,
 )
 
-_DataT = TypeVar("_DataT", bound=Union[Rain, Forecast, CurrentPhenomenons])
+_DataT = TypeVar("_DataT", bound=Rain | Forecast | CurrentPhenomenons)
 
 
 @dataclass
@@ -247,11 +247,7 @@ class MeteoFranceSensor(CoordinatorEntity[DataUpdateCoordinator[_DataT]], Sensor
     @property
     def device_info(self) -> DeviceInfo:
         """Return the device info."""
-        assert (
-            self.platform
-            and self.platform.config_entry
-            and self.platform.config_entry.unique_id
-        )
+        assert self.platform.config_entry and self.platform.config_entry.unique_id
         return DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, self.platform.config_entry.unique_id)},

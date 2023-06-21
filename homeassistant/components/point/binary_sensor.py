@@ -96,7 +96,7 @@ class MinutPointBinarySensor(MinutPointEntity, BinarySensorEntity):
             return
         if self.device_class == BinarySensorDeviceClass.CONNECTIVITY:
             # connectivity is the other way around.
-            self._attr_is_on = not (self._events[0] in self.device.ongoing_events)
+            self._attr_is_on = self._events[0] not in self.device.ongoing_events
         else:
             self._attr_is_on = self._events[0] in self.device.ongoing_events
         self.async_write_ha_state()

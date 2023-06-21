@@ -19,14 +19,45 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "tracker_battery_charging": {
+        "name": "Tracker battery charging"
+      }
+    },
+    "device_tracker": {
+      "tracker": {
+        "name": "Tracker"
+      }
+    },
     "sensor": {
+      "daily_goal": {
+        "name": "Daily goal"
+      },
+      "minutes_active": {
+        "name": "Minutes active"
+      },
+      "tracker_battery_level": {
+        "name": "Tracker battery"
+      },
       "tracker_state": {
+        "name": "Tracker state",
         "state": {
           "not_reporting": "Not reporting",
           "operational": "Operational",
           "system_shutdown_user": "System shutdown user",
           "system_startup": "System startup"
         }
+      }
+    },
+    "switch": {
+      "tracker_buzzer": {
+        "name": "Tracker buzzer"
+      },
+      "tracker_led": {
+        "name": "Tracker LED"
+      },
+      "live_tracking": {
+        "name": "Live tracking"
       }
     }
   }

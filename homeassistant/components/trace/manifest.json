@@ -1,8 +1,8 @@
 {
   "domain": "trace",
   "name": "Trace",
-  "documentation": "https://www.home-assistant.io/integrations/automation",
   "codeowners": ["@home-assistant/core"],
-  "quality_scale": "internal",
-  "integration_type": "system"
+  "documentation": "https://www.home-assistant.io/integrations/automation",
+  "integration_type": "system",
+  "quality_scale": "internal"
 }

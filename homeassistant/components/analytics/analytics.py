@@ -17,6 +17,10 @@ from homeassistant.components.energy import (
     DOMAIN as ENERGY_DOMAIN,
     is_configured as energy_is_configured,
 )
+from homeassistant.components.recorder import (
+    DOMAIN as RECORDER_DOMAIN,
+    get_instance as get_recorder_instance,
+)
 from homeassistant.const import ATTR_DOMAIN, __version__ as HA_VERSION
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -40,11 +44,13 @@ from .const import (
     ATTR_CUSTOM_INTEGRATIONS,
     ATTR_DIAGNOSTICS,
     ATTR_ENERGY,
+    ATTR_ENGINE,
     ATTR_HEALTHY,
     ATTR_INTEGRATION_COUNT,
     ATTR_INTEGRATIONS,
     ATTR_OPERATING_SYSTEM,
     ATTR_PROTECTED,
+    ATTR_RECORDER,
     ATTR_SLUG,
     ATTR_STATE_COUNT,
     ATTR_STATISTICS,
@@ -251,6 +257,15 @@ class Analytics:
                 payload[ATTR_ENERGY] = {
                     ATTR_CONFIGURED: await energy_is_configured(self.hass)
                 }
+
+            if RECORDER_DOMAIN in integrations:
+                instance = get_recorder_instance(self.hass)
+                engine = instance.database_engine
+                if engine and engine.version is not None:
+                    payload[ATTR_RECORDER] = {
+                        ATTR_ENGINE: engine.dialect.value,
+                        ATTR_VERSION: engine.version,
+                    }
 
         if self.preferences.get(ATTR_STATISTICS, False):
             payload[ATTR_STATE_COUNT] = len(self.hass.states.async_all())

@@ -8,7 +8,11 @@ import voluptuous as vol
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv, entity_platform
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.entity_platform import (
+    AddEntitiesCallback,
+    async_get_current_platform,
+)
 
 from .const import DOMAIN
 from .coordinator import MicroBotDataUpdateCoordinator
@@ -23,14 +27,12 @@ CALIBRATE_SCHEMA = {
 
 
 async def async_setup_entry(
-    hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: entity_platform.AddEntitiesCallback,
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up MicroBot based on a config entry."""
     coordinator: MicroBotDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     async_add_entities([MicroBotBinarySwitch(coordinator, entry)])
-    platform = entity_platform.async_get_current_platform()
+    platform = async_get_current_platform()
     platform.async_register_entity_service(
         CALIBRATE,
         CALIBRATE_SCHEMA,

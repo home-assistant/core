@@ -160,6 +160,20 @@ def scripts_with_blueprint(hass: HomeAssistant, blueprint_path: str) -> list[str
     ]
 
 
+@callback
+def blueprint_in_script(hass: HomeAssistant, entity_id: str) -> str | None:
+    """Return the blueprint the script is based on or None."""
+    if DOMAIN not in hass.data:
+        return None
+
+    component: EntityComponent[ScriptEntity] = hass.data[DOMAIN]
+
+    if (script_entity := component.get_entity(entity_id)) is None:
+        return None
+
+    return script_entity.referenced_blueprint
+
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Load the scripts from the configuration."""
     hass.data[DOMAIN] = component = EntityComponent[ScriptEntity](LOGGER, DOMAIN, hass)
@@ -231,7 +245,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-@dataclass
+@dataclass(slots=True)
 class ScriptEntityConfig:
     """Container for prepared script entity configuration."""
 
@@ -268,7 +282,6 @@ async def _create_script_entities(
     entities: list[ScriptEntity] = []
 
     for script_config in script_configs:
-
         entity = ScriptEntity(
             hass,
             script_config.key,
@@ -281,7 +294,9 @@ async def _create_script_entities(
     return entities
 
 
-async def _async_process_config(hass, config, component) -> None:
+async def _async_process_config(
+    hass: HomeAssistant, config: ConfigType, component: EntityComponent[ScriptEntity]
+) -> None:
     """Process script configuration."""
     entities = []
 
@@ -493,7 +508,7 @@ class ScriptEntity(ToggleEntity, RestoreEntity):
                 self.script.last_triggered = parse_datetime(last_triggered)
 
     async def async_will_remove_from_hass(self):
-        """Stop script and remove service when it will be removed from Home Assistant."""
+        """Stop script and remove service when it will be removed from HA."""
         await self.script.async_stop()
 
         # remove service

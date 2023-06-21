@@ -43,9 +43,8 @@ class LookinFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         except Exception:  # pylint: disable=broad-except
             LOGGER.exception("Unexpected exception")
             return self.async_abort(reason="unknown")
-        else:
-            self._name = device.name
 
+        self._name = device.name
         self._host = host
         self._set_confirm_only()
         self.context["title_placeholders"] = {"name": self._name, "host": host}

@@ -9,7 +9,6 @@ start:
   fields:
     duration:
       description: Duration the timer requires to finish. [optional]
-      default: 0
       example: "00:01:00 or 60"
       selector:
         text:
@@ -34,3 +33,18 @@ finish:
   target:
     entity:
       domain: timer
+
+change:
+  name: Change
+  description: Change a timer
+  target:
+    entity:
+      domain: timer
+  fields:
+    duration:
+      description: Duration to add or subtract to the running timer
+      default: 0
+      required: true
+      example: "00:01:00, 60 or -60"
+      selector:
+        text:

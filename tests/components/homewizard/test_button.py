@@ -2,10 +2,11 @@
 from unittest.mock import patch
 
 from homewizard_energy.errors import DisabledError, RequestError
-from pytest import raises
+import pytest
 
 from homeassistant.components import button
 from homeassistant.const import ATTR_FRIENDLY_NAME, STATE_UNKNOWN
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
@@ -13,11 +14,11 @@ from .generator import get_mock_device
 
 
 async def test_identify_button_entity_not_loaded_when_not_available(
-    hass, mock_config_entry_data, mock_config_entry
-):
+    hass: HomeAssistant, mock_config_entry_data, mock_config_entry
+) -> None:
     """Does not load button when device has no support for it."""
 
-    api = get_mock_device(product_type="HWE-P1")
+    api = get_mock_device(product_type="SDM230-WIFI")
 
     with patch(
         "homeassistant.components.homewizard.coordinator.HomeWizardEnergy",
@@ -34,8 +35,8 @@ async def test_identify_button_entity_not_loaded_when_not_available(
 
 
 async def test_identify_button_is_loaded(
-    hass, mock_config_entry_data, mock_config_entry
-):
+    hass: HomeAssistant, mock_config_entry_data, mock_config_entry
+) -> None:
     """Loads button when device has support."""
 
     api = get_mock_device(product_type="HWE-SKT", firmware_version="3.02")
@@ -64,7 +65,9 @@ async def test_identify_button_is_loaded(
     assert entry.unique_id == "aabbccddeeff_identify"
 
 
-async def test_identify_press(hass, mock_config_entry_data, mock_config_entry):
+async def test_identify_press(
+    hass: HomeAssistant, mock_config_entry_data, mock_config_entry
+) -> None:
     """Test button press is handled correctly."""
 
     api = get_mock_device(product_type="HWE-SKT", firmware_version="3.02")
@@ -96,8 +99,8 @@ async def test_identify_press(hass, mock_config_entry_data, mock_config_entry):
 
 
 async def test_identify_press_catches_requesterror(
-    hass, mock_config_entry_data, mock_config_entry
-):
+    hass: HomeAssistant, mock_config_entry_data, mock_config_entry
+) -> None:
     """Test button press is handled RequestError correctly."""
 
     api = get_mock_device(product_type="HWE-SKT", firmware_version="3.02")
@@ -123,7 +126,7 @@ async def test_identify_press_catches_requesterror(
 
     assert api.identify.call_count == 0
 
-    with raises(HomeAssistantError):
+    with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             button.DOMAIN,
             button.SERVICE_PRESS,
@@ -134,8 +137,8 @@ async def test_identify_press_catches_requesterror(
 
 
 async def test_identify_press_catches_disablederror(
-    hass, mock_config_entry_data, mock_config_entry
-):
+    hass: HomeAssistant, mock_config_entry_data, mock_config_entry
+) -> None:
     """Test button press is handled DisabledError correctly."""
 
     api = get_mock_device(product_type="HWE-SKT", firmware_version="3.02")
@@ -161,7 +164,7 @@ async def test_identify_press_catches_disablederror(
 
     assert api.identify.call_count == 0
 
-    with raises(HomeAssistantError):
+    with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             button.DOMAIN,
             button.SERVICE_PRESS,

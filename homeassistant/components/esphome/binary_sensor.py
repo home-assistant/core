@@ -1,19 +1,20 @@
 """Support for ESPHome binary sensors."""
 from __future__ import annotations
 
-from contextlib import suppress
-
-from aioesphomeapi import BinarySensorInfo, BinarySensorState
+from aioesphomeapi import BinarySensorInfo, BinarySensorState, EntityInfo
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
+    BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.util.enum import try_parse_enum
 
-from . import EsphomeEntity, platform_async_setup_entry
+from . import EsphomeAssistEntity, EsphomeEntity, platform_async_setup_entry
+from .domain_data import DomainData
 
 
 async def async_setup_entry(
@@ -29,6 +30,11 @@ async def async_setup_entry(
         entity_type=EsphomeBinarySensor,
         state_type=BinarySensorState,
     )
+
+    entry_data = DomainData.get(hass).get_entry_data(entry)
+    assert entry_data.device_info is not None
+    if entry_data.device_info.voice_assistant_version:
+        async_add_entities([EsphomeAssistInProgressBinarySensor(entry_data)])
 
 
 class EsphomeBinarySensor(
@@ -49,12 +55,13 @@ class EsphomeBinarySensor(
             return None
         return self._state.state
 
-    @property
-    def device_class(self) -> BinarySensorDeviceClass | None:
-        """Return the class of this device, from component DEVICE_CLASSES."""
-        with suppress(ValueError):
-            return BinarySensorDeviceClass(self._static_info.device_class)
-        return None
+    @callback
+    def _on_static_info_update(self, static_info: EntityInfo) -> None:
+        """Set attrs from static info."""
+        super()._on_static_info_update(static_info)
+        self._attr_device_class = try_parse_enum(
+            BinarySensorDeviceClass, self._static_info.device_class
+        )
 
     @property
     def available(self) -> bool:
@@ -62,3 +69,17 @@ class EsphomeBinarySensor(
         if self._static_info.is_status_binary_sensor:
             return True
         return super().available
+
+
+class EsphomeAssistInProgressBinarySensor(EsphomeAssistEntity, BinarySensorEntity):
+    """A binary sensor implementation for ESPHome for use with assist_pipeline."""
+
+    entity_description = BinarySensorEntityDescription(
+        key="assist_in_progress",
+        translation_key="assist_in_progress",
+    )
+
+    @property
+    def is_on(self) -> bool | None:
+        """Return true if the binary sensor is on."""
+        return self._entry_data.assist_pipeline_state

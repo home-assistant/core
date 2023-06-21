@@ -37,7 +37,7 @@ from tests.common import async_fire_time_changed
 ENTITY_ID = f"{DOMAIN}.{CONF_FAKE_NAME}"
 
 
-async def test_setup(hass: HomeAssistant, fritz: Mock):
+async def test_setup(hass: HomeAssistant, fritz: Mock) -> None:
     """Test setup of platform."""
     device = FritzDeviceSwitchMock()
     assert await setup_config_entry(
@@ -62,16 +62,16 @@ async def test_setup(hass: HomeAssistant, fritz: Mock):
             SensorStateClass.MEASUREMENT,
         ],
         [
-            f"{SENSOR_DOMAIN}.{CONF_FAKE_NAME}_power_consumption",
+            f"{SENSOR_DOMAIN}.{CONF_FAKE_NAME}_power",
             "5.678",
-            f"{CONF_FAKE_NAME} Power Consumption",
+            f"{CONF_FAKE_NAME} Power",
             UnitOfPower.WATT,
             SensorStateClass.MEASUREMENT,
         ],
         [
-            f"{SENSOR_DOMAIN}.{CONF_FAKE_NAME}_total_energy",
+            f"{SENSOR_DOMAIN}.{CONF_FAKE_NAME}_energy",
             "1.234",
-            f"{CONF_FAKE_NAME} Total Energy",
+            f"{CONF_FAKE_NAME} Energy",
             UnitOfEnergy.KILO_WATT_HOUR,
             SensorStateClass.TOTAL_INCREASING,
         ],
@@ -83,9 +83,9 @@ async def test_setup(hass: HomeAssistant, fritz: Mock):
             SensorStateClass.MEASUREMENT,
         ],
         [
-            f"{SENSOR_DOMAIN}.{CONF_FAKE_NAME}_electric_current",
+            f"{SENSOR_DOMAIN}.{CONF_FAKE_NAME}_current",
             "0.025",
-            f"{CONF_FAKE_NAME} Electric Current",
+            f"{CONF_FAKE_NAME} Current",
             UnitOfElectricCurrent.AMPERE,
             SensorStateClass.MEASUREMENT,
         ],
@@ -100,33 +100,33 @@ async def test_setup(hass: HomeAssistant, fritz: Mock):
         assert state.attributes[ATTR_STATE_CLASS] == sensor[4]
 
 
-async def test_turn_on(hass: HomeAssistant, fritz: Mock):
+async def test_turn_on(hass: HomeAssistant, fritz: Mock) -> None:
     """Test turn device on."""
     device = FritzDeviceSwitchMock()
     assert await setup_config_entry(
         hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
     )
 
-    assert await hass.services.async_call(
+    await hass.services.async_call(
         DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_ID}, True
     )
     assert device.set_switch_state_on.call_count == 1
 
 
-async def test_turn_off(hass: HomeAssistant, fritz: Mock):
+async def test_turn_off(hass: HomeAssistant, fritz: Mock) -> None:
     """Test turn device off."""
     device = FritzDeviceSwitchMock()
     assert await setup_config_entry(
         hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
     )
 
-    assert await hass.services.async_call(
+    await hass.services.async_call(
         DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_ID}, True
     )
     assert device.set_switch_state_off.call_count == 1
 
 
-async def test_update(hass: HomeAssistant, fritz: Mock):
+async def test_update(hass: HomeAssistant, fritz: Mock) -> None:
     """Test update without error."""
     device = FritzDeviceSwitchMock()
     assert await setup_config_entry(
@@ -143,7 +143,7 @@ async def test_update(hass: HomeAssistant, fritz: Mock):
     assert fritz().login.call_count == 1
 
 
-async def test_update_error(hass: HomeAssistant, fritz: Mock):
+async def test_update_error(hass: HomeAssistant, fritz: Mock) -> None:
     """Test update with error."""
     device = FritzDeviceSwitchMock()
     fritz().update_devices.side_effect = HTTPError("Boom")
@@ -161,7 +161,7 @@ async def test_update_error(hass: HomeAssistant, fritz: Mock):
     assert fritz().login.call_count == 4
 
 
-async def test_assume_device_unavailable(hass: HomeAssistant, fritz: Mock):
+async def test_assume_device_unavailable(hass: HomeAssistant, fritz: Mock) -> None:
     """Test assume device as unavailable."""
     device = FritzDeviceSwitchMock()
     device.voltage = 0
@@ -174,21 +174,3 @@ async def test_assume_device_unavailable(hass: HomeAssistant, fritz: Mock):
     state = hass.states.get(ENTITY_ID)
     assert state
     assert state.state == STATE_UNAVAILABLE
-
-
-async def test_device_current_unavailable(hass: HomeAssistant, fritz: Mock):
-    """Test current in case voltage and power are not available."""
-    device = FritzDeviceSwitchMock()
-    device.voltage = None
-    device.power = None
-    assert await setup_config_entry(
-        hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
-    )
-
-    state = hass.states.get(ENTITY_ID)
-    assert state
-    assert state.state == STATE_ON
-
-    state = hass.states.get(f"{SENSOR_DOMAIN}.{CONF_FAKE_NAME}_electric_current")
-    assert state
-    assert state.state == "0.0"

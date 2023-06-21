@@ -8,20 +8,21 @@ from homeassistant import data_entry_flow
 from homeassistant.components.tile import DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_REAUTH, SOURCE_USER
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.core import HomeAssistant
 
 from .conftest import TEST_PASSWORD, TEST_USERNAME
 
 
 @pytest.mark.parametrize(
-    "mock_login_response,errors",
+    ("mock_login_response", "errors"),
     [
         (AsyncMock(side_effect=InvalidAuthError), {"base": "invalid_auth"}),
         (AsyncMock(side_effect=TileError), {"base": "unknown"}),
     ],
 )
 async def test_create_entry(
-    hass, api, config, errors, mock_login_response, mock_pytile
-):
+    hass: HomeAssistant, api, config, errors, mock_login_response, mock_pytile
+) -> None:
     """Test creating an entry."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -52,7 +53,7 @@ async def test_create_entry(
     }
 
 
-async def test_duplicate_error(hass, config, setup_config_entry):
+async def test_duplicate_error(hass: HomeAssistant, config, setup_config_entry) -> None:
     """Test that errors are shown when duplicates are added."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}, data=config
@@ -61,7 +62,7 @@ async def test_duplicate_error(hass, config, setup_config_entry):
     assert result["reason"] == "already_configured"
 
 
-async def test_import_entry(hass, config, mock_pytile):
+async def test_import_entry(hass: HomeAssistant, config, mock_pytile) -> None:
     """Test importing an entry."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_IMPORT}, data=config
@@ -74,7 +75,9 @@ async def test_import_entry(hass, config, mock_pytile):
     }
 
 
-async def test_step_reauth(hass, config, config_entry, setup_config_entry):
+async def test_step_reauth(
+    hass: HomeAssistant, config, config_entry, setup_config_entry
+) -> None:
     """Test that the reauth step works."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_REAUTH}, data=config

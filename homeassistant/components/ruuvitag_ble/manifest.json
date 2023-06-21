@@ -1,8 +1,6 @@
 {
   "domain": "ruuvitag_ble",
   "name": "RuuviTag BLE",
-  "config_flow": true,
-  "documentation": "https://www.home-assistant.io/integrations/ruuvitag_ble",
   "bluetooth": [
     {
       "manufacturer_id": 1177,
@@ -13,8 +11,10 @@
       "connectable": false
     }
   ],
-  "requirements": ["ruuvitag-ble==0.1.1"],
-  "dependencies": ["bluetooth_adapters"],
   "codeowners": ["@akx"],
-  "iot_class": "local_push"
+  "config_flow": true,
+  "dependencies": ["bluetooth_adapters"],
+  "documentation": "https://www.home-assistant.io/integrations/ruuvitag_ble",
+  "iot_class": "local_push",
+  "requirements": ["ruuvitag-ble==0.1.2"]
 }

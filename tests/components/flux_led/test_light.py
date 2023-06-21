@@ -154,7 +154,7 @@ async def test_light_mac_address_not_found(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "protocol,sw_version,model_num,model",
+    ("protocol", "sw_version", "model_num", "model"),
     [
         ("LEDENET_ORIGINAL", 1, 0x01, "Original LEDEDNET (0x35)"),
         ("LEDENET", 8, 0x33, "Magic Home Branded RGB Controller (0x33)"),

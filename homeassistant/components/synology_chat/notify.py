@@ -1,4 +1,6 @@
 """SynologyChat platform for notify component."""
+from __future__ import annotations
+
 from http import HTTPStatus
 import json
 import logging
@@ -12,7 +14,9 @@ from homeassistant.components.notify import (
     BaseNotificationService,
 )
 from homeassistant.const import CONF_RESOURCE, CONF_VERIFY_SSL
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 ATTR_FILE_URL = "file_url"
 
@@ -26,7 +30,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 _LOGGER = logging.getLogger(__name__)
 
 
-def get_service(hass, config, discovery_info=None):
+def get_service(
+    hass: HomeAssistant,
+    config: ConfigType,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> SynologyChatNotificationService:
     """Get the Synology Chat notification service."""
     resource = config.get(CONF_RESOURCE)
     verify_ssl = config.get(CONF_VERIFY_SSL)

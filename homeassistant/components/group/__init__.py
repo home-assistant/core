@@ -58,6 +58,7 @@ ENTITY_ID_FORMAT = DOMAIN + ".{}"
 CONF_ALL = "all"
 
 ATTR_ADD_ENTITIES = "add_entities"
+ATTR_REMOVE_ENTITIES = "remove_entities"
 ATTR_AUTO = "auto"
 ATTR_ENTITIES = "entities"
 ATTR_OBJECT_ID = "object_id"
@@ -75,6 +76,7 @@ PLATFORMS = [
     Platform.LOCK,
     Platform.MEDIA_PLAYER,
     Platform.NOTIFY,
+    Platform.SENSOR,
     Platform.SWITCH,
 ]
 
@@ -367,6 +369,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 entity_ids = set(group.tracking) | set(delta)
                 await group.async_update_tracked_entity_ids(entity_ids)
 
+            if ATTR_REMOVE_ENTITIES in service.data:
+                delta = service.data[ATTR_REMOVE_ENTITIES]
+                entity_ids = set(group.tracking) - set(delta)
+                await group.async_update_tracked_entity_ids(entity_ids)
+
             if ATTR_ENTITIES in service.data:
                 entity_ids = service.data[ATTR_ENTITIES]
                 await group.async_update_tracked_entity_ids(entity_ids)
@@ -405,6 +412,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                     vol.Optional(ATTR_ALL): cv.boolean,
                     vol.Exclusive(ATTR_ENTITIES, "entities"): cv.entity_ids,
                     vol.Exclusive(ATTR_ADD_ENTITIES, "entities"): cv.entity_ids,
+                    vol.Exclusive(ATTR_REMOVE_ENTITIES, "entities"): cv.entity_ids,
                 }
             )
         ),

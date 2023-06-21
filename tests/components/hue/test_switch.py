@@ -1,10 +1,13 @@
 """Philips Hue switch platform tests for V2 bridge/api."""
+from homeassistant.core import HomeAssistant
 
 from .conftest import setup_platform
 from .const import FAKE_BINARY_SENSOR, FAKE_DEVICE, FAKE_ZIGBEE_CONNECTIVITY
 
 
-async def test_switch(hass, mock_bridge_v2, v2_resources_test_data):
+async def test_switch(
+    hass: HomeAssistant, mock_bridge_v2, v2_resources_test_data
+) -> None:
     """Test if (config) switches get created."""
     await mock_bridge_v2.api.load_test_data(v2_resources_test_data)
 
@@ -22,7 +25,9 @@ async def test_switch(hass, mock_bridge_v2, v2_resources_test_data):
     assert test_entity.attributes["device_class"] == "switch"
 
 
-async def test_switch_turn_on_service(hass, mock_bridge_v2, v2_resources_test_data):
+async def test_switch_turn_on_service(
+    hass: HomeAssistant, mock_bridge_v2, v2_resources_test_data
+) -> None:
     """Test calling the turn on service on a switch."""
     await mock_bridge_v2.api.load_test_data(v2_resources_test_data)
 
@@ -44,7 +49,9 @@ async def test_switch_turn_on_service(hass, mock_bridge_v2, v2_resources_test_da
     assert mock_bridge_v2.mock_requests[0]["json"]["enabled"] is True
 
 
-async def test_switch_turn_off_service(hass, mock_bridge_v2, v2_resources_test_data):
+async def test_switch_turn_off_service(
+    hass: HomeAssistant, mock_bridge_v2, v2_resources_test_data
+) -> None:
     """Test calling the turn off service on a switch."""
     await mock_bridge_v2.api.load_test_data(v2_resources_test_data)
 
@@ -83,7 +90,7 @@ async def test_switch_turn_off_service(hass, mock_bridge_v2, v2_resources_test_d
     assert test_entity.state == "off"
 
 
-async def test_switch_added(hass, mock_bridge_v2):
+async def test_switch_added(hass: HomeAssistant, mock_bridge_v2) -> None:
     """Test new switch added to bridge."""
     await mock_bridge_v2.api.load_test_data([FAKE_DEVICE, FAKE_ZIGBEE_CONNECTIVITY])
 

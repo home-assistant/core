@@ -1,9 +1,28 @@
-"""YoLink Binary Sensor."""
+"""YoLink Sensor."""
 from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
 
+from yolink.const import (
+    ATTR_DEVICE_CO_SMOKE_SENSOR,
+    ATTR_DEVICE_DIMMER,
+    ATTR_DEVICE_DOOR_SENSOR,
+    ATTR_DEVICE_LEAK_SENSOR,
+    ATTR_DEVICE_LOCK,
+    ATTR_DEVICE_MANIPULATOR,
+    ATTR_DEVICE_MOTION_SENSOR,
+    ATTR_DEVICE_MULTI_OUTLET,
+    ATTR_DEVICE_OUTLET,
+    ATTR_DEVICE_POWER_FAILURE_ALARM,
+    ATTR_DEVICE_SIREN,
+    ATTR_DEVICE_SMART_REMOTER,
+    ATTR_DEVICE_SWITCH,
+    ATTR_DEVICE_TH_SENSOR,
+    ATTR_DEVICE_THERMOSTAT,
+    ATTR_DEVICE_VIBRATION_SENSOR,
+    ATTR_GARAGE_DOOR_CONTROLLER,
+)
 from yolink.device import YoLinkDevice
 
 from homeassistant.components.sensor import (
@@ -16,25 +35,14 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+    EntityCategory,
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import percentage
 
-from .const import (
-    ATTR_COORDINATORS,
-    ATTR_DEVICE_CO_SMOKE_SENSOR,
-    ATTR_DEVICE_DOOR_SENSOR,
-    ATTR_DEVICE_LEAK_SENSOR,
-    ATTR_DEVICE_LOCK,
-    ATTR_DEVICE_MANIPULATOR,
-    ATTR_DEVICE_MOTION_SENSOR,
-    ATTR_DEVICE_TH_SENSOR,
-    ATTR_DEVICE_VIBRATION_SENSOR,
-    DOMAIN,
-)
+from .const import DOMAIN
 from .coordinator import YoLinkCoordinator
 from .entity import YoLinkEntity
 
@@ -57,20 +65,31 @@ class YoLinkSensorEntityDescription(
 
 
 SENSOR_DEVICE_TYPE = [
+    ATTR_DEVICE_DIMMER,
     ATTR_DEVICE_DOOR_SENSOR,
     ATTR_DEVICE_LEAK_SENSOR,
     ATTR_DEVICE_MOTION_SENSOR,
+    ATTR_DEVICE_MULTI_OUTLET,
+    ATTR_DEVICE_SMART_REMOTER,
+    ATTR_DEVICE_OUTLET,
+    ATTR_DEVICE_POWER_FAILURE_ALARM,
+    ATTR_DEVICE_SIREN,
+    ATTR_DEVICE_SWITCH,
     ATTR_DEVICE_TH_SENSOR,
+    ATTR_DEVICE_THERMOSTAT,
     ATTR_DEVICE_VIBRATION_SENSOR,
     ATTR_DEVICE_LOCK,
     ATTR_DEVICE_MANIPULATOR,
     ATTR_DEVICE_CO_SMOKE_SENSOR,
+    ATTR_GARAGE_DOOR_CONTROLLER,
 ]
 
 BATTERY_POWER_SENSOR = [
     ATTR_DEVICE_DOOR_SENSOR,
     ATTR_DEVICE_LEAK_SENSOR,
     ATTR_DEVICE_MOTION_SENSOR,
+    ATTR_DEVICE_POWER_FAILURE_ALARM,
+    ATTR_DEVICE_SMART_REMOTER,
     ATTR_DEVICE_TH_SENSOR,
     ATTR_DEVICE_VIBRATION_SENSOR,
     ATTR_DEVICE_LOCK,
@@ -92,6 +111,14 @@ def cvt_battery(val: int | None) -> int | None:
     if val > 0:
         return percentage.ordered_list_item_to_percentage([1, 2, 3, 4], val)
     return 0
+
+
+def cvt_volume(val: int | None) -> str | None:
+    """Convert volume to string."""
+    if val is None:
+        return None
+    volume_level = {1: "low", 2: "medium", 3: "high"}
+    return volume_level.get(val, None)
 
 
 SENSOR_TYPES: tuple[YoLinkSensorEntityDescription, ...] = (
@@ -141,6 +168,41 @@ SENSOR_TYPES: tuple[YoLinkSensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
         should_update_entity=lambda value: value is not None,
     ),
+    YoLinkSensorEntityDescription(
+        key="state",
+        device_class=SensorDeviceClass.ENUM,
+        name="Power failure alarm",
+        icon="mdi:flash",
+        options=["normal", "alert", "off"],
+        exists_fn=lambda device: device.device_type in ATTR_DEVICE_POWER_FAILURE_ALARM,
+    ),
+    YoLinkSensorEntityDescription(
+        key="mute",
+        device_class=SensorDeviceClass.ENUM,
+        name="Power failure alarm mute",
+        icon="mdi:volume-mute",
+        options=["muted", "unmuted"],
+        exists_fn=lambda device: device.device_type in ATTR_DEVICE_POWER_FAILURE_ALARM,
+        value=lambda value: "muted" if value is True else "unmuted",
+    ),
+    YoLinkSensorEntityDescription(
+        key="sound",
+        device_class=SensorDeviceClass.ENUM,
+        name="Power failure alarm volume",
+        icon="mdi:volume-high",
+        options=["low", "medium", "high"],
+        exists_fn=lambda device: device.device_type in ATTR_DEVICE_POWER_FAILURE_ALARM,
+        value=cvt_volume,
+    ),
+    YoLinkSensorEntityDescription(
+        key="beep",
+        device_class=SensorDeviceClass.ENUM,
+        name="Power failure alarm beep",
+        icon="mdi:bullhorn",
+        options=["enabled", "disabled"],
+        exists_fn=lambda device: device.device_type in ATTR_DEVICE_POWER_FAILURE_ALARM,
+        value=lambda value: "enabled" if value is True else "disabled",
+    ),
 )
 
 
@@ -150,7 +212,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up YoLink Sensor from a config entry."""
-    device_coordinators = hass.data[DOMAIN][config_entry.entry_id][ATTR_COORDINATORS]
+    device_coordinators = hass.data[DOMAIN][config_entry.entry_id].device_coordinators
     sensor_device_coordinators = [
         device_coordinator
         for device_coordinator in device_coordinators.values()

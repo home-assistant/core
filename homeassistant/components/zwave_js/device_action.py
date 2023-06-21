@@ -25,8 +25,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_registry
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
 from .config_validation import VALUE_SCHEMA
@@ -102,6 +101,7 @@ RESET_METER_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
 SET_CONFIG_PARAMETER_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_TYPE): SERVICE_SET_CONFIG_PARAMETER,
+        vol.Required(ATTR_ENDPOINT, default=0): vol.Coerce(int),
         vol.Required(ATTR_CONFIG_PARAMETER): vol.Any(int, str),
         vol.Required(ATTR_CONFIG_PARAMETER_BITMASK): vol.Any(None, int, str),
         vol.Required(ATTR_VALUE): vol.Coerce(int),
@@ -145,12 +145,12 @@ async def async_get_actions(
     hass: HomeAssistant, device_id: str
 ) -> list[dict[str, Any]]:
     """List device actions for Z-Wave JS devices."""
-    registry = entity_registry.async_get(hass)
+    registry = er.async_get(hass)
     actions: list[dict] = []
 
     node = async_get_node_from_device_id(hass, device_id)
 
-    if node.client.driver and node.client.driver.controller.own_node_id == node.node_id:
+    if node.client.driver and node.client.driver.controller.own_node == node:
         return actions
 
     base_action = {
@@ -169,6 +169,7 @@ async def async_get_actions(
             {
                 **base_action,
                 CONF_TYPE: SERVICE_SET_CONFIG_PARAMETER,
+                ATTR_ENDPOINT: config_value.endpoint,
                 ATTR_CONFIG_PARAMETER: config_value.property_,
                 ATTR_CONFIG_PARAMETER_BITMASK: config_value.property_key,
                 CONF_SUBTYPE: generate_config_parameter_subtype(config_value),
@@ -179,7 +180,7 @@ async def async_get_actions(
 
     meter_endpoints: dict[int, dict[str, Any]] = defaultdict(dict)
 
-    for entry in entity_registry.async_entries_for_device(
+    for entry in er.async_entries_for_device(
         registry, device_id, include_disabled_entities=False
     ):
         # If an entry is unavailable, it is possible that the underlying value
@@ -187,8 +188,9 @@ async def async_get_actions(
         # underlying value is not being monitored by HA so we shouldn't allow
         # actions against it.
         if (
-            state := hass.states.get(entry.entity_id)
-        ) and state.state == STATE_UNAVAILABLE:
+            not (state := hass.states.get(entry.entity_id))
+            or state.state == STATE_UNAVAILABLE
+        ):
             continue
         entity_action = {**base_action, CONF_ENTITY_ID: entry.entity_id}
         actions.append({**entity_action, CONF_TYPE: SERVICE_REFRESH_VALUE})
@@ -210,9 +212,7 @@ async def async_get_actions(
             # If the value has the meterType CC specific value, we can add a reset_meter
             # action for it
             if CC_SPECIFIC_METER_TYPE in value.metadata.cc_specific:
-                endpoint_idx = value.endpoint
-                if endpoint_idx is None:
-                    endpoint_idx = 0
+                endpoint_idx = value.endpoint or 0
                 meter_endpoints[endpoint_idx].setdefault(
                     CONF_ENTITY_ID, entry.entity_id
                 )
@@ -349,6 +349,7 @@ async def async_get_action_capabilities(
             CommandClass.CONFIGURATION,
             config[ATTR_CONFIG_PARAMETER],
             property_key=config[ATTR_CONFIG_PARAMETER_BITMASK],
+            endpoint=config[ATTR_ENDPOINT],
         )
         value_schema = get_config_parameter_value_schema(node, value_id)
         if value_schema is None:

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Generic, TypeVar, Union
+from typing import Generic, TypeVar
 
 from pydeconz.models.deconz_device import DeconzDevice as PydeconzDevice
 from pydeconz.models.group import Group as PydeconzGroup
@@ -21,12 +21,7 @@ from .util import serial_from_unique_id
 
 _DeviceT = TypeVar(
     "_DeviceT",
-    bound=Union[
-        PydeconzGroup,
-        PydeconzLightBase,
-        PydeconzSensorBase,
-        PydeconzScene,
-    ],
+    bound=PydeconzGroup | PydeconzLightBase | PydeconzSensorBase | PydeconzScene,
 )
 
 

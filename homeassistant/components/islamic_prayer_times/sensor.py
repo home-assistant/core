@@ -1,12 +1,51 @@
 """Platform to retrieve Islamic prayer times information for Home Assistant."""
-from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
+from datetime import datetime
+
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.device_registry import DeviceEntryType
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-import homeassistant.util.dt as dt_util
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DATA_UPDATED, DOMAIN, PRAYER_TIMES_ICON, SENSOR_TYPES
+from . import IslamicPrayerDataUpdateCoordinator
+from .const import DOMAIN, NAME
+
+SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        key="Fajr",
+        name="Fajr prayer",
+    ),
+    SensorEntityDescription(
+        key="Sunrise",
+        name="Sunrise time",
+    ),
+    SensorEntityDescription(
+        key="Dhuhr",
+        name="Dhuhr prayer",
+    ),
+    SensorEntityDescription(
+        key="Asr",
+        name="Asr prayer",
+    ),
+    SensorEntityDescription(
+        key="Maghrib",
+        name="Maghrib prayer",
+    ),
+    SensorEntityDescription(
+        key="Isha",
+        name="Isha prayer",
+    ),
+    SensorEntityDescription(
+        key="Midnight",
+        name="Midnight time",
+    ),
+)
 
 
 async def async_setup_entry(
@@ -16,46 +55,38 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Islamic prayer times sensor platform."""
 
-    client = hass.data[DOMAIN]
+    coordinator: IslamicPrayerDataUpdateCoordinator = hass.data[DOMAIN]
 
-    entities = []
-    for sensor_type in SENSOR_TYPES:
-        entities.append(IslamicPrayerTimeSensor(sensor_type, client))
+    async_add_entities(
+        IslamicPrayerTimeSensor(coordinator, description)
+        for description in SENSOR_TYPES
+    )
 
-    async_add_entities(entities, True)
 
-
-class IslamicPrayerTimeSensor(SensorEntity):
+class IslamicPrayerTimeSensor(
+    CoordinatorEntity[IslamicPrayerDataUpdateCoordinator], SensorEntity
+):
     """Representation of an Islamic prayer time sensor."""
 
     _attr_device_class = SensorDeviceClass.TIMESTAMP
-    _attr_icon = PRAYER_TIMES_ICON
-    _attr_should_poll = False
+    _attr_has_entity_name = True
 
-    def __init__(self, sensor_type, client):
+    def __init__(
+        self,
+        coordinator: IslamicPrayerDataUpdateCoordinator,
+        description: SensorEntityDescription,
+    ) -> None:
         """Initialize the Islamic prayer time sensor."""
-        self.sensor_type = sensor_type
-        self.client = client
+        super().__init__(coordinator)
+        self.entity_description = description
+        self._attr_unique_id = description.key
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, coordinator.config_entry.entry_id)},
+            name=NAME,
+            entry_type=DeviceEntryType.SERVICE,
+        )
 
     @property
-    def name(self):
-        """Return the name of the sensor."""
-        return f"{self.sensor_type} {SENSOR_TYPES[self.sensor_type]}"
-
-    @property
-    def unique_id(self):
-        """Return the unique id of the entity."""
-        return self.sensor_type
-
-    @property
-    def native_value(self):
+    def native_value(self) -> datetime:
         """Return the state of the sensor."""
-        return self.client.prayer_times_info.get(self.sensor_type).astimezone(
-            dt_util.UTC
-        )
-
-    async def async_added_to_hass(self) -> None:
-        """Handle entity which will be added."""
-        self.async_on_remove(
-            async_dispatcher_connect(self.hass, DATA_UPDATED, self.async_write_ha_state)
-        )
+        return self.coordinator.data[self.entity_description.key]

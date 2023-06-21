@@ -5,6 +5,7 @@ import asyncio
 from http import HTTPStatus
 import logging
 import os
+from typing import Any
 
 import aiohttp
 
@@ -17,7 +18,7 @@ from homeassistant.const import SERVER_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.loader import bind_hass
 
-from .const import ATTR_DISCOVERY, DOMAIN
+from .const import ATTR_DISCOVERY, DOMAIN, X_HASS_SOURCE
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -249,6 +250,49 @@ async def async_update_core(
     )
 
 
+@bind_hass
+@_api_bool
+async def async_apply_suggestion(hass: HomeAssistant, suggestion_uuid: str) -> bool:
+    """Apply a suggestion from supervisor's resolution center.
+
+    The caller of the function should handle HassioAPIError.
+    """
+    hassio = hass.data[DOMAIN]
+    command = f"/resolution/suggestion/{suggestion_uuid}"
+    return await hassio.send_command(command, timeout=None)
+
+
+@api_data
+async def async_get_yellow_settings(hass: HomeAssistant) -> dict[str, bool]:
+    """Return settings specific to Home Assistant Yellow."""
+    hassio: HassIO = hass.data[DOMAIN]
+    return await hassio.send_command("/os/boards/yellow", method="get")
+
+
+@api_data
+async def async_set_yellow_settings(
+    hass: HomeAssistant, settings: dict[str, bool]
+) -> dict:
+    """Set settings specific to Home Assistant Yellow.
+
+    Returns an empty dict.
+    """
+    hassio: HassIO = hass.data[DOMAIN]
+    return await hassio.send_command(
+        "/os/boards/yellow", method="post", payload=settings
+    )
+
+
+@api_data
+async def async_reboot_host(hass: HomeAssistant) -> dict:
+    """Reboot the host.
+
+    Returns an empty dict.
+    """
+    hassio: HassIO = hass.data[DOMAIN]
+    return await hassio.send_command("/host/reboot", method="post", timeout=60)
+
+
 class HassIO:
     """Small API wrapper for Hass.io."""
 
@@ -267,7 +311,7 @@ class HassIO:
     def is_connected(self):
         """Return true if it connected to Hass.io supervisor.
 
-        This method return a coroutine.
+        This method returns a coroutine.
         """
         return self.send_command("/supervisor/ping", method="get", timeout=15)
 
@@ -275,7 +319,7 @@ class HassIO:
     def get_info(self):
         """Return generic Supervisor information.
 
-        This method return a coroutine.
+        This method returns a coroutine.
         """
         return self.send_command("/info", method="get")
 
@@ -283,7 +327,7 @@ class HassIO:
     def get_host_info(self):
         """Return data for Host.
 
-        This method return a coroutine.
+        This method returns a coroutine.
         """
         return self.send_command("/host/info", method="get")
 
@@ -291,7 +335,7 @@ class HassIO:
     def get_os_info(self):
         """Return data for the OS.
 
-        This method return a coroutine.
+        This method returns a coroutine.
         """
         return self.send_command("/os/info", method="get")
 
@@ -315,9 +359,17 @@ class HassIO:
     def get_addon_info(self, addon):
         """Return data for a Add-on.
 
-        This method return a coroutine.
+        This method returns a coroutine.
         """
         return self.send_command(f"/addons/{addon}/info", method="get")
+
+    @api_data
+    def get_core_stats(self):
+        """Return stats for the core.
+
+        This method returns a coroutine.
+        """
+        return self.send_command("/core/stats", method="get")
 
     @api_data
     def get_addon_stats(self, addon):
@@ -326,6 +378,14 @@ class HassIO:
         This method returns a coroutine.
         """
         return self.send_command(f"/addons/{addon}/stats", method="get")
+
+    @api_data
+    def get_supervisor_stats(self):
+        """Return stats for the supervisor.
+
+        This method returns a coroutine.
+        """
+        return self.send_command("/supervisor/stats", method="get")
 
     def get_addon_changelog(self, addon):
         """Return changelog for an Add-on.
@@ -340,7 +400,7 @@ class HassIO:
     def get_store(self):
         """Return data from the store.
 
-        This method return a coroutine.
+        This method returns a coroutine.
         """
         return self.send_command("/store", method="get")
 
@@ -348,7 +408,7 @@ class HassIO:
     def get_ingress_panels(self):
         """Return data for Add-on ingress panels.
 
-        This method return a coroutine.
+        This method returns a coroutine.
         """
         return self.send_command("/ingress/panels", method="get")
 
@@ -356,7 +416,7 @@ class HassIO:
     def restart_homeassistant(self):
         """Restart Home-Assistant container.
 
-        This method return a coroutine.
+        This method returns a coroutine.
         """
         return self.send_command("/homeassistant/restart")
 
@@ -364,7 +424,7 @@ class HassIO:
     def stop_homeassistant(self):
         """Stop Home-Assistant container.
 
-        This method return a coroutine.
+        This method returns a coroutine.
         """
         return self.send_command("/homeassistant/stop")
 
@@ -372,7 +432,7 @@ class HassIO:
     def refresh_updates(self):
         """Refresh available updates.
 
-        This method return a coroutine.
+        This method returns a coroutine.
         """
         return self.send_command("/refresh_updates", timeout=None)
 
@@ -380,7 +440,7 @@ class HassIO:
     def retrieve_discovery_messages(self):
         """Return all discovery data from Hass.io API.
 
-        This method return a coroutine.
+        This method returns a coroutine.
         """
         return self.send_command("/discovery", method="get", timeout=60)
 
@@ -388,7 +448,7 @@ class HassIO:
     def get_discovery_message(self, uuid):
         """Return a single discovery data message.
 
-        This method return a coroutine.
+        This method returns a coroutine.
         """
         return self.send_command(f"/discovery/{uuid}", method="get")
 
@@ -396,9 +456,19 @@ class HassIO:
     def get_resolution_info(self):
         """Return data for Supervisor resolution center.
 
-        This method return a coroutine.
+        This method returns a coroutine.
         """
         return self.send_command("/resolution/info", method="get")
+
+    @api_data
+    def get_suggestions_for_issue(self, issue_id: str) -> dict[str, Any]:
+        """Return suggestions for issue from Supervisor resolution center.
+
+        This method returns a coroutine.
+        """
+        return self.send_command(
+            f"/resolution/issue/{issue_id}/suggestions", method="get"
+        )
 
     @_api_bool
     async def update_hass_api(self, http_config, refresh_token):
@@ -424,7 +494,7 @@ class HassIO:
     def update_hass_timezone(self, timezone):
         """Update Home-Assistant timezone data on Hass.io.
 
-        This method return a coroutine.
+        This method returns a coroutine.
         """
         return self.send_command("/supervisor/options", payload={"timezone": timezone})
 
@@ -432,11 +502,19 @@ class HassIO:
     def update_diagnostics(self, diagnostics: bool):
         """Update Supervisor diagnostics setting.
 
-        This method return a coroutine.
+        This method returns a coroutine.
         """
         return self.send_command(
             "/supervisor/options", payload={"diagnostics": diagnostics}
         )
+
+    @_api_bool
+    def apply_suggestion(self, suggestion_uuid: str):
+        """Apply a suggestion from supervisor's resolution center.
+
+        This method returns a coroutine.
+        """
+        return self.send_command(f"/resolution/suggestion/{suggestion_uuid}")
 
     async def send_command(
         self,
@@ -445,6 +523,8 @@ class HassIO:
         payload=None,
         timeout=10,
         return_text=False,
+        *,
+        source="core.handler",
     ):
         """Send API command to Hass.io.
 
@@ -458,7 +538,8 @@ class HassIO:
                 headers={
                     aiohttp.hdrs.AUTHORIZATION: (
                         f"Bearer {os.environ.get('SUPERVISOR_TOKEN', '')}"
-                    )
+                    ),
+                    X_HASS_SOURCE: source,
                 },
                 timeout=aiohttp.ClientTimeout(total=timeout),
             )

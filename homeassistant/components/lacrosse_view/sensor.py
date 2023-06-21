@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+import logging
 
 from lacrosse_view import Sensor
 
@@ -17,6 +18,7 @@ from homeassistant.const import (
     DEGREE,
     PERCENTAGE,
     UnitOfPrecipitationDepth,
+    UnitOfPressure,
     UnitOfSpeed,
     UnitOfTemperature,
 )
@@ -27,7 +29,9 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
-from .const import DOMAIN, LOGGER
+from .const import DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass
@@ -115,6 +119,30 @@ SENSOR_DESCRIPTIONS = {
         name="Flex",
         value_fn=get_value,
     ),
+    "BarometricPressure": LaCrosseSensorEntityDescription(
+        key="BarometricPressure",
+        name="Barometric pressure",
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=get_value,
+        device_class=SensorDeviceClass.ATMOSPHERIC_PRESSURE,
+        native_unit_of_measurement=UnitOfPressure.HPA,
+    ),
+    "FeelsLike": LaCrosseSensorEntityDescription(
+        key="FeelsLike",
+        name="Feels like",
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=get_value,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+    ),
+    "WindChill": LaCrosseSensorEntityDescription(
+        key="WindChill",
+        name="Wind chill",
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=get_value,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+    ),
 }
 
 
@@ -144,7 +172,7 @@ async def async_setup_entry(
                     f"title=LaCrosse%20View%20Unsupported%20sensor%20field:%20{field}"
                 )
 
-                LOGGER.warning(message)
+                _LOGGER.warning(message)
                 continue
             sensor_list.append(
                 LaCrosseViewSensor(

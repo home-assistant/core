@@ -1,9 +1,0 @@
-{
-    "config": {
-        "step": {
-            "user": {
-                "title": "Nastavite 1-Wire"
-            }
-        }
-    }
-}

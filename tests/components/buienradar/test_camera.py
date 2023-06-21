@@ -8,10 +8,13 @@ from aiohttp.client_exceptions import ClientResponseError
 
 from homeassistant.components.buienradar.const import CONF_COUNTRY, CONF_DELTA, DOMAIN
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_registry import async_get
 from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry
+from tests.test_util.aiohttp import AiohttpClientMocker
+from tests.typing import ClientSessionGenerator
 
 # An infinitesimally small time-delta.
 EPSILON_DELTA = 0.0000000001
@@ -42,7 +45,11 @@ async def _setup_config_entry(hass, entry):
     await hass.async_block_till_done()
 
 
-async def test_fetching_url_and_caching(aioclient_mock, hass, hass_client):
+async def test_fetching_url_and_caching(
+    aioclient_mock: AiohttpClientMocker,
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+) -> None:
     """Test that it fetches the given url."""
     aioclient_mock.get(radar_map_url(), text="hello world")
 
@@ -68,7 +75,11 @@ async def test_fetching_url_and_caching(aioclient_mock, hass, hass_client):
     assert aioclient_mock.call_count == 1
 
 
-async def test_expire_delta(aioclient_mock, hass, hass_client):
+async def test_expire_delta(
+    aioclient_mock: AiohttpClientMocker,
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+) -> None:
     """Test that the cache expires after delta."""
     aioclient_mock.get(radar_map_url(), text="hello world")
 
@@ -97,7 +108,11 @@ async def test_expire_delta(aioclient_mock, hass, hass_client):
     assert aioclient_mock.call_count == 2
 
 
-async def test_only_one_fetch_at_a_time(aioclient_mock, hass, hass_client):
+async def test_only_one_fetch_at_a_time(
+    aioclient_mock: AiohttpClientMocker,
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+) -> None:
     """Test that it fetches with only one request at the same time."""
     aioclient_mock.get(radar_map_url(), text="hello world")
 
@@ -120,7 +135,11 @@ async def test_only_one_fetch_at_a_time(aioclient_mock, hass, hass_client):
     assert aioclient_mock.call_count == 1
 
 
-async def test_belgium_country(aioclient_mock, hass, hass_client):
+async def test_belgium_country(
+    aioclient_mock: AiohttpClientMocker,
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+) -> None:
     """Test that it actually adheres to another country like Belgium."""
     aioclient_mock.get(radar_map_url(country_code="BE"), text="hello world")
 
@@ -140,7 +159,11 @@ async def test_belgium_country(aioclient_mock, hass, hass_client):
     assert aioclient_mock.call_count == 1
 
 
-async def test_failure_response_not_cached(aioclient_mock, hass, hass_client):
+async def test_failure_response_not_cached(
+    aioclient_mock: AiohttpClientMocker,
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+) -> None:
     """Test that it does not cache a failure response."""
     aioclient_mock.get(radar_map_url(), text="hello world", status=401)
 
@@ -158,7 +181,11 @@ async def test_failure_response_not_cached(aioclient_mock, hass, hass_client):
     assert aioclient_mock.call_count == 2
 
 
-async def test_last_modified_updates(aioclient_mock, hass, hass_client):
+async def test_last_modified_updates(
+    aioclient_mock: AiohttpClientMocker,
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+) -> None:
     """Test that it does respect HTTP not modified."""
     # Build Last-Modified header value
     now = dt_util.utcnow()
@@ -203,7 +230,11 @@ async def test_last_modified_updates(aioclient_mock, hass, hass_client):
     assert (await resp_1.read()) == (await resp_2.read())
 
 
-async def test_retries_after_error(aioclient_mock, hass, hass_client):
+async def test_retries_after_error(
+    aioclient_mock: AiohttpClientMocker,
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+) -> None:
     """Test that it does retry after an error instead of caching."""
     mock_entry = MockConfigEntry(domain=DOMAIN, unique_id="TEST_ID", data=TEST_CFG_DATA)
 
@@ -233,6 +264,6 @@ async def test_retries_after_error(aioclient_mock, hass, hass_client):
     resp_2 = await client.get("/api/camera_proxy/camera.buienradar_51_5288505_400216")
     assert aioclient_mock.call_count == 1
 
-    # Binary text can not be added as body to `aioclient_mock.get(text=...)`,
+    # Binary text cannot be added as body to `aioclient_mock.get(text=...)`,
     # while `resp.read()` returns bytes, encode the value.
     assert (await resp_2.read()) == b"DEADBEEF"

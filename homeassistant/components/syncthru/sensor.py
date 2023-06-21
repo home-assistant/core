@@ -103,8 +103,7 @@ class SyncThruSensor(CoordinatorEntity[DataUpdateCoordinator[SyncThru]], SensorE
 
 
 class SyncThruMainSensor(SyncThruSensor):
-    """
-    Implementation of the main sensor, conducting the actual polling.
+    """Implementation of the main sensor, conducting the actual polling.
 
     It also shows the detailed state and presents
     the displayed current status message.

@@ -1,5 +1,4 @@
-"""
-Volumio Platform.
+"""Volumio Platform.
 
 Volumio rest API: https://volumio.github.io/docs/API/REST_API.html
 """

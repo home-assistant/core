@@ -93,7 +93,6 @@ class DnsIPConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input:
-
             hostname = user_input[CONF_HOSTNAME]
             name = DEFAULT_NAME if hostname == DEFAULT_HOSTNAME else hostname
             resolver = user_input.get(CONF_RESOLVER, DEFAULT_RESOLVER)

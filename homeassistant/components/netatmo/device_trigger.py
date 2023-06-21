@@ -20,7 +20,7 @@ from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
-    entity_registry,
+    entity_registry as er,
 )
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
@@ -93,11 +93,11 @@ async def async_get_triggers(
     hass: HomeAssistant, device_id: str
 ) -> list[dict[str, str]]:
     """List device triggers for Netatmo devices."""
-    registry = entity_registry.async_get(hass)
+    registry = er.async_get(hass)
     device_registry = dr.async_get(hass)
     triggers = []
 
-    for entry in entity_registry.async_entries_for_device(registry, device_id):
+    for entry in er.async_entries_for_device(registry, device_id):
         if (
             device := device_registry.async_get(device_id)
         ) is None or device.model is None:

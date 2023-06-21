@@ -30,7 +30,7 @@ async def test_form(hass: HomeAssistant) -> None:
     await _setup(hass, result)
 
 
-@pytest.mark.credentials_invalid
+@pytest.mark.parametrize("credentials_valid", [False])
 async def test_form_invalid_credentials_user(hass: HomeAssistant) -> None:
     """Test if we get the error message on invalid credentials."""
 
@@ -116,7 +116,7 @@ async def test_form_zeroconf(hass: HomeAssistant) -> None:
     await _setup(hass, result)
 
 
-@pytest.mark.credentials_invalid
+@pytest.mark.parametrize("credentials_valid", [False])
 async def test_form_invalid_credentials_zeroconf(hass: HomeAssistant) -> None:
     """Test if we get the error message on invalid credentials."""
 
@@ -195,7 +195,7 @@ async def test_form_reauth(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-@pytest.mark.credentials_invalid
+@pytest.mark.parametrize("credentials_valid", [False])
 async def test_form_invalid_credentials_reauth(hass: HomeAssistant) -> None:
     """Test if we get the error message on invalid credentials."""
     mock_config = MockConfigEntry(domain=DOMAIN, unique_id="123456", data={})

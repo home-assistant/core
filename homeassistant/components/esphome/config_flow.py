@@ -26,7 +26,8 @@ from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.device_registry import format_mac
 
-from . import CONF_DEVICE_NAME, CONF_NOISE_PSK, DOMAIN
+from . import CONF_DEVICE_NAME, CONF_NOISE_PSK
+from .const import DOMAIN
 from .dashboard import async_get_dashboard, async_set_dashboard_info
 
 ERROR_REQUIRES_ENCRYPTION_KEY = "requires_encryption_key"
@@ -91,10 +92,18 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         self._name = entry.title
         self._device_name = entry.data.get(CONF_DEVICE_NAME)
 
-        if await self._retrieve_encryption_key_from_dashboard():
-            error = await self.fetch_device_info()
-            if error is None:
-                return await self._async_authenticate_or_add()
+        # Device without encryption allows fetching device info. We can then check
+        # if the device is no longer using a password. If we did try with a password,
+        # we know setting password to empty will allow us to authenticate.
+        error = await self.fetch_device_info()
+        if (
+            error is None
+            and self._password
+            and self._device_info
+            and not self._device_info.uses_password
+        ):
+            self._password = ""
+            return await self._async_authenticate_or_add()
 
         return await self.async_step_reauth_confirm()
 
@@ -103,6 +112,11 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Handle reauthorization flow."""
         errors = {}
+
+        if await self._retrieve_encryption_key_from_dashboard():
+            error = await self.fetch_device_info()
+            if error is None:
+                return await self._async_authenticate_or_add()
 
         if user_input is not None:
             self._noise_psk = user_input[CONF_NOISE_PSK]
@@ -152,6 +166,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         if self._device_info.uses_password:
             return await self.async_step_authenticate()
 
+        self._password = ""
         return self._async_get_entry()
 
     async def async_step_discovery_confirm(
@@ -204,7 +219,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def async_step_hassio(self, discovery_info: HassioServiceInfo) -> FlowResult:
         """Handle Supervisor service discovery."""
-        async_set_dashboard_info(
+        await async_set_dashboard_info(
             self.hass,
             discovery_info.slug,
             discovery_info.config["host"],

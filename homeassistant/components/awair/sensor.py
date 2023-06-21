@@ -1,7 +1,7 @@
 """Support for Awair sensors."""
 from __future__ import annotations
 
-from typing import cast
+from typing import Any, cast
 
 from python_awair.air_data import AirData
 from python_awair.devices import AwairBaseDevice, AwairLocalDevice
@@ -156,7 +156,7 @@ class AwairSensor(CoordinatorEntity[AwairDataUpdateCoordinator], SensorEntity):
         return round(state, 2)
 
     @property
-    def extra_state_attributes(self) -> dict:
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the Awair Index alongside state attributes.
 
         The Awair Index is a subjective score ranging from 0-4 (inclusive) that
@@ -178,7 +178,7 @@ class AwairSensor(CoordinatorEntity[AwairDataUpdateCoordinator], SensorEntity):
         https://docs.developer.getawair.com/?version=latest#awair-score-and-index
         """
         sensor_type = self.entity_description.key
-        attrs: dict = {}
+        attrs: dict[str, Any] = {}
         if not self._air_data:
             return attrs
         if sensor_type in self._air_data.indices:

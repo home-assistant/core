@@ -230,8 +230,7 @@ def build_item_response(
 
 
 def item_payload(item: DidlObject, get_thumbnail_url=None) -> BrowseMedia:
-    """
-    Create response payload for a single media item.
+    """Create response payload for a single media item.
 
     Used by async_browse_media.
     """
@@ -347,8 +346,7 @@ async def root_payload(
 
 
 def library_payload(media_library: MusicLibrary, get_thumbnail_url=None) -> BrowseMedia:
-    """
-    Create response payload to describe contents of a specific library.
+    """Create response payload to describe contents of a specific library.
 
     Used by async_browse_media.
     """
@@ -369,8 +367,7 @@ def library_payload(media_library: MusicLibrary, get_thumbnail_url=None) -> Brow
 
 
 def favorites_payload(favorites: SonosFavorites) -> BrowseMedia:
-    """
-    Create response payload to describe contents of a specific library.
+    """Create response payload to describe contents of a specific library.
 
     Used by async_browse_media.
     """
@@ -461,8 +458,7 @@ def get_media_type(item: DidlObject) -> str:
 
 
 def can_play(item: DidlObject) -> bool:
-    """
-    Test if playable.
+    """Test if playable.
 
     Used by async_browse_media.
     """
@@ -470,8 +466,7 @@ def can_play(item: DidlObject) -> bool:
 
 
 def can_expand(item: DidlObject) -> bool:
-    """
-    Test if expandable.
+    """Test if expandable.
 
     Used by async_browse_media.
     """

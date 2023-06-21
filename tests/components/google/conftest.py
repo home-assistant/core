@@ -68,7 +68,7 @@ def test_calendar_access_role() -> str:
 
 
 @pytest.fixture
-def test_api_calendar(calendar_access_role: str):
+def test_api_calendar(calendar_access_role: str) -> None:
     """Return a test calendar object used in API responses."""
     return {
         **TEST_API_CALENDAR,

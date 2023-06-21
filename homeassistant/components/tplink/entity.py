@@ -2,10 +2,9 @@
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable, Coroutine
-from typing import Any, TypeVar
+from typing import Any, Concatenate, ParamSpec, TypeVar
 
 from kasa import SmartDevice
-from typing_extensions import Concatenate, ParamSpec
 
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity import DeviceInfo
