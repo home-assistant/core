@@ -258,6 +258,7 @@ async def async_setup_entry(
     if not coordinator.last_update_success:
         raise PlatformNotReady
     uid = config_entry.unique_id
+    assert uid is not None
     sensors: list[QNAPSensor] = []
 
     sensors.extend(
