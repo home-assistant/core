@@ -677,7 +677,6 @@ class DefaultAgent(AbstractConversationAgent):
         assert self._trigger_intents is not None
 
         matched_triggers: set[str] = set()
-        speech: str | None = None
         for result in recognize_all(sentence, self._trigger_intents):
             trigger_id = result.intent.name
             if trigger_id in matched_triggers:
@@ -685,9 +684,6 @@ class DefaultAgent(AbstractConversationAgent):
                 break
 
             matched_triggers.add(trigger_id)
-            trigger_data = self._trigger_sentences[trigger_id]
-            if trigger_response := await trigger_data.callback(sentence):
-                speech = speech or trigger_response
 
         if not matched_triggers:
             # Sentence did not match any trigger sentences
@@ -699,6 +695,19 @@ class DefaultAgent(AbstractConversationAgent):
             len(matched_triggers),
             matched_triggers,
         )
+
+        # Gather callback responses in parallel
+        trigger_responses = await asyncio.gather(
+            *(
+                self._trigger_sentences[trigger_id].callback(sentence)
+                for trigger_id in matched_triggers
+            )
+        )
+
+        # Use last non-empty result as speech response
+        speech: str | None = None
+        for trigger_response in trigger_responses:
+            speech = speech or trigger_response
 
         response = intent.IntentResponse(language=self.hass.config.language)
         response.response_type = intent.IntentResponseType.ACTION_DONE

@@ -51,9 +51,6 @@ async def async_attach_trigger(
         ):
             await future
 
-            # Return the result of the action (currently None)
-            return future.result()
-
         return None
 
     default_agent = await _get_agent_manager(hass).async_get_agent(HOME_ASSISTANT_AGENT)
