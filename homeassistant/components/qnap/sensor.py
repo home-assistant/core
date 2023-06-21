@@ -192,21 +192,21 @@ _VOLUME_MON_COND: tuple[SensorEntityDescription, ...] = (
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
-         vol.Required(CONF_HOST): cv.string,
-         vol.Optional(CONF_SSL, default=False): cv.boolean,
-         vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
-         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-         vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
-         vol.Required(CONF_USERNAME): cv.string,
-         vol.Required(CONF_PASSWORD): cv.string,
-         vol.Optional(CONF_MONITORED_CONDITIONS): vol.All(
-             cv.ensure_list, [vol.In(SENSOR_KEYS)]
-         ),
-         vol.Optional(CONF_NICS): cv.ensure_list,
-         vol.Optional(CONF_DRIVES): cv.ensure_list,
-         vol.Optional(CONF_VOLUMES): cv.ensure_list,
-     }
- )
+        vol.Required(CONF_HOST): cv.string,
+        vol.Optional(CONF_SSL, default=False): cv.boolean,
+        vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
+        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
+        vol.Required(CONF_USERNAME): cv.string,
+        vol.Required(CONF_PASSWORD): cv.string,
+        vol.Optional(CONF_MONITORED_CONDITIONS): vol.All(
+            cv.ensure_list, [vol.In(SENSOR_KEYS)]
+        ),
+        vol.Optional(CONF_NICS): cv.ensure_list,
+        vol.Optional(CONF_DRIVES): cv.ensure_list,
+        vol.Optional(CONF_VOLUMES): cv.ensure_list,
+    }
+)
 
 
 async def async_setup_platform(
@@ -447,16 +447,6 @@ class QNAPDriveSensor(QNAPSensor):
     """A QNAP sensor that monitors HDD/SSD drive stats."""
 
     @property
-    def name(self):
-        """Return the name of the sensor, if any."""
-        server_name = self.coordinator.data["system_stats"]["system"]["name"]
-
-        return (
-            f"{server_name} {self.entity_description.name} (Drive"
-            f" {self.monitor_device})"
-        )
-
-    @property
     def native_value(self):
         """Return the state of the sensor."""
         data = self.coordinator.data["smart_drive_health"][self.monitor_device]
@@ -466,6 +456,16 @@ class QNAPDriveSensor(QNAPSensor):
 
         if self.entity_description.key == "drive_temp":
             return int(data["temp_c"]) if data["temp_c"] is not None else 0
+
+    @property
+    def name(self):
+        """Return the name of the sensor, if any."""
+        server_name = self.coordinator.data["system_stats"]["system"]["name"]
+
+        return (
+            f"{server_name} {self.entity_description.name} (Drive"
+            f" {self.monitor_device})"
+        )
 
     @property
     def extra_state_attributes(self):
