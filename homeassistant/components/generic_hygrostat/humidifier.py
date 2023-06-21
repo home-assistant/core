@@ -249,6 +249,11 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
         return self._state
 
     @property
+    def current_humidity(self):
+        """Return the measured humidity."""
+        return self._cur_humidity
+
+    @property
     def target_humidity(self):
         """Return the humidity we try to reach."""
         return self._target_humidity

@@ -26,7 +26,7 @@ CO2Signal==0.4.2
 DoorBirdPy==2.1.0
 
 # homeassistant.components.homekit
-HAP-python==4.6.0
+HAP-python==4.7.0
 
 # homeassistant.components.tasmota
 HATasmota==0.6.5
@@ -429,7 +429,7 @@ aqualogic==2.6
 aranet4==2.1.3
 
 # homeassistant.components.arcam_fmj
-arcam-fmj==1.3.0
+arcam-fmj==1.4.0
 
 # homeassistant.components.arris_tg2492lg
 arris-tg2492lg==1.2.1
