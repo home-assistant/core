@@ -4,6 +4,8 @@ from __future__ import annotations
 import asyncio
 import logging
 
+from blinkpy.blinkpy import Blink
+
 from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntity,
     AlarmControlPanelEntityFeature,
@@ -45,12 +47,13 @@ class BlinkSyncModule(AlarmControlPanelEntity):
     _attr_name = None
     _attr_has_entity_name = True
 
-    def __init__(self, data, name, sync):
+    def __init__(self, data, name: str, sync) -> None:
         """Initialize the alarm control panel."""
-        self.data = data
+        self.data: Blink = data
         self.sync = sync
-        self._name = name
-        self._attr_unique_id = sync.serial
+        self._name: str = name
+        self._attr_unique_id: str = sync.serial
+        self._attr_name: str = f"{DOMAIN} {name}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, sync.serial)},
             name=f"{DOMAIN} {name}",

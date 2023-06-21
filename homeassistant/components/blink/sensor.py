@@ -53,7 +53,7 @@ async def async_setup_entry(
         for description in SENSOR_TYPES
     ]
 
-    async_add_entities(entities)
+    async_add_entities(entities, update_before_add=True)
 
 
 class BlinkSensor(SensorEntity):

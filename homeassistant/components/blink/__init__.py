@@ -95,7 +95,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data[DOMAIN][entry.entry_id] = blink
 
-    if not hass.data[DOMAIN][entry.entry_id].available:
+    if not blink.available:
         raise ConfigEntryNotReady
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
@@ -175,7 +175,9 @@ async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     blink.refresh_rate = entry.options[CONF_SCAN_INTERVAL]
 
 
-async def async_handle_save_video_service(hass, entry, call):
+async def async_handle_save_video_service(
+    hass: HomeAssistant, entry: ConfigEntry, call
+) -> None:
     """Handle save video service calls."""
     camera_name = call.data[CONF_NAME]
     video_path = call.data[CONF_FILENAME]
@@ -191,7 +193,9 @@ async def async_handle_save_video_service(hass, entry, call):
         _LOGGER.error("Can't write image to file: %s", err)
 
 
-async def async_handle_save_recent_clips_service(hass, entry, call):
+async def async_handle_save_recent_clips_service(
+    hass: HomeAssistant, entry: ConfigEntry, call
+) -> None:
     """Save multiple recent clips to output directory."""
     camera_name = call.data[CONF_NAME]
     clips_dir = call.data[CONF_FILE_PATH]

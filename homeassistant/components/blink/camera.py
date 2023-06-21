@@ -2,7 +2,9 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Mapping
 import logging
+from typing import Any
 
 from requests.exceptions import ChunkedEncodingError
 
@@ -30,7 +32,7 @@ async def async_setup_entry(
         BlinkCamera(data, name, camera) for name, camera in data.cameras.items()
     ]
 
-    async_add_entities(entities)
+    async_add_entities(entities, update_before_add=True)
 
     platform = entity_platform.async_get_current_platform()
     platform.async_register_entity_service(SERVICE_TRIGGER, {}, "trigger_camera")
@@ -57,7 +59,7 @@ class BlinkCamera(Camera):
         _LOGGER.debug("Initialized blink camera %s", self.name)
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return the camera attributes."""
         return self._camera.attributes
 
@@ -65,7 +67,7 @@ class BlinkCamera(Camera):
         """Enable motion detection for the camera."""
         try:
             await self._camera.async_arm(True)
-            await self.data.refresh()
+            await self.data.refresh(force=True)
         except asyncio.TimeoutError:
             self._attr_available = False
 
@@ -73,7 +75,7 @@ class BlinkCamera(Camera):
         """Disable motion detection for the camera."""
         try:
             await self._camera.async_arm(False)
-            await self.data.refresh()
+            await self.data.refresh(force=True)
         except asyncio.TimeoutError:
             self._attr_available = False
 
@@ -83,11 +85,11 @@ class BlinkCamera(Camera):
         return self._camera.arm
 
     @property
-    def brand(self):
+    def brand(self) -> str | None:
         """Return the camera brand."""
         return DEFAULT_BRAND
 
-    async def trigger_camera(self):
+    async def trigger_camera(self) -> None:
         """Trigger camera to take a snapshot."""
         try:
             await self._camera.snap_picture()
