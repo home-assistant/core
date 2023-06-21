@@ -19,7 +19,12 @@ from homeassistant.components.websocket_api import ERR_NOT_FOUND, ERR_NOT_SUPPOR
 from homeassistant.components.websocket_api.connection import ActiveConnection
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_OFF, STATE_ON
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import (
+    HomeAssistant,
+    ServiceCall,
+    ServiceResponse,
+    SupportsResponse,
+)
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import (  # noqa: F401
@@ -32,6 +37,7 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.template import DATE_STR_FORMAT
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
+from homeassistant.util.json import JsonValueType
 
 from .const import (
     CONF_EVENT,
@@ -293,6 +299,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         SERVICE_LIST_EVENTS,
         SERVICE_LIST_EVENTS_SCHEMA,
         async_list_events_service,
+        supports_response=SupportsResponse.ONLY,
     )
     await component.async_setup(config)
     return True
@@ -766,21 +773,17 @@ async def async_create_event(entity: CalendarEntity, call: ServiceCall) -> None:
 
 async def async_list_events_service(
     calendar: CalendarEntity, service_call: ServiceCall
-) -> dict[str, Any]:
+) -> ServiceResponse:
     """Handle snapshot services calls."""
-    if not service_call.return_values:
-        raise ValueError(
-            "Service call did not request response data, but the list_events service requires it"
-        )
     start = service_call.data.get(EVENT_START_DATETIME, dt_util.now())
     if EVENT_DURATION in service_call.data:
         end = start + service_call.data[EVENT_DURATION]
     else:
         end = service_call.data[EVENT_END_DATETIME]
     calendar_event_list = await calendar.async_get_events(calendar.hass, start, end)
+    events: list[JsonValueType] = [
+        dataclasses.asdict(event) for event in calendar_event_list
+    ]
     return {
-        "events": [
-            dataclasses.asdict(event, dict_factory=_event_dict_factory)
-            for event in calendar_event_list
-        ]
+        "events": events,
     }

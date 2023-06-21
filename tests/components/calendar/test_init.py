@@ -386,9 +386,7 @@ async def test_create_event_service_invalid_params(
         )
 
 
-async def test_list_events_service(
-    hass: HomeAssistant,
-) -> None:
+async def test_list_events_service(hass: HomeAssistant) -> None:
     """Test listing events from the service call from the calendar demo."""
     await async_setup_component(hass, "calendar", {"calendar": {"platform": "demo"}})
     await hass.async_block_till_done()
@@ -405,7 +403,7 @@ async def test_list_events_service(
             "end_date_time": end,
         },
         blocking=True,
-        return_values=True,
+        return_response=True,
     )
     assert response
     assert "events" in response
@@ -443,7 +441,7 @@ async def test_list_events_service_duration(
             "duration": duration,
         },
         blocking=True,
-        return_values=True,
+        return_response=True,
     )
     assert response
     assert "events" in response
@@ -465,7 +463,7 @@ async def test_list_events_positive_duration(hass: HomeAssistant) -> None:
                 "duration": "-01:00:00",
             },
             blocking=True,
-            return_values=True,
+            return_response=True,
         )
 
 
@@ -486,5 +484,5 @@ async def test_list_events_exclusive_fields(hass: HomeAssistant) -> None:
                 "duration": "01:00:00",
             },
             blocking=True,
-            return_values=True,
+            return_response=True,
         )

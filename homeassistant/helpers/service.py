@@ -30,7 +30,7 @@ from homeassistant.core import (
     Context,
     HomeAssistant,
     ServiceCall,
-    ServiceResult,
+    ServiceResponse,
     callback,
 )
 from homeassistant.exceptions import (
@@ -59,8 +59,6 @@ if TYPE_CHECKING:
 
     _EntityT = TypeVar("_EntityT", bound=Entity)
 
-
-_T = TypeVar("_T")
 
 CONF_SERVICE_ENTITY_ID = "entity_id"
 
@@ -680,10 +678,10 @@ def async_set_service_schema(
 async def entity_service_call(  # noqa: C901
     hass: HomeAssistant,
     platforms: Iterable[EntityPlatform],
-    func: str | Callable[..., Coroutine[Any, Any, ServiceResult]],
+    func: str | Callable[..., Coroutine[Any, Any, ServiceResponse]],
     call: ServiceCall,
     required_features: Iterable[int] | None = None,
-) -> dict[str, ServiceResult] | None:
+) -> dict[str, ServiceResponse] | None:
     """Handle an entity service call.
 
     Calls all platforms simultaneously. The service call may request response data which will
@@ -814,15 +812,11 @@ async def entity_service_call(  # noqa: C901
     )
     assert not pending
 
-    response_data: dict[str, ServiceResult] = {}
+    response_data: dict[str, ServiceResponse] = {}
     for entity, task in zip(entities, done):
         response = task.result()  # pop exception if have
-        if not call.return_values:
+        if not call.return_response:
             continue
-        # if not isinstance(response, dict):
-        #    raise HomeAssistantError(
-        #        f"Service response data expected a dictionary, was {type(response)}"
-        #    )
         response_data[entity.entity_id] = response
 
     tasks: list[asyncio.Task[None]] = []
@@ -842,20 +836,20 @@ async def entity_service_call(  # noqa: C901
         for future in done:
             future.result()  # pop exception if have
 
-    return response_data if call.return_values else None
+    return response_data if call.return_response else None
 
 
 async def _handle_entity_call(
     hass: HomeAssistant,
     entity: Entity,
-    func: str | Callable[..., Coroutine[Any, Any, ServiceResult]],
+    func: str | Callable[..., Coroutine[Any, Any, ServiceResponse]],
     data: dict | ServiceCall,
     context: Context,
-) -> ServiceResult:
+) -> ServiceResponse:
     """Handle calling service method."""
     entity.async_set_context(context)
 
-    task: asyncio.Future[ServiceResult] | None
+    task: asyncio.Future[ServiceResponse] | None
     if isinstance(func, str):
         task = hass.async_run_job(
             partial(getattr(entity, func), **data)  # type: ignore[arg-type]
@@ -865,7 +859,7 @@ async def _handle_entity_call(
 
     # Guard because callback functions do not return a task when passed to
     # async_run_job.
-    result: ServiceResult | None = None
+    result: ServiceResponse | None = None
     if task is not None:
         result = await task
 

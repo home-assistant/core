@@ -22,7 +22,8 @@ from homeassistant.core import (
     Event,
     HomeAssistant,
     ServiceCall,
-    ServiceResult,
+    ServiceResponse,
+    SupportsResponse,
     callback,
 )
 from homeassistant.exceptions import HomeAssistantError
@@ -222,17 +223,18 @@ class EntityComponent(Generic[_EntityT]):
         schema: dict[str | vol.Marker, Any] | vol.Schema,
         func: str | Callable[..., Any],
         required_features: list[int] | None = None,
+        supports_response: SupportsResponse = SupportsResponse.NONE,
     ) -> None:
         """Register an entity service."""
         if isinstance(schema, dict):
             schema = cv.make_entity_service_schema(schema)
 
-        async def handle_service(call: ServiceCall) -> ServiceResult:
+        async def handle_service(call: ServiceCall) -> ServiceResponse:
             """Handle the service."""
             response_data = await service.entity_service_call(
                 self.hass, self._platforms.values(), func, call, required_features
             )
-            if not call.return_values:
+            if not call.return_response:
                 return None
             # The entity service call above zero or more entities, but we expect to match
             # exactly one.
@@ -247,7 +249,9 @@ class EntityComponent(Generic[_EntityT]):
                 )
             return values[0]
 
-        self.hass.services.async_register(self.domain, name, handle_service, schema)
+        self.hass.services.async_register(
+            self.domain, name, handle_service, schema, supports_response
+        )
 
     async def async_setup_platform(
         self,
