@@ -1,10 +1,12 @@
 """Support for QNAP NAS Sensors."""
 from __future__ import annotations
 
+import voluptuous as vol
 import logging
 
 from homeassistant import config_entries
 from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
@@ -12,6 +14,14 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import (
     ATTR_NAME,
+    CONF_HOST,
+    CONF_MONITORED_CONDITIONS,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_SSL,
+    CONF_TIMEOUT,
+    CONF_USERNAME,
+    CONF_VERIFY_SSL,
     PERCENTAGE,
     UnitOfDataRate,
     UnitOfInformation,
@@ -19,6 +29,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
@@ -45,6 +56,9 @@ ATTR_SERIAL = "Serial #"
 ATTR_TYPE = "Type"
 ATTR_UPTIME = "Uptime"
 ATTR_VOLUME_SIZE = "Volume Size"
+CONF_DRIVES = "drives"
+CONF_NICS = "nics"
+CONF_VOLUMES = "volumes"
 
 _SYSTEM_MON_COND: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
@@ -176,6 +190,24 @@ _VOLUME_MON_COND: tuple[SensorEntityDescription, ...] = (
     ),
 )
 
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+         vol.Required(CONF_HOST): cv.string,
+         vol.Optional(CONF_SSL, default=False): cv.boolean,
+         vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
+         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+         vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
+         vol.Required(CONF_USERNAME): cv.string,
+         vol.Required(CONF_PASSWORD): cv.string,
+         vol.Optional(CONF_MONITORED_CONDITIONS): vol.All(
+             cv.ensure_list, [vol.In(SENSOR_KEYS)]
+         ),
+         vol.Optional(CONF_NICS): cv.ensure_list,
+         vol.Optional(CONF_DRIVES): cv.ensure_list,
+         vol.Optional(CONF_VOLUMES): cv.ensure_list,
+     }
+ )
+
 
 async def async_setup_platform(
     hass: HomeAssistant,
@@ -189,7 +221,7 @@ async def async_setup_platform(
         hass,
         DOMAIN,
         "deprecated_yaml",
-        breaks_in_ha_version="2023.8.0",
+        breaks_in_ha_version="2023.12.0",
         is_fixable=False,
         severity=IssueSeverity.WARNING,
         translation_key="deprecated_yaml",
@@ -278,8 +310,8 @@ class QNAPSensor(CoordinatorEntity[QnapCoordinator], SensorEntity):
     def __init__(
         self,
         coordinator: QnapCoordinator,
-        description,
-        uid,
+        description: SensorEntityDescription,
+        uid: str,
         monitor_device: str | None = None,
         monitor_subdevice: str | None = None,
     ) -> None:
