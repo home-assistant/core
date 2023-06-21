@@ -24,14 +24,16 @@ from homeassistant.util import dt as dt_util
 from . import TriggerUpdateCoordinator
 from .const import CONF_PICTURE
 from .template_entity import (
-    TEMPLATE_ENTITY_COMMON_SCHEMA,
     TemplateEntity,
+    make_template_entity_common_schema,
 )
 from .trigger_entity import TriggerEntity
 
 _LOGGER = logging.getLogger(__name__)
 
 CONF_CONTENT_TYPE = "content_type"
+
+DEFAULT_NAME = "Template Image"
 
 GET_IMAGE_TIMEOUT = 10
 
@@ -41,7 +43,7 @@ IMAGE_SCHEMA = vol.Schema(
         vol.Required(CONF_URL): cv.template,
         vol.Optional(CONF_VERIFY_SSL, default=True): bool,
     }
-).extend(TEMPLATE_ENTITY_COMMON_SCHEMA.schema)
+).extend(make_template_entity_common_schema(DEFAULT_NAME).schema)
 
 
 async def _async_create_entities(
