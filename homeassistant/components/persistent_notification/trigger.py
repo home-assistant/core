@@ -16,7 +16,6 @@ from . import Notification, UpdateType, async_register_callback
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ("persistent_notification",)
 
 CONF_NOTIFICATION_ID: Final = "notification_id"
 CONF_UPDATE_TYPE: Final = "update_type"
