@@ -23,6 +23,7 @@ from homeassistant.helpers.entity_registry import async_get as async_get_ent_reg
 
 from .common import PROPERTY_ULTRAVIOLET
 
+from tests.common import MockConfigEntry
 from tests.components.diagnostics import (
     get_diagnostics_for_config_entry,
     get_diagnostics_for_device,
@@ -61,6 +62,22 @@ async def test_device_diagnostics(
     device = dev_reg.async_get_device({get_device_id(client.driver, multisensor_6)})
     assert device
 
+    # Create mock config entry for fake entity
+    mock_config_entry = MockConfigEntry(domain="test", unique_id="test")
+    mock_config_entry.add_to_hass(hass)
+
+    # Add an entity entry to the device that is not part of this config entry
+    ent_reg = async_get_ent_reg(hass)
+    ent_reg.async_get_or_create(
+        "test",
+        "test",
+        "test",
+        suggested_object_id="test",
+        config_entry=mock_config_entry,
+        device_id=device.id,
+    )
+    assert ent_reg.async_get("test.test")
+
     # Update a value and ensure it is reflected in the node state
     event = Event(
         type="value updated",
@@ -92,9 +109,15 @@ async def test_device_diagnostics(
     }
     # Assert that we only have the entities that were discovered for this device
     # Entities that are created outside of discovery (e.g. node status sensor and
-    # ping button) should not be in dump.
+    # ping button) as well as helper entities created from other integrations should
+    # not be in dump.
     assert len(diagnostics_data["entities"]) == len(
         list(async_discover_node_values(multisensor_6, device, {device.id: set()}))
+    )
+    # Explicitly check that the entity that is not part of this config entry is not
+    # in the dump.
+    assert not any(
+        entity["entity_id"] == "test.test" for entity in diagnostics_data["entities"]
     )
     assert diagnostics_data["state"] == multisensor_6.data
 
