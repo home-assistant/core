@@ -431,8 +431,10 @@ async def test_image_from_url_fails(
     await hass.async_block_till_done()
 
     state = hass.states.get("image.test")
-    assert state.state == STATE_UNKNOWN
 
+    # The image failed to load, the the last image update is registered
+    # but _last_image was set to `None`
+    assert state.state == "2023-04-01T00:00:00+00:00"
     assert log_text in caplog.text
 
 

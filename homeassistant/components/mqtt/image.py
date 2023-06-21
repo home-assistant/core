@@ -151,6 +151,9 @@ class MqttImage(MqttEntity, ImageEntity):
             response = await self._client.request("GET", url)
         except (httpx.TimeoutException, httpx.RequestError, ssl.SSLError) as ex:
             _LOGGER.warning("Connection failed to url %s files: %s", url, ex)
+            self._last_image = None
+            self._attr_image_last_updated = dt_util.utcnow()
+            self.async_write_ha_state()
             return
 
         try:
