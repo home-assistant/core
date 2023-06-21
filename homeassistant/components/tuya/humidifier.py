@@ -155,9 +155,9 @@ class TuyaHumidifierEntity(TuyaEntity, HumidifierEntity):
         if self._current_humidity is None:
             return None
 
-        if (current_humidity := self.device.status.get(
-            self._current_humidity.dpcode
-        )) is None:
+        if (
+            current_humidity := self.device.status.get(self._current_humidity.dpcode)
+        ) is None:
             return None
 
         return round(self._current_humidity.scale_value(current_humidity))
