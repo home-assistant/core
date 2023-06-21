@@ -324,7 +324,7 @@ class QNAPSensor(CoordinatorEntity[QnapCoordinator], SensorEntity):
         self,
         coordinator: QnapCoordinator,
         description: SensorEntityDescription,
-        uid: str | None = None,
+        uniqueid: str,
         monitor_device: str | None = None,
         monitor_subdevice: str | None = None,
     ) -> None:
@@ -332,14 +332,14 @@ class QNAPSensor(CoordinatorEntity[QnapCoordinator], SensorEntity):
         super().__init__(coordinator)
         self.coordinator = coordinator
         self.entity_description = description
-        self.uid = uid
+        self.uid = uniqueid
         self.device_name = self.coordinator.data["system_stats"]["system"]["name"]
         self.monitor_device = monitor_device
         self.monitor_subdevice = monitor_subdevice
         self.coordinator_context = None
         self._attr_unique_id = f"{self.uid}_{self.device_name}_{self.name}"
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, uid)},
+            identifiers={(DOMAIN, self.uid)},
             name=self.device_name,
             model=self.coordinator.data["system_stats"]["system"]["model"],
             sw_version=self.coordinator.data["system_stats"]["firmware"]["version"],
