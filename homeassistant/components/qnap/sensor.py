@@ -324,7 +324,7 @@ class QNAPSensor(CoordinatorEntity[QnapCoordinator], SensorEntity):
         self,
         coordinator: QnapCoordinator,
         description: SensorEntityDescription,
-        uid: str,
+        uid: str | None = None,
         monitor_device: str | None = None,
         monitor_subdevice: str | None = None,
     ) -> None:
