@@ -50,6 +50,8 @@ async def test_form(recorder_mock: Recorder, hass: HomeAssistant) -> None:
         "query": "SELECT 5 as value",
         "column": "value",
         "unit_of_measurement": "MiB",
+        "device_class": "data_size",
+        "state_class": "total",
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -151,6 +153,8 @@ async def test_flow_fails_invalid_query(
         "query": "SELECT 5 as value",
         "column": "value",
         "unit_of_measurement": "MiB",
+        "device_class": "data_size",
+        "state_class": "total",
     }
 
 
@@ -187,6 +191,8 @@ async def test_flow_fails_invalid_column_name(
         "query": "SELECT 5 as value",
         "column": "value",
         "unit_of_measurement": "MiB",
+        "device_class": "data_size",
+        "state_class": "total",
     }
 
 
@@ -201,6 +207,8 @@ async def test_options_flow(recorder_mock: Recorder, hass: HomeAssistant) -> Non
             "query": "SELECT 5 as value",
             "column": "value",
             "unit_of_measurement": "MiB",
+            "device_class": "data_size",
+            "state_class": "total",
         },
     )
     entry.add_to_hass(hass)
@@ -225,6 +233,8 @@ async def test_options_flow(recorder_mock: Recorder, hass: HomeAssistant) -> Non
             "column": "size",
             "unit_of_measurement": "MiB",
             "value_template": "{{ value }}",
+            "device_class": "data_size",
+            "state_class": "total",
         },
     )
 
@@ -235,6 +245,8 @@ async def test_options_flow(recorder_mock: Recorder, hass: HomeAssistant) -> Non
         "column": "size",
         "unit_of_measurement": "MiB",
         "value_template": "{{ value }}",
+        "device_class": "data_size",
+        "state_class": "total",
     }
 
 
