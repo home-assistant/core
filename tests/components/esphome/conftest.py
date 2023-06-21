@@ -227,11 +227,11 @@ async def mock_voice_assistant_v2_entry(mock_voice_assistant_entry) -> MockConfi
 @pytest.fixture
 async def mock_generic_device_entry(
     hass: HomeAssistant,
-    mock_client: APIClient,
 ) -> MockConfigEntry:
     """Set up an ESPHome entry."""
 
     async def _mock_device_entry(
+        mock_client: APIClient,
         entity_info: list[EntityInfo],
         user_service: list[UserService],
         states: list[EntityState],
