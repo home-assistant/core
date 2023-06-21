@@ -100,11 +100,7 @@ def _dispatch_bleak_callback(
 
 
 class BluetoothManager:
-    """Manage Bluetooth.
-
-    This class is expected to be a singleton and should
-    never be instantiated more than once.
-    """
+    """Manage Bluetooth."""
 
     def __init__(
         self,
