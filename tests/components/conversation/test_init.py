@@ -12,6 +12,7 @@ from homeassistant.components.cover import SERVICE_OPEN_COVER
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.const import ATTR_FRIENDLY_NAME
 from homeassistant.core import Context, HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
     area_registry as ar,
     device_registry as dr,
@@ -873,7 +874,7 @@ async def test_http_processing_intent_conversion_not_expose_new(
 @pytest.mark.parametrize("agent_id", AGENT_ID_OPTIONS)
 @pytest.mark.parametrize("sentence", ("turn on kitchen", "turn kitchen on"))
 async def test_turn_on_intent(
-    hass: HomeAssistant, init_components, sentence, agent_id
+    hass: HomeAssistant, init_components, sentence, agent_id, snapshot
 ) -> None:
     """Test calling the turn on intent."""
     hass.states.async_set("light.kitchen", "off")
@@ -887,7 +888,7 @@ async def test_turn_on_intent(
         "process",
         data,
         blocking=True,
-        return_values=True,
+        return_response=True,
     )
 
     assert len(calls) == 1
@@ -896,26 +897,21 @@ async def test_turn_on_intent(
     assert call.service == "turn_on"
     assert call.data == {"entity_id": ["light.kitchen"]}
 
-    assert result == {
-        "conversation_id": None,
-        "response": {
-            "card": {},
-            "data": {
-                "failed": [],
-                "success": [
-                    {
-                        "id": "light.kitchen",
-                        "name": "kitchen",
-                        "type": intent.IntentResponseTargetType.ENTITY,
-                    }
-                ],
-                "targets": [],
-            },
-            "language": "en",
-            "response_type": "action_done",
-            "speech": {"plain": {"extra_data": None, "speech": "Turned on light"}},
-        },
-    }
+    assert result == snapshot
+
+
+async def test_service_fails(hass: HomeAssistant, init_components) -> None:
+    """Test calling the turn on intent."""
+    with pytest.raises(HomeAssistantError), patch(
+        "homeassistant.components.conversation.async_converse",
+        side_effect=intent.IntentHandleError,
+    ):
+        await hass.services.async_call(
+            "conversation",
+            "process",
+            {"text": "bla"},
+            blocking=True,
+        )
 
 
 @pytest.mark.parametrize("sentence", ("turn off kitchen", "turn kitchen off"))
