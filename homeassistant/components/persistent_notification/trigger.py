@@ -63,7 +63,7 @@ async def async_attach_trigger(
                 job,
                 {
                     "trigger": {
-                        **trigger_data,  # type: ignore[arg-type]  # https://github.com/python/mypy/issues/9117
+                        **trigger_data,
                         "platform": "persistent_notification",
                         "update_type": update_type,
                         "notification": notification,
