@@ -1954,7 +1954,7 @@ velbus-aio==2023.2.0
 venstarcolortouch==0.19
 
 # homeassistant.components.victron_ble
-victron-ble==0.5.1
+victron-ble==0.6.0
 
 # homeassistant.components.vilfo
 vilfo-api-client==0.4.1
