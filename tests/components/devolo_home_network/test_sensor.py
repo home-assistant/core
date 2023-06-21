@@ -76,47 +76,6 @@ async def test_update_connected_wifi_clients(
     await hass.config_entries.async_unload(entry.entry_id)
 
 
-async def test_update_connected_wifi_clients(
-    hass: HomeAssistant, mock_device: MockDevice
-) -> None:
-    """Test state change of a connected_wifi_clients sensor device."""
-    entry = configure_integration(hass)
-    device_name = entry.title.replace(" ", "_").lower()
-    state_key = f"{DOMAIN}.{device_name}_connected_wifi_clients"
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-
-    state = hass.states.get(state_key)
-    assert state is not None
-    assert state.state == "1"
-    assert (
-        state.attributes[ATTR_FRIENDLY_NAME] == f"{entry.title} Connected Wifi clients"
-    )
-    assert state.attributes["state_class"] == SensorStateClass.MEASUREMENT
-
-    # Emulate device failure
-    mock_device.device.async_get_wifi_connected_station = AsyncMock(
-        side_effect=DeviceUnavailable
-    )
-    async_fire_time_changed(hass, dt.utcnow() + SHORT_UPDATE_INTERVAL)
-    await hass.async_block_till_done()
-
-    state = hass.states.get(state_key)
-    assert state is not None
-    assert state.state == STATE_UNAVAILABLE
-
-    # Emulate state change
-    mock_device.reset()
-    async_fire_time_changed(hass, dt.utcnow() + SHORT_UPDATE_INTERVAL)
-    await hass.async_block_till_done()
-
-    state = hass.states.get(state_key)
-    assert state is not None
-    assert state.state == "1"
-
-    await hass.config_entries.async_unload(entry.entry_id)
-
-
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_update_neighboring_wifi_networks(
     hass: HomeAssistant, mock_device: MockDevice, entity_registry: er.EntityRegistry
@@ -144,7 +103,7 @@ async def test_update_neighboring_wifi_networks(
     mock_device.device.async_get_wifi_neighbor_access_points = AsyncMock(
         side_effect=DeviceUnavailable
     )
-    async_fire_time_changed(hass, dt.utcnow() + LONG_UPDATE_INTERVAL)
+    async_fire_time_changed(hass, dt_util.utcnow() + LONG_UPDATE_INTERVAL)
     await hass.async_block_till_done()
 
     state = hass.states.get(state_key)
@@ -153,7 +112,7 @@ async def test_update_neighboring_wifi_networks(
 
     # Emulate state change
     mock_device.reset()
-    async_fire_time_changed(hass, dt.utcnow() + LONG_UPDATE_INTERVAL)
+    async_fire_time_changed(hass, dt_util.utcnow() + LONG_UPDATE_INTERVAL)
     await hass.async_block_till_done()
 
     state = hass.states.get(state_key)
@@ -189,7 +148,7 @@ async def test_update_connected_plc_devices(
     mock_device.plcnet.async_get_network_overview = AsyncMock(
         side_effect=DeviceUnavailable
     )
-    async_fire_time_changed(hass, dt.utcnow() + LONG_UPDATE_INTERVAL)
+    async_fire_time_changed(hass, dt_util.utcnow() + LONG_UPDATE_INTERVAL)
     await hass.async_block_till_done()
 
     state = hass.states.get(state_key)
@@ -198,7 +157,7 @@ async def test_update_connected_plc_devices(
 
     # Emulate state change
     mock_device.reset()
-    async_fire_time_changed(hass, dt.utcnow() + LONG_UPDATE_INTERVAL)
+    async_fire_time_changed(hass, dt_util.utcnow() + LONG_UPDATE_INTERVAL)
     await hass.async_block_till_done()
 
     state = hass.states.get(state_key)

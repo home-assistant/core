@@ -123,7 +123,7 @@
     'original_name': 'Enable guest Wifi',
     'platform': 'devolo_home_network',
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'switch_guest_wifi',
     'unique_id': '1234567890_switch_guest_wifi',
     'unit_of_measurement': None,
   })
@@ -166,7 +166,7 @@
     'original_name': 'Enable LEDs',
     'platform': 'devolo_home_network',
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'switch_leds',
     'unique_id': '1234567890_switch_leds',
     'unit_of_measurement': None,
   })

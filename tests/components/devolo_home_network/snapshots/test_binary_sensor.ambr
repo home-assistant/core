@@ -38,7 +38,7 @@
     'original_name': 'Connected to router',
     'platform': 'devolo_home_network',
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'connected_to_router',
     'unique_id': '1234567890_connected_to_router',
     'unit_of_measurement': None,
   })
