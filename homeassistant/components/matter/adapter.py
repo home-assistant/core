@@ -92,7 +92,7 @@ class MatterAdapter:
             get_clean_name(basic_info.nodeLabel)
             or get_clean_name(basic_info.productLabel)
             or get_clean_name(basic_info.productName)
-            or device_type.__class__.__name__
+            or device_type.__name__
             if device_type
             else None
         )
@@ -117,7 +117,7 @@ class MatterAdapter:
             identifiers.add((DOMAIN, f"{ID_TYPE_SERIAL}_{basic_info.serialNumber}"))
 
         model = (
-            get_clean_name(basic_info.productName) or device_type.__class__.__name__
+            get_clean_name(basic_info.productName) or device_type.__name__
             if device_type
             else None
         )
