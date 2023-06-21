@@ -115,13 +115,11 @@ class TemplateImage(ImageEntity):
             self._last_image = response.content
             return self._last_image
         except httpx.TimeoutException:
-            _LOGGER.error(
-                "%s: Timeout getting camera image from %s", self.entity_id, url
-            )
+            _LOGGER.error("%s: Timeout getting image from %s", self.entity_id, url)
             return None
         except (httpx.RequestError, httpx.HTTPStatusError) as err:
             _LOGGER.error(
-                "%s: Error getting new camera image from %s: %s",
+                "%s: Error getting new image from %s: %s",
                 self.entity_id,
                 url,
                 err,
