@@ -36,4 +36,4 @@ dismiss:
 
 dismiss_all:
   name: Dismiss All
-  description: Remove all notifications from the frontend.
+  description: Remove all notifications.

@@ -78,8 +78,6 @@ async def test_dismiss_all_notifications(hass: HomeAssistant) -> None:
 
     assert len(notifications) == 0
 
-    pn.create(hass, "test", notification_id="Beer 2")
-
 
 async def test_ws_get_notifications(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
