@@ -35,15 +35,6 @@ async def test_ssdp(hass: HomeAssistant) -> None:
     assert result["step_id"] == "confirm"
     assert result["description_placeholders"] == {CONF_NAME: MOCK_FRIENDLY_NAME}
 
-
-async def test_ssdp_confirm(hass: HomeAssistant) -> None:
-    """Test a confirmed ssdp import flow."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={CONF_SOURCE: SOURCE_SSDP},
-        data=MOCK_DISCOVER,
-    )
-
     result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
     assert result2["title"] == MOCK_FRIENDLY_NAME
     assert result2["data"] == {CONF_HOST: MOCK_SSDP_LOCATION}

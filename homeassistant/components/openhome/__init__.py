@@ -12,7 +12,6 @@ from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
 
@@ -21,12 +20,6 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS = [Platform.MEDIA_PLAYER]
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
-
-
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the component."""
-    hass.data[DOMAIN] = {}
-    return True
 
 
 async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
@@ -55,7 +48,7 @@ async def async_setup_entry(
 
     _LOGGER.debug("Initialised device: %s", device.uuid())
 
-    hass.data[DOMAIN][config_entry.entry_id] = device
+    hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = device
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
