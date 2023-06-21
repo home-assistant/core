@@ -1420,6 +1420,12 @@
       "integration_type": "virtual",
       "supported_by": "energyzero"
     },
+    "energyid": {
+      "name": "EnergyID",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_push"
+    },
     "energyzero": {
       "name": "EnergyZero",
       "integration_type": "hub",

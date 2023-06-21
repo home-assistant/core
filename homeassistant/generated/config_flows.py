@@ -122,6 +122,7 @@ FLOWS = {
         "elmax",
         "emonitor",
         "emulated_roku",
+        "energyid",
         "energyzero",
         "enocean",
         "enphase_envoy",
