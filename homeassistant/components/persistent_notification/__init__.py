@@ -1,7 +1,7 @@
 """Support for displaying persistent notifications."""
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from datetime import datetime
 import logging
 from typing import Any, Final, TypedDict
@@ -10,7 +10,7 @@ import voluptuous as vol
 
 from homeassistant.backports.enum import StrEnum
 from homeassistant.components import websocket_api
-from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import config_validation as cv, singleton
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
@@ -61,6 +61,17 @@ SCHEMA_SERVICE_NOTIFICATION = vol.Schema(
 _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
+
+
+@callback
+def async_register_callback(
+    hass: HomeAssistant,
+    _callback: Callable[[UpdateType, dict[str, Notification]], None],
+) -> CALLBACK_TYPE:
+    """Register a callback."""
+    return async_dispatcher_connect(
+        hass, SIGNAL_PERSISTENT_NOTIFICATIONS_UPDATED, _callback
+    )
 
 
 @bind_hass

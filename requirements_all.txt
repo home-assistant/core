@@ -2730,7 +2730,7 @@ yolink-api==0.2.9
 youless-api==1.0.1
 
 # homeassistant.components.media_extractor
-youtube-dl==2021.12.17
+yt-dlp==2023.3.4
 
 # homeassistant.components.zamg
 zamg==0.2.2
