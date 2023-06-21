@@ -1,4 +1,4 @@
-"""Constants for the Google Translate Text-to-Speech integration."""
+"""Constants for the Google Translate text-to-speech integration."""
 from dataclasses import dataclass
 
 CONF_TLD = "tld"

@@ -1,4 +1,4 @@
-"""The Google Translate Text-to-Speech integration."""
+"""The Google Translate text-to-speech integration."""
 from __future__ import annotations
 
 from homeassistant.config_entries import ConfigEntry
@@ -9,7 +9,7 @@ PLATFORMS: list[Platform] = [Platform.TTS]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up Google Translate Text-to-Speech from a config entry."""
+    """Set up Google Translate text-to-speech from a config entry."""
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True

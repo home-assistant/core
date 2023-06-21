@@ -1,4 +1,4 @@
-"""Test the Google Translate Text-to-Speech config flow."""
+"""Test the Google Translate text-to-speech config flow."""
 from unittest.mock import AsyncMock
 
 import pytest
@@ -32,7 +32,7 @@ async def test_user_step(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> No
     await hass.async_block_till_done()
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Google Translate Text-to-Speech"
+    assert result["title"] == "Google Translate text-to-speech"
     assert result["data"] == {
         CONF_LANG: "de",
         CONF_TLD: "de",
