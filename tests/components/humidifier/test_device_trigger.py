@@ -2,6 +2,7 @@
 import datetime
 
 import pytest
+from pytest_unordered import unordered
 import voluptuous_serialize
 
 import homeassistant.components.automation as automation
@@ -26,7 +27,6 @@ import homeassistant.util.dt as dt_util
 
 from tests.common import (
     MockConfigEntry,
-    assert_lists_same,
     async_fire_time_changed,
     async_get_device_automations,
     async_mock_service,
@@ -65,6 +65,7 @@ async def test_get_triggers(
         STATE_ON,
         {
             const.ATTR_HUMIDITY: 23,
+            const.ATTR_CURRENT_HUMIDITY: 48,
             ATTR_MODE: "home",
             const.ATTR_AVAILABLE_MODES: ["home", "away"],
             ATTR_SUPPORTED_FEATURES: 1,
@@ -80,6 +81,7 @@ async def test_get_triggers(
             "metadata": {"secondary": False},
         }
         for trigger in [
+            "current_humidity_changed",
             "target_humidity_changed",
             "turned_off",
             "turned_on",
@@ -89,7 +91,7 @@ async def test_get_triggers(
     triggers = await async_get_device_automations(
         hass, DeviceAutomationType.TRIGGER, device_entry.id
     )
-    assert_lists_same(triggers, expected_triggers)
+    assert triggers == unordered(expected_triggers)
 
 
 @pytest.mark.parametrize(
@@ -142,7 +144,7 @@ async def test_get_triggers_hidden_auxiliary(
     triggers = await async_get_device_automations(
         hass, DeviceAutomationType.TRIGGER, device_entry.id
     )
-    assert_lists_same(triggers, expected_triggers)
+    assert triggers == unordered(expected_triggers)
 
 
 async def test_if_fires_on_state_change(hass: HomeAssistant, calls) -> None:
