@@ -199,8 +199,7 @@ async def test_image_b64_encoded_with_availability(
         {
             mqtt.DOMAIN: {
                 "image": {
-                    "topic": "test/image",
-                    "from_url": True,
+                    "from_url_topic": "test/image",
                     "name": "Test",
                 }
             }
@@ -259,8 +258,7 @@ async def test_image_from_url(
         {
             mqtt.DOMAIN: {
                 "image": {
-                    "topic": "test/image",
-                    "from_url": True,
+                    "from_url_topic": "test/image",
                     "name": "Test",
                     "value_template": "{{ value_json.val }}",
                 }
@@ -313,8 +311,7 @@ async def test_image_from_url_with_template(
         {
             mqtt.DOMAIN: {
                 "image": {
-                    "topic": "test/image",
-                    "from_url": True,
+                    "from_url_topic": "test/image",
                     "name": "Test",
                 }
             }
@@ -383,8 +380,7 @@ async def test_image_from_url_content_type(
         {
             mqtt.DOMAIN: {
                 "image": {
-                    "topic": "test/image",
-                    "from_url": True,
+                    "from_url_topic": "test/image",
                     "name": "Test",
                     "encoding": "utf-8",
                 }
@@ -703,7 +699,7 @@ async def test_entity_debug_info_message(
         DEFAULT_CONFIG,
         None,
         state_topic="test_topic",
-        state_payload=b"ON",
+        state_payload="ON",
     )
 
 
