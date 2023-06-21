@@ -64,7 +64,7 @@ PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_STATIONS): cv.ensure_list,
         vol.Required(CONF_TOKEN): cv.string,
-        vol.Required(CONF_LOCATIONS): cv.ensure_list,
+        vol.Optional(CONF_LOCATIONS): cv.ensure_list,
     }
 )
 
@@ -79,28 +79,45 @@ async def async_setup_platform(
 
     token = config[CONF_TOKEN]
     station_filter = config.get(CONF_STATIONS)
-    locations = config[CONF_LOCATIONS]
+    locations = config.get(CONF_LOCATIONS)
 
     client = WaqiClient(token, async_get_clientsession(hass), timeout=TIMEOUT)
     dev = []
-    try:
-        for location_name in locations:
-            stations = await client.search(location_name)
-            _LOGGER.debug("The following stations were returned: %s", stations)
-            for station in stations:
-                waqi_sensor = WaqiSensor(client, station)
-                if not station_filter or {
-                    waqi_sensor.uid,
-                    waqi_sensor.url,
-                    waqi_sensor.station_name,
-                } & set(station_filter):
-                    dev.append(waqi_sensor)
-    except (
-        aiohttp.client_exceptions.ClientConnectorError,
-        asyncio.TimeoutError,
-    ) as err:
-        _LOGGER.exception("Failed to connect to WAQI servers")
-        raise PlatformNotReady from err
+    
+    if (locations.count < 1 & station_filter.count > 0)
+        try:
+            for station_name in station_filter
+               waqi_sensor = WaqiSensor(client, station_name)
+                dev.append(waqi_sensor)
+        except (
+            aiohttp.client_exceptions.ClientConnectorError,
+            asyncio.TimeoutError,
+        ) as err:
+            _LOGGER.exception("Failed to connect to WAQI servers")
+            raise PlatformNotReady from err
+
+    elif locations.count > 0
+        try:
+            for location_name in locations:
+                stations = await client.search(location_name)
+                _LOGGER.debug("The following stations were returned: %s", stations)
+                for station in stations:
+                    waqi_sensor = WaqiSensor(client, station)
+                    if not station_filter or {
+                        waqi_sensor.uid,
+                        waqi_sensor.url,
+                        waqi_sensor.station_name,
+                    } & set(station_filter):
+                        dev.append(waqi_sensor)
+        except (
+            aiohttp.client_exceptions.ClientConnectorError,
+            asyncio.TimeoutError,
+        ) as err:
+            _LOGGER.exception("Failed to connect to WAQI servers")
+            raise PlatformNotReady from err
+    else
+        _LOGGER.exception("No locations or stations specified")
+
     async_add_entities(dev, True)
 
 
