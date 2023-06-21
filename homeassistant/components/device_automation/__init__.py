@@ -40,7 +40,7 @@ from .const import (  # noqa: F401
     CONF_TURNED_OFF,
     CONF_TURNED_ON,
 )
-from .exceptions import DeviceNotFound, InvalidDeviceAutomationConfig
+from .exceptions import DeviceNotFound, EntityNotFound, InvalidDeviceAutomationConfig
 
 if TYPE_CHECKING:
     from .action import DeviceAutomationActionProtocol
@@ -313,7 +313,7 @@ async def _async_get_device_automation_capabilities(
 
     try:
         capabilities = await getattr(platform, function_name)(hass, automation)
-    except InvalidDeviceAutomationConfig:
+    except (EntityNotFound, InvalidDeviceAutomationConfig):
         return {}
 
     capabilities = capabilities.copy()
@@ -326,6 +326,18 @@ async def _async_get_device_automation_capabilities(
         )
 
     return capabilities  # type: ignore[no-any-return]
+
+
+@callback
+def async_get_entity_registry_entry_or_raise(
+    hass: HomeAssistant, entity_registry_id: str
+) -> er.RegistryEntry:
+    """Get an entity registry entry from entry ID or raise."""
+    entity_registry = er.async_get(hass)
+    entry = entity_registry.async_get(entity_registry_id)
+    if entry is None:
+        raise EntityNotFound
+    return entry
 
 
 def handle_device_errors(
