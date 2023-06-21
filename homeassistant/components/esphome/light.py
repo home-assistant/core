@@ -13,7 +13,7 @@ from aioesphomeapi import (
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    ATTR_COLOR_TEMP,
+    ATTR_COLOR_TEMP_KELVIN,
     ATTR_EFFECT,
     ATTR_FLASH,
     ATTR_RGB_COLOR,
@@ -96,6 +96,15 @@ _COLOR_MODE_MAPPING = {
         | LightColorCapability.WHITE
     ],
 }
+
+
+def _mired_to_kelvin(mired_temperature: float) -> int:
+    """Convert absolute mired shift to degrees kelvin.
+
+    This function rounds the converted value instead of flooring the value as
+    is done in homeassistant.util.color.color_temperature_mired_to_kelvin().
+    """
+    return round(1000000 / mired_temperature)
 
 
 def _color_mode_to_ha(mode: int) -> str:
@@ -220,8 +229,8 @@ class EsphomeLight(EsphomeEntity[LightInfo, LightState], LightEntity):
         if (transition := kwargs.get(ATTR_TRANSITION)) is not None:
             data["transition_length"] = transition
 
-        if (color_temp := kwargs.get(ATTR_COLOR_TEMP)) is not None:
-            data["color_temperature"] = color_temp
+        if (color_temp_kelvin := kwargs.get(ATTR_COLOR_TEMP_KELVIN)) is not None:
+            data["color_temperature"] = 1000000.0 / color_temp_kelvin
             if _filter_color_modes(color_modes, LightColorCapability.COLOR_TEMPERATURE):
                 color_modes = _filter_color_modes(
                     color_modes, LightColorCapability.COLOR_TEMPERATURE
@@ -349,9 +358,9 @@ class EsphomeLight(EsphomeEntity[LightInfo, LightState], LightEntity):
 
     @property
     @esphome_state_property
-    def color_temp(self) -> int:
-        """Return the CT color value in mireds."""
-        return round(self._state.color_temperature)
+    def color_temp_kelvin(self) -> int:
+        """Return the CT color value in Kelvin."""
+        return _mired_to_kelvin(self._state.color_temperature)
 
     @property
     @esphome_state_property
@@ -386,5 +395,5 @@ class EsphomeLight(EsphomeEntity[LightInfo, LightState], LightEntity):
             supported.remove(ColorMode.WHITE)
         self._attr_supported_color_modes = supported
         self._attr_effect_list = static_info.effects
-        self._attr_min_mireds = round(static_info.min_mireds)
-        self._attr_max_mireds = round(static_info.max_mireds)
+        self._attr_min_color_temp_kelvin = _mired_to_kelvin(static_info.max_mireds)
+        self._attr_max_color_temp_kelvin = _mired_to_kelvin(static_info.min_mireds)
