@@ -212,8 +212,9 @@ class EsphomeLight(EsphomeEntity[LightInfo, LightState], LightEntity):
                 # need to convert cw+ww part to white+color_temp
                 white = data["white"] = max(cw, ww)
                 if white != 0:
-                    min_ct = self.min_mireds
-                    max_ct = self.max_mireds
+                    static_info = self._static_info
+                    min_ct = static_info.min_mireds
+                    max_ct = static_info.max_mireds
                     ct_ratio = ww / (cw + ww)
                     data["color_temperature"] = min_ct + ct_ratio * (max_ct - min_ct)
                 color_modes = _filter_color_modes(
@@ -410,28 +411,10 @@ class EsphomeLight(EsphomeEntity[LightInfo, LightState], LightEntity):
         self._attr_effect_list = static_info.effects
         self._attr_min_mireds = round(static_info.min_mireds)
         self._attr_max_mireds = round(static_info.max_mireds)
+        self._attr_min_color_temp_kelvin = _mired_to_kelvin(static_info.max_mireds)
+        self._attr_max_color_temp_kelvin = _mired_to_kelvin(static_info.min_mireds)
 
     @property
     def effect_list(self) -> list[str]:
         """Return the list of supported effects."""
         return self._static_info.effects
-
-    @property
-    def min_mireds(self) -> int:
-        """Return the coldest color_temp that this light supports."""
-        return round(self._static_info.min_mireds)
-
-    @property
-    def max_mireds(self) -> int:
-        """Return the warmest color_temp that this light supports."""
-        return round(self._static_info.max_mireds)
-
-    @property
-    def min_color_temp_kelvin(self) -> int:
-        """Return the warmest color_temp that this light supports, in Kelvin."""
-        return _mired_to_kelvin(self._static_info.max_mireds)
-
-    @property
-    def max_color_temp_kelvin(self) -> int:
-        """Return the coldest color_temp that this light supports, in Kelvin."""
-        return _mired_to_kelvin(self._static_info.min_mireds)
