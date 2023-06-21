@@ -339,6 +339,53 @@ async def test_if_fires_on_state_change(
     }
 
 
+async def test_if_fires_on_state_change_legacy(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, calls
+) -> None:
+    """Test for turn_on and turn_off triggers firing."""
+    entry = entity_registry.async_get_or_create(DOMAIN, "test", "5678")
+
+    hass.states.async_set(
+        entry.entity_id,
+        STATE_ON,
+        {
+            const.ATTR_HUMIDITY: 23,
+            ATTR_MODE: "home",
+            const.ATTR_AVAILABLE_MODES: ["home", "away"],
+            ATTR_SUPPORTED_FEATURES: 1,
+        },
+    )
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": {
+                        "platform": "device",
+                        "domain": DOMAIN,
+                        "device_id": "",
+                        "entity_id": entry.entity_id,
+                        "type": "target_humidity_changed",
+                        "below": 20,
+                    },
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {"some": "target_humidity_changed_below"},
+                    },
+                },
+            ]
+        },
+    )
+
+    # Fake that the humidity is changing
+    hass.states.async_set(entry.entity_id, STATE_ON, {const.ATTR_HUMIDITY: 7})
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+    assert calls[0].data["some"] == "target_humidity_changed_below"
+
+
 async def test_invalid_config(
     hass: HomeAssistant, entity_registry: er.EntityRegistry, calls
 ) -> None:
