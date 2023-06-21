@@ -85,11 +85,8 @@ async def test_update_enable_guest_wifi(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    state = hass.states.get(state_key)
-    assert state is not None
-    assert state == snapshot
-    entity_entry = entity_registry.async_get(state.entity_id)
-    assert entity_entry == snapshot
+    assert hass.states.get(state_key) == snapshot
+    assert entity_registry.async_get(state_key) == snapshot
 
     # Emulate state change
     mock_device.device.async_get_wifi_guest_access.return_value = WifiGuestAccessGet(
@@ -177,11 +174,8 @@ async def test_update_enable_leds(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    state = hass.states.get(state_key)
-    assert state is not None
-    assert state == snapshot
-    entity_entry = entity_registry.async_get(state.entity_id)
-    assert entity_entry == snapshot
+    assert hass.states.get(state_key) == snapshot
+    assert entity_registry.async_get(state_key) == snapshot
 
     # Emulate state change
     mock_device.device.async_get_led_setting.return_value = True

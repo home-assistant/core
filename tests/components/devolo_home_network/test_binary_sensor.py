@@ -50,10 +50,8 @@ async def test_update_attached_to_router(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    state = hass.states.get(state_key)
-    assert state is not None
-    assert state == snapshot
-    assert entity_registry.async_get(state.entity_id) == snapshot
+    assert hass.states.get(state_key) == snapshot
+    assert entity_registry.async_get(state_key) == snapshot
 
     # Emulate device failure
     mock_device.plcnet.async_get_network_overview = AsyncMock(
