@@ -251,11 +251,33 @@
 # ---
 # name: test_ws_hass_agent_debug
   dict({
-    'name': dict({
-      'name': 'name',
-      'text': 'my cool light',
-      'value': 'my cool light',
-    }),
+    'results': list([
+      dict({
+        'entities': dict({
+          'name': dict({
+            'name': 'name',
+            'text': 'my cool light',
+            'value': 'my cool light',
+          }),
+        }),
+        'intent': dict({
+          'name': 'HassTurnOn',
+        }),
+      }),
+      dict({
+        'entities': dict({
+          'name': dict({
+            'name': 'name',
+            'text': 'my cool light',
+            'value': 'my cool light',
+          }),
+        }),
+        'intent': dict({
+          'name': 'HassTurnOff',
+        }),
+      }),
+      None,
+    ]),
   })
 # ---
 # name: test_ws_hass_agent_debug.1

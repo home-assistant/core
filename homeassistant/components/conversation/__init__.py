@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Iterable
-from dataclasses import asdict, dataclass
+from dataclasses import dataclass
 import logging
 import re
 from typing import Any, Literal
@@ -331,7 +331,22 @@ async def websocket_hass_agent_debug(
         msg["id"],
         {
             "results": [
-                asdict(result) if result is not None else None for result in results
+                {
+                    "intent": {
+                        "name": result.intent.name,
+                    },
+                    "entities": {
+                        entity_key: {
+                            "name": entity.name,
+                            "value": entity.value,
+                            "text": entity.text,
+                        }
+                        for entity_key, entity in result.entities.items()
+                    },
+                }
+                if result is not None
+                else None
+                for result in results
             ]
         },
     )
