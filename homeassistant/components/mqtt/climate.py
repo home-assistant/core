@@ -964,12 +964,6 @@ class MqttClimate(MqttTemperatureControlEntity, ClimateEntity):
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new operation mode."""
-        if CONF_POWER_COMMAND_TOPIC in self._config:
-            if hvac_mode == HVACMode.OFF:
-                await self.async_turn_off()
-            else:
-                await self.async_turn_on()
-
         payload = self._command_templates[CONF_MODE_COMMAND_TEMPLATE](hvac_mode)
         await self._publish(CONF_MODE_COMMAND_TOPIC, payload)
 
