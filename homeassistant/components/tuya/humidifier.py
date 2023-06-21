@@ -115,7 +115,6 @@ class TuyaHumidifierEntity(TuyaEntity, HumidifierEntity):
         if int_type := self.find_dpcode(
             description.current_humidity,
             dptype=DPType.INTEGER,
-            prefer_function=True,
         ):
             self._current_humidity = int_type
 
