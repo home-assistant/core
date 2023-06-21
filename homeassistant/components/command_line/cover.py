@@ -222,7 +222,7 @@ class CommandCover(ManualTriggerEntity, CoverEntity):
             if payload:
                 self._state = int(payload)
             self._process_manual_data(payload)
-            await self.async_update_ha_state(True)
+            self.async_write_ha_state()
 
     async def async_update(self) -> None:
         """Update the entity.
