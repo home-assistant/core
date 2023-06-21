@@ -173,6 +173,7 @@ FLOWS = {
         "google_generative_ai_conversation",
         "google_mail",
         "google_sheets",
+        "google_translate",
         "google_travel_time",
         "govee_ble",
         "gpslogger",

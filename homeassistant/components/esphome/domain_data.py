@@ -28,10 +28,10 @@ class DomainData:
     _entry_datas: dict[str, RuntimeEntryData] = field(default_factory=dict)
     _stores: dict[str, Store] = field(default_factory=dict)
     _gatt_services_cache: MutableMapping[int, BleakGATTServiceCollection] = field(
-        default_factory=lambda: LRU(MAX_CACHED_SERVICES)  # type: ignore[no-any-return]
+        default_factory=lambda: LRU(MAX_CACHED_SERVICES)
     )
     _gatt_mtu_cache: MutableMapping[int, int] = field(
-        default_factory=lambda: LRU(MAX_CACHED_SERVICES)  # type: ignore[no-any-return]
+        default_factory=lambda: LRU(MAX_CACHED_SERVICES)
     )
 
     def get_gatt_services_cache(
