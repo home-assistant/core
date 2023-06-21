@@ -168,6 +168,7 @@ async def _mock_generic_device_entry(
     )
 
     async def _subscribe_states(callback: Callable[[EntityState], None]) -> None:
+        """Subscribe to state."""
         for state in states:
             callback(state)
 
@@ -190,6 +191,8 @@ async def _mock_generic_device_entry(
     with patch.object(ReconnectLogic, "_try_connect", mock_try_connect):
         await hass.config_entries.async_setup(entry.entry_id)
         await try_connect_done.wait()
+
+    await hass.async_block_till_done()
 
     return entry
 

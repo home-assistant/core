@@ -17,7 +17,9 @@ async def test_pipeline_selector(
     assert state.state == "preferred"
 
 
-async def test_select_entity(hass: HomeAssistant, mock_generic_device_entry) -> None:
+async def test_select_generic_entity(
+    hass: HomeAssistant, mock_generic_device_entry
+) -> None:
     """Test a generic select entity."""
     entity_info = [
         SelectInfo(
@@ -33,3 +35,6 @@ async def test_select_entity(hass: HomeAssistant, mock_generic_device_entry) -> 
     await mock_generic_device_entry(
         entity_info=entity_info, user_service=user_service, states=states
     )
+    state = hass.states.get("select.test_my_select")
+    assert state is not None
+    assert state.state == "a"
