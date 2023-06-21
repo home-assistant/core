@@ -814,10 +814,7 @@ async def entity_service_call(  # noqa: C901
 
     response_data: dict[str, ServiceResponse] = {}
     for entity, task in zip(entities, done):
-        response = task.result()  # pop exception if have
-        if not call.return_response:
-            continue
-        response_data[entity.entity_id] = response
+        response_data[entity.entity_id] = task.result()  # pop exception if have
 
     tasks: list[asyncio.Task[None]] = []
 

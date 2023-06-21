@@ -236,8 +236,6 @@ class EntityComponent(Generic[_EntityT]):
             )
             if not call.return_response:
                 return None
-            # The entity service call above zero or more entities, but we expect to match
-            # exactly one.
             if not response_data:
                 raise HomeAssistantError(
                     "Service call requested response data but did not match any entities"
