@@ -1,5 +1,6 @@
 """The tests for Climate device triggers."""
 import pytest
+from pytest_unordered import unordered
 import voluptuous_serialize
 
 import homeassistant.components.automation as automation
@@ -23,7 +24,6 @@ from homeassistant.setup import async_setup_component
 
 from tests.common import (
     MockConfigEntry,
-    assert_lists_same,
     async_get_device_automations,
     async_mock_service,
 )
@@ -83,7 +83,7 @@ async def test_get_triggers(
     triggers = await async_get_device_automations(
         hass, DeviceAutomationType.TRIGGER, device_entry.id
     )
-    assert_lists_same(triggers, expected_triggers)
+    assert triggers == unordered(expected_triggers)
 
 
 @pytest.mark.parametrize(
@@ -145,7 +145,7 @@ async def test_get_triggers_hidden_auxiliary(
     triggers = await async_get_device_automations(
         hass, DeviceAutomationType.TRIGGER, device_entry.id
     )
-    assert_lists_same(triggers, expected_triggers)
+    assert triggers == unordered(expected_triggers)
 
 
 async def test_if_fires_on_state_change(hass: HomeAssistant, calls) -> None:

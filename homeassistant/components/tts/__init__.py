@@ -44,7 +44,7 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.network import get_url
 from homeassistant.helpers.restore_state import RestoreEntity
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import UNDEFINED, ConfigType
 from homeassistant.util import dt as dt_util, language as language_util
 
 from .const import (
@@ -610,7 +610,7 @@ class SpeechManager:
 
         async def get_tts_data() -> str:
             """Handle data available."""
-            if engine_instance.name is None:
+            if engine_instance.name is None or engine_instance.name is UNDEFINED:
                 raise HomeAssistantError("TTS engine name is not set.")
 
             if isinstance(engine_instance, Provider):
