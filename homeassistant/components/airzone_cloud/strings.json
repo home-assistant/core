@@ -15,5 +15,12 @@
         }
       }
     }
+  },
+  "entity": {
+    "binary_sensor": {
+      "problem": {
+        "name": "[%key:component::binary_sensor::entity_component::problem::name%]"
+      }
+    }
   }
 }

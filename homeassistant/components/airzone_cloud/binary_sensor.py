@@ -4,7 +4,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, Final
 
-from aioairzone_cloud.const import AZD_NAME, AZD_PROBLEMS, AZD_WARNINGS, AZD_ZONES
+from aioairzone_cloud.const import AZD_PROBLEMS, AZD_WARNINGS, AZD_ZONES
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -35,7 +35,9 @@ ZONE_BINARY_SENSOR_TYPES: Final[tuple[AirzoneBinarySensorEntityDescription, ...]
         },
         device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
+        has_entity_name=True,
         key=AZD_PROBLEMS,
+        name="Problem",
     ),
 )
 
@@ -100,7 +102,6 @@ class AirzoneZoneBinarySensor(AirzoneZoneEntity, AirzoneBinarySensor):
         """Initialize."""
         super().__init__(coordinator, entry, zone_id, zone_data)
 
-        self._attr_name = f"{zone_data[AZD_NAME]} {description.name}"
         self._attr_unique_id = f"{zone_id}_{description.key}"
         self.entity_description = description
 
