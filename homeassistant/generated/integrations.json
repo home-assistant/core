@@ -1714,7 +1714,7 @@
     },
     "energyid": {
       "name": "EnergyID",
-      "integration_type": "service",
+      "integration_type": "hub",
       "config_flow": true,
       "iot_class": "cloud_push"
     },

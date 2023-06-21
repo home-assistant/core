@@ -1,12 +1,13 @@
 {
   "domain": "energyid",
   "name": "EnergyID",
-  "codeowners": ["@JrtPec", "@Molier"],
+  "codeowners": ["@JrtPec"],
   "config_flow": true,
+  "dependencies": [],
   "documentation": "https://www.home-assistant.io/integrations/energyid",
-  "integration_type": "service",
+  "homekit": {},
   "iot_class": "cloud_push",
-  "loggers": ["energyid_webhooks"],
-  "quality_scale": "silver",
-  "requirements": ["energyid-webhooks==0.0.14"]
+  "requirements": ["energyid-webhooks==0.0.5"],
+  "ssdp": [],
+  "zeroconf": []
 }

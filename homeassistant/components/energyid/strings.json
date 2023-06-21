@@ -2,227 +2,32 @@
   "config": {
     "step": {
       "user": {
-        "title": "Connect to EnergyID (step 1 of 3)",
-        "description": "Enter your EnergyID webhook provisioning key and secret. Find these in your EnergyID portal under Device Provisioning or Webhook settings. More info: https://help.energyid.eu/nl/integraties/home-assistant/",
         "data": {
-          "provisioning_key": "Provisioning key",
-          "provisioning_secret": "Provisioning secret"
-        },
-        "data_description": {
-          "provisioning_key": "Your unique key for provisioning.",
-          "provisioning_secret": "Your secret associated with the provisioning key."
-        }
-      },
-      "auth_and_claim": {
-        "title": "Claim device in EnergyID (step 2 of 3)",
-        "description": "This Home Assistant connection needs to be claimed in your EnergyID portal before it can send data.\n\n1. Go to: {claim_url}\n2. Enter code: **{claim_code}**\n3. (Code expires: {valid_until})\n\nAfter successfully claiming the device in EnergyID, click **Submit** below to continue.",
-        "data": {}
-      },
-      "finalize": {
-        "title": "Finalize setup (step 3 of 3)",
-        "description": "Successfully connected to EnergyID!\n\nPlease confirm or set the name this Home Assistant instance should use when communicating with EnergyID. This name will appear in your EnergyID webhook device list, helping you identify this connection.",
-        "data": {
-          "device_name": "Device name (for EnergyID webhook)"
-        },
-        "data_description": {
-          "device_name": "This friendly name identifies this Home Assistant connection in your EnergyID portal's webhook list."
-        }
-      },
-      "reconfigure": {
-        "title": "Reconfigure EnergyID connection",
-        "description": "Update your EnergyID provisioning credentials or the device name used for this connection.",
-        "data": {
-          "provisioning_key": "[%key:component::energyid::config::step::user::data::provisioning_key%]",
-          "provisioning_secret": "[%key:component::energyid::config::step::user::data::provisioning_secret%]",
-          "device_name": "[%key:component::energyid::config::step::finalize::data::device_name%]"
-        },
-        "data_description": {
-          "provisioning_key": "[%key:component::energyid::config::step::user::data_description::provisioning_key%]",
-          "provisioning_secret": "[%key:component::energyid::config::step::user::data_description::provisioning_secret%]",
-          "device_name": "[%key:component::energyid::config::step::finalize::data_description::device_name%]"
+          "webhook_url": "EnergyID Webhook URL",
+          "entity_id": "Home Assistant Entity ID",
+          "metric": "EnergyID Metric",
+          "metric_kind": "EnergyID Metric Kind",
+          "unit": "Unit of Measurement"
         }
       }
     },
     "error": {
-      "None": "Unknown error occurred during authentication.",
-      "needs_claim": "This device needs to be claimed in EnergyID before continuing.",
-      "missing_record_number": "Authentication succeeded but no record number was returned.",
-      "cannot_connect": "Failed to connect to EnergyID API.",
-      "unknown_auth_error": "Unexpected error occurred during authentication.",
-      "cannot_retrieve_claim_info": "Could not retrieve claim information from EnergyID.",
-      "cannot_retrieve_claim_info_format": "Invalid claim information format received from EnergyID.",
-      "claim_failed_or_timed_out": "Claiming the device failed or the code expired.",
-      "missing_credentials": "Provisioning credentials are missing.",
-      "internal_flow_data_missing": "Configuration data is incomplete. Please restart setup.",
-      "wrong_account": "The credentials belong to a different EnergyID account."
-    },
-    "abort": {
-      "already_configured": "This EnergyID site is already configured.",
-      "reauth_successful": "Re-authentication was successful.",
-      "reconfigure_successful": "Reconfiguration was successful.",
-      "reconfigure_wrong_account": "Reconfiguration failed: The credentials belong to a different site.",
-      "reconfigure_reclaim_needed": "Reconfiguration failed: Device needs to be reclaimed.",
-      "internal_error_no_claim_info": "Internal error: Claim information is missing.",
-      "no_mappings_to_manage": "No mappings are configured yet to manage.",
-      "no_mapping_selected": "No mapping was selected.",
-      "mapping_not_found": "Selected mapping was not found.",
-      "menu_render_error": "Failed to display menu.",
-      "unknown_error": "An unexpected error occurred.",
-      "internal_flow_data_missing": "Internal error: Required data for this step is missing. Please restart the setup."
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_url": "Invalid Webhook URL",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     }
   },
   "options": {
     "step": {
       "init": {
-        "title": "Manage EnergyID mappings",
         "data": {
-          "next_step": "Select action"
-        },
-        "description": "Configure mappings for EnergyID device. Select an action below.",
-        "data_description": {
-          "next_step": "Choose whether to add a new mapping or manage existing ones."
+          "data_interval": "EnergyID Data Interval",
+          "upload_interval": "Upload Interval (seconds)"
         }
-      },
-      "add_mapping": {
-        "title": "Add sensor to EnergyID",
-        "data": {
-          "ha_entity_id": "Home Assistant sensor",
-          "energyid_key": "EnergyID metric key",
-          "show_all_sensors": "Show all sensors"
-        },
-        "description": "Select a sensor and enter the EnergyID metric key to map it to.",
-        "data_description": {
-          "ha_entity_id": "Select the sensor from Home Assistant.",
-          "energyid_key": "Enter the corresponding metric key for EnergyID (e.g., 'el', 'pv', 'temp.living'). No spaces.",
-          "show_all_sensors": "Show all available sensors in Home Assistant."
-        }
-      },
-      "manage_mappings": {
-        "title": "Select mapping to modify/delete",
-        "data": {
-          "selected_mapping": "Select mapping"
-        },
-        "description": "Choose one of the existing mappings:",
-        "data_description": {
-          "selected_mapping": "Select the specific mapping you want to modify or delete."
-        }
-      },
-      "mapping_action": {
-        "title": "Modify or delete mapping",
-        "menu_options": {
-          "edit_mapping": "Update EnergyID key",
-          "delete_mapping": "Delete this mapping"
-        },
-        "description": "Selected mapping. Choose an action to perform."
-      },
-      "edit_mapping": {
-        "title": "Update EnergyID key",
-        "data": {
-          "energyid_key": "New EnergyID metric key"
-        },
-        "description": "Update the EnergyID key for the selected entity.",
-        "data_description": {
-          "energyid_key": "Enter the new EnergyID key. No spaces allowed."
-        }
-      },
-      "delete_mapping": {
-        "title": "Confirm delete mapping",
-        "description": "Are you sure you want to stop sending data from this entity? The EnergyID key will no longer be updated by this entity."
       }
     },
     "error": {
-      "invalid_key_empty": "EnergyID key cannot be empty.",
-      "invalid_key_spaces": "EnergyID key cannot contain spaces.",
-      "entity_already_mapped": "This Home Assistant entity is already mapped.",
-      "entity_required": "You must select a sensor entity."
-    },
-    "abort": {
-      "no_mappings_to_manage": "There are no mappings configured yet. Please add one first.",
-      "no_mapping_selected": "No mapping was selected.",
-      "mapping_not_found": "The selected mapping could not be found or was removed.",
-      "menu_render_error": "Failed to display the management menu. Please try again."
-    }
-  },
-  "config_subentries": {
-    "sensor_mapping": {
-      "initiate_flow": {
-        "user": "Add Sensor Mapping",
-        "reconfigure": "Reconfigure Mapping"
-      },
-      "entry_type": "Sensor Mapping",
-      "step": {
-        "user": {
-          "title": "Manage EnergyID Sensor Mappings",
-          "description": "Select a sensor mapping to view or edit details.",
-          "data": {
-            "selected_mapping": "Select mapping"
-          },
-          "data_description": {
-            "selected_mapping": "Choose the mapping you want to manage."
-          }
-        },
-        "add_mapping": {
-          "title": "Add sensor mapping",
-          "description": "Select a Home Assistant sensor and enter the EnergyID metric key to map it.",
-          "data": {
-            "ha_entity_id": "Home Assistant sensor",
-            "energyid_key": "EnergyID metric key"
-          },
-          "data_description": {
-            "ha_entity_id": "Select the sensor from Home Assistant.",
-            "energyid_key": "Enter the corresponding metric key for EnergyID (e.g., 'el', 'pv', 'temp.living'). No spaces."
-          }
-        },
-        "manage_mappings": {
-          "title": "Manage existing mappings",
-          "description": "Select a mapping to modify or delete.",
-          "data": {
-            "selected_mapping": "Select mapping"
-          },
-          "data_description": {
-            "selected_mapping": "Select the mapping you want to modify or delete."
-          }
-        },
-        "mapping_action": {
-          "title": "Modify or delete mapping",
-          "description": "Choose an action for the selected mapping.",
-          "menu_options": {
-            "edit_mapping": "Update EnergyID key",
-            "delete_mapping": "Delete this mapping"
-          }
-        },
-        "edit_mapping": {
-          "title": "Update EnergyID key",
-          "description": "Update the EnergyID key for the selected entity.",
-          "data": {
-            "energyid_key": "New EnergyID metric key"
-          },
-          "data_description": {
-            "energyid_key": "Enter the new EnergyID key. No spaces allowed."
-          }
-        },
-        "delete_mapping": {
-          "title": "Confirm delete mapping",
-          "description": "Are you sure you want to stop sending data from this entity? The EnergyID key will no longer be updated by this entity."
-        }
-      },
-      "error": {
-        "invalid_key_empty": "EnergyID key cannot be empty.",
-        "invalid_key_spaces": "EnergyID key cannot contain spaces.",
-        "entity_already_mapped": "This Home Assistant entity is already mapped.",
-        "entity_required": "You must select a sensor entity."
-      },
-      "abort": {
-        "no_mappings_to_manage": "There are no mappings configured yet. Please add one first.",
-        "no_mapping_selected": "No mapping was selected.",
-        "mapping_not_found": "The selected mapping could not be found or was removed.",
-        "menu_render_error": "Failed to display the management menu. Please try again."
-      }
-    }
-  },
-  "exceptions": {
-    "auth_failed_on_setup": {
-      "message": "Failed to authenticate with EnergyID for device {device_name}. Setup will be retried. Details: {error_details}"
+      "invalid_interval": "Invalid interval for this webhook policy."
     }
   }
 }

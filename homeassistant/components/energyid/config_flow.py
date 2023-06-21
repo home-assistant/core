@@ -1,167 +1,171 @@
 """Config flow for EnergyID integration."""
+from __future__ import annotations
 
 import logging
 from typing import Any
 
-from aiohttp import ClientError
-from energyid_webhooks.client_v2 import WebhookClient
+import aiohttp
+from energyid_webhooks import WebhookClientAsync
+from energyid_webhooks.metercatalog import MeterCatalog
+from energyid_webhooks.webhookpolicy import WebhookPolicy
 import voluptuous as vol
 
-from homeassistant.config_entries import (
-    ConfigEntry,
-    ConfigFlow,
-    ConfigFlowResult,
-    ConfigSubentryFlow,
-)
-from homeassistant.core import callback
+from homeassistant import config_entries
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.data_entry_flow import FlowResult
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.instance_id import async_get as async_get_instance_id
 
-from .const import (
-    CONF_DEVICE_ID,
-    CONF_DEVICE_NAME,
-    CONF_PROVISIONING_KEY,
-    CONF_PROVISIONING_SECRET,
-    DOMAIN,
-)
-from .energyid_sensor_mapping_flow import EnergyIDSensorMappingFlowHandler
+from .const import DOMAIN, ENERGYID_INTERVALS, ENERGYID_METRIC_KINDS
 
 _LOGGER = logging.getLogger(__name__)
 
-ENERGYID_DEVICE_ID_FOR_WEBHOOK_PREFIX = "homeassistant_eid_"
+
+async def validate_webhook(client: WebhookClientAsync) -> bool:
+    """Validate if the Webhook can connect."""
+    try:
+        await client.get_policy()
+    except aiohttp.ClientResponseError as error:
+        raise CannotConnect from error
+    except aiohttp.InvalidURL as error:
+        raise InvalidUrl from error
+
+    return True
 
 
-class EnergyIDConfigFlow(ConfigFlow, domain=DOMAIN):
-    """Handle the configuration flow for the EnergyID integration."""
+async def validate_interval(interval: str, webhook_policy: WebhookPolicy) -> bool:
+    """Validate if the interval is valid for the webhook policy."""
+    if interval not in webhook_policy.allowed_intervals:
+        raise InvalidInterval
+    return True
+
+
+async def request_meter_catalog(client: WebhookClientAsync) -> MeterCatalog:
+    """Request the meter catalog."""
+    return await client.get_meter_catalog()
+
+
+def hass_entity_ids(hass: HomeAssistant) -> list[str]:
+    """Return all entity IDs in Home Assistant."""
+    return list(hass.states.async_entity_ids())
+
+
+class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+    """Handle a config flow for EnergyID."""
 
     VERSION = 1
 
-    def __init__(self) -> None:
-        """Initialize the config flow."""
-        self._flow_data: dict[str, Any] = {}
-
-    async def _perform_auth_and_get_details(self) -> str | None:
-        """Authenticate with EnergyID and retrieve device details."""
-        _LOGGER.debug("Starting authentication with EnergyID")
-        client = WebhookClient(
-            provisioning_key=self._flow_data[CONF_PROVISIONING_KEY],
-            provisioning_secret=self._flow_data[CONF_PROVISIONING_SECRET],
-            device_id=self._flow_data[CONF_DEVICE_ID],
-            device_name=self._flow_data[CONF_DEVICE_NAME],
-            session=async_get_clientsession(self.hass),
-        )
-        try:
-            is_claimed = await client.authenticate()
-            _LOGGER.debug("Authentication successful, claimed: %s", is_claimed)
-        except ClientError:
-            _LOGGER.error("Failed to connect to EnergyID during authentication")
-            return "cannot_connect"
-        except RuntimeError:
-            _LOGGER.exception("Unexpected runtime error during EnergyID authentication")
-            return "unknown_auth_error"
-
-        if is_claimed:
-            self._flow_data["record_number"] = client.recordNumber
-            self._flow_data["record_name"] = client.recordName
-            _LOGGER.debug(
-                "Device claimed with record number: %s, record name: %s",
-                client.recordNumber,
-                client.recordName,
-            )
-            return None
-
-        self._flow_data["claim_info"] = client.get_claim_info()
-        _LOGGER.debug(
-            "Device needs claim, claim info: %s", self._flow_data["claim_info"]
-        )
-        return "needs_claim"
-
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle the initial step of the configuration flow."""
-        _LOGGER.debug("Starting user step with input: %s", user_input)
+    ) -> FlowResult:
+        """Handle the user step."""
         errors: dict[str, str] = {}
+
+        # Get the meter catalog
+        http_session = async_get_clientsession(self.hass)
+        _client = WebhookClientAsync(webhook_url=None, session=http_session)
+        meter_catalog = await request_meter_catalog(_client)
+
+        # Handle the user input
         if user_input is not None:
-            instance_id = await async_get_instance_id(self.hass)
-            self._flow_data = {
-                **user_input,
-                CONF_DEVICE_ID: f"{ENERGYID_DEVICE_ID_FOR_WEBHOOK_PREFIX}{instance_id}",
-                CONF_DEVICE_NAME: self.hass.config.location_name,
-            }
-            _LOGGER.debug("Flow data after user input: %s", self._flow_data)
-
-            auth_status = await self._perform_auth_and_get_details()
-
-            if auth_status is None:
-                await self.async_set_unique_id(self._flow_data["record_number"])
-                self._abort_if_unique_id_configured()
-                _LOGGER.debug(
-                    "Creating entry with title: %s", self._flow_data["record_name"]
-                )
+            client = WebhookClientAsync(
+                webhook_url=user_input["webhook_url"], session=http_session
+            )
+            try:
+                await validate_webhook(client)
+            except CannotConnect:
+                errors["base"] = "cannot_connect"
+            except InvalidUrl:
+                errors["webhook_url"] = "invalid_url"
+            except Exception:  # pylint: disable=broad-except
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
+            else:
                 return self.async_create_entry(
-                    title=self._flow_data["record_name"], data=self._flow_data
+                    title=f"Send {user_input['entity_id']} to EnergyID",
+                    data=user_input,
                 )
 
-            if auth_status == "needs_claim":
-                _LOGGER.debug("Redirecting to auth and claim step")
-                return await self.async_step_auth_and_claim()
-
-            errors["base"] = auth_status
-            _LOGGER.debug("Errors encountered during user step: %s", errors)
+        # Show the form
+        data_schema = vol.Schema(
+            {
+                vol.Required("webhook_url"): str,
+                vol.Required("entity_id"): vol.In(hass_entity_ids(self.hass)),
+                vol.Required("metric"): vol.In(sorted(meter_catalog.all_metrics)),
+                vol.Required("metric_kind"): vol.In(ENERGYID_METRIC_KINDS),
+                vol.Required("unit"): vol.In(sorted(meter_catalog.all_units)),
+            }
+        )
 
         return self.async_show_form(
-            step_id="user",
+            step_id="user", data_schema=data_schema, errors=errors
+        )
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(
+        config_entry: config_entries.ConfigEntry,
+    ) -> config_entries.OptionsFlow:
+        """Get the options flow."""
+        return OptionsFlowHandler(config_entry)
+
+
+class OptionsFlowHandler(config_entries.OptionsFlow):
+    """Handle options flow changes."""
+
+    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
+        """Initialize options flow."""
+        self.config_entry = config_entry
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Manage the options."""
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            http_session = async_get_clientsession(self.hass)
+            client = WebhookClientAsync(
+                webhook_url=self.config_entry.data.get("webhook_url"),
+                session=http_session,
+            )
+            try:
+                webhook_policy = await client.policy
+                await validate_interval(
+                    interval=user_input["data_interval"], webhook_policy=webhook_policy
+                )
+            except InvalidInterval:
+                errors["data_interval"] = "invalid_interval"
+            else:
+                # self.config_entry.data.update(user_input)
+                return self.async_create_entry(
+                    title=self.config_entry.title, data=user_input
+                )
+
+        return self.async_show_form(
+            step_id="init",
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_PROVISIONING_KEY): str,
-                    vol.Required(CONF_PROVISIONING_SECRET): cv.string,
+                    vol.Required(
+                        "data_interval",
+                        default=self.config_entry.options.get("data_interval", "P1D"),
+                    ): vol.In(ENERGYID_INTERVALS),
+                    vol.Required(
+                        "upload_interval",
+                        default=self.config_entry.options.get("upload_interval", 300),
+                    ): int,
                 }
             ),
             errors=errors,
-            description_placeholders={
-                "docs_url": "https://help.energyid.eu/nl/integraties/home-assistant/"
-            },
         )
 
-    async def async_step_auth_and_claim(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle the step for device claiming if needed."""
-        _LOGGER.debug("Starting auth and claim step with input: %s", user_input)
-        if user_input is not None:
-            auth_status = await self._perform_auth_and_get_details()
 
-            if auth_status is None:
-                await self.async_set_unique_id(self._flow_data["record_number"])
-                self._abort_if_unique_id_configured()
-                _LOGGER.debug(
-                    "Creating entry with title: %s", self._flow_data["record_name"]
-                )
-                return self.async_create_entry(
-                    title=self._flow_data["record_name"], data=self._flow_data
-                )
+class CannotConnect(HomeAssistantError):
+    """Error to indicate we cannot connect."""
 
-            _LOGGER.debug(
-                "Claim failed or timed out, errors: %s",
-                {"base": "claim_failed_or_timed_out"},
-            )
-            return self.async_show_form(
-                step_id="auth_and_claim",
-                description_placeholders=self._flow_data.get("claim_info", {}),
-                errors={"base": "claim_failed_or_timed_out"},
-            )
 
-        return self.async_show_form(
-            step_id="auth_and_claim",
-            description_placeholders=self._flow_data.get("claim_info", {}),
-        )
+class InvalidUrl(HomeAssistantError):
+    """Error to indicate there is invalid url."""
 
-    @classmethod
-    @callback
-    def async_get_supported_subentry_types(
-        cls, config_entry: ConfigEntry
-    ) -> dict[str, type[ConfigSubentryFlow]]:
-        """Return subentries supported by this integration."""
-        return {"sensor_mapping": EnergyIDSensorMappingFlowHandler}
+
+class InvalidInterval(HomeAssistantError):
+    """Error to indicate there is invalid interval."""
