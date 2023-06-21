@@ -140,6 +140,15 @@ def async_dismiss(hass: HomeAssistant, notification_id: str) -> None:
     )
 
 
+@callback
+@bind_hass
+def async_dismiss_all(hass: HomeAssistant) -> None:
+    """Remove all notifications."""
+    notifications = _async_get_or_create_notifications(hass)
+    for notification_id in list(notifications):
+        async_dismiss(hass, notification_id)
+
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the persistent notification component."""
 
@@ -158,6 +167,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         """Handle the dismiss notification service call."""
         async_dismiss(hass, call.data[ATTR_NOTIFICATION_ID])
 
+    @callback
+    def dismiss_all_service(call: ServiceCall) -> None:
+        """Handle the dismiss all notification service call."""
+        async_dismiss_all(hass)
+
     hass.services.async_register(
         DOMAIN,
         "create",
@@ -174,6 +188,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.services.async_register(
         DOMAIN, "dismiss", dismiss_service, SCHEMA_SERVICE_NOTIFICATION
     )
+
+    hass.services.async_register(DOMAIN, "dismiss_all", dismiss_all_service, None)
 
     websocket_api.async_register_command(hass, websocket_get_notifications)
     websocket_api.async_register_command(hass, websocket_subscribe_notifications)
