@@ -246,9 +246,12 @@ class BluetoothManager:
         self, address: str, connectable: bool
     ) -> list[BluetoothScannerDevice]:
         """Get BluetoothScannerDevice by address."""
-        scanners = [*self._connectable_scanners]
         if not connectable:
-            scanners.extend(self._non_connectable_scanners)
+            scanners: Iterable[BaseHaScanner] = itertools.chain(
+                self._connectable_scanners, self._non_connectable_scanners
+            )
+        else:
+            scanners = self._connectable_scanners
         return [
             BluetoothScannerDevice(scanner, *device_adv)
             for scanner in scanners
