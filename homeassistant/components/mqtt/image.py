@@ -148,6 +148,8 @@ class MqttImage(MqttEntity, ImageEntity):
 
         try:
             content_type = validate_content_type(response.headers["content-type"])
+            self._attr_content_type = content_type
+            self._last_image = response.content
         except vol.Invalid as err:
             _LOGGER.error(
                 "Content is not a valid image, url: %s, content_type: %s, %s",
@@ -155,9 +157,7 @@ class MqttImage(MqttEntity, ImageEntity):
                 response.headers["content-type"],
                 err,
             )
-            return
-        self._attr_content_type = content_type
-        self._last_image = response.content
+            self._last_image = None
         self._attr_image_last_updated = dt_util.utcnow()
         self.async_write_ha_state()
 
@@ -193,7 +193,7 @@ class MqttImage(MqttEntity, ImageEntity):
                     msg.topic,
                     err,
                 )
-                return
+                self._last_image = None
             self._attr_image_last_updated = dt_util.utcnow()
             get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
