@@ -2,6 +2,7 @@
 from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.services import ServicesTypes
 import pytest
+from pytest_unordered import unordered
 
 import homeassistant.components.automation as automation
 from homeassistant.components.device_automation import DeviceAutomationType
@@ -14,7 +15,6 @@ from homeassistant.setup import async_setup_component
 from .common import setup_test_component
 
 from tests.common import (
-    assert_lists_same,
     async_get_device_automations,
     async_mock_service,
 )
@@ -131,7 +131,7 @@ async def test_enumerate_remote(hass: HomeAssistant, utcnow) -> None:
     triggers = await async_get_device_automations(
         hass, DeviceAutomationType.TRIGGER, device.id
     )
-    assert_lists_same(triggers, expected)
+    assert triggers == unordered(expected)
 
 
 async def test_enumerate_button(hass: HomeAssistant, utcnow) -> None:
@@ -178,7 +178,7 @@ async def test_enumerate_button(hass: HomeAssistant, utcnow) -> None:
     triggers = await async_get_device_automations(
         hass, DeviceAutomationType.TRIGGER, device.id
     )
-    assert_lists_same(triggers, expected)
+    assert triggers == unordered(expected)
 
 
 async def test_enumerate_doorbell(hass: HomeAssistant, utcnow) -> None:
@@ -225,7 +225,7 @@ async def test_enumerate_doorbell(hass: HomeAssistant, utcnow) -> None:
     triggers = await async_get_device_automations(
         hass, DeviceAutomationType.TRIGGER, device.id
     )
-    assert_lists_same(triggers, expected)
+    assert triggers == unordered(expected)
 
 
 async def test_handle_events(hass: HomeAssistant, utcnow, calls) -> None:

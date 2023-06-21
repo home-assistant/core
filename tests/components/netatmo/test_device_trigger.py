@@ -1,5 +1,6 @@
 """The tests for Netatmo device triggers."""
 import pytest
+from pytest_unordered import unordered
 
 import homeassistant.components.automation as automation
 from homeassistant.components.device_automation import DeviceAutomationType
@@ -18,7 +19,6 @@ from homeassistant.setup import async_setup_component
 
 from tests.common import (
     MockConfigEntry,
-    assert_lists_same,
     async_capture_events,
     async_get_device_automations,
     async_mock_service,
@@ -92,7 +92,7 @@ async def test_get_triggers(
         )
         if trigger["domain"] == NETATMO_DOMAIN
     ]
-    assert_lists_same(triggers, expected_triggers)
+    assert triggers == unordered(expected_triggers)
 
 
 @pytest.mark.parametrize(

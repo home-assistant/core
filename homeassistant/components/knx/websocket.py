@@ -34,7 +34,7 @@ async def register_panel(hass: HomeAssistant) -> None:
         hass.http.register_static_path(
             URL_BASE,
             path,
-            cache_headers=not is_dev_build,
+            cache_headers=not is_dev_build(),
         )
         await panel_custom.async_register_panel(
             hass=hass,

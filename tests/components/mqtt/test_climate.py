@@ -966,7 +966,7 @@ async def test_handle_action_received(
     hvac_action = state.attributes.get(ATTR_HVAC_ACTION)
     assert hvac_action is None
     # Redefine actions according to https://developers.home-assistant.io/docs/core/entity/climate/#hvac-action
-    actions = ["off", "heating", "cooling", "drying", "idle", "fan"]
+    actions = ["off", "preheating", "heating", "cooling", "drying", "idle", "fan"]
     assert all(elem in actions for elem in HVACAction)
     for action in actions:
         async_fire_mqtt_message(hass, "action", action)
