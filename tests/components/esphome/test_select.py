@@ -1,6 +1,8 @@
 """Test ESPHome selects."""
 
 
+from aioesphomeapi import SelectInfo, SelectState
+
 from homeassistant.core import HomeAssistant
 
 
@@ -13,3 +15,21 @@ async def test_pipeline_selector(
     state = hass.states.get("select.test_assist_pipeline")
     assert state is not None
     assert state.state == "preferred"
+
+
+async def test_select_entity(hass: HomeAssistant, mock_generic_device_entry) -> None:
+    """Test a generic select entity."""
+    entity_info = [
+        SelectInfo(
+            object_id="myselect",
+            key=1,
+            name="my select",
+            unique_id="my_select",
+            options=["a", "b"],
+        )
+    ]
+    states = [SelectState(key=1, state="a")]
+    user_service = []
+    await mock_generic_device_entry(
+        entity_info=entity_info, user_service=user_service, states=states
+    )
