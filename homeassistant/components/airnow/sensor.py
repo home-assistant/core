@@ -59,7 +59,6 @@ SENSOR_TYPES: tuple[AirNowEntityDescription, ...] = (
     AirNowEntityDescription(
         key=ATTR_API_AQI,
         icon="mdi:blur",
-        native_unit_of_measurement="aqi",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.AQI,
         value_fn=lambda data: data.get(ATTR_API_AQI),
