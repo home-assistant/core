@@ -17,6 +17,9 @@ class EntityValues:
 
     This class is expected to only be used infrequently
     as it caches all entity ids up to _MAX_EXPECTED_ENTITIES.
+
+    The cache includes `self` so it is important to
+    only use this in places were its usage is immortal.
     """
 
     def __init__(
