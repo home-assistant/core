@@ -1,0 +1,33 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "webhook_url": "EnergyID Webhook URL",
+          "entity_id": "Home Assistant Entity ID",
+          "metric": "EnergyID Metric",
+          "metric_kind": "EnergyID Metric Kind",
+          "unit": "Unit of Measurement"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_url": "Invalid Webhook URL",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "data_interval": "EnergyID Data Interval",
+          "upload_interval": "Upload Interval (seconds)"
+        }
+      }
+    },
+    "error": {
+      "invalid_interval": "Invalid interval for this webhook policy."
+    }
+  }
+}
