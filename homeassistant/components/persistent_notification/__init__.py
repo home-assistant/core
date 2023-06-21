@@ -144,13 +144,13 @@ def async_dismiss(hass: HomeAssistant, notification_id: str) -> None:
 def async_dismiss_all(hass: HomeAssistant) -> None:
     """Remove all notifications."""
     notifications = _async_get_or_create_notifications(hass)
-    copied = notifications.copy()
+    notifications_copy = notifications.copy()
     notifications.clear()
     async_dispatcher_send(
         hass,
         SIGNAL_PERSISTENT_NOTIFICATIONS_UPDATED,
         UpdateType.REMOVED,
-        copied,
+        notifications_copy,
     )
 
 
