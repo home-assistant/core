@@ -1018,11 +1018,7 @@ class MqttClimate(MqttTemperatureControlEntity, ClimateEntity):
             await self._publish(CONF_POWER_COMMAND_TOPIC, mqtt_payload)
             return
         # Fall back to default behavior without power command topic
-        for mode in (HVACMode.HEAT_COOL, HVACMode.HEAT, HVACMode.COOL):
-            if mode not in self.hvac_modes:
-                continue
-            await self.async_set_hvac_mode(mode)
-            break
+        await super().async_turn_on()
 
     async def async_turn_off(self) -> None:
         """Turn the entity off."""
@@ -1036,5 +1032,4 @@ class MqttClimate(MqttTemperatureControlEntity, ClimateEntity):
                 self.async_write_ha_state()
             return
         # Fall back to default behavior without power command topic
-        if HVACMode.OFF in self.hvac_modes:
-            await self.async_set_hvac_mode(HVACMode.OFF)
+        await super().async_turn_off()
