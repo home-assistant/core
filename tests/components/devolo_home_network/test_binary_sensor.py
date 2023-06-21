@@ -53,8 +53,7 @@ async def test_update_attached_to_router(
     state = hass.states.get(state_key)
     assert state is not None
     assert state == snapshot
-    entity_entry = entity_registry.async_get(state.entity_id)
-    assert entity_entry == snapshot
+    assert entity_registry.async_get(state.entity_id) == snapshot
 
     # Emulate device failure
     mock_device.plcnet.async_get_network_overview = AsyncMock(
