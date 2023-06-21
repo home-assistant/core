@@ -83,6 +83,9 @@ async def async_setup_platform(
 
     client = WaqiClient(token, async_get_clientsession(hass), timeout=TIMEOUT)
     dev = []
+
+    # if there are no locations specified, it will use the list of stations in the config file
+    # if there are locations specified, stations becomes a filter to limit within the location
     
     if (locations.count < 1 & station_filter.count > 0)
         try:
