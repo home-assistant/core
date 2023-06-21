@@ -1,0 +1,148 @@
+"""The EnergyID integration."""
+from __future__ import annotations
+
+import asyncio
+import datetime as dt
+import logging
+
+import aiohttp
+from energyid_webhooks import WebhookClientAsync, WebhookPayload
+
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import Event, HomeAssistant
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.event import async_track_state_change_event
+
+from .const import DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Set up EnergyID from a config entry."""
+
+    hass.data.setdefault(DOMAIN, {})
+
+    # Create the webhook dispatcher
+    dispatcher = WebhookDispatcher(hass, entry)
+    hass.data[DOMAIN][entry.entry_id] = dispatcher
+
+    # Validate the webhook client
+    if not await dispatcher.async_validate_client():
+        return False
+
+    # Register the webhook dispatcher
+    async_track_state_change_event(
+        hass=hass,
+        entity_ids=dispatcher.entity_id,
+        action=dispatcher.async_handle_state_change,
+    )
+
+    # Register the dispatcher for updates
+    entry.async_on_unload(entry.add_update_listener(dispatcher.update_listener))
+
+    return True
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unload a config entry."""
+    hass.data[DOMAIN].pop(entry.entry_id)
+    return True
+
+
+class WebhookDispatcher:
+    """Webhook dispatcher."""
+
+    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
+        """Initialize the dispatcher."""
+        self.hass = hass
+        self.client = WebhookClientAsync(
+            webhook_url=entry.data["webhook_url"], session=async_get_clientsession(hass)
+        )
+        self.entity_id = entry.data["entity_id"]
+        self.metric = entry.data["metric"]
+        self.metric_kind = entry.data["metric_kind"]
+        self.unit = entry.data["unit"]
+        self.data_interval = entry.options.get("data_interval", "P1D")
+        self.upload_interval = dt.timedelta(
+            seconds=entry.options.get("upload_interval", 300)
+        )
+
+        self.last_upload: dt.datetime | None = None
+
+        self._upload_lock = asyncio.Lock()
+
+    async def async_handle_state_change(self, event: Event):
+        """Handle a state change."""
+        await self._upload_lock.acquire()
+        _LOGGER.debug("Handling state change event %s", event)
+        new_state = event.data["new_state"]
+
+        # Check if enough time has passed since the last upload
+        if not self.upload_allowed(new_state.last_changed):
+            _LOGGER.debug(
+                "Not uploading state %s because of last upload %s",
+                new_state,
+                self.last_upload,
+            )
+            self._upload_lock.release()
+            return
+
+        # Check if the new state is a valid float
+        try:
+            value = float(new_state.state)
+        except ValueError:
+            _LOGGER.error(
+                "Error converting state %s to float for entity %s",
+                new_state.state,
+                self.entity_id,
+            )
+            self._upload_lock.release()
+            return
+
+        # Upload the new state
+        try:
+            data: list[list] = [[new_state.last_changed.isoformat(), value]]
+            payload = WebhookPayload(
+                remote_id=self.entity_id,
+                remote_name=new_state.attributes.get("friendly_name", self.entity_id),
+                metric=self.metric,
+                metric_kind=self.metric_kind,
+                unit=self.unit,
+                interval=self.data_interval,
+                data=data,
+            )
+            _LOGGER.debug("Uploading data %s", payload)
+            await self.client.post_payload(payload)
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.error("Error saving data %s", payload)
+            self._upload_lock.release()
+            return
+
+        # Update the last upload time
+        self.last_upload = new_state.last_changed
+        _LOGGER.debug("Updated last upload time to %s", self.last_upload)
+        self._upload_lock.release()
+
+    async def async_validate_client(self) -> bool:
+        """Validate the client."""
+        try:
+            await self.client.get_policy()
+        except aiohttp.ClientResponseError as error:
+            _LOGGER.error("Error validating webhook: %s", error)
+            return False
+        return True
+
+    def upload_allowed(self, state_change_time: dt.datetime) -> bool:
+        """Check if an upload is allowed."""
+        if self.last_upload is None:
+            return True
+
+        return state_change_time - self.last_upload > self.upload_interval
+
+    async def update_listener(self, hass: HomeAssistant, entry: ConfigEntry):
+        """Handle options update."""
+        self.data_interval = entry.options.get("data_interval", "P1D")
+        self.upload_interval = dt.timedelta(
+            seconds=entry.options.get("upload_interval", 300)
+        )
