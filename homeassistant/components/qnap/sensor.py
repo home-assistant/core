@@ -1,8 +1,9 @@
 """Support for QNAP NAS Sensors."""
 from __future__ import annotations
 
-import voluptuous as vol
 import logging
+
+import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components.sensor import (
@@ -36,7 +37,7 @@ from homeassistant.helpers.issue_registry import IssueSeverity, async_create_iss
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DEFAULT_NAME, DOMAIN
+from .const import DEFAULT_NAME, DEFAULT_PORT, DEFAULT_TIMEOUT, DOMAIN
 from .coordinator import QnapCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -189,6 +190,18 @@ _VOLUME_MON_COND: tuple[SensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
     ),
 )
+
+SENSOR_KEYS: list[str] = [
+    desc.key
+    for desc in (
+        *_SYSTEM_MON_COND,
+        *_CPU_MON_COND,
+        *_MEMORY_MON_COND,
+        *_NETWORK_MON_COND,
+        *_DRIVE_MON_COND,
+        *_VOLUME_MON_COND,
+    )
+]
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
