@@ -845,6 +845,7 @@ class EsphomeEntity(Entity, Generic[_InfoT, _StateT]):
                 self._on_static_info_update,
             )
         )
+        self._update_state_from_entry_data()
 
     @callback
     def _on_static_info_update(self, static_info: EntityInfo) -> None:
@@ -868,11 +869,9 @@ class EsphomeEntity(Entity, Generic[_InfoT, _StateT]):
             self._attr_icon = None
 
     @callback
-    def _on_state_update(self) -> None:
-        """Call when state changed.
+    def _update_state_from_entry_data(self) -> None:
+        """Update state from entry data."""
 
-        Behavior can be changed in child classes
-        """
         state = self._entry_data.state
         key = self._key
         state_type = self._state_type
@@ -880,6 +879,14 @@ class EsphomeEntity(Entity, Generic[_InfoT, _StateT]):
         if has_state:
             self._state = cast(_StateT, state[state_type][key])
         self._has_state = has_state
+
+    @callback
+    def _on_state_update(self) -> None:
+        """Call when state changed.
+
+        Behavior can be changed in child classes
+        """
+        self._update_state_from_entry_data()
         self.async_write_ha_state()
 
     @callback

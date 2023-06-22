@@ -53,9 +53,8 @@ class EsphomeSelect(EsphomeEntity[SelectInfo, SelectState], SelectEntity):
     @esphome_state_property
     def current_option(self) -> str | None:
         """Return the state of the entity."""
-        if self._state.missing_state:
-            return None
-        return self._state.state
+        state = self._state
+        return None if state.missing_state else state.state
 
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
