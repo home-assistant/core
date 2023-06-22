@@ -47,7 +47,7 @@ class QnapConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    async def async_step_import(self, import_info):
+    async def async_step_import(self, import_info: dict[str, Any]) -> FlowResult:
         """Set the config entry up from yaml."""
         return await self.async_step_user(import_info)
 
