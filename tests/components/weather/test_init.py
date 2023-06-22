@@ -6,12 +6,14 @@ import pytest
 from homeassistant.components.weather import (
     ATTR_CONDITION_SUNNY,
     ATTR_FORECAST,
+    ATTR_FORECAST_APPARENT_TEMP,
     ATTR_FORECAST_PRECIPITATION,
     ATTR_FORECAST_PRESSURE,
     ATTR_FORECAST_TEMP,
     ATTR_FORECAST_TEMP_LOW,
     ATTR_FORECAST_WIND_BEARING,
     ATTR_FORECAST_WIND_SPEED,
+    ATTR_WEATHER_APPARENT_TEMPERATURE,
     ATTR_WEATHER_OZONE,
     ATTR_WEATHER_PRECIPITATION_UNIT,
     ATTR_WEATHER_PRESSURE,
@@ -63,6 +65,7 @@ class MockWeatherEntity(WeatherEntity):
         self._attr_native_pressure = 10
         self._attr_native_pressure_unit = UnitOfPressure.HPA
         self._attr_native_temperature = 20
+        self._attr_native_apparent_temperature = 25
         self._attr_native_temperature_unit = UnitOfTemperature.CELSIUS
         self._attr_native_visibility = 30
         self._attr_native_visibility_unit = UnitOfLength.KILOMETERS
@@ -85,6 +88,7 @@ class MockWeatherEntityPrecision(WeatherEntity):
         super().__init__()
         self._attr_condition = ATTR_CONDITION_SUNNY
         self._attr_native_temperature = 20.3
+        self._attr_native_apparent_temperature = 25.3
         self._attr_native_temperature_unit = UnitOfTemperature.CELSIUS
         self._attr_precision = PRECISION_HALVES
 
@@ -153,21 +157,35 @@ async def test_temperature(
     """Test temperature."""
     hass.config.units = unit_system
     native_value = 38
+    apparent_native_value = 45
     state_value = TemperatureConverter.convert(native_value, native_unit, state_unit)
+    apparent_state_value = TemperatureConverter.convert(
+        apparent_native_value, native_unit, state_unit
+    )
 
     entity0 = await create_entity(
-        hass, native_temperature=native_value, native_temperature_unit=native_unit
+        hass,
+        native_temperature=native_value,
+        native_temperature_unit=native_unit,
+        native_apparent_temperature=apparent_native_value,
     )
 
     state = hass.states.get(entity0.entity_id)
     forecast = state.attributes[ATTR_FORECAST][0]
 
     expected = state_value
+    apparent_expected = apparent_state_value
     assert float(state.attributes[ATTR_WEATHER_TEMPERATURE]) == pytest.approx(
         expected, rel=0.1
     )
+    assert float(state.attributes[ATTR_WEATHER_APPARENT_TEMPERATURE]) == pytest.approx(
+        apparent_expected, rel=0.1
+    )
     assert state.attributes[ATTR_WEATHER_TEMPERATURE_UNIT] == state_unit
     assert float(forecast[ATTR_FORECAST_TEMP]) == pytest.approx(expected, rel=0.1)
+    assert float(forecast[ATTR_FORECAST_APPARENT_TEMP]) == pytest.approx(
+        apparent_expected, rel=0.1
+    )
     assert float(forecast[ATTR_FORECAST_TEMP_LOW]) == pytest.approx(expected, rel=0.1)
 
 

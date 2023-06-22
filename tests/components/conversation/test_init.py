@@ -1626,3 +1626,43 @@ async def test_ws_get_agent_info(
     msg = await client.receive_json()
     assert not msg["success"]
     assert msg["error"] == snapshot
+
+
+async def test_ws_hass_agent_debug(
+    hass: HomeAssistant,
+    init_components,
+    hass_ws_client: WebSocketGenerator,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test homeassistant agent debug websocket command."""
+    client = await hass_ws_client(hass)
+
+    entity_registry.async_get_or_create(
+        "light", "demo", "1234", suggested_object_id="kitchen"
+    )
+    entity_registry.async_update_entity("light.kitchen", aliases={"my cool light"})
+    hass.states.async_set("light.kitchen", "off")
+
+    on_calls = async_mock_service(hass, LIGHT_DOMAIN, "turn_on")
+    off_calls = async_mock_service(hass, LIGHT_DOMAIN, "turn_off")
+
+    await client.send_json_auto_id(
+        {
+            "type": "conversation/agent/homeassistant/debug",
+            "sentences": [
+                "turn on my cool light",
+                "turn my cool light off",
+                "this will not match anything",  # null in results
+            ],
+        }
+    )
+
+    msg = await client.receive_json()
+
+    assert msg["success"]
+    assert msg["result"] == snapshot
+
+    # Light state should not have been changed
+    assert len(on_calls) == 0
+    assert len(off_calls) == 0
