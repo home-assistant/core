@@ -5,10 +5,9 @@ Call init before using it in your tests to ensure clean test data.
 from __future__ import annotations
 
 from homeassistant.components.weather import (
-    ATTR_FORECAST_NATIVE_APPARENT_TEMP,
-    ATTR_FORECAST_NATIVE_DEW_POINT,
     ATTR_FORECAST_CLOUD_COVERAGE,
     ATTR_FORECAST_NATIVE_APPARENT_TEMP,
+    ATTR_FORECAST_NATIVE_DEW_POINT,
     ATTR_FORECAST_NATIVE_PRECIPITATION,
     ATTR_FORECAST_NATIVE_PRESSURE,
     ATTR_FORECAST_NATIVE_TEMP,

@@ -31,8 +31,8 @@ from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from .const import (
     ATTR_WEATHER_APPARENT_TEMPERATURE,
-    ATTR_WEATHER_DEW_POINT,
     ATTR_WEATHER_CLOUD_COVERAGE,
+    ATTR_WEATHER_DEW_POINT,
     ATTR_WEATHER_HUMIDITY,
     ATTR_WEATHER_OZONE,
     ATTR_WEATHER_PRECIPITATION_UNIT,
@@ -605,7 +605,7 @@ class WeatherEntity(Entity):
 
     @final
     @property
-    def state_attributes(self) -> dict[str, Any]:
+    def state_attributes(self) -> dict[str, Any]:  # noqa: C901
         """Return the state attributes, converted.
 
         Attributes are configured from native units to user-configured units.
