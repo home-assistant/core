@@ -37,7 +37,14 @@ from homeassistant.helpers.issue_registry import IssueSeverity, async_create_iss
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DEFAULT_PORT, DEFAULT_TIMEOUT, DOMAIN
+from .const import (
+    CONF_DRIVES,
+    CONF_NICS,
+    CONF_VOLUMES,
+    DEFAULT_PORT,
+    DEFAULT_TIMEOUT,
+    DOMAIN,
+)
 from .coordinator import QnapCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -56,9 +63,6 @@ ATTR_SERIAL = "Serial #"
 ATTR_TYPE = "Type"
 ATTR_UPTIME = "Uptime"
 ATTR_VOLUME_SIZE = "Volume Size"
-CONF_DRIVES = "drives"
-CONF_NICS = "nics"
-CONF_VOLUMES = "volumes"
 
 _SYSTEM_MON_COND: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
