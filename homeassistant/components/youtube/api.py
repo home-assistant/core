@@ -1,8 +1,6 @@
 """API for YouTube bound to Home Assistant OAuth."""
-from aiohttp import ClientSession
 from google.auth.exceptions import RefreshError
 from google.oauth2.credentials import Credentials
-from google.oauth2.utils import OAuthClientAuthHandler
 from googleapiclient.discovery import Resource, build
 
 from homeassistant.const import CONF_ACCESS_TOKEN
@@ -10,19 +8,17 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
 
 
-class AsyncConfigEntryAuth(OAuthClientAuthHandler):
+class AsyncConfigEntryAuth:
     """Provide Google authentication tied to an OAuth2 based config entry."""
 
     def __init__(
         self,
         hass: HomeAssistant,
-        websession: ClientSession,
         oauth2_session: config_entry_oauth2_flow.OAuth2Session,
     ) -> None:
         """Initialize YouTube Auth."""
         self.oauth_session = oauth2_session
         self.hass = hass
-        super().__init__(websession)
 
     @property
     def access_token(self) -> str:
