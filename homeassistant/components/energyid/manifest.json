@@ -7,7 +7,7 @@
   "documentation": "https://www.home-assistant.io/integrations/energyid",
   "homekit": {},
   "iot_class": "cloud_push",
-  "requirements": ["energyid-webhooks==0.0.5"],
+  "requirements": ["energyid-webhooks==0.0.6"],
   "ssdp": [],
   "zeroconf": []
 }
