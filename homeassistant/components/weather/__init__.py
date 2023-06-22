@@ -43,6 +43,7 @@ from .const import (
     ATTR_WEATHER_VISIBILITY,
     ATTR_WEATHER_VISIBILITY_UNIT,
     ATTR_WEATHER_WIND_BEARING,
+    ATTR_WEATHER_WIND_GUST_SPEED,
     ATTR_WEATHER_WIND_SPEED,
     ATTR_WEATHER_WIND_SPEED_UNIT,
     DOMAIN,
@@ -85,6 +86,8 @@ ATTR_FORECAST_NATIVE_TEMP_LOW: Final = "native_templow"
 ATTR_FORECAST_TEMP_LOW: Final = "templow"
 ATTR_FORECAST_TIME: Final = "datetime"
 ATTR_FORECAST_WIND_BEARING: Final = "wind_bearing"
+ATTR_FORECAST_NATIVE_WIND_GUST_SPEED: Final = "native_wind_gust_speed"
+ATTR_FORECAST_WIND_GUST_SPEED: Final = "wind_gust_speed"
 ATTR_FORECAST_NATIVE_WIND_SPEED: Final = "native_wind_speed"
 ATTR_FORECAST_WIND_SPEED: Final = "wind_speed"
 ATTR_FORECAST_NATIVE_DEW_POINT: Final = "native_dew_point"
@@ -138,6 +141,7 @@ class Forecast(TypedDict, total=False):
     native_templow: float | None
     templow: None
     wind_bearing: float | str | None
+    native_wind_gust_speed: float | None
     native_wind_speed: float | None
     wind_speed: None
     native_dew_point: float | None
@@ -218,6 +222,7 @@ class WeatherEntity(Entity):
     _attr_native_visibility: float | None = None
     _attr_native_visibility_unit: str | None = None
     _attr_native_precipitation_unit: str | None = None
+    _attr_native_wind_gust_speed: float | None = None
     _attr_native_wind_speed: float | None = None
     _attr_native_wind_speed_unit: str | None = None
     _attr_native_dew_point: float | None = None
@@ -417,6 +422,11 @@ class WeatherEntity(Entity):
     def humidity(self) -> float | None:
         """Return the humidity in native units."""
         return self._attr_humidity
+
+    @property
+    def native_wind_gust_speed(self) -> float | None:
+        """Return the wind gust speed in native units."""
+        return self._attr_native_wind_gust_speed
 
     @final
     @property
@@ -686,6 +696,20 @@ class WeatherEntity(Entity):
         if (wind_bearing := self.wind_bearing) is not None:
             data[ATTR_WEATHER_WIND_BEARING] = wind_bearing
 
+        if (wind_gust_speed := self.native_wind_gust_speed) is not None:
+            from_unit = self.native_wind_speed_unit or self._default_wind_speed_unit
+            to_unit = self._wind_speed_unit
+            try:
+                wind_gust_speed_f = float(wind_gust_speed)
+                value_wind_gust_speed = UNIT_CONVERSIONS[ATTR_WEATHER_WIND_SPEED_UNIT](
+                    wind_gust_speed_f, from_unit, to_unit
+                )
+                data[ATTR_WEATHER_WIND_GUST_SPEED] = round(
+                    value_wind_gust_speed, ROUNDING_PRECISION
+                )
+            except (TypeError, ValueError):
+                data[ATTR_WEATHER_WIND_GUST_SPEED] = wind_gust_speed
+
         if (wind_speed := self.native_wind_speed) is not None:
             from_unit = self.native_wind_speed_unit or self._default_wind_speed_unit
             to_unit = self._wind_speed_unit
@@ -824,6 +848,27 @@ class WeatherEntity(Entity):
                                 forecast_pressure_f,
                                 from_pressure_unit,
                                 to_pressure_unit,
+                            ),
+                            ROUNDING_PRECISION,
+                        )
+
+                if (
+                    forecast_wind_gust_speed := forecast_entry.pop(
+                        ATTR_FORECAST_NATIVE_WIND_GUST_SPEED,
+                        forecast_entry.get(ATTR_FORECAST_WIND_GUST_SPEED),
+                    )
+                ) is not None:
+                    from_wind_speed_unit = (
+                        self.native_wind_speed_unit or self._default_wind_speed_unit
+                    )
+                    to_wind_speed_unit = self._wind_speed_unit
+                    with suppress(TypeError, ValueError):
+                        forecast_wind_gust_speed_f = float(forecast_wind_gust_speed)
+                        forecast_entry[ATTR_FORECAST_WIND_GUST_SPEED] = round(
+                            UNIT_CONVERSIONS[ATTR_WEATHER_WIND_SPEED_UNIT](
+                                forecast_wind_gust_speed_f,
+                                from_wind_speed_unit,
+                                to_wind_speed_unit,
                             ),
                             ROUNDING_PRECISION,
                         )
