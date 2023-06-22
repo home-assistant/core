@@ -675,8 +675,10 @@ async def handle_execute_script(
 
     context = connection.context(msg)
     script_obj = Script(hass, msg["sequence"], f"{const.DOMAIN} script", const.DOMAIN)
-    await script_obj.async_run(msg.get("variables"), context=context)
-    connection.send_result(msg["id"], {"context": context})
+    variables = await script_obj.async_run(msg.get("variables"), context=context)
+    if variables:
+        variables.pop("context")
+    connection.send_result(msg["id"], {"context": context, "variables": variables})
 
 
 @callback

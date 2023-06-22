@@ -1436,7 +1436,7 @@ class Script:
         run_variables: _VarsType | None = None,
         context: Context | None = None,
         started_action: Callable[..., Any] | None = None,
-    ) -> None:
+    ) -> dict[str, Any] | dict | None:
         """Run script."""
         if context is None:
             self._log(
@@ -1447,7 +1447,7 @@ class Script:
         # Prevent spawning new script runs when Home Assistant is shutting down
         if DATA_NEW_SCRIPT_RUNS_NOT_ALLOWED in self._hass.data:
             self._log("Home Assistant is shutting down, starting script blocked")
-            return
+            return None
 
         # Prevent spawning new script runs if not allowed by script mode
         if self.is_running:
@@ -1455,7 +1455,7 @@ class Script:
                 if self._max_exceeded != "SILENT":
                     self._log("Already running", level=LOGSEVERITY[self._max_exceeded])
                 script_execution_set("failed_single")
-                return
+                return None
             if self.script_mode != SCRIPT_MODE_RESTART and self.runs == self.max_runs:
                 if self._max_exceeded != "SILENT":
                     self._log(
@@ -1463,7 +1463,7 @@ class Script:
                         level=LOGSEVERITY[self._max_exceeded],
                     )
                 script_execution_set("failed_max_runs")
-                return
+                return None
 
         # If this is a top level Script then make a copy of the variables in case they
         # are read-only, but more importantly, so as not to leak any variables created
@@ -1500,7 +1500,7 @@ class Script:
         ):
             script_execution_set("disallowed_recursion_detected")
             self._log("Disallowed recursion detected", level=logging.WARNING)
-            return
+            return None
 
         if self.script_mode != SCRIPT_MODE_QUEUED:
             cls = _ScriptRun
@@ -1525,6 +1525,7 @@ class Script:
 
         try:
             await asyncio.shield(run.async_run())
+            return variables
         except asyncio.CancelledError:
             await run.async_stop()
             self._changed()
