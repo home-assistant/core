@@ -225,28 +225,33 @@ async def test_new_state_is_none(hass: HomeAssistant) -> None:
     assert last_changed == hass.states.get(expected_entity_id).last_changed
 
 
-async def test_limits(hass):
+@pytest.mark.parametrize(
+    ("object_id", "lower", "upper"),
+    [
+        ("minimum", True, False),
+        ("maximum", False, True),
+        ("both", True, True),
+    ],
+)
+async def test_limits(
+    hass: HomeAssistant, object_id: str, lower: bool, upper: bool
+) -> None:
     """Test compensation sensor state."""
-    info = [
-        ("sensor.minimum", True, False),
-        ("sensor.maximum", False, True),
-        ("sensor.both", True, True),
-    ]
+    source = f"sensor.{object_id}"
     config = {
         "compensation": {
-            f"test{i}": {
-                "source": values[0],
+            "test": {
+                "source": source,
                 "data_points": [
                     [1.0, 0.0],
                     [3.0, 2.0],
                     [2.0, 1.0],
                 ],
                 "precision": 2,
-                "apply_lower_limit": values[1],
-                "apply_upper_limit": values[2],
+                "clamp_lower_limit": lower,
+                "clamp_upper_limit": upper,
                 "unit_of_measurement": "a",
             }
-            for i, values in enumerate(info)
         }
     }
     await async_setup_component(hass, DOMAIN, config)
@@ -254,15 +259,16 @@ async def test_limits(hass):
     await hass.async_start()
     await hass.async_block_till_done()
 
-    for source, lower, upper in info:
-        entity_id = f"sensor.compensation_{source.replace('.', '_')}"
+    entity_id = f"sensor.compensation_sensor_{object_id}"
 
-        hass.states.async_set(source, 0, {})
-        await hass.async_block_till_done()
-        state = hass.states.get(entity_id)
-        assert float(state.state) == 0.0 if lower else float(state.state) == -1.0
+    hass.states.async_set(source, 0, {})
+    await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
+    value = 0.0 if lower else -1.0
+    assert float(state.state) == value
 
-        hass.states.async_set(source, 5, {})
-        await hass.async_block_till_done()
-        state = hass.states.get(entity_id)
-        assert float(state.state) == 2.0 if upper else float(state.state) == 4.0
+    hass.states.async_set(source, 5, {})
+    await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
+    value = 2.0 if upper else 4.0
+    assert float(state.state) == value

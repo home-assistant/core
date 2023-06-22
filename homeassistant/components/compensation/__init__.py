@@ -1,5 +1,6 @@
 """The Compensation integration."""
 import logging
+from operator import itemgetter
 
 import numpy as np
 import voluptuous as vol
@@ -19,8 +20,8 @@ from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
-    CONF_APPLY_LOWER_LIMIT,
-    CONF_APPLY_UPPER_LIMIT,
+    CONF_CLAMP_LOWER_LIMIT,
+    CONF_CLAMP_UPPER_LIMIT,
     CONF_COMPENSATION,
     CONF_DATAPOINTS,
     CONF_DEGREE,
@@ -54,8 +55,8 @@ COMPENSATION_SCHEMA = vol.Schema(
         ],
         vol.Optional(CONF_UNIQUE_ID): cv.string,
         vol.Optional(CONF_ATTRIBUTE): cv.string,
-        vol.Optional(CONF_APPLY_UPPER_LIMIT, default=False): cv.boolean,
-        vol.Optional(CONF_APPLY_LOWER_LIMIT, default=False): cv.boolean,
+        vol.Optional(CONF_CLAMP_UPPER_LIMIT, default=False): cv.boolean,
+        vol.Optional(CONF_CLAMP_LOWER_LIMIT, default=False): cv.boolean,
         vol.Optional(CONF_PRECISION, default=DEFAULT_PRECISION): cv.positive_int,
         vol.Optional(CONF_DEGREE, default=DEFAULT_DEGREE): vol.All(
             vol.Coerce(int),
@@ -85,9 +86,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         degree = conf[CONF_DEGREE]
 
         initial_coefficients: list[tuple[float, float]] = conf[CONF_DATAPOINTS]
-        sorted_coefficients = sorted(
-            initial_coefficients, key=lambda coefficient: coefficient[0]
-        )
+        sorted_coefficients = sorted(initial_coefficients, key=itemgetter(0))
 
         # get x values and y values from the x,y point pairs
         x_values, y_values = zip(*initial_coefficients)
@@ -110,12 +109,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             }
             data[CONF_POLYNOMIAL] = np.poly1d(coefficients)
 
-            if data[CONF_APPLY_LOWER_LIMIT]:
+            if data[CONF_CLAMP_LOWER_LIMIT]:
                 data[CONF_MINIMUM] = sorted_coefficients[0]
             else:
                 data[CONF_MINIMUM] = None
 
-            if data[CONF_APPLY_UPPER_LIMIT]:
+            if data[CONF_CLAMP_UPPER_LIMIT]:
                 data[CONF_MAXIMUM] = sorted_coefficients[-1]
             else:
                 data[CONF_MAXIMUM] = None
