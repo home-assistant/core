@@ -13,8 +13,3 @@ RTP_AUDIO_SETTINGS = {
 }
 
 CONF_SIP_PORT = "sip_port"
-
-# Seconds of silence at the end of a voice command
-SILENCE_DEFAULT = 1.0
-SILENCE_RELAXED = 2.0
-SILENCE_AGGRESSIVE = 0.5

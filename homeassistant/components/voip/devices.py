@@ -6,20 +6,11 @@ from dataclasses import dataclass, field
 
 from voip_utils import CallInfo
 
-from homeassistant.backports.enum import StrEnum
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .const import DOMAIN
-
-
-class VadSensitivity(StrEnum):
-    """How quickly the end of a voice command is detected."""
-
-    DEFAULT = "default"
-    RELAXED = "relaxed"
-    AGGRESSIVE = "aggressive"
 
 
 @dataclass
@@ -30,7 +21,6 @@ class VoIPDevice:
     device_id: str
     is_active: bool = False
     update_listeners: list[Callable[[VoIPDevice], None]] = field(default_factory=list)
-    vad_sensitivity: VadSensitivity = VadSensitivity.DEFAULT
 
     @callback
     def set_is_active(self, active: bool) -> None:
