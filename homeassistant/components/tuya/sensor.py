@@ -516,6 +516,31 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
         ),
         *BATTERY_SENSORS,
     ),
+    # Smart Water Timer
+    "sfkzq": (
+        TuyaSensorEntityDescription(
+            key=DPCode.WORK_STATE,
+            name="Mode",
+            entity_category=EntityCategory.DIAGNOSTIC,
+            translation_key="work_state",
+        ),
+        # Total seconds of irrigation. Read-write value; the device appears to ignore the write action (maybe firmware bug)
+        TuyaSensorEntityDescription(
+            key=DPCode.TIME_USE,
+            name="Total watering time",
+            icon="mdi:history",
+            state_class=SensorStateClass.TOTAL_INCREASING,
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
+        # Number of seconds for the watering session. The device will automatically turn off after this time
+        TuyaSensorEntityDescription(
+            key=DPCode.COUNTDOWN,
+            name="Countdown",
+            icon="mdi:timer-outline",
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
+        *BATTERY_SENSORS,
+    ),
     # Water Detector
     # https://developer.tuya.com/en/docs/iot/categorysj?id=Kaiuz3iub2sli
     "sj": BATTERY_SENSORS,
