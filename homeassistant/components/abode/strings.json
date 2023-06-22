@@ -31,18 +31,5 @@
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
-  },
-  "entity": {
-    "sensor": {
-      "temperature": {
-        "name": "[%key:component::sensor::entity_component::temperature::name%]"
-      },
-      "humidity": {
-        "name": "[%key:component::sensor::entity_component::humidity::name%]"
-      },
-      "lux": {
-        "name": "[%key:component::sensor::entity_component::illuminance::name%]"
-      }
-    }
   }
 }

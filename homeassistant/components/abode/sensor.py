@@ -21,17 +21,14 @@ from .const import DOMAIN
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key=CONST.TEMP_STATUS_KEY,
-        translation_key=CONST.TEMP_STATUS_KEY,
         device_class=SensorDeviceClass.TEMPERATURE,
     ),
     SensorEntityDescription(
         key=CONST.HUMI_STATUS_KEY,
-        translation_key=CONST.HUMI_STATUS_KEY,
         device_class=SensorDeviceClass.HUMIDITY,
     ),
     SensorEntityDescription(
         key=CONST.LUX_STATUS_KEY,
-        translation_key=CONST.LUX_STATUS_KEY,
         device_class=SensorDeviceClass.ILLUMINANCE,
     ),
 )
