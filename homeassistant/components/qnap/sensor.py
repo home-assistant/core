@@ -37,13 +37,12 @@ from homeassistant.helpers.issue_registry import IssueSeverity, async_create_iss
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DEFAULT_NAME, DEFAULT_PORT, DEFAULT_TIMEOUT, DOMAIN
+from .const import DEFAULT_PORT, DEFAULT_TIMEOUT, DOMAIN
 from .coordinator import QnapCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_DRIVE = "Drive"
-ATTR_ENABLED = "Sensor Enabled"
 ATTR_IP = "IP Address"
 ATTR_MAC = "MAC Address"
 ATTR_MASK = "Mask"
@@ -325,24 +324,21 @@ class QNAPSensor(CoordinatorEntity[QnapCoordinator], SensorEntity):
         self,
         coordinator: QnapCoordinator,
         description: SensorEntityDescription,
-        uniqueid: str,
+        unique_id: str,
         monitor_device: str | None = None,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
-        self.coordinator = coordinator
         self.entity_description = description
-        self.uid = uniqueid
         self.device_name = self.coordinator.data["system_stats"]["system"]["name"]
         self.monitor_device = monitor_device
-        self.coordinator_context = None
         self._attr_unique_id = f"{self.uid}_{self.device_name}_{self.name}"
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self.uid)},
+            identifiers={(DOMAIN, unique_id)},
             name=self.device_name,
             model=self.coordinator.data["system_stats"]["system"]["model"],
             sw_version=self.coordinator.data["system_stats"]["firmware"]["version"],
-            manufacturer=DEFAULT_NAME,
+            manufacturer="QNAP",
         )
 
     @property
