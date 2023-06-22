@@ -71,7 +71,7 @@ async def test_device_diagnostics(
     ent_reg.async_get_or_create(
         "test",
         "test_integration",
-        "test",
+        "test_unique_id",
         suggested_object_id="test",
         config_entry=mock_config_entry,
         device_id=device.id,
