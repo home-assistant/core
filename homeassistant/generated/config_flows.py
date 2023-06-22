@@ -320,6 +320,7 @@ FLOWS = {
         "openai_conversation",
         "openexchangerates",
         "opengarage",
+        "openhome",
         "opentherm_gw",
         "openuv",
         "openweathermap",
