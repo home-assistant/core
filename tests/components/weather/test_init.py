@@ -31,7 +31,10 @@ from homeassistant.components.weather import (
     WeatherEntity,
     round_temperature,
 )
-from homeassistant.components.weather.const import ATTR_WEATHER_DEW_POINT
+from homeassistant.components.weather.const import (
+    ATTR_WEATHER_CLOUD_COVERAGE,
+    ATTR_WEATHER_DEW_POINT,
+)
 from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
     PRECISION_HALVES,
@@ -522,21 +525,26 @@ async def test_precipitation_no_unit(
     )
 
 
-async def test_wind_bearing_and_ozone(
+async def test_wind_bearing_ozone_and_cloud_coverage(
     hass: HomeAssistant,
     enable_custom_integrations: None,
 ) -> None:
-    """Test wind bearing."""
+    """Test wind bearing, ozone and cloud coverage."""
     wind_bearing_value = 180
     ozone_value = 10
+    cloud_coverage = 75
 
     entity0 = await create_entity(
-        hass, wind_bearing=wind_bearing_value, ozone=ozone_value
+        hass,
+        wind_bearing=wind_bearing_value,
+        ozone=ozone_value,
+        cloud_coverage=cloud_coverage,
     )
 
     state = hass.states.get(entity0.entity_id)
     assert float(state.attributes[ATTR_WEATHER_WIND_BEARING]) == 180
     assert float(state.attributes[ATTR_WEATHER_OZONE]) == 10
+    assert float(state.attributes[ATTR_WEATHER_CLOUD_COVERAGE]) == 75
 
 
 async def test_none_forecast(
