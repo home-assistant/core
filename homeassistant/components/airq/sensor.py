@@ -102,7 +102,6 @@ SENSOR_TYPES: list[AirQEntityDescription] = [
     ),
     AirQEntityDescription(
         key="co",
-        device_class=SensorDeviceClass.CO,
         native_unit_of_measurement=CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
         value=lambda data: data.get("co"),
