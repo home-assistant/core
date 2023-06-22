@@ -63,7 +63,7 @@ async def test_device_diagnostics(
     assert device
 
     # Create mock config entry for fake entity
-    mock_config_entry = MockConfigEntry(domain="test", unique_id="test")
+    mock_config_entry = MockConfigEntry(domain="test_integration")
     mock_config_entry.add_to_hass(hass)
 
     # Add an entity entry to the device that is not part of this config entry
