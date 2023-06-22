@@ -34,7 +34,7 @@ GET_IMAGE_TIMEOUT = 10
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
-    """Set up EZVIZ cameras based on a config entry."""
+    """Set up EZVIZ image entities based on a config entry."""
 
     coordinator: EzvizDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][
         DATA_COORDINATOR
