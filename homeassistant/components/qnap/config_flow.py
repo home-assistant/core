@@ -58,9 +58,6 @@ class QnapConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle a flow initialized by the user."""
         errors = {}
         if user_input is not None:
-            user_input.setdefault(CONF_SSL, DEFAULT_SSL)
-            user_input.setdefault(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL)
-            user_input.setdefault(CONF_PORT, DEFAULT_PORT)
             host = user_input[CONF_HOST]
             protocol = "https" if user_input[CONF_SSL] else "http"
             api = QNAPStats(
