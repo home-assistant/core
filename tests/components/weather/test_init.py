@@ -93,7 +93,7 @@ class MockWeatherEntityPrecision(WeatherEntity):
         self._attr_condition = ATTR_CONDITION_SUNNY
         self._attr_native_temperature = 20.3
         self._attr_native_apparent_temperature = 25.3
-        self._attr_native_dew_point = 2.2
+        self._attr_native_dew_point = 2.3
         self._attr_native_temperature_unit = UnitOfTemperature.CELSIUS
         self._attr_precision = PRECISION_HALVES
 
@@ -961,9 +961,9 @@ async def test_precision_for_temperature(hass: HomeAssistant) -> None:
 
     assert weather.condition == ATTR_CONDITION_SUNNY
     assert weather.native_temperature == 20.3
-    assert weather.native_dew_point == 2.2
+    assert weather.native_dew_point == 2.3
     assert weather._temperature_unit == UnitOfTemperature.CELSIUS
     assert weather.precision == PRECISION_HALVES
 
     assert weather.state_attributes[ATTR_WEATHER_TEMPERATURE] == 20.5
-    assert weather.state_attributes[ATTR_WEATHER_DEW_POINT] == 2.0
+    assert weather.state_attributes[ATTR_WEATHER_DEW_POINT] == 2.5
