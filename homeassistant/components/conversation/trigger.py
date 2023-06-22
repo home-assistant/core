@@ -39,17 +39,22 @@ async def async_attach_trigger(
     job = HassJob(action)
 
     @callback
-    def call_action(sentence: str) -> None:
+    async def call_action(sentence: str) -> str | None:
         """Call action with right context."""
         trigger_input: dict[str, Any] = {  # Satisfy type checker
             **trigger_data,
             "platform": DOMAIN,
             "sentence": sentence,
         }
-        hass.async_run_hass_job(
+        if future := hass.async_run_hass_job(
             job,
             {"trigger": trigger_input},
-        )
+        ):
+            await future
+            if isinstance(future.result, str):
+                return future.result
+
+        return None
 
     default_agent = await _get_agent_manager(hass).async_get_agent(HOME_ASSISTANT_AGENT)
     assert isinstance(default_agent, DefaultAgent)

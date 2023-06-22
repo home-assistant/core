@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from collections import defaultdict
-from collections.abc import Callable, Iterable
+from collections.abc import Awaitable, Callable, Iterable
 from dataclasses import dataclass
 import functools
 import logging
@@ -44,7 +44,9 @@ _DEFAULT_ERROR_TEXT = "Sorry, I couldn't understand that"
 _ENTITY_REGISTRY_UPDATE_FIELDS = ["aliases", "name", "original_name"]
 
 REGEX_TYPE = type(re.compile(""))
-TRIGGER_CALLBACK_TYPE = Callable[[str], str | None]  # pylint: disable=invalid-name
+TRIGGER_CALLBACK_TYPE = Callable[  # pylint: disable=invalid-name
+    [str], Awaitable[str | None]
+]
 
 
 def json_load(fp: IO[str]) -> JsonObjectType:
@@ -658,7 +660,7 @@ class DefaultAgent(AbstractConversationAgent):
         # Force rebuild on next use
         self._trigger_intents = None
 
-    def _match_triggers(self, sentence: str) -> ConversationResult | None:
+    async def _match_triggers(self, sentence: str) -> ConversationResult | None:
         """Try to match sentence against registered trigger sentences.
 
         Calls the registered callbacks if there's a match and returns a positive
@@ -674,13 +676,17 @@ class DefaultAgent(AbstractConversationAgent):
 
         assert self._trigger_intents is not None
 
-        matched_triggers: list[str] = []
+        matched_triggers: set[str] = set()
         speech: str | None = None
         for result in recognize_all(sentence, self._trigger_intents):
             trigger_id = result.intent.name
-            matched_triggers.append(trigger_id)
+            if trigger_id in matched_triggers:
+                # Already matched a sentence from this trigger
+                break
+
+            matched_triggers.add(trigger_id)
             trigger_data = self._trigger_sentences[trigger_id]
-            if trigger_response := trigger_data.callback(sentence):
+            if trigger_response := await trigger_data.callback(sentence):
                 speech = speech or trigger_response
 
         if not matched_triggers:

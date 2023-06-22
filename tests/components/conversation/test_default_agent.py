@@ -1,5 +1,5 @@
 """Test for the default agent."""
-from unittest.mock import Mock, patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -235,7 +235,7 @@ async def test_trigger_sentences(hass: HomeAssistant, init_components) -> None:
     )
     assert isinstance(agent, conversation.DefaultAgent)
 
-    callback = Mock(return_value=trigger_response)
+    callback = AsyncMock(return_value=trigger_response)
     unregister = agent.register_trigger(trigger_sentences, callback)
 
     result = await conversation.async_converse(hass, "Not the trigger", None, Context())
