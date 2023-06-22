@@ -30,6 +30,9 @@
         "ozone": {
           "name": "Ozone"
         },
+        "cloud_coverage": {
+          "name": "Cloud coverage"
+        },
         "precipitation_unit": {
           "name": "Precipitation unit"
         },
