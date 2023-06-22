@@ -44,7 +44,6 @@ class AcmedaBattery(AcmedaBase, SensorEntity):
 
     _attr_device_class = SensorDeviceClass.BATTERY
     _attr_native_unit_of_measurement = PERCENTAGE
-    _attr_translation_key = "battery"
 
     @property
     def native_value(self) -> float | int | None:

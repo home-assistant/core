@@ -11,12 +11,5 @@
     "abort": {
       "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]"
     }
-  },
-  "entity": {
-    "sensor": {
-      "battery": {
-        "name": "[%key:component::sensor::entity_component::battery::name%]"
-      }
-    }
   }
 }
