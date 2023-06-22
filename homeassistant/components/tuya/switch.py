@@ -573,6 +573,13 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
+    # Air Conditioner Mate (Smart IR Socket)
+    "wnykq": (
+        SwitchEntityDescription(
+            key=DPCode.SWITCH,
+            name="Switch",
+        ),
+    ),
     # SIREN: Siren (switch) with Temperature and humidity sensor
     # https://developer.tuya.com/en/docs/iot/f?id=Kavck4sr3o5ek
     "wsdcg": (
