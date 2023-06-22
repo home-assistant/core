@@ -72,7 +72,7 @@ async def test_device_diagnostics(
         "test",
         "test_integration",
         "test_unique_id",
-        suggested_object_id="test",
+        suggested_object_id="unrelated_entity",
         config_entry=mock_config_entry,
         device_id=device.id,
     )
