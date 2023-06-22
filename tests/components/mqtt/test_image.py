@@ -10,7 +10,6 @@ import pytest
 import respx
 
 from homeassistant.components import image, mqtt
-from homeassistant.components.mqtt.image import MQTT_IMAGE_ATTRIBUTES_BLOCKED
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 
@@ -34,7 +33,6 @@ from .test_common import (
     help_test_reloadable,
     help_test_setting_attribute_via_mqtt_json_message,
     help_test_setting_attribute_with_template,
-    help_test_setting_blocked_attribute_via_mqtt_json_message,
     help_test_unique_id,
     help_test_unload_config_entry_with_platform,
     help_test_update_with_json_attrs_bad_json,
@@ -482,19 +480,6 @@ async def test_setting_attribute_via_mqtt_json_message(
     """Test the setting of attribute via MQTT with JSON payload."""
     await help_test_setting_attribute_via_mqtt_json_message(
         hass, mqtt_mock_entry, image.DOMAIN, DEFAULT_CONFIG
-    )
-
-
-async def test_setting_blocked_attribute_via_mqtt_json_message(
-    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
-) -> None:
-    """Test the setting of attribute via MQTT with JSON payload."""
-    await help_test_setting_blocked_attribute_via_mqtt_json_message(
-        hass,
-        mqtt_mock_entry,
-        image.DOMAIN,
-        DEFAULT_CONFIG,
-        MQTT_IMAGE_ATTRIBUTES_BLOCKED,
     )
 
 

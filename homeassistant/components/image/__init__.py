@@ -27,7 +27,7 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
 
-from .const import ATTR_IMAGE_LAST_UPDATED, DOMAIN, IMAGE_TIMEOUT  # noqa: F401
+from .const import DOMAIN, IMAGE_TIMEOUT  # noqa: F401
 
 _LOGGER = logging.getLogger(__name__)
 

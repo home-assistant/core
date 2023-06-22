@@ -14,7 +14,6 @@ import voluptuous as vol
 
 from homeassistant.components import image
 from homeassistant.components.image import (
-    ATTR_IMAGE_LAST_UPDATED,
     DEFAULT_CONTENT_TYPE,
     ImageEntity,
 )
@@ -44,12 +43,10 @@ CONF_FROM_URL_TOPIC = "from_url_topic"
 
 DEFAULT_NAME = "MQTT Image"
 
-MQTT_IMAGE_ATTRIBUTES_BLOCKED = frozenset({ATTR_IMAGE_LAST_UPDATED})
-
 
 def validate_content_type(content_type: str) -> str:
     """Validate the config type is an image."""
-    if content_type.split("/")[0] != "image":
+    if content_type.split("/", 1)[0] != "image":
         raise vol.Invalid(f"Content type {content_type} is not valid")
     return content_type
 
@@ -68,7 +65,7 @@ PLATFORM_SCHEMA_BASE = MQTT_BASE_SCHEMA.extend(
         ),
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Exclusive(CONF_FROM_URL_TOPIC, "image_url"): valid_subscribe_topic,
-        vol.Exclusive(CONF_TOPIC, "url_url"): valid_subscribe_topic,
+        vol.Exclusive(CONF_TOPIC, "image_url"): valid_subscribe_topic,
         vol.Optional(CONF_IMAGE_ENCODING): "b64",
         vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
     }
@@ -108,7 +105,6 @@ class MqttImage(MqttEntity, ImageEntity):
     """representation of a MQTT image."""
 
     _entity_id_format: str = image.ENTITY_ID_FORMAT
-    _attributes_extra_blocked: frozenset[str] = MQTT_IMAGE_ATTRIBUTES_BLOCKED
     _last_image: bytes | None = None
     _client: httpx.AsyncClient
     _template: Callable[[ReceivePayloadType], ReceivePayloadType]
