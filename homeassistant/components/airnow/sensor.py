@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from homeassistant.components.sensor import (
+    SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
@@ -57,10 +58,9 @@ class AirNowEntityDescription(SensorEntityDescription, AirNowEntityDescriptionMi
 SENSOR_TYPES: tuple[AirNowEntityDescription, ...] = (
     AirNowEntityDescription(
         key=ATTR_API_AQI,
-        translation_key="aqi",
         icon="mdi:blur",
-        native_unit_of_measurement="aqi",
         state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.AQI,
         value_fn=lambda data: data.get(ATTR_API_AQI),
         extra_state_attributes_fn=lambda data: {
             ATTR_DESCR: data[ATTR_API_AQI_DESCRIPTION],
@@ -69,10 +69,10 @@ SENSOR_TYPES: tuple[AirNowEntityDescription, ...] = (
     ),
     AirNowEntityDescription(
         key=ATTR_API_PM25,
-        translation_key="pm25",
         icon="mdi:blur",
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.PM25,
         value_fn=lambda data: data.get(ATTR_API_PM25),
         extra_state_attributes_fn=None,
     ),
