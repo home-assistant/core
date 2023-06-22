@@ -7,7 +7,7 @@ import async_timeout
 import pytest
 
 from homeassistant.components import assist_pipeline, voip
-from homeassistant.components.voip.devices import VadSensitivity, VoIPDevice
+from homeassistant.components.voip.devices import VoIPDevice
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -21,7 +21,6 @@ async def test_pipeline(
 ) -> None:
     """Test that pipeline function is called from RTP protocol."""
     assert await async_setup_component(hass, "voip", {})
-    voip_device.vad_sensitivity = VadSensitivity.AGGRESSIVE
 
     def is_speech(self, chunk, sample_rate):
         """Anything non-zero is speech."""
@@ -96,6 +95,7 @@ async def test_pipeline(
             listening_tone_enabled=False,
             processing_tone_enabled=False,
             error_tone_enabled=False,
+            silence_seconds=assist_pipeline.vad.VadSensitivity.to_seconds("aggressive"),
         )
         rtp_protocol.transport = Mock()
 
@@ -210,7 +210,7 @@ async def test_tts_timeout(
 ) -> None:
     """Test that TTS will time out based on its length."""
     assert await async_setup_component(hass, "voip", {})
-    voip_device.vad_sensitivity = VadSensitivity.RELAXED
+    # voip_device.vad_sensitivity = VadSensitivity.RELAXED
 
     def is_speech(self, chunk, sample_rate):
         """Anything non-zero is speech."""
@@ -290,6 +290,7 @@ async def test_tts_timeout(
             listening_tone_enabled=True,
             processing_tone_enabled=True,
             error_tone_enabled=True,
+            silence_seconds=assist_pipeline.vad.VadSensitivity.to_seconds("relaxed"),
         )
         rtp_protocol._tone_bytes = tone_bytes
         rtp_protocol._processing_bytes = tone_bytes

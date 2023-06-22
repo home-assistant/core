@@ -125,7 +125,7 @@ class AssistPipelineSelect(SelectEntity, restore_state.RestoreEntity):
 
 
 class VadSensitivitySelect(SelectEntity, restore_state.RestoreEntity):
-    """Entity to represent vad sensitivity."""
+    """Entity to represent VAD sensitivity."""
 
     entity_description = SelectEntityDescription(
         key="vad_sensitivity",
