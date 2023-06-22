@@ -1,7 +1,7 @@
 """Support for ESPHome buttons."""
 from __future__ import annotations
 
-from aioesphomeapi import ButtonInfo, EntityState
+from aioesphomeapi import ButtonInfo, EntityInfo, EntityState
 
 from homeassistant.components.button import ButtonDeviceClass, ButtonEntity
 from homeassistant.config_entries import ConfigEntry
@@ -30,10 +30,13 @@ async def async_setup_entry(
 class EsphomeButton(EsphomeEntity[ButtonInfo, EntityState], ButtonEntity):
     """A button implementation for ESPHome."""
 
-    @property
-    def device_class(self) -> ButtonDeviceClass | None:
-        """Return the class of this entity."""
-        return try_parse_enum(ButtonDeviceClass, self._static_info.device_class)
+    @callback
+    def _on_static_info_update(self, static_info: EntityInfo) -> None:
+        """Set attrs from static info."""
+        super()._on_static_info_update(static_info)
+        self._attr_device_class = try_parse_enum(
+            ButtonDeviceClass, self._static_info.device_class
+        )
 
     @callback
     def _on_device_update(self) -> None:
@@ -44,4 +47,4 @@ class EsphomeButton(EsphomeEntity[ButtonInfo, EntityState], ButtonEntity):
 
     async def async_press(self) -> None:
         """Press the button."""
-        await self._client.button_command(self._static_info.key)
+        await self._client.button_command(self._key)

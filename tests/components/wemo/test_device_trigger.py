@@ -1,5 +1,6 @@
 """Verify that WeMo device triggers work as expected."""
 import pytest
+from pytest_unordered import unordered
 from pywemo.subscribe import EVENT_TYPE_LONG_PRESS
 
 from homeassistant.components.automation import DOMAIN as AUTOMATION_DOMAIN
@@ -17,7 +18,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import (
-    assert_lists_same,
     async_get_device_automations,
     async_mock_service,
 )
@@ -96,7 +96,7 @@ async def test_get_triggers(hass: HomeAssistant, wemo_entity) -> None:
     triggers = await async_get_device_automations(
         hass, DeviceAutomationType.TRIGGER, wemo_entity.device_id
     )
-    assert_lists_same(triggers, expected_triggers)
+    assert triggers == unordered(expected_triggers)
 
 
 async def test_fires_on_long_press(hass: HomeAssistant) -> None:

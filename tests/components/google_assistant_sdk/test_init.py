@@ -230,6 +230,7 @@ async def test_send_text_command_expired_token_refresh_failure(
             {"command": "turn on tv"},
             blocking=True,
         )
+    await hass.async_block_till_done()
 
     assert any(entry.async_get_active_flows(hass, {"reauth"})) == requires_reauth
 
