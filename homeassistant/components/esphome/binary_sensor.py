@@ -51,9 +51,8 @@ class EsphomeBinarySensor(
             return self._entry_data.available
         if not self._has_state:
             return None
-        if self._state.missing_state:
-            return None
-        return self._state.state
+        state = self._state
+        return None if state.missing_state else state.state
 
     @callback
     def _on_static_info_update(self, static_info: EntityInfo) -> None:
@@ -66,9 +65,7 @@ class EsphomeBinarySensor(
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        if self._static_info.is_status_binary_sensor:
-            return True
-        return super().available
+        return self._static_info.is_status_binary_sensor or super().available
 
 
 class EsphomeAssistInProgressBinarySensor(EsphomeAssistEntity, BinarySensorEntity):
