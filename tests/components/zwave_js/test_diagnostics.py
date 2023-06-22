@@ -117,7 +117,7 @@ async def test_device_diagnostics(
     # Explicitly check that the entity that is not part of this config entry is not
     # in the dump.
     assert not any(
-        entity["entity_id"] == "test.test" for entity in diagnostics_data["entities"]
+        entity["entity_id"] == "test.unrelated_entity" for entity in diagnostics_data["entities"]
     )
     assert diagnostics_data["state"] == multisensor_6.data
 
