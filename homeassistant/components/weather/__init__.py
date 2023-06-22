@@ -71,6 +71,7 @@ ATTR_CONDITION_WINDY = "windy"
 ATTR_CONDITION_WINDY_VARIANT = "windy-variant"
 ATTR_FORECAST = "forecast"
 ATTR_FORECAST_CONDITION: Final = "condition"
+ATTR_FORECAST_HUMIDITY: Final = "humidity"
 ATTR_FORECAST_NATIVE_PRECIPITATION: Final = "native_precipitation"
 ATTR_FORECAST_PRECIPITATION: Final = "precipitation"
 ATTR_FORECAST_PRECIPITATION_PROBABILITY: Final = "precipitation_probability"
@@ -125,6 +126,7 @@ class Forecast(TypedDict, total=False):
 
     condition: str | None
     datetime: Required[str]
+    humidity: float | None
     precipitation_probability: int | None
     cloud_coverage: int | None
     native_precipitation: float | None
@@ -867,6 +869,18 @@ class WeatherEntity(Entity):
                                 to_precipitation_unit,
                             ),
                             ROUNDING_PRECISION,
+                        )
+
+                if (
+                    forecast_humidity := forecast_entry.pop(
+                        ATTR_FORECAST_HUMIDITY,
+                        None,
+                    )
+                ) is not None:
+                    with suppress(TypeError, ValueError):
+                        forecast_humidity_f = float(forecast_humidity)
+                        forecast_entry[ATTR_FORECAST_HUMIDITY] = round(
+                            forecast_humidity_f
                         )
 
                 forecast.append(forecast_entry)
