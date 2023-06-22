@@ -31,6 +31,9 @@
         "available_modes": {
           "name": "Available modes"
         },
+        "current_humidity": {
+          "name": "Current humidity"
+        },
         "humidity": {
           "name": "Target humidity"
         },

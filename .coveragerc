@@ -204,6 +204,7 @@ omit =
     homeassistant/components/discord/notify.py
     homeassistant/components/discovergy/__init__.py
     homeassistant/components/discovergy/sensor.py
+    homeassistant/components/discovergy/coordinator.py
     homeassistant/components/dlib_face_detect/image_processing.py
     homeassistant/components/dlib_face_identify/image_processing.py
     homeassistant/components/dlink/data.py
@@ -304,6 +305,7 @@ omit =
     homeassistant/components/escea/climate.py
     homeassistant/components/escea/discovery.py
     homeassistant/components/esphome/__init__.py
+    homeassistant/components/esphome/alarm_control_panel.py
     homeassistant/components/esphome/binary_sensor.py
     homeassistant/components/esphome/bluetooth/*
     homeassistant/components/esphome/button.py
@@ -312,12 +314,10 @@ omit =
     homeassistant/components/esphome/cover.py
     homeassistant/components/esphome/domain_data.py
     homeassistant/components/esphome/entry_data.py
-    homeassistant/components/esphome/fan.py
     homeassistant/components/esphome/light.py
     homeassistant/components/esphome/lock.py
     homeassistant/components/esphome/media_player.py
     homeassistant/components/esphome/number.py
-    homeassistant/components/esphome/select.py
     homeassistant/components/esphome/sensor.py
     homeassistant/components/esphome/switch.py
     homeassistant/components/etherscan/sensor.py
@@ -618,7 +618,6 @@ omit =
     homeassistant/components/kwb/sensor.py
     homeassistant/components/lacrosse/sensor.py
     homeassistant/components/lannouncer/notify.py
-    homeassistant/components/lastfm/sensor.py
     homeassistant/components/launch_library/__init__.py
     homeassistant/components/launch_library/sensor.py
     homeassistant/components/lcn/climate.py
@@ -976,6 +975,10 @@ omit =
     homeassistant/components/rainmachine/switch.py
     homeassistant/components/rainmachine/update.py
     homeassistant/components/rainmachine/util.py
+    homeassistant/components/renson/__init__.py
+    homeassistant/components/renson/const.py
+    homeassistant/components/renson/entity.py
+    homeassistant/components/renson/sensor.py
     homeassistant/components/raspyrfm/*
     homeassistant/components/recollect_waste/sensor.py
     homeassistant/components/recorder/repack.py

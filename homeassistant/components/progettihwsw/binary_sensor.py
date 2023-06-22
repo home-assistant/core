@@ -2,8 +2,8 @@
 from datetime import timedelta
 import logging
 
-from ProgettiHWSW.input import Input
 import async_timeout
+from ProgettiHWSW.input import Input
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.config_entries import ConfigEntry
