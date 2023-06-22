@@ -10,6 +10,7 @@ import voluptuous as vol
 
 from homeassistant.components import humidifier
 from homeassistant.components.humidifier import (
+    ATTR_CURRENT_HUMIDITY,
     ATTR_HUMIDITY,
     ATTR_MODE,
     DEFAULT_MAX_HUMIDITY,
@@ -37,6 +38,8 @@ from .config import MQTT_RW_SCHEMA
 from .const import (
     CONF_COMMAND_TEMPLATE,
     CONF_COMMAND_TOPIC,
+    CONF_CURRENT_HUMIDITY_TEMPLATE,
+    CONF_CURRENT_HUMIDITY_TOPIC,
     CONF_ENCODING,
     CONF_QOS,
     CONF_RETAIN,
@@ -117,6 +120,8 @@ _PLATFORM_SCHEMA_BASE = MQTT_RW_SCHEMA.extend(
         ): cv.ensure_list,
         vol.Inclusive(CONF_MODE_COMMAND_TOPIC, "available_modes"): valid_publish_topic,
         vol.Optional(CONF_COMMAND_TEMPLATE): cv.template,
+        vol.Optional(CONF_CURRENT_HUMIDITY_TEMPLATE): cv.template,
+        vol.Optional(CONF_CURRENT_HUMIDITY_TOPIC): valid_subscribe_topic,
         vol.Optional(
             CONF_DEVICE_CLASS, default=HumidifierDeviceClass.HUMIDIFIER
         ): vol.In(
@@ -224,6 +229,7 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
             for key in (
                 CONF_STATE_TOPIC,
                 CONF_COMMAND_TOPIC,
+                CONF_CURRENT_HUMIDITY_TOPIC,
                 CONF_TARGET_HUMIDITY_STATE_TOPIC,
                 CONF_TARGET_HUMIDITY_COMMAND_TOPIC,
                 CONF_MODE_STATE_TOPIC,
@@ -263,6 +269,7 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
 
         self._value_templates = {}
         value_templates: dict[str, Template | None] = {
+            ATTR_CURRENT_HUMIDITY: config.get(CONF_CURRENT_HUMIDITY_TEMPLATE),
             CONF_STATE: config.get(CONF_STATE_VALUE_TEMPLATE),
             ATTR_HUMIDITY: config.get(CONF_TARGET_HUMIDITY_STATE_TEMPLATE),
             ATTR_MODE: config.get(CONF_MODE_STATE_TEMPLATE),
@@ -297,6 +304,49 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
             topics[CONF_STATE_TOPIC] = {
                 "topic": self._topic[CONF_STATE_TOPIC],
                 "msg_callback": state_received,
+                "qos": self._config[CONF_QOS],
+                "encoding": self._config[CONF_ENCODING] or None,
+            }
+
+        @callback
+        @log_messages(self.hass, self.entity_id)
+        def current_humidity_received(msg: ReceiveMessage) -> None:
+            """Handle new received MQTT message for the current humidity."""
+            rendered_current_humidity_payload = self._value_templates[
+                ATTR_CURRENT_HUMIDITY
+            ](msg.payload)
+            if rendered_current_humidity_payload == self._payload["HUMIDITY_RESET"]:
+                self._attr_current_humidity = None
+                get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
+                return
+            if not rendered_current_humidity_payload:
+                _LOGGER.debug("Ignoring empty current humidity from '%s'", msg.topic)
+                return
+            try:
+                current_humidity = round(float(rendered_current_humidity_payload))
+            except ValueError:
+                _LOGGER.warning(
+                    "'%s' received on topic %s. '%s' is not a valid humidity",
+                    msg.payload,
+                    msg.topic,
+                    rendered_current_humidity_payload,
+                )
+                return
+            if current_humidity < 0 or current_humidity > 100:
+                _LOGGER.warning(
+                    "'%s' received on topic %s. '%s' is not a valid humidity",
+                    msg.payload,
+                    msg.topic,
+                    rendered_current_humidity_payload,
+                )
+                return
+            self._attr_current_humidity = current_humidity
+            get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
+
+        if self._topic[CONF_CURRENT_HUMIDITY_TOPIC] is not None:
+            topics[CONF_CURRENT_HUMIDITY_TOPIC] = {
+                "topic": self._topic[CONF_CURRENT_HUMIDITY_TOPIC],
+                "msg_callback": current_humidity_received,
                 "qos": self._config[CONF_QOS],
                 "encoding": self._config[CONF_ENCODING] or None,
             }
