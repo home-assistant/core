@@ -85,7 +85,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         degree = conf[CONF_DEGREE]
 
         initial_coefficients: list[tuple[float, float]] = conf[CONF_DATAPOINTS]
-        sorted_coefficients = sorted(initial_coefficients, key=lambda x: x[0])
+        sorted_coefficients = sorted(
+            initial_coefficients, key=lambda coefficient: coefficient[0]
+        )
 
         # get x values and y values from the x,y point pairs
         x_values, y_values = zip(*initial_coefficients)
@@ -107,12 +109,16 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 k: v for k, v in conf.items() if k not in [CONF_DEGREE, CONF_DATAPOINTS]
             }
             data[CONF_POLYNOMIAL] = np.poly1d(coefficients)
-            data[CONF_MINIMUM] = (
-                sorted_coefficients[0] if data[CONF_APPLY_LOWER_LIMIT] else None
-            )
-            data[CONF_MAXIMUM] = (
-                sorted_coefficients[-1] if data[CONF_APPLY_UPPER_LIMIT] else None
-            )
+
+            if data[CONF_APPLY_LOWER_LIMIT]:
+                data[CONF_MINIMUM] = sorted_coefficients[0]
+            else:
+                data[CONF_MINIMUM] = None
+
+            if data[CONF_APPLY_UPPER_LIMIT]:
+                data[CONF_MAXIMUM] = sorted_coefficients[-1]
+            else:
+                data[CONF_MAXIMUM] = None
 
             hass.data[DATA_COMPENSATION][compensation] = data
 
