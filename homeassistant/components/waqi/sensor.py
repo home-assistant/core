@@ -87,10 +87,10 @@ async def async_setup_platform(
     # if there are no locations specified, it will use the list of stations in the config file
     # if there are locations specified, stations becomes a filter to limit within the location
     
-    if (locations.count < 1 & station_filter.count > 0)
+    if locations.count < 1 & station_filter.count > 0:
         try:
-            for station_name in station_filter
-               waqi_sensor = WaqiSensor(client, station_name)
+            for station_name in station_filter:
+                waqi_sensor = WaqiSensor(client, station_name)
                 dev.append(waqi_sensor)
         except (
             aiohttp.client_exceptions.ClientConnectorError,
@@ -99,7 +99,7 @@ async def async_setup_platform(
             _LOGGER.exception("Failed to connect to WAQI servers")
             raise PlatformNotReady from err
 
-    elif locations.count > 0
+    elif locations.count > 0:
         try:
             for location_name in locations:
                 stations = await client.search(location_name)
@@ -118,7 +118,7 @@ async def async_setup_platform(
         ) as err:
             _LOGGER.exception("Failed to connect to WAQI servers")
             raise PlatformNotReady from err
-    else
+    else:
         _LOGGER.exception("No locations or stations specified")
 
     async_add_entities(dev, True)
