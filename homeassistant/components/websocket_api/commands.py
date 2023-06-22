@@ -187,6 +187,7 @@ def handle_unsubscribe_events(
         vol.Required("service"): str,
         vol.Optional("target"): cv.ENTITY_SERVICE_FIELDS,
         vol.Optional("service_data"): dict,
+        vol.Optional("return_response", default=False): bool,
     }
 )
 @decorators.async_response
@@ -202,15 +203,16 @@ async def handle_call_service(
 
     try:
         context = connection.context(msg)
-        await hass.services.async_call(
+        response = await hass.services.async_call(
             msg["domain"],
             msg["service"],
             msg.get("service_data"),
             blocking,
             context,
             target=target,
+            return_response=msg["return_response"],
         )
-        connection.send_result(msg["id"], {"context": context})
+        connection.send_result(msg["id"], {"context": context, "response": response})
     except ServiceNotFound as err:
         if err.domain == msg["domain"] and err.service == msg["service"]:
             connection.send_error(msg["id"], const.ERR_NOT_FOUND, "Service not found.")
