@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Mapping
+import contextlib
 import logging
 from typing import Any
 
@@ -16,6 +17,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DEFAULT_BRAND, DOMAIN, SERVICE_TRIGGER
+from .coordinator import BlinkUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,12 +29,13 @@ async def async_setup_entry(
     hass: HomeAssistant, config: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up a Blink Camera."""
-    data = hass.data[DOMAIN][config.entry_id]
+    coordinator: BlinkUpdateCoordinator = hass.data[DOMAIN][config.entry_id]
     entities = [
-        BlinkCamera(data, name, camera) for name, camera in data.cameras.items()
+        BlinkCamera(coordinator, name, camera)
+        for name, camera in coordinator.api.cameras.items()
     ]
 
-    async_add_entities(entities, update_before_add=True)
+    async_add_entities(entities)
 
     platform = entity_platform.async_get_current_platform()
     platform.async_register_entity_service(SERVICE_TRIGGER, {}, "trigger_camera")
@@ -44,10 +47,14 @@ class BlinkCamera(Camera):
     _attr_has_entity_name = True
     _attr_name = None
 
-    def __init__(self, data, name, camera) -> None:
+    _attr_has_entity_name = True
+    _attr_name = None
+
+    def __init__(self, coordinator: BlinkUpdateCoordinator, name, camera) -> None:
         """Initialize a camera."""
         super().__init__()
-        self.data = data
+        self.coordinator = coordinator
+        self._attr_name = f"{DOMAIN} {name}"
         self._camera = camera
         self._attr_unique_id = f"{camera.serial}-camera"
         self._attr_device_info = DeviceInfo(
@@ -68,7 +75,9 @@ class BlinkCamera(Camera):
         """Enable motion detection for the camera."""
         try:
             await self._camera.async_arm(True)
-            await self.data.refresh(force=True)
+            self._attr_available = True
+            await self.coordinator.async_refresh()
+
         except asyncio.TimeoutError:
             self._attr_available = False
 
@@ -77,7 +86,8 @@ class BlinkCamera(Camera):
         """Disable motion detection for the camera."""
         try:
             await self._camera.async_arm(False)
-            await self.data.refresh(force=True)
+            self._attr_available = True
+            await self.coordinator.async_refresh()
         except asyncio.TimeoutError:
             self._attr_available = False
 
@@ -93,8 +103,8 @@ class BlinkCamera(Camera):
 
     async def trigger_camera(self) -> None:
         """Trigger camera to take a snapshot."""
-        await self._camera.snap_picture()
-        await self.data.refresh()
+        with contextlib.suppress(asyncio.TimeoutError):
+            await self._camera.snap_picture()
 
     def camera_image(
         self, width: int | None = None, height: int | None = None

@@ -21,8 +21,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DEFAULT_BRAND, DOMAIN, TYPE_TEMPERATURE, TYPE_WIFI_STRENGTH
+from .coordinator import BlinkUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -49,26 +51,34 @@ async def async_setup_entry(
     hass: HomeAssistant, config: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Initialize a Blink sensor."""
-    data = hass.data[DOMAIN][config.entry_id]
+    coordinator: BlinkUpdateCoordinator = hass.data[DOMAIN][config.entry_id]
     entities = [
-        BlinkSensor(data, camera, description)
-        for camera in data.cameras
+        BlinkSensor(coordinator, camera, description)
+        for camera in coordinator.api.cameras
         for description in SENSOR_TYPES
     ]
 
-    async_add_entities(entities, update_before_add=True)
+    async_add_entities(entities)
 
 
-class BlinkSensor(SensorEntity):
+class BlinkSensor(CoordinatorEntity[BlinkUpdateCoordinator], SensorEntity):
     """A Blink camera sensor."""
 
     _attr_has_entity_name = True
 
-    def __init__(self, data, camera, description: SensorEntityDescription) -> None:
+    _attr_has_entity_name = True
+
+    def __init__(
+        self,
+        coordinator: BlinkUpdateCoordinator,
+        camera,
+        description: SensorEntityDescription,
+    ) -> None:
         """Initialize sensors from Blink camera."""
+        super().__init__(coordinator)
         self.entity_description = description
-        self.data = data
-        self._camera = data.cameras[camera]
+        self._attr_name = f"{DOMAIN} {camera} {description.name}"
+        self._camera = coordinator.api.cameras[camera]
         self._attr_unique_id = f"{self._camera.serial}-{description.key}"
         self._sensor_key = (
             "temperature_calibrated"
@@ -86,7 +96,7 @@ class BlinkSensor(SensorEntity):
     def native_value(self) -> StateType | date | datetime | Decimal:
         """Retrieve sensor data from the camera."""
         try:
-            native_value = self._camera.attributes[self._sensor_key]
+            value = self._camera.attributes[self._sensor_key]
             _LOGGER.debug(
                 "'%s' %s = %s",
                 self._camera.attributes["name"],
@@ -94,8 +104,8 @@ class BlinkSensor(SensorEntity):
                 self._attr_native_value,
             )
         except KeyError:
-            native_value = None
+            value = None
             _LOGGER.error(
                 "%s not a valid camera attribute. Did the API change?", self._sensor_key
             )
-        return native_value
+        return value
