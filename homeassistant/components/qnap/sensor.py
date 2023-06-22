@@ -332,7 +332,7 @@ class QNAPSensor(CoordinatorEntity[QnapCoordinator], SensorEntity):
         self.entity_description = description
         self.device_name = self.coordinator.data["system_stats"]["system"]["name"]
         self.monitor_device = monitor_device
-        self._attr_unique_id = f"{self.uid}_{self.device_name}_{self.name}"
+        self._attr_unique_id = f"{unique_id}_{self.device_name}_{self.name}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, unique_id)},
             name=self.device_name,
