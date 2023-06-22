@@ -8,6 +8,7 @@ from homeassistant.components.weather import (
     ATTR_FORECAST,
     ATTR_FORECAST_APPARENT_TEMP,
     ATTR_FORECAST_DEW_POINT,
+    ATTR_FORECAST_HUMIDITY,
     ATTR_FORECAST_PRECIPITATION,
     ATTR_FORECAST_PRESSURE,
     ATTR_FORECAST_TEMP,
@@ -34,6 +35,7 @@ from homeassistant.components.weather import (
 from homeassistant.components.weather.const import (
     ATTR_WEATHER_CLOUD_COVERAGE,
     ATTR_WEATHER_DEW_POINT,
+    ATTR_WEATHER_HUMIDITY,
 )
 from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
@@ -555,6 +557,21 @@ async def test_wind_bearing_ozone_and_cloud_coverage(
     assert float(state.attributes[ATTR_WEATHER_WIND_BEARING]) == 180
     assert float(state.attributes[ATTR_WEATHER_OZONE]) == 10
     assert float(state.attributes[ATTR_WEATHER_CLOUD_COVERAGE]) == 75
+
+
+async def test_humidity(
+    hass: HomeAssistant,
+    enable_custom_integrations: None,
+) -> None:
+    """Test humidity."""
+    humidity_value = 80.2
+
+    entity0 = await create_entity(hass, humidity=humidity_value)
+
+    state = hass.states.get(entity0.entity_id)
+    forecast = state.attributes[ATTR_FORECAST][0]
+    assert float(state.attributes[ATTR_WEATHER_HUMIDITY]) == 80
+    assert float(forecast[ATTR_FORECAST_HUMIDITY]) == 80
 
 
 async def test_none_forecast(
