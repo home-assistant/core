@@ -192,7 +192,7 @@ class Flexit(ClimateEntity):
         result = float(
             await self._async_read_int16_from_register(register_type, register)
         )
-        if result == -1:
+        if not result:
             return -1
         return result / 10.0
 
@@ -200,6 +200,6 @@ class Flexit(ClimateEntity):
         result = await self._hub.async_pymodbus_call(
             self._slave, register, value, CALL_TYPE_WRITE_REGISTER
         )
-        if result == -1:
+        if not result:
             return False
         return True

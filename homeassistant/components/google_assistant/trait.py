@@ -922,9 +922,28 @@ class TemperatureSettingTrait(_Trait):
     def sync_attributes(self):
         """Return temperature point and modes attributes for a sync request."""
         response = {}
-        response["thermostatTemperatureUnit"] = _google_temp_unit(
-            self.hass.config.units.temperature_unit
+        attrs = self.state.attributes
+        unit = self.hass.config.units.temperature_unit
+        response["thermostatTemperatureUnit"] = _google_temp_unit(unit)
+
+        min_temp = round(
+            TemperatureConverter.convert(
+                float(attrs[climate.ATTR_MIN_TEMP]),
+                unit,
+                UnitOfTemperature.CELSIUS,
+            )
         )
+        max_temp = round(
+            TemperatureConverter.convert(
+                float(attrs[climate.ATTR_MAX_TEMP]),
+                unit,
+                UnitOfTemperature.CELSIUS,
+            )
+        )
+        response["thermostatTemperatureRange"] = {
+            "minThresholdCelsius": min_temp,
+            "maxThresholdCelsius": max_temp,
+        }
 
         modes = self.climate_google_modes
 
