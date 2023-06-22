@@ -107,11 +107,9 @@ def _mired_to_kelvin(mired_temperature: float) -> int:
     If the value of mired_temperature is less than or equal to zero, return
     the original value to avoid a divide by zero.
     """
-    return (
-        round(1000000 / mired_temperature)
-        if mired_temperature > 0
-        else round(mired_temperature)
-    )
+    if mired_temperature <= 0:
+        return round(mired_temperature)
+    return round(1000000 / mired_temperature)
 
 
 def _color_mode_to_ha(mode: int) -> str:
