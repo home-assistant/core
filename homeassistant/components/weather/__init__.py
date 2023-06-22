@@ -855,7 +855,7 @@ class WeatherEntity(Entity):
                 if (
                     forecast_wind_gust_speed := forecast_entry.pop(
                         ATTR_FORECAST_NATIVE_WIND_GUST_SPEED,
-                        forecast_entry.get(ATTR_FORECAST_WIND_GUST_SPEED),
+                        None,
                     )
                 ) is not None:
                     from_wind_speed_unit = (
