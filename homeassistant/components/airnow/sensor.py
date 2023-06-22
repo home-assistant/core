@@ -78,10 +78,10 @@ SENSOR_TYPES: tuple[AirNowEntityDescription, ...] = (
     ),
     AirNowEntityDescription(
         key=ATTR_API_O3,
+        translation_key="o3",
         icon="mdi:blur",
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
         state_class=SensorStateClass.MEASUREMENT,
-        device_class=SensorDeviceClass.OZONE,
         value_fn=lambda data: data.get(ATTR_API_O3),
         extra_state_attributes_fn=None,
     ),
