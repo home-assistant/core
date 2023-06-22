@@ -45,6 +45,9 @@
       "carbon_disulfide": {
         "name": "Carbon disulfide"
       },
+      "carbon_monoxide": {
+        "name": "[%key:component::sensor::entity_component::carbon_monoxide::name%]"
+      },
       "dew_point": {
         "name": "Dew point"
       },
