@@ -13,7 +13,6 @@ from aioesphomeapi import (
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    ATTR_COLOR_TEMP,
     ATTR_COLOR_TEMP_KELVIN,
     ATTR_EFFECT,
     ATTR_FLASH,
@@ -234,11 +233,6 @@ class EsphomeLight(EsphomeEntity[LightInfo, LightState], LightEntity):
         if (color_temp_k := kwargs.get(ATTR_COLOR_TEMP_KELVIN)) is not None:
             # Do not use kelvin_to_mired here to prevent precision loss
             data["color_temperature"] = 1000000.0 / color_temp_k
-        elif (color_temp := kwargs.get(ATTR_COLOR_TEMP)) is not None:
-            data["color_temperature"] = color_temp
-        if (color_temp := kwargs.get(ATTR_COLOR_TEMP)) is not None or (
-            color_temp := kwargs.get(ATTR_COLOR_TEMP_KELVIN)
-        ) is not None:
             if _filter_color_modes(color_modes, LightColorCapability.COLOR_TEMPERATURE):
                 color_modes = _filter_color_modes(
                     color_modes, LightColorCapability.COLOR_TEMPERATURE
