@@ -269,8 +269,7 @@ async def async_setup_entry(
         if sensor_type in ["fs", "sensors", "raid"]:
             for sensor_label, params in sensors.items():
                 for param in params:
-                    sensor_description = SENSOR_TYPES.get((sensor_type, param))
-                    if sensor_description is not None:
+                    if sensor_description := SENSOR_TYPES.get((sensor_type, param)):
                         _migrate_old_unique_ids(
                             hass,
                             f"{coordinator.host}-{name} {sensor_label} {sensor_description.name_suffix}",
@@ -286,8 +285,7 @@ async def async_setup_entry(
                         )
         else:
             for sensor in sensors:
-                sensor_description = SENSOR_TYPES.get((sensor_type, sensor))
-                if sensor_description is not None:
+                if sensor_description := SENSOR_TYPES.get((sensor_type, sensor)):
                     _migrate_old_unique_ids(
                         hass,
                         f"{coordinator.host}-{name}  {sensor_description.name_suffix}",
