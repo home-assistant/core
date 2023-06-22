@@ -15,11 +15,11 @@ from homeassistant.helpers.entity_component import DATA_INSTANCES
 
 from . import MockAsyncTcpClient
 
-from tests.components.tts.conftest import (  # noqa: F401, pylint: disable=unused-import
-    init_cache_dir_side_effect,
-    mock_get_cache_files,
-    mock_init_cache_dir,
-)
+
+@pytest.fixture(autouse=True)
+def mock_tts_cache_dir_autouse(mock_tts_cache_dir):
+    """Mock the TTS cache dir with empty dir."""
+    return mock_tts_cache_dir
 
 
 async def test_support(hass: HomeAssistant, init_wyoming_tts) -> None:

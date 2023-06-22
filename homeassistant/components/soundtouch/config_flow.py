@@ -26,17 +26,6 @@ class SoundtouchConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.host = None
         self.name = None
 
-    async def async_step_import(self, import_data):
-        """Handle a flow initiated by configuration file."""
-        self.host = import_data[CONF_HOST]
-
-        try:
-            await self._async_get_device_id()
-        except RequestException:
-            return self.async_abort(reason="cannot_connect")
-
-        return await self._async_create_soundtouch_entry()
-
     async def async_step_user(self, user_input=None):
         """Handle a flow initiated by the user."""
         errors = {}

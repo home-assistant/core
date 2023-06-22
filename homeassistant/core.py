@@ -25,6 +25,7 @@ import os
 import pathlib
 import re
 import threading
+import time
 from time import monotonic
 from typing import (
     TYPE_CHECKING,
@@ -80,8 +81,14 @@ from .exceptions import (
     Unauthorized,
 )
 from .helpers.aiohttp_compat import restore_original_aiohttp_cancel_behavior
+from .helpers.json import json_dumps
 from .util import dt as dt_util, location, ulid as ulid_util
-from .util.async_ import run_callback_threadsafe, shutdown_run_callback_threadsafe
+from .util.async_ import (
+    cancelling,
+    run_callback_threadsafe,
+    shutdown_run_callback_threadsafe,
+)
+from .util.json import JsonObjectType
 from .util.read_only_dict import ReadOnlyDict
 from .util.timeout import TimeoutManager
 from .util.unit_system import (
@@ -124,8 +131,7 @@ DOMAIN = "homeassistant"
 # How long to wait to log tasks that are blocking
 BLOCK_LOG_TIMEOUT = 60
 
-# How long we wait for the result of a service call
-SERVICE_CALL_LIMIT = 10  # seconds
+ServiceResponse = JsonObjectType | None
 
 
 class ConfigSource(StrEnum):
@@ -173,18 +179,13 @@ def valid_domain(domain: str) -> bool:
     return VALID_DOMAIN.match(domain) is not None
 
 
-@functools.lru_cache(64)
+@functools.lru_cache(512)
 def valid_entity_id(entity_id: str) -> bool:
     """Test if an entity ID is a valid format.
 
     Format: <domain>.<entity> where both are slugs.
     """
     return VALID_ENTITY_ID.match(entity_id) is not None
-
-
-def valid_state(state: str) -> bool:
-    """Test if a state is valid."""
-    return len(state) <= MAX_LENGTH_STATE_STATE
 
 
 def callback(func: _CallableT) -> _CallableT:
@@ -677,7 +678,11 @@ class HomeAssistant:
         start_time: float | None = None
         current_task = asyncio.current_task()
 
-        while tasks := [task for task in self._tasks if task is not current_task]:
+        while tasks := [
+            task
+            for task in self._tasks
+            if task is not current_task and not cancelling(task)
+        ]:
             await self._await_and_log_pending(tasks)
 
             if start_time is None:
@@ -790,7 +795,7 @@ class HomeAssistant:
         # while we are awaiting canceled tasks to get their result
         # which will result in the set size changing during iteration
         for task in list(running_tasks):
-            if task.done():
+            if task.done() or cancelling(task):
                 # Since we made a copy we need to check
                 # to see if the task finished while we
                 # were awaiting another task
@@ -1223,7 +1228,8 @@ class State:
         "domain",
         "object_id",
         "_as_dict",
-        "_as_compressed_state",
+        "_as_dict_json",
+        "_as_compressed_state_json",
     )
 
     def __init__(
@@ -1245,7 +1251,7 @@ class State:
                 "Format should be <domain>.<object_id>"
             )
 
-        if not valid_state(state):
+        if len(state) > MAX_LENGTH_STATE_STATE:
             raise InvalidStateError(
                 f"Invalid state encountered for entity ID: {entity_id}. "
                 "State max length is 255 characters."
@@ -1259,7 +1265,8 @@ class State:
         self.context = context or Context()
         self.domain, self.object_id = split_entity_id(self.entity_id)
         self._as_dict: ReadOnlyDict[str, Collection[Any]] | None = None
-        self._as_compressed_state: dict[str, Any] | None = None
+        self._as_dict_json: str | None = None
+        self._as_compressed_state_json: str | None = None
 
     @property
     def name(self) -> str:
@@ -1294,6 +1301,12 @@ class State:
             )
         return self._as_dict
 
+    def as_dict_json(self) -> str:
+        """Return a JSON string of the State."""
+        if not self._as_dict_json:
+            self._as_dict_json = json_dumps(self.as_dict())
+        return self._as_dict_json
+
     def as_compressed_state(self) -> dict[str, Any]:
         """Build a compressed dict of a state for adds.
 
@@ -1301,8 +1314,6 @@ class State:
 
         Sends c (context) as a string if it only contains an id.
         """
-        if self._as_compressed_state:
-            return self._as_compressed_state
         state_context = self.context
         if state_context.parent_id is None and state_context.user_id is None:
             context: dict[str, Any] | str = state_context.id
@@ -1318,8 +1329,20 @@ class State:
             compressed_state[COMPRESSED_STATE_LAST_UPDATED] = dt_util.utc_to_timestamp(
                 self.last_updated
             )
-        self._as_compressed_state = compressed_state
         return compressed_state
+
+    def as_compressed_state_json(self) -> str:
+        """Build a compressed JSON key value pair of a state for adds.
+
+        The JSON string is a key value pair of the entity_id and the compressed state.
+
+        It is used for sending multiple states in a single message.
+        """
+        if not self._as_compressed_state_json:
+            self._as_compressed_state_json = json_dumps(
+                {self.entity_id: self.as_compressed_state()}
+            )[1:-1]
+        return self._as_compressed_state_json
 
     @classmethod
     def from_dict(cls, json_dict: dict[str, Any]) -> Self | None:
@@ -1593,10 +1616,24 @@ class StateMachine:
         if same_state and same_attr:
             return
 
-        now = dt_util.utcnow()
-
         if context is None:
-            context = Context(id=ulid_util.ulid_at_time(dt_util.utc_to_timestamp(now)))
+            # It is much faster to convert a timestamp to a utc datetime object
+            # than converting a utc datetime object to a timestamp since cpython
+            # does not have a fast path for handling the UTC timezone and has to do
+            # multiple local timezone conversions.
+            #
+            # from_timestamp implementation:
+            # https://github.com/python/cpython/blob/c90a862cdcf55dc1753c6466e5fa4a467a13ae24/Modules/_datetimemodule.c#L2936
+            #
+            # timestamp implementation:
+            # https://github.com/python/cpython/blob/c90a862cdcf55dc1753c6466e5fa4a467a13ae24/Modules/_datetimemodule.c#L6387
+            # https://github.com/python/cpython/blob/c90a862cdcf55dc1753c6466e5fa4a467a13ae24/Modules/_datetimemodule.c#L6323
+            timestamp = time.time()
+            now = dt_util.utc_from_timestamp(timestamp)
+            context = Context(id=ulid_util.ulid_at_time(timestamp))
+        else:
+            now = dt_util.utcnow()
+
         state = State(
             entity_id,
             new_state,
@@ -1618,28 +1655,43 @@ class StateMachine:
         )
 
 
+class SupportsResponse(StrEnum):
+    """Service call response configuration."""
+
+    NONE = "none"
+    """The service does not support responses (the default)."""
+
+    OPTIONAL = "optional"
+    """The service optionally returns response data when asked by the caller."""
+
+    ONLY = "only"
+    """The service is read-only and the caller must always ask for response data."""
+
+
 class Service:
     """Representation of a callable service."""
 
-    __slots__ = ["job", "schema", "domain", "service"]
+    __slots__ = ["job", "schema", "domain", "service", "supports_response"]
 
     def __init__(
         self,
-        func: Callable[[ServiceCall], Coroutine[Any, Any, None] | None],
+        func: Callable[[ServiceCall], Coroutine[Any, Any, ServiceResponse] | None],
         schema: vol.Schema | None,
         domain: str,
         service: str,
         context: Context | None = None,
+        supports_response: SupportsResponse = SupportsResponse.NONE,
     ) -> None:
         """Initialize a service."""
         self.job = HassJob(func, f"service {domain}.{service}")
         self.schema = schema
+        self.supports_response = supports_response
 
 
 class ServiceCall:
     """Representation of a call to a service."""
 
-    __slots__ = ["domain", "service", "data", "context"]
+    __slots__ = ["domain", "service", "data", "context", "return_response"]
 
     def __init__(
         self,
@@ -1647,12 +1699,14 @@ class ServiceCall:
         service: str,
         data: dict[str, Any] | None = None,
         context: Context | None = None,
+        return_response: bool = False,
     ) -> None:
         """Initialize a service call."""
         self.domain = domain.lower()
         self.service = service.lower()
         self.data = ReadOnlyDict(data or {})
         self.context = context or Context()
+        self.return_response = return_response
 
     def __repr__(self) -> str:
         """Return the representation of the service."""
@@ -1697,7 +1751,10 @@ class ServiceRegistry:
         self,
         domain: str,
         service: str,
-        service_func: Callable[[ServiceCall], Coroutine[Any, Any, None] | None],
+        service_func: Callable[
+            [ServiceCall],
+            Coroutine[Any, Any, ServiceResponse] | None,
+        ],
         schema: vol.Schema | None = None,
     ) -> None:
         """Register a service.
@@ -1713,8 +1770,11 @@ class ServiceRegistry:
         self,
         domain: str,
         service: str,
-        service_func: Callable[[ServiceCall], Coroutine[Any, Any, None] | None],
+        service_func: Callable[
+            [ServiceCall], Coroutine[Any, Any, ServiceResponse] | None
+        ],
         schema: vol.Schema | None = None,
+        supports_response: SupportsResponse = SupportsResponse.NONE,
     ) -> None:
         """Register a service.
 
@@ -1724,7 +1784,9 @@ class ServiceRegistry:
         """
         domain = domain.lower()
         service = service.lower()
-        service_obj = Service(service_func, schema, domain, service)
+        service_obj = Service(
+            service_func, schema, domain, service, supports_response=supports_response
+        )
 
         if domain in self._services:
             self._services[domain][service] = service_obj
@@ -1770,16 +1832,22 @@ class ServiceRegistry:
         service_data: dict[str, Any] | None = None,
         blocking: bool = False,
         context: Context | None = None,
-        limit: float | None = SERVICE_CALL_LIMIT,
         target: dict[str, Any] | None = None,
-    ) -> bool | None:
+        return_response: bool = False,
+    ) -> ServiceResponse:
         """Call a service.
 
         See description of async_call for details.
         """
         return asyncio.run_coroutine_threadsafe(
             self.async_call(
-                domain, service, service_data, blocking, context, limit, target
+                domain,
+                service,
+                service_data,
+                blocking,
+                context,
+                target,
+                return_response,
             ),
             self._hass.loop,
         ).result()
@@ -1791,16 +1859,16 @@ class ServiceRegistry:
         service_data: dict[str, Any] | None = None,
         blocking: bool = False,
         context: Context | None = None,
-        limit: float | None = SERVICE_CALL_LIMIT,
         target: dict[str, Any] | None = None,
-    ) -> bool | None:
+        return_response: bool = False,
+    ) -> ServiceResponse:
         """Call a service.
 
         Specify blocking=True to wait until service is executed.
-        Waits a maximum of limit, which may be None for no timeout.
 
-        If blocking = True, will return boolean if service executed
-        successfully within limit.
+        If return_response=True, indicates that the caller can consume return values
+        from the service, if any. Return values are a dict that can be returned by the
+        standard JSON serialization process. Return values can only be used with blocking=True.
 
         This method will fire an event to indicate the service has been called.
 
@@ -1819,6 +1887,20 @@ class ServiceRegistry:
         except KeyError:
             raise ServiceNotFound(domain, service) from None
 
+        if return_response:
+            if not blocking:
+                raise ValueError(
+                    "Invalid argument return_response=True when blocking=False"
+                )
+            if handler.supports_response == SupportsResponse.NONE:
+                raise ValueError(
+                    "Invalid argument return_response=True when handler does not support responses"
+                )
+        elif handler.supports_response == SupportsResponse.ONLY:
+            raise ValueError(
+                "Service call requires responses but caller did not ask for responses"
+            )
+
         if target:
             service_data.update(target)
 
@@ -1836,7 +1918,9 @@ class ServiceRegistry:
         else:
             processed_data = service_data
 
-        service_call = ServiceCall(domain, service, processed_data, context)
+        service_call = ServiceCall(
+            domain, service, processed_data, context, return_response
+        )
 
         self._hass.bus.async_fire(
             EVENT_CALL_SERVICE,
@@ -1853,35 +1937,18 @@ class ServiceRegistry:
             self._run_service_in_background(coro, service_call)
             return None
 
-        task = self._hass.async_create_task(coro)
-        try:
-            await asyncio.wait({task}, timeout=limit)
-        except asyncio.CancelledError:
-            # Task calling us was cancelled, so cancel service call task, and wait for
-            # it to be cancelled, within reason, before leaving.
-            _LOGGER.debug("Service call was cancelled: %s", service_call)
-            task.cancel()
-            await asyncio.wait({task}, timeout=SERVICE_CALL_LIMIT)
-            raise
-
-        if task.cancelled():
-            # Service call task was cancelled some other way, such as during shutdown.
-            _LOGGER.debug("Service was cancelled: %s", service_call)
-            raise asyncio.CancelledError
-        if task.done():
-            # Propagate any exceptions that might have happened during service call.
-            task.result()
-            # Service call completed successfully!
-            return True
-        # Service call task did not complete before timeout expired.
-        # Let it keep running in background.
-        self._run_service_in_background(task, service_call)
-        _LOGGER.debug("Service did not complete before timeout: %s", service_call)
-        return False
+        response_data = await coro
+        if not return_response:
+            return None
+        if not isinstance(response_data, dict):
+            raise HomeAssistantError(
+                f"Service response data expected a dictionary, was {type(response_data)}"
+            )
+        return response_data
 
     def _run_service_in_background(
         self,
-        coro_or_task: Coroutine[Any, Any, None] | asyncio.Task[None],
+        coro_or_task: Coroutine[Any, Any, Any] | asyncio.Task[Any],
         service_call: ServiceCall,
     ) -> None:
         """Run service call in background, catching and logging any exceptions."""
@@ -1907,18 +1974,21 @@ class ServiceRegistry:
 
     async def _execute_service(
         self, handler: Service, service_call: ServiceCall
-    ) -> None:
+    ) -> ServiceResponse:
         """Execute a service."""
         if handler.job.job_type == HassJobType.Coroutinefunction:
-            await cast(Callable[[ServiceCall], Awaitable[None]], handler.job.target)(
+            return await cast(
+                Callable[[ServiceCall], Awaitable[ServiceResponse]],
+                handler.job.target,
+            )(service_call)
+        if handler.job.job_type == HassJobType.Callback:
+            return cast(Callable[[ServiceCall], ServiceResponse], handler.job.target)(
                 service_call
             )
-        elif handler.job.job_type == HassJobType.Callback:
-            cast(Callable[[ServiceCall], None], handler.job.target)(service_call)
-        else:
-            await self._hass.async_add_executor_job(
-                cast(Callable[[ServiceCall], None], handler.job.target), service_call
-            )
+        return await self._hass.async_add_executor_job(
+            cast(Callable[[ServiceCall], ServiceResponse], handler.job.target),
+            service_call,
+        )
 
 
 class Config:

@@ -1,28 +1,22 @@
 """KNX Websocket API."""
 from __future__ import annotations
 
-from collections.abc import Callable
-from typing import Final
+from typing import TYPE_CHECKING, Final
 
-from knx_frontend import get_build_id, locate_dir
+from knx_frontend import entrypoint_js, is_dev_build, locate_dir
 import voluptuous as vol
-from xknx.dpt import DPTArray
-from xknx.exceptions import XKNXException
-from xknx.telegram import Telegram, TelegramDirection
-from xknx.telegram.apci import GroupValueRead, GroupValueResponse, GroupValueWrite
+from xknx.telegram import TelegramDirection
 from xknxproject.exceptions import XknxProjectException
 
 from homeassistant.components import panel_custom, websocket_api
 from homeassistant.core import HomeAssistant, callback
-import homeassistant.util.dt as dt_util
 
-from .const import (
-    DOMAIN,
-    AsyncMessageCallbackType,
-    KNXBusMonitorMessage,
-    MessageCallbackType,
-)
-from .project import KNXProject
+from .const import DOMAIN, KNXBusMonitorMessage
+from .telegrams import TelegramDict
+
+if TYPE_CHECKING:
+    from . import KNXModule
+
 
 URL_BASE: Final = "/knx_static"
 
@@ -37,9 +31,10 @@ async def register_panel(hass: HomeAssistant) -> None:
 
     if DOMAIN not in hass.data.get("frontend_panels", {}):
         path = locate_dir()
-        build_id = get_build_id()
         hass.http.register_static_path(
-            URL_BASE, path, cache_headers=(build_id != "dev")
+            URL_BASE,
+            path,
+            cache_headers=not is_dev_build(),
         )
         await panel_custom.async_register_panel(
             hass=hass,
@@ -47,12 +42,13 @@ async def register_panel(hass: HomeAssistant) -> None:
             webcomponent_name="knx-frontend",
             sidebar_title=DOMAIN.upper(),
             sidebar_icon="mdi:bus-electric",
-            module_url=f"{URL_BASE}/entrypoint-{build_id}.js",
+            module_url=f"{URL_BASE}/{entrypoint_js()}",
             embed_iframe=True,
             require_admin=True,
         )
 
 
+@websocket_api.require_admin
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "knx/info",
@@ -65,10 +61,10 @@ def ws_info(
     msg: dict,
 ) -> None:
     """Handle get info command."""
-    xknx = hass.data[DOMAIN].xknx
+    knx: KNXModule = hass.data[DOMAIN]
 
     _project_info = None
-    if project_info := hass.data[DOMAIN].project.info:
+    if project_info := knx.project.info:
         _project_info = {
             "name": project_info["name"],
             "last_modified": project_info["last_modified"],
@@ -78,9 +74,9 @@ def ws_info(
     connection.send_result(
         msg["id"],
         {
-            "version": xknx.version,
-            "connected": xknx.connection_manager.connected.is_set(),
-            "current_address": str(xknx.current_address),
+            "version": knx.xknx.version,
+            "connected": knx.xknx.connection_manager.connected.is_set(),
+            "current_address": str(knx.xknx.current_address),
             "project": _project_info,
         },
     )
@@ -101,9 +97,9 @@ async def ws_project_file_process(
     msg: dict,
 ) -> None:
     """Handle get info command."""
-    knx_project = hass.data[DOMAIN].project
+    knx: KNXModule = hass.data[DOMAIN]
     try:
-        await knx_project.process_project_file(
+        await knx.project.process_project_file(
             file_id=msg["file_id"],
             password=msg["password"],
         )
@@ -130,11 +126,12 @@ async def ws_project_file_remove(
     msg: dict,
 ) -> None:
     """Handle get info command."""
-    knx_project = hass.data[DOMAIN].project
-    await knx_project.remove_project_file()
+    knx: KNXModule = hass.data[DOMAIN]
+    await knx.project.remove_project_file()
     connection.send_result(msg["id"])
 
 
+@websocket_api.require_admin
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "knx/group_monitor_info",
@@ -147,13 +144,21 @@ def ws_group_monitor_info(
     msg: dict,
 ) -> None:
     """Handle get info command of group monitor."""
-    project_loaded = hass.data[DOMAIN].project.loaded
+    knx: KNXModule = hass.data[DOMAIN]
+    recent_telegrams = [
+        _telegram_dict_to_group_monitor(telegram)
+        for telegram in knx.telegrams.recent_telegrams
+    ]
     connection.send_result(
         msg["id"],
-        {"project_loaded": bool(project_loaded)},
+        {
+            "project_loaded": knx.project.loaded,
+            "recent_telegrams": recent_telegrams,
+        },
     )
 
 
+@websocket_api.require_admin
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "knx/subscribe_telegrams",
@@ -166,86 +171,53 @@ def ws_subscribe_telegram(
     msg: dict,
 ) -> None:
     """Subscribe to incoming and outgoing KNX telegrams."""
-    project: KNXProject = hass.data[DOMAIN].project
+    knx: KNXModule = hass.data[DOMAIN]
 
-    async def forward_telegrams(telegram: Telegram) -> None:
-        """Forward events to websocket."""
-        payload: str
-        dpt_payload = None
-        if isinstance(telegram.payload, (GroupValueWrite, GroupValueResponse)):
-            dpt_payload = telegram.payload.value
-            if isinstance(dpt_payload, DPTArray):
-                payload = f"0x{bytes(dpt_payload.value).hex()}"
-            else:
-                payload = f"{dpt_payload.value:d}"
-        elif isinstance(telegram.payload, GroupValueRead):
-            payload = ""
-        else:
-            return
-
-        direction = (
-            "group_monitor_incoming"
-            if telegram.direction is TelegramDirection.INCOMING
-            else "group_monitor_outgoing"
-        )
-        dst = str(telegram.destination_address)
-        src = str(telegram.source_address)
-        bus_message: KNXBusMonitorMessage = KNXBusMonitorMessage(
-            destination_address=dst,
-            destination_text=None,
-            payload=payload,
-            type=str(telegram.payload.__class__.__name__),
-            value=None,
-            source_address=src,
-            source_text=None,
-            direction=direction,
-            timestamp=dt_util.as_local(dt_util.utcnow()).strftime("%H:%M:%S.%f")[:-3],
-        )
-        if project.loaded:
-            if ga_infos := project.group_addresses.get(dst):
-                bus_message["destination_text"] = ga_infos.name
-                if dpt_payload is not None and ga_infos.transcoder is not None:
-                    try:
-                        value = ga_infos.transcoder.from_knx(dpt_payload)
-                    except XKNXException:
-                        bus_message["value"] = "Error decoding value"
-                    else:
-                        unit = (
-                            f" {ga_infos.transcoder.unit}"
-                            if ga_infos.transcoder.unit is not None
-                            else ""
-                        )
-                        bus_message["value"] = f"{value}{unit}"
-            if ia_infos := project.devices.get(src):
-                bus_message[
-                    "source_text"
-                ] = f"{ia_infos['manufacturer_name']} {ia_infos['name']}"
-
+    @callback
+    def forward_telegram(telegram: TelegramDict) -> None:
+        """Forward telegram to websocket subscription."""
         connection.send_event(
             msg["id"],
-            bus_message,
+            _telegram_dict_to_group_monitor(telegram),
         )
 
-    connection.subscriptions[msg["id"]] = async_subscribe_telegrams(
-        hass, forward_telegrams
+    connection.subscriptions[msg["id"]] = knx.telegrams.async_listen_telegram(
+        action=forward_telegram,
+        name="KNX GroupMonitor subscription",
     )
-
     connection.send_result(msg["id"])
 
 
-def async_subscribe_telegrams(
-    hass: HomeAssistant,
-    telegram_callback: AsyncMessageCallbackType | MessageCallbackType,
-) -> Callable[[], None]:
-    """Subscribe to telegram received callback."""
-    xknx = hass.data[DOMAIN].xknx
-
-    unregister = xknx.telegram_queue.register_telegram_received_cb(
-        telegram_callback, match_for_outgoing=True
+def _telegram_dict_to_group_monitor(telegram: TelegramDict) -> KNXBusMonitorMessage:
+    """Convert a TelegramDict to a KNXBusMonitorMessage object."""
+    direction = (
+        "group_monitor_incoming"
+        if telegram["direction"] == TelegramDirection.INCOMING.value
+        else "group_monitor_outgoing"
     )
 
-    def async_remove() -> None:
-        """Remove callback."""
-        xknx.telegram_queue.unregister_telegram_received_cb(unregister)
+    _payload = telegram["payload"]
+    if isinstance(_payload, tuple):
+        payload = f"0x{bytes(_payload).hex()}"
+    elif isinstance(_payload, int):
+        payload = f"{_payload:d}"
+    else:
+        payload = ""
 
-    return async_remove
+    timestamp = telegram["timestamp"].strftime("%H:%M:%S.%f")[:-3]
+
+    if (value := telegram["value"]) is not None:
+        unit = telegram["unit"]
+        value = f"{value}{' ' + unit if unit else ''}"
+
+    return KNXBusMonitorMessage(
+        destination_address=telegram["destination"],
+        destination_text=telegram["destination_name"],
+        direction=direction,
+        payload=payload,
+        source_address=telegram["source"],
+        source_text=telegram["source_name"],
+        timestamp=timestamp,
+        type=telegram["telegramtype"],
+        value=value,
+    )

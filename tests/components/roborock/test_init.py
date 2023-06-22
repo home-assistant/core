@@ -1,8 +1,6 @@
 """Test for Roborock init."""
 from unittest.mock import patch
 
-from roborock.exceptions import RoborockTimeout
-
 from homeassistant.components.roborock.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -10,7 +8,6 @@ from homeassistant.helpers.update_coordinator import UpdateFailed
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
-from tests.components.roborock.mock_data import HOME_DATA, NETWORK_INFO
 
 
 async def test_unload_entry(
@@ -41,23 +38,3 @@ async def test_config_entry_not_ready(
     ):
         await async_setup_component(hass, DOMAIN, {})
         assert mock_roborock_entry.state is ConfigEntryState.SETUP_RETRY
-
-
-async def test_continue_setup_mqtt_disconnect_fail(
-    hass: HomeAssistant, mock_roborock_entry: MockConfigEntry
-):
-    """Test that if disconnect fails, we still continue setting up."""
-    with patch(
-        "homeassistant.components.roborock.RoborockApiClient.get_home_data",
-        return_value=HOME_DATA,
-    ), patch(
-        "homeassistant.components.roborock.RoborockMqttClient.get_networking",
-        return_value=NETWORK_INFO,
-    ), patch(
-        "homeassistant.components.roborock.RoborockMqttClient.async_disconnect",
-        side_effect=RoborockTimeout(),
-    ), patch(
-        "homeassistant.components.roborock.RoborockDataUpdateCoordinator.async_config_entry_first_refresh"
-    ):
-        await async_setup_component(hass, DOMAIN, {})
-    assert mock_roborock_entry.state is ConfigEntryState.LOADED

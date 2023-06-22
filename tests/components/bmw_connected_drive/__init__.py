@@ -13,6 +13,7 @@ import respx
 
 from homeassistant import config_entries
 from homeassistant.components.bmw_connected_drive.const import (
+    CONF_GCID,
     CONF_READ_ONLY,
     CONF_REFRESH_TOKEN,
     DOMAIN as BMW_DOMAIN,
@@ -33,6 +34,7 @@ FIXTURE_USER_INPUT = {
     CONF_REGION: "rest_of_world",
 }
 FIXTURE_REFRESH_TOKEN = "SOME_REFRESH_TOKEN"
+FIXTURE_GCID = "SOME_GCID"
 
 FIXTURE_CONFIG_ENTRY = {
     "entry_id": "1",
@@ -43,6 +45,7 @@ FIXTURE_CONFIG_ENTRY = {
         CONF_PASSWORD: FIXTURE_USER_INPUT[CONF_PASSWORD],
         CONF_REGION: FIXTURE_USER_INPUT[CONF_REGION],
         CONF_REFRESH_TOKEN: FIXTURE_REFRESH_TOKEN,
+        CONF_GCID: FIXTURE_GCID,
     },
     "options": {CONF_READ_ONLY: False},
     "source": config_entries.SOURCE_USER,

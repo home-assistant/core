@@ -10,6 +10,14 @@ import re
 from homeassistant.const import MATCH_ALL
 
 SEPARATOR_RE = re.compile(r"[-_]")
+SAME_LANGUAGES = (
+    # no = spoken Norwegian
+    # nb = written Norwegian (Bokmål)
+    ("nb", "no"),
+    # he = Hebrew new code
+    # iw = Hebrew old code
+    ("he", "iw"),
+)
 
 
 def preferred_regions(
@@ -60,9 +68,7 @@ def is_language_match(lang_1: str, lang_2: str) -> bool:
         # Exact match
         return True
 
-    if {lang_1, lang_2} == {"no", "nb"}:
-        # no = spoken Norwegian
-        # nb = written Norwegian (Bokmål)
+    if tuple(sorted([lang_1, lang_2])) in SAME_LANGUAGES:
         return True
 
     return False

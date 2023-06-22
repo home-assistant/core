@@ -8,7 +8,7 @@ from homeassistant.components.knx.sensor import SCAN_INTERVAL
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.util import dt
+from homeassistant.util import dt as dt_util
 
 from .conftest import KNXTestKit
 
@@ -47,7 +47,7 @@ async def test_diagnostic_entities(
     knx.xknx.connection_manager.cemi_count_outgoing_error = 2
 
     events = async_capture_events(hass, "state_changed")
-    async_fire_time_changed(hass, dt.utcnow() + SCAN_INTERVAL)
+    async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
     await hass.async_block_till_done()
 
     assert len(events) == 3  # 5 polled sensors - 2 disabled

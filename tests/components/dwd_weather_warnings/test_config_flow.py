@@ -64,7 +64,7 @@ async def test_create_entry(hass: HomeAssistant) -> None:
     # Test for successfully created entry.
     await hass.async_block_till_done()
     assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"] == "DWD Weather Warnings 807111000"
+    assert result["title"] == "807111000"
     assert result["data"] == {
         CONF_REGION_IDENTIFIER: "807111000",
     }
@@ -102,9 +102,7 @@ async def test_import_flow_full_data(hass: HomeAssistant) -> None:
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == "Unit Test"
     assert result["data"] == {
-        CONF_NAME: "Unit Test",
         CONF_REGION_IDENTIFIER: "807111000",
-        CONF_MONITORED_CONDITIONS: [CURRENT_WARNING_SENSOR, ADVANCE_WARNING_SENSOR],
     }
 
 
@@ -123,30 +121,7 @@ async def test_import_flow_no_name(hass: HomeAssistant) -> None:
 
     await hass.async_block_till_done()
     assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"] == "DWD Weather Warnings 807111000"
-    assert result["data"] == {
-        CONF_REGION_IDENTIFIER: "807111000",
-        CONF_MONITORED_CONDITIONS: [CURRENT_WARNING_SENSOR, ADVANCE_WARNING_SENSOR],
-    }
-
-
-async def test_import_flow_only_required(hass: HomeAssistant) -> None:
-    """Test a successful import of a YAML configuration with only required properties."""
-    data = DEMO_YAML_CONFIGURATION.copy()
-    data.pop(CONF_NAME)
-    data.pop(CONF_MONITORED_CONDITIONS)
-
-    with patch(
-        "homeassistant.components.dwd_weather_warnings.config_flow.DwdWeatherWarningsAPI",
-        return_value=True,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=data
-        )
-
-    await hass.async_block_till_done()
-    assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"] == "DWD Weather Warnings 807111000"
+    assert result["title"] == "807111000"
     assert result["data"] == {
         CONF_REGION_IDENTIFIER: "807111000",
     }

@@ -28,7 +28,7 @@ from tests.common import async_get_device_automations, async_mock_service
 
 
 @pytest.fixture
-def calls(hass):
+def calls(hass: HomeAssistant):
     """Track calls to a mock service."""
     return async_mock_service(hass, "test", "automation")
 
@@ -63,7 +63,7 @@ async def test_get_conditions(
             "type": "config_parameter",
             "device_id": device.id,
             "value_id": value_id,
-            "subtype": f"{config_value.property_} ({name})",
+            "subtype": f"{config_value.property_} ({name}) on endpoint 0",
             "metadata": {},
         },
         {

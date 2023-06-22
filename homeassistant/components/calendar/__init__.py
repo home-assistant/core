@@ -31,7 +31,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.template import DATE_STR_FORMAT
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.util import dt
+from homeassistant.util import dt as dt_util
 
 from .const import (
     CONF_EVENT,
@@ -117,7 +117,7 @@ def _as_local_timezone(*keys: Any) -> Callable[[dict[str, Any]], dict[str, Any]]
         """Convert all keys that are datetime values to local timezone."""
         for k in keys:
             if (value := obj.get(k)) and isinstance(value, datetime.datetime):
-                obj[k] = dt.as_local(value)
+                obj[k] = dt_util.as_local(value)
         return obj
 
     return validate
@@ -294,14 +294,14 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 def get_date(date: dict[str, Any]) -> datetime.datetime:
     """Get the dateTime from date or dateTime as a local."""
     if "date" in date:
-        parsed_date = dt.parse_date(date["date"])
+        parsed_date = dt_util.parse_date(date["date"])
         assert parsed_date
-        return dt.start_of_local_day(
+        return dt_util.start_of_local_day(
             datetime.datetime.combine(parsed_date, datetime.time.min)
         )
-    parsed_datetime = dt.parse_datetime(date["dateTime"])
+    parsed_datetime = dt_util.parse_datetime(date["dateTime"])
     assert parsed_datetime
-    return dt.as_local(parsed_datetime)
+    return dt_util.as_local(parsed_datetime)
 
 
 @dataclasses.dataclass
@@ -380,7 +380,7 @@ def _api_event_dict_factory(obj: Iterable[tuple[str, Any]]) -> dict[str, Any]:
     result: dict[str, Any] = {}
     for name, value in obj:
         if isinstance(value, datetime.datetime):
-            result[name] = {"dateTime": dt.as_local(value).isoformat()}
+            result[name] = {"dateTime": dt_util.as_local(value).isoformat()}
         elif isinstance(value, datetime.date):
             result[name] = {"date": value.isoformat()}
         else:
@@ -393,14 +393,14 @@ def _get_datetime_local(
 ) -> datetime.datetime:
     """Convert a calendar event date/datetime to a datetime if needed."""
     if isinstance(dt_or_d, datetime.datetime):
-        return dt.as_local(dt_or_d)
-    return dt.start_of_local_day(dt_or_d)
+        return dt_util.as_local(dt_or_d)
+    return dt_util.start_of_local_day(dt_or_d)
 
 
 def _get_api_date(dt_or_d: datetime.datetime | datetime.date) -> dict[str, str]:
     """Convert a calendar event date/datetime to a datetime if needed."""
     if isinstance(dt_or_d, datetime.datetime):
-        return {"dateTime": dt.as_local(dt_or_d).isoformat()}
+        return {"dateTime": dt_util.as_local(dt_or_d).isoformat()}
     return {"date": dt_or_d.isoformat()}
 
 
@@ -433,7 +433,7 @@ def is_offset_reached(
     """Have we reached the offset time specified in the event title."""
     if offset_time == datetime.timedelta():
         return False
-    return start + offset_time <= dt.now(start.tzinfo)
+    return start + offset_time <= dt_util.now(start.tzinfo)
 
 
 class CalendarEntity(Entity):
@@ -467,7 +467,7 @@ class CalendarEntity(Entity):
         if (event := self.event) is None:
             return STATE_OFF
 
-        now = dt.now()
+        now = dt_util.now()
 
         if event.start_datetime_local <= now < event.end_datetime_local:
             return STATE_ON
@@ -529,8 +529,8 @@ class CalendarEventView(http.HomeAssistantView):
         if start is None or end is None:
             return web.Response(status=HTTPStatus.BAD_REQUEST)
         try:
-            start_date = dt.parse_datetime(start)
-            end_date = dt.parse_datetime(end)
+            start_date = dt_util.parse_datetime(start)
+            end_date = dt_util.parse_datetime(end)
         except (ValueError, AttributeError):
             return web.Response(status=HTTPStatus.BAD_REQUEST)
         if start_date is None or end_date is None:
@@ -540,7 +540,9 @@ class CalendarEventView(http.HomeAssistantView):
 
         try:
             calendar_event_list = await entity.async_get_events(
-                request.app["hass"], dt.as_local(start_date), dt.as_local(end_date)
+                request.app["hass"],
+                dt_util.as_local(start_date),
+                dt_util.as_local(end_date),
             )
         except HomeAssistantError as err:
             _LOGGER.debug("Error reading events: %s", err)

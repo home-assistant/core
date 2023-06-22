@@ -15,6 +15,8 @@ MODEL2 = "The Perfume Genie 2.0"
 class DiffuserEntity(CoordinatorEntity[RitualsDataUpdateCoordinator]):
     """Representation of a diffuser entity."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self,
         coordinator: RitualsDataUpdateCoordinator,

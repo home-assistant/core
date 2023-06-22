@@ -30,5 +30,11 @@
     "outlet": {
       "name": "Outlet"
     }
+  },
+  "issues": {
+    "platform_integration_no_support": {
+      "title": "[%key:common::issues::platform_integration_no_support_title%]",
+      "description": "[%key:common::issues::platform_integration_no_support_description%]"
+    }
   }
 }

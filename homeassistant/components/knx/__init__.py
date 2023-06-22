@@ -60,6 +60,7 @@ from .const import (
     CONF_KNX_SECURE_USER_ID,
     CONF_KNX_SECURE_USER_PASSWORD,
     CONF_KNX_STATE_UPDATER,
+    CONF_KNX_TELEGRAM_LOG_SIZE,
     CONF_KNX_TUNNELING,
     CONF_KNX_TUNNELING_TCP,
     CONF_KNX_TUNNELING_TCP_SECURE,
@@ -68,6 +69,7 @@ from .const import (
     DOMAIN,
     KNX_ADDRESS,
     SUPPORTED_PLATFORMS,
+    TELEGRAM_LOG_DEFAULT,
 )
 from .device import KNXInterfaceDevice
 from .expose import KNXExposeSensor, KNXExposeTime, create_knx_exposure
@@ -92,6 +94,7 @@ from .schema import (
     ga_validator,
     sensor_type_validator,
 )
+from .telegrams import Telegrams
 from .websocket import register_panel
 
 _LOGGER = logging.getLogger(__name__)
@@ -382,6 +385,12 @@ class KNXModule:
         )
         self.xknx.connection_manager.register_connection_state_changed_cb(
             self.connection_state_changed_cb
+        )
+        self.telegrams = Telegrams(
+            hass=hass,
+            xknx=self.xknx,
+            project=self.project,
+            log_size=entry.data.get(CONF_KNX_TELEGRAM_LOG_SIZE, TELEGRAM_LOG_DEFAULT),
         )
         self.interface_device = KNXInterfaceDevice(
             hass=hass, entry=entry, xknx=self.xknx
@@ -674,6 +683,7 @@ class KNXModule:
                 payload=GroupValueResponse(payload)
                 if attr_response
                 else GroupValueWrite(payload),
+                source_address=self.xknx.current_address,
             )
             await self.xknx.telegrams.put(telegram)
 
@@ -683,5 +693,6 @@ class KNXModule:
             telegram = Telegram(
                 destination_address=parse_device_group_address(address),
                 payload=GroupValueRead(),
+                source_address=self.xknx.current_address,
             )
             await self.xknx.telegrams.put(telegram)

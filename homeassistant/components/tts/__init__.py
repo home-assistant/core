@@ -44,7 +44,7 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.network import get_url
 from homeassistant.helpers.restore_state import RestoreEntity
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import UNDEFINED, ConfigType
 from homeassistant.util import dt as dt_util, language as language_util
 
 from .const import (
@@ -52,7 +52,6 @@ from .const import (
     ATTR_LANGUAGE,
     ATTR_MESSAGE,
     ATTR_OPTIONS,
-    CONF_BASE_URL,
     CONF_CACHE,
     CONF_CACHE_DIR,
     CONF_TIME_MEMORY,
@@ -76,7 +75,6 @@ __all__ = [
     "CONF_LANG",
     "DEFAULT_CACHE_DIR",
     "generate_media_source_id",
-    "get_base_url",
     "PLATFORM_SCHEMA_BASE",
     "PLATFORM_SCHEMA",
     "Provider",
@@ -92,8 +90,6 @@ ATTR_MEDIA_PLAYER_ENTITY_ID = "media_player_entity_id"
 ATTR_VOICE = "voice"
 
 CONF_LANG = "language"
-
-BASE_URL_KEY = "tts_base_url"
 
 SERVICE_CLEAR_CACHE = "clear_cache"
 
@@ -214,15 +210,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     use_cache: bool = conf.get(CONF_CACHE, DEFAULT_CACHE)
     cache_dir: str = conf.get(CONF_CACHE_DIR, DEFAULT_CACHE_DIR)
     time_memory: int = conf.get(CONF_TIME_MEMORY, DEFAULT_TIME_MEMORY)
-    base_url: str | None = conf.get(CONF_BASE_URL)
-    if base_url is not None:
-        _LOGGER.warning(
-            "TTS base_url option is deprecated. Configure internal/external URL"
-            " instead"
-        )
-    hass.data[BASE_URL_KEY] = base_url
 
-    tts = SpeechManager(hass, use_cache, cache_dir, time_memory, base_url)
+    tts = SpeechManager(hass, use_cache, cache_dir, time_memory)
 
     try:
         await tts.async_init_cache()
@@ -364,7 +353,7 @@ class TextToSpeechEntity(RestoreEntity):
 
     @final
     async def internal_async_get_tts_audio(
-        self, message: str, language: str, options: dict[str, Any] | None = None
+        self, message: str, language: str, options: dict[str, Any]
     ) -> TtsAudioType:
         """Process an audio stream to TTS service.
 
@@ -377,13 +366,13 @@ class TextToSpeechEntity(RestoreEntity):
         )
 
     def get_tts_audio(
-        self, message: str, language: str, options: dict[str, Any] | None = None
+        self, message: str, language: str, options: dict[str, Any]
     ) -> TtsAudioType:
         """Load tts audio file from the engine."""
         raise NotImplementedError()
 
     async def async_get_tts_audio(
-        self, message: str, language: str, options: dict[str, Any] | None = None
+        self, message: str, language: str, options: dict[str, Any]
     ) -> TtsAudioType:
         """Load tts audio file from the engine.
 
@@ -413,7 +402,6 @@ class SpeechManager:
         use_cache: bool,
         cache_dir: str,
         time_memory: int,
-        base_url: str | None,
     ) -> None:
         """Initialize a speech store."""
         self.hass = hass
@@ -422,7 +410,6 @@ class SpeechManager:
         self.use_cache = use_cache
         self.cache_dir = cache_dir
         self.time_memory = time_memory
-        self.base_url = base_url
         self.file_cache: dict[str, str] = {}
         self.mem_cache: dict[str, TTSCache] = {}
 
@@ -478,9 +465,9 @@ class SpeechManager:
     def process_options(
         self,
         engine_instance: TextToSpeechEntity | Provider,
-        language: str | None = None,
-        options: dict | None = None,
-    ) -> tuple[str, dict | None]:
+        language: str | None,
+        options: dict | None,
+    ) -> tuple[str, dict[str, Any]]:
         """Validate and process options."""
         # Languages
         language = language or engine_instance.default_language
@@ -491,23 +478,18 @@ class SpeechManager:
         ):
             raise HomeAssistantError(f"Language '{language}' not supported")
 
-        # Options
-        if (default_options := engine_instance.default_options) and options:
-            merged_options = dict(default_options)
-            merged_options.update(options)
-            options = merged_options
-        if not options:
-            options = None if default_options is None else dict(default_options)
+        # Update default options with provided options
+        merged_options = dict(engine_instance.default_options or {})
+        merged_options.update(options or {})
 
-        if options is not None:
-            supported_options = engine_instance.supported_options or []
-            invalid_opts = [
-                opt_name for opt_name in options if opt_name not in supported_options
-            ]
-            if invalid_opts:
-                raise HomeAssistantError(f"Invalid options found: {invalid_opts}")
+        supported_options = engine_instance.supported_options or []
+        invalid_opts = [
+            opt_name for opt_name in merged_options if opt_name not in supported_options
+        ]
+        if invalid_opts:
+            raise HomeAssistantError(f"Invalid options found: {invalid_opts}")
 
-        return language, options
+        return language, merged_options
 
     async def async_get_url_path(
         self,
@@ -602,7 +584,7 @@ class SpeechManager:
         message: str,
         cache: bool,
         language: str,
-        options: dict | None,
+        options: dict[str, Any],
     ) -> str:
         """Receive TTS, store for view in cache and return filename.
 
@@ -615,7 +597,7 @@ class SpeechManager:
 
         async def get_tts_data() -> str:
             """Handle data available."""
-            if engine_instance.name is None:
+            if engine_instance.name is None or engine_instance.name is UNDEFINED:
                 raise HomeAssistantError("TTS engine name is not set.")
 
             if isinstance(engine_instance, Provider):
@@ -891,7 +873,7 @@ class TextToSpeechUrlView(HomeAssistantView):
             _LOGGER.error("Error on init tts: %s", err)
             return self.json({"error": err}, HTTPStatus.BAD_REQUEST)
 
-        base = self.tts.base_url or get_url(self.tts.hass)
+        base = get_url(self.tts.hass)
         url = base + path
 
         return self.json({"url": url, "path": path})
@@ -917,11 +899,6 @@ class TextToSpeechView(HomeAssistantView):
             return web.Response(status=HTTPStatus.NOT_FOUND)
 
         return web.Response(body=data, content_type=content)
-
-
-def get_base_url(hass: HomeAssistant) -> str:
-    """Get base URL."""
-    return hass.data[BASE_URL_KEY] or get_url(hass)
 
 
 @websocket_api.websocket_command(

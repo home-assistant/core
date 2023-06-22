@@ -2,21 +2,22 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
-import contextlib
 import dataclasses
 from functools import wraps
-from typing import Any, Concatenate, ParamSpec, TypeVar
+from typing import Any, Concatenate, ParamSpec, TypeVar, cast
 
 import python_otbr_api
-from python_otbr_api import tlv_parser
+from python_otbr_api import PENDING_DATASET_DELAY_TIMER, tlv_parser
 from python_otbr_api.pskc import compute_pskc
+from python_otbr_api.tlv_parser import MeshcopTLVType
 
 from homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon import (
+    MultiprotocolAddonManager,
+    get_addon_manager,
     is_multiprotocol_url,
     multi_pan_addon_using_device,
 )
 from homeassistant.components.homeassistant_yellow import RADIO_DEVICE as YELLOW_RADIO
-from homeassistant.components.zha import api as zha_api
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import issue_registry as ir
@@ -73,16 +74,31 @@ class OTBRData:
         return await self.api.set_enabled(enabled)
 
     @_handle_otbr_error
+    async def get_active_dataset(self) -> python_otbr_api.ActiveDataSet | None:
+        """Get current active operational dataset, or None."""
+        return await self.api.get_active_dataset()
+
+    @_handle_otbr_error
     async def get_active_dataset_tlvs(self) -> bytes | None:
         """Get current active operational dataset in TLVS format, or None."""
         return await self.api.get_active_dataset_tlvs()
 
     @_handle_otbr_error
+    async def get_pending_dataset_tlvs(self) -> bytes | None:
+        """Get current pending operational dataset in TLVS format, or None."""
+        return await self.api.get_pending_dataset_tlvs()
+
+    @_handle_otbr_error
     async def create_active_dataset(
-        self, dataset: python_otbr_api.OperationalDataSet
+        self, dataset: python_otbr_api.ActiveDataSet
     ) -> None:
         """Create an active operational dataset."""
         return await self.api.create_active_dataset(dataset)
+
+    @_handle_otbr_error
+    async def delete_active_dataset(self) -> None:
+        """Delete the active operational dataset."""
+        return await self.api.delete_active_dataset()
 
     @_handle_otbr_error
     async def set_active_dataset_tlvs(self, dataset: bytes) -> None:
@@ -90,28 +106,16 @@ class OTBRData:
         await self.api.set_active_dataset_tlvs(dataset)
 
     @_handle_otbr_error
+    async def set_channel(
+        self, channel: int, delay: float = PENDING_DATASET_DELAY_TIMER / 1000
+    ) -> None:
+        """Set current channel."""
+        await self.api.set_channel(channel, delay=int(delay * 1000))
+
+    @_handle_otbr_error
     async def get_extended_address(self) -> bytes:
         """Get extended address (EUI-64)."""
         return await self.api.get_extended_address()
-
-
-def _get_zha_url(hass: HomeAssistant) -> str | None:
-    """Get ZHA radio path, or None if there's no ZHA config entry."""
-    with contextlib.suppress(ValueError):
-        return zha_api.async_get_radio_path(hass)
-    return None
-
-
-async def _get_zha_channel(hass: HomeAssistant) -> int | None:
-    """Get ZHA channel, or None if there's no ZHA config entry."""
-    zha_network_settings: zha_api.NetworkBackup | None
-    with contextlib.suppress(ValueError):
-        zha_network_settings = await zha_api.async_get_network_settings(hass)
-    if not zha_network_settings:
-        return None
-    channel: int = zha_network_settings.network_info.channel
-    # ZHA uses channel 0 when no channel is set
-    return channel or None
 
 
 async def get_allowed_channel(hass: HomeAssistant, otbr_url: str) -> int | None:
@@ -120,12 +124,8 @@ async def get_allowed_channel(hass: HomeAssistant, otbr_url: str) -> int | None:
         # The OTBR is not sharing the radio, no restriction
         return None
 
-    zha_url = _get_zha_url(hass)
-    if not zha_url or not is_multiprotocol_url(zha_url):
-        # ZHA is not configured or not sharing the radio with this OTBR, no restriction
-        return None
-
-    return await _get_zha_channel(hass)
+    addon_manager: MultiprotocolAddonManager = await get_addon_manager(hass)
+    return addon_manager.async_get_channel()
 
 
 async def _warn_on_channel_collision(
@@ -146,14 +146,10 @@ async def _warn_on_channel_collision(
 
     dataset = tlv_parser.parse_tlv(dataset_tlvs.hex())
 
-    if (channel_s := dataset.get(tlv_parser.MeshcopTLVType.CHANNEL)) is None:
+    if (channel_s := dataset.get(MeshcopTLVType.CHANNEL)) is None:
         delete_issue()
         return
-    try:
-        channel = int(channel_s, 16)
-    except ValueError:
-        delete_issue()
-        return
+    channel = cast(tlv_parser.Channel, channel_s).channel
 
     if channel == allowed_channel:
         delete_issue()
@@ -186,20 +182,20 @@ def _warn_on_default_network_settings(
     insecure = False
 
     if (
-        network_key := dataset.get(tlv_parser.MeshcopTLVType.NETWORKKEY)
-    ) is not None and bytes.fromhex(network_key) in INSECURE_NETWORK_KEYS:
+        network_key := dataset.get(MeshcopTLVType.NETWORKKEY)
+    ) is not None and network_key.data in INSECURE_NETWORK_KEYS:
         insecure = True
     if (
         not insecure
-        and tlv_parser.MeshcopTLVType.EXTPANID in dataset
-        and tlv_parser.MeshcopTLVType.NETWORKNAME in dataset
-        and tlv_parser.MeshcopTLVType.PSKC in dataset
+        and MeshcopTLVType.EXTPANID in dataset
+        and MeshcopTLVType.NETWORKNAME in dataset
+        and MeshcopTLVType.PSKC in dataset
     ):
-        ext_pan_id = dataset[tlv_parser.MeshcopTLVType.EXTPANID]
-        network_name = dataset[tlv_parser.MeshcopTLVType.NETWORKNAME]
-        pskc = bytes.fromhex(dataset[tlv_parser.MeshcopTLVType.PSKC])
+        ext_pan_id = dataset[MeshcopTLVType.EXTPANID]
+        network_name = cast(tlv_parser.NetworkName, dataset[MeshcopTLVType.NETWORKNAME])
+        pskc = dataset[MeshcopTLVType.PSKC].data
         for passphrase in INSECURE_PASSPHRASES:
-            if pskc == compute_pskc(ext_pan_id, network_name, passphrase):
+            if pskc == compute_pskc(ext_pan_id.data, network_name.name, passphrase):
                 insecure = True
                 break
 

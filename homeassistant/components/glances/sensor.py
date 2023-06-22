@@ -329,6 +329,18 @@ class GlancesSensor(CoordinatorEntity[GlancesDataUpdateCoordinator], SensorEntit
         self._attr_unique_id = f"{coordinator.config_entry.entry_id}-{sensor_name_prefix}-{description.key}"
 
     @property
+    def available(self) -> bool:
+        """Set sensor unavailable when native value is invalid."""
+        if super().available:
+            return (
+                not self._numeric_state_expected
+                or isinstance(value := self.native_value, (int, float))
+                or isinstance(value, str)
+                and value.isnumeric()
+            )
+        return False
+
+    @property
     def native_value(self) -> StateType:
         """Return the state of the resources."""
         value = self.coordinator.data[self.entity_description.type]

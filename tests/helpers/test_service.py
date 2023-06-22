@@ -564,6 +564,23 @@ async def test_async_get_all_descriptions(hass: HomeAssistant) -> None:
     assert "description" in descriptions[logger.DOMAIN]["set_level"]
     assert "fields" in descriptions[logger.DOMAIN]["set_level"]
 
+    hass.services.async_register(logger.DOMAIN, "new_service", lambda x: None, None)
+    service.async_set_service_schema(
+        hass, logger.DOMAIN, "new_service", {"description": "new service"}
+    )
+    descriptions = await service.async_get_all_descriptions(hass)
+    assert "description" in descriptions[logger.DOMAIN]["new_service"]
+    assert descriptions[logger.DOMAIN]["new_service"]["description"] == "new service"
+
+    hass.services.async_register(
+        logger.DOMAIN, "another_new_service", lambda x: None, None
+    )
+    descriptions = await service.async_get_all_descriptions(hass)
+    assert "another_new_service" in descriptions[logger.DOMAIN]
+
+    # Verify the cache returns the same object
+    assert await service.async_get_all_descriptions(hass) is descriptions
+
 
 async def test_call_with_required_features(hass: HomeAssistant, mock_entities) -> None:
     """Test service calls invoked only if entity has required features."""
@@ -697,7 +714,8 @@ async def test_call_context_target_all(
         return_value=Mock(
             permissions=PolicyPermissions(
                 {"entities": {"entity_ids": {"light.kitchen": True}}}, None
-            )
+            ),
+            is_admin=False,
         ),
     ):
         await service.entity_service_call(
@@ -750,7 +768,7 @@ async def test_call_context_target_specific_no_auth(
     """Check targeting specific entities without auth."""
     with pytest.raises(exceptions.Unauthorized) as err, patch(
         "homeassistant.auth.AuthManager.async_get_user",
-        return_value=Mock(permissions=PolicyPermissions({}, None)),
+        return_value=Mock(permissions=PolicyPermissions({}, None), is_admin=False),
     ):
         await service.entity_service_call(
             hass,

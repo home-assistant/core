@@ -12,7 +12,6 @@ from __future__ import annotations
 from collections import UserDict
 from collections.abc import Callable, Iterable, Mapping, ValuesView
 import logging
-from types import MappingProxyType
 from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 import attr
@@ -44,6 +43,7 @@ from homeassistant.core import (
 from homeassistant.exceptions import MaxLengthExceeded
 from homeassistant.util import slugify, uuid as uuid_util
 from homeassistant.util.json import format_unserializable_data
+from homeassistant.util.read_only_dict import ReadOnlyDict
 
 from . import device_registry as dr, storage
 from .device_registry import EVENT_DEVICE_REGISTRY_UPDATED
@@ -102,6 +102,7 @@ class RegistryEntryHider(StrEnum):
 
 
 EntityOptionsType = Mapping[str, Mapping[str, Any]]
+ReadOnlyEntityOptionsType = ReadOnlyDict[str, Mapping[str, Any]]
 
 DISLAY_DICT_OPTIONAL = (
     ("ai", "area_id"),
@@ -110,27 +111,13 @@ DISLAY_DICT_OPTIONAL = (
 )
 
 
-class _EntityOptions(UserDict[str, MappingProxyType]):
-    """Container for entity options."""
-
-    def __init__(self, data: Mapping[str, Mapping] | None) -> None:
-        """Initialize."""
-        super().__init__()
-        if data is None:
-            return
-        self.data = {key: MappingProxyType(val) for key, val in data.items()}
-
-    def __setitem__(self, key: str, entry: Mapping) -> None:
-        """Add an item."""
-        raise NotImplementedError
-
-    def __delitem__(self, key: str) -> None:
-        """Remove an item."""
-        raise NotImplementedError
-
-    def as_dict(self) -> dict[str, dict]:
-        """Return dictionary version."""
-        return {key: dict(val) for key, val in self.data.items()}
+def _protect_entity_options(
+    data: EntityOptionsType | None,
+) -> ReadOnlyEntityOptionsType:
+    """Protect entity options from being modified."""
+    if data is None:
+        return ReadOnlyDict({})
+    return ReadOnlyDict({key: ReadOnlyDict(val) for key, val in data.items()})
 
 
 @attr.s(slots=True, frozen=True)
@@ -154,7 +141,9 @@ class RegistryEntry:
     id: str = attr.ib(factory=uuid_util.random_uuid_hex)
     has_entity_name: bool = attr.ib(default=False)
     name: str | None = attr.ib(default=None)
-    options: _EntityOptions = attr.ib(default=None, converter=_EntityOptions)
+    options: ReadOnlyEntityOptionsType = attr.ib(
+        default=None, converter=_protect_entity_options
+    )
     # As set by integration
     original_device_class: str | None = attr.ib(default=None)
     original_icon: str | None = attr.ib(default=None)
@@ -436,6 +425,7 @@ class EntityRegistry:
     """Class to hold a registry of entities."""
 
     entities: EntityRegistryItems
+    _entities_data: dict[str, RegistryEntry]
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the registry."""
@@ -480,9 +470,15 @@ class EntityRegistry:
         return entity_id in self.entities
 
     @callback
-    def async_get(self, entity_id: str) -> RegistryEntry | None:
-        """Get EntityEntry for an entity_id."""
-        return self.entities.get(entity_id)
+    def async_get(self, entity_id_or_uuid: str) -> RegistryEntry | None:
+        """Get EntityEntry for an entity_id or entity entry id.
+
+        We retrieve the RegistryEntry from the underlying dict to avoid
+        the overhead of the UserDict __getitem__.
+        """
+        return self._entities_data.get(entity_id_or_uuid) or self.entities.get_entry(
+            entity_id_or_uuid
+        )
 
     @callback
     def async_get_entity_id(
@@ -1002,6 +998,7 @@ class EntityRegistry:
                 )
 
         self.entities = entities
+        self._entities_data = entities.data
 
     @callback
     def async_schedule_save(self) -> None:
@@ -1029,7 +1026,7 @@ class EntityRegistry:
                 "id": entry.id,
                 "has_entity_name": entry.has_entity_name,
                 "name": entry.name,
-                "options": entry.options.as_dict(),
+                "options": entry.options,
                 "original_device_class": entry.original_device_class,
                 "original_icon": entry.original_icon,
                 "original_name": entry.original_name,

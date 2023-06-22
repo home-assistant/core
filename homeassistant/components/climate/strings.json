@@ -54,6 +54,7 @@
           "name": "Current action",
           "state": {
             "off": "Off",
+            "preheating": "Preheating",
             "heating": "Heating",
             "cooling": "Cooling",
             "drying": "Drying",
@@ -102,6 +103,12 @@
         "target_temp_step": { "name": "Target temperature step" },
         "temperature": { "name": "Target temperature" }
       }
+    }
+  },
+  "issues": {
+    "platform_integration_no_support": {
+      "title": "[%key:common::issues::platform_integration_no_support_title%]",
+      "description": "[%key:common::issues::platform_integration_no_support_description%]"
     }
   }
 }

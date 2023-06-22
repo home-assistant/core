@@ -307,6 +307,9 @@ async def async_init_integration(
         "homeassistant.components.airzone.AirzoneLocalApi.get_hvac_systems",
         return_value=HVAC_SYSTEMS_MOCK,
     ), patch(
+        "homeassistant.components.airzone.AirzoneLocalApi.get_version",
+        return_value=HVAC_VERSION_MOCK,
+    ), patch(
         "homeassistant.components.airzone.AirzoneLocalApi.get_webserver",
         return_value=HVAC_WEBSERVER_MOCK,
     ):
