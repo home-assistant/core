@@ -6,6 +6,7 @@ from __future__ import annotations
 
 from homeassistant.components.weather import (
     ATTR_FORECAST_NATIVE_APPARENT_TEMP,
+    ATTR_FORECAST_NATIVE_DEWPOINT,
     ATTR_FORECAST_NATIVE_PRECIPITATION,
     ATTR_FORECAST_NATIVE_PRESSURE,
     ATTR_FORECAST_NATIVE_TEMP,
@@ -51,6 +52,11 @@ class MockWeather(MockEntity, WeatherEntity):
     def native_apparent_temperature(self) -> float | None:
         """Return the platform apparent temperature."""
         return self._handle("native_apparent_temperature")
+
+    @property
+    def native_dewpoint(self) -> float | None:
+        """Return the platform dewpoint temperature."""
+        return self._handle("native_dewpoint")
 
     @property
     def native_temperature_unit(self) -> str | None:
@@ -203,6 +209,7 @@ class MockWeatherMockForecast(MockWeather):
                 ATTR_FORECAST_NATIVE_TEMP: self.native_temperature,
                 ATTR_FORECAST_NATIVE_APPARENT_TEMP: self.native_apparent_temperature,
                 ATTR_FORECAST_NATIVE_TEMP_LOW: self.native_temperature,
+                ATTR_FORECAST_NATIVE_DEWPOINT: self.native_dewpoint,
                 ATTR_FORECAST_NATIVE_PRESSURE: self.native_pressure,
                 ATTR_FORECAST_NATIVE_WIND_SPEED: self.native_wind_speed,
                 ATTR_FORECAST_WIND_BEARING: self.wind_bearing,

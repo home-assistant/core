@@ -31,6 +31,7 @@ from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from .const import (
     ATTR_WEATHER_APPARENT_TEMPERATURE,
+    ATTR_WEATHER_DEWPOINT,
     ATTR_WEATHER_HUMIDITY,
     ATTR_WEATHER_OZONE,
     ATTR_WEATHER_PRECIPITATION_UNIT,
@@ -84,6 +85,8 @@ ATTR_FORECAST_TIME: Final = "datetime"
 ATTR_FORECAST_WIND_BEARING: Final = "wind_bearing"
 ATTR_FORECAST_NATIVE_WIND_SPEED: Final = "native_wind_speed"
 ATTR_FORECAST_WIND_SPEED: Final = "wind_speed"
+ATTR_FORECAST_NATIVE_DEWPOINT: Final = "native_dewpoint"
+ATTR_FORECAST_DEWPOINT: Final = "dewpoint"
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
@@ -132,6 +135,7 @@ class Forecast(TypedDict, total=False):
     wind_bearing: float | str | None
     native_wind_speed: float | None
     wind_speed: None
+    dewpoint: float | None
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -210,6 +214,7 @@ class WeatherEntity(Entity):
     _attr_native_precipitation_unit: str | None = None
     _attr_native_wind_speed: float | None = None
     _attr_native_wind_speed_unit: str | None = None
+    _attr_native_dewpoint: float | None = None
 
     _weather_option_temperature_unit: str | None = None
     _weather_option_pressure_unit: str | None = None
@@ -305,6 +310,11 @@ class WeatherEntity(Entity):
             return temperature_unit
 
         return self._attr_native_temperature_unit
+
+    @property
+    def native_dewpoint(self) -> float | None:
+        """Return the dewpoint temperature in native units."""
+        return self._attr_native_dewpoint
 
     @final
     @property
@@ -623,6 +633,20 @@ class WeatherEntity(Entity):
             except (TypeError, ValueError):
                 data[ATTR_WEATHER_APPARENT_TEMPERATURE] = apparent_temperature
 
+        if (dewpoint := self.native_dewpoint) is not None:
+            from_unit = self.native_temperature_unit or self._default_temperature_unit
+            to_unit = self._temperature_unit
+            try:
+                dewpoint_f = float(dewpoint)
+                value_dewpoint = UNIT_CONVERSIONS[ATTR_WEATHER_TEMPERATURE_UNIT](
+                    dewpoint_f, from_unit, to_unit
+                )
+                data[ATTR_WEATHER_DEWPOINT] = round_temperature(
+                    value_dewpoint, precision
+                )
+            except (TypeError, ValueError):
+                data[ATTR_WEATHER_DEWPOINT] = dewpoint
+
         data[ATTR_WEATHER_TEMPERATURE_UNIT] = self._temperature_unit
 
         if (humidity := self.humidity) is not None:
@@ -747,6 +771,26 @@ class WeatherEntity(Entity):
 
                         forecast_entry[ATTR_FORECAST_TEMP_LOW] = round_temperature(
                             value_temp_low, precision
+                        )
+
+                if (
+                    forecast_dewpoint := forecast_entry.pop(
+                        ATTR_FORECAST_NATIVE_DEWPOINT,
+                        None,
+                    )
+                ) is not None:
+                    with suppress(TypeError, ValueError):
+                        forecast_dewpoint_f = float(forecast_dewpoint)
+                        value_dewpoint = UNIT_CONVERSIONS[
+                            ATTR_WEATHER_TEMPERATURE_UNIT
+                        ](
+                            forecast_dewpoint_f,
+                            from_temp_unit,
+                            to_temp_unit,
+                        )
+
+                        forecast_entry[ATTR_FORECAST_DEWPOINT] = round_temperature(
+                            value_dewpoint, precision
                         )
 
                 if (
