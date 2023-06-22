@@ -85,9 +85,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     blink.refresh_rate = entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
 
     try:
-        if await blink.start():
-            await blink.setup_post_verify()
-        elif blink.auth.check_key_required():
+        await blink.start()
+        if blink.auth.check_key_required():
             _LOGGER.debug("Attempting a reauth flow")
             _reauth_flow_wrapper(hass, auth_data)
     except (ClientError, asyncio.TimeoutError) as ex:
@@ -100,6 +99,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.async_on_unload(entry.add_update_listener(update_listener))
+    blink.refresh(force=True)
 
     async def blink_refresh(event_time=None):
         """Call blink to refresh info."""

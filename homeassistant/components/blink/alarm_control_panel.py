@@ -35,11 +35,11 @@ async def async_setup_entry(
 
     sync_modules = []
     for sync_name, sync_module in data.sync.items():
-        sync_modules.append(BlinkSyncModule(data, sync_name, sync_module))
-    async_add_entities(sync_modules)
+        sync_modules.append(BlinkSyncModuleHA(data, sync_name, sync_module))
+    async_add_entities(sync_modules, update_before_add=True)
 
 
-class BlinkSyncModule(AlarmControlPanelEntity):
+class BlinkSyncModuleHA(AlarmControlPanelEntity):
     """Representation of a Blink Alarm Control Panel."""
 
     _attr_icon = ICON
@@ -69,7 +69,7 @@ class BlinkSyncModule(AlarmControlPanelEntity):
                 self.data,
             )
             try:
-                await self.data.refresh()
+                await self.data.refresh(force=True)
                 self._attr_available = True
             except asyncio.TimeoutError:
                 self._attr_available = False
@@ -89,6 +89,7 @@ class BlinkSyncModule(AlarmControlPanelEntity):
         try:
             await self.sync.async_arm(False)
             await self.sync.refresh()
+            self.async_schedule_update_ha_state(force_refresh=True)
         except asyncio.TimeoutError:
             self._attr_available = False
 
@@ -97,5 +98,6 @@ class BlinkSyncModule(AlarmControlPanelEntity):
         try:
             await self.sync.async_arm(True)
             await self.sync.refresh()
+            self.async_schedule_update_ha_state(force_refresh=True)
         except asyncio.TimeoutError:
             self._attr_available = False
