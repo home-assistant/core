@@ -156,13 +156,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     undo_listener = entry.add_update_listener(_async_update_listener)
 
     hass.data[DOMAIN][entry.entry_id] = {
+        UNDO_UPDATE_LISTENER: undo_listener,
         COORDINATOR_FORECAST: coordinator_forecast,
         COORDINATOR_RAIN: coordinator_rain,
-        COORDINATOR_ALERT: coordinator_alert
-        if coordinator_alert and coordinator_alert.last_update_success
-        else None,
-        UNDO_UPDATE_LISTENER: undo_listener,
     }
+    if coordinator_alert and coordinator_alert.last_update_success:
+        hass.data[DOMAIN][entry.entry_id][COORDINATOR_ALERT] = coordinator_alert
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
