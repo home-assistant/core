@@ -225,21 +225,33 @@ async def test_temperature_no_unit(
     """Test temperature when the entity does not declare a native unit."""
     hass.config.units = unit_system
     native_value = 38
+    dew_point_native_value = 32
     state_value = native_value
+    dew_point_state_value = dew_point_native_value
 
     entity0 = await create_entity(
-        hass, native_temperature=native_value, native_temperature_unit=native_unit
+        hass,
+        native_temperature=native_value,
+        native_temperature_unit=native_unit,
+        native_dew_point=dew_point_native_value,
     )
 
     state = hass.states.get(entity0.entity_id)
     forecast = state.attributes[ATTR_FORECAST][0]
 
     expected = state_value
+    dew_point_expected = dew_point_state_value
     assert float(state.attributes[ATTR_WEATHER_TEMPERATURE]) == pytest.approx(
         expected, rel=0.1
     )
+    assert float(state.attributes[ATTR_WEATHER_DEW_POINT]) == pytest.approx(
+        dew_point_expected, rel=0.1
+    )
     assert state.attributes[ATTR_WEATHER_TEMPERATURE_UNIT] == state_unit
     assert float(forecast[ATTR_FORECAST_TEMP]) == pytest.approx(expected, rel=0.1)
+    assert float(forecast[ATTR_FORECAST_DEW_POINT]) == pytest.approx(
+        dew_point_expected, rel=0.1
+    )
     assert float(forecast[ATTR_FORECAST_TEMP_LOW]) == pytest.approx(expected, rel=0.1)
 
 
