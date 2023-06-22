@@ -44,13 +44,6 @@ CONF_FROM_URL_TOPIC = "from_url_topic"
 DEFAULT_NAME = "MQTT Image"
 
 
-def validate_content_type(content_type: str) -> str:
-    """Validate the config type is an image."""
-    if content_type.split("/", 1)[0] != "image":
-        raise vol.Invalid(f"Content type {content_type} is not valid")
-    return content_type
-
-
 def validate_topic_required(config: ConfigType) -> ConfigType:
     """Ensure at least one subscribe topic is configured."""
     if CONF_TOPIC not in config and CONF_FROM_URL_TOPIC not in config:
@@ -60,9 +53,7 @@ def validate_topic_required(config: ConfigType) -> ConfigType:
 
 PLATFORM_SCHEMA_BASE = MQTT_BASE_SCHEMA.extend(
     {
-        vol.Optional(CONF_CONTENT_TYPE, default=DEFAULT_CONTENT_TYPE): vol.All(
-            cv.string, validate_content_type
-        ),
+        vol.Optional(CONF_CONTENT_TYPE, default=DEFAULT_CONTENT_TYPE): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Exclusive(CONF_FROM_URL_TOPIC, "image_url"): valid_subscribe_topic,
         vol.Exclusive(CONF_TOPIC, "image_url"): valid_subscribe_topic,
@@ -152,18 +143,8 @@ class MqttImage(MqttEntity, ImageEntity):
             self.async_write_ha_state()
             return
 
-        try:
-            content_type = validate_content_type(response.headers["content-type"])
-            self._attr_content_type = content_type
-            self._last_image = response.content
-        except vol.Invalid as err:
-            _LOGGER.error(
-                "Content is not a valid image, url: %s, content_type: %s, %s",
-                url,
-                response.headers["content-type"],
-                err,
-            )
-            self._last_image = None
+        self._attr_content_type = response.headers["content-type"]
+        self._last_image = response.content
         self._attr_image_last_updated = dt_util.utcnow()
         self.async_write_ha_state()
 
