@@ -13,7 +13,6 @@ from homeassistant.components.bluetooth.passive_update_processor import (
     PassiveBluetoothProcessorEntity,
 )
 from homeassistant.components.sensor import (
-    SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
@@ -23,6 +22,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.sensor import sensor_device_info_to_hass_device_info
 
 from .const import DOMAIN
+from .custom_state_data import SensorDeviceClass
 
 LOGGER = logging.getLogger(__name__)
 

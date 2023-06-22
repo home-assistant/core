@@ -3,6 +3,8 @@
 import sensor_state_data
 import sensor_state_data.enum
 
+from homeassistant.components.sensor import SensorDeviceClass as HaSensorDeviceClass
+
 
 class SensorDeviceClass(sensor_state_data.BaseDeviceClass):
     """Custom class to support victron-ble specific device classes."""
@@ -13,7 +15,9 @@ class SensorDeviceClass(sensor_state_data.BaseDeviceClass):
     CURRENT = sensor_state_data.DeviceClass.CURRENT
     DURATION = sensor_state_data.DeviceClass.DURATION
     ENERGY = sensor_state_data.DeviceClass.ENERGY
+    ENUM = HaSensorDeviceClass.ENUM
     POWER = sensor_state_data.DeviceClass.POWER
+    SIGNAL_STRENGTH = sensor_state_data.DeviceClass.SIGNAL_STRENGTH
     TEMPERATURE = sensor_state_data.DeviceClass.TEMPERATURE
     VOLTAGE = sensor_state_data.DeviceClass.VOLTAGE
 
