@@ -72,7 +72,7 @@ class WebhookDispatcher:
 
         self._upload_lock = asyncio.Lock()
 
-    async def async_handle_state_change(self, event: Event):
+    async def async_handle_state_change(self, event: Event) -> bool:
         """Handle a state change."""
         await self._upload_lock.acquire()
         _LOGGER.debug("Handling state change event %s", event)
@@ -86,7 +86,7 @@ class WebhookDispatcher:
                 self.last_upload,
             )
             self._upload_lock.release()
-            return
+            return False
 
         # Check if the new state is a valid float
         try:
@@ -98,7 +98,7 @@ class WebhookDispatcher:
                 self.entity_id,
             )
             self._upload_lock.release()
-            return
+            return False
 
         # Upload the new state
         try:
@@ -117,12 +117,13 @@ class WebhookDispatcher:
         except Exception:  # pylint: disable=broad-except
             _LOGGER.error("Error saving data %s", payload)
             self._upload_lock.release()
-            return
+            return False
 
         # Update the last upload time
         self.last_upload = new_state.last_changed
         _LOGGER.debug("Updated last upload time to %s", self.last_upload)
         self._upload_lock.release()
+        return True
 
     async def async_validate_client(self) -> bool:
         """Validate the client."""
@@ -140,7 +141,7 @@ class WebhookDispatcher:
 
         return state_change_time - self.last_upload > self.upload_interval
 
-    async def update_listener(self, hass: HomeAssistant, entry: ConfigEntry):
+    async def update_listener(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Handle options update."""
         self.data_interval = entry.options.get("data_interval", "P1D")
         self.upload_interval = dt.timedelta(

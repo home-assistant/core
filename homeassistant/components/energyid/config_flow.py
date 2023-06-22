@@ -136,7 +136,6 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             except InvalidInterval:
                 errors["data_interval"] = "invalid_interval"
             else:
-                # self.config_entry.data.update(user_input)
                 return self.async_create_entry(
                     title=self.config_entry.title, data=user_input
                 )
