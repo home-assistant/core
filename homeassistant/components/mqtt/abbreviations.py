@@ -159,6 +159,7 @@ ABBREVIATIONS = {
     "pos_clsd": "position_closed",
     "pos_open": "position_open",
     "pow_cmd_t": "power_command_topic",
+    "pow_cmd_tpl": "power_command_template",
     "pow_stat_t": "power_state_topic",
     "pow_stat_tpl": "power_state_template",
     "pr_mode_cmd_t": "preset_mode_command_topic",
