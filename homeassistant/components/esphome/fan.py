@@ -141,16 +141,12 @@ class EsphomeFan(EsphomeEntity[FanInfo, FanState], FanEntity):
     @esphome_state_property
     def oscillating(self) -> bool | None:
         """Return the oscillation state."""
-        if not self._static_info.supports_oscillation:
-            return None
         return self._state.oscillating
 
     @property
     @esphome_state_property
     def current_direction(self) -> str | None:
         """Return the current fan direction."""
-        if not self._static_info.supports_direction:
-            return None
         return _FAN_DIRECTIONS.from_esphome(self._state.direction)
 
     @property
