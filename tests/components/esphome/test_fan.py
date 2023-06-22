@@ -133,7 +133,7 @@ async def test_fan_entity_with_all_features_old_api(
 async def test_fan_entity_with_all_features_new_api(
     hass: HomeAssistant, mock_client: APIClient, mock_generic_device_entry
 ) -> None:
-    """Test a generic fan entity that has all features."""
+    """Test a generic fan entity that uses the new api and has all features."""
     mock_client.api_version = APIVersion(1, 4)
     entity_info = [
         FanInfo(
