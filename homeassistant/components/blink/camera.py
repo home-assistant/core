@@ -67,7 +67,7 @@ class BlinkCamera(Camera):
         """Enable motion detection for the camera."""
         try:
             await self._camera.async_arm(True)
-            await self.data.refresh(force=True)
+            self.async_schedule_update_ha_state(force_refresh=True)
         except asyncio.TimeoutError:
             self._attr_available = False
 
@@ -75,7 +75,7 @@ class BlinkCamera(Camera):
         """Disable motion detection for the camera."""
         try:
             await self._camera.async_arm(False)
-            await self.data.refresh(force=True)
+            self.async_schedule_update_ha_state(force_refresh=True)
         except asyncio.TimeoutError:
             self._attr_available = False
 
