@@ -192,6 +192,9 @@ class DefaultAgent(AbstractConversationAgent):
 
     async def async_process(self, user_input: ConversationInput) -> ConversationResult:
         """Process a sentence."""
+        if trigger_result := await self._match_triggers(user_input.text):
+            return trigger_result
+
         language = user_input.language or self.hass.config.language
         conversation_id = None  # Not supported
 
