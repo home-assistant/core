@@ -135,11 +135,7 @@ class EsphomeLight(EsphomeEntity[LightInfo, LightState], LightEntity):
     """A light implementation for ESPHome."""
 
     _native_supported_color_modes: list[int]
-
-    @property
-    def _supports_color_mode(self) -> bool:
-        """Return whether the client supports the new color mode system natively."""
-        return self._api_version >= APIVersion(1, 6)
+    _supports_color_mode = False
 
     @property
     @esphome_state_property
@@ -364,6 +360,7 @@ class EsphomeLight(EsphomeEntity[LightInfo, LightState], LightEntity):
         """Set attrs from static info."""
         super()._on_static_info_update(static_info)
         static_info = self._static_info
+        self._supports_color_mode = self._api_version >= APIVersion(1, 6)
         self._native_supported_color_modes = static_info.supported_color_modes_compat(
             self._api_version
         )
