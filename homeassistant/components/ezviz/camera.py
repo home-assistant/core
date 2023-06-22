@@ -17,7 +17,6 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
     config_validation as cv,
     discovery_flow,
@@ -54,7 +53,6 @@ from .coordinator import EzvizDataUpdateCoordinator
 from .entity import EzvizEntity
 
 _LOGGER = logging.getLogger(__name__)
-GET_IMAGE_TIMEOUT = 10
 
 
 async def async_setup_entry(
@@ -224,7 +222,7 @@ class EzvizCamera(EzvizEntity, Camera):
             self.coordinator.ezviz_client.set_camera_defence(self._serial, 1)
 
         except InvalidHost as err:
-            raise HomeAssistantError("Error enabling motion detection") from err
+            raise InvalidHost("Error enabling motion detection") from err
 
     def disable_motion_detection(self) -> None:
         """Disable motion detection."""
@@ -232,7 +230,7 @@ class EzvizCamera(EzvizEntity, Camera):
             self.coordinator.ezviz_client.set_camera_defence(self._serial, 0)
 
         except InvalidHost as err:
-            raise HomeAssistantError("Error disabling motion detection") from err
+            raise InvalidHost("Error disabling motion detection") from err
 
     async def async_camera_image(
         self, width: int | None = None, height: int | None = None
@@ -274,28 +272,28 @@ class EzvizCamera(EzvizEntity, Camera):
             )
 
         except HTTPError as err:
-            raise HomeAssistantError("Cannot perform PTZ") from err
+            raise HTTPError("Cannot perform PTZ") from err
 
     def perform_sound_alarm(self, enable: int) -> None:
         """Sound the alarm on a camera."""
         try:
             self.coordinator.ezviz_client.sound_alarm(self._serial, enable)
         except HTTPError as err:
-            raise HomeAssistantError("Cannot sound alarm") from err
+            raise HTTPError("Cannot sound alarm") from err
 
     def perform_wake_device(self) -> None:
         """Basically wakes the camera by querying the device."""
         try:
             self.coordinator.ezviz_client.get_detection_sensibility(self._serial)
         except (HTTPError, PyEzvizError) as err:
-            raise HomeAssistantError("Cannot wake device") from err
+            raise PyEzvizError("Cannot wake device") from err
 
     def perform_alarm_sound(self, level: int) -> None:
         """Enable/Disable movement sound alarm."""
         try:
             self.coordinator.ezviz_client.alarm_sound(self._serial, level, 1)
         except HTTPError as err:
-            raise HomeAssistantError(
+            raise HTTPError(
                 "Cannot set alarm sound level for on movement detected"
             ) from err
 
@@ -308,7 +306,7 @@ class EzvizCamera(EzvizEntity, Camera):
                 self._serial, level, type_value
             )
         except (HTTPError, PyEzvizError) as err:
-            raise HomeAssistantError("Cannot set detection sensitivity level") from err
+            raise PyEzvizError("Cannot set detection sensitivity level") from err
 
         ir.async_create_issue(
             self.hass,
