@@ -38,7 +38,7 @@ def test_state() -> None:
         assert binary_sensor.BinarySensorEntity().state == STATE_ON
 
 
-class STTFlow(ConfigFlow):
+class MockFlow(ConfigFlow):
     """Test flow."""
 
 
@@ -47,7 +47,7 @@ def config_flow_fixture(hass: HomeAssistant) -> Generator[None, None, None]:
     """Mock config flow."""
     mock_platform(hass, f"{TEST_DOMAIN}.config_flow")
 
-    with mock_config_flow(TEST_DOMAIN, STTFlow):
+    with mock_config_flow(TEST_DOMAIN, MockFlow):
         yield
 
 

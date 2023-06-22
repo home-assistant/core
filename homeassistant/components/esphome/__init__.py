@@ -45,7 +45,10 @@ from homeassistant.helpers import template
 import homeassistant.helpers.config_validation as cv
 import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.device_registry import format_mac
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
 from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
@@ -56,10 +59,11 @@ from homeassistant.helpers.issue_registry import (
 )
 from homeassistant.helpers.service import async_set_service_schema
 from homeassistant.helpers.template import Template
+from homeassistant.helpers.typing import ConfigType
 
 from .bluetooth import async_connect_scanner
 from .const import DOMAIN
-from .dashboard import async_get_dashboard
+from .dashboard import async_get_dashboard, async_setup as async_setup_dashboard
 from .domain_data import DomainData
 
 # Import config flow so that it's added to the registry
@@ -72,12 +76,14 @@ CONF_NOISE_PSK = "noise_psk"
 _LOGGER = logging.getLogger(__name__)
 _R = TypeVar("_R")
 
-STABLE_BLE_VERSION_STR = "2023.4.0"
+STABLE_BLE_VERSION_STR = "2023.6.0"
 STABLE_BLE_VERSION = AwesomeVersion(STABLE_BLE_VERSION_STR)
 PROJECT_URLS = {
     "esphome.bluetooth-proxy": "https://esphome.github.io/bluetooth-proxies/",
 }
 DEFAULT_URL = f"https://esphome.io/changelog/{STABLE_BLE_VERSION_STR}.html"
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
 @callback
@@ -133,6 +139,12 @@ def _async_check_using_api_password(
             "name": device_info.name,
         },
     )
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the esphome component."""
+    await async_setup_dashboard(hass)
+    return True
 
 
 async def async_setup_entry(  # noqa: C901
@@ -691,16 +703,12 @@ async def platform_async_setup_entry(
         new_infos: dict[int, EntityInfo] = {}
         add_entities: list[_EntityT] = []
         for info in infos:
-            if not isinstance(info, info_type):
-                # Filter out infos that don't belong to this platform.
-                continue
-
             if info.key in old_infos:
                 # Update existing entity
                 old_infos.pop(info.key)
             else:
                 # Create new entity
-                entity = entity_type(entry_data, component_key, info.key, state_type)
+                entity = entity_type(entry_data, component_key, info, state_type)
                 add_entities.append(entity)
             new_infos[info.key] = info
 
@@ -713,13 +721,19 @@ async def platform_async_setup_entry(
         # Then update the actual info
         entry_data.info[component_key] = new_infos
 
-        # Add entities to Home Assistant
-        async_add_entities(add_entities)
+        for key, new_info in new_infos.items():
+            async_dispatcher_send(
+                hass,
+                entry_data.signal_component_key_static_info_updated(component_key, key),
+                new_info,
+            )
+
+        if add_entities:
+            # Add entities to Home Assistant
+            async_add_entities(add_entities)
 
     entry_data.cleanup_callbacks.append(
-        async_dispatcher_connect(
-            hass, entry_data.signal_static_info_updated, async_list_entities
-        )
+        entry_data.async_register_static_info_callback(info_type, async_list_entities)
     )
 
 
@@ -765,149 +779,136 @@ class EsphomeEntity(Entity, Generic[_InfoT, _StateT]):
     """Define a base esphome entity."""
 
     _attr_should_poll = False
+    _static_info: _InfoT
+    _state: _StateT
+    _has_state: bool
 
     def __init__(
         self,
         entry_data: RuntimeEntryData,
         component_key: str,
-        key: int,
+        entity_info: EntityInfo,
         state_type: type[_StateT],
     ) -> None:
         """Initialize."""
         self._entry_data = entry_data
+        self._on_entry_data_changed()
         self._component_key = component_key
-        self._key = key
+        self._key = entity_info.key
         self._state_type = state_type
-        if entry_data.device_info is not None and entry_data.device_info.friendly_name:
-            self._attr_has_entity_name = True
+        self._on_static_info_update(entity_info)
+        assert entry_data.device_info is not None
+        device_info = entry_data.device_info
+        self._device_info = device_info
+        self._attr_has_entity_name = bool(device_info.friendly_name)
+        self._attr_device_info = DeviceInfo(
+            connections={(dr.CONNECTION_NETWORK_MAC, device_info.mac_address)}
+        )
+        self._entry_id = entry_data.entry_id
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
+        entry_data = self._entry_data
+        hass = self.hass
+        component_key = self._component_key
+        key = self._key
+
         self.async_on_remove(
             async_dispatcher_connect(
-                self.hass,
-                f"esphome_{self._entry_id}_remove_{self._component_key}_{self._key}",
+                hass,
+                f"esphome_{self._entry_id}_remove_{component_key}_{key}",
                 functools.partial(self.async_remove, force_remove=True),
             )
         )
-
         self.async_on_remove(
             async_dispatcher_connect(
-                self.hass,
-                self._entry_data.signal_device_updated,
+                hass,
+                entry_data.signal_device_updated,
                 self._on_device_update,
             )
         )
-
         self.async_on_remove(
-            self._entry_data.async_subscribe_state_update(
-                self._state_type, self._key, self._on_state_update
+            entry_data.async_subscribe_state_update(
+                self._state_type, key, self._on_state_update
             )
         )
+        self.async_on_remove(
+            async_dispatcher_connect(
+                hass,
+                entry_data.signal_component_key_static_info_updated(component_key, key),
+                self._on_static_info_update,
+            )
+        )
+        self._update_state_from_entry_data()
+
+    @callback
+    def _on_static_info_update(self, static_info: EntityInfo) -> None:
+        """Save the static info for this entity when it changes.
+
+        This method can be overridden in child classes to know
+        when the static info changes.
+        """
+        static_info = cast(_InfoT, static_info)
+        self._static_info = static_info
+        self._attr_unique_id = static_info.unique_id
+        self._attr_entity_registry_enabled_default = not static_info.disabled_by_default
+        self._attr_name = static_info.name
+        if entity_category := static_info.entity_category:
+            self._attr_entity_category = ENTITY_CATEGORIES.from_esphome(entity_category)
+        else:
+            self._attr_entity_category = None
+        if icon := static_info.icon:
+            self._attr_icon = cast(str, ICON_SCHEMA(icon))
+        else:
+            self._attr_icon = None
+
+    @callback
+    def _update_state_from_entry_data(self) -> None:
+        """Update state from entry data."""
+
+        state = self._entry_data.state
+        key = self._key
+        state_type = self._state_type
+        has_state = key in state[state_type]
+        if has_state:
+            self._state = cast(_StateT, state[state_type][key])
+        self._has_state = has_state
 
     @callback
     def _on_state_update(self) -> None:
-        # Behavior can be changed in child classes
+        """Call when state changed.
+
+        Behavior can be changed in child classes
+        """
+        self._update_state_from_entry_data()
         self.async_write_ha_state()
 
     @callback
+    def _on_entry_data_changed(self) -> None:
+        entry_data = self._entry_data
+        self._api_version = entry_data.api_version
+        self._client = entry_data.client
+
+    @callback
     def _on_device_update(self) -> None:
-        """Update the entity state when device info has changed."""
-        if self._entry_data.available:
-            # Don't update the HA state yet when the device comes online.
-            # Only update the HA state when the full state arrives
+        """Call when device updates or entry data changes."""
+        self._on_entry_data_changed()
+        if not self._entry_data.available:
+            # Only write state if the device has gone unavailable
+            # since _on_state_update will be called if the device
+            # is available when the full state arrives
             # through the next entity state packet.
-            return
-        self._on_state_update()
-
-    @property
-    def _entry_id(self) -> str:
-        return self._entry_data.entry_id
-
-    @property
-    def _api_version(self) -> APIVersion:
-        return self._entry_data.api_version
-
-    @property
-    def _static_info(self) -> _InfoT:
-        # Check if value is in info database. Use a single lookup.
-        info = self._entry_data.info[self._component_key].get(self._key)
-        if info is not None:
-            return cast(_InfoT, info)
-        # This entity is in the removal project and has been removed from .info
-        # already, look in old_info
-        return cast(_InfoT, self._entry_data.old_info[self._component_key][self._key])
-
-    @property
-    def _device_info(self) -> EsphomeDeviceInfo:
-        assert self._entry_data.device_info is not None
-        return self._entry_data.device_info
-
-    @property
-    def _client(self) -> APIClient:
-        return self._entry_data.client
-
-    @property
-    def _state(self) -> _StateT:
-        return cast(_StateT, self._entry_data.state[self._state_type][self._key])
-
-    @property
-    def _has_state(self) -> bool:
-        return self._key in self._entry_data.state[self._state_type]
+            self.async_write_ha_state()
 
     @property
     def available(self) -> bool:
         """Return if the entity is available."""
-        device = self._device_info
-
-        if device.has_deep_sleep:
+        if self._device_info.has_deep_sleep:
             # During deep sleep the ESP will not be connectable (by design)
             # For these cases, show it as available
             return True
 
         return self._entry_data.available
-
-    @property
-    def unique_id(self) -> str | None:
-        """Return a unique id identifying the entity."""
-        if not self._static_info.unique_id:
-            return None
-        return self._static_info.unique_id
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device registry information for this entity."""
-        return DeviceInfo(
-            connections={(dr.CONNECTION_NETWORK_MAC, self._device_info.mac_address)}
-        )
-
-    @property
-    def name(self) -> str:
-        """Return the name of the entity."""
-        return self._static_info.name
-
-    @property
-    def icon(self) -> str | None:
-        """Return the icon."""
-        if not self._static_info.icon:
-            return None
-
-        return cast(str, ICON_SCHEMA(self._static_info.icon))
-
-    @property
-    def entity_registry_enabled_default(self) -> bool:
-        """Return if the entity should be enabled when first added.
-
-        This only applies when fist added to the entity registry.
-        """
-        return not self._static_info.disabled_by_default
-
-    @property
-    def entity_category(self) -> EntityCategory | None:
-        """Return the category of the entity, if any."""
-        if not self._static_info.entity_category:
-            return None
-        return ENTITY_CATEGORIES.from_esphome(self._static_info.entity_category)
 
 
 class EsphomeAssistEntity(Entity):
@@ -919,20 +920,14 @@ class EsphomeAssistEntity(Entity):
     def __init__(self, entry_data: RuntimeEntryData) -> None:
         """Initialize the binary sensor."""
         self._entry_data: RuntimeEntryData = entry_data
+        assert entry_data.device_info is not None
+        device_info = entry_data.device_info
+        self._device_info = device_info
         self._attr_unique_id = (
-            f"{self._device_info.mac_address}-{self.entity_description.key}"
+            f"{device_info.mac_address}-{self.entity_description.key}"
         )
-
-    @property
-    def _device_info(self) -> EsphomeDeviceInfo:
-        assert self._entry_data.device_info is not None
-        return self._entry_data.device_info
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device registry information for this entity."""
-        return DeviceInfo(
-            connections={(dr.CONNECTION_NETWORK_MAC, self._device_info.mac_address)}
+        self._attr_device_info = DeviceInfo(
+            connections={(dr.CONNECTION_NETWORK_MAC, device_info.mac_address)}
         )
 
     @callback

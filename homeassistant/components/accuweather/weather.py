@@ -50,6 +50,7 @@ class AccuWeatherEntity(
     """Define an AccuWeather entity."""
 
     _attr_has_entity_name = True
+    _attr_name = None
 
     def __init__(self, coordinator: AccuWeatherDataUpdateCoordinator) -> None:
         """Initialize."""

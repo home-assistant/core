@@ -60,6 +60,23 @@ def battery_time_remaining(data: SystemBridgeCoordinatorData) -> datetime | None
     return None
 
 
+def cpu_power_package(data: SystemBridgeCoordinatorData) -> float | None:
+    """Return the CPU package power."""
+    if data.cpu.power_package is not None:
+        return data.cpu.power_package
+    return None
+
+
+def cpu_power_per_cpu(
+    data: SystemBridgeCoordinatorData,
+    cpu: int,
+) -> float | None:
+    """Return CPU power per CPU."""
+    if (value := getattr(data.cpu, f"power_per_cpu_{cpu}", None)) is not None:
+        return value
+    return None
+
+
 def cpu_speed(data: SystemBridgeCoordinatorData) -> float | None:
     """Return the CPU speed."""
     if data.cpu.frequency_current is not None:
@@ -132,6 +149,15 @@ BASE_SENSOR_TYPES: tuple[SystemBridgeSensorEntityDescription, ...] = (
         value=lambda data: datetime.fromtimestamp(
             data.system.boot_time, tz=timezone.utc
         ),
+    ),
+    SystemBridgeSensorEntityDescription(
+        key="cpu_power_package",
+        name="CPU Package Power",
+        native_unit_of_measurement=UnitOfPower.WATT,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=2,
+        icon="mdi:chip",
+        value=cpu_power_package,
     ),
     SystemBridgeSensorEntityDescription(
         key="cpu_speed",
@@ -502,8 +528,7 @@ async def async_setup_entry(
         ]
 
     for index in range(coordinator.data.cpu.count):
-        entities = [
-            *entities,
+        entities.append(
             SystemBridgeSensor(
                 coordinator,
                 SystemBridgeSensorEntityDescription(
@@ -516,8 +541,25 @@ async def async_setup_entry(
                     value=lambda data, k=index: getattr(data.cpu, f"usage_{k}", None),
                 ),
                 entry.data[CONF_PORT],
-            ),
-        ]
+            )
+        )
+        if hasattr(coordinator.data.cpu, f"power_per_cpu_{index}"):
+            entities.append(
+                SystemBridgeSensor(
+                    coordinator,
+                    SystemBridgeSensorEntityDescription(
+                        key=f"cpu_power_core_{index}",
+                        name=f"CPU Core {index} Power",
+                        entity_registry_enabled_default=False,
+                        native_unit_of_measurement=UnitOfPower.WATT,
+                        state_class=SensorStateClass.MEASUREMENT,
+                        suggested_display_precision=2,
+                        icon="mdi:chip",
+                        value=lambda data, k=index: cpu_power_per_cpu(data, k),
+                    ),
+                    entry.data[CONF_PORT],
+                )
+            )
 
     async_add_entities(entities)
 
