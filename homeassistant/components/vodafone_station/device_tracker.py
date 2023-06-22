@@ -1,141 +1,131 @@
-"""Device tracker for Vodafone Station."""
+"""Support for Vodafone Station routers."""
 from __future__ import annotations
 
-import requests
-import voluptuous as vol
+from collections.abc import Mapping
+from typing import Any
 
-from homeassistant.components.device_tracker import (
-    DOMAIN,
-    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
-    DeviceScanner,
-)
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_SSL, CONF_USERNAME
-from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.components.device_tracker import ScannerEntity, SourceType
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .api import VodafoneStationApi
-from .const import _LOGGER, DEFAULT_HOST, DEFAULT_SSL, DEFAULT_USERNAME
-
-PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_HOST, default=DEFAULT_HOST): cv.string,
-        vol.Optional(CONF_USERNAME, default=DEFAULT_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
-    }
-)
+from .api import VodafoneStationApi, VodafoneStationDeviceInfo
+from .const import _LOGGER, DEFAULT_DEVICE_NAME, DOMAIN
 
 
-def get_scanner(
-    hass: HomeAssistant, config: ConfigType
-) -> VodafoneStationDeviceScanner | None:
-    """Return the Vodafone Station device scanner."""
-    scanner = VodafoneStationDeviceScanner(config[DOMAIN])
-    return scanner if scanner.success_init else None
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
+    """Set up device tracker for Vodafone Station component."""
+
+    _LOGGER.debug("Start device trackers setup")
+    api: VodafoneStationApi = hass.data[DOMAIN][entry.entry_id]
+
+    tracked: set = set()
+
+    @callback
+    def update_router() -> None:
+        """Update the values of the router."""
+        add_entities(api, async_add_entities, tracked)
+
+    entry.async_on_unload(
+        async_dispatcher_connect(hass, api.signal_device_new, update_router)
+    )
+
+    update_router()
 
 
-class VodafoneStationDeviceScanner(DeviceScanner):
-    """Scan Vodafone Station devices."""
+@callback
+def add_entities(
+    api: VodafoneStationApi, async_add_entities: AddEntitiesCallback, tracked: set[str]
+) -> None:
+    """Add new tracker entities from the router."""
+    new_tracked = []
 
-    def __init__(self, config) -> None:
-        """Initialize the scanner."""
+    _LOGGER.debug("Adding device trackers entities")
+    for mac, device in api.devices.items():
+        if mac in tracked:
+            continue
+        _LOGGER.debug("New device tracker: %s", device.hostname)
+        new_tracked.append(VodafoneStationTracker(api, device))
+        tracked.add(mac)
 
-        self.api = VodafoneStationApi(config)
+    async_add_entities(new_tracked)
 
-        self.last_results: list[dict] = []
 
-        self.api.login()
-        data = self.api.overview()
-        self.api.logout()
+class VodafoneStationTracker(ScannerEntity):
+    """Representation of a Vodafone Station device."""
 
-        self.success_init = data is not None
+    _attr_should_poll = True
 
-    def scan_devices(self):
-        """Scan for new devices and return a list with found device IDs."""
-        self._update_info()
-        return [client["mac"] for client in self.last_results]
+    def __init__(
+        self, api: VodafoneStationApi, device: VodafoneStationDeviceInfo
+    ) -> None:
+        """Initialize a Vodafone Station device."""
+        self._api = api
+        self._device: VodafoneStationDeviceInfo = device
+        self._attr_unique_id = device._mac
+        self._attr_name = device._name or DEFAULT_DEVICE_NAME
 
-    def get_device_name(self, device):
-        """Return the name of the given device or None if we don't know."""
-        if not self.last_results:
-            return None
-        for client in self.last_results:
-            if client["mac"] == device:
-                return client["name"]
-        return None
+    @property
+    def is_connected(self) -> bool:
+        """Return true if the device is connected to the network."""
+        return self._device.is_connected
 
-    def _update_info(self) -> bool:
-        """Ensure the information from the Vodafone Station is up to date."""
-        if not self.success_init:
-            return False
+    @property
+    def source_type(self) -> SourceType:
+        """Return the source type."""
+        return SourceType.ROUTER
 
-        _LOGGER.debug("Loading data from Vodafone Station")
-        if not (data := self.get_router_data()):
-            _LOGGER.warning("No data from Vodafone Station")
-            return False
+    @property
+    def hostname(self) -> str | None:
+        """Return the hostname of device."""
+        return self._attr_name
 
-        self.last_results = [
-            client for client in data.values() if client["status"] == "on"
-        ]
-        return True
+    @property
+    def icon(self) -> str:
+        """Return device icon."""
+        return "mdi:lan-connect" if self._device.is_connected else "mdi:lan-disconnect"
 
-    def get_router_data(self):
-        """Retrieve data from Vodafone Station and return parsed result."""
+    @property
+    def ip_address(self) -> str | None:
+        """Return the primary ip address of the device."""
+        return self._device.ip_address
 
-        devices = {}
+    @property
+    def mac_address(self) -> str:
+        """Return the mac address of the device."""
+        return self._device.mac_address
 
-        try:
-            self.api.login()
-            data = self.api.overview()
-            self.api.logout()
-        except (
-            requests.exceptions.ConnectionError,
-            requests.exceptions.Timeout,
-            requests.exceptions.ConnectTimeout,
-        ):
-            _LOGGER.info("No response from Vodafone Station")
-            return devices
+    @property
+    def extra_state_attributes(self) -> Mapping[str, Any] | None:
+        """Return additional attributes of the device."""
+        dev = self._api.devices[self.mac_address]
+        self._attr_extra_state_attributes = {}
+        self._attr_extra_state_attributes["connection_type"] = dev.connection_type
+        if "Wifi" in dev.connection_type:
+            self._attr_extra_state_attributes["wifi_band"] = dev.wifi
+        self._attr_extra_state_attributes["last_time_reachable"] = dev.last_activity
+        return super().extra_state_attributes
 
-        kv_tuples = [(list(v.keys())[0], (list(v.values())[0])) for v in data]
-        key_values = {}
-        for entry in kv_tuples:
-            key_values[entry[0]] = entry[1]
+    @callback
+    def async_on_demand_update(self) -> None:
+        """Update state."""
+        self._device = self._api.devices[self._device.mac_address]
+        self._attr_extra_state_attributes = {}
+        if self._device.last_activity:
+            self._attr_extra_state_attributes[
+                "last_time_reachable"
+            ] = self._device.last_activity.isoformat(timespec="seconds")
+        self.async_write_ha_state()
 
-        _LOGGER.debug("kv retrieved: %s", key_values)
-        if (
-            "wifi_user" not in key_values
-            and "wifi_guest" not in key_values
-            and "ethernet" not in key_values
-        ):
-            _LOGGER.info("No device in response from Vodafone Station")
-            return devices
-
-        # 'on|smartphone|Telefono Nora (2.4GHz)|00:0a:f5:6d:8b:38|192.168.1.128;'
-        arr_devices = []
-        arr_wifi_user = key_values["wifi_user"].split(";")
-        arr_wifi_user = filter(lambda x: x.strip() != "", arr_wifi_user)
-        arr_wifi_guest = key_values["wifi_guest"].split(";")
-        arr_wifi_guest = filter(lambda x: x.strip() != "", arr_wifi_guest)
-        arr_devices.append(arr_wifi_user)
-        arr_devices.append(arr_wifi_guest)
-        arr_ethernet = list(key_values["ethernet"].split(";"))
-        arr_ethernet = filter(lambda x: x.strip() != "", arr_ethernet)
-        arr_ethernet = ["on|" + dev for dev in arr_ethernet]
-        arr_devices.append(arr_ethernet)
-        arr_devices = [item for sublist in arr_devices for item in sublist]
-        _LOGGER.debug("Arr_devices: %s", arr_devices)
-
-        for device_line in arr_devices:
-            device_fields = device_line.split("|")
-            try:
-                devices[device_fields[3]] = {
-                    "ip": device_fields[4],
-                    "mac": device_fields[3],
-                    "status": device_fields[0],
-                    "name": device_fields[2],
-                }
-            except (KeyError, requests.exceptions.RequestException, IndexError):
-                _LOGGER.warning("Error processing line: %s", device_line)
-
-        return devices
+    async def async_added_to_hass(self) -> None:
+        """Register state update callback."""
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                self._api.signal_device_update,
+                self.async_on_demand_update,
+            )
+        )
