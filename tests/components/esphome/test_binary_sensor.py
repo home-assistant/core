@@ -1,7 +1,9 @@
 """Test ESPHome binary sensors."""
-
+from aioesphomeapi import APIClient, BinarySensorInfo, BinarySensorState
+import pytest
 
 from homeassistant.components.esphome import DomainData
+from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 
 
@@ -26,3 +28,86 @@ async def test_assist_in_progress(
 
     state = hass.states.get("binary_sensor.test_assist_in_progress")
     assert state.state == "off"
+
+
+@pytest.mark.parametrize(
+    "binary_state", ((True, STATE_ON), (False, STATE_OFF), (None, STATE_UNKNOWN))
+)
+async def test_binary_sensor_generic_entity(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    binary_state: tuple[bool, str],
+    mock_generic_device_entry,
+) -> None:
+    """Test a generic binary_sensor entity."""
+    entity_info = [
+        BinarySensorInfo(
+            object_id="mybinary_sensor",
+            key=1,
+            name="my binary_sensor",
+            unique_id="my_binary_sensor",
+        )
+    ]
+    esphome_state, hass_state = binary_state
+    states = [BinarySensorState(key=1, state=esphome_state)]
+    user_service = []
+    await mock_generic_device_entry(
+        mock_client=mock_client,
+        entity_info=entity_info,
+        user_service=user_service,
+        states=states,
+    )
+    state = hass.states.get("binary_sensor.test_my_binary_sensor")
+    assert state is not None
+    assert state.state == hass_state
+
+
+async def test_status_binary_sensor(
+    hass: HomeAssistant, mock_client: APIClient, mock_generic_device_entry
+) -> None:
+    """Test a generic binary_sensor entity."""
+    entity_info = [
+        BinarySensorInfo(
+            object_id="mybinary_sensor",
+            key=1,
+            name="my binary_sensor",
+            unique_id="my_binary_sensor",
+            is_status_binary_sensor=True,
+        )
+    ]
+    states = [BinarySensorState(key=1, state=None)]
+    user_service = []
+    await mock_generic_device_entry(
+        mock_client=mock_client,
+        entity_info=entity_info,
+        user_service=user_service,
+        states=states,
+    )
+    state = hass.states.get("binary_sensor.test_my_binary_sensor")
+    assert state is not None
+    assert state.state == STATE_ON
+
+
+async def test_binary_sensor_missing_state(
+    hass: HomeAssistant, mock_client: APIClient, mock_generic_device_entry
+) -> None:
+    """Test a generic binary_sensor that is missing state."""
+    entity_info = [
+        BinarySensorInfo(
+            object_id="mybinary_sensor",
+            key=1,
+            name="my binary_sensor",
+            unique_id="my_binary_sensor",
+        )
+    ]
+    states = [BinarySensorState(key=1, state=True, missing_state=True)]
+    user_service = []
+    await mock_generic_device_entry(
+        mock_client=mock_client,
+        entity_info=entity_info,
+        user_service=user_service,
+        states=states,
+    )
+    state = hass.states.get("binary_sensor.test_my_binary_sensor")
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
