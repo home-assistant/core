@@ -19,6 +19,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import StateType
 
 from .const import DEFAULT_ATTRIBUTION, DEFAULT_BRAND, DOMAIN
 
@@ -76,20 +77,22 @@ class BlinkSyncModuleHA(AlarmControlPanelEntity):
 
             _LOGGER.info("Updating State of Blink Alarm Control Panel '%s'", self._name)
 
-        self._attr_state = (
-            STATE_ALARM_ARMED_AWAY if self.sync.arm else STATE_ALARM_DISARMED
-        )
         self.sync.attributes["network_info"] = self.data.networks
         self.sync.attributes["associated_cameras"] = list(self.sync.cameras)
         self.sync.attributes[ATTR_ATTRIBUTION] = DEFAULT_ATTRIBUTION
         self._attr_extra_state_attributes = self.sync.attributes
+
+    @property
+    def state(self) -> StateType:
+        """Return state of alarm."""
+        return STATE_ALARM_ARMED_AWAY if self.sync.arm else STATE_ALARM_DISARMED
 
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
         try:
             await self.sync.async_arm(False)
             await self.sync.refresh()
-            self.async_schedule_update_ha_state(force_refresh=True)
+            self.async_write_ha_state()
         except asyncio.TimeoutError:
             self._attr_available = False
 
@@ -98,6 +101,6 @@ class BlinkSyncModuleHA(AlarmControlPanelEntity):
         try:
             await self.sync.async_arm(True)
             await self.sync.refresh()
-            self.async_schedule_update_ha_state(force_refresh=True)
+            self.async_write_ha_state()
         except asyncio.TimeoutError:
             self._attr_available = False
