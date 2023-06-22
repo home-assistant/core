@@ -226,18 +226,16 @@ async def test_new_state_is_none(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    ("object_id", "lower", "upper"),
+    ("lower", "upper"),
     [
-        ("minimum", True, False),
-        ("maximum", False, True),
-        ("both", True, True),
+        (True, False),
+        (False, True),
+        (True, True),
     ],
 )
-async def test_limits(
-    hass: HomeAssistant, object_id: str, lower: bool, upper: bool
-) -> None:
+async def test_limits(hass: HomeAssistant, lower: bool, upper: bool) -> None:
     """Test compensation sensor state."""
-    source = f"sensor.{object_id}"
+    source = "sensor.test"
     config = {
         "compensation": {
             "test": {
@@ -259,7 +257,7 @@ async def test_limits(
     await hass.async_start()
     await hass.async_block_till_done()
 
-    entity_id = f"sensor.compensation_sensor_{object_id}"
+    entity_id = "sensor.compensation_sensor_test"
 
     hass.states.async_set(source, 0, {})
     await hass.async_block_till_done()
