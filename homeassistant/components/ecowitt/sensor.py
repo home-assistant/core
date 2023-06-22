@@ -230,6 +230,13 @@ async def async_setup_entry(
             name=sensor.name,
         )
 
+        # Hourly rain doesn't reset to fixed hours, it must be measurement state classes
+        if sensor.key in ("hrain_piezomm", "hrain_piezo"):
+            description = dataclasses.replace(
+                description,
+                state_class=SensorStateClass.MEASUREMENT,
+            )
+
         async_add_entities([EcowittSensorEntity(sensor, description)])
 
     ecowitt.new_sensor_cb.append(_new_sensor)
