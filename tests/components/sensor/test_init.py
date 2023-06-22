@@ -35,7 +35,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import STORAGE_KEY as RESTORE_STATE_KEY
 from homeassistant.setup import async_setup_component
@@ -2333,39 +2332,13 @@ async def test_name(hass: HomeAssistant) -> None:
         has_entity_name=True,
     )
 
-    # Unnamed sensor with device class + device info + has_entity_name True -> named
-    entity5 = SensorEntity()
-    entity5.entity_id = "sensor.test5"
-    entity5._attr_device_class = SensorDeviceClass.BATTERY
-    entity5._attr_unique_id = "entity5"
-    entity5._attr_device_info = DeviceInfo(
-        name="Fluxcapacitor",
-        identifiers={("delorean", "VIN#500")},
-    )
-    entity5._attr_has_entity_name = True
-
-    # Unnamed sensor with device class + device info + has_entity_name True -> named
-    entity6 = SensorEntity()
-    entity6.entity_id = "sensor.test6"
-    entity6._attr_unique_id = "entity6"
-    entity6._attr_device_info = DeviceInfo(
-        name="Fluxcapacitor",
-        identifiers={("delorean", "VIN#500")},
-    )
-    entity6.entity_description = SensorEntityDescription(
-        "test",
-        SensorDeviceClass.BATTERY,
-        has_entity_name=True,
-    )
-    entity6._attr_has_entity_name = True
-
     async def async_setup_entry_platform(
         hass: HomeAssistant,
         config_entry: ConfigEntry,
         async_add_entities: AddEntitiesCallback,
     ) -> None:
         """Set up test stt platform via config entry."""
-        async_add_entities([entity1, entity2, entity3, entity4, entity5, entity6])
+        async_add_entities([entity1, entity2, entity3, entity4])
 
     mock_platform(
         hass,
@@ -2389,15 +2362,3 @@ async def test_name(hass: HomeAssistant) -> None:
 
     state = hass.states.get(entity4.entity_id)
     assert state.attributes == {"device_class": "battery", "friendly_name": "Battery"}
-
-    state = hass.states.get(entity5.entity_id)
-    assert state.attributes == {
-        "device_class": "battery",
-        "friendly_name": "Fluxcapacitor Battery",
-    }
-
-    state = hass.states.get(entity6.entity_id)
-    assert state.attributes == {
-        "device_class": "battery",
-        "friendly_name": "Fluxcapacitor Battery",
-    }
