@@ -76,7 +76,7 @@ async def test_device_diagnostics(
         config_entry=mock_config_entry,
         device_id=device.id,
     )
-    assert ent_reg.async_get("test.test")
+    assert ent_reg.async_get("test.unrelated_entity")
 
     # Update a value and ensure it is reflected in the node state
     event = Event(
