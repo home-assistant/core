@@ -101,7 +101,7 @@ async def test_enumerate_remote(hass: HomeAssistant, utcnow) -> None:
         {
             "device_id": device.id,
             "domain": "sensor",
-            "entity_id": bat_sensor.entity_id,
+            "entity_id": bat_sensor.id,
             "platform": "device",
             "type": "battery_level",
             "metadata": {"secondary": True},
@@ -150,7 +150,7 @@ async def test_enumerate_button(hass: HomeAssistant, utcnow) -> None:
         {
             "device_id": device.id,
             "domain": "sensor",
-            "entity_id": bat_sensor.entity_id,
+            "entity_id": bat_sensor.id,
             "platform": "device",
             "type": "battery_level",
             "metadata": {"secondary": True},
@@ -198,7 +198,7 @@ async def test_enumerate_doorbell(hass: HomeAssistant, utcnow) -> None:
         {
             "device_id": device.id,
             "domain": "sensor",
-            "entity_id": bat_sensor.entity_id,
+            "entity_id": bat_sensor.id,
             "platform": "device",
             "type": "battery_level",
             "metadata": {"secondary": True},

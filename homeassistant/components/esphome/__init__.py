@@ -703,10 +703,6 @@ async def platform_async_setup_entry(
         new_infos: dict[int, EntityInfo] = {}
         add_entities: list[_EntityT] = []
         for info in infos:
-            if not isinstance(info, info_type):
-                # Filter out infos that don't belong to this platform.
-                continue
-
             if info.key in old_infos:
                 # Update existing entity
                 old_infos.pop(info.key)
@@ -737,9 +733,7 @@ async def platform_async_setup_entry(
             async_add_entities(add_entities)
 
     entry_data.cleanup_callbacks.append(
-        async_dispatcher_connect(
-            hass, entry_data.signal_static_info_updated, async_list_entities
-        )
+        entry_data.async_register_static_info_callback(info_type, async_list_entities)
     )
 
 
