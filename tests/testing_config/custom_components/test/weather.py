@@ -7,6 +7,7 @@ from __future__ import annotations
 from homeassistant.components.weather import (
     ATTR_FORECAST_NATIVE_APPARENT_TEMP,
     ATTR_FORECAST_NATIVE_DEW_POINT,
+    ATTR_FORECAST_CLOUD_COVERAGE,
     ATTR_FORECAST_NATIVE_PRECIPITATION,
     ATTR_FORECAST_NATIVE_PRESSURE,
     ATTR_FORECAST_NATIVE_TEMP,
@@ -97,6 +98,11 @@ class MockWeather(MockEntity, WeatherEntity):
     def ozone(self) -> float | None:
         """Return the ozone level."""
         return self._handle("ozone")
+
+    @property
+    def cloud_coverage(self) -> float | None:
+        """Return the cloud coverage in %."""
+        return self._handle("cloud_coverage")
 
     @property
     def native_visibility(self) -> float | None:
@@ -210,6 +216,7 @@ class MockWeatherMockForecast(MockWeather):
                 ATTR_FORECAST_NATIVE_APPARENT_TEMP: self.native_apparent_temperature,
                 ATTR_FORECAST_NATIVE_TEMP_LOW: self.native_temperature,
                 ATTR_FORECAST_NATIVE_DEW_POINT: self.native_dew_point,
+                ATTR_FORECAST_CLOUD_COVERAGE: self.cloud_coverage,
                 ATTR_FORECAST_NATIVE_PRESSURE: self.native_pressure,
                 ATTR_FORECAST_NATIVE_WIND_SPEED: self.native_wind_speed,
                 ATTR_FORECAST_WIND_BEARING: self.wind_bearing,

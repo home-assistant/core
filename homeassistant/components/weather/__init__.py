@@ -32,6 +32,7 @@ from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 from .const import (
     ATTR_WEATHER_APPARENT_TEMPERATURE,
     ATTR_WEATHER_DEW_POINT,
+    ATTR_WEATHER_CLOUD_COVERAGE,
     ATTR_WEATHER_HUMIDITY,
     ATTR_WEATHER_OZONE,
     ATTR_WEATHER_PRECIPITATION_UNIT,
@@ -87,6 +88,7 @@ ATTR_FORECAST_NATIVE_WIND_SPEED: Final = "native_wind_speed"
 ATTR_FORECAST_WIND_SPEED: Final = "wind_speed"
 ATTR_FORECAST_NATIVE_DEW_POINT: Final = "native_dew_point"
 ATTR_FORECAST_DEW_POINT: Final = "dew_point"
+ATTR_FORECAST_CLOUD_COVERAGE: Final = "cloud_coverage"
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
@@ -124,6 +126,7 @@ class Forecast(TypedDict, total=False):
     condition: str | None
     datetime: Required[str]
     precipitation_probability: int | None
+    cloud_coverage: int | None
     native_precipitation: float | None
     precipitation: None
     native_pressure: float | None
@@ -173,6 +176,7 @@ class WeatherEntity(Entity):
     _attr_forecast: list[Forecast] | None = None
     _attr_humidity: float | None = None
     _attr_ozone: float | None = None
+    _attr_cloud_coverage: int | None = None
     _attr_precision: float
     _attr_pressure: None = (
         None  # Provide backwards compatibility. Use _attr_native_pressure
@@ -481,6 +485,11 @@ class WeatherEntity(Entity):
         """Return the ozone level."""
         return self._attr_ozone
 
+    @property
+    def cloud_coverage(self) -> float | None:
+        """Return the Cloud coverage in %."""
+        return self._attr_cloud_coverage
+
     @final
     @property
     def visibility(self) -> float | None:
@@ -654,6 +663,9 @@ class WeatherEntity(Entity):
 
         if (ozone := self.ozone) is not None:
             data[ATTR_WEATHER_OZONE] = ozone
+
+        if (cloud_coverage := self.cloud_coverage) is not None:
+            data[ATTR_WEATHER_CLOUD_COVERAGE] = cloud_coverage
 
         if (pressure := self.native_pressure) is not None:
             from_unit = self.native_pressure_unit or self._default_pressure_unit

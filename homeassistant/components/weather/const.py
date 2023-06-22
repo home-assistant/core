@@ -32,6 +32,7 @@ ATTR_WEATHER_WIND_BEARING = "wind_bearing"
 ATTR_WEATHER_WIND_SPEED = "wind_speed"
 ATTR_WEATHER_WIND_SPEED_UNIT = "wind_speed_unit"
 ATTR_WEATHER_PRECIPITATION_UNIT = "precipitation_unit"
+ATTR_WEATHER_CLOUD_COVERAGE = "cloud_coverage"
 
 DOMAIN: Final = "weather"
 
