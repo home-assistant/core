@@ -34,7 +34,6 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.event import async_track_state_added_domain
 from homeassistant.util.json import JsonObjectType, json_loads_object
-from homeassistant.util.ulid import ulid
 
 from .agent import AbstractConversationAgent, ConversationInput, ConversationResult
 from .const import DEFAULT_EXPOSED_ATTRIBUTES, DOMAIN
@@ -124,8 +123,7 @@ class DefaultAgent(AbstractConversationAgent):
         self._slot_lists: dict[str, SlotList] | None = None
 
         # Sentences that will trigger a callback (skipping intent recognition)
-        # trigger id -> sentences and callback
-        self._trigger_sentences: dict[str, TriggerData] = {}
+        self._trigger_sentences: list[TriggerData] = []
         self._trigger_intents: Intents | None = None
 
     @property
@@ -632,15 +630,13 @@ class DefaultAgent(AbstractConversationAgent):
         callback: TRIGGER_CALLBACK_TYPE,
     ) -> core.CALLBACK_TYPE:
         """Register a list of sentences that will trigger a callback when recognized."""
-        trigger_id = ulid()
-        self._trigger_sentences[trigger_id] = TriggerData(
-            sentences=sentences, callback=callback
-        )
+        trigger_data = TriggerData(sentences=sentences, callback=callback)
+        self._trigger_sentences.append(trigger_data)
 
         # Force rebuild on next use
         self._trigger_intents = None
 
-        unregister = functools.partial(self._unregister_trigger, trigger_id)
+        unregister = functools.partial(self._unregister_trigger, trigger_data)
         return unregister
 
     def _rebuild_trigger_intents(self) -> None:
@@ -648,17 +644,20 @@ class DefaultAgent(AbstractConversationAgent):
         intents_dict = {
             "language": self.hass.config.language,
             "intents": {
-                trigger_id: {"data": [{"sentences": trigger_data.sentences}]}
-                for trigger_id, trigger_data in self._trigger_sentences.items()
+                # Use trigger data index as a virtual intent name for HassIL.
+                # This works because the intents are rebuilt on every
+                # register/unregister.
+                str(trigger_id): {"data": [{"sentences": trigger_data.sentences}]}
+                for trigger_id, trigger_data in enumerate(self._trigger_sentences)
             },
         }
 
         self._trigger_intents = Intents.from_dict(intents_dict)
         _LOGGER.debug("Rebuilt trigger intents: %s", intents_dict)
 
-    def _unregister_trigger(self, trigger_id: str) -> None:
+    def _unregister_trigger(self, trigger_data: TriggerData) -> None:
         """Unregister a set of trigger sentences."""
-        self._trigger_sentences.pop(trigger_id, None)
+        self._trigger_sentences.remove(trigger_data)
 
         # Force rebuild on next use
         self._trigger_intents = None
@@ -679,9 +678,9 @@ class DefaultAgent(AbstractConversationAgent):
 
         assert self._trigger_intents is not None
 
-        matched_triggers: set[str] = set()
+        matched_triggers: set[int] = set()
         for result in recognize_all(sentence, self._trigger_intents):
-            trigger_id = result.intent.name
+            trigger_id = int(result.intent.name)
             if trigger_id in matched_triggers:
                 # Already matched a sentence from this trigger
                 break
