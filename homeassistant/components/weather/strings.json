@@ -39,6 +39,9 @@
         "pressure_unit": {
           "name": "Pressure unit"
         },
+        "apparent_temperature": {
+          "name": "Apparent temperature"
+        },
         "temperature": {
           "name": "Temperature"
         },
