@@ -564,7 +564,7 @@ async def test_humidity(
     enable_custom_integrations: None,
 ) -> None:
     """Test humidity."""
-    humidity_value = 80
+    humidity_value = 80.2
 
     entity0 = await create_entity(hass, humidity=humidity_value)
 
