@@ -6,7 +6,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
-from .const import DISCOVERY_TASK, DOMAIN, PLAYER_DISCOVERY_UNSUB
+from .const import CONF_HTTPS, DISCOVERY_TASK, DOMAIN, PLAYER_DISCOVERY_UNSUB
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,3 +35,19 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.data[DOMAIN].pop(DISCOVERY_TASK)
 
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+
+async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+    """Migrate old entry."""
+    _LOGGER.debug("Migrating from version %s", config_entry.version)
+
+    if config_entry.version == 1:
+        new = {**config_entry.data}
+        # https access is new in version 2, so we can safely assume false for all version 1 entries
+        new[CONF_HTTPS] = False
+        config_entry.version = 2
+        hass.config_entries.async_update_entry(config_entry, data=new)
+
+    _LOGGER.info("Migration to version %s successful", config_entry.version)
+
+    return True
