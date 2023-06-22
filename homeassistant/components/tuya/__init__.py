@@ -192,17 +192,7 @@ def async_migrate_entities_unique_ids(
         # `tuya.{device_id}_usb6` -> `tuya.{device_id}{SWITCH_USB6}`
         #
         # In all other cases, the unique ID is not changed.
-        if device.category in (
-            "bh",
-            "cwysj",
-            "cz",
-            "dlq",
-            "kg",
-            "kj",
-            "pc",
-            "xxj",
-            "wnykq",
-        ):
+        if device.category in ("bh", "cwysj", "cz", "dlq", "kg", "kj", "pc", "xxj"):
             for postfix, dpcode in (
                 ("", DPCode.SWITCH),
                 ("_1", DPCode.SWITCH_1),
