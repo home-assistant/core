@@ -5,13 +5,15 @@ import asyncio
 from collections import defaultdict
 from collections.abc import Iterable
 from dataclasses import dataclass
+import functools
 import logging
 from pathlib import Path
 import re
+import threading
 from typing import IO, Any
 
 from hassil.intents import Intents, ResponseType, SlotList, TextSlotList
-from hassil.recognize import RecognizeResult, recognize_all
+from hassil.recognize import RecognizeResult, recognize, recognize_all
 from hassil.util import merge_dict
 from home_assistant_intents import get_domains_and_languages, get_intents
 import yaml
@@ -109,6 +111,11 @@ class DefaultAgent(AbstractConversationAgent):
         # intent -> [sentences]
         self._config_intents: dict[str, Any] = {}
         self._slot_lists: dict[str, SlotList] | None = None
+
+        # Sentences that will trigger a callback (skipping intent recognition)
+        self._trigger_sentences: dict[str, set[core.CALLBACK_TYPE]] = defaultdict(set)
+        self._trigger_intents: Intents | None = None
+        self._trigger_lock = threading.Lock()
 
     @property
     def supported_languages(self) -> list[str]:
@@ -604,6 +611,74 @@ class DefaultAgent(AbstractConversationAgent):
         response_key = response_type.value
         response_str = lang_intents.error_responses.get(response_key)
         return response_str or _DEFAULT_ERROR_TEXT
+
+    def register_trigger(
+        self, sentences: list[str], callback: core.CALLBACK_TYPE
+    ) -> core.CALLBACK_TYPE:
+        """Register a list of sentences that will trigger a callback when recognized."""
+        with self._trigger_lock:
+            for sentence in sentences:
+                self._trigger_sentences[sentence].add(callback)
+            self._rebuild_trigger_intents()
+
+        unregister = functools.partial(self.unregister_trigger, sentences, callback)
+        return unregister
+
+    def _rebuild_trigger_intents(self) -> None:
+        """Rebuild the HassIL intents object from the current trigger sentences."""
+        self._trigger_intents = Intents.from_dict(
+            {
+                "language": self.hass.config.language,
+                "intents": {
+                    sentence: {"data": [{"sentences": [sentence]}]}
+                    for sentence in self._trigger_sentences
+                },
+            }
+        )
+
+    def unregister_trigger(
+        self, sentences: list[str], callback: core.CALLBACK_TYPE
+    ) -> None:
+        """Unregister a callback from a list of trigger sentences."""
+        with self._trigger_lock:
+            for sentence in sentences:
+                self._trigger_sentences[sentence].discard(callback)
+
+                # Remove sentences with no callbacks
+                if not self._trigger_sentences[sentence]:
+                    self._trigger_sentences.pop(sentence)
+
+            self._rebuild_trigger_intents()
+
+    def _match_triggers(self, sentence: str) -> ConversationResult | None:
+        """Try to match sentence against registered trigger sentences.
+
+        Calls the registered callbacks if there's a match and returns a positive
+        conversation result.
+        """
+        with self._trigger_lock:
+            if self._trigger_intents is None:
+                # No triggers registered
+                return None
+
+            result = recognize(sentence, self._trigger_intents)
+            if result is None:
+                # No match
+                return None
+
+            callbacks = self._trigger_sentences[result.intent.name]
+
+        # Call the registered callbacks for this sentence
+        for callback in callbacks:
+            callback()
+
+        # We can't be sure where this is being triggered from (websocket,
+        # ESPHome, VoIP, etc.), so return a positive result with no speech
+        # response.
+        response = intent.IntentResponse(language=self.hass.config.language)
+        response.response_type = intent.IntentResponseType.ACTION_DONE
+
+        return ConversationResult(response=response)
 
 
 def _make_error_result(

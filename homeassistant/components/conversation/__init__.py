@@ -410,6 +410,20 @@ def async_get_agent_info(
     return None
 
 
+async def async_register_trigger_sentences(
+    hass: core.HomeAssistant,
+    sentences: list[str],
+    callback: core.CALLBACK_TYPE,
+) -> core.CALLBACK_TYPE:
+    """Register a list of trigger sentences with the default agent.
+
+    When matched, these sentences will cause the callback to be triggered.
+    """
+    default_agent = await _get_agent_manager(hass).async_get_agent()
+    assert isinstance(default_agent, DefaultAgent)
+    return default_agent.register_trigger(sentences, callback)
+
+
 async def async_converse(
     hass: core.HomeAssistant,
     text: str,
