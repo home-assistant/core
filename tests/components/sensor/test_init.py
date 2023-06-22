@@ -2311,18 +2311,22 @@ async def test_name(hass: HomeAssistant) -> None:
 
     # Unnamed sensor without device class -> no name
     entity1 = SensorEntity()
+    entity1.entity_id = "sensor.test1"
 
     # Unnamed sensor with device class but has_entity_name False -> no name
     entity2 = SensorEntity()
+    entity2.entity_id = "sensor.test2"
     entity2._attr_device_class = SensorDeviceClass.BATTERY
 
     # Unnamed sensor with device class and has_entity_name True -> named
     entity3 = SensorEntity()
+    entity3.entity_id = "sensor.test3"
     entity3._attr_device_class = SensorDeviceClass.BATTERY
     entity3._attr_has_entity_name = True
 
     # Unnamed sensor with device class and has_entity_name True -> named
     entity4 = SensorEntity()
+    entity4.entity_id = "sensor.test4"
     entity4.entity_description = SensorEntityDescription(
         "test",
         SensorDeviceClass.BATTERY,
@@ -2331,7 +2335,9 @@ async def test_name(hass: HomeAssistant) -> None:
 
     # Unnamed sensor with device class + device info + has_entity_name True -> named
     entity5 = SensorEntity()
+    entity5.entity_id = "sensor.test5"
     entity5._attr_device_class = SensorDeviceClass.BATTERY
+    entity5._attr_unique_id = "entity5"
     entity5._attr_device_info = DeviceInfo(
         name="Fluxcapacitor",
         identifiers={("delorean", "VIN#500")},
@@ -2340,6 +2346,8 @@ async def test_name(hass: HomeAssistant) -> None:
 
     # Unnamed sensor with device class + device info + has_entity_name True -> named
     entity6 = SensorEntity()
+    entity6.entity_id = "sensor.test6"
+    entity6._attr_unique_id = "entity6"
     entity6._attr_device_info = DeviceInfo(
         name="Fluxcapacitor",
         identifiers={("delorean", "VIN#500")},
@@ -2383,7 +2391,13 @@ async def test_name(hass: HomeAssistant) -> None:
     assert state.attributes == {"device_class": "battery", "friendly_name": "Battery"}
 
     state = hass.states.get(entity5.entity_id)
-    assert state.attributes == {"device_class": "battery", "friendly_name": "Battery"}
+    assert state.attributes == {
+        "device_class": "battery",
+        "friendly_name": "Fluxcapacitor Battery",
+    }
 
     state = hass.states.get(entity6.entity_id)
-    assert state.attributes == {"device_class": "battery", "friendly_name": "Battery"}
+    assert state.attributes == {
+        "device_class": "battery",
+        "friendly_name": "Fluxcapacitor Battery",
+    }
