@@ -103,8 +103,15 @@ def _mired_to_kelvin(mired_temperature: float) -> int:
 
     This function rounds the converted value instead of flooring the value as
     is done in homeassistant.util.color.color_temperature_mired_to_kelvin().
+
+    If the value of mired_temperature is less than or equal to zero, return
+    the original value to avoid a divide by zero.
     """
-    return round(1000000 / mired_temperature)
+    return (
+        round(1000000 / mired_temperature)
+        if mired_temperature > 0
+        else round(mired_temperature)
+    )
 
 
 def _color_mode_to_ha(mode: int) -> str:
