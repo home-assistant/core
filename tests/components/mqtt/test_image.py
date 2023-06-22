@@ -1,5 +1,6 @@
 """The tests for mqtt image component."""
 from base64 import b64encode
+from contextlib import suppress
 from http import HTTPStatus
 import json
 import ssl
@@ -434,6 +435,63 @@ async def test_image_from_url_fails(
     # but _last_image was set to `None`
     assert state.state == "2023-04-01T00:00:00+00:00"
     assert log_text in caplog.text
+
+
+@respx.mock
+@pytest.mark.freeze_time("2023-04-01 00:00:00+00:00")
+@pytest.mark.parametrize(
+    ("hass_config", "error_msg"),
+    [
+        (
+            {
+                mqtt.DOMAIN: {
+                    "image": {
+                        "from_url_topic": "test/image",
+                        "content_type": "image/jpg",
+                        "name": "Test",
+                        "encoding": "utf-8",
+                    }
+                }
+            },
+            "Option `content_type` and not be used together with `from_url_topic`",
+        ),
+        (
+            {
+                mqtt.DOMAIN: {
+                    "image": {
+                        "from_url_topic": "test/image",
+                        "topic": "test/image-data-topic",
+                        "name": "Test",
+                        "encoding": "utf-8",
+                    }
+                }
+            },
+            "two or more values in the same group of exclusion 'image_topic'",
+        ),
+        (
+            {
+                mqtt.DOMAIN: {
+                    "image": {
+                        "name": "Test",
+                        "encoding": "utf-8",
+                    }
+                }
+            },
+            "Invalid config for [mqtt]: Expected one of [`topic`, `from_url_topic`], got none",
+        ),
+    ],
+)
+async def test_image_config_fails(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+    error_msg: str,
+) -> None:
+    """Test setup with minimum configuration."""
+    with suppress(AssertionError):
+        await mqtt_mock_entry()
+    assert error_msg in caplog.text
 
 
 @pytest.mark.parametrize("hass_config", [DEFAULT_CONFIG])

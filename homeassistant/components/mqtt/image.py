@@ -48,15 +48,19 @@ def validate_topic_required(config: ConfigType) -> ConfigType:
     """Ensure at least one subscribe topic is configured."""
     if CONF_TOPIC not in config and CONF_FROM_URL_TOPIC not in config:
         raise vol.Invalid("Expected one of [`topic`, `from_url_topic`], got none")
+    if CONF_CONTENT_TYPE in config and CONF_FROM_URL_TOPIC in config:
+        raise vol.Invalid(
+            "Option `content_type` and not be used together with `from_url_topic`"
+        )
     return config
 
 
 PLATFORM_SCHEMA_BASE = MQTT_BASE_SCHEMA.extend(
     {
-        vol.Optional(CONF_CONTENT_TYPE, default=DEFAULT_CONTENT_TYPE): cv.string,
+        vol.Optional(CONF_CONTENT_TYPE): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Exclusive(CONF_FROM_URL_TOPIC, "image_url"): valid_subscribe_topic,
-        vol.Exclusive(CONF_TOPIC, "image_url"): valid_subscribe_topic,
+        vol.Exclusive(CONF_FROM_URL_TOPIC, "image_topic"): valid_subscribe_topic,
+        vol.Exclusive(CONF_TOPIC, "image_topic"): valid_subscribe_topic,
         vol.Optional(CONF_IMAGE_ENCODING): "b64",
         vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
     }
@@ -128,7 +132,9 @@ class MqttImage(MqttEntity, ImageEntity):
             )
         }
         if CONF_TOPIC in config:
-            self._attr_content_type = config[CONF_CONTENT_TYPE]
+            self._attr_content_type = config.get(
+                CONF_CONTENT_TYPE, DEFAULT_CONTENT_TYPE
+            )
         self._template = MqttValueTemplate(
             config.get(CONF_VALUE_TEMPLATE), entity=self
         ).async_render_with_possible_json_value
