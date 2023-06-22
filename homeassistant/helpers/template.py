@@ -92,6 +92,12 @@ DATE_STR_FORMAT = "%Y-%m-%d %H:%M:%S"
 _ENVIRONMENT = "template.environment"
 _ENVIRONMENT_LIMITED = "template.environment_limited"
 _ENVIRONMENT_STRICT = "template.environment_strict"
+_REGISTERED_HASS_FUNCTIONS = "template.registered_hass_functions"
+
+# We don't register functions into the limited environment
+# since its only for device_entities
+_REGISTER_ENVIRONMENTS = (_ENVIRONMENT, _ENVIRONMENT_STRICT)
+
 _HASS_LOADER = "template.hass_loader"
 
 _RE_JINJA_DELIMITERS = re.compile(r"\{%|\{\{|\{#")
@@ -444,6 +450,34 @@ class RenderInfo:
             self.filter = self._filter_entities
         else:
             self.filter = _false
+
+
+@callback
+def _async_get_registered_hass_functions(
+    hass: HomeAssistant,
+) -> dict[str, Callable[Concatenate[HomeAssistant, _P], _R]]:
+    """Return the registered hass functions."""
+    functions: dict[
+        str, Callable[Concatenate[HomeAssistant, _P], _R]
+    ] = hass.data.setdefault(_REGISTERED_HASS_FUNCTIONS, {})
+    return functions
+
+
+@callback
+def async_register_hass_environment_function(
+    hass: HomeAssistant, name: str, func: Callable[Concatenate[HomeAssistant, _P], _R]
+) -> None:
+    """Register the environment function."""
+    registered_hass_functions: dict[
+        str, Callable[Concatenate[HomeAssistant, _P], _R]
+    ] = _async_get_registered_hass_functions(hass)
+    registered_hass_functions[name] = func
+
+    # If the environment is already created, register it there too
+    for env in _REGISTER_ENVIRONMENTS:
+        if maybe_template_env := hass.data.get(env):
+            template_env = cast(TemplateEnvironment, maybe_template_env)
+            template_env.async_register_hass_function(name, func)
 
 
 class Template:
@@ -2375,21 +2409,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
 
         # This environment has access to hass, attach its loader to enable imports.
         self.loader = _get_hass_loader(hass)
-
-        # We mark these as a context functions to ensure they get
-        # evaluated fresh with every execution, rather than executed
-        # at compile time and the value stored. The context itself
-        # can be discarded, we only need to get at the hass object.
-        def hassfunction(
-            func: Callable[Concatenate[HomeAssistant, _P], _R],
-        ) -> Callable[Concatenate[Any, _P], _R]:
-            """Wrap function that depend on hass."""
-
-            @wraps(func)
-            def wrapper(_: Any, *args: _P.args, **kwargs: _P.kwargs) -> _R:
-                return func(hass, *args, **kwargs)
-
-            return pass_context(wrapper)
+        hassfunction = self.hassfunction
 
         self.globals["device_entities"] = hassfunction(device_entities)
         self.filters["device_entities"] = pass_context(self.globals["device_entities"])
@@ -2505,6 +2525,35 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["relative_time"] = self.globals["relative_time"]
         self.globals["today_at"] = hassfunction(today_at)
         self.filters["today_at"] = self.globals["today_at"]
+
+        registered_hass_functions = _async_get_registered_hass_functions(hass)
+        for name, func in registered_hass_functions.items():
+            self.async_register_hass_function(name, func)
+
+    def hassfunction(
+        self,
+        func: Callable[Concatenate[HomeAssistant, _P], _R],
+    ) -> Callable[Concatenate[Any, _P], _R]:
+        """Wrap function that depend on hass.
+        We mark these as a context functions to ensure they get
+        evaluated fresh with every execution, rather than executed
+        at compile time and the value stored. The context itself
+        can be discarded, we only need to get at the hass object.
+        """
+
+        @wraps(func)
+        def wrapper(_: Any, *args: _P.args, **kwargs: _P.kwargs) -> _R:
+            return func(self.hass, *args, **kwargs)
+
+        return pass_context(wrapper)
+
+    def async_register_hass_function(
+        self, name: str, func: Callable[Concatenate[HomeAssistant, _P], _R]
+    ) -> None:
+        """Register a function that needs to be wrapped with hass."""
+        hass_func = self.hassfunction(func)
+        self.globals[name] = hass_func
+        self.filters[name] = hass_func
 
     def is_safe_callable(self, obj):
         """Test if callback is safe."""
