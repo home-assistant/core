@@ -5,6 +5,7 @@ Call init before using it in your tests to ensure clean test data.
 from __future__ import annotations
 
 from homeassistant.components.weather import (
+    ATTR_FORECAST_NATIVE_APPARENT_TEMP,
     ATTR_FORECAST_NATIVE_PRECIPITATION,
     ATTR_FORECAST_NATIVE_PRESSURE,
     ATTR_FORECAST_NATIVE_TEMP,
@@ -45,6 +46,11 @@ class MockWeather(MockEntity, WeatherEntity):
     def native_temperature(self) -> float | None:
         """Return the platform temperature."""
         return self._handle("native_temperature")
+
+    @property
+    def native_apparent_temperature(self) -> float | None:
+        """Return the platform apparent temperature."""
+        return self._handle("native_apparent_temperature")
 
     @property
     def native_temperature_unit(self) -> str | None:
@@ -195,6 +201,7 @@ class MockWeatherMockForecast(MockWeather):
         return [
             {
                 ATTR_FORECAST_NATIVE_TEMP: self.native_temperature,
+                ATTR_FORECAST_NATIVE_APPARENT_TEMP: self.native_apparent_temperature,
                 ATTR_FORECAST_NATIVE_TEMP_LOW: self.native_temperature,
                 ATTR_FORECAST_NATIVE_PRESSURE: self.native_pressure,
                 ATTR_FORECAST_NATIVE_WIND_SPEED: self.native_wind_speed,
