@@ -70,7 +70,7 @@ async def test_device_diagnostics(
     ent_reg = async_get_ent_reg(hass)
     ent_reg.async_get_or_create(
         "test",
-        "test",
+        "test_integration",
         "test",
         suggested_object_id="test",
         config_entry=mock_config_entry,
