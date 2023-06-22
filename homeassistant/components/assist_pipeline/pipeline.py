@@ -949,6 +949,7 @@ class PipelineData:
 
     pipeline_runs: dict[str, LimitedSizeDict[str, PipelineRunDebug]]
     pipeline_store: PipelineStorageCollection
+    pipeline_devices: set[str] = field(default_factory=set, init=False)
 
 
 @dataclass

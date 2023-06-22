@@ -434,6 +434,7 @@ class EnergyCostSensor(SensorEntity):
     def add_to_platform_abort(self) -> None:
         """Abort adding an entity to a platform."""
         self.add_finished.set()
+        super().add_to_platform_abort()
 
     async def async_will_remove_from_hass(self) -> None:
         """Handle removing from hass."""

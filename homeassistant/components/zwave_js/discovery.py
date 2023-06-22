@@ -137,7 +137,7 @@ class ZWaveValueDiscoverySchema(DataclassMustHaveAtLeastOne):
 
     The Z-Wave Value must match these conditions.
     Use the Z-Wave specifications to find out the values for these parameters:
-    https://github.com/zwave-js/node-zwave-js/tree/master/specs
+    https://github.com/zwave-js/specs/tree/master
     """
 
     # [optional] the value's command class must match ANY of these values
@@ -168,7 +168,7 @@ class ZWaveDiscoverySchema:
 
     The Z-Wave node and it's (primary) value for an entity must match these conditions.
     Use the Z-Wave specifications to find out the values for these parameters:
-    https://github.com/zwave-js/node-zwave-js/tree/master/specs
+    https://github.com/zwave-js/specs/tree/master
     """
 
     # specify the hass platform for which this scheme applies (e.g. light, sensor)

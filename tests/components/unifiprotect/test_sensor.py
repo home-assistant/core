@@ -537,7 +537,9 @@ async def test_camera_update_licenseplate(
 
     new_camera = camera.copy()
     new_camera.is_smart_detected = True
-    new_camera.last_smart_detect_event_id = event.id
+    new_camera.last_smart_detect_event_ids[
+        SmartDetectObjectType.LICENSE_PLATE
+    ] = event.id
 
     mock_msg = Mock()
     mock_msg.changed_data = {}

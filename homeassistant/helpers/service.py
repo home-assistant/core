@@ -680,15 +680,13 @@ async def entity_service_call(  # noqa: C901
 
     Calls all platforms simultaneously.
     """
+    entity_perms: None | (Callable[[str, str], bool]) = None
     if call.context.user_id:
         user = await hass.auth.async_get_user(call.context.user_id)
         if user is None:
             raise UnknownUser(context=call.context)
-        entity_perms: None | (
-            Callable[[str, str], bool]
-        ) = user.permissions.check_entity
-    else:
-        entity_perms = None
+        if not user.is_admin:
+            entity_perms = user.permissions.check_entity
 
     target_all_entities = call.data.get(ATTR_ENTITY_ID) == ENTITY_MATCH_ALL
 
@@ -714,15 +712,15 @@ async def entity_service_call(  # noqa: C901
 
     if entity_perms is None:
         for platform in platforms:
+            platform_entities = platform.entities
             if target_all_entities:
-                entity_candidates.extend(platform.entities.values())
+                entity_candidates.extend(platform_entities.values())
             else:
                 assert all_referenced is not None
                 entity_candidates.extend(
                     [
-                        entity
-                        for entity in platform.entities.values()
-                        if entity.entity_id in all_referenced
+                        platform_entities[entity_id]
+                        for entity_id in all_referenced.intersection(platform_entities)
                     ]
                 )
 
@@ -742,21 +740,20 @@ async def entity_service_call(  # noqa: C901
         assert all_referenced is not None
 
         for platform in platforms:
-            platform_entities = []
-            for entity in platform.entities.values():
-                if entity.entity_id not in all_referenced:
-                    continue
-
-                if not entity_perms(entity.entity_id, POLICY_CONTROL):
+            platform_entities = platform.entities
+            platform_entity_candidates = []
+            entity_id_matches = all_referenced.intersection(platform_entities)
+            for entity_id in entity_id_matches:
+                if not entity_perms(entity_id, POLICY_CONTROL):
                     raise Unauthorized(
                         context=call.context,
-                        entity_id=entity.entity_id,
+                        entity_id=entity_id,
                         permission=POLICY_CONTROL,
                     )
 
-                platform_entities.append(entity)
+                platform_entity_candidates.append(platform_entities[entity_id])
 
-            entity_candidates.extend(platform_entities)
+            entity_candidates.extend(platform_entity_candidates)
 
     if not target_all_entities:
         assert referenced is not None
@@ -769,7 +766,7 @@ async def entity_service_call(  # noqa: C901
 
         referenced.log_missing(missing)
 
-    entities = []
+    entities: list[Entity] = []
 
     for entity in entity_candidates:
         if not entity.available:
@@ -810,7 +807,7 @@ async def entity_service_call(  # noqa: C901
     for future in done:
         future.result()  # pop exception if have
 
-    tasks = []
+    tasks: list[asyncio.Task[None]] = []
 
     for entity in entities:
         if not entity.should_poll:
