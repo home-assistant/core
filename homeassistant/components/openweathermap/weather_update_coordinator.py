@@ -22,6 +22,7 @@ from .const import (
     ATTR_API_FEELS_LIKE_TEMPERATURE,
     ATTR_API_FORECAST,
     ATTR_API_FORECAST_CONDITION,
+    ATTR_API_FORECAST_HUMIDITY,
     ATTR_API_FORECAST_PRECIPITATION,
     ATTR_API_FORECAST_PRECIPITATION_PROBABILITY,
     ATTR_API_FORECAST_PRESSURE,
@@ -159,6 +160,7 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
     def _convert_forecast(self, entry):
         """Convert the forecast data."""
         forecast = {
+            ATTR_API_FORECAST_HUMIDITY: entry.humidity,
             ATTR_API_FORECAST_TIME: dt_util.utc_from_timestamp(
                 entry.reference_time("unix")
             ).isoformat(),
