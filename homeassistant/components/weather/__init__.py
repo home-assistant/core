@@ -30,6 +30,7 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from .const import (
+    ATTR_WEATHER_APPARENT_TEMPERATURE,
     ATTR_WEATHER_HUMIDITY,
     ATTR_WEATHER_OZONE,
     ATTR_WEATHER_PRECIPITATION_UNIT,
@@ -73,6 +74,8 @@ ATTR_FORECAST_PRECIPITATION: Final = "precipitation"
 ATTR_FORECAST_PRECIPITATION_PROBABILITY: Final = "precipitation_probability"
 ATTR_FORECAST_NATIVE_PRESSURE: Final = "native_pressure"
 ATTR_FORECAST_PRESSURE: Final = "pressure"
+ATTR_FORECAST_NATIVE_APPARENT_TEMP: Final = "native_apparent_temperature"
+ATTR_FORECAST_APPARENT_TEMP: Final = "apparent_temperature"
 ATTR_FORECAST_NATIVE_TEMP: Final = "native_temperature"
 ATTR_FORECAST_TEMP: Final = "temperature"
 ATTR_FORECAST_NATIVE_TEMP_LOW: Final = "native_templow"
@@ -199,6 +202,7 @@ class WeatherEntity(Entity):
 
     _attr_native_pressure: float | None = None
     _attr_native_pressure_unit: str | None = None
+    _attr_native_apparent_temperature: float | None = None
     _attr_native_temperature: float | None = None
     _attr_native_temperature_unit: str | None = None
     _attr_native_visibility: float | None = None
@@ -271,6 +275,11 @@ class WeatherEntity(Entity):
         if not self.registry_entry:
             return
         self.async_registry_entry_updated()
+
+    @property
+    def native_apparent_temperature(self) -> float | None:
+        """Return the apparent temperature in native units."""
+        return self._attr_native_temperature
 
     @final
     @property
@@ -600,6 +609,20 @@ class WeatherEntity(Entity):
             except (TypeError, ValueError):
                 data[ATTR_WEATHER_TEMPERATURE] = temperature
 
+        if (apparent_temperature := self.native_apparent_temperature) is not None:
+            from_unit = self.native_temperature_unit or self._default_temperature_unit
+            to_unit = self._temperature_unit
+            try:
+                apparent_temperature_f = float(apparent_temperature)
+                value_apparent_temp = UNIT_CONVERSIONS[ATTR_WEATHER_TEMPERATURE_UNIT](
+                    apparent_temperature_f, from_unit, to_unit
+                )
+                data[ATTR_WEATHER_APPARENT_TEMPERATURE] = round_temperature(
+                    value_apparent_temp, precision
+                )
+            except (TypeError, ValueError):
+                data[ATTR_WEATHER_APPARENT_TEMPERATURE] = apparent_temperature
+
         data[ATTR_WEATHER_TEMPERATURE_UNIT] = self._temperature_unit
 
         if (humidity := self.humidity) is not None:
@@ -684,6 +707,26 @@ class WeatherEntity(Entity):
                         )
                         forecast_entry[ATTR_FORECAST_TEMP] = round_temperature(
                             value_temp, precision
+                        )
+
+                if (
+                    forecast_apparent_temp := forecast_entry.pop(
+                        ATTR_FORECAST_NATIVE_APPARENT_TEMP,
+                        forecast_entry.get(ATTR_FORECAST_NATIVE_APPARENT_TEMP),
+                    )
+                ) is not None:
+                    with suppress(TypeError, ValueError):
+                        forecast_apparent_temp = float(forecast_apparent_temp)
+                        value_apparent_temp = UNIT_CONVERSIONS[
+                            ATTR_WEATHER_TEMPERATURE_UNIT
+                        ](
+                            forecast_apparent_temp,
+                            from_temp_unit,
+                            to_temp_unit,
+                        )
+
+                        forecast_entry[ATTR_FORECAST_APPARENT_TEMP] = round_temperature(
+                            value_apparent_temp, precision
                         )
 
                 if (
