@@ -20,7 +20,7 @@ from homeassistant.util.unit_conversion import (
 
 ATTR_WEATHER_HUMIDITY = "humidity"
 ATTR_WEATHER_OZONE = "ozone"
-ATTR_WEATHER_DEWPOINT = "dewpoint"
+ATTR_WEATHER_DEW_POINT = "dew_point"
 ATTR_WEATHER_PRESSURE = "pressure"
 ATTR_WEATHER_PRESSURE_UNIT = "pressure_unit"
 ATTR_WEATHER_APPARENT_TEMPERATURE = "apparent_temperature"

@@ -42,8 +42,8 @@
         "apparent_temperature": {
           "name": "Apparent temperature"
         },
-        "dewpoint": {
-          "name": "Dewpoint temperature"
+        "dew_point": {
+          "name": "Dew point temperature"
         },
         "temperature": {
           "name": "Temperature"
