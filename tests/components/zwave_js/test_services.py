@@ -430,6 +430,7 @@ async def test_bulk_set_config_parameters(
     assert args["nodeId"] == 52
     assert args["valueId"] == {
         "commandClass": 112,
+        "endpoint": 0,
         "property": 102,
     }
     assert args["value"] == 241
@@ -457,6 +458,7 @@ async def test_bulk_set_config_parameters(
     assert args["nodeId"] == 52
     assert args["valueId"] == {
         "commandClass": 112,
+        "endpoint": 0,
         "property": 102,
     }
     assert args["value"] == 241
@@ -486,6 +488,7 @@ async def test_bulk_set_config_parameters(
     assert args["nodeId"] == 52
     assert args["valueId"] == {
         "commandClass": 112,
+        "endpoint": 0,
         "property": 102,
     }
     assert args["value"] == 241
@@ -516,6 +519,7 @@ async def test_bulk_set_config_parameters(
     assert args["nodeId"] == 52
     assert args["valueId"] == {
         "commandClass": 112,
+        "endpoint": 0,
         "property": 102,
     }
     assert args["value"] == 241
@@ -545,6 +549,7 @@ async def test_bulk_set_config_parameters(
     assert args["nodeId"] == 52
     assert args["valueId"] == {
         "commandClass": 112,
+        "endpoint": 0,
         "property": 102,
     }
     assert args["value"] == 241
@@ -577,6 +582,7 @@ async def test_bulk_set_config_parameters(
     assert args["nodeId"] == 52
     assert args["valueId"] == {
         "commandClass": 112,
+        "endpoint": 0,
         "property": 102,
     }
     assert args["value"] == 241
@@ -609,6 +615,7 @@ async def test_bulk_set_config_parameters(
     assert args["nodeId"] == 52
     assert args["valueId"] == {
         "commandClass": 112,
+        "endpoint": 0,
         "property": 102,
     }
     assert args["value"] == 241
@@ -648,6 +655,7 @@ async def test_bulk_set_config_parameters_gather(
     assert args["nodeId"] == 52
     assert args["valueId"] == {
         "commandClass": 112,
+        "endpoint": 0,
         "property": 102,
     }
     assert args["value"] == 241
@@ -670,6 +678,7 @@ async def test_refresh_value(
         {ATTR_ENTITY_ID: CLIMATE_RADIO_THERMOSTAT_ENTITY},
         blocking=True,
     )
+    await hass.async_block_till_done()
     assert len(client.async_send_command.call_args_list) == 1
     args = client.async_send_command.call_args[0][0]
     assert args["command"] == "node.poll_value"
@@ -693,6 +702,7 @@ async def test_refresh_value(
         },
         blocking=True,
     )
+    await hass.async_block_till_done()
     assert len(client.async_send_command.call_args_list) == 8
 
     client.async_send_command.reset_mock()
@@ -708,6 +718,7 @@ async def test_refresh_value(
         },
         blocking=True,
     )
+    await hass.async_block_till_done()
     assert len(client.async_send_command.call_args_list) == 8
 
     client.async_send_command.reset_mock()
@@ -725,6 +736,7 @@ async def test_refresh_value(
         },
         blocking=True,
     )
+    await hass.async_block_till_done()
     assert len(client.async_send_command.call_args_list) == 8
 
     client.async_send_command.reset_mock()
@@ -1531,6 +1543,18 @@ async def test_ping(
             blocking=True,
         )
 
+    client.async_send_command.reset_mock()
+    client.async_send_command.side_effect = FailedZWaveCommand("test", 1, "test")
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_PING,
+            {
+                ATTR_ENTITY_ID: CLIMATE_RADIO_THERMOSTAT_ENTITY,
+            },
+            blocking=True,
+        )
+
 
 async def test_invoke_cc_api(
     hass: HomeAssistant,
@@ -1573,6 +1597,7 @@ async def test_invoke_cc_api(
         },
         blocking=True,
     )
+    await hass.async_block_till_done()
     assert len(client.async_send_command.call_args_list) == 1
     args = client.async_send_command.call_args[0][0]
     assert args["command"] == "endpoint.invoke_cc_api"
@@ -1625,6 +1650,7 @@ async def test_invoke_cc_api(
         },
         blocking=True,
     )
+    await hass.async_block_till_done()
     assert len(client.async_send_command.call_args_list) == 1
     args = client.async_send_command.call_args[0][0]
     assert args["command"] == "endpoint.invoke_cc_api"

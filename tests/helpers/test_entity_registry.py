@@ -34,6 +34,16 @@ def update_events(hass):
     return events
 
 
+async def test_get(hass: HomeAssistant, entity_registry: er.EntityRegistry):
+    """Test we can get an item."""
+    entry = entity_registry.async_get_or_create("light", "hue", "1234")
+
+    assert entity_registry.async_get(entry.entity_id) is entry
+    assert entity_registry.async_get(entry.id) is entry
+    assert entity_registry.async_get("blah") is None
+    assert entity_registry.async_get("blah.blah") is None
+
+
 async def test_get_or_create_returns_same_entry(
     hass: HomeAssistant, entity_registry: er.EntityRegistry, update_events
 ) -> None:
@@ -748,13 +758,13 @@ async def test_update_entity_options(entity_registry: er.EntityRegistry) -> None
     assert new_entry_1.options == {"light": {"minimum_brightness": 20}}
 
     # Test it's not possible to modify the options
-    with pytest.raises(NotImplementedError):
+    with pytest.raises(RuntimeError):
         new_entry_1.options["blah"] = {}
-    with pytest.raises(NotImplementedError):
+    with pytest.raises(RuntimeError):
         new_entry_1.options["light"] = {}
-    with pytest.raises(TypeError):
+    with pytest.raises(RuntimeError):
         new_entry_1.options["light"]["blah"] = 123
-    with pytest.raises(TypeError):
+    with pytest.raises(RuntimeError):
         new_entry_1.options["light"]["minimum_brightness"] = 123
 
     entity_registry.async_update_entity_options(

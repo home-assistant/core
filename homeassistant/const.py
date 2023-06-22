@@ -7,14 +7,14 @@ from .backports.enum import StrEnum
 
 APPLICATION_NAME: Final = "HomeAssistant"
 MAJOR_VERSION: Final = 2023
-MINOR_VERSION: Final = 6
+MINOR_VERSION: Final = 7
 PATCH_VERSION: Final = "0.dev0"
 __short_version__: Final = f"{MAJOR_VERSION}.{MINOR_VERSION}"
 __version__: Final = f"{__short_version__}.{PATCH_VERSION}"
 REQUIRED_PYTHON_VER: Final[tuple[int, int, int]] = (3, 10, 0)
-REQUIRED_NEXT_PYTHON_VER: Final[tuple[int, int, int]] = (3, 10, 0)
+REQUIRED_NEXT_PYTHON_VER: Final[tuple[int, int, int]] = (3, 11, 0)
 # Truthy date string triggers showing related deprecation warning messages.
-REQUIRED_NEXT_PYTHON_HA_RELEASE: Final = ""
+REQUIRED_NEXT_PYTHON_HA_RELEASE: Final = "2023.8"
 
 # Format for platform files
 PLATFORM_FORMAT: Final = "{platform}.{domain}"
@@ -37,6 +37,7 @@ class Platform(StrEnum):
     FAN = "fan"
     GEO_LOCATION = "geo_location"
     HUMIDIFIER = "humidifier"
+    IMAGE = "image"
     IMAGE_PROCESSING = "image_processing"
     LIGHT = "light"
     LOCK = "lock"
@@ -222,6 +223,7 @@ CONF_REPEAT: Final = "repeat"
 CONF_RESOURCE: Final = "resource"
 CONF_RESOURCES: Final = "resources"
 CONF_RESOURCE_TEMPLATE: Final = "resource_template"
+CONF_RESPONSE_VARIABLE: Final = "response_variable"
 CONF_RGB: Final = "rgb"
 CONF_ROOM: Final = "room"
 CONF_SCAN_INTERVAL: Final = "scan_interval"

@@ -35,6 +35,7 @@ from . import (
     text as text_platform,
     update as update_platform,
     vacuum as vacuum_platform,
+    water_heater as water_heater_platform,
 )
 from .const import (
     CONF_BIRTH_MESSAGE,
@@ -131,6 +132,10 @@ PLATFORM_CONFIG_SCHEMA_BASE = vol.Schema(
         Platform.VACUUM.value: vol.All(
             cv.ensure_list,
             [vacuum_platform.PLATFORM_SCHEMA_MODERN],  # type: ignore[has-type]
+        ),
+        Platform.WATER_HEATER.value: vol.All(
+            cv.ensure_list,
+            [water_heater_platform.PLATFORM_SCHEMA_MODERN],  # type: ignore[has-type]
         ),
     }
 )

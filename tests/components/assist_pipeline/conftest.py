@@ -9,7 +9,10 @@ import pytest
 
 from homeassistant.components import stt, tts
 from homeassistant.components.assist_pipeline import DOMAIN
-from homeassistant.components.assist_pipeline.pipeline import PipelineStorageCollection
+from homeassistant.components.assist_pipeline.pipeline import (
+    PipelineData,
+    PipelineStorageCollection,
+)
 from homeassistant.config_entries import ConfigEntry, ConfigFlow
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -260,6 +263,12 @@ async def init_components(hass: HomeAssistant, init_supporting_components):
 
 
 @pytest.fixture
-def pipeline_storage(hass: HomeAssistant, init_components) -> PipelineStorageCollection:
+def pipeline_data(hass: HomeAssistant, init_components) -> PipelineData:
+    """Return pipeline data."""
+    return hass.data[DOMAIN]
+
+
+@pytest.fixture
+def pipeline_storage(pipeline_data) -> PipelineStorageCollection:
     """Return pipeline storage collection."""
-    return hass.data[DOMAIN].pipeline_store
+    return pipeline_data.pipeline_store

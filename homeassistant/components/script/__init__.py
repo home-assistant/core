@@ -160,6 +160,20 @@ def scripts_with_blueprint(hass: HomeAssistant, blueprint_path: str) -> list[str
     ]
 
 
+@callback
+def blueprint_in_script(hass: HomeAssistant, entity_id: str) -> str | None:
+    """Return the blueprint the script is based on or None."""
+    if DOMAIN not in hass.data:
+        return None
+
+    component: EntityComponent[ScriptEntity] = hass.data[DOMAIN]
+
+    if (script_entity := component.get_entity(entity_id)) is None:
+        return None
+
+    return script_entity.referenced_blueprint
+
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Load the scripts from the configuration."""
     hass.data[DOMAIN] = component = EntityComponent[ScriptEntity](LOGGER, DOMAIN, hass)
