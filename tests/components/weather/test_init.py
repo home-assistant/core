@@ -226,14 +226,17 @@ async def test_temperature_no_unit(
     hass.config.units = unit_system
     native_value = 38
     dew_point_native_value = 32
+    apparent_temp_native_value = 45
     state_value = native_value
     dew_point_state_value = dew_point_native_value
+    apparent_temp_state_value = apparent_temp_native_value
 
     entity0 = await create_entity(
         hass,
         native_temperature=native_value,
         native_temperature_unit=native_unit,
         native_dew_point=dew_point_native_value,
+        native_apparent_temperature=apparent_temp_native_value,
     )
 
     state = hass.states.get(entity0.entity_id)
@@ -241,11 +244,15 @@ async def test_temperature_no_unit(
 
     expected = state_value
     dew_point_expected = dew_point_state_value
+    expected_apparent_temp = apparent_temp_state_value
     assert float(state.attributes[ATTR_WEATHER_TEMPERATURE]) == pytest.approx(
         expected, rel=0.1
     )
     assert float(state.attributes[ATTR_WEATHER_DEW_POINT]) == pytest.approx(
         dew_point_expected, rel=0.1
+    )
+    assert float(state.attributes[ATTR_WEATHER_APPARENT_TEMPERATURE]) == pytest.approx(
+        expected_apparent_temp, rel=0.1
     )
     assert state.attributes[ATTR_WEATHER_TEMPERATURE_UNIT] == state_unit
     assert float(forecast[ATTR_FORECAST_TEMP]) == pytest.approx(expected, rel=0.1)
@@ -253,6 +260,9 @@ async def test_temperature_no_unit(
         dew_point_expected, rel=0.1
     )
     assert float(forecast[ATTR_FORECAST_TEMP_LOW]) == pytest.approx(expected, rel=0.1)
+    assert float(forecast[ATTR_FORECAST_APPARENT_TEMP]) == pytest.approx(
+        expected_apparent_temp, rel=0.1
+    )
 
 
 @pytest.mark.parametrize("native_unit", (UnitOfPressure.INHG, UnitOfPressure.INHG))
