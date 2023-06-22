@@ -10,21 +10,21 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import (
-    CONF_DRIVES,
     CONF_HOST,
     CONF_MONITORED_CONDITIONS,
-    CONF_NICS,
     CONF_PASSWORD,
     CONF_PORT,
     CONF_SSL,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
-    CONF_VOLUMES,
 )
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_validation as cv
 
 from .const import (
+    CONF_DRIVES,
+    CONF_NICS,
+    CONF_VOLUMES,
     DEFAULT_PORT,
     DEFAULT_SSL,
     DEFAULT_TIMEOUT,
