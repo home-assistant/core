@@ -67,7 +67,7 @@ list_events:
         datetime:
     end_date_time:
       name: End time
-      description: Return active events before this time (exclusive). Cannot be used with 'in'.
+      description: Return active events before this time (exclusive). Cannot be used with 'duration'.
       example: "2022-03-22 22:00:00"
       selector:
         datetime:

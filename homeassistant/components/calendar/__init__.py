@@ -775,7 +775,7 @@ async def async_create_event(entity: CalendarEntity, call: ServiceCall) -> None:
 async def async_list_events_service(
     calendar: CalendarEntity, service_call: ServiceCall
 ) -> ServiceResponse:
-    """Handle snapshot services calls."""
+    """List events on a calendar during a time drange."""
     start = service_call.data.get(EVENT_START_DATETIME, dt_util.now())
     if EVENT_DURATION in service_call.data:
         end = start + service_call.data[EVENT_DURATION]

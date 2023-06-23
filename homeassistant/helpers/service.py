@@ -684,9 +684,7 @@ async def entity_service_call(  # noqa: C901
 ) -> ServiceResponse | None:
     """Handle an entity service call.
 
-    Calls all platforms simultaneously. The service call may request
-    response data which will return a dictionary of entity
-    ids to the service response data.
+    Calls all platforms simultaneously.
     """
     entity_perms: None | (Callable[[str, str], bool]) = None
     if call.context.user_id:
