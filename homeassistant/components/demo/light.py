@@ -153,8 +153,6 @@ class DemoLight(LightEntity):
             self._color_mode = ColorMode.COLOR_TEMP
         elif supported_color_modes and ColorMode.BRIGHTNESS in supported_color_modes:
             self._color_mode = ColorMode.BRIGHTNESS
-        elif supported_color_modes and ColorMode.ONOFF in supported_color_modes:
-            self._color_mode = ColorMode.ONOFF
         else:
             self._color_mode = ColorMode.COLOR_TEMP
         if self._effect_list is not None:
