@@ -1,6 +1,5 @@
 """Test ESPHome binary sensors."""
-from collections.abc import Coroutine
-from typing import Any
+from collections.abc import Awaitable
 
 from aioesphomeapi import APIClient, BinarySensorInfo, BinarySensorState
 import pytest
@@ -10,6 +9,8 @@ from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 
 from .conftest import MockESPHomeDevice
+
+from tests.common import MockConfigEntry
 
 
 async def test_assist_in_progress(
@@ -94,7 +95,9 @@ async def test_status_binary_sensor(
 
 
 async def test_binary_sensor_missing_state(
-    hass: HomeAssistant, mock_client: APIClient, mock_generic_device_entry
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_generic_device_entry: Awaitable[MockConfigEntry],
 ) -> None:
     """Test a generic binary_sensor that is missing state."""
     entity_info = [
@@ -121,7 +124,7 @@ async def test_binary_sensor_missing_state(
 async def test_binary_sensor_has_state_false(
     hass: HomeAssistant,
     mock_client: APIClient,
-    mock_esphome_device: Coroutine[Any, Any, MockESPHomeDevice],
+    mock_esphome_device: Awaitable[MockESPHomeDevice],
 ) -> None:
     """Test a generic binary_sensor where has_state is false."""
     entity_info = [

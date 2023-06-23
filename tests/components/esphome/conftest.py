@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from asyncio import Event
-from collections.abc import Callable, Coroutine
+from collections.abc import Awaitable, Callable
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
@@ -248,7 +248,7 @@ async def mock_voice_assistant_v2_entry(mock_voice_assistant_entry) -> MockConfi
 @pytest.fixture
 async def mock_generic_device_entry(
     hass: HomeAssistant,
-) -> Coroutine[Any, Any, MockConfigEntry]:
+) -> Awaitable[MockConfigEntry]:
     """Set up an ESPHome entry and return the MockConfigEntry."""
 
     async def _mock_device_entry(
@@ -269,7 +269,7 @@ async def mock_generic_device_entry(
 @pytest.fixture
 async def mock_esphome_device(
     hass: HomeAssistant,
-) -> Coroutine[Any, Any, MockESPHomeDevice]:
+) -> Awaitable[MockESPHomeDevice]:
     """Set up an ESPHome entry and return the MockESPHomeDevice."""
 
     async def _mock_device(
