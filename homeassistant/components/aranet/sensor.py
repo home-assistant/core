@@ -131,7 +131,7 @@ def sensor_update_to_bluetooth_data_update(
             for key in SENSOR_DESCRIPTIONS
         },
         entity_names={
-            _device_key_to_bluetooth_entity_key(adv.device, key): desc.translation_key
+            _device_key_to_bluetooth_entity_key(adv.device, key): desc.name
             for key, desc in SENSOR_DESCRIPTIONS.items()
         },
     )
