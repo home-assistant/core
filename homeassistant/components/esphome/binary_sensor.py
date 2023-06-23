@@ -1,7 +1,7 @@
 """Support for ESPHome binary sensors."""
 from __future__ import annotations
 
-from aioesphomeapi import BinarySensorInfo, BinarySensorState
+from aioesphomeapi import BinarySensorInfo, BinarySensorState, EntityInfo
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -9,7 +9,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.enum import try_parse_enum
 
@@ -49,23 +49,23 @@ class EsphomeBinarySensor(
             # Status binary sensors indicated connected state.
             # So in their case what's usually _availability_ is now state
             return self._entry_data.available
-        if not self._has_state:
+        state = self._state
+        if not self._has_state or state.missing_state:
             return None
-        if self._state.missing_state:
-            return None
-        return self._state.state
+        return state.state
 
-    @property
-    def device_class(self) -> BinarySensorDeviceClass | None:
-        """Return the class of this device, from component DEVICE_CLASSES."""
-        return try_parse_enum(BinarySensorDeviceClass, self._static_info.device_class)
+    @callback
+    def _on_static_info_update(self, static_info: EntityInfo) -> None:
+        """Set attrs from static info."""
+        super()._on_static_info_update(static_info)
+        self._attr_device_class = try_parse_enum(
+            BinarySensorDeviceClass, self._static_info.device_class
+        )
 
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        if self._static_info.is_status_binary_sensor:
-            return True
-        return super().available
+        return self._static_info.is_status_binary_sensor or super().available
 
 
 class EsphomeAssistInProgressBinarySensor(EsphomeAssistEntity, BinarySensorEntity):
