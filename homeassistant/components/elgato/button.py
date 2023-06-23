@@ -47,7 +47,6 @@ BUTTONS = [
     ),
     ElgatoButtonEntityDescription(
         key="restart",
-        translation_key="restart",
         device_class=ButtonDeviceClass.RESTART,
         entity_category=EntityCategory.CONFIG,
         press_fn=lambda client: client.restart(),
