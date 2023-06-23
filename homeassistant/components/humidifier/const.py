@@ -20,6 +20,7 @@ class HumidifierAction(StrEnum):
     HUMIDIFYING = "humidifying"
     DRYING = "drying"
     IDLE = "idle"
+    OFF = "off"
 
 
 ATTR_ACTION = "action"
