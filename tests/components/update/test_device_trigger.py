@@ -2,6 +2,7 @@
 from datetime import timedelta
 
 import pytest
+from pytest_unordered import unordered
 
 import homeassistant.components.automation as automation
 from homeassistant.components.device_automation import DeviceAutomationType
@@ -14,7 +15,6 @@ import homeassistant.util.dt as dt_util
 
 from tests.common import (
     MockConfigEntry,
-    assert_lists_same,
     async_fire_time_changed,
     async_get_device_automation_capabilities,
     async_get_device_automations,
@@ -62,7 +62,7 @@ async def test_get_triggers(
     triggers = await async_get_device_automations(
         hass, DeviceAutomationType.TRIGGER, device_entry.id
     )
-    assert_lists_same(triggers, expected_triggers)
+    assert triggers == unordered(expected_triggers)
 
 
 @pytest.mark.parametrize(
@@ -110,7 +110,7 @@ async def test_get_triggers_hidden_auxiliary(
     triggers = await async_get_device_automations(
         hass, DeviceAutomationType.TRIGGER, device_entry.id
     )
-    assert_lists_same(triggers, expected_triggers)
+    assert triggers == unordered(expected_triggers)
 
 
 async def test_get_trigger_capabilities(

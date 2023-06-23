@@ -1,0 +1,40 @@
+# serializer version: 1
+# name: test_states
+  set({
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'friendly_name': 'Statistics issue 1',
+        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+        'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      }),
+      'context': <ANY>,
+      'entity_id': 'sensor.statistics_issue_1',
+      'last_changed': <ANY>,
+      'last_updated': <ANY>,
+      'state': '100',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'friendly_name': 'Statistics issue 2',
+        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+        'unit_of_measurement': 'dogs',
+      }),
+      'context': <ANY>,
+      'entity_id': 'sensor.statistics_issue_2',
+      'last_changed': <ANY>,
+      'last_updated': <ANY>,
+      'state': '100',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'friendly_name': 'Statistics issue 3',
+        'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      }),
+      'context': <ANY>,
+      'entity_id': 'sensor.statistics_issue_3',
+      'last_changed': <ANY>,
+      'last_updated': <ANY>,
+      'state': '100',
+    }),
+  })
+# ---

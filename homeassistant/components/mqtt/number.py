@@ -186,6 +186,9 @@ class MqttNumber(MqttEntity, RestoreNumber):
             """Handle new MQTT messages."""
             num_value: int | float | None
             payload = str(self._value_template(msg.payload))
+            if not payload.strip():
+                _LOGGER.debug("Ignoring empty state update from '%s'", msg.topic)
+                return
             try:
                 if payload == self._config[CONF_PAYLOAD_RESET]:
                     num_value = None

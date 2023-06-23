@@ -1216,9 +1216,12 @@ class HumiditySettingTrait(_Trait):
                     response["humidityAmbientPercent"] = round(float(current_humidity))
 
         elif domain == humidifier.DOMAIN:
-            target_humidity = attrs.get(humidifier.ATTR_HUMIDITY)
+            target_humidity: int | None = attrs.get(humidifier.ATTR_HUMIDITY)
             if target_humidity is not None:
-                response["humiditySetpointPercent"] = round(float(target_humidity))
+                response["humiditySetpointPercent"] = target_humidity
+            current_humidity: int | None = attrs.get(humidifier.ATTR_CURRENT_HUMIDITY)
+            if current_humidity is not None:
+                response["humidityAmbientPercent"] = current_humidity
 
         return response
 
