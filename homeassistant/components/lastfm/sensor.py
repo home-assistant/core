@@ -115,6 +115,7 @@ class LastFmSensor(SensorEntity):
             self._attr_available = False
             LOGGER.error("Failed to load LastFM user `%s`: %r", self._user.name, exc)
             return
+        self._attr_available = True
         if now_playing:
             self._attr_native_value = format_track(now_playing)
         self._attr_extra_state_attributes = {
