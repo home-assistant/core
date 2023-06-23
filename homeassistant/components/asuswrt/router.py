@@ -445,7 +445,7 @@ class AsusWrtRouter:
         """Return the device information."""
         return DeviceInfo(
             identifiers={(DOMAIN, self.unique_id or "AsusWRT")},
-            name=self._host,
+            name=self.name,
             model=self._model,
             manufacturer="Asus",
             sw_version=self._sw_v,
