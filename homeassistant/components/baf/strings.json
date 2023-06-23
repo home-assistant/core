@@ -21,18 +21,14 @@
     }
   },
   "entity": {
-    "sensor": {
-      "current_rpm": {
-        "name": "Current RPM"
-      },
-      "target_rpm": {
-        "name": "Target RPM"
-      },
-      "wifi_ssid": {
-        "name": "Wi-Fi SSID"
-      },
-      "ip_address": {
-        "name": "IP Address"
+    "binary_sensor": {
+      "occupancy": {
+        "name": "Occupancy"
+      }
+    },
+    "climate": {
+      "auto_comfort": {
+        "name": "Auto comfort"
       }
     },
     "number": {
@@ -58,9 +54,50 @@
         "name": "Light Motion Sense Timeout"
       }
     },
-    "binary_sensor": {
-      "occupancy": {
-        "name": "Occupancy"
+    "sensor": {
+      "current_rpm": {
+        "name": "Current RPM"
+      },
+      "target_rpm": {
+        "name": "Target RPM"
+      },
+      "wifi_ssid": {
+        "name": "Wi-Fi SSID"
+      },
+      "ip_address": {
+        "name": "IP Address"
+      }
+    },
+    "switch": {
+      "legacy_ir_remote_enable": {
+        "name": "Legacy IR Remote"
+      },
+      "led_indicators_enable": {
+        "name": "Led Indicators"
+      },
+      "comfort_heat_assist_enable": {
+        "name": "Auto Comfort Heat Assist"
+      },
+      "fan_beep_enable": {
+        "name": "Beep"
+      },
+      "eco_enable": {
+        "name": "Eco Mode"
+      },
+      "motion_sense_enable": {
+        "name": "Motion Sense"
+      },
+      "return_to_auto_enable": {
+        "name": "Return to Auto"
+      },
+      "whoosh_enable": {
+        "name": "Whoosh"
+      },
+      "light_dim_to_warm_enable": {
+        "name": "Dim to Warm"
+      },
+      "light_return_to_auto_enable": {
+        "name": "Light Return to Auto"
       }
     }
   }
