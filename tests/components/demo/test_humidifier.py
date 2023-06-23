@@ -126,12 +126,14 @@ async def test_turn_on(hass: HomeAssistant) -> None:
     )
     state = hass.states.get(ENTITY_DEHUMIDIFIER)
     assert state.state == STATE_OFF
+    assert state.attributes.get(ATTR_ACTION) == "off"
 
     await hass.services.async_call(
         DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_DEHUMIDIFIER}, blocking=True
     )
     state = hass.states.get(ENTITY_DEHUMIDIFIER)
     assert state.state == STATE_ON
+    assert state.attributes.get(ATTR_ACTION) == "drying"
 
 
 async def test_turn_off(hass: HomeAssistant) -> None:
@@ -141,12 +143,14 @@ async def test_turn_off(hass: HomeAssistant) -> None:
     )
     state = hass.states.get(ENTITY_DEHUMIDIFIER)
     assert state.state == STATE_ON
+    assert state.attributes.get(ATTR_ACTION) == "drying"
 
     await hass.services.async_call(
         DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_DEHUMIDIFIER}, blocking=True
     )
     state = hass.states.get(ENTITY_DEHUMIDIFIER)
     assert state.state == STATE_OFF
+    assert state.attributes.get(ATTR_ACTION) == "off"
 
 
 async def test_toggle(hass: HomeAssistant) -> None:
