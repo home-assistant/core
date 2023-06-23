@@ -247,7 +247,7 @@
       "name": "VOCs"
     },
     "volatile_organic_compounds_parts": {
-      "name": "VOCs parts"
+      "name": "VOCs ratio"
     },
     "voltage": {
       "name": "Voltage"
