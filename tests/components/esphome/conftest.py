@@ -248,7 +248,10 @@ async def mock_voice_assistant_v2_entry(mock_voice_assistant_entry) -> MockConfi
 @pytest.fixture
 async def mock_generic_device_entry(
     hass: HomeAssistant,
-) -> Awaitable[MockConfigEntry]:
+) -> Callable[
+    [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
+    Awaitable[MockConfigEntry],
+]:
     """Set up an ESPHome entry and return the MockConfigEntry."""
 
     async def _mock_device_entry(
@@ -269,7 +272,10 @@ async def mock_generic_device_entry(
 @pytest.fixture
 async def mock_esphome_device(
     hass: HomeAssistant,
-) -> Awaitable[MockESPHomeDevice]:
+) -> Callable[
+    [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
+    Awaitable[MockESPHomeDevice],
+]:
     """Set up an ESPHome entry and return the MockESPHomeDevice."""
 
     async def _mock_device(
