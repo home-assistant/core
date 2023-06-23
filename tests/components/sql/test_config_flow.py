@@ -7,6 +7,7 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from homeassistant import config_entries
 from homeassistant.components.recorder import Recorder
+from homeassistant.components.sensor.const import SensorDeviceClass, SensorStateClass
 from homeassistant.components.sql.config_flow import NONE_SENTINEL
 from homeassistant.components.sql.const import DOMAIN
 from homeassistant.core import HomeAssistant
@@ -51,8 +52,8 @@ async def test_form(recorder_mock: Recorder, hass: HomeAssistant) -> None:
         "query": "SELECT 5 as value",
         "column": "value",
         "unit_of_measurement": "MiB",
-        "device_class": "data_size",
-        "state_class": "total",
+        "device_class": SensorDeviceClass.DATA_SIZE,
+        "state_class": SensorStateClass.TOTAL,
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -154,8 +155,8 @@ async def test_flow_fails_invalid_query(
         "query": "SELECT 5 as value",
         "column": "value",
         "unit_of_measurement": "MiB",
-        "device_class": "data_size",
-        "state_class": "total",
+        "device_class": SensorDeviceClass.DATA_SIZE,
+        "state_class": SensorStateClass.TOTAL,
     }
 
 
@@ -192,8 +193,8 @@ async def test_flow_fails_invalid_column_name(
         "query": "SELECT 5 as value",
         "column": "value",
         "unit_of_measurement": "MiB",
-        "device_class": "data_size",
-        "state_class": "total",
+        "device_class": SensorDeviceClass.DATA_SIZE,
+        "state_class": SensorStateClass.TOTAL,
     }
 
 
@@ -208,8 +209,8 @@ async def test_options_flow(recorder_mock: Recorder, hass: HomeAssistant) -> Non
             "query": "SELECT 5 as value",
             "column": "value",
             "unit_of_measurement": "MiB",
-            "device_class": "data_size",
-            "state_class": "total",
+            "device_class": SensorDeviceClass.DATA_SIZE,
+            "state_class": SensorStateClass.TOTAL,
         },
     )
     entry.add_to_hass(hass)
@@ -234,8 +235,8 @@ async def test_options_flow(recorder_mock: Recorder, hass: HomeAssistant) -> Non
             "column": "size",
             "unit_of_measurement": "MiB",
             "value_template": "{{ value }}",
-            "device_class": "data_size",
-            "state_class": "total",
+            "device_class": SensorDeviceClass.DATA_SIZE,
+            "state_class": SensorStateClass.TOTAL,
         },
     )
 
@@ -246,8 +247,8 @@ async def test_options_flow(recorder_mock: Recorder, hass: HomeAssistant) -> Non
         "column": "size",
         "unit_of_measurement": "MiB",
         "value_template": "{{ value }}",
-        "device_class": "data_size",
-        "state_class": "total",
+        "device_class": SensorDeviceClass.DATA_SIZE,
+        "state_class": SensorStateClass.TOTAL,
     }
 
 
@@ -638,8 +639,8 @@ async def test_device_state_class(recorder_mock: Recorder, hass: HomeAssistant) 
                 "query": "SELECT 5 as value",
                 "column": "value",
                 "unit_of_measurement": "MiB",
-                "device_class": "data_size",
-                "state_class": "total",
+                "device_class": SensorDeviceClass.DATA_SIZE,
+                "state_class": SensorStateClass.TOTAL,
             },
         )
         await hass.async_block_till_done()
@@ -650,8 +651,8 @@ async def test_device_state_class(recorder_mock: Recorder, hass: HomeAssistant) 
         "query": "SELECT 5 as value",
         "column": "value",
         "unit_of_measurement": "MiB",
-        "device_class": "data_size",
-        "state_class": "total",
+        "device_class": SensorDeviceClass.DATA_SIZE,
+        "state_class": SensorStateClass.TOTAL,
     }
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
