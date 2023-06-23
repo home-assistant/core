@@ -8,9 +8,8 @@ from dataclasses import dataclass
 from itertools import groupby
 import logging
 from operator import attrgetter
-from typing import Any, Generic, TypedDict
+from typing import Any, Generic, TypedDict, TypeVar
 
-from typing_extensions import TypeVar
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
 
@@ -36,7 +35,6 @@ CHANGE_REMOVED = "removed"
 _ItemT = TypeVar("_ItemT")
 _StoreT = TypeVar("_StoreT", bound="SerializedStorageCollection")
 _StorageCollectionT = TypeVar("_StorageCollectionT", bound="StorageCollection")
-_EntityT = TypeVar("_EntityT", bound=Entity, default=Entity)
 
 
 @dataclass(slots=True)
@@ -423,7 +421,7 @@ def sync_entity_lifecycle(
     hass: HomeAssistant,
     domain: str,
     platform: str,
-    entity_component: EntityComponent[_EntityT],
+    entity_component: EntityComponent,
     collection: StorageCollection | YamlCollection,
     entity_class: type[CollectionEntity],
 ) -> None:

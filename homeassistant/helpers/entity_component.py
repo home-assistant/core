@@ -7,9 +7,8 @@ from datetime import timedelta
 from itertools import chain
 import logging
 from types import ModuleType
-from typing import Any, Generic
+from typing import Any, Generic, TypeVar
 
-from typing_extensions import TypeVar
 import voluptuous as vol
 
 from homeassistant import config as conf_util
@@ -31,7 +30,7 @@ from .typing import ConfigType, DiscoveryInfoType
 DEFAULT_SCAN_INTERVAL = timedelta(seconds=15)
 DATA_INSTANCES = "entity_components"
 
-_EntityT = TypeVar("_EntityT", bound=entity.Entity, default=entity.Entity)
+_EntityT = TypeVar("_EntityT", bound=entity.Entity)
 
 
 @bind_hass
