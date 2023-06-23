@@ -655,31 +655,50 @@ class OptionsFlowHandler(config_entries.OptionsFlow, ABC):
     async def async_step_firmware_revert(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
+        """Install the flasher addon, if necessary."""
+
+        addon_manager: AddonManager = get_flasher_addon_manager(self.hass)
+        addon_info = await self._async_get_addon_info(addon_manager)
+
+        if addon_info.state == AddonState.NOT_INSTALLED:
+            return await self.async_step_install_flasher_addon()
+
+        if addon_info.state == AddonState.NOT_RUNNING:
+            return await self.async_step_configure_flasher_addon()
+
+        # If the addon is already installed and running, fail
+        return self.async_abort(
+            reason="addon_install_failed",
+            description_placeholders={"addon_name": "Silicon Labs Multiprotocol"},
+        )
+
+    async def async_step_install_flasher_addon(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Show progress dialog for installing flasher addon."""
         addon_manager: AddonManager = get_flasher_addon_manager(self.hass)
         addon_info = await self._async_get_addon_info(addon_manager)
 
         _LOGGER.debug("Flasher addon state: %s", addon_info)
 
-        if addon_info.state == AddonState.NOT_INSTALLED:
-            if not self.install_task:
-                self.install_task = self.hass.async_create_task(
-                    self._async_install_addon(addon_manager),
-                    "SiLabs Flasher addon install",
-                )
-                return self.async_show_progress(
-                    step_id="firmware_revert",
-                    progress_action="install_addon",
-                    description_placeholders={"addon_name": "Silicon Labs Flasher"},
-                )
+        if not self.install_task:
+            self.install_task = self.hass.async_create_task(
+                self._async_install_addon(addon_manager),
+                "SiLabs Flasher addon install",
+            )
+            return self.async_show_progress(
+                step_id="install_flasher_addon",
+                progress_action="install_addon",
+                description_placeholders={"addon_name": "Silicon Labs Flasher"},
+            )
 
-            try:
-                await self.install_task
-            except AddonError as err:
-                _LOGGER.error(err)
-                return self.async_show_progress_done(next_step_id="install_failed")
-            finally:
-                self.install_task = None
+        try:
+            await self.install_task
+        except AddonError as err:
+            _LOGGER.error(err)
+            return self.async_show_progress_done(next_step_id="install_failed")
+        finally:
+            self.install_task = None
 
         return self.async_show_progress_done(next_step_id="configure_flasher_addon")
 
