@@ -89,6 +89,8 @@ class AirzoneBinarySensor(AirzoneEntity, BinarySensorEntity):
 class AirzoneZoneBinarySensor(AirzoneZoneEntity, AirzoneBinarySensor):
     """Define an Airzone Cloud Zone binary sensor."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self,
         coordinator: AirzoneUpdateCoordinator,
@@ -100,7 +102,6 @@ class AirzoneZoneBinarySensor(AirzoneZoneEntity, AirzoneBinarySensor):
         """Initialize."""
         super().__init__(coordinator, entry, zone_id, zone_data)
 
-        self._attr_has_entity_name = True
         self._attr_unique_id = f"{zone_id}_{description.key}"
         self.entity_description = description
 
