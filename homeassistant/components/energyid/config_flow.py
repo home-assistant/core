@@ -16,7 +16,20 @@ from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DOMAIN, ENERGYID_INTERVALS, ENERGYID_METRIC_KINDS
+from .const import (
+    CONF_DATA_INTERVAL,
+    CONF_ENTITY_ID,
+    CONF_METRIC,
+    CONF_METRIC_KIND,
+    CONF_UNIT,
+    CONF_UPLOAD_INTERVAL,
+    CONF_WEBHOOK_URL,
+    DEFAULT_DATA_INTERVAL,
+    DEFAULT_UPLOAD_INTERVAL,
+    DOMAIN,
+    ENERGYID_INTERVALS,
+    ENERGYID_METRIC_KINDS,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -69,31 +82,31 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # Handle the user input
         if user_input is not None:
             client = WebhookClientAsync(
-                webhook_url=user_input["webhook_url"], session=http_session
+                webhook_url=user_input[CONF_WEBHOOK_URL], session=http_session
             )
             try:
                 await validate_webhook(client)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except InvalidUrl:
-                errors["webhook_url"] = "invalid_url"
+                errors[CONF_WEBHOOK_URL] = "invalid_url"
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
                 return self.async_create_entry(
-                    title=f"Send {user_input['entity_id']} to EnergyID",
+                    title=f"Send {user_input[CONF_ENTITY_ID]} to EnergyID",
                     data=user_input,
                 )
 
         # Show the form
         data_schema = vol.Schema(
             {
-                vol.Required("webhook_url"): str,
-                vol.Required("entity_id"): vol.In(hass_entity_ids(self.hass)),
-                vol.Required("metric"): vol.In(sorted(meter_catalog.all_metrics)),
-                vol.Required("metric_kind"): vol.In(ENERGYID_METRIC_KINDS),
-                vol.Required("unit"): vol.In(sorted(meter_catalog.all_units)),
+                vol.Required(CONF_WEBHOOK_URL): str,
+                vol.Required(CONF_ENTITY_ID): vol.In(hass_entity_ids(self.hass)),
+                vol.Required(CONF_METRIC): vol.In(sorted(meter_catalog.all_metrics)),
+                vol.Required(CONF_METRIC_KIND): vol.In(ENERGYID_METRIC_KINDS),
+                vol.Required(CONF_UNIT): vol.In(sorted(meter_catalog.all_units)),
             }
         )
 
@@ -125,16 +138,17 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         if user_input is not None:
             http_session = async_get_clientsession(self.hass)
             client = WebhookClientAsync(
-                webhook_url=self.config_entry.data.get("webhook_url"),
+                webhook_url=self.config_entry.data.get(CONF_WEBHOOK_URL),
                 session=http_session,
             )
             try:
                 webhook_policy = await client.policy
                 await validate_interval(
-                    interval=user_input["data_interval"], webhook_policy=webhook_policy
+                    interval=user_input[CONF_DATA_INTERVAL],
+                    webhook_policy=webhook_policy,
                 )
             except InvalidInterval:
-                errors["data_interval"] = "invalid_interval"
+                errors[CONF_DATA_INTERVAL] = "invalid_interval"
             else:
                 return self.async_create_entry(
                     title=self.config_entry.title, data=user_input
@@ -145,12 +159,16 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             data_schema=vol.Schema(
                 {
                     vol.Required(
-                        "data_interval",
-                        default=self.config_entry.options.get("data_interval", "P1D"),
+                        CONF_DATA_INTERVAL,
+                        default=self.config_entry.options.get(
+                            CONF_DATA_INTERVAL, DEFAULT_DATA_INTERVAL
+                        ),
                     ): vol.In(ENERGYID_INTERVALS),
                     vol.Required(
-                        "upload_interval",
-                        default=self.config_entry.options.get("upload_interval", 300),
+                        CONF_UPLOAD_INTERVAL,
+                        default=self.config_entry.options.get(
+                            CONF_UPLOAD_INTERVAL, DEFAULT_UPLOAD_INTERVAL
+                        ),
                     ): int,
                 }
             ),
