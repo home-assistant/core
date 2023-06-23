@@ -4,10 +4,13 @@ from __future__ import annotations
 from typing import cast
 
 from homeassistant.components.weather import (
+    ATTR_FORECAST_CLOUD_COVERAGE,
     ATTR_FORECAST_CONDITION,
+    ATTR_FORECAST_NATIVE_APPARENT_TEMP,
     ATTR_FORECAST_NATIVE_PRECIPITATION,
     ATTR_FORECAST_NATIVE_TEMP,
     ATTR_FORECAST_NATIVE_TEMP_LOW,
+    ATTR_FORECAST_NATIVE_WIND_GUST_SPEED,
     ATTR_FORECAST_NATIVE_WIND_SPEED,
     ATTR_FORECAST_PRECIPITATION_PROBABILITY,
     ATTR_FORECAST_TIME,
@@ -142,13 +145,20 @@ class AccuWeatherEntity(
         return [
             {
                 ATTR_FORECAST_TIME: utc_from_timestamp(item["EpochDate"]).isoformat(),
+                ATTR_FORECAST_CLOUD_COVERAGE: item["CloudCoverDay"],
                 ATTR_FORECAST_NATIVE_TEMP: item["TemperatureMax"]["Value"],
                 ATTR_FORECAST_NATIVE_TEMP_LOW: item["TemperatureMin"]["Value"],
+                ATTR_FORECAST_NATIVE_APPARENT_TEMP: item["RealFeelTemperatureMax"][
+                    "Value"
+                ],
                 ATTR_FORECAST_NATIVE_PRECIPITATION: item["TotalLiquidDay"]["Value"],
                 ATTR_FORECAST_PRECIPITATION_PROBABILITY: item[
                     "PrecipitationProbabilityDay"
                 ],
                 ATTR_FORECAST_NATIVE_WIND_SPEED: item["WindDay"]["Speed"]["Value"],
+                ATTR_FORECAST_NATIVE_WIND_GUST_SPEED: item["WindGustDay"]["Speed"][
+                    "Value"
+                ],
                 ATTR_FORECAST_WIND_BEARING: item["WindDay"]["Direction"]["Degrees"],
                 ATTR_FORECAST_CONDITION: [
                     k for k, v in CONDITION_CLASSES.items() if item["IconDay"] in v
