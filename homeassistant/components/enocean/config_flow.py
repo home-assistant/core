@@ -471,9 +471,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             for part in parts:
                 if len(part) > 2:
                     return False
-
-                if int(part, 16) > 255:
-                    return False
+                int(part, 16)
 
         except ValueError:
             return False
