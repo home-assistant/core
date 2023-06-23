@@ -31,6 +31,7 @@ from homeassistant.const import (
 DOMAIN: Final = "overkiz"
 LOGGER: logging.Logger = logging.getLogger(__package__)
 
+CONF_API_TYPE: Final = "api_type"
 CONF_HUB: Final = "hub"
 CONF_TOKEN_UUID = "token_uuid"
 DEFAULT_HUB: Final = "somfy_europe"

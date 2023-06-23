@@ -25,7 +25,6 @@ async def async_get_config_entry_diagnostics(
         "server": entry.data[CONF_HUB],
     }
 
-    # TODO use is_local attribute
     # Only Overkiz cloud servers expose an endpoint with execution history
     if not "/enduser-mobile-web/1/enduserAPI/" in client.server.endpoint:
         data["execution_history"] = (
@@ -55,7 +54,6 @@ async def async_get_device_diagnostics(
         "server": entry.data[CONF_HUB],
     }
 
-    # TODO use is_local attribute
     # Only Overkiz cloud servers expose an endpoint with execution history
     if not "/enduser-mobile-web/1/enduserAPI/" in client.server.endpoint:
         data["execution_history"] = [

@@ -31,7 +31,9 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
+from .config_flow import generate_local_server
 from .const import (
+    CONF_API_TYPE,
     CONF_HUB,
     CONF_TOKEN_UUID,
     DOMAIN,
@@ -43,8 +45,6 @@ from .const import (
     UPDATE_INTERVAL_LOCAL,
 )
 from .coordinator import OverkizDataUpdateCoordinator
-
-from .config_flow import generate_local_server
 
 
 @dataclass
@@ -59,11 +59,10 @@ class HomeAssistantOverkizData:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Overkiz from a config entry."""
 
-    client = None
+    client: OverkizClient | None = None
 
     # Local API vs Cloud API
-    # TODO add a helper function to see if local API
-    if entry.data.get(CONF_HOST):
+    if entry.data[CONF_API_TYPE] == "local":
         LOGGER.debug("CONFIGURING LOCAL INTEGRATION")
         host = entry.data[CONF_HOST]
         token = entry.data[CONF_TOKEN]
@@ -136,7 +135,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
         coordinator.update_interval = UPDATE_INTERVAL_ALL_ASSUMED_STATE
 
-    if entry.data.get(CONF_HOST):
+    if entry.data[CONF_API_TYPE] == "local":
         # TODO Fix, this part is called but does not change the update interval
         coordinator.update_interval = UPDATE_INTERVAL_LOCAL
 
@@ -187,7 +186,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         # Delete local auth token if local server is unloaded
         if token_uuid := entry.data.get(CONF_TOKEN_UUID):
-            data: HomeAssistantOverkizData = hass.data[DOMAIN][entry.entry_id]
+            hass.data[DOMAIN][entry.entry_id]
             # TODO delete local token on unload, get gateway_id
             # data.coordinator.client.delete_local_token(gateway_id, token_uuid)
 

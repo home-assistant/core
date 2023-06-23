@@ -8,6 +8,12 @@
           "hub": "Hub"
         }
       },
+      "local_or_cloud": {
+        "description": "Choose between local or cloud API. Local API supports TaHoma Connexxoon, TaHoma v2, and TaHoma Switch. Climate devices are not supported in local API.",
+        "data": {
+          "hub": "Hub"
+        }
+      },
       "cloud": {
         "description": "Enter your application credentials.",
         "data": {
@@ -16,7 +22,7 @@
         }
       },
       "local": {
-        "description": "If you have activated the [Developer Mode of your TaHoma box](https://developer.somfy.com/developer-mode), you authorize third-party softwares to connect to it via your local network. \n\n Log in with your Somfy application credentials and change host to include your gateway-pin.",
+        "description": "By activating the [Developer Mode of your TaHoma box](https://developer.somfy.com/developer-mode), you authorize third-party softwares (like Home Assistant) to connect to it via your local network. \n\n After activation, log in with your application credentials and change the host to include your gateway-pin or use the IP address of your hub.",
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "username": "[%key:common::config_flow::data::username%]",
