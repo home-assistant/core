@@ -15,7 +15,6 @@ from homeassistant.const import (
     SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
-    STATE_OFF,
     STATE_ON,
 )
 from homeassistant.core import HomeAssistant
@@ -176,7 +175,7 @@ class HumidifierEntity(ToggleEntity):
 
         if self.action is not None:
             data[ATTR_ACTION] = (
-                self.action if self.state != STATE_OFF else HumidifierAction.OFF
+                self.action if self.is_on else HumidifierAction.OFF
             )
 
         if self.current_humidity is not None:
