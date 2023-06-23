@@ -35,6 +35,7 @@ from .const import (
     ATTR_API_FEELS_LIKE_TEMPERATURE,
     ATTR_API_FORECAST,
     ATTR_API_FORECAST_CONDITION,
+    ATTR_API_FORECAST_HUMIDITY,
     ATTR_API_FORECAST_PRECIPITATION,
     ATTR_API_FORECAST_PRECIPITATION_PROBABILITY,
     ATTR_API_FORECAST_PRESSURE,
@@ -165,6 +166,11 @@ FORECAST_SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key=ATTR_API_FORECAST_CONDITION,
         name="Condition",
+    ),
+    SensorEntityDescription(
+        key=ATTR_API_FORECAST_HUMIDITY,
+        name="Humidity",
+        native_unit_of_measurement=PERCENTAGE,
     ),
     SensorEntityDescription(
         key=ATTR_API_FORECAST_PRECIPITATION,
