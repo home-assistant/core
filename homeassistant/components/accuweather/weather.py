@@ -80,6 +80,18 @@ class AccuWeatherEntity(
             return None
 
     @property
+    def cloud_coverage(self) -> float:
+        """Return the Cloud coverage in %."""
+        return cast(float, self.coordinator.data["CloudCover"])
+
+    @property
+    def native_apparent_temperature(self) -> float:
+        """Return the apparent temperature."""
+        return cast(
+            float, self.coordinator.data["ApparentTemperature"][API_METRIC]["Value"]
+        )
+
+    @property
     def native_temperature(self) -> float:
         """Return the temperature."""
         return cast(float, self.coordinator.data["Temperature"][API_METRIC]["Value"])
@@ -90,9 +102,21 @@ class AccuWeatherEntity(
         return cast(float, self.coordinator.data["Pressure"][API_METRIC]["Value"])
 
     @property
+    def native_dew_point(self) -> float:
+        """Return the dew point."""
+        return cast(float, self.coordinator.data["DewPoint"][API_METRIC]["Value"])
+
+    @property
     def humidity(self) -> int:
         """Return the humidity."""
         return cast(int, self.coordinator.data["RelativeHumidity"])
+
+    @property
+    def native_wind_gust_speed(self) -> float:
+        """Return the wind gust speed."""
+        return cast(
+            float, self.coordinator.data["WindGust"]["Speed"][API_METRIC]["Value"]
+        )
 
     @property
     def native_wind_speed(self) -> float:
