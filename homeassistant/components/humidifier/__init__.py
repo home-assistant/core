@@ -135,7 +135,7 @@ class HumidifierEntity(ToggleEntity):
     """Base class for humidifier entities."""
 
     entity_description: HumidifierEntityDescription
-    _attr_action: HumidiierAction | None = None
+    _attr_action: HumidifierAction | None = None
     _attr_available_modes: list[str] | None
     _attr_current_humidity: int | None = None
     _attr_device_class: HumidifierDeviceClass | None
