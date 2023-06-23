@@ -106,7 +106,6 @@ class BaseZone:
     """Basic zone information."""
 
     id: int
-    controller_id: int
     number: Option
     name: str
 
