@@ -36,7 +36,6 @@ from .const import (
     CONF_API_TYPE,
     CONF_SERVER,
     CONF_TOKEN_UUID,
-    CONF_SERVER,
     DOMAIN,
     LOGGER,
     OVERKIZ_DEVICE_TO_PLATFORM,
@@ -64,7 +63,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # Local API vs Cloud API
     if entry.data[CONF_API_TYPE] == "local":
-        LOGGER.debug("CONFIGURING LOCAL INTEGRATION")
+        LOGGER.debug("Configuring local integration")
         host = entry.data[CONF_HOST]
         token = entry.data[CONF_TOKEN]
 
@@ -137,7 +136,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         coordinator.update_interval = UPDATE_INTERVAL_ALL_ASSUMED_STATE
 
     if entry.data[CONF_API_TYPE] == "local":
-        # TODO Fix, this part is called but does not change the update interval
         coordinator.update_interval = UPDATE_INTERVAL_LOCAL
 
     platforms: defaultdict[Platform, list[Device]] = defaultdict(list)
@@ -183,12 +181,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         # Remove local auth token if local server is unloaded
         if token_uuid := entry.data.get(CONF_TOKEN_UUID):
-            hass.data[DOMAIN].coordinator.client.delete_local_token(
-                entry.unique_id, token_uuid
+            data: HomeAssistantOverkizData = hass.data[DOMAIN][entry.entry_id]
+            await data.coordinator.client.delete_local_token(
+                cast(str, entry.unique_id), token_uuid
             )
 
         hass.data[DOMAIN].pop(entry.entry_id)
