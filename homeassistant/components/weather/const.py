@@ -20,8 +20,10 @@ from homeassistant.util.unit_conversion import (
 
 ATTR_WEATHER_HUMIDITY = "humidity"
 ATTR_WEATHER_OZONE = "ozone"
+ATTR_WEATHER_DEW_POINT = "dew_point"
 ATTR_WEATHER_PRESSURE = "pressure"
 ATTR_WEATHER_PRESSURE_UNIT = "pressure_unit"
+ATTR_WEATHER_APPARENT_TEMPERATURE = "apparent_temperature"
 ATTR_WEATHER_TEMPERATURE = "temperature"
 ATTR_WEATHER_TEMPERATURE_UNIT = "temperature_unit"
 ATTR_WEATHER_VISIBILITY = "visibility"
@@ -30,6 +32,7 @@ ATTR_WEATHER_WIND_BEARING = "wind_bearing"
 ATTR_WEATHER_WIND_SPEED = "wind_speed"
 ATTR_WEATHER_WIND_SPEED_UNIT = "wind_speed_unit"
 ATTR_WEATHER_PRECIPITATION_UNIT = "precipitation_unit"
+ATTR_WEATHER_CLOUD_COVERAGE = "cloud_coverage"
 
 DOMAIN: Final = "weather"
 
