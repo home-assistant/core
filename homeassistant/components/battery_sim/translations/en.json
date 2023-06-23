@@ -1,1 +1,57 @@
-
+{
+    "config": {
+        "abort": {
+            "already_configured": "This device is already configured."
+        },
+        "error": { 
+            "not_float": "Needs to be a number"
+        },
+        "flow_title": "Setup new simulated battery",
+        "step": {
+            "user": {
+                "title": "Select battery",
+                "data":{
+                    "battery": "Battery model"
+                },
+                "description": "Select a battery model to simulate from the list or select custom to create one."
+            },
+            "custom": {
+                "title": "Custom battery",
+                "data":{
+                    "unique_name": "Unique name",
+                    "size_kwh": "Battery size in kWh",
+                    "max_discharge_rate_kw" : "Maximum discharge rate in kW",
+                    "max_charge_rate_kw": "Maximum charging rate in kW",
+                    "efficiency": "Round trip efficiency (0 to 1)"
+                },
+                "description": "Set the speciffications of the battery. Please consider posting details of the battery you are simulating on our github so we can add it to the template list."
+            },
+            "metertype":{
+                "title": "Energy meter type",
+                "data":{
+                    "one_import_one_export" : "One import and one export meter",
+                    "two_import_one_export" : "Two import and one export meter"
+                },
+                "description": "Select the type of energy meter you have. Import meters measure energy coming into your home from the grid. You may have two of these e.g. one for day time and one for night. Export meters measure energy leaving your house to the grid e.g. excess solar generation."
+            },
+            "connectsensors": {
+                "title": "Connect battery to energy meter sensors",
+                "data":{
+                    "import_sensor": "Import sensor/meter - energy coming into house",
+                    "second_import_sensor": "Second import sensor/meter - e.g. night time or Economy 7",
+                    "export_sensor" : "Export sensor/meter - energy sent to grid",
+                    "second_export_sensor" : "Second export sensor/meter - e.g. night time or Economy 7"
+                },
+                "description": "When export sensor shows energy leaving the house battery will charge. When import sensor shows energy entering the house from the grid the battery will discharge."
+            },
+            "connecttariffsensors": {
+                "title": "Connect sensors or specify fixed value for energy tariffs",
+                "data":{
+                    "energy_import_tariff": "Import tariff/rate - cost of energy from the grid (£/kWh)",
+                    "energy_export_tariff": "Export tariff/rate - payment for energy exported to grid (£/kWh)"
+                },
+                "description": "Currency is determined in home assistant location settings and is usually in base unit (e.g. euro) not subunit (e.g. cents) so tariff is usualy in the form 0.33 or similar."
+            }
+          }
+    }
+}
