@@ -1525,7 +1525,7 @@ pyEight==0.3.2
 pyElectra==1.2.0
 
 # homeassistant.components.emby
-pyEmby==1.8
+pyEmby==1.9
 
 # homeassistant.components.hikvision
 pyHik==0.3.2

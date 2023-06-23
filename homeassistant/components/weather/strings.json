@@ -30,6 +30,9 @@
         "ozone": {
           "name": "Ozone"
         },
+        "cloud_coverage": {
+          "name": "Cloud coverage"
+        },
         "precipitation_unit": {
           "name": "Precipitation unit"
         },
@@ -38,6 +41,12 @@
         },
         "pressure_unit": {
           "name": "Pressure unit"
+        },
+        "apparent_temperature": {
+          "name": "Apparent temperature"
+        },
+        "dew_point": {
+          "name": "Dew point temperature"
         },
         "temperature": {
           "name": "Temperature"
@@ -53,6 +62,9 @@
         },
         "wind_bearing": {
           "name": "Wind bearing"
+        },
+        "wind_gust_speed": {
+          "name": "Wind gust speed"
         },
         "wind_speed": {
           "name": "Wind speed"

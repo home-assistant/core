@@ -49,10 +49,10 @@ class EsphomeBinarySensor(
             # Status binary sensors indicated connected state.
             # So in their case what's usually _availability_ is now state
             return self._entry_data.available
-        if not self._has_state:
-            return None
         state = self._state
-        return None if state.missing_state else state.state
+        if not self._has_state or state.missing_state:
+            return None
+        return state.state
 
     @callback
     def _on_static_info_update(self, static_info: EntityInfo) -> None:
