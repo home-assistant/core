@@ -91,7 +91,7 @@ async def async_setup_entry(
         registry, config_entry.options[CONF_SOURCE]
     )
 
-    source_entity = er.EntityRegistry.async_get(registry, source_entity_id)
+    source_entity = registry.async_get(source_entity_id)
     dev_reg = dr.async_get(hass)
     # Resolve source entity device
     if (
