@@ -1,0 +1,5 @@
+{
+  "domain": "energyid",
+  "name": "EnergyID",
+  "integrations": ["energyid"]
+}

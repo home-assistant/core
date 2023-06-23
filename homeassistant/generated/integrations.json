@@ -1422,9 +1422,14 @@
     },
     "energyid": {
       "name": "EnergyID",
-      "integration_type": "hub",
-      "config_flow": true,
-      "iot_class": "cloud_push"
+      "integrations": {
+        "energyid": {
+          "integration_type": "hub",
+          "config_flow": true,
+          "iot_class": "cloud_push",
+          "name": "EnergyID"
+        }
+      }
     },
     "energyzero": {
       "name": "EnergyZero",
