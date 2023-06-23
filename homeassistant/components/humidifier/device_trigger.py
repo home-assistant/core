@@ -46,7 +46,7 @@ CURRENT_TRIGGER_SCHEMA = vol.All(
 HUMIDIFIER_TRIGGER_SCHEMA = vol.All(
     DEVICE_TRIGGER_BASE_SCHEMA.extend(
         {
-            vol.Required(CONF_ENTITY_ID): cv.entity_id,
+            vol.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
             vol.Required(CONF_TYPE): "target_humidity_changed",
             vol.Optional(CONF_BELOW): vol.Any(vol.Coerce(int)),
             vol.Optional(CONF_ABOVE): vol.Any(vol.Coerce(int)),
@@ -85,7 +85,7 @@ async def async_get_triggers(
             CONF_PLATFORM: "device",
             CONF_DEVICE_ID: device_id,
             CONF_DOMAIN: DOMAIN,
-            CONF_ENTITY_ID: entry.entity_id,
+            CONF_ENTITY_ID: entry.id,
         }
 
         triggers.append(

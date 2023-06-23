@@ -42,14 +42,11 @@
       "chlorine_dioxide": {
         "name": "Chlorine dioxide"
       },
-      "carbon_monoxide": {
-        "name": "[%key:component::sensor::entity_component::carbon_monoxide::name%]"
-      },
-      "carbon_dioxide": {
-        "name": "[%key:component::sensor::entity_component::carbon_dioxide::name%]"
-      },
       "carbon_disulfide": {
         "name": "Carbon disulfide"
+      },
+      "carbon_monoxide": {
+        "name": "[%key:component::sensor::entity_component::carbon_monoxide::name%]"
       },
       "dew_point": {
         "name": "Dew point"
@@ -81,9 +78,6 @@
       "health_index": {
         "name": "Health Index"
       },
-      "humidity": {
-        "name": "[%key:component::sensor::entity_component::humidity::name%]"
-      },
       "absolute_humidity": {
         "name": "Absolute humidity"
       },
@@ -96,41 +90,17 @@
       "methane": {
         "name": "Methane"
       },
-      "nitrous_oxide": {
-        "name": "[%key:component::sensor::entity_component::nitrous_oxide::name%]"
-      },
-      "nitrogen_monoxide": {
-        "name": "[%key:component::sensor::entity_component::nitrogen_monoxide::name%]"
-      },
-      "nitrogen_dioxide": {
-        "name": "[%key:component::sensor::entity_component::nitrogen_dioxide::name%]"
-      },
       "organic_acid": {
         "name": "Organic acid"
       },
       "oxygen": {
         "name": "Oxygen"
       },
-      "ozone": {
-        "name": "[%key:component::sensor::entity_component::ozone::name%]"
-      },
       "performance_index": {
         "name": "Performance Index"
       },
       "hydrogen_phosphide": {
         "name": "Hydrogen Phosphide"
-      },
-      "pm1": {
-        "name": "[%key:component::sensor::entity_component::pm1::name%]"
-      },
-      "pm25": {
-        "name": "[%key:component::sensor::entity_component::pm25::name%]"
-      },
-      "pm10": {
-        "name": "[%key:component::sensor::entity_component::pm10::name%]"
-      },
-      "pressure": {
-        "name": "[%key:component::sensor::entity_component::pressure::name%]"
       },
       "relative_pressure": {
         "name": "Relative pressure"
@@ -144,9 +114,6 @@
       "silicon_hydride": {
         "name": "Silicon Hydride"
       },
-      "sulphur_dioxide": {
-        "name": "[%key:component::sensor::entity_component::sulphur_dioxide::name%]"
-      },
       "noise": {
         "name": "Noise"
       },
@@ -155,12 +122,6 @@
       },
       "radon": {
         "name": "Radon"
-      },
-      "temperature": {
-        "name": "[%key:component::sensor::entity_component::temperature::name%]"
-      },
-      "volatile_organic_compounds": {
-        "name": "[%key:component::sensor::entity_component::volatile_organic_compounds::name%]"
       },
       "industrial_volatile_organic_compounds": {
         "name": "VOCs (Industrial)"

@@ -94,13 +94,12 @@ class EsphomeSensor(EsphomeEntity[SensorInfo, SensorState], SensorEntity):
     @esphome_state_property
     def native_value(self) -> datetime | str | None:
         """Return the state of the entity."""
-        if math.isnan(self._state.state):
-            return None
-        if self._state.missing_state:
+        state = self._state
+        if math.isnan(state.state) or state.missing_state:
             return None
         if self._attr_device_class == SensorDeviceClass.TIMESTAMP:
-            return dt_util.utc_from_timestamp(self._state.state)
-        return f"{self._state.state:.{self._static_info.accuracy_decimals}f}"
+            return dt_util.utc_from_timestamp(state.state)
+        return f"{state.state:.{self._static_info.accuracy_decimals}f}"
 
 
 class EsphomeTextSensor(EsphomeEntity[TextSensorInfo, TextSensorState], SensorEntity):
@@ -110,6 +109,5 @@ class EsphomeTextSensor(EsphomeEntity[TextSensorInfo, TextSensorState], SensorEn
     @esphome_state_property
     def native_value(self) -> str | None:
         """Return the state of the entity."""
-        if self._state.missing_state:
-            return None
-        return self._state.state
+        state = self._state
+        return None if state.missing_state else state.state

@@ -305,22 +305,15 @@ omit =
     homeassistant/components/escea/climate.py
     homeassistant/components/escea/discovery.py
     homeassistant/components/esphome/__init__.py
-    homeassistant/components/esphome/alarm_control_panel.py
-    homeassistant/components/esphome/binary_sensor.py
     homeassistant/components/esphome/bluetooth/*
     homeassistant/components/esphome/button.py
     homeassistant/components/esphome/camera.py
-    homeassistant/components/esphome/climate.py
     homeassistant/components/esphome/cover.py
     homeassistant/components/esphome/domain_data.py
     homeassistant/components/esphome/entry_data.py
-    homeassistant/components/esphome/fan.py
     homeassistant/components/esphome/light.py
     homeassistant/components/esphome/lock.py
-    homeassistant/components/esphome/media_player.py
     homeassistant/components/esphome/number.py
-    homeassistant/components/esphome/select.py
-    homeassistant/components/esphome/sensor.py
     homeassistant/components/esphome/switch.py
     homeassistant/components/etherscan/sensor.py
     homeassistant/components/eufy/*
