@@ -10,6 +10,7 @@ from energyid_webhooks import WebhookClientAsync, WebhookPayload
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import Event, HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_track_state_change_event
 
@@ -39,8 +40,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data[DOMAIN][entry.entry_id] = dispatcher
 
     # Validate the webhook client
-    if not await dispatcher.async_validate_client():
-        return False
+    try:
+        await dispatcher.client.get_policy()
+    except aiohttp.ClientResponseError as error:
+        _LOGGER.error("Could not validate webhook client")
+        raise ConfigEntryAuthFailed from error
 
     # Register the webhook dispatcher
     async_track_state_change_event(
@@ -137,15 +141,6 @@ class WebhookDispatcher:
         self.last_upload = new_state.last_changed
         _LOGGER.debug("Updated last upload time to %s", self.last_upload)
         self._upload_lock.release()
-        return True
-
-    async def async_validate_client(self) -> bool:
-        """Validate the client."""
-        try:
-            await self.client.get_policy()
-        except aiohttp.ClientResponseError as error:
-            _LOGGER.error("Error validating webhook: %s", error)
-            return False
         return True
 
     def upload_allowed(self, state_change_time: dt.datetime) -> bool:
