@@ -257,6 +257,13 @@ class SensorEntity(Entity):
         self._async_read_entity_options()
         self._update_suggested_precision()
 
+    def _default_to_device_class_name(self) -> bool:
+        """Return True if an unnamed entity should be named by its device class.
+
+        For sensors this is True if the entity has a device class.
+        """
+        return self.device_class not in (None, SensorDeviceClass.ENUM)
+
     @property
     def device_class(self) -> SensorDeviceClass | None:
         """Return the class of this entity."""

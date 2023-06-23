@@ -355,14 +355,14 @@ class Entity(ABC):
         if hasattr(self, "entity_description"):
             if not (name := self.entity_description.name):
                 return True
-            if name is UNDEFINED:
+            if name is UNDEFINED and not self._default_to_device_class_name():
                 # Backwards compatibility with leaving EntityDescription.name unassigned
                 # for device name.
                 # Deprecated in HA Core 2023.6, remove in HA Core 2023.9
                 report_implicit_device_name()
                 return True
             return False
-        if self.name is UNDEFINED:
+        if self.name is UNDEFINED and not self._default_to_device_class_name():
             # Backwards compatibility with not overriding name property for device name.
             # Deprecated in HA Core 2023.6, remove in HA Core 2023.9
             report_implicit_device_name()
