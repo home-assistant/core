@@ -128,6 +128,7 @@ class SmhiWeather(WeatherEntity):
     _attr_native_pressure_unit = UnitOfPressure.HPA
 
     _attr_has_entity_name = True
+    _attr_name = None
 
     def __init__(
         self,
