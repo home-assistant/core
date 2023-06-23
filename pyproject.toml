@@ -38,18 +38,18 @@ dependencies    = [
     "home-assistant-bluetooth==1.10.0",
     "ifaddr==0.2.0",
     "Jinja2==3.1.2",
-    "lru-dict==1.1.8",
+    "lru-dict==1.2.0",
     "PyJWT==2.7.0",
     # PyJWT has loose dependency. We want the latest one.
-    "cryptography==40.0.2",
-    # pyOpenSSL 23.1.0 is required to work with cryptography 39+
-    "pyOpenSSL==23.1.0",
-    "orjson==3.8.12",
+    "cryptography==41.0.1",
+    # pyOpenSSL 23.2.0 is required to work with cryptography 41+
+    "pyOpenSSL==23.2.0",
+    "orjson==3.9.1",
     "pip>=21.0,<23.2",
     "python-slugify==4.0.1",
     "PyYAML==6.0",
     "requests==2.31.0",
-    "typing_extensions>=4.5.0,<5.0",
+    "typing_extensions>=4.6.3,<5.0",
     "ulid-transform==0.7.2",
     "voluptuous==0.13.1",
     "voluptuous-serialize==2.6.0",
@@ -76,20 +76,6 @@ include = ["homeassistant*"]
 
 [tool.black]
 extend-exclude = "/generated/"
-
-[tool.isort]
-# https://github.com/PyCQA/isort/wiki/isort-Settings
-profile = "black"
-# will group `import x` and `from x import` of the same module.
-force_sort_within_sections = true
-known_first_party = [
-    "homeassistant",
-    "tests",
-]
-forced_separate = [
-    "tests",
-]
-combine_as_imports = true
 
 [tool.pylint.MAIN]
 py-version = "3.10"
@@ -248,9 +234,27 @@ select = [
     "D",  # docstrings
     "E",  # pycodestyle
     "F",  # pyflakes/autoflake
+    "I",  # isort
     "ICN001", # import concentions; {name} should be imported as {asname}
     "PGH004",  # Use specific rule codes when using noqa
     "PLC0414", # Useless import alias. Import alias does not rename original package.
+    "S103",  # bad-file-permissions
+    "S108",  # hardcoded-temp-file
+    "S306",  # suspicious-mktemp-usage
+    "S307",  # suspicious-eval-usage
+    "S313",  # suspicious-xmlc-element-tree-usage
+    "S314",  # suspicious-xml-element-tree-usage
+    "S315",  # suspicious-xml-expat-reader-usage
+    "S316",  # suspicious-xml-expat-builder-usage
+    "S317",  # suspicious-xml-sax-usage
+    "S318",  # suspicious-xml-mini-dom-usage
+    "S319",  # suspicious-xml-pull-dom-usage
+    "S320",  # suspicious-xmle-tree-usage
+    "S601",  # paramiko-call
+    "S602",  # subprocess-popen-with-shell-equals-true
+    "S604",  # call-with-shell-equals-true
+    "S608",  # hardcoded-sql-expression
+    "S609",  # unix-command-wildcard-injection
     "SIM105", # Use contextlib.suppress({exception}) instead of try-except-pass
     "SIM117", # Merge with-statements that use the same scope
     "SIM118", # Use {key} in {dict} instead of {key} in {dict}.keys()
@@ -273,6 +277,8 @@ ignore = [
     "D407",  # Section name underlining
     "E501",  # line too long
     "E731",  # do not assign a lambda expression, use a def
+    "UP006", # keep type annotation style as is
+    "UP007", # keep type annotation style as is
     # Ignored due to performance: https://github.com/charliermarsh/ruff/issues/2923
     "UP038", # Use `X | Y` in `isinstance` call instead of `(X, Y)`
 ]
@@ -289,8 +295,12 @@ voluptuous = "vol"
 [tool.ruff.flake8-pytest-style]
 fixture-parentheses = false
 
-[tool.ruff.pyupgrade]
-keep-runtime-typing = true
+[tool.ruff.isort]
+force-sort-within-sections = true
+known-first-party = [
+    "homeassistant",
+]
+combine-as-imports = true
 
 [tool.ruff.per-file-ignores]
 

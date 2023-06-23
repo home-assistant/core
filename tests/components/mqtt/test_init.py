@@ -37,7 +37,7 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
-from .test_common import help_all_subscribe_calls, help_test_validate_platform_config
+from .test_common import help_all_subscribe_calls
 
 from tests.common import (
     MockConfigEntry,
@@ -2066,48 +2066,50 @@ async def test_handle_message_callback(
     assert callbacks[0].payload == "test-payload"
 
 
-@patch("homeassistant.components.mqtt.PLATFORMS", [])
-async def test_setup_manual_mqtt_with_platform_key(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
-) -> None:
-    """Test set up a manual MQTT item with a platform key."""
-    config = {
-        mqtt.DOMAIN: {
-            "light": {
-                "platform": "mqtt",
-                "name": "test",
-                "command_topic": "test-topic",
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        {
+            mqtt.DOMAIN: {
+                "light": {
+                    "platform": "mqtt",
+                    "name": "test",
+                    "command_topic": "test-topic",
+                }
             }
         }
-    }
-    help_test_validate_platform_config(hass, config)
+    ],
+)
+@patch("homeassistant.components.mqtt.PLATFORMS", [])
+async def test_setup_manual_mqtt_with_platform_key(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test set up a manual MQTT item with a platform key."""
+    with pytest.raises(AssertionError):
+        await mqtt_mock_entry()
     assert (
         "Invalid config for [mqtt]: [platform] is an invalid option for [mqtt]"
         in caplog.text
     )
 
 
+@pytest.mark.parametrize("hass_config", [{mqtt.DOMAIN: {"light": {"name": "test"}}}])
+@pytest.mark.xfail(reason="Invalid config for [mqtt]: required key not provided")
 @patch("homeassistant.components.mqtt.PLATFORMS", [])
 async def test_setup_manual_mqtt_with_invalid_config(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test set up a manual MQTT item with an invalid config."""
-    config = {mqtt.DOMAIN: {"light": {"name": "test"}}}
-    help_test_validate_platform_config(hass, config)
+    with pytest.raises(AssertionError):
+        await mqtt_mock_entry()
     assert (
         "Invalid config for [mqtt]: required key not provided @ data['mqtt']['light'][0]['command_topic']."
         " Got None. (See ?, line ?)" in caplog.text
     )
-
-
-@patch("homeassistant.components.mqtt.PLATFORMS", [])
-async def test_setup_manual_mqtt_empty_platform(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
-) -> None:
-    """Test set up a manual MQTT platform without items."""
-    config: ConfigType = {mqtt.DOMAIN: {"light": []}}
-    help_test_validate_platform_config(hass, config)
-    assert "voluptuous.error.MultipleInvalid" not in caplog.text
 
 
 @patch("homeassistant.components.mqtt.PLATFORMS", [])

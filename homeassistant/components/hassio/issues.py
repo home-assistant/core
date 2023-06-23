@@ -306,7 +306,11 @@ class SupervisorIssues:
 
     async def update(self) -> None:
         """Update issues from Supervisor resolution center."""
-        data = await self._client.get_resolution_info()
+        try:
+            data = await self._client.get_resolution_info()
+        except HassioAPIError as err:
+            _LOGGER.error("Failed to update supervisor issues: %r", err)
+            return
         self.unhealthy_reasons = set(data[ATTR_UNHEALTHY])
         self.unsupported_reasons = set(data[ATTR_UNSUPPORTED])
 
