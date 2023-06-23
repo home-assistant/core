@@ -13,6 +13,7 @@ class BAFEntity(Entity):
     """Base class for baf entities."""
 
     _attr_should_poll = False
+    _attr_has_entity_name = True
 
     def __init__(self, device: Device) -> None:
         """Initialize the entity."""
