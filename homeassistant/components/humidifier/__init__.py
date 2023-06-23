@@ -174,9 +174,7 @@ class HumidifierEntity(ToggleEntity):
         data: dict[str, int | str | None] = {}
 
         if self.action is not None:
-            data[ATTR_ACTION] = (
-                self.action if self.is_on else HumidifierAction.OFF
-            )
+            data[ATTR_ACTION] = self.action if self.is_on else HumidifierAction.OFF
 
         if self.current_humidity is not None:
             data[ATTR_CURRENT_HUMIDITY] = self.current_humidity
