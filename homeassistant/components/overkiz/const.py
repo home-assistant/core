@@ -34,7 +34,8 @@ LOGGER: logging.Logger = logging.getLogger(__package__)
 CONF_API_TYPE: Final = "api_type"
 CONF_HUB: Final = "hub"
 CONF_TOKEN_UUID = "token_uuid"
-DEFAULT_HUB: Final = "somfy_europe"
+CONF_SERVER: Final = "server"
+DEFAULT_SERVER: Final = "somfy_europe"
 DEFAULT_HOST: Final = "gateway-xxxx-xxxx-xxxx.local:8443"
 
 UPDATE_INTERVAL: Final = timedelta(seconds=30)

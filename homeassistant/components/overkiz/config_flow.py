@@ -1,4 +1,4 @@
-"""Config flow for Overkiz (by Somfy) integration."""
+"""Config flow for Overkiz integration."""
 from __future__ import annotations
 
 import re
@@ -10,12 +10,14 @@ from pyoverkiz.const import SUPPORTED_SERVERS
 from pyoverkiz.exceptions import (
     BadCredentialsException,
     CozyTouchBadCredentialsException,
+    OverkizException,
     MaintenanceException,
     TooManyAttemptsBannedException,
     TooManyRequestsException,
     UnknownUserException,
 )
-from pyoverkiz.models import OverkizServer, obfuscate_id
+from pyoverkiz.obfuscate import obfuscate_id
+from pyoverkiz.models import OverkizServer
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -25,16 +27,23 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_TOKEN, CONF_USERN
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
-from .const import CONF_API_TYPE, CONF_HUB, CONF_TOKEN_UUID, DEFAULT_HUB, DOMAIN, LOGGER
+from .const import (
+    CONF_API_TYPE,
+    CONF_SERVER,
+    CONF_TOKEN_UUID,
+    DEFAULT_SERVER,
+    DOMAIN,
+    LOGGER,
+)
 
-SERVERS_THAT_SUPPORT_LOCAL = ["somfy_europe", "somfy_oceania", "somfy_america"]
+SERVERS_THAT_SUPPORT_LOCAL_API = ["somfy_europe", "somfy_oceania", "somfy_america"]
 
 
 # TODO move to PyOverkiz
 def generate_local_server(
-    host: str | None = None,
-    name: str | None = "Somfy TaHoma Developer Mode (local API)",
-    manufacturer: str | None = "Somfy",
+    host: str,
+    name: str = "Somfy TaHoma Developer M`ode",
+    manufacturer: str = "Somfy",
     configuration_url: str | None = None,
 ) -> OverkizServer:
     """Generate OverkizServer object for local API."""
@@ -56,7 +65,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     _config_entry: ConfigEntry | None
     _default_user: None | str
-    _default_hub: str
+    _default_server: str
     _default_host: str
 
     def __init__(self) -> None:
@@ -66,7 +75,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._config_entry = None
         self._default_api_type = None
         self._default_user = None
-        self._default_hub = DEFAULT_HUB
+        self._default_server = DEFAULT_SERVER
         self._default_host = "gateway-xxxx-xxxx-xxxx.local:8443"
 
     async def async_validate_input(self, user_input: dict[str, Any]) -> dict[str, Any]:
@@ -79,7 +88,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if self._default_api_type == LOCAL:
             # Create session on Somfy server to generate an access token for local API
             session = async_create_clientsession(self.hass)
-            server = SUPPORTED_SERVERS[self._default_hub]
+            server = SUPPORTED_SERVERS[self._default_server]
             client = OverkizClient(
                 username=username, password=password, server=server, session=session
             )
@@ -87,11 +96,15 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             await client.login(register_event_listener=False)
             gateways = await client.get_gateways()
 
+            gateway_id = None
             for gateway in gateways:
                 # Overkiz can return multiple gateways, but we only can generate a token
                 # for the main gateway.
                 if re.match(r"\d{4}-\d{4}-\d{4}", gateway.id):
                     gateway_id = gateway.id
+
+            if not gateway_id:
+                raise OverkizException("No valid gateway found")
 
             token = await client.generate_local_token(gateway_id)
             uuid = await client.activate_local_token(
@@ -113,7 +126,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             try:
                 await local_client.login()
             except Exception as exception:  # pylint: disable=broad-except
-                # Remove local token when login is not succesfull
+                # Remove local token when login is not succesful
                 await client.delete_local_token(gateway_id, uuid)
 
                 raise exception
@@ -122,7 +135,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             user_input[CONF_TOKEN_UUID] = uuid
 
         else:
-            server = SUPPORTED_SERVERS[user_input[CONF_HUB]]
+            server = SUPPORTED_SERVERS[user_input[CONF_SERVER]]
 
             session = async_create_clientsession(self.hass)
             client = OverkizClient(
@@ -147,9 +160,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input:
-            self._default_hub = user_input[CONF_HUB]
+            self._default_server = user_input[CONF_SERVER]
 
-            if self._default_hub in SERVERS_THAT_SUPPORT_LOCAL:
+            if self._default_server in SERVERS_THAT_SUPPORT_LOCAL_API:
                 return await self.async_step_local_or_cloud()
 
             return await self.async_step_cloud()
@@ -158,7 +171,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_HUB, default=self._default_hub): vol.In(
+                    vol.Required(CONF_SERVER, default=self._default_server): vol.In(
                         {key: hub.name for key, hub in SUPPORTED_SERVERS.items()}
                     ),
                 }
@@ -175,7 +188,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input:
             self._default_user = user_input[CONF_USERNAME]
-            user_input[CONF_HUB] = self._default_hub
+            user_input[CONF_SERVER] = self._default_server
 
             try:
                 await self.async_validate_input(user_input)
@@ -184,7 +197,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except BadCredentialsException as exception:
                 # If authentication with CozyTouch auth server is valid, but token is invalid
                 # for Overkiz API server, the hardware is not supported.
-                if user_input[CONF_HUB] == "atlantic_cozytouch" and not isinstance(
+                if user_input[CONF_SERVER] == "atlantic_cozytouch" and not isinstance(
                     exception, CozyTouchBadCredentialsException
                 ):
                     description_placeholders["unsupported_device"] = "CozyTouch"
@@ -286,7 +299,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input:
             self._default_host = user_input[CONF_HOST]
             self._default_user = user_input[CONF_USERNAME]
-            user_input[CONF_HUB] = self._default_hub
+            user_input[CONF_SERVER] = self._default_server
 
             try:
                 user_input = await self.async_validate_input(user_input)
@@ -369,18 +382,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             discovery_info.type,
         )
 
-        # await self.async_set_unique_id(gateway_id)
-        # self._abort_if_unique_id_configured()
-        self.context["title_placeholders"] = {"gateway_id": gateway_id}
-
-        # Somfy TaHoma Developer Mode - Local API
-        if discovery_info.type == "_kizboxdev._tcp.local.":
-            self._default_host = f"gateway-{gateway_id}.local:8443"
-            return await self.async_step_local()
-
-        # Overkiz hub via cloud API
-        if discovery_info.type == "_kizbox._tcp.local.":
-            return await self.async_step_cloud()
+        return await self._process_discovery(gateway_id)
 
     async def _process_discovery(self, gateway_id: str) -> FlowResult:
         """Handle discovery of a gateway."""
@@ -404,6 +406,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         }
 
         self._default_user = self._config_entry.data[CONF_USERNAME]
-        self._default_hub = self._config_entry.data[CONF_HUB]
+        self._default_server = self._config_entry.data[CONF_SERVER]
+        self._default_api_type = self._config_entry.data[CONF_API_TYPE]
 
         return await self.async_step_user(user_input)
