@@ -1,201 +1,132 @@
 """API for Hydrawise."""
 
-import time
+from datetime import datetime, timedelta
 
-from .hydrawiser_api import customer_details, set_zones, status_schedule
-
-
-class HydraWiseRelay:
-    """HydraWise Relay."""
-
-    controller_id: int
-    relay_id: int  # Unique ID of relay
-    relay: int  # Physical number of zone
-    name: str
-    timestr: str  # Next time zone will water
-    time: int  # Number of seconds until next programmed run. 1 if running
-    run: str  # Length of next run, if in progress indicates remaining time in seconds
-
-    def __init__(self, controller_id, relay_info) -> None:
-        """Initialize relay."""
-        self.controller_id = controller_id
-        self.relay_id = relay_info["relay_id"]
-        self.relay = relay_info["relay"]
-        self.name = relay_info["name"]
-        self.timestr = relay_info["timestr"]
-        self.time = relay_info["time"]
-        self.run = relay_info["run"]
-
-    def is_zone_running(self) -> bool:
-        """State of the specified zone.
-
-        :param zone: The zone to check.
-        :type zone: int
-        :returns: Returns True if the zone is currently running, otherwise
-                  returns False if the zone is not running.
-        :rtype: boolean
-        """
-
-        return self.time == 1
-
-    def time_remaining(self):
-        """Amount of watering time left in seconds.
-
-        :param zone: The zone to check.
-        :type zone: int
-        :returns: If the zone is not running returns 0. If the zone doesn't
-                  exist returns None. Otherwise returns number of seconds left
-                  in the watering cycle.
-        :rtype: None or seconds left in the waterting cycle.
-        """
-        if self.is_zone_running():
-            return self.run
-
-        return 0
-
-
-class HydraWiseController:
-    """HydraWise Controller."""
-
-    name: str
-    controller_id: int
-    relays: list[HydraWiseRelay]
-    master_relay: int
-    master_time: int
-
-    def __init__(self, controller_details, status_details) -> None:
-        """Initialize controller."""
-        self.name = controller_details["name"]
-        self.controller_id = controller_details["controller_id"]
-        self.master_relay = status_details["master"]
-        self.master_timer = status_details["master_timer"]
-        self.relays = []
-        for relay in status_details["relays"]:
-            self.relays.append(HydraWiseRelay(self.controller_id, relay))
+from .pydrawise import Auth, Controller, Hydrawise, Zone
 
 
 class Hydrawiser:
     """Hydrawiser."""
 
-    controllers: list[HydraWiseController]
+    hydrawise: Hydrawise
+    controllers: list[Controller]
+    zones: list[Zone]
 
-    def __init__(self, user_token) -> None:
+    def __init__(self, username, password) -> None:
         """Construct."""
 
-        self._user_token = user_token
+        self.hydrawise = Hydrawise(Auth(username, password))
         self.controllers = []
-        self.update_controllers()
+        self.zones = []
 
-    def update_controllers(self) -> bool:
+    async def async_update_controllers(self) -> bool:
         """Pull controller information.
 
         :returns: True if successful, otherwise False.
         :rtype: boolean
         """
 
-        # Read the controller information.
-        controller_info = customer_details(self._user_token)
+        self.zones = []
 
-        if controller_info is None:
-            return False
+        self.controllers = await self.hydrawise.get_controllers()
+        for controller in self.controllers:
+            zones = await self.hydrawise.get_zones(controller)
+            for zone in zones:
+                zone.controller_id = controller.id
+                self.zones.append(zone)
 
-        controllers = []
-        for controller in controller_info["controllers"]:
-            controller_status = status_schedule(
-                self._user_token, controller["controller_id"]
-            )
-            controllers.append(HydraWiseController(controller, controller_status))
-
-        self.controllers = controllers
         return True
 
-    def get_controller(self, controller_id) -> HydraWiseController | None:
+    def get_controller(self, controller_id) -> Controller | None:
         """Get controller."""
         for controller in self.controllers:
-            if controller.controller_id == controller_id:
+            if controller.id == controller_id:
                 return controller
 
         return None
 
-    def get_relay(self, controller_id, relay_id) -> HydraWiseRelay | None:
+    def get_zone(self, zone_id) -> Zone | None:
         """Get relay."""
-        controller = self.get_controller(controller_id)
-        if controller is None:
-            return None
-
-        for relay in controller.relays:
-            if relay.relay_id == relay_id:
-                return relay
+        for zone in self.zones:
+            if zone.id == zone_id:
+                return zone
 
         return None
 
-    def convert_days_to_cmd(self, days):
-        """Add days to current time."""
-        if days <= 0:
-            return 0
-
-        # 1 day = 60 * 60 * 24 seconds = 86400
-        return time.mktime(time.localtime()) + (days * 86400)
-
-    def suspend_all(self, controller_id, days):
+    async def async_suspend_all(self, controller_id, days):
         """Suspend all zones."""
-        zone_cmd = "suspendall"
-        relay_id = None
-        time_cmd = self.convert_days_to_cmd(days)
+        controller = self.get_controller(controller_id)
+        if controller is None:
+            raise TypeError
 
-        return set_zones(self._user_token, controller_id, zone_cmd, relay_id, time_cmd)
+        until = datetime.now() + timedelta(days=days)
+        await self.hydrawise.suspend_all_zones(controller, until)
+        return await self.async_update_controllers()
 
-    def suspend_zone(self, days, relay: HydraWiseRelay):
-        """Suspend zone for an amount of time.
+    async def async_suspend_zone(self, zone_id, days):
+        """Suspend zone."""
+        zone = self.get_zone(zone_id)
+        if zone is None:
+            raise TypeError
 
-        :param days: Number of days to suspend the zone(s)
-        :param relay: The zone to suspend.
-        :returns: The response from set_zones() or None if there was an error.
-        :rtype: None or string
-        """
-        zone_cmd = "suspend"
-        time_cmd = self.convert_days_to_cmd(days)
+        until = datetime.now() + timedelta(days=days)
+        await self.hydrawise.suspend_zone(zone, until)
+        return await self.async_update_controllers()
 
-        return set_zones(
-            self._user_token, relay.controller_id, zone_cmd, relay.relay_id, time_cmd
-        )
+    async def async_resume_all(self, controller_id):
+        """Resume all zones."""
+        controller = self.get_controller(controller_id)
+        if controller is None:
+            raise TypeError
 
-    def run_all(self, controller_id, minutes):
+        await self.hydrawise.resume_all_zones(controller)
+        return await self.async_update_controllers()
+
+    async def async_resume_zone(self, zone_id):
+        """Resume zone."""
+        zone = self.get_zone(zone_id)
+        if zone is None:
+            raise TypeError
+
+        await self.hydrawise.resume_zone(zone)
+        return await self.async_update_controllers()
+
+    async def async_run_all(self, controller_id, minutes=0):
         """Run all zones."""
-        zone_cmd = "runall"
-        relay_id = None
-        time_cmd = minutes * 60
+        controller = self.get_controller(controller_id)
+        if controller is None:
+            raise TypeError
 
-        return set_zones(self._user_token, controller_id, zone_cmd, relay_id, time_cmd)
+        duration = minutes * 60
+        await self.hydrawise.start_all_zones(controller, custom_run_duration=duration)
+        return await self.async_update_controllers()
 
-    def run_zone(self, minutes, relay: HydraWiseRelay):
-        """Run zone for an amount of time.
+    async def async_run_zone(self, zone_id, minutes=0):
+        """Run zone."""
+        zone = self.get_zone(zone_id)
+        if zone is None:
+            raise TypeError
 
-        :param minutes: The number of minutes to run.
-        :param relay: The zone number to run.
-        :returns: The response from set_zones() or None if there was an error.
-        :rtype: None or string
-        """
-        zone_cmd = "run"
-        time_cmd = minutes * 60
-
-        return set_zones(
-            self._user_token, relay.controller_id, zone_cmd, relay.relay_id, time_cmd
+        duration = minutes * 60
+        await self.hydrawise.start_zone(
+            zone, custom_run_duration=duration, stack_runs=True
         )
+        return await self.async_update_controllers()
 
-    def stop_all(self, controller_id):
+    async def async_stop_all(self, controller_id):
         """Stop all zones."""
-        zone_cmd = "stopall"
-        relay_id = None
-        time_cmd = 0
+        controller = self.get_controller(controller_id)
+        if controller is None:
+            raise TypeError
 
-        return set_zones(self._user_token, controller_id, zone_cmd, relay_id, time_cmd)
+        await self.hydrawise.stop_all_zones(controller)
+        return await self.async_update_controllers()
 
-    def stop_zone(self, relay: HydraWiseRelay):
+    async def async_stop_zone(self, zone_id):
         """Stop zone."""
-        zone_cmd = "stop"
-        time_cmd = 0
+        zone = self.get_zone(zone_id)
+        if zone is None:
+            raise TypeError
 
-        return set_zones(
-            self._user_token, relay.controller_id, zone_cmd, relay.relay_id, time_cmd
-        )
+        await self.hydrawise.stop_zone(zone)
+        return await self.async_update_controllers()

@@ -14,7 +14,7 @@ from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
-    DEFAULT_WATERING_TIME,
+    DEFAULT_SUSPEND_DAYS,
     DOMAIN,
     LOGGER,
 )
@@ -23,8 +23,8 @@ from .hydrawiser import Hydrawiser
 
 SWITCH_TYPES: tuple[SwitchEntityDescription, ...] = (
     SwitchEntityDescription(
-        key="auto_watering",
-        name="Automatic Watering",
+        key="suspend_zone",
+        name="Suspend Zone",
         device_class=SwitchDeviceClass.SWITCH,
     ),
     SwitchEntityDescription(
@@ -50,17 +50,16 @@ async def async_setup_entry(
 
     entities = []
 
-    for controller in hydrawise.controllers:
-        for relay in controller.relays:
-            for description in SWITCH_TYPES:
-                entities.append(
-                    HydrawiseSwitch(
-                        coordinator=coordinator,
-                        controller_id=controller.controller_id,
-                        relay_id=relay.relay_id,
-                        description=description,
-                    )
+    for zone in hydrawise.zones:
+        for description in SWITCH_TYPES:
+            entities.append(
+                HydrawiseSwitch(
+                    coordinator=coordinator,
+                    controller_id=zone.controller_id,
+                    zone_id=zone.id,
+                    description=description,
                 )
+            )
 
     # Add all entities to HA
     async_add_entities(entities)
@@ -74,40 +73,38 @@ class HydrawiseSwitch(HydrawiseEntity, SwitchEntity):
         *,
         coordinator: HydrawiseDataUpdateCoordinator,
         controller_id: int,
-        relay_id: int,
+        zone_id: int,
         description: EntityDescription,
     ) -> None:
         """Initiatlize."""
         super().__init__(
             coordinator=coordinator,
             controller_id=controller_id,
-            relay_id=relay_id,
+            zone_id=zone_id,
             description=description,
         )
         self.update()
 
-    def turn_on(self, **kwargs: Any) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
-        relay = self.coordinator.api.get_relay(self.controller_id, self.relay_id)
-        if relay is None:
-            return
-
         if self.entity_description.key == "manual_watering":
-            # Watering Time needs to be passed
-            self.coordinator.api.run_zone(DEFAULT_WATERING_TIME, relay)
-        elif self.entity_description.key == "auto_watering":
-            self.coordinator.api.suspend_zone(0, relay)
+            # Watering Time needs to be passed if we want to override default
+            await self.coordinator.api.async_run_zone(self.zone_id)
+        elif self.entity_description.key == "suspend_zone":
+            await self.coordinator.api.async_suspend_zone(
+                self.zone_id, DEFAULT_SUSPEND_DAYS
+            )
 
-    def turn_off(self, **kwargs: Any) -> None:
+        self._attr_is_on = True
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
-        relay = self.coordinator.api.get_relay(self.controller_id, self.relay_id)
-        if relay is None:
-            return
-
         if self.entity_description.key == "manual_watering":
-            self.coordinator.api.run_zone(0, relay)
-        elif self.entity_description.key == "auto_watering":
-            self.coordinator.api.suspend_zone(365, relay)
+            await self.coordinator.api.async_stop_zone(self.zone_id)
+        elif self.entity_description.key == "suspend_zone":
+            await self.coordinator.api.async_resume_zone(self.zone_id)
+
+        self._attr_is_on = False
 
     @callback
     def _handle_coordinator_update(self) -> None:
@@ -118,18 +115,17 @@ class HydrawiseSwitch(HydrawiseEntity, SwitchEntity):
 
     def update(self) -> None:
         """Update state."""
-        relay = self.coordinator.api.get_relay(self.controller_id, self.relay_id)
-        if relay is None:
+        zone = self.coordinator.api.get_zone(self.zone_id)
+        if zone is None:
             return
 
         LOGGER.debug(
-            "Updating Watering switch for controller %d zone %s, timestr %s",
+            "Updating Watering switch for controller %d zone %s",
             self.controller_id,
-            relay.name,
-            relay.timestr,
+            zone.name,
         )
 
         if self.entity_description.key == "manual_watering":
-            self._attr_is_on = relay.time == 1
-        elif self.entity_description.key == "auto_watering":
-            self._attr_is_on = relay.timestr not in {"", "Now"}
+            self._attr_is_on = zone.scheduled_runs.current_run is not None
+        elif self.entity_description.key == "suspend_zone":
+            self._attr_is_on = zone.status.suspended_until is not None
