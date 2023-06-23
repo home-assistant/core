@@ -314,6 +314,15 @@ class OptionsFlowHandler(config_entries.OptionsFlow, ABC):
     async def _async_uninstall_addon(self, addon_manager: AddonManager) -> None:
         """Uninstall an add-on."""
         try:
+            try:
+                info = await addon_manager.async_get_addon_info()
+            except AddonError:
+                info = None
+
+            # Do not try to uninstall an addon if it is already uninstalled
+            if info is not None and info.state == AddonState.NOT_INSTALLED:
+                return
+
             await addon_manager.async_uninstall_addon()
             await self._async_wait_until_addon_state(
                 addon_manager, AddonState.NOT_INSTALLED
