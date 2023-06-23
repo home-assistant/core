@@ -7,7 +7,6 @@ import voluptuous as vol
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA,
     PLATFORM_SCHEMA,
-    BinarySensorDeviceClass,
     BinarySensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -28,7 +27,7 @@ from .config_flow import (
     CONF_ENOCEAN_MODEL,
 )
 from .device import EnOceanEntity
-from .enocean_supported_device_type import EnOceanSupportedDeviceType
+from .supported_device_type import EnOceanSupportedDeviceType
 
 DEFAULT_NAME = ""
 DEPENDENCIES = ["enocean"]
@@ -99,7 +98,7 @@ class EnOceanBinarySensor(EnOceanEntity, BinarySensorEntity):
         device_class,
         dev_type: EnOceanSupportedDeviceType = EnOceanSupportedDeviceType(),
         name=None,
-    ):
+    ) -> None:
         """Initialize the EnOcean binary sensor."""
         super().__init__(dev_id, dev_name, dev_type, name)
         self._device_class = device_class

@@ -7,6 +7,7 @@ from enocean.communicators import SerialCommunicator
 from enocean.protocol.packet import RadioPacket
 import serial
 
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
 
 from .const import SIGNAL_RECEIVE_MESSAGE, SIGNAL_SEND_MESSAGE
@@ -21,9 +22,8 @@ class EnOceanDongle:
     creating devices if needed, and dispatching messages to platforms.
     """
 
-    def __init__(self, hass, serial_path):
+    def __init__(self, hass: HomeAssistant, serial_path) -> None:
         """Initialize the EnOcean dongle."""
-
         self._communicator = SerialCommunicator(
             port=serial_path, callback=self.callback
         )
@@ -65,7 +65,6 @@ class EnOceanDongle:
         This is the callback function called by python-enocan whenever there
         is an incoming packet.
         """
-
         if isinstance(packet, RadioPacket):
             _LOGGER.debug("Received radio packet: %s", packet)
             dispatcher_send(self.hass, SIGNAL_RECEIVE_MESSAGE, packet)

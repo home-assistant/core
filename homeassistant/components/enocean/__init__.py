@@ -9,7 +9,7 @@ import voluptuous as vol
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_DEVICE, EVENT_HOMEASSISTANT_STARTED, Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import device_registry as dr, entity_registry
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.typing import ConfigType
@@ -25,12 +25,10 @@ from .config_flow import (
 )
 from .const import DATA_ENOCEAN, DOMAIN, ENOCEAN_DONGLE, LOGGER, PLATFORMS
 from .dongle import EnOceanDongle
-from .enocean_supported_device_type import (
+from .supported_device_type import (
     EEP_A5_02_0A,
     EEP_A5_02_0B,
     EEP_A5_02_01,
-    EEP_A5_02_1A,
-    EEP_A5_02_1B,
     EEP_A5_02_02,
     EEP_A5_02_03,
     EEP_A5_02_04,
@@ -39,6 +37,8 @@ from .enocean_supported_device_type import (
     EEP_A5_02_07,
     EEP_A5_02_08,
     EEP_A5_02_09,
+    EEP_A5_02_1A,
+    EEP_A5_02_1B,
     EEP_A5_02_10,
     EEP_A5_02_11,
     EEP_A5_02_12,
@@ -115,7 +115,6 @@ def register_platform_config_for_migration_to_config_entry(
     platform_config: EnOceanPlatformConfig,
 ):
     """Register an EnOcean platform configuration for importing it to the config entry."""
-
     dev_id = platform_config.config.get(CONF_ENOCEAN_DEVICE_ID, None)
 
     if not dev_id:
@@ -133,7 +132,7 @@ def register_platform_config_for_migration_to_config_entry(
 
 
 # upcoming code is part of platform import to be deleted in a future version
-def _get_entity_for_unique_id(ent_reg: entity_registry.EntityRegistry, unique_id):
+def _get_entity_for_unique_id(ent_reg: er.EntityRegistry, unique_id):
     """Obtain an entity id even for those 'enocean' platform entities, which never had a device_class set.
 
     For some reason, this does not seem to be possible with the built-in async_get_entity_id(...) function.
@@ -196,7 +195,7 @@ def _setup_yaml_import(
 ) -> bool:
     """Set up the yaml import."""
     enocean_devices_to_add: list[dict[str, str]] = []
-    ent_reg = entity_registry.async_get(hass)
+    ent_reg = er.async_get(hass)
 
     # map from device id (hex) to list of (new) unique_ids
     new_unique_ids: dict[str, list[str]] = {}
@@ -205,7 +204,7 @@ def _setup_yaml_import(
     old_unique_ids: dict[str, dict[str, str]] = {}
 
     # map from device id (hex) to map from (new) unique_id to old entity
-    old_entities: dict[str, dict[str, entity_registry.RegistryEntry]] = {}
+    old_entities: dict[str, dict[str, er.RegistryEntry]] = {}
 
     @callback
     def _schedule_yaml_import(_):
@@ -223,7 +222,7 @@ def _setup_yaml_import(
 
         # get the unique config_entry and the devices configured in it
         conf_entries = hass.config_entries.async_entries(DOMAIN)
-        if not len(conf_entries) == 1:
+        if len(conf_entries) != 1:
             LOGGER.warning(
                 "Cannot import platform configurations to config entry - no config entry found"
             )
@@ -365,7 +364,6 @@ def _get_import_config(
     platform_configs: list[EnOceanPlatformConfig],
 ) -> EnOceanImportConfig | None:
     """Return a list of EnOcean import configurations for the supplied EnOcean platform configurations."""
-
     # ensure that only one platform is configured for this device
     platform = platform_configs[0].platform
     for platform_config in platform_configs:
@@ -575,7 +573,8 @@ def _get_sensor_import_config(
             device_name=device_name,
         )
 
-    # only remaining sensor types are temperature sensors and combined temperature/humidity sensors
+    # only remaining sensor types are temperature sensors and combined
+    # temperature/humidity sensors
     humidity_config = None
     temperature_config = None
 
@@ -706,7 +705,7 @@ def _get_humidity_platform_config(configs: list[EnOceanPlatformConfig]):
 def _get_a5_02_device_type(
     min_temp: int, max_temp: int
 ) -> EnOceanSupportedDeviceType | None:
-    """Return a suitable device type (or None) for the supplied temperature scale."""
+    """Return a suitable device type for the temperature scale."""
     if (min_temp, max_temp) == (-40, 0):
         return EEP_A5_02_01
     if (min_temp, max_temp) == (-30, 10):
@@ -763,7 +762,6 @@ def async_cleanup_device_registry(
     entry: ConfigEntry,
 ) -> None:
     """Remove entries from device registry if device is removed."""
-
     device_registry = dr.async_get(hass)
     hass_devices = dr.async_entries_for_config_entry(
         registry=device_registry,
@@ -778,7 +776,7 @@ def async_cleanup_device_registry(
         for item in hass_device.identifiers:
             domain = item[0]
             device_id = (str(item[1]).split("-", maxsplit=1)[0]).upper()
-            if DOMAIN == domain and device_id not in device_ids:
+            if domain == DOMAIN and device_id not in device_ids:
                 LOGGER.debug(
                     "Removing Home Assistant device %s and associated entities for unconfigured EnOcean device %s",
                     hass_device.id,

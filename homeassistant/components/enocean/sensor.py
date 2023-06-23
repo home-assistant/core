@@ -9,8 +9,8 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA,
+    RestoreSensor,
     SensorDeviceClass,
-    SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
 )
@@ -22,13 +22,13 @@ from homeassistant.const import (
     PERCENTAGE,
     STATE_CLOSED,
     STATE_OPEN,
+    Platform,
     UnitOfPower,
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import (
@@ -45,7 +45,7 @@ from .config_flow import (
 )
 from .const import LOGGER
 from .device import EnOceanEntity
-from .enocean_supported_device_type import PERMUNDO_PSC234, EnOceanSupportedDeviceType
+from .supported_device_type import PERMUNDO_PSC234, EnOceanSupportedDeviceType
 
 CONF_MAX_TEMP = "max_temp"
 CONF_MIN_TEMP = "min_temp"
@@ -363,7 +363,7 @@ async def async_setup_entry(
             continue
 
 
-class EnOceanSensor(EnOceanEntity, RestoreEntity, SensorEntity):
+class EnOceanSensor(EnOceanEntity, RestoreSensor):
     """Representation of an  EnOcean sensor device such as a power meter."""
 
     def __init__(
@@ -373,7 +373,7 @@ class EnOceanSensor(EnOceanEntity, RestoreEntity, SensorEntity):
         description: EnOceanSensorEntityDescription,
         dev_type: EnOceanSupportedDeviceType = EnOceanSupportedDeviceType(),
         name=None,
-    ):
+    ) -> None:
         """Initialize the EnOcean sensor device."""
         super().__init__(dev_id, dev_name, dev_type, name)
         self.entity_description = description
@@ -386,14 +386,13 @@ class EnOceanSensor(EnOceanEntity, RestoreEntity, SensorEntity):
         if self._attr_native_value is not None:
             return
 
-        if (state := await self.async_get_last_state()) is not None:
-            self._attr_native_value = state.state
+        if (data := await self.async_get_last_sensor_data()) is not None:
+            self._attr_native_value = data.native_value
 
     def value_changed(self, packet):
         """Update the internal state of the sensor."""
 
 
-# pylint: disable-next=hass-invalid-inheritance # needs fixing
 class EnOceanPowerSensor(EnOceanSensor):
     """Representation of an EnOcean power sensor.
 
@@ -444,7 +443,7 @@ class EnOceanTemperatureSensor(EnOceanSensor):
         range_to,
         dev_type: EnOceanSupportedDeviceType = EnOceanSupportedDeviceType(),
         name=None,
-    ):
+    ) -> None:
         """Initialize the EnOcean temperature sensor device."""
         super().__init__(dev_id, dev_name, description, dev_type, name)
         self._scale_min = scale_min
@@ -463,6 +462,7 @@ class EnOceanTemperatureSensor(EnOceanSensor):
         temperature += self._scale_min
         self._attr_native_value = round(temperature, 1)
         self.schedule_update_ha_state()
+
 
 class EnOceanHumiditySensor(EnOceanSensor):
     """Representation of an EnOcean humidity sensor device.

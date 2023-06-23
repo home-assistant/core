@@ -31,7 +31,7 @@ from .config_flow import (
     CONF_ENOCEAN_MODEL,
 )
 from .device import EnOceanEntity
-from .enocean_supported_device_type import EnOceanSupportedDeviceType
+from .supported_device_type import EnOceanSupportedDeviceType
 
 CONF_SENDER_ID = "sender_id"
 
@@ -70,7 +70,7 @@ async def async_setup_entry(
         if device["eep"] == "A5-38-08_EltakoFUD61":
             device_id = from_hex_string(device["id"])
             sender_id = 0
-            if not device["sender_id"] == "":
+            if device["sender_id"] != "":
                 sender_id = from_hex_string(device["sender_id"])
 
             async_add_entities(
@@ -102,7 +102,7 @@ class EnOceanLight(EnOceanEntity, LightEntity):
         dev_name,
         dev_type: EnOceanSupportedDeviceType = EnOceanSupportedDeviceType(),
         name=None,
-    ):
+    ) -> None:
         """Initialize the EnOcean light source."""
         super().__init__(dev_id, dev_name, dev_type, name)
         self._on_state = False
@@ -113,7 +113,7 @@ class EnOceanLight(EnOceanEntity, LightEntity):
         )
 
     @property
-    def brightness(self):
+    def brightness(self) -> int | None:
         """Brightness of the light.
 
         This method is optional. Removing it indicates to Home Assistant
@@ -122,7 +122,7 @@ class EnOceanLight(EnOceanEntity, LightEntity):
         return self._brightness
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool | None:
         """If light is on."""
         return self._on_state
 

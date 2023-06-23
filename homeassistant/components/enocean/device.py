@@ -6,7 +6,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatche
 from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN, SIGNAL_RECEIVE_MESSAGE, SIGNAL_SEND_MESSAGE
-from .enocean_supported_device_type import EnOceanSupportedDeviceType
+from .supported_device_type import EnOceanSupportedDeviceType
 
 
 class EnOceanEntity(Entity):
@@ -18,7 +18,7 @@ class EnOceanEntity(Entity):
         dev_name="EnOcean device",
         dev_type: EnOceanSupportedDeviceType = EnOceanSupportedDeviceType(),
         name=None,
-    ):
+    ) -> None:
         """Initialize the device."""
         self.dev_id = dev_id
         self.dev_name = dev_name
@@ -36,7 +36,6 @@ class EnOceanEntity(Entity):
 
     def _message_received_callback(self, packet):
         """Handle incoming packets."""
-
         if packet.sender_int == combine_hex(self.dev_id):
             self.value_changed(packet)
 
@@ -45,7 +44,6 @@ class EnOceanEntity(Entity):
 
     def send_command(self, data, optional, packet_type):
         """Send a command via the EnOcean dongle."""
-
         packet = Packet(packet_type, data=data, optional=optional)
         dispatcher_send(self.hass, SIGNAL_SEND_MESSAGE, packet)
 

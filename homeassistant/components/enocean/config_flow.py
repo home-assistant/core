@@ -12,10 +12,7 @@ from homeassistant.helpers import selector
 
 from . import dongle
 from .const import DOMAIN, ERROR_INVALID_DONGLE_PATH, LOGGER
-from .enocean_supported_device_type import (
-    ENOCEAN_SUPPORTED_DEVICES,
-    EnOceanSupportedDeviceType,
-)
+from .supported_device_type import ENOCEAN_SUPPORTED_DEVICES, EnOceanSupportedDeviceType
 
 # config
 CONF_ENOCEAN_DEVICES = "devices"
@@ -62,9 +59,8 @@ class EnOceanFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self.dongle_path = None
         self.discovery_info = None
 
-    async def async_step_import(self, data=None):
+    async def async_step_import(self, data=None) -> FlowResult:
         """Import a yaml configuration."""
-
         if not await self.validate_enocean_conf(data):
             LOGGER.warning(
                 "Cannot import yaml configuration: %s is not a valid dongle path",
@@ -74,14 +70,14 @@ class EnOceanFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.create_enocean_entry(data)
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(self, user_input=None) -> FlowResult:
         """Handle an EnOcean config flow start."""
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
 
         return await self.async_step_detect()
 
-    async def async_step_detect(self, user_input=None):
+    async def async_step_detect(self, user_input=None) -> FlowResult:
         """Propose a list of detected dongles."""
         errors = {}
         if user_input is not None:
@@ -102,7 +98,7 @@ class EnOceanFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_manual(self, user_input=None):
+    async def async_step_manual(self, user_input=None) -> FlowResult:
         """Request manual USB dongle path."""
         default_value = None
         errors = {}

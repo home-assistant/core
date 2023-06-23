@@ -25,7 +25,7 @@ from .config_flow import (
     CONF_ENOCEAN_MODEL,
 )
 from .device import EnOceanEntity
-from .enocean_supported_device_type import EnOceanSupportedDeviceType
+from .supported_device_type import EnOceanSupportedDeviceType
 
 CONF_CHANNEL = "channel"
 DEFAULT_NAME = ""
@@ -120,7 +120,7 @@ class EnOceanSwitch(EnOceanEntity, SwitchEntity):
         channel,
         dev_type: EnOceanSupportedDeviceType = EnOceanSupportedDeviceType(),
         name=None,
-    ):
+    ) -> None:
         """Initialize the EnOcean switch device."""
         super().__init__(dev_id, dev_name, dev_type, name)
         self._light = None
@@ -132,7 +132,7 @@ class EnOceanSwitch(EnOceanEntity, SwitchEntity):
         )
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool | None:
         """Return whether the switch is on or off."""
         return self._on_state
 

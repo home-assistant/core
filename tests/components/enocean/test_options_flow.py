@@ -15,10 +15,10 @@ from homeassistant.components.enocean.config_flow import (
     ENOCEAN_ERROR_INVALID_DEVICE_ID,
     ENOCEAN_ERROR_INVALID_SENDER_ID,
 )
-from homeassistant.components.enocean.const import (
-    DOMAIN,
+from homeassistant.components.enocean.const import DOMAIN
+from homeassistant.components.enocean.supported_device_type import (
     EEP_A5_12_01,
-    ENOCEAN_TEST_DIMMER,
+    ELTAKO_FUD61,
 )
 from homeassistant.const import CONF_DEVICE
 from homeassistant.core import HomeAssistant
@@ -29,9 +29,9 @@ from tests.common import MockConfigEntry
 TEST_DIMMER = {
     CONF_ENOCEAN_DEVICE_ID: "01:02:03:04",
     CONF_ENOCEAN_DEVICE_NAME: "Test Dimmer 1",
-    CONF_ENOCEAN_MANUFACTURER: ENOCEAN_TEST_DIMMER.manufacturer,
-    CONF_ENOCEAN_MODEL: ENOCEAN_TEST_DIMMER.model,
-    CONF_ENOCEAN_EEP: ENOCEAN_TEST_DIMMER.eep,
+    CONF_ENOCEAN_MANUFACTURER: ELTAKO_FUD61.manufacturer,
+    CONF_ENOCEAN_MODEL: ELTAKO_FUD61.model,
+    CONF_ENOCEAN_EEP: ELTAKO_FUD61.eep,
     CONF_ENOCEAN_SENDER_ID: "AB:AB:AB:AB",
 }
 
@@ -151,7 +151,6 @@ async def test_menu_is_large_for_devices(hass: HomeAssistant):
 
 async def test_add_device(hass: HomeAssistant):
     """Test adding a device."""
-
     mock_config_entry = MockConfigEntry(
         title="",
         domain=DOMAIN,
@@ -380,7 +379,6 @@ async def test_add_device_with_invalid_sender_id_fails(hass: HomeAssistant):
 
 async def test_delete_device(hass: HomeAssistant):
     """Test deleting a device."""
-
     mock_config_entry = MockConfigEntry(
         title="",
         domain=DOMAIN,
