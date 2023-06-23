@@ -39,7 +39,6 @@ class BAFBinarySensorDescription(
 OCCUPANCY_SENSORS = (
     BAFBinarySensorDescription(
         key="occupancy",
-        translation_key="occupancy",
         device_class=BinarySensorDeviceClass.OCCUPANCY,
         value_fn=lambda device: cast(bool | None, device.fan_occupancy_detected),
     ),

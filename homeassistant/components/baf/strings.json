@@ -21,11 +21,6 @@
     }
   },
   "entity": {
-    "binary_sensor": {
-      "occupancy": {
-        "name": "Occupancy"
-      }
-    },
     "climate": {
       "auto_comfort": {
         "name": "Auto comfort"
