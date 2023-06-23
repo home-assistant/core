@@ -1,5 +1,6 @@
 """The test for sensor device automation."""
 import pytest
+from pytest_unordered import unordered
 
 import homeassistant.components.automation as automation
 from homeassistant.components.device_automation import DeviceAutomationType
@@ -21,7 +22,6 @@ from homeassistant.util.json import load_json
 
 from tests.common import (
     MockConfigEntry,
-    assert_lists_same,
     async_get_device_automation_capabilities,
     async_get_device_automations,
     async_mock_service,
@@ -124,7 +124,7 @@ async def test_get_conditions(
         hass, DeviceAutomationType.CONDITION, device_entry.id
     )
     assert len(conditions) == 27
-    assert_lists_same(conditions, expected_conditions)
+    assert conditions == unordered(expected_conditions)
 
 
 @pytest.mark.parametrize(
@@ -173,7 +173,7 @@ async def test_get_conditions_hidden_auxiliary(
     conditions = await async_get_device_automations(
         hass, DeviceAutomationType.CONDITION, device_entry.id
     )
-    assert_lists_same(conditions, expected_conditions)
+    assert conditions == unordered(expected_conditions)
 
 
 async def test_get_conditions_no_state(
@@ -218,7 +218,7 @@ async def test_get_conditions_no_state(
     conditions = await async_get_device_automations(
         hass, DeviceAutomationType.CONDITION, device_entry.id
     )
-    assert_lists_same(conditions, expected_conditions)
+    assert conditions == unordered(expected_conditions)
 
 
 @pytest.mark.parametrize(
@@ -268,7 +268,7 @@ async def test_get_conditions_no_unit_or_stateclass(
     conditions = await async_get_device_automations(
         hass, DeviceAutomationType.CONDITION, device_entry.id
     )
-    assert_lists_same(conditions, expected_conditions)
+    assert conditions == unordered(expected_conditions)
 
 
 @pytest.mark.parametrize(

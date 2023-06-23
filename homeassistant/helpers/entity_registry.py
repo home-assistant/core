@@ -470,13 +470,15 @@ class EntityRegistry:
         return entity_id in self.entities
 
     @callback
-    def async_get(self, entity_id: str) -> RegistryEntry | None:
-        """Get EntityEntry for an entity_id.
+    def async_get(self, entity_id_or_uuid: str) -> RegistryEntry | None:
+        """Get EntityEntry for an entity_id or entity entry id.
 
         We retrieve the RegistryEntry from the underlying dict to avoid
         the overhead of the UserDict __getitem__.
         """
-        return self._entities_data.get(entity_id)
+        return self._entities_data.get(entity_id_or_uuid) or self.entities.get_entry(
+            entity_id_or_uuid
+        )
 
     @callback
     def async_get_entity_id(

@@ -2084,7 +2084,7 @@
         },
         "google_translate": {
           "integration_type": "hub",
-          "config_flow": false,
+          "config_flow": true,
           "iot_class": "cloud_push",
           "name": "Google Translate text-to-speech"
         },
@@ -3954,7 +3954,7 @@
     "openhome": {
       "name": "Linn / OpenHome",
       "integration_type": "hub",
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "local_polling"
     },
     "opensensemap": {

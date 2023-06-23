@@ -30,6 +30,9 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from .const import (
+    ATTR_WEATHER_APPARENT_TEMPERATURE,
+    ATTR_WEATHER_CLOUD_COVERAGE,
+    ATTR_WEATHER_DEW_POINT,
     ATTR_WEATHER_HUMIDITY,
     ATTR_WEATHER_OZONE,
     ATTR_WEATHER_PRECIPITATION_UNIT,
@@ -40,6 +43,7 @@ from .const import (
     ATTR_WEATHER_VISIBILITY,
     ATTR_WEATHER_VISIBILITY_UNIT,
     ATTR_WEATHER_WIND_BEARING,
+    ATTR_WEATHER_WIND_GUST_SPEED,
     ATTR_WEATHER_WIND_SPEED,
     ATTR_WEATHER_WIND_SPEED_UNIT,
     DOMAIN,
@@ -68,19 +72,27 @@ ATTR_CONDITION_WINDY = "windy"
 ATTR_CONDITION_WINDY_VARIANT = "windy-variant"
 ATTR_FORECAST = "forecast"
 ATTR_FORECAST_CONDITION: Final = "condition"
+ATTR_FORECAST_HUMIDITY: Final = "humidity"
 ATTR_FORECAST_NATIVE_PRECIPITATION: Final = "native_precipitation"
 ATTR_FORECAST_PRECIPITATION: Final = "precipitation"
 ATTR_FORECAST_PRECIPITATION_PROBABILITY: Final = "precipitation_probability"
 ATTR_FORECAST_NATIVE_PRESSURE: Final = "native_pressure"
 ATTR_FORECAST_PRESSURE: Final = "pressure"
+ATTR_FORECAST_NATIVE_APPARENT_TEMP: Final = "native_apparent_temperature"
+ATTR_FORECAST_APPARENT_TEMP: Final = "apparent_temperature"
 ATTR_FORECAST_NATIVE_TEMP: Final = "native_temperature"
 ATTR_FORECAST_TEMP: Final = "temperature"
 ATTR_FORECAST_NATIVE_TEMP_LOW: Final = "native_templow"
 ATTR_FORECAST_TEMP_LOW: Final = "templow"
 ATTR_FORECAST_TIME: Final = "datetime"
 ATTR_FORECAST_WIND_BEARING: Final = "wind_bearing"
+ATTR_FORECAST_NATIVE_WIND_GUST_SPEED: Final = "native_wind_gust_speed"
+ATTR_FORECAST_WIND_GUST_SPEED: Final = "wind_gust_speed"
 ATTR_FORECAST_NATIVE_WIND_SPEED: Final = "native_wind_speed"
 ATTR_FORECAST_WIND_SPEED: Final = "wind_speed"
+ATTR_FORECAST_NATIVE_DEW_POINT: Final = "native_dew_point"
+ATTR_FORECAST_DEW_POINT: Final = "dew_point"
+ATTR_FORECAST_CLOUD_COVERAGE: Final = "cloud_coverage"
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
@@ -117,7 +129,9 @@ class Forecast(TypedDict, total=False):
 
     condition: str | None
     datetime: Required[str]
+    humidity: float | None
     precipitation_probability: int | None
+    cloud_coverage: int | None
     native_precipitation: float | None
     precipitation: None
     native_pressure: float | None
@@ -126,9 +140,12 @@ class Forecast(TypedDict, total=False):
     temperature: None
     native_templow: float | None
     templow: None
+    native_apparent_temperature: float | None
     wind_bearing: float | str | None
+    native_wind_gust_speed: float | None
     native_wind_speed: float | None
     wind_speed: None
+    native_dew_point: float | None
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -166,6 +183,7 @@ class WeatherEntity(Entity):
     _attr_forecast: list[Forecast] | None = None
     _attr_humidity: float | None = None
     _attr_ozone: float | None = None
+    _attr_cloud_coverage: int | None = None
     _attr_precision: float
     _attr_pressure: None = (
         None  # Provide backwards compatibility. Use _attr_native_pressure
@@ -199,13 +217,16 @@ class WeatherEntity(Entity):
 
     _attr_native_pressure: float | None = None
     _attr_native_pressure_unit: str | None = None
+    _attr_native_apparent_temperature: float | None = None
     _attr_native_temperature: float | None = None
     _attr_native_temperature_unit: str | None = None
     _attr_native_visibility: float | None = None
     _attr_native_visibility_unit: str | None = None
     _attr_native_precipitation_unit: str | None = None
+    _attr_native_wind_gust_speed: float | None = None
     _attr_native_wind_speed: float | None = None
     _attr_native_wind_speed_unit: str | None = None
+    _attr_native_dew_point: float | None = None
 
     _weather_option_temperature_unit: str | None = None
     _weather_option_pressure_unit: str | None = None
@@ -272,6 +293,11 @@ class WeatherEntity(Entity):
             return
         self.async_registry_entry_updated()
 
+    @property
+    def native_apparent_temperature(self) -> float | None:
+        """Return the apparent temperature in native units."""
+        return self._attr_native_temperature
+
     @final
     @property
     def temperature(self) -> float | None:
@@ -296,6 +322,11 @@ class WeatherEntity(Entity):
             return temperature_unit
 
         return self._attr_native_temperature_unit
+
+    @property
+    def native_dew_point(self) -> float | None:
+        """Return the dew point temperature in native units."""
+        return self._attr_native_dew_point
 
     @final
     @property
@@ -393,6 +424,11 @@ class WeatherEntity(Entity):
         """Return the humidity in native units."""
         return self._attr_humidity
 
+    @property
+    def native_wind_gust_speed(self) -> float | None:
+        """Return the wind gust speed in native units."""
+        return self._attr_native_wind_gust_speed
+
     @final
     @property
     def wind_speed(self) -> float | None:
@@ -461,6 +497,11 @@ class WeatherEntity(Entity):
     def ozone(self) -> float | None:
         """Return the ozone level."""
         return self._attr_ozone
+
+    @property
+    def cloud_coverage(self) -> float | None:
+        """Return the Cloud coverage in %."""
+        return self._attr_cloud_coverage
 
     @final
     @property
@@ -577,7 +618,7 @@ class WeatherEntity(Entity):
 
     @final
     @property
-    def state_attributes(self) -> dict[str, Any]:
+    def state_attributes(self) -> dict[str, Any]:  # noqa: C901
         """Return the state attributes, converted.
 
         Attributes are configured from native units to user-configured units.
@@ -600,6 +641,34 @@ class WeatherEntity(Entity):
             except (TypeError, ValueError):
                 data[ATTR_WEATHER_TEMPERATURE] = temperature
 
+        if (apparent_temperature := self.native_apparent_temperature) is not None:
+            from_unit = self.native_temperature_unit or self._default_temperature_unit
+            to_unit = self._temperature_unit
+            try:
+                apparent_temperature_f = float(apparent_temperature)
+                value_apparent_temp = UNIT_CONVERSIONS[ATTR_WEATHER_TEMPERATURE_UNIT](
+                    apparent_temperature_f, from_unit, to_unit
+                )
+                data[ATTR_WEATHER_APPARENT_TEMPERATURE] = round_temperature(
+                    value_apparent_temp, precision
+                )
+            except (TypeError, ValueError):
+                data[ATTR_WEATHER_APPARENT_TEMPERATURE] = apparent_temperature
+
+        if (dew_point := self.native_dew_point) is not None:
+            from_unit = self.native_temperature_unit or self._default_temperature_unit
+            to_unit = self._temperature_unit
+            try:
+                dew_point_f = float(dew_point)
+                value_dew_point = UNIT_CONVERSIONS[ATTR_WEATHER_TEMPERATURE_UNIT](
+                    dew_point_f, from_unit, to_unit
+                )
+                data[ATTR_WEATHER_DEW_POINT] = round_temperature(
+                    value_dew_point, precision
+                )
+            except (TypeError, ValueError):
+                data[ATTR_WEATHER_DEW_POINT] = dew_point
+
         data[ATTR_WEATHER_TEMPERATURE_UNIT] = self._temperature_unit
 
         if (humidity := self.humidity) is not None:
@@ -607,6 +676,9 @@ class WeatherEntity(Entity):
 
         if (ozone := self.ozone) is not None:
             data[ATTR_WEATHER_OZONE] = ozone
+
+        if (cloud_coverage := self.cloud_coverage) is not None:
+            data[ATTR_WEATHER_CLOUD_COVERAGE] = cloud_coverage
 
         if (pressure := self.native_pressure) is not None:
             from_unit = self.native_pressure_unit or self._default_pressure_unit
@@ -624,6 +696,20 @@ class WeatherEntity(Entity):
 
         if (wind_bearing := self.wind_bearing) is not None:
             data[ATTR_WEATHER_WIND_BEARING] = wind_bearing
+
+        if (wind_gust_speed := self.native_wind_gust_speed) is not None:
+            from_unit = self.native_wind_speed_unit or self._default_wind_speed_unit
+            to_unit = self._wind_speed_unit
+            try:
+                wind_gust_speed_f = float(wind_gust_speed)
+                value_wind_gust_speed = UNIT_CONVERSIONS[ATTR_WEATHER_WIND_SPEED_UNIT](
+                    wind_gust_speed_f, from_unit, to_unit
+                )
+                data[ATTR_WEATHER_WIND_GUST_SPEED] = round(
+                    value_wind_gust_speed, ROUNDING_PRECISION
+                )
+            except (TypeError, ValueError):
+                data[ATTR_WEATHER_WIND_GUST_SPEED] = wind_gust_speed
 
         if (wind_speed := self.native_wind_speed) is not None:
             from_unit = self.native_wind_speed_unit or self._default_wind_speed_unit
@@ -687,6 +773,26 @@ class WeatherEntity(Entity):
                         )
 
                 if (
+                    forecast_apparent_temp := forecast_entry.pop(
+                        ATTR_FORECAST_NATIVE_APPARENT_TEMP,
+                        forecast_entry.get(ATTR_FORECAST_NATIVE_APPARENT_TEMP),
+                    )
+                ) is not None:
+                    with suppress(TypeError, ValueError):
+                        forecast_apparent_temp = float(forecast_apparent_temp)
+                        value_apparent_temp = UNIT_CONVERSIONS[
+                            ATTR_WEATHER_TEMPERATURE_UNIT
+                        ](
+                            forecast_apparent_temp,
+                            from_temp_unit,
+                            to_temp_unit,
+                        )
+
+                        forecast_entry[ATTR_FORECAST_APPARENT_TEMP] = round_temperature(
+                            value_apparent_temp, precision
+                        )
+
+                if (
                     forecast_temp_low := forecast_entry.pop(
                         ATTR_FORECAST_NATIVE_TEMP_LOW,
                         forecast_entry.get(ATTR_FORECAST_TEMP_LOW),
@@ -707,6 +813,26 @@ class WeatherEntity(Entity):
                         )
 
                 if (
+                    forecast_dew_point := forecast_entry.pop(
+                        ATTR_FORECAST_NATIVE_DEW_POINT,
+                        None,
+                    )
+                ) is not None:
+                    with suppress(TypeError, ValueError):
+                        forecast_dew_point_f = float(forecast_dew_point)
+                        value_dew_point = UNIT_CONVERSIONS[
+                            ATTR_WEATHER_TEMPERATURE_UNIT
+                        ](
+                            forecast_dew_point_f,
+                            from_temp_unit,
+                            to_temp_unit,
+                        )
+
+                        forecast_entry[ATTR_FORECAST_DEW_POINT] = round_temperature(
+                            value_dew_point, precision
+                        )
+
+                if (
                     forecast_pressure := forecast_entry.pop(
                         ATTR_FORECAST_NATIVE_PRESSURE,
                         forecast_entry.get(ATTR_FORECAST_PRESSURE),
@@ -723,6 +849,27 @@ class WeatherEntity(Entity):
                                 forecast_pressure_f,
                                 from_pressure_unit,
                                 to_pressure_unit,
+                            ),
+                            ROUNDING_PRECISION,
+                        )
+
+                if (
+                    forecast_wind_gust_speed := forecast_entry.pop(
+                        ATTR_FORECAST_NATIVE_WIND_GUST_SPEED,
+                        None,
+                    )
+                ) is not None:
+                    from_wind_speed_unit = (
+                        self.native_wind_speed_unit or self._default_wind_speed_unit
+                    )
+                    to_wind_speed_unit = self._wind_speed_unit
+                    with suppress(TypeError, ValueError):
+                        forecast_wind_gust_speed_f = float(forecast_wind_gust_speed)
+                        forecast_entry[ATTR_FORECAST_WIND_GUST_SPEED] = round(
+                            UNIT_CONVERSIONS[ATTR_WEATHER_WIND_SPEED_UNIT](
+                                forecast_wind_gust_speed_f,
+                                from_wind_speed_unit,
+                                to_wind_speed_unit,
                             ),
                             ROUNDING_PRECISION,
                         )
@@ -768,6 +915,18 @@ class WeatherEntity(Entity):
                                 to_precipitation_unit,
                             ),
                             ROUNDING_PRECISION,
+                        )
+
+                if (
+                    forecast_humidity := forecast_entry.pop(
+                        ATTR_FORECAST_HUMIDITY,
+                        None,
+                    )
+                ) is not None:
+                    with suppress(TypeError, ValueError):
+                        forecast_humidity_f = float(forecast_humidity)
+                        forecast_entry[ATTR_FORECAST_HUMIDITY] = round(
+                            forecast_humidity_f
                         )
 
                 forecast.append(forecast_entry)
