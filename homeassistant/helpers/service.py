@@ -681,7 +681,7 @@ async def entity_service_call(  # noqa: C901
     func: str | Callable[..., Coroutine[Any, Any, ServiceResponse]],
     call: ServiceCall,
     required_features: Iterable[int] | None = None,
-) -> dict[str, ServiceResponse] | None:
+) -> ServiceResponse | None:
     """Handle an entity service call.
 
     Calls all platforms simultaneously. The service call may request
@@ -799,7 +799,16 @@ async def entity_service_call(  # noqa: C901
         entities.append(entity)
 
     if not entities:
+        if call.return_response:
+            raise HomeAssistantError(
+                "Service call requested response data but did not match any entities"
+            )
         return None
+
+    if call.return_response and len(entities) != 1:
+        raise HomeAssistantError(
+            "Service call requested response data but matched more than one entity"
+        )
 
     done, pending = await asyncio.wait(
         [
@@ -813,9 +822,9 @@ async def entity_service_call(  # noqa: C901
     )
     assert not pending
 
-    response_data: dict[str, ServiceResponse] = {}
-    for entity, task in zip(entities, done):
-        response_data[entity.entity_id] = task.result()  # pop exception if have
+    response_data: ServiceResponse | None
+    for task in done:
+        response_data = task.result()  # pop exception if have
 
     tasks: list[asyncio.Task[None]] = []
 

@@ -231,21 +231,9 @@ class EntityComponent(Generic[_EntityT]):
 
         async def handle_service(call: ServiceCall) -> ServiceResponse:
             """Handle the service."""
-            response_data = await service.entity_service_call(
+            return await service.entity_service_call(
                 self.hass, self._platforms.values(), func, call, required_features
             )
-            if not call.return_response:
-                return None
-            if not response_data:
-                raise HomeAssistantError(
-                    "Service call requested response data but did not match any entities"
-                )
-            values = list(response_data.values())
-            if len(values) != 1:
-                raise HomeAssistantError(
-                    "Service call requested response data but matched more than one entity"
-                )
-            return values[0]
 
         self.hass.services.async_register(
             self.domain, name, handle_service, schema, supports_response

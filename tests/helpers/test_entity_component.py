@@ -571,8 +571,7 @@ async def test_register_entity_service_response_data_multiple_matches(
     async def generate_response(
         target: MockEntity, call: ServiceCall
     ) -> ServiceResponse:
-        assert call.return_response
-        return None
+        raise ValueError("Should not be invoked")
 
     component = EntityComponent(_LOGGER, DOMAIN, hass)
     await component.async_setup({})
