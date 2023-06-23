@@ -259,6 +259,7 @@ CALENDAR_EVENT_SCHEMA = vol.Schema(
 
 SERVICE_LIST_EVENTS: Final = "list_events"
 SERVICE_LIST_EVENTS_SCHEMA: Final = vol.All(
+    cv.has_at_least_one_key(EVENT_END_DATETIME, EVENT_DURATION),
     cv.has_at_most_one_key(EVENT_END_DATETIME, EVENT_DURATION),
     cv.make_entity_service_schema(
         {

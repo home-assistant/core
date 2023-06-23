@@ -387,7 +387,7 @@ async def test_create_event_service_invalid_params(
 
 
 async def test_list_events_service(hass: HomeAssistant) -> None:
-    """Test listing events from the service call from the calendar demo."""
+    """Test listing events from the service call using exlplicit start and end time."""
     await async_setup_component(hass, "calendar", {"calendar": {"platform": "demo"}})
     await hass.async_block_till_done()
 
@@ -429,7 +429,7 @@ async def test_list_events_service_duration(
     duration: str,
     expected_events: list[str],
 ) -> None:
-    """Test listing events from the service call from the calendar demo."""
+    """Test listing events using a time duration."""
     await async_setup_component(hass, "calendar", {"calendar": {"platform": "demo"}})
     await hass.async_block_till_done()
 
@@ -450,7 +450,7 @@ async def test_list_events_service_duration(
 
 
 async def test_list_events_positive_duration(hass: HomeAssistant) -> None:
-    """Test listing events from the service call from the calendar demo."""
+    """Test listing events requires a positive duration."""
     await async_setup_component(hass, "calendar", {"calendar": {"platform": "demo"}})
     await hass.async_block_till_done()
 
@@ -468,7 +468,7 @@ async def test_list_events_positive_duration(hass: HomeAssistant) -> None:
 
 
 async def test_list_events_exclusive_fields(hass: HomeAssistant) -> None:
-    """Test listing events from the service call from the calendar demo."""
+    """Test listing events specifying fields that are exclusive."""
     await async_setup_component(hass, "calendar", {"calendar": {"platform": "demo"}})
     await hass.async_block_till_done()
 
@@ -482,6 +482,23 @@ async def test_list_events_exclusive_fields(hass: HomeAssistant) -> None:
                 "entity_id": "calendar.calendar_1",
                 "end_date_time": end,
                 "duration": "01:00:00",
+            },
+            blocking=True,
+            return_response=True,
+        )
+
+
+async def test_list_events_missing_fields(hass: HomeAssistant) -> None:
+    """Test listing events missing some required fields."""
+    await async_setup_component(hass, "calendar", {"calendar": {"platform": "demo"}})
+    await hass.async_block_till_done()
+
+    with pytest.raises(vol.Invalid, match="at least one of"):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_LIST_EVENTS,
+            {
+                "entity_id": "calendar.calendar_1",
             },
             blocking=True,
             return_response=True,
