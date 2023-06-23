@@ -21,7 +21,6 @@ from . import (
     ENTRY_CONFIG_INVALID_QUERY_OPT,
     ENTRY_CONFIG_NO_RESULTS,
     ENTRY_CONFIG_WITH_VALUE_TEMPLATE,
-    init_integration,
 )
 
 from tests.common import MockConfigEntry
@@ -656,14 +655,6 @@ async def test_device_state_class(recorder_mock: Recorder, hass: HomeAssistant) 
         "state_class": SensorStateClass.TOTAL,
     }
 
-    await init_integration(hass, result2["data"], entry_id=entry.entry_id)
-
-    state = hass.states.get("sensor.get_value")
-    assert state.state == "5"
-    assert state.attributes["device_class"] == SensorDeviceClass.DATA_SIZE
-    assert state.attributes["state_class"] == SensorStateClass.TOTAL
-    assert state.attributes["unit_of_measurement"] == "MiB"
-
     result = await hass.config_entries.options.async_init(entry.entry_id)
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "init"
@@ -685,17 +676,11 @@ async def test_device_state_class(recorder_mock: Recorder, hass: HomeAssistant) 
         await hass.async_block_till_done()
 
     assert result3["type"] == FlowResultType.CREATE_ENTRY
+    assert "device_class" not in result3["data"]
+    assert "state_class" not in result3["data"]
     assert result3["data"] == {
         "name": "Get Value",
         "query": "SELECT 5 as value",
         "column": "value",
         "unit_of_measurement": "MiB",
     }
-
-    await init_integration(hass, result3["data"], entry_id=entry.entry_id)
-
-    state = hass.states.get("sensor.get_value")
-    assert state.state == "5"
-    assert "device_class" not in state.attributes
-    assert "state_class" not in state.attributes
-    assert state.attributes["unit_of_measurement"] == "MiB"
