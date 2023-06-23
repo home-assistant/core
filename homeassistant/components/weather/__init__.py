@@ -140,6 +140,7 @@ class Forecast(TypedDict, total=False):
     temperature: None
     native_templow: float | None
     templow: None
+    native_apparent_temperature: float | None
     wind_bearing: float | str | None
     native_wind_gust_speed: float | None
     native_wind_speed: float | None
