@@ -9,6 +9,7 @@ from homeassistant.components.combined_energy.const import CONF_INSTALLATION_ID,
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
 
 async def test_form(hass: HomeAssistant) -> None:
@@ -18,7 +19,7 @@ async def test_form(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == "form"
+    assert result["type"] == FlowResultType.FORM
     assert result["errors"] == {}
 
     with patch(
@@ -38,7 +39,7 @@ async def test_form(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == "create_entry"
+    assert result2["type"] == FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Combined Energy"
     assert result2["data"] == {
         CONF_USERNAME: "user@example.com",
@@ -70,7 +71,7 @@ async def test_form__where_api_returns_an_expected_error(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == "form"
+    assert result["type"] == FlowResultType.FORM
     assert result["errors"] == {}
 
     with patch(
@@ -87,7 +88,7 @@ async def test_form__where_api_returns_an_expected_error(
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == "form"
+    assert result2["type"] == FlowResultType.FORM
     assert result2["errors"] == expected_errors
 
 
@@ -99,7 +100,7 @@ async def test_form__where_api_returns_an_unexpected_error(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == "form"
+    assert result["type"] == FlowResultType.FORM
     assert result["errors"] == {}
 
     with patch(
@@ -116,7 +117,7 @@ async def test_form__where_api_returns_an_unexpected_error(
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == "form"
+    assert result2["type"] == FlowResultType.FORM
     assert result2["errors"] == {"base": "unknown"}
     assert "Unexpected error verifying connection to API" in caplog.text
 
@@ -129,7 +130,7 @@ async def test_form__where_installation_id_already_configured(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == "form"
+    assert result["type"] == FlowResultType.FORM
     assert result["errors"] == {}
 
     # Add config entry
@@ -162,5 +163,5 @@ async def test_form__where_installation_id_already_configured(
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == "abort"
+    assert result2["type"] == FlowResultType.ABORT
     assert result2["reason"] == "already_configured"
