@@ -33,7 +33,8 @@
           "state": {
             "humidifying": "Humidifying",
             "drying": "Drying",
-            "idle": "Idle"
+            "idle": "Idle",
+            "off": "Off"
           }
         },
         "available_modes": {
