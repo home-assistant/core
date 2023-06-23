@@ -1,4 +1,5 @@
 """The tests for the Number component."""
+from collections.abc import Generator
 from typing import Any
 from unittest.mock import MagicMock
 
@@ -14,6 +15,7 @@ from homeassistant.components.number import (
     NumberDeviceClass,
     NumberEntity,
     NumberEntityDescription,
+    NumberMode,
 )
 from homeassistant.components.number.const import (
     DEVICE_CLASS_UNITS as NUMBER_DEVICE_CLASS_UNITS,
@@ -22,6 +24,7 @@ from homeassistant.components.sensor import (
     DEVICE_CLASS_UNITS as SENSOR_DEVICE_CLASS_UNITS,
     SensorDeviceClass,
 )
+from homeassistant.config_entries import ConfigEntry, ConfigFlow
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_UNIT_OF_MEASUREMENT,
@@ -30,15 +33,24 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import STORAGE_KEY as RESTORE_STATE_KEY
 from homeassistant.setup import async_setup_component
 from homeassistant.util.unit_system import METRIC_SYSTEM, US_CUSTOMARY_SYSTEM
 
 from tests.common import (
+    MockConfigEntry,
     MockEntityPlatform,
+    MockModule,
+    MockPlatform,
     async_mock_restore_state_shutdown_restart,
+    mock_config_flow,
+    mock_integration,
+    mock_platform,
     mock_restore_cache_with_extra_data,
 )
+
+TEST_DOMAIN = "test"
 
 
 class MockDefaultNumberEntity(NumberEntity):
@@ -935,3 +947,120 @@ def test_device_classes_aligned() -> None:
             SENSOR_DEVICE_CLASS_UNITS[device_class]
             == NUMBER_DEVICE_CLASS_UNITS[device_class]
         )
+
+
+class MockFlow(ConfigFlow):
+    """Test flow."""
+
+
+@pytest.fixture(autouse=True)
+def config_flow_fixture(hass: HomeAssistant) -> Generator[None, None, None]:
+    """Mock config flow."""
+    mock_platform(hass, f"{TEST_DOMAIN}.config_flow")
+
+    with mock_config_flow(TEST_DOMAIN, MockFlow):
+        yield
+
+
+async def test_name(hass: HomeAssistant) -> None:
+    """Test number name."""
+
+    async def async_setup_entry_init(
+        hass: HomeAssistant, config_entry: ConfigEntry
+    ) -> bool:
+        """Set up test config entry."""
+        await hass.config_entries.async_forward_entry_setup(config_entry, DOMAIN)
+        return True
+
+    mock_platform(hass, f"{TEST_DOMAIN}.config_flow")
+    mock_integration(
+        hass,
+        MockModule(
+            TEST_DOMAIN,
+            async_setup_entry=async_setup_entry_init,
+        ),
+    )
+
+    # Unnamed sensor without device class -> no name
+    entity1 = NumberEntity()
+    entity1.entity_id = "number.test1"
+
+    # Unnamed sensor with device class but has_entity_name False -> no name
+    entity2 = NumberEntity()
+    entity2.entity_id = "number.test2"
+    entity2._attr_device_class = NumberDeviceClass.TEMPERATURE
+
+    # Unnamed sensor with device class and has_entity_name True -> named
+    entity3 = NumberEntity()
+    entity3.entity_id = "number.test3"
+    entity3._attr_device_class = NumberDeviceClass.TEMPERATURE
+    entity3._attr_has_entity_name = True
+
+    # Unnamed sensor with device class and has_entity_name True -> named
+    entity4 = NumberEntity()
+    entity4.entity_id = "number.test4"
+    entity4.entity_description = NumberEntityDescription(
+        "test",
+        NumberDeviceClass.TEMPERATURE,
+        has_entity_name=True,
+    )
+
+    async def async_setup_entry_platform(
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        async_add_entities: AddEntitiesCallback,
+    ) -> None:
+        """Set up test number platform via config entry."""
+        async_add_entities([entity1, entity2, entity3, entity4])
+
+    mock_platform(
+        hass,
+        f"{TEST_DOMAIN}.{DOMAIN}",
+        MockPlatform(async_setup_entry=async_setup_entry_platform),
+    )
+
+    config_entry = MockConfigEntry(domain=TEST_DOMAIN)
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity1.entity_id)
+    assert state
+    assert state.attributes == {
+        "max": 100.0,
+        "min": 0.0,
+        "mode": NumberMode.AUTO,
+        "step": 1.0,
+    }
+
+    state = hass.states.get(entity2.entity_id)
+    assert state
+    assert state.attributes == {
+        "device_class": "temperature",
+        "max": 100.0,
+        "min": 0.0,
+        "mode": NumberMode.AUTO,
+        "step": 1.0,
+    }
+
+    state = hass.states.get(entity3.entity_id)
+    assert state
+    assert state.attributes == {
+        "device_class": "temperature",
+        "friendly_name": "Temperature",
+        "max": 100.0,
+        "min": 0.0,
+        "mode": NumberMode.AUTO,
+        "step": 1.0,
+    }
+
+    state = hass.states.get(entity4.entity_id)
+    assert state
+    assert state.attributes == {
+        "device_class": "temperature",
+        "friendly_name": "Temperature",
+        "max": 100.0,
+        "min": 0.0,
+        "mode": NumberMode.AUTO,
+        "step": 1.0,
+    }

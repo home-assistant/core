@@ -1,5 +1,5 @@
 """Test for the default agent."""
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -223,3 +223,45 @@ async def test_unexposed_entities_skipped(
     assert result.response.response_type == intent.IntentResponseType.QUERY_ANSWER
     assert len(result.response.matched_states) == 1
     assert result.response.matched_states[0].entity_id == exposed_light.entity_id
+
+
+async def test_trigger_sentences(hass: HomeAssistant, init_components) -> None:
+    """Test registering/unregistering/matching a few trigger sentences."""
+    trigger_sentences = ["It's party time", "It is time to party"]
+    trigger_response = "Cowabunga!"
+
+    agent = await conversation._get_agent_manager(hass).async_get_agent(
+        conversation.HOME_ASSISTANT_AGENT
+    )
+    assert isinstance(agent, conversation.DefaultAgent)
+
+    callback = AsyncMock(return_value=trigger_response)
+    unregister = agent.register_trigger(trigger_sentences, callback)
+
+    result = await conversation.async_converse(hass, "Not the trigger", None, Context())
+    assert result.response.response_type == intent.IntentResponseType.ERROR
+
+    # Using different case and including punctuation
+    test_sentences = ["it's party time!", "IT IS TIME TO PARTY."]
+    for sentence in test_sentences:
+        callback.reset_mock()
+        result = await conversation.async_converse(hass, sentence, None, Context())
+        callback.assert_called_once_with(sentence)
+        assert (
+            result.response.response_type == intent.IntentResponseType.ACTION_DONE
+        ), sentence
+        assert result.response.speech == {
+            "plain": {"speech": trigger_response, "extra_data": None}
+        }
+
+    unregister()
+
+    # Should produce errors now
+    callback.reset_mock()
+    for sentence in test_sentences:
+        result = await conversation.async_converse(hass, sentence, None, Context())
+        assert (
+            result.response.response_type == intent.IntentResponseType.ERROR
+        ), sentence
+
+    assert len(callback.mock_calls) == 0
