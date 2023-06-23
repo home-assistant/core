@@ -274,7 +274,9 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
         """Return the list of available fan modes."""
         if fan_modes := self.device_data.fan_modes:
             fan_modes_set = set(fan_modes)
-            available_fan_modes = set(fan_modes_set).intersection(AVAILABLE_FAN_MODES)
+            available_fan_modes = sorted(
+                set(fan_modes_set).intersection(AVAILABLE_FAN_MODES)
+            )
             return list(available_fan_modes)
         return None
 
@@ -294,8 +296,8 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
         """Return the list of available swing modes."""
         if swing_modes := self.device_data.swing_modes:
             swing_modes_set = set(swing_modes)
-            available_swing_modes = set(swing_modes_set).intersection(
-                AVAILABLE_SWING_MODES
+            available_swing_modes = sorted(
+                set(swing_modes_set).intersection(AVAILABLE_SWING_MODES)
             )
             return list(available_swing_modes)
         return None
