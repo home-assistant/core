@@ -61,8 +61,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     client: OverkizClient | None = None
 
-    print(entry.unique_id)
-
     # Local API vs Cloud API
     if entry.data[CONF_API_TYPE] == "local":
         LOGGER.debug("CONFIGURING LOCAL INTEGRATION")
