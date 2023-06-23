@@ -4,6 +4,7 @@ from __future__ import annotations
 from datetime import date
 import decimal
 import logging
+from typing import Any
 
 import sqlalchemy
 from sqlalchemy import lambda_stmt
@@ -27,6 +28,7 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
+    CONF_ICON,
     CONF_NAME,
     CONF_UNIQUE_ID,
     CONF_UNIT_OF_MEASUREMENT,
@@ -41,6 +43,11 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.template_entity import (
+    CONF_AVAILABILITY,
+    CONF_PICTURE,
+    ManualTriggerEntity,
+)
 
 from .const import CONF_COLUMN_NAME, CONF_QUERY, DOMAIN
 from .models import SQLData
@@ -61,7 +68,7 @@ async def async_setup_platform(
     if (conf := discovery_info) is None:
         return
 
-    name: str = conf[CONF_NAME]
+    name: Template = conf[CONF_NAME]
     query_str: str = conf[CONF_QUERY]
     unit: str | None = conf.get(CONF_UNIT_OF_MEASUREMENT)
     value_template: Template | None = conf.get(CONF_VALUE_TEMPLATE)
@@ -70,13 +77,24 @@ async def async_setup_platform(
     db_url: str = resolve_db_url(hass, conf.get(CONF_DB_URL))
     device_class: SensorDeviceClass | None = conf.get(CONF_DEVICE_CLASS)
     state_class: SensorStateClass | None = conf.get(CONF_STATE_CLASS)
+    availability: Template | None = conf.get(CONF_AVAILABILITY)
+    icon: Template | None = conf.get(CONF_ICON)
+    picture: Template | None = conf.get(CONF_PICTURE)
 
     if value_template is not None:
         value_template.hass = hass
 
+    trigger_entity_config = {CONF_NAME: name}
+    if availability:
+        trigger_entity_config[CONF_AVAILABILITY] = availability
+    if icon:
+        trigger_entity_config[CONF_ICON] = icon
+    if picture:
+        trigger_entity_config[CONF_PICTURE] = picture
+
     await async_setup_sensor(
         hass,
-        name,
+        trigger_entity_config,
         query_str,
         column_name,
         unit,
@@ -114,9 +132,12 @@ async def async_setup_entry(
         if value_template is not None:
             value_template.hass = hass
 
+    name_template = Template(name, hass)
+    trigger_entity_config = {CONF_NAME: name_template}
+
     await async_setup_sensor(
         hass,
-        name,
+        trigger_entity_config,
         query_str,
         column_name,
         unit,
@@ -162,7 +183,7 @@ def _async_get_or_init_domain_data(hass: HomeAssistant) -> SQLData:
 
 async def async_setup_sensor(
     hass: HomeAssistant,
-    name: str,
+    trigger_entity_config: ConfigType,
     query_str: str,
     column_name: str,
     unit: str | None,
@@ -245,7 +266,7 @@ async def async_setup_sensor(
     async_add_entities(
         [
             SQLSensor(
-                name,
+                trigger_entity_config,
                 sessmaker,
                 query_str,
                 column_name,
@@ -258,7 +279,6 @@ async def async_setup_sensor(
                 use_database_executor,
             )
         ],
-        True,
     )
 
 
@@ -295,15 +315,12 @@ def _generate_lambda_stmt(query: str) -> StatementLambdaElement:
     return lambda_stmt(lambda: text, lambda_cache=_SQL_LAMBDA_CACHE)
 
 
-class SQLSensor(SensorEntity):
+class SQLSensor(ManualTriggerEntity, SensorEntity):
     """Representation of an SQL sensor."""
-
-    _attr_icon = "mdi:database-search"
-    _attr_has_entity_name = True
 
     def __init__(
         self,
-        name: str,
+        trigger_entity_config: ConfigType,
         sessmaker: scoped_session,
         query: str,
         column: str,
@@ -316,8 +333,9 @@ class SQLSensor(SensorEntity):
         use_database_executor: bool,
     ) -> None:
         """Initialize the SQL sensor."""
+        super().__init__(self.hass, trigger_entity_config)
         self._query = query
-        self._attr_name = name if yaml else None
+        self._attr_name = trigger_entity_config[CONF_NAME].template if yaml else None
         self._attr_native_unit_of_measurement = unit
         self._attr_device_class = device_class
         self._attr_state_class = state_class
@@ -328,22 +346,24 @@ class SQLSensor(SensorEntity):
         self._attr_unique_id = unique_id
         self._use_database_executor = use_database_executor
         self._lambda_stmt = _generate_lambda_stmt(query)
+        self._attr_has_entity_name = not yaml
         if not yaml and unique_id:
             self._attr_device_info = DeviceInfo(
                 entry_type=DeviceEntryType.SERVICE,
                 identifiers={(DOMAIN, unique_id)},
                 manufacturer="SQL",
-                name=name,
+                name=trigger_entity_config[CONF_NAME].template,
             )
 
     async def async_update(self) -> None:
         """Retrieve sensor data from the query using the right executor."""
         if self._use_database_executor:
-            await get_instance(self.hass).async_add_executor_job(self._update)
+            data = await get_instance(self.hass).async_add_executor_job(self._update)
         else:
-            await self.hass.async_add_executor_job(self._update)
+            data = await self.hass.async_add_executor_job(self._update)
+        self._process_manual_data(data)
 
-    def _update(self) -> None:
+    def _update(self) -> Any:
         """Retrieve sensor data from the query."""
         data = None
         self._attr_extra_state_attributes = {}
@@ -384,3 +404,6 @@ class SQLSensor(SensorEntity):
             _LOGGER.warning("%s returned no results", self._query)
 
         sess.close()
+        return data
+
+        # self.async_write_ha_state()

@@ -32,13 +32,14 @@ from . import (
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 
-async def test_query(recorder_mock: Recorder, hass: HomeAssistant) -> None:
+async def test_query_basic(recorder_mock: Recorder, hass: HomeAssistant) -> None:
     """Test the SQL sensor."""
     config = {
         "db_url": "sqlite://",
         "query": "SELECT 5 as value",
         "column": "value",
         "name": "Select value SQL query",
+        "unique_id": "very_unique_id",
     }
     await init_integration(hass, config)
 
