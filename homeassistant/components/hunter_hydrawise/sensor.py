@@ -1,6 +1,9 @@
 """Support for Hydrawise sprinkler sensors."""
 from __future__ import annotations
 
+from datetime import timedelta
+from typing import cast
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -11,11 +14,11 @@ from homeassistant.const import UnitOfTime
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN, LOGGER
 from .coordinator import HydrawiseDataUpdateCoordinator, HydrawiseEntity
 from .hydrawiser import Hydrawiser
+from .pydrawise.schema import AdvancedProgram, AdvancedWateringSettings
 
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
@@ -27,11 +30,11 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key="watering_time",
         name="Watering Time",
         icon="mdi:water-pump",
-        native_unit_of_measurement=UnitOfTime.SECONDS,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        suggested_display_precision=0,
     ),
 )
 
-TWO_YEAR_SECONDS = 60 * 60 * 24 * 365 * 2
 WATERING_TIME_ICON = "mdi:water-pump"
 
 
@@ -50,17 +53,17 @@ async def async_setup_entry(
     hydrawise: Hydrawiser = coordinator.api
 
     entities = []
-    for controller in hydrawise.controllers:
-        for relay in controller.relays:
-            for description in SENSOR_TYPES:
-                entities.append(
-                    HydrawiseSensor(
-                        coordinator=coordinator,
-                        controller_id=controller.controller_id,
-                        relay_id=relay.relay_id,
-                        description=description,
-                    )
+
+    for zone in hydrawise.zones:
+        for description in SENSOR_TYPES:
+            entities.append(
+                HydrawiseSensor(
+                    coordinator=coordinator,
+                    controller_id=zone.controller_id,
+                    zone_id=zone.id,
+                    description=description,
                 )
+            )
 
     # Add all entities to HA
     async_add_entities(entities)
@@ -74,14 +77,14 @@ class HydrawiseSensor(HydrawiseEntity, SensorEntity):
         *,
         coordinator: HydrawiseDataUpdateCoordinator,
         controller_id: int,
-        relay_id: int,
+        zone_id: int,
         description: EntityDescription,
     ) -> None:
         """Initialize."""
         super().__init__(
             coordinator=coordinator,
             controller_id=controller_id,
-            relay_id=relay_id,
+            zone_id=zone_id,
             description=description,
         )
         self.update()
@@ -95,29 +98,46 @@ class HydrawiseSensor(HydrawiseEntity, SensorEntity):
 
     def update(self) -> None:
         """Update state."""
-        relay = self.coordinator.api.get_relay(self.controller_id, self.relay_id)
-        if relay is None:
+        zone = self.coordinator.api.get_zone(self.zone_id)
+        if zone is None:
             return
 
         if self.entity_description.key == "watering_time":
-            self._attr_native_value = relay.time_remaining()
+            if zone.scheduled_runs.current_run is not None:
+                self._attr_native_value = (
+                    zone.scheduled_runs.current_run.remaining_time.total_seconds() / 60
+                )
+            elif zone.scheduled_runs.next_run is not None:
+                self._attr_native_value = (
+                    zone.scheduled_runs.next_run.duration.total_seconds() / 60
+                )
+            else:
+                duration = timedelta(seconds=0)
+                advanced = cast(AdvancedWateringSettings, zone.watering_settings)
+                if advanced is not None:
+                    program = cast(AdvancedProgram, advanced.advanced_program)
+                    if program is not None:
+                        duration = program.run_time_group.duration
+
+                self._attr_native_value = duration.total_seconds() / 60
+
             LOGGER.debug(
                 "Updating WateringTime sensor for controller %d zone %s, remaining time %ds",
                 self.controller_id,
-                relay.name,
+                zone.name,
                 self._attr_native_value,
             )
         else:  # _sensor_type == 'next_cycle'
-            if relay.timestr == "":
-                self._attr_native_value = None
+            if zone.scheduled_runs.current_run is not None:
+                self._attr_native_value = zone.scheduled_runs.current_run.start_time
+            elif zone.scheduled_runs.next_run is not None:
+                self._attr_native_value = zone.scheduled_runs.next_run.start_time
             else:
-                self._attr_native_value = dt_util.utc_from_timestamp(
-                    dt_util.as_timestamp(dt_util.now()) + relay.time
-                )
+                self._attr_native_value = None
 
             LOGGER.debug(
                 "Updating NextCycle sensor for controller %s zone %s, next cycle %s",
                 self.controller_id,
-                relay.name,
+                zone.name,
                 self._attr_native_value,
             )

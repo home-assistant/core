@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from typing import Any
 
-from requests.exceptions import ConnectTimeout, HTTPError
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -11,12 +10,14 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 
-from .const import ACCESS_TOKEN, DOMAIN, LOGGER
+from .const import DOMAIN, LOGGER, PASSWORD, USERNAME
 from .hydrawiser import Hydrawiser
+from .pydrawise.exceptions import Error
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required("password"): str,
+        vol.Required(USERNAME): str,
+        vol.Required(PASSWORD): str,
     }
 )
 
@@ -26,14 +27,15 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
-    access_token = data[ACCESS_TOKEN]
+    username = data[USERNAME]
+    password = data[PASSWORD]
     try:
-        hydrawise = await hass.async_add_executor_job(Hydrawiser, access_token)
-    except (ConnectTimeout, HTTPError) as ex:
+        hydrawise = await hass.async_add_executor_job(Hydrawiser, username, password)
+    except Error as ex:
         LOGGER.error("Unable to connect to Hydrawise cloud service: %s", str(ex))
         raise InvalidAuth from ex
 
-    if not hydrawise.controllers:
+    if not await hydrawise.async_update_controllers():
         LOGGER.error("Failed to fetch Hydrawise data")
         raise CannotConnect
 

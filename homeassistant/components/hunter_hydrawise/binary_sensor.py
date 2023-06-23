@@ -31,20 +31,19 @@ async def async_setup_entry(
 
     entities = []
 
-    for controller in hydrawise.controllers:
-        for relay in controller.relays:
-            entities.append(
-                HydrawiseBinarySensor(
-                    coordinator=coordinator,
-                    controller_id=controller.controller_id,
-                    relay_id=relay.relay_id,
-                    description=BinarySensorEntityDescription(
-                        key="is_watering",
-                        name="Watering",
-                        device_class=BinarySensorDeviceClass.MOISTURE,
-                    ),
-                )
+    for zone in hydrawise.zones:
+        entities.append(
+            HydrawiseBinarySensor(
+                coordinator=coordinator,
+                controller_id=zone.controller_id,
+                zone_id=zone.id,
+                description=BinarySensorEntityDescription(
+                    key="is_watering",
+                    name="Watering",
+                    device_class=BinarySensorDeviceClass.MOISTURE,
+                ),
             )
+        )
 
     # Add all entities to HA
     async_add_entities(entities)
@@ -58,14 +57,14 @@ class HydrawiseBinarySensor(HydrawiseEntity, BinarySensorEntity):
         *,
         coordinator: HydrawiseDataUpdateCoordinator,
         controller_id: int,
-        relay_id: int,
+        zone_id: int,
         description: EntityDescription,
     ) -> None:
         """Initialize."""
         super().__init__(
             coordinator=coordinator,
             controller_id=controller_id,
-            relay_id=relay_id,
+            zone_id=zone_id,
             description=description,
         )
         self.update()
@@ -78,16 +77,16 @@ class HydrawiseBinarySensor(HydrawiseEntity, BinarySensorEntity):
 
     def update(self) -> None:
         """Update state."""
-        relay = self.coordinator.api.get_relay(self.controller_id, self.relay_id)
-        if relay is None:
+        zone = self.coordinator.api.get_zone(self.zone_id)
+        if zone is None:
             return
 
         if self.entity_description.key == "is_watering":
-            is_running = relay.is_zone_running()
+            is_running = zone.scheduled_runs.current_run is not None
             LOGGER.debug(
                 "Updating IsWatering sensor for controller %d zone %s, is_wattering %s",
                 self.controller_id,
-                relay.name,
+                zone.name,
                 is_running,
             )
             self._attr_is_on = is_running
