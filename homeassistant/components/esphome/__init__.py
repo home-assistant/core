@@ -239,7 +239,7 @@ async def async_setup_entry(  # noqa: C901
                     **service_data,
                 },
             )
-        elif entry_data.get(CONF_ALLOW_SERVICE_CALLS, DEFAULT_ALLOW_SERVICE_CALLS):
+        elif entry.options.get(CONF_ALLOW_SERVICE_CALLS, DEFAULT_ALLOW_SERVICE_CALLS):
             hass.async_create_task(
                 hass.services.async_call(
                     domain, service_name, service_data, blocking=True
@@ -258,10 +258,10 @@ async def async_setup_entry(  # noqa: C901
                 },
             )
             _LOGGER.error(
-                "Service call %s.%s: with data %s rejected. "
+                "Service call %s.%s: with data %s rejected; "
                 "If you trust this device and want to allow access for it to make "
                 "arbitrary Home Assistant service calls, you can enable this "
-                "functionality in the options flow.",
+                "functionality in the options flow",
                 domain,
                 service_name,
                 service_data,
