@@ -11,6 +11,12 @@ async def test_airzone_create_binary_sensors(hass: HomeAssistant) -> None:
 
     await async_init_integration(hass)
 
+    # Systems
+    state = hass.states.get("binary_sensor.system_1_problem")
+    assert state.state == STATE_OFF
+    assert state.attributes.get("errors") is None
+    assert state.attributes.get("warnings") is None
+
     # Zones
     state = hass.states.get("binary_sensor.dormitorio_problem")
     assert state.state == STATE_OFF
