@@ -11,10 +11,11 @@ from requests.exceptions import ChunkedEncodingError
 
 from homeassistant.components.camera import Camera
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_platform
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DEFAULT_BRAND, DOMAIN, SERVICE_TRIGGER
 from .coordinator import BlinkUpdateCoordinator
@@ -41,7 +42,7 @@ async def async_setup_entry(
     platform.async_register_entity_service(SERVICE_TRIGGER, {}, "trigger_camera")
 
 
-class BlinkCamera(Camera):
+class BlinkCamera(CoordinatorEntity[BlinkUpdateCoordinator], Camera):
     """An implementation of a Blink Camera."""
 
     _attr_has_entity_name = True
@@ -52,7 +53,8 @@ class BlinkCamera(Camera):
 
     def __init__(self, coordinator: BlinkUpdateCoordinator, name, camera) -> None:
         """Initialize a camera."""
-        super().__init__()
+        super().__init__(coordinator)
+        Camera.__init__(self)
         self.coordinator = coordinator
         self._attr_name = f"{DOMAIN} {name}"
         self._camera = camera
@@ -76,6 +78,7 @@ class BlinkCamera(Camera):
         try:
             await self._camera.async_arm(True)
             self._attr_available = True
+            self._camera.motion_enabled = True
             await self.coordinator.async_refresh()
 
         except asyncio.TimeoutError:
@@ -87,6 +90,7 @@ class BlinkCamera(Camera):
         try:
             await self._camera.async_arm(False)
             self._attr_available = True
+            self._camera.motion_enabled = False
             await self.coordinator.async_refresh()
         except asyncio.TimeoutError:
             self._attr_available = False
@@ -95,6 +99,11 @@ class BlinkCamera(Camera):
     def motion_detection_enabled(self) -> bool:
         """Return the state of the camera."""
         return self._camera.arm
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Update camera data."""
+        self.async_write_ha_state()
 
     @property
     def brand(self) -> str | None:

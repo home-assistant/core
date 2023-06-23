@@ -10,7 +10,7 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -81,8 +81,8 @@ class BlinkBinarySensor(CoordinatorEntity[BlinkUpdateCoordinator], BinarySensorE
             model=self._camera.camera_type,
         )
 
-    @property
-    def is_on(self) -> bool | None:
+    @callback
+    def _handle_coordinator_update(self) -> None:
         """Handle update from data coordinator."""
         is_on = self._camera.attributes[self.entity_description.key]
         _LOGGER.debug(
@@ -93,4 +93,5 @@ class BlinkBinarySensor(CoordinatorEntity[BlinkUpdateCoordinator], BinarySensorE
         )
         if self.entity_description.key == TYPE_BATTERY:
             is_on = is_on != "ok"
-        return is_on
+        self._attr_is_on = is_on
+        self.async_write_ha_state()

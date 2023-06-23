@@ -20,7 +20,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DEFAULT_ATTRIBUTION, DEFAULT_BRAND, DOMAIN
@@ -75,13 +74,11 @@ class BlinkSyncModuleHA(
         self.sync.attributes["associated_cameras"] = list(self.sync.cameras)
         self.sync.attributes[ATTR_ATTRIBUTION] = DEFAULT_ATTRIBUTION
         self._attr_extra_state_attributes = self.sync.attributes
+        self._attr_state = (
+            STATE_ALARM_ARMED_AWAY if self.sync.arm else STATE_ALARM_DISARMED
+        )
 
         self.async_write_ha_state()
-
-    @property
-    def state(self) -> StateType:
-        """Update alarm state."""
-        return STATE_ALARM_ARMED_AWAY if self.sync.arm else STATE_ALARM_DISARMED
 
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""

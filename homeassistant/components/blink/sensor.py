@@ -1,8 +1,6 @@
 """Support for Blink system camera sensors."""
 from __future__ import annotations
 
-from datetime import date, datetime
-from decimal import Decimal
 import logging
 
 from homeassistant.components.sensor import (
@@ -17,10 +15,9 @@ from homeassistant.const import (
     EntityCategory,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DEFAULT_BRAND, DOMAIN, TYPE_TEMPERATURE, TYPE_WIFI_STRENGTH
@@ -92,11 +89,11 @@ class BlinkSensor(CoordinatorEntity[BlinkUpdateCoordinator], SensorEntity):
             model=self._camera.camera_type,
         )
 
-    @property
-    def native_value(self) -> StateType | date | datetime | Decimal:
-        """Retrieve sensor data from the camera."""
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Return native value for blink."""
         try:
-            value = self._camera.attributes[self._sensor_key]
+            self._attr_native_value = self._camera.attributes[self._sensor_key]
             _LOGGER.debug(
                 "'%s' %s = %s",
                 self._camera.attributes["name"],
@@ -104,8 +101,8 @@ class BlinkSensor(CoordinatorEntity[BlinkUpdateCoordinator], SensorEntity):
                 self._attr_native_value,
             )
         except KeyError:
-            value = None
+            self._attr_native_value = None
             _LOGGER.error(
                 "%s not a valid camera attribute. Did the API change?", self._sensor_key
             )
-        return value
+        self.async_write_ha_state()
