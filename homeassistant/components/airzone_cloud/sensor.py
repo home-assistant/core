@@ -6,7 +6,6 @@ from typing import Any, Final
 from aioairzone_cloud.const import (
     AZD_AIDOOS,
     AZD_HUMIDITY,
-    AZD_NAME,
     AZD_TEMP,
     AZD_WEBSERVERS,
     AZD_WIFI_RSSI,
@@ -41,6 +40,7 @@ from .entity import (
 AIDOO_SENSOR_TYPES: Final[tuple[SensorEntityDescription, ...]] = (
     SensorEntityDescription(
         device_class=SensorDeviceClass.TEMPERATURE,
+        has_entity_name=True,
         key=AZD_TEMP,
         name="Temperature",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
@@ -64,6 +64,7 @@ WEBSERVER_SENSOR_TYPES: Final[tuple[SensorEntityDescription, ...]] = (
 ZONE_SENSOR_TYPES: Final[tuple[SensorEntityDescription, ...]] = (
     SensorEntityDescription(
         device_class=SensorDeviceClass.TEMPERATURE,
+        has_entity_name=True,
         key=AZD_TEMP,
         name="Temperature",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
@@ -71,6 +72,7 @@ ZONE_SENSOR_TYPES: Final[tuple[SensorEntityDescription, ...]] = (
     ),
     SensorEntityDescription(
         device_class=SensorDeviceClass.HUMIDITY,
+        has_entity_name=True,
         key=AZD_HUMIDITY,
         name="Humidity",
         native_unit_of_measurement=PERCENTAGE,
@@ -161,7 +163,6 @@ class AirzoneAidooSensor(AirzoneAidooEntity, AirzoneSensor):
         """Initialize."""
         super().__init__(coordinator, entry, aidoo_id, aidoo_data)
 
-        self._attr_name = f"{aidoo_data[AZD_NAME]} {description.name}"
         self._attr_unique_id = f"{aidoo_id}_{description.key}"
         self.entity_description = description
 
@@ -202,7 +203,6 @@ class AirzoneZoneSensor(AirzoneZoneEntity, AirzoneSensor):
         """Initialize."""
         super().__init__(coordinator, entry, zone_id, zone_data)
 
-        self._attr_name = f"{zone_data[AZD_NAME]} {description.name}"
         self._attr_unique_id = f"{zone_id}_{description.key}"
         self.entity_description = description
 
