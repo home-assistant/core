@@ -301,7 +301,7 @@ aionanoleaf==0.2.1
 aionotion==2023.05.5
 
 # homeassistant.components.oncue
-aiooncue==0.3.4
+aiooncue==0.3.5
 
 # homeassistant.components.openexchangerates
 aioopenexchangerates==0.4.0
