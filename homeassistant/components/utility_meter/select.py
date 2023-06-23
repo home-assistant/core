@@ -39,9 +39,7 @@ async def async_setup_entry(
     unique_id = config_entry.entry_id
 
     registry = er.async_get(hass)
-    source_entity = registry.async_get(
-        config_entry.options[CONF_SOURCE_SENSOR]
-    )
+    source_entity = registry.async_get(config_entry.options[CONF_SOURCE_SENSOR])
     dev_reg = dr.async_get(hass)
     # Resolve source entity device
     if (
