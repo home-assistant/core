@@ -1,3 +1,18 @@
+change_location:
+  name: Change Location
+  description: Redirect Fully Kiosk Browser to relative URL without reloading page
+  target:
+    device:
+      integration: fully_kiosk
+  fields:
+    url:
+      name: URL
+      description: URL to load.
+      example: "/lovelace/0"
+      required: true
+      selector:
+        text:
+
 load_url:
   name: Load URL
   description: Load a URL on Fully Kiosk Browser

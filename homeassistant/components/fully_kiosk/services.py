@@ -1,6 +1,8 @@
 """Services for the Fully Kiosk Browser integration."""
 from __future__ import annotations
 
+import json
+
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
@@ -14,6 +16,7 @@ from .const import (
     ATTR_APPLICATION,
     ATTR_URL,
     DOMAIN,
+    SERVICE_CHANGE_LOCATION,
     SERVICE_LOAD_URL,
     SERVICE_START_APPLICATION,
 )
@@ -52,6 +55,17 @@ async def async_setup_services(hass: HomeAssistant) -> None:
             coordinators.append(hass.data[DOMAIN][config_entry.entry_id])
         return coordinators
 
+    async def async_change_location(call: ServiceCall) -> None:
+        """Open relative URL on the Fully Kiosk Browser without reloading page."""
+
+        # Encode string to prevent accidental JavaScript execution
+        relative_url = json.dumps(call.data[ATTR_URL])
+        javascript_url = f"""
+        javascript:history.pushState(null,"",{relative_url});window.dispatchEvent(new CustomEvent("location-changed"));
+        """.strip()
+        for coordinator in await collect_coordinators(call.data[ATTR_DEVICE_ID]):
+            await coordinator.fully.loadUrl(javascript_url)
+
     async def async_load_url(call: ServiceCall) -> None:
         """Load a URL on the Fully Kiosk Browser."""
         for coordinator in await collect_coordinators(call.data[ATTR_DEVICE_ID]):
@@ -64,6 +78,7 @@ async def async_setup_services(hass: HomeAssistant) -> None:
 
     # Register all the above services
     service_mapping = [
+        (async_change_location, SERVICE_CHANGE_LOCATION, ATTR_URL),
         (async_load_url, SERVICE_LOAD_URL, ATTR_URL),
         (async_start_app, SERVICE_START_APPLICATION, ATTR_APPLICATION),
     ]

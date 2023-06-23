@@ -7,6 +7,7 @@ from homeassistant.components.fully_kiosk.const import (
     ATTR_APPLICATION,
     ATTR_URL,
     DOMAIN,
+    SERVICE_CHANGE_LOCATION,
     SERVICE_LOAD_URL,
     SERVICE_START_APPLICATION,
 )
@@ -31,6 +32,18 @@ async def test_services(
 
     assert device_entry
 
+    url = "/dashboard-test/1"
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_CHANGE_LOCATION,
+        {ATTR_DEVICE_ID: [device_entry.id], ATTR_URL: url},
+        blocking=True,
+    )
+    mock_fully_kiosk.loadUrl.assert_called_once_with(
+        'javascript:history.pushState(null,"","/dashboard-test/1");window.dispatchEvent(new CustomEvent("location-changed"));'
+    )
+
+    mock_fully_kiosk.loadUrl.reset_mock()
     url = "https://example.com"
     await hass.services.async_call(
         DOMAIN,
@@ -38,7 +51,6 @@ async def test_services(
         {ATTR_DEVICE_ID: [device_entry.id], ATTR_URL: url},
         blocking=True,
     )
-
     mock_fully_kiosk.loadUrl.assert_called_once_with(url)
 
     app = "de.ozerov.fully"
@@ -48,7 +60,6 @@ async def test_services(
         {ATTR_DEVICE_ID: [device_entry.id], ATTR_APPLICATION: app},
         blocking=True,
     )
-
     mock_fully_kiosk.startApplication.assert_called_once_with(app)
 
 

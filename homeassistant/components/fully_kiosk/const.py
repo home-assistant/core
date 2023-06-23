@@ -23,6 +23,7 @@ MEDIA_SUPPORT_FULLYKIOSK = (
     | MediaPlayerEntityFeature.BROWSE_MEDIA
 )
 
+SERVICE_CHANGE_LOCATION = "change_location"
 SERVICE_LOAD_URL = "load_url"
 SERVICE_START_APPLICATION = "start_application"
 
