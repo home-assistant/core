@@ -40,9 +40,7 @@ from .entity import (
 AIDOO_SENSOR_TYPES: Final[tuple[SensorEntityDescription, ...]] = (
     SensorEntityDescription(
         device_class=SensorDeviceClass.TEMPERATURE,
-        has_entity_name=True,
         key=AZD_TEMP,
-        name="Temperature",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -53,7 +51,6 @@ WEBSERVER_SENSOR_TYPES: Final[tuple[SensorEntityDescription, ...]] = (
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        has_entity_name=True,
         key=AZD_WIFI_RSSI,
         name="RSSI",
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
@@ -64,17 +61,13 @@ WEBSERVER_SENSOR_TYPES: Final[tuple[SensorEntityDescription, ...]] = (
 ZONE_SENSOR_TYPES: Final[tuple[SensorEntityDescription, ...]] = (
     SensorEntityDescription(
         device_class=SensorDeviceClass.TEMPERATURE,
-        has_entity_name=True,
         key=AZD_TEMP,
-        name="Temperature",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         device_class=SensorDeviceClass.HUMIDITY,
-        has_entity_name=True,
         key=AZD_HUMIDITY,
-        name="Humidity",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -163,6 +156,7 @@ class AirzoneAidooSensor(AirzoneAidooEntity, AirzoneSensor):
         """Initialize."""
         super().__init__(coordinator, entry, aidoo_id, aidoo_data)
 
+        self._attr_has_entity_name = True
         self._attr_unique_id = f"{aidoo_id}_{description.key}"
         self.entity_description = description
 
@@ -183,6 +177,7 @@ class AirzoneWebServerSensor(AirzoneWebServerEntity, AirzoneSensor):
         """Initialize."""
         super().__init__(coordinator, entry, ws_id, ws_data)
 
+        self._attr_has_entity_name = True
         self._attr_unique_id = f"{ws_id}_{description.key}"
         self.entity_description = description
 
@@ -203,6 +198,7 @@ class AirzoneZoneSensor(AirzoneZoneEntity, AirzoneSensor):
         """Initialize."""
         super().__init__(coordinator, entry, zone_id, zone_data)
 
+        self._attr_has_entity_name = True
         self._attr_unique_id = f"{zone_id}_{description.key}"
         self.entity_description = description
 
