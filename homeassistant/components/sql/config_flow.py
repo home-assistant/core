@@ -179,9 +179,9 @@ class SQLConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 options[CONF_UNIT_OF_MEASUREMENT] = uom
             if value_template := user_input.get(CONF_VALUE_TEMPLATE):
                 options[CONF_VALUE_TEMPLATE] = value_template
-            if (device_class := user_input.get(CONF_DEVICE_CLASS)) != NONE_SENTINEL:
+            if (device_class := user_input[CONF_DEVICE_CLASS]) != NONE_SENTINEL:
                 options[CONF_DEVICE_CLASS] = device_class
-            if (state_class := user_input.get(CONF_STATE_CLASS)) != NONE_SENTINEL:
+            if (state_class := user_input[CONF_STATE_CLASS]) != NONE_SENTINEL:
                 options[CONF_STATE_CLASS] = state_class
             if db_url_for_validation != get_instance(self.hass).db_url:
                 options[CONF_DB_URL] = db_url_for_validation
@@ -248,9 +248,9 @@ class SQLOptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
                     options[CONF_UNIT_OF_MEASUREMENT] = uom
                 if value_template := user_input.get(CONF_VALUE_TEMPLATE):
                     options[CONF_VALUE_TEMPLATE] = value_template
-                if (device_class := user_input.get(CONF_DEVICE_CLASS)) != NONE_SENTINEL:
+                if (device_class := user_input[CONF_DEVICE_CLASS]) != NONE_SENTINEL:
                     options[CONF_DEVICE_CLASS] = device_class
-                if (state_class := user_input.get(CONF_STATE_CLASS)) != NONE_SENTINEL:
+                if (state_class := user_input[CONF_STATE_CLASS]) != NONE_SENTINEL:
                     options[CONF_STATE_CLASS] = state_class
                 if db_url_for_validation != get_instance(self.hass).db_url:
                     options[CONF_DB_URL] = db_url_for_validation

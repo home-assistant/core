@@ -7,6 +7,7 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from homeassistant import config_entries
 from homeassistant.components.recorder import Recorder
+from homeassistant.components.sql.config_flow import NONE_SENTINEL
 from homeassistant.components.sql.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -605,4 +606,78 @@ async def test_full_flow_not_recorder_db(
         "query": "SELECT 5 as value",
         "column": "value",
         "unit_of_measurement": "MB",
+    }
+
+
+async def test_device_state_class(recorder_mock: Recorder, hass: HomeAssistant) -> None:
+    """Test we get the form."""
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={},
+        options={
+            "name": "Get Value",
+            "query": "SELECT 5 as value",
+            "column": "value",
+            "unit_of_measurement": "MiB",
+        },
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    with patch(
+        "homeassistant.components.sql.async_setup_entry",
+        return_value=True,
+    ):
+        result2 = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={
+                "query": "SELECT 5 as value",
+                "column": "value",
+                "unit_of_measurement": "MiB",
+                "device_class": "data_size",
+                "state_class": "total",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["data"] == {
+        "name": "Get Value",
+        "query": "SELECT 5 as value",
+        "column": "value",
+        "unit_of_measurement": "MiB",
+        "device_class": "data_size",
+        "state_class": "total",
+    }
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    with patch(
+        "homeassistant.components.sql.async_setup_entry",
+        return_value=True,
+    ):
+        result3 = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={
+                "query": "SELECT 5 as value",
+                "column": "value",
+                "unit_of_measurement": "MiB",
+                "device_class": NONE_SENTINEL,
+                "state_class": NONE_SENTINEL,
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] == FlowResultType.CREATE_ENTRY
+    assert result3["data"] == {
+        "name": "Get Value",
+        "query": "SELECT 5 as value",
+        "column": "value",
+        "unit_of_measurement": "MiB",
     }
