@@ -49,42 +49,37 @@ class AranetSensorEntityDescription(SensorEntityDescription):
 SENSOR_DESCRIPTIONS = {
     "temperature": AranetSensorEntityDescription(
         key="temperature",
-        name="Temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     "humidity": AranetSensorEntityDescription(
         key="humidity",
-        name="Humidity",
         device_class=SensorDeviceClass.HUMIDITY,
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     "pressure": AranetSensorEntityDescription(
         key="pressure",
-        name="Pressure",
         device_class=SensorDeviceClass.PRESSURE,
         native_unit_of_measurement=UnitOfPressure.HPA,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     "co2": AranetSensorEntityDescription(
         key="co2",
-        name="Carbon Dioxide",
         device_class=SensorDeviceClass.CO2,
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     "battery": AranetSensorEntityDescription(
         key="battery",
-        name="Battery",
         device_class=SensorDeviceClass.BATTERY,
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     "interval": AranetSensorEntityDescription(
         key="update_interval",
-        name="Update Interval",
+        translation_key="update_interval",
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.SECONDS,
         state_class=SensorStateClass.MEASUREMENT,
