@@ -373,7 +373,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         properties = discovery_info.properties
         gateway_id = properties["gateway_pin"]
         hostname = discovery_info.hostname
-        self._default_host = hostname
 
         LOGGER.debug(
             "ZeroConf discovery detected gateway %s on %s (%s)",
@@ -381,6 +380,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             hostname,
             discovery_info.type,
         )
+
+        if discovery_info.type == "_kizbox._tcp.local.":
+            self._default_host = f"gateway-{gateway_id}.local:8443"
+
+        if discovery_info.type == "_kizboxdev._tcp.local.":
+            self._default_host = f"{discovery_info.hostname[:-1]}:{discovery_info.port}"
 
         return await self._process_discovery(gateway_id)
 
