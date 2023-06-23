@@ -11,7 +11,7 @@ AIOAladdinConnect==0.1.56
 Adax-local==0.1.5
 
 # homeassistant.components.homekit
-HAP-python==4.6.0
+HAP-python==4.7.0
 
 # homeassistant.components.mastodon
 Mastodon.py==1.5.1
@@ -119,7 +119,7 @@ aioairq==0.2.4
 aioairzone-cloud==0.1.8
 
 # homeassistant.components.airzone
-aioairzone==0.6.3
+aioairzone==0.6.4
 
 # homeassistant.components.ambient_station
 aioambient==2023.04.0
@@ -434,7 +434,7 @@ beautifulsoup4==4.11.1
 bellows==0.35.5
 
 # homeassistant.components.bmw_connected_drive
-bimmer_connected==0.13.6
+bimmer-connected==0.13.7
 
 # homeassistant.components.bizkaibus
 bizkaibus==0.1.1
@@ -502,7 +502,7 @@ brunt==1.2.0
 bt_proximity==0.2.1
 
 # homeassistant.components.bthome
-bthome-ble==2.11.3
+bthome-ble==2.12.0
 
 # homeassistant.components.bt_home_hub_5
 bthomehub5-devicelist==0.1.1
@@ -966,7 +966,7 @@ ibeacon_ble==1.0.1
 ibmiotf==0.3.4
 
 # homeassistant.components.local_calendar
-ical==4.5.1
+ical==4.5.4
 
 # homeassistant.components.ping
 icmplib==3.0
@@ -2087,7 +2087,7 @@ python-kasa==0.5.1
 # python-lirc==1.2.3
 
 # homeassistant.components.matter
-python-matter-server==3.4.1
+python-matter-server==3.5.1
 
 # homeassistant.components.xiaomi_miio
 python-miio==0.5.12
@@ -2240,7 +2240,7 @@ radiotherm==2.1.0
 raincloudy==0.0.7
 
 # homeassistant.components.rapt_ble
-rapt-ble==0.1.1
+rapt-ble==0.1.2
 
 # homeassistant.components.raspyrfm
 raspyrfm-client==1.2.8
