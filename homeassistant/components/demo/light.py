@@ -90,7 +90,7 @@ async def async_setup_entry(
             ),
             DemoLight(
                 available=True,
-                name="Bathroom CT Lights",
+                device_name="Bathroom CT Lights",
                 ct=LIGHT_TEMPS[1],
                 state=True,
                 supported_color_modes={ColorMode.COLOR_TEMP},
@@ -98,7 +98,7 @@ async def async_setup_entry(
             ),
             DemoLight(
                 available=True,
-                name="Garage Brightness Lights",
+                device_name="Garage Brightness Lights",
                 state=True,
                 supported_color_modes={ColorMode.BRIGHTNESS},
                 unique_id="light_8",
