@@ -16,6 +16,7 @@ from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import MATCH_ALL
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, intent, singleton
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
@@ -154,12 +155,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     if config_intents := config.get(DOMAIN, {}).get("intents"):
         hass.data[DATA_CONFIG] = config_intents
 
-    async def handle_process(service: core.ServiceCall) -> None:
+    async def handle_process(service: core.ServiceCall) -> core.ServiceResponse:
         """Parse text into commands."""
         text = service.data[ATTR_TEXT]
         _LOGGER.debug("Processing: <%s>", text)
         try:
-            await async_converse(
+            result = await async_converse(
                 hass=hass,
                 text=text,
                 conversation_id=None,
@@ -168,7 +169,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 agent_id=service.data.get(ATTR_AGENT_ID),
             )
         except intent.IntentHandleError as err:
-            _LOGGER.error("Error processing %s: %s", text, err)
+            raise HomeAssistantError(f"Error processing {text}: {err}") from err
+
+        if service.return_response:
+            return result.as_dict()
+
+        return None
 
     async def handle_reload(service: core.ServiceCall) -> None:
         """Reload intents."""
@@ -176,7 +182,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         await agent.async_reload(language=service.data.get(ATTR_LANGUAGE))
 
     hass.services.async_register(
-        DOMAIN, SERVICE_PROCESS, handle_process, schema=SERVICE_PROCESS_SCHEMA
+        DOMAIN,
+        SERVICE_PROCESS,
+        handle_process,
+        schema=SERVICE_PROCESS_SCHEMA,
+        supports_response=core.SupportsResponse.OPTIONAL,
     )
     hass.services.async_register(
         DOMAIN, SERVICE_RELOAD, handle_reload, schema=SERVICE_RELOAD_SCHEMA
