@@ -181,6 +181,7 @@ async def async_setup_entry(  # noqa: C901
         client=cli,
         entry_id=entry.entry_id,
         store=domain_data.get_or_create_store(hass, entry),
+        original_options=dict(entry.options),
     )
     domain_data.set_entry_data(entry, entry_data)
 
@@ -494,6 +495,8 @@ async def async_setup_entry(  # noqa: C901
 
     await reconnect_logic.start()
     entry_data.cleanup_callbacks.append(reconnect_logic.stop_callback)
+
+    entry.async_on_unload(entry.add_update_listener(entry_data.async_update_listener))
 
     return True
 

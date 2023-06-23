@@ -981,12 +981,17 @@ async def test_option_flow(
         CONF_ALLOW_SERVICE_CALLS: DEFAULT_NEW_CONFIG_ALLOW_ALLOW_SERVICE_CALLS
     }
 
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={
-            CONF_ALLOW_SERVICE_CALLS: option_value,
-        },
-    )
+    with patch(
+        "homeassistant.components.esphome.async_setup_entry", return_value=True
+    ) as mock_reload:
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_ALLOW_SERVICE_CALLS: option_value,
+            },
+        )
+        await hass.async_block_till_done()
 
     assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["data"] == {CONF_ALLOW_SERVICE_CALLS: option_value}
+    assert len(mock_reload.mock_calls) == 1
