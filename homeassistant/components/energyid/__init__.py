@@ -13,7 +13,18 @@ from homeassistant.core import Event, HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_track_state_change_event
 
-from .const import DOMAIN
+from .const import (
+    CONF_DATA_INTERVAL,
+    CONF_ENTITY_ID,
+    CONF_METRIC,
+    CONF_METRIC_KIND,
+    CONF_UNIT,
+    CONF_UPLOAD_INTERVAL,
+    CONF_WEBHOOK_URL,
+    DEFAULT_DATA_INTERVAL,
+    DEFAULT_UPLOAD_INTERVAL,
+    DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -57,15 +68,18 @@ class WebhookDispatcher:
         """Initialize the dispatcher."""
         self.hass = hass
         self.client = WebhookClientAsync(
-            webhook_url=entry.data["webhook_url"], session=async_get_clientsession(hass)
+            webhook_url=entry.data[CONF_WEBHOOK_URL],
+            session=async_get_clientsession(hass),
         )
-        self.entity_id = entry.data["entity_id"]
-        self.metric = entry.data["metric"]
-        self.metric_kind = entry.data["metric_kind"]
-        self.unit = entry.data["unit"]
-        self.data_interval = entry.options.get("data_interval", "P1D")
+        self.entity_id = entry.data[CONF_ENTITY_ID]
+        self.metric = entry.data[CONF_METRIC]
+        self.metric_kind = entry.data[CONF_METRIC_KIND]
+        self.unit = entry.data[CONF_UNIT]
+        self.data_interval = entry.options.get(
+            CONF_DATA_INTERVAL, DEFAULT_DATA_INTERVAL
+        )
         self.upload_interval = dt.timedelta(
-            seconds=entry.options.get("upload_interval", 300)
+            seconds=entry.options.get(CONF_UPLOAD_INTERVAL, DEFAULT_UPLOAD_INTERVAL)
         )
 
         self.last_upload: dt.datetime | None = None
@@ -143,7 +157,9 @@ class WebhookDispatcher:
 
     async def update_listener(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Handle options update."""
-        self.data_interval = entry.options.get("data_interval", "P1D")
+        self.data_interval = entry.options.get(
+            CONF_DATA_INTERVAL, DEFAULT_DATA_INTERVAL
+        )
         self.upload_interval = dt.timedelta(
-            seconds=entry.options.get("upload_interval", 300)
+            seconds=entry.options.get(CONF_UPLOAD_INTERVAL, DEFAULT_UPLOAD_INTERVAL)
         )
