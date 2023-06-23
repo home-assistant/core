@@ -115,6 +115,11 @@ class IssueRegistry:
         return self.issues.get((domain, issue_id))
 
     @callback
+    def async_get_issues(self) -> dict[tuple[str, str], IssueEntry]:
+        """Get issue by id."""
+        return self.issues
+
+    @callback
     def async_get_or_create(
         self,
         domain: str,
@@ -187,6 +192,7 @@ class IssueRegistry:
             return
 
         self.async_schedule_save()
+        # Replace by Callback instead?...
         self.hass.bus.async_fire(
             EVENT_REPAIRS_ISSUE_REGISTRY_UPDATED,
             {"action": "remove", "domain": domain, "issue_id": issue_id},
