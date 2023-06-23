@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Final
 
-from knx_frontend import entrypoint_js, is_dev_build, locate_dir
+import knx_frontend as knx_panel
 import voluptuous as vol
 from xknxproject.exceptions import XknxProjectException
 
@@ -29,19 +29,18 @@ async def register_panel(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, ws_subscribe_telegram)
 
     if DOMAIN not in hass.data.get("frontend_panels", {}):
-        path = locate_dir()
         hass.http.register_static_path(
             URL_BASE,
-            path,
-            cache_headers=not is_dev_build(),
+            path=knx_panel.locate_dir(),
+            cache_headers=knx_panel.is_prod_build,
         )
         await panel_custom.async_register_panel(
             hass=hass,
             frontend_url_path=DOMAIN,
-            webcomponent_name="knx-frontend",
+            webcomponent_name=knx_panel.webcomponent_name,
             sidebar_title=DOMAIN.upper(),
             sidebar_icon="mdi:bus-electric",
-            module_url=f"{URL_BASE}/{entrypoint_js()}",
+            module_url=f"{URL_BASE}/{knx_panel.entrypoint_js}",
             embed_iframe=True,
             require_admin=True,
         )
