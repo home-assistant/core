@@ -1,0 +1,13 @@
+{
+  "domain": "hunter_hydrawise",
+  "name": "Hunter Hydrawise",
+  "codeowners": ["@Lake292"],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://www.home-assistant.io/integrations/hunter_hydrawise",
+  "homekit": {},
+  "iot_class": "cloud_polling",
+  "requirements": [],
+  "ssdp": [],
+  "zeroconf": []
+}

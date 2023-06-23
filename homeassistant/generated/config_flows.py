@@ -198,6 +198,7 @@ FLOWS = {
         "huawei_lte",
         "hue",
         "huisbaasje",
+        "hunter_hydrawise",
         "hunterdouglas_powerview",
         "hvv_departures",
         "hyperion",
