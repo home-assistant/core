@@ -1315,3 +1315,41 @@ async def test_climate_full_ac_state(
 
     assert state.state == "cool"
     assert state.attributes["temperature"] == 22
+
+
+async def test_climate_fan_mode_and_swing_mode_not_supported(
+    hass: HomeAssistant,
+    load_int: ConfigEntry,
+    monkeypatch: pytest.MonkeyPatch,
+    get_data: SensiboData,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test the Sensibo climate fan_mode and swing_mode not supported is logging error."""
+
+    state1 = hass.states.get("climate.hallway")
+    assert state1.attributes["fan_mode"] == "high"
+    assert state1.attributes["swing_mode"] == "stopped"
+
+    monkeypatch.setattr(get_data.parsed["ABC999111"], "swing_mode", "faulty_swing_mode")
+    monkeypatch.setattr(get_data.parsed["ABC999111"], "fan_mode", "faulty_fan_mode")
+    with patch(
+        "homeassistant.components.sensibo.coordinator.SensiboClient.async_get_devices_data",
+        return_value=get_data,
+    ):
+        async_fire_time_changed(
+            hass,
+            dt.utcnow() + timedelta(minutes=5),
+        )
+        await hass.async_block_till_done()
+
+    state3 = hass.states.get("climate.hallway")
+    assert state3.attributes["fan_mode"] is None
+    assert state3.attributes["swing_mode"] is None
+    assert (
+        "Climate entity fan_mode is faulty_fan_mode which is not supported by the integration"
+        in caplog.text
+    )
+    assert (
+        "Climate entity swing_mode is faulty_swing_mode which is not supported by the integration"
+        in caplog.text
+    )

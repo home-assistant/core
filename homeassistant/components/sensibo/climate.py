@@ -27,7 +27,7 @@ from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.unit_conversion import TemperatureConverter
 
-from .const import DOMAIN
+from .const import DOMAIN, LOGGER
 from .coordinator import SensiboDataUpdateCoordinator
 from .entity import SensiboDeviceBaseEntity, async_handle_api_call
 
@@ -263,6 +263,10 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
         """Return the fan setting."""
         if (fan_mode := self.device_data.fan_mode) in AVAILABLE_FAN_MODES:
             return fan_mode
+        LOGGER.warning(
+            "Climate entity fan_mode is %s which is not supported by the integration, please open an issue",
+            fan_mode,
+        )
         return None
 
     @property
@@ -270,9 +274,7 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
         """Return the list of available fan modes."""
         if fan_modes := self.device_data.fan_modes:
             fan_modes_set = set(fan_modes)
-            available_fan_modes = sorted(
-                set(fan_modes_set).intersection(AVAILABLE_FAN_MODES)
-            )
+            available_fan_modes = set(fan_modes_set).intersection(AVAILABLE_FAN_MODES)
             return list(available_fan_modes)
         return None
 
@@ -281,6 +283,10 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
         """Return the swing setting."""
         if (swing_mode := self.device_data.swing_mode) in AVAILABLE_SWING_MODES:
             return swing_mode
+        LOGGER.warning(
+            "Climate entity swing_mode is %s which is not supported by the integration, please open an issue",
+            swing_mode,
+        )
         return None
 
     @property
@@ -288,8 +294,8 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
         """Return the list of available swing modes."""
         if swing_modes := self.device_data.swing_modes:
             swing_modes_set = set(swing_modes)
-            available_swing_modes = sorted(
-                set(swing_modes_set).intersection(AVAILABLE_SWING_MODES)
+            available_swing_modes = set(swing_modes_set).intersection(
+                AVAILABLE_SWING_MODES
             )
             return list(available_swing_modes)
         return None
