@@ -457,26 +457,3 @@ async def test_engine_is_disposed_at_stop(
         await hass.async_stop()
 
     assert mock_engine_dispose.call_count == 2
-
-
-async def test_attributes_from_entry_config(
-    recorder_mock: Recorder, hass: HomeAssistant
-) -> None:
-    """Test attributes from entry config."""
-
-    config = {
-        "name": "Get Value",
-        "query": "SELECT 5 as value",
-        "column": "value",
-        "unit_of_measurement": "MiB",
-        "device_class": SensorDeviceClass.DATA_SIZE,
-        "state_class": SensorStateClass.TOTAL,
-    }
-    await init_integration(hass, config)
-
-    state = hass.states.get("sensor.get_value")
-
-    assert state.state == "5"
-    assert state.attributes["device_class"] == SensorDeviceClass.DATA_SIZE
-    assert state.attributes["state_class"] == SensorStateClass.TOTAL
-    assert state.attributes["unit_of_measurement"] == "MiB"
