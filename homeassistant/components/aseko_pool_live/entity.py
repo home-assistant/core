@@ -4,8 +4,8 @@ from aioaseko import Unit
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import AsekoDataUpdateCoordinator
 from .const import DOMAIN
+from .coordinator import AsekoDataUpdateCoordinator
 
 
 class AsekoEntity(CoordinatorEntity[AsekoDataUpdateCoordinator]):
