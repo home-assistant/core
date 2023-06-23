@@ -6,7 +6,6 @@ from typing import Any
 
 import aiohttp
 from energyid_webhooks import WebhookClientAsync
-from energyid_webhooks.metercatalog import MeterCatalog
 from energyid_webhooks.webhookpolicy import WebhookPolicy
 import voluptuous as vol
 
@@ -34,28 +33,11 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-async def validate_webhook(client: WebhookClientAsync) -> bool:
-    """Validate if the Webhook can connect."""
-    try:
-        await client.get_policy()
-    except aiohttp.ClientResponseError as error:
-        raise CannotConnect from error
-    except aiohttp.InvalidURL as error:
-        raise InvalidUrl from error
-
-    return True
-
-
 async def validate_interval(interval: str, webhook_policy: WebhookPolicy) -> bool:
     """Validate if the interval is valid for the webhook policy."""
     if interval not in webhook_policy.allowed_intervals:
         raise InvalidInterval
     return True
-
-
-async def request_meter_catalog(client: WebhookClientAsync) -> MeterCatalog:
-    """Request the meter catalog."""
-    return await client.get_meter_catalog()
 
 
 def hass_entity_ids(hass: HomeAssistant) -> list[str]:
@@ -76,8 +58,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         # Get the meter catalog
         http_session = async_get_clientsession(self.hass)
+        # Temporary client without webhook URL (not yet known, but not needed for catalog)
         _client = WebhookClientAsync(webhook_url=None, session=http_session)
-        meter_catalog = await request_meter_catalog(_client)
+        meter_catalog = await _client.get_meter_catalog()
 
         # Handle the user input
         if user_input is not None:
@@ -85,10 +68,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 webhook_url=user_input[CONF_WEBHOOK_URL], session=http_session
             )
             try:
-                await validate_webhook(client)
-            except CannotConnect:
+                await client.get_policy()
+            except aiohttp.ClientResponseError:
                 errors["base"] = "cannot_connect"
-            except InvalidUrl:
+            except aiohttp.InvalidURL:
                 errors[CONF_WEBHOOK_URL] = "invalid_url"
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
@@ -174,14 +157,6 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             ),
             errors=errors,
         )
-
-
-class CannotConnect(HomeAssistantError):
-    """Error to indicate we cannot connect."""
-
-
-class InvalidUrl(HomeAssistantError):
-    """Error to indicate there is invalid url."""
 
 
 class InvalidInterval(HomeAssistantError):
