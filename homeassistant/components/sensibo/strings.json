@@ -71,7 +71,7 @@
       "horizontalswing": {
         "name": "Horizontal swing",
         "state": {
-          "stopped": "Stopped",
+          "stopped": "[%key:common::state::off%]",
           "fixedleft": "Fixed left",
           "fixedcenterleft": "Fixed center left",
           "fixedcenter": "Fixed center",
@@ -165,16 +165,16 @@
           "fan_mode": {
             "state": {
               "quiet": "Quiet",
-              "low": "Low",
-              "medium": "Medium",
+              "low": "[%key:component::climate::entity_component::_::state_attributes::fan_mode::state::low%]",
+              "medium": "[%key:component::climate::entity_component::_::state_attributes::fan_mode::state::medium%]",
               "medium_high": "Medium high",
-              "high": "High",
-              "auto": "Auto"
+              "high": "[%key:component::climate::entity_component::_::state_attributes::fan_mode::state::high%]",
+              "auto": "[%key:component::climate::entity_component::_::state_attributes::fan_mode::state::auto%]"
             }
           },
           "swing_mode": {
             "state": {
-              "stopped": "Stopped",
+              "stopped": "[%key:common::state::off%]",
               "fixedtop": "Fixed top",
               "fixedmiddletop": "Fixed middle top",
               "fixedmiddle": "Fixed middle",
@@ -185,7 +185,7 @@
               "rangebottom": "Range bottom",
               "rangefull": "Range full",
               "horizontal": "Horizontal",
-              "both": "Both"
+              "both": "[%key:component::climate::entity_component::_::state_attributes::swing_mode::state::both%]"
             }
           }
         }

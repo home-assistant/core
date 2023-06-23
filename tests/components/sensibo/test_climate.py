@@ -1338,7 +1338,7 @@ async def test_climate_fan_mode_and_swing_mode_not_supported(
     ):
         async_fire_time_changed(
             hass,
-            dt.utcnow() + timedelta(minutes=5),
+            dt_util.utcnow() + timedelta(minutes=5),
         )
         await hass.async_block_till_done()
 
