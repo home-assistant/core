@@ -994,4 +994,4 @@ async def test_option_flow(
 
     assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["data"] == {CONF_ALLOW_SERVICE_CALLS: option_value}
-    assert len(mock_reload.mock_calls) == 1
+    assert len(mock_reload.mock_calls) == int(option_value)
