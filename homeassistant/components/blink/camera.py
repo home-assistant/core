@@ -42,7 +42,7 @@ async def async_setup_entry(
     platform.async_register_entity_service(SERVICE_TRIGGER, {}, "trigger_camera")
 
 
-class BlinkCamera(CoordinatorEntity[BlinkUpdateCoordinator], Camera):
+class BlinkCamera(CoordinatorEntity, Camera):
     """An implementation of a Blink Camera."""
 
     _attr_has_entity_name = True
@@ -55,7 +55,7 @@ class BlinkCamera(CoordinatorEntity[BlinkUpdateCoordinator], Camera):
         """Initialize a camera."""
         super().__init__(coordinator)
         Camera.__init__(self)
-        self.coordinator = coordinator
+        self._coordinator = coordinator
         self._attr_name = f"{DOMAIN} {name}"
         self._camera = camera
         self._attr_unique_id = f"{camera.serial}-camera"
@@ -77,9 +77,8 @@ class BlinkCamera(CoordinatorEntity[BlinkUpdateCoordinator], Camera):
         """Enable motion detection for the camera."""
         try:
             await self._camera.async_arm(True)
-            self._attr_available = True
             self._camera.motion_enabled = True
-            await self.coordinator.async_refresh()
+            await self._coordinator.async_refresh()
 
         except asyncio.TimeoutError:
             self._attr_available = False
@@ -89,9 +88,8 @@ class BlinkCamera(CoordinatorEntity[BlinkUpdateCoordinator], Camera):
         """Disable motion detection for the camera."""
         try:
             await self._camera.async_arm(False)
-            self._attr_available = True
             self._camera.motion_enabled = False
-            await self.coordinator.async_refresh()
+            await self._coordinator.async_refresh()
         except asyncio.TimeoutError:
             self._attr_available = False
 
@@ -103,6 +101,7 @@ class BlinkCamera(CoordinatorEntity[BlinkUpdateCoordinator], Camera):
     @callback
     def _handle_coordinator_update(self) -> None:
         """Update camera data."""
+        self._attr_available = True
         self.async_write_ha_state()
 
     @property

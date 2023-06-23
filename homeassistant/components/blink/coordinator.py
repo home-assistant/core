@@ -21,13 +21,13 @@ class BlinkUpdateCoordinator(DataUpdateCoordinator):
 
     def __init__(self, hass: HomeAssistant, api: Blink) -> None:
         """Initialise the data service."""
+        self.api = api
         super().__init__(
             hass,
             _LOGGER,
             name=DOMAIN,
             update_interval=timedelta(seconds=30),
         )
-        self.api = api
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Async update wrapper."""
