@@ -5,13 +5,12 @@ from typing import TYPE_CHECKING, Final
 
 from knx_frontend import entrypoint_js, is_dev_build, locate_dir
 import voluptuous as vol
-from xknx.telegram import TelegramDirection
 from xknxproject.exceptions import XknxProjectException
 
 from homeassistant.components import panel_custom, websocket_api
 from homeassistant.core import HomeAssistant, callback
 
-from .const import DOMAIN, KNXBusMonitorMessage
+from .const import DOMAIN
 from .telegrams import TelegramDict
 
 if TYPE_CHECKING:
@@ -145,10 +144,7 @@ def ws_group_monitor_info(
 ) -> None:
     """Handle get info command of group monitor."""
     knx: KNXModule = hass.data[DOMAIN]
-    recent_telegrams = [
-        _telegram_dict_to_group_monitor(telegram)
-        for telegram in knx.telegrams.recent_telegrams
-    ]
+    recent_telegrams = [*knx.telegrams.recent_telegrams]
     connection.send_result(
         msg["id"],
         {
@@ -178,7 +174,7 @@ def ws_subscribe_telegram(
         """Forward telegram to websocket subscription."""
         connection.send_event(
             msg["id"],
-            _telegram_dict_to_group_monitor(telegram),
+            telegram,
         )
 
     connection.subscriptions[msg["id"]] = knx.telegrams.async_listen_telegram(
@@ -186,38 +182,3 @@ def ws_subscribe_telegram(
         name="KNX GroupMonitor subscription",
     )
     connection.send_result(msg["id"])
-
-
-def _telegram_dict_to_group_monitor(telegram: TelegramDict) -> KNXBusMonitorMessage:
-    """Convert a TelegramDict to a KNXBusMonitorMessage object."""
-    direction = (
-        "group_monitor_incoming"
-        if telegram["direction"] == TelegramDirection.INCOMING.value
-        else "group_monitor_outgoing"
-    )
-
-    _payload = telegram["payload"]
-    if isinstance(_payload, tuple):
-        payload = f"0x{bytes(_payload).hex()}"
-    elif isinstance(_payload, int):
-        payload = f"{_payload:d}"
-    else:
-        payload = ""
-
-    timestamp = telegram["timestamp"].strftime("%H:%M:%S.%f")[:-3]
-
-    if (value := telegram["value"]) is not None:
-        unit = telegram["unit"]
-        value = f"{value}{' ' + unit if unit else ''}"
-
-    return KNXBusMonitorMessage(
-        destination_address=telegram["destination"],
-        destination_text=telegram["destination_name"],
-        direction=direction,
-        payload=payload,
-        source_address=telegram["source"],
-        source_text=telegram["source_name"],
-        timestamp=timestamp,
-        type=telegram["telegramtype"],
-        value=value,
-    )
