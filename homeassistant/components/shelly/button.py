@@ -18,6 +18,7 @@ from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.util import slugify
 
 from .const import LOGGER, SHELLY_GAS_MODELS
 from .coordinator import ShellyBlockCoordinator, ShellyRpcCoordinator, get_entry_data
@@ -81,16 +82,17 @@ BUTTONS: Final[list[ShellyButtonDescription[Any]]] = [
 
 @callback
 def async_migrate_unique_ids(
-    entity_entry: er.RegistryEntry, mac: str
+    entity_entry: er.RegistryEntry,
+    coordinator: ShellyRpcCoordinator | ShellyBlockCoordinator,
 ) -> dict[str, Any] | None:
     """Migrate button unique IDs."""
     if not entity_entry.entity_id.startswith("button"):
         return None
 
     for key in ("reboot", "self_test", "mute", "unmute"):
-        if entity_entry.unique_id.endswith(key):
+        if entity_entry.unique_id.startswith(slugify(coordinator.device.name)):
             old_unique_id = entity_entry.unique_id
-            new_unique_id = f"{mac}_{key}"
+            new_unique_id = f"{coordinator.mac}_{key}"
             LOGGER.debug(
                 "Migrating unique_id for %s entity from [%s] to [%s]",
                 entity_entry.entity_id,
@@ -120,7 +122,7 @@ async def async_setup_entry(
         """Migrate button unique IDs."""
         if TYPE_CHECKING:
             assert coordinator is not None
-        return async_migrate_unique_ids(entity_entry, coordinator.mac)
+        return async_migrate_unique_ids(entity_entry, coordinator)
 
     coordinator: ShellyRpcCoordinator | ShellyBlockCoordinator | None = None
     if get_device_entry_gen(config_entry) == 2:

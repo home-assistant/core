@@ -47,8 +47,8 @@ async def test_rpc_button(hass: HomeAssistant, mock_rpc_device) -> None:
 @pytest.mark.parametrize(
     ("gen", "old_unique_id", "new_unique_id"),
     [
-        (2, "test_device_reboot", "123456789ABC_reboot"),
-        (1, "test_device_reboot", "123456789ABC_reboot"),
+        (2, "test_name_reboot", "123456789ABC_reboot"),
+        (1, "test_name_reboot", "123456789ABC_reboot"),
     ],
 )
 async def test_migrate_unique_id(
