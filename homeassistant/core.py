@@ -82,7 +82,7 @@ from .exceptions import (
 )
 from .helpers.aiohttp_compat import restore_original_aiohttp_cancel_behavior
 from .helpers.json import json_dumps
-from .util import dt as dt_util, location, ulid as ulid_util
+from .util import dt as dt_util, location
 from .util.async_ import (
     cancelling,
     run_callback_threadsafe,
@@ -91,6 +91,7 @@ from .util.async_ import (
 from .util.json import JsonObjectType
 from .util.read_only_dict import ReadOnlyDict
 from .util.timeout import TimeoutManager
+from .util.ulid import ulid, ulid_at_time
 from .util.unit_system import (
     _CONF_UNIT_SYSTEM_IMPERIAL,
     _CONF_UNIT_SYSTEM_US_CUSTOMARY,
@@ -874,7 +875,7 @@ class Context:
         id: str | None = None,  # pylint: disable=redefined-builtin
     ) -> None:
         """Init the context."""
-        self.id = id or ulid_util.ulid()
+        self.id = id or ulid()
         self.user_id = user_id
         self.parent_id = parent_id
         self.origin_event: Event | None = None
@@ -926,10 +927,14 @@ class Event:
         self.data = data or {}
         self.origin = origin
         self.time_fired = time_fired or dt_util.utcnow()
-        self.context: Context = context or Context(
-            id=ulid_util.ulid_at_time(dt_util.utc_to_timestamp(self.time_fired))
-        )
+        if not context:
+            context = Context(
+                id=ulid_at_time(dt_util.utc_to_timestamp(self.time_fired))
+            )
+        self.context = context
         self._as_dict: ReadOnlyDict[str, Any] | None = None
+        if not context.origin_event:
+            context.origin_event = self
 
     def as_dict(self) -> ReadOnlyDict[str, Any]:
         """Create a dict representation of this Event.
@@ -973,6 +978,8 @@ class EventBus:
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize a new event bus."""
         self._listeners: dict[str, list[_FilterableJob]] = {}
+        self._match_all_listeners: list[_FilterableJob] = []
+        self._listeners[MATCH_ALL] = self._match_all_listeners
         self._hass = hass
 
     @callback
@@ -1019,20 +1026,19 @@ class EventBus:
             )
 
         listeners = self._listeners.get(event_type, [])
+        match_all_listeners = self._match_all_listeners
 
-        # EVENT_HOMEASSISTANT_CLOSE should go only to this listeners
-        match_all_listeners = self._listeners.get(MATCH_ALL)
-        if match_all_listeners is not None and event_type != EVENT_HOMEASSISTANT_CLOSE:
+        if not listeners and not match_all_listeners:
+            return
+
+        # EVENT_HOMEASSISTANT_CLOSE should not be sent to MATCH_ALL listeners
+        if event_type != EVENT_HOMEASSISTANT_CLOSE:
             listeners = match_all_listeners + listeners
 
         event = Event(event_type, event_data, origin, time_fired, context)
-        if not event.context.origin_event:
-            event.context.origin_event = event
 
-        _LOGGER.debug("Bus:Handling %s", event)
-
-        if not listeners:
-            return
+        if _LOGGER.isEnabledFor(logging.DEBUG):
+            _LOGGER.debug("Bus:Handling %s", event)
 
         for job, event_filter, run_immediately in listeners:
             if event_filter is not None:
@@ -1195,7 +1201,7 @@ class EventBus:
             self._listeners[event_type].remove(filterable_job)
 
             # delete event_type list if empty
-            if not self._listeners[event_type]:
+            if not self._listeners[event_type] and event_type != MATCH_ALL:
                 self._listeners.pop(event_type)
         except (KeyError, ValueError):
             # KeyError is key event_type listener did not exist
@@ -1630,7 +1636,7 @@ class StateMachine:
             # https://github.com/python/cpython/blob/c90a862cdcf55dc1753c6466e5fa4a467a13ae24/Modules/_datetimemodule.c#L6323
             timestamp = time.time()
             now = dt_util.utc_from_timestamp(timestamp)
-            context = Context(id=ulid_util.ulid_at_time(timestamp))
+            context = Context(id=ulid_at_time(timestamp))
         else:
             now = dt_util.utcnow()
 

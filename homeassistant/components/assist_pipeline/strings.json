@@ -11,6 +11,14 @@
         "state": {
           "preferred": "Preferred"
         }
+      },
+      "vad_sensitivity": {
+        "name": "Silence sensitivity",
+        "state": {
+          "default": "Default",
+          "aggressive": "Aggressive",
+          "relaxed": "Relaxed"
+        }
       }
     }
   }
