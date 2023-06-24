@@ -49,6 +49,7 @@ async def test_rpc_button(hass: HomeAssistant, mock_rpc_device) -> None:
     [
         (2, "test_name_reboot", "123456789ABC_reboot"),
         (1, "test_name_reboot", "123456789ABC_reboot"),
+        (2, "123456789ABC_reboot", "123456789ABC_reboot"),
     ],
 )
 async def test_migrate_unique_id(
@@ -79,29 +80,3 @@ async def test_migrate_unique_id(
     entity_entry = entity_registry.async_get("button.test_name_reboot")
     assert entity_entry
     assert entity_entry.unique_id == new_unique_id
-
-
-async def test_migrate_unique_id_not_needed(
-    hass: HomeAssistant, mock_rpc_device, caplog: pytest.LogCaptureFixture
-) -> None:
-    """Test migration of unique_id."""
-    entry = await init_integration(hass, 2, skip_setup=True)
-
-    entity_registry = er.async_get(hass)
-    er.RegistryEntry = entity_registry.async_get_or_create(
-        suggested_object_id="test_name_reboot",
-        disabled_by=None,
-        domain=BUTTON_DOMAIN,
-        platform=DOMAIN,
-        unique_id="123456789ABC_reboot",
-        config_entry=entry,
-    )
-
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-
-    entity_entry = entity_registry.async_get("button.test_name_reboot")
-    assert entity_entry
-    assert entity_entry.unique_id == "123456789ABC_reboot"
-
-    assert "Migrating unique_id for button.test_name_reboot" not in caplog.text
