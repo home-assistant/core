@@ -89,8 +89,10 @@ def async_migrate_unique_ids(
     if not entity_entry.entity_id.startswith("button"):
         return None
 
+    device_name = slugify(coordinator.device.name)
+
     for key in ("reboot", "self_test", "mute", "unmute"):
-        if entity_entry.unique_id.startswith(slugify(coordinator.device.name)):
+        if entity_entry.unique_id.startswith(device_name):
             old_unique_id = entity_entry.unique_id
             new_unique_id = f"{coordinator.mac}_{key}"
             LOGGER.debug(
