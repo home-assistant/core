@@ -325,29 +325,28 @@ class Entity(ABC):
         """Return a unique ID."""
         return self._attr_unique_id
 
+    def _report_implicit_device_name(self) -> None:
+        """Report entities which use implicit device name."""
+        if self._implicit_device_name_reported:
+            return
+        report_issue = self._suggest_report_issue()
+        _LOGGER.warning(
+            (
+                "Entity %s (%s) is implicitly using device name by not setting its "
+                "name. Instead, the name should be set to None, please %s"
+            ),
+            self.entity_id,
+            type(self),
+            report_issue,
+        )
+        self._implicit_device_name_reported = True
+
     @property
     def use_device_name(self) -> bool:
         """Return if this entity does not have its own name.
 
         Should be True if the entity represents the single main feature of a device.
         """
-
-        def report_implicit_device_name() -> None:
-            """Report entities which use implicit device name."""
-            if self._implicit_device_name_reported:
-                return
-            report_issue = self._suggest_report_issue()
-            _LOGGER.warning(
-                (
-                    "Entity %s (%s) is implicitly using device name by not setting its "
-                    "name. Instead, the name should be set to None, please %s"
-                ),
-                self.entity_id,
-                type(self),
-                report_issue,
-            )
-            self._implicit_device_name_reported = True
-
         if hasattr(self, "_attr_name"):
             return not self._attr_name
 
@@ -362,13 +361,13 @@ class Entity(ABC):
                 # Backwards compatibility with leaving EntityDescription.name unassigned
                 # for device name.
                 # Deprecated in HA Core 2023.6, remove in HA Core 2023.9
-                report_implicit_device_name()
+                self._report_implicit_device_name()
                 return True
             return False
         if self.name is UNDEFINED and not self._default_to_device_class_name():
             # Backwards compatibility with not overriding name property for device name.
             # Deprecated in HA Core 2023.6, remove in HA Core 2023.9
-            report_implicit_device_name()
+            self._report_implicit_device_name()
             return True
         return not self.name
 
@@ -1093,6 +1092,19 @@ class Entity(ABC):
         self._unsub_device_updates = None
 
     @callback
+    def _async_device_registry_updated(self, event: Event) -> None:
+        """Handle device registry update."""
+        data = event.data
+
+        if data["action"] != "update":
+            return
+
+        if "name" not in data["changes"] and "name_by_user" not in data["changes"]:
+            return
+
+        self.async_write_ha_state()
+
+    @callback
     def _async_subscribe_device_updates(self) -> None:
         """Subscribe to device registry updates."""
         assert self.registry_entry
@@ -1105,23 +1117,10 @@ class Entity(ABC):
         if not self.has_entity_name:
             return
 
-        @callback
-        def async_device_registry_updated(event: Event) -> None:
-            """Handle device registry update."""
-            data = event.data
-
-            if data["action"] != "update":
-                return
-
-            if "name" not in data["changes"] and "name_by_user" not in data["changes"]:
-                return
-
-            self.async_write_ha_state()
-
         self._unsub_device_updates = async_track_device_registry_updated_event(
             self.hass,
             device_id,
-            async_device_registry_updated,
+            self._async_device_registry_updated,
         )
         if (
             not self._on_remove
