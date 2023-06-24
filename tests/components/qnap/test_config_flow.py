@@ -24,15 +24,6 @@ STANDARD_CONFIG = {
     CONF_HOST: TEST_HOST,
 }
 
-STANDARD_RESULT = {
-    CONF_HOST: TEST_HOST,
-    CONF_USERNAME: TEST_USERNAME,
-    CONF_PASSWORD: TEST_PASSWORD,
-    CONF_SSL: const.DEFAULT_SSL,
-    CONF_VERIFY_SSL: const.DEFAULT_VERIFY_SSL,
-    CONF_PORT: const.DEFAULT_PORT,
-}
-
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry", "qnap_connect")
 
@@ -53,9 +44,15 @@ async def test_config_flow_success(hass: HomeAssistant) -> None:
     )
 
     assert result["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Test NAS name"
-    assert result["data"] == STANDARD_RESULT
-
+    assert result["title"] == "Test NAS name
+    assert result["data"] == {
+        CONF_HOST: "1.2.3.4",
+        CONF_USERNAME: "admin",
+        CONF_PASSWORD: "password",
+        CONF_SSL: const.DEFAULT_SSL,
+        CONF_VERIFY_SSL: const.DEFAULT_VERIFY_SSL,
+        CONF_PORT: const.DEFAULT_PORT,
+    }
 
 async def test_config_flow_errors(hass: HomeAssistant, qnap_connect: MagicMock) -> None:
     """Flow manually initialized by the user after some errors."""
@@ -108,4 +105,11 @@ async def test_config_flow_import(hass: HomeAssistant) -> None:
 
     assert result["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["title"] == "Test NAS name"
-    assert result["data"] == STANDARD_RESULT
+    assert result["data"] == {
+        CONF_HOST: "1.2.3.4",
+        CONF_USERNAME: "admin",
+        CONF_PASSWORD: "password",
+        CONF_SSL: const.DEFAULT_SSL,
+        CONF_VERIFY_SSL: const.DEFAULT_VERIFY_SSL,
+        CONF_PORT: const.DEFAULT_PORT,
+    }
