@@ -14,7 +14,7 @@ import voluptuous as vol
 from homeassistant.components import http, websocket_api
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import integration_platform
+from homeassistant.helpers import config_validation as cv, integration_platform
 from homeassistant.helpers.device_registry import DeviceEntry, async_get
 from homeassistant.helpers.json import (
     ExtendedJSONEncoder,
@@ -31,6 +31,9 @@ from .util import async_redact_data
 __all__ = ["REDACTED", "async_redact_data"]
 
 _LOGGER = logging.getLogger(__name__)
+
+
+CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 
 @dataclass(slots=True)

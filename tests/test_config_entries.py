@@ -31,7 +31,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.setup import async_set_domains_to_be_loaded, async_setup_component
-from homeassistant.util import dt
 import homeassistant.util.dt as dt_util
 
 from .common import (
@@ -69,9 +68,10 @@ def mock_handlers() -> Generator[None, None, None]:
 
 
 @pytest.fixture
-def manager(hass: HomeAssistant) -> config_entries.ConfigEntries:
+async def manager(hass: HomeAssistant) -> config_entries.ConfigEntries:
     """Fixture of a loaded config manager."""
     manager = config_entries.ConfigEntries(hass, {})
+    await manager.async_initialize()
     hass.config_entries = manager
     return manager
 
@@ -650,7 +650,7 @@ async def test_saving_and_loading(hass: HomeAssistant) -> None:
     )
 
     # To trigger the call_later
-    async_fire_time_changed(hass, dt.utcnow() + timedelta(seconds=1))
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=1))
     # To execute the save
     await hass.async_block_till_done()
 
@@ -713,7 +713,9 @@ async def test_forward_entry_does_not_setup_entry_if_setup_fails(
     assert len(mock_setup_entry.mock_calls) == 0
 
 
-async def test_discovery_notification(hass: HomeAssistant) -> None:
+async def test_discovery_notification(
+    hass: HomeAssistant, manager: config_entries.ConfigEntries
+) -> None:
     """Test that we create/dismiss a notification when source is discovery."""
     mock_integration(hass, MockModule("test"))
     mock_entity_platform(hass, "config_flow.test", None)
@@ -1053,7 +1055,9 @@ async def test_setup_does_not_retry_during_shutdown(hass: HomeAssistant) -> None
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_create_entry_options(hass: HomeAssistant) -> None:
+async def test_create_entry_options(
+    hass: HomeAssistant, manager: config_entries.ConfigEntries
+) -> None:
     """Test a config entry being created with options."""
 
     async def mock_async_setup(hass, config):
@@ -1611,7 +1615,8 @@ async def test_reload_entry_entity_registry_works(
 
     async_fire_time_changed(
         hass,
-        dt.utcnow() + timedelta(seconds=config_entries.RELOAD_AFTER_UPDATE_DELAY + 1),
+        dt_util.utcnow()
+        + timedelta(seconds=config_entries.RELOAD_AFTER_UPDATE_DELAY + 1),
     )
     await hass.async_block_till_done()
 
@@ -2482,7 +2487,9 @@ async def test_partial_flows_hidden(
         assert "config_entry_discovery" in notifications
 
 
-async def test_async_setup_init_entry(hass: HomeAssistant) -> None:
+async def test_async_setup_init_entry(
+    hass: HomeAssistant, manager: config_entries.ConfigEntries
+) -> None:
     """Test a config entry being initialized during integration setup."""
 
     async def mock_async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -2527,7 +2534,7 @@ async def test_async_setup_init_entry(hass: HomeAssistant) -> None:
 
 
 async def test_async_setup_init_entry_completes_before_loaded_event_fires(
-    hass: HomeAssistant,
+    hass: HomeAssistant, manager: config_entries.ConfigEntries
 ) -> None:
     """Test a config entry being initialized during integration setup before the loaded event fires."""
     load_events: list[Event] = []
@@ -3303,7 +3310,7 @@ async def test_setup_retrying_during_shutdown(hass: HomeAssistant) -> None:
 
     assert len(mock_call.return_value.mock_calls) == 0
 
-    async_fire_time_changed(hass, dt.utcnow() + timedelta(hours=4))
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(hours=4))
     await hass.async_block_till_done()
 
     assert len(mock_call.return_value.mock_calls) == 0

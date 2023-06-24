@@ -47,6 +47,8 @@ from .common import (
 )
 from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_PROFILE, SIG_EP_TYPE
 
+from tests.common import async_mock_load_restore_state_from_storage
+
 ENTITY_ID_PREFIX = "sensor.fakemanufacturer_fakemodel_{}"
 
 
@@ -530,6 +532,7 @@ def core_rs(hass_storage):
     ],
 )
 async def test_temp_uom(
+    hass: HomeAssistant,
     uom,
     raw_temp,
     expected,
@@ -544,6 +547,7 @@ async def test_temp_uom(
     entity_id = "sensor.fake1026_fakemodel1026_004f3202_temperature"
     if restore:
         core_rs(entity_id, uom, state=(expected - 2))
+        await async_mock_load_restore_state_from_storage(hass)
 
     hass = await hass_ms(
         CONF_UNIT_SYSTEM_METRIC
@@ -565,7 +569,7 @@ async def test_temp_uom(
     )
     cluster = zigpy_device.endpoints[1].temperature
     zha_device = await zha_device_restored(zigpy_device)
-    entity_id = await find_entity_id(Platform.SENSOR, zha_device, hass)
+    entity_id = find_entity_id(Platform.SENSOR, zha_device, hass)
 
     if not restore:
         await async_enable_traffic(hass, [zha_device], enabled=False)
@@ -609,7 +613,7 @@ async def test_electrical_measurement_init(
     )
     cluster = zigpy_device.endpoints[1].in_clusters[cluster_id]
     zha_device = await zha_device_joined(zigpy_device)
-    entity_id = await find_entity_id(
+    entity_id = find_entity_id(
         Platform.SENSOR, zha_device, hass, qualifier="active_power"
     )
 

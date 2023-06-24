@@ -116,3 +116,5 @@ class BMWNumber(BMWBaseEntity, NumberEntity):
             await self.entity_description.remote_service(self.vehicle, value)
         except MyBMWAPIError as ex:
             raise HomeAssistantError(ex) from ex
+
+        self.coordinator.async_update_listeners()

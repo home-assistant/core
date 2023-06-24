@@ -24,7 +24,7 @@ from homeassistant.helpers.event import (
     async_track_point_in_utc_time,
     async_track_time_interval,
 )
-from homeassistant.util import dt
+from homeassistant.util import dt as dt_util
 
 from .const import (
     CONF_CALENDAR_ACCESS,
@@ -51,7 +51,9 @@ class DeviceAuth(AuthImplementation):
     async def async_resolve_external_data(self, external_data: Any) -> dict:
         """Resolve a Google API Credentials object to Home Assistant token."""
         creds: Credentials = external_data[DEVICE_AUTH_CREDS]
-        delta = creds.token_expiry.replace(tzinfo=datetime.timezone.utc) - dt.utcnow()
+        delta = (
+            creds.token_expiry.replace(tzinfo=datetime.timezone.utc) - dt_util.utcnow()
+        )
         _LOGGER.debug(
             "Token expires at %s (in %s)", creds.token_expiry, delta.total_seconds()
         )
@@ -108,7 +110,9 @@ class DeviceFlow:
     def async_start_exchange(self) -> None:
         """Start the device auth exchange flow polling."""
         _LOGGER.debug("Starting exchange flow")
-        max_timeout = dt.utcnow() + datetime.timedelta(seconds=EXCHANGE_TIMEOUT_SECONDS)
+        max_timeout = dt_util.utcnow() + datetime.timedelta(
+            seconds=EXCHANGE_TIMEOUT_SECONDS
+        )
         # For some reason, oauth.step1_get_device_and_user_codes() returns a datetime
         # object without tzinfo. For the comparison below to work, it needs one.
         user_code_expiry = self._device_flow_info.user_code_expiry.replace(

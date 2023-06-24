@@ -51,12 +51,15 @@ CONF_MANUAL_INPUT = "Manually configure ONVIF device"
 def wsdiscovery() -> list[Service]:
     """Get ONVIF Profile S devices from network."""
     discovery = WSDiscovery(ttl=4)
-    discovery.start()
-    services = discovery.searchServices(
-        scopes=[Scope("onvif://www.onvif.org/Profile/Streaming")]
-    )
-    discovery.stop()
-    return services
+    try:
+        discovery.start()
+        return discovery.searchServices(
+            scopes=[Scope("onvif://www.onvif.org/Profile/Streaming")]
+        )
+    finally:
+        discovery.stop()
+        # Stop the threads started by WSDiscovery since otherwise there is a leak.
+        discovery._stopThreads()  # pylint: disable=protected-access
 
 
 async def async_discovery(hass: HomeAssistant) -> list[dict[str, Any]]:

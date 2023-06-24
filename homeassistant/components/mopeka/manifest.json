@@ -21,5 +21,5 @@
   "documentation": "https://www.home-assistant.io/integrations/mopeka",
   "integration_type": "device",
   "iot_class": "local_push",
-  "requirements": ["mopeka_iot_ble==0.4.1"]
+  "requirements": ["mopeka-iot-ble==0.4.1"]
 }
