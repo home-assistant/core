@@ -1474,13 +1474,12 @@ async def test_clear_config_topic_disabled_entity(
     mqtt_mock = await mqtt_mock_entry()
     # discover an entity that is not enabled by default
     config = {
-        "name": "sbfspot_12345",
         "state_topic": "homeassistant_test/sensor/sbfspot_0/sbfspot_12345/",
         "unique_id": "sbfspot_12345",
         "enabled_by_default": False,
         "device": {
             "identifiers": ["sbfspot_12345"],
-            "name": "sbfspot_12345",
+            "name": "abc123",
             "sw_version": "1.0",
             "connections": [["mac", "12:34:56:AB:CD:EF"]],
         },
@@ -1512,9 +1511,9 @@ async def test_clear_config_topic_disabled_entity(
     await hass.async_block_till_done()
     assert "Platform mqtt does not generate unique IDs" in caplog.text
 
-    assert hass.states.get("sensor.sbfspot_12345") is None  # disabled
-    assert hass.states.get("sensor.sbfspot_12345_1") is not None  # enabled
-    assert hass.states.get("sensor.sbfspot_12345_2") is None  # not unique
+    assert hass.states.get("sensor.abc123_sbfspot_12345") is None  # disabled
+    assert hass.states.get("sensor.abc123_sbfspot_12345_1") is not None  # enabled
+    assert hass.states.get("sensor.abc123_sbfspot_12345_2") is None  # not unique
 
     # Verify device is created
     device_entry = device_registry.async_get_device(
@@ -1603,13 +1602,12 @@ async def test_unique_id_collission_has_priority(
     """Test the unique_id collision detection has priority over registry disabled items."""
     await mqtt_mock_entry()
     config = {
-        "name": "sbfspot_12345",
         "state_topic": "homeassistant_test/sensor/sbfspot_0/sbfspot_12345/",
         "unique_id": "sbfspot_12345",
         "enabled_by_default": False,
         "device": {
             "identifiers": ["sbfspot_12345"],
-            "name": "sbfspot_12345",
+            "name": "abc123",
             "sw_version": "1.0",
             "connections": [["mac", "12:34:56:AB:CD:EF"]],
         },
@@ -1633,13 +1631,13 @@ async def test_unique_id_collission_has_priority(
     )
     await hass.async_block_till_done()
 
-    assert hass.states.get("sensor.sbfspot_12345_1") is None  # not enabled
-    assert hass.states.get("sensor.sbfspot_12345_2") is None  # not unique
+    assert hass.states.get("sensor.abc123_sbfspot_12345_1") is None  # not enabled
+    assert hass.states.get("sensor.abc123_sbfspot_12345_2") is None  # not unique
 
     # Verify the first entity is created
-    assert entity_registry.async_get("sensor.sbfspot_12345_1") is not None
+    assert entity_registry.async_get("sensor.abc123_sbfspot_12345_1") is not None
     # Verify the second entity is not created because it is not unique
-    assert entity_registry.async_get("sensor.sbfspot_12345_2") is None
+    assert entity_registry.async_get("sensor.abc123_sbfspot_12345_2") is None
 
 
 @patch("homeassistant.components.mqtt.PLATFORMS", [Platform.SENSOR])

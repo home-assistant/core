@@ -104,6 +104,7 @@ async def _async_setup_entity(
 class MqttDeviceTracker(MqttEntity, TrackerEntity):
     """Representation of a device tracker using MQTT."""
 
+    _default_name = None
     _entity_id_format = device_tracker.ENTITY_ID_FORMAT
     _value_template: Callable[..., ReceivePayloadType]
 

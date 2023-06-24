@@ -1008,6 +1008,7 @@ class MqttEntity(
     """Representation of an MQTT entity."""
 
     _attr_should_poll = False
+    _default_name: str | None
     _entity_id_format: str
 
     def __init__(
@@ -1122,7 +1123,22 @@ class MqttEntity(
             config.get(CONF_ENABLED_BY_DEFAULT)
         )
         self._attr_icon = config.get(CONF_ICON)
-        self._attr_name = config.get(CONF_NAME)
+        entity_name: str | None = config.get(CONF_NAME)
+        if CONF_DEVICE in config:
+            device_name: str | None = config[CONF_DEVICE].get(CONF_NAME)
+            if device_name is not None and entity_name is None:
+                self._attr_name = None
+                self._attr_has_entity_name = True
+                return
+            if device_name is not None and entity_name is not None:
+                self._attr_name = entity_name
+                self._attr_has_entity_name = True
+                return
+            self._attr_name = self._default_name
+            self._attr_has_entity_name = False
+        else:
+            self._attr_name = entity_name or self._default_name
+            self._attr_has_entity_name = False
 
     def _setup_from_config(self, config: ConfigType) -> None:
         """(Re)Setup the entity."""

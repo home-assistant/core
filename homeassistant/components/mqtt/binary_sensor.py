@@ -36,7 +36,12 @@ from homeassistant.util import dt as dt_util
 
 from . import subscription
 from .config import MQTT_RO_SCHEMA
-from .const import CONF_ENCODING, CONF_QOS, CONF_STATE_TOPIC, PAYLOAD_NONE
+from .const import (
+    CONF_ENCODING,
+    CONF_QOS,
+    CONF_STATE_TOPIC,
+    PAYLOAD_NONE,
+)
 from .debug_info import log_messages
 from .mixins import (
     MQTT_ENTITY_COMMON_SCHEMA,
@@ -61,7 +66,7 @@ PLATFORM_SCHEMA_MODERN = MQTT_RO_SCHEMA.extend(
         vol.Optional(CONF_DEVICE_CLASS): vol.Any(DEVICE_CLASSES_SCHEMA, None),
         vol.Optional(CONF_EXPIRE_AFTER): cv.positive_int,
         vol.Optional(CONF_FORCE_UPDATE, default=DEFAULT_FORCE_UPDATE): cv.boolean,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_NAME): cv.string,
         vol.Optional(CONF_OFF_DELAY): cv.positive_int,
         vol.Optional(CONF_PAYLOAD_OFF, default=DEFAULT_PAYLOAD_OFF): cv.string,
         vol.Optional(CONF_PAYLOAD_ON, default=DEFAULT_PAYLOAD_ON): cv.string,
@@ -97,6 +102,7 @@ async def _async_setup_entity(
 class MqttBinarySensor(MqttEntity, BinarySensorEntity, RestoreEntity):
     """Representation a binary sensor that is updated by MQTT."""
 
+    _default_name = DEFAULT_NAME
     _entity_id_format = binary_sensor.ENTITY_ID_FORMAT
     _expired: bool | None
     _expire_after: int | None

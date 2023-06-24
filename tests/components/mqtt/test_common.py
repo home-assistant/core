@@ -1390,7 +1390,7 @@ async def help_test_entity_debug_info_message(
         with patch("homeassistant.util.dt.utcnow") as dt_utcnow:
             dt_utcnow.return_value = start_dt
             if service:
-                service_data = {ATTR_ENTITY_ID: f"{domain}.test"}
+                service_data = {ATTR_ENTITY_ID: f"{domain}.beer_test"}
                 if service_parameters:
                     service_data.update(service_parameters)
 
@@ -1458,7 +1458,7 @@ async def help_test_entity_debug_info_remove(
         "subscriptions"
     ]
     assert len(debug_info_data["triggers"]) == 0
-    assert debug_info_data["entities"][0]["entity_id"] == f"{domain}.test"
+    assert debug_info_data["entities"][0]["entity_id"] == f"{domain}.beer_test"
     entity_id = debug_info_data["entities"][0]["entity_id"]
 
     async_fire_mqtt_message(hass, f"homeassistant/{domain}/bla/config", "")
@@ -1503,7 +1503,7 @@ async def help_test_entity_debug_info_update_entity_id(
         == f"homeassistant/{domain}/bla/config"
     )
     assert debug_info_data["entities"][0]["discovery_data"]["payload"] == config
-    assert debug_info_data["entities"][0]["entity_id"] == f"{domain}.test"
+    assert debug_info_data["entities"][0]["entity_id"] == f"{domain}.beer_test"
     assert len(debug_info_data["entities"][0]["subscriptions"]) == 1
     assert {"topic": "test-topic", "messages": []} in debug_info_data["entities"][0][
         "subscriptions"
@@ -1511,7 +1511,7 @@ async def help_test_entity_debug_info_update_entity_id(
     assert len(debug_info_data["triggers"]) == 0
 
     entity_registry.async_update_entity(
-        f"{domain}.test", new_entity_id=f"{domain}.milk"
+        f"{domain}.beer_test", new_entity_id=f"{domain}.milk"
     )
     await hass.async_block_till_done()
     await hass.async_block_till_done()
@@ -1529,7 +1529,7 @@ async def help_test_entity_debug_info_update_entity_id(
         "subscriptions"
     ]
     assert len(debug_info_data["triggers"]) == 0
-    assert f"{domain}.test" not in hass.data["mqtt"].debug_info_entities
+    assert f"{domain}.beer_test" not in hass.data["mqtt"].debug_info_entities
 
 
 async def help_test_entity_disabled_by_default(
