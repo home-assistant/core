@@ -219,10 +219,8 @@ class NumberEntity(Entity):
     def capability_attributes(self) -> dict[str, Any]:
         """Return capability attributes."""
         return {
-            ATTR_MIN: self._convert_to_state_value(
-                self.native_min_value, floor_decimal
-            ),
-            ATTR_MAX: self._convert_to_state_value(self.native_max_value, ceil_decimal),
+            ATTR_MIN: self.min_value,
+            ATTR_MAX: self.max_value,
             ATTR_STEP: self.step,
             ATTR_MODE: self.mode,
         }
