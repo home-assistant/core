@@ -21,7 +21,10 @@ from .const import (
     ATTR_API_DEW_POINT,
     ATTR_API_FEELS_LIKE_TEMPERATURE,
     ATTR_API_FORECAST,
+    ATTR_API_FORECAST_CLOUDS,
     ATTR_API_FORECAST_CONDITION,
+    ATTR_API_FORECAST_FEELS_LIKE_TEMPERATURE,
+    ATTR_API_FORECAST_HUMIDITY,
     ATTR_API_FORECAST_PRECIPITATION,
     ATTR_API_FORECAST_PRECIPITATION_PROBABILITY,
     ATTR_API_FORECAST_PRESSURE,
@@ -176,7 +179,11 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
             ATTR_API_FORECAST_CONDITION: self._get_condition(
                 entry.weather_code, entry.reference_time("unix")
             ),
-            ATTR_API_CLOUDS: entry.clouds,
+            ATTR_API_FORECAST_CLOUDS: entry.clouds,
+            ATTR_API_FORECAST_FEELS_LIKE_TEMPERATURE: entry.temperature("celsius").get(
+                "feels_like_day"
+            ),
+            ATTR_API_FORECAST_HUMIDITY: entry.humidity,
         }
 
         temperature_dict = entry.temperature("celsius")
