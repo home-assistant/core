@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import AsyncIterator
+from collections.abc import Awaitable, Callable
 from contextlib import asynccontextmanager
 from datetime import timedelta
 import logging
@@ -16,9 +16,10 @@ from gardena_bluetooth.exceptions import CharacteristicNoAccess
 from gardena_bluetooth.parse import Characteristic, CharacteristicType
 
 from homeassistant.components import bluetooth
-from homeassistant.core import HomeAssistant
+from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -39,6 +40,98 @@ class DeviceUnavailable(UpdateFailed, HomeAssistantError):
     """Raised if device can't be found."""
 
 
+class CallLaterJob:
+    """Helper to contain a function that is to be called later."""
+
+    def __init__(self, hass: HomeAssistant, fun: Callable[[], Awaitable[None]]) -> None:
+        """Initialize a call later job."""
+        self._fun = fun
+        self._hass = hass
+        self._cancel: CALLBACK_TYPE | None = None
+
+        async def _call(_):
+            self._cancel = None
+            await self.call_now()
+
+        self._job = HassJob(_call)
+
+    def cancel(self):
+        """Cancel any pending delay call."""
+        if self._cancel:
+            self._cancel()
+            self._cancel = None
+
+    async def call_now(self):
+        """Call function now."""
+        self.cancel()
+        await self._fun()
+
+    def call_later(self, delay: float | timedelta):
+        """Call function sometime later."""
+        self.cancel()
+        self._cancel = async_call_later(self._hass, delay, self._job)
+
+
+class CachedClient:
+    """Recursive and delay closed client."""
+
+    def __init__(self, hass: HomeAssistant, address: str) -> None:
+        """Initialize cached client."""
+
+        self._hass = hass
+        self._client: BleakClient | None = None
+        self._lock = asyncio.Lock()
+        self._count = 0
+        self._address = address
+
+        self.disconnect = CallLaterJob(hass, self._disconnect)
+
+    async def _disconnect(self):
+        async with self._lock:
+            if client := self._client:
+                LOGGER.debug("Disconnecting from %s", self._address)
+                self._client = None
+                await client.disconnect()
+
+    async def _connect(self) -> BleakClient:
+        LOGGER.debug("Connecting to %s", self._address)
+
+        ble_device = bluetooth.async_ble_device_from_address(
+            self._hass, self._address, connectable=True
+        )
+        if not ble_device:
+            raise DeviceUnavailable("Unable to find device")
+
+        self._client = await establish_connection(
+            BleakClient, ble_device, "Gardena Bluetooth", use_services_cache=True
+        )
+        LOGGER.debug("Connected to %s", self._address)
+        return self._client
+
+    @asynccontextmanager
+    async def __call__(self):
+        """Retrieve a context manager for a cached client."""
+        self.disconnect.cancel()
+
+        async with self._lock:
+            if not (client := self._client) or not client.is_connected:
+                client = await self._connect()
+
+            self._count += 1
+            try:
+                yield client
+            except:
+                LOGGER.debug("Disconnecting client due to exception")
+                await self.disconnect.call_now()
+                raise
+
+            finally:
+                self._count -= 1
+
+                if not self._count and self._client:
+                    self.disconnect.call_later(DISCONNECT_DELAY)
+
+
 class Coordinator(DataUpdateCoordinator[dict[str, bytes]]):
     """Class to manage fetching data."""
 
@@ -57,26 +150,13 @@ class Coordinator(DataUpdateCoordinator[dict[str, bytes]]):
         )
         self.address = address
         self.data = {}
-        self.lock = asyncio.Lock()
+        self.client = CachedClient(hass, address)
         self.characteristics: set[str] = set()
 
-    @asynccontextmanager
-    async def client(self) -> AsyncIterator[BleakClient]:
-        """Client connection generator."""
-        async with self.lock:
-            ble_device = bluetooth.async_ble_device_from_address(
-                self.hass, self.address, connectable=True
-            )
-            if not ble_device:
-                raise DeviceUnavailable("Unable to find device")
-
-            client = await establish_connection(
-                BleakClient, ble_device, "Gardena Bluetooth", use_services_cache=True
-            )
-            try:
-                yield client
-            finally:
-                await client.disconnect()
+    async def async_shutdown(self) -> None:
+        """Shutdown coordinator and any connection."""
+        await super().async_shutdown()
+        await self.client.disconnect.call_now()
 
     async def _async_update_data(self) -> dict[str, bytes]:
         """Poll the device."""
