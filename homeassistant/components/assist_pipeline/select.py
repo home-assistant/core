@@ -71,7 +71,7 @@ class AssistPipelineSelect(SelectEntity, restore_state.RestoreEntity):
     _attr_options = [OPTION_PREFERRED]
 
     def __init__(self, hass: HomeAssistant, unique_id_prefix: str) -> None:
-        """Initialize a vad sensitivity selector."""
+        """Initialize a pipeline selector."""
         self._attr_unique_id = f"{unique_id_prefix}-pipeline"
         self.hass = hass
         self._update_options()
