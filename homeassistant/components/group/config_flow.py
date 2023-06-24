@@ -32,6 +32,7 @@ _STATISTIC_MEASURES = [
     "range",
     "sum",
     "product",
+    "division",
 ]
 
 

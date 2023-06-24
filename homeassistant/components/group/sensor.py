@@ -55,6 +55,7 @@ ATTR_LAST_ENTITY_ID = "last_entity_id"
 ATTR_RANGE = "range"
 ATTR_SUM = "sum"
 ATTR_PRODUCT = "product"
+ATTR_DIVISION = "division"
 SENSOR_TYPES = {
     ATTR_MIN_VALUE: "min",
     ATTR_MAX_VALUE: "max",
@@ -64,6 +65,7 @@ SENSOR_TYPES = {
     ATTR_RANGE: "range",
     ATTR_SUM: "sum",
     ATTR_PRODUCT: "product",
+    ATTR_DIVISION: "division",
 }
 SENSOR_TYPE_TO_ATTR = {v: k for k, v in SENSOR_TYPES.items()}
 
@@ -239,6 +241,20 @@ def calc_product(
     return {}, result
 
 
+def calc_division(
+    sensor_values: list[tuple[str, float, State]]
+) -> tuple[dict[str, str | None], float]:
+    """Calculate a division of values."""
+    result = 0.0
+    for index, _values in enumerate(sensor_values):
+        if index == 0:
+            result = _values[1]
+            continue
+        result /= _values[1]
+
+    return {}, result
+
+
 CALC_TYPES: dict[
     str,
     Callable[
@@ -253,6 +269,7 @@ CALC_TYPES: dict[
     "range": calc_range,
     "sum": calc_sum,
     "product": calc_product,
+    "division": calc_division,
 }
 
 

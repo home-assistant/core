@@ -47,6 +47,7 @@ MEDIAN = statistics.median(VALUES)
 RANGE = max(VALUES) - min(VALUES)
 SUM_VALUE = sum(VALUES)
 PRODUCT_VALUE = prod(VALUES)
+DIVISION_VALUE = 17 / 20 / 15.3
 
 
 @pytest.mark.parametrize(
@@ -60,6 +61,7 @@ PRODUCT_VALUE = prod(VALUES)
         ("range", RANGE, {}),
         ("sum", SUM_VALUE, {}),
         ("product", PRODUCT_VALUE, {}),
+        ("division", DIVISION_VALUE, {}),
     ],
 )
 async def test_sensors(
