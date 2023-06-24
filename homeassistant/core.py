@@ -975,6 +975,8 @@ class _FilterableJob(NamedTuple):
 class EventBus:
     """Allow the firing of and listening for events."""
 
+    __slots__ = ("_listeners", "_match_all_listeners", "_hass")
+
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize a new event bus."""
         self._listeners: dict[str, list[_FilterableJob]] = {}
