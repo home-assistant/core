@@ -36,5 +36,32 @@
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     },
     "flow_title": "Bosch SHC: {name}"
+  },
+  "entity": {
+    "sensor": {
+      "purity": {
+        "name": "Purity"
+      },
+      "valvetappet": {
+        "name": "Valvetappet"
+      },
+      "airquality": {
+        "name": "Air Quality"
+      },
+      "temperature_rating": {
+        "name": "Temperature Rating"
+      },
+      "humidity_rating": {
+        "name": "Humidity Rating"
+      },
+      "communication_quality": {
+        "name": "Communication Quality"
+      }
+    },
+    "switch": {
+      "routing": {
+        "name": "Routing"
+      }
+    }
   }
 }

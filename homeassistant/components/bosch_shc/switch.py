@@ -201,11 +201,11 @@ class SHCRoutingSwitch(SHCEntity, SwitchEntity):
 
     _attr_icon = "mdi:wifi"
     _attr_entity_category = EntityCategory.CONFIG
+    _attr_translation_key = "routing"
 
     def __init__(self, device: SHCDevice, parent_id: str, entry_id: str) -> None:
         """Initialize an SHC communication quality reporting sensor."""
         super().__init__(device, parent_id, entry_id)
-        self._attr_name = f"{device.name} Routing"
         self._attr_unique_id = f"{device.serial}_routing"
 
     @property
