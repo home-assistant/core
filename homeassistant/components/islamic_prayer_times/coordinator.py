@@ -14,7 +14,17 @@ from homeassistant.helpers.event import async_call_later, async_track_point_in_t
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 import homeassistant.util.dt as dt_util
 
-from .const import CONF_CALC_METHOD, DEFAULT_CALC_METHOD, DOMAIN
+from .const import (
+    CONF_CALC_METHOD,
+    CONF_LAT_ADJ_METHOD,
+    CONF_MIDNIGHT_MODE,
+    CONF_SCHOOL,
+    DEFAULT_CALC_METHOD,
+    DEFAULT_LAT_ADJ_METHOD,
+    DEFAULT_MIDNIGHT_MODE,
+    DEFAULT_SCHOOL,
+    DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,12 +48,34 @@ class IslamicPrayerDataUpdateCoordinator(DataUpdateCoordinator[dict[str, datetim
         """Return the calculation method."""
         return self.config_entry.options.get(CONF_CALC_METHOD, DEFAULT_CALC_METHOD)
 
+    @property
+    def lat_adj_method(self) -> str:
+        """Return the latitude adjustment method."""
+        return str(
+            self.config_entry.options.get(
+                CONF_LAT_ADJ_METHOD, DEFAULT_LAT_ADJ_METHOD
+            ).replace("_", " ")
+        )
+
+    @property
+    def midnight_mode(self) -> str:
+        """Return the midnight mode."""
+        return self.config_entry.options.get(CONF_MIDNIGHT_MODE, DEFAULT_MIDNIGHT_MODE)
+
+    @property
+    def school(self) -> str:
+        """Return the school."""
+        return self.config_entry.options.get(CONF_SCHOOL, DEFAULT_SCHOOL)
+
     def get_new_prayer_times(self) -> dict[str, Any]:
         """Fetch prayer times for today."""
         calc = PrayerTimesCalculator(
             latitude=self.hass.config.latitude,
             longitude=self.hass.config.longitude,
             calculation_method=self.calc_method,
+            latitudeAdjustmentMethod=self.lat_adj_method,
+            midnightMode=self.midnight_mode,
+            school=self.school,
             date=str(dt_util.now().date()),
         )
         return cast(dict[str, Any], calc.fetch_prayer_times())
