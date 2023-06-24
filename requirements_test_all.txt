@@ -379,6 +379,9 @@ anthemav==1.4.1
 # homeassistant.components.apcupsd
 apcaccess==0.0.13
 
+# homeassistant.components.hunter_hydrawise
+apischema==0.18.0
+
 # homeassistant.components.apprise
 apprise==1.4.0
 
