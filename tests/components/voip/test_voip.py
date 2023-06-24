@@ -210,7 +210,6 @@ async def test_tts_timeout(
 ) -> None:
     """Test that TTS will time out based on its length."""
     assert await async_setup_component(hass, "voip", {})
-    # voip_device.vad_sensitivity = VadSensitivity.RELAXED
 
     def is_speech(self, chunk, sample_rate):
         """Anything non-zero is speech."""
