@@ -16,7 +16,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 
-from .conftest import TEST_HOST, TEST_NAS_NAME, TEST_PASSWORD, TEST_USERNAME
+from .conftest import TEST_HOST, TEST_PASSWORD, TEST_USERNAME
 
 STANDARD_CONFIG = {
     CONF_USERNAME: TEST_USERNAME,
@@ -53,7 +53,7 @@ async def test_config_flow_success(hass: HomeAssistant) -> None:
     )
 
     assert result["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
-    assert result["title"] == TEST_NAS_NAME
+    assert result["title"] == "Test NAS name"
     assert result["data"] == STANDARD_RESULT
 
 
@@ -107,5 +107,5 @@ async def test_config_flow_import(hass: HomeAssistant) -> None:
     )
 
     assert result["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
-    assert result["title"] == TEST_NAS_NAME
+    assert result["title"] == "Test NAS name"
     assert result["data"] == STANDARD_RESULT
