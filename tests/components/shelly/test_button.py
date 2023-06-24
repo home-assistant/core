@@ -45,20 +45,22 @@ async def test_rpc_button(hass: HomeAssistant, mock_rpc_device) -> None:
 
 
 @pytest.mark.parametrize(
-    ("gen", "old_unique_id", "new_unique_id"),
+    ("gen", "old_unique_id", "new_unique_id", "migration"),
     [
-        (2, "test_name_reboot", "123456789ABC_reboot"),
-        (1, "test_name_reboot", "123456789ABC_reboot"),
-        (2, "123456789ABC_reboot", "123456789ABC_reboot"),
+        (2, "test_name_reboot", "123456789ABC_reboot", True),
+        (1, "test_name_reboot", "123456789ABC_reboot", True),
+        (2, "123456789ABC_reboot", "123456789ABC_reboot", False),
     ],
 )
 async def test_migrate_unique_id(
     hass: HomeAssistant,
     mock_block_device,
     mock_rpc_device,
-    gen,
-    old_unique_id,
-    new_unique_id,
+    caplog: pytest.LogCaptureFixture,
+    gen: int,
+    old_unique_id: str,
+    new_unique_id: str,
+    migration: bool,
 ) -> None:
     """Test migration of unique_id."""
     entry = await init_integration(hass, gen, skip_setup=True)
@@ -80,3 +82,8 @@ async def test_migrate_unique_id(
     entity_entry = entity_registry.async_get("button.test_name_reboot")
     assert entity_entry
     assert entity_entry.unique_id == new_unique_id
+
+    assert (
+        bool("Migrating unique_id for button.test_name_reboot" in caplog.text)
+        == migration
+    )
