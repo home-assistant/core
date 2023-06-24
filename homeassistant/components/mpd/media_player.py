@@ -93,6 +93,8 @@ class MpdDevice(MediaPlayerEntity):
         self._name = name
         self.password = password
 
+        self._attr_unique_id = f"{self.server}-{self.port}"
+
         self._status = None
         self._currentsong = None
         self._playlists = None
