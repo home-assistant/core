@@ -10,7 +10,12 @@ from .coordinator import HydrawiseDataUpdateCoordinator
 from .hydrawiser import Hydrawiser
 from .pydrawise.exceptions import Error
 
-PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.SENSOR, Platform.SWITCH]
+PLATFORMS: list[Platform] = [
+    Platform.BINARY_SENSOR,
+    Platform.SENSOR,
+    Platform.SWITCH,
+    Platform.BUTTON,
+]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
