@@ -35,7 +35,7 @@ from aioesphomeapi.model import ButtonInfo
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.storage import Store
 
@@ -106,6 +106,9 @@ class RuntimeEntryData:
         default_factory=list
     )
     assist_pipeline_state: bool = False
+    entity_info_callbacks: dict[
+        type[EntityInfo], list[Callable[[list[EntityInfo]], None]]
+    ] = field(default_factory=dict)
 
     @property
     def name(self) -> str:
@@ -129,9 +132,26 @@ class RuntimeEntryData:
         """Return the signal to listen to for updates on static info."""
         return f"esphome_{self.entry_id}_on_list"
 
-    def signal_component_static_info_updated(self, component_key: str) -> str:
-        """Return the signal to listen to for updates on static info for a specific component_key."""
-        return f"esphome_{self.entry_id}_static_info_updated_{component_key}"
+    def signal_component_key_static_info_updated(
+        self, component_key: str, key: int
+    ) -> str:
+        """Return the signal to listen to for updates on static info for a specific component_key and key."""
+        return f"esphome_{self.entry_id}_static_info_updated_{component_key}_{key}"
+
+    @callback
+    def async_register_static_info_callback(
+        self,
+        entity_info_type: type[EntityInfo],
+        callback_: Callable[[list[EntityInfo]], None],
+    ) -> CALLBACK_TYPE:
+        """Register to receive callbacks when static info changes for an EntityInfo type."""
+        callbacks = self.entity_info_callbacks.setdefault(entity_info_type, [])
+        callbacks.append(callback_)
+
+        def _unsub() -> None:
+            callbacks.remove(callback_)
+
+        return _unsub
 
     @callback
     def async_update_ble_connection_limits(self, free: int, limit: int) -> None:
@@ -219,6 +239,21 @@ class RuntimeEntryData:
                     needed_platforms.add(platform)
                     break
         await self._ensure_platforms_loaded(hass, entry, needed_platforms)
+
+        # Make a dict of the EntityInfo by type and send
+        # them to the listeners for each specific EntityInfo type
+        infos_by_type: dict[type[EntityInfo], list[EntityInfo]] = {}
+        for info in infos:
+            info_type = type(info)
+            if info_type not in infos_by_type:
+                infos_by_type[info_type] = []
+            infos_by_type[info_type].append(info)
+
+        callbacks_by_type = self.entity_info_callbacks
+        for type_, entity_infos in infos_by_type.items():
+            if callbacks_ := callbacks_by_type.get(type_):
+                for callback_ in callbacks_:
+                    callback_(entity_infos)
 
         # Then send dispatcher event
         async_dispatcher_send(hass, self.signal_static_info_updated, infos)

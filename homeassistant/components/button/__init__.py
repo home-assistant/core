@@ -88,6 +88,13 @@ class ButtonEntity(RestoreEntity):
     _attr_state: None = None
     __last_pressed: datetime | None = None
 
+    def _default_to_device_class_name(self) -> bool:
+        """Return True if an unnamed entity should be named by its device class.
+
+        For sensors this is True if the entity has a device class.
+        """
+        return self.device_class is not None
+
     @property
     def device_class(self) -> ButtonDeviceClass | None:
         """Return the class of this entity."""

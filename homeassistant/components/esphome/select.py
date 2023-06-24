@@ -1,12 +1,12 @@
 """Support for esphome selects."""
 from __future__ import annotations
 
-from aioesphomeapi import SelectInfo, SelectState
+from aioesphomeapi import EntityInfo, SelectInfo, SelectState
 
 from homeassistant.components.assist_pipeline.select import AssistPipelineSelect
 from homeassistant.components.select import SelectEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import (
@@ -44,22 +44,22 @@ async def async_setup_entry(
 class EsphomeSelect(EsphomeEntity[SelectInfo, SelectState], SelectEntity):
     """A select implementation for esphome."""
 
-    @property
-    def options(self) -> list[str]:
-        """Return a set of selectable options."""
-        return self._static_info.options
+    @callback
+    def _on_static_info_update(self, static_info: EntityInfo) -> None:
+        """Set attrs from static info."""
+        super()._on_static_info_update(static_info)
+        self._attr_options = self._static_info.options
 
     @property
     @esphome_state_property
     def current_option(self) -> str | None:
         """Return the state of the entity."""
-        if self._state.missing_state:
-            return None
-        return self._state.state
+        state = self._state
+        return None if state.missing_state else state.state
 
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
-        await self._client.select_command(self._static_info.key, option)
+        await self._client.select_command(self._key, option)
 
 
 class EsphomeAssistPipelineSelect(EsphomeAssistEntity, AssistPipelineSelect):

@@ -258,6 +258,13 @@ class NumberEntity(Entity):
             ATTR_MODE: self.mode,
         }
 
+    def _default_to_device_class_name(self) -> bool:
+        """Return True if an unnamed entity should be named by its device class.
+
+        For sensors this is True if the entity has a device class.
+        """
+        return self.device_class is not None
+
     @property
     def device_class(self) -> NumberDeviceClass | None:
         """Return the class of this entity."""

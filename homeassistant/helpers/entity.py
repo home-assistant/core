@@ -12,7 +12,7 @@ import logging
 import math
 import sys
 from timeit import default_timer as timer
-from typing import TYPE_CHECKING, Any, Final, Literal, TypedDict, final
+from typing import TYPE_CHECKING, Any, Final, Literal, TypedDict, TypeVar, final
 
 import voluptuous as vol
 
@@ -48,6 +48,9 @@ from .typing import UNDEFINED, StateType, UndefinedType
 
 if TYPE_CHECKING:
     from .entity_platform import EntityPlatform
+
+
+_T = TypeVar("_T")
 
 _LOGGER = logging.getLogger(__name__)
 SLOW_UPDATE_WARNING = 10
@@ -355,14 +358,14 @@ class Entity(ABC):
         if hasattr(self, "entity_description"):
             if not (name := self.entity_description.name):
                 return True
-            if name is UNDEFINED:
+            if name is UNDEFINED and not self._default_to_device_class_name():
                 # Backwards compatibility with leaving EntityDescription.name unassigned
                 # for device name.
                 # Deprecated in HA Core 2023.6, remove in HA Core 2023.9
                 report_implicit_device_name()
                 return True
             return False
-        if self.name is UNDEFINED:
+        if self.name is UNDEFINED and not self._default_to_device_class_name():
             # Backwards compatibility with not overriding name property for device name.
             # Deprecated in HA Core 2023.6, remove in HA Core 2023.9
             report_implicit_device_name()
@@ -1130,13 +1133,13 @@ class Entity(ABC):
         """Return the representation."""
         return f"<entity {self.entity_id}={self._stringify_state(self.available)}>"
 
-    async def async_request_call(self, coro: Coroutine[Any, Any, Any]) -> None:
+    async def async_request_call(self, coro: Coroutine[Any, Any, _T]) -> _T:
         """Process request batched."""
         if self.parallel_updates:
             await self.parallel_updates.acquire()
 
         try:
-            await coro
+            return await coro
         finally:
             if self.parallel_updates:
                 self.parallel_updates.release()

@@ -356,8 +356,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/eq3btsmart/ @rytilahti
 /homeassistant/components/escea/ @lazdavila
 /tests/components/escea/ @lazdavila
-/homeassistant/components/esphome/ @OttoWinter @jesserockz
-/tests/components/esphome/ @OttoWinter @jesserockz
+/homeassistant/components/esphome/ @OttoWinter @jesserockz @bdraco
+/tests/components/esphome/ @OttoWinter @jesserockz @bdraco
 /homeassistant/components/eufylife_ble/ @bdr99
 /tests/components/eufylife_ble/ @bdr99
 /homeassistant/components/evil_genius_labs/ @balloob
@@ -885,6 +885,7 @@ build.json @home-assistant/supervisor
 /homeassistant/components/opengarage/ @danielhiversen
 /tests/components/opengarage/ @danielhiversen
 /homeassistant/components/openhome/ @bazwilliams
+/tests/components/openhome/ @bazwilliams
 /homeassistant/components/opensky/ @joostlek
 /homeassistant/components/opentherm_gw/ @mvn23
 /tests/components/opentherm_gw/ @mvn23
