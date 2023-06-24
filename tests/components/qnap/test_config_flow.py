@@ -44,7 +44,7 @@ async def test_config_flow_success(hass: HomeAssistant) -> None:
     )
 
     assert result["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Test NAS name
+    assert result["title"] == "Test NAS name"
     assert result["data"] == {
         CONF_HOST: "1.2.3.4",
         CONF_USERNAME: "admin",
