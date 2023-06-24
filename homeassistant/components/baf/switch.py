@@ -133,8 +133,8 @@ class BAFSwitch(BAFEntity, SwitchEntity):
 
     def __init__(self, device: Device, description: BAFSwitchDescription) -> None:
         """Initialize the entity."""
-        super().__init__(device)
         self.entity_description = description
+        super().__init__(device)
         self._attr_unique_id = f"{self._device.mac_address}-{description.key}"
 
     @callback

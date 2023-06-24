@@ -125,8 +125,8 @@ class BAFSensor(BAFEntity, SensorEntity):
 
     def __init__(self, device: Device, description: BAFSensorDescription) -> None:
         """Initialize the entity."""
-        super().__init__(device)
         self.entity_description = description
+        super().__init__(device)
         self._attr_unique_id = f"{self._device.mac_address}-{description.key}"
 
     @callback
