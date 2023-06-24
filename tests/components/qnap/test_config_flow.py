@@ -28,34 +28,8 @@ STANDARD_CONFIG = {
 pytestmark = pytest.mark.usefixtures("mock_setup_entry", "qnap_connect")
 
 
-async def test_config_flow_success(hass: HomeAssistant) -> None:
+async def test_config_flow(hass: HomeAssistant, qnap_connect: MagicMock) -> None:
     """Successful flow manually initialized by the user."""
-    result = await hass.config_entries.flow.async_init(
-        const.DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    assert result["type"] is data_entry_flow.FlowResultType.FORM
-    assert result["step_id"] == "user"
-    assert result["errors"] == {}
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        STANDARD_CONFIG,
-    )
-
-    assert result["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Test NAS name"
-    assert result["data"] == {
-        CONF_HOST: "1.2.3.4",
-        CONF_USERNAME: "admin",
-        CONF_PASSWORD: "password",
-        CONF_SSL: const.DEFAULT_SSL,
-        CONF_VERIFY_SSL: const.DEFAULT_VERIFY_SSL,
-        CONF_PORT: const.DEFAULT_PORT,
-    }
-
-async def test_config_flow_errors(hass: HomeAssistant, qnap_connect: MagicMock) -> None:
-    """Flow manually initialized by the user after some errors."""
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -93,6 +67,26 @@ async def test_config_flow_errors(hass: HomeAssistant, qnap_connect: MagicMock) 
     assert result["type"] is data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "unknown"}
+
+    assert result["type"] is data_entry_flow.FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        STANDARD_CONFIG,
+    )
+
+    assert result["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Test NAS name"
+    assert result["data"] == {
+        CONF_HOST: "1.2.3.4",
+        CONF_USERNAME: "admin",
+        CONF_PASSWORD: "password",
+        CONF_SSL: const.DEFAULT_SSL,
+        CONF_VERIFY_SSL: const.DEFAULT_VERIFY_SSL,
+        CONF_PORT: const.DEFAULT_PORT,
+    }
 
 
 async def test_config_flow_import(hass: HomeAssistant) -> None:
