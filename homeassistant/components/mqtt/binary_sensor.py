@@ -36,12 +36,7 @@ from homeassistant.util import dt as dt_util
 
 from . import subscription
 from .config import MQTT_RO_SCHEMA
-from .const import (
-    CONF_ENCODING,
-    CONF_QOS,
-    CONF_STATE_TOPIC,
-    PAYLOAD_NONE,
-)
+from .const import CONF_ENCODING, CONF_QOS, CONF_STATE_TOPIC, PAYLOAD_NONE
 from .debug_info import log_messages
 from .mixins import (
     MQTT_ENTITY_COMMON_SCHEMA,
