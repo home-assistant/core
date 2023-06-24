@@ -61,7 +61,6 @@ async def test_migrate_unique_id(
 ) -> None:
     """Test migration of unique_id."""
     entry = await init_integration(hass, gen, skip_setup=True)
-    registry = er.async_get(hass)
 
     entity_registry = er.async_get(hass)
     entity: er.RegistryEntry = entity_registry.async_get_or_create(
@@ -77,9 +76,9 @@ async def test_migrate_unique_id(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    entry = registry.async_get("button.test_name_reboot")
-    assert entry
-    assert entry.unique_id == new_unique_id
+    entity_entry = entity_registry.async_get("button.test_name_reboot")
+    assert entity_entry
+    assert entity_entry.unique_id == new_unique_id
 
 
 async def test_migrate_unique_id_not_needed(
@@ -87,7 +86,6 @@ async def test_migrate_unique_id_not_needed(
 ) -> None:
     """Test migration of unique_id."""
     entry = await init_integration(hass, 2, skip_setup=True)
-    registry = er.async_get(hass)
 
     entity_registry = er.async_get(hass)
     er.RegistryEntry = entity_registry.async_get_or_create(
@@ -102,8 +100,8 @@ async def test_migrate_unique_id_not_needed(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    entry = registry.async_get("button.test_name_reboot")
-    assert entry
-    assert entry.unique_id == "123456789ABC_reboot"
+    entity_entry = entity_registry.async_get("button.test_name_reboot")
+    assert entity_entry
+    assert entity_entry.unique_id == "123456789ABC_reboot"
 
     assert "Migrating unique_id for button.test_name_reboot" not in caplog.text
