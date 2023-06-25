@@ -113,7 +113,7 @@ class RuntimeEntryData:
     entity_info_callbacks: dict[
         type[EntityInfo], list[Callable[[list[EntityInfo]], None]]
     ] = field(default_factory=dict)
-    entity_info_key_removed_callbacks: dict[
+    entity_info_key_remove_coros: dict[
         tuple[type[EntityInfo], int], list[Coroutine[Any, Any, None]]
     ] = field(default_factory=dict)
     entity_info_key_updated_callbacks: dict[
@@ -159,18 +159,18 @@ class RuntimeEntryData:
         return _unsub
 
     @callback
-    def async_register_key_static_info_remove_callback(
+    def async_register_key_static_info_remove_coro(
         self,
         static_info: EntityInfo,
-        callback_: Coroutine[Any, Any, None],
+        coro: Coroutine[Any, Any, None],
     ) -> CALLBACK_TYPE:
         """Register to receive callbacks when static info is removed for a specific key."""
-        callback_key = (type(static_info), static_info.key)
-        callbacks = self.entity_info_key_removed_callbacks.setdefault(callback_key, [])
-        callbacks.append(callback_)
+        coro_key = (type(static_info), static_info.key)
+        coros = self.entity_info_key_remove_coros.setdefault(coro_key, [])
+        coros.append(coro)
 
         def _unsub() -> None:
-            callbacks.remove(callback_)
+            coros.remove(coro)
 
         return _unsub
 
@@ -243,10 +243,8 @@ class RuntimeEntryData:
         """Schedule the removal of an entity."""
         coros: list[Coroutine[Any, Any, None]] = []
         for static_info in static_infos:
-            callback_key = (type(static_info), static_info.key)
-            if coros_for_key := self.entity_info_key_removed_callbacks.get(
-                callback_key
-            ):
+            coro_key = (type(static_info), static_info.key)
+            if coros_for_key := self.entity_info_key_remove_coros.get(coro_key):
                 coros.extend(coros_for_key)
         if coros:
             await asyncio.gather(*coros)
