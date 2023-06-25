@@ -54,6 +54,7 @@ async def test_entities_removed(
     )
     entry = mock_device.entry
     entry_id = entry.entry_id
+    storage_key = f"esphome.{entry_id}"
     state = hass.states.get("binary_sensor.test_my_binary_sensor")
     assert state is not None
     assert state.state == STATE_ON
@@ -64,7 +65,7 @@ async def test_entities_removed(
     await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert len(hass_storage[f"esphome.{entry_id}"]["data"]["binary_sensor"]) == 2
+    assert len(hass_storage[storage_key]["data"]["binary_sensor"]) == 2
 
     state = hass.states.get("binary_sensor.test_my_binary_sensor")
     assert state is not None
@@ -97,3 +98,6 @@ async def test_entities_removed(
     assert state.state == STATE_ON
     state = hass.states.get("binary_sensor.test_my_binary_sensor_to_be_removed")
     assert state is None
+    await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+    assert len(hass_storage[storage_key]["data"]["binary_sensor"]) == 1
