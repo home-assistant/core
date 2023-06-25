@@ -247,7 +247,7 @@ async def async_setup_entry(  # noqa: C901
             _LOGGER.error(
                 "%s: Service call %s.%s: with data %s rejected; "
                 "If you trust this device and want to allow access for it to make "
-                "arbitrary Home Assistant service calls, you can enable this "
+                "Home Assistant service calls, you can enable this "
                 "functionality in the options flow",
                 device_info.name,
                 domain,
