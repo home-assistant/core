@@ -49,7 +49,6 @@ SENSOR_TYPES: tuple[DelugeSensorEntityDescription, ...] = (
     DelugeSensorEntityDescription(
         key=CURRENT_STATUS,
         translation_key="status",
-        name="Status",
         value=lambda data: get_state(data, CURRENT_STATUS),
         device_class=SensorDeviceClass.ENUM,
         options=[
