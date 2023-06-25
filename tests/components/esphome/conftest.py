@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from asyncio import Event
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
@@ -142,13 +142,30 @@ async def mock_dashboard(hass):
         yield data
 
 
+class MockESPHomeDevice:
+    """Mock an esphome device."""
+
+    def __init__(self, entry: MockConfigEntry) -> None:
+        """Init the mock."""
+        self.entry = entry
+        self.state_callback: Callable[[EntityState], None]
+
+    def set_state_callback(self, state_callback: Callable[[EntityState], None]) -> None:
+        """Set the state callback."""
+        self.state_callback = state_callback
+
+    def set_state(self, state: EntityState) -> None:
+        """Mock setting state."""
+        self.state_callback(state)
+
+
 async def _mock_generic_device_entry(
     hass: HomeAssistant,
     mock_client: APIClient,
     mock_device_info: dict[str, Any],
     mock_list_entities_services: tuple[list[EntityInfo], list[UserService]],
     states: list[EntityState],
-) -> MockConfigEntry:
+) -> MockESPHomeDevice:
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={
@@ -158,6 +175,7 @@ async def _mock_generic_device_entry(
         },
     )
     entry.add_to_hass(hass)
+    mock_device = MockESPHomeDevice(entry)
 
     device_info = DeviceInfo(
         name="test",
@@ -169,6 +187,7 @@ async def _mock_generic_device_entry(
 
     async def _subscribe_states(callback: Callable[[EntityState], None]) -> None:
         """Subscribe to state."""
+        mock_device.set_state_callback(callback)
         for state in states:
             callback(state)
 
@@ -194,7 +213,7 @@ async def _mock_generic_device_entry(
 
     await hass.async_block_till_done()
 
-    return entry
+    return mock_device
 
 
 @pytest.fixture
@@ -205,9 +224,11 @@ async def mock_voice_assistant_entry(
     """Set up an ESPHome entry with voice assistant."""
 
     async def _mock_voice_assistant_entry(version: int) -> MockConfigEntry:
-        return await _mock_generic_device_entry(
-            hass, mock_client, {"voice_assistant_version": version}, ([], []), []
-        )
+        return (
+            await _mock_generic_device_entry(
+                hass, mock_client, {"voice_assistant_version": version}, ([], []), []
+            )
+        ).entry
 
     return _mock_voice_assistant_entry
 
@@ -227,8 +248,11 @@ async def mock_voice_assistant_v2_entry(mock_voice_assistant_entry) -> MockConfi
 @pytest.fixture
 async def mock_generic_device_entry(
     hass: HomeAssistant,
-) -> MockConfigEntry:
-    """Set up an ESPHome entry."""
+) -> Callable[
+    [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
+    Awaitable[MockConfigEntry],
+]:
+    """Set up an ESPHome entry and return the MockConfigEntry."""
 
     async def _mock_device_entry(
         mock_client: APIClient,
@@ -236,8 +260,32 @@ async def mock_generic_device_entry(
         user_service: list[UserService],
         states: list[EntityState],
     ) -> MockConfigEntry:
+        return (
+            await _mock_generic_device_entry(
+                hass, mock_client, {}, (entity_info, user_service), states
+            )
+        ).entry
+
+    return _mock_device_entry
+
+
+@pytest.fixture
+async def mock_esphome_device(
+    hass: HomeAssistant,
+) -> Callable[
+    [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
+    Awaitable[MockESPHomeDevice],
+]:
+    """Set up an ESPHome entry and return the MockESPHomeDevice."""
+
+    async def _mock_device(
+        mock_client: APIClient,
+        entity_info: list[EntityInfo],
+        user_service: list[UserService],
+        states: list[EntityState],
+    ) -> MockESPHomeDevice:
         return await _mock_generic_device_entry(
             hass, mock_client, {}, (entity_info, user_service), states
         )
 
-    return _mock_device_entry
+    return _mock_device
