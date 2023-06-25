@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable
+from collections.abc import Callable, Coroutine, Iterable
 from dataclasses import dataclass, field
 import logging
 from typing import Any, cast
@@ -41,6 +41,8 @@ from homeassistant.helpers.storage import Store
 
 from .dashboard import async_get_dashboard
 
+INFO_TO_COMPONENT_TYPE = {v: k for k, v in COMPONENT_TYPE_TO_INFO.items()}
+
 _SENTINEL = object()
 SAVE_DELAY = 120
 _LOGGER = logging.getLogger(__name__)
@@ -77,13 +79,15 @@ class RuntimeEntryData:
     # as stale so we will always dispatch a state update when the
     # device reconnects. This is the same format as state_subscriptions.
     stale_state: set[tuple[type[EntityState], int]] = field(default_factory=set)
-    info: dict[str, dict[int, EntityInfo]] = field(default_factory=dict)
+    info: dict[type[EntityInfo], dict[int, EntityInfo]] = field(default_factory=dict)
 
     # A second list of EntityInfo objects
     # This is necessary for when an entity is being removed. HA requires
     # some static info to be accessible during removal (unique_id, maybe others)
     # If an entity can't find anything in the info array, it will look for info here.
-    old_info: dict[str, dict[int, EntityInfo]] = field(default_factory=dict)
+    old_info: dict[type[EntityInfo], dict[int, EntityInfo]] = field(
+        default_factory=dict
+    )
 
     services: dict[int, UserService] = field(default_factory=dict)
     available: bool = False
@@ -109,6 +113,13 @@ class RuntimeEntryData:
     entity_info_callbacks: dict[
         type[EntityInfo], list[Callable[[list[EntityInfo]], None]]
     ] = field(default_factory=dict)
+    entity_info_key_removed_callbacks: dict[
+        tuple[type[EntityInfo], int], list[Coroutine[Any, Any, None]]
+    ] = field(default_factory=dict)
+    entity_info_key_updated_callbacks: dict[
+        tuple[type[EntityInfo], int], list[Callable[[EntityInfo], None]]
+    ] = field(default_factory=dict)
+    original_options: dict[str, Any] = field(default_factory=dict)
 
     @property
     def name(self) -> str:
@@ -132,12 +143,6 @@ class RuntimeEntryData:
         """Return the signal to listen to for updates on static info."""
         return f"esphome_{self.entry_id}_on_list"
 
-    def signal_component_key_static_info_updated(
-        self, component_key: str, key: int
-    ) -> str:
-        """Return the signal to listen to for updates on static info for a specific component_key and key."""
-        return f"esphome_{self.entry_id}_static_info_updated_{component_key}_{key}"
-
     @callback
     def async_register_static_info_callback(
         self,
@@ -146,6 +151,38 @@ class RuntimeEntryData:
     ) -> CALLBACK_TYPE:
         """Register to receive callbacks when static info changes for an EntityInfo type."""
         callbacks = self.entity_info_callbacks.setdefault(entity_info_type, [])
+        callbacks.append(callback_)
+
+        def _unsub() -> None:
+            callbacks.remove(callback_)
+
+        return _unsub
+
+    @callback
+    def async_register_key_static_info_remove_callback(
+        self,
+        static_info: EntityInfo,
+        callback_: Coroutine[Any, Any, None],
+    ) -> CALLBACK_TYPE:
+        """Register to receive callbacks when static info is removed for a specific key."""
+        callback_key = (type(static_info), static_info.key)
+        callbacks = self.entity_info_key_removed_callbacks.setdefault(callback_key, [])
+        callbacks.append(callback_)
+
+        def _unsub() -> None:
+            callbacks.remove(callback_)
+
+        return _unsub
+
+    @callback
+    def async_register_key_static_info_updated_callback(
+        self,
+        static_info: EntityInfo,
+        callback_: Callable[[EntityInfo], None],
+    ) -> CALLBACK_TYPE:
+        """Register to receive callbacks when static info is updated for a specific key."""
+        callback_key = (type(static_info), static_info.key)
+        callbacks = self.entity_info_key_updated_callbacks.setdefault(callback_key, [])
         callbacks.append(callback_)
 
         def _unsub() -> None:
@@ -202,13 +239,27 @@ class RuntimeEntryData:
         self.assist_pipeline_update_callbacks.append(update_callback)
         return _unsubscribe
 
-    @callback
-    def async_remove_entity(
-        self, hass: HomeAssistant, component_key: str, key: int
-    ) -> None:
+    async def async_remove_entities(self, static_infos: Iterable[EntityInfo]) -> None:
         """Schedule the removal of an entity."""
-        signal = f"esphome_{self.entry_id}_remove_{component_key}_{key}"
-        async_dispatcher_send(hass, signal)
+        coros: list[Coroutine[Any, Any, None]] = []
+        for static_info in static_infos:
+            callback_key = (type(static_info), static_info.key)
+            if coros_for_key := self.entity_info_key_removed_callbacks.get(
+                callback_key
+            ):
+                coros.extend(coros_for_key)
+        if coros:
+            await asyncio.gather(*coros)
+
+    @callback
+    def async_update_entity_infos(self, static_infos: Iterable[EntityInfo]) -> None:
+        """Call static info updated callbacks."""
+        for static_info in static_infos:
+            callback_key = (type(static_info), static_info.key)
+            for callback_ in self.entity_info_key_updated_callbacks.get(
+                callback_key, []
+            ):
+                callback_(static_info)
 
     async def _ensure_platforms_loaded(
         self, hass: HomeAssistant, entry: ConfigEntry, platforms: set[Platform]
@@ -287,7 +338,7 @@ class RuntimeEntryData:
             and subscription_key not in stale_state
             and not (
                 type(state) is SensorState  # pylint: disable=unidiomatic-typecheck
-                and (platform_info := self.info.get(Platform.SENSOR))
+                and (platform_info := self.info.get(SensorInfo))
                 and (entity_info := platform_info.get(state.key))
                 and (cast(SensorInfo, entity_info)).force_update
             )
@@ -352,7 +403,8 @@ class RuntimeEntryData:
             "api_version": self.api_version.to_dict(),
         }
 
-        for comp_type, infos in self.info.items():
+        for info_type, infos in self.info.items():
+            comp_type = INFO_TO_COMPONENT_TYPE[info_type]
             store_data[comp_type] = [info.to_dict() for info in infos.values()]
         for service in self.services.values():
             store_data["services"].append(service.to_dict())
