@@ -640,6 +640,7 @@ async def _cleanup_instance(
     data.disconnect_callbacks = []
     for cleanup_callback in data.cleanup_callbacks:
         cleanup_callback()
+    await data.async_cleanup()
     await data.client.disconnect()
     return data
 

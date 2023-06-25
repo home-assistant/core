@@ -5,7 +5,7 @@ import asyncio
 from collections.abc import Callable, Coroutine, Iterable
 from dataclasses import dataclass, field
 import logging
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, Final, TypedDict, cast
 
 from aioesphomeapi import (
     COMPONENT_TYPE_TO_INFO,
@@ -41,7 +41,7 @@ from homeassistant.helpers.storage import Store
 
 from .dashboard import async_get_dashboard
 
-INFO_TO_COMPONENT_TYPE = {v: k for k, v in COMPONENT_TYPE_TO_INFO.items()}
+INFO_TO_COMPONENT_TYPE: Final = {v: k for k, v in COMPONENT_TYPE_TO_INFO.items()}
 
 _SENTINEL = object()
 SAVE_DELAY = 120
@@ -67,13 +67,25 @@ INFO_TYPE_TO_PLATFORM: dict[type[EntityInfo], Platform] = {
 }
 
 
+class StoreData(TypedDict, total=False):
+    """ESPHome storage data."""
+
+    device_info: dict[str, Any]
+    services: list[dict[str, Any]]
+    api_version: dict[str, Any]
+
+
+class ESPHomeStorage(Store[StoreData]):
+    """ESPHome Storage."""
+
+
 @dataclass
 class RuntimeEntryData:
     """Store runtime data for esphome config entries."""
 
     entry_id: str
     client: APIClient
-    store: Store
+    store: ESPHomeStorage
     state: dict[type[EntityState], dict[int, EntityState]] = field(default_factory=dict)
     # When the disconnect callback is called, we mark all states
     # as stale so we will always dispatch a state update when the
@@ -91,7 +103,8 @@ class RuntimeEntryData:
     ] = field(default_factory=dict)
     loaded_platforms: set[Platform] = field(default_factory=set)
     platform_load_lock: asyncio.Lock = field(default_factory=asyncio.Lock)
-    _storage_contents: dict[str, Any] | None = None
+    _storage_contents: StoreData | None = None
+    _pending_storage: Callable[[], StoreData] | None = None
     ble_connections_free: int = 0
     ble_connections_limit: int = 0
     _ble_connection_free_futures: list[asyncio.Future[int]] = field(
@@ -365,44 +378,53 @@ class RuntimeEntryData:
         """Load the retained data from store and return de-serialized data."""
         if (restored := await self.store.async_load()) is None:
             return [], []
-        restored = cast("dict[str, Any]", restored)
         self._storage_contents = restored.copy()
 
         self.device_info = DeviceInfo.from_dict(restored.pop("device_info"))
         self.api_version = APIVersion.from_dict(restored.pop("api_version", {}))
-        infos = []
+        infos: list[EntityInfo] = []
         for comp_type, restored_infos in restored.items():
+            if TYPE_CHECKING:
+                restored_infos = cast(list[dict[str, Any]], restored_infos)
             if comp_type not in COMPONENT_TYPE_TO_INFO:
                 continue
             for info in restored_infos:
                 cls = COMPONENT_TYPE_TO_INFO[comp_type]
                 infos.append(cls.from_dict(info))
-        services = []
-        for service in restored.get("services", []):
-            services.append(UserService.from_dict(service))
+        services = [
+            UserService.from_dict(service) for service in restored.pop("services", [])
+        ]
         return infos, services
 
     async def async_save_to_store(self) -> None:
         """Generate dynamic data to store and save it to the filesystem."""
         if self.device_info is None:
             raise ValueError("device_info is not set yet")
-        store_data: dict[str, Any] = {
+        store_data: StoreData = {
             "device_info": self.device_info.to_dict(),
             "services": [],
             "api_version": self.api_version.to_dict(),
         }
-
         for info_type, infos in self.info.items():
             comp_type = INFO_TO_COMPONENT_TYPE[info_type]
-            store_data[comp_type] = [info.to_dict() for info in infos.values()]
+            store_data[comp_type] = [info.to_dict() for info in infos.values()]  # type: ignore[literal-required]
         for service in self.services.values():
             store_data["services"].append(service.to_dict())
 
         if store_data == self._storage_contents:
             return
 
-        def _memorized_storage() -> dict[str, Any]:
+        def _memorized_storage() -> StoreData:
+            self._pending_storage = None
             self._storage_contents = store_data
             return store_data
 
-        self.store.async_delay_save(_memorized_storage, SAVE_DELAY)
+        self._pending_storage = _memorized_storage
+        self.store.async_delay_save(self._pending_storage, SAVE_DELAY)
+
+    async def async_cleanup(self) -> None:
+        """Cleanup the entry data when disconnected or unloading."""
+        if self._pending_storage:
+            # Ensure we save the data if we are unloading before the
+            # save delay has passed.
+            await self.store.async_save(self._pending_storage())

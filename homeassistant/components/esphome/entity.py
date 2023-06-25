@@ -67,6 +67,7 @@ async def platform_async_setup_entry(
         current_infos = entry_data.info[info_type]
         new_infos: dict[int, EntityInfo] = {}
         add_entities: list[_EntityT] = []
+
         for info in infos:
             if not current_infos.pop(info.key, None):
                 # Create new entity
