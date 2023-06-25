@@ -1203,6 +1203,7 @@ async def test_humidity_setting_humidifier_setpoint(hass: HomeAssistant) -> None
                 humidifier.ATTR_MIN_HUMIDITY: 20,
                 humidifier.ATTR_MAX_HUMIDITY: 90,
                 humidifier.ATTR_HUMIDITY: 38,
+                humidifier.ATTR_CURRENT_HUMIDITY: 30,
             },
         ),
         BASIC_CONFIG,
@@ -1212,6 +1213,7 @@ async def test_humidity_setting_humidifier_setpoint(hass: HomeAssistant) -> None
     }
     assert trt.query_attributes() == {
         "humiditySetpointPercent": 38,
+        "humidityAmbientPercent": 30,
     }
     assert trt.can_execute(trait.COMMAND_SET_HUMIDITY, {})
 

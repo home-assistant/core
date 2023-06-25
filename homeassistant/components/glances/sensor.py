@@ -290,36 +290,36 @@ async def async_setup_entry(
         if sensor_type in ["fs", "sensors", "raid"]:
             for sensor_label, params in sensors.items():
                 for param in params:
-                    sensor_description = SENSOR_TYPES[(sensor_type, param)]
+                    if sensor_description := SENSOR_TYPES.get((sensor_type, param)):
+                        _migrate_old_unique_ids(
+                            hass,
+                            f"{coordinator.host}-{name} {sensor_label} {sensor_description.name_suffix}",
+                            f"{sensor_label}-{sensor_description.key}",
+                        )
+                        entities.append(
+                            GlancesSensor(
+                                coordinator,
+                                name,
+                                sensor_label,
+                                sensor_description,
+                            )
+                        )
+        else:
+            for sensor in sensors:
+                if sensor_description := SENSOR_TYPES.get((sensor_type, sensor)):
                     _migrate_old_unique_ids(
                         hass,
-                        f"{coordinator.host}-{name} {sensor_label} {sensor_description.name_suffix}",
-                        f"{sensor_label}-{sensor_description.key}",
+                        f"{coordinator.host}-{name}  {sensor_description.name_suffix}",
+                        f"-{sensor_description.key}",
                     )
                     entities.append(
                         GlancesSensor(
                             coordinator,
                             name,
-                            sensor_label,
+                            "",
                             sensor_description,
                         )
                     )
-        else:
-            for sensor in sensors:
-                sensor_description = SENSOR_TYPES[(sensor_type, sensor)]
-                _migrate_old_unique_ids(
-                    hass,
-                    f"{coordinator.host}-{name}  {sensor_description.name_suffix}",
-                    f"-{sensor_description.key}",
-                )
-                entities.append(
-                    GlancesSensor(
-                        coordinator,
-                        name,
-                        "",
-                        sensor_description,
-                    )
-                )
 
     async_add_entities(entities)
 
