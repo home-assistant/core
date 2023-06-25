@@ -14,6 +14,7 @@ from homeassistant.components.weather import (
     ATTR_FORECAST_TEMP,
     ATTR_FORECAST_TEMP_LOW,
     ATTR_FORECAST_WIND_BEARING,
+    ATTR_FORECAST_WIND_GUST_SPEED,
     ATTR_FORECAST_WIND_SPEED,
     ATTR_WEATHER_APPARENT_TEMPERATURE,
     ATTR_WEATHER_OZONE,
@@ -25,6 +26,7 @@ from homeassistant.components.weather import (
     ATTR_WEATHER_VISIBILITY,
     ATTR_WEATHER_VISIBILITY_UNIT,
     ATTR_WEATHER_WIND_BEARING,
+    ATTR_WEATHER_WIND_GUST_SPEED,
     ATTR_WEATHER_WIND_SPEED,
     ATTR_WEATHER_WIND_SPEED_UNIT,
     ROUNDING_PRECISION,
@@ -77,6 +79,7 @@ class MockWeatherEntity(WeatherEntity):
         self._attr_native_temperature_unit = UnitOfTemperature.CELSIUS
         self._attr_native_visibility = 30
         self._attr_native_visibility_unit = UnitOfLength.KILOMETERS
+        self._attr_native_wind_gust_speed = 10
         self._attr_native_wind_speed = 3
         self._attr_native_wind_speed_unit = UnitOfSpeed.METERS_PER_SECOND
         self._attr_forecast = [
@@ -369,6 +372,49 @@ async def test_wind_speed(
         expected, rel=1e-2
     )
     assert float(forecast[ATTR_FORECAST_WIND_SPEED]) == pytest.approx(
+        expected, rel=1e-2
+    )
+
+
+@pytest.mark.parametrize(
+    "native_unit",
+    (
+        UnitOfSpeed.MILES_PER_HOUR,
+        UnitOfSpeed.KILOMETERS_PER_HOUR,
+        UnitOfSpeed.METERS_PER_SECOND,
+    ),
+)
+@pytest.mark.parametrize(
+    ("state_unit", "unit_system"),
+    (
+        (UnitOfSpeed.KILOMETERS_PER_HOUR, METRIC_SYSTEM),
+        (UnitOfSpeed.MILES_PER_HOUR, US_CUSTOMARY_SYSTEM),
+    ),
+)
+async def test_wind_gust_speed(
+    hass: HomeAssistant,
+    enable_custom_integrations: None,
+    native_unit: str,
+    state_unit: str,
+    unit_system,
+) -> None:
+    """Test wind speed."""
+    hass.config.units = unit_system
+    native_value = 10
+    state_value = SpeedConverter.convert(native_value, native_unit, state_unit)
+
+    entity0 = await create_entity(
+        hass, native_wind_gust_speed=native_value, native_wind_speed_unit=native_unit
+    )
+
+    state = hass.states.get(entity0.entity_id)
+    forecast = state.attributes[ATTR_FORECAST][0]
+
+    expected = state_value
+    assert float(state.attributes[ATTR_WEATHER_WIND_GUST_SPEED]) == pytest.approx(
+        expected, rel=1e-2
+    )
+    assert float(forecast[ATTR_FORECAST_WIND_GUST_SPEED]) == pytest.approx(
         expected, rel=1e-2
     )
 

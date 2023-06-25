@@ -9,13 +9,13 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import (
+from .domain_data import DomainData
+from .entity import (
     EsphomeAssistEntity,
     EsphomeEntity,
     esphome_state_property,
     platform_async_setup_entry,
 )
-from .domain_data import DomainData
 from .entry_data import RuntimeEntryData
 
 

@@ -8,12 +8,11 @@ from datetime import datetime, timedelta
 import logging
 from random import randint
 from time import monotonic
-from typing import Any, Generic, Protocol
+from typing import Any, Generic, Protocol, TypeVar
 import urllib.error
 
 import aiohttp
 import requests
-from typing_extensions import TypeVar
 
 from homeassistant import config_entries
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
@@ -31,14 +30,12 @@ from .debounce import Debouncer
 REQUEST_REFRESH_DEFAULT_COOLDOWN = 10
 REQUEST_REFRESH_DEFAULT_IMMEDIATE = True
 
-_DataT = TypeVar("_DataT", default=dict[str, Any])
+_DataT = TypeVar("_DataT")
 _BaseDataUpdateCoordinatorT = TypeVar(
     "_BaseDataUpdateCoordinatorT", bound="BaseDataUpdateCoordinatorProtocol"
 )
 _DataUpdateCoordinatorT = TypeVar(
-    "_DataUpdateCoordinatorT",
-    bound="DataUpdateCoordinator[Any]",
-    default="DataUpdateCoordinator[dict[str, Any]]",
+    "_DataUpdateCoordinatorT", bound="DataUpdateCoordinator[Any]"
 )
 
 

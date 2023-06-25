@@ -234,7 +234,7 @@ aioecowitt==2023.5.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==14.1.0
+aioesphomeapi==14.1.1
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -301,7 +301,7 @@ aionanoleaf==0.2.1
 aionotion==2023.05.5
 
 # homeassistant.components.oncue
-aiooncue==0.3.4
+aiooncue==0.3.5
 
 # homeassistant.components.openexchangerates
 aioopenexchangerates==0.4.0
@@ -2343,10 +2343,10 @@ securetar==2023.3.0
 sendgrid==6.8.2
 
 # homeassistant.components.sense
-sense-energy==0.11.2
+sense-energy==0.12.0
 
 # homeassistant.components.emulated_kasa
-sense_energy==0.11.2
+sense_energy==0.12.0
 
 # homeassistant.components.sensirion_ble
 sensirion-ble==0.1.0
