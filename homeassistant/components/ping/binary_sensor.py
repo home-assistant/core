@@ -253,8 +253,8 @@ class PingDataSubProcess(PingData):
                 rtt_min, rtt_avg, rtt_max = match.groups()
                 return {"min": rtt_min, "avg": rtt_avg, "max": rtt_max, "mdev": ""}
             match = PING_MATCHER.search(str(out_data).rsplit("\n", maxsplit=1)[-1])
-            if match is None:
-                return None
+            if TYPE_CHECKING:
+                assert match is not None
             rtt_min, rtt_avg, rtt_max, rtt_mdev = match.groups()
             return {"min": rtt_min, "avg": rtt_avg, "max": rtt_max, "mdev": rtt_mdev}
         except asyncio.TimeoutError:
