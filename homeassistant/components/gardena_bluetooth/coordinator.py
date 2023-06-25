@@ -83,8 +83,13 @@ class Coordinator(DataUpdateCoordinator[dict[str, bytes]]):
         try:
             async with self.client() as client:
                 for uuid in uuids:
-                    data[uuid] = await read_char_raw(client, uuid)
-        except (CharacteristicNoAccess, BleakError) as exception:
+                    try:
+                        data[uuid] = await read_char_raw(client, uuid)
+                    except CharacteristicNoAccess as exception:
+                        LOGGER.debug(
+                            "Unable to get data for %s due to %s", uuid, exception
+                        )
+        except BleakError as exception:
             raise UpdateFailed(
                 f"Unable to update data for {uuid} due to {exception}"
             ) from exception
