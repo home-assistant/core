@@ -1,59 +1,22 @@
-"""Sensor for zamg the Austrian "Zentralanstalt für Meteorologie und Geodynamik" integration."""
+"""Sensor for the zamg integration."""
 from __future__ import annotations
 
-import voluptuous as vol
-
-from homeassistant.components.weather import PLATFORM_SCHEMA, WeatherEntity
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.components.weather import WeatherEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    CONF_LATITUDE,
-    CONF_LONGITUDE,
-    CONF_NAME,
     UnitOfPrecipitationDepth,
     UnitOfPressure,
     UnitOfSpeed,
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import ATTRIBUTION, CONF_STATION_ID, DOMAIN, MANUFACTURER_URL
 from .coordinator import ZamgDataUpdateCoordinator
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Optional(CONF_NAME): cv.string,
-        vol.Optional(CONF_STATION_ID): cv.string,
-        vol.Inclusive(
-            CONF_LATITUDE, "coordinates", "Latitude and longitude must exist together"
-        ): cv.latitude,
-        vol.Inclusive(
-            CONF_LONGITUDE, "coordinates", "Latitude and longitude must exist together"
-        ): cv.longitude,
-    }
-)
-
-
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Set up the ZAMG weather platform."""
-    # trigger import flow
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data=config,
-        )
-    )
 
 
 async def async_setup_entry(
@@ -101,8 +64,16 @@ class ZamgWeather(CoordinatorEntity, WeatherEntity):
     def native_temperature(self) -> float | None:
         """Return the platform temperature."""
         try:
-            return float(self.coordinator.data[self.station_id]["TL"]["data"])
-        except (KeyError, ValueError):
+            if (
+                value := self.coordinator.data[self.station_id]["TLAM"]["data"]
+            ) is not None:
+                return float(value)
+            if (
+                value := self.coordinator.data[self.station_id]["TL"]["data"]
+            ) is not None:
+                return float(value)
+            return None
+        except (KeyError, ValueError, TypeError):
             return None
 
     @property
@@ -110,7 +81,7 @@ class ZamgWeather(CoordinatorEntity, WeatherEntity):
         """Return the pressure."""
         try:
             return float(self.coordinator.data[self.station_id]["P"]["data"])
-        except (KeyError, ValueError):
+        except (KeyError, ValueError, TypeError):
             return None
 
     @property
@@ -118,21 +89,37 @@ class ZamgWeather(CoordinatorEntity, WeatherEntity):
         """Return the humidity."""
         try:
             return float(self.coordinator.data[self.station_id]["RFAM"]["data"])
-        except (KeyError, ValueError):
+        except (KeyError, ValueError, TypeError):
             return None
 
     @property
     def native_wind_speed(self) -> float | None:
         """Return the wind speed."""
         try:
-            return float(self.coordinator.data[self.station_id]["FFAM"]["data"])
-        except (KeyError, ValueError):
+            if (
+                value := self.coordinator.data[self.station_id]["FFAM"]["data"]
+            ) is not None:
+                return float(value)
+            if (
+                value := self.coordinator.data[self.station_id]["FFX"]["data"]
+            ) is not None:
+                return float(value)
+            return None
+        except (KeyError, ValueError, TypeError):
             return None
 
     @property
-    def wind_bearing(self) -> float | str | None:
+    def wind_bearing(self) -> float | None:
         """Return the wind bearing."""
         try:
-            return self.coordinator.data[self.station_id]["DD"]["data"]
-        except (KeyError, ValueError):
+            if (
+                value := self.coordinator.data[self.station_id]["DD"]["data"]
+            ) is not None:
+                return float(value)
+            if (
+                value := self.coordinator.data[self.station_id]["DDX"]["data"]
+            ) is not None:
+                return float(value)
+            return None
+        except (KeyError, ValueError, TypeError):
             return None

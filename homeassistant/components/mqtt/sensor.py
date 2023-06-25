@@ -38,14 +38,13 @@ from homeassistant.util import dt as dt_util
 
 from . import subscription
 from .config import MQTT_RO_SCHEMA
-from .const import CONF_ENCODING, CONF_QOS, CONF_STATE_TOPIC
+from .const import CONF_ENCODING, CONF_QOS, CONF_STATE_TOPIC, PAYLOAD_NONE
 from .debug_info import log_messages
 from .mixins import (
     MQTT_ENTITY_COMMON_SCHEMA,
     MqttAvailability,
     MqttEntity,
     async_setup_entry_helper,
-    warn_for_legacy_schema,
 )
 from .models import (
     MqttValueTemplate,
@@ -53,13 +52,14 @@ from .models import (
     ReceiveMessage,
     ReceivePayloadType,
 )
-from .util import get_mqtt_data, valid_subscribe_topic
+from .util import get_mqtt_data
 
 _LOGGER = logging.getLogger(__name__)
 
 CONF_EXPIRE_AFTER = "expire_after"
 CONF_LAST_RESET_TOPIC = "last_reset_topic"
 CONF_LAST_RESET_VALUE_TEMPLATE = "last_reset_value_template"
+CONF_SUGGESTED_DISPLAY_PRECISION = "suggested_display_precision"
 
 MQTT_SENSOR_ATTRIBUTES_BLOCKED = frozenset(
     {
@@ -72,57 +72,31 @@ DEFAULT_NAME = "MQTT Sensor"
 DEFAULT_FORCE_UPDATE = False
 
 
-def validate_options(conf: ConfigType) -> ConfigType:
-    """Validate options.
-
-    If last reset topic is present it must be same as the state topic.
-    """
-    if (
-        CONF_LAST_RESET_TOPIC in conf
-        and CONF_STATE_TOPIC in conf
-        and conf[CONF_LAST_RESET_TOPIC] != conf[CONF_STATE_TOPIC]
-    ):
-        _LOGGER.warning(
-            "'%s' must be same as '%s'", CONF_LAST_RESET_TOPIC, CONF_STATE_TOPIC
-        )
-
-    if CONF_LAST_RESET_TOPIC in conf and CONF_LAST_RESET_VALUE_TEMPLATE not in conf:
-        _LOGGER.warning(
-            "'%s' must be set if '%s' is set",
-            CONF_LAST_RESET_VALUE_TEMPLATE,
-            CONF_LAST_RESET_TOPIC,
-        )
-
-    return conf
-
-
 _PLATFORM_SCHEMA_BASE = MQTT_RO_SCHEMA.extend(
     {
-        vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
+        vol.Optional(CONF_DEVICE_CLASS): vol.Any(DEVICE_CLASSES_SCHEMA, None),
         vol.Optional(CONF_EXPIRE_AFTER): cv.positive_int,
         vol.Optional(CONF_FORCE_UPDATE, default=DEFAULT_FORCE_UPDATE): cv.boolean,
-        vol.Optional(CONF_LAST_RESET_TOPIC): valid_subscribe_topic,
         vol.Optional(CONF_LAST_RESET_VALUE_TEMPLATE): cv.template,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_STATE_CLASS): STATE_CLASSES_SCHEMA,
-        vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
+        vol.Optional(CONF_SUGGESTED_DISPLAY_PRECISION): cv.positive_int,
+        vol.Optional(CONF_STATE_CLASS): vol.Any(STATE_CLASSES_SCHEMA, None),
+        vol.Optional(CONF_UNIT_OF_MEASUREMENT): vol.Any(cv.string, None),
     }
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
 
 PLATFORM_SCHEMA_MODERN = vol.All(
+    # Deprecated in HA Core 2021.11.0 https://github.com/home-assistant/core/pull/54840
+    # Removed in HA Core 2023.6.0
+    cv.removed(CONF_LAST_RESET_TOPIC),
     _PLATFORM_SCHEMA_BASE,
-    validate_options,
-)
-
-# Configuring MQTT Sensors under the sensor platform key was deprecated in HA Core 2022.6
-PLATFORM_SCHEMA = vol.All(
-    warn_for_legacy_schema(sensor.DOMAIN),
 )
 
 DISCOVERY_SCHEMA = vol.All(
-    cv.deprecated(CONF_LAST_RESET_TOPIC),
+    # Deprecated in HA Core 2021.11.0 https://github.com/home-assistant/core/pull/54840
+    # Removed in HA Core 2023.6.0
+    cv.removed(CONF_LAST_RESET_TOPIC),
     _PLATFORM_SCHEMA_BASE.extend({}, extra=vol.REMOVE_EXTRA),
-    validate_options,
 )
 
 
@@ -131,7 +105,7 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up MQTT sensor through configuration.yaml and dynamically through MQTT discovery."""
+    """Set up MQTT sensor through YAML and through MQTT discovery."""
     setup = functools.partial(
         _async_setup_entity, hass, async_add_entities, config_entry=config_entry
     )
@@ -153,7 +127,7 @@ class MqttSensor(MqttEntity, RestoreSensor):
     """Representation of a sensor that can be updated using MQTT."""
 
     _entity_id_format = ENTITY_ID_FORMAT
-    _attr_last_reset = None
+    _attr_last_reset: datetime | None = None
     _attributes_extra_blocked = MQTT_SENSOR_ATTRIBUTES_BLOCKED
     _expire_after: int | None
     _expired: bool | None
@@ -225,6 +199,9 @@ class MqttSensor(MqttEntity, RestoreSensor):
         """(Re)Setup the entity."""
         self._attr_device_class = config.get(CONF_DEVICE_CLASS)
         self._attr_force_update = config[CONF_FORCE_UPDATE]
+        self._attr_suggested_display_precision = config.get(
+            CONF_SUGGESTED_DISPLAY_PRECISION
+        )
         self._attr_native_unit_of_measurement = config.get(CONF_UNIT_OF_MEASUREMENT)
         self._attr_state_class = config.get(CONF_STATE_CLASS)
 
@@ -248,7 +225,8 @@ class MqttSensor(MqttEntity, RestoreSensor):
         def _update_state(msg: ReceiveMessage) -> None:
             # auto-expire enabled?
             if self._expire_after is not None and self._expire_after > 0:
-                # When self._expire_after is set, and we receive a message, assume device is not expired since it has to be to receive the message
+                # When self._expire_after is set, and we receive a message, assume
+                # device is not expired since it has to be to receive the message
                 self._expired = False
 
                 # Reset old trigger
@@ -265,13 +243,22 @@ class MqttSensor(MqttEntity, RestoreSensor):
             payload = self._template(msg.payload, PayloadSentinel.DEFAULT)
             if payload is PayloadSentinel.DEFAULT:
                 return
-            if self.device_class not in {
-                SensorDeviceClass.DATE,
-                SensorDeviceClass.TIMESTAMP,
-            }:
-                self._attr_native_value = str(payload)
+            new_value = str(payload)
+            if self._numeric_state_expected:
+                if new_value == "":
+                    _LOGGER.debug("Ignore empty state from '%s'", msg.topic)
+                elif new_value == PAYLOAD_NONE:
+                    self._attr_native_value = None
+                else:
+                    self._attr_native_value = new_value
                 return
-            if (payload_datetime := dt_util.parse_datetime(str(payload))) is None:
+            if self.device_class in {None, SensorDeviceClass.ENUM}:
+                self._attr_native_value = new_value
+                return
+            try:
+                if (payload_datetime := dt_util.parse_datetime(new_value)) is None:
+                    raise ValueError
+            except ValueError:
                 _LOGGER.warning(
                     "Invalid state message '%s' from '%s'", msg.payload, msg.topic
                 )
@@ -303,10 +290,7 @@ class MqttSensor(MqttEntity, RestoreSensor):
         def message_received(msg: ReceiveMessage) -> None:
             """Handle new MQTT messages."""
             _update_state(msg)
-            if CONF_LAST_RESET_VALUE_TEMPLATE in self._config and (
-                CONF_LAST_RESET_TOPIC not in self._config
-                or self._config[CONF_LAST_RESET_TOPIC] == self._config[CONF_STATE_TOPIC]
-            ):
+            if CONF_LAST_RESET_VALUE_TEMPLATE in self._config:
                 _update_last_reset(msg)
             get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
@@ -316,24 +300,6 @@ class MqttSensor(MqttEntity, RestoreSensor):
             "qos": self._config[CONF_QOS],
             "encoding": self._config[CONF_ENCODING] or None,
         }
-
-        @callback
-        @log_messages(self.hass, self.entity_id)
-        def last_reset_message_received(msg: ReceiveMessage) -> None:
-            """Handle new last_reset messages."""
-            _update_last_reset(msg)
-            get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
-
-        if (
-            CONF_LAST_RESET_TOPIC in self._config
-            and self._config[CONF_LAST_RESET_TOPIC] != self._config[CONF_STATE_TOPIC]
-        ):
-            topics["last_reset_topic"] = {
-                "topic": self._config[CONF_LAST_RESET_TOPIC],
-                "msg_callback": last_reset_message_received,
-                "qos": self._config[CONF_QOS],
-                "encoding": self._config[CONF_ENCODING] or None,
-            }
 
         self._sub_state = subscription.async_prepare_subscribe_topics(
             self.hass, self._sub_state, topics

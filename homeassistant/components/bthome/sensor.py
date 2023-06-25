@@ -1,15 +1,11 @@
 """Support for BTHome sensors."""
 from __future__ import annotations
 
-from typing import Optional, Union
-
 from bthome_ble import SensorDeviceClass as BTHomeSensorDeviceClass, SensorUpdate, Units
 
 from homeassistant import config_entries
 from homeassistant.components.bluetooth.passive_update_processor import (
-    PassiveBluetoothDataProcessor,
     PassiveBluetoothDataUpdate,
-    PassiveBluetoothProcessorCoordinator,
     PassiveBluetoothProcessorEntity,
 )
 from homeassistant.components.sensor import (
@@ -25,6 +21,7 @@ from homeassistant.const import (
     LIGHT_LUX,
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+    EntityCategory,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
     UnitOfEnergy,
@@ -39,14 +36,26 @@ from homeassistant.const import (
     UnitOfVolumeFlowRate,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.sensor import sensor_device_info_to_hass_device_info
 
 from .const import DOMAIN
+from .coordinator import (
+    BTHomePassiveBluetoothDataProcessor,
+    BTHomePassiveBluetoothProcessorCoordinator,
+)
 from .device import device_key_to_bluetooth_entity_key
 
 SENSOR_DESCRIPTIONS = {
+    # Acceleration (m/s²)
+    (
+        BTHomeSensorDeviceClass.ACCELERATION,
+        Units.ACCELERATION_METERS_PER_SQUARE_SECOND,
+    ): SensorEntityDescription(
+        key=f"{BTHomeSensorDeviceClass.ACCELERATION}_{Units.ACCELERATION_METERS_PER_SQUARE_SECOND}",
+        native_unit_of_measurement=Units.ACCELERATION_METERS_PER_SQUARE_SECOND,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
     # Battery (percent)
     (BTHomeSensorDeviceClass.BATTERY, Units.PERCENTAGE): SensorEntityDescription(
         key=f"{BTHomeSensorDeviceClass.BATTERY}_{Units.PERCENTAGE}",
@@ -119,7 +128,26 @@ SENSOR_DESCRIPTIONS = {
         key=f"{BTHomeSensorDeviceClass.ENERGY}_{Units.ENERGY_KILO_WATT_HOUR}",
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        state_class=SensorStateClass.TOTAL_INCREASING,
+        state_class=SensorStateClass.TOTAL,
+    ),
+    # Gas (m3)
+    (
+        BTHomeSensorDeviceClass.GAS,
+        Units.VOLUME_CUBIC_METERS,
+    ): SensorEntityDescription(
+        key=f"{BTHomeSensorDeviceClass.GAS}_{Units.VOLUME_CUBIC_METERS}",
+        device_class=SensorDeviceClass.GAS,
+        native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
+        state_class=SensorStateClass.TOTAL,
+    ),
+    # Gyroscope (°/s)
+    (
+        BTHomeSensorDeviceClass.GYROSCOPE,
+        Units.GYROSCOPE_DEGREES_PER_SECOND,
+    ): SensorEntityDescription(
+        key=f"{BTHomeSensorDeviceClass.GYROSCOPE}_{Units.GYROSCOPE_DEGREES_PER_SECOND}",
+        native_unit_of_measurement=Units.GYROSCOPE_DEGREES_PER_SECOND,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     # Humidity in (percent)
     (BTHomeSensorDeviceClass.HUMIDITY, Units.PERCENTAGE): SensorEntityDescription(
@@ -232,8 +260,20 @@ SENSOR_DESCRIPTIONS = {
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
     ),
+    # Timestamp (datetime object)
+    (
+        BTHomeSensorDeviceClass.TIMESTAMP,
+        None,
+    ): SensorEntityDescription(
+        key=f"{BTHomeSensorDeviceClass.TIMESTAMP}",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
     # UV index (-)
-    (BTHomeSensorDeviceClass.UV_INDEX, None,): SensorEntityDescription(
+    (
+        BTHomeSensorDeviceClass.UV_INDEX,
+        None,
+    ): SensorEntityDescription(
         key=f"{BTHomeSensorDeviceClass.UV_INDEX}",
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -258,7 +298,10 @@ SENSOR_DESCRIPTIONS = {
         state_class=SensorStateClass.MEASUREMENT,
     ),
     # Volume (L)
-    (BTHomeSensorDeviceClass.VOLUME, Units.VOLUME_LITERS,): SensorEntityDescription(
+    (
+        BTHomeSensorDeviceClass.VOLUME,
+        Units.VOLUME_LITERS,
+    ): SensorEntityDescription(
         key=f"{BTHomeSensorDeviceClass.VOLUME}_{Units.VOLUME_LITERS}",
         device_class=SensorDeviceClass.VOLUME,
         native_unit_of_measurement=UnitOfVolume.LITERS,
@@ -282,6 +325,16 @@ SENSOR_DESCRIPTIONS = {
         key=f"{BTHomeSensorDeviceClass.VOLUME_FLOW_RATE}_{Units.VOLUME_FLOW_RATE_CUBIC_METERS_PER_HOUR}",
         native_unit_of_measurement=UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
         state_class=SensorStateClass.MEASUREMENT,
+    ),
+    # Water (L)
+    (
+        BTHomeSensorDeviceClass.WATER,
+        Units.VOLUME_LITERS,
+    ): SensorEntityDescription(
+        key=f"{BTHomeSensorDeviceClass.WATER}_{Units.VOLUME_LITERS}",
+        device_class=SensorDeviceClass.WATER,
+        native_unit_of_measurement=UnitOfVolume.LITERS,
+        state_class=SensorStateClass.TOTAL,
     ),
 }
 
@@ -319,10 +372,12 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the BTHome BLE sensors."""
-    coordinator: PassiveBluetoothProcessorCoordinator = hass.data[DOMAIN][
+    coordinator: BTHomePassiveBluetoothProcessorCoordinator = hass.data[DOMAIN][
         entry.entry_id
     ]
-    processor = PassiveBluetoothDataProcessor(sensor_update_to_bluetooth_data_update)
+    processor = BTHomePassiveBluetoothDataProcessor(
+        sensor_update_to_bluetooth_data_update
+    )
     entry.async_on_unload(
         processor.async_add_entities_listener(
             BTHomeBluetoothSensorEntity, async_add_entities
@@ -332,9 +387,7 @@ async def async_setup_entry(
 
 
 class BTHomeBluetoothSensorEntity(
-    PassiveBluetoothProcessorEntity[
-        PassiveBluetoothDataProcessor[Optional[Union[float, int]]]
-    ],
+    PassiveBluetoothProcessorEntity[BTHomePassiveBluetoothDataProcessor],
     SensorEntity,
 ):
     """Representation of a BTHome BLE sensor."""
@@ -343,3 +396,11 @@ class BTHomeBluetoothSensorEntity(
     def native_value(self) -> int | float | None:
         """Return the native value."""
         return self.processor.entity_data.get(self.entity_key)
+
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        coordinator: BTHomePassiveBluetoothProcessorCoordinator = (
+            self.processor.coordinator
+        )
+        return coordinator.device_data.sleepy_device or super().available

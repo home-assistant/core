@@ -1,43 +1,5 @@
 # Describes the format for available lock services
 
-clear_usercode:
-  name: Clear usercode
-  description: Clear a usercode from lock.
-  fields:
-    node_id:
-      name: Node ID
-      description: Node id of the lock.
-      selector:
-        number:
-          min: 1
-          max: 255
-    code_slot:
-      name: Code slot
-      description: Code slot to clear code from.
-      selector:
-        number:
-          min: 1
-          max: 255
-
-get_usercode:
-  name: Get usercode
-  description: Retrieve a usercode from lock.
-  fields:
-    node_id:
-      name: Node ID
-      description: Node id of the lock.
-      selector:
-        number:
-          min: 1
-          max: 255
-    code_slot:
-      name: Code slot
-      description: Code slot to retrieve a code from.
-      selector:
-        number:
-          min: 1
-          max: 255
-
 lock:
   name: Lock
   description: Lock all or specified locks.
@@ -62,29 +24,6 @@ open:
     code:
       name: Code
       description: An optional code to open the lock with.
-      example: 1234
-      selector:
-        text:
-
-set_usercode:
-  name: Set usercode
-  description: Set a usercode to lock.
-  fields:
-    node_id:
-      description: Node id of the lock.
-      selector:
-        number:
-          min: 1
-          max: 255
-    code_slot:
-      description: Code slot to set the code.
-      selector:
-        number:
-          min: 1
-          max: 255
-    usercode:
-      description: Code to set.
-      required: true
       example: 1234
       selector:
         text:

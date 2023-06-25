@@ -82,7 +82,7 @@ async def mock_modbus_fixture(
 ):
     """Load integration modbus using mocked pymodbus."""
     conf = copy.deepcopy(do_config)
-    for key in conf.keys():
+    for key in conf:
         if config_addon:
             conf[key][0].update(config_addon)
         for entity in conf[key]:
@@ -179,4 +179,4 @@ async def mock_ha_fixture(hass, mock_pymodbus_return):
 @pytest.fixture(name="caplog_setup_text")
 async def caplog_setup_text_fixture(caplog):
     """Return setup log of integration."""
-    yield caplog.text
+    return caplog.text

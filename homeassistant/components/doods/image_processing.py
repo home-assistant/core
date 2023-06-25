@@ -255,7 +255,6 @@ class Doods(ImageProcessingEntity):
             )
 
         for label, values in matches.items():
-
             # Draw custom label regions/areas
             if label in self._label_areas and self._label_areas[label] != [0, 0, 1, 1]:
                 box_label = f"{label.capitalize()} Detection Area"

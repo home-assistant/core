@@ -1,16 +1,16 @@
-"""Test the Home Assistant Sky Connect integration."""
+"""Test the Home Assistant SkyConnect integration."""
 from collections.abc import Generator
 from typing import Any
 from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 
-from homeassistant.components import usb, zha
+from homeassistant.components import zha
 from homeassistant.components.hassio.handler import HassioAPIError
 from homeassistant.components.homeassistant_sky_connect.const import DOMAIN
-from homeassistant.config_entries import ConfigEntryDisabler, ConfigEntryState
-from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.config_entries import ConfigEntryState
+from homeassistant.core import EVENT_HOMEASSISTANT_STARTED, HomeAssistant
+from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 
@@ -45,7 +45,7 @@ def mock_zha_config_flow_setup() -> Generator[None, None, None]:
 
 
 @pytest.mark.parametrize(
-    "onboarded, num_entries, num_flows", ((False, 1, 0), (True, 0, 1))
+    ("onboarded", "num_entries", "num_flows"), ((False, 1, 0), (True, 0, 1))
 )
 async def test_setup_entry(
     mock_zha_config_flow_setup,
@@ -56,12 +56,15 @@ async def test_setup_entry(
     num_flows,
 ) -> None:
     """Test setup of a config entry, including setup of zha."""
+    assert await async_setup_component(hass, "usb", {})
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+
     # Setup the config entry
     config_entry = MockConfigEntry(
         data=CONFIG_ENTRY_DATA,
         domain=DOMAIN,
         options={},
-        title="Home Assistant Sky Connect",
+        title="Home Assistant SkyConnect",
     )
     config_entry.add_to_hass(hass)
     with patch(
@@ -101,12 +104,15 @@ async def test_setup_zha(
     mock_zha_config_flow_setup, hass: HomeAssistant, addon_store_info
 ) -> None:
     """Test zha gets the right config."""
+    assert await async_setup_component(hass, "usb", {})
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+
     # Setup the config entry
     config_entry = MockConfigEntry(
         data=CONFIG_ENTRY_DATA,
         domain=DOMAIN,
         options={},
-        title="Home Assistant Sky Connect",
+        title="Home Assistant SkyConnect",
     )
     config_entry.add_to_hass(hass)
     with patch(
@@ -147,6 +153,9 @@ async def test_setup_zha_multipan(
     hass: HomeAssistant, addon_info, addon_running
 ) -> None:
     """Test zha gets the right config."""
+    assert await async_setup_component(hass, "usb", {})
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+
     addon_info.return_value["options"]["device"] = CONFIG_ENTRY_DATA["device"]
 
     # Setup the config entry
@@ -154,7 +163,7 @@ async def test_setup_zha_multipan(
         data=CONFIG_ENTRY_DATA,
         domain=DOMAIN,
         options={},
-        title="Home Assistant Sky Connect",
+        title="Home Assistant SkyConnect",
     )
     config_entry.add_to_hass(hass)
     with patch(
@@ -163,7 +172,7 @@ async def test_setup_zha_multipan(
     ) as mock_is_plugged_in, patch(
         "homeassistant.components.onboarding.async_is_onboarded", return_value=False
     ), patch(
-        "homeassistant.components.homeassistant_sky_connect.is_hassio",
+        "homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon.is_hassio",
         side_effect=Mock(return_value=True),
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
@@ -191,13 +200,16 @@ async def test_setup_zha_multipan(
         "radio_type": "ezsp",
     }
     assert config_entry.options == {}
-    assert config_entry.title == "Sky Connect Multi-PAN"
+    assert config_entry.title == "SkyConnect Multi-PAN"
 
 
 async def test_setup_zha_multipan_other_device(
     mock_zha_config_flow_setup, hass: HomeAssistant, addon_info, addon_running
 ) -> None:
     """Test zha gets the right config."""
+    assert await async_setup_component(hass, "usb", {})
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+
     addon_info.return_value["options"]["device"] = "/dev/not_our_sky_connect"
 
     # Setup the config entry
@@ -214,7 +226,7 @@ async def test_setup_zha_multipan_other_device(
     ) as mock_is_plugged_in, patch(
         "homeassistant.components.onboarding.async_is_onboarded", return_value=False
     ), patch(
-        "homeassistant.components.homeassistant_sky_connect.is_hassio",
+        "homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon.is_hassio",
         side_effect=Mock(return_value=True),
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
@@ -245,62 +257,37 @@ async def test_setup_zha_multipan_other_device(
     assert config_entry.title == CONFIG_ENTRY_DATA["description"]
 
 
-async def test_setup_entry_wait_usb(
-    mock_zha_config_flow_setup, hass: HomeAssistant
-) -> None:
+async def test_setup_entry_wait_usb(hass: HomeAssistant) -> None:
     """Test setup of a config entry when the dongle is not plugged in."""
     # Setup the config entry
-    vid = CONFIG_ENTRY_DATA["vid"]
-    pid = CONFIG_ENTRY_DATA["device"]
-    serial_number = CONFIG_ENTRY_DATA["serial_number"]
-    manufacturer = CONFIG_ENTRY_DATA["manufacturer"]
-    description = CONFIG_ENTRY_DATA["description"]
     config_entry = MockConfigEntry(
         data=CONFIG_ENTRY_DATA,
         domain=DOMAIN,
         options={},
-        title="Home Assistant Sky Connect",
-        unique_id=f"{vid}:{pid}_{serial_number}_{manufacturer}_{description}",
+        title="Home Assistant SkyConnect",
     )
     config_entry.add_to_hass(hass)
     with patch(
         "homeassistant.components.homeassistant_sky_connect.usb.async_is_plugged_in",
         return_value=False,
     ) as mock_is_plugged_in:
-        assert not await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        assert config_entry.state == ConfigEntryState.LOADED
+        assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+        # USB discovery starts, config entry should be removed
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
         await hass.async_block_till_done()
         assert len(mock_is_plugged_in.mock_calls) == 1
-        assert config_entry.disabled_by == ConfigEntryDisabler.INTEGRATION
-        assert config_entry.state == ConfigEntryState.NOT_LOADED
-
-    # USB dongle plugged in
-    usb_data = usb.UsbServiceInfo(
-        device=CONFIG_ENTRY_DATA["device"],
-        vid=CONFIG_ENTRY_DATA["vid"],
-        pid=CONFIG_ENTRY_DATA["device"],
-        serial_number=CONFIG_ENTRY_DATA["serial_number"],
-        manufacturer=CONFIG_ENTRY_DATA["manufacturer"],
-        description=CONFIG_ENTRY_DATA["description"],
-    )
-    with patch(
-        "homeassistant.components.homeassistant_sky_connect.usb.async_is_plugged_in",
-        return_value=True,
-    ) as mock_is_plugged_in, patch(
-        "homeassistant.components.onboarding.async_is_onboarded", return_value=True
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": "usb"}, data=usb_data
-        )
-        assert result["type"] == FlowResultType.ABORT
-
-        assert config_entry.disabled_by is None
-        assert config_entry.state == ConfigEntryState.LOADED
+        assert len(hass.config_entries.async_entries(DOMAIN)) == 0
 
 
 async def test_setup_entry_addon_info_fails(
     hass: HomeAssistant, addon_store_info
 ) -> None:
     """Test setup of a config entry when fetching addon info fails."""
+    assert await async_setup_component(hass, "usb", {})
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+
     addon_store_info.side_effect = HassioAPIError("Boom")
 
     # Setup the config entry
@@ -308,7 +295,7 @@ async def test_setup_entry_addon_info_fails(
         data=CONFIG_ENTRY_DATA,
         domain=DOMAIN,
         options={},
-        title="Home Assistant Sky Connect",
+        title="Home Assistant SkyConnect",
     )
     config_entry.add_to_hass(hass)
     with patch(
@@ -317,7 +304,7 @@ async def test_setup_entry_addon_info_fails(
     ), patch(
         "homeassistant.components.onboarding.async_is_onboarded", return_value=False
     ), patch(
-        "homeassistant.components.homeassistant_sky_connect.is_hassio",
+        "homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon.is_hassio",
         side_effect=Mock(return_value=True),
     ):
         assert not await hass.config_entries.async_setup(config_entry.entry_id)
@@ -329,12 +316,15 @@ async def test_setup_entry_addon_not_running(
     hass: HomeAssistant, addon_installed, start_addon
 ) -> None:
     """Test the addon is started if it is not running."""
+    assert await async_setup_component(hass, "usb", {})
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+
     # Setup the config entry
     config_entry = MockConfigEntry(
         data=CONFIG_ENTRY_DATA,
         domain=DOMAIN,
         options={},
-        title="Home Assistant Sky Connect",
+        title="Home Assistant SkyConnect",
     )
     config_entry.add_to_hass(hass)
     with patch(
@@ -343,7 +333,7 @@ async def test_setup_entry_addon_not_running(
     ), patch(
         "homeassistant.components.onboarding.async_is_onboarded", return_value=False
     ), patch(
-        "homeassistant.components.homeassistant_sky_connect.is_hassio",
+        "homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon.is_hassio",
         side_effect=Mock(return_value=True),
     ):
         assert not await hass.config_entries.async_setup(config_entry.entry_id)

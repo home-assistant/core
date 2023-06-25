@@ -1,11 +1,18 @@
 """Test Guardian diagnostics."""
 from homeassistant.components.diagnostics import REDACTED
 from homeassistant.components.guardian import DOMAIN, GuardianData
+from homeassistant.core import HomeAssistant
 
 from tests.components.diagnostics import get_diagnostics_for_config_entry
+from tests.typing import ClientSessionGenerator
 
 
-async def test_entry_diagnostics(hass, config_entry, hass_client, setup_guardian):
+async def test_entry_diagnostics(
+    hass: HomeAssistant,
+    config_entry,
+    hass_client: ClientSessionGenerator,
+    setup_guardian,
+) -> None:
     """Test config entry diagnostics."""
     data: GuardianData = hass.data[DOMAIN][config_entry.entry_id]
 

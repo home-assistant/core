@@ -1,11 +1,18 @@
 """Support for Ecobee Send Message service."""
+from __future__ import annotations
 
 from homeassistant.components.notify import ATTR_TARGET, BaseNotificationService
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import DOMAIN
 
 
-def get_service(hass, config, discovery_info=None):
+def get_service(
+    hass: HomeAssistant,
+    config: ConfigType,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> EcobeeNotificationService | None:
     """Get the Ecobee notification service."""
     if discovery_info is None:
         return None

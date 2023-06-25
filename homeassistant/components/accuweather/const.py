@@ -20,7 +20,6 @@ from homeassistant.components.weather import (
     ATTR_CONDITION_WINDY,
 )
 
-API_IMPERIAL: Final = "Imperial"
 API_METRIC: Final = "Metric"
 ATTRIBUTION: Final = "Data provided by AccuWeather"
 ATTR_CATEGORY: Final = "Category"

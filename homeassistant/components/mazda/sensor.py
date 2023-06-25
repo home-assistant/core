@@ -25,7 +25,8 @@ from .const import DATA_CLIENT, DATA_COORDINATOR, DOMAIN
 class MazdaSensorRequiredKeysMixin:
     """Mixin for required keys."""
 
-    # Function to determine the value for this sensor, given the coordinator data and the configured unit system
+    # Function to determine the value for this sensor, given the coordinator data
+    # and the configured unit system
     value: Callable[[dict[str, Any]], StateType]
 
 
@@ -35,7 +36,8 @@ class MazdaSensorEntityDescription(
 ):
     """Describes a Mazda sensor entity."""
 
-    # Function to determine whether the vehicle supports this sensor, given the coordinator data
+    # Function to determine whether the vehicle supports this sensor,
+    # given the coordinator data
     is_supported: Callable[[dict[str, Any]], bool] = lambda data: True
 
 

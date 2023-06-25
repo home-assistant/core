@@ -11,7 +11,9 @@ import homeassistant.util.dt as dt_util
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 
-async def test_upnp_sensors(hass: HomeAssistant, mock_config_entry: MockConfigEntry):
+async def test_upnp_sensors(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
     """Test sensors."""
     # First poll.
     assert hass.states.get("sensor.mock_name_b_received").state == "0"

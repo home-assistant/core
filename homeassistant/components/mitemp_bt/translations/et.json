@@ -1,8 +1,0 @@
-{
-    "issues": {
-        "replaced": {
-            "description": "Xiaomi Mijia BLE temperatuuri- ja niiskusanduri integratsioon lakkas t\u00f6\u00f6tamast Home Assistant 2022.7 versioonis ja asendati Xiaomi BLE integratsiooniga 2022.8 versioonis.\n\nMigratsiooniteed ei ole v\u00f5imalik, seega peate oma Xiaomi Mijia BLE-seadme lisama uue integratsiooni abil k\u00e4sitsi.\n\nTeie olemasolevat Xiaomi Mijia BLE temperatuuri ja \u00f5huniiskuse anduri YAML-konfiguratsiooni ei kasuta enam Home Assistant. Eemaldage YAML-konfiguratsioon oma configuration.yaml-failist ja k\u00e4ivitage Home Assistant uuesti, et see probleem lahendada.",
-            "title": "Xiaomi Mijia BLE temperatuuri ja niiskusanduri sidumine on asendatud"
-        }
-    }
-}

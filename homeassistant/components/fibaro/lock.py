@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from fiblary3.client.v4.models import DeviceModel, SceneModel
+from pyfibaro.fibaro_device import DeviceModel
 
 from homeassistant.components.lock import ENTITY_ID_FORMAT, LockEntity
 from homeassistant.config_entries import ConfigEntry
@@ -35,7 +35,7 @@ async def async_setup_entry(
 class FibaroLock(FibaroDevice, LockEntity):
     """Representation of a Fibaro Lock."""
 
-    def __init__(self, fibaro_device: DeviceModel | SceneModel) -> None:
+    def __init__(self, fibaro_device: DeviceModel) -> None:
         """Initialize the Fibaro device."""
         super().__init__(fibaro_device)
         self.entity_id = ENTITY_ID_FORMAT.format(self.ha_id)
@@ -52,4 +52,5 @@ class FibaroLock(FibaroDevice, LockEntity):
 
     def update(self) -> None:
         """Update device state."""
+        super().update()
         self._attr_is_locked = self.current_binary_state

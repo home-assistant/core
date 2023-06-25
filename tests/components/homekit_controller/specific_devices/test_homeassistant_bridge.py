@@ -1,6 +1,6 @@
 """Test against characteristics captured from the Home Assistant HomeKit bridge running demo platforms."""
-
 from homeassistant.components.fan import FanEntityFeature
+from homeassistant.core import HomeAssistant
 
 from ..common import (
     HUB_TEST_ACCESSORY_ID,
@@ -12,7 +12,7 @@ from ..common import (
 )
 
 
-async def test_homeassistant_bridge_fan_setup(hass):
+async def test_homeassistant_bridge_fan_setup(hass: HomeAssistant) -> None:
     """Test that a SIMPLEconnect fan can be correctly setup in HA."""
     accessories = await setup_accessories_from_file(
         hass, "home_assistant_bridge_fan.json"

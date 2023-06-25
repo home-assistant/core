@@ -11,10 +11,9 @@ from homeassistant.components.number import NumberEntity, NumberEntityDescriptio
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import ACTUATOR, DOMAIN, ENTITY_TYPES, FIRMNESS, ICON_OCCUPIED
-from .coordinator import SleepIQData
+from .coordinator import SleepIQData, SleepIQDataUpdateCoordinator
 from .entity import SleepIQBedEntity
 
 
@@ -57,7 +56,7 @@ def _get_actuator_name(bed: SleepIQBed, actuator: SleepIQActuator) -> str:
 
 def _get_actuator_unique_id(bed: SleepIQBed, actuator: SleepIQActuator) -> str:
     if actuator.side:
-        return f"{bed.id}_{actuator.side}_{actuator.actuator}"
+        return f"{bed.id}_{actuator.side.value}_{actuator.actuator}"
 
     return f"{bed.id}_{actuator.actuator}"
 
@@ -130,7 +129,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class SleepIQNumberEntity(SleepIQBedEntity, NumberEntity):
+class SleepIQNumberEntity(SleepIQBedEntity[SleepIQDataUpdateCoordinator], NumberEntity):
     """Representation of a SleepIQ number entity."""
 
     entity_description: SleepIQNumberEntityDescription
@@ -138,7 +137,7 @@ class SleepIQNumberEntity(SleepIQBedEntity, NumberEntity):
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator,
+        coordinator: SleepIQDataUpdateCoordinator,
         bed: SleepIQBed,
         device: Any,
         description: SleepIQNumberEntityDescription,

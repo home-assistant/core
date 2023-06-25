@@ -63,7 +63,6 @@ DATA_PERSONS = "netatmo_persons"
 DATA_SCHEDULES = "netatmo_schedules"
 
 NETATMO_EVENT = "netatmo_event"
-NETATMO_WEBHOOK_URL = None
 
 DEFAULT_DISCOVERY = True
 DEFAULT_PERSON = "unknown"

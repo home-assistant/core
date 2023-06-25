@@ -12,9 +12,10 @@ from homeassistant.components.weather import (
     DOMAIN,
 )
 from homeassistant.const import ATTR_ATTRIBUTION
+from homeassistant.core import HomeAssistant
 
 
-@pytest.mark.parametrize("count,domain", [(1, DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(1, DOMAIN)])
 @pytest.mark.parametrize(
     "config",
     [
@@ -39,7 +40,7 @@ from homeassistant.const import ATTR_ATTRIBUTION
         },
     ],
 )
-async def test_template_state_text(hass, start_ha):
+async def test_template_state_text(hass: HomeAssistant, start_ha) -> None:
     """Test the state text of a template."""
     for attr, v_attr, value in [
         (

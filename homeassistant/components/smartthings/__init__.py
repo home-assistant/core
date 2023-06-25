@@ -16,6 +16,7 @@ from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
@@ -50,6 +51,8 @@ from .smartapp import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -279,7 +282,7 @@ class DeviceBroker:
         smart_app,
         devices: Iterable,
         scenes: Iterable,
-    ):
+    ) -> None:
         """Create a new instance of the DeviceBroker."""
         self._hass = hass
         self._entry = entry
@@ -318,6 +321,7 @@ class DeviceBroker:
 
     def connect(self):
         """Connect handlers/listeners for device/lifecycle events."""
+
         # Setup interval to regenerate the refresh token on a periodic basis.
         # Tokens expire in 30 days and once expired, cannot be recovered.
         async def regenerate_refresh_token(now):

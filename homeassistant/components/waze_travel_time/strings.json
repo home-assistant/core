@@ -35,5 +35,29 @@
         }
       }
     }
+  },
+  "selector": {
+    "vehicle_type": {
+      "options": {
+        "car": "Car",
+        "taxi": "Taxi",
+        "motorcycle": "Motorcycle"
+      }
+    },
+    "units": {
+      "options": {
+        "metric": "Metric System",
+        "imperial": "Imperial System"
+      }
+    },
+    "region": {
+      "options": {
+        "us": "USA",
+        "na": "North America",
+        "eu": "Europe",
+        "il": "Israel",
+        "au": "Australia"
+      }
+    }
   }
 }

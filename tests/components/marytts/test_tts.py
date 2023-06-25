@@ -1,6 +1,4 @@
 """The tests for the MaryTTS speech platform."""
-import os
-import shutil
 from unittest.mock import patch
 
 import pytest
@@ -11,6 +9,7 @@ from homeassistant.components.media_player import (
     DOMAIN as DOMAIN_MP,
     SERVICE_PLAY_MEDIA,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import assert_setup_component, async_mock_service
@@ -26,15 +25,12 @@ async def get_media_source_url(hass, media_content_id):
 
 
 @pytest.fixture(autouse=True)
-def cleanup_cache(hass):
-    """Prevent TTS writing."""
-    yield
-    default_tts = hass.config.path(tts.DEFAULT_CACHE_DIR)
-    if os.path.isdir(default_tts):
-        shutil.rmtree(default_tts)
+def mock_tts_cache_dir_autouse(mock_tts_cache_dir):
+    """Mock the TTS cache dir with empty dir."""
+    return mock_tts_cache_dir
 
 
-async def test_setup_component(hass):
+async def test_setup_component(hass: HomeAssistant) -> None:
     """Test setup component."""
     config = {tts.DOMAIN: {"platform": "marytts"}}
 
@@ -43,7 +39,7 @@ async def test_setup_component(hass):
         await hass.async_block_till_done()
 
 
-async def test_service_say(hass):
+async def test_service_say(hass: HomeAssistant) -> None:
     """Test service call say."""
     calls = async_mock_service(hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
 
@@ -76,7 +72,7 @@ async def test_service_say(hass):
     assert url.endswith(".wav")
 
 
-async def test_service_say_with_effect(hass):
+async def test_service_say_with_effect(hass: HomeAssistant) -> None:
     """Test service call say with effects."""
     calls = async_mock_service(hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
 
@@ -109,7 +105,7 @@ async def test_service_say_with_effect(hass):
     assert url.endswith(".wav")
 
 
-async def test_service_say_http_error(hass):
+async def test_service_say_http_error(hass: HomeAssistant) -> None:
     """Test service call say."""
     calls = async_mock_service(hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
 

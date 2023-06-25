@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from collections import UserDict
-from collections.abc import Coroutine
+from collections.abc import Coroutine, ValuesView
 import logging
 import time
 from typing import TYPE_CHECKING, Any, TypeVar, cast
@@ -10,15 +10,16 @@ from typing import TYPE_CHECKING, Any, TypeVar, cast
 import attr
 
 from homeassistant.backports.enum import StrEnum
-from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
+from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, RequiredParameterMissing
-from homeassistant.loader import bind_hass
+from homeassistant.util.json import format_unserializable_data
 import homeassistant.util.uuid as uuid_util
 
 from . import storage
 from .debounce import Debouncer
 from .frame import report
+from .json import JSON_DUMP, find_paths_unserializable_data
 from .typing import UNDEFINED, UndefinedType
 
 if TYPE_CHECKING:
@@ -89,10 +90,52 @@ class DeviceEntry:
     # This value is not stored, just used to keep track of events to fire.
     is_new: bool = attr.ib(default=False)
 
+    _json_repr: str | None = attr.ib(cmp=False, default=None, init=False, repr=False)
+
     @property
     def disabled(self) -> bool:
         """Return if entry is disabled."""
         return self.disabled_by is not None
+
+    @property
+    def dict_repr(self) -> dict[str, Any]:
+        """Return a dict representation of the entry."""
+        return {
+            "area_id": self.area_id,
+            "configuration_url": self.configuration_url,
+            "config_entries": list(self.config_entries),
+            "connections": list(self.connections),
+            "disabled_by": self.disabled_by,
+            "entry_type": self.entry_type,
+            "hw_version": self.hw_version,
+            "id": self.id,
+            "identifiers": list(self.identifiers),
+            "manufacturer": self.manufacturer,
+            "model": self.model,
+            "name_by_user": self.name_by_user,
+            "name": self.name,
+            "sw_version": self.sw_version,
+            "via_device_id": self.via_device_id,
+        }
+
+    @property
+    def json_repr(self) -> str | None:
+        """Return a cached JSON representation of the entry."""
+        if self._json_repr is not None:
+            return self._json_repr
+
+        try:
+            dict_repr = self.dict_repr
+            object.__setattr__(self, "_json_repr", JSON_DUMP(dict_repr))
+        except (ValueError, TypeError):
+            _LOGGER.error(
+                "Unable to serialize entry %s to JSON. Bad data found at %s",
+                self.id,
+                format_unserializable_data(
+                    find_paths_unserializable_data(dict_repr, dump=JSON_DUMP)
+                ),
+            )
+        return self._json_repr
 
 
 @attr.s(slots=True, frozen=True)
@@ -161,7 +204,9 @@ class DeviceRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
                     device.setdefault("configuration_url", None)
                     device.setdefault("disabled_by", None)
                     try:
-                        device["entry_type"] = DeviceEntryType(device.get("entry_type"))  # type: ignore[arg-type]
+                        device["entry_type"] = DeviceEntryType(
+                            device.get("entry_type"),  # type: ignore[arg-type]
+                        )
                     except ValueError:
                         device["entry_type"] = None
                     device.setdefault("name_by_user", None)
@@ -196,6 +241,10 @@ class DeviceRegistryItems(UserDict[str, _EntryTypeT]):
         super().__init__()
         self._connections: dict[tuple[str, str], _EntryTypeT] = {}
         self._identifiers: dict[tuple[str, str], _EntryTypeT] = {}
+
+    def values(self) -> ValuesView[_EntryTypeT]:
+        """Return the underlying values to avoid __iter__ overhead."""
+        return self.data.values()
 
     def __setitem__(self, key: str, entry: _EntryTypeT) -> None:
         """Add an item."""
@@ -243,6 +292,7 @@ class DeviceRegistry:
 
     devices: DeviceRegistryItems[DeviceEntry]
     deleted_devices: DeviceRegistryItems[DeletedDeviceEntry]
+    _device_data: dict[str, DeviceEntry]
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the device registry."""
@@ -257,8 +307,12 @@ class DeviceRegistry:
 
     @callback
     def async_get(self, device_id: str) -> DeviceEntry | None:
-        """Get device."""
-        return self.devices.get(device_id)
+        """Get device.
+
+        We retrieve the DeviceEntry from the underlying dict to avoid
+        the overhead of the UserDict __getitem__.
+        """
+        return self._device_data.get(device_id)
 
     @callback
     def async_get_device(
@@ -397,7 +451,7 @@ class DeviceRegistry:
     ) -> DeviceEntry | None:
         """Update device attributes."""
         # Circular dep
-        # pylint: disable=import-outside-toplevel
+        # pylint: disable-next=import-outside-toplevel
         from . import area_registry as ar
 
         old = self.devices[device_id]
@@ -550,7 +604,10 @@ class DeviceRegistry:
                     config_entries=set(device["config_entries"]),
                     configuration_url=device["configuration_url"],
                     # type ignores (if tuple arg was cast): likely https://github.com/python/mypy/issues/8625
-                    connections={tuple(conn) for conn in device["connections"]},  # type: ignore[misc]
+                    connections={
+                        tuple(conn)  # type: ignore[misc]
+                        for conn in device["connections"]
+                    },
                     disabled_by=DeviceEntryDisabler(device["disabled_by"])
                     if device["disabled_by"]
                     else None,
@@ -559,7 +616,10 @@ class DeviceRegistry:
                     else None,
                     hw_version=device["hw_version"],
                     id=device["id"],
-                    identifiers={tuple(iden) for iden in device["identifiers"]},  # type: ignore[misc]
+                    identifiers={
+                        tuple(iden)  # type: ignore[misc]
+                        for iden in device["identifiers"]
+                    },
                     manufacturer=device["manufacturer"],
                     model=device["model"],
                     name_by_user=device["name_by_user"],
@@ -572,14 +632,21 @@ class DeviceRegistry:
                 deleted_devices[device["id"]] = DeletedDeviceEntry(
                     config_entries=set(device["config_entries"]),
                     # type ignores (if tuple arg was cast): likely https://github.com/python/mypy/issues/8625
-                    connections={tuple(conn) for conn in device["connections"]},  # type: ignore[misc]
-                    identifiers={tuple(iden) for iden in device["identifiers"]},  # type: ignore[misc]
+                    connections={
+                        tuple(conn)  # type: ignore[misc]
+                        for conn in device["connections"]
+                    },
+                    identifiers={
+                        tuple(iden)  # type: ignore[misc]
+                        for iden in device["identifiers"]
+                    },
                     id=device["id"],
                     orphaned_timestamp=device["orphaned_timestamp"],
                 )
 
         self.devices = devices
         self.deleted_devices = deleted_devices
+        self._device_data = devices.data
 
     @callback
     def async_schedule_save(self) -> None:
@@ -685,19 +752,6 @@ async def async_load(hass: HomeAssistant) -> None:
     assert DATA_REGISTRY not in hass.data
     hass.data[DATA_REGISTRY] = DeviceRegistry(hass)
     await hass.data[DATA_REGISTRY].async_load()
-
-
-@bind_hass
-async def async_get_registry(hass: HomeAssistant) -> DeviceRegistry:
-    """Get device registry.
-
-    This is deprecated and will be removed in the future. Use async_get instead.
-    """
-    report(
-        "uses deprecated `async_get_registry` to access device registry, use async_get"
-        " instead"
-    )
-    return async_get(hass)
 
 
 @callback
@@ -844,6 +898,13 @@ def async_setup_cleanup(hass: HomeAssistant, dev_reg: DeviceRegistry) -> None:
         await debounced_cleanup.async_call()
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, startup_clean)
+
+    @callback
+    def _on_homeassistant_stop(event: Event) -> None:
+        """Cancel debounced cleanup."""
+        debounced_cleanup.async_cancel()
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _on_homeassistant_stop)
 
 
 def _normalize_connections(connections: set[tuple[str, str]]) -> set[tuple[str, str]]:

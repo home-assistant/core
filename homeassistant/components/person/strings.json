@@ -1,9 +1,29 @@
 {
   "title": "Person",
-  "state": {
+  "entity_component": {
     "_": {
-      "home": "[%key:common::state::home%]",
-      "not_home": "[%key:common::state::not_home%]"
+      "name": "[%key:component::person::title%]",
+      "state": {
+        "home": "[%key:common::state::home%]",
+        "not_home": "[%key:common::state::not_home%]"
+      },
+      "state_attributes": {
+        "device_trackers": {
+          "name": "Device trackers"
+        },
+        "gps_accuracy": {
+          "name": "[%key:component::device_tracker::entity_component::_::state_attributes::gps_accuracy::name%]"
+        },
+        "latitude": {
+          "name": "[%key:component::device_tracker::entity_component::_::state_attributes::latitude::name%]"
+        },
+        "longitude": {
+          "name": "[%key:component::device_tracker::entity_component::_::state_attributes::longitude::name%]"
+        },
+        "source": {
+          "name": "Source"
+        }
+      }
     }
   }
 }

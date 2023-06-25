@@ -1,10 +1,10 @@
 {
   "domain": "juicenet",
   "name": "JuiceNet",
-  "documentation": "https://www.home-assistant.io/integrations/juicenet",
-  "requirements": ["python-juicenet==1.1.0"],
   "codeowners": ["@jesserockz"],
   "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/juicenet",
   "iot_class": "cloud_polling",
-  "loggers": ["pyjuicenet"]
+  "loggers": ["pyjuicenet"],
+  "requirements": ["python-juicenet==1.1.0"]
 }

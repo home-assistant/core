@@ -130,7 +130,10 @@ class ImageProcessingSsocr(ImageProcessingEntity):
         img.save(self.filepath, "png")
 
         with subprocess.Popen(
-            self._command, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+            self._command,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            close_fds=False,  # Required for posix_spawn
         ) as ocr:
             out = ocr.communicate()
             if out[0] != b"":

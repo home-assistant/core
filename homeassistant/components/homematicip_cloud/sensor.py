@@ -177,10 +177,10 @@ class HomematicipHeatingThermostat(HomematicipGenericEntity, SensorEntity):
         return "mdi:radiator"
 
     @property
-    def native_value(self) -> int:
+    def native_value(self) -> int | None:
         """Return the state of the radiator valve."""
         if self._device.valveState != ValveState.ADAPTION_DONE:
-            return self._device.valveState
+            return None
         return round(self._device.valvePosition * 100)
 
 

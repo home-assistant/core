@@ -119,7 +119,6 @@ def _patch_discovery(device=None, no_device=None):
 
     @contextmanager
     def _patcher():
-
         with patch.object(config_flow, "DISCOVER_TIMEOUT", 0), patch(
             "homeassistant.components.senseme.discovery.SensemeDiscovery",
             return_value=mock_senseme_discovery,

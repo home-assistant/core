@@ -1,6 +1,8 @@
 """Diagnostics support for Tibber."""
 from __future__ import annotations
 
+from typing import Any
+
 import tibber
 
 from homeassistant.config_entries import ConfigEntry
@@ -11,7 +13,7 @@ from .const import DOMAIN
 
 async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, config_entry: ConfigEntry
-) -> dict:
+) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
     tibber_connection: tibber.Tibber = hass.data[DOMAIN]
 

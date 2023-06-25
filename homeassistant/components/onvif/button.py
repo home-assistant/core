@@ -1,8 +1,8 @@
 """ONVIF Buttons."""
 from homeassistant.components.button import ButtonDeviceClass, ButtonEntity
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .base import ONVIFBaseEntity
@@ -34,7 +34,7 @@ class RebootButton(ONVIFBaseEntity, ButtonEntity):
 
     async def async_press(self) -> None:
         """Send out a SystemReboot command."""
-        device_mgmt = self.device.device.create_devicemgmt_service()
+        device_mgmt = await self.device.device.create_devicemgmt_service()
         await device_mgmt.SystemReboot()
 
 

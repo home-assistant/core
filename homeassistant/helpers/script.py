@@ -11,7 +11,7 @@ from functools import partial
 import itertools
 import logging
 from types import MappingProxyType
-from typing import Any, TypedDict, Union, cast
+from typing import Any, TypedDict, TypeVar, cast
 
 import async_timeout
 import voluptuous as vol
@@ -46,6 +46,7 @@ from homeassistant.const import (
     CONF_MODE,
     CONF_PARALLEL,
     CONF_REPEAT,
+    CONF_RESPONSE_VARIABLE,
     CONF_SCENE,
     CONF_SEQUENCE,
     CONF_SERVICE,
@@ -64,10 +65,11 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
 )
 from homeassistant.core import (
-    SERVICE_CALL_LIMIT,
     Context,
+    Event,
     HassJob,
     HomeAssistant,
+    SupportsResponse,
     callback,
 )
 from homeassistant.util import slugify
@@ -98,6 +100,8 @@ from .trigger import async_initialize_triggers, async_validate_trigger_config
 from .typing import ConfigType
 
 # mypy: allow-untyped-calls, allow-untyped-defs, no-check-untyped-defs
+
+_T = TypeVar("_T")
 
 SCRIPT_MODE_PARALLEL = "parallel"
 SCRIPT_MODE_QUEUED = "queued"
@@ -375,7 +379,7 @@ class _ScriptRun:
             self._script._changed()  # pylint: disable=protected-access
 
     async def _async_get_condition(self, config):
-        # pylint: disable=protected-access
+        # pylint: disable-next=protected-access
         return await self._script._async_get_condition(config)
 
     def _log(
@@ -617,7 +621,7 @@ class _ScriptRun:
                 task.cancel()
             unsub()
 
-    async def _async_run_long_action(self, long_task: asyncio.Task) -> None:
+    async def _async_run_long_action(self, long_task: asyncio.Task[_T]) -> _T | None:
         """Run a long task while monitoring for stop request."""
 
         async def async_cancel_long_task() -> None:
@@ -645,10 +649,10 @@ class _ScriptRun:
             raise asyncio.CancelledError
         if long_task.done():
             # Propagate any exceptions that occurred.
-            long_task.result()
-        else:
-            # Stopped before long task completed, so cancel it.
-            await async_cancel_long_task()
+            return long_task.result()
+        # Stopped before long task completed, so cancel it.
+        await async_cancel_long_task()
+        return None
 
     async def _async_call_service_step(self):
         """Call the service specified in the action."""
@@ -658,33 +662,43 @@ class _ScriptRun:
             self._hass, self._action, self._variables
         )
 
+        # Validate response data paraters. This check ignores services that do
+        # not exist which will raise an appropriate error in the service call below.
+        response_variable = self._action.get(CONF_RESPONSE_VARIABLE)
+        return_response = response_variable is not None
+        if self._hass.services.has_service(params[CONF_DOMAIN], params[CONF_SERVICE]):
+            supports_response = self._hass.services.supports_response(
+                params[CONF_DOMAIN], params[CONF_SERVICE]
+            )
+            if supports_response == SupportsResponse.ONLY and not return_response:
+                raise vol.Invalid(
+                    f"Script requires '{CONF_RESPONSE_VARIABLE}' for response data "
+                    f"for service call {params[CONF_DOMAIN]}.{params[CONF_SERVICE]}"
+                )
+            if supports_response == SupportsResponse.NONE and return_response:
+                raise vol.Invalid(
+                    f"Script does not support '{CONF_RESPONSE_VARIABLE}' for service "
+                    f"'{CONF_RESPONSE_VARIABLE}' which does not support response data."
+                )
+
         running_script = (
             params[CONF_DOMAIN] == "automation"
             and params[CONF_SERVICE] == "trigger"
             or params[CONF_DOMAIN] in ("python_script", "script")
         )
-        # If this might start a script then disable the call timeout.
-        # Otherwise use the normal service call limit.
-        if running_script:
-            limit = None
-        else:
-            limit = SERVICE_CALL_LIMIT
-
-        trace_set_result(params=params, running_script=running_script, limit=limit)
-        service_task = self._hass.async_create_task(
-            self._hass.services.async_call(
-                **params,
-                blocking=True,
-                context=self._context,
-                limit=limit,
-            )
+        trace_set_result(params=params, running_script=running_script)
+        response_data = await self._async_run_long_action(
+            self._hass.async_create_task(
+                self._hass.services.async_call(
+                    **params,
+                    blocking=True,
+                    context=self._context,
+                    return_response=return_response,
+                )
+            ),
         )
-        if limit is not None:
-            # There is a call limit, so just wait for it to finish.
-            await service_task
-            return
-
-        await self._async_run_long_action(service_task)
+        if response_variable:
+            self._variables[response_variable] = response_data
 
     async def _async_device_step(self):
         """Perform the device automation specified in the action."""
@@ -757,7 +771,7 @@ class _ScriptRun:
                 with trace_path(condition_path):
                     for idx, cond in enumerate(conditions):
                         with trace_path(str(idx)):
-                            if not cond(hass, variables):
+                            if cond(hass, variables) is False:
                                 return False
             except exceptions.ConditionError as ex:
                 _LOGGER.warning("Error in '%s[%s]' evaluation: %s", name, idx, ex)
@@ -786,7 +800,7 @@ class _ScriptRun:
                 repeat_vars["item"] = item
             self._variables["repeat"] = repeat_vars
 
-        # pylint: disable=protected-access
+        # pylint: disable-next=protected-access
         script = self._script._get_repeat_script(self._step)
 
         async def async_run_sequence(iteration, extra_msg=""):
@@ -1074,7 +1088,17 @@ class _QueuedScriptRun(_ScriptRun):
         super()._finish()
 
 
-async def _async_stop_scripts_after_shutdown(hass, point_in_time):
+@callback
+def _schedule_stop_scripts_after_shutdown(hass: HomeAssistant) -> None:
+    """Stop running Script objects started after shutdown."""
+    async_call_later(
+        hass, _SHUTDOWN_MAX_WAIT, partial(_async_stop_scripts_after_shutdown, hass)
+    )
+
+
+async def _async_stop_scripts_after_shutdown(
+    hass: HomeAssistant, point_in_time: datetime
+) -> None:
     """Stop running Script objects started after shutdown."""
     hass.data[DATA_NEW_SCRIPT_RUNS_NOT_ALLOWED] = None
     running_scripts = [
@@ -1091,11 +1115,9 @@ async def _async_stop_scripts_after_shutdown(hass, point_in_time):
         )
 
 
-async def _async_stop_scripts_at_shutdown(hass, event):
+async def _async_stop_scripts_at_shutdown(hass: HomeAssistant, event: Event) -> None:
     """Stop running Script objects started before shutdown."""
-    async_call_later(
-        hass, _SHUTDOWN_MAX_WAIT, partial(_async_stop_scripts_after_shutdown, hass)
-    )
+    _schedule_stop_scripts_after_shutdown(hass)
 
     running_scripts = [
         script
@@ -1110,7 +1132,7 @@ async def _async_stop_scripts_at_shutdown(hass, event):
         )
 
 
-_VarsType = Union[dict[str, Any], MappingProxyType]
+_VarsType = dict[str, Any] | MappingProxyType
 
 
 def _referenced_extract_ids(data: Any, key: str, found: set[str]) -> None:

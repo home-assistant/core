@@ -96,8 +96,7 @@ async def see_device(
 
 
 async def get_tracking_devices(hass: HomeAssistant) -> tuple[set[str], set[str]]:
-    """
-    Load all known devices.
+    """Load all known devices.
 
     We just need the devices so set consider_home and home range to 0
     """
@@ -174,7 +173,11 @@ async def async_setup_scanner(
                     rssi = await hass.async_add_executor_job(client.request_rssi)
                     client.close()
 
-                tasks.append(see_device(hass, async_see, mac, friendly_name, rssi))
+                tasks.append(
+                    asyncio.create_task(
+                        see_device(hass, async_see, mac, friendly_name, rssi)
+                    )
+                )
 
             if tasks:
                 await asyncio.wait(tasks)

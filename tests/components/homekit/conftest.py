@@ -10,7 +10,7 @@ from homeassistant.components.homekit.accessories import HomeDriver
 from homeassistant.components.homekit.const import BRIDGE_NAME, EVENT_HOMEKIT_CHANGED
 from homeassistant.components.homekit.iidmanager import AccessoryIIDStorage
 
-from tests.common import async_capture_events, mock_device_registry, mock_registry
+from tests.common import async_capture_events
 
 
 @pytest.fixture
@@ -20,7 +20,7 @@ def iid_storage(hass):
         yield AccessoryIIDStorage(hass, "")
 
 
-@pytest.fixture()
+@pytest.fixture
 def run_driver(hass, event_loop, iid_storage):
     """Return a custom AccessoryDriver instance for HomeKit accessory init.
 
@@ -101,18 +101,6 @@ def mock_hap(hass, event_loop, iid_storage, mock_zeroconf):
 def events(hass):
     """Yield caught homekit_changed events."""
     return async_capture_events(hass, EVENT_HOMEKIT_CHANGED)
-
-
-@pytest.fixture(name="device_reg")
-def device_reg_fixture(hass):
-    """Return an empty, loaded, registry."""
-    return mock_device_registry(hass)
-
-
-@pytest.fixture(name="entity_reg")
-def entity_reg_fixture(hass):
-    """Return an empty, loaded, registry."""
-    return mock_registry(hass)
 
 
 @pytest.fixture

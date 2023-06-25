@@ -1,5 +1,4 @@
 """deCONZ alarm control panel platform tests."""
-
 from unittest.mock import patch
 
 from pydeconz.models.sensor.ancillary_control import AncillaryControlPanel
@@ -24,6 +23,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
+from homeassistant.core import HomeAssistant
 
 from .test_gateway import (
     DECONZ_WEB_REQUEST,
@@ -31,14 +31,20 @@ from .test_gateway import (
     setup_deconz_integration,
 )
 
+from tests.test_util.aiohttp import AiohttpClientMocker
 
-async def test_no_sensors(hass, aioclient_mock):
+
+async def test_no_sensors(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test that no sensors in deconz results in no climate entities."""
     await setup_deconz_integration(hass, aioclient_mock)
     assert len(hass.states.async_all()) == 0
 
 
-async def test_alarm_control_panel(hass, aioclient_mock, mock_deconz_websocket):
+async def test_alarm_control_panel(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, mock_deconz_websocket
+) -> None:
     """Test successful creation of alarm control panel entities."""
     data = {
         "alarmsystems": {
@@ -169,7 +175,6 @@ async def test_alarm_control_panel(hass, aioclient_mock, mock_deconz_websocket):
         AncillaryControlPanel.ARMING_NIGHT,
         AncillaryControlPanel.ARMING_STAY,
     }:
-
         event_changed_sensor = {
             "t": "event",
             "e": "changed",
@@ -188,7 +193,6 @@ async def test_alarm_control_panel(hass, aioclient_mock, mock_deconz_websocket):
         AncillaryControlPanel.ENTRY_DELAY,
         AncillaryControlPanel.EXIT_DELAY,
     }:
-
         event_changed_sensor = {
             "t": "event",
             "e": "changed",

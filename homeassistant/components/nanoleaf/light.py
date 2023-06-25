@@ -47,7 +47,9 @@ class NanoleafLight(NanoleafEntity, LightEntity):
     _attr_supported_color_modes = {ColorMode.COLOR_TEMP, ColorMode.HS}
     _attr_supported_features = LightEntityFeature.EFFECT | LightEntityFeature.TRANSITION
 
-    def __init__(self, nanoleaf: Nanoleaf, coordinator: DataUpdateCoordinator) -> None:
+    def __init__(
+        self, nanoleaf: Nanoleaf, coordinator: DataUpdateCoordinator[None]
+    ) -> None:
         """Initialize the Nanoleaf light."""
         super().__init__(nanoleaf, coordinator)
         self._attr_unique_id = nanoleaf.serial_no

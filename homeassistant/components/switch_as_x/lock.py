@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from homeassistant.components.lock import LockEntity
+from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN, LockEntity
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -30,18 +30,15 @@ async def async_setup_entry(
     entity_id = er.async_validate_entity_id(
         registry, config_entry.options[CONF_ENTITY_ID]
     )
-    wrapped_switch = registry.async_get(entity_id)
-    device_id = wrapped_switch.device_id if wrapped_switch else None
-    entity_category = wrapped_switch.entity_category if wrapped_switch else None
 
     async_add_entities(
         [
             LockSwitch(
+                hass,
                 config_entry.title,
+                LOCK_DOMAIN,
                 entity_id,
                 config_entry.entry_id,
-                device_id,
-                entity_category,
             )
         ]
     )

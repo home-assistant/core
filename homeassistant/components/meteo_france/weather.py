@@ -83,6 +83,7 @@ class MeteoFranceWeather(
 ):
     """Representation of a weather condition."""
 
+    _attr_attribution = ATTRIBUTION
     _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_native_precipitation_unit = UnitOfPrecipitationDepth.MILLIMETERS
     _attr_native_pressure_unit = UnitOfPressure.HPA
@@ -108,11 +109,7 @@ class MeteoFranceWeather(
     @property
     def device_info(self) -> DeviceInfo:
         """Return the device info."""
-        assert (
-            self.platform
-            and self.platform.config_entry
-            and self.platform.config_entry.unique_id
-        )
+        assert self.platform.config_entry and self.platform.config_entry.unique_id
         return DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, self.platform.config_entry.unique_id)},
@@ -203,8 +200,3 @@ class MeteoFranceWeather(
                     }
                 )
         return forecast_data
-
-    @property
-    def attribution(self):
-        """Return the attribution."""
-        return ATTRIBUTION

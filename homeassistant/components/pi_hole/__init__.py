@@ -17,7 +17,8 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv
+from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
@@ -38,6 +39,13 @@ _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.SENSOR,
+    Platform.SWITCH,
+    Platform.UPDATE,
+]
+
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Pi-hole entry."""
@@ -48,13 +56,45 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     location = entry.data[CONF_LOCATION]
     api_key = entry.data.get(CONF_API_KEY)
 
-    # For backward compatibility
-    if CONF_STATISTICS_ONLY not in entry.data:
-        hass.config_entries.async_update_entry(
-            entry, data={**entry.data, CONF_STATISTICS_ONLY: not api_key}
-        )
+    # remove obsolet CONF_STATISTICS_ONLY from entry.data
+    if CONF_STATISTICS_ONLY in entry.data:
+        entry_data = entry.data.copy()
+        entry_data.pop(CONF_STATISTICS_ONLY)
+        hass.config_entries.async_update_entry(entry, data=entry_data)
 
     _LOGGER.debug("Setting up %s integration with host %s", DOMAIN, host)
+
+    name_to_key = {
+        "Core Update Available": "core_update_available",
+        "Web Update Available": "web_update_available",
+        "FTL Update Available": "ftl_update_available",
+        "Status": "status",
+        "Ads Blocked Today": "ads_blocked_today",
+        "Ads Percentage Blocked Today": "ads_percentage_today",
+        "Seen Clients": "clients_ever_seen",
+        "DNS Queries Today": "dns_queries_today",
+        "Domains Blocked": "domains_being_blocked",
+        "DNS Queries Cached": "queries_cached",
+        "DNS Queries Forwarded": "queries_forwarded",
+        "DNS Unique Clients": "unique_clients",
+        "DNS Unique Domains": "unique_domains",
+    }
+
+    @callback
+    def update_unique_id(
+        entity_entry: er.RegistryEntry,
+    ) -> dict[str, str] | None:
+        """Update unique ID of entity entry."""
+        unique_id_parts = entity_entry.unique_id.split("/")
+        if len(unique_id_parts) == 2 and unique_id_parts[1] in name_to_key:
+            name = unique_id_parts[1]
+            new_unique_id = entity_entry.unique_id.replace(name, name_to_key[name])
+            _LOGGER.debug("Migrate %s to %s", entity_entry.unique_id, new_unique_id)
+            return {"new_unique_id": new_unique_id}
+
+        return None
+
+    await er.async_migrate_entries(hass, entry.entry_id, update_unique_id)
 
     session = async_get_clientsession(hass, verify_tls)
     api = Hole(
@@ -72,6 +112,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             await api.get_versions()
         except HoleError as err:
             raise UpdateFailed(f"Failed to communicate with API: {err}") from err
+        if not isinstance(api.data, dict):
+            raise ConfigEntryAuthFailed
 
     coordinator = DataUpdateCoordinator(
         hass,
@@ -89,28 +131,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await coordinator.async_config_entry_first_refresh()
 
-    await hass.config_entries.async_forward_entry_setups(entry, _async_platforms(entry))
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload Pi-hole entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(
-        entry, _async_platforms(entry)
-    )
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
     return unload_ok
-
-
-@callback
-def _async_platforms(entry: ConfigEntry) -> list[Platform]:
-    """Return platforms to be loaded / unloaded."""
-    platforms = [Platform.BINARY_SENSOR, Platform.UPDATE, Platform.SENSOR]
-    if not entry.data[CONF_STATISTICS_ONLY]:
-        platforms.append(Platform.SWITCH)
-    return platforms
 
 
 class PiHoleEntity(CoordinatorEntity):

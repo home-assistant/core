@@ -56,7 +56,7 @@ async def test_plug(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "dev, domain",
+    ("dev", "domain"),
     [
         (_mocked_plug(), "switch"),
         (_mocked_strip(), "switch"),

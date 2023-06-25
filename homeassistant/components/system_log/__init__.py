@@ -61,7 +61,6 @@ SERVICE_WRITE_SCHEMA = vol.Schema(
 def _figure_out_source(
     record: logging.LogRecord, call_stack: list[tuple[str, int]], paths_re: re.Pattern
 ) -> tuple[str, int]:
-
     # If a stack trace exists, extract file names from the entire call stack.
     # The other case is when a regular "log" is made (without an attached
     # exception). In that case, just use the file where the log was made from.
@@ -82,7 +81,6 @@ def _figure_out_source(
     # Iterate through the stack call (in reverse) and find the last call from
     # a file in Home Assistant. Try to figure out where error happened.
     for pathname in reversed(stack):
-
         # Try to match with a file within Home Assistant
         if match := paths_re.match(pathname[0]):
             return (cast(str, match.group(1)), pathname[1])
@@ -108,8 +106,11 @@ def _safe_get_message(record: logging.LogRecord) -> str:
     """
     try:
         return record.getMessage()
-    except Exception:  # pylint: disable=broad-except
-        return f"Bad logger message: {record.msg} ({record.args})"
+    except Exception as ex:  # pylint: disable=broad-except
+        try:
+            return f"Bad logger message: {record.msg} ({record.args})"
+        except Exception:  # pylint: disable=broad-except
+            return f"Bad logger message: {ex}"
 
 
 class LogEntry:

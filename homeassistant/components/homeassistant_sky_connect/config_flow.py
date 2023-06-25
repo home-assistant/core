@@ -1,11 +1,11 @@
-"""Config flow for the Home Assistant Sky Connect integration."""
+"""Config flow for the Home Assistant SkyConnect integration."""
 from __future__ import annotations
 
 from typing import Any
 
 from homeassistant.components import usb
 from homeassistant.components.homeassistant_hardware import silabs_multiprotocol_addon
-from homeassistant.config_entries import ConfigEntry, ConfigEntryDisabler, ConfigFlow
+from homeassistant.config_entries import ConfigEntry, ConfigFlow
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 
@@ -14,7 +14,7 @@ from .util import get_usb_service_info
 
 
 class HomeAssistantSkyConnectConfigFlow(ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for Home Assistant Sky Connect."""
+    """Handle a config flow for Home Assistant SkyConnect."""
 
     VERSION = 1
 
@@ -35,15 +35,10 @@ class HomeAssistantSkyConnectConfigFlow(ConfigFlow, domain=DOMAIN):
         manufacturer = discovery_info.manufacturer
         description = discovery_info.description
         unique_id = f"{vid}:{pid}_{serial_number}_{manufacturer}_{description}"
-        if existing_entry := await self.async_set_unique_id(unique_id):
-            # Re-enable existing config entry which was disabled by USB unplug
-            if existing_entry.disabled_by == ConfigEntryDisabler.INTEGRATION:
-                await self.hass.config_entries.async_set_disabled_by(
-                    existing_entry.entry_id, None
-                )
+        if await self.async_set_unique_id(unique_id):
             self._abort_if_unique_id_configured(updates={"device": device})
         return self.async_create_entry(
-            title="Home Assistant Sky Connect",
+            title="Home Assistant SkyConnect",
             data={
                 "device": device,
                 "vid": vid,
@@ -56,13 +51,14 @@ class HomeAssistantSkyConnectConfigFlow(ConfigFlow, domain=DOMAIN):
 
 
 class HomeAssistantSkyConnectOptionsFlow(silabs_multiprotocol_addon.OptionsFlowHandler):
-    """Handle an option flow for Home Assistant Sky Connect."""
+    """Handle an option flow for Home Assistant SkyConnect."""
 
     async def _async_serial_port_settings(
         self,
     ) -> silabs_multiprotocol_addon.SerialPortSettings:
         """Return the radio serial port settings."""
         usb_dev = self.config_entry.data["device"]
+        # The call to get_serial_by_id can be removed in HA Core 2024.1
         dev_path = await self.hass.async_add_executor_job(usb.get_serial_by_id, usb_dev)
         return silabs_multiprotocol_addon.SerialPortSettings(
             device=dev_path,
@@ -80,8 +76,8 @@ class HomeAssistantSkyConnectOptionsFlow(silabs_multiprotocol_addon.OptionsFlowH
 
     def _zha_name(self) -> str:
         """Return the ZHA name."""
-        return "Sky Connect Multi-PAN"
+        return "SkyConnect Multi-PAN"
 
     def _hardware_name(self) -> str:
         """Return the name of the hardware."""
-        return "Home Assistant Sky Connect"
+        return "Home Assistant SkyConnect"

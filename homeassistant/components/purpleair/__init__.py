@@ -6,12 +6,10 @@ from aiopurpleair.models.sensors import SensorModel
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE, Platform
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .config_flow import async_remove_sensor_by_device_id
-from .const import CONF_LAST_UPDATE_SENSOR_ADD, DOMAIN
+from .const import DOMAIN
 from .coordinator import PurpleAirDataUpdateCoordinator
 
 PLATFORMS = [Platform.SENSOR]
@@ -32,26 +30,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_handle_entry_update(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Handle an options update."""
-    if entry.options.get(CONF_LAST_UPDATE_SENSOR_ADD) is True:
-        # If the last options update was to add a sensor, we reload the config entry:
-        await hass.config_entries.async_reload(entry.entry_id)
-
-
-async def async_remove_config_entry_device(
-    hass: HomeAssistant, config_entry: ConfigEntry, device_entry: dr.DeviceEntry
-) -> bool:
-    """Remove a config entry from a device."""
-    new_entry_options = async_remove_sensor_by_device_id(
-        hass,
-        config_entry,
-        device_entry.id,
-        # remove_device is set to False because in this instance, the device has
-        # already been removed:
-        remove_device=False,
-    )
-    return hass.config_entries.async_update_entry(
-        config_entry, options=new_entry_options
-    )
+    await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

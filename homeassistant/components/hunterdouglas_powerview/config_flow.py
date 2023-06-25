@@ -97,9 +97,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Handle zeroconf discovery."""
         self.discovered_ip = discovery_info.host
-        name = discovery_info.name
-        if name.endswith(POWERVIEW_SUFFIX):
-            name = name[: -len(POWERVIEW_SUFFIX)]
+        name = discovery_info.name.removesuffix(POWERVIEW_SUFFIX)
         self.discovered_name = name
         return await self.async_step_discovery_confirm()
 
@@ -108,9 +106,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Handle HomeKit discovery."""
         self.discovered_ip = discovery_info.host
-        name = discovery_info.name
-        if name.endswith(HAP_SUFFIX):
-            name = name[: -len(HAP_SUFFIX)]
+        name = discovery_info.name.removesuffix(HAP_SUFFIX)
         self.discovered_name = name
         return await self.async_step_discovery_confirm()
 

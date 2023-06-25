@@ -59,11 +59,11 @@ def mock_reload_entry() -> Generator[AsyncMock, None, None]:
 
 
 @pytest.fixture
-def mock_mjpeg_requests(requests_mock: Mocker) -> Generator[Mocker, None, None]:
+def mock_mjpeg_requests(requests_mock: Mocker) -> Mocker:
     """Fixture to provide a requests mocker."""
     requests_mock.get("https://example.com/mjpeg", text="resp")
     requests_mock.get("https://example.com/still", text="resp")
-    yield requests_mock
+    return requests_mock
 
 
 @pytest.fixture

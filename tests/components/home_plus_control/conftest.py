@@ -12,7 +12,7 @@ CLIENT_SECRET = "5678"
 SUBSCRIPTION_KEY = "12345678901234567890123456789012"
 
 
-@pytest.fixture()
+@pytest.fixture
 def mock_config_entry():
     """Return a fake config entry.
 
@@ -40,7 +40,7 @@ def mock_config_entry():
     )
 
 
-@pytest.fixture()
+@pytest.fixture
 def mock_modules():
     """Return the full set of mock modules."""
     plant = HomePlusPlant(

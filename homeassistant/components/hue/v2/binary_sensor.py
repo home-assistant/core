@@ -1,7 +1,7 @@
 """Support for Hue binary sensors."""
 from __future__ import annotations
 
-from typing import Any, Union
+from typing import Any, TypeAlias
 
 from aiohue.v2 import HueBridgeV2
 from aiohue.v2.controllers.config import (
@@ -25,8 +25,8 @@ from ..bridge import HueBridge
 from ..const import DOMAIN
 from .entity import HueBaseEntity
 
-SensorType = Union[Motion, EntertainmentConfiguration]
-ControllerType = Union[MotionController, EntertainmentConfigurationController]
+SensorType: TypeAlias = Motion | EntertainmentConfiguration
+ControllerType: TypeAlias = MotionController | EntertainmentConfigurationController
 
 
 async def async_setup_entry(

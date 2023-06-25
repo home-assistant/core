@@ -180,7 +180,7 @@ class ArestData:
         self._resource = resource
         self._pin = pin
         self.data = {}
-        self._attr_available = True
+        self.available = True
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
@@ -201,7 +201,7 @@ class ArestData:
                         f"{self._resource}/digital/{self._pin}", timeout=10
                     )
                     self.data = {"value": response.json()["return_value"]}
-            self._attr_available = True
+            self.available = True
         except requests.exceptions.ConnectionError:
             _LOGGER.error("No route to device %s", self._resource)
-            self._attr_available = False
+            self.available = False

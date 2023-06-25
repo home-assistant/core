@@ -9,7 +9,7 @@ from homeassistant.components.ffmpeg import (
     SERVICE_STOP,
 )
 from homeassistant.const import ATTR_ENTITY_ID
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.setup import async_setup_component, setup_component
 
 from tests.common import assert_setup_component, get_test_home_assistant
@@ -99,7 +99,7 @@ class TestFFmpegSetup:
         assert self.hass.services.has_service(ffmpeg.DOMAIN, "restart")
 
 
-async def test_setup_component_test_register(hass):
+async def test_setup_component_test_register(hass: HomeAssistant) -> None:
     """Set up ffmpeg component test register."""
     with assert_setup_component(1):
         await async_setup_component(hass, ffmpeg.DOMAIN, {ffmpeg.DOMAIN: {}})
@@ -112,7 +112,7 @@ async def test_setup_component_test_register(hass):
     assert hass.bus.async_listen_once.call_count == 2
 
 
-async def test_setup_component_test_register_no_startup(hass):
+async def test_setup_component_test_register_no_startup(hass: HomeAssistant) -> None:
     """Set up ffmpeg component test register without startup."""
     with assert_setup_component(1):
         await async_setup_component(hass, ffmpeg.DOMAIN, {ffmpeg.DOMAIN: {}})
@@ -125,7 +125,7 @@ async def test_setup_component_test_register_no_startup(hass):
     assert hass.bus.async_listen_once.call_count == 1
 
 
-async def test_setup_component_test_service_start(hass):
+async def test_setup_component_test_service_start(hass: HomeAssistant) -> None:
     """Set up ffmpeg component test service start."""
     with assert_setup_component(1):
         await async_setup_component(hass, ffmpeg.DOMAIN, {ffmpeg.DOMAIN: {}})
@@ -139,7 +139,7 @@ async def test_setup_component_test_service_start(hass):
     assert ffmpeg_dev.called_start
 
 
-async def test_setup_component_test_service_stop(hass):
+async def test_setup_component_test_service_stop(hass: HomeAssistant) -> None:
     """Set up ffmpeg component test service stop."""
     with assert_setup_component(1):
         await async_setup_component(hass, ffmpeg.DOMAIN, {ffmpeg.DOMAIN: {}})
@@ -153,7 +153,7 @@ async def test_setup_component_test_service_stop(hass):
     assert ffmpeg_dev.called_stop
 
 
-async def test_setup_component_test_service_restart(hass):
+async def test_setup_component_test_service_restart(hass: HomeAssistant) -> None:
     """Set up ffmpeg component test service restart."""
     with assert_setup_component(1):
         await async_setup_component(hass, ffmpeg.DOMAIN, {ffmpeg.DOMAIN: {}})
@@ -168,7 +168,9 @@ async def test_setup_component_test_service_restart(hass):
     assert ffmpeg_dev.called_start
 
 
-async def test_setup_component_test_service_start_with_entity(hass):
+async def test_setup_component_test_service_start_with_entity(
+    hass: HomeAssistant,
+) -> None:
     """Set up ffmpeg component test service start."""
     with assert_setup_component(1):
         await async_setup_component(hass, ffmpeg.DOMAIN, {ffmpeg.DOMAIN: {}})
@@ -183,7 +185,7 @@ async def test_setup_component_test_service_start_with_entity(hass):
     assert ffmpeg_dev.called_entities == ["test.ffmpeg_device"]
 
 
-async def test_async_get_image_with_width_height(hass):
+async def test_async_get_image_with_width_height(hass: HomeAssistant) -> None:
     """Test fetching an image with a specific width and height."""
     with assert_setup_component(1):
         await async_setup_component(hass, ffmpeg.DOMAIN, {ffmpeg.DOMAIN: {}})
@@ -200,7 +202,9 @@ async def test_async_get_image_with_width_height(hass):
     ]
 
 
-async def test_async_get_image_with_extra_cmd_overlapping_width_height(hass):
+async def test_async_get_image_with_extra_cmd_overlapping_width_height(
+    hass: HomeAssistant,
+) -> None:
     """Test fetching an image with and extra_cmd with width and height and a specific width and height."""
     with assert_setup_component(1):
         await async_setup_component(hass, ffmpeg.DOMAIN, {ffmpeg.DOMAIN: {}})
@@ -219,7 +223,7 @@ async def test_async_get_image_with_extra_cmd_overlapping_width_height(hass):
     ]
 
 
-async def test_async_get_image_with_extra_cmd_width_height(hass):
+async def test_async_get_image_with_extra_cmd_width_height(hass: HomeAssistant) -> None:
     """Test fetching an image with and extra_cmd and a specific width and height."""
     with assert_setup_component(1):
         await async_setup_component(hass, ffmpeg.DOMAIN, {ffmpeg.DOMAIN: {}})

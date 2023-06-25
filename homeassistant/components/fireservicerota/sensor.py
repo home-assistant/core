@@ -23,6 +23,7 @@ async def async_setup_entry(
     async_add_entities([IncidentsSensor(client)])
 
 
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
 class IncidentsSensor(RestoreEntity, SensorEntity):
     """Representation of FireServiceRota incidents sensor."""
 

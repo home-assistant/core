@@ -13,9 +13,8 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PERCENTAGE
+from homeassistant.const import PERCENTAGE, EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
@@ -71,7 +70,7 @@ SENSORS: Final = [
     PowerviewSensorDescription(
         key="signal",
         name="Signal",
-        device_class=SensorDeviceClass.SIGNAL_STRENGTH,
+        icon="mdi:signal",
         native_unit_of_measurement=PERCENTAGE,
         native_value_fn=lambda shade: round(
             shade.raw_data[ATTR_SIGNAL_STRENGTH] / ATTR_SIGNAL_STRENGTH_MAX * 100

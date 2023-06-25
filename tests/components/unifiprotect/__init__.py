@@ -3,6 +3,7 @@
 from contextlib import contextmanager
 from unittest.mock import AsyncMock, MagicMock, patch
 
+import pytest
 from unifi_discovery import AIOUnifiScanner, UnifiDevice, UnifiService
 
 DEVICE_HOSTNAME = "unvr"
@@ -26,6 +27,8 @@ UNIFI_DISCOVERY_PARTIAL = UnifiDevice(
     hw_addr=DEVICE_MAC_ADDRESS,
     services={UnifiService.Protect: True},
 )
+
+pytest.register_assert_rewrite("tests.components.unifiprotect.utils")
 
 
 def _patch_discovery(device=None, no_device=False):

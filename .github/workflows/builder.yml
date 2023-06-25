@@ -10,7 +10,7 @@ on:
 
 env:
   BUILD_TYPE: core
-  DEFAULT_PYTHON: 3.9
+  DEFAULT_PYTHON: "3.10"
 
 jobs:
   init:
@@ -24,12 +24,12 @@ jobs:
       publish: ${{ steps.version.outputs.publish }}
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v3.2.0
+        uses: actions/checkout@v3.5.3
         with:
           fetch-depth: 0
 
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v4.4.0
+        uses: actions/setup-python@v4.6.1
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
 
@@ -62,17 +62,23 @@ jobs:
 
   build_python:
     name: Build PyPi package
-    needs: init
+    environment: ${{ needs.init.outputs.channel }}
+    needs: ["init", "build_base"]
     runs-on: ubuntu-latest
     if: github.repository_owner == 'home-assistant' && needs.init.outputs.publish == 'true'
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v3.2.0
+        uses: actions/checkout@v3.5.3
 
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v4.4.0
+        uses: actions/setup-python@v4.6.1
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
+
+      - name: Download Translations
+        run: python3 -m script.translations download
+        env:
+          LOKALISE_TOKEN: ${{ secrets.LOKALISE_TOKEN }}
 
       - name: Build package
         shell: bash
@@ -100,7 +106,7 @@ jobs:
         arch: ${{ fromJson(needs.init.outputs.architectures) }}
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v3.2.0
+        uses: actions/checkout@v3.5.3
 
       - name: Download nightly wheels of frontend
         if: needs.init.outputs.channel == 'dev'
@@ -113,9 +119,20 @@ jobs:
           workflow_conclusion: success
           name: wheels
 
+      - name: Download nightly wheels of intents
+        if: needs.init.outputs.channel == 'dev'
+        uses: dawidd6/action-download-artifact@v2
+        with:
+          github_token: ${{secrets.GITHUB_TOKEN}}
+          repo: home-assistant/intents-package
+          branch: main
+          workflow: nightly.yaml
+          workflow_conclusion: success
+          name: package
+
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         if: needs.init.outputs.channel == 'dev'
-        uses: actions/setup-python@v4.4.0
+        uses: actions/setup-python@v4.6.1
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
 
@@ -124,7 +141,7 @@ jobs:
         shell: bash
         run: |
           python3 -m pip install packaging tomli
-          python3 -m pip install --use-deprecated=legacy-resolver .
+          python3 -m pip install .
           version="$(python3 script/version_bump.py nightly)"
 
           if [[ "$(ls home_assistant_frontend*.whl)" =~ ^home_assistant_frontend-(.*)-py3-none-any.whl$ ]]; then
@@ -140,26 +157,61 @@ jobs:
             python -m script.gen_requirements_all
           fi
 
+          if [[ "$(ls home_assistant_intents*.whl)" =~ ^home_assistant_intents-(.*)-py3-none-any.whl$ ]]; then
+            echo "Found intents wheel, setting version to: ${BASH_REMATCH[1]}"
+            yq \
+              --inplace e -o json \
+              'del(.requirements[] | select(contains("home-assistant-intents")))' \
+              homeassistant/components/conversation/manifest.json
+
+            intents_version="${BASH_REMATCH[1]}" yq \
+              --inplace e -o json \
+              '.requirements += ["home-assistant-intents=="+env(intents_version)]' \
+              homeassistant/components/conversation/manifest.json
+
+            sed -i "s|home-assistant-intents==.*|home-assistant-intents==${BASH_REMATCH[1]}|" \
+              homeassistant/package_constraints.txt
+
+            python -m script.gen_requirements_all
+          fi
+
+      - name: Adjustments for armhf
+        if: matrix.arch == 'armhf'
+        run: |
+          # Pandas has issues building on armhf, it is expected they
+          # will drop the platform in the near future (they consider it
+          # "flimsy" on 386). The following packages depend on pandas,
+          # so we comment them out.
+          sed -i "s|env-canada|# env-canada|g" requirements_all.txt
+          sed -i "s|noaa-coops|# noaa-coops|g" requirements_all.txt
+          sed -i "s|pyezviz|# pyezviz|g" requirements_all.txt
+          sed -i "s|pykrakenapi|# pykrakenapi|g" requirements_all.txt
+
+      - name: Download Translations
+        run: python3 -m script.translations download
+        env:
+          LOKALISE_TOKEN: ${{ secrets.LOKALISE_TOKEN }}
+
       - name: Write meta info file
         shell: bash
         run: |
           echo "${{ github.sha }};${{ github.ref }};${{ github.event_name }};${{ github.actor }}" > rootfs/OFFICIAL_IMAGE
 
       - name: Login to DockerHub
-        uses: docker/login-action@v2.1.0
+        uses: docker/login-action@v2.2.0
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Login to GitHub Container Registry
-        uses: docker/login-action@v2.1.0
+        uses: docker/login-action@v2.2.0
         with:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build base image
-        uses: home-assistant/builder@2022.11.0
+        uses: home-assistant/builder@2023.06.0
         with:
           args: |
             $BUILD_ARGS \
@@ -168,6 +220,17 @@ jobs:
             --generic ${{ needs.init.outputs.version }}
         env:
           CAS_API_KEY: ${{ secrets.CAS_TOKEN }}
+
+      - name: Archive translations
+        shell: bash
+        run: find ./homeassistant/components/*/translations -name "*.json" | tar zcvf translations.tar.gz -T -
+
+      - name: Upload translations
+        uses: actions/upload-artifact@v3
+        with:
+          name: translations
+          path: translations.tar.gz
+          if-no-files-found: error
 
   build_machine:
     name: Build ${{ matrix.machine }} machine core image
@@ -182,6 +245,7 @@ jobs:
           - khadas-vim3
           - odroid-c2
           - odroid-c4
+          - odroid-m1
           - odroid-n2
           - odroid-xu
           - qemuarm
@@ -198,7 +262,7 @@ jobs:
           - yellow
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v3.2.0
+        uses: actions/checkout@v3.5.3
 
       - name: Set build additional args
         run: |
@@ -212,20 +276,20 @@ jobs:
           fi
 
       - name: Login to DockerHub
-        uses: docker/login-action@v2.1.0
+        uses: docker/login-action@v2.2.0
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Login to GitHub Container Registry
-        uses: docker/login-action@v2.1.0
+        uses: docker/login-action@v2.2.0
         with:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build base image
-        uses: home-assistant/builder@2022.11.0
+        uses: home-assistant/builder@2023.06.0
         with:
           args: |
             $BUILD_ARGS \
@@ -236,12 +300,13 @@ jobs:
 
   publish_ha:
     name: Publish version files
+    environment: ${{ needs.init.outputs.channel }}
     if: github.repository_owner == 'home-assistant'
     needs: ["init", "build_machine"]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v3.2.0
+        uses: actions/checkout@v3.5.3
 
       - name: Initialize git
         uses: home-assistant/actions/helpers/git-init@master
@@ -269,6 +334,7 @@ jobs:
 
   publish_container:
     name: Publish meta container for ${{ matrix.registry }}
+    environment: ${{ needs.init.outputs.channel }}
     if: github.repository_owner == 'home-assistant'
     needs: ["init", "build_base"]
     runs-on: ubuntu-latest
@@ -280,18 +346,18 @@ jobs:
           - "homeassistant"
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v3.2.0
+        uses: actions/checkout@v3.5.3
 
       - name: Login to DockerHub
         if: matrix.registry == 'homeassistant'
-        uses: docker/login-action@v2.1.0
+        uses: docker/login-action@v2.2.0
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Login to GitHub Container Registry
         if: matrix.registry == 'ghcr.io/home-assistant'
-        uses: docker/login-action@v2.1.0
+        uses: docker/login-action@v2.2.0
         with:
           registry: ghcr.io
           username: ${{ github.repository_owner }}

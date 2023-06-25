@@ -99,7 +99,6 @@ class NINADataUpdateCoordinator(
         all_filtered_warnings: dict[str, list[Any]] = {}
 
         for region_id, raw_warnings in warnings.items():
-
             filtered_warnings: list[Any] = []
             processed_details: list[tuple[str, str]] = []
 

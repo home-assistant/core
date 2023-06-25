@@ -55,7 +55,7 @@ async def _validate_input(
         data[CONF_API_KEY],
     )
     try:
-        async with async_timeout.timeout(30):
+        async with async_timeout.timeout(15):
             await websocket_client.connect(session=async_get_clientsession(hass))
             hass.async_create_task(websocket_client.listen())
             response = await websocket_client.get_data(GetData(modules=["system"]))
@@ -116,7 +116,7 @@ class ConfigFlow(
 
     VERSION = 1
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize flow."""
         self._name: str | None = None
         self._input: dict[str, Any] = {}

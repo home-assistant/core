@@ -22,7 +22,7 @@ async def test_buttons(
     entry = entity_registry.async_get("button.amazon_fire_restart_browser")
     assert entry
     assert entry.unique_id == "abcdef-123456-restartApp"
-    assert await hass.services.async_call(
+    await hass.services.async_call(
         button.DOMAIN,
         button.SERVICE_PRESS,
         {ATTR_ENTITY_ID: "button.amazon_fire_restart_browser"},
@@ -33,7 +33,7 @@ async def test_buttons(
     entry = entity_registry.async_get("button.amazon_fire_reboot_device")
     assert entry
     assert entry.unique_id == "abcdef-123456-rebootDevice"
-    assert await hass.services.async_call(
+    await hass.services.async_call(
         button.DOMAIN,
         button.SERVICE_PRESS,
         {ATTR_ENTITY_ID: "button.amazon_fire_reboot_device"},
@@ -44,7 +44,7 @@ async def test_buttons(
     entry = entity_registry.async_get("button.amazon_fire_bring_to_foreground")
     assert entry
     assert entry.unique_id == "abcdef-123456-toForeground"
-    assert await hass.services.async_call(
+    await hass.services.async_call(
         button.DOMAIN,
         button.SERVICE_PRESS,
         {ATTR_ENTITY_ID: "button.amazon_fire_bring_to_foreground"},
@@ -55,7 +55,7 @@ async def test_buttons(
     entry = entity_registry.async_get("button.amazon_fire_send_to_background")
     assert entry
     assert entry.unique_id == "abcdef-123456-toBackground"
-    assert await hass.services.async_call(
+    await hass.services.async_call(
         button.DOMAIN,
         button.SERVICE_PRESS,
         {ATTR_ENTITY_ID: "button.amazon_fire_send_to_background"},
@@ -66,7 +66,7 @@ async def test_buttons(
     entry = entity_registry.async_get("button.amazon_fire_load_start_url")
     assert entry
     assert entry.unique_id == "abcdef-123456-loadStartUrl"
-    assert await hass.services.async_call(
+    await hass.services.async_call(
         button.DOMAIN,
         button.SERVICE_PRESS,
         {ATTR_ENTITY_ID: "button.amazon_fire_load_start_url"},

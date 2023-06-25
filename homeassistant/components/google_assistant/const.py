@@ -161,6 +161,7 @@ DEVICE_CLASS_TO_GOOGLE_TYPES = {
     (cover.DOMAIN, cover.CoverDeviceClass.GARAGE): TYPE_GARAGE,
     (cover.DOMAIN, cover.CoverDeviceClass.GATE): TYPE_GARAGE,
     (cover.DOMAIN, cover.CoverDeviceClass.SHUTTER): TYPE_SHUTTER,
+    (cover.DOMAIN, cover.CoverDeviceClass.WINDOW): TYPE_WINDOW,
     (
         humidifier.DOMAIN,
         humidifier.HumidifierDeviceClass.DEHUMIDIFIER,
@@ -185,7 +186,7 @@ STORE_GOOGLE_LOCAL_WEBHOOK_ID = "local_webhook_id"
 SOURCE_CLOUD = "cloud"
 SOURCE_LOCAL = "local"
 
-NOT_EXPOSE_LOCAL = {TYPE_ALARM, TYPE_LOCK}
+NOT_EXPOSE_LOCAL = {TYPE_ALARM, TYPE_LOCK, TYPE_THERMOSTAT}
 
 FAN_SPEEDS = {
     "5/5": ["High", "Max", "Fast", "5"],

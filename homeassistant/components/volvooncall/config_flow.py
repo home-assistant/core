@@ -106,10 +106,6 @@ class VolvoOnCallConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=user_schema, errors=errors
         )
 
-    async def async_step_import(self, import_data) -> FlowResult:
-        """Import volvooncall config from configuration.yaml."""
-        return await self.async_step_user(import_data)
-
     async def async_step_reauth(self, user_input: Mapping[str, Any]) -> FlowResult:
         """Perform reauth upon an API authentication error."""
         self._reauth_entry = self.hass.config_entries.async_get_entry(

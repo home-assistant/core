@@ -109,7 +109,7 @@ class SomaTilt(SomaEntity, CoverEntity):
 
         api_position = int(response["position"])
 
-        if "closed_upwards" in response.keys():
+        if "closed_upwards" in response:
             self.current_position = 50 + ((api_position * 50) / 100)
         else:
             self.current_position = 50 - ((api_position * 50) / 100)

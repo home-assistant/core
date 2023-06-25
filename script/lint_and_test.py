@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
-"""
-Quickly check if branch is up to PR standards.
+"""Quickly check if branch is up to PR standards.
 
 This is NOT a full CI/linting replacement, only a quick check during development.
 """
 import asyncio
 from collections import namedtuple
+from contextlib import suppress
+import itertools
 import os
 import re
 import shlex
@@ -39,7 +40,7 @@ def printc(the_color, *args):
 
 def validate_requirements_ok():
     """Validate requirements, returns True of ok."""
-    # pylint: disable=import-error,import-outside-toplevel
+    # pylint: disable-next=import-error,import-outside-toplevel
     from gen_requirements_all import main as req_main
 
     return req_main(True) == 0
@@ -115,9 +116,9 @@ async def pylint(files):
     return res
 
 
-async def flake8(files):
-    """Exec flake8."""
-    _, log = await async_exec("pre-commit", "run", "flake8", "--files", *files)
+async def ruff(files):
+    """Exec ruff."""
+    _, log = await async_exec("pre-commit", "run", "ruff", "--files", *files)
     res = []
     for line in log.splitlines():
         line = line.split(":")
@@ -131,14 +132,19 @@ async def flake8(files):
 async def lint(files):
     """Perform lint."""
     files = [file for file in files if os.path.isfile(file)]
-    fres, pres = await asyncio.gather(flake8(files), pylint(files))
-
-    res = fres + pres
-    res.sort(key=lambda item: item.file)
+    res = sorted(
+        itertools.chain(
+            *await asyncio.gather(
+                pylint(files),
+                ruff(files),
+            )
+        ),
+        key=lambda item: item.file,
+    )
     if res:
-        print("Pylint & Flake8 errors:")
+        print("Lint errors:")
     else:
-        printc(PASS, "Pylint and Flake8 passed")
+        printc(PASS, "Lint passed")
 
     lint_ok = True
     for err in res:
@@ -232,7 +238,5 @@ async def main():
 
 
 if __name__ == "__main__":
-    try:
+    with suppress(FileNotFoundError, KeyboardInterrupt):
         asyncio.run(main())
-    except (FileNotFoundError, KeyboardInterrupt):
-        pass

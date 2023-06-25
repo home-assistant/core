@@ -18,12 +18,14 @@ from soco.exceptions import SoCoException, SoCoUPnPException
 from soco.plugins.plex import PlexPlugin
 from soco.plugins.sharelink import ShareLinkPlugin
 from soco.snapshot import Snapshot
+from sonos_websocket import SonosWebsocket
 
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_registry as ent_reg
+from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
@@ -69,15 +71,15 @@ EVENT_CHARGING = {
     "CHARGING": True,
     "NOT_CHARGING": False,
 }
-SUBSCRIPTION_SERVICES = [
+SUBSCRIPTION_SERVICES = {
     "alarmClock",
     "avTransport",
     "contentDirectory",
     "deviceProperties",
     "renderingControl",
     "zoneGroupTopology",
-]
-SUPPORTED_VANISH_REASONS = ("sleeping", "switch to bluetooth", "upgrade")
+}
+SUPPORTED_VANISH_REASONS = ("powered off", "sleeping", "switch to bluetooth", "upgrade")
 UNUSED_DEVICE_KEYS = ["SPID", "TargetRoomName"]
 
 
@@ -88,11 +90,16 @@ class SonosSpeaker:
     """Representation of a Sonos speaker."""
 
     def __init__(
-        self, hass: HomeAssistant, soco: SoCo, speaker_info: dict[str, Any]
+        self,
+        hass: HomeAssistant,
+        soco: SoCo,
+        speaker_info: dict[str, Any],
+        zone_group_state_sub: SubscriptionBase | None,
     ) -> None:
         """Initialize a SonosSpeaker."""
         self.hass = hass
         self.soco = soco
+        self.websocket: SonosWebsocket | None = None
         self.household_id: str = soco.household_id
         self.media = SonosMedia(hass, soco)
         self._plex_plugin: PlexPlugin | None = None
@@ -112,6 +119,9 @@ class SonosSpeaker:
         # Subscriptions and events
         self.subscriptions_failed: bool = False
         self._subscriptions: list[SubscriptionBase] = []
+        if zone_group_state_sub:
+            zone_group_state_sub.callback = self.async_dispatch_event
+            self._subscriptions.append(zone_group_state_sub)
         self._subscription_lock: asyncio.Lock | None = None
         self._event_dispatchers: dict[str, Callable] = {}
         self._last_activity: float = NEVER_TIME
@@ -135,6 +145,7 @@ class SonosSpeaker:
         self.volume: int | None = None
         self.muted: bool | None = None
         self.cross_fade: bool | None = None
+        self.balance: tuple[int, int] | None = None
         self.bass: int | None = None
         self.treble: int | None = None
         self.loudness: bool | None = None
@@ -163,8 +174,13 @@ class SonosSpeaker:
         self.snapshot_group: list[SonosSpeaker] = []
         self._group_members_missing: set[str] = set()
 
-    async def async_setup_dispatchers(self, entry: ConfigEntry) -> None:
-        """Connect dispatchers in async context during setup."""
+    async def async_setup(self, entry: ConfigEntry) -> None:
+        """Complete setup in async context."""
+        self.websocket = SonosWebsocket(
+            self.soco.ip_address,
+            player_id=self.soco.uid,
+            session=async_get_clientsession(self.hass),
+        )
         dispatch_pairs: tuple[tuple[str, Callable[..., Any]], ...] = (
             (SONOS_CHECK_ACTIVITY, self.async_check_activity),
             (SONOS_SPEAKER_ADDED, self.update_group_for_uid),
@@ -173,7 +189,7 @@ class SonosSpeaker:
             (f"{SONOS_VANISHED}-{self.soco.uid}", self.async_vanished),
         )
 
-        for (signal, target) in dispatch_pairs:
+        for signal, target in dispatch_pairs:
             entry.async_on_unload(
                 async_dispatcher_connect(
                     self.hass,
@@ -191,7 +207,7 @@ class SonosSpeaker:
             self.media.poll_media()
 
         future = asyncio.run_coroutine_threadsafe(
-            self.async_setup_dispatchers(entry), self.hass.loop
+            self.async_setup(entry), self.hass.loop
         )
         future.result(timeout=10)
 
@@ -289,6 +305,12 @@ class SonosSpeaker:
         addr, port = self._subscriptions[0].event_listener.address
         return ":".join([addr, str(port)])
 
+    @property
+    def missing_subscriptions(self) -> set[str]:
+        """Return a list of missing service subscriptions."""
+        subscribed_services = {sub.service.service_type for sub in self._subscriptions}
+        return SUBSCRIPTION_SERVICES - subscribed_services
+
     #
     # Subscription handling and event dispatchers
     #
@@ -321,8 +343,6 @@ class SonosSpeaker:
             self._subscription_lock = asyncio.Lock()
 
         async with self._subscription_lock:
-            if self._subscriptions:
-                return
             try:
                 await self._async_subscribe()
             except SonosSubscriptionsFailed:
@@ -331,12 +351,14 @@ class SonosSpeaker:
 
     async def _async_subscribe(self) -> None:
         """Create event subscriptions."""
-        _LOGGER.debug("Creating subscriptions for %s", self.zone_name)
-
         subscriptions = [
             self._subscribe(getattr(self.soco, service), self.async_dispatch_event)
-            for service in SUBSCRIPTION_SERVICES
+            for service in self.missing_subscriptions
         ]
+        if not subscriptions:
+            return
+
+        _LOGGER.debug("Creating subscriptions for %s", self.zone_name)
         results = await asyncio.gather(*subscriptions, return_exceptions=True)
         for result in results:
             self.log_subscription_result(
@@ -346,7 +368,8 @@ class SonosSpeaker:
         if any(isinstance(result, Exception) for result in results):
             raise SonosSubscriptionsFailed
 
-        # Create a polling task in case subscriptions fail or callback events do not arrive
+        # Create a polling task in case subscriptions fail
+        # or callback events do not arrive
         if not self._poll_timer:
             self._poll_timer = async_track_time_interval(
                 self.hass,
@@ -514,7 +537,10 @@ class SonosSpeaker:
         variables = event.variables
 
         if "volume" in variables:
-            self.volume = int(variables["volume"]["Master"])
+            volume = variables["volume"]
+            self.volume = int(volume["Master"])
+            if "LF" in volume and "RF" in volume:
+                self.balance = (int(volume["LF"]), int(volume["RF"]))
 
         if "mute" in variables:
             self.muted = variables["mute"]["Master"] == "1"
@@ -577,13 +603,20 @@ class SonosSpeaker:
             self.async_write_entity_states()
             self.hass.async_create_task(self.async_subscribe())
 
-    async def async_check_activity(self, now: datetime.datetime) -> None:
+    @callback
+    def async_check_activity(self, now: datetime.datetime) -> None:
         """Validate availability of the speaker based on recent activity."""
         if not self.available:
             return
         if time.monotonic() - self._last_activity < AVAILABILITY_TIMEOUT:
             return
+        # Ensure the ping is canceled at shutdown
+        self.hass.async_create_background_task(
+            self._async_check_activity(), f"sonos {self.uid} {self.zone_name} ping"
+        )
 
+    async def _async_check_activity(self) -> None:
+        """Validate availability of the speaker based on recent activity."""
         try:
             await self.hass.async_add_executor_job(self.ping)
         except SonosUpdateError:
@@ -823,7 +856,7 @@ class SonosSpeaker:
                 # Skip updating existing single speakers in polling mode
                 return
 
-            entity_registry = ent_reg.async_get(self.hass)
+            entity_registry = er.async_get(self.hass)
             sonos_group = []
             sonos_group_entities = []
 

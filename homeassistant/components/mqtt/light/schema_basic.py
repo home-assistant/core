@@ -34,7 +34,6 @@ from homeassistant.const import (
     CONF_OPTIMISTIC,
     CONF_PAYLOAD_OFF,
     CONF_PAYLOAD_ON,
-    CONF_VALUE_TEMPLATE,
     STATE_ON,
 )
 from homeassistant.core import HomeAssistant, callback
@@ -112,10 +111,6 @@ CONF_XY_STATE_TOPIC = "xy_state_topic"
 CONF_XY_VALUE_TEMPLATE = "xy_value_template"
 CONF_WHITE_COMMAND_TOPIC = "white_command_topic"
 CONF_WHITE_SCALE = "white_scale"
-CONF_WHITE_VALUE_COMMAND_TOPIC = "white_value_command_topic"
-CONF_WHITE_VALUE_SCALE = "white_value_scale"
-CONF_WHITE_VALUE_STATE_TOPIC = "white_value_state_topic"
-CONF_WHITE_VALUE_TEMPLATE = "white_value_template"
 CONF_ON_COMMAND_TYPE = "on_command_type"
 
 MQTT_LIGHT_ATTRIBUTES_BLOCKED = frozenset(
@@ -168,7 +163,7 @@ VALUE_TEMPLATE_KEYS = [
     CONF_XY_VALUE_TEMPLATE,
 ]
 
-_PLATFORM_SCHEMA_BASE = (
+PLATFORM_SCHEMA_MODERN_BASIC = (
     MQTT_RW_SCHEMA.extend(
         {
             vol.Optional(CONF_BRIGHTNESS_COMMAND_TEMPLATE): cv.template,
@@ -228,31 +223,8 @@ _PLATFORM_SCHEMA_BASE = (
     .extend(MQTT_LIGHT_SCHEMA_SCHEMA.schema)
 )
 
-# The use of PLATFORM_SCHEMA was deprecated in HA Core 2022.6
-PLATFORM_SCHEMA_BASIC = vol.All(
-    cv.PLATFORM_SCHEMA.extend(_PLATFORM_SCHEMA_BASE.schema),
-)
-
 DISCOVERY_SCHEMA_BASIC = vol.All(
-    # CONF_VALUE_TEMPLATE is no longer supported, support was removed in 2022.2
-    cv.removed(CONF_VALUE_TEMPLATE),
-    # CONF_WHITE_VALUE_* is no longer supported, support was removed in 2022.9
-    cv.removed(CONF_WHITE_VALUE_COMMAND_TOPIC),
-    cv.removed(CONF_WHITE_VALUE_SCALE),
-    cv.removed(CONF_WHITE_VALUE_STATE_TOPIC),
-    cv.removed(CONF_WHITE_VALUE_TEMPLATE),
-    _PLATFORM_SCHEMA_BASE.extend({}, extra=vol.REMOVE_EXTRA),
-)
-
-PLATFORM_SCHEMA_MODERN_BASIC = vol.All(
-    # CONF_VALUE_TEMPLATE is no longer supported, support was removed in 2022.2
-    cv.removed(CONF_VALUE_TEMPLATE),
-    # CONF_WHITE_VALUE_* is no longer supported, support was removed in 2022.9
-    cv.removed(CONF_WHITE_VALUE_COMMAND_TOPIC),
-    cv.removed(CONF_WHITE_VALUE_SCALE),
-    cv.removed(CONF_WHITE_VALUE_STATE_TOPIC),
-    cv.removed(CONF_WHITE_VALUE_TEMPLATE),
-    _PLATFORM_SCHEMA_BASE,
+    PLATFORM_SCHEMA_MODERN_BASIC.extend({}, extra=vol.REMOVE_EXTRA),
 )
 
 
@@ -311,9 +283,6 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
         self._attr_min_mireds = config.get(CONF_MIN_MIREDS, super().min_mireds)
         self._attr_max_mireds = config.get(CONF_MAX_MIREDS, super().max_mireds)
         self._attr_effect_list = config.get(CONF_EFFECT_LIST)
-
-        if CONF_STATE_VALUE_TEMPLATE not in config and CONF_VALUE_TEMPLATE in config:
-            config[CONF_STATE_VALUE_TEMPLATE] = config[CONF_VALUE_TEMPLATE]
 
         topic: dict[str, str | None] = {
             key: config.get(key)
@@ -481,6 +450,10 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
                 return
 
             device_value = float(payload)
+            if device_value == 0:
+                _LOGGER.debug("Ignoring zero brightness from '%s'", msg.topic)
+                return
+
             percent_bright = device_value / self._config[CONF_BRIGHTNESS_SCALE]
             self._attr_brightness = min(round(percent_bright * 255), 255)
 
@@ -508,8 +481,12 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
                 self._attr_color_mode = color_mode
             if self._topic[CONF_BRIGHTNESS_STATE_TOPIC] is None:
                 rgb = convert_color(*color)
-                percent_bright = float(color_util.color_RGB_to_hsv(*rgb)[2]) / 100.0
-                self._attr_brightness = min(round(percent_bright * 255), 255)
+                brightness = max(rgb)
+                self._attr_brightness = brightness
+                # Normalize the color to 100% brightness
+                color = tuple(
+                    min(round(channel / brightness * 255), 255) for channel in color
+                )
             return color
 
         @callback
