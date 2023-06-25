@@ -241,7 +241,7 @@ async def async_setup_entry(  # noqa: C901
                 severity=IssueSeverity.WARNING,
                 translation_key="service_calls_not_allowed",
                 translation_placeholders={
-                    "name": device_info.name,
+                    "name": device_info.friendly_name or device_info.name,
                 },
             )
             _LOGGER.error(
