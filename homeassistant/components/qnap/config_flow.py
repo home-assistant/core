@@ -95,5 +95,5 @@ class QnapConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user",
             data_schema=self.add_suggested_values_to_schema(DATA_SCHEMA, user_input),
-            errors=errors
+            errors=errors,
         )
