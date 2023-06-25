@@ -74,6 +74,20 @@ class AirzoneAidooEntity(AirzoneEntity):
             value = aidoo.get(key)
         return value
 
+    async def _async_update_params(self, params: dict[str, Any]) -> None:
+        """Send Aidoo parameters to Cloud API."""
+        _LOGGER.debug("aidoo=%s: update_params=%s", self.name, params)
+        try:
+            await self.coordinator.airzone.api_set_aidoo_id_params(
+                self.aidoo_id, params
+            )
+        except AirzoneCloudError as error:
+            raise HomeAssistantError(
+                f"Failed to set {self.name} params: {error}"
+            ) from error
+
+        self.coordinator.async_set_updated_data(self.coordinator.airzone.data())
+
 
 class AirzoneSystemEntity(AirzoneEntity):
     """Define an Airzone Cloud System entity."""
