@@ -40,3 +40,4 @@ EVENT_TIME_FIELDS = {
     EVENT_IN,
 }
 EVENT_TYPES = "event_types"
+EVENT_DURATION = "duration"

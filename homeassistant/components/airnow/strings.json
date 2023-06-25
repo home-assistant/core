@@ -20,5 +20,12 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
+  },
+  "entity": {
+    "sensor": {
+      "o3": {
+        "name": "[%key:component::sensor::entity_component::ozone::name%]"
+      }
+    }
   }
 }
