@@ -60,4 +60,4 @@ class CCM15SlaveDevice:
 class CCM15DeviceState:
     """Data retrieved from a CCM15 device."""
 
-    devices: list[CCM15SlaveDevice]
+    devices: dict[int, CCM15SlaveDevice]

@@ -63,11 +63,11 @@ class CCM15Coordinator(DataUpdateCoordinator[CCM15DeviceState]):
         )
         self._host = host
         self._port = port
-        self._ac_devices: list[CCM15Climate] = []
+        self._ac_devices: dict[int, CCM15Climate] = {}
 
     def get_devices(self):
         """Get all climate devices from the coordinator."""
-        return self._ac_devices
+        return self._ac_devices.values()
 
     async def _async_update_data(self) -> CCM15DeviceState:
         """Fetch data from Rain Bird device."""
@@ -85,8 +85,8 @@ class CCM15Coordinator(DataUpdateCoordinator[CCM15DeviceState]):
         doc = xmltodict.parse(response.text)
         data = doc["response"]
         _LOGGER.debug("Found %s items in host %s", len(data.items()), self._host)
+        ac_data = CCM15DeviceState(devices={})
         ac_index = 0
-        ac_data = CCM15DeviceState(devices=[])
         for ac_name, ac_binary in data.items():
             _LOGGER.debug("Found ac_name:'%s', data:'%s'", ac_name, ac_binary)
             if ac_binary == "-":
@@ -94,14 +94,13 @@ class CCM15Coordinator(DataUpdateCoordinator[CCM15DeviceState]):
             bytesarr = bytes.fromhex(ac_binary.strip(","))
             ac_slave = CCM15SlaveDevice(bytesarr)
             _LOGGER.debug("Index: %s, state:'%s'", ac_index, ac_slave)
-            if len(self._ac_devices) == ac_index:
-                _LOGGER.debug("Creating new ac device at index '%s'", ac_index)
-                self._ac_devices.insert(
-                    ac_index, CCM15Climate(self._host, ac_index, self)
-                )
-            ac_data.devices.insert(ac_index, ac_slave)
+            ac_data.devices[ac_index] = ac_slave
             ac_index += 1
         _LOGGER.debug("Found data '%s'", ac_data.devices)
+        if len(self._ac_devices) == 0:
+            for ac_index in ac_data.devices:
+                _LOGGER.debug("Creating new ac device at index '%s'", ac_index)
+                self._ac_devices[ac_index] = CCM15Climate(self._host, ac_index, self)
         return ac_data
 
     async def async_test_connection(self):
