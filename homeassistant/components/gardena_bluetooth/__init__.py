@@ -62,15 +62,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 manufacturer=manufacturer,
                 model=model,
             )
-    except asyncio.TimeoutError as exception:
-        raise ConfigEntryNotReady("Unable to connect to device") from exception
-    except DeviceUnavailable as exception:
+    except (asyncio.TimeoutError, DeviceUnavailable, BleakError) as exception:
         raise ConfigEntryNotReady(
-            f"Could not find Gardena Device with address {address}"
-        ) from exception
-    except BleakError as exception:
-        raise ConfigEntryNotReady(
-            f"Connection to Gardena Device with address {address} failed {exception}"
+            f"Unable to connect to device {address} due to {exception}"
         ) from exception
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
