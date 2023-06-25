@@ -313,13 +313,14 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
         dev_info = self.atv.device_info
+        raw_model = dev_info.raw_model
+        is_unknown = dev_info.model == DeviceModel.Unknown and raw_model
+        model_type = raw_model if is_unknown else model_str(dev_info.model)
+        if model_type.startswith("Mac"):
+            raise AbortFlow("device_not_supported")
         self.context["title_placeholders"] = {
             "name": self.atv.name,
-            "type": (
-                dev_info.raw_model
-                if dev_info.model == DeviceModel.Unknown and dev_info.raw_model
-                else model_str(dev_info.model)
-            ),
+            "type": model_type,
         }
         all_identifiers = set(self.atv.all_identifiers)
         discovered_ip_address = str(self.atv.address)

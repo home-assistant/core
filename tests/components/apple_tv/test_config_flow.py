@@ -41,6 +41,16 @@ RAOP_SERVICE = zeroconf.ZeroconfServiceInfo(
     properties={"am": "AppleTV11,1"},
 )
 
+MAC_RAOP_SERVICE = zeroconf.ZeroconfServiceInfo(
+    host="127.0.0.1",
+    addresses=["127.0.0.1"],
+    hostname="mock_hostname",
+    port=None,
+    type="_raop._tcp.local.",
+    name="AABBCCDDEEFF@MacbookAir._raop._tcp.local.",
+    properties={"am": "Mac14,9"},
+)
+
 
 @pytest.fixture(autouse=True)
 def zero_aggregation_time():

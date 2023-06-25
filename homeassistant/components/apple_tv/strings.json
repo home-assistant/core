@@ -57,6 +57,7 @@
       "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
       "unknown": "[%key:common::config_flow::error::unknown%]",
       "setup_failed": "Failed to set up device.",
+      "device_not_supported": "Device is not supported.",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "device_not_found": "Device was not found during discovery, please try adding it again.",
       "inconsistent_device": "Expected protocols were not found during discovery. This normally indicates a problem with multicast DNS (Zeroconf). Please try adding the device again."
