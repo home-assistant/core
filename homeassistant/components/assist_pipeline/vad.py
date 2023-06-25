@@ -1,9 +1,33 @@
 """Voice activity detection."""
+from __future__ import annotations
+
 from dataclasses import dataclass, field
 
 import webrtcvad
 
+from homeassistant.backports.enum import StrEnum
+
 _SAMPLE_RATE = 16000
+
+
+class VadSensitivity(StrEnum):
+    """How quickly the end of a voice command is detected."""
+
+    DEFAULT = "default"
+    RELAXED = "relaxed"
+    AGGRESSIVE = "aggressive"
+
+    @staticmethod
+    def to_seconds(sensitivity: VadSensitivity | str) -> float:
+        """Return seconds of silence for sensitivity level."""
+        sensitivity = VadSensitivity(sensitivity)
+        if sensitivity == VadSensitivity.RELAXED:
+            return 2.0
+
+        if sensitivity == VadSensitivity.AGGRESSIVE:
+            return 0.5
+
+        return 1.0
 
 
 @dataclass

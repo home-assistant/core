@@ -512,6 +512,8 @@ class PipelineRun:
                     "engine": self.intent_agent,
                     "language": self.pipeline.conversation_language,
                     "intent_input": intent_input,
+                    "conversation_id": conversation_id,
+                    "device_id": device_id,
                 },
             )
         )

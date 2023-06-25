@@ -312,7 +312,6 @@ omit =
     homeassistant/components/esphome/domain_data.py
     homeassistant/components/esphome/entry_data.py
     homeassistant/components/esphome/light.py
-    homeassistant/components/esphome/lock.py
     homeassistant/components/esphome/number.py
     homeassistant/components/esphome/switch.py
     homeassistant/components/etherscan/sensor.py
