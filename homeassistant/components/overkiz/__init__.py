@@ -42,7 +42,6 @@ from .const import (
     PLATFORMS,
     UPDATE_INTERVAL,
     UPDATE_INTERVAL_ALL_ASSUMED_STATE,
-    UPDATE_INTERVAL_LOCAL,
 )
 from .coordinator import OverkizDataUpdateCoordinator
 
@@ -134,9 +133,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             UPDATE_INTERVAL_ALL_ASSUMED_STATE,
         )
         coordinator.update_interval = UPDATE_INTERVAL_ALL_ASSUMED_STATE
-
-    if entry.data[CONF_API_TYPE] == "local":
-        coordinator.update_interval = UPDATE_INTERVAL_LOCAL
 
     platforms: defaultdict[Platform, list[Device]] = defaultdict(list)
 
