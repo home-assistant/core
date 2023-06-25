@@ -6,7 +6,7 @@ from contextlib import suppress
 from datetime import timedelta
 import logging
 import re
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import async_timeout
 from icmplib import NameLookupError, async_ping
@@ -248,8 +248,8 @@ class PingDataSubProcess(PingData):
                 match = PING_MATCHER_BUSYBOX.search(
                     str(out_data).rsplit("\n", maxsplit=1)[-1]
                 )
-                if match is None:
-                    return None
+                if TYPE_CHECKING:
+                    assert match is not None
                 rtt_min, rtt_avg, rtt_max = match.groups()
                 return {"min": rtt_min, "avg": rtt_avg, "max": rtt_max, "mdev": ""}
             match = PING_MATCHER.search(str(out_data).rsplit("\n", maxsplit=1)[-1])
