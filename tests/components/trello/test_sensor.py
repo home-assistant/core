@@ -42,6 +42,8 @@ async def test_sensor_setup_entry(hass: HomeAssistant) -> None:
             mock_add_entities.call_args[0][0], expected_trello_sensors
         ):
             assert actual.native_value == expected.native_value
+            assert actual.name == expected.name
+            assert actual.available == expected.available
             assert actual.board == expected.board
             assert actual.list_id == expected.list_id
             assert actual.coordinator == expected.coordinator

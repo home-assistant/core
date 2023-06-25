@@ -6,7 +6,7 @@ from trello import TrelloClient
 from homeassistant.components.sensor import SensorEntity, SensorStateClass
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -38,16 +38,24 @@ class TrelloSensor(CoordinatorEntity[TrelloDataUpdateCoordinator], SensorEntity)
         self._attr_has_entity_name = True
 
     @property
-    def native_value(self) -> int | None:
-        """Return the card count of the sensor's list."""
+    def available(self) -> bool:
+        """Determine if sensor is available."""
         board = self.coordinator.data[self.board.id]
         list_id = board.lists.get(self.list_id)
-        if not board.lists and not list_id:
-            self._attr_available = False
-            return None
+        return bool(board.lists and list_id)
 
-        self._attr_name = board.lists[self.list_id].name
+    @property
+    def native_value(self) -> int | None:
+        """Return the card count of the sensor's list."""
         return self.coordinator.data[self.board.id].lists[self.list_id].card_count
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        if self.available:
+            board = self.coordinator.data[self.board.id]
+            self._attr_name = board.lists[self.list_id].name
+            self.async_write_ha_state()
+        super()._handle_coordinator_update()
 
     @property
     def device_info(self) -> DeviceInfo:
