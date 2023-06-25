@@ -81,7 +81,7 @@
     },
     "service_calls_not_allowed": {
       "title": "{name} is not permitted to call Home Assistant services",
-      "description": "The ESPHome device attempted to make a Home Assistant service call, but this functionality is not enabled.\n\nIf you trust this device and want to allow access for it to make arbitrary Home Assistant service calls, you can enable this functionality in the options flow."
+      "description": "The ESPHome device attempted to make a Home Assistant service call, but this functionality is not enabled.\n\nIf you trust this device and want to allow access for it to make Home Assistant service calls, you can enable this functionality in the options flow."
     }
   }
 }
