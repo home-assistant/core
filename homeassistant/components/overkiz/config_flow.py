@@ -12,6 +12,7 @@ from pyoverkiz.exceptions import (
     CozyTouchBadCredentialsException,
     OverkizException,
     MaintenanceException,
+    NotSuchTokenException,
     TooManyAttemptsBannedException,
     TooManyRequestsException,
     UnknownUserException,
@@ -314,6 +315,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "server_in_maintenance"
             except TooManyAttemptsBannedException:
                 errors["base"] = "too_many_attempts"
+            except NotSuchTokenException:
+                errors["base"] = "not_such_token"
             except Exception as exception:  # pylint: disable=broad-except
                 errors["base"] = "unknown"
                 LOGGER.exception(exception)
