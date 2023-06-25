@@ -87,6 +87,7 @@ class RuntimeEntryData:
 
     services: dict[int, UserService] = field(default_factory=dict)
     available: bool = False
+    expected_disconnect: bool = False  # Last disconnect was expected (e.g. deep sleep)
     device_info: DeviceInfo | None = None
     api_version: APIVersion = field(default_factory=APIVersion)
     cleanup_callbacks: list[Callable[[], None]] = field(default_factory=list)
