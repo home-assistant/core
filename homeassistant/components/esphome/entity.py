@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from collections.abc import Callable
 import functools
-import logging
 import math
 from typing import (  # pylint: disable=unused-import
     Any,
@@ -42,8 +41,6 @@ _R = TypeVar("_R")
 _InfoT = TypeVar("_InfoT", bound=EntityInfo)
 _EntityT = TypeVar("_EntityT", bound="EsphomeEntity[Any,Any]")
 _StateT = TypeVar("_StateT", bound=EntityState)
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def platform_async_setup_entry(
