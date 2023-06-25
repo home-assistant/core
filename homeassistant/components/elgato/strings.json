@@ -26,15 +26,9 @@
     "button": {
       "identify": {
         "name": "Identify"
-      },
-      "restart": {
-        "name": "[%key:component::button::entity_component::restart::name%]"
       }
     },
     "sensor": {
-      "battery": {
-        "name": "[%key:component::sensor::entity_component::battery::name%]"
-      },
       "charge_power": {
         "name": "Charging power"
       },
