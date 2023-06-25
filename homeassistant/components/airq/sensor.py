@@ -109,7 +109,6 @@ SENSOR_TYPES: list[AirQEntityDescription] = [
     ),
     AirQEntityDescription(
         key="co2",
-        translation_key="carbon_dioxide",
         device_class=SensorDeviceClass.CO2,
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
         state_class=SensorStateClass.MEASUREMENT,
@@ -196,7 +195,6 @@ SENSOR_TYPES: list[AirQEntityDescription] = [
     ),
     AirQEntityDescription(
         key="humidity",
-        translation_key="humidity",
         device_class=SensorDeviceClass.HUMIDITY,
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -233,7 +231,6 @@ SENSOR_TYPES: list[AirQEntityDescription] = [
     ),
     AirQEntityDescription(
         key="n2o",
-        translation_key="nitrous_oxide",
         device_class=SensorDeviceClass.NITROUS_OXIDE,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
@@ -241,7 +238,6 @@ SENSOR_TYPES: list[AirQEntityDescription] = [
     ),
     AirQEntityDescription(
         key="no_M250",
-        translation_key="nitrogen_monoxide",
         device_class=SensorDeviceClass.NITROGEN_MONOXIDE,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
@@ -249,7 +245,6 @@ SENSOR_TYPES: list[AirQEntityDescription] = [
     ),
     AirQEntityDescription(
         key="no2",
-        translation_key="nitrogen_dioxide",
         device_class=SensorDeviceClass.NITROGEN_DIOXIDE,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
@@ -272,7 +267,6 @@ SENSOR_TYPES: list[AirQEntityDescription] = [
     ),
     AirQEntityDescription(
         key="o3",
-        translation_key="ozone",
         device_class=SensorDeviceClass.OZONE,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
@@ -295,7 +289,6 @@ SENSOR_TYPES: list[AirQEntityDescription] = [
     ),
     AirQEntityDescription(
         key="pm1",
-        translation_key="pm1",
         device_class=SensorDeviceClass.PM1,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
@@ -304,7 +297,6 @@ SENSOR_TYPES: list[AirQEntityDescription] = [
     ),
     AirQEntityDescription(
         key="pm2_5",
-        translation_key="pm25",
         device_class=SensorDeviceClass.PM25,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
@@ -313,7 +305,6 @@ SENSOR_TYPES: list[AirQEntityDescription] = [
     ),
     AirQEntityDescription(
         key="pm10",
-        translation_key="pm10",
         device_class=SensorDeviceClass.PM10,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
@@ -322,7 +313,6 @@ SENSOR_TYPES: list[AirQEntityDescription] = [
     ),
     AirQEntityDescription(
         key="pressure",
-        translation_key="pressure",
         device_class=SensorDeviceClass.PRESSURE,
         native_unit_of_measurement=UnitOfPressure.HPA,
         state_class=SensorStateClass.MEASUREMENT,
@@ -359,7 +349,6 @@ SENSOR_TYPES: list[AirQEntityDescription] = [
     ),
     AirQEntityDescription(
         key="so2",
-        translation_key="sulphur_dioxide",
         device_class=SensorDeviceClass.SULPHUR_DIOXIDE,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
@@ -391,7 +380,6 @@ SENSOR_TYPES: list[AirQEntityDescription] = [
     ),
     AirQEntityDescription(
         key="temperature",
-        translation_key="temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
@@ -399,7 +387,7 @@ SENSOR_TYPES: list[AirQEntityDescription] = [
     ),
     AirQEntityDescription(
         key="tvoc",
-        translation_key="volatile_organic_compounds",
+        device_class=SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS_PARTS,
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_BILLION,
         state_class=SensorStateClass.MEASUREMENT,
         value=lambda data: data.get("tvoc"),
@@ -407,6 +395,7 @@ SENSOR_TYPES: list[AirQEntityDescription] = [
     AirQEntityDescription(
         key="tvoc_ionsc",
         translation_key="industrial_volatile_organic_compounds",
+        device_class=SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS_PARTS,
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_BILLION,
         state_class=SensorStateClass.MEASUREMENT,
         value=lambda data: data.get("tvoc_ionsc"),

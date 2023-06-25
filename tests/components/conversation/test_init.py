@@ -12,6 +12,7 @@ from homeassistant.components.cover import SERVICE_OPEN_COVER
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.const import ATTR_FRIENDLY_NAME
 from homeassistant.core import Context, HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
     area_registry as ar,
     device_registry as dr,
@@ -873,7 +874,7 @@ async def test_http_processing_intent_conversion_not_expose_new(
 @pytest.mark.parametrize("agent_id", AGENT_ID_OPTIONS)
 @pytest.mark.parametrize("sentence", ("turn on kitchen", "turn kitchen on"))
 async def test_turn_on_intent(
-    hass: HomeAssistant, init_components, sentence, agent_id
+    hass: HomeAssistant, init_components, sentence, agent_id, snapshot
 ) -> None:
     """Test calling the turn on intent."""
     hass.states.async_set("light.kitchen", "off")
@@ -882,14 +883,35 @@ async def test_turn_on_intent(
     data = {conversation.ATTR_TEXT: sentence}
     if agent_id is not None:
         data[conversation.ATTR_AGENT_ID] = agent_id
-    await hass.services.async_call("conversation", "process", data)
-    await hass.async_block_till_done()
+    result = await hass.services.async_call(
+        "conversation",
+        "process",
+        data,
+        blocking=True,
+        return_response=True,
+    )
 
     assert len(calls) == 1
     call = calls[0]
     assert call.domain == LIGHT_DOMAIN
     assert call.service == "turn_on"
     assert call.data == {"entity_id": ["light.kitchen"]}
+
+    assert result == snapshot
+
+
+async def test_service_fails(hass: HomeAssistant, init_components) -> None:
+    """Test calling the turn on intent."""
+    with pytest.raises(HomeAssistantError), patch(
+        "homeassistant.components.conversation.async_converse",
+        side_effect=intent.IntentHandleError,
+    ):
+        await hass.services.async_call(
+            "conversation",
+            "process",
+            {"text": "bla"},
+            blocking=True,
+        )
 
 
 @pytest.mark.parametrize("sentence", ("turn off kitchen", "turn kitchen off"))
@@ -1626,3 +1648,43 @@ async def test_ws_get_agent_info(
     msg = await client.receive_json()
     assert not msg["success"]
     assert msg["error"] == snapshot
+
+
+async def test_ws_hass_agent_debug(
+    hass: HomeAssistant,
+    init_components,
+    hass_ws_client: WebSocketGenerator,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test homeassistant agent debug websocket command."""
+    client = await hass_ws_client(hass)
+
+    entity_registry.async_get_or_create(
+        "light", "demo", "1234", suggested_object_id="kitchen"
+    )
+    entity_registry.async_update_entity("light.kitchen", aliases={"my cool light"})
+    hass.states.async_set("light.kitchen", "off")
+
+    on_calls = async_mock_service(hass, LIGHT_DOMAIN, "turn_on")
+    off_calls = async_mock_service(hass, LIGHT_DOMAIN, "turn_off")
+
+    await client.send_json_auto_id(
+        {
+            "type": "conversation/agent/homeassistant/debug",
+            "sentences": [
+                "turn on my cool light",
+                "turn my cool light off",
+                "this will not match anything",  # null in results
+            ],
+        }
+    )
+
+    msg = await client.receive_json()
+
+    assert msg["success"]
+    assert msg["result"] == snapshot
+
+    # Light state should not have been changed
+    assert len(on_calls) == 0
+    assert len(off_calls) == 0

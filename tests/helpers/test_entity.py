@@ -1,8 +1,10 @@
 """Test the entity helper."""
 import asyncio
+from collections.abc import Iterable
 import dataclasses
 from datetime import timedelta
 import threading
+from typing import Any
 from unittest.mock import MagicMock, PropertyMock, patch
 
 import pytest
@@ -953,8 +955,6 @@ async def _test_friendly_name(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     ent: entity.Entity,
-    has_entity_name: bool,
-    entity_name: str | None,
     expected_friendly_name: str | None,
     warn_implicit_name: bool,
 ) -> None:
@@ -1017,8 +1017,6 @@ async def test_friendly_name_attr(
         hass,
         caplog,
         ent,
-        has_entity_name,
-        entity_name,
         expected_friendly_name,
         warn_implicit_name,
     )
@@ -1060,11 +1058,76 @@ async def test_friendly_name_description(
         hass,
         caplog,
         ent,
-        has_entity_name,
-        entity_name,
         expected_friendly_name,
         warn_implicit_name,
     )
+
+
+@pytest.mark.parametrize(
+    ("has_entity_name", "entity_name", "expected_friendly_name", "warn_implicit_name"),
+    (
+        (False, "Entity Blu", "Entity Blu", False),
+        (False, None, None, False),
+        (False, UNDEFINED, None, False),
+        (True, "Entity Blu", "Device Bla Entity Blu", False),
+        (True, None, "Device Bla", False),
+        (True, UNDEFINED, "Device Bla English cls", False),
+    ),
+)
+async def test_friendly_name_description_device_class_name(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    has_entity_name: bool,
+    entity_name: str | None,
+    expected_friendly_name: str | None,
+    warn_implicit_name: bool,
+) -> None:
+    """Test friendly name when the entity has an entity description."""
+
+    translations = {
+        "en": {"component.test_domain.entity_component.test_class.name": "English cls"},
+    }
+
+    async def async_get_translations(
+        hass: HomeAssistant,
+        language: str,
+        category: str,
+        integrations: Iterable[str] | None = None,
+        config_flow: bool | None = None,
+    ) -> dict[str, Any]:
+        """Return all backend translations."""
+        return translations[language]
+
+    class DeviceClassNameMockEntity(MockEntity):
+        def _default_to_device_class_name(self) -> bool:
+            """Return True if an unnamed entity should be named by its device class."""
+            return True
+
+    ent = DeviceClassNameMockEntity(
+        unique_id="qwer",
+        device_info={
+            "identifiers": {("hue", "1234")},
+            "connections": {(dr.CONNECTION_NETWORK_MAC, "abcd")},
+            "name": "Device Bla",
+        },
+    )
+    ent.entity_description = entity.EntityDescription(
+        "test",
+        device_class="test_class",
+        has_entity_name=has_entity_name,
+        name=entity_name,
+    )
+    with patch(
+        "homeassistant.helpers.entity_platform.translation.async_get_translations",
+        side_effect=async_get_translations,
+    ):
+        await _test_friendly_name(
+            hass,
+            caplog,
+            ent,
+            expected_friendly_name,
+            warn_implicit_name,
+        )
 
 
 @pytest.mark.parametrize(
@@ -1102,11 +1165,132 @@ async def test_friendly_name_property(
         hass,
         caplog,
         ent,
-        has_entity_name,
-        entity_name,
         expected_friendly_name,
         warn_implicit_name,
     )
+
+
+@pytest.mark.parametrize(
+    ("has_entity_name", "entity_name", "expected_friendly_name", "warn_implicit_name"),
+    (
+        (False, "Entity Blu", "Entity Blu", False),
+        (False, None, None, False),
+        (False, UNDEFINED, None, False),
+        (True, "Entity Blu", "Device Bla Entity Blu", False),
+        (True, None, "Device Bla", False),
+        # Won't use the device class name because the entity overrides the name property
+        (True, UNDEFINED, "Device Bla None", False),
+    ),
+)
+async def test_friendly_name_property_device_class_name(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    has_entity_name: bool,
+    entity_name: str | None,
+    expected_friendly_name: str | None,
+    warn_implicit_name: bool,
+) -> None:
+    """Test friendly name when the entity has overridden the name property."""
+
+    translations = {
+        "en": {"component.test_domain.entity_component.test_class.name": "English cls"},
+    }
+
+    async def async_get_translations(
+        hass: HomeAssistant,
+        language: str,
+        category: str,
+        integrations: Iterable[str] | None = None,
+        config_flow: bool | None = None,
+    ) -> dict[str, Any]:
+        """Return all backend translations."""
+        return translations[language]
+
+    class DeviceClassNameMockEntity(MockEntity):
+        def _default_to_device_class_name(self) -> bool:
+            """Return True if an unnamed entity should be named by its device class."""
+            return True
+
+    ent = DeviceClassNameMockEntity(
+        unique_id="qwer",
+        device_class="test_class",
+        device_info={
+            "identifiers": {("hue", "1234")},
+            "connections": {(dr.CONNECTION_NETWORK_MAC, "abcd")},
+            "name": "Device Bla",
+        },
+        has_entity_name=has_entity_name,
+        name=entity_name,
+    )
+    with patch(
+        "homeassistant.helpers.entity_platform.translation.async_get_translations",
+        side_effect=async_get_translations,
+    ):
+        await _test_friendly_name(
+            hass,
+            caplog,
+            ent,
+            expected_friendly_name,
+            warn_implicit_name,
+        )
+
+
+@pytest.mark.parametrize(
+    ("has_entity_name", "expected_friendly_name", "warn_implicit_name"),
+    (
+        (False, None, False),
+        (True, "Device Bla English cls", False),
+    ),
+)
+async def test_friendly_name_device_class_name(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    has_entity_name: bool,
+    expected_friendly_name: str | None,
+    warn_implicit_name: bool,
+) -> None:
+    """Test friendly name when the entity has not set the name in any way."""
+
+    translations = {
+        "en": {"component.test_domain.entity_component.test_class.name": "English cls"},
+    }
+
+    async def async_get_translations(
+        hass: HomeAssistant,
+        language: str,
+        category: str,
+        integrations: Iterable[str] | None = None,
+        config_flow: bool | None = None,
+    ) -> dict[str, Any]:
+        """Return all backend translations."""
+        return translations[language]
+
+    class DeviceClassNameMockEntity(MockEntity):
+        def _default_to_device_class_name(self) -> bool:
+            """Return True if an unnamed entity should be named by its device class."""
+            return True
+
+    ent = DeviceClassNameMockEntity(
+        unique_id="qwer",
+        device_class="test_class",
+        device_info={
+            "identifiers": {("hue", "1234")},
+            "connections": {(dr.CONNECTION_NETWORK_MAC, "abcd")},
+            "name": "Device Bla",
+        },
+        has_entity_name=has_entity_name,
+    )
+    with patch(
+        "homeassistant.helpers.entity_platform.translation.async_get_translations",
+        side_effect=async_get_translations,
+    ):
+        await _test_friendly_name(
+            hass,
+            caplog,
+            ent,
+            expected_friendly_name,
+            warn_implicit_name,
+        )
 
 
 @pytest.mark.parametrize(

@@ -12,7 +12,7 @@ import logging
 import math
 import sys
 from timeit import default_timer as timer
-from typing import TYPE_CHECKING, Any, Final, Literal, TypedDict, final
+from typing import TYPE_CHECKING, Any, Final, Literal, TypedDict, TypeVar, final
 
 import voluptuous as vol
 
@@ -48,6 +48,9 @@ from .typing import UNDEFINED, StateType, UndefinedType
 
 if TYPE_CHECKING:
     from .entity_platform import EntityPlatform
+
+
+_T = TypeVar("_T")
 
 _LOGGER = logging.getLogger(__name__)
 SLOW_UPDATE_WARNING = 10
@@ -322,29 +325,28 @@ class Entity(ABC):
         """Return a unique ID."""
         return self._attr_unique_id
 
+    def _report_implicit_device_name(self) -> None:
+        """Report entities which use implicit device name."""
+        if self._implicit_device_name_reported:
+            return
+        report_issue = self._suggest_report_issue()
+        _LOGGER.warning(
+            (
+                "Entity %s (%s) is implicitly using device name by not setting its "
+                "name. Instead, the name should be set to None, please %s"
+            ),
+            self.entity_id,
+            type(self),
+            report_issue,
+        )
+        self._implicit_device_name_reported = True
+
     @property
     def use_device_name(self) -> bool:
         """Return if this entity does not have its own name.
 
         Should be True if the entity represents the single main feature of a device.
         """
-
-        def report_implicit_device_name() -> None:
-            """Report entities which use implicit device name."""
-            if self._implicit_device_name_reported:
-                return
-            report_issue = self._suggest_report_issue()
-            _LOGGER.warning(
-                (
-                    "Entity %s (%s) is implicitly using device name by not setting its "
-                    "name. Instead, the name should be set to None, please %s"
-                ),
-                self.entity_id,
-                type(self),
-                report_issue,
-            )
-            self._implicit_device_name_reported = True
-
         if hasattr(self, "_attr_name"):
             return not self._attr_name
 
@@ -355,17 +357,17 @@ class Entity(ABC):
         if hasattr(self, "entity_description"):
             if not (name := self.entity_description.name):
                 return True
-            if name is UNDEFINED:
+            if name is UNDEFINED and not self._default_to_device_class_name():
                 # Backwards compatibility with leaving EntityDescription.name unassigned
                 # for device name.
                 # Deprecated in HA Core 2023.6, remove in HA Core 2023.9
-                report_implicit_device_name()
+                self._report_implicit_device_name()
                 return True
             return False
-        if self.name is UNDEFINED:
+        if self.name is UNDEFINED and not self._default_to_device_class_name():
             # Backwards compatibility with not overriding name property for device name.
             # Deprecated in HA Core 2023.6, remove in HA Core 2023.9
-            report_implicit_device_name()
+            self._report_implicit_device_name()
             return True
         return not self.name
 
@@ -1090,6 +1092,19 @@ class Entity(ABC):
         self._unsub_device_updates = None
 
     @callback
+    def _async_device_registry_updated(self, event: Event) -> None:
+        """Handle device registry update."""
+        data = event.data
+
+        if data["action"] != "update":
+            return
+
+        if "name" not in data["changes"] and "name_by_user" not in data["changes"]:
+            return
+
+        self.async_write_ha_state()
+
+    @callback
     def _async_subscribe_device_updates(self) -> None:
         """Subscribe to device registry updates."""
         assert self.registry_entry
@@ -1102,23 +1117,10 @@ class Entity(ABC):
         if not self.has_entity_name:
             return
 
-        @callback
-        def async_device_registry_updated(event: Event) -> None:
-            """Handle device registry update."""
-            data = event.data
-
-            if data["action"] != "update":
-                return
-
-            if "name" not in data["changes"] and "name_by_user" not in data["changes"]:
-                return
-
-            self.async_write_ha_state()
-
         self._unsub_device_updates = async_track_device_registry_updated_event(
             self.hass,
             device_id,
-            async_device_registry_updated,
+            self._async_device_registry_updated,
         )
         if (
             not self._on_remove
@@ -1130,13 +1132,13 @@ class Entity(ABC):
         """Return the representation."""
         return f"<entity {self.entity_id}={self._stringify_state(self.available)}>"
 
-    async def async_request_call(self, coro: Coroutine[Any, Any, Any]) -> None:
+    async def async_request_call(self, coro: Coroutine[Any, Any, _T]) -> _T:
         """Process request batched."""
         if self.parallel_updates:
             await self.parallel_updates.acquire()
 
         try:
-            await coro
+            return await coro
         finally:
             if self.parallel_updates:
                 self.parallel_updates.release()
