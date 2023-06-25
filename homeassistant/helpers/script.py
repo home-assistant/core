@@ -69,6 +69,7 @@ from homeassistant.core import (
     Event,
     HassJob,
     HomeAssistant,
+    SupportsResponse,
     callback,
 )
 from homeassistant.util import slugify
@@ -661,12 +662,30 @@ class _ScriptRun:
             self._hass, self._action, self._variables
         )
 
+        # Validate response data paraters. This check ignores services that do
+        # not exist which will raise an appropriate error in the service call below.
+        response_variable = self._action.get(CONF_RESPONSE_VARIABLE)
+        return_response = response_variable is not None
+        if self._hass.services.has_service(params[CONF_DOMAIN], params[CONF_SERVICE]):
+            supports_response = self._hass.services.supports_response(
+                params[CONF_DOMAIN], params[CONF_SERVICE]
+            )
+            if supports_response == SupportsResponse.ONLY and not return_response:
+                raise vol.Invalid(
+                    f"Script requires '{CONF_RESPONSE_VARIABLE}' for response data "
+                    f"for service call {params[CONF_DOMAIN]}.{params[CONF_SERVICE]}"
+                )
+            if supports_response == SupportsResponse.NONE and return_response:
+                raise vol.Invalid(
+                    f"Script does not support '{CONF_RESPONSE_VARIABLE}' for service "
+                    f"'{CONF_RESPONSE_VARIABLE}' which does not support response data."
+                )
+
         running_script = (
             params[CONF_DOMAIN] == "automation"
             and params[CONF_SERVICE] == "trigger"
             or params[CONF_DOMAIN] in ("python_script", "script")
         )
-        response_variable = self._action.get(CONF_RESPONSE_VARIABLE)
         trace_set_result(params=params, running_script=running_script)
         response_data = await self._async_run_long_action(
             self._hass.async_create_task(
@@ -674,7 +693,7 @@ class _ScriptRun:
                     **params,
                     blocking=True,
                     context=self._context,
-                    return_response=(response_variable is not None),
+                    return_response=return_response,
                 )
             ),
         )
