@@ -50,7 +50,7 @@
     "step": {
       "init": {
         "data": {
-          "allow_service_calls": "Allow the device to make arbitrary Home Assistant service calls."
+          "allow_service_calls": "Allow the device to make Home Assistant service calls."
         }
       }
     }
