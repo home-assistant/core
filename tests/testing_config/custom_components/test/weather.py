@@ -13,6 +13,7 @@ from homeassistant.components.weather import (
     ATTR_FORECAST_NATIVE_PRESSURE,
     ATTR_FORECAST_NATIVE_TEMP,
     ATTR_FORECAST_NATIVE_TEMP_LOW,
+    ATTR_FORECAST_NATIVE_WIND_GUST_SPEED,
     ATTR_FORECAST_NATIVE_WIND_SPEED,
     ATTR_FORECAST_PRECIPITATION,
     ATTR_FORECAST_PRESSURE,
@@ -79,6 +80,11 @@ class MockWeather(MockEntity, WeatherEntity):
     def humidity(self) -> float | None:
         """Return the humidity."""
         return self._handle("humidity")
+
+    @property
+    def native_wind_gust_speed(self) -> float | None:
+        """Return the wind speed."""
+        return self._handle("native_wind_gust_speed")
 
     @property
     def native_wind_speed(self) -> float | None:
@@ -219,6 +225,7 @@ class MockWeatherMockForecast(MockWeather):
                 ATTR_FORECAST_NATIVE_DEW_POINT: self.native_dew_point,
                 ATTR_FORECAST_CLOUD_COVERAGE: self.cloud_coverage,
                 ATTR_FORECAST_NATIVE_PRESSURE: self.native_pressure,
+                ATTR_FORECAST_NATIVE_WIND_GUST_SPEED: self.native_wind_gust_speed,
                 ATTR_FORECAST_NATIVE_WIND_SPEED: self.native_wind_speed,
                 ATTR_FORECAST_WIND_BEARING: self.wind_bearing,
                 ATTR_FORECAST_NATIVE_PRECIPITATION: self._values.get(
