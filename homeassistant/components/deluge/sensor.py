@@ -51,12 +51,7 @@ SENSOR_TYPES: tuple[DelugeSensorEntityDescription, ...] = (
         translation_key="status",
         value=lambda data: get_state(data, CURRENT_STATUS),
         device_class=SensorDeviceClass.ENUM,
-        options=[
-            "seeding_and_downloading",
-            "seeding",
-            "downloading",
-            "idle"
-        ]
+        options=["seeding_and_downloading", "seeding", "downloading", "idle"],
     ),
     DelugeSensorEntityDescription(
         key=DOWNLOAD_SPEED,
