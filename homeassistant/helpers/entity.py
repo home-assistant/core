@@ -312,6 +312,10 @@ class Entity(ABC):
     _attr_unique_id: str | None = None
     _attr_unit_of_measurement: str | None
 
+    # Translation cache
+    _cached_name_translation_key: str | None = None
+    _cached_device_class_name: str | None = None
+
     @property
     def should_poll(self) -> bool:
         """Return True if entity has to be polled for state.
@@ -382,14 +386,19 @@ class Entity(ABC):
 
     def _device_class_name(self) -> str | None:
         """Return a translated name of the entity based on its device class."""
+        if self._cached_device_class_name is not None:
+            return self._cached_device_class_name
         if not self.has_entity_name:
             return None
         device_class_key = self.device_class or "_"
+        platform = self.platform
         name_translation_key = (
-            f"component.{self.platform.domain}.entity_component."
-            f"{device_class_key}.name"
+            f"component.{platform.domain}.entity_component." f"{device_class_key}.name"
         )
-        return self.platform.component_translations.get(name_translation_key)
+        self._cached_device_class_name = platform.component_translations.get(
+            name_translation_key
+        )
+        return self._cached_device_class_name
 
     def _default_to_device_class_name(self) -> bool:
         """Return True if an unnamed entity should be named by its device class."""
@@ -397,24 +406,30 @@ class Entity(ABC):
 
     def _name_translation_key(self) -> str | None:
         """Return translation key for entity name."""
+        if self._cached_name_translation_key is not None:
+            return self._cached_name_translation_key
         if self.translation_key is None:
             return None
-        return (
-            f"component.{self.platform.platform_name}.entity.{self.platform.domain}"
+        platform = self.platform
+        self._cached_name_translation_key = (
+            f"component.{platform.platform_name}.entity.{platform.domain}"
             f".{self.translation_key}.name"
         )
+        return self._cached_name_translation_key
 
     @property
     def name(self) -> str | UndefinedType | None:
         """Return the name of the entity."""
         if hasattr(self, "_attr_name"):
             return self._attr_name
-        if self.has_entity_name and (
-            name_translation_key := self._name_translation_key()
+        if (
+            self.has_entity_name
+            and (name_translation_key := self._name_translation_key())
+            and (name := self.platform.platform_translations.get(name_translation_key))
         ):
-            if name_translation_key in self.platform.platform_translations:
-                name: str = self.platform.platform_translations[name_translation_key]
-                return name
+            if TYPE_CHECKING:
+                assert isinstance(name, str)
+            return name
         if hasattr(self, "entity_description"):
             description_name = self.entity_description.name
             if description_name is UNDEFINED and self._default_to_device_class_name():
