@@ -922,9 +922,28 @@ class TemperatureSettingTrait(_Trait):
     def sync_attributes(self):
         """Return temperature point and modes attributes for a sync request."""
         response = {}
-        response["thermostatTemperatureUnit"] = _google_temp_unit(
-            self.hass.config.units.temperature_unit
+        attrs = self.state.attributes
+        unit = self.hass.config.units.temperature_unit
+        response["thermostatTemperatureUnit"] = _google_temp_unit(unit)
+
+        min_temp = round(
+            TemperatureConverter.convert(
+                float(attrs[climate.ATTR_MIN_TEMP]),
+                unit,
+                UnitOfTemperature.CELSIUS,
+            )
         )
+        max_temp = round(
+            TemperatureConverter.convert(
+                float(attrs[climate.ATTR_MAX_TEMP]),
+                unit,
+                UnitOfTemperature.CELSIUS,
+            )
+        )
+        response["thermostatTemperatureRange"] = {
+            "minThresholdCelsius": min_temp,
+            "maxThresholdCelsius": max_temp,
+        }
 
         modes = self.climate_google_modes
 
@@ -1197,9 +1216,12 @@ class HumiditySettingTrait(_Trait):
                     response["humidityAmbientPercent"] = round(float(current_humidity))
 
         elif domain == humidifier.DOMAIN:
-            target_humidity = attrs.get(humidifier.ATTR_HUMIDITY)
+            target_humidity: int | None = attrs.get(humidifier.ATTR_HUMIDITY)
             if target_humidity is not None:
-                response["humiditySetpointPercent"] = round(float(target_humidity))
+                response["humiditySetpointPercent"] = target_humidity
+            current_humidity: int | None = attrs.get(humidifier.ATTR_CURRENT_HUMIDITY)
+            if current_humidity is not None:
+                response["humidityAmbientPercent"] = current_humidity
 
         return response
 

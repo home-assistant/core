@@ -85,9 +85,16 @@ class YouTubeDataUpdateCoordinator(DataUpdateCoordinator):
                     ATTR_PUBLISHED_AT: video["snippet"]["publishedAt"],
                     ATTR_TITLE: video["snippet"]["title"],
                     ATTR_DESCRIPTION: video["snippet"]["description"],
-                    ATTR_THUMBNAIL: video["snippet"]["thumbnails"]["standard"]["url"],
+                    ATTR_THUMBNAIL: self._get_thumbnail(video),
                     ATTR_VIDEO_ID: video["contentDetails"]["videoId"],
                 },
                 ATTR_SUBSCRIBER_COUNT: int(channel["statistics"]["subscriberCount"]),
             }
         return data
+
+    def _get_thumbnail(self, video: dict[str, Any]) -> str | None:
+        thumbnails = video["snippet"]["thumbnails"]
+        for size in ("standard", "high", "medium", "default"):
+            if size in thumbnails:
+                return thumbnails[size]["url"]
+        return None
