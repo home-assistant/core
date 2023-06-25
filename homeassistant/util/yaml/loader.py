@@ -7,6 +7,7 @@ from io import StringIO, TextIOWrapper
 import logging
 import os
 from pathlib import Path
+import string
 from typing import Any, TextIO, TypeVar, overload
 
 import yaml
@@ -104,7 +105,12 @@ class Secrets:
 class SafeLoader(FastestAvailableSafeLoader):
     """The fastest available safe loader."""
 
-    def __init__(self, stream: Any, secrets: Secrets | None = None) -> None:
+    def __init__(
+        self,
+        stream: Any,
+        secrets: Secrets | None = None,
+        substitutes: dict[str, str] | None = None,
+    ) -> None:
         """Initialize a safe line loader."""
         self.stream = stream
         if isinstance(stream, str):
@@ -115,6 +121,9 @@ class SafeLoader(FastestAvailableSafeLoader):
             self.name = getattr(stream, "name", "<file>")
         super().__init__(stream)
         self.secrets = secrets
+        self.substitutes = {}
+        if substitutes is not None:
+            self.substitutes = substitutes
 
     def get_name(self) -> str:
         """Get the name of the loader."""
@@ -128,10 +137,18 @@ class SafeLoader(FastestAvailableSafeLoader):
 class SafeLineLoader(yaml.SafeLoader):
     """Loader class that keeps track of line numbers."""
 
-    def __init__(self, stream: Any, secrets: Secrets | None = None) -> None:
+    def __init__(
+        self,
+        stream: Any,
+        secrets: Secrets | None = None,
+        substitutes: dict[str, str] | None = None,
+    ) -> None:
         """Initialize a safe line loader."""
         super().__init__(stream)
         self.secrets = secrets
+        self.substitutes = {}
+        if substitutes is not None:
+            self.substitutes = substitutes
 
     def compose_node(  # type: ignore[override]
         self, parent: yaml.nodes.Node, index: int
@@ -156,35 +173,43 @@ class SafeLineLoader(yaml.SafeLoader):
 LoaderType = SafeLineLoader | SafeLoader
 
 
-def load_yaml(fname: str, secrets: Secrets | None = None) -> JSON_TYPE:
+def load_yaml(
+    fname: str,
+    secrets: Secrets | None = None,
+    substitutes: dict[str, str] | None = None,
+) -> JSON_TYPE:
     """Load a YAML file."""
     try:
         with open(fname, encoding="utf-8") as conf_file:
-            return parse_yaml(conf_file, secrets)
+            return parse_yaml(conf_file, secrets, substitutes)
     except UnicodeDecodeError as exc:
         _LOGGER.error("Unable to read file %s: %s", fname, exc)
         raise HomeAssistantError(exc) from exc
 
 
 def parse_yaml(
-    content: str | TextIO | StringIO, secrets: Secrets | None = None
+    content: str | TextIO | StringIO,
+    secrets: Secrets | None = None,
+    substitutes: dict[str, str] | None = None,
 ) -> JSON_TYPE:
     """Parse YAML with the fastest available loader."""
     if not HAS_C_LOADER:
-        return _parse_yaml_pure_python(content, secrets)
+        return _parse_yaml_pure_python(content, secrets, substitutes)
     try:
-        return _parse_yaml(SafeLoader, content, secrets)
+        return _parse_yaml(SafeLoader, content, secrets, substitutes)
     except yaml.YAMLError:
         # Loading failed, so we now load with the slow line loader
         # since the C one will not give us line numbers
         if isinstance(content, (StringIO, TextIO, TextIOWrapper)):
             # Rewind the stream so we can try again
             content.seek(0, 0)
-        return _parse_yaml_pure_python(content, secrets)
+        return _parse_yaml_pure_python(content, secrets, substitutes)
 
 
 def _parse_yaml_pure_python(
-    content: str | TextIO | StringIO, secrets: Secrets | None = None
+    content: str | TextIO | StringIO,
+    secrets: Secrets | None = None,
+    substitutes: dict[str, str] | None = None,
 ) -> JSON_TYPE:
     """Parse YAML with the pure python loader (this is very slow)."""
     try:
@@ -198,12 +223,13 @@ def _parse_yaml(
     loader: type[SafeLoader] | type[SafeLineLoader],
     content: str | TextIO,
     secrets: Secrets | None = None,
+    substitutes: dict[str, str] | None = None,
 ) -> JSON_TYPE:
     """Load a YAML file."""
     # If configuration file is empty YAML returns None
     # We convert that to an empty dict
     return (
-        yaml.load(content, Loader=lambda stream: loader(stream, secrets))
+        yaml.load(content, Loader=lambda stream: loader(stream, secrets, substitutes))
         or NodeDictClass()
     )
 
@@ -250,10 +276,37 @@ def _include_yaml(loader: LoaderType, node: yaml.nodes.Node) -> JSON_TYPE:
     Example:
         device_tracker: !include device_tracker.yaml
 
+    Example with substitutes:
+        device_tracker: !include
+          path: device_tracker.yaml
+          substitutes:
+            name: "Device #1"
+            id: device_1
+
     """
-    fname = os.path.join(os.path.dirname(loader.get_name()), node.value)
+
+    if isinstance(node, yaml.nodes.ScalarNode):
+        path = node.value
+        substitutes = {}
+    elif isinstance(node, yaml.nodes.MappingNode):
+        data = loader.construct_mapping(node)
+        path = data["path"]
+        substitutes = data["substitutes"]
+
+        if not all(
+            isinstance(k, str) and isinstance(v, str) for k, v in substitutes.items()
+        ):
+            raise HomeAssistantError(
+                f"{node.start_mark}: substitutes must be a dictionary of string keys and values"
+            )
+    else:
+        raise HomeAssistantError(f"{node.start_mark}: Invalid value for !import")
+
+    fname = os.path.join(os.path.dirname(loader.get_name()), path)
     try:
-        return _add_reference(load_yaml(fname, loader.secrets), loader, node)
+        return _add_reference(
+            load_yaml(fname, loader.secrets, substitutes), loader, node
+        )
     except FileNotFoundError as exc:
         raise HomeAssistantError(
             f"{node.start_mark}: Unable to read file {fname}."
@@ -278,12 +331,32 @@ def _find_files(directory: str, pattern: str) -> Iterator[str]:
 def _include_dir_named_yaml(loader: LoaderType, node: yaml.nodes.Node) -> NodeDictClass:
     """Load multiple files from directory as a dictionary."""
     mapping = NodeDictClass()
-    loc = os.path.join(os.path.dirname(loader.get_name()), node.value)
+
+    if isinstance(node, yaml.nodes.ScalarNode):
+        path = node.value
+        substitutes = {}
+    elif isinstance(node, yaml.nodes.MappingNode):
+        data = loader.construct_mapping(node)
+        path = data["path"]
+        substitutes = data["substitutes"]
+
+        if not all(
+            isinstance(k, str) and isinstance(v, str) for k, v in substitutes.items()
+        ):
+            raise HomeAssistantError(
+                f"{node.start_mark}: substitutes must be a dictionary of string keys and values"
+            )
+    else:
+        raise HomeAssistantError(
+            f"{node.start_mark}: Invalid value for !include_dir_named"
+        )
+
+    loc = os.path.join(os.path.dirname(loader.get_name()), path)
     for fname in _find_files(loc, "*.yaml"):
         filename = os.path.splitext(os.path.basename(fname))[0]
         if os.path.basename(fname) == SECRET_YAML:
             continue
-        mapping[filename] = load_yaml(fname, loader.secrets)
+        mapping[filename] = load_yaml(fname, loader.secrets, substitutes)
     return _add_reference(mapping, loader, node)
 
 
@@ -292,11 +365,31 @@ def _include_dir_merge_named_yaml(
 ) -> NodeDictClass:
     """Load multiple files from directory as a merged dictionary."""
     mapping = NodeDictClass()
-    loc = os.path.join(os.path.dirname(loader.get_name()), node.value)
+
+    if isinstance(node, yaml.nodes.ScalarNode):
+        path = node.value
+        substitutes = {}
+    elif isinstance(node, yaml.nodes.MappingNode):
+        data = loader.construct_mapping(node)
+        path = data["path"]
+        substitutes = data["substitutes"]
+
+        if not all(
+            isinstance(k, str) and isinstance(v, str) for k, v in substitutes.items()
+        ):
+            raise HomeAssistantError(
+                f"{node.start_mark}: substitutes must be a dictionary of string keys and values"
+            )
+    else:
+        raise HomeAssistantError(
+            f"{node.start_mark}: Invalid value for !include_dir_merge_named"
+        )
+
+    loc = os.path.join(os.path.dirname(loader.get_name()), path)
     for fname in _find_files(loc, "*.yaml"):
         if os.path.basename(fname) == SECRET_YAML:
             continue
-        loaded_yaml = load_yaml(fname, loader.secrets)
+        loaded_yaml = load_yaml(fname, loader.secrets, substitutes)
         if isinstance(loaded_yaml, dict):
             mapping.update(loaded_yaml)
     return _add_reference(mapping, loader, node)
@@ -306,9 +399,29 @@ def _include_dir_list_yaml(
     loader: LoaderType, node: yaml.nodes.Node
 ) -> list[JSON_TYPE]:
     """Load multiple files from directory as a list."""
-    loc = os.path.join(os.path.dirname(loader.get_name()), node.value)
+
+    if isinstance(node, yaml.nodes.ScalarNode):
+        path = node.value
+        substitutes = {}
+    elif isinstance(node, yaml.nodes.MappingNode):
+        data = loader.construct_mapping(node)
+        path = data["path"]
+        substitutes = data["substitutes"]
+
+        if not all(
+            isinstance(k, str) and isinstance(v, str) for k, v in substitutes.items()
+        ):
+            raise HomeAssistantError(
+                f"{node.start_mark}: substitutes must be a dictionary of string keys and values"
+            )
+    else:
+        raise HomeAssistantError(
+            f"{node.start_mark}: Invalid value for !include_dir_list"
+        )
+
+    loc = os.path.join(os.path.dirname(loader.get_name()), path)
     return [
-        load_yaml(f, loader.secrets)
+        load_yaml(f, loader.secrets, substitutes)
         for f in _find_files(loc, "*.yaml")
         if os.path.basename(f) != SECRET_YAML
     ]
@@ -318,21 +431,50 @@ def _include_dir_merge_list_yaml(
     loader: LoaderType, node: yaml.nodes.Node
 ) -> JSON_TYPE:
     """Load multiple files from directory as a merged list."""
-    loc: str = os.path.join(os.path.dirname(loader.get_name()), node.value)
+
+    if isinstance(node, yaml.nodes.ScalarNode):
+        path = node.value
+        substitutes = {}
+    elif isinstance(node, yaml.nodes.MappingNode):
+        data = loader.construct_mapping(node)
+        path = data["path"]
+        substitutes = data["substitutes"]
+
+        if not all(
+            isinstance(k, str) and isinstance(v, str) for k, v in substitutes.items()
+        ):
+            raise HomeAssistantError(
+                f"{node.start_mark}: substitutes must be a dictionary of string keys and values"
+            )
+    else:
+        raise HomeAssistantError(
+            f"{node.start_mark}: Invalid value for !include_dir_merge_list"
+        )
+
+    loc: str = os.path.join(os.path.dirname(loader.get_name()), path)
     merged_list: list[JSON_TYPE] = []
     for fname in _find_files(loc, "*.yaml"):
         if os.path.basename(fname) == SECRET_YAML:
             continue
-        loaded_yaml = load_yaml(fname, loader.secrets)
+        loaded_yaml = load_yaml(fname, loader.secrets, substitutes)
         if isinstance(loaded_yaml, list):
             merged_list.extend(loaded_yaml)
     return _add_reference(merged_list, loader, node)
+
+
+def _replace_keys_and_values(loader: LoaderType, node: yaml.nodes.MappingNode) -> None:
+    for _idx, values in enumerate(node.value):
+        for _idy, elem in enumerate(values):
+            if isinstance(elem, yaml.nodes.ScalarNode) and "$" in elem.value:
+                elem.value = _string_constructor(loader, elem)
 
 
 def _handle_mapping_tag(
     loader: LoaderType, node: yaml.nodes.MappingNode
 ) -> NodeDictClass:
     """Load YAML mappings into an ordered dictionary to preserve key order."""
+    _replace_keys_and_values(loader, node)
+
     loader.flatten_mapping(node)
     nodes = loader.construct_pairs(node)
 
@@ -392,12 +534,28 @@ def secret_yaml(loader: LoaderType, node: yaml.nodes.Node) -> JSON_TYPE:
     return loader.secrets.get(loader.get_name(), node.value)
 
 
+def _string_constructor(loader: LoaderType, node: yaml.nodes.Node) -> JSON_TYPE:
+    """Replace all matching identifies with substitutes from loader."""
+    template = string.Template(node.value)
+    value = template.safe_substitute(loader.substitutes)
+
+    return value
+
+
 def add_constructor(tag: Any, constructor: Any) -> None:
     """Add to constructor to all loaders."""
     for yaml_loader in (SafeLoader, SafeLineLoader):
         yaml_loader.add_constructor(tag, constructor)
 
 
+def add_implicit_resolver(tag: Any, regexp: Any, first: Any) -> None:
+    """Add implicit resolver to all loaders."""
+    for yaml_loader in (SafeLoader, SafeLineLoader):
+        yaml_loader.add_implicit_resolver(tag, regexp, first)  # type: ignore[attr-defined]
+
+
+add_constructor("tag:yaml.org,2002:str", _string_constructor)
+add_implicit_resolver("tag:yaml.org,2002:str", string.Template.pattern, None)
 add_constructor("!include", _include_yaml)
 add_constructor(yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG, _handle_mapping_tag)
 add_constructor(yaml.resolver.BaseResolver.DEFAULT_SEQUENCE_TAG, _construct_seq)
