@@ -4,5 +4,11 @@
       "name": "[%key:common::action::reload%]",
       "description": "Reloads ping sensors from the YAML-configuration."
     }
+  },
+  "issues": {
+    "deprecated_platform_yaml": {
+      "title": "Ping YAML configuration has moved",
+      "description": "Configuring Ping `{platform}` using YAML has moved.\n\nConsult the [documentation](https://www.home-assistant.io/integrations/ping/) to move your YAML configuration to integration key and restart Home Assistant to fix this issue."
+    }
   }
 }

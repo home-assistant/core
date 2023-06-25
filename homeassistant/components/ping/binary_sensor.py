@@ -13,6 +13,7 @@ from icmplib import NameLookupError, async_ping
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
+    DOMAIN as BINARY_SENSOR_DOMAIN,
     PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
     BinarySensorDeviceClass,
     BinarySensorEntity,
@@ -21,10 +22,18 @@ from homeassistant.const import CONF_HOST, CONF_NAME, STATE_ON
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import DOMAIN, ICMP_TIMEOUT, PING_PRIVS, PING_TIMEOUT
+from .const import (
+    CONF_PING_COUNT,
+    DEFAULT_PING_COUNT,
+    DOMAIN,
+    ICMP_TIMEOUT,
+    PING_PRIVS,
+    PING_TIMEOUT,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,10 +43,7 @@ ATTR_ROUND_TRIP_TIME_MAX = "round_trip_time_max"
 ATTR_ROUND_TRIP_TIME_MDEV = "round_trip_time_mdev"
 ATTR_ROUND_TRIP_TIME_MIN = "round_trip_time_min"
 
-CONF_PING_COUNT = "count"
-
 DEFAULT_NAME = "Ping"
-DEFAULT_PING_COUNT = 5
 
 SCAN_INTERVAL = timedelta(minutes=5)
 
@@ -71,9 +77,23 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Ping Binary sensor."""
-    host: str = config[CONF_HOST]
-    count: int = config[CONF_PING_COUNT]
-    name: str = config.get(CONF_NAME, f"{DEFAULT_NAME} {host}")
+    if binary_sensor_config := config:
+        async_create_issue(
+            hass,
+            DOMAIN,
+            "deprecated_yaml_binary_sensor",
+            breaks_in_ha_version="2024.1.0",
+            is_fixable=False,
+            severity=IssueSeverity.WARNING,
+            translation_key="deprecated_platform_yaml",
+            translation_placeholders={"platform": BINARY_SENSOR_DOMAIN},
+        )
+    if discovery_info:
+        binary_sensor_config = discovery_info
+
+    host: str = binary_sensor_config[CONF_HOST]
+    count: int = binary_sensor_config[CONF_PING_COUNT]
+    name: str = binary_sensor_config.get(CONF_NAME, f"{DEFAULT_NAME} {host}")
     privileged: bool | None = hass.data[DOMAIN][PING_PRIVS]
     ping_cls: type[PingDataSubProcess | PingDataICMPLib]
     if privileged is None:

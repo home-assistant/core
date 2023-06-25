@@ -11,15 +11,17 @@ import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
     CONF_SCAN_INTERVAL,
+    DOMAIN as DEVICE_TRACKER_DOMAIN,
     PLATFORM_SCHEMA as BASE_PLATFORM_SCHEMA,
     SCAN_INTERVAL,
     AsyncSeeCallback,
     SourceType,
 )
-from homeassistant.const import CONF_HOSTS
+from homeassistant.const import CONF_HOST, CONF_HOSTS, CONF_NAME
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_point_in_utc_time
+from homeassistant.helpers.issue_registry import IssueSeverity, create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
 from homeassistant.util.async_ import gather_with_concurrency
@@ -32,6 +34,8 @@ _LOGGER = logging.getLogger(__name__)
 PARALLEL_UPDATES = 0
 CONF_PING_COUNT = "count"
 CONCURRENT_PING_LIMIT = 6
+
+DEFAULT_NAME = "Ping tracker"
 
 PLATFORM_SCHEMA = BASE_PLATFORM_SCHEMA.extend(
     {
@@ -96,12 +100,34 @@ async def async_setup_scanner(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> bool:
     """Set up the Host objects and return the update function."""
-
+    ip_to_dev_id: dict[str, str] = {}
+    if device_tracker_config := config:
+        create_issue(
+            hass,
+            DOMAIN,
+            "deprecated_yaml_device_tracker",
+            breaks_in_ha_version="2024.1.0",
+            is_fixable=False,
+            severity=IssueSeverity.WARNING,
+            translation_key="deprecated_platform_yaml",
+            translation_placeholders={"platform": DEVICE_TRACKER_DOMAIN},
+        )
+        ip_to_dev_id = {
+            ip: dev_id for (dev_id, ip) in device_tracker_config[CONF_HOSTS].items()
+        }
+    if discovery_info:
+        device_tracker_config = discovery_info
+        ip_to_dev_id = {
+            device_tracker_config[CONF_HOST]: device_tracker_config.get(
+                CONF_NAME, f"{DEFAULT_NAME} {device_tracker_config[CONF_HOST]}"
+            )
+        }
     privileged = hass.data[DOMAIN][PING_PRIVS]
-    ip_to_dev_id = {ip: dev_id for (dev_id, ip) in config[CONF_HOSTS].items()}
-    interval = config.get(
+
+    interval = device_tracker_config.get(
         CONF_SCAN_INTERVAL,
-        timedelta(seconds=len(ip_to_dev_id) * config[CONF_PING_COUNT]) + SCAN_INTERVAL,
+        timedelta(seconds=len(ip_to_dev_id) * device_tracker_config[CONF_PING_COUNT])
+        + SCAN_INTERVAL,
     )
     _LOGGER.debug(
         "Started ping tracker with interval=%s on hosts: %s",
