@@ -33,8 +33,8 @@ KEY_BAN_MANAGER: Final = "ha_banned_ips_manager"
 KEY_FAILED_LOGIN_ATTEMPTS: Final = "ha_failed_login_attempts"
 KEY_LOGIN_THRESHOLD: Final = "ha_login_threshold"
 
-EVENT_FAILED_LOGIN = "login_failed"
-EVENT_BAN_IP = "ban_ip"
+EVENT_FAILED_LOGIN: Final = "login_failed"
+EVENT_BAN_IP: Final = "banned_ip"
 
 NOTIFICATION_ID_BAN: Final = "ip-ban"
 NOTIFICATION_ID_LOGIN: Final = "http-login"
