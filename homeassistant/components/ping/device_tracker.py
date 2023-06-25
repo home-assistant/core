@@ -154,7 +154,7 @@ async def async_setup_scanner(
         finally:
             if not hass.is_stopping:
                 async_track_point_in_utc_time(
-                    hass, _async_update_interval, dt_util.utcnow() + interval
+                    hass, _async_update_interval, now + interval
                 )
 
     await _async_update_interval(dt_util.now())
