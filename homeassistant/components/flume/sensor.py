@@ -143,4 +143,4 @@ class FlumeSensor(FlumeEntity[FlumeDeviceDataUpdateCoordinator], SensorEntity):
 
 
 def _format_state_value(value):
-    return round(value, 1) if isinstance(value, Number) else None
+    return round(value, 2) if isinstance(value, Number) else None
