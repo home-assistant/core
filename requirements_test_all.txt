@@ -1026,7 +1026,7 @@ openai==0.27.2
 openerz-api==0.2.0
 
 # homeassistant.components.openhome
-openhomedevice==2.0.2
+openhomedevice==2.1.0
 
 # homeassistant.components.oralb
 oralb-ble==0.17.6
