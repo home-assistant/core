@@ -66,7 +66,7 @@ async def test_config_flow(hass: HomeAssistant, qnap_connect: MagicMock) -> None
 
     assert result["type"] is data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
-    assert result["errors"] == {"base": "unknown"}
+    assert result["errors"] == {}
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
