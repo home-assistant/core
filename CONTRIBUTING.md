@@ -16,3 +16,5 @@ Still interested? Then you should take a peek at the [developer documentation](h
 
 If you want to suggest a new feature for Home Assistant (e.g., new integrations), please open a thread in our [Community Forum: Feature Requests](https://community.home-assistant.io/c/feature-requests).
 We use [GitHub for tracking issues](https://github.com/home-assistant/core/issues), not for tracking feature requests.
+
+Feel free to suggest your ideas!
