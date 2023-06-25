@@ -249,7 +249,7 @@ async def async_setup_entry(  # noqa: C901
                 "If you trust this device and want to allow access for it to make "
                 "Home Assistant service calls, you can enable this "
                 "functionality in the options flow",
-                device_info.name,
+                device_info.friendly_name or device_info.name,
                 domain,
                 service_name,
                 service_data,
