@@ -10,8 +10,12 @@ from homeassistant.components import config
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa: F401
 from tests.typing import ClientSessionGenerator
+
+
+@pytest.fixture(autouse=True, name="stub_blueprint_populate")
+def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
+    """Stub copying the blueprints to the config folder."""
 
 
 @pytest.fixture(autouse=True)

@@ -1,7 +1,7 @@
 """Shared Entity definition for UniFi Protect Integration."""
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 import logging
 from typing import Any
 
@@ -22,12 +22,8 @@ from pyunifiprotect.data import (
 
 from homeassistant.core import callback
 import homeassistant.helpers.device_registry as dr
-from homeassistant.helpers.entity import (
-    DEVICE_CLASS_NAME,
-    DeviceInfo,
-    Entity,
-    EntityDescription,
-)
+from homeassistant.helpers.entity import DeviceInfo, Entity, EntityDescription
+from homeassistant.helpers.typing import UNDEFINED
 
 from .const import (
     ATTR_EVENT_ID,
@@ -196,6 +192,9 @@ class ProtectDeviceEntity(Entity):
         super().__init__()
         self.data: ProtectData = data
         self.device = device
+        self._async_get_ufp_enabled: Callable[
+            [ProtectAdoptableDeviceModel], bool
+        ] | None = None
 
         if description is None:
             self._attr_unique_id = f"{self.device.mac}"
@@ -203,12 +202,14 @@ class ProtectDeviceEntity(Entity):
         else:
             self.entity_description = description
             self._attr_unique_id = f"{self.device.mac}_{description.key}"
-            name = description.name or ""
-            # It's not possible to do string manipulations on DEVICE_CLASS_NAME
-            # the assert satisfies the type checker and will catch attempts
-            # to use DEVICE_CLASS_NAME in the entity descriptions.
-            assert name is not DEVICE_CLASS_NAME
+            name = (
+                description.name
+                if description.name and description.name is not UNDEFINED
+                else ""
+            )
             self._attr_name = f"{self.device.display_name} {name.title()}"
+            if isinstance(description, ProtectRequiredKeysMixin):
+                self._async_get_ufp_enabled = description.get_ufp_enabled
 
         self._attr_attribution = DEFAULT_ATTRIBUTION
         self._async_set_device_info()
@@ -236,24 +237,20 @@ class ProtectDeviceEntity(Entity):
     @callback
     def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
         """Update Entity object from Protect device."""
-        if self.data.last_update_success:
-            assert isinstance(device, ProtectAdoptableDeviceModel)
+        assert isinstance(device, ProtectAdoptableDeviceModel)
+
+        if last_update_success := self.data.last_update_success:
             self.device = device
 
-        is_connected = self.data.last_update_success and (
-            self.device.state == StateType.CONNECTED
-            or (not self.device.is_adopted_by_us and self.device.can_adopt)
-        )
-        if (
-            hasattr(self, "entity_description")
-            and self.entity_description is not None
-            and hasattr(self.entity_description, "get_ufp_enabled")
-        ):
-            assert isinstance(self.entity_description, ProtectRequiredKeysMixin)
-            is_connected = is_connected and self.entity_description.get_ufp_enabled(
-                self.device
+        async_get_ufp_enabled = self._async_get_ufp_enabled
+        self._attr_available = (
+            last_update_success
+            and (
+                device.state == StateType.CONNECTED
+                or (not device.is_adopted_by_us and device.can_adopt)
             )
-        self._attr_available = is_connected
+            and (not async_get_ufp_enabled or async_get_ufp_enabled(device))
+        )
 
     @callback
     def _async_updated_event(self, device: ProtectModelWithId) -> None:

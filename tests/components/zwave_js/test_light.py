@@ -70,6 +70,13 @@ async def test_light(
     }
     assert args["value"] == 255
 
+    # Due to optimistic updates, the state should be on even though the Z-Wave state
+    # hasn't been updated yet
+    state = hass.states.get(BULB_6_MULTI_COLOR_LIGHT_ENTITY)
+
+    assert state
+    assert state.state == STATE_ON
+
     client.async_send_command.reset_mock()
 
     # Test turning on with transition

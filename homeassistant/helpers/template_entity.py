@@ -172,8 +172,6 @@ class _TemplateAttribute:
 class TemplateEntity(Entity):
     """Entity that uses templates to calculate attributes."""
 
-    _attr_name: str | None
-
     _attr_available = True
     _attr_entity_picture = None
     _attr_icon = None

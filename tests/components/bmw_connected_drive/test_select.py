@@ -4,6 +4,9 @@ import pytest
 import respx
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.bmw_connected_drive.coordinator import (
+    BMWDataUpdateCoordinator,
+)
 from homeassistant.core import HomeAssistant
 
 from . import setup_mocked_integration
@@ -41,6 +44,7 @@ async def test_update_triggers_success(
 
     # Setup component
     assert await setup_mocked_integration(hass)
+    BMWDataUpdateCoordinator.async_update_listeners.reset_mock()
 
     # Test
     await hass.services.async_call(
@@ -51,6 +55,7 @@ async def test_update_triggers_success(
         target={"entity_id": entity_id},
     )
     assert RemoteServices.trigger_remote_service.call_count == 1
+    assert BMWDataUpdateCoordinator.async_update_listeners.call_count == 1
 
 
 @pytest.mark.parametrize(
@@ -69,6 +74,7 @@ async def test_update_triggers_fail(
 
     # Setup component
     assert await setup_mocked_integration(hass)
+    BMWDataUpdateCoordinator.async_update_listeners.reset_mock()
 
     # Test
     with pytest.raises(ValueError):
@@ -80,3 +86,4 @@ async def test_update_triggers_fail(
             target={"entity_id": entity_id},
         )
     assert RemoteServices.trigger_remote_service.call_count == 0
+    assert BMWDataUpdateCoordinator.async_update_listeners.call_count == 0

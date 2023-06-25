@@ -30,8 +30,8 @@ class FreeboxHomeEntity(Entity):
         self._node = node
         self._sub_node = sub_node
         self._id = node["id"]
-        self._device_name = node["label"].strip()
-        self._attr_name = self._device_name
+        self._attr_name = node["label"].strip()
+        self._device_name = self._attr_name
         self._attr_unique_id = f"{self._router.mac}-node_{self._id}"
 
         if sub_node is not None:

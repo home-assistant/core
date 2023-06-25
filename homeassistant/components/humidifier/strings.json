@@ -31,6 +31,9 @@
         "available_modes": {
           "name": "Available modes"
         },
+        "current_humidity": {
+          "name": "Current humidity"
+        },
         "humidity": {
           "name": "Target humidity"
         },
@@ -61,6 +64,12 @@
     },
     "humidifier": {
       "name": "[%key:component::humidifier::entity_component::_::name%]"
+    }
+  },
+  "issues": {
+    "platform_integration_no_support": {
+      "title": "[%key:common::issues::platform_integration_no_support_title%]",
+      "description": "[%key:common::issues::platform_integration_no_support_description%]"
     }
   }
 }

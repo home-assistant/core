@@ -137,9 +137,20 @@
     },
     "airzone": {
       "name": "Airzone",
-      "integration_type": "hub",
-      "config_flow": true,
-      "iot_class": "local_polling"
+      "integrations": {
+        "airzone": {
+          "integration_type": "hub",
+          "config_flow": true,
+          "iot_class": "local_polling",
+          "name": "Airzone"
+        },
+        "airzone_cloud": {
+          "integration_type": "hub",
+          "config_flow": true,
+          "iot_class": "cloud_polling",
+          "name": "Airzone Cloud"
+        }
+      }
     },
     "aladdin_connect": {
       "name": "Aladdin Connect",
@@ -1080,6 +1091,12 @@
       "config_flow": true,
       "iot_class": "cloud_push"
     },
+    "discovergy": {
+      "name": "Discovergy",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "dlib_face_detect": {
       "name": "Dlib Face Detect",
       "integration_type": "hub",
@@ -1160,6 +1177,12 @@
       "name": "Downloader",
       "integration_type": "hub",
       "config_flow": false
+    },
+    "dremel_3d_printer": {
+      "name": "Dremel 3D Printer",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
     },
     "dsmr": {
       "name": "DSMR Slimme Meter",
@@ -1984,12 +2007,6 @@
         }
       }
     },
-    "goalfeed": {
-      "name": "Goalfeed",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "cloud_push"
-    },
     "goalzero": {
       "name": "Goal Zero Yeti",
       "integration_type": "device",
@@ -2067,9 +2084,9 @@
         },
         "google_translate": {
           "integration_type": "hub",
-          "config_flow": false,
+          "config_flow": true,
           "iot_class": "cloud_push",
-          "name": "Google Translate Text-to-Speech"
+          "name": "Google Translate text-to-speech"
         },
         "google_travel_time": {
           "integration_type": "hub",
@@ -2105,6 +2122,12 @@
           "config_flow": true,
           "iot_class": "cloud_push",
           "name": "Dialogflow"
+        },
+        "youtube": {
+          "integration_type": "service",
+          "config_flow": true,
+          "iot_class": "cloud_polling",
+          "name": "YouTube"
         }
       }
     },
@@ -2835,7 +2858,7 @@
     "lastfm": {
       "name": "Last.fm",
       "integration_type": "hub",
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "cloud_polling"
     },
     "launch_library": {
@@ -3533,7 +3556,7 @@
     "mystrom": {
       "name": "myStrom",
       "integration_type": "hub",
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "local_polling"
     },
     "mythicbeastsdns": {
@@ -3931,7 +3954,7 @@
     "openhome": {
       "name": "Linn / OpenHome",
       "integration_type": "hub",
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "local_polling"
     },
     "opensensemap": {
@@ -4363,7 +4386,7 @@
       "name": "QNAP",
       "integrations": {
         "qnap": {
-          "integration_type": "hub",
+          "integration_type": "device",
           "config_flow": false,
           "iot_class": "local_polling",
           "name": "QNAP"
@@ -4533,6 +4556,12 @@
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "cloud_polling"
+    },
+    "renson": {
+      "name": "Renson",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling"
     },
     "reolink": {
       "name": "Reolink IP NVR/camera",
@@ -5097,7 +5126,7 @@
       "name": "Snapcast",
       "integration_type": "hub",
       "config_flow": true,
-      "iot_class": "local_polling"
+      "iot_class": "local_push"
     },
     "snips": {
       "name": "Snips",
@@ -6383,6 +6412,12 @@
           "config_flow": true,
           "iot_class": "local_push",
           "name": "Yale Access Bluetooth"
+        },
+        "yale_home": {
+          "integration_type": "virtual",
+          "config_flow": false,
+          "supported_by": "august",
+          "name": "Yale Home"
         }
       }
     },

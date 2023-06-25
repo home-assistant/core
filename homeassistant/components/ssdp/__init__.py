@@ -48,7 +48,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback as core_callback
 from homeassistant.data_entry_flow import BaseServiceInfo
-from homeassistant.helpers import discovery_flow
+from homeassistant.helpers import config_validation as cv, discovery_flow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.instance_id import async_get as async_get_instance_id
@@ -104,6 +104,9 @@ PRIMARY_MATCH_KEYS = [
 ]
 
 _LOGGER = logging.getLogger(__name__)
+
+
+CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 
 @dataclass(slots=True)

@@ -1,11 +1,8 @@
 """Support for the Twitch stream status."""
 from __future__ import annotations
 
-import logging
-
 from twitchAPI.helper import first
 from twitchAPI.twitch import (
-    AuthScope,
     AuthType,
     InvalidTokenException,
     MissingScopeException,
@@ -24,7 +21,17 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-_LOGGER = logging.getLogger(__name__)
+from .const import CONF_CHANNELS, LOGGER, OAUTH_SCOPES
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_CLIENT_ID): cv.string,
+        vol.Required(CONF_CLIENT_SECRET): cv.string,
+        vol.Required(CONF_CHANNELS): vol.All(cv.ensure_list, [cv.string]),
+        vol.Optional(CONF_TOKEN): cv.string,
+    }
+)
+
 
 ATTR_GAME = "game"
 ATTR_TITLE = "title"
@@ -36,23 +43,10 @@ ATTR_FOLLOW_SINCE = "following_since"
 ATTR_FOLLOWING = "followers"
 ATTR_VIEWS = "views"
 
-CONF_CHANNELS = "channels"
-
 ICON = "mdi:twitch"
 
 STATE_OFFLINE = "offline"
 STATE_STREAMING = "streaming"
-
-OAUTH_SCOPES = [AuthScope.USER_READ_SUBSCRIPTIONS]
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_CLIENT_ID): cv.string,
-        vol.Required(CONF_CLIENT_SECRET): cv.string,
-        vol.Required(CONF_CHANNELS): vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional(CONF_TOKEN): cv.string,
-    }
-)
 
 
 async def async_setup_platform(
@@ -75,7 +69,7 @@ async def async_setup_platform(
         )
         client.auto_refresh_auth = False
     except TwitchAuthorizationException:
-        _LOGGER.error("Invalid client ID or client secret")
+        LOGGER.error("Invalid client ID or client secret")
         return
 
     if oauth_token:
@@ -84,10 +78,10 @@ async def async_setup_platform(
                 token=oauth_token, scope=OAUTH_SCOPES, validate=True
             )
         except MissingScopeException:
-            _LOGGER.error("OAuth token is missing required scope")
+            LOGGER.error("OAuth token is missing required scope")
             return
         except InvalidTokenException:
-            _LOGGER.error("OAuth token is invalid")
+            LOGGER.error("OAuth token is invalid")
             return
 
     twitch_users: list[TwitchUser] = []
@@ -151,9 +145,9 @@ class TwitchSensor(SensorEntity):
             self._attr_extra_state_attributes[ATTR_SUBSCRIPTION] = True
             self._attr_extra_state_attributes[ATTR_SUBSCRIPTION_GIFTED] = sub.is_gift
         except TwitchResourceNotFound:
-            _LOGGER.debug("User is not subscribed")
+            LOGGER.debug("User is not subscribed")
         except TwitchAPIException as exc:
-            _LOGGER.error("Error response on check_user_subscription: %s", exc)
+            LOGGER.error("Error response on check_user_subscription: %s", exc)
 
         follows = (
             await self._client.get_users_follows(

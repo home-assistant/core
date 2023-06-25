@@ -135,7 +135,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     exclude_attributes_by_domain: dict[str, set[str]] = {}
     hass.data[EXCLUDE_ATTRIBUTES] = exclude_attributes_by_domain
     conf = config[DOMAIN]
-    entity_filter = convert_include_exclude_filter(conf)
+    entity_filter = convert_include_exclude_filter(conf).get_filter()
     auto_purge = conf[CONF_AUTO_PURGE]
     auto_repack = conf[CONF_AUTO_REPACK]
     keep_days = conf[CONF_PURGE_KEEP_DAYS]

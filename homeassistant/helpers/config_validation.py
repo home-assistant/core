@@ -59,6 +59,7 @@ from homeassistant.const import (
     CONF_PARALLEL,
     CONF_PLATFORM,
     CONF_REPEAT,
+    CONF_RESPONSE_VARIABLE,
     CONF_SCAN_INTERVAL,
     CONF_SCENE,
     CONF_SEQUENCE,
@@ -86,6 +87,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import (
+    DOMAIN as HOMEASSISTANT_DOMAIN,
     HomeAssistant,
     async_get_hass,
     split_entity_id,
@@ -866,7 +868,7 @@ def _deprecated_or_removed(
 
             logger_func(warning, *arguments)
             value = config[key]
-            if replacement_key:
+            if replacement_key or option_removed:
                 config.pop(key)
         else:
             value = default
@@ -1045,6 +1047,107 @@ def expand_condition_shorthand(value: Any | None) -> Any:
 
 
 # Schemas
+def empty_config_schema(domain: str) -> Callable[[dict], dict]:
+    """Return a config schema which logs if there are configuration parameters."""
+
+    module = inspect.getmodule(inspect.stack(context=0)[2].frame)
+    if module is not None:
+        module_name = module.__name__
+    else:
+        # If Python is unable to access the sources files, the call stack frame
+        # will be missing information, so let's guard.
+        # https://github.com/home-assistant/core/issues/24982
+        module_name = __name__
+    logger_func = logging.getLogger(module_name).error
+
+    def validator(config: dict) -> dict:
+        if domain in config and config[domain]:
+            logger_func(
+                (
+                    "The %s integration does not support any configuration parameters, "
+                    "got %s. Please remove the configuration parameters from your "
+                    "configuration."
+                ),
+                domain,
+                config[domain],
+            )
+        return config
+
+    return validator
+
+
+def _no_yaml_config_schema(
+    domain: str,
+    issue_base: str,
+    translation_key: str,
+    translation_placeholders: dict[str, str],
+) -> Callable[[dict], dict]:
+    """Return a config schema which logs if attempted to setup from YAML."""
+
+    module = inspect.getmodule(inspect.stack(context=0)[2].frame)
+    if module is not None:
+        module_name = module.__name__
+    else:
+        # If Python is unable to access the sources files, the call stack frame
+        # will be missing information, so let's guard.
+        # https://github.com/home-assistant/core/issues/24982
+        module_name = __name__
+    logger_func = logging.getLogger(module_name).error
+
+    def raise_issue() -> None:
+        # pylint: disable-next=import-outside-toplevel
+        from .issue_registry import IssueSeverity, async_create_issue
+
+        with contextlib.suppress(LookupError):
+            hass = async_get_hass()
+            async_create_issue(
+                hass,
+                HOMEASSISTANT_DOMAIN,
+                f"{issue_base}_{domain}",
+                is_fixable=False,
+                issue_domain=domain,
+                severity=IssueSeverity.ERROR,
+                translation_key=translation_key,
+                translation_placeholders={"domain": domain} | translation_placeholders,
+            )
+
+    def validator(config: dict) -> dict:
+        if domain in config:
+            logger_func(
+                (
+                    "The %s integration does not support YAML setup, please remove it "
+                    "from your configuration file"
+                ),
+                domain,
+            )
+            raise_issue()
+        return config
+
+    return validator
+
+
+def config_entry_only_config_schema(domain: str) -> Callable[[dict], dict]:
+    """Return a config schema which logs if attempted to setup from YAML."""
+
+    return _no_yaml_config_schema(
+        domain,
+        "config_entry_only",
+        "config_entry_only",
+        {"add_integration": f"/config/integrations/dashboard/add?domain={domain}"},
+    )
+
+
+def platform_only_config_schema(domain: str) -> Callable[[dict], dict]:
+    """Return a config schema which logs if attempted to setup from YAML."""
+
+    return _no_yaml_config_schema(
+        domain,
+        "platform_only",
+        "platform_only",
+        {},
+    )
+
+
 PLATFORM_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_PLATFORM): string,
@@ -1163,6 +1266,7 @@ SERVICE_SCHEMA = vol.All(
             ),
             vol.Optional(CONF_ENTITY_ID): comp_entity_ids,
             vol.Optional(CONF_TARGET): vol.Any(TARGET_SERVICE_FIELDS, dynamic_template),
+            vol.Optional(CONF_RESPONSE_VARIABLE): str,
             # The frontend stores data here. Don't use in core.
             vol.Remove("metadata"): dict,
         }

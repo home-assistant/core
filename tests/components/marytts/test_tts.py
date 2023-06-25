@@ -1,6 +1,4 @@
 """The tests for the MaryTTS speech platform."""
-import os
-import shutil
 from unittest.mock import patch
 
 import pytest
@@ -27,12 +25,9 @@ async def get_media_source_url(hass, media_content_id):
 
 
 @pytest.fixture(autouse=True)
-def cleanup_cache(hass):
-    """Prevent TTS writing."""
-    yield
-    default_tts = hass.config.path(tts.DEFAULT_CACHE_DIR)
-    if os.path.isdir(default_tts):
-        shutil.rmtree(default_tts)
+def mock_tts_cache_dir_autouse(mock_tts_cache_dir):
+    """Mock the TTS cache dir with empty dir."""
+    return mock_tts_cache_dir
 
 
 async def test_setup_component(hass: HomeAssistant) -> None:

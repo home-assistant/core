@@ -13,12 +13,12 @@ class BAFEntity(Entity):
     """Base class for baf entities."""
 
     _attr_should_poll = False
+    _attr_has_entity_name = True
 
-    def __init__(self, device: Device, name: str) -> None:
+    def __init__(self, device: Device) -> None:
         """Initialize the entity."""
         self._device = device
         self._attr_unique_id = format_mac(self._device.mac_address)
-        self._attr_name = name
         self._attr_device_info = DeviceInfo(
             connections={(dr.CONNECTION_NETWORK_MAC, self._device.mac_address)},
             name=self._device.name,
