@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 import functools
+import logging
 import math
 from typing import (  # pylint: disable=unused-import
     Any,
@@ -42,6 +43,8 @@ _InfoT = TypeVar("_InfoT", bound=EntityInfo)
 _EntityT = TypeVar("_EntityT", bound="EsphomeEntity[Any,Any]")
 _StateT = TypeVar("_StateT", bound=EntityState)
 
+_LOGGER = logging.getLogger(__name__)
+
 
 async def platform_async_setup_entry(
     hass: HomeAssistant,
@@ -59,31 +62,27 @@ async def platform_async_setup_entry(
     """
     entry_data: RuntimeEntryData = DomainData.get(hass).get_entry_data(entry)
     entry_data.info[info_type] = {}
-    entry_data.old_info[info_type] = {}
     entry_data.state.setdefault(state_type, {})
 
     @callback
     def async_list_entities(infos: list[EntityInfo]) -> None:
         """Update entities of this platform when entities are listed."""
-        old_infos = entry_data.info[info_type]
+        current_infos = entry_data.info[info_type]
         new_infos: dict[int, EntityInfo] = {}
         add_entities: list[_EntityT] = []
         for info in infos:
-            if info.key in old_infos:
-                # Update existing entity
-                old_infos.pop(info.key)
-            else:
+            if not current_infos.pop(info.key, None):
                 # Create new entity
                 entity = entity_type(entry_data, info, state_type)
                 add_entities.append(entity)
             new_infos[info.key] = info
 
-        # Remove old entities
-        if old_infos:
-            hass.async_create_task(entry_data.async_remove_entities(old_infos.values()))
+        # Anything still in current_infos is now gone
+        if current_infos:
+            hass.async_create_task(
+                entry_data.async_remove_entities(current_infos.values())
+            )
 
-        # First copy the now-old info into the backup object
-        entry_data.old_info[info_type] = entry_data.info[info_type]
         # Then update the actual info
         entry_data.info[info_type] = new_infos
 
@@ -175,7 +174,7 @@ class EsphomeEntity(Entity, Generic[_InfoT, _StateT]):
         self.async_on_remove(
             entry_data.async_register_key_static_info_remove_coro(
                 self._static_info,
-                functools.partial(self.async_remove, force_remove=True),  # type: ignore[arg-type]
+                functools.partial(self.async_remove, force_remove=True),
             )
         )
         self.async_on_remove(

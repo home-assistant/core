@@ -80,15 +80,6 @@ class RuntimeEntryData:
     # device reconnects. This is the same format as state_subscriptions.
     stale_state: set[tuple[type[EntityState], int]] = field(default_factory=set)
     info: dict[type[EntityInfo], dict[int, EntityInfo]] = field(default_factory=dict)
-
-    # A second list of EntityInfo objects
-    # This is necessary for when an entity is being removed. HA requires
-    # some static info to be accessible during removal (unique_id, maybe others)
-    # If an entity can't find anything in the info array, it will look for info here.
-    old_info: dict[type[EntityInfo], dict[int, EntityInfo]] = field(
-        default_factory=dict
-    )
-
     services: dict[int, UserService] = field(default_factory=dict)
     available: bool = False
     device_info: DeviceInfo | None = None
@@ -114,7 +105,7 @@ class RuntimeEntryData:
         type[EntityInfo], list[Callable[[list[EntityInfo]], None]]
     ] = field(default_factory=dict)
     entity_info_key_remove_coros: dict[
-        tuple[type[EntityInfo], int], list[Coroutine[Any, Any, None]]
+        tuple[type[EntityInfo], int], list[Callable[[], Coroutine[Any, Any, None]]]
     ] = field(default_factory=dict)
     entity_info_key_updated_callbacks: dict[
         tuple[type[EntityInfo], int], list[Callable[[EntityInfo], None]]
@@ -162,7 +153,7 @@ class RuntimeEntryData:
     def async_register_key_static_info_remove_coro(
         self,
         static_info: EntityInfo,
-        coro: Coroutine[Any, Any, None],
+        coro: Callable[[], Coroutine[Any, Any, None]],
     ) -> CALLBACK_TYPE:
         """Register to receive callbacks when static info is removed for a specific key."""
         coro_key = (type(static_info), static_info.key)
@@ -245,7 +236,7 @@ class RuntimeEntryData:
         for static_info in static_infos:
             coro_key = (type(static_info), static_info.key)
             if coros_for_key := self.entity_info_key_remove_coros.get(coro_key):
-                coros.extend(coros_for_key)
+                coros.extend([coros_for_key() for coros_for_key in coros_for_key])
         if coros:
             await asyncio.gather(*coros)
 
