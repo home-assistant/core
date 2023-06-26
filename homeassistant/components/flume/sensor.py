@@ -1,5 +1,4 @@
 """Sensor for displaying the number of result from Flume."""
-from numbers import Number
 
 from pyflume import FlumeData
 
@@ -139,8 +138,4 @@ class FlumeSensor(FlumeEntity[FlumeDeviceDataUpdateCoordinator], SensorEntity):
         if sensor_key not in self.coordinator.flume_device.values:
             return None
 
-        return _format_state_value(self.coordinator.flume_device.values[sensor_key])
-
-
-def _format_state_value(value):
-    return round(value, 2) if isinstance(value, Number) else None
+        return self.coordinator.flume_device.values[sensor_key]
