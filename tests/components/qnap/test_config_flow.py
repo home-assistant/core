@@ -68,6 +68,7 @@ async def test_config_flow(hass: HomeAssistant, qnap_connect: MagicMock) -> None
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "unknown"}
 
+    qnap_connect.get_system_stats.side_effect = None
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         STANDARD_CONFIG,
@@ -87,10 +88,14 @@ async def test_config_flow(hass: HomeAssistant, qnap_connect: MagicMock) -> None
 
 async def test_config_flow_import(hass: HomeAssistant) -> None:
     """Test import of YAML config."""
+    data = STANDARD_CONFIG
+    data[CONF_SSL] = const.DEFAULT_SSL
+    data[CONF_VERIFY_SSL] = const.DEFAULT_VERIFY_SSL
+    data[CONF_PORT] = const.DEFAULT_PORT
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN,
         context={"source": config_entries.SOURCE_IMPORT},
-        data=STANDARD_CONFIG,
+        data=data,
     )
 
     assert result["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
