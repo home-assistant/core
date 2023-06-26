@@ -420,7 +420,7 @@ class RuntimeEntryData:
             return store_data
 
         self._pending_storage = _memorized_storage
-        self.store.async_delay_save(self._pending_storage, SAVE_DELAY)
+        self.store.async_delay_save(_memorized_storage, SAVE_DELAY)
 
     async def async_cleanup(self) -> None:
         """Cleanup the entry data when disconnected or unloading."""
