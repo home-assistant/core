@@ -425,14 +425,20 @@ async def async_setup_entry(  # noqa: C901
             _async_check_firmware_version(hass, device_info, entry_data.api_version)
             _async_check_using_api_password(hass, device_info, bool(password))
 
-    async def on_disconnect() -> None:
+    async def on_disconnect(expected_disconnect: bool) -> None:
         """Run disconnect callbacks on API disconnect."""
         name = entry_data.device_info.name if entry_data.device_info else host
-        _LOGGER.debug("%s: %s disconnected, running disconnected callbacks", name, host)
+        _LOGGER.debug(
+            "%s: %s disconnected (expected=%s), running disconnected callbacks",
+            name,
+            host,
+            expected_disconnect,
+        )
         for disconnect_cb in entry_data.disconnect_callbacks:
             disconnect_cb()
         entry_data.disconnect_callbacks = []
         entry_data.available = False
+        entry_data.expected_disconnect = expected_disconnect
         # Mark state as stale so that we will always dispatch
         # the next state update of that type when the device reconnects
         entry_data.stale_state = {
