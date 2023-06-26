@@ -13,7 +13,7 @@
         }
       },
       "vad_sensitivity": {
-        "name": "Silence sensitivity",
+        "name": "Finished speaking detection",
         "state": {
           "default": "Default",
           "aggressive": "Aggressive",
