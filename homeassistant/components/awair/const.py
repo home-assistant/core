@@ -1,6 +1,7 @@
 """Constants for the Awair component."""
 from __future__ import annotations
 
+from datetime import timedelta
 import logging
 
 API_CO2 = "carbon_dioxide"
@@ -20,3 +21,6 @@ ATTRIBUTION = "Awair air quality sensor"
 DOMAIN = "awair"
 
 LOGGER = logging.getLogger(__package__)
+
+UPDATE_INTERVAL_CLOUD = timedelta(minutes=5)
+UPDATE_INTERVAL_LOCAL = timedelta(seconds=30)

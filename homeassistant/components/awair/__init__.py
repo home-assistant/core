@@ -27,12 +27,11 @@ from .const import (
     API_TIMEOUT,
     DOMAIN,
     LOGGER,
+    UPDATE_INTERVAL_CLOUD,
+    UPDATE_INTERVAL_LOCAL,
 )
 
 PLATFORMS = [Platform.SENSOR]
-
-UPDATE_INTERVAL_CLOUD = timedelta(minutes=5)
-UPDATE_INTERVAL_LOCAL = timedelta(seconds=30)
 
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
