@@ -48,7 +48,6 @@ async def async_setup_entry(
         hass,
         entry,
         async_add_entities,
-        component_key="light",
         info_type=LightInfo,
         entity_type=EsphomeLight,
         state_type=LightState,

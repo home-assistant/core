@@ -29,7 +29,6 @@ async def async_setup_entry(
         hass,
         entry,
         async_add_entities,
-        component_key="select",
         info_type=SelectInfo,
         entity_type=EsphomeSelect,
         state_type=SelectState,
