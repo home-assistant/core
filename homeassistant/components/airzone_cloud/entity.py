@@ -86,7 +86,7 @@ class AirzoneWebServerEntity(AirzoneEntity):
             connections={(dr.CONNECTION_NETWORK_MAC, ws_id)},
             identifiers={(DOMAIN, ws_id)},
             manufacturer=MANUFACTURER,
-            name=f"WebServer {ws_id}",
+            name=ws_data[AZD_NAME],
             sw_version=ws_data[AZD_FIRMWARE],
         )
 

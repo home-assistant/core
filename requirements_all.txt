@@ -191,7 +191,7 @@ aio-georss-gdacs==0.8
 aioairq==0.2.4
 
 # homeassistant.components.airzone_cloud
-aioairzone-cloud==0.1.8
+aioairzone-cloud==0.1.9
 
 # homeassistant.components.airzone
 aioairzone==0.6.4
@@ -234,7 +234,7 @@ aioecowitt==2023.5.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==14.1.0
+aioesphomeapi==15.0.0
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -301,7 +301,7 @@ aionanoleaf==0.2.1
 aionotion==2023.05.5
 
 # homeassistant.components.oncue
-aiooncue==0.3.4
+aiooncue==0.3.5
 
 # homeassistant.components.openexchangerates
 aioopenexchangerates==0.4.0
@@ -503,7 +503,7 @@ beautifulsoup4==4.11.1
 bellows==0.35.5
 
 # homeassistant.components.bmw_connected_drive
-bimmer-connected==0.13.6
+bimmer-connected==0.13.7
 
 # homeassistant.components.bizkaibus
 bizkaibus==0.1.1
@@ -1089,7 +1089,7 @@ kegtron-ble==0.4.0
 kiwiki-client==0.1.1
 
 # homeassistant.components.knx
-knx-frontend==2023.6.9.195839
+knx-frontend==2023.6.23.191712
 
 # homeassistant.components.konnected
 konnected==1.2.0
@@ -1522,7 +1522,7 @@ pyEight==0.3.2
 pyElectra==1.2.0
 
 # homeassistant.components.emby
-pyEmby==1.8
+pyEmby==1.9
 
 # homeassistant.components.hikvision
 pyHik==0.3.2
@@ -2106,7 +2106,7 @@ python-kasa==0.5.1
 # python-lirc==1.2.3
 
 # homeassistant.components.matter
-python-matter-server==3.4.1
+python-matter-server==3.5.1
 
 # homeassistant.components.xiaomi_miio
 python-miio==0.5.12
@@ -2343,10 +2343,10 @@ securetar==2023.3.0
 sendgrid==6.8.2
 
 # homeassistant.components.sense
-sense-energy==0.11.2
+sense-energy==0.12.0
 
 # homeassistant.components.emulated_kasa
-sense_energy==0.11.2
+sense_energy==0.12.0
 
 # homeassistant.components.sensirion_ble
 sensirion-ble==0.1.0
@@ -2388,7 +2388,7 @@ sisyphus-control==3.1.3
 slackclient==2.5.0
 
 # homeassistant.components.xmpp
-slixmpp==1.8.3
+slixmpp==1.8.4
 
 # homeassistant.components.smart_meter_texas
 smart-meter-texas==0.4.7
@@ -2688,7 +2688,7 @@ xbox-webapi==2.0.11
 xiaomi-ble==0.17.2
 
 # homeassistant.components.knx
-xknx==2.10.0
+xknx==2.11.0
 
 # homeassistant.components.knx
 xknxproject==3.2.0
@@ -2727,7 +2727,7 @@ yolink-api==0.2.9
 youless-api==1.0.1
 
 # homeassistant.components.media_extractor
-youtube-dl==2021.12.17
+yt-dlp==2023.3.4
 
 # homeassistant.components.zamg
 zamg==0.2.2

@@ -31,7 +31,11 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import EsphomeEntity, EsphomeEnumMapper, platform_async_setup_entry
+from .entity import (
+    EsphomeEntity,
+    platform_async_setup_entry,
+)
+from .enum_mapper import EsphomeEnumMapper
 
 _ESPHOME_ACP_STATE_TO_HASS_STATE: EsphomeEnumMapper[
     AlarmControlPanelState, str
@@ -70,7 +74,6 @@ async def async_setup_entry(
         hass,
         entry,
         async_add_entities,
-        component_key="alarm_control_panel",
         info_type=AlarmControlPanelInfo,
         entity_type=EsphomeAlarmControlPanel,
         state_type=AlarmControlPanelEntityState,
