@@ -27,7 +27,6 @@ async def async_setup_entry(
         hass,
         entry,
         async_add_entities,
-        component_key="camera",
         info_type=CameraInfo,
         entity_type=EsphomeCamera,
         state_type=CameraState,

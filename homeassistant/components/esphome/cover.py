@@ -32,7 +32,6 @@ async def async_setup_entry(
         hass,
         entry,
         async_add_entities,
-        component_key="cover",
         info_type=CoverInfo,
         entity_type=EsphomeCover,
         state_type=CoverState,

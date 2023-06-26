@@ -34,7 +34,6 @@ async def async_setup_entry(
         hass,
         entry,
         async_add_entities,
-        component_key="number",
         info_type=NumberInfo,
         entity_type=EsphomeNumber,
         state_type=NumberState,

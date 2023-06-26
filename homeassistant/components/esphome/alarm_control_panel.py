@@ -73,7 +73,6 @@ async def async_setup_entry(
         hass,
         entry,
         async_add_entities,
-        component_key="alarm_control_panel",
         info_type=AlarmControlPanelInfo,
         entity_type=EsphomeAlarmControlPanel,
         state_type=AlarmControlPanelEntityState,
