@@ -63,9 +63,6 @@
       "time_to_empty_full": {
         "name": "Time to empty/full"
       },
-      "temperature": {
-        "name": "Temperature"
-      },
       "wifi_strength": {
         "name": "Wi-Fi strength"
       },
