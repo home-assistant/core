@@ -50,13 +50,13 @@ class Dremel3DPrinterSensorEntityDescription(
 SENSOR_TYPES: tuple[Dremel3DPrinterSensorEntityDescription, ...] = (
     Dremel3DPrinterSensorEntityDescription(
         key="job_phase",
-        name="Job phase",
+        translation_key="job_phase",
         icon="mdi:printer-3d",
         value_fn=lambda api, _: api.get_printing_status(),
     ),
     Dremel3DPrinterSensorEntityDescription(
         key="remaining_time",
-        name="Remaining time",
+        translation_key="remaining_time",
         device_class=SensorDeviceClass.TIMESTAMP,
         available_fn=lambda api, key: api.get_job_status()[key] > 0,
         value_fn=ignore_variance(
@@ -66,7 +66,7 @@ SENSOR_TYPES: tuple[Dremel3DPrinterSensorEntityDescription, ...] = (
     ),
     Dremel3DPrinterSensorEntityDescription(
         key="progress",
-        name="Progress",
+        translation_key="progress",
         icon="mdi:printer-3d-nozzle",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -76,7 +76,7 @@ SENSOR_TYPES: tuple[Dremel3DPrinterSensorEntityDescription, ...] = (
     ),
     Dremel3DPrinterSensorEntityDescription(
         key="chamber",
-        name="Chamber",
+        translation_key="chamber",
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
@@ -86,7 +86,7 @@ SENSOR_TYPES: tuple[Dremel3DPrinterSensorEntityDescription, ...] = (
     ),
     Dremel3DPrinterSensorEntityDescription(
         key="platform_temperature",
-        name="Platform temperature",
+        translation_key="platform_temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
@@ -96,7 +96,7 @@ SENSOR_TYPES: tuple[Dremel3DPrinterSensorEntityDescription, ...] = (
     ),
     Dremel3DPrinterSensorEntityDescription(
         key="target_platform_temperature",
-        name="Target platform temperature",
+        translation_key="target_platform_temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
@@ -108,7 +108,7 @@ SENSOR_TYPES: tuple[Dremel3DPrinterSensorEntityDescription, ...] = (
     ),
     Dremel3DPrinterSensorEntityDescription(
         key="max_platform_temperature",
-        name="Max platform temperature",
+        translation_key="max_platform_temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
@@ -120,7 +120,7 @@ SENSOR_TYPES: tuple[Dremel3DPrinterSensorEntityDescription, ...] = (
     ),
     Dremel3DPrinterSensorEntityDescription(
         key=ATTR_EXTRUDER,
-        name="Extruder",
+        translation_key="extruder",
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
@@ -130,7 +130,7 @@ SENSOR_TYPES: tuple[Dremel3DPrinterSensorEntityDescription, ...] = (
     ),
     Dremel3DPrinterSensorEntityDescription(
         key="target_extruder_temperature",
-        name="Target extruder temperature",
+        translation_key="target_extruder_temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
@@ -142,7 +142,7 @@ SENSOR_TYPES: tuple[Dremel3DPrinterSensorEntityDescription, ...] = (
     ),
     Dremel3DPrinterSensorEntityDescription(
         key="max_extruder_temperature",
-        name="Max extruder temperature",
+        translation_key="max_extruder_temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
@@ -154,14 +154,14 @@ SENSOR_TYPES: tuple[Dremel3DPrinterSensorEntityDescription, ...] = (
     ),
     Dremel3DPrinterSensorEntityDescription(
         key="network_build",
-        name="Network build",
+        translation_key="network_build",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         value_fn=lambda api, key: api.get_job_status()[key],
     ),
     Dremel3DPrinterSensorEntityDescription(
         key="filament",
-        name="Filament",
+        translation_key="filament",
         icon="mdi:printer-3d-nozzle",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -169,7 +169,7 @@ SENSOR_TYPES: tuple[Dremel3DPrinterSensorEntityDescription, ...] = (
     ),
     Dremel3DPrinterSensorEntityDescription(
         key="elapsed_time",
-        name="Elapsed time",
+        translation_key="elapsed_time",
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -181,7 +181,7 @@ SENSOR_TYPES: tuple[Dremel3DPrinterSensorEntityDescription, ...] = (
     ),
     Dremel3DPrinterSensorEntityDescription(
         key="estimated_total_time",
-        name="Estimated total time",
+        translation_key="estimated_total_time",
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -193,7 +193,7 @@ SENSOR_TYPES: tuple[Dremel3DPrinterSensorEntityDescription, ...] = (
     ),
     Dremel3DPrinterSensorEntityDescription(
         key="job_status",
-        name="Job status",
+        translation_key="job_status",
         icon="mdi:printer-3d",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -201,7 +201,7 @@ SENSOR_TYPES: tuple[Dremel3DPrinterSensorEntityDescription, ...] = (
     ),
     Dremel3DPrinterSensorEntityDescription(
         key="job_name",
-        name="Job name",
+        translation_key="job_name",
         icon="mdi:file",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -209,7 +209,7 @@ SENSOR_TYPES: tuple[Dremel3DPrinterSensorEntityDescription, ...] = (
     ),
     Dremel3DPrinterSensorEntityDescription(
         key="api_version",
-        name="API version",
+        translation_key="api_version",
         icon="mdi:api",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -217,7 +217,7 @@ SENSOR_TYPES: tuple[Dremel3DPrinterSensorEntityDescription, ...] = (
     ),
     Dremel3DPrinterSensorEntityDescription(
         key="host",
-        name="Host",
+        translation_key="host",
         icon="mdi:ip-network",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -225,7 +225,7 @@ SENSOR_TYPES: tuple[Dremel3DPrinterSensorEntityDescription, ...] = (
     ),
     Dremel3DPrinterSensorEntityDescription(
         key="connection_type",
-        name="Connection type",
+        translation_key="connection_type",
         icon="mdi:network",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -233,7 +233,7 @@ SENSOR_TYPES: tuple[Dremel3DPrinterSensorEntityDescription, ...] = (
     ),
     Dremel3DPrinterSensorEntityDescription(
         key="available_storage",
-        name="Available storage",
+        translation_key="available_storage",
         native_unit_of_measurement=UnitOfInformation.MEGABYTES,
         device_class=SensorDeviceClass.DATA_SIZE,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -242,7 +242,7 @@ SENSOR_TYPES: tuple[Dremel3DPrinterSensorEntityDescription, ...] = (
     ),
     Dremel3DPrinterSensorEntityDescription(
         key="hours_used",
-        name="Hours used",
+        translation_key="hours_used",
         icon="mdi:clock",
         native_unit_of_measurement=UnitOfTime.HOURS,
         device_class=SensorDeviceClass.DURATION,
@@ -267,7 +267,7 @@ async def async_setup_entry(
 
 
 class Dremel3DPrinterSensor(Dremel3DPrinterEntity, SensorEntity):
-    """Representation of an Dremel 3D Printer sensor."""
+    """Representation of a Dremel 3D Printer sensor."""
 
     entity_description: Dremel3DPrinterSensorEntityDescription
 

@@ -12,6 +12,9 @@
     "_": {
       "name": "[%key:component::button::title%]"
     },
+    "identify": {
+      "name": "Identify"
+    },
     "restart": {
       "name": "Restart"
     },
