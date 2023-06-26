@@ -33,7 +33,7 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Required(CONF_URL): cv.url,
                 vol.Required(CONF_API_KEY): cv.string,
                 vol.Required(CONF_API_SECRET): cv.string,
-                vol.Required(CONF_TIMEOUT, default=20): cv.time_period_seconds,
+                vol.Required(CONF_TIMEOUT, default=20): cv.positive_int,
                 vol.Optional(CONF_VERIFY_SSL, default=False): cv.boolean,
                 vol.Optional(CONF_TRACKER_INTERFACE, default=[]): vol.All(
                     cv.ensure_list, [cv.string]
@@ -57,7 +57,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     tracker_interfaces = conf[CONF_TRACKER_INTERFACE]
 
     interfaces_client = diagnostics.InterfaceClient(
-        api_key, api_secret, url, verify_ssl, timeout=timeout.total_seconds()
+        api_key, api_secret, url, verify_ssl, timeout
     )
     try:
         interfaces_client.get_arp()
@@ -68,7 +68,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     if tracker_interfaces:
         # Verify that specified tracker interfaces are valid
         netinsight_client = diagnostics.NetworkInsightClient(
-            api_key, api_secret, url, verify_ssl, timeout=timeout.total_seconds()
+            api_key, api_secret, url, verify_ssl, timeout
         )
         interfaces = list(netinsight_client.get_interfaces().values())
         for interface in tracker_interfaces:
