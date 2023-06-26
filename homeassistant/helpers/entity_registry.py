@@ -627,9 +627,8 @@ class EntityRegistry:
             )
 
         entity_registry_id: str | None = None
-        deleted_entity = self.deleted_entities.get((domain, platform, unique_id))
+        deleted_entity = self.deleted_entities.pop((domain, platform, unique_id), None)
         if deleted_entity is not None:
-            self.deleted_entities.pop((domain, platform, unique_id))
             # Restore id
             entity_registry_id = deleted_entity.id
 
@@ -699,11 +698,12 @@ class EntityRegistry:
     def async_remove(self, entity_id: str) -> None:
         """Remove an entity from registry."""
         entity = self.entities.pop(entity_id)
+        config_entry_id = entity.config_entry_id
         key = (entity.domain, entity.platform, entity.unique_id)
         # If the entity does not belong to a config entry, mark it as orphaned
-        orphaned_timestamp = None if entity.config_entry_id else time.time()
+        orphaned_timestamp = None if config_entry_id else time.time()
         self.deleted_entities[key] = DeletedRegistryEntry(
-            config_entry_id=entity.config_entry_id,
+            config_entry_id=config_entry_id,
             entity_id=entity_id,
             id=entity.id,
             orphaned_timestamp=orphaned_timestamp,
@@ -1153,13 +1153,10 @@ class EntityRegistry:
         """
         now_time = time.time()
         for key, deleted_entity in list(self.deleted_entities.items()):
-            if deleted_entity.orphaned_timestamp is None:
+            if (orphaned_timestamp := deleted_entity.orphaned_timestamp) is None:
                 continue
 
-            if (
-                deleted_entity.orphaned_timestamp + ORPHANED_ENTITY_KEEP_SECONDS
-                < now_time
-            ):
+            if orphaned_timestamp + ORPHANED_ENTITY_KEEP_SECONDS < now_time:
                 self.deleted_entities.pop(key)
                 self.async_schedule_save()
 
