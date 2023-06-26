@@ -152,7 +152,6 @@ async def test_webhook_repair_issue(
         "homeassistant.components.reolink.host.FIRST_ONVIF_TIMEOUT", new=0
     ), patch(
         "homeassistant.components.reolink.host.ReolinkHost._async_long_polling",
-        AsyncMock(),
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
