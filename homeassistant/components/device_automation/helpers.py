@@ -25,6 +25,8 @@ STATIC_VALIDATOR = {
     DeviceAutomationType.TRIGGER: "TRIGGER_SCHEMA",
 }
 
+TOGGLE_ENTITY_DOMAINS = {"fan", "humidifier", "light", "remote", "switch"}
+
 
 async def async_validate_device_automation_config(
     hass: HomeAssistant,
@@ -41,6 +43,16 @@ async def async_validate_device_automation_config(
         # Pass the unvalidated config to avoid mutating the raw config twice
         return cast(
             ConfigType, getattr(platform, STATIC_VALIDATOR[automation_type])(config)
+        )
+
+    # Bypass checks for toggle entity domains
+    if (
+        automation_type == DeviceAutomationType.ACTION
+        and validated_config[CONF_DOMAIN] in TOGGLE_ENTITY_DOMAINS
+    ):
+        return cast(
+            ConfigType,
+            await getattr(platform, DYNAMIC_VALIDATOR[automation_type])(hass, config),
         )
 
     # Only call the dynamic validator if the referenced device exists and the relevant

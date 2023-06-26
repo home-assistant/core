@@ -13,7 +13,10 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import EsphomeEntity, platform_async_setup_entry
+from .entity import (
+    EsphomeEntity,
+    platform_async_setup_entry,
+)
 
 
 async def async_setup_entry(
@@ -24,7 +27,6 @@ async def async_setup_entry(
         hass,
         entry,
         async_add_entities,
-        component_key="camera",
         info_type=CameraInfo,
         entity_type=EsphomeCamera,
         state_type=CameraState,

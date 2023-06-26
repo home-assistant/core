@@ -22,7 +22,11 @@ from homeassistant.util.percentage import (
     ranged_value_to_percentage,
 )
 
-from . import EsphomeEntity, esphome_state_property, platform_async_setup_entry
+from .entity import (
+    EsphomeEntity,
+    esphome_state_property,
+    platform_async_setup_entry,
+)
 from .enum_mapper import EsphomeEnumMapper
 
 ORDERED_NAMED_FAN_SPEEDS = [FanSpeed.LOW, FanSpeed.MEDIUM, FanSpeed.HIGH]
@@ -36,7 +40,6 @@ async def async_setup_entry(
         hass,
         entry,
         async_add_entities,
-        component_key="fan",
         info_type=FanInfo,
         entity_type=EsphomeFan,
         state_type=FanState,
