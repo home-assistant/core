@@ -34,6 +34,7 @@ from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from .config_flow import generate_local_server
 from .const import (
     CONF_API_TYPE,
+    CONF_HUB,
     CONF_SERVER,
     CONF_TOKEN_UUID,
     DOMAIN,
@@ -53,6 +54,21 @@ class HomeAssistantOverkizData:
     coordinator: OverkizDataUpdateCoordinator
     platforms: defaultdict[Platform, list[Device]]
     scenarios: list[Scenario]
+
+
+async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Migrate an old config entry."""
+
+    LOGGER.debug("Migrating from version %s", entry.version)
+    # 1 -> 2: CONF_HUB renamed to CONF_SERVER and CONF_API_TYPE added
+    if entry.version == 1:
+        entry.data[CONF_SERVER] = entry.data[CONF_HUB]
+        entry.data[CONF_API_TYPE] = "cloud"  # V1 only supports cloud
+        entry.version = 2
+
+        LOGGER.debug("Migration to version %s successful", entry.version)
+
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

@@ -10,15 +10,15 @@ from pyoverkiz.const import SUPPORTED_SERVERS
 from pyoverkiz.exceptions import (
     BadCredentialsException,
     CozyTouchBadCredentialsException,
-    OverkizException,
     MaintenanceException,
     NotSuchTokenException,
+    OverkizException,
     TooManyAttemptsBannedException,
     TooManyRequestsException,
     UnknownUserException,
 )
-from pyoverkiz.obfuscate import obfuscate_id
 from pyoverkiz.models import OverkizServer
+from pyoverkiz.obfuscate import obfuscate_id
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -62,7 +62,7 @@ LOCAL = "local"
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Overkiz (by Somfy)."""
 
-    VERSION = 1
+    VERSION = 2
 
     _config_entry: ConfigEntry | None
     _default_user: None | str
