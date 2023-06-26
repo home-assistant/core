@@ -5,6 +5,10 @@ from typing import Final
 
 import voluptuous as vol
 
+from homeassistant.components.device_automation import (
+    async_get_entity_registry_entry_or_raise,
+    async_validate_entity_schema,
+)
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_DEVICE_ID,
@@ -29,13 +33,20 @@ from .const import (
 
 ACTION_TYPES: Final[set[str]] = {"install", "skip"}
 
-ACTION_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
+_ACTION_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_TYPE): vol.In(ACTION_TYPES),
-        vol.Required(CONF_ENTITY_ID): cv.entity_domain(DOMAIN),
+        vol.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
         vol.Optional("backup"): cv.boolean,
     }
 )
+
+
+async def async_validate_action_config(
+    hass: HomeAssistant, config: ConfigType
+) -> ConfigType:
+    """Validate config."""
+    return async_validate_entity_schema(hass, config, _ACTION_SCHEMA)
 
 
 async def async_get_actions(
@@ -55,7 +66,7 @@ async def async_get_actions(
         base_action = {
             CONF_DEVICE_ID: device_id,
             CONF_DOMAIN: DOMAIN,
-            CONF_ENTITY_ID: entry.entity_id,
+            CONF_ENTITY_ID: entry.id,
         }
 
         # Add actions for each entity that belongs to this integration
@@ -98,7 +109,8 @@ async def async_get_action_capabilities(
         return {}
 
     try:
-        supported_features = get_supported_features(hass, config[ATTR_ENTITY_ID])
+        entry = async_get_entity_registry_entry_or_raise(hass, config[CONF_ENTITY_ID])
+        supported_features = get_supported_features(hass, entry.entity_id)
     except HomeAssistantError:
         supported_features = 0
 

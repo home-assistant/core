@@ -53,7 +53,7 @@ async def test_get_actions(
         config_entry_id=config_entry.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    entity_registry.async_get_or_create(
+    entity_entry = entity_registry.async_get_or_create(
         DOMAIN,
         "test",
         "5678",
@@ -66,7 +66,7 @@ async def test_get_actions(
             "domain": DOMAIN,
             "type": action,
             "device_id": device_entry.id,
-            "entity_id": f"{DOMAIN}.test_5678",
+            "entity_id": entity_entry.id,
             "metadata": {"secondary": False},
         }
         for action in expected_action_types
@@ -115,7 +115,7 @@ async def test_get_actions_hidden_auxiliary(
             "domain": DOMAIN,
             "type": action,
             "device_id": device_entry.id,
-            "entity_id": entity_entry.entity_id,
+            "entity_id": entity_entry.id,
             "metadata": {"secondary": True},
         }
         for action in ["skip"]
@@ -138,7 +138,7 @@ async def test_get_actions_reporting_only(
         config_entry_id=config_entry.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    entity_registry.async_get_or_create(
+    entity_entry = entity_registry.async_get_or_create(
         DOMAIN, "test", "123", device_id=device_entry.id
     )
     hass.states.async_set("update.test_123", "attributes", {"supported_features": 0})
@@ -147,7 +147,7 @@ async def test_get_actions_reporting_only(
             "domain": DOMAIN,
             "type": "skip",
             "device_id": device_entry.id,
-            "entity_id": "update.test_123",
+            "entity_id": entity_entry.id,
             "metadata": {"secondary": False},
         },
     ]
@@ -169,7 +169,7 @@ async def test_get_actions_with_install(
         config_entry_id=config_entry.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    entity_registry.async_get_or_create(
+    entity_entry = entity_registry.async_get_or_create(
         DOMAIN, "test", "123", device_id=device_entry.id
     )
     hass.states.async_set(
@@ -182,7 +182,7 @@ async def test_get_actions_with_install(
             "domain": DOMAIN,
             "type": action,
             "device_id": device_entry.id,
-            "entity_id": "update.test_123",
+            "entity_id": entity_entry.id,
             "metadata": {"secondary": False},
         }
         for action in ["install", "skip"]
@@ -235,10 +235,17 @@ async def test_get_action_capabilities(
         assert capabilities == expected_capabilities[action["type"]]
 
 
-async def test_action(hass: HomeAssistant, enable_custom_integrations: None) -> None:
+async def test_action(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    enable_custom_integrations: None,
+) -> None:
     """Test for install and skip actions."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
     platform.init()
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+    await hass.async_block_till_done()
+    entry = entity_registry.async_get("update.update_backup")
 
     assert await async_setup_component(
         hass,
@@ -253,7 +260,7 @@ async def test_action(hass: HomeAssistant, enable_custom_integrations: None) -> 
                     "action": {
                         "domain": DOMAIN,
                         "device_id": "abcdefgh",
-                        "entity_id": "update.update_backup",
+                        "entity_id": entry.id,
                         "type": "skip",
                     },
                 },
@@ -265,7 +272,7 @@ async def test_action(hass: HomeAssistant, enable_custom_integrations: None) -> 
                     "action": {
                         "domain": DOMAIN,
                         "device_id": "abcdefgh",
-                        "entity_id": "update.update_backup",
+                        "entity_id": entry.id,
                         "type": "install",
                         "backup": True,
                     },
