@@ -170,7 +170,7 @@ class EsphomeEntity(Entity, Generic[_InfoT, _StateT]):
         key = self._key
 
         self.async_on_remove(
-            entry_data.async_register_key_static_info_remove_coro(
+            entry_data.async_register_key_static_info_remove_callback(
                 self._static_info,
                 functools.partial(self.async_remove, force_remove=True),
             )
