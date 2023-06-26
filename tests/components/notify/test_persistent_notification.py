@@ -27,7 +27,7 @@ async def test_async_send_message(hass: HomeAssistant) -> None:
     assert notification["title"] == "Test notification"
 
 
-async def test_async_supports_notification_id(hass: HomeAssistant):
+async def test_async_supports_notification_id(hass: HomeAssistant) -> None:
     """Test that notify.persistent_notification supports notification_id."""
     await async_setup_component(hass, pn.DOMAIN, {"core": {}})
     await async_setup_component(hass, notify.DOMAIN, {})
@@ -43,8 +43,8 @@ async def test_async_supports_notification_id(hass: HomeAssistant):
     )
     await hass.async_block_till_done()
 
-    entity_ids = hass.states.async_entity_ids(pn.DOMAIN)
-    assert len(entity_ids) == 1
+    notifications = async_get_persistent_notifications(hass)
+    assert len(notifications) == 1
 
     # Send second message with same ID
 
@@ -58,9 +58,9 @@ async def test_async_supports_notification_id(hass: HomeAssistant):
     )
     await hass.async_block_till_done()
 
-    entity_ids = hass.states.async_entity_ids(pn.DOMAIN)
-    assert len(entity_ids) == 1
+    notifications = async_get_persistent_notifications(hass)
+    assert len(notifications) == 1
 
-    state = hass.states.get(entity_ids[0])
-    assert state.attributes.get("message") == "Goodbye"
-    assert state.attributes.get("title") == "Notification was updated"
+    notification = notifications[list(notifications)[0]]
+    assert notification["message"] == "Goodbye"
+    assert notification["title"] == "Notification was updated"
