@@ -17,6 +17,7 @@ from homeassistant.components.input_text import (
 from homeassistant.const import (
     ATTR_ENTITY_PICTURE,
     CONF_ENTITY_ID,
+    STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_registry import async_get
@@ -72,6 +73,33 @@ async def _assert_state(
     assert resp.status == expected_status
     body = await resp.read()
     assert body == expected_image
+
+
+@respx.mock
+@pytest.mark.freeze_time("2023-04-01 00:00:00+00:00")
+async def test_platform_config(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator, imgbytes_jpg
+) -> None:
+    """Test configuring under the platform key does not work."""
+    respx.get("http://example.com").respond(stream=imgbytes_jpg)
+
+    with assert_setup_component(1, "image"):
+        assert await setup.async_setup_component(
+            hass,
+            "image",
+            {
+                "image": {
+                    "platform": "template",
+                    "url": "{{ 'http://example.com' }}",
+                }
+            },
+        )
+
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 0
 
 
 @respx.mock
@@ -299,6 +327,39 @@ async def test_http_timeout(
         hass,
         hass_client,
         expected_state,
+        b"500: Internal Server Error",
+        expected_status=HTTPStatus.INTERNAL_SERVER_ERROR,
+    )
+
+
+@respx.mock
+async def test_template_error(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
+    """Test handling template error."""
+    respx.get("http://example.com").side_effect = httpx.TimeoutException
+
+    with assert_setup_component(1, "template"):
+        assert await setup.async_setup_component(
+            hass,
+            "template",
+            {
+                "template": {
+                    "image": {
+                        "url": "{{ no_such_variable.url }}",
+                    },
+                }
+            },
+        )
+
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    await _assert_state(
+        hass,
+        hass_client,
+        STATE_UNKNOWN,
         b"500: Internal Server Error",
         expected_status=HTTPStatus.INTERNAL_SERVER_ERROR,
     )
