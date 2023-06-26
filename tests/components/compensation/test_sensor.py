@@ -246,8 +246,8 @@ async def test_limits(hass: HomeAssistant, lower: bool, upper: bool) -> None:
                     [2.0, 1.0],
                 ],
                 "precision": 2,
-                "clamp_lower_limit": lower,
-                "clamp_upper_limit": upper,
+                "lower_limit": lower,
+                "upper_limit": upper,
                 "unit_of_measurement": "a",
             }
         }

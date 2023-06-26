@@ -20,13 +20,13 @@ from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
-    CONF_CLAMP_LOWER_LIMIT,
-    CONF_CLAMP_UPPER_LIMIT,
     CONF_COMPENSATION,
     CONF_DATAPOINTS,
     CONF_DEGREE,
+    CONF_LOWER_LIMIT,
     CONF_POLYNOMIAL,
     CONF_PRECISION,
+    CONF_UPPER_LIMIT,
     DATA_COMPENSATION,
     DEFAULT_DEGREE,
     DEFAULT_PRECISION,
@@ -55,8 +55,8 @@ COMPENSATION_SCHEMA = vol.Schema(
         ],
         vol.Optional(CONF_UNIQUE_ID): cv.string,
         vol.Optional(CONF_ATTRIBUTE): cv.string,
-        vol.Optional(CONF_CLAMP_UPPER_LIMIT, default=False): cv.boolean,
-        vol.Optional(CONF_CLAMP_LOWER_LIMIT, default=False): cv.boolean,
+        vol.Optional(CONF_UPPER_LIMIT, default=False): cv.boolean,
+        vol.Optional(CONF_LOWER_LIMIT, default=False): cv.boolean,
         vol.Optional(CONF_PRECISION, default=DEFAULT_PRECISION): cv.positive_int,
         vol.Optional(CONF_DEGREE, default=DEFAULT_DEGREE): vol.All(
             vol.Coerce(int),
@@ -109,12 +109,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             }
             data[CONF_POLYNOMIAL] = np.poly1d(coefficients)
 
-            if data[CONF_CLAMP_LOWER_LIMIT]:
+            if data[CONF_LOWER_LIMIT]:
                 data[CONF_MINIMUM] = sorted_coefficients[0]
             else:
                 data[CONF_MINIMUM] = None
 
-            if data[CONF_CLAMP_UPPER_LIMIT]:
+            if data[CONF_UPPER_LIMIT]:
                 data[CONF_MAXIMUM] = sorted_coefficients[-1]
             else:
                 data[CONF_MAXIMUM] = None
