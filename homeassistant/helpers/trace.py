@@ -207,13 +207,15 @@ class StopReason:
     """Mutable container class for script_execution."""
 
     script_execution: str | None = None
+    response: Any = None
 
 
-def script_execution_set(reason: str) -> None:
+def script_execution_set(reason: str, response: Any = None) -> None:
     """Set stop reason."""
     if (data := script_execution_cv.get()) is None:
         return
     data.script_execution = reason
+    data.response = response
 
 
 def script_execution_get() -> str | None:

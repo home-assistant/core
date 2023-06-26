@@ -1502,3 +1502,33 @@ async def test_blueprint_script_fails_substitution(
         "{'service_to_call': 'test.automation'}: No substitution found for input blah"
         in caplog.text
     )
+
+
+async def test_responses(hass: HomeAssistant) -> None:
+    """Test we can get responses."""
+    mock_restore_cache(hass, ())
+    assert await async_setup_component(
+        hass,
+        "script",
+        {
+            "script": {
+                "test": {
+                    "sequence": {
+                        "stop": "done",
+                        "response": "5",
+                    }
+                }
+            }
+        },
+    )
+
+    assert await hass.services.async_call(
+        DOMAIN, "test", {"greeting": "world"}, blocking=True, return_response=True
+    ) == {"response": 5}
+    # Validate we can also call it without return_response
+    assert (
+        await hass.services.async_call(
+            DOMAIN, "test", {"greeting": "world"}, blocking=True, return_response=False
+        )
+        is None
+    )
