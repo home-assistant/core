@@ -33,9 +33,7 @@ class DexcomGlucoseValueSensor(CoordinatorEntity, SensorEntity):
         """Initialize the sensor."""
         super().__init__(coordinator)
         self._attr_native_unit_of_measurement = unit_of_measurement
-        self._key = (
-            "mg_dl" if unit_of_measurement == MG_DL else "mmol_l"
-        )
+        self._key = "mg_dl" if unit_of_measurement == MG_DL else "mmol_l"
         self._attr_name = f"{DOMAIN}_{username}_glucose_value"
         self._attr_unique_id = f"{username}-value"
         self._attr_icon = GLUCOSE_VALUE_ICON
