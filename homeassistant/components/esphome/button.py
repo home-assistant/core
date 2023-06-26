@@ -48,6 +48,10 @@ class EsphomeButton(EsphomeEntity[ButtonInfo, EntityState], ButtonEntity):
         still set updated attributes.
         """
         self._on_entry_data_changed()
+        # We already write state on device update because
+        # we will never get state coming from the device
+        # because buttons don't have state
+        self.async_write_ha_state()
 
     async def async_press(self) -> None:
         """Press the button."""
