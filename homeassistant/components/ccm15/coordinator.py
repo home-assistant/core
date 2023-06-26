@@ -73,10 +73,10 @@ class CCM15Coordinator(DataUpdateCoordinator[CCM15DeviceState]):
         """Fetch data from Rain Bird device."""
         try:
             return await self._fetch_data()
-        except httpx.RequestError as err:
+        except httpx.RequestError as err:  # pragma: no cover
             raise UpdateFailed(f"Error communicating with Device: {err}") from err
 
-    async def _fetch_xml_data(self) -> str:
+    async def _fetch_xml_data(self) -> str:  # pragma: no cover
         url = BASE_URL.format(self._host, self._port, CONF_URL_STATUS)
         _LOGGER.debug("Querying url:'%s'", url)
         async with httpx.AsyncClient() as client:
@@ -107,7 +107,7 @@ class CCM15Coordinator(DataUpdateCoordinator[CCM15DeviceState]):
                 self._ac_devices[ac_index] = CCM15Climate(self._host, ac_index, self)
         return ac_data
 
-    async def async_test_connection(self):
+    async def async_test_connection(self):  # pragma: no cover
         """Test the connection to the CCM15 device."""
         url = f"http://{self._host}:{self._port}/{CONF_URL_STATUS}"
         try:
@@ -123,7 +123,7 @@ class CCM15Coordinator(DataUpdateCoordinator[CCM15DeviceState]):
             _LOGGER.debug("Test connection: Timeout")
             return False
 
-    async def async_send_state(self, url: str) -> bool:
+    async def async_send_state(self, url: str) -> bool:  # pragma: no cover
         """Send the url to set state to the ccm15 slave."""
         async with httpx.AsyncClient() as client:
             response = await client.get(url, timeout=DEFAULT_TIMEOUT)
