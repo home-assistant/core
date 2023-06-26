@@ -33,3 +33,7 @@ dismiss:
       example: 1234
       selector:
         text:
+
+dismiss_all:
+  name: Dismiss All
+  description: Remove all notifications.

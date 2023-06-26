@@ -61,7 +61,7 @@ class DeviceCoordinator(DataUpdateCoordinator[None]):
                     CONF_NAME: self.wemo.name,
                     CONF_TYPE: event_type,
                     CONF_PARAMS: params,
-                    CONF_UNIQUE_ID: self.wemo.serialnumber,
+                    CONF_UNIQUE_ID: self.wemo.serial_number,
                 },
             )
         else:
@@ -131,14 +131,14 @@ def _create_device_info(wemo: WeMoDevice) -> DeviceInfo:
     _dev_info = _device_info(wemo)
     if wemo.model_name == "DLI emulated Belkin Socket":
         _dev_info[ATTR_CONFIGURATION_URL] = f"http://{wemo.host}"
-        _dev_info[ATTR_IDENTIFIERS] = {(DOMAIN, wemo.serialnumber[:-1])}
+        _dev_info[ATTR_IDENTIFIERS] = {(DOMAIN, wemo.serial_number[:-1])}
     return _dev_info
 
 
 def _device_info(wemo: WeMoDevice) -> DeviceInfo:
     return DeviceInfo(
         connections={(CONNECTION_UPNP, wemo.udn)},
-        identifiers={(DOMAIN, wemo.serialnumber)},
+        identifiers={(DOMAIN, wemo.serial_number)},
         manufacturer="Belkin",
         model=wemo.model_name,
         name=wemo.name,

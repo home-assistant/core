@@ -45,7 +45,7 @@ from .device_registry import DeviceRegistry
 from .entity_registry import EntityRegistry, RegistryEntryDisabler, RegistryEntryHider
 from .event import async_call_later, async_track_time_interval
 from .issue_registry import IssueSeverity, async_create_issue
-from .typing import ConfigType, DiscoveryInfoType
+from .typing import UNDEFINED, ConfigType, DiscoveryInfoType
 
 if TYPE_CHECKING:
     from .entity import Entity
@@ -552,6 +552,10 @@ class EntityPlatform:
         suggested_object_id: str | None = None
         generate_new_entity_id = False
 
+        entity_name = entity.name
+        if entity_name is UNDEFINED:
+            entity_name = None
+
         # Get entity_id from unique ID registration
         if entity.unique_id is not None:
             registered_entity_id = entity_registry.async_get_entity_id(
@@ -645,12 +649,12 @@ class EntityPlatform:
             else:
                 if device and entity.has_entity_name:
                     device_name = device.name_by_user or device.name
-                    if not entity.name:
+                    if entity.use_device_name:
                         suggested_object_id = device_name
                     else:
-                        suggested_object_id = f"{device_name} {entity.name}"
+                        suggested_object_id = f"{device_name} {entity_name}"
                 if not suggested_object_id:
-                    suggested_object_id = entity.name
+                    suggested_object_id = entity_name
 
             if self.entity_namespace is not None:
                 suggested_object_id = f"{self.entity_namespace} {suggested_object_id}"
@@ -678,7 +682,7 @@ class EntityPlatform:
                 known_object_ids=self.entities.keys(),
                 original_device_class=entity.device_class,
                 original_icon=entity.icon,
-                original_name=entity.name,
+                original_name=entity_name,
                 suggested_object_id=suggested_object_id,
                 supported_features=entity.supported_features,
                 translation_key=entity.translation_key,
@@ -705,7 +709,7 @@ class EntityPlatform:
         # Generate entity ID
         if entity.entity_id is None or generate_new_entity_id:
             suggested_object_id = (
-                suggested_object_id or entity.name or DEVICE_DEFAULT_NAME
+                suggested_object_id or entity_name or DEVICE_DEFAULT_NAME
             )
 
             if self.entity_namespace is not None:
@@ -732,7 +736,7 @@ class EntityPlatform:
             self.logger.debug(
                 "Not adding entity %s because it's disabled",
                 entry.name
-                or entity.name
+                or entity_name
                 or f'"{self.platform_name} {entity.unique_id}"',
             )
             entity.add_to_platform_abort()

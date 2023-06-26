@@ -356,8 +356,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/eq3btsmart/ @rytilahti
 /homeassistant/components/escea/ @lazdavila
 /tests/components/escea/ @lazdavila
-/homeassistant/components/esphome/ @OttoWinter @jesserockz
-/tests/components/esphome/ @OttoWinter @jesserockz
+/homeassistant/components/esphome/ @OttoWinter @jesserockz @bdraco
+/tests/components/esphome/ @OttoWinter @jesserockz @bdraco
 /homeassistant/components/eufylife_ble/ @bdr99
 /tests/components/eufylife_ble/ @bdr99
 /homeassistant/components/evil_genius_labs/ @balloob
@@ -563,6 +563,8 @@ build.json @home-assistant/supervisor
 /tests/components/icloud/ @Quentame @nzapponi
 /homeassistant/components/ign_sismologia/ @exxamalte
 /tests/components/ign_sismologia/ @exxamalte
+/homeassistant/components/image/ @home-assistant/core
+/tests/components/image/ @home-assistant/core
 /homeassistant/components/image_processing/ @home-assistant/core
 /tests/components/image_processing/ @home-assistant/core
 /homeassistant/components/image_upload/ @home-assistant/core
@@ -783,8 +785,8 @@ build.json @home-assistant/supervisor
 /tests/components/mutesync/ @currentoor
 /homeassistant/components/my/ @home-assistant/core
 /tests/components/my/ @home-assistant/core
-/homeassistant/components/myq/ @bdraco @ehendrix23
-/tests/components/myq/ @bdraco @ehendrix23
+/homeassistant/components/myq/ @ehendrix23
+/tests/components/myq/ @ehendrix23
 /homeassistant/components/mysensors/ @MartinHjelmare @functionpointer
 /tests/components/mysensors/ @MartinHjelmare @functionpointer
 /homeassistant/components/mystrom/ @fabaff
@@ -883,6 +885,7 @@ build.json @home-assistant/supervisor
 /homeassistant/components/opengarage/ @danielhiversen
 /tests/components/opengarage/ @danielhiversen
 /homeassistant/components/openhome/ @bazwilliams
+/tests/components/openhome/ @bazwilliams
 /homeassistant/components/opensky/ @joostlek
 /homeassistant/components/opentherm_gw/ @mvn23
 /tests/components/opentherm_gw/ @mvn23
@@ -1300,6 +1303,8 @@ build.json @home-assistant/supervisor
 /tests/components/twentemilieu/ @frenck
 /homeassistant/components/twinkly/ @dr1rrb @Robbie1221
 /tests/components/twinkly/ @dr1rrb @Robbie1221
+/homeassistant/components/twitch/ @joostlek
+/tests/components/twitch/ @joostlek
 /homeassistant/components/ukraine_alarm/ @PaulAnnekov
 /tests/components/ukraine_alarm/ @PaulAnnekov
 /homeassistant/components/unifi/ @Kane610
