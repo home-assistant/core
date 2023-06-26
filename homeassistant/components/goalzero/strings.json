@@ -31,9 +31,6 @@
       "app_online": {
         "name": "App online"
       },
-      "is_charging": {
-        "name": "Charging"
-      },
       "input_detected": {
         "name": "Input detected"
       }
