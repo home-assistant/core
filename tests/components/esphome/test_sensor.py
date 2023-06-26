@@ -1,4 +1,6 @@
 """Test ESPHome sensors."""
+import math
+
 from aioesphomeapi import (
     APIClient,
     EntityCategory as ESPHomeEntityCategory,
@@ -171,6 +173,56 @@ async def test_generic_numeric_sensor_legacy_last_reset_convert(
     assert state is not None
     assert state.state == "50"
     assert state.attributes[ATTR_STATE_CLASS] == SensorStateClass.TOTAL_INCREASING
+
+
+async def test_generic_numeric_sensor_no_state(
+    hass: HomeAssistant, mock_client: APIClient, mock_generic_device_entry
+) -> None:
+    """Test a generic numeric sensor that has no state."""
+    entity_info = [
+        SensorInfo(
+            object_id="mysensor",
+            key=1,
+            name="my sensor",
+            unique_id="my_sensor",
+        )
+    ]
+    states = []
+    user_service = []
+    await mock_generic_device_entry(
+        mock_client=mock_client,
+        entity_info=entity_info,
+        user_service=user_service,
+        states=states,
+    )
+    state = hass.states.get("sensor.test_my_sensor")
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+
+
+async def test_generic_numeric_sensor_nan_state(
+    hass: HomeAssistant, mock_client: APIClient, mock_generic_device_entry
+) -> None:
+    """Test a generic numeric sensor that has nan state."""
+    entity_info = [
+        SensorInfo(
+            object_id="mysensor",
+            key=1,
+            name="my sensor",
+            unique_id="my_sensor",
+        )
+    ]
+    states = [SensorState(key=1, state=math.nan, missing_state=False)]
+    user_service = []
+    await mock_generic_device_entry(
+        mock_client=mock_client,
+        entity_info=entity_info,
+        user_service=user_service,
+        states=states,
+    )
+    state = hass.states.get("sensor.test_my_sensor")
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
 
 
 async def test_generic_numeric_sensor_missing_state(
