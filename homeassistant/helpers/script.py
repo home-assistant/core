@@ -662,7 +662,7 @@ class _ScriptRun:
             self._hass, self._action, self._variables
         )
 
-        # Validate response data paraters. This check ignores services that do
+        # Validate response data parameters. This check ignores services that do
         # not exist which will raise an appropriate error in the service call below.
         response_variable = self._action.get(CONF_RESPONSE_VARIABLE)
         return_response = response_variable is not None
