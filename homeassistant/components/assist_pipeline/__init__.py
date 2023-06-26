@@ -80,3 +80,33 @@ async def async_pipeline_from_audio_stream(
     )
     await pipeline_input.validate()
     await pipeline_input.execute()
+
+
+async def async_pipeline_from_text(
+    hass: HomeAssistant,
+    context: Context,
+    event_callback: PipelineEventCallback,
+    intent_input: str,
+    pipeline_id: str | None = None,
+    conversation_id: str | None = None,
+    device_id: str | None = None,
+) -> None:
+    """Create a text pipeline from a text input.
+
+    Raises PipelineNotFound if no pipeline is found.
+    """
+    pipeline_input = PipelineInput(
+        conversation_id=conversation_id,
+        device_id=device_id,
+        intent_input=intent_input,
+        run=PipelineRun(
+            hass,
+            context=context,
+            pipeline=async_get_pipeline(hass, pipeline_id=pipeline_id),
+            start_stage=PipelineStage.INTENT,
+            end_stage=PipelineStage.INTENT,
+            event_callback=event_callback,
+        ),
+    )
+    await pipeline_input.validate()
+    await pipeline_input.execute()

@@ -266,3 +266,51 @@
     }),
   ])
 # ---
+# name: test_pipeline_from_text
+  list([
+    dict({
+      'data': dict({
+        'language': 'en',
+        'pipeline': <ANY>,
+      }),
+      'type': <PipelineEventType.RUN_START: 'run-start'>,
+    }),
+    dict({
+      'data': dict({
+        'conversation_id': None,
+        'device_id': None,
+        'engine': 'homeassistant',
+        'intent_input': 'Hello?',
+        'language': 'en',
+      }),
+      'type': <PipelineEventType.INTENT_START: 'intent-start'>,
+    }),
+    dict({
+      'data': dict({
+        'intent_output': dict({
+          'conversation_id': None,
+          'response': dict({
+            'card': dict({
+            }),
+            'data': dict({
+              'code': 'no_intent_match',
+            }),
+            'language': 'en',
+            'response_type': 'error',
+            'speech': dict({
+              'plain': dict({
+                'extra_data': None,
+                'speech': "Sorry, I couldn't understand that",
+              }),
+            }),
+          }),
+        }),
+      }),
+      'type': <PipelineEventType.INTENT_END: 'intent-end'>,
+    }),
+    dict({
+      'data': None,
+      'type': <PipelineEventType.RUN_END: 'run-end'>,
+    }),
+  ])
+# ---

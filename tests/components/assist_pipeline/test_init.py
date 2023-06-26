@@ -280,3 +280,22 @@ async def test_pipeline_from_audio_stream_unknown_pipeline(
         )
 
     assert not events
+
+
+async def test_pipeline_from_text(
+    hass: HomeAssistant,
+    init_components,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test creating a pipeline from a text."""
+    events = []
+    hass.states.async_set("light.kitchen", "on")
+
+    await assist_pipeline.async_pipeline_from_text(
+        hass,
+        Context(),
+        events.append,
+        "Hello?",
+    )
+
+    assert process_events(events) == snapshot
