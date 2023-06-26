@@ -123,7 +123,6 @@ class CCM15Coordinator(DataUpdateCoordinator[CCM15DeviceState]):
             _LOGGER.debug("Test connection: Timeout")
             return False
 
-    # @pytest.mark.skip(reason="Uses http requests")
     async def async_send_state(self, url: str) -> bool:
         """Send the url to set state to the ccm15 slave."""
         async with httpx.AsyncClient() as client:
