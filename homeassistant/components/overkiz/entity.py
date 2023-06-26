@@ -18,6 +18,7 @@ class OverkizEntity(CoordinatorEntity[OverkizDataUpdateCoordinator]):
     """Representation of an Overkiz device entity."""
 
     _attr_has_entity_name = True
+    _attr_name: str | None = None
 
     def __init__(
         self, device_url: str, coordinator: OverkizDataUpdateCoordinator
@@ -38,8 +39,6 @@ class OverkizEntity(CoordinatorEntity[OverkizDataUpdateCoordinator]):
         if self.is_sub_device:
             # In case of sub entity, use the provided label as name
             self._attr_name = self.device.label
-        else:
-            self._attr_name = None
 
         self._attr_device_info = self.generate_device_info()
 
