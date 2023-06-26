@@ -109,6 +109,7 @@ class RuntimeEntryData:
     entity_info_callbacks: dict[
         type[EntityInfo], list[Callable[[list[EntityInfo]], None]]
     ] = field(default_factory=dict)
+    original_options: dict[str, Any] = field(default_factory=dict)
 
     @property
     def name(self) -> str:
@@ -365,3 +366,11 @@ class RuntimeEntryData:
             return store_data
 
         self.store.async_delay_save(_memorized_storage, SAVE_DELAY)
+
+    async def async_update_listener(
+        self, hass: HomeAssistant, entry: ConfigEntry
+    ) -> None:
+        """Handle options update."""
+        if self.original_options == entry.options:
+            return
+        hass.async_create_task(hass.config_entries.async_reload(entry.entry_id))
