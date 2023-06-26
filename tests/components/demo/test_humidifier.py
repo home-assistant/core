@@ -4,6 +4,7 @@ import pytest
 import voluptuous as vol
 
 from homeassistant.components.humidifier import (
+    ATTR_CURRENT_HUMIDITY,
     ATTR_HUMIDITY,
     ATTR_MAX_HUMIDITY,
     ATTR_MIN_HUMIDITY,
@@ -30,7 +31,7 @@ ENTITY_HUMIDIFIER = "humidifier.humidifier"
 
 
 @pytest.fixture(autouse=True)
-async def setup_demo_humidifier(hass):
+async def setup_demo_humidifier(hass, disable_platforms):
     """Initialize setup demo humidifier."""
     assert await async_setup_component(
         hass, DOMAIN, {"humidifier": {"platform": "demo"}}
@@ -43,6 +44,7 @@ def test_setup_params(hass: HomeAssistant) -> None:
     state = hass.states.get(ENTITY_DEHUMIDIFIER)
     assert state.state == STATE_ON
     assert state.attributes.get(ATTR_HUMIDITY) == 54
+    assert state.attributes.get(ATTR_CURRENT_HUMIDITY) == 59
 
 
 def test_default_setup_params(hass: HomeAssistant) -> None:
