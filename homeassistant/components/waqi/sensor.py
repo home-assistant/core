@@ -64,7 +64,7 @@ PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_STATIONS): cv.ensure_list,
         vol.Required(CONF_TOKEN): cv.string,
-        vol.Required(CONF_LOCATIONS): cv.ensure_list,
+        vol.Optional(CONF_LOCATIONS): cv.ensure_list,
     }
 )
 
@@ -79,28 +79,65 @@ async def async_setup_platform(
 
     token = config[CONF_TOKEN]
     station_filter = config.get(CONF_STATIONS)
-    locations = config[CONF_LOCATIONS]
+    locations = config.get(CONF_LOCATIONS)
 
     client = WaqiClient(token, async_get_clientsession(hass), timeout=TIMEOUT)
     dev = []
-    try:
-        for location_name in locations:
-            stations = await client.search(location_name)
-            _LOGGER.debug("The following stations were returned: %s", stations)
-            for station in stations:
-                waqi_sensor = WaqiSensor(client, station)
-                if not station_filter or {
-                    waqi_sensor.uid,
-                    waqi_sensor.url,
-                    waqi_sensor.station_name,
-                } & set(station_filter):
-                    dev.append(waqi_sensor)
-    except (
-        aiohttp.client_exceptions.ClientConnectorError,
-        asyncio.TimeoutError,
-    ) as err:
-        _LOGGER.exception("Failed to connect to WAQI servers")
-        raise PlatformNotReady from err
+
+    # if there are no locations specified, it will use the list of stations in the config file
+    # if there are locations specified, stations becomes a filter to limit within the location
+    
+    if len(station_filter) > 0:
+        try:
+            for station_name in station_filter:
+                if '@' in station_name:
+                    _LOGGER.info("Checking numerical station: %s", station_name)
+                    station = await client.get_station_by_name(station_name)
+                    _LOGGER.debug("got station object: %s", station)
+                    waqi_sensor = WaqiSensor(client, station)             
+                    if waqi_sensor.uid:
+                        dev.append(waqi_sensor)
+
+                else:
+                    _LOGGER.info("Checking named station: %s", station_name)
+                    station = await client.get_station_by_name(station_name)
+                    _LOGGER.debug("got station object: %s", station)
+                    #station["uid"] = station_name
+                    waqi_sensor = WaqiSensor(client, station)
+                    if waqi_sensor.uid:
+                        dev.append(waqi_sensor)
+        except (
+            aiohttp.client_exceptions.ClientConnectorError,
+            asyncio.TimeoutError,
+        ) as err:
+            _LOGGER.exception("Failed to connect to WAQI servers")
+            raise PlatformNotReady from err
+
+    elif len(locations) > 0:
+        try:
+            for location_name in locations:
+                _LOGGER.debug("Finding stations by location: %s", location_name)
+                stations = await client.search(location_name)
+                _LOGGER.debug("The following stations were returned: %s", stations)
+                for station in stations:
+                    waqi_sensor = WaqiSensor(client, station)
+                    if not station_filter or {
+                        waqi_sensor.uid,
+                        waqi_sensor.url,
+                        waqi_sensor.station_name,
+                    } & set(station_filter):
+                        dev.append(waqi_sensor)
+        except (
+            aiohttp.client_exceptions.ClientConnectorError,
+            asyncio.TimeoutError,
+        ) as err:
+            _LOGGER.exception("Failed to connect to WAQI servers")
+            raise PlatformNotReady from err
+    else:
+        _LOGGER.exception("No locations or stations specified")
+        raise PlatformNotReady
+ 
+    _LOGGER.info("Getting feed from %s station(s)", len(dev))
     async_add_entities(dev, True)
 
 
@@ -117,17 +154,27 @@ class WaqiSensor(SensorEntity):
         try:
             self.uid = station["uid"]
         except (KeyError, TypeError):
-            self.uid = None
+            try:
+                self.uid = station["idx"]
+            except (KeyError, TypeError):
+                self.uid = None
 
         try:
             self.url = station["station"]["url"]
         except (KeyError, TypeError):
-            self.url = None
+            try:
+                self.url = station["city"]["url"]    
+            except (KeyError, TypeError):               
+                self.url = None
+            
 
         try:
             self.station_name = station["station"]["name"]
         except (KeyError, TypeError):
-            self.station_name = None
+            try:
+                self.station_name = station["city"]["name"]    
+            except (KeyError, TypeError):
+                self.station_name = None
 
         self._data = None
 
