@@ -1059,7 +1059,6 @@ async def test_custom_agent(
     hass_client: ClientSessionGenerator,
     hass_admin_user: MockUser,
     mock_agent,
-    agent_id,
 ) -> None:
     """Test a custom conversation agent."""
     assert await async_setup_component(hass, "homeassistant", {})
@@ -1072,7 +1071,7 @@ async def test_custom_agent(
         "text": "Test Text",
         "conversation_id": "test-conv-id",
         "language": "test-language",
-        "agent_id": agent_id,
+        "agent_id": mock_agent.agent_id,
     }
 
     resp = await client.post("/api/conversation/process", json=data)
