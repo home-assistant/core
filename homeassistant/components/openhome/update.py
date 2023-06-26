@@ -1,8 +1,12 @@
 """Update entities for Linn devices."""
 from __future__ import annotations
 
+import asyncio
 import logging
 from typing import Any
+
+import aiohttp
+from async_upnp_client.client import UpnpError
 
 from homeassistant.components.update import (
     UpdateDeviceClass,
@@ -41,49 +45,23 @@ async def async_setup_entry(
 class OpenhomeUpdateEntity(UpdateEntity):
     """Update entity for a Linn DS device."""
 
+    _attr_device_class = UpdateDeviceClass.FIRMWARE
+    _attr_supported_features = UpdateEntityFeature.INSTALL
     _attr_has_entity_name = True
     _attr_name = "Firmware Update"
 
     def __init__(self, device):
         """Initialize a Linn DS update entity."""
-        self._attr_device_class = UpdateDeviceClass.FIRMWARE
-        self._attr_supported_features = UpdateEntityFeature.INSTALL
-        self._name = None
         self._device = device
-        self._installed_version = None
-        self._latest_version = None
-        self._release_summary = None
-        self._release_url = None
+        self._attr_attr_installed_version = None
+        self._attr_latest_version = None
+        self._attr_release_summary = None
+        self._attr_release_url = None
 
     @property
     def unique_id(self):
         """Return a unique ID."""
         return f"{self._device.uuid()}-update"
-
-    @property
-    def name(self):
-        """Return the name of the device."""
-        return f"{self._name} Firmware Update"
-
-    @property
-    def installed_version(self) -> str | None:
-        """Version currently in use."""
-        return self._installed_version
-
-    @property
-    def latest_version(self) -> str | None:
-        """Latest version available for install."""
-        return self._latest_version
-
-    @property
-    def release_summary(self) -> str | None:
-        """Description of the latest firmware release."""
-        return self._release_summary
-
-    @property
-    def release_url(self) -> str | None:
-        """URL to the full release notes of the latest version available."""
-        return self._release_url
 
     @property
     def device_info(self):
@@ -100,23 +78,28 @@ class OpenhomeUpdateEntity(UpdateEntity):
     async def async_update(self) -> None:
         """Update state of entity."""
 
-        self._name = await self._device.room()
-
         software_status = await self._device.software_status()
 
-        if not software_status:
-            return
+        self._attr_installed_version = None
+        self._attr_latest_version = None
+        self._attr_release_summary = None
+        self._attr_release_url = None
 
-        self._installed_version = software_status["current_software"]["version"]
-
-        if software_status["status"] == "update_available":
-            self._latest_version = software_status["update_info"]["updates"][0][
+        if software_status:
+            self._attr_installed_version = software_status["current_software"][
                 "version"
             ]
-            self._release_summary = software_status["update_info"]["updates"][0][
-                "description"
-            ]
-            self._release_url = software_status["update_info"]["releasenotesuri"]
+
+            if software_status["status"] == "update_available":
+                self._attr_latest_version = software_status["update_info"]["updates"][
+                    0
+                ]["version"]
+                self._attr_release_summary = software_status["update_info"]["updates"][
+                    0
+                ]["description"]
+                self._attr_release_url = software_status["update_info"][
+                    "releasenotesuri"
+                ]
 
     async def async_install(
         self, version: str | None, backup: bool, **kwargs: Any
@@ -125,7 +108,7 @@ class OpenhomeUpdateEntity(UpdateEntity):
         try:
             if self.latest_version:
                 await self._device.update_firmware()
-        except Exception as err:
+        except (asyncio.TimeoutError, aiohttp.ClientError, UpnpError) as err:
             raise HomeAssistantError(
                 f"Error updating {self._device.device.friendly_name}: {err}"
             ) from err
