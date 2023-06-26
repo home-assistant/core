@@ -9,12 +9,12 @@ from homeassistant.components.button import (
     DOMAIN as BUTTON_DOMAIN,
     SERVICE_PRESS,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 
 
 async def test_button_generic_entity(
-    hass: HomeAssistant, mock_client: APIClient, mock_generic_device_entry
+    hass: HomeAssistant, mock_client: APIClient, mock_esphome_device
 ) -> None:
     """Test a generic button entity."""
     entity_info = [
@@ -27,7 +27,7 @@ async def test_button_generic_entity(
     ]
     states = []
     user_service = []
-    await mock_generic_device_entry(
+    mock_device = await mock_esphome_device(
         mock_client=mock_client,
         entity_info=entity_info,
         user_service=user_service,
@@ -47,3 +47,8 @@ async def test_button_generic_entity(
     state = hass.states.get("button.test_my_button")
     assert state is not None
     assert state.state != STATE_UNKNOWN
+
+    await mock_device.mock_disconnect(False)
+    state = hass.states.get("button.test_my_button")
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
