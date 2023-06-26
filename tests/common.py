@@ -511,6 +511,7 @@ def mock_registry(
     registry = er.EntityRegistry(hass)
     if mock_entries is None:
         mock_entries = {}
+    registry.deleted_entities = {}
     registry.entities = er.EntityRegistryItems()
     registry._entities_data = registry.entities.data
     for key, entry in mock_entries.items():
@@ -1218,6 +1219,8 @@ def mock_storage(
         if store._data is None:
             # No data to load
             if store.key not in data:
+                # Make sure the next attempt will still load
+                store._load_task = None
                 return None
 
             mock_data = data.get(store.key)
@@ -1371,19 +1374,6 @@ def async_mock_signal(hass: HomeAssistant, signal: str) -> list[tuple[Any]]:
     async_dispatcher_connect(hass, signal, mock_signal_handler)
 
     return calls
-
-
-def assert_lists_same(a: list[Any], b: list[Any]) -> None:
-    """Compare two lists, ignoring order.
-
-    Check both that all items in a are in b and that all items in b are in a,
-    otherwise assert_lists_same(["1", "1"], ["1", "2"]) could be True.
-    """
-    assert len(a) == len(b)
-    for i in a:
-        assert i in b
-    for i in b:
-        assert i in a
 
 
 _SENTINEL = object()

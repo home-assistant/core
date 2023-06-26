@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools~=62.3", "wheel~=0.37.1"]
+requires = ["setuptools~=68.0", "wheel~=0.40.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -19,6 +19,7 @@ classifiers = [
     "License :: OSI Approved :: Apache Software License",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
     "Topic :: Home Automation",
 ]
 requires-python = ">=3.10.0"
@@ -45,7 +46,7 @@ dependencies    = [
     # pyOpenSSL 23.2.0 is required to work with cryptography 41+
     "pyOpenSSL==23.2.0",
     "orjson==3.9.1",
-    "pip>=21.0,<23.2",
+    "pip>=21.3.1,<23.2",
     "python-slugify==4.0.1",
     "PyYAML==6.0",
     "requests==2.31.0",
@@ -57,6 +58,7 @@ dependencies    = [
 ]
 
 [project.urls]
+"Homepage"    = "https://www.home-assistant.io/"
 "Source Code" = "https://github.com/home-assistant/core"
 "Bug Reports" = "https://github.com/home-assistant/core/issues"
 "Docs: Dev"   = "https://developers.home-assistant.io/"

@@ -71,7 +71,7 @@ SYSTEM_ENTITY_DESCRIPTIONS = (
         device_class=SensorDeviceClass.ENUM,
         options=[opt.value for opt in XknxConnectionType],
         should_poll=False,
-        value_fn=lambda knx: knx.xknx.connection_manager.connection_type.value,  # type: ignore[no-any-return]
+        value_fn=lambda knx: knx.xknx.connection_manager.connection_type.value,
     ),
     KNXSystemEntityDescription(
         key="telegrams_incoming",

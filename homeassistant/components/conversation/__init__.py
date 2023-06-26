@@ -16,6 +16,7 @@ from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import MATCH_ALL
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, intent, singleton
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
@@ -154,12 +155,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     if config_intents := config.get(DOMAIN, {}).get("intents"):
         hass.data[DATA_CONFIG] = config_intents
 
-    async def handle_process(service: core.ServiceCall) -> None:
+    async def handle_process(service: core.ServiceCall) -> core.ServiceResponse:
         """Parse text into commands."""
         text = service.data[ATTR_TEXT]
         _LOGGER.debug("Processing: <%s>", text)
         try:
-            await async_converse(
+            result = await async_converse(
                 hass=hass,
                 text=text,
                 conversation_id=None,
@@ -168,7 +169,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 agent_id=service.data.get(ATTR_AGENT_ID),
             )
         except intent.IntentHandleError as err:
-            _LOGGER.error("Error processing %s: %s", text, err)
+            raise HomeAssistantError(f"Error processing {text}: {err}") from err
+
+        if service.return_response:
+            return result.as_dict()
+
+        return None
 
     async def handle_reload(service: core.ServiceCall) -> None:
         """Reload intents."""
@@ -176,7 +182,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         await agent.async_reload(language=service.data.get(ATTR_LANGUAGE))
 
     hass.services.async_register(
-        DOMAIN, SERVICE_PROCESS, handle_process, schema=SERVICE_PROCESS_SCHEMA
+        DOMAIN,
+        SERVICE_PROCESS,
+        handle_process,
+        schema=SERVICE_PROCESS_SCHEMA,
+        supports_response=core.SupportsResponse.OPTIONAL,
     )
     hass.services.async_register(
         DOMAIN, SERVICE_RELOAD, handle_reload, schema=SERVICE_RELOAD_SCHEMA
@@ -186,6 +196,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     websocket_api.async_register_command(hass, websocket_prepare)
     websocket_api.async_register_command(hass, websocket_get_agent_info)
     websocket_api.async_register_command(hass, websocket_list_agents)
+    websocket_api.async_register_command(hass, websocket_hass_agent_debug)
 
     return True
 
@@ -295,6 +306,60 @@ async def websocket_list_agents(
         agents.append(agent_dict)
 
     connection.send_message(websocket_api.result_message(msg["id"], {"agents": agents}))
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "conversation/agent/homeassistant/debug",
+        vol.Required("sentences"): [str],
+        vol.Optional("language"): str,
+        vol.Optional("device_id"): vol.Any(str, None),
+    }
+)
+@websocket_api.async_response
+async def websocket_hass_agent_debug(
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
+) -> None:
+    """Return intents that would be matched by the default agent for a list of sentences."""
+    agent = await _get_agent_manager(hass).async_get_agent(HOME_ASSISTANT_AGENT)
+    assert isinstance(agent, DefaultAgent)
+    results = [
+        await agent.async_recognize(
+            ConversationInput(
+                text=sentence,
+                context=connection.context(msg),
+                conversation_id=None,
+                device_id=msg.get("device_id"),
+                language=msg.get("language", hass.config.language),
+            )
+        )
+        for sentence in msg["sentences"]
+    ]
+
+    # Return results for each sentence in the same order as the input.
+    connection.send_result(
+        msg["id"],
+        {
+            "results": [
+                {
+                    "intent": {
+                        "name": result.intent.name,
+                    },
+                    "entities": {
+                        entity_key: {
+                            "name": entity.name,
+                            "value": entity.value,
+                            "text": entity.text,
+                        }
+                        for entity_key, entity in result.entities.items()
+                    },
+                }
+                if result is not None
+                else None
+                for result in results
+            ]
+        },
+    )
 
 
 class ConversationProcessView(http.HomeAssistantView):

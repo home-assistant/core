@@ -26,6 +26,14 @@
         "state": {
           "preferred": "[%key:component::assist_pipeline::entity::select::pipeline::state::preferred%]"
         }
+      },
+      "vad_sensitivity": {
+        "name": "[%key:component::assist_pipeline::entity::select::vad_sensitivity::name%]",
+        "state": {
+          "default": "[%key:component::assist_pipeline::entity::select::vad_sensitivity::state::default%]",
+          "aggressive": "[%key:component::assist_pipeline::entity::select::vad_sensitivity::state::aggressive%]",
+          "relaxed": "[%key:component::assist_pipeline::entity::select::vad_sensitivity::state::relaxed%]"
+        }
       }
     }
   },

@@ -683,6 +683,7 @@ class KNXModule:
                 payload=GroupValueResponse(payload)
                 if attr_response
                 else GroupValueWrite(payload),
+                source_address=self.xknx.current_address,
             )
             await self.xknx.telegrams.put(telegram)
 
@@ -692,5 +693,6 @@ class KNXModule:
             telegram = Telegram(
                 destination_address=parse_device_group_address(address),
                 payload=GroupValueRead(),
+                source_address=self.xknx.current_address,
             )
             await self.xknx.telegrams.put(telegram)
