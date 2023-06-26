@@ -16,9 +16,9 @@ from nacl.secret import SecretBox
 import voluptuous as vol
 
 from homeassistant.components import (
+    assist_pipeline,
     camera,
     cloud,
-    conversation,
     notify as hass_notify,
     tag,
 )
@@ -317,7 +317,7 @@ async def webhook_fire_event(
 @validate_schema(
     {
         vol.Required("text"): cv.string,
-        vol.Optional("language"): cv.string,
+        vol.Optional("pipeline_id"): cv.string,
         vol.Optional("conversation_id"): cv.string,
     }
 )
@@ -325,14 +325,33 @@ async def webhook_conversation_process(
     hass: HomeAssistant, config_entry: ConfigEntry, data: dict[str, Any]
 ) -> Response:
     """Handle a conversation process webhook."""
-    result = await conversation.async_converse(
-        hass,
-        text=data["text"],
-        language=data.get("language"),
-        conversation_id=data.get("conversation_id"),
+    result: dict | None = None
+
+    def event_callback(event: assist_pipeline.PipelineEvent) -> None:
+        """Handle assist event."""
+        nonlocal result
+        if event.type == assist_pipeline.PipelineEventType.INTENT_END:
+            assert event.data is not None
+            result = event.data["intent_output"]
+
+    await assist_pipeline.async_pipeline_from_text(
+        hass=hass,
         context=registration_context(config_entry.data),
+        event_callback=event_callback,
+        intent_input=data["text"],
+        conversation_id=data.get("conversation_id"),
+        device_id=config_entry.data[ATTR_DEVICE_ID],
+        pipeline_id=data.get("pipeline_id"),
     )
-    return webhook_response(result.as_dict(), registration=config_entry.data)
+
+    if result is None:
+        return webhook_response(
+            {"success": False},
+            registration=config_entry.data,
+            status=HTTPStatus.INTERNAL_SERVER_ERROR,
+        )
+
+    return webhook_response(result, registration=config_entry.data)
 
 
 @WEBHOOK_COMMANDS.register("stream_camera")
