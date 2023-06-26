@@ -1327,6 +1327,12 @@ def issues(hass: HomeAssistant) -> dict[tuple[str, str], dict[str, Any]]:
     # Use JSON for safe representation
     return {k: v.to_json() for (k, v) in current_issues.items()}
 
+def issue(hass: HomeAssistant, domain: str, issue_id: str) -> dict[str, Any] | None:
+    """Get issue by domain and issue_id."""
+    result = issue_registry.async_get(hass).async_get_issue(domain, issue_id)
+    if result:
+        return result.to_json()
+    return None
 
 def areas(hass: HomeAssistant) -> Iterable[str | None]:
     """Return all areas."""
@@ -2496,6 +2502,9 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
 
         self.globals["issues"] = hassfunction(issues)
         self.filters["issues"] = pass_context(self.globals["issues"])
+
+        self.globals["issue"] = hassfunction(issue)
+        self.filters["issue"] = pass_context(self.globals["issue"])
 
         self.globals["areas"] = hassfunction(areas)
         self.filters["areas"] = self.globals["areas"]

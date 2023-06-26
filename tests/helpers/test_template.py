@@ -3225,6 +3225,32 @@ async def test_issues(hass: HomeAssistant, issue_registry: ir.IssueRegistry) -> 
     assert_result_info(info, {})
     assert info.rate_limit is None
 
+async def test_issue(hass: HomeAssistant, issue_registry: ir.IssueRegistry) -> None:
+    """Test issue function."""
+    # Test non existent issue
+    info = render_to_info(hass, "{{ issues('non_existent', 'issue') }}")
+    assert_result_info(info, {})
+    assert info.rate_limit is None
+
+    # Test existing issue
+    ir.async_create_issue(
+        hass,
+        "test",
+        "issue 1",
+        breaks_in_ha_version="2023.7",
+        is_fixable=True,
+        is_persistent=True,
+        learn_more_url="https://theuselessweb.com",
+        severity="error",
+        translation_key="abc_1234",
+        translation_placeholders={"abc": "123"},
+    )
+    await hass.async_block_till_done()
+    created_issue = issue_registry.async_get_issue("test", "issue 1")
+    info = render_to_info(hass, "{{ issues('test', 'issue 1') }}")
+    assert_result_info(info, created_issue.to_json())
+    assert info.rate_limit is None
+
 
 async def test_areas(hass: HomeAssistant, area_registry: ar.AreaRegistry) -> None:
     """Test areas function."""
