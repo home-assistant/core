@@ -114,6 +114,19 @@ async def test_get_actions(hass: HomeAssistant, device_ias) -> None:
 
     ha_device_registry = dr.async_get(hass)
     reg_device = ha_device_registry.async_get_device({(DOMAIN, ieee_address)})
+    ha_entity_registry = er.async_get(hass)
+    siren_level_select = ha_entity_registry.async_get(
+        "select.fakemanufacturer_fakemodel_default_siren_level"
+    )
+    siren_tone_select = ha_entity_registry.async_get(
+        "select.fakemanufacturer_fakemodel_default_siren_tone"
+    )
+    strobe_level_select = ha_entity_registry.async_get(
+        "select.fakemanufacturer_fakemodel_default_strobe_level"
+    )
+    strobe_select = ha_entity_registry.async_get(
+        "select.fakemanufacturer_fakemodel_default_strobe"
+    )
 
     actions = await async_get_device_automations(
         hass, DeviceAutomationType.ACTION, reg_device.id
@@ -145,10 +158,10 @@ async def test_get_actions(hass: HomeAssistant, device_ias) -> None:
                 "select_previous",
             ]
             for entity_id in [
-                "select.fakemanufacturer_fakemodel_default_siren_level",
-                "select.fakemanufacturer_fakemodel_default_siren_tone",
-                "select.fakemanufacturer_fakemodel_default_strobe_level",
-                "select.fakemanufacturer_fakemodel_default_strobe",
+                siren_level_select.id,
+                siren_tone_select.id,
+                strobe_level_select.id,
+                strobe_select.id,
             ]
         ]
     )
