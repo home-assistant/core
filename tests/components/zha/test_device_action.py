@@ -165,6 +165,7 @@ async def test_get_inovelli_actions(hass: HomeAssistant, device_inovelli) -> Non
         {(DOMAIN, inovelli_ieee_address)}
     )
     ha_entity_registry = er.async_get(hass)
+    inovelli_button = ha_entity_registry.async_get("button.inovelli_vzm31_sn_identify")
     inovelli_light = ha_entity_registry.async_get("light.inovelli_vzm31_sn_light")
 
     actions = await async_get_device_automations(
@@ -187,7 +188,7 @@ async def test_get_inovelli_actions(hass: HomeAssistant, device_inovelli) -> Non
         {
             "device_id": inovelli_reg_device.id,
             "domain": Platform.BUTTON,
-            "entity_id": "button.inovelli_vzm31_sn_identify",
+            "entity_id": inovelli_button.id,
             "metadata": {"secondary": True},
             "type": "press",
         },
