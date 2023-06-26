@@ -65,6 +65,19 @@ TEMPLATE_ENTITY_BASE_SCHEMA = vol.Schema(
     }
 )
 
+
+def make_template_entity_base_schema(default_name: str) -> vol.Schema:
+    """Return a schema with default name."""
+    return vol.Schema(
+        {
+            vol.Optional(CONF_ICON): cv.template,
+            vol.Optional(CONF_NAME, default=default_name): cv.template,
+            vol.Optional(CONF_PICTURE): cv.template,
+            vol.Optional(CONF_UNIQUE_ID): cv.string,
+        }
+    )
+
+
 TEMPLATE_SENSOR_BASE_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
