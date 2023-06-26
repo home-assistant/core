@@ -41,6 +41,9 @@ async def async_setup_entry(
 class OpenhomeUpdateEntity(UpdateEntity):
     """Update entity for a Linn DS device."""
 
+    _attr_has_entity_name = True
+    _attr_name = "Firmware Update"
+
     def __init__(self, device):
         """Initialize a Linn DS update entity."""
         self._attr_device_class = UpdateDeviceClass.FIRMWARE
