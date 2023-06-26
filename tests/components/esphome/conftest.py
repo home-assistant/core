@@ -169,19 +169,22 @@ async def _mock_generic_device_entry(
     mock_device_info: dict[str, Any],
     mock_list_entities_services: tuple[list[EntityInfo], list[UserService]],
     states: list[EntityState],
+    entry: MockConfigEntry | None = None,
 ) -> MockESPHomeDevice:
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            CONF_HOST: "test.local",
-            CONF_PORT: 6053,
-            CONF_PASSWORD: "",
-        },
-        options={
-            CONF_ALLOW_SERVICE_CALLS: DEFAULT_NEW_CONFIG_ALLOW_ALLOW_SERVICE_CALLS
-        },
-    )
-    entry.add_to_hass(hass)
+    if not entry:
+        entry = MockConfigEntry(
+            domain=DOMAIN,
+            data={
+                CONF_HOST: "test.local",
+                CONF_PORT: 6053,
+                CONF_PASSWORD: "",
+            },
+            options={
+                CONF_ALLOW_SERVICE_CALLS: DEFAULT_NEW_CONFIG_ALLOW_ALLOW_SERVICE_CALLS
+            },
+        )
+        entry.add_to_hass(hass)
+
     mock_device = MockESPHomeDevice(entry)
 
     device_info = DeviceInfo(
@@ -290,9 +293,10 @@ async def mock_esphome_device(
         entity_info: list[EntityInfo],
         user_service: list[UserService],
         states: list[EntityState],
+        entry: MockConfigEntry | None = None,
     ) -> MockESPHomeDevice:
         return await _mock_generic_device_entry(
-            hass, mock_client, {}, (entity_info, user_service), states
+            hass, mock_client, {}, (entity_info, user_service), states, entry
         )
 
     return _mock_device

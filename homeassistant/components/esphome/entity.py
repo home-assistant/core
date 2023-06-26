@@ -27,7 +27,6 @@ import homeassistant.helpers.config_validation as cv
 import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
-    async_dispatcher_send,
 )
 from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -49,7 +48,6 @@ async def platform_async_setup_entry(
     entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
     *,
-    component_key: str,
     info_type: type[_InfoT],
     entity_type: type[_EntityT],
     state_type: type[_StateT],
@@ -60,41 +58,34 @@ async def platform_async_setup_entry(
     info and state updates.
     """
     entry_data: RuntimeEntryData = DomainData.get(hass).get_entry_data(entry)
-    entry_data.info[component_key] = {}
-    entry_data.old_info[component_key] = {}
+    entry_data.info[info_type] = {}
     entry_data.state.setdefault(state_type, {})
 
     @callback
     def async_list_entities(infos: list[EntityInfo]) -> None:
         """Update entities of this platform when entities are listed."""
-        old_infos = entry_data.info[component_key]
+        current_infos = entry_data.info[info_type]
         new_infos: dict[int, EntityInfo] = {}
         add_entities: list[_EntityT] = []
+
         for info in infos:
-            if info.key in old_infos:
-                # Update existing entity
-                old_infos.pop(info.key)
-            else:
+            if not current_infos.pop(info.key, None):
                 # Create new entity
-                entity = entity_type(entry_data, component_key, info, state_type)
+                entity = entity_type(entry_data, info, state_type)
                 add_entities.append(entity)
             new_infos[info.key] = info
 
-        # Remove old entities
-        for info in old_infos.values():
-            entry_data.async_remove_entity(hass, component_key, info.key)
-
-        # First copy the now-old info into the backup object
-        entry_data.old_info[component_key] = entry_data.info[component_key]
-        # Then update the actual info
-        entry_data.info[component_key] = new_infos
-
-        for key, new_info in new_infos.items():
-            async_dispatcher_send(
-                hass,
-                entry_data.signal_component_key_static_info_updated(component_key, key),
-                new_info,
+        # Anything still in current_infos is now gone
+        if current_infos:
+            hass.async_create_task(
+                entry_data.async_remove_entities(current_infos.values())
             )
+
+        # Then update the actual info
+        entry_data.info[info_type] = new_infos
+
+        if new_infos:
+            entry_data.async_update_entity_infos(new_infos.values())
 
         if add_entities:
             # Add entities to Home Assistant
@@ -154,14 +145,12 @@ class EsphomeEntity(Entity, Generic[_InfoT, _StateT]):
     def __init__(
         self,
         entry_data: RuntimeEntryData,
-        component_key: str,
         entity_info: EntityInfo,
         state_type: type[_StateT],
     ) -> None:
         """Initialize."""
         self._entry_data = entry_data
         self._on_entry_data_changed()
-        self._component_key = component_key
         self._key = entity_info.key
         self._state_type = state_type
         self._on_static_info_update(entity_info)
@@ -178,13 +167,11 @@ class EsphomeEntity(Entity, Generic[_InfoT, _StateT]):
         """Register callbacks."""
         entry_data = self._entry_data
         hass = self.hass
-        component_key = self._component_key
         key = self._key
 
         self.async_on_remove(
-            async_dispatcher_connect(
-                hass,
-                f"esphome_{self._entry_id}_remove_{component_key}_{key}",
+            entry_data.async_register_key_static_info_remove_callback(
+                self._static_info,
                 functools.partial(self.async_remove, force_remove=True),
             )
         )
@@ -201,10 +188,8 @@ class EsphomeEntity(Entity, Generic[_InfoT, _StateT]):
             )
         )
         self.async_on_remove(
-            async_dispatcher_connect(
-                hass,
-                entry_data.signal_component_key_static_info_updated(component_key, key),
-                self._on_static_info_update,
+            entry_data.async_register_key_static_info_updated_callback(
+                self._static_info, self._on_static_info_update
             )
         )
         self._update_state_from_entry_data()
