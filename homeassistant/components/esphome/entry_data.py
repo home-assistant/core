@@ -247,9 +247,9 @@ class RuntimeEntryData:
         """Schedule the removal of an entity."""
         coros: list[Coroutine[Any, Any, None]] = []
         for static_info in static_infos:
-            coro_key = (type(static_info), static_info.key)
-            if coros_for_key := self.entity_info_key_remove_coros.get(coro_key):
-                coros.extend([coros_for_key() for coros_for_key in coros_for_key])
+            callback_key = (type(static_info), static_info.key)
+            if callbacks := self.entity_info_key_remove_coros.get(coro_key):
+                coros.extend([callback() for callback in callbacks])
         if coros:
             await asyncio.gather(*coros)
 
