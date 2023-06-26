@@ -40,6 +40,11 @@ class EsphomeButton(EsphomeEntity[ButtonInfo, EntityState], ButtonEntity):
             ButtonDeviceClass, self._static_info.device_class
         )
 
+    @callback
+    def _on_device_update(self) -> None:
+        """Call when device updates or entry data changes."""
+        self._on_entry_data_changed()
+
     async def async_press(self) -> None:
         """Press the button."""
         await self._client.button_command(self._key)
