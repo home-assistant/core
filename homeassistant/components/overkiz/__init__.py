@@ -62,8 +62,11 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     LOGGER.debug("Migrating from version %s", entry.version)
     # 1 -> 2: CONF_HUB renamed to CONF_SERVER and CONF_API_TYPE added
     if entry.version == 1:
-        entry.data[CONF_SERVER] = entry.data[CONF_HUB]
-        entry.data[CONF_API_TYPE] = "cloud"  # V1 only supports cloud
+        v2_entry_data = {**entry.data}
+        v2_entry_data[CONF_SERVER] = entry.data[CONF_HUB]
+        v2_entry_data[CONF_API_TYPE] = "cloud"  # V1 only supports cloud
+
+        entry.data = {**v2_entry_data}
         entry.version = 2
 
         LOGGER.debug("Migration to version %s successful", entry.version)
