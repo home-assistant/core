@@ -3,22 +3,25 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from types import GenericAlias
-from typing import Any
+from typing import Any, Generic, TypeVar, cast
+
+_T = TypeVar("_T")
+_R = TypeVar("_R")
 
 
-class cached_property:  # pylint: disable=invalid-name
+class cached_property(Generic[_T, _R]):  # pylint: disable=invalid-name
     """Backport of Python 3.12's cached_property.
 
     Includes https://github.com/python/cpython/pull/101890/files
     """
 
-    def __init__(self, func: Callable) -> None:
+    def __init__(self, func: Callable[[_T], _R]) -> None:
         """Initialize."""
         self.func = func
         self.attrname: Any = None
         self.__doc__ = func.__doc__
 
-    def __set_name__(self, owner: Any, name: Any) -> None:
+    def __set_name__(self, owner: type[_T], name: str) -> None:
         """Set name."""
         if self.attrname is None:
             self.attrname = name
@@ -28,10 +31,10 @@ class cached_property:  # pylint: disable=invalid-name
                 f"({self.attrname!r} and {name!r})."
             )
 
-    def __get__(self, instance: Any, owner: Any = None) -> Any:
+    def __get__(self, instance: _T | None, owner: type[_T] | None = None) -> _R:
         """Get."""
         if instance is None:
-            return self
+            return cast(_R, self)
         if self.attrname is None:
             raise TypeError(
                 "Cannot use cached_property instance without calling __set_name__ on it."
