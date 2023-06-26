@@ -123,6 +123,14 @@ class CCM15Coordinator(DataUpdateCoordinator[CCM15DeviceState]):
             _LOGGER.debug("Test connection: Timeout")
             return False
 
+    # @pytest.mark.skip(reason="Uses http requests")
+    async def async_send_state(self, url: str) -> bool:
+        """Send the url to set state to the ccm15 slave."""
+        async with httpx.AsyncClient() as client:
+            response = await client.get(url, timeout=DEFAULT_TIMEOUT)
+            _LOGGER.debug("API response status code:%d", response.status_code)
+            return response.status_code in (httpx.codes.OK, httpx.codes.FOUND)
+
     async def async_set_state(self, ac_index: int, state: str, value: int) -> None:
         """Set new target states."""
         _LOGGER.debug("Calling async_set_states for ac index '%s'", ac_index)
@@ -141,17 +149,8 @@ class CCM15Coordinator(DataUpdateCoordinator[CCM15DeviceState]):
         )
         _LOGGER.debug("Url:'%s'", url)
 
-        async with httpx.AsyncClient() as client:
-            response = await client.get(url, timeout=DEFAULT_TIMEOUT)
-            if response.status_code in (httpx.codes.OK, httpx.codes.FOUND):
-                _LOGGER.debug("API request ok %d", response.status_code)
-                await self.async_request_refresh()
-            else:
-                _LOGGER.exception(
-                    "Error doing API request: url: %s, code: %s",
-                    url,
-                    response.status_code,
-                )
+        if await self.async_send_state(url):
+            await self.async_request_refresh()
 
     def get_ac_data(self, ac_index: int) -> CCM15SlaveDevice:
         """Get ac data from the ac_index."""
