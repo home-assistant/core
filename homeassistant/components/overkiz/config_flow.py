@@ -66,6 +66,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 2
 
     _config_entry: ConfigEntry | None
+    _api_type: str
     _user: None | str
     _server: str
     _host: str
@@ -75,7 +76,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         super().__init__()
 
         self._config_entry = None
-        self._api_type = None
+        self._api_type = "cloud"
         self._user = None
         self._server = DEFAULT_SERVER
         self._host = "gateway-xxxx-xxxx-xxxx.local:8443"
@@ -390,6 +391,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if discovery_info.type == "_kizboxdev._tcp.local.":
             self._host = f"{discovery_info.hostname[:-1]}:{discovery_info.port}"
+            self._api_type = "local"
 
         return await self._process_discovery(gateway_id)
 
