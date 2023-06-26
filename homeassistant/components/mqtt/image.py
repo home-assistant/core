@@ -6,7 +6,6 @@ import binascii
 from collections.abc import Callable
 import functools
 import logging
-import ssl
 from typing import Any
 
 import httpx
@@ -106,6 +105,7 @@ class MqttImage(MqttEntity, ImageEntity):
     _entity_id_format: str = image.ENTITY_ID_FORMAT
     _last_image: bytes | None = None
     _client: httpx.AsyncClient
+    _url: str | None = None
     _url_template: Callable[[ReceivePayloadType], ReceivePayloadType]
     _topic: dict[str, Any]
 
@@ -142,23 +142,6 @@ class MqttImage(MqttEntity, ImageEntity):
         self._url_template = MqttValueTemplate(
             config.get(CONF_URL_TEMPLATE), entity=self
         ).async_render_with_possible_json_value
-
-    async def _async_load_image(self, url: str) -> None:
-        try:
-            response = await self._client.request(
-                "GET", url, timeout=GET_IMAGE_TIMEOUT, follow_redirects=True
-            )
-        except (httpx.TimeoutException, httpx.RequestError, ssl.SSLError) as ex:
-            _LOGGER.warning("Connection failed to url %s files: %s", url, ex)
-            self._last_image = None
-            self._attr_image_last_updated = dt_util.utcnow()
-            self.async_write_ha_state()
-            return
-
-        self._attr_content_type = response.headers["content-type"]
-        self._last_image = response.content
-        self._attr_image_last_updated = dt_util.utcnow()
-        self.async_write_ha_state()
 
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
@@ -211,14 +194,16 @@ class MqttImage(MqttEntity, ImageEntity):
 
             try:
                 url = cv.url(self._url_template(msg.payload))
+                self._url = url
             except vol.Invalid:
                 _LOGGER.error(
                     "Invalid image URL '%s' received at topic %s",
                     msg.payload,
                     msg.topic,
                 )
-                return
-            self.hass.async_create_task(self._async_load_image(url))
+                self._last_image = None
+            self._attr_image_last_updated = dt_util.utcnow()
+            get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
         add_subscribe_topic(CONF_URL_TOPIC, image_from_url_request_received)
 
@@ -232,4 +217,10 @@ class MqttImage(MqttEntity, ImageEntity):
 
     async def async_image(self) -> bytes | None:
         """Return bytes of image."""
-        return self._last_image
+        if CONF_IMAGE_TOPIC in self._config:
+            return self._last_image
+        return await super().async_image()
+
+    async def async_image_url(self) -> str | None:
+        """Return URL of image."""
+        return self._url

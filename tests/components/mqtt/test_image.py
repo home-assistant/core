@@ -233,7 +233,7 @@ async def test_image_from_url(
     await hass.async_block_till_done()
 
     state = hass.states.get("image.test")
-    assert state.state == STATE_UNKNOWN
+    assert state.state == "2023-04-01T00:00:00+00:00"
 
     assert "Invalid image URL" in caplog.text
 
@@ -356,7 +356,7 @@ async def test_image_from_url_content_type(
     await hass.async_block_till_done()
 
     state = hass.states.get("image.test")
-    assert state.state == STATE_UNKNOWN
+    assert state.state == "2023-04-01T00:00:00+00:00"
 
     access_token = state.attributes["access_token"]
     assert state.attributes == {
@@ -397,11 +397,11 @@ async def test_image_from_url_content_type(
     ],
 )
 @pytest.mark.parametrize(
-    ("side_effect", "log_text"),
+    "side_effect",
     [
-        (httpx.RequestError("server offline", request=MagicMock()), "server offline"),
-        (httpx.TimeoutException, "Connection failed"),
-        (ssl.SSLError, "Connection failed"),
+        httpx.RequestError("server offline", request=MagicMock()),
+        httpx.TimeoutException,
+        ssl.SSLError,
     ],
 )
 async def test_image_from_url_fails(
@@ -410,7 +410,6 @@ async def test_image_from_url_fails(
     mqtt_mock_entry: MqttMockHAClientGenerator,
     caplog: pytest.LogCaptureFixture,
     side_effect: Exception,
-    log_text: str,
 ) -> None:
     """Test setup with minimum configuration."""
     respx.get("http://localhost/test.png").mock(side_effect=side_effect)
@@ -436,7 +435,9 @@ async def test_image_from_url_fails(
     # The image failed to load, the the last image update is registered
     # but _last_image was set to `None`
     assert state.state == "2023-04-01T00:00:00+00:00"
-    assert log_text in caplog.text
+    client = await hass_client_no_auth()
+    resp = await client.get(state.attributes["entity_picture"])
+    assert resp.status == HTTPStatus.INTERNAL_SERVER_ERROR
 
 
 @respx.mock
