@@ -11,5 +11,51 @@
         }
       }
     }
+  },
+  "entity": {
+    "sensor": {
+      "ownership_id": {
+        "name": "Ownership ID"
+      },
+      "electricity_id": {
+        "name": "Electricity ID"
+      },
+      "configuration_program_version_number": {
+        "name": "Configuration program version number"
+      },
+      "firmware_version_number": {
+        "name": "Firmware version number"
+      },
+      "positive_active_energy_total": {
+        "name": "Positive active energy total"
+      },
+      "positive_active_energy_tariff_t1": {
+        "name": "Positive active energy in tariff T1"
+      },
+      "positive_active_energy_tariff_t2": {
+        "name": "Positive active energy in tariff T2"
+      },
+      "last_signed_positive_active_energy_total": {
+        "name": "Last signed positive active energy total"
+      },
+      "negative_active_energy_total": {
+        "name": "Negative active energy total"
+      },
+      "negative_active_energy_tariff_t1": {
+        "name": "Negative active energy in tariff T1"
+      },
+      "negative_active_energy_tariff_t2": {
+        "name": "Negative active energy in tariff T2"
+      },
+      "supply_frequency": {
+        "name": "Supply frequency"
+      },
+      "absolute_active_instantaneous_power": {
+        "name": "Absolute active instantaneous power"
+      },
+      "sum_active_instantaneous_power": {
+        "name": "Sum active instantaneous power"
+      }
+    }
   }
 }

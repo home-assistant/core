@@ -50,20 +50,26 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     # E=0 Ownership ID
     SensorEntityDescription(
         key="1-0:0.0.0*255",
-        name="Ownership ID",
+        translation_key="ownership_id",
         icon="mdi:flash",
         entity_registry_enabled_default=False,
     ),
     # E=9: Electrity ID
     SensorEntityDescription(
-        key="1-0:0.0.9*255", name="Electricity ID", icon="mdi:flash"
+        key="1-0:0.0.9*255",
+        translation_key="electricity_id",
+        icon="mdi:flash",
     ),
     # D=2: Program entries
     SensorEntityDescription(
-        key="1-0:0.2.0*0", name="Configuration program version number", icon="mdi:flash"
+        key="1-0:0.2.0*0",
+        translation_key="configuration_program_version_number",
+        icon="mdi:flash",
     ),
     SensorEntityDescription(
-        key="1-0:0.2.0*1", name="Firmware version number", icon="mdi:flash"
+        key="1-0:0.2.0*1",
+        translation_key="firmware_version_number",
+        icon="mdi:flash",
     ),
     # C=1: Active power +
     # D=8: Time integral 1
@@ -121,7 +127,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     # D=7: Instantaneous value
     # E=0: Total
     SensorEntityDescription(
-        key="1-0:14.7.0*255", name="Supply frequency", icon="mdi:sine-wave"
+        key="1-0:14.7.0*255", name="Supply frequency", icon="mdi:sine-wave",
     ),
     # C=15: Active power absolute
     # D=7: Instantaneous value
