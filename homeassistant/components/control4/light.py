@@ -193,6 +193,7 @@ class Control4Light(Control4Entity, LightEntity):
             for var in CONTROL4_DIMMER_VARS:
                 if var in self.coordinator.data[self._idx]:
                     return self.coordinator.data[self._idx][var] > 0
+            raise RuntimeError("Dimmer Variable Not Found")
         return self.coordinator.data[self._idx][CONTROL4_NON_DIMMER_VAR] > 0
 
     @property
