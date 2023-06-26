@@ -89,7 +89,7 @@ async def test_get_triggers(
             "domain": DOMAIN,
             "type": trigger,
             "device_id": device_entry.id,
-            "entity_id": entity_entry.entity_id,
+            "entity_id": entity_entry.id,
             "metadata": {"secondary": False},
         }
         for trigger in toggle_trigger_types
@@ -150,7 +150,7 @@ async def test_get_triggers_hidden_auxiliary(
             "domain": DOMAIN,
             "type": trigger,
             "device_id": device_entry.id,
-            "entity_id": entity_entry.entity_id,
+            "entity_id": entity_entry.id,
             "metadata": {"secondary": True},
         }
         for trigger in toggle_trigger_types
@@ -231,7 +231,7 @@ async def test_if_fires_on_state_change(
                         "platform": "device",
                         "domain": DOMAIN,
                         "device_id": "",
-                        "entity_id": entry.entity_id,
+                        "entity_id": entry.id,
                         "type": "turned_on",
                     },
                     "action": {
@@ -255,7 +255,7 @@ async def test_if_fires_on_state_change(
                         "platform": "device",
                         "domain": DOMAIN,
                         "device_id": "",
-                        "entity_id": entry.entity_id,
+                        "entity_id": entry.id,
                         "type": "turned_off",
                     },
                     "action": {
@@ -279,7 +279,7 @@ async def test_if_fires_on_state_change(
                         "platform": "device",
                         "domain": DOMAIN,
                         "device_id": "",
-                        "entity_id": entry.entity_id,
+                        "entity_id": entry.id,
                         "type": "changed_states",
                     },
                     "action": {

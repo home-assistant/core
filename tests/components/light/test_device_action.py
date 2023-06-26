@@ -12,9 +12,12 @@ from homeassistant.components.light import (
     ColorMode,
     LightEntityFeature,
 )
-from homeassistant.const import CONF_PLATFORM, STATE_OFF, STATE_ON, EntityCategory
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+)
 from homeassistant.helpers.entity_registry import RegistryEntryHider
 from homeassistant.setup import async_setup_component
 
@@ -49,7 +52,7 @@ async def test_get_actions(
         config_entry_id=config_entry.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    entity_registry.async_get_or_create(
+    entity_entry = entity_registry.async_get_or_create(
         DOMAIN,
         "test",
         "5678",
@@ -63,13 +66,24 @@ async def test_get_actions(
             "domain": DOMAIN,
             "type": action,
             "device_id": device_entry.id,
-            "entity_id": f"{DOMAIN}.test_5678",
+            "entity_id": entity_entry.id,
             "metadata": {"secondary": False},
         }
         for action in [
             "turn_off",
             "turn_on",
             "toggle",
+        ]
+    ]
+    expected_actions += [
+        {
+            "domain": DOMAIN,
+            "type": action,
+            "device_id": device_entry.id,
+            "entity_id": entity_entry.entity_id,
+            "metadata": {"secondary": False},
+        }
+        for action in [
             "brightness_decrease",
             "brightness_increase",
             "flash",
@@ -104,7 +118,7 @@ async def test_get_actions_hidden_auxiliary(
         config_entry_id=config_entry.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    entity_registry.async_get_or_create(
+    entity_entry = entity_registry.async_get_or_create(
         DOMAIN,
         "test",
         "5678",
@@ -120,7 +134,7 @@ async def test_get_actions_hidden_auxiliary(
             "domain": DOMAIN,
             "type": action,
             "device_id": device_entry.id,
-            "entity_id": f"{DOMAIN}.test_5678",
+            "entity_id": entity_entry.id,
             "metadata": {"secondary": True},
         }
         for action in ["turn_on", "turn_off", "toggle"]
@@ -168,7 +182,7 @@ async def test_get_action_capabilities(
         capabilities = await async_get_device_automation_capabilities(
             hass, DeviceAutomationType.ACTION, action
         )
-        assert capabilities == {"extra_fields": []}
+        assert capabilities == {"extra_fields": []} or capabilities == {}
 
 
 @pytest.mark.parametrize(
@@ -319,16 +333,13 @@ async def test_get_action_capabilities_features(
 
 
 async def test_action(
-    hass: HomeAssistant, calls, enable_custom_integrations: None
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    calls,
+    enable_custom_integrations: None,
 ) -> None:
     """Test for turn_on and turn_off actions."""
-    platform = getattr(hass.components, f"test.{DOMAIN}")
-
-    platform.init()
-    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
-    await hass.async_block_till_done()
-
-    ent1 = platform.ENTITIES[0]
+    entry = entity_registry.async_get_or_create(DOMAIN, "test", "5678")
 
     assert await async_setup_component(
         hass,
@@ -340,7 +351,7 @@ async def test_action(
                     "action": {
                         "domain": DOMAIN,
                         "device_id": "",
-                        "entity_id": ent1.entity_id,
+                        "entity_id": entry.id,
                         "type": "turn_off",
                     },
                 },
@@ -349,7 +360,7 @@ async def test_action(
                     "action": {
                         "domain": DOMAIN,
                         "device_id": "",
-                        "entity_id": ent1.entity_id,
+                        "entity_id": entry.id,
                         "type": "turn_on",
                     },
                 },
@@ -358,7 +369,7 @@ async def test_action(
                     "action": {
                         "domain": DOMAIN,
                         "device_id": "",
-                        "entity_id": ent1.entity_id,
+                        "entity_id": entry.id,
                         "type": "toggle",
                     },
                 },
@@ -367,7 +378,7 @@ async def test_action(
                     "action": {
                         "domain": DOMAIN,
                         "device_id": "",
-                        "entity_id": ent1.entity_id,
+                        "entity_id": entry.entity_id,
                         "type": "flash",
                     },
                 },
@@ -376,7 +387,7 @@ async def test_action(
                     "action": {
                         "domain": DOMAIN,
                         "device_id": "",
-                        "entity_id": ent1.entity_id,
+                        "entity_id": entry.entity_id,
                         "type": "flash",
                         "flash": "long",
                     },
@@ -389,7 +400,7 @@ async def test_action(
                     "action": {
                         "domain": DOMAIN,
                         "device_id": "",
-                        "entity_id": ent1.entity_id,
+                        "entity_id": entry.entity_id,
                         "type": "brightness_increase",
                     },
                 },
@@ -401,7 +412,7 @@ async def test_action(
                     "action": {
                         "domain": DOMAIN,
                         "device_id": "",
-                        "entity_id": ent1.entity_id,
+                        "entity_id": entry.entity_id,
                         "type": "brightness_decrease",
                     },
                 },
@@ -410,7 +421,7 @@ async def test_action(
                     "action": {
                         "domain": DOMAIN,
                         "device_id": "",
-                        "entity_id": ent1.entity_id,
+                        "entity_id": entry.entity_id,
                         "type": "turn_on",
                         "brightness_pct": 75,
                     },
@@ -419,89 +430,59 @@ async def test_action(
         },
     )
     await hass.async_block_till_done()
-    assert hass.states.get(ent1.entity_id).state == STATE_ON
-    assert len(calls) == 0
-
-    hass.bus.async_fire("test_off")
-    await hass.async_block_till_done()
-    assert hass.states.get(ent1.entity_id).state == STATE_OFF
-
-    hass.bus.async_fire("test_off")
-    await hass.async_block_till_done()
-    assert hass.states.get(ent1.entity_id).state == STATE_OFF
-
-    hass.bus.async_fire("test_on")
-    await hass.async_block_till_done()
-    assert hass.states.get(ent1.entity_id).state == STATE_ON
-
-    hass.bus.async_fire("test_on")
-    await hass.async_block_till_done()
-    assert hass.states.get(ent1.entity_id).state == STATE_ON
-
-    hass.bus.async_fire("test_toggle")
-    await hass.async_block_till_done()
-    assert hass.states.get(ent1.entity_id).state == STATE_OFF
-
-    hass.bus.async_fire("test_toggle")
-    await hass.async_block_till_done()
-    assert hass.states.get(ent1.entity_id).state == STATE_ON
-
-    hass.bus.async_fire("test_toggle")
-    await hass.async_block_till_done()
-    assert hass.states.get(ent1.entity_id).state == STATE_OFF
-
-    hass.bus.async_fire("test_flash_short")
-    await hass.async_block_till_done()
-    assert hass.states.get(ent1.entity_id).state == STATE_ON
-
-    hass.bus.async_fire("test_toggle")
-    await hass.async_block_till_done()
-    assert hass.states.get(ent1.entity_id).state == STATE_OFF
-
-    hass.bus.async_fire("test_flash_long")
-    await hass.async_block_till_done()
-    assert hass.states.get(ent1.entity_id).state == STATE_ON
 
     turn_on_calls = async_mock_service(hass, DOMAIN, "turn_on")
+    turn_off_calls = async_mock_service(hass, DOMAIN, "turn_off")
+    toggle_calls = async_mock_service(hass, DOMAIN, "toggle")
+
+    hass.bus.async_fire("test_toggle")
+    await hass.async_block_till_done()
+    assert len(toggle_calls) == 1
+    assert toggle_calls[-1].data == {"entity_id": entry.entity_id}
+
+    hass.bus.async_fire("test_off")
+    await hass.async_block_till_done()
+    assert len(turn_off_calls) == 1
+    assert turn_off_calls[-1].data == {"entity_id": entry.entity_id}
 
     hass.bus.async_fire("test_brightness_increase")
     await hass.async_block_till_done()
-
     assert len(turn_on_calls) == 1
-    assert turn_on_calls[0].data["entity_id"] == ent1.entity_id
-    assert turn_on_calls[0].data["brightness_step_pct"] == 10
+    assert turn_on_calls[-1].data == {
+        "entity_id": entry.entity_id,
+        "brightness_step_pct": 10,
+    }
 
     hass.bus.async_fire("test_brightness_decrease")
     await hass.async_block_till_done()
-
     assert len(turn_on_calls) == 2
-    assert turn_on_calls[1].data["entity_id"] == ent1.entity_id
-    assert turn_on_calls[1].data["brightness_step_pct"] == -10
+    assert turn_on_calls[-1].data == {
+        "entity_id": entry.entity_id,
+        "brightness_step_pct": -10,
+    }
 
     hass.bus.async_fire("test_brightness")
     await hass.async_block_till_done()
-
     assert len(turn_on_calls) == 3
-    assert turn_on_calls[2].data["entity_id"] == ent1.entity_id
-    assert turn_on_calls[2].data["brightness_pct"] == 75
+    assert turn_on_calls[-1].data == {
+        "entity_id": entry.entity_id,
+        "brightness_pct": 75,
+    }
 
     hass.bus.async_fire("test_on")
     await hass.async_block_till_done()
-
     assert len(turn_on_calls) == 4
-    assert turn_on_calls[3].data["entity_id"] == ent1.entity_id
-    assert "brightness_pct" not in turn_on_calls[3].data
+    assert turn_on_calls[-1].data == {"entity_id": entry.entity_id}
 
     hass.bus.async_fire("test_flash_short")
     await hass.async_block_till_done()
-
     assert len(turn_on_calls) == 5
-    assert turn_on_calls[4].data["entity_id"] == ent1.entity_id
-    assert turn_on_calls[4].data["flash"] == FLASH_SHORT
+    assert turn_on_calls[-1].data == {
+        "entity_id": entry.entity_id,
+        "flash": FLASH_SHORT,
+    }
 
     hass.bus.async_fire("test_flash_long")
     await hass.async_block_till_done()
-
     assert len(turn_on_calls) == 6
-    assert turn_on_calls[5].data["entity_id"] == ent1.entity_id
-    assert turn_on_calls[5].data["flash"] == FLASH_LONG
+    assert turn_on_calls[-1].data == {"entity_id": entry.entity_id, "flash": FLASH_LONG}
