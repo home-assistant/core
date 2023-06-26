@@ -45,6 +45,7 @@ ADDON_STATE_POLL_INTERVAL = 3
 
 CONF_ADDON_AUTOFLASH_FW = "autoflash_firmware"
 CONF_ADDON_DEVICE = "device"
+CONF_DISABLE_MULTI_PAN = "disable_multi_pan"
 CONF_ENABLE_MULTI_PAN = "enable_multi_pan"
 
 DEFAULT_CHANNEL = 15
@@ -650,6 +651,17 @@ class OptionsFlowHandler(config_entries.OptionsFlow, ABC):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Uninstall the addon and revert the firmware."""
+        if user_input is None:
+            return self.async_show_form(
+                step_id="uninstall_addon",
+                data_schema=vol.Schema(
+                    {vol.Required(CONF_DISABLE_MULTI_PAN, default=False): bool}
+                ),
+                description_placeholders={"hardware_name": self._hardware_name()},
+            )
+        if not user_input[CONF_DISABLE_MULTI_PAN]:
+            return self.async_create_entry(title="", data={})
+
         return await self.async_step_firmware_revert()
 
     async def async_step_firmware_revert(
@@ -757,7 +769,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow, ABC):
             "flow_control": new_settings.flow_control,
         }
 
-        _LOGGER.debug("Reconfiguring addon with %s", new_addon_config)
+        _LOGGER.debug("Reconfiguring flasher addon with %s", new_addon_config)
         await self._async_set_addon_config(new_addon_config, addon_manager)
 
         return await self.async_step_uninstall_multiprotocol_addon()

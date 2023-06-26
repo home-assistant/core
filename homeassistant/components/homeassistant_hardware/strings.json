@@ -31,15 +31,18 @@
             "channel": "Channel"
           }
         },
-        "show_revert_guide": {
-          "title": "Multiprotocol support is enabled for this device",
-          "description": "If you want to change to Zigbee only firmware, please complete the following manual steps:\n\n  * Remove the Silicon Labs Multiprotocol addon\n\n  * Flash the Zigbee only firmware, follow the guide at https://github.com/NabuCasa/silabs-firmware/wiki/Flash-Silicon-Labs-radio-firmware-manually.\n\n  * Reconfigure ZHA to migrate settings to the reflashed radio"
-        },
         "start_addon": {
           "title": "The Silicon Labs Multiprotocol add-on is starting."
         },
         "uninstall_addon": {
-          "title": "Remove IEEE 802.15.4 radio multiprotocol support."
+          "title": "Remove IEEE 802.15.4 radio multiprotocol support.",
+          "description": "Disabling multiprotocol support will revert your {hardware_name}'s radio back to Zigbee-only firmware and will disable Thread support provided by the {hardware_name}. Your Thread devices will continue working only if you have another Thread border router nearby.\n\nInstalling Zigbee firmware and restoring the backup will take a few minutes."
+        },
+        "install_flasher_addon": {
+          "title": "The Silicon Labs Flasher add-on installation has started"
+        },
+        "configure_flasher_addon": {
+          "title": "The Silicon Labs Flasher add-on installation has started"
         }
       },
       "error": {
