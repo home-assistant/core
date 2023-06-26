@@ -45,7 +45,7 @@ DEFAULT_NAME = "MQTT Image"
 
 PLATFORM_SCHEMA_MODERN = MQTT_BASE_SCHEMA.extend(
     {
-        vol.Optional(CONF_CONTENT_TYPE): cv.string,
+        vol.Optional(CONF_CONTENT_TYPE, default=DEFAULT_CONTENT_TYPE): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Required(CONF_IMAGE_TOPIC): valid_subscribe_topic,
         vol.Optional(CONF_IMAGE_ENCODING): "b64",
@@ -108,10 +108,7 @@ class MqttImage(MqttEntity, ImageEntity):
     def _setup_from_config(self, config: ConfigType) -> None:
         """(Re)Setup the entity."""
         self._topic = {key: config.get(key) for key in (CONF_IMAGE_TOPIC,)}
-        if CONF_IMAGE_TOPIC in config:
-            self._attr_content_type = config.get(
-                CONF_CONTENT_TYPE, DEFAULT_CONTENT_TYPE
-            )
+        self._attr_content_type = config[CONF_CONTENT_TYPE]
 
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
