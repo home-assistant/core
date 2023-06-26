@@ -76,13 +76,17 @@ class CCM15Coordinator(DataUpdateCoordinator[CCM15DeviceState]):
         except httpx.RequestError as err:
             raise UpdateFailed(f"Error communicating with Device: {err}") from err
 
-    async def _fetch_data(self) -> CCM15DeviceState:
-        """Get the current status of all AC devices."""
+    async def _fetch_xml_data(self) -> str:
         url = BASE_URL.format(self._host, self._port, CONF_URL_STATUS)
         _LOGGER.debug("Querying url:'%s'", url)
         async with httpx.AsyncClient() as client:
             response = await client.get(url, timeout=DEFAULT_TIMEOUT)
-        doc = xmltodict.parse(response.text)
+        return response.text
+
+    async def _fetch_data(self) -> CCM15DeviceState:
+        """Get the current status of all AC devices."""
+        str_data = await self._fetch_xml_data()
+        doc = xmltodict.parse(str_data)
         data = doc["response"]
         _LOGGER.debug("Found %s items in host %s", len(data.items()), self._host)
         ac_data = CCM15DeviceState(devices={})
