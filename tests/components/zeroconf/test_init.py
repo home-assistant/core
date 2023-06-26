@@ -910,13 +910,11 @@ async def test_info_from_service_non_utf8(hass: HomeAssistant) -> None:
     info = zeroconf.info_from_service(
         get_service_info_mock(service_type, f"test.{service_type}")
     )
-    raw_info = info.properties.pop("_raw", False)
-    assert raw_info
-    assert len(raw_info) == len(PROPERTIES) - 1
-    assert NON_ASCII_KEY not in raw_info
-    assert len(info.properties) <= len(raw_info)
-    assert "non-utf8-value" not in info.properties
-    assert raw_info["non-utf8-value"] is NON_UTF8_VALUE
+    assert NON_ASCII_KEY.decode("ascii", "replace") in info.properties
+    assert "non-utf8-value" in info.properties
+    assert info.properties["non-utf8-value"] == NON_UTF8_VALUE.decode(
+        "utf-8", "replace"
+    )
 
 
 async def test_info_from_service_with_addresses(hass: HomeAssistant) -> None:

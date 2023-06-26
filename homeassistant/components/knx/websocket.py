@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Final
 
-from knx_frontend import get_build_id, locate_dir
+from knx_frontend import entrypoint_js, is_dev_build, locate_dir
 import voluptuous as vol
 from xknx.telegram import TelegramDirection
 from xknxproject.exceptions import XknxProjectException
@@ -31,9 +31,10 @@ async def register_panel(hass: HomeAssistant) -> None:
 
     if DOMAIN not in hass.data.get("frontend_panels", {}):
         path = locate_dir()
-        build_id = get_build_id()
         hass.http.register_static_path(
-            URL_BASE, path, cache_headers=(build_id != "dev")
+            URL_BASE,
+            path,
+            cache_headers=not is_dev_build(),
         )
         await panel_custom.async_register_panel(
             hass=hass,
@@ -41,12 +42,13 @@ async def register_panel(hass: HomeAssistant) -> None:
             webcomponent_name="knx-frontend",
             sidebar_title=DOMAIN.upper(),
             sidebar_icon="mdi:bus-electric",
-            module_url=f"{URL_BASE}/entrypoint-{build_id}.js",
+            module_url=f"{URL_BASE}/{entrypoint_js()}",
             embed_iframe=True,
             require_admin=True,
         )
 
 
+@websocket_api.require_admin
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "knx/info",
@@ -129,6 +131,7 @@ async def ws_project_file_remove(
     connection.send_result(msg["id"])
 
 
+@websocket_api.require_admin
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "knx/group_monitor_info",
@@ -155,6 +158,7 @@ def ws_group_monitor_info(
     )
 
 
+@websocket_api.require_admin
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "knx/subscribe_telegrams",
