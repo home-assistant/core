@@ -58,6 +58,7 @@ dependencies    = [
 ]
 
 [project.urls]
+"Homepage"    = "https://www.home-assistant.io/"
 "Source Code" = "https://github.com/home-assistant/core"
 "Bug Reports" = "https://github.com/home-assistant/core/issues"
 "Docs: Dev"   = "https://developers.home-assistant.io/"
