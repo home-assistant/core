@@ -20,10 +20,13 @@ async def async_setup_entry(
     coordinator = hass.data[DOMAIN][config_entry.entry_id][COORDINATOR]
     username = config_entry.data[CONF_USERNAME]
     unit_of_measurement = config_entry.options[CONF_UNIT_OF_MEASUREMENT]
-    async_add_entities([
-        DexcomGlucoseTrendSensor(coordinator, username),
-        DexcomGlucoseValueSensor(coordinator, username, unit_of_measurement),
-    ], False)
+    async_add_entities(
+        [
+            DexcomGlucoseTrendSensor(coordinator, username),
+            DexcomGlucoseValueSensor(coordinator, username, unit_of_measurement),
+        ],
+        False,
+    )
 
 
 class DexcomGlucoseValueSensor(CoordinatorEntity, SensorEntity):
