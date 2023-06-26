@@ -259,7 +259,7 @@ class EsphomeEntity(Entity, Generic[_InfoT, _StateT]):
         if self._device_info.has_deep_sleep:
             # During deep sleep the ESP will not be connectable (by design)
             # For these cases, show it as available
-            return True
+            return self._entry_data.expected_disconnect
 
         return self._entry_data.available
 

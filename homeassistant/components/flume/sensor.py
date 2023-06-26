@@ -1,5 +1,4 @@
 """Sensor for displaying the number of result from Flume."""
-from numbers import Number
 
 from pyflume import FlumeData
 
@@ -35,11 +34,13 @@ FLUME_QUERIES_SENSOR: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="current_interval",
         name="Current",
+        suggested_display_precision=2,
         native_unit_of_measurement=f"{UnitOfVolume.GALLONS}/m",
     ),
     SensorEntityDescription(
         key="month_to_date",
         name="Current Month",
+        suggested_display_precision=2,
         native_unit_of_measurement=UnitOfVolume.GALLONS,
         device_class=SensorDeviceClass.WATER,
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -47,6 +48,7 @@ FLUME_QUERIES_SENSOR: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="week_to_date",
         name="Current Week",
+        suggested_display_precision=2,
         native_unit_of_measurement=UnitOfVolume.GALLONS,
         device_class=SensorDeviceClass.WATER,
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -54,6 +56,7 @@ FLUME_QUERIES_SENSOR: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="today",
         name="Current Day",
+        suggested_display_precision=2,
         native_unit_of_measurement=UnitOfVolume.GALLONS,
         device_class=SensorDeviceClass.WATER,
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -61,18 +64,21 @@ FLUME_QUERIES_SENSOR: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="last_60_min",
         name="60 Minutes",
+        suggested_display_precision=2,
         native_unit_of_measurement=f"{UnitOfVolume.GALLONS}/h",
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="last_24_hrs",
         name="24 Hours",
+        suggested_display_precision=2,
         native_unit_of_measurement=f"{UnitOfVolume.GALLONS}/d",
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="last_30_days",
         name="30 Days",
+        suggested_display_precision=2,
         native_unit_of_measurement=f"{UnitOfVolume.GALLONS}/mo",
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -139,8 +145,4 @@ class FlumeSensor(FlumeEntity[FlumeDeviceDataUpdateCoordinator], SensorEntity):
         if sensor_key not in self.coordinator.flume_device.values:
             return None
 
-        return _format_state_value(self.coordinator.flume_device.values[sensor_key])
-
-
-def _format_state_value(value):
-    return round(value, 1) if isinstance(value, Number) else None
+        return self.coordinator.flume_device.values[sensor_key]

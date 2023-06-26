@@ -169,7 +169,7 @@ aio-georss-gdacs==0.8
 aioairq==0.2.4
 
 # homeassistant.components.airzone_cloud
-aioairzone-cloud==0.1.8
+aioairzone-cloud==0.1.9
 
 # homeassistant.components.airzone
 aioairzone==0.6.4
@@ -212,7 +212,7 @@ aioecowitt==2023.5.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==14.1.1
+aioesphomeapi==15.0.0
 
 # homeassistant.components.flo
 aioflo==2021.11.0
