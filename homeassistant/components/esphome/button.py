@@ -42,7 +42,11 @@ class EsphomeButton(EsphomeEntity[ButtonInfo, EntityState], ButtonEntity):
 
     @callback
     def _on_device_update(self) -> None:
-        """Call when device updates or entry data changes."""
+        """Call when device updates or entry data changes.
+
+        Overwrites the default behavior to not write state, but
+        still set updated attributes.
+        """
         self._on_entry_data_changed()
 
     async def async_press(self) -> None:
