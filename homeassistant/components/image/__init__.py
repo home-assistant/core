@@ -123,9 +123,9 @@ class ImageEntity(Entity):
     _attr_should_poll: bool = False  # No need to poll image entities
     _attr_state: None = None  # State is determined by last_updated
 
-    def __init__(self, hass: HomeAssistant) -> None:
+    def __init__(self, hass: HomeAssistant, verify_ssl: bool = False) -> None:
         """Initialize an image entity."""
-        self._client = get_async_client(hass)
+        self._client = get_async_client(hass, verify_ssl=verify_ssl)
         self.access_tokens: collections.deque = collections.deque([], 2)
         self.async_update_token()
 
