@@ -511,6 +511,7 @@ def mock_registry(
     registry = er.EntityRegistry(hass)
     if mock_entries is None:
         mock_entries = {}
+    registry.deleted_entities = {}
     registry.entities = er.EntityRegistryItems()
     registry._entities_data = registry.entities.data
     for key, entry in mock_entries.items():
@@ -1218,6 +1219,8 @@ def mock_storage(
         if store._data is None:
             # No data to load
             if store.key not in data:
+                # Make sure the next attempt will still load
+                store._load_task = None
                 return None
 
             mock_data = data.get(store.key)

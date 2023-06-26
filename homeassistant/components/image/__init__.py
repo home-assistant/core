@@ -129,7 +129,7 @@ class ImageEntity(Entity):
         return self._attr_content_type
 
     @property
-    def entity_picture(self) -> str:
+    def entity_picture(self) -> str | None:
         """Return a link to the image as entity picture."""
         if self._attr_entity_picture is not None:
             return self._attr_entity_picture
