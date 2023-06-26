@@ -311,16 +311,6 @@ async def async_setup_entry(
     async_add_entities(sensors)
 
 
-def round_nicely(number):
-    """Round a number based on its size (so it looks nice)."""
-    if number < 10:
-        return round(number, 2)
-    if number < 100:
-        return round(number, 1)
-
-    return round(number)
-
-
 class QNAPSensor(CoordinatorEntity[QnapCoordinator], SensorEntity):
     """Base class for a QNAP sensor."""
 
@@ -375,23 +365,23 @@ class QNAPMemorySensor(QNAPSensor):
         """Return the state of the sensor."""
         free = float(self.coordinator.data["system_stats"]["memory"]["free"]) / 1024
         if self.entity_description.key == "memory_free":
-            return round_nicely(free)
+            return free
 
         total = float(self.coordinator.data["system_stats"]["memory"]["total"]) / 1024
 
         used = total - free
         if self.entity_description.key == "memory_used":
-            return round_nicely(used)
+            return used
 
         if self.entity_description.key == "memory_percent_used":
-            return round(used / total * 100)
+            return used / total * 100
 
     @property
     def extra_state_attributes(self):
         """Return the state attributes."""
         if self.coordinator.data:
             data = self.coordinator.data["system_stats"]["memory"]
-            size = round_nicely(float(data["total"]) / 1024)
+            size = float(data["total"]) / 1024
             return {ATTR_MEMORY_SIZE: f"{size} {UnitOfInformation.GIBIBYTES}"}
 
 
@@ -407,10 +397,10 @@ class QNAPNetworkSensor(QNAPSensor):
 
         data = self.coordinator.data["bandwidth"][self.monitor_device]
         if self.entity_description.key == "network_tx":
-            return round_nicely(data["tx"] / 1024 / 1024)
+            return data["tx"] / 1024 / 1024
 
         if self.entity_description.key == "network_rx":
-            return round_nicely(data["rx"] / 1024 / 1024)
+            return data["rx"] / 1024 / 1024
 
     @property
     def extra_state_attributes(self):
@@ -504,16 +494,16 @@ class QNAPVolumeSensor(QNAPSensor):
 
         free_gb = int(data["free_size"]) / 1024 / 1024 / 1024
         if self.entity_description.key == "volume_size_free":
-            return round_nicely(free_gb)
+            return free_gb
 
         total_gb = int(data["total_size"]) / 1024 / 1024 / 1024
 
         used_gb = total_gb - free_gb
         if self.entity_description.key == "volume_size_used":
-            return round_nicely(used_gb)
+            return used_gb
 
         if self.entity_description.key == "volume_percentage_used":
-            return round(used_gb / total_gb * 100)
+            return used_gb / total_gb * 100
 
     @property
     def extra_state_attributes(self):
@@ -523,5 +513,5 @@ class QNAPVolumeSensor(QNAPSensor):
             total_gb = int(data["total_size"]) / 1024 / 1024 / 1024
 
             return {
-                ATTR_VOLUME_SIZE: f"{round_nicely(total_gb)} {UnitOfInformation.GIBIBYTES}"
+                ATTR_VOLUME_SIZE: f"{round(total_gb, 1)} {UnitOfInformation.GIBIBYTES}"
             }
