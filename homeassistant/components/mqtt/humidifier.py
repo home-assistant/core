@@ -332,7 +332,7 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
         def action_received(msg: ReceiveMessage) -> None:
             """Handle new received MQTT message."""
             action_payload = self._value_templates[ATTR_ACTION](msg.payload)
-            if not action_payload:
+            if not action_payload or action_payload == PAYLOAD_NONE:
                 _LOGGER.debug("Ignoring empty action from '%s'", msg.topic)
                 return
             try:
@@ -344,6 +344,7 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
                     msg.topic,
                     action_payload,
                 )
+                return
             get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
         self.add_subscription(topics, CONF_ACTION_TOPIC, action_received)
