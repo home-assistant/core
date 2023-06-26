@@ -20,8 +20,8 @@
       "job_phase": {
         "name": "Job phase"
       },
-      "remaining_time": {
-        "name": "Remaining time"
+      "completion_time": {
+        "name": "Completion time"
       },
       "progress": {
         "name": "Progress"
