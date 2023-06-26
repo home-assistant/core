@@ -115,7 +115,7 @@ async def test_awair_gen1_sensors(
     assert_expected_properties(
         hass,
         registry,
-        "sensor.living_room_volatile_organic_compounds",
+        "sensor.living_room_vocs",
         f"{AWAIR_UUID}_{SENSOR_TYPES_MAP[API_VOC].unique_id_tag}",
         "366",
         {
