@@ -32,6 +32,7 @@ ENTITY_PLATFORMS = {
     Platform.LIGHT.value,
     Platform.REMOTE.value,
     Platform.SWITCH.value,
+    Platform.UPDATE.value,
 }
 
 

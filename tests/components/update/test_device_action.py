@@ -1,5 +1,6 @@
 """The tests for update device actions."""
 import pytest
+from pytest_unordered import unordered
 
 import homeassistant.components.automation as automation
 from homeassistant.components.device_automation import DeviceAutomationType
@@ -10,36 +11,26 @@ from homeassistant.components.update.const import (
     DOMAIN,
     UpdateEntityFeature,
 )
-from homeassistant.const import CONF_PLATFORM, STATE_OFF, STATE_ON
+from homeassistant.const import CONF_PLATFORM, STATE_OFF, STATE_ON, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.entity_registry import RegistryEntryHider
 from homeassistant.setup import async_setup_component
 
 from tests.common import (
     MockConfigEntry,
-    assert_lists_same,
     async_get_device_automation_capabilities,
     async_get_device_automations,
-    mock_device_registry,
-    mock_registry,
 )
-from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa: F401
 
 
-@pytest.fixture(name="device_registry")
-def device_registry_fixture(hass: HomeAssistant) -> dr.DeviceRegistry:
-    """Return an empty, loaded, registry."""
-    return mock_device_registry(hass)
-
-
-@pytest.fixture(name="entity_registry")
-def entity_registry_fixture(hass: HomeAssistant) -> er.EntityRegistry:
-    """Return an empty, loaded, registry."""
-    return mock_registry(hass)
+@pytest.fixture(autouse=True, name="stub_blueprint_populate")
+def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
+    """Stub copying the blueprints to the config folder."""
 
 
 @pytest.mark.parametrize(
-    "supported_features,expected_action_types",
+    ("supported_features", "expected_action_types"),
     [
         (0, {"skip"}),
         (
@@ -76,6 +67,7 @@ async def test_get_actions(
             "type": action,
             "device_id": device_entry.id,
             "entity_id": f"{DOMAIN}.test_5678",
+            "metadata": {"secondary": False},
         }
         for action in expected_action_types
     ]
@@ -83,7 +75,55 @@ async def test_get_actions(
     actions = await async_get_device_automations(
         hass, DeviceAutomationType.ACTION, device_entry.id
     )
-    assert_lists_same(actions, expected_actions)
+    assert actions == unordered(expected_actions)
+
+
+@pytest.mark.parametrize(
+    ("hidden_by", "entity_category"),
+    (
+        (RegistryEntryHider.INTEGRATION, None),
+        (RegistryEntryHider.USER, None),
+        (None, EntityCategory.CONFIG),
+        (None, EntityCategory.DIAGNOSTIC),
+    ),
+)
+async def test_get_actions_hidden_auxiliary(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    hidden_by,
+    entity_category,
+) -> None:
+    """Test we get the expected actions from a hidden or auxiliary entity."""
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    entity_entry = entity_registry.async_get_or_create(
+        DOMAIN,
+        "test",
+        "5678",
+        device_id=device_entry.id,
+        entity_category=entity_category,
+        hidden_by=hidden_by,
+    )
+    expected_actions = []
+    expected_actions += [
+        {
+            "domain": DOMAIN,
+            "type": action,
+            "device_id": device_entry.id,
+            "entity_id": entity_entry.entity_id,
+            "metadata": {"secondary": True},
+        }
+        for action in ["skip"]
+    ]
+    actions = await async_get_device_automations(
+        hass, DeviceAutomationType.ACTION, device_entry.id
+    )
+    assert actions == unordered(expected_actions)
 
 
 async def test_get_actions_reporting_only(
@@ -108,12 +148,13 @@ async def test_get_actions_reporting_only(
             "type": "skip",
             "device_id": device_entry.id,
             "entity_id": "update.test_123",
+            "metadata": {"secondary": False},
         },
     ]
     actions = await async_get_device_automations(
         hass, DeviceAutomationType.ACTION, device_entry.id
     )
-    assert_lists_same(actions, expected_actions)
+    assert actions == unordered(expected_actions)
 
 
 async def test_get_actions_with_install(
@@ -139,21 +180,17 @@ async def test_get_actions_with_install(
     expected_actions = [
         {
             "domain": DOMAIN,
-            "type": "skip",
+            "type": action,
             "device_id": device_entry.id,
             "entity_id": "update.test_123",
-        },
-        {
-            "domain": DOMAIN,
-            "type": "install",
-            "device_id": device_entry.id,
-            "entity_id": "update.test_123",
-        },
+            "metadata": {"secondary": False},
+        }
+        for action in ["install", "skip"]
     ]
     actions = await async_get_device_automations(
         hass, DeviceAutomationType.ACTION, device_entry.id
     )
-    assert_lists_same(actions, expected_actions)
+    assert actions == unordered(expected_actions)
 
 
 async def test_get_action_capabilities(
