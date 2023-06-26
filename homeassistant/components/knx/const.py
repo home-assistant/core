@@ -118,6 +118,7 @@ class ColorTempModes(Enum):
     """Color temperature modes for config validation."""
 
     ABSOLUTE = "DPT-7.600"
+    ABSOLUTE_FLOAT = "DPT-9"
     RELATIVE = "DPT-5.001"
 
 

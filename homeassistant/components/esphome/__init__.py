@@ -49,7 +49,11 @@ from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType
 
 from .bluetooth import async_connect_scanner
-from .const import DOMAIN
+from .const import (
+    CONF_ALLOW_SERVICE_CALLS,
+    DEFAULT_ALLOW_SERVICE_CALLS,
+    DOMAIN,
+)
 from .dashboard import async_get_dashboard, async_setup as async_setup_dashboard
 from .domain_data import DomainData
 
@@ -154,11 +158,16 @@ async def async_setup_entry(  # noqa: C901
         noise_psk=noise_psk,
     )
 
+    services_issue = f"service_calls_not_enabled-{entry.unique_id}"
+    if entry.options.get(CONF_ALLOW_SERVICE_CALLS, DEFAULT_ALLOW_SERVICE_CALLS):
+        async_delete_issue(hass, DOMAIN, services_issue)
+
     domain_data = DomainData.get(hass)
     entry_data = RuntimeEntryData(
         client=cli,
         entry_id=entry.entry_id,
         store=domain_data.get_or_create_store(hass, entry),
+        original_options=dict(entry.options),
     )
     domain_data.set_entry_data(entry, entry_data)
 
@@ -177,6 +186,8 @@ async def async_setup_entry(  # noqa: C901
     @callback
     def async_on_service_call(service: HomeassistantServiceCall) -> None:
         """Call service when user automation in ESPHome config is triggered."""
+        device_info = entry_data.device_info
+        assert device_info is not None
         domain, service_name = service.service.split(".", 1)
         service_data = service.data
 
@@ -194,7 +205,7 @@ async def async_setup_entry(  # noqa: C901
                 return
 
         if service.is_event:
-            # ESPHome uses servicecall packet for both events and service calls
+            # ESPHome uses service call packet for both events and service calls
             # Ensure the user can only send events of form 'esphome.xyz'
             if domain != "esphome":
                 _LOGGER.error(
@@ -215,11 +226,33 @@ async def async_setup_entry(  # noqa: C901
                     **service_data,
                 },
             )
-        else:
+        elif entry.options.get(CONF_ALLOW_SERVICE_CALLS, DEFAULT_ALLOW_SERVICE_CALLS):
             hass.async_create_task(
                 hass.services.async_call(
                     domain, service_name, service_data, blocking=True
                 )
+            )
+        else:
+            async_create_issue(
+                hass,
+                DOMAIN,
+                services_issue,
+                is_fixable=False,
+                severity=IssueSeverity.WARNING,
+                translation_key="service_calls_not_allowed",
+                translation_placeholders={
+                    "name": device_info.friendly_name or device_info.name,
+                },
+            )
+            _LOGGER.error(
+                "%s: Service call %s.%s: with data %s rejected; "
+                "If you trust this device and want to allow access for it to make "
+                "Home Assistant service calls, you can enable this "
+                "functionality in the options flow",
+                device_info.friendly_name or device_info.name,
+                domain,
+                service_name,
+                service_data,
             )
 
     async def _send_home_assistant_state(
@@ -449,6 +482,8 @@ async def async_setup_entry(  # noqa: C901
     await reconnect_logic.start()
     entry_data.cleanup_callbacks.append(reconnect_logic.stop_callback)
 
+    entry.async_on_unload(entry.add_update_listener(entry_data.async_update_listener))
+
     return True
 
 
@@ -640,6 +675,7 @@ async def _cleanup_instance(
     data.disconnect_callbacks = []
     for cleanup_callback in data.cleanup_callbacks:
         cleanup_callback()
+    await data.async_cleanup()
     await data.client.disconnect()
     return data
 
