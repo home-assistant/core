@@ -27,10 +27,7 @@ from homeassistant.setup import async_setup_component
 
 from . import mock_real_ip
 
-from tests.common import (
-    async_get_persistent_notifications,
-    async_capture_events
-)
+from tests.common import async_get_persistent_notifications, async_capture_events
 from tests.typing import ClientSessionGenerator
 
 SUPERVISOR_IP = "1.2.3.4"
@@ -444,7 +441,6 @@ async def test_banning_ip_fires_event(hass, aiohttp_client):
     m_open = mock_open()
 
     with patch("homeassistant.components.http.ban.open", m_open, create=True):
-
         client = await aiohttp_client(app)
         await client.get("/unauth")
 
