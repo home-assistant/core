@@ -6,12 +6,14 @@ from dataclasses import dataclass
 import logging
 from typing import TYPE_CHECKING, Any
 
+from bimmer_connected.models import MyBMWAPIError
 from bimmer_connected.vehicle import MyBMWVehicle
 from bimmer_connected.vehicle.remote_services import RemoteServiceStatus
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import BMWBaseEntity
@@ -111,7 +113,10 @@ class BMWButton(BMWBaseEntity, ButtonEntity):
     async def async_press(self) -> None:
         """Press the button."""
         if self.entity_description.remote_function:
-            await self.entity_description.remote_function(self.vehicle)
+            try:
+                await self.entity_description.remote_function(self.vehicle)
+            except MyBMWAPIError as ex:
+                raise HomeAssistantError(ex) from ex
         elif self.entity_description.account_function:
             _LOGGER.warning(
                 "The 'Refresh from cloud' button is deprecated. Use the"
@@ -120,6 +125,9 @@ class BMWButton(BMWBaseEntity, ButtonEntity):
                 " https://www.home-assistant.io/integrations/bmw_connected_drive/#update-the-state--refresh-from-api"
                 " for details"
             )
-            await self.entity_description.account_function(self.coordinator)
+            try:
+                await self.entity_description.account_function(self.coordinator)
+            except MyBMWAPIError as ex:
+                raise HomeAssistantError(ex) from ex
 
         self.coordinator.async_update_listeners()
