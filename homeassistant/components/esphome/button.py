@@ -41,11 +41,10 @@ class EsphomeButton(EsphomeEntity[ButtonInfo, EntityState], ButtonEntity):
         )
 
     @callback
-    def _on_device_update(self) -> None:
-        """Update the entity state when device info has changed."""
+    def _on_state_update(self) -> None:
+        """Update the entity state when state has changed."""
         # This override the EsphomeEntity method as the button entity
         # never gets a state update.
-        self._on_state_update()
 
     async def async_press(self) -> None:
         """Press the button."""
