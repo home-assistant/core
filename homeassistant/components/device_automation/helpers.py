@@ -35,6 +35,7 @@ ENTITY_PLATFORMS = {
     Platform.REMOTE.value,
     Platform.SELECT.value,
     Platform.SWITCH.value,
+    Platform.VACUUM.value,
 }
 
 
