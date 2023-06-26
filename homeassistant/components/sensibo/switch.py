@@ -138,7 +138,7 @@ class SensiboDeviceSwitch(SensiboDeviceBaseEntity, SwitchEntity):
         await func(
             self,
             key=self.entity_description.data_key,
-            value=True,
+            value=False,
         )
 
     @property
@@ -149,27 +149,25 @@ class SensiboDeviceSwitch(SensiboDeviceBaseEntity, SwitchEntity):
         return None
 
     @async_handle_api_call
-    async def async_turn_on_timer(self, key: str, value: Any) -> bool:
+    async def async_turn_on_timer(self, key: str, value: bool) -> bool:
         """Make service call to api for setting timer."""
-        new_state = bool(self.device_data.ac_states["on"] is False)
         data = {
             "minutesFromNow": 60,
-            "acState": {**self.device_data.ac_states, "on": new_state},
+            "acState": {**self.device_data.ac_states, "on": value},
         }
         result = await self._client.async_set_timer(self._device_id, data)
         return bool(result.get("status") == "success")
 
     @async_handle_api_call
-    async def async_turn_off_timer(self, key: str, value: Any) -> bool:
+    async def async_turn_off_timer(self, key: str, value: bool) -> bool:
         """Make service call to api for deleting timer."""
         result = await self._client.async_del_timer(self._device_id)
         return bool(result.get("status") == "success")
 
     @async_handle_api_call
-    async def async_turn_on_off_pure_boost(self, key: str, value: Any) -> bool:
+    async def async_turn_on_off_pure_boost(self, key: str, value: bool) -> bool:
         """Make service call to api for setting Pure Boost."""
-        new_state = bool(self.device_data.pure_boost_enabled is False)
-        data: dict[str, Any] = {"enabled": new_state}
+        data: dict[str, Any] = {"enabled": value}
         if self.device_data.pure_measure_integration is None:
             data["sensitivity"] = "N"
             data["measurementsIntegration"] = True
@@ -180,14 +178,13 @@ class SensiboDeviceSwitch(SensiboDeviceBaseEntity, SwitchEntity):
         return bool(result.get("status") == "success")
 
     @async_handle_api_call
-    async def async_turn_on_off_smart(self, key: str, value: Any) -> bool:
+    async def async_turn_on_off_smart(self, key: str, value: bool) -> bool:
         """Make service call to api for setting Climate React."""
         if self.device_data.smart_type is None:
             raise HomeAssistantError(
                 "Use Sensibo Enable Climate React Service once to enable switch or the"
                 " Sensibo app"
             )
-        new_state = bool(self.device_data.smart_on is False)
-        data: dict[str, Any] = {"enabled": new_state}
+        data: dict[str, Any] = {"enabled": value}
         result = await self._client.async_enable_climate_react(self._device_id, data)
         return bool(result.get("status") == "success")

@@ -151,6 +151,7 @@ def setup_platform(
     add_entities(entities)
 
 
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
 class EnOceanSensor(EnOceanEntity, RestoreEntity, SensorEntity):
     """Representation of an  EnOcean sensor device such as a power meter."""
 
@@ -180,6 +181,7 @@ class EnOceanSensor(EnOceanEntity, RestoreEntity, SensorEntity):
         """Update the internal state of the sensor."""
 
 
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
 class EnOceanPowerSensor(EnOceanSensor):
     """Representation of an EnOcean power sensor.
 
@@ -200,6 +202,7 @@ class EnOceanPowerSensor(EnOceanSensor):
             self.schedule_update_ha_state()
 
 
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
 class EnOceanTemperatureSensor(EnOceanSensor):
     """Representation of an EnOcean temperature sensor device.
 
@@ -249,6 +252,7 @@ class EnOceanTemperatureSensor(EnOceanSensor):
         self.schedule_update_ha_state()
 
 
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
 class EnOceanHumiditySensor(EnOceanSensor):
     """Representation of an EnOcean humidity sensor device.
 
@@ -267,6 +271,7 @@ class EnOceanHumiditySensor(EnOceanSensor):
         self.schedule_update_ha_state()
 
 
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
 class EnOceanWindowHandle(EnOceanSensor):
     """Representation of an EnOcean window handle device.
 

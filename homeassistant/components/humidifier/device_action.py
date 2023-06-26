@@ -3,7 +3,10 @@ from __future__ import annotations
 
 import voluptuous as vol
 
-from homeassistant.components.device_automation import toggle_entity
+from homeassistant.components.device_automation import (
+    async_validate_entity_schema,
+    toggle_entity,
+)
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_MODE,
@@ -41,7 +44,14 @@ SET_MODE_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
 
 ONOFF_SCHEMA = toggle_entity.ACTION_SCHEMA.extend({vol.Required(CONF_DOMAIN): DOMAIN})
 
-ACTION_SCHEMA = vol.Any(SET_HUMIDITY_SCHEMA, SET_MODE_SCHEMA, ONOFF_SCHEMA)
+_ACTION_SCHEMA = vol.Any(SET_HUMIDITY_SCHEMA, SET_MODE_SCHEMA, ONOFF_SCHEMA)
+
+
+async def async_validate_action_config(
+    hass: HomeAssistant, config: ConfigType
+) -> ConfigType:
+    """Validate config."""
+    return async_validate_entity_schema(hass, config, _ACTION_SCHEMA)
 
 
 async def async_get_actions(

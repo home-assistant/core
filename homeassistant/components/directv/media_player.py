@@ -112,7 +112,8 @@ class DIRECTVMediaPlayer(DIRECTVEntity, MediaPlayerEntity):
             self._paused = self._last_position == self._program.position
             self._is_recorded = self._program.recorded
             self._last_position = self._program.position
-            self._last_update = state.at
+            if not self._paused:
+                self._last_update = dt_util.utcnow()
             self._attr_assumed_state = self._is_recorded
 
     @property

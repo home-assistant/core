@@ -6,7 +6,7 @@ from collections.abc import Coroutine
 import contextlib
 from datetime import timedelta
 import logging
-from typing import Any, cast
+from typing import Any
 
 import httpx
 import voluptuous as vol
@@ -160,11 +160,7 @@ def _rest_coordinator(
     if resource_template:
 
         async def _async_refresh_with_resource_template() -> None:
-            rest.set_url(
-                cast(template.Template, resource_template).async_render(
-                    parse_result=False
-                )
-            )
+            rest.set_url(resource_template.async_render(parse_result=False))
             await rest.async_update()
 
         update_method = _async_refresh_with_resource_template

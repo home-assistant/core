@@ -2,6 +2,7 @@
 from unittest.mock import call, patch
 
 import pytest
+from pytest_unordered import unordered
 from zhaquirks.inovelli.VZM31SN import InovelliVZM31SNv11
 import zigpy.profiles.zha
 import zigpy.zcl.clusters.general as general
@@ -13,18 +14,22 @@ from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.zha import DOMAIN
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_TYPE
 
 from tests.common import (
-    assert_lists_same,
     async_get_device_automations,
     async_mock_service,
     mock_coro,
 )
-from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa: F401
+
+
+@pytest.fixture(autouse=True, name="stub_blueprint_populate")
+def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
+    """Stub copying the blueprints to the config folder."""
+
 
 SHORT_PRESS = "remote_button_short_press"
 COMMAND = "command"
@@ -148,7 +153,7 @@ async def test_get_actions(hass: HomeAssistant, device_ias) -> None:
         ]
     )
 
-    assert_lists_same(actions, expected_actions)
+    assert actions == unordered(expected_actions)
 
 
 async def test_get_inovelli_actions(hass: HomeAssistant, device_inovelli) -> None:
@@ -159,6 +164,8 @@ async def test_get_inovelli_actions(hass: HomeAssistant, device_inovelli) -> Non
     inovelli_reg_device = ha_device_registry.async_get_device(
         {(DOMAIN, inovelli_ieee_address)}
     )
+    ha_entity_registry = er.async_get(hass)
+    inovelli_light = ha_entity_registry.async_get("light.inovelli_vzm31_sn_light")
 
     actions = await async_get_device_automations(
         hass, DeviceAutomationType.ACTION, inovelli_reg_device.id
@@ -187,21 +194,21 @@ async def test_get_inovelli_actions(hass: HomeAssistant, device_inovelli) -> Non
         {
             "device_id": inovelli_reg_device.id,
             "domain": Platform.LIGHT,
-            "entity_id": "light.inovelli_vzm31_sn_light",
+            "entity_id": inovelli_light.id,
             "metadata": {"secondary": False},
             "type": "turn_off",
         },
         {
             "device_id": inovelli_reg_device.id,
             "domain": Platform.LIGHT,
-            "entity_id": "light.inovelli_vzm31_sn_light",
+            "entity_id": inovelli_light.id,
             "metadata": {"secondary": False},
             "type": "turn_on",
         },
         {
             "device_id": inovelli_reg_device.id,
             "domain": Platform.LIGHT,
-            "entity_id": "light.inovelli_vzm31_sn_light",
+            "entity_id": inovelli_light.id,
             "metadata": {"secondary": False},
             "type": "toggle",
         },
@@ -228,7 +235,7 @@ async def test_get_inovelli_actions(hass: HomeAssistant, device_inovelli) -> Non
         },
     ]
 
-    assert_lists_same(actions, expected_actions)
+    assert actions == unordered(expected_actions)
 
 
 async def test_action(hass: HomeAssistant, device_ias, device_inovelli) -> None:
@@ -323,7 +330,6 @@ async def test_action(hass: HomeAssistant, device_ias, device_inovelli) -> None:
                 5,
                 expect_reply=False,
                 manufacturer=4151,
-                tries=1,
                 tsn=None,
             )
             in cluster.request.call_args_list
@@ -340,7 +346,6 @@ async def test_action(hass: HomeAssistant, device_ias, device_inovelli) -> None:
                 5,
                 expect_reply=False,
                 manufacturer=4151,
-                tries=1,
                 tsn=None,
             )
             in cluster.request.call_args_list

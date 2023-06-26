@@ -3,8 +3,9 @@ from __future__ import annotations
 
 from typing import Any, NamedTuple
 
-import RFXtrx
 import pytest
+from pytest_unordered import unordered
+import RFXtrx
 
 import homeassistant.components.automation as automation
 from homeassistant.components.device_automation import DeviceAutomationType
@@ -17,7 +18,6 @@ from .conftest import create_rfx_test_cfg
 
 from tests.common import (
     MockConfigEntry,
-    assert_lists_same,
     async_get_device_automations,
 )
 
@@ -89,6 +89,14 @@ async def test_get_actions(
     device_entry = device_registry.async_get_device(device.device_identifiers, set())
     assert device_entry
 
+    # Add alternate identifiers, to make sure we can handle future formats
+    identifiers: list[str] = list(*device_entry.identifiers)
+    device_registry.async_update_device(
+        device_entry.id, merge_identifiers={(identifiers[0], "_".join(identifiers[1:]))}
+    )
+    device_entry = device_registry.async_get_device(device.device_identifiers, set())
+    assert device_entry
+
     actions = await async_get_device_automations(
         hass, DeviceAutomationType.ACTION, device_entry.id
     )
@@ -99,7 +107,7 @@ async def test_get_actions(
         for action_type in expected
     ]
 
-    assert_lists_same(actions, expected_actions)
+    assert actions == unordered(expected_actions)
 
 
 @pytest.mark.parametrize(

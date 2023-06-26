@@ -24,6 +24,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import UNDEFINED
 
 from .base_class import TradfriBaseEntity
 from .const import (
@@ -202,7 +203,7 @@ class TradfriSensor(TradfriBaseEntity, SensorEntity):
 
         self._attr_unique_id = f"{self._attr_unique_id}-{description.key}"
 
-        if description.name:
+        if description.name is not UNDEFINED:
             self._attr_name = f"{self._attr_name}: {description.name}"
 
         self._refresh()  # Set initial state

@@ -2,9 +2,19 @@
 from __future__ import annotations
 
 from asyncio import Event
+from collections.abc import Awaitable, Callable
+from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
-from aioesphomeapi import APIClient, APIVersion, DeviceInfo, ReconnectLogic
+from aioesphomeapi import (
+    APIClient,
+    APIVersion,
+    DeviceInfo,
+    EntityInfo,
+    EntityState,
+    ReconnectLogic,
+    UserService,
+)
 import pytest
 from zeroconf import Zeroconf
 
@@ -13,6 +23,10 @@ from homeassistant.components.esphome import (
     CONF_NOISE_PSK,
     DOMAIN,
     dashboard,
+)
+from homeassistant.components.esphome.const import (
+    CONF_ALLOW_SERVICE_CALLS,
+    DEFAULT_NEW_CONFIG_ALLOW_ALLOW_SERVICE_CALLS,
 )
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import HomeAssistant
@@ -64,7 +78,7 @@ def mock_device_info() -> DeviceInfo:
     return DeviceInfo(
         uses_password=False,
         name="test",
-        bluetooth_proxy_version=0,
+        legacy_bluetooth_proxy_version=0,
         mac_address="11:22:33:44:55:aa",
         esphome_version="1.0.0",
     )
@@ -82,7 +96,7 @@ async def init_integration(
 
 
 @pytest.fixture
-def mock_client(mock_device_info):
+def mock_client(mock_device_info) -> APIClient:
     """Mock APIClient."""
     mock_client = Mock(spec=APIClient)
 
@@ -132,32 +146,67 @@ async def mock_dashboard(hass):
         yield data
 
 
-@pytest.fixture
-async def mock_voice_assistant_v1_entry(
+class MockESPHomeDevice:
+    """Mock an esphome device."""
+
+    def __init__(self, entry: MockConfigEntry) -> None:
+        """Init the mock."""
+        self.entry = entry
+        self.state_callback: Callable[[EntityState], None]
+
+    def set_state_callback(self, state_callback: Callable[[EntityState], None]) -> None:
+        """Set the state callback."""
+        self.state_callback = state_callback
+
+    def set_state(self, state: EntityState) -> None:
+        """Mock setting state."""
+        self.state_callback(state)
+
+
+async def _mock_generic_device_entry(
     hass: HomeAssistant,
-    mock_client,
-) -> MockConfigEntry:
-    """Set up an ESPHome entry with voice assistant."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            CONF_HOST: "test.local",
-            CONF_PORT: 6053,
-            CONF_PASSWORD: "",
-        },
-    )
-    entry.add_to_hass(hass)
+    mock_client: APIClient,
+    mock_device_info: dict[str, Any],
+    mock_list_entities_services: tuple[list[EntityInfo], list[UserService]],
+    states: list[EntityState],
+    entry: MockConfigEntry | None = None,
+) -> MockESPHomeDevice:
+    if not entry:
+        entry = MockConfigEntry(
+            domain=DOMAIN,
+            data={
+                CONF_HOST: "test.local",
+                CONF_PORT: 6053,
+                CONF_PASSWORD: "",
+            },
+            options={
+                CONF_ALLOW_SERVICE_CALLS: DEFAULT_NEW_CONFIG_ALLOW_ALLOW_SERVICE_CALLS
+            },
+        )
+        entry.add_to_hass(hass)
+
+    mock_device = MockESPHomeDevice(entry)
 
     device_info = DeviceInfo(
         name="test",
         friendly_name="Test",
-        voice_assistant_version=1,
         mac_address="11:22:33:44:55:aa",
         esphome_version="1.0.0",
+        **mock_device_info,
     )
+
+    async def _subscribe_states(callback: Callable[[EntityState], None]) -> None:
+        """Subscribe to state."""
+        mock_device.set_state_callback(callback)
+        for state in states:
+            callback(state)
 
     mock_client.device_info = AsyncMock(return_value=device_info)
     mock_client.subscribe_voice_assistant = AsyncMock(return_value=Mock())
+    mock_client.list_entities_services = AsyncMock(
+        return_value=mock_list_entities_services
+    )
+    mock_client.subscribe_states = _subscribe_states
 
     try_connect_done = Event()
     real_try_connect = ReconnectLogic._try_connect
@@ -169,42 +218,85 @@ async def mock_voice_assistant_v1_entry(
         return result
 
     with patch.object(ReconnectLogic, "_try_connect", mock_try_connect):
-        await hass.config_entries.async_setup(entry.entry_id)
+        assert await hass.config_entries.async_setup(entry.entry_id)
         await try_connect_done.wait()
 
-    return entry
+    await hass.async_block_till_done()
+
+    return mock_device
 
 
 @pytest.fixture
-async def mock_voice_assistant_v2_entry(
+async def mock_voice_assistant_entry(
     hass: HomeAssistant,
-    mock_client,
-) -> MockConfigEntry:
+    mock_client: APIClient,
+):
     """Set up an ESPHome entry with voice assistant."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            CONF_HOST: "test.local",
-            CONF_PORT: 6053,
-            CONF_PASSWORD: "",
-        },
-    )
-    entry.add_to_hass(hass)
 
-    device_info = DeviceInfo(
-        name="test",
-        friendly_name="Test",
-        voice_assistant_version=2,
-        mac_address="11:22:33:44:55:aa",
-        esphome_version="1.0.0",
-    )
+    async def _mock_voice_assistant_entry(version: int) -> MockConfigEntry:
+        return (
+            await _mock_generic_device_entry(
+                hass, mock_client, {"voice_assistant_version": version}, ([], []), []
+            )
+        ).entry
 
-    mock_client.device_info = AsyncMock(return_value=device_info)
-    mock_client.subscribe_voice_assistant = AsyncMock(return_value=Mock())
+    return _mock_voice_assistant_entry
 
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
 
-    return entry
+@pytest.fixture
+async def mock_voice_assistant_v1_entry(mock_voice_assistant_entry) -> MockConfigEntry:
+    """Set up an ESPHome entry with voice assistant."""
+    return await mock_voice_assistant_entry(version=1)
+
+
+@pytest.fixture
+async def mock_voice_assistant_v2_entry(mock_voice_assistant_entry) -> MockConfigEntry:
+    """Set up an ESPHome entry with voice assistant."""
+    return await mock_voice_assistant_entry(version=2)
+
+
+@pytest.fixture
+async def mock_generic_device_entry(
+    hass: HomeAssistant,
+) -> Callable[
+    [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
+    Awaitable[MockConfigEntry],
+]:
+    """Set up an ESPHome entry and return the MockConfigEntry."""
+
+    async def _mock_device_entry(
+        mock_client: APIClient,
+        entity_info: list[EntityInfo],
+        user_service: list[UserService],
+        states: list[EntityState],
+    ) -> MockConfigEntry:
+        return (
+            await _mock_generic_device_entry(
+                hass, mock_client, {}, (entity_info, user_service), states
+            )
+        ).entry
+
+    return _mock_device_entry
+
+
+@pytest.fixture
+async def mock_esphome_device(
+    hass: HomeAssistant,
+) -> Callable[
+    [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
+    Awaitable[MockESPHomeDevice],
+]:
+    """Set up an ESPHome entry and return the MockESPHomeDevice."""
+
+    async def _mock_device(
+        mock_client: APIClient,
+        entity_info: list[EntityInfo],
+        user_service: list[UserService],
+        states: list[EntityState],
+        entry: MockConfigEntry | None = None,
+    ) -> MockESPHomeDevice:
+        return await _mock_generic_device_entry(
+            hass, mock_client, {}, (entity_info, user_service), states, entry
+        )
+
+    return _mock_device

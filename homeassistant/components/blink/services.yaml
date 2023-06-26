@@ -25,9 +25,28 @@ save_video:
         text:
     filename:
       name: File name
-      description: Filename to writable path (directory may need to be included in whitelist_dirs in config)
+      description: Filename to writable path (directory may need to be included in allowlist_external_dirs in config)
       required: true
       example: "/tmp/video.mp4"
+      selector:
+        text:
+
+save_recent_clips:
+  name: Save recent clips
+  description: 'Save all recent video clips to local directory with file pattern "%Y%m%d_%H%M%S_{name}.mp4"'
+  fields:
+    name:
+      name: Name
+      description: Name of camera to grab recent clips from.
+      required: true
+      example: "Living Room"
+      selector:
+        text:
+    file_path:
+      name: Output directory
+      description: Directory name of writable path (directory may need to be included in allowlist_external_dirs in config)
+      required: true
+      example: "/tmp"
       selector:
         text:
 

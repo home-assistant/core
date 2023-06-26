@@ -2,6 +2,7 @@
 from unittest.mock import patch
 
 import pytest
+from pytest_unordered import unordered
 import voluptuous_serialize
 from zwave_js_server.const import CommandClass
 from zwave_js_server.event import Event
@@ -25,14 +26,13 @@ from homeassistant.helpers.entity_registry import async_get as async_get_ent_reg
 from homeassistant.setup import async_setup_component
 
 from tests.common import (
-    assert_lists_same,
     async_get_device_automations,
     async_mock_service,
 )
 
 
 @pytest.fixture
-def calls(hass):
+def calls(hass: HomeAssistant):
     """Track calls to a mock service."""
     return async_mock_service(hass, "test", "automation")
 
@@ -193,16 +193,15 @@ async def test_get_trigger_capabilities_notification_notification(
     )
     assert capabilities and "extra_fields" in capabilities
 
-    assert_lists_same(
-        voluptuous_serialize.convert(
-            capabilities["extra_fields"], custom_serializer=cv.custom_serializer
-        ),
+    assert voluptuous_serialize.convert(
+        capabilities["extra_fields"], custom_serializer=cv.custom_serializer
+    ) == unordered(
         [
             {"name": "type.", "optional": True, "type": "string"},
             {"name": "label", "optional": True, "type": "string"},
             {"name": "event", "optional": True, "type": "string"},
             {"name": "event_label", "optional": True, "type": "string"},
-        ],
+        ]
     )
 
 
@@ -323,14 +322,13 @@ async def test_get_trigger_capabilities_entry_control_notification(
     )
     assert capabilities and "extra_fields" in capabilities
 
-    assert_lists_same(
-        voluptuous_serialize.convert(
-            capabilities["extra_fields"], custom_serializer=cv.custom_serializer
-        ),
+    assert voluptuous_serialize.convert(
+        capabilities["extra_fields"], custom_serializer=cv.custom_serializer
+    ) == unordered(
         [
             {"name": "event_type", "optional": True, "type": "string"},
             {"name": "data_type", "optional": True, "type": "string"},
-        ],
+        ]
     )
 
 
@@ -1292,7 +1290,7 @@ async def test_get_value_updated_config_parameter_triggers(
         "property_key": None,
         "endpoint": 0,
         "command_class": CommandClass.CONFIGURATION.value,
-        "subtype": "3 (Beeper)",
+        "subtype": "3 (Beeper) on endpoint 0",
         "metadata": {},
     }
     triggers = await async_get_device_automations(

@@ -44,7 +44,8 @@ from . import (
 from .device_registry import DeviceRegistry
 from .entity_registry import EntityRegistry, RegistryEntryDisabler, RegistryEntryHider
 from .event import async_call_later, async_track_time_interval
-from .typing import ConfigType, DiscoveryInfoType
+from .issue_registry import IssueSeverity, async_create_issue
+from .typing import UNDEFINED, ConfigType, DiscoveryInfoType
 
 if TYPE_CHECKING:
     from .entity import Entity
@@ -137,6 +138,7 @@ class EntityPlatform:
         self._process_updates: asyncio.Lock | None = None
 
         self.parallel_updates: asyncio.Semaphore | None = None
+        self._update_in_sequence: bool = False
 
         # Platform is None for the EntityComponent "catch-all" EntityPlatform
         # which powers entity_component.add_entities
@@ -187,6 +189,7 @@ class EntityPlatform:
 
         if parallel_updates is not None:
             self.parallel_updates = asyncio.Semaphore(parallel_updates)
+            self._update_in_sequence = parallel_updates == 1
 
         return self.parallel_updates
 
@@ -210,6 +213,19 @@ class EntityPlatform:
                 self.platform_name,
                 self.domain,
             )
+            async_create_issue(
+                self.hass,
+                self.domain,
+                f"platform_integration_no_support_{self.domain}_{self.platform_name}",
+                is_fixable=False,
+                severity=IssueSeverity.ERROR,
+                translation_key="platform_integration_no_support",
+                translation_placeholders={
+                    "domain": self.domain,
+                    "platform": self.platform_name,
+                },
+            )
+
             return
 
         @callback
@@ -297,8 +313,8 @@ class EntityPlatform:
             )
 
         logger.info("Setting up %s", full_name)
-        warn_task = hass.loop.call_later(
-            SLOW_SETUP_WARNING,
+        warn_task = hass.loop.call_at(
+            hass.loop.time() + SLOW_SETUP_WARNING,
             logger.warning,
             "Setup of %s platform %s is taking over %s seconds.",
             self.domain,
@@ -536,6 +552,10 @@ class EntityPlatform:
         suggested_object_id: str | None = None
         generate_new_entity_id = False
 
+        entity_name = entity.name
+        if entity_name is UNDEFINED:
+            entity_name = None
+
         # Get entity_id from unique ID registration
         if entity.unique_id is not None:
             registered_entity_id = entity_registry.async_get_entity_id(
@@ -629,12 +649,12 @@ class EntityPlatform:
             else:
                 if device and entity.has_entity_name:
                     device_name = device.name_by_user or device.name
-                    if not entity.name:
+                    if entity.use_device_name:
                         suggested_object_id = device_name
                     else:
-                        suggested_object_id = f"{device_name} {entity.name}"
+                        suggested_object_id = f"{device_name} {entity_name}"
                 if not suggested_object_id:
-                    suggested_object_id = entity.name
+                    suggested_object_id = entity_name
 
             if self.entity_namespace is not None:
                 suggested_object_id = f"{self.entity_namespace} {suggested_object_id}"
@@ -662,7 +682,7 @@ class EntityPlatform:
                 known_object_ids=self.entities.keys(),
                 original_device_class=entity.device_class,
                 original_icon=entity.icon,
-                original_name=entity.name,
+                original_name=entity_name,
                 suggested_object_id=suggested_object_id,
                 supported_features=entity.supported_features,
                 translation_key=entity.translation_key,
@@ -689,7 +709,7 @@ class EntityPlatform:
         # Generate entity ID
         if entity.entity_id is None or generate_new_entity_id:
             suggested_object_id = (
-                suggested_object_id or entity.name or DEVICE_DEFAULT_NAME
+                suggested_object_id or entity_name or DEVICE_DEFAULT_NAME
             )
 
             if self.entity_namespace is not None:
@@ -716,7 +736,7 @@ class EntityPlatform:
             self.logger.debug(
                 "Not adding entity %s because it's disabled",
                 entry.name
-                or entity.name
+                or entity_name
                 or f'"{self.platform_name} {entity.unique_id}"',
             )
             entity.add_to_platform_abort()
@@ -853,13 +873,22 @@ class EntityPlatform:
             return
 
         async with self._process_updates:
-            tasks: list[Coroutine[Any, Any, None]] = []
-            for entity in self.entities.values():
-                if not entity.should_poll:
-                    continue
-                tasks.append(entity.async_update_ha_state(True))
+            if self._update_in_sequence or len(self.entities) <= 1:
+                # If we know we will update sequentially, we want to avoid scheduling
+                # the coroutines as tasks that will wait on the semaphore lock.
+                for entity in list(self.entities.values()):
+                    # If the entity is removed from hass during the previous
+                    # entity being updated, we need to skip updating the
+                    # entity.
+                    if entity.should_poll and entity.hass:
+                        await entity.async_update_ha_state(True)
+                return
 
-            if tasks:
+            if tasks := [
+                entity.async_update_ha_state(True)
+                for entity in self.entities.values()
+                if entity.should_poll
+            ]:
                 await asyncio.gather(*tasks)
 
 
