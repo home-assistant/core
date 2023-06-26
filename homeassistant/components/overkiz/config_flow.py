@@ -1,6 +1,7 @@
 """Config flow for Overkiz integration."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 import re
 from typing import Any, cast
 
@@ -65,31 +66,31 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 2
 
     _config_entry: ConfigEntry | None
-    _default_user: None | str
-    _default_server: str
-    _default_host: str
+    _user: None | str
+    _server: str
+    _host: str
 
     def __init__(self) -> None:
         """Initialize Overkiz Config Flow."""
         super().__init__()
 
         self._config_entry = None
-        self._default_api_type = None
-        self._default_user = None
-        self._default_server = DEFAULT_SERVER
-        self._default_host = "gateway-xxxx-xxxx-xxxx.local:8443"
+        self._api_type = None
+        self._user = None
+        self._server = DEFAULT_SERVER
+        self._host = "gateway-xxxx-xxxx-xxxx.local:8443"
 
     async def async_validate_input(self, user_input: dict[str, Any]) -> dict[str, Any]:
         """Validate user credentials."""
         username = user_input[CONF_USERNAME]
         password = user_input[CONF_PASSWORD]
 
-        user_input[CONF_API_TYPE] = self._default_api_type
+        user_input[CONF_API_TYPE] = self._api_type
 
-        if self._default_api_type == LOCAL:
+        if self._api_type == LOCAL:
             # Create session on Somfy server to generate an access token for local API
             session = async_create_clientsession(self.hass)
-            server = SUPPORTED_SERVERS[self._default_server]
+            server = SUPPORTED_SERVERS[self._server]
             client = OverkizClient(
                 username=username, password=password, server=server, session=session
             )
@@ -161,9 +162,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input:
-            self._default_server = user_input[CONF_SERVER]
+            self._server = user_input[CONF_SERVER]
 
-            if self._default_server in SERVERS_THAT_SUPPORT_LOCAL_API:
+            if self._server in SERVERS_THAT_SUPPORT_LOCAL_API:
                 return await self.async_step_local_or_cloud()
 
             return await self.async_step_cloud()
@@ -172,7 +173,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_SERVER, default=self._default_server): vol.In(
+                    vol.Required(CONF_SERVER, default=self._server): vol.In(
                         {key: hub.name for key, hub in SUPPORTED_SERVERS.items()}
                     ),
                 }
@@ -188,8 +189,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         description_placeholders = {}
 
         if user_input:
-            self._default_user = user_input[CONF_USERNAME]
-            user_input[CONF_SERVER] = self._default_server
+            self._user = user_input[CONF_USERNAME]
+            user_input[CONF_SERVER] = self._server
 
             try:
                 await self.async_validate_input(user_input)
@@ -252,7 +253,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="cloud",
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_USERNAME, default=self._default_user): str,
+                    vol.Required(CONF_USERNAME, default=self._user): str,
                     vol.Required(CONF_PASSWORD): str,
                 }
             ),
@@ -267,9 +268,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input:
-            self._default_api_type = user_input[CONF_API_TYPE]
+            self._api_type = user_input[CONF_API_TYPE]
 
-            if self._default_api_type == "local":
+            if self._api_type == "local":
                 return await self.async_step_local()
 
             return await self.async_step_cloud()
@@ -298,9 +299,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input:
-            self._default_host = user_input[CONF_HOST]
-            self._default_user = user_input[CONF_USERNAME]
-            user_input[CONF_SERVER] = self._default_server
+            self._host = user_input[CONF_HOST]
+            self._user = user_input[CONF_USERNAME]
+            user_input[CONF_SERVER] = self._server
 
             try:
                 user_input = await self.async_validate_input(user_input)
@@ -353,8 +354,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="local",
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_HOST, default=self._default_host): str,
-                    vol.Required(CONF_USERNAME, default=self._default_user): str,
+                    vol.Required(CONF_HOST, default=self._host): str,
+                    vol.Required(CONF_USERNAME, default=self._user): str,
                     vol.Required(CONF_PASSWORD): str,
                 }
             ),
@@ -385,10 +386,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
         if discovery_info.type == "_kizbox._tcp.local.":
-            self._default_host = f"gateway-{gateway_id}.local:8443"
+            self._host = f"gateway-{gateway_id}.local:8443"
 
         if discovery_info.type == "_kizboxdev._tcp.local.":
-            self._default_host = f"{discovery_info.hostname[:-1]}:{discovery_info.port}"
+            self._host = f"{discovery_info.hostname[:-1]}:{discovery_info.port}"
 
         return await self._process_discovery(gateway_id)
 
@@ -400,9 +401,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_user()
 
-    async def async_step_reauth(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Handle reauth."""
         self._config_entry = cast(
             ConfigEntry,
@@ -413,8 +412,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             "gateway_id": self._config_entry.unique_id
         }
 
-        self._default_user = self._config_entry.data[CONF_USERNAME]
-        self._default_server = self._config_entry.data[CONF_SERVER]
-        self._default_api_type = self._config_entry.data[CONF_API_TYPE]
+        self._user = self._config_entry.data[CONF_USERNAME]
+        self._server = self._config_entry.data[CONF_SERVER]
+        self._api_type = self._config_entry.data[CONF_API_TYPE]
 
-        return await self.async_step_user(user_input)
+        return await self.async_step_user(dict(entry_data))
