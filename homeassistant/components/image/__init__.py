@@ -8,15 +8,17 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
 from random import SystemRandom
+import ssl
 from typing import Final, final
 
 from aiohttp import hdrs, web
 import async_timeout
+import httpx
 
 from homeassistant.components.http import KEY_AUTHENTICATED, HomeAssistantView
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.core import Event, HomeAssistant, async_get_hass, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
@@ -25,6 +27,7 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN, IMAGE_TIMEOUT  # noqa: F401
@@ -39,6 +42,8 @@ ENTITY_IMAGE_URL: Final = "/api/image_proxy/{0}?token={1}"
 
 TOKEN_CHANGE_INTERVAL: Final = timedelta(minutes=5)
 _RND: Final = SystemRandom()
+
+GET_IMAGE_TIMEOUT: Final = 10
 
 
 @dataclass
@@ -120,6 +125,7 @@ class ImageEntity(Entity):
 
     def __init__(self) -> None:
         """Initialize an image entity."""
+        self._client = get_async_client(async_get_hass())
         self.access_tokens: collections.deque = collections.deque([], 2)
         self.async_update_token()
 
@@ -146,7 +152,34 @@ class ImageEntity(Entity):
 
     async def async_image(self) -> bytes | None:
         """Return bytes of image."""
+
+        async def _async_load_image_from_url(url: str) -> Image:
+            """Load an image by url."""
+            try:
+                response = await self._client.get(
+                    url, timeout=GET_IMAGE_TIMEOUT, follow_redirects=True
+                )
+            except (httpx.TimeoutException, httpx.RequestError, ssl.SSLError) as ex:
+                raise HomeAssistantError(
+                    f"Connection failed to url {url} files: {ex}"
+                ) from ex
+            return Image(
+                content=response.content, content_type=response.headers["content-type"]
+            )
+
+        if (url := await self.async_image_url()) is not None:
+            image = await _async_load_image_from_url(url)
+            self._attr_content_type = image.content_type
+            return image.content
         return await self.hass.async_add_executor_job(self.image)
+
+    def image_url(self) -> str | None:
+        """Return URL of image."""
+        return None
+
+    async def async_image_url(self) -> str | None:
+        """Return URL of image."""
+        return self.image_url()
 
     @property
     @final
