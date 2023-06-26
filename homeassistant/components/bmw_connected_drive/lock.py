@@ -44,7 +44,7 @@ async def async_setup_entry(
 class BMWLock(BMWBaseEntity, LockEntity):
     """Representation of a MyBMW vehicle lock."""
 
-    _attr_name = "Lock"
+    _attr_translation_key = "lock"
 
     def __init__(
         self,
