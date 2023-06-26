@@ -23,7 +23,6 @@ async def async_setup_entry(
         hass,
         entry,
         async_add_entities,
-        component_key="button",
         info_type=ButtonInfo,
         entity_type=EsphomeButton,
         state_type=EntityState,

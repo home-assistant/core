@@ -29,7 +29,6 @@ async def async_setup_entry(
         hass,
         entry,
         async_add_entities,
-        component_key="binary_sensor",
         info_type=BinarySensorInfo,
         entity_type=EsphomeBinarySensor,
         state_type=BinarySensorState,

@@ -14,7 +14,7 @@ from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.zha import DOMAIN
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_TYPE
@@ -164,6 +164,8 @@ async def test_get_inovelli_actions(hass: HomeAssistant, device_inovelli) -> Non
     inovelli_reg_device = ha_device_registry.async_get_device(
         {(DOMAIN, inovelli_ieee_address)}
     )
+    ha_entity_registry = er.async_get(hass)
+    inovelli_light = ha_entity_registry.async_get("light.inovelli_vzm31_sn_light")
 
     actions = await async_get_device_automations(
         hass, DeviceAutomationType.ACTION, inovelli_reg_device.id
@@ -192,21 +194,21 @@ async def test_get_inovelli_actions(hass: HomeAssistant, device_inovelli) -> Non
         {
             "device_id": inovelli_reg_device.id,
             "domain": Platform.LIGHT,
-            "entity_id": "light.inovelli_vzm31_sn_light",
+            "entity_id": inovelli_light.id,
             "metadata": {"secondary": False},
             "type": "turn_off",
         },
         {
             "device_id": inovelli_reg_device.id,
             "domain": Platform.LIGHT,
-            "entity_id": "light.inovelli_vzm31_sn_light",
+            "entity_id": inovelli_light.id,
             "metadata": {"secondary": False},
             "type": "turn_on",
         },
         {
             "device_id": inovelli_reg_device.id,
             "domain": Platform.LIGHT,
-            "entity_id": "light.inovelli_vzm31_sn_light",
+            "entity_id": inovelli_light.id,
             "metadata": {"secondary": False},
             "type": "toggle",
         },

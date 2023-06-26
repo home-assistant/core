@@ -31,6 +31,7 @@ from homeassistant.core import (
     HomeAssistant,
     ServiceCall,
     ServiceResponse,
+    SupportsResponse,
     callback,
 )
 from homeassistant.exceptions import (
@@ -634,6 +635,13 @@ async def async_get_all_descriptions(
 
                 if "target" in yaml_description:
                     description["target"] = yaml_description["target"]
+
+                if (
+                    response := hass.services.supports_response(domain, service)
+                ) != SupportsResponse.NONE:
+                    description["response"] = {
+                        "optional": response == SupportsResponse.OPTIONAL,
+                    }
 
                 descriptions_cache[cache_key] = description
 

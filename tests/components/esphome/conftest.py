@@ -24,6 +24,10 @@ from homeassistant.components.esphome import (
     DOMAIN,
     dashboard,
 )
+from homeassistant.components.esphome.const import (
+    CONF_ALLOW_SERVICE_CALLS,
+    DEFAULT_NEW_CONFIG_ALLOW_ALLOW_SERVICE_CALLS,
+)
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -165,16 +169,22 @@ async def _mock_generic_device_entry(
     mock_device_info: dict[str, Any],
     mock_list_entities_services: tuple[list[EntityInfo], list[UserService]],
     states: list[EntityState],
+    entry: MockConfigEntry | None = None,
 ) -> MockESPHomeDevice:
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            CONF_HOST: "test.local",
-            CONF_PORT: 6053,
-            CONF_PASSWORD: "",
-        },
-    )
-    entry.add_to_hass(hass)
+    if not entry:
+        entry = MockConfigEntry(
+            domain=DOMAIN,
+            data={
+                CONF_HOST: "test.local",
+                CONF_PORT: 6053,
+                CONF_PASSWORD: "",
+            },
+            options={
+                CONF_ALLOW_SERVICE_CALLS: DEFAULT_NEW_CONFIG_ALLOW_ALLOW_SERVICE_CALLS
+            },
+        )
+        entry.add_to_hass(hass)
+
     mock_device = MockESPHomeDevice(entry)
 
     device_info = DeviceInfo(
@@ -208,7 +218,7 @@ async def _mock_generic_device_entry(
         return result
 
     with patch.object(ReconnectLogic, "_try_connect", mock_try_connect):
-        await hass.config_entries.async_setup(entry.entry_id)
+        assert await hass.config_entries.async_setup(entry.entry_id)
         await try_connect_done.wait()
 
     await hass.async_block_till_done()
@@ -283,9 +293,10 @@ async def mock_esphome_device(
         entity_info: list[EntityInfo],
         user_service: list[UserService],
         states: list[EntityState],
+        entry: MockConfigEntry | None = None,
     ) -> MockESPHomeDevice:
         return await _mock_generic_device_entry(
-            hass, mock_client, {}, (entity_info, user_service), states
+            hass, mock_client, {}, (entity_info, user_service), states, entry
         )
 
     return _mock_device
