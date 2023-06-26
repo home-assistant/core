@@ -14,7 +14,7 @@ pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
 
 async def test_coordinator(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
-    """Test we get the form."""
+    """Test the coordinator."""
     with patch(
         "homeassistant.components.ccm15.coordinator.CCM15Coordinator._fetch_xml_data",
         return_value="<response><a0>000000b0b8001b,</a0><a1>00000041c0001a,</a1><a2>-</a2></response>",
