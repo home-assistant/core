@@ -8,7 +8,6 @@ import httpx
 import voluptuous as vol
 
 from homeassistant.components.image import (
-    DEFAULT_CONTENT_TYPE,
     DOMAIN as IMAGE_DOMAIN,
     ImageEntity,
 )
@@ -31,15 +30,12 @@ from .trigger_entity import TriggerEntity
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_CONTENT_TYPE = "content_type"
-
 DEFAULT_NAME = "Template Image"
 
 GET_IMAGE_TIMEOUT = 10
 
 IMAGE_SCHEMA = vol.Schema(
     {
-        vol.Optional(CONF_CONTENT_TYPE, default=DEFAULT_CONTENT_TYPE): cv.template,
         vol.Required(CONF_URL): cv.template,
         vol.Optional(CONF_VERIFY_SSL, default=True): bool,
     }
@@ -112,6 +108,7 @@ class TemplateImage(ImageEntity):
                 url, timeout=GET_IMAGE_TIMEOUT, follow_redirects=True
             )
             response.raise_for_status()
+            self._attr_content_type = response.headers["content-type"]
             self._last_image = response.content
             return self._last_image
         except httpx.TimeoutException:
@@ -172,7 +169,7 @@ class TriggerImageEntity(TriggerEntity, TemplateImage):
     _last_image: bytes | None = None
 
     domain = IMAGE_DOMAIN
-    extra_template_keys = (CONF_CONTENT_TYPE, CONF_URL)
+    extra_template_keys = (CONF_URL,)
 
     def __init__(
         self,

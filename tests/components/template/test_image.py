@@ -53,8 +53,9 @@ async def _assert_state(
     expected_state: str,
     expected_image: bytes | None,
     entity_id: str = _TEST_IMAGE,
-    expected_status: HTTPStatus = HTTPStatus.OK,
+    expected_content_type: str = "image/jpeg",
     expected_entity_picture: Any = _DEFAULT,
+    expected_status: HTTPStatus = HTTPStatus.OK,
 ):
     """Verify image's state."""
     state = hass.states.get(entity_id)
@@ -70,6 +71,7 @@ async def _assert_state(
     client = await hass_client()
 
     resp = await client.get(f"/api/image_proxy/{entity_id}")
+    assert resp.content_type == expected_content_type
     assert resp.status == expected_status
     body = await resp.read()
     assert body == expected_image
@@ -81,7 +83,9 @@ async def test_platform_config(
     hass: HomeAssistant, hass_client: ClientSessionGenerator, imgbytes_jpg
 ) -> None:
     """Test configuring under the platform key does not work."""
-    respx.get("http://example.com").respond(stream=imgbytes_jpg)
+    respx.get("http://example.com").respond(
+        stream=imgbytes_jpg, content_type="image/jpeg"
+    )
 
     with assert_setup_component(1, "image"):
         assert await setup.async_setup_component(
@@ -108,7 +112,9 @@ async def test_missing_optional_config(
     hass: HomeAssistant, hass_client: ClientSessionGenerator, imgbytes_jpg
 ) -> None:
     """Test: missing optional template is ok."""
-    respx.get("http://example.com").respond(stream=imgbytes_jpg)
+    respx.get("http://example.com").respond(
+        stream=imgbytes_jpg, content_type="image/jpeg"
+    )
 
     with assert_setup_component(1, "template"):
         assert await setup.async_setup_component(
@@ -145,8 +151,12 @@ async def test_multiple_configs(
     imgbytes2_jpg,
 ) -> None:
     """Test: multiple image entities get created."""
-    respx.get("http://example.com").respond(stream=imgbytes_jpg)
-    respx.get("http://example2.com").respond(stream=imgbytes2_jpg)
+    respx.get("http://example.com").respond(
+        stream=imgbytes_jpg, content_type="image/jpeg"
+    )
+    respx.get("http://example2.com").respond(
+        stream=imgbytes2_jpg, content_type="image/png"
+    )
 
     with assert_setup_component(1, "template"):
         assert await setup.async_setup_component(
@@ -173,7 +183,12 @@ async def test_multiple_configs(
     expected_state = dt_util.utcnow().isoformat()
     await _assert_state(hass, hass_client, expected_state, imgbytes_jpg)
     await _assert_state(
-        hass, hass_client, expected_state, imgbytes2_jpg, f"{_TEST_IMAGE}_2"
+        hass,
+        hass_client,
+        expected_state,
+        imgbytes2_jpg,
+        f"{_TEST_IMAGE}_2",
+        expected_content_type="image/png",
     )
 
 
@@ -232,7 +247,9 @@ async def test_custom_entity_picture(
     hass: HomeAssistant, hass_client: ClientSessionGenerator, imgbytes_jpg
 ) -> None:
     """Test custom entity picture."""
-    respx.get("http://example.com").respond(stream=imgbytes_jpg)
+    respx.get("http://example.com").respond(
+        stream=imgbytes_jpg, content_type="image/jpeg"
+    )
 
     with assert_setup_component(1, "template"):
         assert await setup.async_setup_component(
@@ -294,6 +311,7 @@ async def test_http_error(
         expected_state,
         b"500: Internal Server Error",
         expected_status=HTTPStatus.INTERNAL_SERVER_ERROR,
+        expected_content_type="text/plain",
     )
 
 
@@ -329,6 +347,7 @@ async def test_http_timeout(
         expected_state,
         b"500: Internal Server Error",
         expected_status=HTTPStatus.INTERNAL_SERVER_ERROR,
+        expected_content_type="text/plain",
     )
 
 
@@ -362,6 +381,7 @@ async def test_template_error(
         STATE_UNKNOWN,
         b"500: Internal Server Error",
         expected_status=HTTPStatus.INTERNAL_SERVER_ERROR,
+        expected_content_type="text/plain",
     )
 
 
@@ -374,8 +394,12 @@ async def test_templates_with_entities(
     imgbytes2_jpg,
 ) -> None:
     """Test templates with values from other entities."""
-    respx.get("http://example.com").respond(stream=imgbytes_jpg)
-    respx.get("http://example2.com").respond(stream=imgbytes2_jpg)
+    respx.get("http://example.com").respond(
+        stream=imgbytes_jpg, content_type="image/jpeg"
+    )
+    respx.get("http://example2.com").respond(
+        stream=imgbytes2_jpg, content_type="image/png"
+    )
 
     with assert_setup_component(1, "input_text"):
         assert await setup.async_setup_component(
@@ -423,7 +447,13 @@ async def test_templates_with_entities(
         blocking=True,
     )
     await hass.async_block_till_done()
-    await _assert_state(hass, hass_client, expected_state, imgbytes2_jpg)
+    await _assert_state(
+        hass,
+        hass_client,
+        expected_state,
+        imgbytes2_jpg,
+        expected_content_type="image/png",
+    )
 
 
 @respx.mock
@@ -435,8 +465,12 @@ async def test_trigger_image(
     imgbytes2_jpg,
 ) -> None:
     """Test trigger based template image."""
-    respx.get("http://example.com").respond(stream=imgbytes_jpg)
-    respx.get("http://example2.com").respond(stream=imgbytes2_jpg)
+    respx.get("http://example.com").respond(
+        stream=imgbytes_jpg, content_type="image/jpeg"
+    )
+    respx.get("http://example2.com").respond(
+        stream=imgbytes2_jpg, content_type="image/png"
+    )
 
     assert await setup.async_setup_component(
         hass,
@@ -466,6 +500,7 @@ async def test_trigger_image(
         "unknown",
         b"500: Internal Server Error",
         expected_status=HTTPStatus.INTERNAL_SERVER_ERROR,
+        expected_content_type="text/plain",
     )
 
     hass.bus.async_fire("test_event", {"url": "http://example.com"})
@@ -480,7 +515,13 @@ async def test_trigger_image(
 
     hass.bus.async_fire("test_event", {"url": "http://example2.com"})
     await hass.async_block_till_done()
-    await _assert_state(hass, hass_client, expected_state, imgbytes2_jpg)
+    await _assert_state(
+        hass,
+        hass_client,
+        expected_state,
+        imgbytes2_jpg,
+        expected_content_type="image/png",
+    )
 
 
 @respx.mock
@@ -489,7 +530,9 @@ async def test_trigger_image_custom_entity_picture(
     hass: HomeAssistant, hass_client: ClientSessionGenerator, imgbytes_jpg
 ) -> None:
     """Test trigger based template image with custom entity picture."""
-    respx.get("http://example.com").respond(stream=imgbytes_jpg)
+    respx.get("http://example.com").respond(
+        stream=imgbytes_jpg, content_type="image/jpeg"
+    )
 
     assert await setup.async_setup_component(
         hass,
@@ -521,6 +564,7 @@ async def test_trigger_image_custom_entity_picture(
         b"500: Internal Server Error",
         expected_status=HTTPStatus.INTERNAL_SERVER_ERROR,
         expected_entity_picture="http://example2.com",
+        expected_content_type="text/plain",
     )
 
     hass.bus.async_fire("test_event", {"url": "http://example.com"})
