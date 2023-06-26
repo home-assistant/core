@@ -181,7 +181,7 @@ async def _mock_generic_device_entry(
             },
             options={
                 CONF_ALLOW_SERVICE_CALLS: DEFAULT_NEW_CONFIG_ALLOW_ALLOW_SERVICE_CALLS
-            }
+            },
         )
         entry.add_to_hass(hass)
 
