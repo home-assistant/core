@@ -8,7 +8,6 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
 from random import SystemRandom
-import ssl
 from typing import Final, final
 
 from aiohttp import hdrs, web
@@ -153,22 +152,35 @@ class ImageEntity(Entity):
     async def async_image(self) -> bytes | None:
         """Return bytes of image."""
 
-        async def _async_load_image_from_url(url: str) -> Image:
+        async def _async_load_image_from_url(url: str) -> Image | None:
             """Load an image by url."""
             try:
                 response = await self._client.get(
                     url, timeout=GET_IMAGE_TIMEOUT, follow_redirects=True
                 )
-            except (httpx.TimeoutException, httpx.RequestError, ssl.SSLError) as ex:
-                raise HomeAssistantError(
-                    f"Connection failed to url {url} files: {ex}"
-                ) from ex
-            return Image(
-                content=response.content, content_type=response.headers["content-type"]
-            )
+                response.raise_for_status()
+                return Image(
+                    content=response.content,
+                    content_type=response.headers["content-type"],
+                )
+            except httpx.TimeoutException:
+                _LOGGER.error("%s: Timeout getting image from %s", self.entity_id, url)
+                return None
+            except (httpx.RequestError, httpx.HTTPStatusError) as err:
+                _LOGGER.error(
+                    "%s: Error getting new image from %s: %s",
+                    self.entity_id,
+                    url,
+                    err,
+                )
+                return None
 
         if (url := await self.async_image_url()) is not None:
-            image = await _async_load_image_from_url(url)
+            # Ignore an empty url
+            if url == "":
+                return None
+            if (image := await _async_load_image_from_url(url)) is None:
+                return None
             self._attr_content_type = image.content_type
             return image.content
         return await self.hass.async_add_executor_job(self.image)
