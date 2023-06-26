@@ -18,7 +18,7 @@ import httpx
 from homeassistant.components.http import KEY_AUTHENTICATED, HomeAssistantView
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import Event, HomeAssistant, async_get_hass, callback
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
@@ -123,9 +123,9 @@ class ImageEntity(Entity):
     _attr_should_poll: bool = False  # No need to poll image entities
     _attr_state: None = None  # State is determined by last_updated
 
-    def __init__(self) -> None:
+    def __init__(self, hass: HomeAssistant) -> None:
         """Initialize an image entity."""
-        self._client = get_async_client(async_get_hass())
+        self._client = get_async_client(hass)
         self.access_tokens: collections.deque = collections.deque([], 2)
         self.async_update_token()
 

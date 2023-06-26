@@ -60,7 +60,7 @@ async def test_state_attr(
 ) -> None:
     """Test image state with entity picture from attr."""
     mock_integration(hass, MockModule(domain="test"))
-    entity = MockImageEntity()
+    entity = MockImageEntity(hass)
     entity._attr_entity_picture = "abcd"
     mock_platform(hass, "test.image", MockImagePlatform([entity]))
     assert await async_setup_component(
@@ -83,7 +83,7 @@ async def test_no_state(
 ) -> None:
     """Test image state."""
     mock_integration(hass, MockModule(domain="test"))
-    mock_platform(hass, "test.image", MockImagePlatform([MockImageNoStateEntity()]))
+    mock_platform(hass, "test.image", MockImagePlatform([MockImageNoStateEntity(hass)]))
     assert await async_setup_component(
         hass, image.DOMAIN, {"image": {"platform": "test"}}
     )
@@ -130,7 +130,7 @@ async def test_fetch_image_sync(
 ) -> None:
     """Test fetching an image with an authenticated client."""
     mock_integration(hass, MockModule(domain="test"))
-    mock_platform(hass, "test.image", MockImagePlatform([MockImageSyncEntity()]))
+    mock_platform(hass, "test.image", MockImagePlatform([MockImageSyncEntity(hass)]))
     assert await async_setup_component(
         hass, image.DOMAIN, {"image": {"platform": "test"}}
     )
@@ -183,7 +183,7 @@ async def test_fetch_image_url_success(
     )
 
     mock_integration(hass, MockModule(domain="test"))
-    mock_platform(hass, "test.image", MockImagePlatform([MockURLImageEntity()]))
+    mock_platform(hass, "test.image", MockImagePlatform([MockURLImageEntity(hass)]))
     assert await async_setup_component(
         hass, image.DOMAIN, {"image": {"platform": "test"}}
     )
@@ -215,7 +215,7 @@ async def test_fetch_image_url_exception(
     respx.get("https://example.com/myimage.jpg").mock(side_effect=side_effect)
 
     mock_integration(hass, MockModule(domain="test"))
-    mock_platform(hass, "test.image", MockImagePlatform([MockURLImageEntity()]))
+    mock_platform(hass, "test.image", MockImagePlatform([MockURLImageEntity(hass)]))
     assert await async_setup_component(
         hass, image.DOMAIN, {"image": {"platform": "test"}}
     )
