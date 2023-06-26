@@ -47,7 +47,9 @@ from tests.typing import (
     MqttMockPahoClient,
 )
 
-DEFAULT_CONFIG = {mqtt.DOMAIN: {image.DOMAIN: {"name": "test", "topic": "test_topic"}}}
+DEFAULT_CONFIG = {
+    mqtt.DOMAIN: {image.DOMAIN: {"name": "test", "image_topic": "test_topic"}}
+}
 
 
 @pytest.fixture(autouse=True)
@@ -60,7 +62,7 @@ def image_platform_only():
 @pytest.mark.freeze_time("2023-04-01 00:00:00+00:00")
 @pytest.mark.parametrize(
     "hass_config",
-    [{mqtt.DOMAIN: {image.DOMAIN: {"topic": "test/image", "name": "Test"}}}],
+    [{mqtt.DOMAIN: {image.DOMAIN: {"image_topic": "test/image", "name": "Test"}}}],
 )
 async def test_run_image_setup(
     hass: HomeAssistant,
@@ -98,7 +100,7 @@ async def test_run_image_setup(
         {
             mqtt.DOMAIN: {
                 image.DOMAIN: {
-                    "topic": "test/image",
+                    "image_topic": "test/image",
                     "name": "Test",
                     "image_encoding": "b64",
                     "content_type": "image/png",
@@ -152,7 +154,7 @@ async def test_run_image_b64_encoded(
         {
             mqtt.DOMAIN: {
                 "image": {
-                    "topic": "test/image",
+                    "image_topic": "test/image",
                     "name": "Test",
                     "encoding": "utf-8",
                     "image_encoding": "b64",
@@ -205,7 +207,7 @@ async def test_image_b64_encoded_with_availability(
         {
             mqtt.DOMAIN: {
                 "image": {
-                    "from_url_topic": "test/image",
+                    "url_topic": "test/image",
                     "name": "Test",
                 }
             }
@@ -264,9 +266,9 @@ async def test_image_from_url(
         {
             mqtt.DOMAIN: {
                 "image": {
-                    "from_url_topic": "test/image",
+                    "url_topic": "test/image",
                     "name": "Test",
-                    "value_template": "{{ value_json.val }}",
+                    "url_template": "{{ value_json.val }}",
                 }
             }
         }
@@ -317,7 +319,7 @@ async def test_image_from_url_with_template(
         {
             mqtt.DOMAIN: {
                 "image": {
-                    "from_url_topic": "test/image",
+                    "url_topic": "test/image",
                     "name": "Test",
                 }
             }
@@ -386,7 +388,7 @@ async def test_image_from_url_content_type(
         {
             mqtt.DOMAIN: {
                 "image": {
-                    "from_url_topic": "test/image",
+                    "url_topic": "test/image",
                     "name": "Test",
                     "encoding": "utf-8",
                 }
@@ -446,21 +448,21 @@ async def test_image_from_url_fails(
             {
                 mqtt.DOMAIN: {
                     "image": {
-                        "from_url_topic": "test/image",
+                        "url_topic": "test/image",
                         "content_type": "image/jpg",
                         "name": "Test",
                         "encoding": "utf-8",
                     }
                 }
             },
-            "Option `content_type` and not be used together with `from_url_topic`",
+            "Option `content_type` can not be used together with `url_topic`",
         ),
         (
             {
                 mqtt.DOMAIN: {
                     "image": {
-                        "from_url_topic": "test/image",
-                        "topic": "test/image-data-topic",
+                        "url_topic": "test/image",
+                        "image_topic": "test/image-data-topic",
                         "name": "Test",
                         "encoding": "utf-8",
                     }
@@ -477,7 +479,7 @@ async def test_image_from_url_fails(
                     }
                 }
             },
-            "Invalid config for [mqtt]: Expected one of [`topic`, `from_url_topic`], got none",
+            "Invalid config for [mqtt]: Expected one of [`image_topic`, `url_topic`], got none",
         ),
     ],
 )
@@ -603,12 +605,12 @@ async def test_discovery_update_attr(
                 image.DOMAIN: [
                     {
                         "name": "Test 1",
-                        "topic": "test-topic",
+                        "image_topic": "test-topic",
                         "unique_id": "TOTALLY_UNIQUE",
                     },
                     {
                         "name": "Test 2",
-                        "topic": "test-topic",
+                        "image_topic": "test-topic",
                         "unique_id": "TOTALLY_UNIQUE",
                     },
                 ]
@@ -639,8 +641,8 @@ async def test_discovery_update_image(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test update of discovered image."""
-    config1 = {"name": "Beer", "topic": "test_topic"}
-    config2 = {"name": "Milk", "topic": "test_topic"}
+    config1 = {"name": "Beer", "image_topic": "test_topic"}
+    config2 = {"name": "Milk", "image_topic": "test_topic"}
 
     await help_test_discovery_update(
         hass, mqtt_mock_entry, caplog, image.DOMAIN, config1, config2
@@ -653,7 +655,7 @@ async def test_discovery_update_unchanged_image(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test update of discovered image."""
-    data1 = '{ "name": "Beer", "topic": "test_topic"}'
+    data1 = '{ "name": "Beer", "image_topic": "test_topic"}'
     with patch(
         "homeassistant.components.mqtt.image.MqttImage.discovery_update"
     ) as discovery_update:
@@ -675,7 +677,7 @@ async def test_discovery_broken(
 ) -> None:
     """Test handling of bad discovery message."""
     data1 = '{ "name": "Beer" }'
-    data2 = '{ "name": "Milk", "from_url_topic": "test_topic"}'
+    data2 = '{ "name": "Milk", "url_topic": "test_topic"}'
 
     await help_test_discovery_broken(
         hass, mqtt_mock_entry, caplog, image.DOMAIN, data1, data2

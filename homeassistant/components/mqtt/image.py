@@ -18,7 +18,7 @@ from homeassistant.components.image import (
     ImageEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_NAME, CONF_VALUE_TEMPLATE
+from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -29,7 +29,7 @@ from homeassistant.util import dt as dt_util
 
 from . import subscription
 from .config import MQTT_BASE_SCHEMA
-from .const import CONF_ENCODING, CONF_QOS, CONF_TOPIC
+from .const import CONF_ENCODING, CONF_QOS
 from .debug_info import log_messages
 from .mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity, async_setup_entry_helper
 from .models import MessageCallbackType, MqttValueTemplate, ReceiveMessage
@@ -39,18 +39,20 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_CONTENT_TYPE = "content_type"
 CONF_IMAGE_ENCODING = "image_encoding"
-CONF_FROM_URL_TOPIC = "from_url_topic"
+CONF_IMAGE_TOPIC = "image_topic"
+CONF_URL_TEMPLATE = "url_template"
+CONF_URL_TOPIC = "url_topic"
 
 DEFAULT_NAME = "MQTT Image"
 
 
 def validate_topic_required(config: ConfigType) -> ConfigType:
     """Ensure at least one subscribe topic is configured."""
-    if CONF_TOPIC not in config and CONF_FROM_URL_TOPIC not in config:
-        raise vol.Invalid("Expected one of [`topic`, `from_url_topic`], got none")
-    if CONF_CONTENT_TYPE in config and CONF_FROM_URL_TOPIC in config:
+    if CONF_IMAGE_TOPIC not in config and CONF_URL_TOPIC not in config:
+        raise vol.Invalid("Expected one of [`image_topic`, `url_topic`], got none")
+    if CONF_CONTENT_TYPE in config and CONF_URL_TOPIC in config:
         raise vol.Invalid(
-            "Option `content_type` and not be used together with `from_url_topic`"
+            "Option `content_type` can not be used together with `url_topic`"
         )
     return config
 
@@ -59,10 +61,10 @@ PLATFORM_SCHEMA_BASE = MQTT_BASE_SCHEMA.extend(
     {
         vol.Optional(CONF_CONTENT_TYPE): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Exclusive(CONF_FROM_URL_TOPIC, "image_topic"): valid_subscribe_topic,
-        vol.Exclusive(CONF_TOPIC, "image_topic"): valid_subscribe_topic,
+        vol.Exclusive(CONF_URL_TOPIC, "image_topic"): valid_subscribe_topic,
+        vol.Exclusive(CONF_IMAGE_TOPIC, "image_topic"): valid_subscribe_topic,
         vol.Optional(CONF_IMAGE_ENCODING): "b64",
-        vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
+        vol.Optional(CONF_URL_TEMPLATE): cv.template,
     }
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
 
@@ -102,7 +104,7 @@ class MqttImage(MqttEntity, ImageEntity):
     _entity_id_format: str = image.ENTITY_ID_FORMAT
     _last_image: bytes | None = None
     _client: httpx.AsyncClient
-    _template: Callable[[ReceivePayloadType], ReceivePayloadType]
+    _url_template: Callable[[ReceivePayloadType], ReceivePayloadType]
     _topic: dict[str, Any]
 
     def __init__(
@@ -127,16 +129,16 @@ class MqttImage(MqttEntity, ImageEntity):
         self._topic = {
             key: config.get(key)
             for key in (
-                CONF_TOPIC,
-                CONF_FROM_URL_TOPIC,
+                CONF_IMAGE_TOPIC,
+                CONF_URL_TOPIC,
             )
         }
-        if CONF_TOPIC in config:
+        if CONF_IMAGE_TOPIC in config:
             self._attr_content_type = config.get(
                 CONF_CONTENT_TYPE, DEFAULT_CONTENT_TYPE
             )
-        self._template = MqttValueTemplate(
-            config.get(CONF_VALUE_TEMPLATE), entity=self
+        self._url_template = MqttValueTemplate(
+            config.get(CONF_URL_TEMPLATE), entity=self
         ).async_render_with_possible_json_value
 
     async def _async_load_image(self, url: str) -> None:
@@ -164,7 +166,7 @@ class MqttImage(MqttEntity, ImageEntity):
             encoding: str | None
             encoding = (
                 None
-                if CONF_TOPIC in self._config
+                if CONF_IMAGE_TOPIC in self._config
                 else self._config[CONF_ENCODING] or None
             )
             if has_topic := self._topic[topic] is not None:
@@ -196,7 +198,7 @@ class MqttImage(MqttEntity, ImageEntity):
             self._attr_image_last_updated = dt_util.utcnow()
             get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
-        add_subscribe_topic(CONF_TOPIC, image_data_received)
+        add_subscribe_topic(CONF_IMAGE_TOPIC, image_data_received)
 
         @callback
         @log_messages(self.hass, self.entity_id)
@@ -204,7 +206,7 @@ class MqttImage(MqttEntity, ImageEntity):
             """Handle new MQTT messages."""
 
             try:
-                url = cv.url(self._template(msg.payload))
+                url = cv.url(self._url_template(msg.payload))
             except vol.Invalid:
                 _LOGGER.error(
                     "Invalid image URL '%s' received at topic %s",
@@ -214,7 +216,7 @@ class MqttImage(MqttEntity, ImageEntity):
                 return
             self.hass.async_create_task(self._async_load_image(url))
 
-        add_subscribe_topic(CONF_FROM_URL_TOPIC, image_from_url_request_received)
+        add_subscribe_topic(CONF_URL_TOPIC, image_from_url_request_received)
 
         self._sub_state = subscription.async_prepare_subscribe_topics(
             self.hass, self._sub_state, topics
