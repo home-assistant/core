@@ -28,6 +28,8 @@ DEFAULT_TIMEOUT = 60
 FIRST_ONVIF_TIMEOUT = 10
 SUBSCRIPTION_RENEW_THRESHOLD = 300
 POLL_INTERVAL_NO_PUSH = 5
+LONG_POLL_COOLDOWN = 0.75
+LONG_POLL_ERROR_COOLDOWN = 30
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -446,7 +448,7 @@ class ReolinkHost:
                     _LOGGER.error("Error while requesting ONVIF pull point: %s", ex)
                     await self._api.unsubscribe(sub_type=SubType.long_poll)
                 self._long_poll_error = True
-                await asyncio.sleep(30)
+                await asyncio.sleep(LONG_POLL_ERROR_COOLDOWN)
                 continue
             except Exception as ex:
                 _LOGGER.exception("Error while requesting ONVIF pull point: %s", ex)
@@ -462,7 +464,7 @@ class ReolinkHost:
             self._signal_write_ha_state(channels)
 
             # Cooldown to prevent CPU over usage on camera freezes
-            await asyncio.sleep(0.75)
+            await asyncio.sleep(LONG_POLL_COOLDOWN)
 
     async def _async_poll_all_motion(self, *_) -> None:
         """Poll motion and AI states until the first ONVIF push is received."""
