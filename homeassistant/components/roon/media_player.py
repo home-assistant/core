@@ -410,7 +410,7 @@ class RoonDevice(MediaPlayerEntity):
         else:
             # media_id is a path matching the Roon menu structure
             path_list = split_media_path(media_id)
-            if not self._server.roonapi.play_media(self.zone_id, path_list):
+            if not self._server.roonapi.play_media(self.zone_id, path_list, media_type):
                 _LOGGER.error(
                     "Playback request for %s / %s / %s was unsuccessful",
                     media_type,
