@@ -55,6 +55,54 @@
       },
       "sum_active_instantaneous_power": {
         "name": "Sum active instantaneous power"
+      },
+      "l1_active_instantaneous_amperage": {
+        "name": "L1 active instantaneous amperage"
+      },
+      "l1_active_instantaneous_voltage": {
+        "name": "L1 active instantaneous voltage"
+      },
+      "l1_active_instantaneous_power": {
+        "name": "L1 active instantaneous power"
+      },
+      "l2_active_instantaneous_amperage": {
+        "name": "L2 active instantaneous amperage"
+      },
+      "l2_active_instantaneous_voltage": {
+        "name": "L2 active instantaneous voltage"
+      },
+      "l2_active_instantaneous_power": {
+        "name": "L2 active instantaneous power"
+      },
+      "l3_active_instantaneous_amperage": {
+        "name": "L3 active instantaneous amperage"
+      },
+      "l3_active_instantaneous_voltage": {
+        "name": "L3 active instantaneous voltage"
+      },
+      "l3_active_instantaneous_power": {
+        "name": "L3 active instantaneous power"
+      },
+      "u_l2_u_l1_phase_angle": {
+        "name": "U(L2)/U(L1) phase angle"
+      },
+      "u_l3_u_l1_phase_angle": {
+        "name": "U(L3)/U(L1) phase angle"
+      },
+      "u_l1_i_l1_phase_angle": {
+        "name": "U(L1)/I(L1) phase angle"
+      },
+      "u_l2_i_l2_phase_angle": {
+        "name": "U(L2)/I(L2) phase angle"
+      },
+      "u_l3_i_l3_phase_angle": {
+        "name": "U(L3)/I(L3) phase angle"
+      },
+      "metering_point_id_1": {
+        "name": "Metering point ID 1"
+      },
+      "internal_operating_status": {
+        "name": "Internal operating status"
       }
     }
   }
