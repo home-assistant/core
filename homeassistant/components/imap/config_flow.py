@@ -19,7 +19,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import AbortFlow, FlowResult
-from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.selector import (
     BooleanSelector,
@@ -29,7 +28,6 @@ from homeassistant.helpers.selector import (
     TemplateSelector,
     TemplateSelectorConfig,
 )
-from homeassistant.helpers.template import Template
 from homeassistant.util.ssl import SSLCipherList
 
 from .const import (
@@ -122,11 +120,6 @@ async def validate_input(
                 errors[CONF_CHARSET] = "invalid_charset"
             else:
                 errors[CONF_SEARCH] = "invalid_search"
-    if template := user_input.get(CONF_CUSTOM_EVENT_DATA_TEMPLATE):
-        try:
-            Template(template, hass=hass).ensure_valid()
-        except TemplateError:
-            errors[CONF_CUSTOM_EVENT_DATA_TEMPLATE] = "invalid_template"
 
     return errors
 

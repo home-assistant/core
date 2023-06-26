@@ -5,10 +5,15 @@ Call init before using it in your tests to ensure clean test data.
 from __future__ import annotations
 
 from homeassistant.components.weather import (
+    ATTR_FORECAST_CLOUD_COVERAGE,
+    ATTR_FORECAST_HUMIDITY,
+    ATTR_FORECAST_NATIVE_APPARENT_TEMP,
+    ATTR_FORECAST_NATIVE_DEW_POINT,
     ATTR_FORECAST_NATIVE_PRECIPITATION,
     ATTR_FORECAST_NATIVE_PRESSURE,
     ATTR_FORECAST_NATIVE_TEMP,
     ATTR_FORECAST_NATIVE_TEMP_LOW,
+    ATTR_FORECAST_NATIVE_WIND_GUST_SPEED,
     ATTR_FORECAST_NATIVE_WIND_SPEED,
     ATTR_FORECAST_PRECIPITATION,
     ATTR_FORECAST_PRESSURE,
@@ -47,6 +52,16 @@ class MockWeather(MockEntity, WeatherEntity):
         return self._handle("native_temperature")
 
     @property
+    def native_apparent_temperature(self) -> float | None:
+        """Return the platform apparent temperature."""
+        return self._handle("native_apparent_temperature")
+
+    @property
+    def native_dew_point(self) -> float | None:
+        """Return the platform dewpoint temperature."""
+        return self._handle("native_dew_point")
+
+    @property
     def native_temperature_unit(self) -> str | None:
         """Return the unit of measurement for temperature."""
         return self._handle("native_temperature_unit")
@@ -67,6 +82,11 @@ class MockWeather(MockEntity, WeatherEntity):
         return self._handle("humidity")
 
     @property
+    def native_wind_gust_speed(self) -> float | None:
+        """Return the wind speed."""
+        return self._handle("native_wind_gust_speed")
+
+    @property
     def native_wind_speed(self) -> float | None:
         """Return the wind speed."""
         return self._handle("native_wind_speed")
@@ -85,6 +105,11 @@ class MockWeather(MockEntity, WeatherEntity):
     def ozone(self) -> float | None:
         """Return the ozone level."""
         return self._handle("ozone")
+
+    @property
+    def cloud_coverage(self) -> float | None:
+        """Return the cloud coverage in %."""
+        return self._handle("cloud_coverage")
 
     @property
     def native_visibility(self) -> float | None:
@@ -195,13 +220,18 @@ class MockWeatherMockForecast(MockWeather):
         return [
             {
                 ATTR_FORECAST_NATIVE_TEMP: self.native_temperature,
+                ATTR_FORECAST_NATIVE_APPARENT_TEMP: self.native_apparent_temperature,
                 ATTR_FORECAST_NATIVE_TEMP_LOW: self.native_temperature,
+                ATTR_FORECAST_NATIVE_DEW_POINT: self.native_dew_point,
+                ATTR_FORECAST_CLOUD_COVERAGE: self.cloud_coverage,
                 ATTR_FORECAST_NATIVE_PRESSURE: self.native_pressure,
+                ATTR_FORECAST_NATIVE_WIND_GUST_SPEED: self.native_wind_gust_speed,
                 ATTR_FORECAST_NATIVE_WIND_SPEED: self.native_wind_speed,
                 ATTR_FORECAST_WIND_BEARING: self.wind_bearing,
                 ATTR_FORECAST_NATIVE_PRECIPITATION: self._values.get(
                     "native_precipitation"
                 ),
+                ATTR_FORECAST_HUMIDITY: self.humidity,
             }
         ]
 

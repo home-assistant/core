@@ -80,7 +80,7 @@ async def test_switch_set_off(hass: HomeAssistant, init_integration) -> None:
     with patch(
         "homeassistant.components.freedompro.switch.put_state"
     ) as mock_put_state:
-        assert await hass.services.async_call(
+        await hass.services.async_call(
             SWITCH_DOMAIN,
             SERVICE_TURN_OFF,
             {ATTR_ENTITY_ID: [entity_id]},
@@ -119,7 +119,7 @@ async def test_switch_set_on(hass: HomeAssistant, init_integration) -> None:
     with patch(
         "homeassistant.components.freedompro.switch.put_state"
     ) as mock_put_state:
-        assert await hass.services.async_call(
+        await hass.services.async_call(
             SWITCH_DOMAIN,
             SERVICE_TURN_ON,
             {ATTR_ENTITY_ID: [entity_id]},
