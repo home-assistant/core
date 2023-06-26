@@ -5,7 +5,6 @@ from datetime import timedelta
 import logging
 from typing import TYPE_CHECKING, Any
 
-from bleak.backends.device import BLEDevice
 from bleak.exc import BleakError
 from gardena_bluetooth import read_char_raw, write_char
 from gardena_bluetooth.client import CachedClient
@@ -22,13 +21,10 @@ from homeassistant.helpers.update_coordinator import (
     UpdateFailed,
 )
 
-from .const import DOMAIN
-
 if TYPE_CHECKING:
     pass
 
 SCAN_INTERVAL = timedelta(seconds=60)
-DISCONNECT_DELAY = 5
 LOGGER = logging.getLogger(__name__)
 
 
@@ -43,6 +39,9 @@ class Coordinator(DataUpdateCoordinator[dict[str, bytes]]):
         self,
         hass: HomeAssistant,
         logger: logging.Logger,
+        client: CachedClient,
+        characteristics: set[str],
+        device_info: DeviceInfo,
         address: str,
     ) -> None:
         """Initialize global data updater."""
@@ -54,17 +53,9 @@ class Coordinator(DataUpdateCoordinator[dict[str, bytes]]):
         )
         self.address = address
         self.data = {}
-
-        def _device_lookup() -> BLEDevice:
-            device = bluetooth.async_ble_device_from_address(
-                hass, address, connectable=True
-            )
-            if not device:
-                raise DeviceUnavailable("Unable to find device")
-            return device
-
-        self.client = CachedClient(DISCONNECT_DELAY, _device_lookup)
-        self.characteristics: set[str] = set()
+        self.client = client
+        self.characteristics = characteristics
+        self.device_info = device_info
 
     async def async_shutdown(self) -> None:
         """Shutdown coordinator and any connection."""
@@ -127,7 +118,7 @@ class GardenaBluetoothEntity(CoordinatorEntity[Coordinator]):
     def __init__(self, coordinator: Coordinator, context: Any = None) -> None:
         """Initialize coordinator entity."""
         super().__init__(coordinator, context)
-        self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, coordinator.address)})
+        self._attr_device_info = coordinator.device_info
 
     @property
     def available(self) -> bool:
