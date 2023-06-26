@@ -24,6 +24,10 @@ from homeassistant.components.esphome import (
     DOMAIN,
     dashboard,
 )
+from homeassistant.components.esphome.const import (
+    CONF_ALLOW_SERVICE_CALLS,
+    DEFAULT_NEW_CONFIG_ALLOW_ALLOW_SERVICE_CALLS,
+)
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -175,6 +179,9 @@ async def _mock_generic_device_entry(
                 CONF_PORT: 6053,
                 CONF_PASSWORD: "",
             },
+            options={
+                CONF_ALLOW_SERVICE_CALLS: DEFAULT_NEW_CONFIG_ALLOW_ALLOW_SERVICE_CALLS
+            }
         )
         entry.add_to_hass(hass)
 
@@ -211,7 +218,7 @@ async def _mock_generic_device_entry(
         return result
 
     with patch.object(ReconnectLogic, "_try_connect", mock_try_connect):
-        await hass.config_entries.async_setup(entry.entry_id)
+        assert await hass.config_entries.async_setup(entry.entry_id)
         await try_connect_done.wait()
 
     await hass.async_block_till_done()

@@ -1967,7 +1967,7 @@ xbox-webapi==2.0.11
 xiaomi-ble==0.17.2
 
 # homeassistant.components.knx
-xknx==2.10.0
+xknx==2.11.0
 
 # homeassistant.components.knx
 xknxproject==3.2.0

@@ -428,3 +428,12 @@ class RuntimeEntryData:
             # Ensure we save the data if we are unloading before the
             # save delay has passed.
             await self.store.async_save(self._pending_storage())
+        self.store.async_delay_save(_memorized_storage, SAVE_DELAY)
+
+    async def async_update_listener(
+        self, hass: HomeAssistant, entry: ConfigEntry
+    ) -> None:
+        """Handle options update."""
+        if self.original_options == entry.options:
+            return
+        hass.async_create_task(hass.config_entries.async_reload(entry.entry_id))
