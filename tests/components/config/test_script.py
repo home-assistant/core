@@ -102,45 +102,6 @@ async def test_update_script_config(
             },
             "Unknown entity registry entry abcdabcdabcdabcdabcdabcdabcdabcd",
         ),
-    ],
-)
-async def test_update_script_config_with_error(
-    hass: HomeAssistant,
-    hass_client: ClientSessionGenerator,
-    hass_config_store,
-    caplog: pytest.LogCaptureFixture,
-    updated_config: Any,
-    validation_error: str,
-) -> None:
-    """Test updating script config with errors."""
-    with patch.object(config, "SECTIONS", ["script"]):
-        await async_setup_component(hass, "config", {})
-
-    assert sorted(hass.states.async_entity_ids("script")) == []
-
-    client = await hass_client()
-
-    orig_data = {"sun": {}, "moon": {}}
-    hass_config_store["scripts.yaml"] = orig_data
-
-    resp = await client.post(
-        "/api/config/script/config/moon",
-        data=json.dumps(updated_config),
-    )
-    await hass.async_block_till_done()
-    assert sorted(hass.states.async_entity_ids("script")) == []
-
-    assert resp.status != HTTPStatus.OK
-    result = await resp.json()
-    assert result == {"message": f"Message malformed: {validation_error}"}
-    # Assert the validation error is not logged
-    assert validation_error not in caplog.text
-
-
-@pytest.mark.parametrize("script_config", ({},))
-@pytest.mark.parametrize(
-    ("updated_config", "validation_error"),
-    [
         (
             {
                 "use_blueprint": {
@@ -152,11 +113,10 @@ async def test_update_script_config_with_error(
         ),
     ],
 )
-async def test_update_script_config_with_blueprint_missing_input(
+async def test_update_script_config_with_error(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     hass_config_store,
-    # setup_automation,
     caplog: pytest.LogCaptureFixture,
     updated_config: Any,
     validation_error: str,
