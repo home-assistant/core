@@ -24,6 +24,7 @@ from . import (
     device_tracker as device_tracker_platform,
     fan as fan_platform,
     humidifier as humidifier_platform,
+    image as image_platform,
     light as light_platform,
     lock as lock_platform,
     number as number_platform,
@@ -88,6 +89,10 @@ PLATFORM_CONFIG_SCHEMA_BASE = vol.Schema(
         Platform.HUMIDIFIER.value: vol.All(
             cv.ensure_list,
             [humidifier_platform.PLATFORM_SCHEMA_MODERN],  # type: ignore[has-type]
+        ),
+        Platform.IMAGE.value: vol.All(
+            cv.ensure_list,
+            [image_platform.PLATFORM_SCHEMA_MODERN],  # type: ignore[has-type]
         ),
         Platform.LOCK.value: vol.All(
             cv.ensure_list,

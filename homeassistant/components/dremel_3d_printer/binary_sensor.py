@@ -36,13 +36,11 @@ class Dremel3DPrinterBinarySensorEntityDescription(
 BINARY_SENSOR_TYPES: tuple[Dremel3DPrinterBinarySensorEntityDescription, ...] = (
     Dremel3DPrinterBinarySensorEntityDescription(
         key="door",
-        name="Door",
         device_class=BinarySensorDeviceClass.DOOR,
         value_fn=lambda api: api.is_door_open(),
     ),
     Dremel3DPrinterBinarySensorEntityDescription(
         key="running",
-        name="Running",
         device_class=BinarySensorDeviceClass.RUNNING,
         value_fn=lambda api: api.is_running(),
     ),

@@ -37,6 +37,7 @@ class PeriodicVentingTime(CoordinatorEntity[Coordinator], NumberEntity):
     _attr_native_step: float = 1
     _attr_entity_category = EntityCategory.CONFIG
     _attr_native_unit_of_measurement = UnitOfTime.MINUTES
+    _attr_translation_key = "periodic_venting"
 
     def __init__(
         self,
@@ -47,7 +48,6 @@ class PeriodicVentingTime(CoordinatorEntity[Coordinator], NumberEntity):
         super().__init__(coordinator)
         self._attr_unique_id = f"{coordinator.device.address}-periodic-venting"
         self._attr_device_info = device_info
-        self._attr_name = "Periodic venting"
 
     @property
     def native_value(self) -> float | None:

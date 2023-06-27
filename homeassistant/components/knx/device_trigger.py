@@ -84,6 +84,7 @@ async def async_attach_trigger(
     trigger_info: TriggerInfo,
 ) -> CALLBACK_TYPE:
     """Attach a trigger."""
+    trigger_data = trigger_info["trigger_data"]
     dst_addresses: list[str] = config.get(EXTRA_FIELD_DESTINATION, [])
     job = HassJob(action, f"KNX device trigger {trigger_info}")
     knx: KNXModule = hass.data[DOMAIN]
@@ -95,7 +96,7 @@ async def async_attach_trigger(
             return
         hass.async_run_hass_job(
             job,
-            {"trigger": telegram},
+            {"trigger": {**trigger_data, **telegram}},
         )
 
     return knx.telegrams.async_listen_telegram(

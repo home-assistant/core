@@ -11,7 +11,11 @@ from homeassistant.const import ATTR_CODE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import EsphomeEntity, esphome_state_property, platform_async_setup_entry
+from .entity import (
+    EsphomeEntity,
+    esphome_state_property,
+    platform_async_setup_entry,
+)
 
 
 async def async_setup_entry(
@@ -22,7 +26,6 @@ async def async_setup_entry(
         hass,
         entry,
         async_add_entities,
-        component_key="lock",
         info_type=LockInfo,
         entity_type=EsphomeLock,
         state_type=LockEntityState,
