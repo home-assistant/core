@@ -37,6 +37,10 @@ SERVICE_TRANSFER = "transfer"
 
 ATTR_TRANSFER = "transfer_id"
 
+
+SERVICE_START_RADIO = "start_radio"
+ATTR_RADIO_PATH = "start_radio_path"
+
 REPEAT_MODE_MAPPING_TO_HA = {
     "loop": RepeatMode.ALL,
     "disabled": RepeatMode.OFF,
@@ -63,6 +67,12 @@ async def async_setup_entry(
         SERVICE_TRANSFER,
         {vol.Required(ATTR_TRANSFER): cv.entity_id},
         "async_transfer",
+    )
+
+    platform.async_register_entity_service(
+        SERVICE_START_RADIO,
+        {vol.Required(ATTR_RADIO_PATH): cv.entity_id},
+        "async_start_radio",
     )
 
     @callback
@@ -500,6 +510,20 @@ class RoonDevice(MediaPlayerEntity):
             self._server.roonapi.transfer_zone, self._zone_id, transfer_id
         )
 
+    
+    async def async_start_radio(self, radio_path):
+        """Start a Roon Radio from the given Path."""
+        _LOGGER.debug("Roon Radio request for %s", radio_path)
+        
+        # radio_path is a path matching the Roon menu structure
+
+        path_list = split_media_path(radio_path)
+        if not self._server.roonapi.play_media(self.zone_id, path_list, "Start Radio"):
+            _LOGGER.error(
+                "Roon Radio request for %s was unsuccessful",
+                radio_path,
+            )
+        
     async def async_browse_media(
         self,
         media_content_type: MediaType | str | None = None,
