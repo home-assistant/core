@@ -221,6 +221,9 @@ async def test_send_usage(
     ), patch(
         "homeassistant.config.load_yaml_config_file",
         return_value={"default_config": {}},
+    ), patch(
+        "homeassistant.components.analytics.analytics.async_get_system_info",
+        return_value={"installation_type": "Home Assistant Tests"},
     ):
         await analytics.send_analytics()
 
@@ -231,7 +234,7 @@ async def test_send_usage(
     assert _last_call_payload(aioclient_mock) == {
         "uuid": ANY,
         "version": MOCK_VERSION,
-        "installation_type": "Unsupported Third Party Container",
+        "installation_type": "Home Assistant Tests",
         "certificate": False,
         "integrations": ["default_config"],
         "custom_integrations": [],
