@@ -212,6 +212,12 @@ class CloudClient(Interface):
         """Process cloud remote message to client."""
         await self._prefs.async_update(remote_enabled=connect)
 
+    async def async_cloud_connection_info(
+        self, payload: dict[str, Any]
+    ) -> dict[str, Any]:
+        """Process cloud connection info message to client."""
+        return {}
+
     async def async_alexa_message(self, payload: dict[Any, Any]) -> dict[Any, Any]:
         """Process cloud alexa message to client."""
         cloud_user = await self._prefs.get_cloud_user()
