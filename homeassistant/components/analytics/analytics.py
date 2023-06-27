@@ -224,7 +224,7 @@ class Analytics:
                 LOGGER.error(err)
                 return
 
-            configuration_set = set(yaml_configuration.keys())
+            configuration_set = set(yaml_configuration)
             er_platforms = {
                 entity.platform
                 for entity in ent_reg.entities.values()
@@ -233,7 +233,7 @@ class Analytics:
 
             domains = async_get_loaded_integrations(self.hass)
             configured_integrations = await async_get_integrations(self.hass, domains)
-            enabled_domains = set(configured_integrations.keys())
+            enabled_domains = set(configured_integrations)
 
             for integration in configured_integrations.values():
                 if isinstance(integration, IntegrationNotFound):
@@ -242,7 +242,7 @@ class Analytics:
                 if isinstance(integration, BaseException):
                     raise integration
 
-                if not self._async_validate_integration(
+                if not self._async_should_report_integration(
                     integration=integration,
                     yaml_domains=configuration_set,
                     entity_registry_platforms=er_platforms,
@@ -339,7 +339,7 @@ class Analytics:
             )
 
     @callback
-    def _async_validate_integration(
+    def _async_should_report_integration(
         self,
         integration: Integration,
         yaml_domains: set[str],
@@ -351,23 +351,20 @@ class Analytics:
 
         # Check if the integration is defined in YAML or in the entity registry
         if (
-            integration.domain not in yaml_domains
-            and integration.domain not in entity_registry_platforms
+            integration.domain in yaml_domains
+            or integration.domain in entity_registry_platforms
         ):
-            # Check if the integration provide a config flow
-            if not integration.config_flow:
-                return False
+            return True
 
-            entries = self.hass.config_entries.async_entries(integration.domain)
+        # Check if the integration provide a config flow
+        if not integration.config_flow:
+            return False
 
-            # Filter out ignored and disabled entries
-            active_entries = [
-                entry
-                for entry in entries
-                if entry.source != SOURCE_IGNORE and entry.disabled_by is None
-            ]
+        entries = self.hass.config_entries.async_entries(integration.domain)
 
-            if len(active_entries) == 0:
-                return False
-
-        return True
+        # Filter out ignored and disabled entries
+        return any(
+            entry
+            for entry in entries
+            if entry.source != SOURCE_IGNORE and entry.disabled_by is None
+        )
