@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-from datetime import time
+from datetime import datetime, time
 from typing import Any, Generic
 
 from pylitterbot import LitterRobot3
@@ -33,13 +33,16 @@ class RobotTimeEntityDescription(TimeEntityDescription, RequiredKeysMixin[_Robot
     """A class that describes robot time entities."""
 
 
+def _as_local_time(start: datetime | None) -> time | None:
+    """Return a datetime as local time."""
+    return dt_util.as_local(start).time() if start else None
+
+
 LITTER_ROBOT_3_SLEEP_START = RobotTimeEntityDescription[LitterRobot3](
     key="sleep_mode_start_time",
-    name="Sleep mode start time",
+    translation_key="sleep_mode_start_time",
     entity_category=EntityCategory.CONFIG,
-    value_fn=lambda robot: dt_util.as_local(start).time()
-    if (start := robot.sleep_mode_start_time)
-    else None,
+    value_fn=lambda robot: _as_local_time(robot.sleep_mode_start_time),
     set_fn=lambda robot, value: robot.set_sleep_mode(
         robot.sleep_mode_enabled, value.replace(tzinfo=dt_util.DEFAULT_TIME_ZONE)
     ),
