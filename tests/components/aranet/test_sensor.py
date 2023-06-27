@@ -10,7 +10,9 @@ from tests.common import MockConfigEntry
 from tests.components.bluetooth import inject_bluetooth_service_info
 
 
-async def test_sensors(hass: HomeAssistant) -> None:
+async def test_sensors(
+    hass: HomeAssistant, entity_registry_enabled_by_default: None
+) -> None:
     """Test setting up creates the sensors."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -72,7 +74,9 @@ async def test_sensors(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
 
-async def test_smart_home_integration_disabled(hass: HomeAssistant) -> None:
+async def test_smart_home_integration_disabled(
+    hass: HomeAssistant, entity_registry_enabled_by_default: None
+) -> None:
     """Test disabling smart home integration marks entities as unavailable."""
     entry = MockConfigEntry(
         domain=DOMAIN,
