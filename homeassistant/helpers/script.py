@@ -1024,7 +1024,7 @@ class _ScriptRun:
     async def _async_stop_step(self):
         """Stop script execution."""
         stop = self._action[CONF_STOP]
-        error = self._action[CONF_ERROR]
+        error = self._action.get(CONF_ERROR, False)
         trace_set_result(stop=stop, error=error)
         if error:
             self._log("Error script sequence: %s", stop)
