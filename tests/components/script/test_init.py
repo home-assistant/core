@@ -1,6 +1,7 @@
 """The tests for the Script component."""
 import asyncio
 from datetime import timedelta
+from typing import Any
 from unittest.mock import Mock, patch
 
 import pytest
@@ -1504,7 +1505,8 @@ async def test_blueprint_script_fails_substitution(
     )
 
 
-async def test_responses(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize("response", ({"value": 5}, '{"value": 5}'))
+async def test_responses(hass: HomeAssistant, response: Any) -> None:
     """Test we can get responses."""
     mock_restore_cache(hass, ())
     assert await async_setup_component(
@@ -1515,7 +1517,7 @@ async def test_responses(hass: HomeAssistant) -> None:
                 "test": {
                     "sequence": {
                         "stop": "done",
-                        "response": "5",
+                        "response": response,
                     }
                 }
             }
@@ -1524,7 +1526,7 @@ async def test_responses(hass: HomeAssistant) -> None:
 
     assert await hass.services.async_call(
         DOMAIN, "test", {"greeting": "world"}, blocking=True, return_response=True
-    ) == {"response": 5}
+    ) == {"value": 5}
     # Validate we can also call it without return_response
     assert (
         await hass.services.async_call(

@@ -498,7 +498,7 @@ class ScriptEntity(ToggleEntity, RestoreEntity):
             variables=service.data, context=service.context, wait=True
         )
         if service.return_response:
-            return {"response": response}
+            return response
         return None
 
     async def async_added_to_hass(self) -> None:

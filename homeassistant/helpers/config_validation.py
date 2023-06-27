@@ -1691,7 +1691,10 @@ _SCRIPT_STOP_SCHEMA = vol.Schema(
         **SCRIPT_ACTION_BASE_SCHEMA,
         vol.Required(CONF_STOP): vol.Any(None, string),
         vol.Optional(CONF_ERROR, default=False): boolean,
-        vol.Optional(CONF_RESPONSE): template,
+        vol.Optional(CONF_RESPONSE): vol.Any(
+            vol.All(dict, template_complex),
+            vol.All(str, template),
+        ),
     }
 )
 

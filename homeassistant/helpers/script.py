@@ -1031,7 +1031,9 @@ class _ScriptRun:
 
         self._log("Stop script sequence: %s", stop)
         if CONF_RESPONSE in self._action:
-            response = self._action[CONF_RESPONSE].async_render(self._variables)
+            response = template.render_complex(
+                self._action[CONF_RESPONSE], self._variables
+            )
         else:
             response = None
         raise _StopScript(stop, response)
