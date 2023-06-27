@@ -102,6 +102,7 @@ class FloCurrentFlowRateSensor(FloEntity, SensorEntity):
     _attr_icon = GAUGE_ICON
     _attr_native_unit_of_measurement = "gpm"
     _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
+    _attr_translation_key = "current_flow_rate"
 
     def __init__(self, device):
         """Initialize the flow rate sensor."""
