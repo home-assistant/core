@@ -11,7 +11,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntry
 
 from . import HomeAssistantOverkizData
-from .const import CONF_SERVER, DOMAIN, CONF_API_TYPE
+from .const import CONF_API_TYPE, CONF_SERVER, DOMAIN
 
 
 async def async_get_config_entry_diagnostics(
