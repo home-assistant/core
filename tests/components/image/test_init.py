@@ -1,9 +1,12 @@
 """The tests for the image component."""
 from http import HTTPStatus
-from unittest.mock import patch
+import ssl
+from unittest.mock import MagicMock, patch
 
 from aiohttp import hdrs
+import httpx
 import pytest
+import respx
 
 from homeassistant.components import image
 from homeassistant.core import HomeAssistant
@@ -14,6 +17,7 @@ from .conftest import (
     MockImageNoStateEntity,
     MockImagePlatform,
     MockImageSyncEntity,
+    MockURLImageEntity,
 )
 
 from tests.common import MockModule, mock_integration, mock_platform
@@ -56,7 +60,7 @@ async def test_state_attr(
 ) -> None:
     """Test image state with entity picture from attr."""
     mock_integration(hass, MockModule(domain="test"))
-    entity = MockImageEntity()
+    entity = MockImageEntity(hass)
     entity._attr_entity_picture = "abcd"
     mock_platform(hass, "test.image", MockImagePlatform([entity]))
     assert await async_setup_component(
@@ -79,7 +83,7 @@ async def test_no_state(
 ) -> None:
     """Test image state."""
     mock_integration(hass, MockModule(domain="test"))
-    mock_platform(hass, "test.image", MockImagePlatform([MockImageNoStateEntity()]))
+    mock_platform(hass, "test.image", MockImagePlatform([MockImageNoStateEntity(hass)]))
     assert await async_setup_component(
         hass, image.DOMAIN, {"image": {"platform": "test"}}
     )
@@ -126,7 +130,7 @@ async def test_fetch_image_sync(
 ) -> None:
     """Test fetching an image with an authenticated client."""
     mock_integration(hass, MockModule(domain="test"))
-    mock_platform(hass, "test.image", MockImagePlatform([MockImageSyncEntity()]))
+    mock_platform(hass, "test.image", MockImagePlatform([MockImageSyncEntity(hass)]))
     assert await async_setup_component(
         hass, image.DOMAIN, {"image": {"platform": "test"}}
     )
@@ -167,3 +171,57 @@ async def test_fetch_image_unauthenticated(
 
     resp = await client.get("/api/image_proxy/image.unknown")
     assert resp.status == HTTPStatus.NOT_FOUND
+
+
+@respx.mock
+async def test_fetch_image_url_success(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
+    """Test fetching an image with an authenticated client."""
+    respx.get("https://example.com/myimage.jpg").respond(
+        status_code=HTTPStatus.OK, content_type="image/png", content=b"Test"
+    )
+
+    mock_integration(hass, MockModule(domain="test"))
+    mock_platform(hass, "test.image", MockImagePlatform([MockURLImageEntity(hass)]))
+    assert await async_setup_component(
+        hass, image.DOMAIN, {"image": {"platform": "test"}}
+    )
+    await hass.async_block_till_done()
+
+    client = await hass_client()
+
+    resp = await client.get("/api/image_proxy/image.test")
+    assert resp.status == HTTPStatus.OK
+    body = await resp.read()
+    assert body == b"Test"
+
+
+@respx.mock
+@pytest.mark.parametrize(
+    "side_effect",
+    [
+        httpx.RequestError("server offline", request=MagicMock()),
+        httpx.TimeoutException,
+        ssl.SSLError,
+    ],
+)
+async def test_fetch_image_url_exception(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    side_effect: Exception,
+) -> None:
+    """Test fetching an image with an authenticated client."""
+    respx.get("https://example.com/myimage.jpg").mock(side_effect=side_effect)
+
+    mock_integration(hass, MockModule(domain="test"))
+    mock_platform(hass, "test.image", MockImagePlatform([MockURLImageEntity(hass)]))
+    assert await async_setup_component(
+        hass, image.DOMAIN, {"image": {"platform": "test"}}
+    )
+    await hass.async_block_till_done()
+
+    client = await hass_client()
+
+    resp = await client.get("/api/image_proxy/image.test")
+    assert resp.status == HTTPStatus.INTERNAL_SERVER_ERROR

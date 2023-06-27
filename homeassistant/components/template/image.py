@@ -89,9 +89,9 @@ class TemplateImage(ImageEntity):
     _url: str | None = None
     _verify_ssl: bool
 
-    def __init__(self, verify_ssl: bool) -> None:
+    def __init__(self, hass: HomeAssistant, verify_ssl: bool) -> None:
         """Initialize the image."""
-        super().__init__()
+        super().__init__(hass)
         self._verify_ssl = verify_ssl
 
     async def async_image(self) -> bytes | None:
@@ -137,7 +137,7 @@ class StateImageEntity(TemplateEntity, TemplateImage):
     ) -> None:
         """Initialize the image."""
         TemplateEntity.__init__(self, hass, config=config, unique_id=unique_id)
-        TemplateImage.__init__(self, config[CONF_VERIFY_SSL])
+        TemplateImage.__init__(self, hass, config[CONF_VERIFY_SSL])
         self._url_template = config[CONF_URL]
 
     @property
@@ -179,7 +179,7 @@ class TriggerImageEntity(TriggerEntity, TemplateImage):
     ) -> None:
         """Initialize the entity."""
         TriggerEntity.__init__(self, hass, coordinator, config)
-        TemplateImage.__init__(self, config[CONF_VERIFY_SSL])
+        TemplateImage.__init__(self, hass, config[CONF_VERIFY_SSL])
 
     @property
     def entity_picture(self) -> str | None:
