@@ -58,12 +58,23 @@ class Image:
     content: bytes
 
 
+class ImageContentTypeError(HomeAssistantError):
+    """Error with the content type while loading an image."""
+
+
+def valid_image_content_type(content_type: str) -> str:
+    """Validate the assigned content type is one of an image."""
+    if content_type.split("/", 1)[0] != "image":
+        raise ImageContentTypeError
+    return content_type
+
+
 async def _async_get_image(image_entity: ImageEntity, timeout: int) -> Image:
     """Fetch image from an image entity."""
-    with suppress(asyncio.CancelledError, asyncio.TimeoutError):
+    with suppress(asyncio.CancelledError, asyncio.TimeoutError, ImageContentTypeError):
         async with async_timeout.timeout(timeout):
             if image_bytes := await image_entity.async_image():
-                content_type = image_entity.content_type
+                content_type = valid_image_content_type(image_entity.content_type)
                 image = Image(content_type, image_bytes)
                 return image
 
