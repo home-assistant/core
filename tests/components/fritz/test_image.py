@@ -62,10 +62,10 @@ async def test_image_entities_initialized(
 
     images = hass.states.async_all(IMAGE_DOMAIN)
     assert len(images) == 1
-    assert images[0].name == "Mock Title GuestWifi QR-Code"
+    assert images[0].name == "Mock Title GuestWifi"
 
     entity_registry = async_get_entity_registry(hass)
-    entity_entry = entity_registry.async_get("image.mock_title_guestwifi_qr_code")
+    entity_entry = entity_registry.async_get("image.mock_title_guestwifi")
 
     assert entity_entry.unique_id == "1c_ed_6f_12_34_11_guestwifi_qr_code"
 

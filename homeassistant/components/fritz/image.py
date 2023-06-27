@@ -43,12 +43,13 @@ class FritzGuestWifiQRImage(FritzBoxBaseEntity, ImageEntity):
 
     _attr_content_type = "image/png"
     _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_has_entity_name = True
 
     def __init__(
         self, avm_wrapper: AvmWrapper, device_friendly_name: str, ssid: str
     ) -> None:
         """Initialize the image entity."""
-        self._attr_name = f"{device_friendly_name} {ssid} QR-Code"
+        self._attr_name = ssid
         self._attr_unique_id = slugify(f"{avm_wrapper.unique_id}-{ssid}-qr-code")
         self._current_qr_bytes: bytes | None = None
         super().__init__(avm_wrapper, device_friendly_name)
@@ -69,6 +70,7 @@ class FritzGuestWifiQRImage(FritzBoxBaseEntity, ImageEntity):
 
         if self._current_qr_bytes is None:
             self._current_qr_bytes = qr_bytes
+            return qr_bytes
 
         if self._current_qr_bytes != qr_bytes:
             dt_now = dt_util.utcnow()
