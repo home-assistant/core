@@ -151,7 +151,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             )
 
         # Start subscription check in the background, outside this component's setup.
-        async_call_later(hass, 1, async_call_later_callback)
+        entry.async_on_unload(async_call_later(hass, 1, async_call_later_callback))
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

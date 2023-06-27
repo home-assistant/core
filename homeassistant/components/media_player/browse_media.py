@@ -42,9 +42,8 @@ def async_process_play_media_url(
     if parsed.is_absolute():
         if not is_hass_url(hass, media_content_id):
             return media_content_id
-    else:
-        if media_content_id[0] != "/":
-            raise ValueError("URL is relative, but does not start with a /")
+    elif media_content_id[0] != "/":
+        return media_content_id
 
     if parsed.query:
         logging.getLogger(__name__).debug(

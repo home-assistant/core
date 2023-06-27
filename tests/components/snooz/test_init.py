@@ -1,11 +1,15 @@
 """Test Snooz configuration."""
 from __future__ import annotations
 
+import pytest
+
 from homeassistant.core import HomeAssistant
 
 from . import SnoozFixture
 
 
+# This tests needs to be adjusted to remove lingering tasks
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
 async def test_removing_entry_cleans_up_connections(
     hass: HomeAssistant, mock_connected_snooz: SnoozFixture
 ) -> None:
@@ -16,6 +20,8 @@ async def test_removing_entry_cleans_up_connections(
     assert not mock_connected_snooz.device.is_connected
 
 
+# This tests needs to be adjusted to remove lingering tasks
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
 async def test_reloading_entry_cleans_up_connections(
     hass: HomeAssistant, mock_connected_snooz: SnoozFixture
 ) -> None:

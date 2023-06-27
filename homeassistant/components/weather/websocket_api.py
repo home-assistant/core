@@ -27,4 +27,7 @@ def ws_convertible_units(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Return supported units for a device class."""
-    connection.send_result(msg["id"], {"units": VALID_UNITS})
+    sorted_units = {
+        key: sorted(units, key=str.casefold) for key, units in VALID_UNITS.items()
+    }
+    connection.send_result(msg["id"], {"units": sorted_units})

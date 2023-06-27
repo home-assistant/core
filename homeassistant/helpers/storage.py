@@ -34,11 +34,11 @@ _T = TypeVar("_T", bound=Mapping[str, Any] | Sequence[Any])
 async def async_migrator(
     hass: HomeAssistant,
     old_path: str,
-    store: Store,
+    store: Store[_T],
     *,
     old_conf_load_func: Callable | None = None,
     old_conf_migrate_func: Callable | None = None,
-) -> Any:
+) -> _T | None:
     """Migrate old data to a store and then load data.
 
     async def old_conf_migrate_func(old_data)
@@ -115,7 +115,9 @@ class Store(Generic[_T]):
         the second call will wait and return the result of the first call.
         """
         if self._load_task is None:
-            self._load_task = self.hass.async_create_task(self._async_load())
+            self._load_task = self.hass.async_create_task(
+                self._async_load(), f"Storage load {self.key}"
+            )
 
         return await self._load_task
 

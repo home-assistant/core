@@ -56,7 +56,7 @@ class VerisureConfigFlowHandler(ConfigFlow, domain=DOMAIN):
             self.verisure = Verisure(
                 username=self.email,
                 password=self.password,
-                cookieFileName=self.hass.config.path(
+                cookie_file_name=self.hass.config.path(
                     STORAGE_DIR, f"verisure_{user_input[CONF_EMAIL]}"
                 ),
             )
@@ -66,7 +66,9 @@ class VerisureConfigFlowHandler(ConfigFlow, domain=DOMAIN):
             except VerisureLoginError as ex:
                 if "Multifactor authentication enabled" in str(ex):
                     try:
-                        await self.hass.async_add_executor_job(self.verisure.login_mfa)
+                        await self.hass.async_add_executor_job(
+                            self.verisure.request_mfa
+                        )
                     except (
                         VerisureLoginError,
                         VerisureError,
@@ -108,9 +110,8 @@ class VerisureConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 await self.hass.async_add_executor_job(
-                    self.verisure.mfa_validate, user_input[CONF_CODE], True
+                    self.verisure.validate_mfa, user_input[CONF_CODE]
                 )
-                await self.hass.async_add_executor_job(self.verisure.login)
             except VerisureLoginError as ex:
                 LOGGER.debug("Could not log in to Verisure, %s", ex)
                 errors["base"] = "invalid_auth"
@@ -136,9 +137,16 @@ class VerisureConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Select Verisure installation to add."""
+        installations_data = await self.hass.async_add_executor_job(
+            self.verisure.get_installations
+        )
         installations = {
-            inst["giid"]: f"{inst['alias']} ({inst['street']})"
-            for inst in self.verisure.installations or []
+            inst["giid"]: f"{inst['alias']} ({inst['address']['street']})"
+            for inst in (
+                installations_data.get("data", {})
+                .get("account", {})
+                .get("installations", [])
+            )
         }
 
         if user_input is None:
@@ -184,8 +192,8 @@ class VerisureConfigFlowHandler(ConfigFlow, domain=DOMAIN):
             self.verisure = Verisure(
                 username=self.email,
                 password=self.password,
-                cookieFileName=self.hass.config.path(
-                    STORAGE_DIR, f"verisure-{user_input[CONF_EMAIL]}"
+                cookie_file_name=self.hass.config.path(
+                    STORAGE_DIR, f"verisure_{user_input[CONF_EMAIL]}"
                 ),
             )
 
@@ -194,7 +202,9 @@ class VerisureConfigFlowHandler(ConfigFlow, domain=DOMAIN):
             except VerisureLoginError as ex:
                 if "Multifactor authentication enabled" in str(ex):
                     try:
-                        await self.hass.async_add_executor_job(self.verisure.login_mfa)
+                        await self.hass.async_add_executor_job(
+                            self.verisure.request_mfa
+                        )
                     except (
                         VerisureLoginError,
                         VerisureError,
@@ -248,7 +258,7 @@ class VerisureConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 await self.hass.async_add_executor_job(
-                    self.verisure.mfa_validate, user_input[CONF_CODE], True
+                    self.verisure.validate_mfa, user_input[CONF_CODE]
                 )
                 await self.hass.async_add_executor_job(self.verisure.login)
             except VerisureLoginError as ex:

@@ -1,7 +1,7 @@
 """Support for the Tuya lights."""
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import json
 from typing import Any, cast
 
@@ -59,7 +59,9 @@ class TuyaLightEntityDescription(LightEntityDescription):
     color_data: DPCode | tuple[DPCode, ...] | None = None
     color_mode: DPCode | None = None
     color_temp: DPCode | tuple[DPCode, ...] | None = None
-    default_color_type: ColorTypeData = DEFAULT_COLOR_TYPE_DATA
+    default_color_type: ColorTypeData = field(
+        default_factory=lambda: DEFAULT_COLOR_TYPE_DATA
+    )
 
 
 LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
@@ -169,6 +171,15 @@ LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
+    # Air Purifier
+    # https://developer.tuya.com/en/docs/iot/f?id=K9gf46h2s6dzm
+    "kj": (
+        TuyaLightEntityDescription(
+            key=DPCode.LIGHT,
+            name="Backlight",
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
     # Air conditioner
     # https://developer.tuya.com/en/docs/iot/categorykt?id=Kaiuz0z71ov2n
     "kt": (
@@ -219,7 +230,7 @@ LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
         ),
         TuyaLightEntityDescription(
             key=DPCode.BASIC_INDICATOR,
-            name="Indicator Light",
+            name="Indicator light",
             entity_category=EntityCategory.CONFIG,
         ),
     ),
@@ -497,9 +508,14 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
                     ),
                 },
             ]
-        elif self._color_data_type and (
+
+        if self._color_data_type and (
             ATTR_HS_COLOR in kwargs
-            or (ATTR_BRIGHTNESS in kwargs and self.color_mode == ColorMode.HS)
+            or (
+                ATTR_BRIGHTNESS in kwargs
+                and self.color_mode == ColorMode.HS
+                and ATTR_COLOR_TEMP not in kwargs
+            )
         ):
             if self._color_mode_dpcode:
                 commands += [
@@ -540,11 +556,7 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
                 },
             ]
 
-        if (
-            ATTR_BRIGHTNESS in kwargs
-            and self.color_mode != ColorMode.HS
-            and self._brightness
-        ):
+        elif ATTR_BRIGHTNESS in kwargs and self._brightness:
             brightness = kwargs[ATTR_BRIGHTNESS]
 
             # If there is a min/max value, the brightness is actually limited.

@@ -27,6 +27,10 @@
           "flow_control": "data flow control"
         }
       },
+      "verify_radio": {
+        "title": "Radio is not recommended",
+        "description": "The radio you are using ({name}) is not recommended and support for it may be removed in the future. Please see the Zigbee Home Automation integration's documentation for [a list of recommended adapters]({docs_recommended_adapters_url})."
+      },
       "choose_formation_strategy": {
         "title": "Network Formation",
         "description": "Choose the network settings for your radio.",
@@ -115,6 +119,10 @@
           "baudrate": "[%key:component::zha::config::step::manual_port_config::data::baudrate%]",
           "flow_control": "[%key:component::zha::config::step::manual_port_config::data::flow_control%]"
         }
+      },
+      "verify_radio": {
+        "title": "[%key:component::zha::config::step::verify_radio::title%]",
+        "description": "[%key:component::zha::config::step::verify_radio::description%]"
       },
       "choose_formation_strategy": {
         "title": "[%key:component::zha::config::step::choose_formation_strategy::title%]",

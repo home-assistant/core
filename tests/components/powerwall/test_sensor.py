@@ -20,7 +20,9 @@ from .mocks import _mock_powerwall_with_fixtures
 from tests.common import MockConfigEntry
 
 
-async def test_sensors(hass: HomeAssistant, entity_registry_enabled_by_default) -> None:
+async def test_sensors(
+    hass: HomeAssistant, entity_registry_enabled_by_default: None
+) -> None:
     """Test creation of the sensors."""
 
     mock_powerwall = await _mock_powerwall_with_fixtures(hass)

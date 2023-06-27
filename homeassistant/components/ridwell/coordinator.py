@@ -22,14 +22,14 @@ UPDATE_INTERVAL = timedelta(hours=1)
 
 
 class RidwellDataUpdateCoordinator(
-    DataUpdateCoordinator[dict[str, RidwellPickupEvent]]
+    DataUpdateCoordinator[dict[str, list[RidwellPickupEvent]]]
 ):
     """Class to manage fetching data from single endpoint."""
 
     config_entry: ConfigEntry
 
     def __init__(self, hass: HomeAssistant, *, name: str) -> None:
-        """Initialize global data updater."""
+        """Initialize."""
         # These will be filled in by async_initialize; we give them these defaults to
         # avoid arduous typing checks down the line:
         self.accounts: dict[str, RidwellAccount] = {}
@@ -38,13 +38,13 @@ class RidwellDataUpdateCoordinator(
 
         super().__init__(hass, LOGGER, name=name, update_interval=UPDATE_INTERVAL)
 
-    async def _async_update_data(self) -> dict[str, RidwellPickupEvent]:
+    async def _async_update_data(self) -> dict[str, list[RidwellPickupEvent]]:
         """Fetch the latest data from the source."""
         data = {}
 
         async def async_get_pickups(account: RidwellAccount) -> None:
             """Get the latest pickups for an account."""
-            data[account.account_id] = await account.async_get_next_pickup_event()
+            data[account.account_id] = await account.async_get_pickup_events()
 
         tasks = [async_get_pickups(account) for account in self.accounts.values()]
         results = await asyncio.gather(*tasks, return_exceptions=True)

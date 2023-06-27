@@ -52,6 +52,7 @@ _VALID_STATES = [
     STATE_CLOSING,
     "true",
     "false",
+    "none",
 ]
 
 CONF_POSITION_TEMPLATE = "position_template"
@@ -233,8 +234,15 @@ class CoverTemplate(TemplateEntity, CoverEntity):
             if not self._position_template:
                 self._position = None
 
+            self._is_opening = False
+            self._is_closing = False
+
     @callback
     def _update_position(self, result):
+        if result is None:
+            self._position = None
+            return
+
         try:
             state = float(result)
         except ValueError as err:
@@ -253,6 +261,10 @@ class CoverTemplate(TemplateEntity, CoverEntity):
 
     @callback
     def _update_tilt(self, result):
+        if result is None:
+            self._tilt_value = None
+            return
+
         try:
             state = float(result)
         except ValueError as err:

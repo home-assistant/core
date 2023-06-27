@@ -8,6 +8,7 @@ import lirc
 
 from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
@@ -19,6 +20,8 @@ DOMAIN = "lirc"
 EVENT_IR_COMMAND_RECEIVED = "ir_command_received"
 
 ICON = "mdi:remote"
+
+CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 
 def setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -42,7 +45,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 
 class LircInterface(threading.Thread):
-    """This interfaces with the lirc daemon to read IR commands.
+    """Interfaces with the lirc daemon to read IR commands.
 
     When using lirc in blocking mode, sometimes repeated commands get produced
     in the next read of a command so we use a thread here to just wait

@@ -8,8 +8,8 @@ import attr
 
 from homeassistant.core import HomeAssistant
 
-from . import debug_info
 from .. import mqtt
+from . import debug_info
 from .const import DEFAULT_QOS
 from .models import MessageCallbackType
 
@@ -124,11 +124,9 @@ def async_prepare_subscribe_topics(
 
 async def async_subscribe_topics(
     hass: HomeAssistant,
-    sub_state: dict[str, EntitySubscription] | None,
+    sub_state: dict[str, EntitySubscription],
 ) -> None:
     """(Re)Subscribe to a set of MQTT topics."""
-    if sub_state is None:
-        return
     for sub in sub_state.values():
         await sub.subscribe()
 

@@ -23,7 +23,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, ServiceCall, split_entity_id
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv, entity_registry
+from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.json import save_json
 from homeassistant.helpers.typing import ConfigType
@@ -52,6 +52,8 @@ PS4_COMMAND_SCHEMA = vol.Schema(
 )
 
 PLATFORMS = [Platform.MEDIA_PLAYER]
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
 class PS4Data:
@@ -116,7 +118,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Migrate Version 2 -> Version 3: Update identifier format.
     if version == 2:
         # Prevent changing entity_id. Updates entity registry.
-        registry = entity_registry.async_get(hass)
+        registry = er.async_get(hass)
 
         for entity_id, e_entry in registry.entities.items():
             if e_entry.config_entry_id == entry.entry_id:

@@ -130,7 +130,9 @@ class SIABinarySensor(SIABaseEntity, BinarySensorEntity):
 
         Return True if the event was relevant for this entity.
         """
-        new_state = self.entity_description.code_consequences.get(sia_event.code)
+        new_state = None
+        if sia_event.code:
+            new_state = self.entity_description.code_consequences.get(sia_event.code)
         if new_state is None:
             return False
         _LOGGER.debug("New state will be %s", new_state)

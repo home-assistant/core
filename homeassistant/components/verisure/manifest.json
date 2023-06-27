@@ -1,7 +1,7 @@
 {
   "domain": "verisure",
   "name": "Verisure",
-  "codeowners": ["@frenck"],
+  "codeowners": ["@frenck", "@niro1987"],
   "config_flow": true,
   "dhcp": [
     {
@@ -12,5 +12,5 @@
   "integration_type": "hub",
   "iot_class": "cloud_polling",
   "loggers": ["verisure"],
-  "requirements": ["vsure==1.8.1"]
+  "requirements": ["vsure==2.6.1"]
 }

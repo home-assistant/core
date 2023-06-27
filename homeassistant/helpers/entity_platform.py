@@ -31,6 +31,7 @@ from homeassistant.exceptions import (
     PlatformNotReady,
     RequiredParameterMissing,
 )
+from homeassistant.generated import languages
 from homeassistant.setup import async_start_setup
 from homeassistant.util.async_ import run_callback_threadsafe
 
@@ -39,11 +40,13 @@ from . import (
     device_registry as dev_reg,
     entity_registry as ent_reg,
     service,
+    translation,
 )
 from .device_registry import DeviceRegistry
 from .entity_registry import EntityRegistry, RegistryEntryDisabler, RegistryEntryHider
 from .event import async_call_later, async_track_time_interval
-from .typing import ConfigType, DiscoveryInfoType
+from .issue_registry import IssueSeverity, async_create_issue
+from .typing import UNDEFINED, ConfigType, DiscoveryInfoType
 
 if TYPE_CHECKING:
     from .entity import Entity
@@ -124,6 +127,10 @@ class EntityPlatform:
         self.entity_namespace = entity_namespace
         self.config_entry: config_entries.ConfigEntry | None = None
         self.entities: dict[str, Entity] = {}
+        self.component_translations: dict[str, Any] = {}
+        self.platform_translations: dict[str, Any] = {}
+        self.object_id_component_translations: dict[str, Any] = {}
+        self.object_id_platform_translations: dict[str, Any] = {}
         self._tasks: list[asyncio.Task[None]] = []
         # Stop tracking tasks after setup is completed
         self._setup_complete = False
@@ -134,6 +141,7 @@ class EntityPlatform:
         self._process_updates: asyncio.Lock | None = None
 
         self.parallel_updates: asyncio.Semaphore | None = None
+        self._update_in_sequence: bool = False
 
         # Platform is None for the EntityComponent "catch-all" EntityPlatform
         # which powers entity_component.add_entities
@@ -184,6 +192,7 @@ class EntityPlatform:
 
         if parallel_updates is not None:
             self.parallel_updates = asyncio.Semaphore(parallel_updates)
+            self._update_in_sequence = parallel_updates == 1
 
         return self.parallel_updates
 
@@ -207,6 +216,19 @@ class EntityPlatform:
                 self.platform_name,
                 self.domain,
             )
+            async_create_issue(
+                self.hass,
+                self.domain,
+                f"platform_integration_no_support_{self.domain}_{self.platform_name}",
+                is_fixable=False,
+                severity=IssueSeverity.ERROR,
+                translation_key="platform_integration_no_support",
+                translation_placeholders={
+                    "domain": self.domain,
+                    "platform": self.platform_name,
+                },
+            )
+
             return
 
         @callback
@@ -275,10 +297,48 @@ class EntityPlatform:
         logger = self.logger
         hass = self.hass
         full_name = f"{self.domain}.{self.platform_name}"
+        object_id_language = (
+            hass.config.language
+            if hass.config.language in languages.NATIVE_ENTITY_IDS
+            else languages.DEFAULT_LANGUAGE
+        )
+
+        async def get_translations(
+            language: str, category: str, integration: str
+        ) -> dict[str, Any]:
+            """Get entity translations."""
+            try:
+                return await translation.async_get_translations(
+                    hass, language, category, {integration}
+                )
+            except Exception as err:  # pylint: disable=broad-exception-caught
+                _LOGGER.debug(
+                    "Could not load translations for %s",
+                    integration,
+                    exc_info=err,
+                )
+            return {}
+
+        self.component_translations = await get_translations(
+            hass.config.language, "entity_component", self.domain
+        )
+        self.platform_translations = await get_translations(
+            hass.config.language, "entity", self.platform_name
+        )
+        if object_id_language == hass.config.language:
+            self.object_id_component_translations = self.component_translations
+            self.object_id_platform_translations = self.platform_translations
+        else:
+            self.object_id_component_translations = await get_translations(
+                object_id_language, "entity_component", self.domain
+            )
+            self.object_id_platform_translations = await get_translations(
+                object_id_language, "entity", self.platform_name
+            )
 
         logger.info("Setting up %s", full_name)
-        warn_task = hass.loop.call_later(
-            SLOW_SETUP_WARNING,
+        warn_task = hass.loop.call_at(
+            hass.loop.time() + SLOW_SETUP_WARNING,
             logger.warning,
             "Setup of %s platform %s is taking over %s seconds.",
             self.domain,
@@ -375,6 +435,7 @@ class EntityPlatform:
         """Schedule adding entities for a single platform async."""
         task = self.hass.async_create_task(
             self.async_add_entities(new_entities, update_before_add=update_before_add),
+            f"EntityPlatform async_add_entities {self.domain}.{self.platform_name}",
         )
 
         if not self._setup_complete:
@@ -389,6 +450,7 @@ class EntityPlatform:
         task = self.config_entry.async_create_task(
             self.hass,
             self.async_add_entities(new_entities, update_before_add=update_before_add),
+            f"EntityPlatform async_add_entities_for_entry {self.domain}.{self.platform_name}",
         )
 
         if not self._setup_complete:
@@ -466,6 +528,7 @@ class EntityPlatform:
             self.hass,
             self._update_entity_states,
             self.scan_interval,
+            name=f"EntityPlatform poll {self.domain}.{self.platform_name}",
         )
 
     def _entity_id_already_exists(self, entity_id: str) -> tuple[bool, bool]:
@@ -512,6 +575,10 @@ class EntityPlatform:
 
         suggested_object_id: str | None = None
         generate_new_entity_id = False
+
+        entity_name = entity.name
+        if entity_name is UNDEFINED:
+            entity_name = None
 
         # Get entity_id from unique ID registration
         if entity.unique_id is not None:
@@ -599,17 +666,21 @@ class EntityPlatform:
                 except RequiredParameterMissing:
                     pass
 
-            if entity.entity_id is not None:
+            # An entity may suggest the entity_id by setting entity_id itself
+            suggested_entity_id: str | None = entity.entity_id
+            if suggested_entity_id is not None:
                 suggested_object_id = split_entity_id(entity.entity_id)[1]
             else:
-                if device and entity.has_entity_name:  # type: ignore[unreachable]
+                if device and entity.has_entity_name:
                     device_name = device.name_by_user or device.name
-                    if not entity.name:
+                    if entity.use_device_name:
                         suggested_object_id = device_name
                     else:
-                        suggested_object_id = f"{device_name} {entity.name}"
+                        suggested_object_id = (
+                            f"{device_name} {entity.suggested_object_id}"
+                        )
                 if not suggested_object_id:
-                    suggested_object_id = entity.name
+                    suggested_object_id = entity.suggested_object_id
 
             if self.entity_namespace is not None:
                 suggested_object_id = f"{self.entity_namespace} {suggested_object_id}"
@@ -637,7 +708,7 @@ class EntityPlatform:
                 known_object_ids=self.entities.keys(),
                 original_device_class=entity.device_class,
                 original_icon=entity.icon,
-                original_name=entity.name,
+                original_name=entity_name,
                 suggested_object_id=suggested_object_id,
                 supported_features=entity.supported_features,
                 translation_key=entity.translation_key,
@@ -664,7 +735,7 @@ class EntityPlatform:
         # Generate entity ID
         if entity.entity_id is None or generate_new_entity_id:
             suggested_object_id = (
-                suggested_object_id or entity.name or DEVICE_DEFAULT_NAME
+                suggested_object_id or entity.suggested_object_id or DEVICE_DEFAULT_NAME
             )
 
             if self.entity_namespace is not None:
@@ -682,7 +753,7 @@ class EntityPlatform:
 
         if already_exists:
             self.logger.error(
-                f"Entity id already exists - ignoring: {entity.entity_id}"
+                "Entity id already exists - ignoring: %s", entity.entity_id
             )
             entity.add_to_platform_abort()
             return
@@ -691,7 +762,7 @@ class EntityPlatform:
             self.logger.debug(
                 "Not adding entity %s because it's disabled",
                 entry.name
-                or entity.name
+                or entity_name
                 or f'"{self.platform_name} {entity.unique_id}"',
             )
             entity.add_to_platform_abort()
@@ -828,13 +899,22 @@ class EntityPlatform:
             return
 
         async with self._process_updates:
-            tasks: list[Coroutine[Any, Any, None]] = []
-            for entity in self.entities.values():
-                if not entity.should_poll:
-                    continue
-                tasks.append(entity.async_update_ha_state(True))
+            if self._update_in_sequence or len(self.entities) <= 1:
+                # If we know we will update sequentially, we want to avoid scheduling
+                # the coroutines as tasks that will wait on the semaphore lock.
+                for entity in list(self.entities.values()):
+                    # If the entity is removed from hass during the previous
+                    # entity being updated, we need to skip updating the
+                    # entity.
+                    if entity.should_poll and entity.hass:
+                        await entity.async_update_ha_state(True)
+                return
 
-            if tasks:
+            if tasks := [
+                entity.async_update_ha_state(True)
+                for entity in self.entities.values()
+                if entity.should_poll
+            ]:
                 await asyncio.gather(*tasks)
 
 

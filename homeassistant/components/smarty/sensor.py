@@ -4,7 +4,7 @@ from __future__ import annotations
 import datetime as dt
 import logging
 
-from pysmarty import Smarty
+from pysmarty import Smarty  # pylint: disable=import-error
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.const import UnitOfTemperature

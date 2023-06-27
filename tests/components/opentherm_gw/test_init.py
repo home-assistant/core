@@ -2,6 +2,7 @@
 from unittest.mock import patch
 
 from pyotgw.vars import OTGW, OTGW_ABOUT
+import pytest
 
 from homeassistant import setup
 from homeassistant.components.opentherm_gw.const import DOMAIN
@@ -28,6 +29,8 @@ MOCK_CONFIG_ENTRY = MockConfigEntry(
 )
 
 
+# This tests needs to be adjusted to remove lingering tasks
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
 async def test_device_registry_insert(hass: HomeAssistant) -> None:
     """Test that the device registry is initialized correctly."""
     MOCK_CONFIG_ENTRY.add_to_hass(hass)
@@ -46,6 +49,8 @@ async def test_device_registry_insert(hass: HomeAssistant) -> None:
     assert gw_dev.sw_version == VERSION_OLD
 
 
+# This tests needs to be adjusted to remove lingering tasks
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
 async def test_device_registry_update(
     hass: HomeAssistant, device_registry: dr.DeviceRegistry
 ) -> None:

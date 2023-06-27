@@ -1,9 +1,10 @@
 """Tests for ZHA integration init."""
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 from zigpy.config import CONF_DEVICE, CONF_DEVICE_PATH
 
+from homeassistant.components.zha import async_setup_entry
 from homeassistant.components.zha.core.const import (
     CONF_BAUDRATE,
     CONF_RADIO_TYPE,
@@ -108,3 +109,43 @@ async def test_config_depreciation(hass: HomeAssistant, zha_config) -> None:
     ) as setup_mock:
         assert await async_setup_component(hass, DOMAIN, {DOMAIN: zha_config})
         assert setup_mock.call_count == 1
+
+
+@pytest.mark.parametrize(
+    ("path", "cleaned_path"),
+    [
+        ("/dev/path1", "/dev/path1"),
+        ("/dev/path1 ", "/dev/path1 "),
+        ("socket://dev/path1 ", "socket://dev/path1"),
+    ],
+)
+@patch("homeassistant.components.zha.setup_quirks", Mock(return_value=True))
+@patch(
+    "homeassistant.components.zha.websocket_api.async_load_api", Mock(return_value=True)
+)
+async def test_setup_with_v3_spaces_in_uri(
+    hass: HomeAssistant, path: str, cleaned_path: str
+) -> None:
+    """Test migration of config entry from v3 with spaces after `socket://` URI."""
+    config_entry_v3 = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_RADIO_TYPE: DATA_RADIO_TYPE,
+            CONF_DEVICE: {CONF_DEVICE_PATH: path, CONF_BAUDRATE: 115200},
+        },
+        version=3,
+    )
+    config_entry_v3.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.zha.ZHAGateway", return_value=AsyncMock()
+    ) as mock_gateway:
+        mock_gateway.return_value.coordinator_ieee = "mock_ieee"
+        mock_gateway.return_value.radio_description = "mock_radio"
+
+        assert await async_setup_entry(hass, config_entry_v3)
+        hass.data[DOMAIN]["zha_gateway"] = mock_gateway.return_value
+
+    assert config_entry_v3.data[CONF_RADIO_TYPE] == DATA_RADIO_TYPE
+    assert config_entry_v3.data[CONF_DEVICE][CONF_DEVICE_PATH] == cleaned_path
+    assert config_entry_v3.version == 3

@@ -11,6 +11,11 @@ from typing_extensions import Self
 from homeassistant.const import APPLICATION_NAME, EVENT_HOMEASSISTANT_CLOSE, __version__
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.loader import bind_hass
+from homeassistant.util.ssl import (
+    SSLCipherList,
+    client_context,
+    create_no_verify_ssl_context,
+)
 
 from .frame import warn_use
 
@@ -55,6 +60,7 @@ def create_async_httpx_client(
     hass: HomeAssistant,
     verify_ssl: bool = True,
     auto_cleanup: bool = True,
+    ssl_cipher_list: SSLCipherList = SSLCipherList.PYTHON_DEFAULT,
     **kwargs: Any,
 ) -> httpx.AsyncClient:
     """Create a new httpx.AsyncClient with kwargs, i.e. for cookies.
@@ -64,15 +70,20 @@ def create_async_httpx_client(
 
     This method must be run in the event loop.
     """
+    ssl_context = (
+        client_context(ssl_cipher_list)
+        if verify_ssl
+        else create_no_verify_ssl_context(ssl_cipher_list)
+    )
     client = HassHttpXAsyncClient(
-        verify=verify_ssl,
+        verify=ssl_context,
         headers={USER_AGENT: SERVER_SOFTWARE},
         **kwargs,
     )
 
     original_aclose = client.aclose
 
-    client.aclose = warn_use(  # type: ignore[assignment]
+    client.aclose = warn_use(  # type: ignore[method-assign]
         client.aclose, "closes the Home Assistant httpx client"
     )
 

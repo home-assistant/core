@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import Any, Literal
 
 from reolink_aio.exceptions import ReolinkError
 
@@ -30,11 +30,12 @@ async def async_setup_entry(
 ) -> None:
     """Set up update entities for Reolink component."""
     reolink_data: ReolinkData = hass.data[DOMAIN][config_entry.entry_id]
-    if reolink_data.host.api.supported(None, "update"):
-        async_add_entities([ReolinkUpdateEntity(reolink_data)])
+    async_add_entities([ReolinkUpdateEntity(reolink_data)])
 
 
-class ReolinkUpdateEntity(ReolinkBaseCoordinatorEntity, UpdateEntity):
+class ReolinkUpdateEntity(
+    ReolinkBaseCoordinatorEntity[str | Literal[False]], UpdateEntity
+):
     """Update entity for a Netgear device."""
 
     _attr_device_class = UpdateDeviceClass.FIRMWARE
@@ -59,13 +60,13 @@ class ReolinkUpdateEntity(ReolinkBaseCoordinatorEntity, UpdateEntity):
     @property
     def latest_version(self) -> str | None:
         """Latest version available for install."""
-        if self.coordinator.data is None:
-            return None
-
         if not self.coordinator.data:
             return self.installed_version
 
-        return self.coordinator.data
+        if isinstance(self.coordinator.data, str):
+            return self.coordinator.data
+
+        return self.coordinator.data.version_string
 
     async def async_install(
         self, version: str | None, backup: bool, **kwargs: Any

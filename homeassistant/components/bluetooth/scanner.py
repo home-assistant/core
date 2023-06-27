@@ -91,12 +91,16 @@ def create_bleak_scanner(
         "detection_callback": detection_callback,
         "scanning_mode": SCANNING_MODE_TO_BLEAK[scanning_mode],
     }
-    if platform.system() == "Linux":
+    system = platform.system()
+    if system == "Linux":
         # Only Linux supports multiple adapters
         if adapter:
             scanner_kwargs["adapter"] = adapter
         if scanning_mode == BluetoothScanningMode.PASSIVE:
             scanner_kwargs["bluez"] = PASSIVE_SCANNER_ARGS
+    elif system == "Darwin":
+        # We want mac address on macOS
+        scanner_kwargs["cb"] = {"use_bdaddr": True}
     _LOGGER.debug("Initializing bluetooth scanner with %s", scanner_kwargs)
 
     try:

@@ -60,7 +60,7 @@ async def test_form(hass: HomeAssistant) -> None:
     }
     assert result2["options"] == {
         "resolver": "208.67.222.222",
-        "resolver_ipv6": "2620:0:ccc::2",
+        "resolver_ipv6": "2620:119:53::53",
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -87,7 +87,7 @@ async def test_form_adv(hass: HomeAssistant) -> None:
             {
                 CONF_HOSTNAME: "home-assistant.io",
                 CONF_RESOLVER: "8.8.8.8",
-                CONF_RESOLVER_IPV6: "2620:0:ccc::2",
+                CONF_RESOLVER_IPV6: "2620:119:53::53",
             },
         )
         await hass.async_block_till_done()
@@ -102,7 +102,7 @@ async def test_form_adv(hass: HomeAssistant) -> None:
     }
     assert result2["options"] == {
         "resolver": "8.8.8.8",
-        "resolver_ipv6": "2620:0:ccc::2",
+        "resolver_ipv6": "2620:119:53::53",
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -143,7 +143,7 @@ async def test_flow_already_exist(hass: HomeAssistant) -> None:
         },
         options={
             CONF_RESOLVER: "208.67.222.222",
-            CONF_RESOLVER_IPV6: "2620:0:ccc::2",
+            CONF_RESOLVER_IPV6: "2620:119:53::5",
         },
         unique_id="home-assistant.io",
     ).add_to_hass(hass)
@@ -185,7 +185,7 @@ async def test_options_flow(hass: HomeAssistant) -> None:
         },
         options={
             CONF_RESOLVER: "208.67.222.222",
-            CONF_RESOLVER_IPV6: "2620:0:ccc::2",
+            CONF_RESOLVER_IPV6: "2620:119:53::5",
         },
     )
     entry.add_to_hass(hass)
@@ -227,7 +227,7 @@ async def test_options_flow(hass: HomeAssistant) -> None:
             CONF_HOSTNAME: "home-assistant.io",
             CONF_NAME: "home-assistant.io",
             CONF_RESOLVER: "208.67.222.222",
-            CONF_RESOLVER_IPV6: "2620:0:ccc::2",
+            CONF_RESOLVER_IPV6: "2620:119:53::5",
             CONF_IPV4: True,
             CONF_IPV6: False,
         },
@@ -235,7 +235,7 @@ async def test_options_flow(hass: HomeAssistant) -> None:
             CONF_HOSTNAME: "home-assistant.io",
             CONF_NAME: "home-assistant.io",
             CONF_RESOLVER: "208.67.222.222",
-            CONF_RESOLVER_IPV6: "2620:0:ccc::2",
+            CONF_RESOLVER_IPV6: "2620:119:53::5",
             CONF_IPV4: False,
             CONF_IPV6: True,
         },

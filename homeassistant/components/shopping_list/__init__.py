@@ -18,6 +18,8 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.json import JsonArrayType, load_json_array
 
 from .const import (
+    ATTR_REVERSE,
+    DEFAULT_REVERSE,
     DOMAIN,
     EVENT_SHOPPING_LIST_UPDATED,
     SERVICE_ADD_ITEM,
@@ -27,6 +29,7 @@ from .const import (
     SERVICE_INCOMPLETE_ALL,
     SERVICE_INCOMPLETE_ITEM,
     SERVICE_REMOVE_ITEM,
+    SERVICE_SORT,
 )
 
 ATTR_COMPLETE = "complete"
@@ -38,6 +41,9 @@ PERSISTENCE = ".shopping_list.json"
 
 SERVICE_ITEM_SCHEMA = vol.Schema({vol.Required(ATTR_NAME): cv.string})
 SERVICE_LIST_SCHEMA = vol.Schema({})
+SERVICE_SORT_SCHEMA = vol.Schema(
+    {vol.Optional(ATTR_REVERSE, default=DEFAULT_REVERSE): bool}
+)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -111,6 +117,10 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         """Clear all completed items from the list."""
         await data.async_clear_completed()
 
+    async def sort_list_service(call: ServiceCall) -> None:
+        """Sort all items by name."""
+        await data.async_sort(call.data[ATTR_REVERSE])
+
     data = hass.data[DOMAIN] = ShoppingData(hass)
     await data.async_load()
 
@@ -146,6 +156,12 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         SERVICE_CLEAR_COMPLETED_ITEMS,
         clear_completed_items_service,
         schema=SERVICE_LIST_SCHEMA,
+    )
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_SORT,
+        sort_list_service,
+        schema=SERVICE_SORT_SCHEMA,
     )
 
     hass.http.register_view(ShoppingListView)
@@ -274,6 +290,16 @@ class ShoppingData:
         self.hass.bus.async_fire(
             EVENT_SHOPPING_LIST_UPDATED,
             {"action": "reorder"},
+            context=context,
+        )
+
+    async def async_sort(self, reverse=False, context=None):
+        """Sort items by name."""
+        self.items = sorted(self.items, key=lambda item: item["name"], reverse=reverse)
+        self.hass.async_add_executor_job(self.save)
+        self.hass.bus.async_fire(
+            EVENT_SHOPPING_LIST_UPDATED,
+            {"action": "sorted"},
             context=context,
         )
 

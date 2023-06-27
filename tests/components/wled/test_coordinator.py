@@ -7,7 +7,7 @@ from unittest.mock import MagicMock
 import pytest
 from wled import (
     Device as WLEDDevice,
-    WLEDConnectionClosed,
+    WLEDConnectionClosedError,
     WLEDConnectionError,
     WLEDError,
 )
@@ -124,7 +124,7 @@ async def test_websocket(
     assert state.state == STATE_OFF
 
     # Resolve Future with a connection losed.
-    connection_finished.set_exception(WLEDConnectionClosed)
+    connection_finished.set_exception(WLEDConnectionClosedError)
     await hass.async_block_till_done()
 
     # Disconnect called, unsubbed Home Assistant stop listener

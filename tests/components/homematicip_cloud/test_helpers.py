@@ -5,7 +5,7 @@ import json
 from homeassistant.components.homematicip_cloud.helpers import is_error_response
 
 
-async def test_is_error_response():
+async def test_is_error_response() -> None:
     """Test, if an response is a normal result or an error."""
     assert not is_error_response("True")
     assert not is_error_response(True)

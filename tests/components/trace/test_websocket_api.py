@@ -1,10 +1,12 @@
 """Test Trace websocket API."""
 import asyncio
+from collections import defaultdict
 import json
-from typing import Any, DefaultDict
+from typing import Any
 from unittest.mock import patch
 
 import pytest
+from pytest_unordered import unordered
 
 from homeassistant.bootstrap import async_setup_component
 from homeassistant.components.trace.const import DEFAULT_STORED_TRACES
@@ -13,7 +15,7 @@ from homeassistant.core import Context, CoreState, HomeAssistant, callback
 from homeassistant.helpers.typing import UNDEFINED
 from homeassistant.util.uuid import random_uuid_hex
 
-from tests.common import assert_lists_same, load_fixture
+from tests.common import load_fixture
 from tests.typing import WebSocketGenerator
 
 
@@ -155,7 +157,6 @@ async def test_get_trace(
     }
 
     sun_action = {
-        "limit": 10,
         "params": {
             "domain": "test",
             "service": "automation",
@@ -391,7 +392,7 @@ async def test_get_trace(
     trace_list = response["result"]
 
     # Get all traces and generate expected stored traces
-    traces = DefaultDict(list)
+    traces = defaultdict(list)
     for trace in trace_list:
         item_id = trace["item_id"]
         run_id = trace["run_id"]
@@ -448,7 +449,7 @@ async def test_restore_traces(
     trace_list = response["result"]
 
     # Get all traces and generate expected stored traces
-    traces = DefaultDict(list)
+    traces = defaultdict(list)
     contexts = {}
     for trace in trace_list:
         item_id = trace["item_id"]
@@ -1086,8 +1087,7 @@ async def test_breakpoints(
     await client.send_json({"id": next_id(), "type": "trace/debug/breakpoint/list"})
     response = await client.receive_json()
     assert response["success"]
-    assert_lists_same(
-        response["result"],
+    assert response["result"] == unordered(
         [
             {"node": f"{prefix}/1", "run_id": "*", "domain": domain, "item_id": "sun"},
             {"node": f"{prefix}/5", "run_id": "*", "domain": domain, "item_id": "sun"},
@@ -1593,7 +1593,6 @@ async def test_trace_blueprint_automation(
         },
     }
     sun_action = {
-        "limit": 10,
         "params": {
             "domain": "test",
             "service": "automation",

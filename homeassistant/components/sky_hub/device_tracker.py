@@ -39,7 +39,7 @@ async def async_get_scanner(
 
 
 class SkyHubDeviceScanner(DeviceScanner):
-    """This class queries a Sky Hub router."""
+    """Class which queries a Sky Hub router."""
 
     def __init__(self, hub):
         """Initialise the scanner."""

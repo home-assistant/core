@@ -10,7 +10,7 @@ from typing import Any, ClassVar, Final
 import voluptuous as vol
 from xknx.devices.climate import SetpointShiftMode
 from xknx.dpt import DPTBase, DPTNumeric, DPTString
-from xknx.exceptions import ConversionError, CouldNotParseAddress
+from xknx.exceptions import ConversionError, CouldNotParseAddress, CouldNotParseTelegram
 from xknx.telegram.address import IndividualAddress, parse_device_group_address
 
 from homeassistant.components.binary_sensor import (
@@ -101,7 +101,11 @@ def ga_validator(value: Any) -> str | int:
     )
 
 
-ga_list_validator = vol.All(cv.ensure_list, [ga_validator])
+ga_list_validator = vol.All(
+    cv.ensure_list,
+    [ga_validator],
+    vol.IsTrue("value must be a group address or a list containing group addresses"),
+)
 
 ia_validator = vol.Any(
     vol.All(str, str.strip, cv.matches_regex(IndividualAddress.ADDRESS_RE.pattern)),
@@ -181,13 +185,13 @@ def button_payload_sub_validator(entity_config: OrderedDict) -> OrderedDict:
             raise vol.Invalid(f"'type: {_type}' is not a valid sensor type.")
         entity_config[CONF_PAYLOAD_LENGTH] = transcoder.payload_length
         try:
-            entity_config[CONF_PAYLOAD] = int.from_bytes(
-                transcoder.to_knx(_payload), byteorder="big"
-            )
-        except ConversionError as ex:
+            _dpt_payload = transcoder.to_knx(_payload)
+            _raw_payload = transcoder.validate_payload(_dpt_payload)
+        except (ConversionError, CouldNotParseTelegram) as ex:
             raise vol.Invalid(
                 f"'payload: {_payload}' not valid for 'type: {_type}'"
             ) from ex
+        entity_config[CONF_PAYLOAD] = int.from_bytes(_raw_payload, byteorder="big")
         return entity_config
 
     _payload = entity_config[CONF_PAYLOAD]

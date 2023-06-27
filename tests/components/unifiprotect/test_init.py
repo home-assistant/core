@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable
 from unittest.mock import AsyncMock, patch
 
 import aiohttp
@@ -23,6 +22,7 @@ from . import _patch_discovery
 from .utils import MockUFPFixture, init_entry, time_changed
 
 from tests.common import MockConfigEntry
+from tests.typing import WebSocketGenerator
 
 
 async def remove_device(
@@ -217,9 +217,7 @@ async def test_device_remove_devices(
     hass: HomeAssistant,
     ufp: MockUFPFixture,
     light: Light,
-    hass_ws_client: Callable[
-        [HomeAssistant], Awaitable[aiohttp.ClientWebSocketResponse]
-    ],
+    hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test we can only remove a device that no longer exists."""
 
@@ -252,9 +250,7 @@ async def test_device_remove_devices(
 async def test_device_remove_devices_nvr(
     hass: HomeAssistant,
     ufp: MockUFPFixture,
-    hass_ws_client: Callable[
-        [HomeAssistant], Awaitable[aiohttp.ClientWebSocketResponse]
-    ],
+    hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test we can only remove a NVR device that no longer exists."""
     assert await async_setup_component(hass, "config", {})

@@ -34,7 +34,7 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
         ),
         SwitchEntityDescription(
             key=DPCode.WARM,
-            name="Heat Preservation",
+            name="Heat preservation",
             entity_category=EntityCategory.CONFIG,
         ),
     ),
@@ -57,7 +57,7 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
     "cwwsq": (
         SwitchEntityDescription(
             key=DPCode.SLOW_FEED,
-            name="Slow Feed",
+            name="Slow feed",
             icon="mdi:speedometer-slow",
             entity_category=EntityCategory.CONFIG,
         ),
@@ -89,7 +89,7 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
         ),
         SwitchEntityDescription(
             key=DPCode.UV,
-            name="UV Sterilization",
+            name="UV sterilization",
             icon="mdi:lightbulb",
             entity_category=EntityCategory.CONFIG,
         ),
@@ -109,7 +109,7 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
     "dlq": (
         SwitchEntityDescription(
             key=DPCode.CHILD_LOCK,
-            name="Child Lock",
+            name="Child lock",
             icon="mdi:account-lock",
             entity_category=EntityCategory.CONFIG,
         ),
@@ -152,7 +152,7 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
         ),
         SwitchEntityDescription(
             key=DPCode.SWITCH_6,
-            name="Sleep Aid",
+            name="Sleep aid",
             icon="mdi:power-sleep",
         ),
     ),
@@ -176,7 +176,7 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
     "kg": (
         SwitchEntityDescription(
             key=DPCode.CHILD_LOCK,
-            name="Child Lock",
+            name="Child lock",
             icon="mdi:account-lock",
             entity_category=EntityCategory.CONFIG,
         ),
@@ -283,7 +283,7 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
         ),
         SwitchEntityDescription(
             key=DPCode.UV,
-            name="UV Sterilization",
+            name="UV sterilization",
             icon="mdi:minus-circle-outline",
             entity_category=EntityCategory.CONFIG,
         ),
@@ -299,7 +299,7 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
         ),
         SwitchEntityDescription(
             key=DPCode.LOCK,
-            name="Child Lock",
+            name="Child lock",
             icon="mdi:account-lock",
             entity_category=EntityCategory.CONFIG,
         ),
@@ -325,7 +325,7 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
     "pc": (
         SwitchEntityDescription(
             key=DPCode.CHILD_LOCK,
-            name="Child Lock",
+            name="Child lock",
             icon="mdi:account-lock",
             entity_category=EntityCategory.CONFIG,
         ),
@@ -409,7 +409,7 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
         ),
         SwitchEntityDescription(
             key=DPCode.LOCK,
-            name="Child Lock",
+            name="Child lock",
             icon="mdi:account-lock",
             entity_category=EntityCategory.CONFIG,
         ),
@@ -419,13 +419,13 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
     "sd": (
         SwitchEntityDescription(
             key=DPCode.SWITCH_DISTURB,
-            name="Do Not Disturb",
+            name="Do not disturb",
             icon="mdi:minus-circle",
             entity_category=EntityCategory.CONFIG,
         ),
         SwitchEntityDescription(
             key=DPCode.VOICE_SWITCH,
-            name="Mute Voice",
+            name="Mute voice",
             icon="mdi:account-voice",
             entity_category=EntityCategory.CONFIG,
         ),
@@ -444,38 +444,38 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
     "sp": (
         SwitchEntityDescription(
             key=DPCode.WIRELESS_BATTERYLOCK,
-            name="Battery Lock",
+            name="Battery lock",
             icon="mdi:battery-lock",
             entity_category=EntityCategory.CONFIG,
         ),
         SwitchEntityDescription(
             key=DPCode.CRY_DETECTION_SWITCH,
             icon="mdi:emoticon-cry",
-            name="Cry Detection",
+            name="Cry detection",
             entity_category=EntityCategory.CONFIG,
         ),
         SwitchEntityDescription(
             key=DPCode.DECIBEL_SWITCH,
             icon="mdi:microphone-outline",
-            name="Sound Detection",
+            name="Sound detection",
             entity_category=EntityCategory.CONFIG,
         ),
         SwitchEntityDescription(
             key=DPCode.RECORD_SWITCH,
             icon="mdi:record-rec",
-            name="Video Recording",
+            name="Video recording",
             entity_category=EntityCategory.CONFIG,
         ),
         SwitchEntityDescription(
             key=DPCode.MOTION_RECORD,
             icon="mdi:record-rec",
-            name="Motion Recording",
+            name="Motion recording",
             entity_category=EntityCategory.CONFIG,
         ),
         SwitchEntityDescription(
             key=DPCode.BASIC_PRIVATE,
             icon="mdi:eye-off",
-            name="Privacy Mode",
+            name="Privacy mode",
             entity_category=EntityCategory.CONFIG,
         ),
         SwitchEntityDescription(
@@ -487,25 +487,25 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
         SwitchEntityDescription(
             key=DPCode.BASIC_OSD,
             icon="mdi:watermark",
-            name="Time Watermark",
+            name="Time watermark",
             entity_category=EntityCategory.CONFIG,
         ),
         SwitchEntityDescription(
             key=DPCode.BASIC_WDR,
             icon="mdi:watermark",
-            name="Wide Dynamic Range",
+            name="Wide dynamic range",
             entity_category=EntityCategory.CONFIG,
         ),
         SwitchEntityDescription(
             key=DPCode.MOTION_TRACKING,
             icon="mdi:motion-sensor",
-            name="Motion Tracking",
+            name="Motion tracking",
             entity_category=EntityCategory.CONFIG,
         ),
         SwitchEntityDescription(
             key=DPCode.MOTION_SWITCH,
             icon="mdi:motion-sensor",
-            name="Motion Alarm",
+            name="Motion alarm",
             entity_category=EntityCategory.CONFIG,
         ),
     ),
@@ -542,7 +542,7 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
         ),
         SwitchEntityDescription(
             key=DPCode.CHILD_LOCK,
-            name="Child Lock",
+            name="Child lock",
             icon="mdi:account-lock",
             entity_category=EntityCategory.CONFIG,
         ),
@@ -552,7 +552,7 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
     "tyndj": (
         SwitchEntityDescription(
             key=DPCode.SWITCH_SAVE_ENERGY,
-            name="Energy Saving",
+            name="Energy saving",
             icon="mdi:leaf",
             entity_category=EntityCategory.CONFIG,
         ),
@@ -562,13 +562,13 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
     "wkf": (
         SwitchEntityDescription(
             key=DPCode.CHILD_LOCK,
-            name="Child Lock",
+            name="Child lock",
             icon="mdi:account-lock",
             entity_category=EntityCategory.CONFIG,
         ),
         SwitchEntityDescription(
             key=DPCode.WINDOW_CHECK,
-            name="Open Window Detection",
+            name="Open window detection",
             icon="mdi:window-open",
             entity_category=EntityCategory.CONFIG,
         ),
@@ -636,13 +636,13 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
         ),
         SwitchEntityDescription(
             key=DPCode.OXYGEN,
-            name="Oxygen Bar",
+            name="Oxygen bar",
             icon="mdi:molecule",
             entity_category=EntityCategory.CONFIG,
         ),
         SwitchEntityDescription(
             key=DPCode.FAN_COOL,
-            name="Natural Wind",
+            name="Natural wind",
             icon="mdi:weather-windy",
             entity_category=EntityCategory.CONFIG,
         ),
@@ -654,7 +654,7 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
         ),
         SwitchEntityDescription(
             key=DPCode.CHILD_LOCK,
-            name="Child Lock",
+            name="Child lock",
             icon="mdi:account-lock",
             entity_category=EntityCategory.CONFIG,
         ),

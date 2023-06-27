@@ -14,6 +14,6 @@
   "documentation": "https://www.home-assistant.io/integrations/cast",
   "iot_class": "local_polling",
   "loggers": ["casttube", "pychromecast"],
-  "requirements": ["pychromecast==13.0.4"],
+  "requirements": ["PyChromecast==13.0.7"],
   "zeroconf": ["_googlecast._tcp.local."]
 }

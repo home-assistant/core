@@ -14,8 +14,10 @@ DEVICE_POLLING_DELAY: Final = 60
 LIVISI_STATE_CHANGE: Final = "livisi_state_change"
 LIVISI_REACHABILITY_CHANGE: Final = "livisi_reachability_change"
 
-PSS_DEVICE_TYPE: Final = "PSS"
+SWITCH_DEVICE_TYPES: Final = ["ISS", "ISS2", "PSS", "PSSO"]
 VRCC_DEVICE_TYPE: Final = "VRCC"
+WDS_DEVICE_TYPE: Final = "WDS"
+
 
 MAX_TEMPERATURE: Final = 30.0
 MIN_TEMPERATURE: Final = 6.0

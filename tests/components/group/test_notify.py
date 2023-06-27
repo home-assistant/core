@@ -54,14 +54,14 @@ async def test_send_message_with_data(hass: HomeAssistant) -> None:
                     "service": "demo2",
                     "data": {
                         "target": "unnamed device",
-                        "data": {"test": "message"},
+                        "data": {"test": "message", "default": "default"},
                     },
                 },
             ]
         },
     )
 
-    """Test sending a message with to a notify group."""
+    """Test sending a message to a notify group."""
     await service.async_send_message(
         "Hello", title="Test notification", data={"hello": "world"}
     )
@@ -77,7 +77,28 @@ async def test_send_message_with_data(hass: HomeAssistant) -> None:
     assert service2.send_message.mock_calls[0][2] == {
         "target": ["unnamed device"],
         "title": "Test notification",
-        "data": {"hello": "world", "test": "message"},
+        "data": {"hello": "world", "test": "message", "default": "default"},
+    }
+
+    """Test sending a message which overrides service defaults to a notify group."""
+    await service.async_send_message(
+        "Hello",
+        title="Test notification",
+        data={"hello": "world", "default": "override"},
+    )
+
+    await hass.async_block_till_done()
+
+    assert service1.send_message.mock_calls[1][1][0] == "Hello"
+    assert service1.send_message.mock_calls[1][2] == {
+        "title": "Test notification",
+        "data": {"hello": "world", "default": "override"},
+    }
+    assert service2.send_message.mock_calls[1][1][0] == "Hello"
+    assert service2.send_message.mock_calls[1][2] == {
+        "target": ["unnamed device"],
+        "title": "Test notification",
+        "data": {"hello": "world", "test": "message", "default": "override"},
     }
 
 

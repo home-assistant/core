@@ -18,7 +18,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import Context, CoreState, HomeAssistant, State, callback
-from homeassistant.helpers import entity_registry
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.helpers.template import Template
 from homeassistant.setup import ATTR_COMPONENT, async_setup_component
@@ -558,19 +558,18 @@ async def test_no_template_match_all(
         },
     ],
 )
-async def test_unique_id(hass: HomeAssistant, start_ha) -> None:
+async def test_unique_id(
+    hass: HomeAssistant, start_ha, entity_registry: er.EntityRegistry
+) -> None:
     """Test unique_id option only creates one sensor per id."""
     assert len(hass.states.async_all()) == 2
 
-    ent_reg = entity_registry.async_get(hass)
-    assert len(ent_reg.entities) == 2
-    assert (
-        ent_reg.async_get_entity_id("sensor", "template", "group-id-sensor-id")
-        is not None
+    assert len(entity_registry.entities) == 2
+    assert entity_registry.async_get_entity_id(
+        "sensor", "template", "group-id-sensor-id"
     )
-    assert (
-        ent_reg.async_get_entity_id("sensor", "template", "not-so-unique-anymore")
-        is not None
+    assert entity_registry.async_get_entity_id(
+        "sensor", "template", "not-so-unique-anymore"
     )
 
 
@@ -1094,7 +1093,9 @@ async def test_duplicate_templates(hass: HomeAssistant, start_ha) -> None:
         },
     ],
 )
-async def test_trigger_entity(hass: HomeAssistant, start_ha) -> None:
+async def test_trigger_entity(
+    hass: HomeAssistant, start_ha, entity_registry: er.EntityRegistry
+) -> None:
     """Test trigger entity works."""
     state = hass.states.get("sensor.hello_name")
     assert state is not None
@@ -1117,14 +1118,13 @@ async def test_trigger_entity(hass: HomeAssistant, start_ha) -> None:
     assert state.attributes.get("unit_of_measurement") == "%"
     assert state.context is context
 
-    ent_reg = entity_registry.async_get(hass)
-    assert len(ent_reg.entities) == 2
+    assert len(entity_registry.entities) == 2
     assert (
-        ent_reg.entities["sensor.hello_name"].unique_id
+        entity_registry.entities["sensor.hello_name"].unique_id
         == "listening-test-event-hello_name-id"
     )
     assert (
-        ent_reg.entities["sensor.via_list"].unique_id
+        entity_registry.entities["sensor.via_list"].unique_id
         == "listening-test-event-via_list-id"
     )
 
@@ -1157,7 +1157,9 @@ async def test_trigger_entity(hass: HomeAssistant, start_ha) -> None:
         },
     ],
 )
-async def test_trigger_entity_render_error(hass: HomeAssistant, start_ha) -> None:
+async def test_trigger_entity_render_error(
+    hass: HomeAssistant, start_ha, entity_registry: er.EntityRegistry
+) -> None:
     """Test trigger entity handles render error."""
     state = hass.states.get("sensor.hello")
     assert state is not None
@@ -1170,9 +1172,8 @@ async def test_trigger_entity_render_error(hass: HomeAssistant, start_ha) -> Non
     state = hass.states.get("sensor.hello")
     assert state.state == STATE_UNAVAILABLE
 
-    ent_reg = entity_registry.async_get(hass)
-    assert len(ent_reg.entities) == 1
-    assert ent_reg.entities["sensor.hello"].unique_id == "no-base-id"
+    assert len(entity_registry.entities) == 1
+    assert entity_registry.entities["sensor.hello"].unique_id == "no-base-id"
 
 
 @pytest.mark.parametrize(("count", "domain"), [(0, sensor.DOMAIN)])

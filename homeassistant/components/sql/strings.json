@@ -5,7 +5,8 @@
     },
     "error": {
       "db_url_invalid": "Database URL invalid",
-      "query_invalid": "SQL Query invalid"
+      "query_invalid": "SQL Query invalid",
+      "column_invalid": "The column `{column}` is not returned by the query"
     },
     "step": {
       "user": {
@@ -18,7 +19,7 @@
           "value_template": "Value Template"
         },
         "data_description": {
-          "db_url": "Database URL, leave empty to use default HA database",
+          "db_url": "Database URL, leave empty to use HA recorder database",
           "name": "Name that will be used for Config Entry and also the Sensor",
           "query": "Query to run, needs to start with 'SELECT'",
           "column": "Column for returned query to present as state",
@@ -51,7 +52,14 @@
     },
     "error": {
       "db_url_invalid": "[%key:component::sql::config::error::db_url_invalid%]",
-      "query_invalid": "[%key:component::sql::config::error::query_invalid%]"
+      "query_invalid": "[%key:component::sql::config::error::query_invalid%]",
+      "column_invalid": "[%key:component::sql::config::error::column_invalid%]"
+    }
+  },
+  "issues": {
+    "entity_id_query_does_full_table_scan": {
+      "title": "SQL query does full table scan",
+      "description": "The query `{query}` contains the keyword `entity_id` but does not reference the `states_meta` table. This will cause a full table scan and database instability. Please check the documentation and use `states_meta.entity_id` instead."
     }
   }
 }

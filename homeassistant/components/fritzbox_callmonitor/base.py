@@ -19,7 +19,7 @@ MIN_TIME_PHONEBOOK_UPDATE = timedelta(hours=6)
 
 
 class FritzBoxPhonebook:
-    """This connects to a FritzBox router and downloads its phone book."""
+    """Connects to a FritzBox router and downloads its phone book."""
 
     fph: FritzPhonebook
     phonebook_dict: dict[str, list[str]]

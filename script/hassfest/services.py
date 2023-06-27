@@ -10,7 +10,7 @@ from voluptuous.humanize import humanize_error
 
 from homeassistant.const import CONF_SELECTOR
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv, selector
+from homeassistant.helpers import config_validation as cv, selector, service
 from homeassistant.util.yaml import load_yaml
 
 from .model import Config, Integration
@@ -33,6 +33,14 @@ FIELD_SCHEMA = vol.Schema(
         vol.Optional("required"): bool,
         vol.Optional("advanced"): bool,
         vol.Optional(CONF_SELECTOR): selector.validate_selector,
+        vol.Optional("filter"): {
+            vol.Exclusive("attribute", "field_filter"): {
+                vol.Required(str): [vol.All(str, service.validate_attribute_option)],
+            },
+            vol.Exclusive("supported_features", "field_filter"): [
+                vol.All(str, service.validate_supported_feature)
+            ],
+        },
     }
 )
 
@@ -40,9 +48,7 @@ SERVICE_SCHEMA = vol.Schema(
     {
         vol.Required("description"): str,
         vol.Optional("name"): str,
-        vol.Optional("target"): vol.Any(
-            selector.TargetSelector.CONFIG_SCHEMA, None  # pylint: disable=no-member
-        ),
+        vol.Optional("target"): vol.Any(selector.TargetSelector.CONFIG_SCHEMA, None),
         vol.Optional("fields"): vol.Schema({str: FIELD_SCHEMA}),
     }
 )

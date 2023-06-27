@@ -1,4 +1,5 @@
 """Test The generic (IP Camera) config flow."""
+import contextlib
 import errno
 from http import HTTPStatus
 import os.path
@@ -34,7 +35,7 @@ from homeassistant.const import (
     HTTP_BASIC_AUTHENTICATION,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry
+from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry
 from tests.typing import ClientSessionGenerator
@@ -330,7 +331,10 @@ async def test_still_template(
     expected_errors,
 ) -> None:
     """Test we can handle various templates."""
-    respx.get(url).respond(stream=fakeimgbytes_png)
+    with contextlib.suppress(httpx.InvalidURL):
+        # There is no need to mock the request if its an
+        # invalid url because we will never make the request
+        respx.get(url).respond(stream=fakeimgbytes_png)
     data = TESTDATA.copy()
     data.pop(CONF_STREAM_SOURCE)
     data[CONF_STILL_IMAGE_URL] = template
@@ -809,10 +813,10 @@ async def test_reload_on_title_change(hass: HomeAssistant) -> None:
     assert hass.states.get("camera.my_title").attributes["friendly_name"] == "New Title"
 
 
-async def test_migrate_existing_ids(hass: HomeAssistant) -> None:
+async def test_migrate_existing_ids(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test that existing ids are migrated for issue #70568."""
-
-    registry = entity_registry.async_get(hass)
 
     test_data = TESTDATA_OPTIONS.copy()
     test_data[CONF_CONTENT_TYPE] = "image/png"
@@ -825,7 +829,7 @@ async def test_migrate_existing_ids(hass: HomeAssistant) -> None:
     new_unique_id = mock_entry.entry_id
     mock_entry.add_to_hass(hass)
 
-    entity_entry = registry.async_get_or_create(
+    entity_entry = entity_registry.async_get_or_create(
         "camera",
         DOMAIN,
         old_unique_id,
@@ -838,7 +842,7 @@ async def test_migrate_existing_ids(hass: HomeAssistant) -> None:
     await hass.config_entries.async_setup(mock_entry.entry_id)
     await hass.async_block_till_done()
 
-    entity_entry = registry.async_get(entity_id)
+    entity_entry = entity_registry.async_get(entity_id)
     assert entity_entry.unique_id == new_unique_id
 
 

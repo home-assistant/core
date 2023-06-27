@@ -14,6 +14,8 @@ from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_REAUTH, SOURCE_US
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 
+pytestmark = pytest.mark.usefixtures("mock_setup_entry")
+
 
 @pytest.mark.parametrize(
     ("connect_mock", "connect_errors"),

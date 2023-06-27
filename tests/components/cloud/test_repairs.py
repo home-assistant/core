@@ -10,7 +10,7 @@ from homeassistant.components.repairs import DOMAIN as REPAIRS_DOMAIN
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.issue_registry as ir
 from homeassistant.setup import async_setup_component
-from homeassistant.util import dt
+from homeassistant.util import dt as dt_util
 
 from . import mock_cloud
 
@@ -28,7 +28,7 @@ async def test_do_not_create_repair_issues_at_startup_if_not_logged_in(
     with patch("homeassistant.components.cloud.Cloud.is_logged_in", False):
         await mock_cloud(hass)
 
-        async_fire_time_changed(hass, dt.utcnow() + timedelta(hours=1))
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(hours=1))
         await hass.async_block_till_done()
 
     assert not issue_registry.async_get_issue(
@@ -51,7 +51,7 @@ async def test_create_repair_issues_at_startup_if_logged_in(
     with patch("homeassistant.components.cloud.Cloud.is_logged_in", True):
         await mock_cloud(hass)
 
-        async_fire_time_changed(hass, dt.utcnow() + timedelta(hours=1))
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(hours=1))
         await hass.async_block_till_done()
 
     assert issue_registry.async_get_issue(

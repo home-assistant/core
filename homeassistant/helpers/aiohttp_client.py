@@ -37,7 +37,27 @@ SERVER_SOFTWARE = "{0}/{1} aiohttp/{2} Python/{3[0]}.{3[1]}".format(
     APPLICATION_NAME, __version__, aiohttp.__version__, sys.version_info
 )
 
+ENABLE_CLEANUP_CLOSED = not (3, 11, 1) <= sys.version_info < (3, 11, 4)
+# Enabling cleanup closed on python 3.11.1+ leaks memory relatively quickly
+# see https://github.com/aio-libs/aiohttp/issues/7252
+# aiohttp interacts poorly with https://github.com/python/cpython/pull/98540
+# The issue was fixed in 3.11.4 via https://github.com/python/cpython/pull/104485
+
 WARN_CLOSE_MSG = "closes the Home Assistant aiohttp session"
+
+#
+# The default connection limit of 100 meant that you could only have
+# 100 concurrent connections.
+#
+# This was effectively a limit of 100 devices and than
+# the supervisor API would fail as soon as it was hit.
+#
+# We now apply the 100 limit per host, so that we can have 100 connections
+# to a single host, but can have more than 4096 connections in total to
+# prevent a single host from using all available connections.
+#
+MAXIMUM_CONNECTIONS = 4096
+MAXIMUM_CONNECTIONS_PER_HOST = 100
 
 
 class HassClientResponse(aiohttp.ClientResponse):
@@ -129,7 +149,7 @@ def _async_create_clientsession(
         {USER_AGENT: SERVER_SOFTWARE},
     )
 
-    clientsession.close = warn_use(  # type: ignore[assignment]
+    clientsession.close = warn_use(  # type: ignore[method-assign]
         clientsession.close,
         WARN_CLOSE_MSG,
     )
@@ -257,11 +277,16 @@ def _async_get_connector(
         return cast(aiohttp.BaseConnector, hass.data[key])
 
     if verify_ssl:
-        ssl_context: bool | SSLContext = ssl_util.client_context()
+        ssl_context: bool | SSLContext = ssl_util.get_default_context()
     else:
-        ssl_context = False
+        ssl_context = ssl_util.get_default_no_verify_context()
 
-    connector = aiohttp.TCPConnector(enable_cleanup_closed=True, ssl=ssl_context)
+    connector = aiohttp.TCPConnector(
+        enable_cleanup_closed=ENABLE_CLEANUP_CLOSED,
+        ssl=ssl_context,
+        limit=MAXIMUM_CONNECTIONS,
+        limit_per_host=MAXIMUM_CONNECTIONS_PER_HOST,
+    )
     hass.data[key] = connector
 
     async def _async_close_connector(event: Event) -> None:

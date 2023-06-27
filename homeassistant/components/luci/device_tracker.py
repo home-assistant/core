@@ -46,7 +46,7 @@ def get_scanner(hass: HomeAssistant, config: ConfigType) -> LuciDeviceScanner | 
 
 
 class LuciDeviceScanner(DeviceScanner):
-    """This class scans for devices connected to an OpenWrt router."""
+    """Scanner for devices connected to an OpenWrt router."""
 
     def __init__(self, config):
         """Initialize the scanner."""
