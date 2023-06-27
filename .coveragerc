@@ -308,7 +308,6 @@ omit =
     homeassistant/components/escea/discovery.py
     homeassistant/components/esphome/__init__.py
     homeassistant/components/esphome/bluetooth/*
-    homeassistant/components/esphome/button.py
     homeassistant/components/esphome/camera.py
     homeassistant/components/esphome/cover.py
     homeassistant/components/esphome/domain_data.py
