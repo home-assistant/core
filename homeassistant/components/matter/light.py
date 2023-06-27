@@ -299,6 +299,8 @@ class MatterLight(MatterEntity, LightEntity):
             # colormode(s)
             if self._entity_info.endpoint.has_attribute(
                 None, clusters.ColorControl.Attributes.ColorMode
+            ) and self._entity_info.endpoint.has_attribute(
+                None, clusters.ColorControl.Attributes.ColorCapabilities
             ):
                 capabilities = self.get_matter_attribute_value(
                     clusters.ColorControl.Attributes.ColorCapabilities
