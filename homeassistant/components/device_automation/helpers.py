@@ -38,6 +38,7 @@ ENTITY_PLATFORMS = {
     Platform.SELECT.value,
     Platform.SWITCH.value,
     Platform.VACUUM.value,
+    Platform.WATER_HEATER.value,
 }
 
 
