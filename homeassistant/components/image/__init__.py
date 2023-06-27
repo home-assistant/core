@@ -62,9 +62,9 @@ class ImageContentTypeError(HomeAssistantError):
     """Error with the content type while loading an image."""
 
 
-def valid_image_content_type(content_type: str) -> str:
+def valid_image_content_type(content_type: str | None) -> str:
     """Validate the assigned content type is one of an image."""
-    if content_type.split("/", 1)[0] != "image":
+    if content_type is None or content_type.split("/", 1)[0] != "image":
         raise ImageContentTypeError
     return content_type
 
@@ -174,9 +174,10 @@ class ImageEntity(Entity):
                 url, timeout=GET_IMAGE_TIMEOUT, follow_redirects=True
             )
             response.raise_for_status()
+            content_type = response.headers.get("content-type")
             return Image(
                 content=response.content,
-                content_type=response.headers["content-type"],
+                content_type=valid_image_content_type(content_type),
             )
         except httpx.TimeoutException:
             _LOGGER.error("%s: Timeout getting image from %s", self.entity_id, url)
@@ -187,6 +188,14 @@ class ImageEntity(Entity):
                 self.entity_id,
                 url,
                 err,
+            )
+            return None
+        except ImageContentTypeError:
+            _LOGGER.error(
+                "%s: Image from %s has invalid content type: %s",
+                self.entity_id,
+                url,
+                content_type,
             )
             return None
 
