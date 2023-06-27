@@ -253,9 +253,31 @@ async def test_image_from_url(
     assert resp.status == HTTPStatus.OK
     body = await resp.text()
     assert body == "milk"
+    assert respx.get("http://localhost/test.png").call_count == 1
 
     state = hass.states.get("image.test")
     assert state.state == "2023-04-01T00:00:00+00:00"
+
+    # Check the image is not refetched
+    resp = await client.get(state.attributes["entity_picture"])
+    assert resp.status == HTTPStatus.OK
+    body = await resp.text()
+    assert body == "milk"
+    assert respx.get("http://localhost/test.png").call_count == 1
+
+    # Check the image is refetched when receiving a new message on the URL topic
+    respx.get("http://localhost/test.png").respond(
+        status_code=HTTPStatus.OK, content_type="image/png", content=b"milk"
+    )
+    async_fire_mqtt_message(hass, topic, b"http://localhost/test.png")
+
+    await hass.async_block_till_done()
+
+    resp = await client.get(state.attributes["entity_picture"])
+    assert resp.status == HTTPStatus.OK
+    body = await resp.text()
+    assert body == "milk"
+    assert respx.get("http://localhost/test.png").call_count == 2
 
 
 @respx.mock
