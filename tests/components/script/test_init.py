@@ -25,7 +25,7 @@ from homeassistant.core import (
     callback,
     split_entity_id,
 )
-from homeassistant.exceptions import ServiceNotFound
+from homeassistant.exceptions import HomeAssistantError, ServiceNotFound
 from homeassistant.helpers import entity_registry as er, template
 from homeassistant.helpers.event import async_track_state_change
 from homeassistant.helpers.script import (
@@ -1532,6 +1532,39 @@ async def test_responses(hass: HomeAssistant, response: Any) -> None:
     assert await hass.services.async_call(
         DOMAIN, "test", {"greeting": "world"}, blocking=True, return_response=True
     ) == {"response": response}
+    # Validate we can also call it without return_response
+    assert (
+        await hass.services.async_call(
+            DOMAIN, "test", {"greeting": "world"}, blocking=True, return_response=False
+        )
+        is None
+    )
+
+
+async def test_responses_error(hass: HomeAssistant) -> None:
+    """Test response variable not set."""
+    mock_restore_cache(hass, ())
+    assert await async_setup_component(
+        hass,
+        "script",
+        {
+            "script": {
+                "test": {
+                    "sequence": [
+                        {
+                            "stop": "done",
+                            "response_variable": "test_var",
+                        },
+                    ]
+                }
+            }
+        },
+    )
+
+    with pytest.raises(HomeAssistantError):
+        assert await hass.services.async_call(
+            DOMAIN, "test", {"greeting": "world"}, blocking=True, return_response=True
+        )
     # Validate we can also call it without return_response
     assert (
         await hass.services.async_call(
