@@ -191,7 +191,7 @@ aio-georss-gdacs==0.8
 aioairq==0.2.4
 
 # homeassistant.components.airzone_cloud
-aioairzone-cloud==0.1.8
+aioairzone-cloud==0.1.9
 
 # homeassistant.components.airzone
 aioairzone==0.6.4
@@ -234,7 +234,7 @@ aioecowitt==2023.5.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==14.1.1
+aioesphomeapi==15.0.0
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -334,9 +334,6 @@ aioridwell==2023.01.0
 
 # homeassistant.components.ruuvi_gateway
 aioruuvigateway==0.1.0
-
-# homeassistant.components.senseme
-aiosenseme==0.6.1
 
 # homeassistant.components.senz
 aiosenz==1.0.0
@@ -948,7 +945,7 @@ ha-philipsjs==3.1.0
 habitipy==0.2.0
 
 # homeassistant.components.cloud
-hass-nabucasa==0.68.0
+hass-nabucasa==0.69.0
 
 # homeassistant.components.splunk
 hass-splunk==0.1.1
@@ -1565,7 +1562,7 @@ pyatag==0.3.5.3
 pyatmo==7.5.0
 
 # homeassistant.components.apple_tv
-pyatv==0.13.0
+pyatv==0.13.2
 
 # homeassistant.components.aussie_broadband
 pyaussiebb==0.0.15
@@ -1880,7 +1877,7 @@ pyombi==0.1.10
 pyopenuv==2023.02.0
 
 # homeassistant.components.opnsense
-pyopnsense==0.2.0
+pyopnsense==0.4.0
 
 # homeassistant.components.opple
 pyoppleio-legacy==1.0.8
@@ -1894,7 +1891,7 @@ pyotgw==2.1.3
 pyotp==2.8.0
 
 # homeassistant.components.overkiz
-pyoverkiz==1.8.0
+pyoverkiz==1.9.0
 
 # homeassistant.components.openweathermap
 pyowm==3.2.0
@@ -2106,7 +2103,7 @@ python-kasa==0.5.1
 # python-lirc==1.2.3
 
 # homeassistant.components.matter
-python-matter-server==3.5.1
+python-matter-server==3.6.0
 
 # homeassistant.components.xiaomi_miio
 python-miio==0.5.12
@@ -2124,7 +2121,7 @@ python-nest==4.2.0
 python-opendata-transport==0.3.0
 
 # homeassistant.components.opensky
-python-opensky==0.0.9
+python-opensky==0.0.10
 
 # homeassistant.components.otbr
 # homeassistant.components.thread
@@ -2688,7 +2685,7 @@ xbox-webapi==2.0.11
 xiaomi-ble==0.17.2
 
 # homeassistant.components.knx
-xknx==2.10.0
+xknx==2.11.0
 
 # homeassistant.components.knx
 xknxproject==3.2.0

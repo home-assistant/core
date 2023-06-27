@@ -55,7 +55,6 @@ async def async_setup_entry(
                     AirzoneZoneBinarySensor(
                         coordinator,
                         description,
-                        entry,
                         zone_id,
                         zone_data,
                     )
@@ -95,12 +94,11 @@ class AirzoneZoneBinarySensor(AirzoneZoneEntity, AirzoneBinarySensor):
         self,
         coordinator: AirzoneUpdateCoordinator,
         description: AirzoneBinarySensorEntityDescription,
-        entry: ConfigEntry,
         zone_id: str,
         zone_data: dict[str, Any],
     ) -> None:
         """Initialize."""
-        super().__init__(coordinator, entry, zone_id, zone_data)
+        super().__init__(coordinator, zone_id, zone_data)
 
         self._attr_unique_id = f"{zone_id}_{description.key}"
         self.entity_description = description

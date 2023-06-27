@@ -18,7 +18,7 @@ from homeassistant.components.homeassistant.exposed_entities import (
     ExposedEntities,
     async_expose_entity,
 )
-from homeassistant.const import CONTENT_TYPE_JSON
+from homeassistant.const import CONTENT_TYPE_JSON, __version__ as HA_VERSION
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
@@ -353,3 +353,18 @@ async def test_system_msg(hass: HomeAssistant) -> None:
 
     assert response is None
     assert cloud.client.relayer_region == "xx-earth-616"
+
+
+async def test_cloud_connection_info(hass: HomeAssistant) -> None:
+    """Test connection info msg."""
+    with patch("hass_nabucasa.Cloud.initialize"):
+        setup = await async_setup_component(hass, "cloud", {"cloud": {}})
+        assert setup
+    cloud = hass.data["cloud"]
+
+    response = await cloud.client.async_cloud_connection_info({})
+
+    assert response == {
+        "remote": {"connected": False, "enabled": False, "instance_domain": None},
+        "version": HA_VERSION,
+    }

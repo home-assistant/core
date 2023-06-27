@@ -1,10 +1,14 @@
 """Home Assistant wrapper for a pyWeMo device."""
+from __future__ import annotations
+
 import asyncio
+from dataclasses import dataclass, fields
 from datetime import timedelta
 import logging
+from typing import Literal
 
 from pywemo import Insight, LongPressMixin, WeMoDevice
-from pywemo.exceptions import ActionException
+from pywemo.exceptions import ActionException, PyWeMoException
 from pywemo.subscribe import EVENT_TYPE_LONG_PRESS
 
 from homeassistant.config_entries import ConfigEntry
@@ -29,9 +33,74 @@ from .const import DOMAIN, WEMO_SUBSCRIPTION_EVENT
 
 _LOGGER = logging.getLogger(__name__)
 
+# Literal values must match options.error keys from strings.json.
+ErrorStringKey = Literal[
+    "long_press_requires_subscription", "polling_interval_to_small"
+]
+# Literal values must match options.step.init.data keys from strings.json.
+OptionsFieldKey = Literal[
+    "enable_subscription", "enable_long_press", "polling_interval_seconds"
+]
+
+
+class OptionsValidationError(Exception):
+    """Error validating options."""
+
+    def __init__(
+        self, field_key: OptionsFieldKey, error_key: ErrorStringKey, message: str
+    ) -> None:
+        """Store field and error_key so the exception handler can used them.
+
+        The field_key and error_key strings must be the same as in strings.json.
+
+        Args:
+          field_key: Name of the options.step.init.data key that corresponds to this error.
+            field_key must also match one of the field names inside the Options class.
+          error_key: Name of the options.error key that corresponds to this error.
+          message: Message for the Exception class.
+        """
+        super().__init__(message)
+        self.field_key = field_key
+        self.error_key = error_key
+
+
+@dataclass(frozen=True)
+class Options:
+    """Configuration options for the DeviceCoordinator class.
+
+    Note: The field names must match the keys (OptionsFieldKey)
+    from options.step.init.data in strings.json.
+    """
+
+    # Subscribe to device local push updates.
+    enable_subscription: bool = True
+
+    # Register for device long-press events.
+    enable_long_press: bool = True
+
+    # Polling interval for when subscriptions are not enabled or broken.
+    polling_interval_seconds: int = 30
+
+    def __post_init__(self) -> None:
+        """Validate parameters."""
+        if not self.enable_subscription and self.enable_long_press:
+            raise OptionsValidationError(
+                "enable_subscription",
+                "long_press_requires_subscription",
+                "Local push update subscriptions must be enabled to use long-press events",
+            )
+        if self.polling_interval_seconds < 10:
+            raise OptionsValidationError(
+                "polling_interval_seconds",
+                "polling_interval_to_small",
+                "Polling more frequently than 10 seconds is not supported",
+            )
+
 
 class DeviceCoordinator(DataUpdateCoordinator[None]):
     """Home Assistant wrapper for a pyWeMo device."""
+
+    options: Options | None = None
 
     def __init__(self, hass: HomeAssistant, wemo: WeMoDevice, device_id: str) -> None:
         """Initialize DeviceCoordinator."""
@@ -39,13 +108,12 @@ class DeviceCoordinator(DataUpdateCoordinator[None]):
             hass,
             _LOGGER,
             name=wemo.name,
-            update_interval=timedelta(seconds=30),
         )
         self.hass = hass
         self.wemo = wemo
         self.device_id = device_id
         self.device_info = _create_device_info(wemo)
-        self.supports_long_press = wemo.supports_long_press()
+        self.supports_long_press = isinstance(wemo, LongPressMixin)
         self.update_lock = asyncio.Lock()
 
     def subscription_callback(
@@ -67,6 +135,54 @@ class DeviceCoordinator(DataUpdateCoordinator[None]):
         else:
             updated = self.wemo.subscription_update(event_type, params)
             self.hass.create_task(self._async_subscription_callback(updated))
+
+    async def _async_set_enable_subscription(self, enable_subscription: bool) -> None:
+        """Turn on/off push updates from the device."""
+        registry = self.hass.data[DOMAIN]["registry"]
+        if enable_subscription:
+            registry.on(self.wemo, None, self.subscription_callback)
+            await self.hass.async_add_executor_job(registry.register, self.wemo)
+        elif self.options is not None:
+            await self.hass.async_add_executor_job(registry.unregister, self.wemo)
+
+    async def _async_set_enable_long_press(self, enable_long_press: bool) -> None:
+        """Turn on/off long-press events from the device."""
+        if not (isinstance(self.wemo, LongPressMixin) and self.supports_long_press):
+            return
+        try:
+            if enable_long_press:
+                await self.hass.async_add_executor_job(
+                    self.wemo.ensure_long_press_virtual_device
+                )
+            elif self.options is not None:
+                await self.hass.async_add_executor_job(
+                    self.wemo.remove_long_press_virtual_device
+                )
+        except PyWeMoException:
+            _LOGGER.exception(
+                "Failed to enable long press support for device: %s", self.wemo.name
+            )
+            self.supports_long_press = False
+
+    async def _async_set_polling_interval_seconds(
+        self, polling_interval_seconds: int
+    ) -> None:
+        self.update_interval = timedelta(seconds=polling_interval_seconds)
+
+    async def async_set_options(
+        self, hass: HomeAssistant, config_entry: ConfigEntry
+    ) -> None:
+        """Update the configuration options for the device."""
+        options = Options(**config_entry.options)
+        _LOGGER.debug(
+            "async_set_options old(%s) new(%s)", repr(self.options), repr(options)
+        )
+        for field in fields(options):
+            new_value = getattr(options, field.name)
+            if self.options is None or getattr(self.options, field.name) != new_value:
+                # The value changed, call the _async_set_* method for the option.
+                await getattr(self, f"_async_set_{field.name}")(new_value)
+        self.options = options
 
     async def _async_subscription_callback(self, updated: bool) -> None:
         """Update the state by the Wemo device."""
@@ -160,20 +276,11 @@ async def async_register_device(
 
     device = DeviceCoordinator(hass, wemo, entry.id)
     hass.data[DOMAIN].setdefault("devices", {})[entry.id] = device
-    registry = hass.data[DOMAIN]["registry"]
-    registry.on(wemo, None, device.subscription_callback)
-    await hass.async_add_executor_job(registry.register, wemo)
 
-    if isinstance(wemo, LongPressMixin):
-        try:
-            await hass.async_add_executor_job(wemo.ensure_long_press_virtual_device)
-        # Temporarily handling all exceptions for #52996 & pywemo/pywemo/issues/276
-        # Replace this with `except: PyWeMoException` after upstream has been fixed.
-        except Exception:  # pylint: disable=broad-except
-            _LOGGER.exception(
-                "Failed to enable long press support for device: %s", wemo.name
-            )
-            device.supports_long_press = False
+    config_entry.async_on_unload(
+        config_entry.add_update_listener(device.async_set_options)
+    )
+    await device.async_set_options(hass, config_entry)
 
     return device
 
