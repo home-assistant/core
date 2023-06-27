@@ -13,6 +13,28 @@ load_url:
       selector:
         text:
 
+set_config:
+  name: Set Configuration
+  description: Set a configuration parameter on Fully Kiosk Browser.
+  target:
+    device:
+      integration: fully_kiosk
+  fields:
+    key:
+      name: Key
+      description: Configuration parameter to set.
+      example: "motionSensitivity"
+      required: true
+      selector:
+        text:
+    value:
+      name: Value
+      description: Value for the configuration parameter.
+      example: "90"
+      required: true
+      selector:
+        text:
+
 start_application:
   name: Start Application
   description: Start an application on the device running Fully Kiosk Browser.
