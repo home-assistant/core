@@ -80,9 +80,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     client: OverkizClient | None = None
 
-    # Local API vs Cloud API
+    # Local API
     if entry.data[CONF_API_TYPE] == APIType.LOCAL:
-        LOGGER.debug("Configuring local integration")
         host = entry.data[CONF_HOST]
         token = entry.data[CONF_TOKEN]
 
@@ -97,6 +96,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             session=session,
             server=generate_local_server(host=host),
         )
+    # Overkiz Cloud API
     else:
         username = entry.data[CONF_USERNAME]
         password = entry.data[CONF_PASSWORD]
@@ -198,7 +198,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        # Remove local auth token if local server is unloaded
+        # Remove local auth token if entry with Local API is unloaded
         if token_uuid := entry.data.get(CONF_TOKEN_UUID):
             data: HomeAssistantOverkizData = hass.data[DOMAIN][entry.entry_id]
             await data.coordinator.client.delete_local_token(
