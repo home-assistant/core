@@ -97,7 +97,7 @@ class MqttImage(MqttEntity, ImageEntity):
     ) -> None:
         """Initialize the MQTT Image."""
         self._client = get_async_client(hass)
-        ImageEntity.__init__(self)
+        ImageEntity.__init__(self, hass)
         MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
 
     @staticmethod
