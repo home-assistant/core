@@ -1,5 +1,8 @@
-ARG BUILD_VERSION
-FROM homeassistant/amd64-homeassistant:$BUILD_VERSION
+ARG \
+    BUILD_FROM \
+    BUILD_VERSION
+
+FROM $BUILD_FROM:$BUILD_VERSION
 
 # NOTE: intel-nuc will be replaced by generic-x86-64. Make sure to apply
 # changes in generic-x86-64 as well.
