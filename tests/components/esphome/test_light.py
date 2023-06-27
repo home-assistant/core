@@ -15,6 +15,8 @@ import pytest
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP_KELVIN,
+    ATTR_EFFECT,
+    ATTR_EFFECT_LIST,
     ATTR_HS_COLOR,
     ATTR_MAX_COLOR_TEMP_KELVIN,
     ATTR_MAX_MIREDS,
@@ -1191,4 +1193,56 @@ async def test_light_color_temp_legacy(
         blocking=True,
     )
     mock_client.light_command.assert_has_calls([call(key=1, state=False)])
+    mock_client.light_command.reset_mock()
+
+
+async def test_light_effects(
+    hass: HomeAssistant, mock_client: APIClient, mock_generic_device_entry
+) -> None:
+    """Test a generic light entity that supports on and on and brightness."""
+    mock_client.api_version = APIVersion(1, 7)
+    entity_info = [
+        LightInfo(
+            object_id="mylight",
+            key=1,
+            name="my light",
+            unique_id="my_light",
+            min_mireds=153,
+            max_mireds=400,
+            effects=["effect1", "effect2"],
+            supported_color_modes=[
+                LightColorCapability.ON_OFF | LightColorCapability.BRIGHTNESS,
+            ],
+        )
+    ]
+    states = [LightState(key=1, state=True, brightness=100)]
+    user_service = []
+    await mock_generic_device_entry(
+        mock_client=mock_client,
+        entity_info=entity_info,
+        user_service=user_service,
+        states=states,
+    )
+    state = hass.states.get("light.test_my_light")
+    assert state is not None
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_EFFECT_LIST] == ["effect1", "effect2"]
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: "light.test_my_light", ATTR_EFFECT: "effect1"},
+        blocking=True,
+    )
+    mock_client.light_command.assert_has_calls(
+        [
+            call(
+                key=1,
+                state=True,
+                color_mode=LightColorCapability.ON_OFF
+                | LightColorCapability.BRIGHTNESS,
+                effect="effect1",
+            )
+        ]
+    )
     mock_client.light_command.reset_mock()
