@@ -27,7 +27,7 @@ from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.httpx_client import get_async_client
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import UNDEFINED, ConfigType, UndefinedType
 
 from .const import DOMAIN, IMAGE_TIMEOUT  # noqa: F401
 
@@ -58,12 +58,23 @@ class Image:
     content: bytes
 
 
+class ImageContentTypeError(HomeAssistantError):
+    """Error with the content type while loading an image."""
+
+
+def valid_image_content_type(content_type: str) -> str:
+    """Validate the assigned content type is one of an image."""
+    if content_type.split("/", 1)[0] != "image":
+        raise ImageContentTypeError
+    return content_type
+
+
 async def _async_get_image(image_entity: ImageEntity, timeout: int) -> Image:
     """Fetch image from an image entity."""
-    with suppress(asyncio.CancelledError, asyncio.TimeoutError):
+    with suppress(asyncio.CancelledError, asyncio.TimeoutError, ImageContentTypeError):
         async with async_timeout.timeout(timeout):
             if image_bytes := await image_entity.async_image():
-                content_type = image_entity.content_type
+                content_type = valid_image_content_type(image_entity.content_type)
                 image = Image(content_type, image_bytes)
                 return image
 
@@ -119,8 +130,10 @@ class ImageEntity(Entity):
     # Entity Properties
     _attr_content_type: str = DEFAULT_CONTENT_TYPE
     _attr_image_last_updated: datetime | None = None
+    _attr_image_url: str | None | UndefinedType = UNDEFINED
     _attr_should_poll: bool = False  # No need to poll image entities
     _attr_state: None = None  # State is determined by last_updated
+    _cached_image: Image | None = None
 
     def __init__(self, hass: HomeAssistant, verify_ssl: bool = False) -> None:
         """Initialize an image entity."""
@@ -145,53 +158,50 @@ class ImageEntity(Entity):
         """The time when the image was last updated."""
         return self._attr_image_last_updated
 
+    @property
+    def image_url(self) -> str | None | UndefinedType:
+        """Return URL of image."""
+        return self._attr_image_url
+
     def image(self) -> bytes | None:
         """Return bytes of image."""
         raise NotImplementedError()
 
+    async def _async_load_image_from_url(self, url: str) -> Image | None:
+        """Load an image by url."""
+        try:
+            response = await self._client.get(
+                url, timeout=GET_IMAGE_TIMEOUT, follow_redirects=True
+            )
+            response.raise_for_status()
+            return Image(
+                content=response.content,
+                content_type=response.headers["content-type"],
+            )
+        except httpx.TimeoutException:
+            _LOGGER.error("%s: Timeout getting image from %s", self.entity_id, url)
+            return None
+        except (httpx.RequestError, httpx.HTTPStatusError) as err:
+            _LOGGER.error(
+                "%s: Error getting new image from %s: %s",
+                self.entity_id,
+                url,
+                err,
+            )
+            return None
+
     async def async_image(self) -> bytes | None:
         """Return bytes of image."""
 
-        async def _async_load_image_from_url(url: str) -> Image | None:
-            """Load an image by url."""
-            try:
-                response = await self._client.get(
-                    url, timeout=GET_IMAGE_TIMEOUT, follow_redirects=True
-                )
-                response.raise_for_status()
-                return Image(
-                    content=response.content,
-                    content_type=response.headers["content-type"],
-                )
-            except httpx.TimeoutException:
-                _LOGGER.error("%s: Timeout getting image from %s", self.entity_id, url)
+        if self._cached_image:
+            return self._cached_image.content
+        if (url := self.image_url) is not UNDEFINED:
+            if not url or (image := await self._async_load_image_from_url(url)) is None:
                 return None
-            except (httpx.RequestError, httpx.HTTPStatusError) as err:
-                _LOGGER.error(
-                    "%s: Error getting new image from %s: %s",
-                    self.entity_id,
-                    url,
-                    err,
-                )
-                return None
-
-        if (url := await self.async_image_url()) is not None:
-            # Ignore an empty url
-            if url == "":
-                return None
-            if (image := await _async_load_image_from_url(url)) is None:
-                return None
+            self._cached_image = image
             self._attr_content_type = image.content_type
             return image.content
         return await self.hass.async_add_executor_job(self.image)
-
-    def image_url(self) -> str | None:
-        """Return URL of image."""
-        return None
-
-    async def async_image_url(self) -> str | None:
-        """Return URL of image."""
-        return self.image_url()
 
     @property
     @final

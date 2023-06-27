@@ -36,18 +36,30 @@ class MockImageEntity(image.ImageEntity):
         return b"Test"
 
 
-class MockURLImageEntity(image.ImageEntity):
+class MockImageEntityInvalidContentType(image.ImageEntity):
     """Mock image entity."""
 
     _attr_name = "Test"
 
     async def async_added_to_hass(self):
-        """Set the update time."""
+        """Set the update time and assign and incorrect content type."""
+        self._attr_content_type = "text/json"
         self._attr_image_last_updated = dt_util.utcnow()
 
-    async def async_image_url(self) -> str:
-        """Return URL of image."""
-        return "https://example.com/myimage.jpg"
+    async def async_image(self) -> bytes | None:
+        """Return bytes of image."""
+        return b"Test"
+
+
+class MockURLImageEntity(image.ImageEntity):
+    """Mock image entity."""
+
+    _attr_image_url = "https://example.com/myimage.jpg"
+    _attr_name = "Test"
+
+    async def async_added_to_hass(self):
+        """Set the update time."""
+        self._attr_image_last_updated = dt_util.utcnow()
 
 
 class MockImageNoStateEntity(image.ImageEntity):
@@ -125,7 +137,9 @@ def config_flow_fixture(hass: HomeAssistant) -> Generator[None, None, None]:
 
 
 @pytest.fixture(name="mock_image_config_entry")
-async def mock_image_config_entry_fixture(hass: HomeAssistant, config_flow: None):
+async def mock_image_config_entry_fixture(
+    hass: HomeAssistant, config_flow: None
+) -> ConfigEntry:
     """Initialize a mock image config_entry."""
 
     async def async_setup_entry_init(
@@ -166,7 +180,7 @@ async def mock_image_config_entry_fixture(hass: HomeAssistant, config_flow: None
 
 
 @pytest.fixture(name="mock_image_platform")
-async def mock_image_platform_fixture(hass: HomeAssistant):
+async def mock_image_platform_fixture(hass: HomeAssistant) -> None:
     """Initialize a mock image platform."""
     mock_integration(hass, MockModule(domain="test"))
     mock_platform(hass, "test.image", MockImagePlatform([MockImageEntity(hass)]))

@@ -335,9 +335,6 @@ aioridwell==2023.01.0
 # homeassistant.components.ruuvi_gateway
 aioruuvigateway==0.1.0
 
-# homeassistant.components.senseme
-aiosenseme==0.6.1
-
 # homeassistant.components.senz
 aiosenz==1.0.0
 
@@ -1880,7 +1877,7 @@ pyombi==0.1.10
 pyopenuv==2023.02.0
 
 # homeassistant.components.opnsense
-pyopnsense==0.2.0
+pyopnsense==0.4.0
 
 # homeassistant.components.opple
 pyoppleio-legacy==1.0.8
@@ -2124,7 +2121,7 @@ python-nest==4.2.0
 python-opendata-transport==0.3.0
 
 # homeassistant.components.opensky
-python-opensky==0.0.9
+python-opensky==0.0.10
 
 # homeassistant.components.otbr
 # homeassistant.components.thread
