@@ -249,6 +249,8 @@ ABBREVIATIONS = {
     "t": "topic",
     "uniq_id": "unique_id",
     "unit_of_meas": "unit_of_measurement",
+    "url_t": "url_topic",
+    "url_tpl": "url_template",
     "val_tpl": "value_template",
     "whit_cmd_t": "white_command_topic",
     "whit_scl": "white_scale",

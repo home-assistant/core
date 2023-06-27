@@ -153,6 +153,7 @@ class MockESPHomeDevice:
         """Init the mock."""
         self.entry = entry
         self.state_callback: Callable[[EntityState], None]
+        self.on_disconnect: Callable[[bool], None]
 
     def set_state_callback(self, state_callback: Callable[[EntityState], None]) -> None:
         """Set the state callback."""
@@ -161,6 +162,14 @@ class MockESPHomeDevice:
     def set_state(self, state: EntityState) -> None:
         """Mock setting state."""
         self.state_callback(state)
+
+    def set_on_disconnect(self, on_disconnect: Callable[[bool], None]) -> None:
+        """Set the disconnect callback."""
+        self.on_disconnect = on_disconnect
+
+    async def mock_disconnect(self, expected_disconnect: bool) -> None:
+        """Mock disconnecting."""
+        await self.on_disconnect(expected_disconnect)
 
 
 async def _mock_generic_device_entry(
@@ -209,15 +218,23 @@ async def _mock_generic_device_entry(
     mock_client.subscribe_states = _subscribe_states
 
     try_connect_done = Event()
-    real_try_connect = ReconnectLogic._try_connect
 
-    async def mock_try_connect(self):
-        """Set an event when ReconnectLogic._try_connect has been awaited."""
-        result = await real_try_connect(self)
-        try_connect_done.set()
-        return result
+    class MockReconnectLogic(ReconnectLogic):
+        """Mock ReconnectLogic."""
 
-    with patch.object(ReconnectLogic, "_try_connect", mock_try_connect):
+        def __init__(self, *args, **kwargs):
+            """Init the mock."""
+            super().__init__(*args, **kwargs)
+            mock_device.set_on_disconnect(kwargs["on_disconnect"])
+            self._try_connect = self.mock_try_connect
+
+        async def mock_try_connect(self):
+            """Set an event when ReconnectLogic._try_connect has been awaited."""
+            result = await super()._try_connect()
+            try_connect_done.set()
+            return result
+
+    with patch("homeassistant.components.esphome.ReconnectLogic", MockReconnectLogic):
         assert await hass.config_entries.async_setup(entry.entry_id)
         await try_connect_done.wait()
 
