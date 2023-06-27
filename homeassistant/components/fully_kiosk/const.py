@@ -25,6 +25,10 @@ MEDIA_SUPPORT_FULLYKIOSK = (
 
 SERVICE_LOAD_URL = "load_url"
 SERVICE_START_APPLICATION = "start_application"
+SERVICE_SET_CONFIG = "set_config"
 
 ATTR_URL = "url"
 ATTR_APPLICATION = "application"
+ATTR_CONFIG_TYPE = "config_type"
+ATTR_KEY = "key"
+ATTR_VALUE = "value"
