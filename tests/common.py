@@ -48,6 +48,7 @@ from homeassistant.core import (
     Event,
     HomeAssistant,
     ServiceCall,
+    ServiceResponse,
     State,
     SupportsResponse,
     callback,
@@ -290,7 +291,7 @@ def async_mock_service(
     domain: str,
     service: str,
     schema: vol.Schema | None = None,
-    response: Any = None,
+    response: ServiceResponse = None,
     supports_response: SupportsResponse | None = None,
 ) -> list[ServiceCall]:
     """Set up a fake service & return a calls log list to this service."""

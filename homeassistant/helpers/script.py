@@ -70,6 +70,7 @@ from homeassistant.core import (
     Event,
     HassJob,
     HomeAssistant,
+    ServiceResponse,
     SupportsResponse,
     callback,
 )
@@ -402,7 +403,7 @@ class _ScriptRun:
         )
         self._log("Executing step %s%s", self._script.last_action, _timeout)
 
-    async def async_run(self) -> Any:
+    async def async_run(self) -> ServiceResponse:
         """Run script."""
         # Push the script to the script execution stack
         if (script_stack := script_stack_cv.get()) is None:
@@ -1475,7 +1476,7 @@ class Script:
         run_variables: _VarsType | None = None,
         context: Context | None = None,
         started_action: Callable[..., Any] | None = None,
-    ) -> dict[str, Any] | None:
+    ) -> ServiceResponse:
         """Run script."""
         if context is None:
             self._log(
