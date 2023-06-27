@@ -1515,10 +1515,15 @@ async def test_responses(hass: HomeAssistant, response: Any) -> None:
         {
             "script": {
                 "test": {
-                    "sequence": {
-                        "stop": "done",
-                        "response": response,
-                    }
+                    "sequence": [
+                        {
+                            "variables": {"test_var": {"response": response}},
+                        },
+                        {
+                            "stop": "done",
+                            "response_variable": "test_var",
+                        },
+                    ]
                 }
             }
         },
@@ -1526,7 +1531,7 @@ async def test_responses(hass: HomeAssistant, response: Any) -> None:
 
     assert await hass.services.async_call(
         DOMAIN, "test", {"greeting": "world"}, blocking=True, return_response=True
-    ) == {"value": 5}
+    ) == {"response": response}
     # Validate we can also call it without return_response
     assert (
         await hass.services.async_call(

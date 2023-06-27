@@ -1689,7 +1689,7 @@ async def test_execute_script(hass: HomeAssistant, websocket_client) -> None:
                     "data": {"hello": "world"},
                     "response_variable": "service_result",
                 },
-                {"stop": "done", "response": "{{ service_result }}"},
+                {"stop": "done", "response_variable": "service_result"},
             ],
         }
     )

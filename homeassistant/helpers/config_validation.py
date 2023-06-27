@@ -59,7 +59,6 @@ from homeassistant.const import (
     CONF_PARALLEL,
     CONF_PLATFORM,
     CONF_REPEAT,
-    CONF_RESPONSE,
     CONF_RESPONSE_VARIABLE,
     CONF_SCAN_INTERVAL,
     CONF_SCENE,
@@ -1691,10 +1690,6 @@ _SCRIPT_STOP_SCHEMA = vol.Schema(
         **SCRIPT_ACTION_BASE_SCHEMA,
         vol.Required(CONF_STOP): vol.Any(None, string),
         vol.Exclusive(CONF_ERROR, "error_or_response"): boolean,
-        vol.Exclusive(CONF_RESPONSE, "error_or_response"): vol.Any(
-            vol.All(dict, template_complex),
-            vol.All(str, template),
-        ),
         vol.Exclusive(CONF_RESPONSE_VARIABLE, "error_or_response"): str,
     }
 )

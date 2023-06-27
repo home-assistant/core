@@ -46,7 +46,6 @@ from homeassistant.const import (
     CONF_MODE,
     CONF_PARALLEL,
     CONF_REPEAT,
-    CONF_RESPONSE,
     CONF_RESPONSE_VARIABLE,
     CONF_SCENE,
     CONF_SEQUENCE,
@@ -1031,11 +1030,7 @@ class _ScriptRun:
             raise _AbortScript(stop)
 
         self._log("Stop script sequence: %s", stop)
-        if CONF_RESPONSE in self._action:
-            response = template.render_complex(
-                self._action[CONF_RESPONSE], self._variables
-            )
-        elif CONF_RESPONSE_VARIABLE in self._action:
+        if CONF_RESPONSE_VARIABLE in self._action:
             response = self._variables.get(self._action[CONF_RESPONSE_VARIABLE])
         else:
             response = None
