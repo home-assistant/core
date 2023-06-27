@@ -3,7 +3,9 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from types import GenericAlias
-from typing import Any, Generic, TypeVar, cast
+from typing import Any, Generic, TypeVar, overload
+
+from typing_extensions import Self
 
 _T = TypeVar("_T")
 _R = TypeVar("_R")
@@ -31,10 +33,18 @@ class cached_property(Generic[_T, _R]):  # pylint: disable=invalid-name
                 f"({self.attrname!r} and {name!r})."
             )
 
-    def __get__(self, instance: _T | None, owner: type[_T] | None = None) -> _R:
+    @overload
+    def __get__(self, instance: None, owner: type[_T]) -> Self:
+        ...
+
+    @overload
+    def __get__(self, instance: _T, owner: type[_T]) -> _R:
+        ...
+
+    def __get__(self, instance: _T | None, owner: type[_T] | None = None) -> _R | Self:
         """Get."""
         if instance is None:
-            return cast(_R, self)
+            return self
         if self.attrname is None:
             raise TypeError(
                 "Cannot use cached_property instance without calling __set_name__ on it."
