@@ -9,7 +9,7 @@ from typing import cast
 from aiohttp import ClientError
 from pyoverkiz.client import OverkizClient
 from pyoverkiz.const import SUPPORTED_SERVERS
-from pyoverkiz.enums import OverkizState, UIClass, UIWidget
+from pyoverkiz.enums import APIType, OverkizState, UIClass, UIWidget
 from pyoverkiz.exceptions import (
     BadCredentialsException,
     MaintenanceException,
@@ -17,6 +17,7 @@ from pyoverkiz.exceptions import (
     TooManyRequestsException,
 )
 from pyoverkiz.models import Device, Setup, Scenario
+from pyoverkiz.utils import generate_local_server
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -31,7 +32,6 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
-from .config_flow import generate_local_server
 from .const import (
     CONF_API_TYPE,
     CONF_HUB,
@@ -65,7 +65,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if entry.version == 1:
         v2_entry_data = {**entry.data}
         v2_entry_data[CONF_SERVER] = entry.data[CONF_HUB]
-        v2_entry_data[CONF_API_TYPE] = "cloud"  # V1 only supports cloud
+        v2_entry_data[CONF_API_TYPE] = APIType.CLOUD  # V1 only supports cloud
 
         entry.version = 2
         hass.config_entries.async_update_entry(entry, data=v2_entry_data)
@@ -81,7 +81,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     client: OverkizClient | None = None
 
     # Local API vs Cloud API
-    if entry.data[CONF_API_TYPE] == "local":
+    if entry.data[CONF_API_TYPE] == APIType.LOCAL:
         LOGGER.debug("Configuring local integration")
         host = entry.data[CONF_HOST]
         token = entry.data[CONF_TOKEN]

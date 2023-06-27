@@ -2,12 +2,12 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-import re
 from typing import Any, cast
 
 from aiohttp import ClientConnectorError, ClientError
 from pyoverkiz.client import OverkizClient
-from pyoverkiz.const import SUPPORTED_SERVERS
+from pyoverkiz.const import SERVERS_WITH_LOCAL_API, SUPPORTED_SERVERS
+from pyoverkiz.enums import APIType
 from pyoverkiz.exceptions import (
     BadCredentialsException,
     CozyTouchBadCredentialsException,
@@ -18,8 +18,8 @@ from pyoverkiz.exceptions import (
     TooManyRequestsException,
     UnknownUserException,
 )
-from pyoverkiz.models import OverkizServer
 from pyoverkiz.obfuscate import obfuscate_id
+from pyoverkiz.utils import generate_local_server, is_overkiz_gateway
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -37,27 +37,6 @@ from .const import (
     DOMAIN,
     LOGGER,
 )
-
-SERVERS_THAT_SUPPORT_LOCAL_API = ["somfy_europe", "somfy_oceania", "somfy_america"]
-
-
-# TODO move to PyOverkiz
-def generate_local_server(
-    host: str,
-    name: str = "Somfy TaHoma Developer M`ode",
-    manufacturer: str = "Somfy",
-    configuration_url: str | None = None,
-) -> OverkizServer:
-    """Generate OverkizServer object for local API."""
-    return OverkizServer(
-        name=name,
-        endpoint=f"https://{host}/enduser-mobile-web/1/enduserAPI/" if host else "",
-        manufacturer=manufacturer,
-        configuration_url=configuration_url,
-    )
-
-
-LOCAL = "local"
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -88,7 +67,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         user_input[CONF_API_TYPE] = self._api_type
 
-        if self._api_type == LOCAL:
+        if self._api_type == APIType.LOCAL:
             # Create session on Somfy server to generate an access token for local API
             session = async_create_clientsession(self.hass)
             server = SUPPORTED_SERVERS[self._server]
@@ -103,7 +82,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             for gateway in gateways:
                 # Overkiz can return multiple gateways, but we only can generate a token
                 # for the main gateway.
-                if re.match(r"\d{4}-\d{4}-\d{4}", gateway.id):
+                if is_overkiz_gateway(gateway.id):
                     gateway_id = gateway.id
 
             if not gateway_id:
@@ -129,7 +108,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             try:
                 await local_client.login()
             except Exception as exception:  # pylint: disable=broad-except
-                # Remove local token when login is not succesful
+                # Remove local token when login is not successful
                 await client.delete_local_token(gateway_id, uuid)
 
                 raise exception
@@ -150,7 +129,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # Set main gateway id as unique id
         if gateways := await client.get_gateways():
             for gateway in gateways:
-                if re.match(r"\d{4}-\d{4}-\d{4}", gateway.id):
+                if is_overkiz_gateway(gateway.id):
                     gateway_id = gateway.id
                     await self.async_set_unique_id(gateway_id)
 
@@ -165,7 +144,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input:
             self._server = user_input[CONF_SERVER]
 
-            if self._server in SERVERS_THAT_SUPPORT_LOCAL_API:
+            if self._server in SERVERS_WITH_LOCAL_API:
                 return await self.async_step_local_or_cloud()
 
             return await self.async_step_cloud()
@@ -271,7 +250,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input:
             self._api_type = user_input[CONF_API_TYPE]
 
-            if self._api_type == "local":
+            if self._api_type == APIType.LOCAL:
                 return await self.async_step_local()
 
             return await self.async_step_cloud()
@@ -283,8 +262,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     vol.Required(CONF_API_TYPE): vol.In(
                         dict(
                             {
-                                "local": "Local API",
-                                "cloud": "Cloud API",
+                                APIType.LOCAL: "Local API",
+                                APIType.CLOUD: "Cloud API",
                             }.items()
                         )
                     ),
@@ -391,7 +370,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if discovery_info.type == "_kizboxdev._tcp.local.":
             self._host = f"{discovery_info.hostname[:-1]}:{discovery_info.port}"
-            self._api_type = "local"
+            self._api_type = APIType.LOCAL
 
         return await self._process_discovery(gateway_id)
 

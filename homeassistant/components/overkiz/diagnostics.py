@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from pyoverkiz.enums import APIType
 from pyoverkiz.obfuscate import obfuscate_id
 
 from homeassistant.config_entries import ConfigEntry
@@ -26,7 +27,7 @@ async def async_get_config_entry_diagnostics(
     }
 
     # Only Overkiz cloud servers expose an endpoint with execution history
-    if not "/enduser-mobile-web/1/enduserAPI/" in client.server.endpoint:
+    if client.api_type == APIType.CLOUD:
         data["execution_history"] = (
             [repr(execution) for execution in await client.get_execution_history()],
         )
@@ -55,7 +56,7 @@ async def async_get_device_diagnostics(
     }
 
     # Only Overkiz cloud servers expose an endpoint with execution history
-    if not "/enduser-mobile-web/1/enduserAPI/" in client.server.endpoint:
+    if client.api_type == APIType.CLOUD:
         data["execution_history"] = [
             repr(execution)
             for execution in await client.get_execution_history()
