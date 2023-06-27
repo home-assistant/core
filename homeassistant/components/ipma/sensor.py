@@ -36,6 +36,7 @@ SENSOR_TYPES: tuple[IPMASensorEntityDescription, ...] = (
     IPMASensorEntityDescription(
         key="rcm",
         name="Fire risk",
+        translation_key="fire_risk",
         update_method="fire_risk",
     ),
 )
