@@ -110,7 +110,7 @@
       }
     },
     "cover": {
-      "covers": {
+      "cover": {
         "state_attributes": {
           "last_run_success": {
             "state": {
@@ -122,7 +122,7 @@
       }
     },
     "humidifier": {
-      "switchbot_humidifier": {
+      "humidifier": {
         "state_attributes": {
           "last_run_success": {
             "state": {
@@ -134,7 +134,7 @@
       }
     },
     "lock": {
-      "switchbot_lock": {
+      "lock": {
         "state_attributes": {
           "last_run_success": {
             "state": {
