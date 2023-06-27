@@ -58,7 +58,7 @@ class MatterLock(MatterEntity, LockEntity):
         """Lock the lock with pin if needed."""
         code: str = kwargs.get(
             ATTR_CODE,
-            self._lock_option_default_code,  # pylint: disable=protected-access
+            self._lock_option_default_code,
         )
         code_bytes = code.encode() if code else None
         await self.send_device_command(
@@ -69,7 +69,7 @@ class MatterLock(MatterEntity, LockEntity):
         """Unlock the lock with pin if needed."""
         code: str = kwargs.get(
             ATTR_CODE,
-            self._lock_option_default_code,  # pylint: disable=protected-access
+            self._lock_option_default_code,
         )
         code_bytes = code.encode() if code else None
         await self.send_device_command(
