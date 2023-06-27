@@ -16,6 +16,7 @@ from typing import TYPE_CHECKING, Any, Final, Literal, TypedDict, TypeVar, final
 
 import voluptuous as vol
 
+from homeassistant.backports.functools import cached_property
 from homeassistant.config import DATA_CUSTOMIZE
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
@@ -312,10 +313,6 @@ class Entity(ABC):
     _attr_unique_id: str | None = None
     _attr_unit_of_measurement: str | None
 
-    # Translation cache
-    _cached_name_translation_key: str | None = None
-    _cached_device_class_name: str | None = None
-
     @property
     def should_poll(self) -> bool:
         """Return True if entity has to be polled for state.
@@ -354,7 +351,7 @@ class Entity(ABC):
         if hasattr(self, "_attr_name"):
             return not self._attr_name
 
-        if name_translation_key := self._name_translation_key():
+        if name_translation_key := self._name_translation_key:
             if name_translation_key in self.platform.platform_translations:
                 return False
 
@@ -384,10 +381,9 @@ class Entity(ABC):
             return self.entity_description.has_entity_name
         return False
 
+    @cached_property
     def _device_class_name(self) -> str | None:
         """Return a translated name of the entity based on its device class."""
-        if self._cached_device_class_name is not None:
-            return self._cached_device_class_name
         if not self.has_entity_name:
             return None
         device_class_key = self.device_class or "_"
@@ -395,27 +391,22 @@ class Entity(ABC):
         name_translation_key = (
             f"component.{platform.domain}.entity_component." f"{device_class_key}.name"
         )
-        self._cached_device_class_name = platform.component_translations.get(
-            name_translation_key
-        )
-        return self._cached_device_class_name
+        return platform.component_translations.get(name_translation_key)
 
     def _default_to_device_class_name(self) -> bool:
         """Return True if an unnamed entity should be named by its device class."""
         return False
 
+    @cached_property
     def _name_translation_key(self) -> str | None:
         """Return translation key for entity name."""
-        if self._cached_name_translation_key is not None:
-            return self._cached_name_translation_key
         if self.translation_key is None:
             return None
         platform = self.platform
-        self._cached_name_translation_key = (
+        return (
             f"component.{platform.platform_name}.entity.{platform.domain}"
             f".{self.translation_key}.name"
         )
-        return self._cached_name_translation_key
 
     @property
     def name(self) -> str | UndefinedType | None:
@@ -424,7 +415,7 @@ class Entity(ABC):
             return self._attr_name
         if (
             self.has_entity_name
-            and (name_translation_key := self._name_translation_key())
+            and (name_translation_key := self._name_translation_key)
             and (name := self.platform.platform_translations.get(name_translation_key))
         ):
             if TYPE_CHECKING:
@@ -433,13 +424,13 @@ class Entity(ABC):
         if hasattr(self, "entity_description"):
             description_name = self.entity_description.name
             if description_name is UNDEFINED and self._default_to_device_class_name():
-                return self._device_class_name()
+                return self._device_class_name
             return description_name
 
         # The entity has no name set by _attr_name, translation_key or entity_description
         # Check if the entity should be named by its device class
         if self._default_to_device_class_name():
-            return self._device_class_name()
+            return self._device_class_name
         return UNDEFINED
 
     @property
