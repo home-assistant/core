@@ -28,6 +28,7 @@ STATIC_VALIDATOR = {
 ENTITY_PLATFORMS = {
     Platform.ALARM_CONTROL_PANEL.value,
     Platform.BUTTON.value,
+    Platform.COVER.value,
     Platform.FAN.value,
     Platform.HUMIDIFIER.value,
     Platform.LIGHT.value,
