@@ -308,7 +308,7 @@ def _legacy_task(hass: HomeAssistant, entry: ConfigEntry) -> None:
         hass,
         DOMAIN,
         "deprecated_notify",
-        breaks_in_ha_version="2023.9.0",
+        breaks_in_ha_version="2024.1.0",
         is_fixable=False,
         severity=IssueSeverity.WARNING,
         translation_key="deprecated_notify",
