@@ -257,6 +257,13 @@ class SensorEntity(Entity):
         self._async_read_entity_options()
         self._update_suggested_precision()
 
+    def _default_to_device_class_name(self) -> bool:
+        """Return True if an unnamed entity should be named by its device class.
+
+        For sensors this is True if the entity has a device class.
+        """
+        return self.device_class not in (None, SensorDeviceClass.ENUM)
+
     @property
     def device_class(self) -> SensorDeviceClass | None:
         """Return the class of this entity."""
@@ -443,8 +450,10 @@ class SensorEntity(Entity):
             return self._sensor_option_unit_of_measurement
 
         # Second priority, for non registered entities: unit suggested by integration
-        if not self.unique_id and self.suggested_unit_of_measurement:
-            return self.suggested_unit_of_measurement
+        if not self.unique_id and (
+            suggested_unit_of_measurement := self.suggested_unit_of_measurement
+        ):
+            return suggested_unit_of_measurement
 
         # Third priority: Legacy temperature conversion, which applies
         # to both registered and non registered entities

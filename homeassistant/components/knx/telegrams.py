@@ -20,9 +20,13 @@ from .project import KNXProject
 class TelegramDict(TypedDict):
     """Represent a Telegram as a dict."""
 
+    # this has to be in sync with the frontend implementation
     destination: str
     destination_name: str
     direction: str
+    dpt_main: int | None
+    dpt_sub: int | None
+    dpt_name: str | None
     payload: int | tuple[int, ...] | None
     source: str
     source_name: str
@@ -57,7 +61,7 @@ class Telegrams:
     async def _xknx_telegram_cb(self, telegram: Telegram) -> None:
         """Handle incoming and outgoing telegrams from xknx."""
         telegram_dict = self.telegram_to_dict(telegram)
-        self.recent_telegrams.appendleft(telegram_dict)
+        self.recent_telegrams.append(telegram_dict)
         for job in self._jobs:
             self.hass.async_run_hass_job(job, telegram_dict)
 
@@ -80,6 +84,9 @@ class Telegrams:
     def telegram_to_dict(self, telegram: Telegram) -> TelegramDict:
         """Convert a Telegram to a dict."""
         dst_name = ""
+        dpt_main = None
+        dpt_sub = None
+        dpt_name = None
         payload_data: int | tuple[int, ...] | None = None
         src_name = ""
         transcoder = None
@@ -104,6 +111,9 @@ class Telegrams:
             if transcoder is not None:
                 try:
                     value = transcoder.from_knx(telegram.payload.value)
+                    dpt_main = transcoder.dpt_main_number
+                    dpt_sub = transcoder.dpt_sub_number
+                    dpt_name = transcoder.value_type
                     unit = transcoder.unit
                 except XKNXException:
                     value = "Error decoding value"
@@ -112,6 +122,9 @@ class Telegrams:
             destination=f"{telegram.destination_address}",
             destination_name=dst_name,
             direction=telegram.direction.value,
+            dpt_main=dpt_main,
+            dpt_sub=dpt_sub,
+            dpt_name=dpt_name,
             payload=payload_data,
             source=f"{telegram.source_address}",
             source_name=src_name,

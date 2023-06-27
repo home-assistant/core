@@ -6,12 +6,14 @@ from dataclasses import dataclass
 import logging
 from typing import TYPE_CHECKING, Any
 
+from bimmer_connected.models import MyBMWAPIError
 from bimmer_connected.vehicle import MyBMWVehicle
 from bimmer_connected.vehicle.remote_services import RemoteServiceStatus
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import BMWBaseEntity
@@ -37,32 +39,32 @@ class BMWButtonEntityDescription(ButtonEntityDescription):
 BUTTON_TYPES: tuple[BMWButtonEntityDescription, ...] = (
     BMWButtonEntityDescription(
         key="light_flash",
+        translation_key="light_flash",
         icon="mdi:car-light-alert",
-        name="Flash lights",
         remote_function=lambda vehicle: vehicle.remote_services.trigger_remote_light_flash(),
     ),
     BMWButtonEntityDescription(
         key="sound_horn",
+        translation_key="sound_horn",
         icon="mdi:bullhorn",
-        name="Sound horn",
         remote_function=lambda vehicle: vehicle.remote_services.trigger_remote_horn(),
     ),
     BMWButtonEntityDescription(
         key="activate_air_conditioning",
+        translation_key="activate_air_conditioning",
         icon="mdi:hvac",
-        name="Activate air conditioning",
         remote_function=lambda vehicle: vehicle.remote_services.trigger_remote_air_conditioning(),
     ),
     BMWButtonEntityDescription(
         key="find_vehicle",
+        translation_key="find_vehicle",
         icon="mdi:crosshairs-question",
-        name="Find vehicle",
         remote_function=lambda vehicle: vehicle.remote_services.trigger_remote_vehicle_finder(),
     ),
     BMWButtonEntityDescription(
         key="refresh",
+        translation_key="refresh",
         icon="mdi:refresh",
-        name="Refresh from cloud",
         account_function=lambda coordinator: coordinator.async_request_refresh(),
         enabled_when_read_only=True,
     ),
@@ -111,7 +113,10 @@ class BMWButton(BMWBaseEntity, ButtonEntity):
     async def async_press(self) -> None:
         """Press the button."""
         if self.entity_description.remote_function:
-            await self.entity_description.remote_function(self.vehicle)
+            try:
+                await self.entity_description.remote_function(self.vehicle)
+            except MyBMWAPIError as ex:
+                raise HomeAssistantError(ex) from ex
         elif self.entity_description.account_function:
             _LOGGER.warning(
                 "The 'Refresh from cloud' button is deprecated. Use the"
@@ -120,6 +125,9 @@ class BMWButton(BMWBaseEntity, ButtonEntity):
                 " https://www.home-assistant.io/integrations/bmw_connected_drive/#update-the-state--refresh-from-api"
                 " for details"
             )
-            await self.entity_description.account_function(self.coordinator)
+            try:
+                await self.entity_description.account_function(self.coordinator)
+            except MyBMWAPIError as ex:
+                raise HomeAssistantError(ex) from ex
 
         self.coordinator.async_update_listeners()
