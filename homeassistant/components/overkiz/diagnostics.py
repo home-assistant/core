@@ -11,7 +11,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntry
 
 from . import HomeAssistantOverkizData
-from .const import CONF_SERVER, DOMAIN
+from .const import CONF_SERVER, DOMAIN, CONF_API_TYPE
 
 
 async def async_get_config_entry_diagnostics(
@@ -24,6 +24,7 @@ async def async_get_config_entry_diagnostics(
     data = {
         "setup": await client.get_diagnostic_data(),
         "server": entry.data[CONF_SERVER],
+        "api_type": entry.data[CONF_API_TYPE],
     }
 
     # Only Overkiz cloud servers expose an endpoint with execution history
@@ -53,6 +54,7 @@ async def async_get_device_diagnostics(
         },
         "setup": await client.get_diagnostic_data(),
         "server": entry.data[CONF_SERVER],
+        "api_type": entry.data[CONF_API_TYPE],
     }
 
     # Only Overkiz cloud servers expose an endpoint with execution history
