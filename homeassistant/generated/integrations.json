@@ -4387,7 +4387,7 @@
       "integrations": {
         "qnap": {
           "integration_type": "device",
-          "config_flow": false,
+          "config_flow": true,
           "iot_class": "local_polling",
           "name": "QNAP"
         },
@@ -4828,12 +4828,6 @@
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "cloud_polling"
-    },
-    "senseme": {
-      "name": "SenseME",
-      "integration_type": "hub",
-      "config_flow": true,
-      "iot_class": "local_push"
     },
     "sensibo": {
       "name": "Sensibo",

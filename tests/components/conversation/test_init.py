@@ -1054,16 +1054,16 @@ async def test_http_api_wrong_data(
     assert resp.status == HTTPStatus.BAD_REQUEST
 
 
-@pytest.mark.parametrize("agent_id", (None, "mock-entry"))
 async def test_custom_agent(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     hass_admin_user: MockUser,
     mock_agent,
-    agent_id,
 ) -> None:
     """Test a custom conversation agent."""
+    assert await async_setup_component(hass, "homeassistant", {})
     assert await async_setup_component(hass, "conversation", {})
+    assert await async_setup_component(hass, "intent", {})
 
     client = await hass_client()
 
@@ -1071,9 +1071,8 @@ async def test_custom_agent(
         "text": "Test Text",
         "conversation_id": "test-conv-id",
         "language": "test-language",
+        "agent_id": mock_agent.agent_id,
     }
-    if agent_id is not None:
-        data["agent_id"] = agent_id
 
     resp = await client.post("/api/conversation/process", json=data)
     assert resp.status == HTTPStatus.OK
@@ -1599,8 +1598,7 @@ async def test_get_agent_info(
     """Test get agent info."""
     agent_info = conversation.async_get_agent_info(hass)
     # Test it's the default
-    assert agent_info.id == mock_agent.agent_id
-    assert agent_info == snapshot
+    assert conversation.async_get_agent_info(hass, "homeassistant") == agent_info
     assert conversation.async_get_agent_info(hass, "homeassistant") == snapshot
     assert conversation.async_get_agent_info(hass, mock_agent.agent_id) == snapshot
     assert conversation.async_get_agent_info(hass, "not exist") is None

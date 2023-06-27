@@ -234,7 +234,7 @@ aioecowitt==2023.5.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==14.1.1
+aioesphomeapi==15.0.0
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -334,9 +334,6 @@ aioridwell==2023.01.0
 
 # homeassistant.components.ruuvi_gateway
 aioruuvigateway==0.1.0
-
-# homeassistant.components.senseme
-aiosenseme==0.6.1
 
 # homeassistant.components.senz
 aiosenz==1.0.0
@@ -948,7 +945,7 @@ ha-philipsjs==3.1.0
 habitipy==0.2.0
 
 # homeassistant.components.cloud
-hass-nabucasa==0.68.0
+hass-nabucasa==0.69.0
 
 # homeassistant.components.splunk
 hass-splunk==0.1.1
@@ -1565,7 +1562,7 @@ pyatag==0.3.5.3
 pyatmo==7.5.0
 
 # homeassistant.components.apple_tv
-pyatv==0.13.0
+pyatv==0.13.2
 
 # homeassistant.components.aussie_broadband
 pyaussiebb==0.0.15
@@ -1880,7 +1877,7 @@ pyombi==0.1.10
 pyopenuv==2023.02.0
 
 # homeassistant.components.opnsense
-pyopnsense==0.2.0
+pyopnsense==0.4.0
 
 # homeassistant.components.opple
 pyoppleio-legacy==1.0.8
@@ -2124,7 +2121,7 @@ python-nest==4.2.0
 python-opendata-transport==0.3.0
 
 # homeassistant.components.opensky
-python-opensky==0.0.9
+python-opensky==0.0.10
 
 # homeassistant.components.otbr
 # homeassistant.components.thread

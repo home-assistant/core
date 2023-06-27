@@ -1,20 +1,20 @@
 # serializer version: 1
 # name: test_get_agent_info
   dict({
-    'id': 'mock-entry',
-    'name': 'Mock Title',
-  })
-# ---
-# name: test_get_agent_info.1
-  dict({
     'id': 'homeassistant',
     'name': 'Home Assistant',
   })
 # ---
-# name: test_get_agent_info.2
+# name: test_get_agent_info.1
   dict({
     'id': 'mock-entry',
     'name': 'Mock Title',
+  })
+# ---
+# name: test_get_agent_info.2
+  dict({
+    'id': 'homeassistant',
+    'name': 'Home Assistant',
   })
 # ---
 # name: test_get_agent_info.3
@@ -344,10 +344,7 @@
 # ---
 # name: test_ws_get_agent_info
   dict({
-    'attribution': dict({
-      'name': 'Mock assistant',
-      'url': 'https://assist.me',
-    }),
+    'attribution': None,
   })
 # ---
 # name: test_ws_get_agent_info.1

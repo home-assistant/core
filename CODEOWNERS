@@ -970,6 +970,7 @@ build.json @home-assistant/supervisor
 /homeassistant/components/qld_bushfire/ @exxamalte
 /tests/components/qld_bushfire/ @exxamalte
 /homeassistant/components/qnap/ @disforw
+/tests/components/qnap/ @disforw
 /homeassistant/components/qnap_qsw/ @Noltari
 /tests/components/qnap_qsw/ @Noltari
 /homeassistant/components/quantum_gateway/ @cisasteelersfan
@@ -1079,8 +1080,6 @@ build.json @home-assistant/supervisor
 /tests/components/select/ @home-assistant/core
 /homeassistant/components/sense/ @kbickar
 /tests/components/sense/ @kbickar
-/homeassistant/components/senseme/ @mikelawrence @bdraco
-/tests/components/senseme/ @mikelawrence @bdraco
 /homeassistant/components/sensibo/ @andrey-git @gjohansson-ST
 /tests/components/sensibo/ @andrey-git @gjohansson-ST
 /homeassistant/components/sensirion_ble/ @akx
