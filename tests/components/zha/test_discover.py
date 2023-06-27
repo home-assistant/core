@@ -1,5 +1,7 @@
 """Test ZHA device discovery."""
+from collections.abc import Callable
 import re
+from typing import Any
 from unittest import mock
 from unittest.mock import AsyncMock, Mock, patch
 
@@ -13,19 +15,12 @@ import zigpy.zcl.clusters.general
 import zigpy.zcl.clusters.security
 import zigpy.zcl.foundation as zcl_f
 
-import homeassistant.components.zha.binary_sensor
-import homeassistant.components.zha.core.channels as zha_channels
-import homeassistant.components.zha.core.channels.base as base_channels
+import homeassistant.components.zha.core.cluster_handlers as cluster_handlers
 import homeassistant.components.zha.core.const as zha_const
+from homeassistant.components.zha.core.device import ZHADevice
 import homeassistant.components.zha.core.discovery as disc
+from homeassistant.components.zha.core.endpoint import Endpoint
 import homeassistant.components.zha.core.registries as zha_regs
-import homeassistant.components.zha.cover
-import homeassistant.components.zha.device_tracker
-import homeassistant.components.zha.fan
-import homeassistant.components.zha.light
-import homeassistant.components.zha.lock
-import homeassistant.components.zha.sensor
-import homeassistant.components.zha.switch
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.entity_registry as er
@@ -33,11 +28,12 @@ import homeassistant.helpers.entity_registry as er
 from .common import get_zha_gateway
 from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_PROFILE, SIG_EP_TYPE
 from .zha_devices_list import (
-    DEV_SIG_CHANNELS,
+    DEV_SIG_ATTRIBUTES,
+    DEV_SIG_CLUSTER_HANDLERS,
     DEV_SIG_ENT_MAP,
     DEV_SIG_ENT_MAP_CLASS,
     DEV_SIG_ENT_MAP_ID,
-    DEV_SIG_EVT_CHANNELS,
+    DEV_SIG_EVT_CLUSTER_HANDLERS,
     DEVICES,
 )
 
@@ -63,27 +59,6 @@ def contains_ignored_suffix(unique_id: str) -> bool:
     return False
 
 
-@pytest.fixture
-def channels_mock(zha_device_mock):
-    """Channels mock factory."""
-
-    def _mock(
-        endpoints,
-        ieee="00:11:22:33:44:55:66:77",
-        manufacturer="mock manufacturer",
-        model="mock model",
-        node_desc=b"\x02@\x807\x10\x7fd\x00\x00*d\x00\x00",
-        patch_cluster=False,
-    ):
-        zha_dev = zha_device_mock(
-            endpoints, ieee, manufacturer, model, node_desc, patch_cluster=patch_cluster
-        )
-        channels = zha_channels.Channels.new(zha_dev)
-        return channels
-
-    return _mock
-
-
 @patch(
     "zigpy.zcl.clusters.general.Identify.request",
     new=AsyncMock(return_value=[mock.sentinel.data, zcl_f.Status.SUCCESS]),
@@ -107,11 +82,12 @@ async def test_devices(
     entity_registry = er.async_get(hass_disable_services)
 
     zigpy_device = zigpy_device_mock(
-        device[SIG_ENDPOINTS],
-        "00:11:22:33:44:55:66:77",
-        device[SIG_MANUFACTURER],
-        device[SIG_MODEL],
+        endpoints=device[SIG_ENDPOINTS],
+        ieee="00:11:22:33:44:55:66:77",
+        manufacturer=device[SIG_MANUFACTURER],
+        model=device[SIG_MODEL],
         node_descriptor=device[SIG_NODE_DESC],
+        attributes=device.get(DEV_SIG_ATTRIBUTES),
         patch_cluster=False,
     )
 
@@ -119,62 +95,70 @@ async def test_devices(
     if cluster_identify:
         cluster_identify.request.reset_mock()
 
-    orig_new_entity = zha_channels.ChannelPool.async_new_entity
+    orig_new_entity = Endpoint.async_new_entity
     _dispatch = mock.MagicMock(wraps=orig_new_entity)
     try:
-        zha_channels.ChannelPool.async_new_entity = lambda *a, **kw: _dispatch(*a, **kw)
+        Endpoint.async_new_entity = lambda *a, **kw: _dispatch(*a, **kw)
         zha_dev = await zha_device_joined_restored(zigpy_device)
         await hass_disable_services.async_block_till_done()
     finally:
-        zha_channels.ChannelPool.async_new_entity = orig_new_entity
+        Endpoint.async_new_entity = orig_new_entity
 
     if cluster_identify:
-        called = int(zha_device_joined_restored.name == "zha_device_joined")
-        assert cluster_identify.request.call_count == called
-        assert cluster_identify.request.await_count == called
-        if called:
-            assert cluster_identify.request.call_args == mock.call(
-                False,
-                cluster_identify.commands_by_name["trigger_effect"].id,
-                cluster_identify.commands_by_name["trigger_effect"].schema,
-                effect_id=zigpy.zcl.clusters.general.Identify.EffectIdentifier.Okay,
-                effect_variant=(
-                    zigpy.zcl.clusters.general.Identify.EffectVariant.Default
-                ),
-                expect_reply=True,
-                manufacturer=None,
-                tries=1,
-                tsn=None,
-            )
+        # We only identify on join
+        should_identify = (
+            zha_device_joined_restored.name == "zha_device_joined"
+            and not zigpy_device.skip_configuration
+        )
 
-    event_channels = {
-        ch.id for pool in zha_dev.channels.pools for ch in pool.client_channels.values()
+        if should_identify:
+            assert cluster_identify.request.mock_calls == [
+                mock.call(
+                    False,
+                    cluster_identify.commands_by_name["trigger_effect"].id,
+                    cluster_identify.commands_by_name["trigger_effect"].schema,
+                    effect_id=zigpy.zcl.clusters.general.Identify.EffectIdentifier.Okay,
+                    effect_variant=(
+                        zigpy.zcl.clusters.general.Identify.EffectVariant.Default
+                    ),
+                    expect_reply=True,
+                    manufacturer=None,
+                    tsn=None,
+                )
+            ]
+        else:
+            assert cluster_identify.request.mock_calls == []
+
+    event_cluster_handlers = {
+        ch.id
+        for endpoint in zha_dev._endpoints.values()
+        for ch in endpoint.client_cluster_handlers.values()
     }
-    assert event_channels == set(device[DEV_SIG_EVT_CHANNELS])
+    assert event_cluster_handlers == set(device[DEV_SIG_EVT_CLUSTER_HANDLERS])
     # we need to probe the class create entity factory so we need to reset this to get accurate results
     zha_regs.ZHA_ENTITIES.clean_up()
-    # build a dict of entity_class -> (component, unique_id, channels) tuple
+    # build a dict of entity_class -> (platform, unique_id, cluster_handlers) tuple
     ha_ent_info = {}
     created_entity_count = 0
     for call in _dispatch.call_args_list:
-        _, component, entity_cls, unique_id, channels = call[0]
+        _, platform, entity_cls, unique_id, cluster_handlers = call[0]
         # the factory can return None. We filter these out to get an accurate created entity count
-        response = entity_cls.create_entity(unique_id, zha_dev, channels)
+        response = entity_cls.create_entity(unique_id, zha_dev, cluster_handlers)
         if response and not contains_ignored_suffix(response.name):
             created_entity_count += 1
             unique_id_head = UNIQUE_ID_HD.match(unique_id).group(
                 0
             )  # ieee + endpoint_id
             ha_ent_info[(unique_id_head, entity_cls.__name__)] = (
-                component,
+                platform,
                 unique_id,
-                channels,
+                cluster_handlers,
             )
 
     for comp_id, ent_info in device[DEV_SIG_ENT_MAP].items():
-        component, unique_id = comp_id
+        platform, unique_id = comp_id
         no_tail_id = NO_TAIL_ID.sub("", ent_info[DEV_SIG_ENT_MAP_ID])
-        ha_entity_id = entity_registry.async_get_entity_id(component, "zha", unique_id)
+        ha_entity_id = entity_registry.async_get_entity_id(platform, "zha", unique_id)
         assert ha_entity_id is not None
         assert ha_entity_id.startswith(no_tail_id)
 
@@ -182,13 +166,15 @@ async def test_devices(
         test_unique_id_head = UNIQUE_ID_HD.match(unique_id).group(0)
         assert (test_unique_id_head, test_ent_class) in ha_ent_info
 
-        ha_comp, ha_unique_id, ha_channels = ha_ent_info[
+        ha_comp, ha_unique_id, ha_cluster_handlers = ha_ent_info[
             (test_unique_id_head, test_ent_class)
         ]
-        assert component is ha_comp.value
+        assert platform is ha_comp.value
         # unique_id used for discover is the same for "multi entities"
         assert unique_id.startswith(ha_unique_id)
-        assert {ch.name for ch in ha_channels} == set(ent_info[DEV_SIG_CHANNELS])
+        assert {ch.name for ch in ha_cluster_handlers} == set(
+            ent_info[DEV_SIG_CLUSTER_HANDLERS]
+        )
 
     assert created_entity_count == len(device[DEV_SIG_ENT_MAP])
 
@@ -219,16 +205,16 @@ def _get_first_identify_cluster(zigpy_device):
 )
 def test_discover_entities(m1, m2) -> None:
     """Test discover endpoint class method."""
-    ep_channels = mock.MagicMock()
-    disc.PROBE.discover_entities(ep_channels)
+    endpoint = mock.MagicMock()
+    disc.PROBE.discover_entities(endpoint)
     assert m1.call_count == 1
-    assert m1.call_args[0][0] is ep_channels
+    assert m1.call_args[0][0] is endpoint
     assert m2.call_count == 1
-    assert m2.call_args[0][0] is ep_channels
+    assert m2.call_args[0][0] is endpoint
 
 
 @pytest.mark.parametrize(
-    ("device_type", "component", "hit"),
+    ("device_type", "platform", "hit"),
     [
         (zigpy.profiles.zha.DeviceType.ON_OFF_LIGHT, Platform.LIGHT, True),
         (zigpy.profiles.zha.DeviceType.ON_OFF_BALLAST, Platform.SWITCH, True),
@@ -236,14 +222,14 @@ def test_discover_entities(m1, m2) -> None:
         (0xFFFF, None, False),
     ],
 )
-def test_discover_by_device_type(device_type, component, hit) -> None:
+def test_discover_by_device_type(device_type, platform, hit) -> None:
     """Test entity discovery by device type."""
 
-    ep_channels = mock.MagicMock(spec_set=zha_channels.ChannelPool)
+    endpoint = mock.MagicMock(spec_set=Endpoint)
     ep_mock = mock.PropertyMock()
     ep_mock.return_value.profile_id = 0x0104
     ep_mock.return_value.device_type = device_type
-    type(ep_channels).endpoint = ep_mock
+    type(endpoint).zigpy_endpoint = ep_mock
 
     get_entity_mock = mock.MagicMock(
         return_value=(mock.sentinel.entity_cls, mock.sentinel.claimed)
@@ -252,26 +238,26 @@ def test_discover_by_device_type(device_type, component, hit) -> None:
         "homeassistant.components.zha.core.registries.ZHA_ENTITIES.get_entity",
         get_entity_mock,
     ):
-        disc.PROBE.discover_by_device_type(ep_channels)
+        disc.PROBE.discover_by_device_type(endpoint)
     if hit:
         assert get_entity_mock.call_count == 1
-        assert ep_channels.claim_channels.call_count == 1
-        assert ep_channels.claim_channels.call_args[0][0] is mock.sentinel.claimed
-        assert ep_channels.async_new_entity.call_count == 1
-        assert ep_channels.async_new_entity.call_args[0][0] == component
-        assert ep_channels.async_new_entity.call_args[0][1] == mock.sentinel.entity_cls
+        assert endpoint.claim_cluster_handlers.call_count == 1
+        assert endpoint.claim_cluster_handlers.call_args[0][0] is mock.sentinel.claimed
+        assert endpoint.async_new_entity.call_count == 1
+        assert endpoint.async_new_entity.call_args[0][0] == platform
+        assert endpoint.async_new_entity.call_args[0][1] == mock.sentinel.entity_cls
 
 
 def test_discover_by_device_type_override() -> None:
     """Test entity discovery by device type overriding."""
 
-    ep_channels = mock.MagicMock(spec_set=zha_channels.ChannelPool)
+    endpoint = mock.MagicMock(spec_set=Endpoint)
     ep_mock = mock.PropertyMock()
     ep_mock.return_value.profile_id = 0x0104
     ep_mock.return_value.device_type = 0x0100
-    type(ep_channels).endpoint = ep_mock
+    type(endpoint).zigpy_endpoint = ep_mock
 
-    overrides = {ep_channels.unique_id: {"type": Platform.SWITCH}}
+    overrides = {endpoint.unique_id: {"type": Platform.SWITCH}}
     get_entity_mock = mock.MagicMock(
         return_value=(mock.sentinel.entity_cls, mock.sentinel.claimed)
     )
@@ -279,99 +265,109 @@ def test_discover_by_device_type_override() -> None:
         "homeassistant.components.zha.core.registries.ZHA_ENTITIES.get_entity",
         get_entity_mock,
     ), mock.patch.dict(disc.PROBE._device_configs, overrides, clear=True):
-        disc.PROBE.discover_by_device_type(ep_channels)
+        disc.PROBE.discover_by_device_type(endpoint)
         assert get_entity_mock.call_count == 1
-        assert ep_channels.claim_channels.call_count == 1
-        assert ep_channels.claim_channels.call_args[0][0] is mock.sentinel.claimed
-        assert ep_channels.async_new_entity.call_count == 1
-        assert ep_channels.async_new_entity.call_args[0][0] == Platform.SWITCH
-        assert ep_channels.async_new_entity.call_args[0][1] == mock.sentinel.entity_cls
+        assert endpoint.claim_cluster_handlers.call_count == 1
+        assert endpoint.claim_cluster_handlers.call_args[0][0] is mock.sentinel.claimed
+        assert endpoint.async_new_entity.call_count == 1
+        assert endpoint.async_new_entity.call_args[0][0] == Platform.SWITCH
+        assert endpoint.async_new_entity.call_args[0][1] == mock.sentinel.entity_cls
 
 
 def test_discover_probe_single_cluster() -> None:
     """Test entity discovery by single cluster."""
 
-    ep_channels = mock.MagicMock(spec_set=zha_channels.ChannelPool)
+    endpoint = mock.MagicMock(spec_set=Endpoint)
     ep_mock = mock.PropertyMock()
     ep_mock.return_value.profile_id = 0x0104
     ep_mock.return_value.device_type = 0x0100
-    type(ep_channels).endpoint = ep_mock
+    type(endpoint).zigpy_endpoint = ep_mock
 
     get_entity_mock = mock.MagicMock(
         return_value=(mock.sentinel.entity_cls, mock.sentinel.claimed)
     )
-    channel_mock = mock.MagicMock(spec_set=base_channels.ZigbeeChannel)
+    cluster_handler_mock = mock.MagicMock(spec_set=cluster_handlers.ClusterHandler)
     with mock.patch(
         "homeassistant.components.zha.core.registries.ZHA_ENTITIES.get_entity",
         get_entity_mock,
     ):
-        disc.PROBE.probe_single_cluster(Platform.SWITCH, channel_mock, ep_channels)
+        disc.PROBE.probe_single_cluster(Platform.SWITCH, cluster_handler_mock, endpoint)
 
     assert get_entity_mock.call_count == 1
-    assert ep_channels.claim_channels.call_count == 1
-    assert ep_channels.claim_channels.call_args[0][0] is mock.sentinel.claimed
-    assert ep_channels.async_new_entity.call_count == 1
-    assert ep_channels.async_new_entity.call_args[0][0] == Platform.SWITCH
-    assert ep_channels.async_new_entity.call_args[0][1] == mock.sentinel.entity_cls
-    assert ep_channels.async_new_entity.call_args[0][3] == mock.sentinel.claimed
+    assert endpoint.claim_cluster_handlers.call_count == 1
+    assert endpoint.claim_cluster_handlers.call_args[0][0] is mock.sentinel.claimed
+    assert endpoint.async_new_entity.call_count == 1
+    assert endpoint.async_new_entity.call_args[0][0] == Platform.SWITCH
+    assert endpoint.async_new_entity.call_args[0][1] == mock.sentinel.entity_cls
+    assert endpoint.async_new_entity.call_args[0][3] == mock.sentinel.claimed
 
 
 @pytest.mark.parametrize("device_info", DEVICES)
 async def test_discover_endpoint(
-    device_info, channels_mock, hass: HomeAssistant
+    device_info: dict[str, Any],
+    zha_device_mock: Callable[..., ZHADevice],
+    hass: HomeAssistant,
 ) -> None:
     """Test device discovery."""
 
     with mock.patch(
-        "homeassistant.components.zha.core.channels.Channels.async_new_entity"
+        "homeassistant.components.zha.core.endpoint.Endpoint.async_new_entity"
     ) as new_ent:
-        channels = channels_mock(
+        device = zha_device_mock(
             device_info[SIG_ENDPOINTS],
             manufacturer=device_info[SIG_MANUFACTURER],
             model=device_info[SIG_MODEL],
             node_desc=device_info[SIG_NODE_DESC],
-            patch_cluster=False,
+            patch_cluster=True,
         )
 
-    assert device_info[DEV_SIG_EVT_CHANNELS] == sorted(
-        ch.id for pool in channels.pools for ch in pool.client_channels.values()
+    assert device_info[DEV_SIG_EVT_CLUSTER_HANDLERS] == sorted(
+        ch.id
+        for endpoint in device._endpoints.values()
+        for ch in endpoint.client_cluster_handlers.values()
     )
 
-    # build a dict of entity_class -> (component, unique_id, channels) tuple
+    # build a dict of entity_class -> (platform, unique_id, cluster_handlers) tuple
     ha_ent_info = {}
     for call in new_ent.call_args_list:
-        component, entity_cls, unique_id, channels = call[0]
+        platform, entity_cls, unique_id, cluster_handlers = call[0]
         if not contains_ignored_suffix(unique_id):
             unique_id_head = UNIQUE_ID_HD.match(unique_id).group(
                 0
             )  # ieee + endpoint_id
             ha_ent_info[(unique_id_head, entity_cls.__name__)] = (
-                component,
+                platform,
                 unique_id,
-                channels,
+                cluster_handlers,
             )
 
-    for comp_id, ent_info in device_info[DEV_SIG_ENT_MAP].items():
-        component, unique_id = comp_id
+    for platform_id, ent_info in device_info[DEV_SIG_ENT_MAP].items():
+        platform, unique_id = platform_id
 
         test_ent_class = ent_info[DEV_SIG_ENT_MAP_CLASS]
         test_unique_id_head = UNIQUE_ID_HD.match(unique_id).group(0)
         assert (test_unique_id_head, test_ent_class) in ha_ent_info
 
-        ha_comp, ha_unique_id, ha_channels = ha_ent_info[
+        entity_platform, entity_unique_id, entity_cluster_handlers = ha_ent_info[
             (test_unique_id_head, test_ent_class)
         ]
-        assert component is ha_comp.value
+        assert platform is entity_platform.value
         # unique_id used for discover is the same for "multi entities"
-        assert unique_id.startswith(ha_unique_id)
-        assert {ch.name for ch in ha_channels} == set(ent_info[DEV_SIG_CHANNELS])
+        assert unique_id.startswith(entity_unique_id)
+        assert {ch.name for ch in entity_cluster_handlers} == set(
+            ent_info[DEV_SIG_CLUSTER_HANDLERS]
+        )
+
+    device.async_cleanup_handles()
 
 
 def _ch_mock(cluster):
-    """Return mock of a channel with a cluster."""
-    channel = mock.MagicMock()
-    type(channel).cluster = mock.PropertyMock(return_value=cluster(mock.MagicMock()))
-    return channel
+    """Return mock of a cluster_handler with a cluster."""
+    cluster_handler = mock.MagicMock()
+    type(cluster_handler).cluster = mock.PropertyMock(
+        return_value=cluster(mock.MagicMock())
+    )
+    return cluster_handler
 
 
 @mock.patch(
@@ -401,16 +397,16 @@ def _test_single_input_cluster_device_class(probe_mock):
 
     analog_ch = _ch_mock(_Analog)
 
-    ch_pool = mock.MagicMock(spec_set=zha_channels.ChannelPool)
-    ch_pool.unclaimed_channels.return_value = [
+    endpoint = mock.MagicMock(spec_set=Endpoint)
+    endpoint.unclaimed_cluster_handlers.return_value = [
         door_ch,
         cover_ch,
         multistate_ch,
         ias_ch,
     ]
 
-    disc.ProbeEndpoint().discover_by_cluster_id(ch_pool)
-    assert probe_mock.call_count == len(ch_pool.unclaimed_channels())
+    disc.ProbeEndpoint().discover_by_cluster_id(endpoint)
+    assert probe_mock.call_count == len(endpoint.unclaimed_cluster_handlers())
     probes = (
         (Platform.LOCK, door_ch),
         (Platform.COVER, cover_ch),
@@ -419,8 +415,8 @@ def _test_single_input_cluster_device_class(probe_mock):
         (Platform.SENSOR, analog_ch),
     )
     for call, details in zip(probe_mock.call_args_list, probes):
-        component, ch = details
-        assert call[0][0] == component
+        platform, ch = details
+        assert call[0][0] == platform
         assert call[0][1] == ch
 
 
@@ -488,35 +484,3 @@ async def test_group_probe_cleanup_called(
     await config_entry.async_unload(hass_disable_services)
     await hass_disable_services.async_block_till_done()
     disc.GROUP_PROBE.cleanup.assert_called()
-
-
-@patch(
-    "zigpy.zcl.clusters.general.Identify.request",
-    new=AsyncMock(return_value=[mock.sentinel.data, zcl_f.Status.SUCCESS]),
-)
-@patch(
-    "homeassistant.components.zha.entity.ZhaEntity.entity_registry_enabled_default",
-    new=Mock(return_value=True),
-)
-async def test_channel_with_empty_ep_attribute_cluster(
-    hass_disable_services,
-    zigpy_device_mock,
-    zha_device_joined_restored,
-) -> None:
-    """Test device discovery for cluster which does not have em_attribute."""
-    entity_registry = homeassistant.helpers.entity_registry.async_get(
-        hass_disable_services
-    )
-
-    zigpy_device = zigpy_device_mock(
-        {1: {SIG_EP_INPUT: [0x042E], SIG_EP_OUTPUT: [], SIG_EP_TYPE: 0x1234}},
-        "00:11:22:33:44:55:66:77",
-        "test manufacturer",
-        "test model",
-        patch_cluster=False,
-    )
-    zha_dev = await zha_device_joined_restored(zigpy_device)
-    ha_entity_id = entity_registry.async_get_entity_id(
-        "sensor", "zha", f"{zha_dev.ieee}-1-1070"
-    )
-    assert ha_entity_id is not None

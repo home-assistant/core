@@ -109,6 +109,7 @@ class StatisticsMetaManager:
                 _generate_get_metadata_stmt(
                     statistic_ids, statistic_type, statistic_source
                 ),
+                orm_rows=False,
             ):
                 statistics_meta = cast(StatisticsMeta, row)
                 id_meta = _statistics_meta_to_id_statistics_metadata(statistics_meta)

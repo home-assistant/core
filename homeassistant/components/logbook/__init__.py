@@ -127,7 +127,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     possible_merged_entities_filter = convert_include_exclude_filter(merged_filter)
     if not possible_merged_entities_filter.empty_filter:
         filters = sqlalchemy_filter_from_include_exclude_conf(merged_filter)
-        entities_filter = possible_merged_entities_filter
+        entities_filter = possible_merged_entities_filter.get_filter()
     else:
         filters = None
         entities_filter = None

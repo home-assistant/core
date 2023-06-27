@@ -30,6 +30,7 @@ from homeassistant.loader import bind_hass
 
 from .const import (  # noqa: F401
     ATTR_AVAILABLE_MODES,
+    ATTR_CURRENT_HUMIDITY,
     ATTR_HUMIDITY,
     ATTR_MAX_HUMIDITY,
     ATTR_MIN_HUMIDITY,
@@ -133,6 +134,7 @@ class HumidifierEntity(ToggleEntity):
 
     entity_description: HumidifierEntityDescription
     _attr_available_modes: list[str] | None
+    _attr_current_humidity: int | None = None
     _attr_device_class: HumidifierDeviceClass | None
     _attr_max_humidity: int = DEFAULT_MAX_HUMIDITY
     _attr_min_humidity: int = DEFAULT_MIN_HUMIDITY
@@ -168,6 +170,9 @@ class HumidifierEntity(ToggleEntity):
         """Return the optional state attributes."""
         data: dict[str, int | str | None] = {}
 
+        if self.current_humidity is not None:
+            data[ATTR_CURRENT_HUMIDITY] = self.current_humidity
+
         if self.target_humidity is not None:
             data[ATTR_HUMIDITY] = self.target_humidity
 
@@ -175,6 +180,11 @@ class HumidifierEntity(ToggleEntity):
             data[ATTR_MODE] = self.mode
 
         return data
+
+    @property
+    def current_humidity(self) -> int | None:
+        """Return the current humidity."""
+        return self._attr_current_humidity
 
     @property
     def target_humidity(self) -> int | None:

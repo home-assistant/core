@@ -3,65 +3,54 @@ from __future__ import annotations
 
 from collections import defaultdict
 from datetime import timedelta
-import uuid
 
-import brottsplatskartan
-import voluptuous as vol
+from brottsplatskartan import ATTRIBUTION, BrottsplatsKartan
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
+from homeassistant.components.sensor import SensorEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.device_registry import DeviceEntryType
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import AREAS, CONF_AREA, DEFAULT_NAME, LOGGER
+from .const import CONF_APP_ID, CONF_AREA, DOMAIN, LOGGER
 
 SCAN_INTERVAL = timedelta(minutes=30)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Inclusive(CONF_LATITUDE, "coordinates"): cv.latitude,
-        vol.Inclusive(CONF_LONGITUDE, "coordinates"): cv.longitude,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_AREA, default=[]): vol.All(cv.ensure_list, [vol.In(AREAS)]),
-    }
-)
 
-
-def setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
-    """Set up the Brottsplatskartan platform."""
+    """Set up the Brottsplatskartan sensor entry."""
 
-    area = config.get(CONF_AREA)
-    latitude = config.get(CONF_LATITUDE, hass.config.latitude)
-    longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
-    name = config[CONF_NAME]
+    area = entry.data.get(CONF_AREA)
+    latitude = entry.data.get(CONF_LATITUDE)
+    longitude = entry.data.get(CONF_LONGITUDE)
+    app = entry.data[CONF_APP_ID]
+    name = entry.title
 
-    # Every Home Assistant instance should have their own unique
-    # app parameter: https://brottsplatskartan.se/sida/api
-    app = f"ha-{uuid.getnode()}"
+    bpk = BrottsplatsKartan(app=app, area=area, latitude=latitude, longitude=longitude)
 
-    bpk = brottsplatskartan.BrottsplatsKartan(
-        app=app, area=area, latitude=latitude, longitude=longitude
-    )
-
-    add_entities([BrottsplatskartanSensor(bpk, name)], True)
+    async_add_entities([BrottsplatskartanSensor(bpk, name, entry.entry_id)], True)
 
 
 class BrottsplatskartanSensor(SensorEntity):
     """Representation of a Brottsplatskartan Sensor."""
 
-    _attr_attribution = brottsplatskartan.ATTRIBUTION
+    _attr_attribution = ATTRIBUTION
+    _attr_has_entity_name = True
 
-    def __init__(self, bpk: brottsplatskartan.BrottsplatsKartan, name: str) -> None:
+    def __init__(self, bpk: BrottsplatsKartan, name: str, entry_id: str) -> None:
         """Initialize the Brottsplatskartan sensor."""
         self._brottsplatskartan = bpk
-        self._attr_name = name
+        self._attr_unique_id = entry_id
+        self._attr_device_info = DeviceInfo(
+            entry_type=DeviceEntryType.SERVICE,
+            identifiers={(DOMAIN, entry_id)},
+            manufacturer="Brottsplatskartan",
+            name=name,
+        )
 
     def update(self) -> None:
         """Update device state."""

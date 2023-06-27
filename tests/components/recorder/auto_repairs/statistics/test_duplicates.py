@@ -3,10 +3,10 @@ from collections.abc import Callable
 
 # pylint: disable=invalid-name
 import importlib
+from pathlib import Path
 import sys
 from unittest.mock import patch
 
-import py
 import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
@@ -129,10 +129,12 @@ def _create_engine_28(*args, **kwargs):
 
 
 def test_delete_metadata_duplicates(
-    caplog: pytest.LogCaptureFixture, tmpdir: py.path.local
+    caplog: pytest.LogCaptureFixture, tmp_path: Path
 ) -> None:
     """Test removal of duplicated statistics."""
-    test_db_file = tmpdir.mkdir("sqlite").join("test_run_info.db")
+    test_dir = tmp_path.joinpath("sqlite")
+    test_dir.mkdir()
+    test_db_file = test_dir.joinpath("test_run_info.db")
     dburl = f"{SQLITE_URL_PREFIX}//{test_db_file}"
 
     module = "tests.components.recorder.db_schema_28"
@@ -222,10 +224,12 @@ def test_delete_metadata_duplicates(
 
 
 def test_delete_metadata_duplicates_many(
-    caplog: pytest.LogCaptureFixture, tmpdir: py.path.local
+    caplog: pytest.LogCaptureFixture, tmp_path: Path
 ) -> None:
     """Test removal of duplicated statistics."""
-    test_db_file = tmpdir.mkdir("sqlite").join("test_run_info.db")
+    test_dir = tmp_path.joinpath("sqlite")
+    test_dir.mkdir()
+    test_db_file = test_dir.joinpath("test_run_info.db")
     dburl = f"{SQLITE_URL_PREFIX}//{test_db_file}"
 
     module = "tests.components.recorder.db_schema_28"

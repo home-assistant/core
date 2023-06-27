@@ -18,12 +18,14 @@ from homeassistant.const import MATCH_ALL
 import homeassistant.core as ha
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
+from homeassistant.helpers.device_registry import EVENT_DEVICE_REGISTRY_UPDATED
 from homeassistant.helpers.entity_registry import EVENT_ENTITY_REGISTRY_UPDATED
 from homeassistant.helpers.event import (
     TrackStates,
     TrackTemplate,
     TrackTemplateResult,
     async_call_later,
+    async_track_device_registry_updated_event,
     async_track_entity_registry_updated_event,
     async_track_point_in_time,
     async_track_point_in_utc_time,
@@ -3666,6 +3668,7 @@ async def test_track_sunset(hass: HomeAssistant) -> None:
 
 async def test_async_track_time_change(hass: HomeAssistant) -> None:
     """Test tracking time change."""
+    none_runs = []
     wildcard_runs = []
     specific_runs = []
 
@@ -3678,11 +3681,16 @@ async def test_async_track_time_change(hass: HomeAssistant) -> None:
     with patch(
         "homeassistant.util.dt.utcnow", return_value=time_that_will_not_match_right_away
     ):
-        unsub = async_track_time_change(
-            hass, callback(lambda x: wildcard_runs.append(x))
-        )
+        unsub = async_track_time_change(hass, callback(lambda x: none_runs.append(x)))
         unsub_utc = async_track_utc_time_change(
             hass, callback(lambda x: specific_runs.append(x)), second=[0, 30]
+        )
+        unsub_wildcard = async_track_time_change(
+            hass,
+            callback(lambda x: wildcard_runs.append(x)),
+            second="*",
+            minute="*",
+            hour="*",
         )
 
     async_fire_time_changed(
@@ -3691,6 +3699,7 @@ async def test_async_track_time_change(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     assert len(specific_runs) == 1
     assert len(wildcard_runs) == 1
+    assert len(none_runs) == 1
 
     async_fire_time_changed(
         hass, datetime(now.year + 1, 5, 24, 12, 0, 15, 999999, tzinfo=dt_util.UTC)
@@ -3698,6 +3707,7 @@ async def test_async_track_time_change(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     assert len(specific_runs) == 1
     assert len(wildcard_runs) == 2
+    assert len(none_runs) == 2
 
     async_fire_time_changed(
         hass, datetime(now.year + 1, 5, 24, 12, 0, 30, 999999, tzinfo=dt_util.UTC)
@@ -3705,9 +3715,11 @@ async def test_async_track_time_change(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     assert len(specific_runs) == 2
     assert len(wildcard_runs) == 3
+    assert len(none_runs) == 3
 
     unsub()
     unsub_utc()
+    unsub_wildcard()
 
     async_fire_time_changed(
         hass, datetime(now.year + 1, 5, 24, 12, 0, 30, 999999, tzinfo=dt_util.UTC)
@@ -3715,6 +3727,7 @@ async def test_async_track_time_change(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     assert len(specific_runs) == 2
     assert len(wildcard_runs) == 3
+    assert len(none_runs) == 3
 
 
 async def test_periodic_task_minute(hass: HomeAssistant) -> None:
@@ -4553,3 +4566,103 @@ async def test_async_track_entity_registry_updated_event_with_empty_list(
 
     unsub_single2()
     unsub_single()
+
+
+async def test_async_track_device_registry_updated_event(hass: HomeAssistant) -> None:
+    """Test tracking device registry updates for an device_id."""
+
+    device_id = "b92c0f06fbc911edacc9eea8ae14f866"
+    device_id2 = "747bbf22fbca11ed843aeea8ae14f866"
+    untracked_device_id = "bda93f86fbc911edacc9eea8ae14f866"
+
+    single_event_data = []
+    multiple_event_data = []
+
+    @ha.callback
+    def single_device_id_callback(event: ha.Event) -> None:
+        single_event_data.append(event.data)
+
+    @ha.callback
+    def multiple_device_id_callback(event: ha.Event) -> None:
+        multiple_event_data.append(event.data)
+
+    unsub1 = async_track_device_registry_updated_event(
+        hass, device_id, single_device_id_callback
+    )
+    unsub2 = async_track_device_registry_updated_event(
+        hass, [device_id, device_id2], multiple_device_id_callback
+    )
+    hass.bus.async_fire(
+        EVENT_DEVICE_REGISTRY_UPDATED, {"action": "create", "device_id": device_id}
+    )
+    hass.bus.async_fire(
+        EVENT_ENTITY_REGISTRY_UPDATED,
+        {"action": "create", "device_id": untracked_device_id},
+    )
+    await hass.async_block_till_done()
+    assert len(single_event_data) == 1
+    assert len(multiple_event_data) == 1
+    hass.bus.async_fire(
+        EVENT_DEVICE_REGISTRY_UPDATED, {"action": "create", "device_id": device_id2}
+    )
+    await hass.async_block_till_done()
+    assert len(single_event_data) == 1
+    assert len(multiple_event_data) == 2
+
+    unsub1()
+    unsub2()
+    hass.bus.async_fire(
+        EVENT_ENTITY_REGISTRY_UPDATED, {"action": "create", "device_id": device_id}
+    )
+    hass.bus.async_fire(
+        EVENT_ENTITY_REGISTRY_UPDATED, {"action": "create", "device_id": device_id2}
+    )
+    await hass.async_block_till_done()
+    assert len(single_event_data) == 1
+    assert len(multiple_event_data) == 2
+
+
+async def test_async_track_device_registry_updated_event_with_empty_list(
+    hass: HomeAssistant,
+) -> None:
+    """Test async_track_device_registry_updated_event passing an empty list of devices."""
+    unsub_single = async_track_device_registry_updated_event(
+        hass, [], ha.callback(lambda event: None)
+    )
+    unsub_single2 = async_track_device_registry_updated_event(
+        hass, [], ha.callback(lambda event: None)
+    )
+
+    unsub_single2()
+    unsub_single()
+
+
+async def test_async_track_device_registry_updated_event_with_a_callback_that_throws(
+    hass: HomeAssistant,
+) -> None:
+    """Test tracking device registry updates for an device when one callback throws."""
+
+    device_id = "b92c0f06fbc911edacc9eea8ae14f866"
+
+    event_data = []
+
+    @ha.callback
+    def run_callback(event: ha.Event) -> None:
+        event_data.append(event.data)
+
+    @ha.callback
+    def failing_callback(event: ha.Event) -> None:
+        raise ValueError
+
+    unsub1 = async_track_device_registry_updated_event(
+        hass, device_id, failing_callback
+    )
+    unsub2 = async_track_device_registry_updated_event(hass, device_id, run_callback)
+    hass.bus.async_fire(
+        EVENT_DEVICE_REGISTRY_UPDATED, {"action": "create", "device_id": device_id}
+    )
+    await hass.async_block_till_done()
+    unsub1()
+    unsub2()
+
+    assert event_data[0] == {"action": "create", "device_id": device_id}

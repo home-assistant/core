@@ -54,7 +54,6 @@ CLIENT_CONNECTED_ATTRIBUTES = [
 ]
 
 CLIENT_STATIC_ATTRIBUTES = [
-    "hostname",
     "mac",
     "name",
     "oui",
@@ -175,7 +174,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiTrackerEntityDescription, ...] = (
         supported_fn=lambda controller, obj_id: True,
         unique_id_fn=lambda controller, obj_id: f"{obj_id}-{controller.site}",
         ip_address_fn=lambda api, obj_id: api.clients[obj_id].ip,
-        hostname_fn=lambda api, obj_id: None,
+        hostname_fn=lambda api, obj_id: api.clients[obj_id].hostname,
     ),
     UnifiTrackerEntityDescription[Devices, Device](
         key="Device scanner",

@@ -888,7 +888,6 @@ async def test_websocket_create(
     assert aioclient_mock.mock_calls[0][2] == {
         "summary": "Bastille Day Party",
         "description": None,
-        "location": None,
         "start": {
             "dateTime": "1997-07-14T11:00:00-06:00",
             "timeZone": "America/Regina",
@@ -932,7 +931,6 @@ async def test_websocket_create_all_day(
     assert aioclient_mock.mock_calls[0][2] == {
         "summary": "Bastille Day Party",
         "description": None,
-        "location": None,
         "start": {
             "date": "1997-07-14",
         },
@@ -1239,4 +1237,95 @@ async def test_reader_in_progress_event(
         "end_time": end_event.strftime(DATE_STR_FORMAT),
         "location": event["location"],
         "description": event["description"],
+    }
+
+
+async def test_all_day_event_without_duration(
+    hass: HomeAssistant, mock_events_list_items, component_setup
+) -> None:
+    """Test that an all day event without a duration is adjusted to have a duration of one day."""
+    week_from_today = dt_util.now().date() + datetime.timedelta(days=7)
+    event = {
+        **TEST_EVENT,
+        "start": {"date": week_from_today.isoformat()},
+        "end": {"date": week_from_today.isoformat()},
+    }
+    mock_events_list_items([event])
+
+    assert await component_setup()
+
+    expected_end_event = week_from_today + datetime.timedelta(days=1)
+
+    state = hass.states.get(TEST_ENTITY)
+    assert state.name == TEST_ENTITY_NAME
+    assert state.state == STATE_OFF
+    assert dict(state.attributes) == {
+        "friendly_name": TEST_ENTITY_NAME,
+        "message": event["summary"],
+        "all_day": True,
+        "offset_reached": False,
+        "start_time": week_from_today.strftime(DATE_STR_FORMAT),
+        "end_time": expected_end_event.strftime(DATE_STR_FORMAT),
+        "location": event["location"],
+        "description": event["description"],
+        "supported_features": 3,
+    }
+
+
+async def test_event_without_duration(
+    hass: HomeAssistant, mock_events_list_items, component_setup
+) -> None:
+    """Google calendar UI allows creating events without a duration."""
+    one_hour_from_now = dt_util.now() + datetime.timedelta(minutes=30)
+    event = {
+        **TEST_EVENT,
+        "start": {"dateTime": one_hour_from_now.isoformat()},
+        "end": {"dateTime": one_hour_from_now.isoformat()},
+    }
+    mock_events_list_items([event])
+
+    assert await component_setup()
+
+    state = hass.states.get(TEST_ENTITY)
+    assert state.name == TEST_ENTITY_NAME
+    assert state.state == STATE_OFF
+    # Confirm the event is parsed successfully, but we don't assert on the
+    # specific end date as the client library may adjust it
+    assert state.attributes.get("message") == event["summary"]
+    assert state.attributes.get("start_time") == one_hour_from_now.strftime(
+        DATE_STR_FORMAT
+    )
+
+
+async def test_event_differs_timezone(
+    hass: HomeAssistant, mock_events_list_items, component_setup
+) -> None:
+    """Test a case where the event has a different start/end timezone."""
+    one_hour_from_now = dt_util.now() + datetime.timedelta(minutes=30)
+    end_event = one_hour_from_now + datetime.timedelta(hours=8)
+    event = {
+        **TEST_EVENT,
+        "start": {
+            "dateTime": one_hour_from_now.isoformat(),
+            "timeZone": "America/Regina",
+        },
+        "end": {"dateTime": end_event.isoformat(), "timeZone": "UTC"},
+    }
+    mock_events_list_items([event])
+
+    assert await component_setup()
+
+    state = hass.states.get(TEST_ENTITY)
+    assert state.name == TEST_ENTITY_NAME
+    assert state.state == STATE_OFF
+    assert dict(state.attributes) == {
+        "friendly_name": TEST_ENTITY_NAME,
+        "message": event["summary"],
+        "all_day": False,
+        "offset_reached": False,
+        "start_time": one_hour_from_now.strftime(DATE_STR_FORMAT),
+        "end_time": end_event.strftime(DATE_STR_FORMAT),
+        "location": event["location"],
+        "description": event["description"],
+        "supported_features": 3,
     }

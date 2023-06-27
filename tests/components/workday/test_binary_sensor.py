@@ -4,9 +4,7 @@ from typing import Any
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-import voluptuous as vol
 
-from homeassistant.components.workday import binary_sensor
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import UTC
@@ -28,21 +26,6 @@ from . import (
     TEST_CONFIG_YESTERDAY,
     init_integration,
 )
-
-
-async def test_valid_country_yaml() -> None:
-    """Test valid country from yaml."""
-    # Invalid UTF-8, must not contain U+D800 to U+DFFF
-    with pytest.raises(vol.Invalid):
-        binary_sensor.valid_country("\ud800")
-    with pytest.raises(vol.Invalid):
-        binary_sensor.valid_country("\udfff")
-    # Country MUST NOT be empty
-    with pytest.raises(vol.Invalid):
-        binary_sensor.valid_country("")
-    # Country must be supported by holidays
-    with pytest.raises(vol.Invalid):
-        binary_sensor.valid_country("HomeAssistantLand")
 
 
 @pytest.mark.parametrize(

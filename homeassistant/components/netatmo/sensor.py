@@ -266,7 +266,7 @@ SENSOR_TYPES: tuple[NetatmoSensorEntityDescription, ...] = (
         netatmo_name="power",
         entity_registry_enabled_default=True,
         native_unit_of_measurement=UnitOfPower.WATT,
-        state_class=SensorStateClass.TOTAL,
+        state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.POWER,
     ),
 )

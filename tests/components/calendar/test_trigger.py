@@ -8,7 +8,8 @@ forward exercising the triggers.
 """
 from __future__ import annotations
 
-from collections.abc import Callable, Generator
+from collections.abc import AsyncIterator, Callable, Generator
+from contextlib import asynccontextmanager
 import datetime
 import logging
 import secrets
@@ -22,6 +23,7 @@ import pytest
 from homeassistant.components import calendar
 import homeassistant.components.automation as automation
 from homeassistant.components.calendar.trigger import EVENT_END, EVENT_START
+from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
@@ -151,7 +153,10 @@ async def setup_calendar(hass: HomeAssistant, fake_schedule: FakeSchedule) -> No
     await hass.async_block_till_done()
 
 
-async def create_automation(hass: HomeAssistant, event_type: str, offset=None) -> None:
+@asynccontextmanager
+async def create_automation(
+    hass: HomeAssistant, event_type: str, offset=None
+) -> AsyncIterator[None]:
     """Register an automation."""
     trigger_data = {
         "platform": calendar.DOMAIN,
@@ -165,6 +170,7 @@ async def create_automation(hass: HomeAssistant, event_type: str, offset=None) -
         automation.DOMAIN,
         {
             automation.DOMAIN: {
+                "alias": event_type,
                 "trigger": trigger_data,
                 "action": TEST_AUTOMATION_ACTION,
                 "mode": "queued",
@@ -172,6 +178,16 @@ async def create_automation(hass: HomeAssistant, event_type: str, offset=None) -
         },
     )
     await hass.async_block_till_done()
+
+    yield
+
+    # Disable automation to cleanup lingering timers
+    await hass.services.async_call(
+        automation.DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: f"automation.{event_type}"},
+        blocking=True,
+    )
 
 
 @pytest.fixture
@@ -205,12 +221,13 @@ async def test_event_start_trigger(
         start=datetime.datetime.fromisoformat("2022-04-19 11:00:00+00:00"),
         end=datetime.datetime.fromisoformat("2022-04-19 11:30:00+00:00"),
     )
-    await create_automation(hass, EVENT_START)
-    assert len(calls()) == 0
+    async with create_automation(hass, EVENT_START):
+        assert len(calls()) == 0
 
-    await fake_schedule.fire_until(
-        datetime.datetime.fromisoformat("2022-04-19 11:15:00+00:00"),
-    )
+        await fake_schedule.fire_until(
+            datetime.datetime.fromisoformat("2022-04-19 11:15:00+00:00"),
+        )
+
     assert calls() == [
         {
             "platform": "calendar",
@@ -239,25 +256,24 @@ async def test_event_start_trigger_with_offset(
         start=datetime.datetime.fromisoformat("2022-04-19 12:00:00+00:00"),
         end=datetime.datetime.fromisoformat("2022-04-19 12:30:00+00:00"),
     )
-    await create_automation(hass, EVENT_START, offset=offset_str)
+    async with create_automation(hass, EVENT_START, offset=offset_str):
+        # No calls yet
+        await fake_schedule.fire_until(
+            datetime.datetime.fromisoformat("2022-04-19 11:55:00+00:00") + offset_delta,
+        )
+        assert len(calls()) == 0
 
-    # No calls yet
-    await fake_schedule.fire_until(
-        datetime.datetime.fromisoformat("2022-04-19 11:55:00+00:00") + offset_delta,
-    )
-    assert len(calls()) == 0
-
-    # Event has started w/ offset
-    await fake_schedule.fire_until(
-        datetime.datetime.fromisoformat("2022-04-19 12:05:00+00:00") + offset_delta,
-    )
-    assert calls() == [
-        {
-            "platform": "calendar",
-            "event": EVENT_START,
-            "calendar_event": event_data,
-        }
-    ]
+        # Event has started w/ offset
+        await fake_schedule.fire_until(
+            datetime.datetime.fromisoformat("2022-04-19 12:05:00+00:00") + offset_delta,
+        )
+        assert calls() == [
+            {
+                "platform": "calendar",
+                "event": EVENT_START,
+                "calendar_event": event_data,
+            }
+        ]
 
 
 async def test_event_end_trigger(
@@ -270,25 +286,24 @@ async def test_event_end_trigger(
         start=datetime.datetime.fromisoformat("2022-04-19 11:00:00+00:00"),
         end=datetime.datetime.fromisoformat("2022-04-19 12:00:00+00:00"),
     )
-    await create_automation(hass, EVENT_END)
+    async with create_automation(hass, EVENT_END):
+        # Event started, nothing should fire yet
+        await fake_schedule.fire_until(
+            datetime.datetime.fromisoformat("2022-04-19 11:10:00+00:00")
+        )
+        assert len(calls()) == 0
 
-    # Event started, nothing should fire yet
-    await fake_schedule.fire_until(
-        datetime.datetime.fromisoformat("2022-04-19 11:10:00+00:00")
-    )
-    assert len(calls()) == 0
-
-    # Event ends
-    await fake_schedule.fire_until(
-        datetime.datetime.fromisoformat("2022-04-19 12:10:00+00:00")
-    )
-    assert calls() == [
-        {
-            "platform": "calendar",
-            "event": EVENT_END,
-            "calendar_event": event_data,
-        }
-    ]
+        # Event ends
+        await fake_schedule.fire_until(
+            datetime.datetime.fromisoformat("2022-04-19 12:10:00+00:00")
+        )
+        assert calls() == [
+            {
+                "platform": "calendar",
+                "event": EVENT_END,
+                "calendar_event": event_data,
+            }
+        ]
 
 
 @pytest.mark.parametrize(
@@ -310,25 +325,24 @@ async def test_event_end_trigger_with_offset(
         start=datetime.datetime.fromisoformat("2022-04-19 12:00:00+00:00"),
         end=datetime.datetime.fromisoformat("2022-04-19 12:30:00+00:00"),
     )
-    await create_automation(hass, EVENT_END, offset=offset_str)
+    async with create_automation(hass, EVENT_END, offset=offset_str):
+        # No calls yet
+        await fake_schedule.fire_until(
+            datetime.datetime.fromisoformat("2022-04-19 12:05:00+00:00") + offset_delta,
+        )
+        assert len(calls()) == 0
 
-    # No calls yet
-    await fake_schedule.fire_until(
-        datetime.datetime.fromisoformat("2022-04-19 12:05:00+00:00") + offset_delta,
-    )
-    assert len(calls()) == 0
-
-    # Event has started w/ offset
-    await fake_schedule.fire_until(
-        datetime.datetime.fromisoformat("2022-04-19 12:35:00+00:00") + offset_delta,
-    )
-    assert calls() == [
-        {
-            "platform": "calendar",
-            "event": EVENT_END,
-            "calendar_event": event_data,
-        }
-    ]
+        # Event has started w/ offset
+        await fake_schedule.fire_until(
+            datetime.datetime.fromisoformat("2022-04-19 12:35:00+00:00") + offset_delta,
+        )
+        assert calls() == [
+            {
+                "platform": "calendar",
+                "event": EVENT_END,
+                "calendar_event": event_data,
+            }
+        ]
 
 
 async def test_calendar_trigger_with_no_events(
@@ -338,13 +352,11 @@ async def test_calendar_trigger_with_no_events(
 ) -> None:
     """Test a calendar trigger setup  with no events."""
 
-    await create_automation(hass, EVENT_START)
-    await create_automation(hass, EVENT_END)
-
-    # No calls, at arbitrary times
-    await fake_schedule.fire_until(
-        datetime.datetime.fromisoformat("2022-04-19 11:00:00+00:00")
-    )
+    async with create_automation(hass, EVENT_START), create_automation(hass, EVENT_END):
+        # No calls, at arbitrary times
+        await fake_schedule.fire_until(
+            datetime.datetime.fromisoformat("2022-04-19 11:00:00+00:00")
+        )
     assert len(calls()) == 0
 
 
@@ -363,11 +375,10 @@ async def test_multiple_start_events(
         start=datetime.datetime.fromisoformat("2022-04-19 11:00:00+00:00"),
         end=datetime.datetime.fromisoformat("2022-04-19 11:15:00+00:00"),
     )
-    await create_automation(hass, EVENT_START)
-
-    await fake_schedule.fire_until(
-        datetime.datetime.fromisoformat("2022-04-19 11:30:00+00:00")
-    )
+    async with create_automation(hass, EVENT_START):
+        await fake_schedule.fire_until(
+            datetime.datetime.fromisoformat("2022-04-19 11:30:00+00:00")
+        )
     assert calls() == [
         {
             "platform": "calendar",
@@ -397,11 +408,11 @@ async def test_multiple_end_events(
         start=datetime.datetime.fromisoformat("2022-04-19 11:00:00+00:00"),
         end=datetime.datetime.fromisoformat("2022-04-19 11:15:00+00:00"),
     )
-    await create_automation(hass, EVENT_END)
+    async with create_automation(hass, EVENT_END):
+        await fake_schedule.fire_until(
+            datetime.datetime.fromisoformat("2022-04-19 11:30:00+00:00")
+        )
 
-    await fake_schedule.fire_until(
-        datetime.datetime.fromisoformat("2022-04-19 11:30:00+00:00")
-    )
     assert calls() == [
         {
             "platform": "calendar",
@@ -431,11 +442,11 @@ async def test_multiple_events_sharing_start_time(
         start=datetime.datetime.fromisoformat("2022-04-19 11:00:00+00:00"),
         end=datetime.datetime.fromisoformat("2022-04-19 11:30:00+00:00"),
     )
-    await create_automation(hass, EVENT_START)
+    async with create_automation(hass, EVENT_START):
+        await fake_schedule.fire_until(
+            datetime.datetime.fromisoformat("2022-04-19 11:35:00+00:00")
+        )
 
-    await fake_schedule.fire_until(
-        datetime.datetime.fromisoformat("2022-04-19 11:35:00+00:00")
-    )
     assert calls() == [
         {
             "platform": "calendar",
@@ -465,11 +476,11 @@ async def test_overlap_events(
         start=datetime.datetime.fromisoformat("2022-04-19 11:15:00+00:00"),
         end=datetime.datetime.fromisoformat("2022-04-19 11:45:00+00:00"),
     )
-    await create_automation(hass, EVENT_START)
+    async with create_automation(hass, EVENT_START):
+        await fake_schedule.fire_until(
+            datetime.datetime.fromisoformat("2022-04-19 11:20:00+00:00")
+        )
 
-    await fake_schedule.fire_until(
-        datetime.datetime.fromisoformat("2022-04-19 11:20:00+00:00")
-    )
     assert calls() == [
         {
             "platform": "calendar",
@@ -537,24 +548,23 @@ async def test_update_next_event(
         start=datetime.datetime.fromisoformat("2022-04-19 11:00:00+00:00"),
         end=datetime.datetime.fromisoformat("2022-04-19 11:15:00+00:00"),
     )
-    await create_automation(hass, EVENT_START)
+    async with create_automation(hass, EVENT_START):
+        # No calls before event start
+        await fake_schedule.fire_until(
+            datetime.datetime.fromisoformat("2022-04-19 10:45:00+00:00")
+        )
+        assert len(calls()) == 0
 
-    # No calls before event start
-    await fake_schedule.fire_until(
-        datetime.datetime.fromisoformat("2022-04-19 10:45:00+00:00")
-    )
-    assert len(calls()) == 0
+        # Create a new event between now and when the event fires
+        event_data2 = fake_schedule.create_event(
+            start=datetime.datetime.fromisoformat("2022-04-19 10:55:00+00:00"),
+            end=datetime.datetime.fromisoformat("2022-04-19 11:05:00+00:00"),
+        )
 
-    # Create a new event between now and when the event fires
-    event_data2 = fake_schedule.create_event(
-        start=datetime.datetime.fromisoformat("2022-04-19 10:55:00+00:00"),
-        end=datetime.datetime.fromisoformat("2022-04-19 11:05:00+00:00"),
-    )
-
-    # Advance past the end of the events
-    await fake_schedule.fire_until(
-        datetime.datetime.fromisoformat("2022-04-19 11:30:00+00:00")
-    )
+        # Advance past the end of the events
+        await fake_schedule.fire_until(
+            datetime.datetime.fromisoformat("2022-04-19 11:30:00+00:00")
+        )
     assert calls() == [
         {
             "platform": "calendar",
@@ -580,31 +590,30 @@ async def test_update_missed(
         start=datetime.datetime.fromisoformat("2022-04-19 11:00:00+00:00"),
         end=datetime.datetime.fromisoformat("2022-04-19 11:30:00+00:00"),
     )
-    await create_automation(hass, EVENT_START)
+    async with create_automation(hass, EVENT_START):
+        # Events are refreshed at t+TEST_UPDATE_INTERVAL minutes. A new event is
+        # added, but the next update happens after the event is already over.
+        await fake_schedule.fire_until(
+            datetime.datetime.fromisoformat("2022-04-19 10:38:00+00:00")
+        )
+        assert len(calls()) == 0
 
-    # Events are refreshed at t+TEST_UPDATE_INTERVAL minutes. A new event is
-    # added, but the next update happens after the event is already over.
-    await fake_schedule.fire_until(
-        datetime.datetime.fromisoformat("2022-04-19 10:38:00+00:00")
-    )
-    assert len(calls()) == 0
+        fake_schedule.create_event(
+            start=datetime.datetime.fromisoformat("2022-04-19 10:40:00+00:00"),
+            end=datetime.datetime.fromisoformat("2022-04-19 10:55:00+00:00"),
+        )
 
-    fake_schedule.create_event(
-        start=datetime.datetime.fromisoformat("2022-04-19 10:40:00+00:00"),
-        end=datetime.datetime.fromisoformat("2022-04-19 10:55:00+00:00"),
-    )
-
-    # Only the first event is returned
-    await fake_schedule.fire_until(
-        datetime.datetime.fromisoformat("2022-04-19 11:05:00+00:00")
-    )
-    assert calls() == [
-        {
-            "platform": "calendar",
-            "event": EVENT_START,
-            "calendar_event": event_data1,
-        },
-    ]
+        # Only the first event is returned
+        await fake_schedule.fire_until(
+            datetime.datetime.fromisoformat("2022-04-19 11:05:00+00:00")
+        )
+        assert calls() == [
+            {
+                "platform": "calendar",
+                "event": EVENT_START,
+                "calendar_event": event_data1,
+            },
+        ]
 
 
 @pytest.mark.parametrize(
@@ -670,17 +679,17 @@ async def test_event_payload(
 ) -> None:
     """Test the fields in the calendar event payload are set."""
     fake_schedule.create_event(**create_data)
-    await create_automation(hass, EVENT_START)
-    assert len(calls()) == 0
+    async with create_automation(hass, EVENT_START):
+        assert len(calls()) == 0
 
-    await fake_schedule.fire_until(fire_time)
-    assert calls() == [
-        {
-            "platform": "calendar",
-            "event": EVENT_START,
-            "calendar_event": payload_data,
-        }
-    ]
+        await fake_schedule.fire_until(fire_time)
+        assert calls() == [
+            {
+                "platform": "calendar",
+                "event": EVENT_START,
+                "calendar_event": payload_data,
+            }
+        ]
 
 
 async def test_trigger_timestamp_window_edge(
@@ -697,19 +706,19 @@ async def test_trigger_timestamp_window_edge(
         start=datetime.datetime.fromisoformat("2022-04-19 11:14:00+00:00"),
         end=datetime.datetime.fromisoformat("2022-04-19 11:30:00+00:00"),
     )
-    await create_automation(hass, EVENT_START)
-    assert len(calls()) == 0
+    async with create_automation(hass, EVENT_START):
+        assert len(calls()) == 0
 
-    await fake_schedule.fire_until(
-        datetime.datetime.fromisoformat("2022-04-19 11:20:00+00:00")
-    )
-    assert calls() == [
-        {
-            "platform": "calendar",
-            "event": EVENT_START,
-            "calendar_event": event_data,
-        }
-    ]
+        await fake_schedule.fire_until(
+            datetime.datetime.fromisoformat("2022-04-19 11:20:00+00:00")
+        )
+        assert calls() == [
+            {
+                "platform": "calendar",
+                "event": EVENT_START,
+                "calendar_event": event_data,
+            }
+        ]
 
 
 async def test_event_start_trigger_dst(
@@ -741,26 +750,27 @@ async def test_event_start_trigger_dst(
         start=datetime.datetime(2023, 3, 12, 3, 30, tzinfo=tzinfo),
         end=datetime.datetime(2023, 3, 12, 3, 45, tzinfo=tzinfo),
     )
-    await create_automation(hass, EVENT_START)
-    assert len(calls()) == 0
+    async with create_automation(hass, EVENT_START):
+        assert len(calls()) == 0
 
-    await fake_schedule.fire_until(
-        datetime.datetime.fromisoformat("2023-03-12 05:00:00-08:00"),
-    )
-    assert calls() == [
-        {
-            "platform": "calendar",
-            "event": EVENT_START,
-            "calendar_event": event1_data,
-        },
-        {
-            "platform": "calendar",
-            "event": EVENT_START,
-            "calendar_event": event2_data,
-        },
-        {
-            "platform": "calendar",
-            "event": EVENT_START,
-            "calendar_event": event3_data,
-        },
-    ]
+        await fake_schedule.fire_until(
+            datetime.datetime.fromisoformat("2023-03-12 05:00:00-08:00"),
+        )
+
+        assert calls() == [
+            {
+                "platform": "calendar",
+                "event": EVENT_START,
+                "calendar_event": event1_data,
+            },
+            {
+                "platform": "calendar",
+                "event": EVENT_START,
+                "calendar_event": event2_data,
+            },
+            {
+                "platform": "calendar",
+                "event": EVENT_START,
+                "calendar_event": event3_data,
+            },
+        ]

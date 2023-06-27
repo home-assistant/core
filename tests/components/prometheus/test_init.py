@@ -5,6 +5,7 @@ from http import HTTPStatus
 from typing import Any
 from unittest import mock
 
+from freezegun import freeze_time
 import prometheus_client
 import pytest
 
@@ -941,10 +942,7 @@ async def sensor_fixture(
         suggested_object_id="radio_energy",
         original_name="Radio Energy",
     )
-    with mock.patch(
-        "homeassistant.util.dt.utcnow",
-        return_value=datetime.datetime(1970, 1, 2, tzinfo=dt_util.UTC),
-    ):
+    with freeze_time(datetime.datetime(1970, 1, 2, tzinfo=dt_util.UTC)):
         set_state_with_entry(hass, sensor_3, 14)
     data["sensor_3"] = sensor_3
 

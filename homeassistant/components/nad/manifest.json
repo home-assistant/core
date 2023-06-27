@@ -5,5 +5,5 @@
   "documentation": "https://www.home-assistant.io/integrations/nad",
   "iot_class": "local_polling",
   "loggers": ["nad_receiver"],
-  "requirements": ["nad_receiver==0.3.0"]
+  "requirements": ["nad-receiver==0.3.0"]
 }

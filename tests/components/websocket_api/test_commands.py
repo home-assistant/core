@@ -514,13 +514,14 @@ async def test_get_states(hass: HomeAssistant, websocket_client) -> None:
 
 async def test_get_services(hass: HomeAssistant, websocket_client) -> None:
     """Test get_services command."""
-    await websocket_client.send_json({"id": 5, "type": "get_services"})
+    for id_ in (5, 6):
+        await websocket_client.send_json({"id": id_, "type": "get_services"})
 
-    msg = await websocket_client.receive_json()
-    assert msg["id"] == 5
-    assert msg["type"] == const.TYPE_RESULT
-    assert msg["success"]
-    assert msg["result"] == hass.services.async_services()
+        msg = await websocket_client.receive_json()
+        assert msg["id"] == id_
+        assert msg["type"] == const.TYPE_RESULT
+        assert msg["success"]
+        assert msg["result"] == hass.services.async_services()
 
 
 async def test_get_config(hass: HomeAssistant, websocket_client) -> None:
@@ -1671,7 +1672,9 @@ async def test_test_condition(hass: HomeAssistant, websocket_client) -> None:
 
 async def test_execute_script(hass: HomeAssistant, websocket_client) -> None:
     """Test testing a condition."""
-    calls = async_mock_service(hass, "domain_test", "test_service")
+    calls = async_mock_service(
+        hass, "domain_test", "test_service", response={"hello": "world"}
+    )
 
     await websocket_client.send_json(
         {
@@ -1681,7 +1684,9 @@ async def test_execute_script(hass: HomeAssistant, websocket_client) -> None:
                 {
                     "service": "domain_test.test_service",
                     "data": {"hello": "world"},
-                }
+                    "response_variable": "service_result",
+                },
+                {"stop": "done", "response": "{{ service_result }}"},
             ],
         }
     )
@@ -1690,6 +1695,7 @@ async def test_execute_script(hass: HomeAssistant, websocket_client) -> None:
     assert msg_no_var["id"] == 5
     assert msg_no_var["type"] == const.TYPE_RESULT
     assert msg_no_var["success"]
+    assert msg_no_var["result"]["response"] == {"hello": "world"}
 
     await websocket_client.send_json(
         {

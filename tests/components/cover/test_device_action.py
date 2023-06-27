@@ -1,5 +1,6 @@
 """The tests for Cover device actions."""
 import pytest
+from pytest_unordered import unordered
 
 import homeassistant.components.automation as automation
 from homeassistant.components.cover import DOMAIN, CoverEntityFeature
@@ -12,12 +13,15 @@ from homeassistant.setup import async_setup_component
 
 from tests.common import (
     MockConfigEntry,
-    assert_lists_same,
     async_get_device_automation_capabilities,
     async_get_device_automations,
     async_mock_service,
 )
-from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa: F401
+
+
+@pytest.fixture(autouse=True, name="stub_blueprint_populate")
+def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
+    """Stub copying the blueprints to the config folder."""
 
 
 @pytest.mark.parametrize(
@@ -57,7 +61,7 @@ async def test_get_actions(
         config_entry_id=config_entry.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    entity_registry.async_get_or_create(
+    entity_entry = entity_registry.async_get_or_create(
         DOMAIN,
         "test",
         "5678",
@@ -66,7 +70,7 @@ async def test_get_actions(
     )
     if set_state:
         hass.states.async_set(
-            f"{DOMAIN}.test_5678", "attributes", {"supported_features": features_state}
+            entity_entry.entity_id, "attributes", {"supported_features": features_state}
         )
     await hass.async_block_till_done()
 
@@ -76,7 +80,7 @@ async def test_get_actions(
             "domain": DOMAIN,
             "type": action,
             "device_id": device_entry.id,
-            "entity_id": f"{DOMAIN}.test_5678",
+            "entity_id": entity_entry.id,
             "metadata": {"secondary": False},
         }
         for action in expected_action_types
@@ -84,7 +88,7 @@ async def test_get_actions(
     actions = await async_get_device_automations(
         hass, DeviceAutomationType.ACTION, device_entry.id
     )
-    assert_lists_same(actions, expected_actions)
+    assert actions == unordered(expected_actions)
 
 
 @pytest.mark.parametrize(
@@ -110,7 +114,7 @@ async def test_get_actions_hidden_auxiliary(
         config_entry_id=config_entry.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    entity_registry.async_get_or_create(
+    entity_entry = entity_registry.async_get_or_create(
         DOMAIN,
         "test",
         "5678",
@@ -125,7 +129,7 @@ async def test_get_actions_hidden_auxiliary(
             "domain": DOMAIN,
             "type": action,
             "device_id": device_entry.id,
-            "entity_id": f"{DOMAIN}.test_5678",
+            "entity_id": entity_entry.id,
             "metadata": {"secondary": True},
         }
         for action in ["close"]
@@ -133,7 +137,7 @@ async def test_get_actions_hidden_auxiliary(
     actions = await async_get_device_automations(
         hass, DeviceAutomationType.ACTION, device_entry.id
     )
-    assert_lists_same(actions, expected_actions)
+    assert actions == unordered(expected_actions)
 
 
 async def test_get_action_capabilities(
@@ -186,6 +190,57 @@ async def test_get_action_capabilities(
         assert capabilities == {"extra_fields": []}
 
 
+async def test_get_action_capabilities_legacy(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    enable_custom_integrations: None,
+) -> None:
+    """Test we get the expected capabilities from a cover action."""
+    platform = getattr(hass.components, f"test.{DOMAIN}")
+    platform.init(empty=True)
+    platform.ENTITIES.append(
+        platform.MockCover(
+            name="Set position cover",
+            is_on=True,
+            unique_id="unique_set_pos_cover",
+            current_cover_position=50,
+            supported_features=CoverEntityFeature.OPEN
+            | CoverEntityFeature.CLOSE
+            | CoverEntityFeature.STOP
+            | CoverEntityFeature.OPEN_TILT
+            | CoverEntityFeature.CLOSE_TILT
+            | CoverEntityFeature.STOP_TILT,
+        ),
+    )
+    ent = platform.ENTITIES[0]
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+    await hass.async_block_till_done()
+
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    entity_registry.async_get_or_create(
+        DOMAIN, "test", ent.unique_id, device_id=device_entry.id
+    )
+
+    actions = await async_get_device_automations(
+        hass, DeviceAutomationType.ACTION, device_entry.id
+    )
+    assert len(actions) == 5  # open, close, open_tilt, close_tilt
+    action_types = {action["type"] for action in actions}
+    assert action_types == {"open", "close", "stop", "open_tilt", "close_tilt"}
+    for action in actions:
+        action["entity_id"] = entity_registry.async_get(action["entity_id"]).entity_id
+        capabilities = await async_get_device_automation_capabilities(
+            hass, DeviceAutomationType.ACTION, action
+        )
+        assert capabilities == {"extra_fields": []}
+
+
 async def test_get_action_capabilities_set_pos(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -224,9 +279,9 @@ async def test_get_action_capabilities_set_pos(
     actions = await async_get_device_automations(
         hass, DeviceAutomationType.ACTION, device_entry.id
     )
-    assert len(actions) == 1  # set_position
+    assert len(actions) == 4  # set_position, open, close, stop
     action_types = {action["type"] for action in actions}
-    assert action_types == {"set_position"}
+    assert action_types == {"set_position", "open", "close", "stop"}
     for action in actions:
         capabilities = await async_get_device_automation_capabilities(
             hass, DeviceAutomationType.ACTION, action
@@ -275,9 +330,15 @@ async def test_get_action_capabilities_set_tilt_pos(
     actions = await async_get_device_automations(
         hass, DeviceAutomationType.ACTION, device_entry.id
     )
-    assert len(actions) == 3
+    assert len(actions) == 5
     action_types = {action["type"] for action in actions}
-    assert action_types == {"open", "close", "set_tilt_position"}
+    assert action_types == {
+        "open",
+        "close",
+        "set_tilt_position",
+        "open_tilt",
+        "close_tilt",
+    }
     for action in actions:
         capabilities = await async_get_device_automation_capabilities(
             hass, DeviceAutomationType.ACTION, action
@@ -288,11 +349,13 @@ async def test_get_action_capabilities_set_tilt_pos(
             assert capabilities == {"extra_fields": []}
 
 
-async def test_action(hass: HomeAssistant, enable_custom_integrations: None) -> None:
+async def test_action(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    enable_custom_integrations: None,
+) -> None:
     """Test for cover actions."""
-    platform = getattr(hass.components, f"test.{DOMAIN}")
-    platform.init()
-    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+    entry = entity_registry.async_get_or_create(DOMAIN, "test", "5678")
 
     assert await async_setup_component(
         hass,
@@ -304,7 +367,7 @@ async def test_action(hass: HomeAssistant, enable_custom_integrations: None) -> 
                     "action": {
                         "domain": DOMAIN,
                         "device_id": "abcdefgh",
-                        "entity_id": "cover.entity",
+                        "entity_id": entry.id,
                         "type": "open",
                     },
                 },
@@ -313,7 +376,7 @@ async def test_action(hass: HomeAssistant, enable_custom_integrations: None) -> 
                     "action": {
                         "domain": DOMAIN,
                         "device_id": "abcdefgh",
-                        "entity_id": "cover.entity",
+                        "entity_id": entry.id,
                         "type": "close",
                     },
                 },
@@ -322,7 +385,7 @@ async def test_action(hass: HomeAssistant, enable_custom_integrations: None) -> 
                     "action": {
                         "domain": DOMAIN,
                         "device_id": "abcdefgh",
-                        "entity_id": "cover.entity",
+                        "entity_id": entry.id,
                         "type": "stop",
                     },
                 },
@@ -353,14 +416,24 @@ async def test_action(hass: HomeAssistant, enable_custom_integrations: None) -> 
     assert len(close_calls) == 1
     assert len(stop_calls) == 1
 
+    assert open_calls[0].domain == DOMAIN
+    assert open_calls[0].service == "open_cover"
+    assert open_calls[0].data == {"entity_id": entry.entity_id}
+    assert close_calls[0].domain == DOMAIN
+    assert close_calls[0].service == "close_cover"
+    assert close_calls[0].data == {"entity_id": entry.entity_id}
+    assert stop_calls[0].domain == DOMAIN
+    assert stop_calls[0].service == "stop_cover"
+    assert stop_calls[0].data == {"entity_id": entry.entity_id}
 
-async def test_action_tilt(
-    hass: HomeAssistant, enable_custom_integrations: None
+
+async def test_action_legacy(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    enable_custom_integrations: None,
 ) -> None:
-    """Test for cover tilt actions."""
-    platform = getattr(hass.components, f"test.{DOMAIN}")
-    platform.init()
-    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+    """Test for cover actions."""
+    entry = entity_registry.async_get_or_create(DOMAIN, "test", "5678")
 
     assert await async_setup_component(
         hass,
@@ -372,7 +445,45 @@ async def test_action_tilt(
                     "action": {
                         "domain": DOMAIN,
                         "device_id": "abcdefgh",
-                        "entity_id": "cover.entity",
+                        "entity_id": entry.id,
+                        "type": "open",
+                    },
+                },
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+
+    open_calls = async_mock_service(hass, "cover", "open_cover")
+
+    hass.bus.async_fire("test_event_open")
+    await hass.async_block_till_done()
+    assert len(open_calls) == 1
+
+    assert open_calls[0].domain == DOMAIN
+    assert open_calls[0].service == "open_cover"
+    assert open_calls[0].data == {"entity_id": entry.entity_id}
+
+
+async def test_action_tilt(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    enable_custom_integrations: None,
+) -> None:
+    """Test for cover tilt actions."""
+    entry = entity_registry.async_get_or_create(DOMAIN, "test", "5678")
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": {"platform": "event", "event_type": "test_event_open"},
+                    "action": {
+                        "domain": DOMAIN,
+                        "device_id": "abcdefgh",
+                        "entity_id": entry.id,
                         "type": "open_tilt",
                     },
                 },
@@ -381,7 +492,7 @@ async def test_action_tilt(
                     "action": {
                         "domain": DOMAIN,
                         "device_id": "abcdefgh",
-                        "entity_id": "cover.entity",
+                        "entity_id": entry.id,
                         "type": "close_tilt",
                     },
                 },
@@ -408,14 +519,21 @@ async def test_action_tilt(
     assert len(open_calls) == 1
     assert len(close_calls) == 1
 
+    assert open_calls[0].domain == DOMAIN
+    assert open_calls[0].service == "open_cover_tilt"
+    assert open_calls[0].data == {"entity_id": entry.entity_id}
+    assert close_calls[0].domain == DOMAIN
+    assert close_calls[0].service == "close_cover_tilt"
+    assert close_calls[0].data == {"entity_id": entry.entity_id}
+
 
 async def test_action_set_position(
-    hass: HomeAssistant, enable_custom_integrations: None
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    enable_custom_integrations: None,
 ) -> None:
     """Test for cover set position actions."""
-    platform = getattr(hass.components, f"test.{DOMAIN}")
-    platform.init()
-    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+    entry = entity_registry.async_get_or_create(DOMAIN, "test", "5678")
 
     assert await async_setup_component(
         hass,
@@ -430,7 +548,7 @@ async def test_action_set_position(
                     "action": {
                         "domain": DOMAIN,
                         "device_id": "abcdefgh",
-                        "entity_id": "cover.entity",
+                        "entity_id": entry.id,
                         "type": "set_position",
                         "position": 25,
                     },
@@ -443,7 +561,7 @@ async def test_action_set_position(
                     "action": {
                         "domain": DOMAIN,
                         "device_id": "abcdefgh",
-                        "entity_id": "cover.entity",
+                        "entity_id": entry.id,
                         "type": "set_tilt_position",
                         "position": 75,
                     },
@@ -459,11 +577,16 @@ async def test_action_set_position(
     hass.bus.async_fire("test_event_set_pos")
     await hass.async_block_till_done()
     assert len(cover_pos_calls) == 1
-    assert cover_pos_calls[0].data["position"] == 25
     assert len(tilt_pos_calls) == 0
 
     hass.bus.async_fire("test_event_set_tilt_pos")
     await hass.async_block_till_done()
     assert len(cover_pos_calls) == 1
     assert len(tilt_pos_calls) == 1
-    assert tilt_pos_calls[0].data["tilt_position"] == 75
+
+    assert cover_pos_calls[0].domain == DOMAIN
+    assert cover_pos_calls[0].service == "set_cover_position"
+    assert cover_pos_calls[0].data == {"entity_id": entry.entity_id, "position": 25}
+    assert tilt_pos_calls[0].domain == DOMAIN
+    assert tilt_pos_calls[0].service == "set_cover_tilt_position"
+    assert tilt_pos_calls[0].data == {"entity_id": entry.entity_id, "tilt_position": 75}

@@ -19,7 +19,6 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
 from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.helpers.typing import ConfigType
 
 from .const import API_CLIENT, DOMAIN, EQUIPMENT
 
@@ -34,14 +33,6 @@ PLATFORMS = [
 PUSH_UPDATE = "econet.push_update"
 
 INTERVAL = timedelta(minutes=60)
-
-
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the EcoNet component."""
-    hass.data[DOMAIN] = {}
-    hass.data[DOMAIN][API_CLIENT] = {}
-    hass.data[DOMAIN][EQUIPMENT] = {}
-    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
@@ -65,6 +56,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         )
     except (ClientError, GenericHTTPError, InvalidResponseFormat) as err:
         raise ConfigEntryNotReady from err
+    hass.data.setdefault(DOMAIN, {API_CLIENT: {}, EQUIPMENT: {}})
     hass.data[DOMAIN][API_CLIENT][config_entry.entry_id] = api
     hass.data[DOMAIN][EQUIPMENT][config_entry.entry_id] = equipment
 
