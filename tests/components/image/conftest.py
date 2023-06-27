@@ -39,15 +39,12 @@ class MockImageEntity(image.ImageEntity):
 class MockURLImageEntity(image.ImageEntity):
     """Mock image entity."""
 
+    _attr_image_url = "https://example.com/myimage.jpg"
     _attr_name = "Test"
 
     async def async_added_to_hass(self):
         """Set the update time."""
         self._attr_image_last_updated = dt_util.utcnow()
-
-    async def async_image_url(self) -> str:
-        """Return URL of image."""
-        return "https://example.com/myimage.jpg"
 
 
 class MockImageNoStateEntity(image.ImageEntity):
