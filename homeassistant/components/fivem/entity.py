@@ -30,6 +30,8 @@ class FiveMEntityDescription(EntityDescription):
 class FiveMEntity(CoordinatorEntity[FiveMDataUpdateCoordinator]):
     """Representation of a FiveM base entity."""
 
+    _attr_has_entity_name = True
+
     entity_description: FiveMEntityDescription
 
     def __init__(
@@ -41,7 +43,6 @@ class FiveMEntity(CoordinatorEntity[FiveMDataUpdateCoordinator]):
         super().__init__(coordinator)
         self.entity_description = description
 
-        self._attr_name = f"{self.coordinator.host} {description.name}"
         self._attr_unique_id = f"{self.coordinator.unique_id}-{description.key}".lower()
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self.coordinator.unique_id)},
