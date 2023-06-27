@@ -8,9 +8,9 @@
       "name": "Home Assistant",
       "type": "python",
       "request": "launch",
-      "module": "pytest",
+      "module": "homeassistant",
       "justMyCode": false,
-      "args": ["tests/components/matter/test_diagnostics.py"],
+      "args": ["--debug", "-c", "config"],
       "preLaunchTask": "Compile English translations"
     },
     {
