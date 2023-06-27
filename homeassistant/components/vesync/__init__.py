@@ -15,13 +15,20 @@ from .const import (
     SERVICE_UPDATE_DEVS,
     VS_DISCOVERY,
     VS_FANS,
+    VS_HUMIDIFIERS,
     VS_LIGHTS,
     VS_MANAGER,
     VS_SENSORS,
     VS_SWITCHES,
 )
 
-PLATFORMS = [Platform.FAN, Platform.LIGHT, Platform.SENSOR, Platform.SWITCH]
+PLATFORMS = [
+    Platform.FAN,
+    Platform.LIGHT,
+    Platform.SENSOR,
+    Platform.SWITCH,
+    Platform.HUMIDIFIER,
+]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -54,6 +61,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     fans = hass.data[DOMAIN][VS_FANS] = []
     lights = hass.data[DOMAIN][VS_LIGHTS] = []
     sensors = hass.data[DOMAIN][VS_SENSORS] = []
+    humifiers = hass.data[DOMAIN][VS_HUMIDIFIERS] = []
     platforms = []
 
     if device_dict[VS_SWITCHES]:
@@ -63,6 +71,10 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     if device_dict[VS_FANS]:
         fans.extend(device_dict[VS_FANS])
         platforms.append(Platform.FAN)
+
+    if device_dict[VS_HUMIDIFIERS]:
+        humifiers.extend(device_dict[VS_HUMIDIFIERS])
+        platforms.append(Platform.HUMIDIFIER)
 
     if device_dict[VS_LIGHTS]:
         lights.extend(device_dict[VS_LIGHTS])
@@ -81,12 +93,14 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         fans = hass.data[DOMAIN][VS_FANS]
         lights = hass.data[DOMAIN][VS_LIGHTS]
         sensors = hass.data[DOMAIN][VS_SENSORS]
+        humifiers = hass.data[DOMAIN][VS_HUMIDIFIERS]
 
         dev_dict = await async_process_devices(hass, manager)
         switch_devs = dev_dict.get(VS_SWITCHES, [])
         fan_devs = dev_dict.get(VS_FANS, [])
         light_devs = dev_dict.get(VS_LIGHTS, [])
         sensor_devs = dev_dict.get(VS_SENSORS, [])
+        humifier_devs = dev_dict.get(VS_HUMIDIFIERS, [])
 
         switch_set = set(switch_devs)
         new_switches = list(switch_set.difference(switches))
@@ -107,6 +121,18 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         if new_fans and not fans:
             fans.extend(new_fans)
             hass.async_create_task(forward_setup(config_entry, Platform.FAN))
+
+        humifier_set = set(humifier_devs)
+        new_humifiers = list(humifier_set.difference(humifiers))
+        if new_humifiers and humifiers:
+            humifiers.extend(new_humifiers)
+            async_dispatcher_send(
+                hass, VS_DISCOVERY.format(VS_HUMIDIFIERS), new_humifiers
+            )
+            return
+        if new_humifiers and not humifiers:
+            humifiers.extend(new_humifiers)
+            hass.async_create_task(forward_setup(config_entry, Platform.HUMIDIFIER))
 
         light_set = set(light_devs)
         new_lights = list(light_set.difference(lights))

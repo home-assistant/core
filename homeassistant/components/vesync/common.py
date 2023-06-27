@@ -6,7 +6,9 @@ from pyvesync.vesyncbasedevice import VeSyncBaseDevice
 
 from homeassistant.helpers.entity import DeviceInfo, Entity, ToggleEntity
 
-from .const import DOMAIN, VS_FANS, VS_LIGHTS, VS_SENSORS, VS_SWITCHES
+from .const import DOMAIN, VS_FANS, VS_HUMIDIFIERS, VS_LIGHTS, VS_SENSORS, VS_SWITCHES
+
+DEV_TYPE_TO_HA = ["LUH-A602S-WUS"]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -18,14 +20,27 @@ async def async_process_devices(hass, manager):
     devices[VS_FANS] = []
     devices[VS_LIGHTS] = []
     devices[VS_SENSORS] = []
+    devices[VS_HUMIDIFIERS] = []
 
     await hass.async_add_executor_job(manager.update)
 
-    if manager.fans:
-        devices[VS_FANS].extend(manager.fans)
+    fans = list(
+        filter(lambda fan: (fan.device_type not in DEV_TYPE_TO_HA), manager.fans)
+    )
+    humifiders = list(
+        filter(lambda fan: (fan.device_type in DEV_TYPE_TO_HA), manager.fans)
+    )
+    if fans:
+        devices[VS_FANS].extend(fans)
         # Expose fan sensors separately
-        devices[VS_SENSORS].extend(manager.fans)
-        _LOGGER.info("%d VeSync fans found", len(manager.fans))
+        devices[VS_SENSORS].extend(fans)
+        _LOGGER.info("%d VeSync fans found", len(fans))
+
+    if humifiders:
+        devices[VS_HUMIDIFIERS].extend(humifiders)
+        # Expose humidifier sensors separately
+        devices[VS_SENSORS].extend(humifiders)
+        _LOGGER.info("%d VeSync humifiders found", len(humifiders))
 
     if manager.bulbs:
         devices[VS_LIGHTS].extend(manager.bulbs)
