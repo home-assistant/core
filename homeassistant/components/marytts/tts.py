@@ -11,7 +11,10 @@ import homeassistant.helpers.config_validation as cv
 CONF_VOICE = "voice"
 CONF_CODEC = "codec"
 
-SUPPORT_LANGUAGES = MaryTTS.supported_locales()
+MIMIC_LANGUAGES = ["af_ZA", "bn", "de_DE", "el_GR", "en_UK", "es_ES", "fa", "fi_FI", "fr_FR", "gu_IN", "ha_NE", "hu_HU", "it_IT", "jv_ID", "ko_KO", "ne_NP", "nl", "pl_PL", "ru_RU", "sw", "te_IN", "tn_ZA", "uk_UK", "vi_VN", "yo"]
+MARY_LANGUAGES = MaryTTS.supported_locales()
+
+SUPPORT_LANGUAGES = [*MARY_LANGUAGES, *MIMIC_LANGUAGES]
 SUPPORT_CODEC = MaryTTS.supported_codecs()
 SUPPORT_OPTIONS = [CONF_EFFECT]
 SUPPORT_EFFECTS = MaryTTS.supported_effects().keys()
