@@ -389,7 +389,7 @@ class Entity(ABC):
         device_class_key = self.device_class or "_"
         platform = self.platform
         name_translation_key = (
-            f"component.{platform.domain}.entity_component." f"{device_class_key}.name"
+            f"component.{platform.domain}.entity_component.{device_class_key}.name"
         )
         return platform.component_translations.get(name_translation_key)
 
