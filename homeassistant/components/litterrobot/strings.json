@@ -128,6 +128,11 @@
         "name": "Panel lockout"
       }
     },
+    "time": {
+      "sleep_mode_start_time": {
+        "name": "Sleep mode start time"
+      }
+    },
     "vacuum": {
       "litter_box": {
         "name": "Litter box"
