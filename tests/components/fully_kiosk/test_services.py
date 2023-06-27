@@ -5,9 +5,13 @@ import pytest
 
 from homeassistant.components.fully_kiosk.const import (
     ATTR_APPLICATION,
+    ATTR_CONFIG_TYPE,
+    ATTR_KEY,
     ATTR_URL,
+    ATTR_VALUE,
     DOMAIN,
     SERVICE_LOAD_URL,
+    SERVICE_SET_CONFIG,
     SERVICE_START_APPLICATION,
 )
 from homeassistant.const import ATTR_DEVICE_ID
@@ -50,6 +54,37 @@ async def test_services(
     )
 
     mock_fully_kiosk.startApplication.assert_called_once_with(app)
+
+    key = "test_key"
+    value = "test_value"
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_CONFIG,
+        {
+            ATTR_DEVICE_ID: [device_entry.id],
+            ATTR_CONFIG_TYPE: "string",
+            ATTR_KEY: "test_key",
+            ATTR_VALUE: "test_value",
+        },
+        blocking=True,
+    )
+
+    mock_fully_kiosk.setConfigurationString.assert_called_once_with(key, value)
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_CONFIG,
+        {
+            ATTR_DEVICE_ID: [device_entry.id],
+            ATTR_CONFIG_TYPE: "bool",
+            ATTR_KEY: "test_key",
+            ATTR_VALUE: "test_value",
+        },
+        blocking=True,
+    )
+
+    mock_fully_kiosk.setConfigurationBool.assert_called_once_with(key, value)
 
 
 async def test_service_unloaded_entry(
