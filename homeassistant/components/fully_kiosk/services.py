@@ -70,10 +70,9 @@ async def async_setup_services(hass: HomeAssistant) -> None:
         for coordinator in await collect_coordinators(call.data[ATTR_DEVICE_ID]):
             # Fully API has different methods for setting string and bool values.
             # check if call.data[ATTR_VALUE] is a bool
-            if (
-                isinstance(call.data[ATTR_VALUE], bool)
-                or call.data[ATTR_VALUE].lower() in ("true", "false")
-            ):
+            if isinstance(call.data[ATTR_VALUE], bool) or call.data[
+                ATTR_VALUE
+            ].lower() in ("true", "false"):
                 await coordinator.fully.setConfigurationBool(
                     call.data[ATTR_KEY], call.data[ATTR_VALUE]
                 )
