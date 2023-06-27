@@ -28,14 +28,14 @@ VICTRON_BATTERY_MONITOR_SERVICE_INFO = BluetoothServiceInfo(
 VICTRON_BATTERY_MONITOR_TOKEN = "aff4d0995b7d1e176c0c33ecb9e70dcd"
 VICTRON_BATTERY_MONITOR_SENSORS = {
     "battery_monitor_aux_mode": "DISABLED",
-    "battery_monitor_consumed_amp_hours": "50.0",
+    "battery_monitor_consumed_ampere_hours": "50.0",
     "battery_monitor_current": "0.0",
     "battery_monitor_remaining_minutes": "65535",
     "battery_monitor_state_of_charge": "50.0",
     "battery_monitor_voltage": "12.53",
     "battery_monitor_alarm": "no alarm",
     "battery_monitor_temperature": "unknown",
-    "battery_monitor_secondary_voltage": "unknown",
+    "battery_monitor_starter_voltage": "unknown",
     "battery_monitor_midpoint_voltage": "unknown",
 }
 
@@ -70,11 +70,11 @@ VICTRON_DC_ENERGY_METER_SERVICE_INFO = BluetoothServiceInfo(
 VICTRON_DC_ENERGY_METER_TOKEN = "aff4d0995b7d1e176c0c33ecb9e70dcd"
 
 VICTRON_DC_ENERGY_METER_SENSORS = {
-    "dc_energy_meter_type": "FUEL_CELL",
+    "dc_energy_meter_meter_type": "FUEL_CELL",
     "dc_energy_meter_aux_mode": "STARTER_VOLTAGE",
     "dc_energy_meter_current": "0.0",
     "dc_energy_meter_voltage": "12.52",
-    "dc_energy_meter_secondary_voltage": "-0.01",
+    "dc_energy_meter_starter_voltage": "-0.01",
     "dc_energy_meter_alarm": "no alarm",
     "dc_energy_meter_temperature": "unknown",
 }
@@ -110,11 +110,11 @@ VICTRON_SOLAR_CHARGER_SERVICE_INFO = BluetoothServiceInfo(
 VICTRON_SOLAR_CHARGER_TOKEN = "adeccb947395801a4dd45a2eaa44bf17"
 
 VICTRON_SOLAR_CHARGER_SENSORS = {
-    "solar_charger_state": "ABSORPTION",
+    "solar_charger_charge_state": "ABSORPTION",
     "solar_charger_battery_voltage": "13.88",
     "solar_charger_battery_current": "1.4",
     "solar_charger_yield_today": "30",
-    "solar_charger_power": "19",
+    "solar_charger_solar_power": "19",
     "solar_charger_external_device_load": "0.0",
 }
 

@@ -3,6 +3,7 @@
 import logging
 
 from sensor_state_data import DeviceKey
+from victron_ble.parser import Keys, Units
 
 from homeassistant import config_entries
 from homeassistant.components.bluetooth.passive_update_processor import (
@@ -13,28 +14,167 @@ from homeassistant.components.bluetooth.passive_update_processor import (
     PassiveBluetoothProcessorEntity,
 )
 from homeassistant.components.sensor import (
+    SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
+)
+from homeassistant.const import (
+    PERCENTAGE,
+    SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+    UnitOfElectricCurrent,
+    UnitOfElectricPotential,
+    UnitOfEnergy,
+    UnitOfPower,
+    UnitOfTemperature,
+    UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.sensor import sensor_device_info_to_hass_device_info
 
 from .const import DOMAIN
-from .custom_state_data import SensorDeviceClass
 
 LOGGER = logging.getLogger(__name__)
 
+SENSOR_DESCRIPTIONS = {
+    Keys.AC_IN_POWER: SensorEntityDescription(
+        key=Keys.AC_IN_POWER,
+        device_class=SensorDeviceClass.POWER,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    Keys.AC_IN_STATE: SensorEntityDescription(
+        key=Keys.AC_IN_STATE,
+        device_class=SensorDeviceClass.ENUM,
+    ),
+    Keys.AC_OUT_POWER: SensorEntityDescription(
+        key=Keys.AC_OUT_POWER,
+        device_class=SensorDeviceClass.POWER,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    Keys.AC_OUT_STATE: SensorEntityDescription(
+        key=Keys.AC_OUT_STATE,
+        device_class=SensorDeviceClass.ENUM,
+    ),
+    Keys.ALARM: SensorEntityDescription(
+        key=Keys.ALARM,
+        device_class=SensorDeviceClass.ENUM,
+    ),
+    Keys.AUX_MODE: SensorEntityDescription(
+        key=Keys.AUX_MODE,
+        device_class=SensorDeviceClass.ENUM,
+    ),
+    Keys.BATTERY_CURRENT: SensorEntityDescription(
+        key=Keys.BATTERY_CURRENT,
+        device_class=SensorDeviceClass.CURRENT,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    Keys.BATTERY_TEMPERATURE: SensorEntityDescription(
+        key=Keys.BATTERY_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    Keys.BATTERY_VOLTAGE: SensorEntityDescription(
+        key=Keys.BATTERY_VOLTAGE,
+        device_class=SensorDeviceClass.VOLTAGE,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    Keys.CHARGE_STATE: SensorEntityDescription(
+        key=Keys.CHARGE_STATE,
+        device_class=SensorDeviceClass.ENUM,
+    ),
+    Keys.CONSUMED_AMPERE_HOURS: SensorEntityDescription(
+        key=Keys.CONSUMED_AMPERE_HOURS,
+        native_unit_of_measurement=Units.ELECTRIC_CURRENT_FLOW_AMPERE_HOUR,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    Keys.CURRENT: SensorEntityDescription(
+        key=Keys.CURRENT,
+        device_class=SensorDeviceClass.CURRENT,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    Keys.DEVICE_STATE: SensorEntityDescription(
+        key=Keys.DEVICE_STATE,
+        device_class=SensorDeviceClass.ENUM,
+    ),
+    Keys.EXTERNAL_DEVICE_LOAD: SensorEntityDescription(
+        key=Keys.EXTERNAL_DEVICE_LOAD,
+        device_class=SensorDeviceClass.CURRENT,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    Keys.METER_TYPE: SensorEntityDescription(
+        key=Keys.METER_TYPE,
+        device_class=SensorDeviceClass.ENUM,
+    ),
+    Keys.MIDPOINT_VOLTAGE: SensorEntityDescription(
+        key=Keys.MIDPOINT_VOLTAGE,
+        device_class=SensorDeviceClass.VOLTAGE,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    Keys.REMAINING_MINUTES: SensorEntityDescription(
+        key=Keys.REMAINING_MINUTES,
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorDeviceClass.SIGNAL_STRENGTH: SensorEntityDescription(
+        key=SensorDeviceClass.SIGNAL_STRENGTH.value,
+        device_class=SensorDeviceClass.SIGNAL_STRENGTH,
+        native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    Keys.SOLAR_POWER: SensorEntityDescription(
+        key=Keys.SOLAR_POWER,
+        device_class=SensorDeviceClass.POWER,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    Keys.STARTER_VOLTAGE: SensorEntityDescription(
+        key=Keys.STARTER_VOLTAGE,
+        device_class=SensorDeviceClass.VOLTAGE,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    Keys.STATE_OF_CHARGE: SensorEntityDescription(
+        key=Keys.STATE_OF_CHARGE,
+        device_class=SensorDeviceClass.BATTERY,
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    Keys.TEMPERATURE: SensorEntityDescription(
+        key=Keys.TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    Keys.VOLTAGE: SensorEntityDescription(
+        key=Keys.VOLTAGE,
+        device_class=SensorDeviceClass.VOLTAGE,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    Keys.YIELD_TODAY: SensorEntityDescription(
+        key=Keys.YIELD_TODAY,
+        device_class=SensorDeviceClass.ENERGY,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+}
 
-def _victron_state_class(device_key: DeviceKey):
-    """Return the state class for a sensor."""
-    key = device_key.key.lower()
-    if "yield" in key:
-        return SensorStateClass.TOTAL_INCREASING
-    if "alarm" in key or "state" in key or "mode" in key:
-        return None
-    return SensorStateClass.MEASUREMENT
+
+def _device_key_to_bluetooth_entity_key(
+    device_key: DeviceKey,
+) -> PassiveBluetoothEntityKey:
+    """Convert a device key to an entity key."""
+    return PassiveBluetoothEntityKey(device_key.key, device_key.device_id)
 
 
 def sensor_update_to_bluetooth_data_update(sensor_update):
@@ -45,28 +185,17 @@ def sensor_update_to_bluetooth_data_update(sensor_update):
             for device_id, device_info in sensor_update.devices.items()
         },
         entity_descriptions={
-            PassiveBluetoothEntityKey(
-                device_key.key, device_key.device_id
-            ): SensorEntityDescription(
-                key=device_key.key,
-                device_class=SensorDeviceClass(description.device_class.value)
-                if description.device_class
-                else SensorDeviceClass.ENUM,
-                native_unit_of_measurement=description.native_unit_of_measurement,
-                state_class=_victron_state_class(device_key),
-            )
-            for device_key, description in sensor_update.entity_descriptions.items()
+            _device_key_to_bluetooth_entity_key(device_key): SENSOR_DESCRIPTIONS[
+                device_key.key
+            ]
+            for device_key in sensor_update.entity_descriptions
         },
         entity_data={
-            PassiveBluetoothEntityKey(
-                device_key.key, device_key.device_id
-            ): sensor_values.native_value
+            _device_key_to_bluetooth_entity_key(device_key): sensor_values.native_value
             for device_key, sensor_values in sensor_update.entity_values.items()
         },
         entity_names={
-            PassiveBluetoothEntityKey(
-                device_key.key, device_key.device_id
-            ): sensor_values.name
+            _device_key_to_bluetooth_entity_key(device_key): sensor_values.name
             for device_key, sensor_values in sensor_update.entity_values.items()
         },
     )
