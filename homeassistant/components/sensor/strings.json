@@ -247,7 +247,7 @@
       "name": "VOCs"
     },
     "volatile_organic_compounds_parts": {
-      "name": "[%key:component::sensor::entity_component::volatile_organic_compounds::name%]"
+      "name": "VOCs ratio"
     },
     "voltage": {
       "name": "Voltage"
