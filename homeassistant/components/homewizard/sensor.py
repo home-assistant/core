@@ -386,7 +386,7 @@ async def async_setup_entry(
     async_add_entities(
         HomeWizardSensorEntity(coordinator, entry, description)
         for description in SENSORS
-        if getattr(coordinator.data.data, description.key, None) is not None
+        if description.value_fn(coordinator.data.data) is not None
     )
 
 
