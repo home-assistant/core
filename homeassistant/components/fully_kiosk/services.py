@@ -72,8 +72,7 @@ async def async_setup_services(hass: HomeAssistant) -> None:
             # check if call.data[ATTR_VALUE] is a bool
             if (
                 isinstance(call.data[ATTR_VALUE], bool)
-                or call.data[ATTR_VALUE].lower() == "true"
-                or call.data[ATTR_VALUE].lower() == "false"
+                or call.data[ATTR_VALUE].lower() in ("true", "false")
             ):
                 await coordinator.fully.setConfigurationBool(
                     call.data[ATTR_KEY], call.data[ATTR_VALUE]
