@@ -64,13 +64,12 @@ async def test_get_triggers(
         STATE_ON,
         {
             const.ATTR_HUMIDITY: 23,
-            const.ATTR_CURRENT_HUMIDITY: 48,
             ATTR_MODE: "home",
             const.ATTR_AVAILABLE_MODES: ["home", "away"],
             ATTR_SUPPORTED_FEATURES: 1,
         },
     )
-    humidifier_trigger_types = ["current_humidity_changed", "target_humidity_changed"]
+    humidifier_trigger_types = ["target_humidity_changed"]
     toggle_trigger_types = ["turned_on", "turned_off", "changed_states"]
     expected_triggers = [
         {
@@ -302,13 +301,13 @@ async def test_if_fires_on_state_change(
         },
     )
 
-    # Fake that the humidity is changing
+    # Fake that the humidity target is changing
     hass.states.async_set(entry.entity_id, STATE_ON, {const.ATTR_HUMIDITY: 7})
     await hass.async_block_till_done()
     assert len(calls) == 1
     assert calls[0].data["some"] == "target_humidity_changed_below"
 
-    # Fake that the humidity is changing
+    # Fake that the humidity target is changing
     hass.states.async_set(entry.entity_id, STATE_ON, {const.ATTR_HUMIDITY: 37})
     await hass.async_block_till_done()
     assert len(calls) == 2
