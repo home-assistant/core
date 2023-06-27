@@ -357,6 +357,7 @@ omit =
     homeassistant/components/fitbit/*
     homeassistant/components/fivem/__init__.py
     homeassistant/components/fivem/binary_sensor.py
+    homeassistant/components/fivem/coordinator.py
     homeassistant/components/fivem/sensor.py
     homeassistant/components/fixer/sensor.py
     homeassistant/components/fjaraskupan/__init__.py
