@@ -446,6 +446,10 @@ DISCOVERY_SCHEMAS = [
         ),
         # important: make sure to rule out all device types that are also based on the
         # onoff and levelcontrol clusters !
-        not_device_type=(device_types.Fan, device_types.GenericSwitch),
+        not_device_type=(
+            device_types.Fan,
+            device_types.GenericSwitch,
+            device_types.OnOffPlugInUnit,
+        ),
     ),
 ]
