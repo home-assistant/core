@@ -105,7 +105,6 @@ class MqttImage(MqttEntity, ImageEntity):
     _entity_id_format: str = image.ENTITY_ID_FORMAT
     _last_image: bytes | None = None
     _client: httpx.AsyncClient
-    _url: str | None = None
     _url_template: Callable[[ReceivePayloadType], ReceivePayloadType]
     _topic: dict[str, Any]
 
@@ -139,6 +138,8 @@ class MqttImage(MqttEntity, ImageEntity):
             self._attr_content_type = config.get(
                 CONF_CONTENT_TYPE, DEFAULT_CONTENT_TYPE
             )
+        if CONF_URL_TOPIC in config:
+            self._attr_image_url = None
         self._url_template = MqttValueTemplate(
             config.get(CONF_URL_TEMPLATE), entity=self
         ).async_render_with_possible_json_value
@@ -194,15 +195,15 @@ class MqttImage(MqttEntity, ImageEntity):
 
             try:
                 url = cv.url(self._url_template(msg.payload))
-                self._url = url
+                self._attr_image_url = url
             except vol.Invalid:
                 _LOGGER.error(
                     "Invalid image URL '%s' received at topic %s",
                     msg.payload,
                     msg.topic,
                 )
-                self._last_image = None
             self._attr_image_last_updated = dt_util.utcnow()
+            self._cached_image = None
             get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
         add_subscribe_topic(CONF_URL_TOPIC, image_from_url_request_received)
@@ -220,7 +221,3 @@ class MqttImage(MqttEntity, ImageEntity):
         if CONF_IMAGE_TOPIC in self._config:
             return self._last_image
         return await super().async_image()
-
-    async def async_image_url(self) -> str | None:
-        """Return URL of image."""
-        return self._url
