@@ -1,8 +1,7 @@
 ARG \
-    BUILD_FROM \
-    BUILD_VERSION
+    BUILD_FROM
 
-FROM $BUILD_FROM:$BUILD_VERSION
+FROM $BUILD_FROM
 
 # NOTE: intel-nuc will be replaced by generic-x86-64. Make sure to apply
 # changes in generic-x86-64 as well.
