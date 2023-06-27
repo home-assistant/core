@@ -450,6 +450,11 @@ DISCOVERY_SCHEMAS = [
             device_types.Fan,
             device_types.GenericSwitch,
             device_types.OnOffPlugInUnit,
+            device_types.HeatingCoolingUnit,
+            device_types.Pump,
+            device_types.CastingVideoClient,
+            device_types.VideoRemoteControl,
+            device_types.Speaker,
         ),
     ),
 ]
