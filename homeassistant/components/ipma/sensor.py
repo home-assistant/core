@@ -1,6 +1,7 @@
 """Support for IPMA sensors."""
 from __future__ import annotations
 
+from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 import logging
 
@@ -24,7 +25,7 @@ _LOGGER = logging.getLogger(__name__)
 class IPMARequiredKeysMixin:
     """Mixin for required keys."""
 
-    update_method: str
+    value_fn: Callable[[Location, IPMA_API], Coroutine[Location, IPMA_API, int | None]]
 
 
 @dataclass
@@ -32,12 +33,20 @@ class IPMASensorEntityDescription(SensorEntityDescription, IPMARequiredKeysMixin
     """Describes IPMA sensor entity."""
 
 
+async def async_retrive_rcm(location: Location, api: IPMA_API) -> int | None:
+    """Retrieve RCM."""
+    fire_risk = await location.fire_risk(api)
+    if fire_risk:
+        return fire_risk.rcm
+    return None
+
+
 SENSOR_TYPES: tuple[IPMASensorEntityDescription, ...] = (
     IPMASensorEntityDescription(
         key="rcm",
         name="Fire risk",
         translation_key="fire_risk",
-        update_method="fire_risk",
+        value_fn=async_retrive_rcm,
     ),
 )
 
@@ -76,8 +85,6 @@ class IPMASensor(SensorEntity, IPMADevice):
     async def async_update(self) -> None:
         """Update Fire risk."""
         async with async_timeout.timeout(10):
-            if self.entity_description.update_method == "fire_risk":
-                rcm = await self._location.fire_risk(self._api)
-
-                if rcm:
-                    self._attr_native_value = rcm.rcm
+            self._attr_native_value = await self.entity_description.value_fn(
+                self._location, self._api
+            )
