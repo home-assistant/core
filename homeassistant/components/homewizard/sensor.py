@@ -52,7 +52,6 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
     HomeWizardSensorEntityDescription(
         key="smr_version",
         translation_key="dsmr_version",
-        name="DSMR version",
         icon="mdi:counter",
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: data.smr_version,
