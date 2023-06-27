@@ -45,7 +45,8 @@ SCHEMA_WEBSOCKET_EVENT = vol.Schema(
 WS_NO_ADMIN_ENDPOINTS = re.compile(
     r"^(?:"
     r"|/ingress/(session|validate_session)"
-    r"|/addons/[^/]+/info" r")$" # noqa: ISC001
+    r"|/addons/[^/]+/info"
+    r")$" # noqa: ISC001
 )
 # fmt: on
 # pylint: enable=implicit-str-concat

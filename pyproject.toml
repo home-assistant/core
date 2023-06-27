@@ -272,7 +272,6 @@ disable = [
     "unnecessary-direct-lambda-call", # PLC3002
     "unnecessary-lambda-assignment", # PLC3001
     "unneeded-not", # SIM208
-    "use-sequence-for-iteration", # PLC0208
     "useless-import-alias", # PLC0414
     "wrong-import-order", # I001
     "wrong-import-position", # E402
@@ -505,6 +504,8 @@ ignore = [
     "E501",  # line too long
     "E731",  # do not assign a lambda expression, use a def
     "PLC1901", # Lots of false positives
+    # False positives https://github.com/astral-sh/ruff/issues/5386
+    "PLC0208", # Use a sequence type instead of a `set` when iterating over values
     "PLR0911", # Too many return statements ({returns} > {max_returns})
     "PLR0912", # Too many branches ({branches} > {max_branches})
     "PLR0913", # Too many arguments to function call ({c_args} > {max_args})
@@ -515,6 +516,7 @@ ignore = [
     "UP007", # keep type annotation style as is
     # Ignored due to performance: https://github.com/charliermarsh/ruff/issues/2923
     "UP038", # Use `X | Y` in `isinstance` call instead of `(X, Y)`
+
 ]
 
 [tool.ruff.flake8-import-conventions.extend-aliases]
