@@ -88,7 +88,7 @@ class MatterEntity(Entity):
                     attr_path_filter=attr_path,
                 )
             )
-        await self.matter_client.subscribe_attributes(
+        await self.matter_client.subscribe_attribute(
             self._endpoint.node.node_id, sub_paths
         )
         # subscribe to node (availability changes)
