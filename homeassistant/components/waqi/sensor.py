@@ -87,11 +87,25 @@ async def async_setup_platform(
     # if there are no locations specified, it will use the list of stations in the config file
     # if there are locations specified, stations becomes a filter to limit within the location
     
-    if (locations.count < 1 & station_filter.count > 0)
+    if len(station_filter) > 0:
         try:
-            for station_name in station_filter
-               waqi_sensor = WaqiSensor(client, station_name)
-                dev.append(waqi_sensor)
+            for station_name in station_filter:
+                if '@' in station_name:
+                    _LOGGER.info("Checking numerical station: %s", station_name)
+                    station = await client.get_station_by_name(station_name)
+                    _LOGGER.debug("got station object: %s", station)
+                    waqi_sensor = WaqiSensor(client, station)             
+                    if waqi_sensor.uid:
+                        dev.append(waqi_sensor)
+
+                else:
+                    _LOGGER.info("Checking named station: %s", station_name)
+                    station = await client.get_station_by_name(station_name)
+                    _LOGGER.debug("got station object: %s", station)
+                    #station["uid"] = station_name
+                    waqi_sensor = WaqiSensor(client, station)
+                    if waqi_sensor.uid:
+                        dev.append(waqi_sensor)
         except (
             aiohttp.client_exceptions.ClientConnectorError,
             asyncio.TimeoutError,
@@ -99,9 +113,10 @@ async def async_setup_platform(
             _LOGGER.exception("Failed to connect to WAQI servers")
             raise PlatformNotReady from err
 
-    elif locations.count > 0
+    elif len(locations) > 0:
         try:
             for location_name in locations:
+                _LOGGER.debug("Finding stations by location: %s", location_name)
                 stations = await client.search(location_name)
                 _LOGGER.debug("The following stations were returned: %s", stations)
                 for station in stations:
@@ -118,9 +133,11 @@ async def async_setup_platform(
         ) as err:
             _LOGGER.exception("Failed to connect to WAQI servers")
             raise PlatformNotReady from err
-    else
+    else:
         _LOGGER.exception("No locations or stations specified")
-
+        raise PlatformNotReady
+ 
+    _LOGGER.info("Getting feed from %s station(s)", len(dev))
     async_add_entities(dev, True)
 
 
@@ -137,17 +154,27 @@ class WaqiSensor(SensorEntity):
         try:
             self.uid = station["uid"]
         except (KeyError, TypeError):
-            self.uid = None
+            try:
+                self.uid = station["idx"]
+            except (KeyError, TypeError):
+                self.uid = None
 
         try:
             self.url = station["station"]["url"]
         except (KeyError, TypeError):
-            self.url = None
+            try:
+                self.url = station["city"]["url"]    
+            except (KeyError, TypeError):               
+                self.url = None
+            
 
         try:
             self.station_name = station["station"]["name"]
         except (KeyError, TypeError):
-            self.station_name = None
+            try:
+                self.station_name = station["city"]["name"]    
+            except (KeyError, TypeError):
+                self.station_name = None
 
         self._data = None
 
