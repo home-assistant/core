@@ -52,7 +52,7 @@ async def async_setup_entry(
 
 
 class Device(CoordinatorEntity[FreedomproDataUpdateCoordinator], SensorEntity):
-    """Representation of an Freedompro sensor."""
+    """Representation of a Freedompro sensor."""
 
     _attr_has_entity_name = True
     _attr_name = None
