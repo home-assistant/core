@@ -38,13 +38,16 @@
       "restart_browser": {
         "name": "Restart browser"
       },
+      "restart_device": {
+        "name": "Restart device"
+      },
       "to_foreground": {
         "name": "Bring to foreground"
       },
       "to_background": {
         "name": "Send to background"
       },
-      "load_start_urk": {
+      "load_start_url": {
         "name": "Load start URL"
       }
     },

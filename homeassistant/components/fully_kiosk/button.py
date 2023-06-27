@@ -46,7 +46,7 @@ BUTTONS: tuple[FullyButtonEntityDescription, ...] = (
     ),
     FullyButtonEntityDescription(
         key="rebootDevice",
-        translation_key="",
+        translation_key="restart_device",
         device_class=ButtonDeviceClass.RESTART,
         entity_category=EntityCategory.CONFIG,
         press_action=lambda fully: fully.rebootDevice(),
@@ -63,7 +63,7 @@ BUTTONS: tuple[FullyButtonEntityDescription, ...] = (
     ),
     FullyButtonEntityDescription(
         key="loadStartUrl",
-        translation_key="load_start_urk",
+        translation_key="load_start_url",
         press_action=lambda fully: fully.loadStartUrl(),
     ),
 )
