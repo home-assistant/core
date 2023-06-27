@@ -34,13 +34,6 @@ set_config:
       required: true
       selector:
         text:
-    config_type:
-      name: Type
-      description: Type of configuration parameter (either 'string' or 'bool').
-      example: "string"
-      required: true
-      selector:
-        text:
 
 start_application:
   name: Start Application

@@ -12,7 +12,6 @@ import homeassistant.helpers.device_registry as dr
 
 from .const import (
     ATTR_APPLICATION,
-    ATTR_CONFIG_TYPE,
     ATTR_KEY,
     ATTR_URL,
     ATTR_VALUE,
@@ -69,12 +68,18 @@ async def async_setup_services(hass: HomeAssistant) -> None:
     async def async_set_config(call: ServiceCall) -> None:
         """Set a Fully Kiosk Browser config value on the device."""
         for coordinator in await collect_coordinators(call.data[ATTR_DEVICE_ID]):
-            if call.data[ATTR_CONFIG_TYPE] == "string":
-                await coordinator.fully.setConfigurationString(
+            # Fully API has different methods for setting string and bool values.
+            # check if call.data[ATTR_VALUE] is a bool
+            if (
+                isinstance(call.data[ATTR_VALUE], bool)
+                or call.data[ATTR_VALUE].lower() == "true"
+                or call.data[ATTR_VALUE].lower() == "false"
+            ):
+                await coordinator.fully.setConfigurationBool(
                     call.data[ATTR_KEY], call.data[ATTR_VALUE]
                 )
-            elif call.data[ATTR_CONFIG_TYPE] == "bool":
-                await coordinator.fully.setConfigurationBool(
+            else:
+                await coordinator.fully.setConfigurationString(
                     call.data[ATTR_KEY], call.data[ATTR_VALUE]
                 )
 
@@ -106,9 +111,8 @@ async def async_setup_services(hass: HomeAssistant) -> None:
             vol.All(
                 {
                     vol.Required(ATTR_DEVICE_ID): cv.ensure_list,
-                    vol.Required(ATTR_CONFIG_TYPE): vol.In(["string", "bool"]),
                     vol.Required(ATTR_KEY): cv.string,
-                    vol.Required(ATTR_VALUE): vol.Any(cv.string, cv.boolean),
+                    vol.Required(ATTR_VALUE): vol.Any(str, bool),
                 }
             )
         ),
