@@ -1034,7 +1034,10 @@ class _ScriptRun:
             try:
                 response = self._variables[self._action[CONF_RESPONSE_VARIABLE]]
             except KeyError as ex:
-                raise _AbortScript(f"Response variable '{self._action[CONF_RESPONSE_VARIABLE]}' is not defined") from ex
+                raise _AbortScript(
+                    f"Response variable '{self._action[CONF_RESPONSE_VARIABLE]}' "
+                    "is not defined"
+                ) from ex
         else:
             response = None
         raise _StopScript(stop, response)
