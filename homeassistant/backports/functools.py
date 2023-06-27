@@ -7,23 +7,22 @@ from typing import Any, Generic, TypeVar, overload
 
 from typing_extensions import Self
 
-_T = TypeVar("_T")
-_R = TypeVar("_R")
+_R_co = TypeVar("_R_co", covariant=True)
 
 
-class cached_property(Generic[_T, _R]):  # pylint: disable=invalid-name
+class cached_property(Generic[_R_co]):  # pylint: disable=invalid-name
     """Backport of Python 3.12's cached_property.
 
     Includes https://github.com/python/cpython/pull/101890/files
     """
 
-    def __init__(self, func: Callable[[_T], _R]) -> None:
+    def __init__(self, func: Callable[[Any], _R_co]) -> None:
         """Initialize."""
         self.func = func
         self.attrname: Any = None
         self.__doc__ = func.__doc__
 
-    def __set_name__(self, owner: type[_T], name: str) -> None:
+    def __set_name__(self, owner: type[Any], name: str) -> None:
         """Set name."""
         if self.attrname is None:
             self.attrname = name
@@ -34,14 +33,16 @@ class cached_property(Generic[_T, _R]):  # pylint: disable=invalid-name
             )
 
     @overload
-    def __get__(self, instance: None, owner: type[_T]) -> Self:
+    def __get__(self, instance: None, owner: type[Any]) -> Self:
         ...
 
     @overload
-    def __get__(self, instance: _T, owner: type[_T]) -> _R:
+    def __get__(self, instance: Any, owner: type[Any]) -> _R_co:
         ...
 
-    def __get__(self, instance: _T | None, owner: type[_T] | None = None) -> _R | Self:
+    def __get__(
+        self, instance: Any | None, owner: type[Any] | None = None
+    ) -> _R_co | Self:
         """Get."""
         if instance is None:
             return self
