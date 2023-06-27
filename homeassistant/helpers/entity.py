@@ -381,17 +381,31 @@ class Entity(ABC):
             return self.entity_description.has_entity_name
         return False
 
-    @cached_property
-    def _device_class_name(self) -> str | None:
+    def _device_class_name_helper(
+        self,
+        component_translations: dict[str, Any],
+    ) -> str | None:
         """Return a translated name of the entity based on its device class."""
         if not self.has_entity_name:
             return None
         device_class_key = self.device_class or "_"
         platform = self.platform
         name_translation_key = (
-            f"component.{platform.domain}.entity_component." f"{device_class_key}.name"
+            f"component.{platform.domain}.entity_component.{device_class_key}.name"
         )
-        return platform.component_translations.get(name_translation_key)
+        return component_translations.get(name_translation_key)
+
+    @cached_property
+    def _object_id_device_class_name(self) -> str | None:
+        """Return a translated name of the entity based on its device class."""
+        return self._device_class_name_helper(
+            self.platform.object_id_component_translations
+        )
+
+    @cached_property
+    def _device_class_name(self) -> str | None:
+        """Return a translated name of the entity based on its device class."""
+        return self._device_class_name_helper(self.platform.component_translations)
 
     def _default_to_device_class_name(self) -> bool:
         """Return True if an unnamed entity should be named by its device class."""
@@ -408,15 +422,18 @@ class Entity(ABC):
             f".{self.translation_key}.name"
         )
 
-    @property
-    def name(self) -> str | UndefinedType | None:
+    def _name_internal(
+        self,
+        device_class_name: str | None,
+        platform_translations: dict[str, Any],
+    ) -> str | UndefinedType | None:
         """Return the name of the entity."""
         if hasattr(self, "_attr_name"):
             return self._attr_name
         if (
             self.has_entity_name
             and (name_translation_key := self._name_translation_key)
-            and (name := self.platform.platform_translations.get(name_translation_key))
+            and (name := platform_translations.get(name_translation_key))
         ):
             if TYPE_CHECKING:
                 assert isinstance(name, str)
@@ -424,14 +441,41 @@ class Entity(ABC):
         if hasattr(self, "entity_description"):
             description_name = self.entity_description.name
             if description_name is UNDEFINED and self._default_to_device_class_name():
-                return self._device_class_name
+                return device_class_name
             return description_name
 
         # The entity has no name set by _attr_name, translation_key or entity_description
         # Check if the entity should be named by its device class
         if self._default_to_device_class_name():
-            return self._device_class_name
+            return device_class_name
         return UNDEFINED
+
+    @property
+    def suggested_object_id(self) -> str | None:
+        """Return input for object id."""
+        # The check for self.platform guards against integrations not using an
+        # EntityComponent and can be removed in HA Core 2024.1
+        # mypy doesn't know about fget: https://github.com/python/mypy/issues/6185
+        if self.__class__.name.fget is Entity.name.fget and self.platform:  # type: ignore[attr-defined]
+            name = self._name_internal(
+                self._object_id_device_class_name,
+                self.platform.object_id_platform_translations,
+            )
+        else:
+            name = self.name
+        return None if name is UNDEFINED else name
+
+    @property
+    def name(self) -> str | UndefinedType | None:
+        """Return the name of the entity."""
+        # The check for self.platform guards against integrations not using an
+        # EntityComponent and can be removed in HA Core 2024.1
+        if not self.platform:
+            return self._name_internal(None, {})
+        return self._name_internal(
+            self._device_class_name,
+            self.platform.platform_translations,
+        )
 
     @property
     def state(self) -> StateType:
