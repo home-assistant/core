@@ -36,7 +36,7 @@ async def test_buttons(
     await hass.services.async_call(
         button.DOMAIN,
         button.SERVICE_PRESS,
-        {ATTR_ENTITY_ID: "button.amazon_fire_restart"},
+        {ATTR_ENTITY_ID: "button.amazon_fire_restart_device"},
         blocking=True,
     )
     assert len(mock_fully_kiosk.rebootDevice.mock_calls) == 1
