@@ -391,7 +391,6 @@ FLOWS = {
         "screenlogic",
         "season",
         "sense",
-        "senseme",
         "sensibo",
         "sensirion_ble",
         "sensorpro",
