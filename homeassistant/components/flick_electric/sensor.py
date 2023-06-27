@@ -19,8 +19,6 @@ _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(minutes=5)
 
-FRIENDLY_NAME = "Flick Power Price"
-
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
@@ -36,19 +34,15 @@ class FlickPricingSensor(SensorEntity):
 
     _attr_attribution = "Data provided by Flick Electric"
     _attr_native_unit_of_measurement = f"{CURRENCY_CENT}/{UnitOfEnergy.KILO_WATT_HOUR}"
+    _attr_translation_key = "power_price"
 
     def __init__(self, api: FlickAPI) -> None:
         """Entity object for Flick Electric sensor."""
         self._api: FlickAPI = api
         self._price: FlickPrice = None
         self._attributes: dict[str, Any] = {
-            ATTR_FRIENDLY_NAME: FRIENDLY_NAME,
+            ATTR_FRIENDLY_NAME: "Flick Power Price",
         }
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return FRIENDLY_NAME
 
     @property
     def native_value(self):
