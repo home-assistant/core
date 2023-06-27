@@ -1031,7 +1031,10 @@ class _ScriptRun:
 
         self._log("Stop script sequence: %s", stop)
         if CONF_RESPONSE_VARIABLE in self._action:
-            response = self._variables.get(self._action[CONF_RESPONSE_VARIABLE])
+            try:
+                response = self._variables[self._action[CONF_RESPONSE_VARIABLE]]
+            except KeyError as ex:
+                raise _AbortScript from ex
         else:
             response = None
         raise _StopScript(stop, response)
