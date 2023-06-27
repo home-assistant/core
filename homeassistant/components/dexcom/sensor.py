@@ -32,6 +32,8 @@ async def async_setup_entry(
 class DexcomGlucoseValueSensor(CoordinatorEntity, SensorEntity):
     """Representation of a Dexcom glucose value sensor."""
 
+    _attr_icon = GLUCOSE_VALUE_ICON
+
     def __init__(self, coordinator, username, unit_of_measurement):
         """Initialize the sensor."""
         super().__init__(coordinator)
@@ -39,7 +41,6 @@ class DexcomGlucoseValueSensor(CoordinatorEntity, SensorEntity):
         self._key = "mg_dl" if unit_of_measurement == MG_DL else "mmol_l"
         self._attr_name = f"{DOMAIN}_{username}_glucose_value"
         self._attr_unique_id = f"{username}-value"
-        self._attr_icon = GLUCOSE_VALUE_ICON
 
     @property
     def native_value(self):
