@@ -32,7 +32,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.sun import is_up
 from homeassistant.util import Throttle
 
-from . import IPMADevice
 from .const import (
     ATTRIBUTION,
     CONDITION_CLASSES,
@@ -41,6 +40,7 @@ from .const import (
     DOMAIN,
     MIN_TIME_BETWEEN_UPDATES,
 )
+from .entity import IPMADevice
 
 _LOGGER = logging.getLogger(__name__)
 

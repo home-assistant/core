@@ -12,8 +12,6 @@ from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import DeviceInfo, Entity
 
 from .config_flow import IpmaFlowHandler  # noqa: F401
 from .const import DATA_API, DATA_LOCATION, DOMAIN
@@ -67,22 +65,3 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.data.pop(DOMAIN)
 
     return unload_ok
-
-
-class IPMADevice(Entity):
-    """Common IPMA Device Information."""
-
-    def __init__(self, location) -> None:
-        """Initialize device information."""
-        self._location = location
-        self._attr_device_info = DeviceInfo(
-            entry_type=DeviceEntryType.SERVICE,
-            identifiers={
-                (
-                    DOMAIN,
-                    f"{self._location.station_latitude}, {self._location.station_longitude}",
-                )
-            },
-            manufacturer=DOMAIN,
-            name=self._location.name,
-        )
