@@ -381,7 +381,7 @@ def test_bad_connection(hass: HomeAssistant, mock_exception_logger) -> None:
             "POST",
             "http://tomato-router:80/update.cgi",
             exc=requests.exceptions.ConnectionError,
-        ),
+        )
         tomato.get_scanner(hass, config)
     assert mock_exception_logger.call_count == 1
     assert mock_exception_logger.mock_calls[0] == mock.call(
@@ -409,7 +409,7 @@ def test_router_timeout(hass: HomeAssistant, mock_exception_logger) -> None:
             "POST",
             "http://tomato-router:80/update.cgi",
             exc=requests.exceptions.Timeout,
-        ),
+        )
         tomato.get_scanner(hass, config)
     assert mock_exception_logger.call_count == 1
     assert mock_exception_logger.mock_calls[0] == mock.call(

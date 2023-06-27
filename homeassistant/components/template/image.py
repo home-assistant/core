@@ -4,7 +4,6 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-import httpx
 import voluptuous as vol
 
 from homeassistant.components.image import (
@@ -16,7 +15,6 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
 
@@ -82,52 +80,11 @@ async def async_setup_platform(
     )
 
 
-class TemplateImage(ImageEntity):
-    """Base class for templated image."""
-
-    _last_image: bytes | None = None
-    _url: str | None = None
-    _verify_ssl: bool
-
-    def __init__(self, hass: HomeAssistant, verify_ssl: bool) -> None:
-        """Initialize the image."""
-        super().__init__(hass)
-        self._verify_ssl = verify_ssl
-
-    async def async_image(self) -> bytes | None:
-        """Return bytes of image."""
-        if self._last_image:
-            return self._last_image
-
-        if not (url := self._url):
-            return None
-
-        try:
-            async_client = get_async_client(self.hass, verify_ssl=self._verify_ssl)
-            response = await async_client.get(
-                url, timeout=GET_IMAGE_TIMEOUT, follow_redirects=True
-            )
-            response.raise_for_status()
-            self._attr_content_type = response.headers["content-type"]
-            self._last_image = response.content
-            return self._last_image
-        except httpx.TimeoutException:
-            _LOGGER.error("%s: Timeout getting image from %s", self.entity_id, url)
-            return None
-        except (httpx.RequestError, httpx.HTTPStatusError) as err:
-            _LOGGER.error(
-                "%s: Error getting new image from %s: %s",
-                self.entity_id,
-                url,
-                err,
-            )
-            return None
-
-
-class StateImageEntity(TemplateEntity, TemplateImage):
+class StateImageEntity(TemplateEntity, ImageEntity):
     """Representation of a template image."""
 
     _attr_should_poll = False
+    _attr_image_url: str | None = None
 
     def __init__(
         self,
@@ -137,7 +94,7 @@ class StateImageEntity(TemplateEntity, TemplateImage):
     ) -> None:
         """Initialize the image."""
         TemplateEntity.__init__(self, hass, config=config, unique_id=unique_id)
-        TemplateImage.__init__(self, hass, config[CONF_VERIFY_SSL])
+        ImageEntity.__init__(self, hass, config[CONF_VERIFY_SSL])
         self._url_template = config[CONF_URL]
 
     @property
@@ -151,11 +108,11 @@ class StateImageEntity(TemplateEntity, TemplateImage):
     @callback
     def _update_url(self, result):
         if isinstance(result, TemplateError):
-            self._url = None
+            self._attr_image_url = None
             return
         self._attr_image_last_updated = dt_util.utcnow()
-        self._last_image = None
-        self._url = result
+        self._cached_image = None
+        self._attr_image_url = result
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
@@ -163,10 +120,10 @@ class StateImageEntity(TemplateEntity, TemplateImage):
         await super().async_added_to_hass()
 
 
-class TriggerImageEntity(TriggerEntity, TemplateImage):
+class TriggerImageEntity(TriggerEntity, ImageEntity):
     """Image entity based on trigger data."""
 
-    _last_image: bytes | None = None
+    _attr_image_url: str | None = None
 
     domain = IMAGE_DOMAIN
     extra_template_keys = (CONF_URL,)
@@ -179,7 +136,7 @@ class TriggerImageEntity(TriggerEntity, TemplateImage):
     ) -> None:
         """Initialize the entity."""
         TriggerEntity.__init__(self, hass, coordinator, config)
-        TemplateImage.__init__(self, hass, config[CONF_VERIFY_SSL])
+        ImageEntity.__init__(self, hass, config[CONF_VERIFY_SSL])
 
     @property
     def entity_picture(self) -> str | None:
@@ -194,5 +151,5 @@ class TriggerImageEntity(TriggerEntity, TemplateImage):
         """Process new data."""
         super()._process_data()
         self._attr_image_last_updated = dt_util.utcnow()
-        self._last_image = None
-        self._url = self._rendered.get(CONF_URL)
+        self._cached_image = None
+        self._attr_image_url = self._rendered.get(CONF_URL)
