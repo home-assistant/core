@@ -167,36 +167,36 @@ class ImageEntity(Entity):
         """Return bytes of image."""
         raise NotImplementedError()
 
+    async def _async_load_image_from_url(self, url: str) -> Image | None:
+        """Load an image by url."""
+        try:
+            response = await self._client.get(
+                url, timeout=GET_IMAGE_TIMEOUT, follow_redirects=True
+            )
+            response.raise_for_status()
+            return Image(
+                content=response.content,
+                content_type=response.headers["content-type"],
+            )
+        except httpx.TimeoutException:
+            _LOGGER.error("%s: Timeout getting image from %s", self.entity_id, url)
+            return None
+        except (httpx.RequestError, httpx.HTTPStatusError) as err:
+            _LOGGER.error(
+                "%s: Error getting new image from %s: %s",
+                self.entity_id,
+                url,
+                err,
+            )
+            return None
+
     async def async_image(self) -> bytes | None:
         """Return bytes of image."""
-
-        async def _async_load_image_from_url(url: str) -> Image | None:
-            """Load an image by url."""
-            try:
-                response = await self._client.get(
-                    url, timeout=GET_IMAGE_TIMEOUT, follow_redirects=True
-                )
-                response.raise_for_status()
-                return Image(
-                    content=response.content,
-                    content_type=response.headers["content-type"],
-                )
-            except httpx.TimeoutException:
-                _LOGGER.error("%s: Timeout getting image from %s", self.entity_id, url)
-                return None
-            except (httpx.RequestError, httpx.HTTPStatusError) as err:
-                _LOGGER.error(
-                    "%s: Error getting new image from %s: %s",
-                    self.entity_id,
-                    url,
-                    err,
-                )
-                return None
 
         if self._cached_image:
             return self._cached_image.content
         if (url := self.image_url) is not UNDEFINED:
-            if not url or (image := await _async_load_image_from_url(url)) is None:
+            if not url or (image := await self._async_load_image_from_url(url)) is None:
                 return None
             self._cached_image = image
             self._attr_content_type = image.content_type
