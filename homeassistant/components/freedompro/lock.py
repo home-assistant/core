@@ -31,7 +31,7 @@ async def async_setup_entry(
 
 
 class Device(CoordinatorEntity[FreedomproDataUpdateCoordinator], LockEntity):
-    """Representation of an Freedompro lock."""
+    """Representation of a Freedompro lock."""
 
     _attr_has_entity_name = True
     _attr_name = None
