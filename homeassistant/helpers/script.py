@@ -1035,6 +1035,8 @@ class _ScriptRun:
             response = template.render_complex(
                 self._action[CONF_RESPONSE], self._variables
             )
+        elif CONF_RESPONSE_VARIABLE in self._action:
+            response = self._variables.get(self._action[CONF_RESPONSE_VARIABLE])
         else:
             response = None
         raise _StopScript(stop, response)

@@ -1695,6 +1695,7 @@ _SCRIPT_STOP_SCHEMA = vol.Schema(
             vol.All(dict, template_complex),
             vol.All(str, template),
         ),
+        vol.Exclusive(CONF_RESPONSE_VARIABLE, "error_or_response"): str,
     }
 )
 
