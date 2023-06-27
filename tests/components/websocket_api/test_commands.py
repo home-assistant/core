@@ -1823,11 +1823,17 @@ async def test_integration_setup_info(
     ("key", "config"),
     (
         ("trigger", {"platform": "event", "event_type": "hello"}),
+        ("trigger", [{"platform": "event", "event_type": "hello"}]),
         (
             "condition",
             {"condition": "state", "entity_id": "hello.world", "state": "paulus"},
         ),
+        (
+            "condition",
+            [{"condition": "state", "entity_id": "hello.world", "state": "paulus"}],
+        ),
         ("action", {"service": "domain_test.test_service"}),
+        ("action", [{"service": "domain_test.test_service"}]),
     ),
 )
 async def test_validate_config_works(websocket_client, key, config) -> None:
@@ -1858,7 +1864,8 @@ async def test_validate_config_works(websocket_client, key, config) -> None:
             },
             (
                 "Unexpected value for condition: 'non_existing'. Expected and, device,"
-                " not, numeric_state, or, state, sun, template, time, trigger, zone"
+                " not, numeric_state, or, state, sun, template, time, trigger, zone "
+                "@ data[0]"
             ),
         ),
         (
