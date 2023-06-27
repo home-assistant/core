@@ -90,6 +90,8 @@ SENSOR_DESCRIPTIONS = {
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.SECONDS,
         state_class=SensorStateClass.MEASUREMENT,
+        # The interval setting is not a generally useful entity for most users.
+        entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
 }
