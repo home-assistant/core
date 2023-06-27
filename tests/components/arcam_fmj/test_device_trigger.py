@@ -109,3 +109,49 @@ async def test_if_fires_on_turn_on_request(
     assert len(calls) == 1
     assert calls[0].data["some"] == player_setup
     assert calls[0].data["id"] == 0
+
+
+async def test_if_fires_on_turn_on_request_legacy(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, calls, player_setup, state
+) -> None:
+    """Test for turn_on and turn_off triggers firing."""
+    entry = entity_registry.async_get(player_setup)
+
+    state.get_power.return_value = None
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": {
+                        "platform": "device",
+                        "domain": DOMAIN,
+                        "device_id": "",
+                        "entity_id": entry.entity_id,
+                        "type": "turn_on",
+                    },
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {
+                            "some": "{{ trigger.entity_id }}",
+                            "id": "{{ trigger.id }}",
+                        },
+                    },
+                }
+            ]
+        },
+    )
+
+    await hass.services.async_call(
+        "media_player",
+        "turn_on",
+        {"entity_id": player_setup},
+        blocking=True,
+    )
+
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+    assert calls[0].data["some"] == player_setup
+    assert calls[0].data["id"] == 0
