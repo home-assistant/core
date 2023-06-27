@@ -495,7 +495,7 @@ jobs:
           pip install --cache-dir=$PIP_CACHE -U "pip>=21.3.1,<23.2" setuptools wheel
           pip install --cache-dir=$PIP_CACHE -r requirements_all.txt
           pip install --cache-dir=$PIP_CACHE -r requirements_test.txt
-          pip install .
+          pip install -e . --config-settings editable_mode=compat
 
   hassfest:
     name: Check hassfest

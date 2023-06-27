@@ -59,7 +59,6 @@ from homeassistant.const import (
     CONF_PARALLEL,
     CONF_PLATFORM,
     CONF_REPEAT,
-    CONF_RESPONSE,
     CONF_RESPONSE_VARIABLE,
     CONF_SCAN_INTERVAL,
     CONF_SCENE,
@@ -725,7 +724,7 @@ def socket_timeout(value: Any | None) -> object:
             return float_value
         raise vol.Invalid("Invalid socket timeout value. float > 0.0 required.")
     except Exception as err:
-        raise vol.Invalid(f"Invalid socket timeout: {err}")
+        raise vol.Invalid(f"Invalid socket timeout: {err}") from err
 
 
 # pylint: disable=no-value-for-parameter
@@ -762,7 +761,7 @@ def uuid4_hex(value: Any) -> str:
     try:
         result = UUID(value, version=4)
     except (ValueError, AttributeError, TypeError) as error:
-        raise vol.Invalid("Invalid Version4 UUID", error_message=str(error))
+        raise vol.Invalid("Invalid Version4 UUID", error_message=str(error)) from error
 
     if result.hex != value.lower():
         # UUID() will create a uuid4 if input is invalid
@@ -1227,7 +1226,7 @@ def script_action(value: Any) -> dict:
     try:
         action = determine_script_action(value)
     except ValueError as err:
-        raise vol.Invalid(str(err))
+        raise vol.Invalid(str(err)) from err
 
     return ACTION_TYPE_SCHEMAS[action](value)
 
@@ -1528,6 +1527,7 @@ CONDITION_SCHEMA: vol.Schema = vol.Schema(
     )
 )
 
+CONDITIONS_SCHEMA = vol.All(ensure_list, [CONDITION_SCHEMA])
 
 dynamic_template_condition_action = vol.All(
     # Wrap a shorthand template condition action in a template condition
@@ -1691,10 +1691,11 @@ _SCRIPT_STOP_SCHEMA = vol.Schema(
         **SCRIPT_ACTION_BASE_SCHEMA,
         vol.Required(CONF_STOP): vol.Any(None, string),
         vol.Exclusive(CONF_ERROR, "error_or_response"): boolean,
-        vol.Exclusive(CONF_RESPONSE, "error_or_response"): vol.Any(
-            vol.All(dict, template_complex),
-            vol.All(str, template),
-        ),
+        vol.Exclusive(
+            CONF_RESPONSE_VARIABLE,
+            "error_or_response",
+            msg="not allowed to add a response to an error stop action",
+        ): str,
     }
 )
 

@@ -46,7 +46,6 @@ from homeassistant.const import (
     CONF_MODE,
     CONF_PARALLEL,
     CONF_REPEAT,
-    CONF_RESPONSE,
     CONF_RESPONSE_VARIABLE,
     CONF_SCENE,
     CONF_SEQUENCE,
@@ -1031,10 +1030,14 @@ class _ScriptRun:
             raise _AbortScript(stop)
 
         self._log("Stop script sequence: %s", stop)
-        if CONF_RESPONSE in self._action:
-            response = template.render_complex(
-                self._action[CONF_RESPONSE], self._variables
-            )
+        if CONF_RESPONSE_VARIABLE in self._action:
+            try:
+                response = self._variables[self._action[CONF_RESPONSE_VARIABLE]]
+            except KeyError as ex:
+                raise _AbortScript(
+                    f"Response variable '{self._action[CONF_RESPONSE_VARIABLE]}' "
+                    "is not defined"
+                ) from ex
         else:
             response = None
         raise _StopScript(stop, response)
@@ -1524,11 +1527,10 @@ class Script:
                 variables = {}
 
             variables["context"] = context
+        elif self._copy_variables_on_run:
+            variables = cast(dict, copy(run_variables))
         else:
-            if self._copy_variables_on_run:
-                variables = cast(dict, copy(run_variables))
-            else:
-                variables = cast(dict, run_variables)
+            variables = cast(dict, run_variables)
 
         # Prevent non-allowed recursive calls which will cause deadlocks when we try to
         # stop (restart) or wait for (queued) our own script run.

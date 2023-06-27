@@ -16,6 +16,17 @@
     }
   },
   "entity": {
+    "button": {
+      "cancel_job": {
+        "name": "Cancel job"
+      },
+      "pause_job": {
+        "name": "Pause job"
+      },
+      "resume_job": {
+        "name": "Resume job"
+      }
+    },
     "sensor": {
       "job_phase": {
         "name": "Job phase"

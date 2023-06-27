@@ -256,3 +256,34 @@ async def test_fetch_image_url_exception(
 
     resp = await client.get("/api/image_proxy/image.test")
     assert resp.status == HTTPStatus.INTERNAL_SERVER_ERROR
+
+
+@respx.mock
+@pytest.mark.parametrize(
+    "content_type",
+    [
+        None,
+        "text/plain",
+    ],
+)
+async def test_fetch_image_url_wrong_content_type(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    content_type: str | None,
+) -> None:
+    """Test fetching an image with an authenticated client."""
+    respx.get("https://example.com/myimage.jpg").respond(
+        status_code=HTTPStatus.OK, content_type=content_type, content=b"Test"
+    )
+
+    mock_integration(hass, MockModule(domain="test"))
+    mock_platform(hass, "test.image", MockImagePlatform([MockURLImageEntity(hass)]))
+    assert await async_setup_component(
+        hass, image.DOMAIN, {"image": {"platform": "test"}}
+    )
+    await hass.async_block_till_done()
+
+    client = await hass_client()
+
+    resp = await client.get("/api/image_proxy/image.test")
+    assert resp.status == HTTPStatus.INTERNAL_SERVER_ERROR

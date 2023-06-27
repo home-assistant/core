@@ -124,7 +124,6 @@ omit =
     homeassistant/components/bluetooth_tracker/*
     homeassistant/components/bmw_connected_drive/__init__.py
     homeassistant/components/bmw_connected_drive/binary_sensor.py
-    homeassistant/components/bmw_connected_drive/button.py
     homeassistant/components/bmw_connected_drive/coordinator.py
     homeassistant/components/bmw_connected_drive/lock.py
     homeassistant/components/bmw_connected_drive/notify.py
@@ -942,6 +941,8 @@ omit =
     homeassistant/components/pyload/sensor.py
     homeassistant/components/qbittorrent/__init__.py
     homeassistant/components/qbittorrent/sensor.py
+    homeassistant/components/qnap/__init__.py
+    homeassistant/components/qnap/coordinator.py
     homeassistant/components/qnap/sensor.py
     homeassistant/components/qrcode/image_processing.py
     homeassistant/components/quantum_gateway/device_tracker.py

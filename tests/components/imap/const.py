@@ -41,7 +41,7 @@ TEST_INVALID_DATE3 = (
     TEST_MESSAGE_HEADERS1 + DATE_HEADER_INVALID3 + TEST_MESSAGE_HEADERS2
 )
 
-TEST_CONTENT_TEXT_BARE = b"\r\n" b"Test body\r\n" b"\r\n"
+TEST_CONTENT_TEXT_BARE = b"\r\nTest body\r\n\r\n"
 
 TEST_CONTENT_BINARY = (
     b"Content-Type: application/binary\r\n"
