@@ -70,9 +70,9 @@ class OpenhomeUpdateEntity(UpdateEntity):
             identifiers={
                 (DOMAIN, self._device.uuid()),
             },
-            manufacturer=self._device.device.manufacturer,
-            model=self._device.device.model_name,
-            name=self._device.device.friendly_name,
+            manufacturer=self._device.manufacturer(),
+            model=self._device.model_name(),
+            name=self._device.friendly_name(),
         )
 
     async def async_update(self) -> None:
