@@ -165,7 +165,7 @@ async def test_fetch_blueprint_from_github_gist_url(
 
 
 async def test_fetch_blueprint_from_website_url(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, snapshot
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test fetching blueprint from url."""
     aioclient_mock.get(
@@ -181,3 +181,11 @@ async def test_fetch_blueprint_from_website_url(
     assert imported_blueprint.blueprint.domain == "automation"
     assert imported_blueprint.suggested_filename == "homeassistant/awesome"
     assert imported_blueprint.blueprint.metadata["source_url"] == url
+
+
+async def test_fetch_blueprint_from_unsupported_url(hass: HomeAssistant) -> None:
+    """Test fetching blueprint from an unsupported URL."""
+    url = "https://example.com/unsupported.yaml"
+
+    with pytest.raises(HomeAssistantError, match=r"^Unsupported URL$"):
+        await importer.fetch_blueprint_from_url(hass, url)

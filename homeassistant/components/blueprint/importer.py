@@ -258,4 +258,4 @@ async def fetch_blueprint_from_url(hass: HomeAssistant, url: str) -> ImportedBlu
             imported_bp.blueprint.update_metadata(source_url=url)
             return imported_bp
 
-    raise HomeAssistantError("Unsupported url")
+    raise HomeAssistantError("Unsupported URL")
