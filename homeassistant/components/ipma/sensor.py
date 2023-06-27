@@ -44,7 +44,6 @@ async def async_retrive_rcm(location: Location, api: IPMA_API) -> int | None:
 SENSOR_TYPES: tuple[IPMASensorEntityDescription, ...] = (
     IPMASensorEntityDescription(
         key="rcm",
-        name="Fire risk",
         translation_key="fire_risk",
         value_fn=async_retrive_rcm,
     ),

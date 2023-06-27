@@ -22,7 +22,7 @@
   "entity": {
     "sensor": {
       "fire_risk": {
-        "name": "Fire Risk"
+        "name": "Fire risk"
       }
     }
   }
