@@ -27,7 +27,7 @@ from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.httpx_client import get_async_client
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import UNDEFINED, ConfigType, UndefinedType
 
 from .const import DOMAIN, IMAGE_TIMEOUT  # noqa: F401
 
@@ -130,8 +130,10 @@ class ImageEntity(Entity):
     # Entity Properties
     _attr_content_type: str = DEFAULT_CONTENT_TYPE
     _attr_image_last_updated: datetime | None = None
+    _attr_image_url: str | None | UndefinedType = UNDEFINED
     _attr_should_poll: bool = False  # No need to poll image entities
     _attr_state: None = None  # State is determined by last_updated
+    _cached_image: Image | None = None
 
     def __init__(self, hass: HomeAssistant, verify_ssl: bool = False) -> None:
         """Initialize an image entity."""
@@ -155,6 +157,11 @@ class ImageEntity(Entity):
     def image_last_updated(self) -> datetime | None:
         """The time when the image was last updated."""
         return self._attr_image_last_updated
+
+    @property
+    def image_url(self) -> str | None | UndefinedType:
+        """Return URL of image."""
+        return self._attr_image_url
 
     def image(self) -> bytes | None:
         """Return bytes of image."""
@@ -186,23 +193,15 @@ class ImageEntity(Entity):
                 )
                 return None
 
-        if (url := await self.async_image_url()) is not None:
-            # Ignore an empty url
-            if url == "":
+        if self._cached_image:
+            return self._cached_image.content
+        if (url := self.image_url) is not UNDEFINED:
+            if not url or (image := await _async_load_image_from_url(url)) is None:
                 return None
-            if (image := await _async_load_image_from_url(url)) is None:
-                return None
+            self._cached_image = image
             self._attr_content_type = image.content_type
             return image.content
         return await self.hass.async_add_executor_job(self.image)
-
-    def image_url(self) -> str | None:
-        """Return URL of image."""
-        return None
-
-    async def async_image_url(self) -> str | None:
-        """Return URL of image."""
-        return self.image_url()
 
     @property
     @final
