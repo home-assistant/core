@@ -1008,24 +1008,22 @@ class TemperatureSettingTrait(_Trait):
                     ),
                     1,
                 )
-            else:
-                if (target_temp := attrs.get(ATTR_TEMPERATURE)) is not None:
-                    target_temp = round(
-                        TemperatureConverter.convert(
-                            target_temp, unit, UnitOfTemperature.CELSIUS
-                        ),
-                        1,
-                    )
-                    response["thermostatTemperatureSetpointHigh"] = target_temp
-                    response["thermostatTemperatureSetpointLow"] = target_temp
-        else:
-            if (target_temp := attrs.get(ATTR_TEMPERATURE)) is not None:
-                response["thermostatTemperatureSetpoint"] = round(
+            elif (target_temp := attrs.get(ATTR_TEMPERATURE)) is not None:
+                target_temp = round(
                     TemperatureConverter.convert(
                         target_temp, unit, UnitOfTemperature.CELSIUS
                     ),
                     1,
                 )
+                response["thermostatTemperatureSetpointHigh"] = target_temp
+                response["thermostatTemperatureSetpointLow"] = target_temp
+        elif (target_temp := attrs.get(ATTR_TEMPERATURE)) is not None:
+            response["thermostatTemperatureSetpoint"] = round(
+                TemperatureConverter.convert(
+                    target_temp, unit, UnitOfTemperature.CELSIUS
+                ),
+                1,
+            )
 
         return response
 

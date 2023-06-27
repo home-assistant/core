@@ -865,8 +865,6 @@ async def _async_process_config(
     entities = await _create_automation_entities(hass, updated_automation_configs)
     await component.async_add_entities(entities)
 
-    return
-
 
 async def _async_process_if(
     hass: HomeAssistant, name: str, config: dict[str, Any]
