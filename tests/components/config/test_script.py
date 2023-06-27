@@ -7,6 +7,7 @@ import pytest
 
 from homeassistant.bootstrap import async_setup_component
 from homeassistant.components import config
+from homeassistant.const import STATE_OFF, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -67,7 +68,12 @@ async def test_update_script_config(
         data=json.dumps({"alias": "Moon updated", "sequence": []}),
     )
     await hass.async_block_till_done()
-    assert sorted(hass.states.async_entity_ids("script")) == ["script.moon"]
+    assert sorted(hass.states.async_entity_ids("script")) == [
+        "script.moon",
+        "script.sun",
+    ]
+    assert hass.states.get("script.moon").state == STATE_OFF
+    assert hass.states.get("script.sun").state == STATE_UNAVAILABLE
 
     assert resp.status == HTTPStatus.OK
     result = await resp.json()
@@ -131,7 +137,12 @@ async def test_update_remove_key_script_config(
         data=json.dumps({"sequence": []}),
     )
     await hass.async_block_till_done()
-    assert sorted(hass.states.async_entity_ids("script")) == ["script.moon"]
+    assert sorted(hass.states.async_entity_ids("script")) == [
+        "script.moon",
+        "script.sun",
+    ]
+    assert hass.states.get("script.moon").state == STATE_OFF
+    assert hass.states.get("script.sun").state == STATE_UNAVAILABLE
 
     assert resp.status == HTTPStatus.OK
     result = await resp.json()
