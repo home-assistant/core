@@ -1,6 +1,7 @@
 """Tests for config/script."""
 from http import HTTPStatus
 import json
+from typing import Any
 from unittest.mock import patch
 
 import pytest
@@ -10,6 +11,7 @@ from homeassistant.components import config
 from homeassistant.const import STATE_OFF, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.util import yaml
 
 from tests.typing import ClientSessionGenerator
 
@@ -85,11 +87,30 @@ async def test_update_script_config(
 
 
 @pytest.mark.parametrize("script_config", ({},))
+@pytest.mark.parametrize(
+    ("updated_config", "validation_error"),
+    [
+        ({}, "required key not provided @ data['sequence']"),
+        (
+            {
+                "sequence": {
+                    "condition": "state",
+                    # The UUID will fail being resolved to en entity_id
+                    "entity_id": "abcdabcdabcdabcdabcdabcdabcdabcd",
+                    "state": "blah",
+                }
+            },
+            "Unknown entity registry entry abcdabcdabcdabcdabcdabcdabcdabcd",
+        ),
+    ],
+)
 async def test_update_script_config_with_error(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     hass_config_store,
     caplog: pytest.LogCaptureFixture,
+    updated_config: Any,
+    validation_error: str,
 ) -> None:
     """Test updating script config with errors."""
     with patch.object(config, "SECTIONS", ["script"]):
@@ -104,14 +125,117 @@ async def test_update_script_config_with_error(
 
     resp = await client.post(
         "/api/config/script/config/moon",
-        data=json.dumps({}),
+        data=json.dumps(updated_config),
     )
     await hass.async_block_till_done()
     assert sorted(hass.states.async_entity_ids("script")) == []
 
     assert resp.status != HTTPStatus.OK
     result = await resp.json()
-    validation_error = "required key not provided @ data['sequence']"
+    assert result == {"message": f"Message malformed: {validation_error}"}
+    # Assert the validation error is not logged
+    assert validation_error not in caplog.text
+
+
+@pytest.mark.parametrize("script_config", ({},))
+@pytest.mark.parametrize(
+    ("updated_config", "validation_error"),
+    [
+        (
+            {
+                "use_blueprint": {
+                    "path": "test_service.yaml",
+                    "input": {},
+                },
+            },
+            "Missing input service_to_call",
+        ),
+    ],
+)
+async def test_update_script_config_with_blueprint_missing_input(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    hass_config_store,
+    # setup_automation,
+    caplog: pytest.LogCaptureFixture,
+    updated_config: Any,
+    validation_error: str,
+) -> None:
+    """Test updating script config with errors."""
+    with patch.object(config, "SECTIONS", ["script"]):
+        await async_setup_component(hass, "config", {})
+
+    assert sorted(hass.states.async_entity_ids("script")) == []
+
+    client = await hass_client()
+
+    orig_data = {"sun": {}, "moon": {}}
+    hass_config_store["scripts.yaml"] = orig_data
+
+    resp = await client.post(
+        "/api/config/script/config/moon",
+        data=json.dumps(updated_config),
+    )
+    await hass.async_block_till_done()
+    assert sorted(hass.states.async_entity_ids("script")) == []
+
+    assert resp.status != HTTPStatus.OK
+    result = await resp.json()
+    assert result == {"message": f"Message malformed: {validation_error}"}
+    # Assert the validation error is not logged
+    assert validation_error not in caplog.text
+
+
+@pytest.mark.parametrize("script_config", ({},))
+@pytest.mark.parametrize(
+    ("updated_config", "validation_error"),
+    [
+        (
+            {
+                "use_blueprint": {
+                    "path": "test_service.yaml",
+                    "input": {
+                        "service_to_call": "test.automation",
+                    },
+                },
+            },
+            "No substitution found for input blah",
+        ),
+    ],
+)
+async def test_update_script_config_with_blueprint_substitution_error(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    hass_config_store,
+    # setup_automation,
+    caplog: pytest.LogCaptureFixture,
+    updated_config: Any,
+    validation_error: str,
+) -> None:
+    """Test updating script config with errors."""
+    with patch.object(config, "SECTIONS", ["script"]):
+        await async_setup_component(hass, "config", {})
+
+    assert sorted(hass.states.async_entity_ids("script")) == []
+
+    client = await hass_client()
+
+    orig_data = {"sun": {}, "moon": {}}
+    hass_config_store["scripts.yaml"] = orig_data
+
+    with patch(
+        "homeassistant.components.blueprint.models.BlueprintInputs.async_substitute",
+        side_effect=yaml.UndefinedSubstitution("blah"),
+    ):
+        resp = await client.post(
+            "/api/config/script/config/moon",
+            data=json.dumps(updated_config),
+        )
+        await hass.async_block_till_done()
+    assert sorted(hass.states.async_entity_ids("script")) == []
+
+    assert resp.status != HTTPStatus.OK
+    result = await resp.json()
     assert result == {"message": f"Message malformed: {validation_error}"}
     # Assert the validation error is not logged
     assert validation_error not in caplog.text
