@@ -155,21 +155,14 @@ def _async_import_options_from_data_if_missing(
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload Blink entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
+        hass.data[DOMAIN].pop(entry.entry_id)
 
-    if not unload_ok:
-        return False
+        hass.services.async_remove(DOMAIN, SERVICE_REFRESH)
+        hass.services.async_remove(DOMAIN, SERVICE_SAVE_VIDEO)
+        hass.services.async_remove(DOMAIN, SERVICE_SEND_PIN)
 
-    hass.data[DOMAIN].pop(entry.entry_id)
-
-    if len(hass.data[DOMAIN]) != 0:
-        return True
-
-    hass.services.async_remove(DOMAIN, SERVICE_REFRESH)
-    hass.services.async_remove(DOMAIN, SERVICE_SAVE_VIDEO)
-    hass.services.async_remove(DOMAIN, SERVICE_SEND_PIN)
-
-    return True
+    return unload_ok
 
 
 async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
