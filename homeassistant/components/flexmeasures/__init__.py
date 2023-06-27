@@ -2,12 +2,13 @@
 from __future__ import annotations
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
+from homeassistant.const import Platform, EVENT_STATE_CHANGED
 from homeassistant.core import HomeAssistant
 import logging
 from datetime import datetime
 import pytz
 
+from homeassistant.helpers import state as state_helper
 from .api import async_register_s2_api, S2FlexMeasuresClient
 from .const import DOMAIN
 
@@ -67,7 +68,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             logging.info("trigger_schedule")
             schedule = await getattr(client, method)(**call_dict)
             print(schedule)
-            #hass.states.async_set(f"{DOMAIN}.schedule_id", schedule)
+            # hass.states.async_set(f"{DOMAIN}.schedule_id", schedule)
             new_state = (
                 "ChargeScheduleAvailable" + datetime.now(tz=pytz.utc).isoformat()
             )
@@ -91,6 +92,64 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         elif method is not None and hasattr(client, method):
             await getattr(client, method)(**call_dict)
 
+    async def schedule_trigger_event_listener(event):
+
+        state = event.data.get("new_state")
+ 
+
+        try:
+            _state = state_helper.state_as_number(state)
+        except ValueError:
+            _state = state.state
+
+        if state.domain != "flexmeasures":
+            return
+
+
+        if state.object_id == "trigger_and_get_schedule":
+
+            schedule = await client.trigger_and_get_schedule(**state.attributes)
+            new_state = "ChargeScheduleAvailable" + datetime.now(tz=pytz.utc).isoformat()
+
+            hass.states.async_set(
+                f"{DOMAIN}.charge_schedule", new_state=new_state, attributes=schedule
+            )
+
+        if state.object_id == "get_sensors":
+            sensors = await client.get_sensors(**state.attributes)
+            new_state = "sensors"
+            hass.states.async_set(
+                f"{DOMAIN}.sensors", new_state=new_state, attributes=sensors
+            )
+
+        if state.object_id == "post_measurements":
+            logging.info("post measurement")
+            await client.post_measurements(**state.attributes)
+            
+        if state.object_id == "trigger_storage_schedule":
+            logging.info("trigger_schedule")
+            schedule_id = await client.trigger_storage_schedule(**state.attributes)
+            hass.states.async_set(f"{DOMAIN}.schedule_id", schedule_id)
+            # hass.states.set("schedule_id", schedule_id)
+
+        if state.object_id == "get_schedule":
+            logging.info("get schedule")
+            schedule = await client.get_schedule(**state.attributes)
+            # hass.states.async_set(f"{DOMAIN}.schedule", new_state=schedule['start'])
+            new_state = (
+                "ChargeScheduleAvailable" + datetime.now(tz=pytz.utc).isoformat()
+            )
+            hass.states.async_set(
+                f"{DOMAIN}.charge_schedule", new_state=new_state, attributes=schedule
+            )
+
+        
+
+
+
+
+
+
     def handle_s2(call):
         """Handle the service call to the FlexMeasures S2 websockets implementation."""
         name = call.data.get(ATTR_NAME, DEFAULT_NAME)
@@ -99,6 +158,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # Register services
     hass.services.async_register(DOMAIN, "api", handle_api)
+    hass.bus.async_listen(EVENT_STATE_CHANGED, schedule_trigger_event_listener)
     hass.services.async_register(DOMAIN, "s2", handle_s2)
     async_register_s2_api(hass)
 
