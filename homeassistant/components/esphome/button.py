@@ -44,13 +44,15 @@ class EsphomeButton(EsphomeEntity[ButtonInfo, EntityState], ButtonEntity):
     def _on_device_update(self) -> None:
         """Call when device updates or entry data changes.
 
-        Overwrites the default behavior to not write state, but
-        still set updated attributes.
+        The default behavior is only to write entity state when the
+        device is unavailable when the device state changes.
+        This method overrides the default behavior since buttons do
+        not have a state, so we will never get a state update for a
+        button. As such, we need to write the state on every device
+        update to ensure the button goes available and unavailable
+        as the device becomes available or unavailable.
         """
         self._on_entry_data_changed()
-        # We already write state on device update because
-        # we will never get state coming from the device
-        # because buttons don't have state
         self.async_write_ha_state()
 
     async def async_press(self) -> None:
