@@ -1690,7 +1690,11 @@ _SCRIPT_STOP_SCHEMA = vol.Schema(
         **SCRIPT_ACTION_BASE_SCHEMA,
         vol.Required(CONF_STOP): vol.Any(None, string),
         vol.Exclusive(CONF_ERROR, "error_or_response"): boolean,
-        vol.Exclusive(CONF_RESPONSE_VARIABLE, "error_or_response"): str,
+        vol.Exclusive(
+            CONF_RESPONSE_VARIABLE,
+            "error_or_response",
+            msg="not allowed to add a response to an error stop action",
+        ): str,
     }
 )
 
