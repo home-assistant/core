@@ -5,5 +5,6 @@
   "documentation": "https://www.home-assistant.io/integrations/waqi",
   "iot_class": "cloud_polling",
   "loggers": ["waqiasync"],
-  "requirements": ["waqiasync==1.1.0"]
+  "requirements": ["waqiasync==1.1.0"],
+  "version": "99999"
 }
