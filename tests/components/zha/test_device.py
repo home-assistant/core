@@ -339,12 +339,12 @@ async def test_device_is_active_coordinator(
 
     current_coord_dev = zigpy_device(ieee="aa:bb:cc:dd:ee:ff:00:11", nwk=0x0000)
     current_coord_dev.node_desc = current_coord_dev.node_desc.replace(
-        logical_type=zdo_t.LogicalType.Coordinator
+        logical_type=zdo_t.LogicalType.FjaraskupanCoordinator
     )
 
     old_coord_dev = zigpy_device(ieee="aa:bb:cc:dd:ee:ff:00:12", nwk=0x0000)
     old_coord_dev.node_desc = old_coord_dev.node_desc.replace(
-        logical_type=zdo_t.LogicalType.Coordinator
+        logical_type=zdo_t.LogicalType.FjaraskupanCoordinator
     )
 
     # The two coordinators have different IEEE addresses
