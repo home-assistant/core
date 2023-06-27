@@ -7,7 +7,7 @@ from typing import Any, cast
 from aiohttp import ClientConnectorError, ClientError
 from pyoverkiz.client import OverkizClient
 from pyoverkiz.const import SERVERS_WITH_LOCAL_API, SUPPORTED_SERVERS
-from pyoverkiz.enums import APIType
+from pyoverkiz.enums import APIType, Server
 from pyoverkiz.exceptions import (
     BadCredentialsException,
     CozyTouchBadCredentialsException,
@@ -45,7 +45,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 2
 
     _config_entry: ConfigEntry | None
-    _api_type: str
+    _api_type: APIType
     _user: None | str
     _server: str
     _host: str
@@ -55,7 +55,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         super().__init__()
 
         self._config_entry = None
-        self._api_type = "cloud"
+        self._api_type = APIType.CLOUD
         self._user = None
         self._server = DEFAULT_SERVER
         self._host = "gateway-xxxx-xxxx-xxxx.local:8443"
@@ -67,8 +67,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         user_input[CONF_API_TYPE] = self._api_type
 
+        # Local API
         if self._api_type == APIType.LOCAL:
-            # Create session on Somfy server to generate an access token for local API
+            # Create session on Somfy cloud server to generate an access token for local API
             session = async_create_clientsession(self.hass)
             server = SUPPORTED_SERVERS[self._server]
             client = OverkizClient(
@@ -97,6 +98,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             # Somfy (self-signed) SSL cert uses the wrong common name
             session = async_create_clientsession(self.hass, verify_ssl=False)
 
+            # Local API
             local_client = OverkizClient(
                 username="",
                 password="",
@@ -144,6 +146,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input:
             self._server = user_input[CONF_SERVER]
 
+            # Some Overkiz hubs do support a local API
+            # Users can choose between local or cloud API.
             if self._server in SERVERS_WITH_LOCAL_API:
                 return await self.async_step_local_or_cloud()
 
@@ -161,6 +165,37 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    async def async_step_local_or_cloud(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Users can choose between local API or cloud API via config flow."""
+        errors = {}
+
+        if user_input:
+            self._api_type = user_input[CONF_API_TYPE]
+
+            if self._api_type == APIType.LOCAL:
+                return await self.async_step_local()
+
+            return await self.async_step_cloud()
+
+        return self.async_show_form(
+            step_id="local_or_cloud",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_API_TYPE): vol.In(
+                        dict(
+                            {
+                                APIType.LOCAL: "Local API",
+                                APIType.CLOUD: "Cloud API",
+                            }.items()
+                        )
+                    ),
+                }
+            ),
+            errors=errors,
+        )
+
     async def async_step_cloud(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
@@ -170,7 +205,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input:
             self._user = user_input[CONF_USERNAME]
-            user_input[CONF_SERVER] = self._server
+            user_input[
+                CONF_SERVER
+            ] = self._server  # inherit the server from previous step
 
             try:
                 await self.async_validate_input(user_input)
@@ -179,7 +216,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except BadCredentialsException as exception:
                 # If authentication with CozyTouch auth server is valid, but token is invalid
                 # for Overkiz API server, the hardware is not supported.
-                if user_input[CONF_SERVER] == "atlantic_cozytouch" and not isinstance(
+                if user_input[
+                    CONF_SERVER
+                ] == Server.ATLANTIC_COZYTOUCH and not isinstance(
                     exception, CozyTouchBadCredentialsException
                 ):
                     description_placeholders["unsupported_device"] = "CozyTouch"
@@ -241,51 +280,22 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_local_or_cloud(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """Handle the local authentication step via config flow."""
-        errors = {}
-
-        if user_input:
-            self._api_type = user_input[CONF_API_TYPE]
-
-            if self._api_type == APIType.LOCAL:
-                return await self.async_step_local()
-
-            return await self.async_step_cloud()
-
-        return self.async_show_form(
-            step_id="local_or_cloud",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(CONF_API_TYPE): vol.In(
-                        dict(
-                            {
-                                APIType.LOCAL: "Local API",
-                                APIType.CLOUD: "Cloud API",
-                            }.items()
-                        )
-                    ),
-                }
-            ),
-            errors=errors,
-        )
-
     async def async_step_local(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle the local authentication step via config flow."""
         errors = {}
+        description_placeholders = {}
 
         if user_input:
             self._host = user_input[CONF_HOST]
             self._user = user_input[CONF_USERNAME]
-            user_input[CONF_SERVER] = self._server
+            user_input[
+                CONF_SERVER
+            ] = self._server  # inherit the server from previous step
 
             try:
                 user_input = await self.async_validate_input(user_input)
-
             except TooManyRequestsException:
                 errors["base"] = "too_many_requests"
             except BadCredentialsException:
@@ -298,6 +308,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "too_many_attempts"
             except NotSuchTokenException:
                 errors["base"] = "not_such_token"
+            except UnknownUserException:
+                # Somfy Protect accounts are not supported since they don't use
+                # the Overkiz API server. Login will return unknown user.
+                description_placeholders["unsupported_device"] = "Somfy Protect"
+                errors["base"] = "unsupported_hardware"
             except Exception as exception:  # pylint: disable=broad-except
                 errors["base"] = "unknown"
                 LOGGER.exception(exception)
@@ -339,6 +354,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     vol.Required(CONF_PASSWORD): str,
                 }
             ),
+            description_placeholders=description_placeholders,
             errors=errors,
         )
 
