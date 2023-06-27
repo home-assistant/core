@@ -32,6 +32,7 @@ from homeassistant.core import (
     Context,
     HomeAssistant,
     ServiceCall,
+    ServiceResponse,
     SupportsResponse,
     callback,
 )
@@ -444,7 +445,9 @@ class ScriptEntity(ToggleEntity, RestoreEntity):
         wait = kwargs.get("wait", True)
         await self._async_start_run(variables, context, wait)
 
-    async def _async_start_run(self, variables: dict, context: Context, wait: bool):
+    async def _async_start_run(
+        self, variables: dict, context: Context, wait: bool
+    ) -> ServiceResponse:
         """Start the run of a script."""
         self.async_set_context(context)
         self.hass.bus.async_fire(
@@ -466,6 +469,7 @@ class ScriptEntity(ToggleEntity, RestoreEntity):
         # Wait for first state change so we can guarantee that
         # it is written to the State Machine before we return.
         await self._changed.wait()
+        return None
 
     async def _async_run(self, variables, context):
         with trace_script(
@@ -492,7 +496,7 @@ class ScriptEntity(ToggleEntity, RestoreEntity):
         """
         await self.script.async_stop()
 
-    async def _service_handler(self, service: ServiceCall) -> Any:
+    async def _service_handler(self, service: ServiceCall) -> ServiceResponse:
         """Execute a service call to script.<script name>."""
         response = await self._async_start_run(
             variables=service.data, context=service.context, wait=True
