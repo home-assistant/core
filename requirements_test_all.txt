@@ -307,9 +307,6 @@ aioridwell==2023.01.0
 # homeassistant.components.ruuvi_gateway
 aioruuvigateway==0.1.0
 
-# homeassistant.components.senseme
-aiosenseme==0.6.1
-
 # homeassistant.components.senz
 aiosenz==1.0.0
 

@@ -1046,12 +1046,6 @@ omit =
     homeassistant/components/sense/__init__.py
     homeassistant/components/sense/binary_sensor.py
     homeassistant/components/sense/sensor.py
-    homeassistant/components/senseme/__init__.py
-    homeassistant/components/senseme/discovery.py
-    homeassistant/components/senseme/entity.py
-    homeassistant/components/senseme/fan.py
-    homeassistant/components/senseme/light.py
-    homeassistant/components/senseme/switch.py
     homeassistant/components/senz/__init__.py
     homeassistant/components/senz/api.py
     homeassistant/components/senz/climate.py
