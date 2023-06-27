@@ -20,5 +20,15 @@
     "abort": {
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
     }
+  },
+  "entity": {
+    "number": {
+      "ventilator_min_type_home": {
+        "name": "Ventilator min time home"
+      },
+      "ventilator_min_type_away": {
+        "name": "Ventilator min time away"
+      }
+    }
   }
 }

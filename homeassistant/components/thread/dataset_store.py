@@ -3,13 +3,13 @@ from __future__ import annotations
 
 import dataclasses
 from datetime import datetime
-from functools import cached_property
 import logging
 from typing import Any, cast
 
 from python_otbr_api import tlv_parser
 from python_otbr_api.tlv_parser import MeshcopTLVType
 
+from homeassistant.backports.functools import cached_property
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.singleton import singleton

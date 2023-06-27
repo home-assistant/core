@@ -46,6 +46,7 @@ from homeassistant.const import (
     CONF_MODE,
     CONF_PARALLEL,
     CONF_REPEAT,
+    CONF_RESPONSE,
     CONF_RESPONSE_VARIABLE,
     CONF_SCENE,
     CONF_SEQUENCE,
@@ -69,6 +70,7 @@ from homeassistant.core import (
     Event,
     HassJob,
     HomeAssistant,
+    ServiceResponse,
     SupportsResponse,
     callback,
 )
@@ -352,6 +354,11 @@ class _ConditionFail(_HaltScript):
 class _StopScript(_HaltScript):
     """Throw if script needs to stop."""
 
+    def __init__(self, message: str, response: Any) -> None:
+        """Initialize a halt exception."""
+        super().__init__(message)
+        self.response = response
+
 
 class _ScriptRun:
     """Manage Script sequence run."""
@@ -396,13 +403,14 @@ class _ScriptRun:
         )
         self._log("Executing step %s%s", self._script.last_action, _timeout)
 
-    async def async_run(self) -> None:
+    async def async_run(self) -> ServiceResponse:
         """Run script."""
         # Push the script to the script execution stack
         if (script_stack := script_stack_cv.get()) is None:
             script_stack = []
             script_stack_cv.set(script_stack)
         script_stack.append(id(self._script))
+        response = None
 
         try:
             self._log("Running %s", self._script.running_description)
@@ -420,11 +428,15 @@ class _ScriptRun:
                 raise
         except _ConditionFail:
             script_execution_set("aborted")
-        except _StopScript:
-            script_execution_set("finished")
+        except _StopScript as err:
+            script_execution_set("finished", err.response)
+            response = err.response
+
             # Let the _StopScript bubble up if this is a sub-script
             if not self._script.top_level:
-                raise
+                # We already consumed the response, do not pass it on
+                err.response = None
+                raise err
         except Exception:
             script_execution_set("error")
             raise
@@ -432,6 +444,8 @@ class _ScriptRun:
             # Pop the script from the script execution stack
             script_stack.pop()
             self._finish()
+
+        return response
 
     async def _async_step(self, log_exceptions):
         continue_on_error = self._action.get(CONF_CONTINUE_ON_ERROR, False)
@@ -1010,13 +1024,20 @@ class _ScriptRun:
     async def _async_stop_step(self):
         """Stop script execution."""
         stop = self._action[CONF_STOP]
-        error = self._action[CONF_ERROR]
+        error = self._action.get(CONF_ERROR, False)
         trace_set_result(stop=stop, error=error)
         if error:
             self._log("Error script sequence: %s", stop)
             raise _AbortScript(stop)
+
         self._log("Stop script sequence: %s", stop)
-        raise _StopScript(stop)
+        if CONF_RESPONSE in self._action:
+            response = template.render_complex(
+                self._action[CONF_RESPONSE], self._variables
+            )
+        else:
+            response = None
+        raise _StopScript(stop, response)
 
     @async_trace_path("parallel")
     async def _async_parallel_step(self) -> None:
@@ -1455,7 +1476,7 @@ class Script:
         run_variables: _VarsType | None = None,
         context: Context | None = None,
         started_action: Callable[..., Any] | None = None,
-    ) -> None:
+    ) -> ServiceResponse:
         """Run script."""
         if context is None:
             self._log(
@@ -1466,7 +1487,7 @@ class Script:
         # Prevent spawning new script runs when Home Assistant is shutting down
         if DATA_NEW_SCRIPT_RUNS_NOT_ALLOWED in self._hass.data:
             self._log("Home Assistant is shutting down, starting script blocked")
-            return
+            return None
 
         # Prevent spawning new script runs if not allowed by script mode
         if self.is_running:
@@ -1474,7 +1495,7 @@ class Script:
                 if self._max_exceeded != "SILENT":
                     self._log("Already running", level=LOGSEVERITY[self._max_exceeded])
                 script_execution_set("failed_single")
-                return
+                return None
             if self.script_mode != SCRIPT_MODE_RESTART and self.runs == self.max_runs:
                 if self._max_exceeded != "SILENT":
                     self._log(
@@ -1482,7 +1503,7 @@ class Script:
                         level=LOGSEVERITY[self._max_exceeded],
                     )
                 script_execution_set("failed_max_runs")
-                return
+                return None
 
         # If this is a top level Script then make a copy of the variables in case they
         # are read-only, but more importantly, so as not to leak any variables created
@@ -1519,7 +1540,7 @@ class Script:
         ):
             script_execution_set("disallowed_recursion_detected")
             self._log("Disallowed recursion detected", level=logging.WARNING)
-            return
+            return None
 
         if self.script_mode != SCRIPT_MODE_QUEUED:
             cls = _ScriptRun
@@ -1543,7 +1564,7 @@ class Script:
         self._changed()
 
         try:
-            await asyncio.shield(run.async_run())
+            return await asyncio.shield(run.async_run())
         except asyncio.CancelledError:
             await run.async_stop()
             self._changed()

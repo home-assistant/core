@@ -5,7 +5,7 @@ from typing import cast
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN
+from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.typing import ConfigType
@@ -25,7 +25,22 @@ STATIC_VALIDATOR = {
     DeviceAutomationType.TRIGGER: "TRIGGER_SCHEMA",
 }
 
-TOGGLE_ENTITY_DOMAINS = {"fan", "humidifier", "light", "remote", "switch"}
+ENTITY_PLATFORMS = {
+    Platform.ALARM_CONTROL_PANEL.value,
+    Platform.BUTTON.value,
+    Platform.CLIMATE.value,
+    Platform.COVER.value,
+    Platform.FAN.value,
+    Platform.HUMIDIFIER.value,
+    Platform.LIGHT.value,
+    Platform.LOCK.value,
+    Platform.NUMBER.value,
+    Platform.REMOTE.value,
+    Platform.SELECT.value,
+    Platform.SWITCH.value,
+    Platform.VACUUM.value,
+    Platform.WATER_HEATER.value,
+}
 
 
 async def async_validate_device_automation_config(
@@ -45,10 +60,10 @@ async def async_validate_device_automation_config(
             ConfigType, getattr(platform, STATIC_VALIDATOR[automation_type])(config)
         )
 
-    # Bypass checks for toggle entity domains
+    # Bypass checks for entity platforms
     if (
         automation_type == DeviceAutomationType.ACTION
-        and validated_config[CONF_DOMAIN] in TOGGLE_ENTITY_DOMAINS
+        and validated_config[CONF_DOMAIN] in ENTITY_PLATFORMS
     ):
         return cast(
             ConfigType,

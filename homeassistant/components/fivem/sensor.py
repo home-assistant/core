@@ -7,7 +7,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from . import FiveMEntity, FiveMEntityDescription
 from .const import (
     ATTR_PLAYERS_LIST,
     ATTR_RESOURCES_LIST,
@@ -22,6 +21,7 @@ from .const import (
     UNIT_PLAYERS_ONLINE,
     UNIT_RESOURCES,
 )
+from .entity import FiveMEntity, FiveMEntityDescription
 
 
 @dataclass

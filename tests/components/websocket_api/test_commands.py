@@ -1672,7 +1672,9 @@ async def test_test_condition(hass: HomeAssistant, websocket_client) -> None:
 
 async def test_execute_script(hass: HomeAssistant, websocket_client) -> None:
     """Test testing a condition."""
-    calls = async_mock_service(hass, "domain_test", "test_service")
+    calls = async_mock_service(
+        hass, "domain_test", "test_service", response={"hello": "world"}
+    )
 
     await websocket_client.send_json(
         {
@@ -1682,7 +1684,9 @@ async def test_execute_script(hass: HomeAssistant, websocket_client) -> None:
                 {
                     "service": "domain_test.test_service",
                     "data": {"hello": "world"},
-                }
+                    "response_variable": "service_result",
+                },
+                {"stop": "done", "response": "{{ service_result }}"},
             ],
         }
     )
@@ -1691,6 +1695,7 @@ async def test_execute_script(hass: HomeAssistant, websocket_client) -> None:
     assert msg_no_var["id"] == 5
     assert msg_no_var["type"] == const.TYPE_RESULT
     assert msg_no_var["success"]
+    assert msg_no_var["result"]["response"] == {"hello": "world"}
 
     await websocket_client.send_json(
         {

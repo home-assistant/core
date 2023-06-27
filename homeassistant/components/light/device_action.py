@@ -113,7 +113,7 @@ async def async_get_actions(
         base_action = {
             CONF_DEVICE_ID: device_id,
             CONF_DOMAIN: DOMAIN,
-            CONF_ENTITY_ID: entry.entity_id,
+            CONF_ENTITY_ID: entry.id,
         }
 
         if brightness_supported(supported_color_modes):
@@ -137,16 +137,12 @@ async def async_get_action_capabilities(
     if config[CONF_TYPE] != toggle_entity.CONF_TURN_ON:
         return {}
 
-    entry = async_get_entity_registry_entry_or_raise(hass, config[CONF_ENTITY_ID])
-
     try:
+        entry = async_get_entity_registry_entry_or_raise(hass, config[CONF_ENTITY_ID])
         supported_color_modes = get_supported_color_modes(hass, entry.entity_id)
-    except HomeAssistantError:
-        supported_color_modes = None
-
-    try:
         supported_features = get_supported_features(hass, entry.entity_id)
     except HomeAssistantError:
+        supported_color_modes = None
         supported_features = 0
 
     extra_fields = {}
