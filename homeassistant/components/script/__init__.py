@@ -28,7 +28,14 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_ON,
 )
-from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.core import (
+    Context,
+    HomeAssistant,
+    ServiceCall,
+    ServiceResponse,
+    SupportsResponse,
+    callback,
+)
 from homeassistant.helpers import entity_registry as er
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import make_entity_service_schema
@@ -436,6 +443,12 @@ class ScriptEntity(ToggleEntity, RestoreEntity):
         variables = kwargs.get("variables")
         context = kwargs.get("context")
         wait = kwargs.get("wait", True)
+        await self._async_start_run(variables, context, wait)
+
+    async def _async_start_run(
+        self, variables: dict, context: Context, wait: bool
+    ) -> ServiceResponse:
+        """Start the run of a script."""
         self.async_set_context(context)
         self.hass.bus.async_fire(
             EVENT_SCRIPT_STARTED,
@@ -444,8 +457,7 @@ class ScriptEntity(ToggleEntity, RestoreEntity):
         )
         coro = self._async_run(variables, context)
         if wait:
-            await coro
-            return
+            return await coro
 
         # Caller does not want to wait for called script to finish so let script run in
         # separate Task. Make a new empty script stack; scripts are allowed to
@@ -457,6 +469,7 @@ class ScriptEntity(ToggleEntity, RestoreEntity):
         # Wait for first state change so we can guarantee that
         # it is written to the State Machine before we return.
         await self._changed.wait()
+        return None
 
     async def _async_run(self, variables, context):
         with trace_script(
@@ -483,16 +496,25 @@ class ScriptEntity(ToggleEntity, RestoreEntity):
         """
         await self.script.async_stop()
 
-    async def _service_handler(self, service: ServiceCall) -> None:
+    async def _service_handler(self, service: ServiceCall) -> ServiceResponse:
         """Execute a service call to script.<script name>."""
-        await self.async_turn_on(variables=service.data, context=service.context)
+        response = await self._async_start_run(
+            variables=service.data, context=service.context, wait=True
+        )
+        if service.return_response:
+            return response
+        return None
 
     async def async_added_to_hass(self) -> None:
         """Restore last triggered on startup and register service."""
 
         unique_id = cast(str, self.unique_id)
         self.hass.services.async_register(
-            DOMAIN, unique_id, self._service_handler, schema=SCRIPT_SERVICE_SCHEMA
+            DOMAIN,
+            unique_id,
+            self._service_handler,
+            schema=SCRIPT_SERVICE_SCHEMA,
+            supports_response=SupportsResponse.OPTIONAL,
         )
 
         # Register the service description
