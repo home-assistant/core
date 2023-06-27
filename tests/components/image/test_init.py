@@ -9,11 +9,13 @@ import pytest
 import respx
 
 from homeassistant.components import image
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from .conftest import (
     MockImageEntity,
+    MockImageEntityInvalidContentType,
     MockImageNoStateEntity,
     MockImagePlatform,
     MockImageSyncEntity,
@@ -26,7 +28,7 @@ from tests.typing import ClientSessionGenerator
 
 @pytest.mark.freeze_time("2023-04-01 00:00:00+00:00")
 async def test_state(
-    hass: HomeAssistant, hass_client: ClientSessionGenerator, mock_image_platform
+    hass: HomeAssistant, hass_client: ClientSessionGenerator, mock_image_platform: None
 ) -> None:
     """Test image state."""
     state = hass.states.get("image.test")
@@ -41,7 +43,9 @@ async def test_state(
 
 @pytest.mark.freeze_time("2023-04-01 00:00:00+00:00")
 async def test_config_entry(
-    hass: HomeAssistant, hass_client: ClientSessionGenerator, mock_image_config_entry
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_image_config_entry: ConfigEntry,
 ) -> None:
     """Test setting up an image platform from a config entry."""
     state = hass.states.get("image.test")
@@ -99,8 +103,35 @@ async def test_no_state(
     }
 
 
+async def test_no_valid_content_type(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
+    """Test invalid content type."""
+    mock_integration(hass, MockModule(domain="test"))
+    mock_platform(
+        hass, "test.image", MockImagePlatform([MockImageEntityInvalidContentType(hass)])
+    )
+    assert await async_setup_component(
+        hass, image.DOMAIN, {"image": {"platform": "test"}}
+    )
+    await hass.async_block_till_done()
+
+    client = await hass_client()
+
+    state = hass.states.get("image.test")
+    # assert state.state == "unknown"
+    access_token = state.attributes["access_token"]
+    assert state.attributes == {
+        "access_token": access_token,
+        "entity_picture": f"/api/image_proxy/image.test?token={access_token}",
+        "friendly_name": "Test",
+    }
+    resp = await client.get(f"/api/image_proxy/image.test?token={access_token}")
+    assert resp.status == HTTPStatus.INTERNAL_SERVER_ERROR
+
+
 async def test_fetch_image_authenticated(
-    hass: HomeAssistant, hass_client: ClientSessionGenerator, mock_image_platform
+    hass: HomeAssistant, hass_client: ClientSessionGenerator, mock_image_platform: None
 ) -> None:
     """Test fetching an image with an authenticated client."""
     client = await hass_client()
@@ -115,7 +146,7 @@ async def test_fetch_image_authenticated(
 
 
 async def test_fetch_image_fail(
-    hass: HomeAssistant, hass_client: ClientSessionGenerator, mock_image_platform
+    hass: HomeAssistant, hass_client: ClientSessionGenerator, mock_image_platform: None
 ) -> None:
     """Test fetching an image with an authenticated client."""
     client = await hass_client()
@@ -147,7 +178,7 @@ async def test_fetch_image_sync(
 async def test_fetch_image_unauthenticated(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
-    mock_image_platform,
+    mock_image_platform: None,
 ) -> None:
     """Test fetching an image with an unauthenticated client."""
     client = await hass_client_no_auth()
