@@ -324,6 +324,10 @@ jobs:
     if: github.repository_owner == 'home-assistant'
     needs: ["init", "build_base"]
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
     steps:
       - name: Checkout the repository
         uses: actions/checkout@v3.5.3
