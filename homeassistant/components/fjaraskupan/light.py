@@ -12,7 +12,8 @@ from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import Coordinator, async_setup_entry_platform
+from . import async_setup_entry_platform
+from .coordinator import FjaraskupanCoordinator
 
 
 async def async_setup_entry(
@@ -22,13 +23,13 @@ async def async_setup_entry(
 ) -> None:
     """Set up tuya sensors dynamically through tuya discovery."""
 
-    def _constructor(coordinator: Coordinator) -> list[Entity]:
+    def _constructor(coordinator: FjaraskupanCoordinator) -> list[Entity]:
         return [Light(coordinator, coordinator.device_info)]
 
     async_setup_entry_platform(hass, config_entry, async_add_entities, _constructor)
 
 
-class Light(CoordinatorEntity[Coordinator], LightEntity):
+class Light(CoordinatorEntity[FjaraskupanCoordinator], LightEntity):
     """Light device."""
 
     _attr_has_entity_name = True
@@ -36,7 +37,7 @@ class Light(CoordinatorEntity[Coordinator], LightEntity):
 
     def __init__(
         self,
-        coordinator: Coordinator,
+        coordinator: FjaraskupanCoordinator,
         device_info: DeviceInfo,
     ) -> None:
         """Init light entity."""

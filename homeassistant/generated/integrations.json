@@ -3085,6 +3085,12 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
+    "loqed": {
+      "name": "LOQED Touch Smart Lock",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "luftdaten": {
       "name": "Sensor.Community",
       "integration_type": "device",

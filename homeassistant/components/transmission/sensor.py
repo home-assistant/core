@@ -40,12 +40,20 @@ async def async_setup_entry(
     dev = [
         TransmissionSpeedSensor(tm_client, name, "Down Speed", "download"),
         TransmissionSpeedSensor(tm_client, name, "Up Speed", "upload"),
-        TransmissionStatusSensor(tm_client, name, "Status"),
-        TransmissionTorrentsSensor(tm_client, name, "Active Torrents", "active"),
-        TransmissionTorrentsSensor(tm_client, name, "Paused Torrents", "paused"),
-        TransmissionTorrentsSensor(tm_client, name, "Total Torrents", "total"),
-        TransmissionTorrentsSensor(tm_client, name, "Completed Torrents", "completed"),
-        TransmissionTorrentsSensor(tm_client, name, "Started Torrents", "started"),
+        TransmissionStatusSensor(tm_client, name, "Status", "status"),
+        TransmissionTorrentsSensor(
+            tm_client, name, "Active Torrents", "active_torrents"
+        ),
+        TransmissionTorrentsSensor(
+            tm_client, name, "Paused Torrents", "paused_torrents"
+        ),
+        TransmissionTorrentsSensor(tm_client, name, "Total Torrents", "total_torrents"),
+        TransmissionTorrentsSensor(
+            tm_client, name, "Completed Torrents", "completed_torrents"
+        ),
+        TransmissionTorrentsSensor(
+            tm_client, name, "Started Torrents", "started_torrents"
+        ),
     ]
 
     async_add_entities(dev, True)
@@ -56,29 +64,19 @@ class TransmissionSensor(SensorEntity):
 
     _attr_should_poll = False
 
-    def __init__(self, tm_client, client_name, sensor_name, sub_type=None):
+    def __init__(self, tm_client, client_name, sensor_name, key):
         """Initialize the sensor."""
         self._tm_client: TransmissionClient = tm_client
-        self._client_name = client_name
-        self._name = sensor_name
-        self._sub_type = sub_type
+        self._attr_name = f"{client_name} {sensor_name}"
+        self._key = key
         self._state = None
+        self._attr_unique_id = f"{tm_client.config_entry.entry_id}-{key}"
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, tm_client.config_entry.entry_id)},
             manufacturer="Transmission",
             name=client_name,
         )
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return f"{self._client_name} {self._name}"
-
-    @property
-    def unique_id(self):
-        """Return the unique id of the entity."""
-        return f"{self._tm_client.api.host}-{self.name}"
 
     @property
     def native_value(self):
@@ -118,7 +116,7 @@ class TransmissionSpeedSensor(TransmissionSensor):
         if data := self._tm_client.api.data:
             b_spd = (
                 float(data.download_speed)
-                if self._sub_type == "download"
+                if self._key == "download"
                 else float(data.upload_speed)
             )
             self._state = b_spd
@@ -151,12 +149,15 @@ class TransmissionStatusSensor(TransmissionSensor):
 class TransmissionTorrentsSensor(TransmissionSensor):
     """Representation of a Transmission torrents sensor."""
 
-    SUBTYPE_MODES = {
-        "started": ("downloading"),
-        "completed": ("seeding"),
-        "paused": ("stopped"),
-        "active": ("seeding", "downloading"),
-        "total": None,
+    MODES: dict[str, list[str] | None] = {
+        "started_torrents": ["downloading"],
+        "completed_torrents": ["seeding"],
+        "paused_torrents": ["stopped"],
+        "active_torrents": [
+            "seeding",
+            "downloading",
+        ],
+        "total_torrents": None,
     }
 
     @property
@@ -171,7 +172,7 @@ class TransmissionTorrentsSensor(TransmissionSensor):
             torrents=self._tm_client.api.torrents,
             order=self._tm_client.config_entry.options[CONF_ORDER],
             limit=self._tm_client.config_entry.options[CONF_LIMIT],
-            statuses=self.SUBTYPE_MODES[self._sub_type],
+            statuses=self.MODES[self._key],
         )
         return {
             STATE_ATTR_TORRENT_INFO: info,
@@ -180,7 +181,7 @@ class TransmissionTorrentsSensor(TransmissionSensor):
     def update(self) -> None:
         """Get the latest data from Transmission and updates the state."""
         torrents = _filter_torrents(
-            self._tm_client.api.torrents, statuses=self.SUBTYPE_MODES[self._sub_type]
+            self._tm_client.api.torrents, statuses=self.MODES[self._key]
         )
         self._state = len(torrents)
 
