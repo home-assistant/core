@@ -115,11 +115,6 @@ class IssueRegistry:
         return self.issues.get((domain, issue_id))
 
     @callback
-    def async_get_issues(self) -> dict[tuple[str, str], IssueEntry]:
-        """Get all current issues."""
-        return self.issues
-
-    @callback
     def async_get_or_create(
         self,
         domain: str,

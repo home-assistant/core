@@ -1323,9 +1323,10 @@ def is_device_attr(
 
 def issues(hass: HomeAssistant) -> dict[tuple[str, str], dict[str, Any]]:
     """Return all open issues."""
-    current_issues = issue_registry.async_get(hass).async_get_issues()
+    current_issues = issue_registry.async_get(hass).issues
     # Use JSON for safe representation
     return {k: v.to_json() for (k, v) in current_issues.items()}
+
 
 def issue(hass: HomeAssistant, domain: str, issue_id: str) -> dict[str, Any] | None:
     """Get issue by domain and issue_id."""
@@ -1333,6 +1334,7 @@ def issue(hass: HomeAssistant, domain: str, issue_id: str) -> dict[str, Any] | N
     if result:
         return result.to_json()
     return None
+
 
 def areas(hass: HomeAssistant) -> Iterable[str | None]:
     """Return all areas."""
