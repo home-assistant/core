@@ -9,7 +9,8 @@ from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import Coordinator, async_setup_entry_platform
+from . import async_setup_entry_platform
+from .coordinator import FjaraskupanCoordinator
 
 
 async def async_setup_entry(
@@ -19,7 +20,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up number entities dynamically through discovery."""
 
-    def _constructor(coordinator: Coordinator) -> list[Entity]:
+    def _constructor(coordinator: FjaraskupanCoordinator) -> list[Entity]:
         return [
             PeriodicVentingTime(coordinator, coordinator.device_info),
         ]
@@ -27,7 +28,7 @@ async def async_setup_entry(
     async_setup_entry_platform(hass, config_entry, async_add_entities, _constructor)
 
 
-class PeriodicVentingTime(CoordinatorEntity[Coordinator], NumberEntity):
+class PeriodicVentingTime(CoordinatorEntity[FjaraskupanCoordinator], NumberEntity):
     """Periodic Venting."""
 
     _attr_has_entity_name = True
@@ -41,7 +42,7 @@ class PeriodicVentingTime(CoordinatorEntity[Coordinator], NumberEntity):
 
     def __init__(
         self,
-        coordinator: Coordinator,
+        coordinator: FjaraskupanCoordinator,
         device_info: DeviceInfo,
     ) -> None:
         """Init number entities."""
