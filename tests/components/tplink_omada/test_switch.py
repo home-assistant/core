@@ -32,7 +32,7 @@ async def test_poe_switches(
 async def _test_poe_switch(
     hass: HomeAssistant,
     mock_omada_site_client: MagicMock,
-    entity_name: str,
+    entity_id: str,
     network_switch_mac: str,
     port: int,
 ) -> None:
