@@ -36,7 +36,7 @@ async def async_setup_entry(
     async_add_entities(
         [
             FritzGuestWifiQRImage(
-                avm_wrapper, entry.title, guest_wifi_info["NewSSID"], hass
+                hass, avm_wrapper, entry.title, guest_wifi_info["NewSSID"]
             )
         ]
     )
@@ -51,10 +51,10 @@ class FritzGuestWifiQRImage(FritzBoxBaseEntity, ImageEntity):
 
     def __init__(
         self,
+        hass: HomeAssistant,
         avm_wrapper: AvmWrapper,
         device_friendly_name: str,
         ssid: str,
-        hass: HomeAssistant,
     ) -> None:
         """Initialize the image entity."""
         self._attr_name = ssid
