@@ -28,16 +28,13 @@ async def async_setup_entry(
 
     sensors: list[Any] = []
     for key in requester.services:
-        LOGGER.debug(f"services: {key}")
         sensors.append(ObihaiServiceSensor(requester, key))
 
     if requester.line_services is not None:
         for key in requester.line_services:
-            LOGGER.debug(f"line_services: {key}")
             sensors.append(ObihaiLineServiceSensor(requester, key))
 
     for key in requester.call_direction:
-        LOGGER.debug(f"call_direction: {key}")
         sensors.append(ObihaiCallDirectionSensor(requester, key))
 
     async_add_entities(sensors, update_before_add=True)
@@ -49,7 +46,7 @@ class ObihaiSensor(ObihaiEntity, SensorEntity, ABC):
     @property
     @abstractmethod
     def icon(self) -> str:
-        """Return entity icon."""
+        """Return an icon."""
 
     @abstractmethod
     def _update(self) -> None:
