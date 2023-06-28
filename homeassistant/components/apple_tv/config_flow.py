@@ -197,6 +197,17 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if unique_id is None:
             return self.async_abort(reason="unknown")
 
+        # Macs are not currently supported but may be in the future
+        # and we can remove this at that time
+        if (
+            service_type == "_raop._tcp.local"
+            and ((am := properties.get("am")) and am.startswith("Mac"))
+        ) or (
+            service_type == "_airplay._tcp.local"
+            and ((model := properties.get("model")) and model.startswith("model"))
+        ):
+            return self.async_abort(reason="device_not_supported")
+
         if existing_unique_id := self._entry_unique_id_from_identifers({unique_id}):
             await self.async_set_unique_id(existing_unique_id)
             self._abort_if_unique_id_configured(updates={CONF_ADDRESS: host})
@@ -293,8 +304,6 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="no_devices_found")
         except DeviceAlreadyConfigured:
             return self.async_abort(reason="already_configured")
-        except AbortFlow:
-            raise
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected exception")
             return self.async_abort(reason="unknown")
@@ -318,8 +327,6 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         raw_model = dev_info.raw_model
         is_unknown = dev_info.model == DeviceModel.Unknown and raw_model
         model_type = raw_model if is_unknown else model_str(dev_info.model)
-        if model_type.startswith("Mac"):
-            raise AbortFlow("device_not_supported")
         self.context["title_placeholders"] = {
             "name": self.atv.name,
             "type": model_type,

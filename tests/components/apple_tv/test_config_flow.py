@@ -16,7 +16,12 @@ from homeassistant.components.apple_tv.const import (
 )
 from homeassistant.core import HomeAssistant
 
-from .common import airplay_service, create_conf, mrp_service, raop_service
+from .common import (
+    airplay_service,
+    create_conf,
+    mrp_service,
+    raop_service,
+)
 
 from tests.common import MockConfigEntry
 
@@ -49,6 +54,16 @@ MAC_RAOP_SERVICE = zeroconf.ZeroconfServiceInfo(
     type="_raop._tcp.local.",
     name="AABBCCDDEEFF@MacbookAir._raop._tcp.local.",
     properties={"am": "Mac14,9"},
+)
+
+MAC_AIRPLAY_SERVICE = zeroconf.ZeroconfServiceInfo(
+    host="127.0.0.1",
+    addresses=["127.0.0.1"],
+    hostname="mock_hostname",
+    port=None,
+    type="_airplay._tcp.local.",
+    name="AABBCCDDEEFF@MacbookAir._airplay._tcp.local.",
+    properties={"model": "Mac14,9"},
 )
 
 
@@ -1179,3 +1194,17 @@ async def test_zeroconf_rejects_ipv6(hass: HomeAssistant) -> None:
     )
     assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "ipv6_not_supported"
+
+
+@pytest.mark.parametrize("discovery", [MAC_RAOP_SERVICE, MAC_AIRPLAY_SERVICE])
+async def test_zeroconf_rejects_mac(
+    hass: HomeAssistant, discovery: zeroconf.ZeroconfServiceInfo
+) -> None:
+    """Test zeroconf discovery rejects mac."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=discovery,
+    )
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["reason"] == "device_not_supported"
