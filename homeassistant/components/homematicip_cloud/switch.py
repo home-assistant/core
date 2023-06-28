@@ -4,6 +4,7 @@ from __future__ import annotations
 from typing import Any
 
 from homematicip.aio.device import (
+    AsyncBrandSwitch2,
     AsyncBrandSwitchMeasuring,
     AsyncDinRailSwitch,
     AsyncDinRailSwitch4,
@@ -17,7 +18,6 @@ from homematicip.aio.device import (
     AsyncPrintedCircuitBoardSwitch2,
     AsyncPrintedCircuitBoardSwitchBattery,
     AsyncWiredSwitch8,
-    AsyncBrandSwitch2,
 )
 from homematicip.aio.group import AsyncExtendedLinkedSwitchingGroup, AsyncSwitchingGroup
 
