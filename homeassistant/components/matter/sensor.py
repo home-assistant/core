@@ -91,7 +91,7 @@ DISCOVERY_SCHEMAS = [
         entity_description=MatterSensorEntityDescription(
             key="FlowSensor",
             native_unit_of_measurement=UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
-            device_class=SensorDeviceClass.WATER,  # what is the device class here ?
+            name="Flow",
             measurement_to_ha=lambda x: x / 10,
         ),
         entity_class=MatterSensor,
