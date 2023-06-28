@@ -19,5 +19,18 @@
         }
       }
     }
+  },
+  "entity": {
+    "sensor": {
+      "power": {
+        "name": "Power"
+      },
+      "estimated_distance": {
+        "name": "Estimated distance"
+      },
+      "vendor": {
+        "name": "Vendor"
+      }
+    }
   }
 }
