@@ -18,16 +18,26 @@ from homeassistant.components.assist_pipeline import (
     Pipeline,
     PipelineEvent,
     PipelineEventType,
+    PipelineNotFound,
     async_get_pipeline,
     async_pipeline_from_audio_stream,
     select as pipeline_select,
 )
-from homeassistant.components.assist_pipeline.vad import VoiceCommandSegmenter
+from homeassistant.components.assist_pipeline.vad import (
+    VadSensitivity,
+    VoiceCommandSegmenter,
+)
 from homeassistant.const import __version__
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.util.ulid import ulid
 
-from .const import CHANNELS, DOMAIN, RATE, RTP_AUDIO_SETTINGS, WIDTH
+from .const import (
+    CHANNELS,
+    DOMAIN,
+    RATE,
+    RTP_AUDIO_SETTINGS,
+    WIDTH,
+)
 
 if TYPE_CHECKING:
     from .devices import VoIPDevice, VoIPDevices
@@ -45,7 +55,11 @@ def make_protocol(
         DOMAIN,
         voip_device.voip_id,
     )
-    pipeline = async_get_pipeline(hass, pipeline_id)
+    try:
+        pipeline: Pipeline | None = async_get_pipeline(hass, pipeline_id)
+    except PipelineNotFound:
+        pipeline = None
+
     if (
         (pipeline is None)
         or (pipeline.stt_engine is None)
@@ -58,6 +72,12 @@ def make_protocol(
             opus_payload_type=call_info.opus_payload_type,
         )
 
+    vad_sensitivity = pipeline_select.get_vad_sensitivity(
+        hass,
+        DOMAIN,
+        voip_device.voip_id,
+    )
+
     # Pipeline is properly configured
     return PipelineRtpDatagramProtocol(
         hass,
@@ -65,6 +85,7 @@ def make_protocol(
         voip_device,
         Context(user_id=devices.config_entry.data["user"]),
         opus_payload_type=call_info.opus_payload_type,
+        silence_seconds=VadSensitivity.to_seconds(vad_sensitivity),
     )
 
 
@@ -125,6 +146,7 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
         error_tone_enabled: bool = True,
         tone_delay: float = 0.2,
         tts_extra_timeout: float = 1.0,
+        silence_seconds: float = 1.0,
     ) -> None:
         """Set up pipeline RTP server."""
         super().__init__(
@@ -146,6 +168,7 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
         self.error_tone_enabled = error_tone_enabled
         self.tone_delay = tone_delay
         self.tts_extra_timeout = tts_extra_timeout
+        self.silence_seconds = silence_seconds
 
         self._audio_queue: asyncio.Queue[bytes] = asyncio.Queue()
         self._context = context
@@ -194,7 +217,7 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
 
         try:
             # Wait for speech before starting pipeline
-            segmenter = VoiceCommandSegmenter()
+            segmenter = VoiceCommandSegmenter(silence_seconds=self.silence_seconds)
             chunk_buffer: deque[bytes] = deque(
                 maxlen=self.buffered_chunks_before_speech,
             )
@@ -246,6 +269,7 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
                         self.hass, DOMAIN, self.voip_device.voip_id
                     ),
                     conversation_id=self._conversation_id,
+                    device_id=self.voip_device.device_id,
                     tts_audio_output="raw",
                 )
 
@@ -261,6 +285,8 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
                 await self._tts_done.wait()
 
             _LOGGER.debug("Pipeline finished")
+        except PipelineNotFound:
+            _LOGGER.warning("Pipeline not found")
         except asyncio.TimeoutError:
             # Expected after caller hangs up
             _LOGGER.debug("Pipeline timeout")

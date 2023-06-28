@@ -70,8 +70,8 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="rssi",
         name="RSSI",
+        icon="mdi:wifi",
         native_unit_of_measurement=PERCENTAGE,
-        device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(

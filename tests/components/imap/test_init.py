@@ -1,6 +1,6 @@
 """Test the imap entry initialization."""
 import asyncio
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -9,6 +9,7 @@ import pytest
 
 from homeassistant.components.imap import DOMAIN
 from homeassistant.components.imap.errors import InvalidAuth, InvalidFolder
+from homeassistant.components.sensor.const import SensorStateClass
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.util.dt import utcnow
@@ -22,6 +23,7 @@ from .const import (
     TEST_FETCH_RESPONSE_INVALID_DATE2,
     TEST_FETCH_RESPONSE_INVALID_DATE3,
     TEST_FETCH_RESPONSE_MULTIPART,
+    TEST_FETCH_RESPONSE_NO_SUBJECT_TO_FROM,
     TEST_FETCH_RESPONSE_TEXT_BARE,
     TEST_FETCH_RESPONSE_TEXT_OTHER,
     TEST_FETCH_RESPONSE_TEXT_PLAIN,
@@ -134,6 +136,7 @@ async def test_receiving_message_successfully(
     # we should have received one message
     assert state is not None
     assert state.state == "1"
+    assert state.attributes["state_class"] == SensorStateClass.MEASUREMENT
 
     # we should have received one event
     assert len(event_called) == 1
@@ -151,6 +154,44 @@ async def test_receiving_message_successfully(
         or not valid_date
         and data["date"] is None
     )
+
+
+@pytest.mark.parametrize("imap_search", [TEST_SEARCH_RESPONSE])
+@pytest.mark.parametrize("imap_fetch", [TEST_FETCH_RESPONSE_NO_SUBJECT_TO_FROM])
+@pytest.mark.parametrize("imap_has_capability", [True, False], ids=["push", "poll"])
+async def test_receiving_message_no_subject_to_from(
+    hass: HomeAssistant, mock_imap_protocol: MagicMock
+) -> None:
+    """Test receiving a message successfully without subject, to and from in body."""
+    event_called = async_capture_events(hass, "imap_content")
+
+    config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG)
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    # Make sure we have had one update (when polling)
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=5))
+    await hass.async_block_till_done()
+    state = hass.states.get("sensor.imap_email_email_com")
+    # we should have received one message
+    assert state is not None
+    assert state.state == "1"
+
+    # we should have received one event
+    assert len(event_called) == 1
+    data: dict[str, Any] = event_called[0].data
+    assert data["server"] == "imap.server.com"
+    assert data["username"] == "email@email.com"
+    assert data["search"] == "UnSeen UnDeleted"
+    assert data["folder"] == "INBOX"
+    assert data["sender"] == ""
+    assert data["subject"] == ""
+    assert data["date"] == datetime(
+        2023, 3, 24, 13, 52, tzinfo=timezone(timedelta(seconds=3600))
+    )
+    assert data["text"] == "Test body\r\n\r\n"
+    assert data["headers"]["Return-Path"] == ("<john.doe@example.com>",)
+    assert data["headers"]["Delivered-To"] == ("notify@example.com",)
 
 
 @pytest.mark.parametrize("imap_has_capability", [True, False], ids=["push", "poll"])

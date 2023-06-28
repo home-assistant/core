@@ -26,6 +26,8 @@ from homeassistant.util import dt as dt_util
 from .common import async_enable_traffic, find_entity_id, send_attributes_report
 from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_TYPE
 
+from tests.common import async_mock_load_restore_state_from_storage
+
 
 @pytest.fixture(autouse=True)
 def select_select_only():
@@ -114,7 +116,6 @@ def core_rs(hass_storage):
                 }
             ],
         }
-        return
 
     return _storage
 
@@ -125,7 +126,7 @@ async def test_select(hass: HomeAssistant, siren) -> None:
     entity_registry = er.async_get(hass)
     zha_device, cluster = siren
     assert cluster is not None
-    entity_id = await find_entity_id(
+    entity_id = find_entity_id(
         Platform.SELECT,
         zha_device,
         hass,
@@ -176,6 +177,7 @@ async def test_select_restore_state(
 
     entity_id = "select.fakemanufacturer_fakemodel_default_siren_tone"
     core_rs(entity_id, state="Burglar")
+    await async_mock_load_restore_state_from_storage(hass)
 
     zigpy_device = zigpy_device_mock(
         {
@@ -191,7 +193,7 @@ async def test_select_restore_state(
     zha_device = await zha_device_restored(zigpy_device)
     cluster = zigpy_device.endpoints[1].ias_wd
     assert cluster is not None
-    entity_id = await find_entity_id(
+    entity_id = find_entity_id(
         Platform.SELECT,
         zha_device,
         hass,
@@ -216,7 +218,7 @@ async def test_on_off_select_new_join(
     }
     zha_device = await zha_device_joined(light)
     select_name = "start_up_behavior"
-    entity_id = await find_entity_id(
+    entity_id = find_entity_id(
         Platform.SELECT,
         zha_device,
         hass,
@@ -301,7 +303,7 @@ async def test_on_off_select_restored(
     )
 
     select_name = "start_up_behavior"
-    entity_id = await find_entity_id(
+    entity_id = find_entity_id(
         Platform.SELECT,
         zha_device,
         hass,
@@ -328,7 +330,7 @@ async def test_on_off_select_unsupported(
     on_off_cluster.add_unsupported_attribute("start_up_on_off")
     zha_device = await zha_device_joined_restored(light)
     select_name = general.OnOff.StartUpOnOff.__name__
-    entity_id = await find_entity_id(
+    entity_id = find_entity_id(
         Platform.SELECT,
         zha_device,
         hass,
@@ -397,7 +399,7 @@ async def test_on_off_select_attribute_report(
 
     zha_device = await zha_device_restored(zigpy_device_aqara_sensor)
     cluster = zigpy_device_aqara_sensor.endpoints.get(1).opple_cluster
-    entity_id = await find_entity_id(Platform.SELECT, zha_device, hass)
+    entity_id = find_entity_id(Platform.SELECT, zha_device, hass)
     assert entity_id is not None
 
     # allow traffic to flow through the gateway and device

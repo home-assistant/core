@@ -45,7 +45,7 @@ class BMWNumberEntityDescription(NumberEntityDescription, BMWRequiredKeysMixin):
 NUMBER_TYPES: list[BMWNumberEntityDescription] = [
     BMWNumberEntityDescription(
         key="target_soc",
-        name="Target SoC",
+        translation_key="target_soc",
         device_class=NumberDeviceClass.BATTERY,
         is_available=lambda v: v.is_remote_set_target_soc_enabled,
         native_max_value=100.0,

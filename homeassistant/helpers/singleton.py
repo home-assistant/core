@@ -38,7 +38,7 @@ def singleton(data_key: str) -> Callable[[_FuncType[_T]], _FuncType[_T]]:
         async def async_wrapped(hass: HomeAssistant) -> Any:
             if data_key not in hass.data:
                 evt = hass.data[data_key] = asyncio.Event()
-                result = await func(hass)  # type: ignore[misc]
+                result = await func(hass)
                 hass.data[data_key] = result
                 evt.set()
                 return cast(_T, result)

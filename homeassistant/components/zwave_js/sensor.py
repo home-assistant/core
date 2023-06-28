@@ -11,6 +11,7 @@ from zwave_js_server.const.command_class.meter import (
     RESET_METER_OPTION_TARGET_VALUE,
     RESET_METER_OPTION_TYPE,
 )
+from zwave_js_server.exceptions import BaseZwaveJSServerError
 from zwave_js_server.model.controller import Controller
 from zwave_js_server.model.controller.statistics import ControllerStatisticsDataType
 from zwave_js_server.model.driver import Driver
@@ -32,6 +33,7 @@ from homeassistant.const import (
     LIGHT_LUX,
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+    UV_INDEX,
     EntityCategory,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
@@ -42,10 +44,11 @@ from homeassistant.const import (
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import StateType
+from homeassistant.helpers.typing import UNDEFINED, StateType
 
 from .const import (
     ATTR_METER_TYPE,
@@ -58,6 +61,10 @@ from .const import (
     ENTITY_DESC_KEY_CO2,
     ENTITY_DESC_KEY_CURRENT,
     ENTITY_DESC_KEY_ENERGY_MEASUREMENT,
+    ENTITY_DESC_KEY_ENERGY_PRODUCTION_POWER,
+    ENTITY_DESC_KEY_ENERGY_PRODUCTION_TIME,
+    ENTITY_DESC_KEY_ENERGY_PRODUCTION_TODAY,
+    ENTITY_DESC_KEY_ENERGY_PRODUCTION_TOTAL,
     ENTITY_DESC_KEY_ENERGY_TOTAL_INCREASING,
     ENTITY_DESC_KEY_HUMIDITY,
     ENTITY_DESC_KEY_ILLUMINANCE,
@@ -69,6 +76,7 @@ from .const import (
     ENTITY_DESC_KEY_TARGET_TEMPERATURE,
     ENTITY_DESC_KEY_TEMPERATURE,
     ENTITY_DESC_KEY_TOTAL_INCREASING,
+    ENTITY_DESC_KEY_UV_INDEX,
     ENTITY_DESC_KEY_VOLTAGE,
     LOGGER,
     SERVICE_RESET_METER,
@@ -235,6 +243,50 @@ ENTITY_DESCRIPTION_KEY_DEVICE_CLASS_MAP: dict[
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
     ),
+    (
+        ENTITY_DESC_KEY_ENERGY_PRODUCTION_TIME,
+        UnitOfTime.SECONDS,
+    ): SensorEntityDescription(
+        ENTITY_DESC_KEY_ENERGY_PRODUCTION_TIME,
+        name="Energy production time",
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+    ),
+    (ENTITY_DESC_KEY_ENERGY_PRODUCTION_TIME, UnitOfTime.HOURS): SensorEntityDescription(
+        ENTITY_DESC_KEY_ENERGY_PRODUCTION_TIME,
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.HOURS,
+    ),
+    (
+        ENTITY_DESC_KEY_ENERGY_PRODUCTION_TODAY,
+        UnitOfEnergy.WATT_HOUR,
+    ): SensorEntityDescription(
+        ENTITY_DESC_KEY_ENERGY_PRODUCTION_TODAY,
+        name="Energy production today",
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+    ),
+    (
+        ENTITY_DESC_KEY_ENERGY_PRODUCTION_TOTAL,
+        UnitOfEnergy.WATT_HOUR,
+    ): SensorEntityDescription(
+        ENTITY_DESC_KEY_ENERGY_PRODUCTION_TOTAL,
+        name="Energy production total",
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+    ),
+    (
+        ENTITY_DESC_KEY_ENERGY_PRODUCTION_POWER,
+        UnitOfPower.WATT,
+    ): SensorEntityDescription(
+        ENTITY_DESC_KEY_POWER,
+        name="Energy production power",
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfPower.WATT,
+    ),
 }
 
 # These descriptions are without device class.
@@ -272,6 +324,11 @@ ENTITY_DESCRIPTION_KEY_MAP = {
     ENTITY_DESC_KEY_TOTAL_INCREASING: SensorEntityDescription(
         ENTITY_DESC_KEY_TOTAL_INCREASING,
         state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    ENTITY_DESC_KEY_UV_INDEX: SensorEntityDescription(
+        ENTITY_DESC_KEY_UV_INDEX,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UV_INDEX,
     ),
 }
 
@@ -547,13 +604,14 @@ class ZwaveSensor(ZWaveBaseEntity, SensorEntity):
         unit_of_measurement: str | None = None,
     ) -> None:
         """Initialize a ZWaveSensorBase entity."""
-        super().__init__(config_entry, driver, info)
         self.entity_description = entity_description
+        super().__init__(config_entry, driver, info)
         self._attr_native_unit_of_measurement = unit_of_measurement
 
         # Entity class attributes
         self._attr_force_update = True
-        self._attr_name = self.generate_name(include_value_name=True)
+        if not entity_description.name or entity_description.name is UNDEFINED:
+            self._attr_name = self.generate_name(include_value_name=True)
 
     @property
     def native_value(self) -> StateType:
@@ -615,9 +673,15 @@ class ZWaveMeterSensor(ZWaveNumericSensor):
         if value is not None:
             options[RESET_METER_OPTION_TARGET_VALUE] = value
         args = [options] if options else []
-        await node.endpoints[endpoint].async_invoke_cc_api(
-            CommandClass.METER, "reset", *args, wait_for_result=False
-        )
+        try:
+            await node.endpoints[endpoint].async_invoke_cc_api(
+                CommandClass.METER, "reset", *args, wait_for_result=False
+            )
+        except BaseZwaveJSServerError as err:
+            LOGGER.error(
+                "Failed to reset meters on node %s endpoint %s: %s", node, endpoint, err
+            )
+            raise HomeAssistantError from err
         LOGGER.debug(
             "Meters on node %s endpoint %s reset with the following options: %s",
             node,
@@ -705,8 +769,9 @@ class ZWaveConfigParameterSensor(ZWaveListSensor):
     @property
     def device_class(self) -> SensorDeviceClass | None:
         """Return sensor device class."""
-        if (device_class := super(ZwaveSensor, self).device_class) is not None:
-            return device_class
+        # mypy doesn't know about fget: https://github.com/python/mypy/issues/6185
+        if (device_class := ZwaveSensor.device_class.fget(self)) is not None:  # type: ignore[attr-defined]
+            return device_class  # type: ignore[no-any-return]
         if (
             self._primary_value.configuration_value_type
             == ConfigurationValueType.ENUMERATED
@@ -746,6 +811,9 @@ class ZWaveNodeStatusSensor(SensorEntity):
 
     async def async_poll_value(self, _: bool) -> None:
         """Poll a value."""
+        # We log an error instead of raising an exception because this service call occurs
+        # in a separate task since it is called via the dispatcher and we don't want to
+        # raise the exception in that separate task because it is confusing to the user.
         LOGGER.error(
             "There is no value to refresh for this entity so the zwave_js.refresh_value"
             " service won't work for it"
@@ -822,7 +890,10 @@ class ZWaveStatisticsSensor(SensorEntity):
 
     async def async_poll_value(self, _: bool) -> None:
         """Poll a value."""
-        raise ValueError(
+        # We log an error instead of raising an exception because this service call occurs
+        # in a separate task since it is called via the dispatcher and we don't want to
+        # raise the exception in that separate task because it is confusing to the user.
+        LOGGER.error(
             "There is no value to refresh for this entity so the zwave_js.refresh_value"
             " service won't work for it"
         )

@@ -103,7 +103,7 @@
         "state": {
           "unknown": "Unknown",
           "warmup": "Warm-up",
-          "normal": "normal",
+          "normal": "Normal",
           "fault": "Fault"
         },
         "state_attributes": {
