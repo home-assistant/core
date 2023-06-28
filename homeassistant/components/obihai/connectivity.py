@@ -48,7 +48,7 @@ class ObihaiConnection:
         self.host = host
         self.username = username
         self.password = password
-        self.serial: str = ""
+        self.serial: str
         self.services: list = []
         self.line_services: list = []
         self.call_direction: list = []
@@ -59,9 +59,9 @@ class ObihaiConnection:
         """Validate connection and retrieve a list of sensors."""
 
         if not self.pyobihai:
-            self.pyobihai = get_pyobihai(self.host, self.username, self.password)
+            self.pyobihai = validate_auth(self.host, self.username, self.password)
 
-            if not self.pyobihai.check_account():
+            if not self.pyobihai:
                 return False
 
         self.serial = self.pyobihai.get_device_serial()
