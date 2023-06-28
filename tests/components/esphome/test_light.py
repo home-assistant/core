@@ -1085,13 +1085,13 @@ async def test_light_rgbww_without_cold_warm_white_support(
                 | LightColorCapability.COLOR_TEMPERATURE
                 | LightColorCapability.ON_OFF
                 | LightColorCapability.BRIGHTNESS,
-                cold_white=0,
-                warm_white=0,
+                white=0,
                 rgb=(pytest.approx(0.32941176470588235), 1.0, 0.0),
                 brightness=pytest.approx(0.4980392156862745),
             )
         ]
     )
+
     mock_client.light_command.reset_mock()
 
     await hass.services.async_call(
@@ -1106,8 +1106,8 @@ async def test_light_rgbww_without_cold_warm_white_support(
                 key=1,
                 state=True,
                 color_brightness=pytest.approx(0.4235294117647059),
-                cold_white=1,
-                warm_white=1,
+                color_temperature=276.5,
+                white=1,
                 color_mode=LightColorCapability.RGB
                 | LightColorCapability.WHITE
                 | LightColorCapability.COLOR_TEMPERATURE
@@ -1131,8 +1131,8 @@ async def test_light_rgbww_without_cold_warm_white_support(
                 key=1,
                 state=True,
                 color_brightness=pytest.approx(0.4235294117647059),
-                cold_white=1,
-                warm_white=1,
+                white=1,
+                color_temperature=276.5,
                 color_mode=LightColorCapability.RGB
                 | LightColorCapability.WHITE
                 | LightColorCapability.COLOR_TEMPERATURE
@@ -1159,8 +1159,8 @@ async def test_light_rgbww_without_cold_warm_white_support(
                 key=1,
                 state=True,
                 color_brightness=1,
-                cold_white=1,
-                warm_white=1,
+                white=1,
+                color_temperature=276.5,
                 color_mode=LightColorCapability.RGB
                 | LightColorCapability.WHITE
                 | LightColorCapability.COLOR_TEMPERATURE
@@ -1184,8 +1184,8 @@ async def test_light_rgbww_without_cold_warm_white_support(
                 key=1,
                 state=True,
                 color_brightness=0,
-                cold_white=0,
-                warm_white=100,
+                white=100,
+                color_temperature=400.0,
                 color_mode=LightColorCapability.RGB
                 | LightColorCapability.WHITE
                 | LightColorCapability.COLOR_TEMPERATURE
