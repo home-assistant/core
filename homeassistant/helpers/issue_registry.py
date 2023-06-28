@@ -116,7 +116,7 @@ class IssueRegistry:
 
     @callback
     def async_get_issues(self) -> dict[tuple[str, str], IssueEntry]:
-        """Get issue by id."""
+        """Get all current issues."""
         return self.issues
 
     @callback
