@@ -93,7 +93,7 @@ async def test_not_supported(hass: HomeAssistant):
     update_firmware = AsyncMock()
     await setup_integration(hass, None, update_firmware)
 
-    state = hass.states.get("update.friendly_name_firmware_update")
+    state = hass.states.get("update.friendly_name")
 
     assert state
     assert state.state == STATE_UNKNOWN
@@ -111,7 +111,7 @@ async def test_on_latest_firmware(hass: HomeAssistant):
     update_firmware = AsyncMock()
     await setup_integration(hass, LATEST_FIRMWARE_INSTALLED, update_firmware)
 
-    state = hass.states.get("update.friendly_name_firmware_update")
+    state = hass.states.get("update.friendly_name")
 
     assert state
     assert state.state == STATE_UNKNOWN
@@ -129,7 +129,7 @@ async def test_update_available(hass: HomeAssistant):
     update_firmware = AsyncMock()
     await setup_integration(hass, FIRMWARE_UPDATE_AVAILABLE, update_firmware)
 
-    state = hass.states.get("update.friendly_name_firmware_update")
+    state = hass.states.get("update.friendly_name")
 
     assert state
     assert state.state == STATE_ON
@@ -148,7 +148,7 @@ async def test_update_available(hass: HomeAssistant):
     await hass.services.async_call(
         PLATFORM_DOMAIN,
         SERVICE_INSTALL,
-        {ATTR_ENTITY_ID: "update.friendly_name_firmware_update"},
+        {ATTR_ENTITY_ID: "update.friendly_name"},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -166,7 +166,7 @@ async def test_firmware_update_not_required(hass: HomeAssistant):
         await hass.services.async_call(
             PLATFORM_DOMAIN,
             SERVICE_INSTALL,
-            {ATTR_ENTITY_ID: "update.friendly_name_firmware_update"},
+            {ATTR_ENTITY_ID: "update.friendly_name"},
             blocking=True,
         )
     update_firmware.assert_not_called()
