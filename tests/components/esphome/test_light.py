@@ -27,6 +27,7 @@ from homeassistant.components.light import (
     ATTR_RGBW_COLOR,
     ATTR_RGBWW_COLOR,
     ATTR_SUPPORTED_COLOR_MODES,
+    ATTR_TRANSITION,
     DOMAIN as LIGHT_DOMAIN,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
@@ -131,6 +132,17 @@ async def test_light_brightness(
                 brightness=pytest.approx(0.4980392156862745),
             )
         ]
+    )
+    mock_client.light_command.reset_mock()
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: "light.test_my_light", ATTR_TRANSITION: 2},
+        blocking=True,
+    )
+    mock_client.light_command.assert_has_calls(
+        [call(key=1, state=False, transition_length=2.0)]
     )
     mock_client.light_command.reset_mock()
 
