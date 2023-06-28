@@ -476,7 +476,7 @@ class ESPHomeManager:
             self.entry.async_start_reauth(self.hass)
 
     async def async_start(self) -> None:
-        """Start the esphome component coordinator."""
+        """Start the esphome connection manager."""
         hass = self.hass
         entry = self.entry
         entry_data = self.entry_data
