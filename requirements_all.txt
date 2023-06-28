@@ -861,7 +861,7 @@ gios==3.1.0
 gitterpy==0.1.7
 
 # homeassistant.components.glances
-glances-api==0.4.2
+glances-api==0.4.3
 
 # homeassistant.components.goalzero
 goalzero==0.2.1
@@ -980,10 +980,10 @@ hole==0.8.0
 holidays==0.21.13
 
 # homeassistant.components.frontend
-home-assistant-frontend==20230608.0
+home-assistant-frontend==20230628.0
 
 # homeassistant.components.conversation
-home-assistant-intents==2023.6.5
+home-assistant-intents==2023.6.28
 
 # homeassistant.components.home_connect
 homeconnect==0.7.2
@@ -1348,7 +1348,7 @@ openerz-api==0.2.0
 openevsewifi==1.1.2
 
 # homeassistant.components.openhome
-openhomedevice==2.0.2
+openhomedevice==2.2.0
 
 # homeassistant.components.opensensemap
 opensensemap-api==0.2.0
@@ -1867,7 +1867,7 @@ pynx584==0.5
 pynzbgetapi==0.2.0
 
 # homeassistant.components.obihai
-pyobihai==1.3.2
+pyobihai==1.4.2
 
 # homeassistant.components.octoprint
 pyoctoprintapi==0.1.11
@@ -2687,7 +2687,7 @@ xbox-webapi==2.0.11
 xiaomi-ble==0.17.2
 
 # homeassistant.components.knx
-xknx==2.11.0
+xknx==2.11.1
 
 # homeassistant.components.knx
 xknxproject==3.2.0
