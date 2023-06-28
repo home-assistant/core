@@ -12,7 +12,6 @@
   "entity": {
     "sensor": {
       "sign": {
-        "name": "Zodiac",
         "state": {
           "aquarius": "Aquarius",
           "aries": "Aries",
