@@ -204,7 +204,7 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             and ((am := properties.get("am")) and am.startswith("Mac"))
         ) or (
             service_type == "_airplay._tcp.local"
-            and ((model := properties.get("model")) and model.startswith("model"))
+            and ((model := properties.get("model")) and model.startswith("Mac"))
         ):
             return self.async_abort(reason="device_not_supported")
 
