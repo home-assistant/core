@@ -60,7 +60,6 @@ MIX_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
     GrowattSensorEntityDescription(
         key="mix_solar_generation_lifetime",
         translation_key="mix_solar_generation_lifetime",
-        name="Lifetime solar energy",
         api_key="epvTotal",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
