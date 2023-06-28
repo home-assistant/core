@@ -15,6 +15,7 @@ from homeassistant.helpers import entity_platform
 
 from .connectivity import ObihaiConnection
 from .const import DOMAIN, OBIHAI
+from .entity import ObihaiEntity
 
 BUTTON_DESCRIPTION = ButtonEntityDescription(
     key="reboot",
@@ -33,20 +34,16 @@ async def async_setup_entry(
 
     requester: ObihaiConnection = hass.data[DOMAIN][entry.entry_id]
 
-    buttons = [ObihaiButton(requester)]
+    buttons = [ObihaiButton(requester, "reboot")]
     async_add_entities(buttons, update_before_add=True)
 
 
-class ObihaiButton(ButtonEntity):
+class ObihaiButton(ObihaiEntity, ButtonEntity):
     """Obihai Reboot button."""
 
     entity_description = BUTTON_DESCRIPTION
-
-    def __init__(self, requester: ObihaiConnection) -> None:
-        """Initialize monitor sensor."""
-        self.requester = requester
-        self._pyobihai = requester.pyobihai
-        self._attr_unique_id = f"{requester.serial}-reboot"
+    _attr_device_class = ButtonDeviceClass.RESTART
+    _attr_entity_category = EntityCategory.CONFIG
 
     def press(self) -> None:
         """Press button."""
