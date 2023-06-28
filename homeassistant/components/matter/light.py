@@ -358,7 +358,7 @@ class MatterLight(MatterEntity, LightEntity):
 DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.LIGHT,
-        entity_description=LightEntityDescription(key="MatterLight"),
+        entity_description=LightEntityDescription(key="MatterLight", name=None),
         entity_class=MatterLight,
         required_attributes=(clusters.OnOff.Attributes.OnOff,),
         optional_attributes=(
@@ -380,7 +380,9 @@ DISCOVERY_SCHEMAS = [
     # Additional schema to match (HS Color) lights with incorrect/missing device type
     MatterDiscoverySchema(
         platform=Platform.LIGHT,
-        entity_description=LightEntityDescription(key="MatterHSColorLightFallback"),
+        entity_description=LightEntityDescription(
+            key="MatterHSColorLightFallback", name=None
+        ),
         entity_class=MatterLight,
         required_attributes=(
             clusters.OnOff.Attributes.OnOff,
@@ -398,7 +400,9 @@ DISCOVERY_SCHEMAS = [
     # Additional schema to match (XY Color) lights with incorrect/missing device type
     MatterDiscoverySchema(
         platform=Platform.LIGHT,
-        entity_description=LightEntityDescription(key="MatterXYColorLightFallback"),
+        entity_description=LightEntityDescription(
+            key="MatterXYColorLightFallback", name=None
+        ),
         entity_class=MatterLight,
         required_attributes=(
             clusters.OnOff.Attributes.OnOff,
@@ -417,7 +421,7 @@ DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.LIGHT,
         entity_description=LightEntityDescription(
-            key="MatterColorTemperatureLightFallback"
+            key="MatterColorTemperatureLightFallback", name=None
         ),
         entity_class=MatterLight,
         required_attributes=(
@@ -430,7 +434,9 @@ DISCOVERY_SCHEMAS = [
     # Additional schema to match generic dimmable lights with incorrect/missing device type
     MatterDiscoverySchema(
         platform=Platform.LIGHT,
-        entity_description=LightEntityDescription(key="MatterDimmableLightFallback"),
+        entity_description=LightEntityDescription(
+            key="MatterDimmableLightFallback", name=None
+        ),
         entity_class=MatterLight,
         required_attributes=(
             clusters.OnOff.Attributes.OnOff,
