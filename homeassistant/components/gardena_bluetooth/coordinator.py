@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from bleak.exc import BleakError
 from gardena_bluetooth.client import Client
@@ -19,9 +19,6 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
     UpdateFailed,
 )
-
-if TYPE_CHECKING:
-    pass
 
 SCAN_INTERVAL = timedelta(seconds=60)
 LOGGER = logging.getLogger(__name__)
