@@ -147,7 +147,7 @@ class DoorLockFeature(IntFlag):
 DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.LOCK,
-        entity_description=LockEntityDescription(key="MatterLock"),
+        entity_description=LockEntityDescription(key="MatterLock", name=None),
         entity_class=MatterLock,
         required_attributes=(clusters.DoorLock.Attributes.LockState,),
         optional_attributes=(clusters.DoorLock.Attributes.DoorState,),
