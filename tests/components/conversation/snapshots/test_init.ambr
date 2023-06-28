@@ -382,6 +382,11 @@
         'intent': dict({
           'name': 'HassTurnOn',
         }),
+        'targets': dict({
+          'light.kitchen': dict({
+            'matched': True,
+          }),
+        }),
       }),
       dict({
         'entities': dict({
@@ -393,6 +398,11 @@
         }),
         'intent': dict({
           'name': 'HassTurnOff',
+        }),
+        'targets': dict({
+          'light.kitchen': dict({
+            'matched': True,
+          }),
         }),
       }),
       None,
