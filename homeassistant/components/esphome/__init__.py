@@ -296,7 +296,7 @@ class ESPHomeManager:
             # Only communicate changes to the state or attribute tracked
             if new_state is None or (
                 old_state is not None
-                and "new_state" in event_data
+                and new_state
                 and (
                     (not attribute and old_state.state == new_state.state)
                     or (
