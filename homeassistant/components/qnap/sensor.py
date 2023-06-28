@@ -66,10 +66,12 @@ ATTR_VOLUME_SIZE = "Volume Size"
 
 _SYSTEM_MON_COND: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
+        key="status",
         translation_key="status",
         icon="mdi:checkbox-marked-circle-outline",
     ),
     SensorEntityDescription(
+        key="system_temp",
         translation_key="system_temp",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
@@ -79,6 +81,7 @@ _SYSTEM_MON_COND: tuple[SensorEntityDescription, ...] = (
 )
 _CPU_MON_COND: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
+        key="cpu_temp",
         translation_key="cpu_temp",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
@@ -87,6 +90,7 @@ _CPU_MON_COND: tuple[SensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
+        key="cpu_usage",
         translation_key="cpu_usage",
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:chip",
@@ -95,6 +99,7 @@ _CPU_MON_COND: tuple[SensorEntityDescription, ...] = (
 )
 _MEMORY_MON_COND: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
+        key="memory_free",
         translation_key="memory_free",
         native_unit_of_measurement=UnitOfInformation.GIBIBYTES,
         device_class=SensorDeviceClass.DATA_SIZE,
@@ -103,6 +108,7 @@ _MEMORY_MON_COND: tuple[SensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
+        key="memory_used",
         translation_key="memory_used",
         native_unit_of_measurement=UnitOfInformation.GIBIBYTES,
         device_class=SensorDeviceClass.DATA_SIZE,
@@ -111,6 +117,7 @@ _MEMORY_MON_COND: tuple[SensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
+        key="memory_percent_used",
         translation_key="memory_percent_used",
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:memory",
@@ -119,10 +126,12 @@ _MEMORY_MON_COND: tuple[SensorEntityDescription, ...] = (
 )
 _NETWORK_MON_COND: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
+        key="network_link_status",
         translation_key="network_link_status",
         icon="mdi:checkbox-marked-circle-outline",
     ),
     SensorEntityDescription(
+        key="network_tx",
         translation_key="network_tx",
         native_unit_of_measurement=UnitOfDataRate.MEBIBYTES_PER_SECOND,
         device_class=SensorDeviceClass.DATA_RATE,
@@ -131,6 +140,7 @@ _NETWORK_MON_COND: tuple[SensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
+        key="network_rx",
         translation_key="network_rx",
         native_unit_of_measurement=UnitOfDataRate.MEBIBYTES_PER_SECOND,
         device_class=SensorDeviceClass.DATA_RATE,
@@ -141,11 +151,13 @@ _NETWORK_MON_COND: tuple[SensorEntityDescription, ...] = (
 )
 _DRIVE_MON_COND: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
+        key="drive_smart_status",
         translation_key="drive_smart_status",
         icon="mdi:checkbox-marked-circle-outline",
         entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
+        key="drive_temp",
         translation_key="drive_temp",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
@@ -156,6 +168,7 @@ _DRIVE_MON_COND: tuple[SensorEntityDescription, ...] = (
 )
 _VOLUME_MON_COND: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
+        key="volume_size_used",
         translation_key="volume_size_used",
         native_unit_of_measurement=UnitOfInformation.GIBIBYTES,
         device_class=SensorDeviceClass.DATA_SIZE,
@@ -164,6 +177,7 @@ _VOLUME_MON_COND: tuple[SensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
+        key="volume_size_free",
         translation_key="volume_size_free",
         native_unit_of_measurement=UnitOfInformation.GIBIBYTES,
         device_class=SensorDeviceClass.DATA_SIZE,
@@ -172,6 +186,7 @@ _VOLUME_MON_COND: tuple[SensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
+        key="volume_percentage_used",
         translation_key="volume_percentage_used",
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:chart-pie",
@@ -180,7 +195,7 @@ _VOLUME_MON_COND: tuple[SensorEntityDescription, ...] = (
 )
 
 SENSOR_KEYS: list[str] = [
-    desc.translation_key
+    desc.key
     for desc in (
         *_SYSTEM_MON_COND,
         *_CPU_MON_COND,
@@ -321,7 +336,7 @@ class QNAPSensor(CoordinatorEntity[QnapCoordinator], SensorEntity):
         self.entity_description = description
         self.device_name = self.coordinator.data["system_stats"]["system"]["name"]
         self.monitor_device = monitor_device
-        self._attr_unique_id = f"{unique_id}_{description.translation_key}"
+        self._attr_unique_id = f"{unique_id}_{description.key}"
         if monitor_device:
             self._attr_unique_id = f"{self._attr_unique_id}_{monitor_device}"
         self._attr_device_info = DeviceInfo(
@@ -346,9 +361,9 @@ class QNAPCPUSensor(QNAPSensor):
     @property
     def native_value(self):
         """Return the state of the sensor."""
-        if self.entity_description.translation_key == "cpu_temp":
+        if self.entity_description.key == "cpu_temp":
             return self.coordinator.data["system_stats"]["cpu"]["temp_c"]
-        if self.entity_description.translation_key == "cpu_usage":
+        if self.entity_description.key == "cpu_usage":
             return self.coordinator.data["system_stats"]["cpu"]["usage_percent"]
 
 
@@ -359,16 +374,16 @@ class QNAPMemorySensor(QNAPSensor):
     def native_value(self):
         """Return the state of the sensor."""
         free = float(self.coordinator.data["system_stats"]["memory"]["free"]) / 1024
-        if self.entity_description.translation_key == "memory_free":
+        if self.entity_description.key == "memory_free":
             return round_nicely(free)
 
         total = float(self.coordinator.data["system_stats"]["memory"]["total"]) / 1024
 
         used = total - free
-        if self.entity_description.translation_key == "memory_used":
+        if self.entity_description.key == "memory_used":
             return round_nicely(used)
 
-        if self.entity_description.translation_key == "memory_percent_used":
+        if self.entity_description.key == "memory_percent_used":
             return round(used / total * 100)
 
     @property
@@ -386,15 +401,15 @@ class QNAPNetworkSensor(QNAPSensor):
     @property
     def native_value(self):
         """Return the state of the sensor."""
-        if self.entity_description.translation_key == "network_link_status":
+        if self.entity_description.key == "network_link_status":
             nic = self.coordinator.data["system_stats"]["nics"][self.monitor_device]
             return nic["link_status"]
 
         data = self.coordinator.data["bandwidth"][self.monitor_device]
-        if self.entity_description.translation_key == "network_tx":
+        if self.entity_description.key == "network_tx":
             return round_nicely(data["tx"] / 1024 / 1024)
 
-        if self.entity_description.translation_key == "network_rx":
+        if self.entity_description.key == "network_rx":
             return round_nicely(data["rx"] / 1024 / 1024)
 
     @property
@@ -419,10 +434,10 @@ class QNAPSystemSensor(QNAPSensor):
     @property
     def native_value(self):
         """Return the state of the sensor."""
-        if self.entity_description.translation_key == "status":
+        if self.entity_description.key == "status":
             return self.coordinator.data["system_health"]
 
-        if self.entity_description.translation_key == "system_temp":
+        if self.entity_description.key == "system_temp":
             return int(self.coordinator.data["system_stats"]["system"]["temp_c"])
 
     @property
@@ -450,10 +465,10 @@ class QNAPDriveSensor(QNAPSensor):
         """Return the state of the sensor."""
         data = self.coordinator.data["smart_drive_health"][self.monitor_device]
 
-        if self.entity_description.translation_key == "drive_smart_status":
+        if self.entity_description.key == "drive_smart_status":
             return data["health"]
 
-        if self.entity_description.translation_key == "drive_temp":
+        if self.entity_description.key == "drive_temp":
             return int(data["temp_c"]) if data["temp_c"] is not None else 0
 
     @property
@@ -488,16 +503,16 @@ class QNAPVolumeSensor(QNAPSensor):
         data = self.coordinator.data["volumes"][self.monitor_device]
 
         free_gb = int(data["free_size"]) / 1024 / 1024 / 1024
-        if self.entity_description.translation_key == "volume_size_free":
+        if self.entity_description.key == "volume_size_free":
             return round_nicely(free_gb)
 
         total_gb = int(data["total_size"]) / 1024 / 1024 / 1024
 
         used_gb = total_gb - free_gb
-        if self.entity_description.translation_key == "volume_size_used":
+        if self.entity_description.key == "volume_size_used":
             return round_nicely(used_gb)
 
-        if self.entity_description.translation_key == "volume_percentage_used":
+        if self.entity_description.key == "volume_percentage_used":
             return round(used_gb / total_gb * 100)
 
     @property
