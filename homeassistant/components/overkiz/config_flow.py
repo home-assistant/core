@@ -141,7 +141,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle the initial step via config flow."""
-        errors = {}
+        errors: dict[str, str] = {}
 
         if user_input:
             self._server = user_input[CONF_SERVER]
@@ -169,8 +169,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Users can choose between local API or cloud API via config flow."""
-        errors = {}
-
         if user_input:
             self._api_type = user_input[CONF_API_TYPE]
 
@@ -193,14 +191,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     ),
                 }
             ),
-            errors=errors,
         )
 
     async def async_step_cloud(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle the cloud authentication step via config flow."""
-        errors = {}
+        errors: dict[str, str] = {}
         description_placeholders = {}
 
         if user_input:
