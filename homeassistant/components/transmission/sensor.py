@@ -38,21 +38,21 @@ async def async_setup_entry(
     name = config_entry.data[CONF_NAME]
 
     dev = [
-        TransmissionSpeedSensor(tm_client, name, "Down Speed", "download"),
-        TransmissionSpeedSensor(tm_client, name, "Up Speed", "upload"),
+        TransmissionSpeedSensor(tm_client, name, "Down speed", "download"),
+        TransmissionSpeedSensor(tm_client, name, "Up speed", "upload"),
         TransmissionStatusSensor(tm_client, name, "Status", "status"),
         TransmissionTorrentsSensor(
-            tm_client, name, "Active Torrents", "active_torrents"
+            tm_client, name, "Active torrents", "active_torrents"
         ),
         TransmissionTorrentsSensor(
-            tm_client, name, "Paused Torrents", "paused_torrents"
+            tm_client, name, "Paused torrents", "paused_torrents"
         ),
-        TransmissionTorrentsSensor(tm_client, name, "Total Torrents", "total_torrents"),
+        TransmissionTorrentsSensor(tm_client, name, "Total torrents", "total_torrents"),
         TransmissionTorrentsSensor(
-            tm_client, name, "Completed Torrents", "completed_torrents"
+            tm_client, name, "Completed torrents", "completed_torrents"
         ),
         TransmissionTorrentsSensor(
-            tm_client, name, "Started Torrents", "started_torrents"
+            tm_client, name, "Started torrents", "started_torrents"
         ),
     ]
 
@@ -62,12 +62,13 @@ async def async_setup_entry(
 class TransmissionSensor(SensorEntity):
     """A base class for all Transmission sensors."""
 
+    _attr_has_entity_name = True
     _attr_should_poll = False
 
     def __init__(self, tm_client, client_name, sensor_name, key):
         """Initialize the sensor."""
         self._tm_client: TransmissionClient = tm_client
-        self._attr_name = f"{client_name} {sensor_name}"
+        self._attr_name = sensor_name
         self._key = key
         self._state = None
         self._attr_unique_id = f"{tm_client.config_entry.entry_id}-{key}"
