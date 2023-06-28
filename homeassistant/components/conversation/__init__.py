@@ -529,12 +529,8 @@ class AgentManager:
     def async_set_agent(self, agent_id: str, agent: AbstractConversationAgent) -> None:
         """Set the agent."""
         self._agents[agent_id] = agent
-        if self.default_agent == HOME_ASSISTANT_AGENT:
-            self.default_agent = agent_id
 
     @core.callback
     def async_unset_agent(self, agent_id: str) -> None:
         """Unset the agent."""
-        if self.default_agent == agent_id:
-            self.default_agent = HOME_ASSISTANT_AGENT
         self._agents.pop(agent_id, None)
