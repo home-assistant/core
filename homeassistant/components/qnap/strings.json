@@ -25,8 +25,11 @@
       "status": {
         "name": "Status"
       },
-      "system_temperature": {
+      "system_temp": {
         "name": "System Temperature"
+      },
+      "cpu_temp": {
+        "name": "CPU Temperature"
       }
     }
   }
