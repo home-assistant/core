@@ -25,7 +25,11 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
 from homeassistant.util.enum import try_parse_enum
 
-from . import EsphomeEntity, esphome_state_property, platform_async_setup_entry
+from .entity import (
+    EsphomeEntity,
+    esphome_state_property,
+    platform_async_setup_entry,
+)
 from .enum_mapper import EsphomeEnumMapper
 
 
@@ -37,7 +41,6 @@ async def async_setup_entry(
         hass,
         entry,
         async_add_entities,
-        component_key="sensor",
         info_type=SensorInfo,
         entity_type=EsphomeSensor,
         state_type=SensorState,
@@ -46,7 +49,6 @@ async def async_setup_entry(
         hass,
         entry,
         async_add_entities,
-        component_key="text_sensor",
         info_type=TextSensorInfo,
         entity_type=EsphomeTextSensor,
         state_type=TextSensorState,

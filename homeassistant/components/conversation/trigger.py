@@ -51,7 +51,7 @@ async def async_attach_trigger(
         ):
             await future
 
-        return None
+        return "Done"
 
     default_agent = await _get_agent_manager(hass).async_get_agent(HOME_ASSISTANT_AGENT)
     assert isinstance(default_agent, DefaultAgent)

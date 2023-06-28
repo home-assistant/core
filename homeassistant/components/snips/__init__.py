@@ -176,7 +176,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         await mqtt.async_publish(
             hass, "hermes/dialogueManager/startSession", json.dumps(notification)
         )
-        return
 
     async def snips_say_action(call: ServiceCall) -> None:
         """Send a Snips action message."""
@@ -193,7 +192,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         await mqtt.async_publish(
             hass, "hermes/dialogueManager/startSession", json.dumps(notification)
         )
-        return
 
     async def feedback_on(call: ServiceCall) -> None:
         """Turn feedback sounds on."""

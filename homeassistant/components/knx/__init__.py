@@ -90,6 +90,7 @@ from .schema import (
     SensorSchema,
     SwitchSchema,
     TextSchema,
+    TimeSchema,
     WeatherSchema,
     ga_validator,
     sensor_type_validator,
@@ -143,6 +144,7 @@ CONFIG_SCHEMA = vol.Schema(
                     **SensorSchema.platform_node(),
                     **SwitchSchema.platform_node(),
                     **TextSchema.platform_node(),
+                    **TimeSchema.platform_node(),
                     **WeatherSchema.platform_node(),
                 }
             ),
