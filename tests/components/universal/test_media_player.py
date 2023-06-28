@@ -1276,8 +1276,8 @@ async def test_master_state_with_template(hass: HomeAssistant) -> None:
     assert events[0].context == context
 
 
-async def test_invalid_active_children_template(hass: HomeAssistant) -> None:
-    """Test invalid active children template."""
+async def test_invalid_active_child_template(hass: HomeAssistant) -> None:
+    """Test invalid active child template."""
     hass.states.async_set("media_player.mock1", STATE_PLAYING)
     hass.states.async_set("media_player.mock2", STATE_PAUSED)
 
@@ -1289,7 +1289,7 @@ async def test_invalid_active_children_template(hass: HomeAssistant) -> None:
                 "platform": "universal",
                 "name": "tv",
                 "children": ["media_player.mock1", "media_player.mock2"],
-                "active_children_template": "{{invalid.invalid}}!invalid",
+                "active_child_template": "{{invalid.invalid}}!invalid",
             }
         },
     )
@@ -1300,8 +1300,8 @@ async def test_invalid_active_children_template(hass: HomeAssistant) -> None:
     assert hass.states.get("media_player.tv").state == STATE_PLAYING
 
 
-async def test_active_children_template(hass: HomeAssistant) -> None:
-    """Test override active children with template."""
+async def test_active_child_template(hass: HomeAssistant) -> None:
+    """Test override active child with template."""
     hass.states.async_set("media_player.mock1", STATE_PLAYING)
     hass.states.async_set("media_player.mock2", STATE_PAUSED)
 
@@ -1313,7 +1313,7 @@ async def test_active_children_template(hass: HomeAssistant) -> None:
                 "platform": "universal",
                 "name": "tv",
                 "children": ["media_player.mock1", "media_player.mock2"],
-                "active_children_template": "{{ 'media_player.mock2' }}",
+                "active_child_template": "{{ 'media_player.mock2' }}",
             }
         },
     )
