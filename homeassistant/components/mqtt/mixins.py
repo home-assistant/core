@@ -50,7 +50,12 @@ from homeassistant.helpers.event import (
     async_track_device_registry_updated_event,
     async_track_entity_registry_updated_event,
 )
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.typing import (
+    UNDEFINED,
+    ConfigType,
+    DiscoveryInfoType,
+    UndefinedType,
+)
 from homeassistant.util.json import json_loads
 
 from . import debug_info, subscription
@@ -1008,7 +1013,7 @@ class MqttEntity(
     """Representation of an MQTT entity."""
 
     _attr_should_poll = False
-    _default_name: str | None
+    _default_name: str | None | UndefinedType
     _entity_id_format: str
 
     def __init__(
@@ -1123,22 +1128,17 @@ class MqttEntity(
             config.get(CONF_ENABLED_BY_DEFAULT)
         )
         self._attr_icon = config.get(CONF_ICON)
-        entity_name: str | None = config.get(CONF_NAME)
-        if CONF_DEVICE in config:
-            device_name: str | None = config[CONF_DEVICE].get(CONF_NAME)
-            if device_name is not None and entity_name is None:
-                self._attr_name = None
-                self._attr_has_entity_name = True
-                return
-            if device_name is not None and entity_name is not None:
-                self._attr_name = entity_name
-                self._attr_has_entity_name = True
-                return
+        entity_name: str | None | UndefinedType = config.get(CONF_NAME, UNDEFINED)
+        # Only set _attr_name if it is needed
+        if entity_name is not UNDEFINED:
+            self._attr_name = entity_name
+        elif (
+            self._default_name is not UNDEFINED
+            and not self._default_to_device_class_name()
+        ):
             self._attr_name = self._default_name
-            self._attr_has_entity_name = False
-        else:
-            self._attr_name = entity_name or self._default_name
-            self._attr_has_entity_name = False
+        if CONF_DEVICE in config:
+            self._attr_has_entity_name = True
 
     def _setup_from_config(self, config: ConfigType) -> None:
         """(Re)Setup the entity."""
