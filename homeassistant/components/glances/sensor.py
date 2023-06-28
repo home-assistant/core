@@ -228,14 +228,12 @@ SENSOR_TYPES = {
         type="raid",
         name_suffix="Raid status",
         icon="mdi:harddisk",
-        state_class=SensorStateClass.MEASUREMENT,
     ),
     ("raid", "type"): GlancesSensorEntityDescription(
         key="type",
         type="raid",
         name_suffix="Raid type",
         icon="mdi:harddisk",
-        state_class=SensorStateClass.MEASUREMENT,
     ),
     ("raid", "available"): GlancesSensorEntityDescription(
         key="available",
@@ -256,7 +254,6 @@ SENSOR_TYPES = {
         type="raid",
         name_suffix="Raid configuration",
         icon="mdi:harddisk",
-        state_class=SensorStateClass.MEASUREMENT,
     ),
 }
 
