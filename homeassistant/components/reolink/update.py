@@ -82,7 +82,7 @@ class ReolinkUpdateEntity(
             return None
 
         return (
-            "If the install button fails, alternatively directly download the"
+            "If the install button fails, download this"
             f" [firmware zip file here]({self.coordinator.data.download_url})"
             ", including installation guide.\n\n"
             f"## Release notes\n\n{self.coordinator.data.release_notes}"
