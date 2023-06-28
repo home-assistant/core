@@ -41,10 +41,11 @@ class FullyKioskEntity(CoordinatorEntity[FullyKioskDataUpdateCoordinator], Entit
         """Subscribe to MQTT for a given event."""
         data = self.coordinator.data
         if (
-            event is not None
-            and mqtt.mqtt_config_entry_enabled(self.hass)
-            and data["settings"]["mqttEnabled"]
+            event is None
+            or not mqtt.mqtt_config_entry_enabled(self.hass)
+            or not data["settings"]["mqttEnabled"]
         ):
+            return
 
             @callback
             def message_callback(message: mqtt.ReceiveMessage) -> None:
