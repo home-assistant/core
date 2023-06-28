@@ -19,5 +19,15 @@
       "invalid_auth": "Bad authentication",
       "unknown": "Unknown error"
     }
+  },
+  "entity": {
+    "sensor": {
+      "status": {
+        "name": "Status"
+      },
+      "system_temperature": {
+        "name": "System Temperature"
+      }
+    }
   }
 }
