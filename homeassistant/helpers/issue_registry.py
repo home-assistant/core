@@ -192,7 +192,6 @@ class IssueRegistry:
             return
 
         self.async_schedule_save()
-        # Replace by Callback instead?...
         self.hass.bus.async_fire(
             EVENT_REPAIRS_ISSUE_REGISTRY_UPDATED,
             {"action": "remove", "domain": domain, "issue_id": issue_id},
