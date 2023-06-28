@@ -10,6 +10,7 @@ from homeassistant.components.loqed.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.network import get_url
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, load_fixture
@@ -50,14 +51,11 @@ async def test_setup_webhook_in_bridge(
 
     with patch("loqedAPI.loqed.LoqedAPI.async_get_lock", return_value=lock), patch(
         "loqedAPI.loqed.LoqedAPI.async_get_lock_details", return_value=lock_status
-    ), patch(
-        "homeassistant.components.webhook.async_generate_url",
-        return_value="http://hook_id",
     ):
         await async_setup_component(hass, DOMAIN, config)
         await hass.async_block_till_done()
 
-    lock.registerWebhook.assert_called_with("http://hook_id")
+    lock.registerWebhook.assert_called_with(f"{get_url(hass)}/api/webhook/Webhook_id")
 
 
 async def test_unload_entry(hass, integration: MockConfigEntry, lock: loqed.Lock):

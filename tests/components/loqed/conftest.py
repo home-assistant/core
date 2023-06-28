@@ -64,9 +64,6 @@ async def integration_fixture(
 
     with patch("loqedAPI.loqed.LoqedAPI.async_get_lock", return_value=lock), patch(
         "loqedAPI.loqed.LoqedAPI.async_get_lock_details", return_value=lock_status
-    ), patch(
-        "homeassistant.components.webhook.async_generate_url",
-        return_value="http://hook_id",
     ):
         await async_setup_component(hass, DOMAIN, config)
         await hass.async_block_till_done()

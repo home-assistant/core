@@ -10,6 +10,7 @@ from homeassistant.components import webhook
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, CONF_WEBHOOK_ID
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.network import get_url
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN
@@ -114,7 +115,9 @@ class LoqedDataCoordinator(DataUpdateCoordinator[StatusMessage]):
         webhook.async_register(
             self.hass, DOMAIN, "Loqed", webhook_id, self._handle_webhook
         )
-        webhook_url = webhook.async_generate_url(self.hass, webhook_id)
+
+        webhook_path = webhook.async_generate_path(webhook_id)
+        webhook_url = f"{get_url(self.hass)}{webhook_path}"
         _LOGGER.debug("Webhook URL: %s", webhook_url)
 
         webhooks = await self.lock.getWebhooks()
@@ -133,7 +136,8 @@ class LoqedDataCoordinator(DataUpdateCoordinator[StatusMessage]):
     async def remove_webhooks(self) -> None:
         """Remove webhook from LOQED bridge."""
         webhook_id = self._entry.data[CONF_WEBHOOK_ID]
-        webhook_url = webhook.async_generate_url(self.hass, webhook_id)
+        webhook_path = webhook.async_generate_path(webhook_id)
+        webhook_url = f"{get_url(self.hass)}{webhook_path}"
 
         webhook.async_unregister(
             self.hass,
