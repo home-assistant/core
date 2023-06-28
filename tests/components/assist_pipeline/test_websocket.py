@@ -7,6 +7,7 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.assist_pipeline.const import DOMAIN
 from homeassistant.components.assist_pipeline.pipeline import Pipeline, PipelineData
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 
 from tests.typing import WebSocketGenerator
 
@@ -27,6 +28,8 @@ async def test_text_only_pipeline(
             "start_stage": "intent",
             "end_stage": "intent",
             "input": {"text": "Are the lights on?"},
+            "conversation_id": "mock-conversation-id",
+            "device_id": "mock-device-id",
         }
     )
 
@@ -131,7 +134,7 @@ async def test_audio_pipeline(
     assert msg["event"]["data"] == snapshot
     events.append(msg["event"])
 
-    # text to speech
+    # text-to-speech
     msg = await client.receive_json()
     assert msg["event"]["type"] == "tts-start"
     assert msg["event"]["data"] == snapshot
@@ -430,6 +433,34 @@ async def test_stt_provider_missing(
         assert msg["error"]["code"] == "stt-provider-missing"
 
 
+async def test_stt_provider_bad_metadata(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    init_components,
+    mock_stt_provider,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test events from a pipeline run with wrong metadata."""
+    with patch.object(mock_stt_provider, "check_metadata", return_value=False):
+        client = await hass_ws_client(hass)
+
+        await client.send_json_auto_id(
+            {
+                "type": "assist_pipeline/run",
+                "start_stage": "stt",
+                "end_stage": "tts",
+                "input": {
+                    "sample_rate": 12345,
+                },
+            }
+        )
+
+        # result
+        msg = await client.receive_json()
+        assert not msg["success"]
+        assert msg["error"]["code"] == "stt-provider-unsupported-metadata"
+
+
 async def test_stt_stream_failed(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
@@ -503,7 +534,7 @@ async def test_tts_failed(
     init_components,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test pipeline run with text to speech error."""
+    """Test pipeline run with text-to-speech error."""
     events = []
     client = await hass_ws_client(hass)
 
@@ -557,6 +588,64 @@ async def test_tts_failed(
     msg = await client.receive_json()
     assert msg["success"]
     assert msg["result"] == {"events": events}
+
+
+async def test_tts_provider_missing(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    init_components,
+    mock_tts_provider,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test pipeline run with text-to-speech error."""
+    client = await hass_ws_client(hass)
+
+    with patch(
+        "homeassistant.components.tts.async_support_options",
+        side_effect=HomeAssistantError,
+    ):
+        await client.send_json_auto_id(
+            {
+                "type": "assist_pipeline/run",
+                "start_stage": "tts",
+                "end_stage": "tts",
+                "input": {"text": "Lights are on."},
+            }
+        )
+
+        # result
+        msg = await client.receive_json()
+        assert not msg["success"]
+        assert msg["error"]["code"] == "tts-not-supported"
+
+
+async def test_tts_provider_bad_options(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    init_components,
+    mock_tts_provider,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test pipeline run with text-to-speech error."""
+    client = await hass_ws_client(hass)
+
+    with patch(
+        "homeassistant.components.tts.async_support_options",
+        return_value=False,
+    ):
+        await client.send_json_auto_id(
+            {
+                "type": "assist_pipeline/run",
+                "start_stage": "tts",
+                "end_stage": "tts",
+                "input": {"text": "Lights are on."},
+            }
+        )
+
+        # result
+        msg = await client.receive_json()
+        assert not msg["success"]
+        assert msg["error"]["code"] == "tts-not-supported"
 
 
 async def test_invalid_stage_order(
@@ -867,7 +956,6 @@ async def test_list_pipelines(
 ) -> None:
     """Test we can list pipelines."""
     client = await hass_ws_client(hass)
-    hass.data[DOMAIN]
 
     await client.send_json_auto_id({"type": "assist_pipeline/pipeline/list"})
     msg = await client.receive_json()
@@ -1140,7 +1228,7 @@ async def test_audio_pipeline_debug(
     assert msg["event"]["data"] == snapshot
     events.append(msg["event"])
 
-    # text to speech
+    # text-to-speech
     msg = await client.receive_json()
     assert msg["event"]["type"] == "tts-start"
     assert msg["event"]["data"] == snapshot

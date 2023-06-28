@@ -29,6 +29,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import Context, CoreState, Event, HomeAssistant, State, callback
 from homeassistant.exceptions import TemplateError
+from homeassistant.util.json import JSON_DECODE_EXCEPTIONS, json_loads
 
 from . import config_validation as cv
 from .entity import Entity
@@ -63,6 +64,19 @@ TEMPLATE_ENTITY_BASE_SCHEMA = vol.Schema(
         vol.Optional(CONF_UNIQUE_ID): cv.string,
     }
 )
+
+
+def make_template_entity_base_schema(default_name: str) -> vol.Schema:
+    """Return a schema with default name."""
+    return vol.Schema(
+        {
+            vol.Optional(CONF_ICON): cv.template,
+            vol.Optional(CONF_NAME, default=default_name): cv.template,
+            vol.Optional(CONF_PICTURE): cv.template,
+            vol.Optional(CONF_UNIQUE_ID): cv.string,
+        }
+    )
+
 
 TEMPLATE_SENSOR_BASE_SCHEMA = vol.Schema(
     {
@@ -427,7 +441,7 @@ class TemplateEntity(Entity):
         """Run an action script."""
         if run_variables is None:
             run_variables = {}
-        return await script.async_run(
+        await script.async_run(
             run_variables={
                 "this": TemplateStateFromEntityId(self.hass, self.entity_id),
                 **run_variables,
@@ -487,9 +501,8 @@ class TriggerBaseEntity(Entity):
             CONF_NAME,
             CONF_PICTURE,
         ):
-            if itm not in config:
+            if itm not in config or config[itm] is None:
                 continue
-
             if config[itm].is_static:
                 self._static_rendered[itm] = config[itm].template
             else:
@@ -597,3 +610,36 @@ class TriggerBaseEntity(Entity):
                 "Error rendering %s template for %s: %s", key, self.entity_id, err
             )
             self._rendered = self._static_rendered
+
+
+class ManualTriggerEntity(TriggerBaseEntity):
+    """Template entity based on manual trigger data."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config: dict,
+    ) -> None:
+        """Initialize the entity."""
+        TriggerBaseEntity.__init__(self, hass, config)
+
+    @callback
+    def _process_manual_data(self, value: str | None = None) -> None:
+        """Process new data manually.
+
+        Implementing class should call this last in update method to render templates.
+        Ex: self._process_manual_data(payload)
+        """
+
+        self.async_write_ha_state()
+        this = None
+        if state := self.hass.states.get(self.entity_id):
+            this = state.as_dict()
+
+        run_variables: dict[str, Any] = {"value": value}
+        # Silently try if variable is a json and store result in `value_json` if it is.
+        with contextlib.suppress(*JSON_DECODE_EXCEPTIONS):
+            run_variables["value_json"] = json_loads(run_variables["value"])
+        variables = {"this": this, **(run_variables or {})}
+
+        self._render_templates(variables)

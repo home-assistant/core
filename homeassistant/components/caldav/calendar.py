@@ -1,7 +1,7 @@
 """Support for WebDav Calendar."""
 from __future__ import annotations
 
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, time, timedelta
 from functools import partial
 import logging
 import re
@@ -29,7 +29,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import generate_entity_id
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.util import Throttle, dt
+from homeassistant.util import Throttle, dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -204,8 +204,8 @@ class WebDavCalendarData:
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data."""
-        start_of_today = dt.start_of_local_day()
-        start_of_tomorrow = dt.start_of_local_day() + timedelta(days=self.days)
+        start_of_today = dt_util.start_of_local_day()
+        start_of_tomorrow = dt_util.start_of_local_day() + timedelta(days=self.days)
 
         # We have to retrieve the results for the whole day as the server
         # won't return events that have already started
@@ -312,7 +312,7 @@ class WebDavCalendarData:
     @staticmethod
     def is_over(vevent):
         """Return if the event is over."""
-        return dt.now() >= WebDavCalendarData.to_datetime(
+        return dt_util.now() >= WebDavCalendarData.to_datetime(
             WebDavCalendarData.get_end_date(vevent)
         )
 
@@ -321,9 +321,7 @@ class WebDavCalendarData:
         """Return a datetime."""
         if isinstance(obj, datetime):
             return WebDavCalendarData.to_local(obj)
-        return dt.dt.datetime.combine(obj, dt.dt.time.min).replace(
-            tzinfo=dt.DEFAULT_TIME_ZONE
-        )
+        return datetime.combine(obj, time.min).replace(tzinfo=dt_util.DEFAULT_TIME_ZONE)
 
     @staticmethod
     def to_local(obj: datetime | date) -> datetime | date:
@@ -334,7 +332,7 @@ class WebDavCalendarData:
         used by the caldav client and dateutil so the datetime can be copied.
         """
         if isinstance(obj, datetime):
-            return dt.as_local(obj)
+            return dt_util.as_local(obj)
         return obj
 
     @staticmethod

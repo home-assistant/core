@@ -7,6 +7,7 @@ from homeassistant.components import conversation
 from homeassistant.components.homeassistant.exposed_entities import (
     DATA_EXPOSED_ENTITIES,
     ExposedEntities,
+    async_expose_entity,
 )
 from homeassistant.helpers import intent
 
@@ -53,5 +54,4 @@ def expose_new(hass, expose_new):
 
 def expose_entity(hass, entity_id, should_expose):
     """Expose an entity to the default agent."""
-    exposed_entities: ExposedEntities = hass.data[DATA_EXPOSED_ENTITIES]
-    exposed_entities.async_expose_entity(conversation.DOMAIN, entity_id, should_expose)
+    async_expose_entity(hass, conversation.DOMAIN, entity_id, should_expose)

@@ -15,6 +15,7 @@ from homeassistant.components.recorder import Recorder
 from homeassistant.const import ATTR_DEVICE_CLASS, SERVICE_RELOAD, STATE_UNKNOWN
 import homeassistant.core as ha
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
@@ -1589,3 +1590,25 @@ async def test_history_stats_handles_floored_timestamps(
         await hass.async_block_till_done()
 
     assert last_times == (start_time, start_time + timedelta(hours=2))
+
+
+async def test_unique_id(recorder_mock: Recorder, hass: HomeAssistant) -> None:
+    """Test unique_id property."""
+
+    config = {
+        "sensor": {
+            "platform": "history_stats",
+            "entity_id": "binary_sensor.test_id",
+            "state": "on",
+            "start": "{{ utcnow() }}",
+            "duration": "01:00",
+            "name": "Test",
+            "unique_id": "some_history_stats_unique_id",
+        },
+    }
+
+    assert await async_setup_component(hass, "sensor", config)
+    await hass.async_block_till_done()
+
+    registry = er.async_get(hass)
+    assert registry.async_get("sensor.test").unique_id == "some_history_stats_unique_id"

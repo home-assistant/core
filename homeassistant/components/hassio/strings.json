@@ -17,16 +17,46 @@
     }
   },
   "issues": {
+    "issue_mount_mount_failed": {
+      "title": "Network storage device failed",
+      "fix_flow": {
+        "step": {
+          "fix_menu": {
+            "description": "Could not connect to `{reference}`. Check host logs for errors from the mount service for more details.\n\nUse reload to try to connect again. If you need to update `{reference}`, go to [storage]({storage_url}).",
+            "menu_options": {
+              "mount_execute_reload": "Reload",
+              "mount_execute_remove": "Remove"
+            }
+          }
+        },
+        "abort": {
+          "apply_suggestion_fail": "Could not apply the fix. Check the Supervisor logs for more details."
+        }
+      }
+    },
+    "issue_system_docker_config": {
+      "title": "Restart(s) required",
+      "fix_flow": {
+        "step": {
+          "system_execute_rebuild": {
+            "description": "The default configuration for add-ons and Home Assistant has changed. To update the configuration with the new defaults, a restart is required for the following:\n\n- {components}"
+          }
+        },
+        "abort": {
+          "apply_suggestion_fail": "One or more of the restarts failed. Check the Supervisor logs for more details."
+        }
+      }
+    },
     "issue_system_multiple_data_disks": {
       "title": "Multiple data disks detected",
       "fix_flow": {
         "step": {
           "system_rename_data_disk": {
-            "description": "'{reference}' is a filesystem with the name 'hassos-data' and is not the active data disk. This can cause Home Assistant to choose the wrong data disk at system reboot.\n\nUse the fix option to rename the filesystem to prevent this. Alternatively you can move the data disk to the drive (overwriting its contents) or remove the drive from the system."
+            "description": "`{reference}` is a filesystem with the name hassos-data and is not the active data disk. This can cause Home Assistant to choose the wrong data disk at system reboot.\n\nUse the fix option to rename the filesystem to prevent this. Alternatively you can move the data disk to the drive (overwriting its contents) or remove the drive from the system."
           }
         },
         "abort": {
-          "apply_suggestion_fail": "Could not rename the filesystem. Check the supervisor logs for more details."
+          "apply_suggestion_fail": "Could not rename the filesystem. Check the Supervisor logs for more details."
         }
       }
     },
@@ -39,7 +69,7 @@
           }
         },
         "abort": {
-          "apply_suggestion_fail": "Could not reboot the system. Check the supervisor logs for more details."
+          "apply_suggestion_fail": "Could not reboot the system. Check the Supervisor logs for more details."
         }
       }
     },

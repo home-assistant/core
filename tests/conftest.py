@@ -305,7 +305,7 @@ def skip_stop_scripts(
         return
     with patch(
         "homeassistant.helpers.script._schedule_stop_scripts_after_shutdown",
-        AsyncMock(),
+        Mock(),
     ):
         yield
 

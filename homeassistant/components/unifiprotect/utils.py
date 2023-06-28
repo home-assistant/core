@@ -38,21 +38,20 @@ from .const import (
     ModelType,
 )
 
+_SENTINEL = object()
+
 
 def get_nested_attr(obj: Any, attr: str) -> Any:
     """Fetch a nested attribute."""
-    attrs = attr.split(".")
+    if "." not in attr:
+        value = getattr(obj, attr, None)
+    else:
+        value = obj
+        for key in attr.split("."):
+            if (value := getattr(value, key, _SENTINEL)) is _SENTINEL:
+                return None
 
-    value = obj
-    for key in attrs:
-        if not hasattr(value, key):
-            return None
-        value = getattr(value, key)
-
-    if isinstance(value, Enum):
-        value = value.value
-
-    return value
+    return value.value if isinstance(value, Enum) else value
 
 
 @callback

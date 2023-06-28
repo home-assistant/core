@@ -14,7 +14,7 @@ import pytest
 
 from homeassistant.components.nest.const import API_URL, OAUTH2_TOKEN, SDM_SCOPES
 from homeassistant.core import HomeAssistant
-from homeassistant.util import dt
+from homeassistant.util import dt as dt_util
 
 from .common import CLIENT_ID, CLIENT_SECRET, PROJECT_ID, PlatformSetup
 from .conftest import FAKE_REFRESH_TOKEN, FAKE_TOKEN
@@ -80,7 +80,7 @@ async def test_auth(
     creds = captured_creds
     assert creds.token == FAKE_TOKEN
     assert creds.refresh_token == FAKE_REFRESH_TOKEN
-    assert int(dt.as_timestamp(creds.expiry)) == int(token_expiration_time)
+    assert int(dt_util.as_timestamp(creds.expiry)) == int(token_expiration_time)
     assert creds.valid
     assert not creds.expired
     assert creds.token_uri == OAUTH2_TOKEN
@@ -157,7 +157,7 @@ async def test_auth_expired_token(
     creds = captured_creds
     assert creds.token == FAKE_TOKEN
     assert creds.refresh_token == FAKE_REFRESH_TOKEN
-    assert int(dt.as_timestamp(creds.expiry)) == int(token_expiration_time)
+    assert int(dt_util.as_timestamp(creds.expiry)) == int(token_expiration_time)
     assert not creds.valid
     assert creds.expired
     assert creds.token_uri == OAUTH2_TOKEN

@@ -38,7 +38,7 @@ async def test_switch_entity(
 
     entry = entity_registry.async_get("switch.genie")
     assert entry
-    assert entry.unique_id == diffuser.hublot
+    assert entry.unique_id == f"{diffuser.hublot}-is_on"
 
 
 async def test_switch_handle_coordinator_update(hass: HomeAssistant) -> None:

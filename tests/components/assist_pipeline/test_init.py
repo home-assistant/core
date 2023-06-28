@@ -241,3 +241,42 @@ async def test_pipeline_from_audio_stream_no_stt(
         )
 
     assert not events
+
+
+async def test_pipeline_from_audio_stream_unknown_pipeline(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    mock_stt_provider: MockSttProvider,
+    init_components,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test creating a pipeline from an audio stream.
+
+    In this test, the pipeline does not exist.
+    """
+    events = []
+
+    async def audio_data():
+        yield b"part1"
+        yield b"part2"
+        yield b""
+
+    # Try to use the created pipeline
+    with pytest.raises(assist_pipeline.PipelineNotFound):
+        await assist_pipeline.async_pipeline_from_audio_stream(
+            hass,
+            Context(),
+            events.append,
+            stt.SpeechMetadata(
+                language="en-UK",
+                format=stt.AudioFormats.WAV,
+                codec=stt.AudioCodecs.PCM,
+                bit_rate=stt.AudioBitRates.BITRATE_16,
+                sample_rate=stt.AudioSampleRates.SAMPLERATE_16000,
+                channel=stt.AudioChannels.CHANNEL_MONO,
+            ),
+            audio_data(),
+            pipeline_id="blah",
+        )
+
+    assert not events

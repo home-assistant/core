@@ -12,7 +12,7 @@ import homeassistant.components.media_player as media_player
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-from homeassistant.util import dt
+from homeassistant.util import dt as dt_util
 
 from tests.common import assert_setup_component, async_fire_time_changed
 
@@ -206,7 +206,7 @@ async def test_update_unavailable(projector_from_address, hass: HomeAssistant) -
         assert state.state == "off"
 
         projector_from_address.side_effect = socket.timeout
-        async_fire_time_changed(hass, dt.utcnow() + timedelta(seconds=10))
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=10))
         await hass.async_block_till_done()
 
         state = hass.states.get("media_player.test")
@@ -235,7 +235,7 @@ async def test_unavailable_time(mocked_projector, hass: HomeAssistant) -> None:
     assert state.attributes["is_volume_muted"] is not False
 
     mocked_projector.get_power.side_effect = ProjectorError("unavailable time")
-    async_fire_time_changed(hass, dt.utcnow() + timedelta(seconds=10))
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=10))
     await hass.async_block_till_done()
 
     state = hass.states.get("media_player.test")

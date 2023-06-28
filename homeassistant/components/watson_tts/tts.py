@@ -180,7 +180,7 @@ class WatsonTTSProvider(Provider):
         """Return a list of supported options."""
         return [CONF_VOICE]
 
-    def get_tts_audio(self, message, language=None, options=None):
+    def get_tts_audio(self, message, language, options):
         """Request TTS file from Watson TTS."""
         response = self.service.synthesize(
             text=message, accept=self.output_format, voice=options[CONF_VOICE]

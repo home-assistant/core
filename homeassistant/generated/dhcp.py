@@ -98,6 +98,18 @@ DHCP: list[dict[str, str | bool]] = [
         "macaddress": "C8F742*",
     },
     {
+        "domain": "broadlink",
+        "macaddress": "E81656*",
+    },
+    {
+        "domain": "broadlink",
+        "macaddress": "E87072*",
+    },
+    {
+        "domain": "broadlink",
+        "macaddress": "EC0BAE*",
+    },
+    {
         "domain": "dlink",
         "hostname": "dsp-w215",
     },
@@ -488,14 +500,6 @@ DHCP: list[dict[str, str | bool]] = [
         "domain": "sense",
         "hostname": "sense-*",
         "macaddress": "A4D578*",
-    },
-    {
-        "domain": "senseme",
-        "registered_devices": True,
-    },
-    {
-        "domain": "senseme",
-        "macaddress": "20F85E*",
     },
     {
         "domain": "sensibo",

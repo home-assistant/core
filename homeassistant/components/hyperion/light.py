@@ -277,15 +277,14 @@ class HyperionLight(LightEntity):
                 return
 
         # == Set a color
-        else:
-            if not await self._client.async_send_set_color(
-                **{
-                    const.KEY_PRIORITY: self._get_option(CONF_PRIORITY),
-                    const.KEY_COLOR: rgb_color,
-                    const.KEY_ORIGIN: DEFAULT_ORIGIN,
-                }
-            ):
-                return
+        elif not await self._client.async_send_set_color(
+            **{
+                const.KEY_PRIORITY: self._get_option(CONF_PRIORITY),
+                const.KEY_COLOR: rgb_color,
+                const.KEY_ORIGIN: DEFAULT_ORIGIN,
+            }
+        ):
+            return
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the light i.e. clear the configured priority."""

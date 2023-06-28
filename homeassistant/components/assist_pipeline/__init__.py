@@ -5,6 +5,7 @@ from collections.abc import AsyncIterable
 
 from homeassistant.components import stt
 from homeassistant.core import Context, HomeAssistant
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
@@ -33,7 +34,10 @@ __all__ = (
     "Pipeline",
     "PipelineEvent",
     "PipelineEventType",
+    "PipelineNotFound",
 )
+
+CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -53,28 +57,26 @@ async def async_pipeline_from_audio_stream(
     pipeline_id: str | None = None,
     conversation_id: str | None = None,
     tts_audio_output: str | None = None,
+    device_id: str | None = None,
 ) -> None:
-    """Create an audio pipeline from an audio stream."""
-    pipeline = async_get_pipeline(hass, pipeline_id=pipeline_id)
-    if pipeline is None:
-        raise PipelineNotFound(
-            "pipeline_not_found", f"Pipeline {pipeline_id} not found"
-        )
+    """Create an audio pipeline from an audio stream.
 
+    Raises PipelineNotFound if no pipeline is found.
+    """
     pipeline_input = PipelineInput(
         conversation_id=conversation_id,
+        device_id=device_id,
         stt_metadata=stt_metadata,
         stt_stream=stt_stream,
         run=PipelineRun(
             hass,
             context=context,
-            pipeline=pipeline,
+            pipeline=async_get_pipeline(hass, pipeline_id=pipeline_id),
             start_stage=PipelineStage.STT,
             end_stage=PipelineStage.TTS,
             event_callback=event_callback,
             tts_audio_output=tts_audio_output,
         ),
     )
-
     await pipeline_input.validate()
     await pipeline_input.execute()

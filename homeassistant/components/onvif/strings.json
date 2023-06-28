@@ -47,6 +47,7 @@
       },
       "reauth_confirm": {
         "title": "Reauthenticate the ONVIF device",
+        "description": "Some devices will reject authentication if the time is out of sync by more than 5 seconds. If authentication is unsuccessful, verify the time on the device is correct and try again.",
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"
@@ -60,7 +61,8 @@
         "data": {
           "extra_arguments": "Extra FFMPEG arguments",
           "rtsp_transport": "RTSP transport mechanism",
-          "use_wallclock_as_timestamps": "Use wall clock as timestamps"
+          "use_wallclock_as_timestamps": "Use wall clock as timestamps",
+          "enable_webhooks": "Enable Webhooks"
         },
         "title": "ONVIF Device Options"
       }

@@ -4,6 +4,11 @@ from __future__ import annotations
 from unittest.mock import patch
 
 import pytest
+from pytrafikverket.exceptions import (
+    InvalidAuthentication,
+    MultipleTrainStationsFound,
+    NoTrainStationFound,
+)
 
 from homeassistant import config_entries
 from homeassistant.components.trafikverket_train.const import (
@@ -108,28 +113,28 @@ async def test_form_entry_already_exist(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    ("error_message", "base_error"),
+    ("side_effect", "base_error"),
     [
         (
-            "Source: Security, message: Invalid authentication",
+            InvalidAuthentication,
             "invalid_auth",
         ),
         (
-            "Could not find a station with the specified name",
+            NoTrainStationFound,
             "invalid_station",
         ),
         (
-            "Found multiple stations with the specified name",
+            MultipleTrainStationsFound,
             "more_stations",
         ),
         (
-            "Unknown",
+            Exception,
             "cannot_connect",
         ),
     ],
 )
 async def test_flow_fails(
-    hass: HomeAssistant, error_message: str, base_error: str
+    hass: HomeAssistant, side_effect: Exception, base_error: str
 ) -> None:
     """Test config flow errors."""
     result4 = await hass.config_entries.flow.async_init(
@@ -141,7 +146,7 @@ async def test_flow_fails(
 
     with patch(
         "homeassistant.components.trafikverket_train.config_flow.TrafikverketTrain.async_get_train_station",
-        side_effect=ValueError(error_message),
+        side_effect=side_effect(),
     ):
         result4 = await hass.config_entries.flow.async_configure(
             result4["flow_id"],
@@ -234,28 +239,28 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    ("sideeffect", "p_error"),
+    ("side_effect", "p_error"),
     [
         (
-            ValueError("Source: Security, message: Invalid authentication"),
+            InvalidAuthentication,
             "invalid_auth",
         ),
         (
-            ValueError("Could not find a station with the specified name"),
+            NoTrainStationFound,
             "invalid_station",
         ),
         (
-            ValueError("Found multiple stations with the specified name"),
+            MultipleTrainStationsFound,
             "more_stations",
         ),
         (
-            ValueError("Unknown"),
+            Exception,
             "cannot_connect",
         ),
     ],
 )
 async def test_reauth_flow_error(
-    hass: HomeAssistant, sideeffect: Exception, p_error: str
+    hass: HomeAssistant, side_effect: Exception, p_error: str
 ) -> None:
     """Test a reauthentication flow with error."""
     entry = MockConfigEntry(
@@ -284,7 +289,7 @@ async def test_reauth_flow_error(
 
     with patch(
         "homeassistant.components.trafikverket_train.config_flow.TrafikverketTrain.async_get_train_station",
-        side_effect=sideeffect,
+        side_effect=side_effect(),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],

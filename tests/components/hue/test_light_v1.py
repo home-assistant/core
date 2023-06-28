@@ -8,6 +8,7 @@ from homeassistant.components import hue
 from homeassistant.components.hue.const import CONF_ALLOW_HUE_GROUPS
 from homeassistant.components.hue.v1 import light as hue_light
 from homeassistant.components.light import ColorMode
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util import color
@@ -178,6 +179,8 @@ async def setup_bridge(hass, mock_bridge_v1):
     """Load the Hue light platform with the provided bridge."""
     hass.config.components.add(hue.DOMAIN)
     config_entry = create_config_entry()
+    config_entry.add_to_hass(hass)
+    config_entry.state = ConfigEntryState.LOADED
     config_entry.options = {CONF_ALLOW_HUE_GROUPS: True}
     mock_bridge_v1.config_entry = config_entry
     hass.data[hue.DOMAIN] = {config_entry.entry_id: mock_bridge_v1}
