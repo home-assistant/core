@@ -29,7 +29,7 @@
     }
   },
   "entity": {
-    "button": {
+    "number": {
       "status_light_brightness": {
         "name": "Status light brightness"
       }
