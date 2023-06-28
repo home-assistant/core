@@ -28,6 +28,15 @@
         "on": "[%key:common::state::on%]"
       },
       "state_attributes": {
+        "action": {
+          "name": "Action",
+          "state": {
+            "humidifying": "Humidifying",
+            "drying": "Drying",
+            "idle": "Idle",
+            "off": "Off"
+          }
+        },
         "available_modes": {
           "name": "Available modes"
         },
