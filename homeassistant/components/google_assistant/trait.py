@@ -2416,15 +2416,16 @@ class SensorStateTrait(_Trait):
     def _air_quality_description_for_aqi(self, aqi):
         if aqi is None or aqi.isnumeric() is False:
             return "unknown"
-        if int(aqi) <= 50:
+        aqi = int(aqi)
+        if aqi <= 50:
             return "healthy"
-        if int(aqi) <= 100:
+        if aqi <= 100:
             return "moderate"
-        if int(aqi) <= 150:
+        if aqi <= 150:
             return "unhealthy for sensitive groups"
-        if int(aqi) <= 200:
+        if aqi <= 200:
             return "unhealthy"
-        if int(aqi) <= 300:
+        if aqi <= 300:
             return "very unhealthy"
 
         return "hazardous"
