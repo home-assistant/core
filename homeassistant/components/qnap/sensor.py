@@ -67,12 +67,12 @@ ATTR_VOLUME_SIZE = "Volume Size"
 _SYSTEM_MON_COND: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="status",
-        name="Status",
+        translation_key="status",
         icon="mdi:checkbox-marked-circle-outline",
     ),
     SensorEntityDescription(
         key="system_temp",
-        name="System Temperature",
+        translation_key="system_temp",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         icon="mdi:thermometer",
@@ -82,7 +82,7 @@ _SYSTEM_MON_COND: tuple[SensorEntityDescription, ...] = (
 _CPU_MON_COND: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="cpu_temp",
-        name="CPU Temperature",
+        translation_key="cpu_temp",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         icon="mdi:checkbox-marked-circle-outline",
