@@ -1,6 +1,13 @@
 """Tests for Shelly sensor platform."""
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.components.shelly.const import DOMAIN
+from homeassistant.const import (
+    ATTR_UNIT_OF_MEASUREMENT,
+    PERCENTAGE,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+    UnitOfEnergy,
+)
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.entity_registry import async_get
 
@@ -13,7 +20,7 @@ from . import (
     register_entity,
 )
 
-from tests.common import mock_restore_cache
+from tests.common import mock_restore_cache_with_extra_data
 
 RELAY_BLOCK_ID = 0
 SENSOR_BLOCK_ID = 3
@@ -33,6 +40,52 @@ async def test_block_sensor(
     mock_block_device.mock_update()
 
     assert hass.states.get(entity_id).state == "60.1"
+
+
+async def test_energy_sensor(hass: HomeAssistant, mock_block_device) -> None:
+    """Test energy sensor."""
+    entity_id = f"{SENSOR_DOMAIN}.test_name_channel_1_energy"
+    await init_integration(hass, 1)
+
+    state = hass.states.get(entity_id)
+    # 1234567.89 Wmin / 60 / 1000 = 20.5761315 kWh
+    assert state.state == "20.5761315"
+    # suggested unit is KWh
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfEnergy.KILO_WATT_HOUR
+
+
+async def test_power_factory_unit_migration(
+    hass: HomeAssistant, mock_block_device
+) -> None:
+    """Test migration unit of the power factory sensor."""
+    registry = async_get(hass)
+    registry.async_get_or_create(
+        SENSOR_DOMAIN,
+        DOMAIN,
+        "123456789ABC-emeter_0-powerFactor",
+        suggested_object_id="test_name_power_factor",
+        unit_of_measurement="%",
+    )
+
+    entity_id = f"{SENSOR_DOMAIN}.test_name_power_factor"
+    await init_integration(hass, 1)
+
+    state = hass.states.get(entity_id)
+    # Value of 0.98 is converted to 98.0%
+    assert state.state == "98.0"
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
+
+
+async def test_power_factory_without_unit_migration(
+    hass: HomeAssistant, mock_block_device
+) -> None:
+    """Test unit and value of the power factory sensor without unit migration."""
+    entity_id = f"{SENSOR_DOMAIN}.test_name_power_factor"
+    await init_integration(hass, 1)
+
+    state = hass.states.get(entity_id)
+    assert state.state == "0.98"
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
 
 
 async def test_block_rest_sensor(
@@ -84,7 +137,9 @@ async def test_block_restored_sleeping_sensor(
     entity_id = register_entity(
         hass, SENSOR_DOMAIN, "test_name_temperature", "sensor_0-temp", entry
     )
-    mock_restore_cache(hass, [State(entity_id, "20.4")])
+    extra_data = {"native_value": "20.4", "native_unit_of_measurement": "°C"}
+
+    mock_restore_cache_with_extra_data(hass, ((State(entity_id, ""), extra_data),))
     monkeypatch.setattr(mock_block_device, "initialized", False)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
@@ -163,7 +218,9 @@ async def test_block_not_matched_restored_sleeping_sensor(
     entity_id = register_entity(
         hass, SENSOR_DOMAIN, "test_name_temperature", "sensor_0-temp", entry
     )
-    mock_restore_cache(hass, [State(entity_id, "20.4")])
+    extra_data = {"native_value": "20.4", "native_unit_of_measurement": "°C"}
+
+    mock_restore_cache_with_extra_data(hass, ((State(entity_id, ""), extra_data),))
     monkeypatch.setattr(mock_block_device, "initialized", False)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
@@ -221,6 +278,16 @@ async def test_rpc_sensor(hass: HomeAssistant, mock_rpc_device, monkeypatch) -> 
     assert hass.states.get(entity_id).state == STATE_UNKNOWN
 
 
+async def test_rpc_illuminance_sensor(
+    hass: HomeAssistant, mock_rpc_device, monkeypatch
+) -> None:
+    """Test RPC illuminacne sensor."""
+    entity_id = f"{SENSOR_DOMAIN}.test_name_illuminance"
+    await init_integration(hass, 2)
+
+    assert hass.states.get(entity_id).state == "345"
+
+
 async def test_rpc_sensor_error(
     hass: HomeAssistant, mock_rpc_device, monkeypatch
 ) -> None:
@@ -228,7 +295,7 @@ async def test_rpc_sensor_error(
     entity_id = f"{SENSOR_DOMAIN}.test_name_voltmeter"
     await init_integration(hass, 2)
 
-    assert hass.states.get(entity_id).state == "4.3"
+    assert hass.states.get(entity_id).state == "4.321"
 
     mutate_rpc_device_status(monkeypatch, mock_rpc_device, "voltmeter", "voltage", None)
     mock_rpc_device.mock_update()
@@ -294,8 +361,9 @@ async def test_rpc_restored_sleeping_sensor(
         "temperature:0-temperature_0",
         entry,
     )
+    extra_data = {"native_value": "21.0", "native_unit_of_measurement": "°C"}
 
-    mock_restore_cache(hass, [State(entity_id, "21.0")])
+    mock_restore_cache_with_extra_data(hass, ((State(entity_id, ""), extra_data),))
     monkeypatch.setattr(mock_rpc_device, "initialized", False)
 
     await hass.config_entries.async_setup(entry.entry_id)

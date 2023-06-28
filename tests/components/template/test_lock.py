@@ -4,6 +4,7 @@ import pytest
 from homeassistant import setup
 from homeassistant.components import lock
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, STATE_UNAVAILABLE
+from homeassistant.core import HomeAssistant
 
 OPTIMISTIC_LOCK_CONFIG = {
     "platform": "template",
@@ -37,7 +38,7 @@ OPTIMISTIC_LOCK_CONFIG = {
         },
     ],
 )
-async def test_template_state(hass, start_ha):
+async def test_template_state(hass: HomeAssistant, start_ha) -> None:
     """Test template."""
     hass.states.async_set("switch.test_state", STATE_ON)
     await hass.async_block_till_done()
@@ -64,7 +65,7 @@ async def test_template_state(hass, start_ha):
         },
     ],
 )
-async def test_template_state_boolean_on(hass, start_ha):
+async def test_template_state_boolean_on(hass: HomeAssistant, start_ha) -> None:
     """Test the setting of the state with boolean on."""
     state = hass.states.get("lock.template_lock")
     assert state.state == lock.STATE_LOCKED
@@ -82,7 +83,7 @@ async def test_template_state_boolean_on(hass, start_ha):
         },
     ],
 )
-async def test_template_state_boolean_off(hass, start_ha):
+async def test_template_state_boolean_off(hass: HomeAssistant, start_ha) -> None:
     """Test the setting of the state with off."""
     state = hass.states.get("lock.template_lock")
     assert state.state == lock.STATE_UNLOCKED
@@ -138,7 +139,7 @@ async def test_template_state_boolean_off(hass, start_ha):
         },
     ],
 )
-async def test_template_syntax_error(hass, start_ha):
+async def test_template_syntax_error(hass: HomeAssistant, start_ha) -> None:
     """Test templating syntax error."""
     assert hass.states.async_all("lock") == []
 
@@ -155,7 +156,7 @@ async def test_template_syntax_error(hass, start_ha):
         },
     ],
 )
-async def test_template_static(hass, start_ha):
+async def test_template_static(hass: HomeAssistant, start_ha) -> None:
     """Test that we allow static templates."""
     state = hass.states.get("lock.template_lock")
     assert state.state == lock.STATE_UNLOCKED
@@ -178,7 +179,7 @@ async def test_template_static(hass, start_ha):
         },
     ],
 )
-async def test_lock_action(hass, start_ha, calls):
+async def test_lock_action(hass: HomeAssistant, start_ha, calls) -> None:
     """Test lock action."""
     await setup.async_setup_component(hass, "switch", {})
     hass.states.async_set("switch.test_state", STATE_OFF)
@@ -209,7 +210,7 @@ async def test_lock_action(hass, start_ha, calls):
         },
     ],
 )
-async def test_unlock_action(hass, start_ha, calls):
+async def test_unlock_action(hass: HomeAssistant, start_ha, calls) -> None:
     """Test unlock action."""
     await setup.async_setup_component(hass, "switch", {})
     hass.states.async_set("switch.test_state", STATE_ON)
@@ -243,7 +244,7 @@ async def test_unlock_action(hass, start_ha, calls):
 @pytest.mark.parametrize(
     "test_state", [lock.STATE_UNLOCKING, lock.STATE_LOCKING, lock.STATE_JAMMED]
 )
-async def test_lock_state(hass, test_state, start_ha):
+async def test_lock_state(hass: HomeAssistant, test_state, start_ha) -> None:
     """Test value template."""
     hass.states.async_set("input_select.test_state", test_state)
     await hass.async_block_till_done()
@@ -265,7 +266,7 @@ async def test_lock_state(hass, test_state, start_ha):
         },
     ],
 )
-async def test_available_template_with_entities(hass, start_ha):
+async def test_available_template_with_entities(hass: HomeAssistant, start_ha) -> None:
     """Test availability templates with values from other entities."""
     # When template returns true..
     hass.states.async_set("availability_state.state", STATE_ON)
@@ -296,8 +297,8 @@ async def test_available_template_with_entities(hass, start_ha):
     ],
 )
 async def test_invalid_availability_template_keeps_component_available(
-    hass, start_ha, caplog_setup_text
-):
+    hass: HomeAssistant, start_ha, caplog_setup_text
+) -> None:
     """Test that an invalid availability keeps the device available."""
     assert hass.states.get("lock.template_lock").state != STATE_UNAVAILABLE
     assert ("UndefinedError: 'x' is undefined") in caplog_setup_text
@@ -317,7 +318,7 @@ async def test_invalid_availability_template_keeps_component_available(
         },
     ],
 )
-async def test_unique_id(hass, start_ha):
+async def test_unique_id(hass: HomeAssistant, start_ha) -> None:
     """Test unique_id option only creates one lock per id."""
     await setup.async_setup_component(
         hass,

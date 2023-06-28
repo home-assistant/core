@@ -8,6 +8,7 @@ import voluptuous as vol
 from homeassistant.backports.enum import StrEnum
 from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    CONCENTRATION_PARTS_PER_BILLION,
     CONCENTRATION_PARTS_PER_MILLION,
     LIGHT_LUX,
     PERCENTAGE,
@@ -75,7 +76,7 @@ class SensorDeviceClass(StrEnum):
     DURATION = "duration"
     """Fixed duration.
 
-    Unit of measurement: `d`, `h`, `min`, `s`
+    Unit of measurement: `d`, `h`, `min`, `s`, `ms`
     """
 
     ENUM = "enum"
@@ -159,6 +160,17 @@ class SensorDeviceClass(StrEnum):
 
     ENERGY = "energy"
     """Energy.
+
+    Use this device class for sensors measuring energy consumption, for example
+    electric energy consumption.
+    Unit of measurement: `Wh`, `kWh`, `MWh`, `MJ`, `GJ`
+    """
+
+    ENERGY_STORAGE = "energy_storage"
+    """Stored energy.
+
+    Use this device class for sensors measuring stored energy, for example the amount
+    of electric energy currently stored in a battery or the capacity of a battery.
 
     Unit of measurement: `Wh`, `kWh`, `MWh`, `MJ`, `GJ`
     """
@@ -336,6 +348,12 @@ class SensorDeviceClass(StrEnum):
     Unit of measurement: `µg/m³`
     """
 
+    VOLATILE_ORGANIC_COMPOUNDS_PARTS = "volatile_organic_compounds_parts"
+    """Ratio of VOC.
+
+    Unit of measurement: `ppm`, `ppb`
+    """
+
     VOLTAGE = "voltage"
     """Voltage.
 
@@ -344,6 +362,18 @@ class SensorDeviceClass(StrEnum):
 
     VOLUME = "volume"
     """Generic volume.
+
+    Unit of measurement: `VOLUME_*` units
+    - SI / metric: `mL`, `L`, `m³`
+    - USCS / imperial: `ft³`, `CCF`, `fl. oz.`, `gal` (warning: volumes expressed in
+    USCS/imperial units are currently assumed to be US volumes)
+    """
+
+    VOLUME_STORAGE = "volume_storage"
+    """Generic stored volume.
+
+    Use this device class for sensors measuring stored volume, for example the amount
+    of fuel in a fuel tank.
 
     Unit of measurement: `VOLUME_*` units
     - SI / metric: `mL`, `L`, `m³`
@@ -420,8 +450,6 @@ STATE_CLASS_TOTAL: Final = "total"
 STATE_CLASS_TOTAL_INCREASING: Final = "total_increasing"
 STATE_CLASSES: Final[list[str]] = [cls.value for cls in SensorStateClass]
 
-# Note: this needs to be aligned with frontend: OVERRIDE_SENSOR_UNITS in
-# `entity-registry-settings.ts`
 UNIT_CONVERTERS: dict[SensorDeviceClass | str | None, type[BaseUnitConverter]] = {
     SensorDeviceClass.ATMOSPHERIC_PRESSURE: PressureConverter,
     SensorDeviceClass.CURRENT: ElectricCurrentConverter,
@@ -429,6 +457,7 @@ UNIT_CONVERTERS: dict[SensorDeviceClass | str | None, type[BaseUnitConverter]] =
     SensorDeviceClass.DATA_SIZE: InformationConverter,
     SensorDeviceClass.DISTANCE: DistanceConverter,
     SensorDeviceClass.ENERGY: EnergyConverter,
+    SensorDeviceClass.ENERGY_STORAGE: EnergyConverter,
     SensorDeviceClass.GAS: VolumeConverter,
     SensorDeviceClass.POWER: PowerConverter,
     SensorDeviceClass.POWER_FACTOR: UnitlessRatioConverter,
@@ -437,8 +466,10 @@ UNIT_CONVERTERS: dict[SensorDeviceClass | str | None, type[BaseUnitConverter]] =
     SensorDeviceClass.PRESSURE: PressureConverter,
     SensorDeviceClass.SPEED: SpeedConverter,
     SensorDeviceClass.TEMPERATURE: TemperatureConverter,
+    SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS_PARTS: UnitlessRatioConverter,
     SensorDeviceClass.VOLTAGE: ElectricPotentialConverter,
     SensorDeviceClass.VOLUME: VolumeConverter,
+    SensorDeviceClass.VOLUME_STORAGE: VolumeConverter,
     SensorDeviceClass.WATER: VolumeConverter,
     SensorDeviceClass.WEIGHT: MassConverter,
     SensorDeviceClass.WIND_SPEED: SpeedConverter,
@@ -460,8 +491,10 @@ DEVICE_CLASS_UNITS: dict[SensorDeviceClass, set[type[StrEnum] | str | None]] = {
         UnitOfTime.HOURS,
         UnitOfTime.MINUTES,
         UnitOfTime.SECONDS,
+        UnitOfTime.MILLISECONDS,
     },
     SensorDeviceClass.ENERGY: set(UnitOfEnergy),
+    SensorDeviceClass.ENERGY_STORAGE: set(UnitOfEnergy),
     SensorDeviceClass.FREQUENCY: set(UnitOfFrequency),
     SensorDeviceClass.GAS: {
         UnitOfVolume.CENTUM_CUBIC_FEET,
@@ -496,6 +529,10 @@ DEVICE_CLASS_UNITS: dict[SensorDeviceClass, set[type[StrEnum] | str | None]] = {
     SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS: {
         CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
     },
+    SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS_PARTS: {
+        CONCENTRATION_PARTS_PER_BILLION,
+        CONCENTRATION_PARTS_PER_MILLION,
+    },
     SensorDeviceClass.VOLTAGE: set(UnitOfElectricPotential),
     SensorDeviceClass.VOLUME: set(UnitOfVolume),
     SensorDeviceClass.WATER: {
@@ -526,6 +563,7 @@ DEVICE_CLASS_STATE_CLASSES: dict[SensorDeviceClass, set[SensorStateClass]] = {
         SensorStateClass.TOTAL,
         SensorStateClass.TOTAL_INCREASING,
     },
+    SensorDeviceClass.ENERGY_STORAGE: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.ENUM: set(),
     SensorDeviceClass.FREQUENCY: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.GAS: {SensorStateClass.TOTAL, SensorStateClass.TOTAL_INCREASING},
@@ -554,15 +592,17 @@ DEVICE_CLASS_STATE_CLASSES: dict[SensorDeviceClass, set[SensorStateClass]] = {
     SensorDeviceClass.TEMPERATURE: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.TIMESTAMP: set(),
     SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS: {SensorStateClass.MEASUREMENT},
+    SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS_PARTS: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.VOLTAGE: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.VOLUME: {
         SensorStateClass.TOTAL,
         SensorStateClass.TOTAL_INCREASING,
     },
+    SensorDeviceClass.VOLUME_STORAGE: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.WATER: {
         SensorStateClass.TOTAL,
         SensorStateClass.TOTAL_INCREASING,
     },
-    SensorDeviceClass.WEIGHT: {SensorStateClass.TOTAL},
+    SensorDeviceClass.WEIGHT: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.WIND_SPEED: {SensorStateClass.MEASUREMENT},
 }

@@ -26,9 +26,6 @@ from homeassistant.core import HomeAssistant
 from .common import (
     PROJECT_ID,
     SUBSCRIBER_ID,
-    TEST_CONFIG_APP_CREDS,
-    TEST_CONFIG_HYBRID,
-    TEST_CONFIG_YAML_ONLY,
     TEST_CONFIGFLOW_APP_CREDS,
     FakeSubscriber,
     YieldFixture,
@@ -180,10 +177,7 @@ async def test_subscriber_configuration_failure(
     assert entries[0].state is ConfigEntryState.SETUP_ERROR
 
 
-@pytest.mark.parametrize(
-    "nest_test_config",
-    [TEST_CONFIGFLOW_APP_CREDS],
-)
+@pytest.mark.parametrize("nest_test_config", [TEST_CONFIGFLOW_APP_CREDS])
 async def test_empty_config(
     hass: HomeAssistant, error_caplog, config, setup_platform
 ) -> None:
@@ -208,26 +202,9 @@ async def test_unload_entry(hass: HomeAssistant, setup_platform) -> None:
     assert entry.state == ConfigEntryState.NOT_LOADED
 
 
-@pytest.mark.parametrize(
-    ("nest_test_config", "delete_called"),
-    [
-        (
-            TEST_CONFIG_YAML_ONLY,
-            False,
-        ),  # User manually created subscriber, preserve on remove
-        (
-            TEST_CONFIG_HYBRID,
-            True,
-        ),  # Integration created subscriber, garbage collect on remove
-        (
-            TEST_CONFIG_APP_CREDS,
-            True,
-        ),  # Integration created subscriber, garbage collect on remove
-    ],
-    ids=["yaml-config-only", "hybrid-config", "config-entry"],
-)
 async def test_remove_entry(
-    hass: HomeAssistant, nest_test_config, setup_base_platform, delete_called
+    hass: HomeAssistant,
+    setup_base_platform,
 ) -> None:
     """Test successful unload of a ConfigEntry."""
     with patch(
@@ -250,19 +227,14 @@ async def test_remove_entry(
         "homeassistant.components.nest.api.GoogleNestSubscriber.delete_subscription",
     ) as delete:
         assert await hass.config_entries.async_remove(entry.entry_id)
-        assert delete.called == delete_called
+        assert delete.called
 
     entries = hass.config_entries.async_entries(DOMAIN)
     assert not entries
 
 
-@pytest.mark.parametrize(
-    "nest_test_config",
-    [TEST_CONFIG_HYBRID, TEST_CONFIG_APP_CREDS],
-    ids=["hyrbid-config", "app-creds"],
-)
 async def test_remove_entry_delete_subscriber_failure(
-    hass: HomeAssistant, nest_test_config, setup_base_platform
+    hass: HomeAssistant, setup_base_platform
 ) -> None:
     """Test a failure when deleting the subscription."""
     with patch(

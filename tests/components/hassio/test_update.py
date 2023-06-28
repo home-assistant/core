@@ -127,6 +127,38 @@ def mock_all(aioclient_mock, request):
             },
         },
     )
+    aioclient_mock.get(
+        "http://127.0.0.1/core/stats",
+        json={
+            "result": "ok",
+            "data": {
+                "cpu_percent": 0.99,
+                "memory_usage": 182611968,
+                "memory_limit": 3977146368,
+                "memory_percent": 4.59,
+                "network_rx": 362570232,
+                "network_tx": 82374138,
+                "blk_read": 46010945536,
+                "blk_write": 15051526144,
+            },
+        },
+    )
+    aioclient_mock.get(
+        "http://127.0.0.1/supervisor/stats",
+        json={
+            "result": "ok",
+            "data": {
+                "cpu_percent": 0.99,
+                "memory_usage": 182611968,
+                "memory_limit": 3977146368,
+                "memory_percent": 4.59,
+                "network_rx": 362570232,
+                "network_tx": 82374138,
+                "blk_read": 46010945536,
+                "blk_write": 15051526144,
+            },
+        },
+    )
     aioclient_mock.get("http://127.0.0.1/addons/test/changelog", text="")
     aioclient_mock.get(
         "http://127.0.0.1/addons/test/info",
@@ -215,7 +247,7 @@ async def test_update_addon(
         json={"result": "ok", "data": {}},
     )
 
-    assert await hass.services.async_call(
+    await hass.services.async_call(
         "update",
         "install",
         {"entity_id": "update.test_update"},
@@ -244,7 +276,7 @@ async def test_update_os(
         json={"result": "ok", "data": {}},
     )
 
-    assert await hass.services.async_call(
+    await hass.services.async_call(
         "update",
         "install",
         {"entity_id": "update.home_assistant_operating_system_update"},
@@ -273,7 +305,7 @@ async def test_update_core(
         json={"result": "ok", "data": {}},
     )
 
-    assert await hass.services.async_call(
+    await hass.services.async_call(
         "update",
         "install",
         {"entity_id": "update.home_assistant_os_update"},
@@ -302,7 +334,7 @@ async def test_update_supervisor(
         json={"result": "ok", "data": {}},
     )
 
-    assert await hass.services.async_call(
+    await hass.services.async_call(
         "update",
         "install",
         {"entity_id": "update.home_assistant_supervisor_update"},

@@ -21,7 +21,7 @@ from homeassistant.components.websocket_api.const import TYPE_RESULT
 from homeassistant.core import HomeAssistant
 from homeassistant.loader import async_get_integration
 from homeassistant.setup import async_setup_component
-from homeassistant.util import dt
+from homeassistant.util import dt as dt_util
 
 from tests.common import MockUser, async_capture_events, async_fire_time_changed
 from tests.typing import WebSocketGenerator
@@ -141,7 +141,7 @@ async def test_frontend_and_static(mock_http_client, mock_onboarded) -> None:
     text = await resp.text()
 
     # Test we can retrieve frontend.js
-    frontendjs = re.search(r"(?P<app>\/frontend_es5\/app.[A-Za-z0-9]{8}.js)", text)
+    frontendjs = re.search(r"(?P<app>\/frontend_es5\/app.[A-Za-z0-9_-]{11}.js)", text)
 
     assert frontendjs is not None, text
     resp = await mock_http_client.get(frontendjs.groups(0)[0])
@@ -228,7 +228,7 @@ async def test_themes_save_storage(
     )
 
     # To trigger the call_later
-    async_fire_time_changed(hass, dt.utcnow() + timedelta(seconds=60))
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=60))
     # To execute the save
     await hass.async_block_till_done()
 
@@ -546,7 +546,7 @@ async def test_auth_authorize(mock_http_client) -> None:
 
     # Test we can retrieve authorize.js
     authorizejs = re.search(
-        r"(?P<app>\/frontend_latest\/authorize.[A-Za-z0-9]{8}.js)", text
+        r"(?P<app>\/frontend_latest\/authorize.[A-Za-z0-9_-]{11}.js)", text
     )
 
     assert authorizejs is not None, text

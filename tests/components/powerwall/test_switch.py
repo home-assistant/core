@@ -13,7 +13,7 @@ from homeassistant.components.switch import (
 from homeassistant.const import ATTR_ENTITY_ID, CONF_IP_ADDRESS, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_registry as ent_reg
+from homeassistant.helpers import entity_registry as er
 
 from .mocks import _mock_powerwall_with_fixtures
 
@@ -38,11 +38,12 @@ async def mock_powerwall_fixture(hass):
         yield mock_powerwall
 
 
-async def test_entity_registry(hass: HomeAssistant, mock_powerwall) -> None:
+async def test_entity_registry(
+    hass: HomeAssistant, mock_powerwall, entity_registry: er.EntityRegistry
+) -> None:
     """Test powerwall off-grid switch device."""
 
     mock_powerwall.get_grid_status = Mock(return_value=GridStatus.CONNECTED)
-    entity_registry = ent_reg.async_get(hass)
 
     assert ENTITY_ID in entity_registry.entities
 

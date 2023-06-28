@@ -16,6 +16,12 @@ from tests.common import assert_setup_component, async_capture_events
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
+@pytest.fixture(autouse=True)
+async def setup_homeassistant(hass: HomeAssistant):
+    """Set up the homeassistant integration."""
+    await async_setup_component(hass, "homeassistant", {})
+
+
 @pytest.fixture
 def aiohttp_unused_port(event_loop, aiohttp_unused_port, socket_enabled):
     """Return aiohttp_unused_port and allow opening sockets."""
@@ -58,6 +64,7 @@ async def test_setup_component(hass: HomeAssistant) -> None:
 
     with assert_setup_component(1, ip.DOMAIN):
         assert await async_setup_component(hass, ip.DOMAIN, config)
+        await hass.async_block_till_done()
 
 
 async def test_setup_component_with_service(hass: HomeAssistant) -> None:
@@ -66,6 +73,7 @@ async def test_setup_component_with_service(hass: HomeAssistant) -> None:
 
     with assert_setup_component(1, ip.DOMAIN):
         assert await async_setup_component(hass, ip.DOMAIN, config)
+        await hass.async_block_till_done()
 
     assert hass.services.has_service(ip.DOMAIN, "scan")
 

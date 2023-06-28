@@ -5,6 +5,7 @@ from unittest.mock import patch
 from pyinsteon.constants import DeviceAction
 from pyinsteon.topics import DEVICE_LIST_CHANGED
 from pyinsteon.utils import publish_topic
+import pytest
 
 from homeassistant.components import insteon
 from homeassistant.components.insteon.api import async_load_api
@@ -154,6 +155,8 @@ async def test_get_ha_device_name(
         assert name == ""
 
 
+# This tests needs to be adjusted to remove lingering tasks
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
 async def test_add_device_api(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:

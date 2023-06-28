@@ -66,7 +66,7 @@ BUTTON_TYPES: tuple[SFRBoxButtonEntityDescription, ...] = (
         device_class=ButtonDeviceClass.RESTART,
         entity_category=EntityCategory.CONFIG,
         key="system_reboot",
-        name="Reboot",
+        translation_key="reboot",
     ),
 )
 

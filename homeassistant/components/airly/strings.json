@@ -26,5 +26,15 @@
       "requests_remaining": "Remaining allowed requests",
       "requests_per_day": "Allowed requests per day"
     }
+  },
+  "entity": {
+    "sensor": {
+      "caqi": {
+        "name": "Common air quality index"
+      },
+      "co": {
+        "name": "[%key:component::sensor::entity_component::carbon_monoxide::name%]"
+      }
+    }
   }
 }

@@ -1,4 +1,4 @@
-"""This package contains components that can be plugged into Home Assistant.
+"""Contains components that can be plugged into Home Assistant.
 
 Component design guidelines:
 - Each component defines a constant DOMAIN that is equal to its filename.

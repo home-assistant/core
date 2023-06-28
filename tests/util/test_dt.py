@@ -325,7 +325,7 @@ def test_find_next_time_expression_time_dst() -> None:
         ),
     ],
 )
-def test_find_next_time_expression_entering_dst(now_dt, expected_dt):
+def test_find_next_time_expression_entering_dst(now_dt, expected_dt) -> None:
     """Test entering daylight saving time for find_next_time_expression_time."""
     tz = dt_util.get_time_zone("Europe/Vienna")
     dt_util.set_default_time_zone(tz)
@@ -409,7 +409,7 @@ def test_find_next_time_expression_entering_dst(now_dt, expected_dt):
         ),
     ],
 )
-def test_find_next_time_expression_exiting_dst(now_dt, expected_dt):
+def test_find_next_time_expression_exiting_dst(now_dt, expected_dt) -> None:
     """Test exiting daylight saving time for find_next_time_expression_time."""
     tz = dt_util.get_time_zone("Europe/Vienna")
     dt_util.set_default_time_zone(tz)
@@ -724,7 +724,7 @@ def test_find_next_time_expression_tenth_second_pattern_does_not_drift_entering_
     )
     assert next_time == datetime(2021, 3, 15, 2, 30, 10, tzinfo=tz)
     prev_target = next_time
-    for i in range(1000):
+    for _ in range(1000):
         next_target = dt_util.find_next_time_expression_time(
             prev_target.replace(microsecond=999999) + timedelta(seconds=1),
             matching_seconds,

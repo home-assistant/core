@@ -234,11 +234,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             await register_webhook(None)
         cloud.async_listen_connection_change(hass, manage_cloudhook)
 
+    elif hass.state == CoreState.running:
+        await register_webhook(None)
     else:
-        if hass.state == CoreState.running:
-            await register_webhook(None)
-        else:
-            hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, register_webhook)
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, register_webhook)
 
     hass.services.async_register(DOMAIN, "register_webhook", register_webhook)
     hass.services.async_register(DOMAIN, "unregister_webhook", unregister_webhook)

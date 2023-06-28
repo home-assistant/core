@@ -1,0 +1,104 @@
+{
+  "code": 0,
+  "result": {
+    "list": [
+      {
+        "cid": "200s-humidifier",
+        "deviceType": "Classic200S",
+        "deviceName": "Humidifier 200s",
+        "subDeviceNo": null,
+        "deviceStatus": "on",
+        "connectionStatus": "online",
+        "uuid": "00000000-1111-2222-3333-444444444444"
+      },
+      {
+        "cid": "600s-humidifier",
+        "deviceType": "LUH-A602S-WUS",
+        "deviceName": "Humidifier 600S",
+        "subDeviceNo": null,
+        "deviceStatus": "off",
+        "connectionStatus": "online",
+        "uuid": "00000000-1111-2222-3333-555555555555",
+        "deviceImg": "https://image.vesync.com/defaultImages/LV_600S_Series/icon_lv600s_humidifier_160.png",
+        "configModule": "WFON_AHM_LUH-A602S-WUS_US",
+        "currentFirmVersion": null,
+        "subDeviceType": null
+      },
+      {
+        "cid": "air-purifier",
+        "deviceType": "LV-PUR131S",
+        "deviceName": "Air Purifier 131s",
+        "subDeviceNo": null,
+        "deviceStatus": "on",
+        "connectionStatus": "online"
+      },
+      {
+        "cid": "asd_sdfKIHG7IJHGwJGJ7GJ_ag5h3G55",
+        "deviceType": "Core200S",
+        "deviceName": "Air Purifier 200s",
+        "subDeviceNo": null,
+        "deviceStatus": "on",
+        "type": "wifi-air",
+        "connectionStatus": "online"
+      },
+      {
+        "cid": "400s-purifier",
+        "deviceType": "LAP-C401S-WJP",
+        "deviceName": "Air Purifier 400s",
+        "subDeviceNo": null,
+        "deviceStatus": "on",
+        "type": "wifi-air",
+        "connectionStatus": "online"
+      },
+      {
+        "cid": "600s-purifier",
+        "deviceType": "LAP-C601S-WUS",
+        "deviceName": "Air Purifier 600s",
+        "subDeviceNo": null,
+        "type": "wifi-air",
+        "deviceStatus": "on",
+        "connectionStatus": "online"
+      },
+      {
+        "cid": "dimmable-bulb",
+        "deviceType": "ESL100",
+        "deviceName": "Dimmable Light",
+        "subDeviceNo": null,
+        "deviceStatus": "on",
+        "connectionStatus": "online"
+      },
+      {
+        "cid": "tunable-bulb",
+        "deviceType": "ESL100CW",
+        "deviceName": "Temperature Light",
+        "subDeviceNo": null,
+        "deviceStatus": "on",
+        "connectionStatus": "online"
+      },
+      {
+        "cid": "outlet",
+        "deviceType": "wifi-switch-1.3",
+        "deviceName": "Outlet",
+        "subDeviceNo": null,
+        "deviceStatus": "on",
+        "connectionStatus": "online"
+      },
+      {
+        "cid": "switch",
+        "deviceType": "ESWL01",
+        "deviceName": "Wall Switch",
+        "subDeviceNo": null,
+        "deviceStatus": "on",
+        "connectionStatus": "online"
+      },
+      {
+        "cid": "dimmable-switch",
+        "deviceType": "ESWD16",
+        "deviceName": "Dimmer Switch",
+        "subDeviceNo": null,
+        "deviceStatus": "on",
+        "connectionStatus": "online"
+      }
+    ]
+  }
+}

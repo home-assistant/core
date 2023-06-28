@@ -24,7 +24,7 @@ def mock_setup_component():
         yield mock
 
 
-async def test_listen(hass, mock_setup_component):
+async def test_listen(hass: HomeAssistant, mock_setup_component) -> None:
     """Test discovery listen/discover combo."""
     calls_single = []
 
@@ -50,7 +50,7 @@ async def test_listen(hass, mock_setup_component):
     assert calls_single[0] == ("test service", "discovery info")
 
 
-async def test_platform(hass, mock_setup_component):
+async def test_platform(hass: HomeAssistant, mock_setup_component) -> None:
     """Test discover platform method."""
     calls = []
 

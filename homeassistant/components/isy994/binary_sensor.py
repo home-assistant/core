@@ -400,12 +400,18 @@ class ISYInsteonBinarySensorEntity(ISYBinarySensorEntity):
         Insteon leak sensors set their primary node to On when the state is
         DRY, not WET, so we invert the binary state if the user indicates
         that it is a moisture sensor.
+
+        Dusk/Dawn sensors set their node to On when DUSK, not light detected,
+        so this is inverted as well.
         """
         if self._computed_state is None:
-            # Do this first so we don't invert None on moisture sensors
+            # Do this first so we don't invert None on moisture or light sensors
             return None
 
-        if self.device_class == BinarySensorDeviceClass.MOISTURE:
+        if self.device_class in (
+            BinarySensorDeviceClass.LIGHT,
+            BinarySensorDeviceClass.MOISTURE,
+        ):
             return not self._computed_state
 
         return self._computed_state

@@ -7,6 +7,7 @@ from unittest.mock import call, patch
 import aiohttp
 import pytest
 
+from homeassistant.components import conversation
 from homeassistant.components.google_assistant_sdk import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -15,7 +16,7 @@ from homeassistant.util.dt import utcnow
 
 from .conftest import ComponentSetup, ExpectedCredentials
 
-from tests.common import async_fire_time_changed, async_mock_service
+from tests.common import MockConfigEntry, async_fire_time_changed, async_mock_service
 from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import ClientSessionGenerator
 
@@ -208,6 +209,7 @@ async def test_send_text_command_expired_token_refresh_failure(
     requires_reauth: ConfigEntryState,
 ) -> None:
     """Test failure refreshing token in send_text_command."""
+    await async_setup_component(hass, "homeassistant", {})
     await setup_integration()
 
     entries = hass.config_entries.async_entries(DOMAIN)
@@ -228,6 +230,7 @@ async def test_send_text_command_expired_token_refresh_failure(
             {"command": "turn on tv"},
             blocking=True,
         )
+    await hass.async_block_till_done()
 
     assert any(entry.async_get_active_flows(hass, {"reauth"})) == requires_reauth
 
@@ -319,6 +322,7 @@ async def test_send_text_command_media_player(
 async def test_conversation_agent(
     hass: HomeAssistant,
     setup_integration: ComponentSetup,
+    config_entry: MockConfigEntry,
 ) -> None:
     """Test GoogleAssistantConversationAgent."""
     await setup_integration()
@@ -334,6 +338,9 @@ async def test_conversation_agent(
     )
     await hass.async_block_till_done()
 
+    agent = await conversation._get_agent_manager(hass).async_get_agent(entry.entry_id)
+    assert agent.supported_languages == ["en-US"]
+
     text1 = "tell me a joke"
     text2 = "tell me another one"
     with patch(
@@ -342,13 +349,13 @@ async def test_conversation_agent(
         await hass.services.async_call(
             "conversation",
             "process",
-            {"text": text1},
+            {"text": text1, "agent_id": config_entry.entry_id},
             blocking=True,
         )
         await hass.services.async_call(
             "conversation",
             "process",
-            {"text": text2},
+            {"text": text2, "agent_id": config_entry.entry_id},
             blocking=True,
         )
 
@@ -361,6 +368,7 @@ async def test_conversation_agent(
 
 async def test_conversation_agent_refresh_token(
     hass: HomeAssistant,
+    config_entry: MockConfigEntry,
     setup_integration: ComponentSetup,
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
@@ -386,7 +394,7 @@ async def test_conversation_agent_refresh_token(
         await hass.services.async_call(
             "conversation",
             "process",
-            {"text": text1},
+            {"text": text1, "agent_id": config_entry.entry_id},
             blocking=True,
         )
 
@@ -406,7 +414,7 @@ async def test_conversation_agent_refresh_token(
         await hass.services.async_call(
             "conversation",
             "process",
-            {"text": text2},
+            {"text": text2, "agent_id": config_entry.entry_id},
             blocking=True,
         )
 

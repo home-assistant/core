@@ -10,7 +10,7 @@ import pytest
 import voluptuous as vol
 
 from homeassistant.bootstrap import async_setup_component
-from homeassistant.components.calendar import DOMAIN
+from homeassistant.components.calendar import DOMAIN, SERVICE_LIST_EVENTS
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.util.dt as dt_util
@@ -28,9 +28,7 @@ async def test_events_http_api(
     start = dt_util.now()
     end = start + timedelta(days=1)
     response = await client.get(
-        "/api/calendars/calendar.calendar_1?start={}&end={}".format(
-            start.isoformat(), end.isoformat()
-        )
+        f"/api/calendars/calendar.calendar_1?start={start.isoformat()}&end={end.isoformat()}"
     )
     assert response.status == HTTPStatus.OK
     events = await response.json()
@@ -63,12 +61,25 @@ async def test_events_http_api_error(
         side_effect=HomeAssistantError("Failure"),
     ):
         response = await client.get(
-            "/api/calendars/calendar.calendar_1?start={}&end={}".format(
-                start.isoformat(), end.isoformat()
-            )
+            f"/api/calendars/calendar.calendar_1?start={start.isoformat()}&end={end.isoformat()}"
         )
         assert response.status == HTTPStatus.INTERNAL_SERVER_ERROR
         assert await response.json() == {"message": "Error reading events: Failure"}
+
+
+async def test_events_http_api_dates_wrong_order(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
+    """Test the calendar demo view."""
+    await async_setup_component(hass, "calendar", {"calendar": {"platform": "demo"}})
+    await hass.async_block_till_done()
+    client = await hass_client()
+    start = dt_util.now()
+    end = start + timedelta(days=-1)
+    response = await client.get(
+        f"/api/calendars/calendar.calendar_1?start={start.isoformat()}&end={end.isoformat()}"
+    )
+    assert response.status == HTTPStatus.BAD_REQUEST
 
 
 async def test_calendars_http_api(
@@ -299,6 +310,38 @@ async def test_unsupported_create_event_service(hass: HomeAssistant) -> None:
             vol.error.MultipleInvalid,
             "must contain at most one of start_date, start_date_time, in.",
         ),
+        (
+            {
+                "start_date_time": "2022-04-01T06:00:00+00:00",
+                "end_date_time": "2022-04-01T07:00:00+01:00",
+            },
+            vol.error.MultipleInvalid,
+            "Expected all values to have the same timezone",
+        ),
+        (
+            {
+                "start_date_time": "2022-04-01T07:00:00",
+                "end_date_time": "2022-04-01T06:00:00",
+            },
+            vol.error.MultipleInvalid,
+            "Expected minimum event duration",
+        ),
+        (
+            {
+                "start_date": "2022-04-02",
+                "end_date": "2022-04-01",
+            },
+            vol.error.MultipleInvalid,
+            "Expected minimum event duration",
+        ),
+        (
+            {
+                "start_date": "2022-04-01",
+                "end_date": "2022-04-01",
+            },
+            vol.error.MultipleInvalid,
+            "Expected minimum event duration",
+        ),
     ],
     ids=[
         "missing_all",
@@ -313,6 +356,10 @@ async def test_unsupported_create_event_service(hass: HomeAssistant) -> None:
         "multiple_in",
         "unexpected_in_with_date",
         "unexpected_in_with_datetime",
+        "inconsistent_timezone",
+        "incorrect_date_order",
+        "incorrect_datetime_order",
+        "dates_not_exclusive",
     ],
 )
 async def test_create_event_service_invalid_params(
@@ -336,4 +383,123 @@ async def test_create_event_service_invalid_params(
             },
             target={"entity_id": "calendar.calendar_1"},
             blocking=True,
+        )
+
+
+async def test_list_events_service(hass: HomeAssistant) -> None:
+    """Test listing events from the service call using exlplicit start and end time."""
+    await async_setup_component(hass, "calendar", {"calendar": {"platform": "demo"}})
+    await hass.async_block_till_done()
+
+    start = dt_util.now()
+    end = start + timedelta(days=1)
+
+    response = await hass.services.async_call(
+        DOMAIN,
+        SERVICE_LIST_EVENTS,
+        {
+            "entity_id": "calendar.calendar_1",
+            "start_date_time": start,
+            "end_date_time": end,
+        },
+        blocking=True,
+        return_response=True,
+    )
+    assert response
+    assert "events" in response
+    events = response["events"]
+    assert len(events) == 1
+    assert events[0]["summary"] == "Future Event"
+
+
+@pytest.mark.parametrize(
+    ("entity", "duration", "expected_events"),
+    [
+        # Calendar 1 has an hour long event starting in 30 minutes. No events in the
+        # next 15 minutes, but it shows up an hour from now.
+        ("calendar.calendar_1", "00:15:00", []),
+        ("calendar.calendar_1", "01:00:00", ["Future Event"]),
+        # Calendar 2 has a active event right now
+        ("calendar.calendar_2", "00:15:00", ["Current Event"]),
+    ],
+)
+async def test_list_events_service_duration(
+    hass: HomeAssistant,
+    entity: str,
+    duration: str,
+    expected_events: list[str],
+) -> None:
+    """Test listing events using a time duration."""
+    await async_setup_component(hass, "calendar", {"calendar": {"platform": "demo"}})
+    await hass.async_block_till_done()
+
+    response = await hass.services.async_call(
+        DOMAIN,
+        SERVICE_LIST_EVENTS,
+        {
+            "entity_id": entity,
+            "duration": duration,
+        },
+        blocking=True,
+        return_response=True,
+    )
+    assert response
+    assert "events" in response
+    events = response["events"]
+    assert [event["summary"] for event in events] == expected_events
+
+
+async def test_list_events_positive_duration(hass: HomeAssistant) -> None:
+    """Test listing events requires a positive duration."""
+    await async_setup_component(hass, "calendar", {"calendar": {"platform": "demo"}})
+    await hass.async_block_till_done()
+
+    with pytest.raises(vol.Invalid, match="should be positive"):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_LIST_EVENTS,
+            {
+                "entity_id": "calendar.calendar_1",
+                "duration": "-01:00:00",
+            },
+            blocking=True,
+            return_response=True,
+        )
+
+
+async def test_list_events_exclusive_fields(hass: HomeAssistant) -> None:
+    """Test listing events specifying fields that are exclusive."""
+    await async_setup_component(hass, "calendar", {"calendar": {"platform": "demo"}})
+    await hass.async_block_till_done()
+
+    end = dt_util.now() + timedelta(days=1)
+
+    with pytest.raises(vol.Invalid, match="at most one of"):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_LIST_EVENTS,
+            {
+                "entity_id": "calendar.calendar_1",
+                "end_date_time": end,
+                "duration": "01:00:00",
+            },
+            blocking=True,
+            return_response=True,
+        )
+
+
+async def test_list_events_missing_fields(hass: HomeAssistant) -> None:
+    """Test listing events missing some required fields."""
+    await async_setup_component(hass, "calendar", {"calendar": {"platform": "demo"}})
+    await hass.async_block_till_done()
+
+    with pytest.raises(vol.Invalid, match="at least one of"):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_LIST_EVENTS,
+            {
+                "entity_id": "calendar.calendar_1",
+            },
+            blocking=True,
+            return_response=True,
         )

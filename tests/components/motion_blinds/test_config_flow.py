@@ -90,6 +90,12 @@ def motion_blinds_connect_fixture(mock_get_source_ip):
         "homeassistant.components.motion_blinds.config_flow.MotionDiscovery.discover",
         return_value=TEST_DISCOVERY_1,
     ), patch(
+        "homeassistant.components.motion_blinds.config_flow.MotionGateway.GetDeviceList",
+        return_value=True,
+    ), patch(
+        "homeassistant.components.motion_blinds.config_flow.MotionGateway.available",
+        True,
+    ), patch(
         "homeassistant.components.motion_blinds.gateway.AsyncMotionMulticast.Start_listen",
         return_value=True,
     ), patch(
@@ -353,6 +359,46 @@ async def test_dhcp_flow(hass: HomeAssistant) -> None:
         CONF_API_KEY: TEST_API_KEY,
         const.CONF_INTERFACE: TEST_HOST_ANY,
     }
+
+
+async def test_dhcp_flow_abort(hass: HomeAssistant) -> None:
+    """Test that DHCP discovery aborts if not Motion Blinds."""
+    dhcp_data = dhcp.DhcpServiceInfo(
+        ip=TEST_HOST,
+        hostname="MOTION_abcdef",
+        macaddress=TEST_MAC,
+    )
+
+    with patch(
+        "homeassistant.components.motion_blinds.config_flow.MotionGateway.GetDeviceList",
+        side_effect=socket.timeout,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            const.DOMAIN, context={"source": config_entries.SOURCE_DHCP}, data=dhcp_data
+        )
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "not_motionblinds"
+
+
+async def test_dhcp_flow_abort_invalid_response(hass: HomeAssistant) -> None:
+    """Test that DHCP discovery aborts if device responded with invalid data."""
+    dhcp_data = dhcp.DhcpServiceInfo(
+        ip=TEST_HOST,
+        hostname="MOTION_abcdef",
+        macaddress=TEST_MAC,
+    )
+
+    with patch(
+        "homeassistant.components.motion_blinds.config_flow.MotionGateway.available",
+        False,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            const.DOMAIN, context={"source": config_entries.SOURCE_DHCP}, data=dhcp_data
+        )
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "not_motionblinds"
 
 
 async def test_options_flow(hass: HomeAssistant) -> None:

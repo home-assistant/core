@@ -249,7 +249,7 @@ async def test_user_setup_wohand_already_configured(hass: HomeAssistant) -> None
             DOMAIN, context={"source": SOURCE_USER}
         )
     assert result["type"] == FlowResultType.ABORT
-    assert result["reason"] == "no_unconfigured_devices"
+    assert result["reason"] == "no_devices_found"
 
 
 async def test_user_setup_wocurtain(hass: HomeAssistant) -> None:
@@ -662,7 +662,7 @@ async def test_user_no_devices(hass: HomeAssistant) -> None:
             DOMAIN, context={"source": SOURCE_USER}
         )
     assert result["type"] == FlowResultType.ABORT
-    assert result["reason"] == "no_unconfigured_devices"
+    assert result["reason"] == "no_devices_found"
 
 
 async def test_async_step_user_takes_precedence_over_discovery(

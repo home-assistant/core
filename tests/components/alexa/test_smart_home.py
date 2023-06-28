@@ -1,7 +1,6 @@
 """Test for smart home alexa support."""
 from unittest.mock import patch
 
-from freezegun import freeze_time
 import pytest
 
 from homeassistant.components.alexa import messages, smart_home
@@ -40,6 +39,7 @@ def events(hass: HomeAssistant) -> list[Event]:
 @pytest.fixture
 async def mock_camera(hass: HomeAssistant) -> None:
     """Initialize a demo camera platform."""
+    assert await async_setup_component(hass, "homeassistant", {})
     assert await async_setup_component(
         hass, "camera", {camera.DOMAIN: {"platform": "demo"}}
     )
@@ -158,7 +158,7 @@ def assert_endpoint_capabilities(endpoint, *interfaces):
     return capabilities
 
 
-@freeze_time("2022-04-19 07:53:05")
+@pytest.mark.freeze_time("2022-04-19 07:53:05")
 async def test_switch(hass: HomeAssistant, events: list[Event]) -> None:
     """Test switch discovery."""
     device = ("switch.test", "on", {"friendly_name": "Test switch"})
@@ -212,7 +212,7 @@ async def test_outlet(hass: HomeAssistant, events: list[Event]) -> None:
     )
 
 
-@freeze_time("2022-04-19 07:53:05")
+@pytest.mark.freeze_time("2022-04-19 07:53:05")
 async def test_light(hass: HomeAssistant) -> None:
     """Test light discovery."""
     device = ("light.test_1", "on", {"friendly_name": "Test light 1"})
@@ -308,7 +308,7 @@ async def test_color_light(
     # tests
 
 
-@freeze_time("2022-04-19 07:53:05")
+@pytest.mark.freeze_time("2022-04-19 07:53:05")
 async def test_script(hass: HomeAssistant) -> None:
     """Test script discovery."""
     device = ("script.test", "off", {"friendly_name": "Test script"})
@@ -329,7 +329,7 @@ async def test_script(hass: HomeAssistant) -> None:
     )
 
 
-@freeze_time("2022-04-19 07:53:05")
+@pytest.mark.freeze_time("2022-04-19 07:53:05")
 async def test_input_boolean(hass: HomeAssistant) -> None:
     """Test input boolean discovery."""
     device = ("input_boolean.test", "off", {"friendly_name": "Test input boolean"})
@@ -366,7 +366,7 @@ async def test_input_boolean(hass: HomeAssistant) -> None:
     assert {"name": "detectionState"} in properties["supported"]
 
 
-@freeze_time("2022-04-19 07:53:05")
+@pytest.mark.freeze_time("2022-04-19 07:53:05")
 async def test_scene(hass: HomeAssistant) -> None:
     """Test scene discovery."""
     device = ("scene.test", "off", {"friendly_name": "Test scene"})
@@ -387,7 +387,7 @@ async def test_scene(hass: HomeAssistant) -> None:
     )
 
 
-@freeze_time("2022-04-19 07:53:05")
+@pytest.mark.freeze_time("2022-04-19 07:53:05")
 async def test_fan(hass: HomeAssistant) -> None:
     """Test fan discovery."""
     device = ("fan.test_1", "off", {"friendly_name": "Test fan 1"})
@@ -945,7 +945,7 @@ async def test_single_preset_mode_fan(
     caplog.clear()
 
 
-@freeze_time("2022-04-19 07:53:05")
+@pytest.mark.freeze_time("2022-04-19 07:53:05")
 async def test_humidifier(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
@@ -1117,7 +1117,7 @@ async def test_lock(hass: HomeAssistant) -> None:
     assert properties["value"] == "UNLOCKED"
 
 
-@freeze_time("2022-04-19 07:53:05")
+@pytest.mark.freeze_time("2022-04-19 07:53:05")
 async def test_media_player(hass: HomeAssistant) -> None:
     """Test media player discovery."""
     device = (
@@ -1729,7 +1729,7 @@ async def test_media_player_seek_error(hass: HomeAssistant) -> None:
         assert msg["payload"]["type"] == "ACTION_NOT_PERMITTED_FOR_CONTENT"
 
 
-@freeze_time("2022-04-19 07:53:05")
+@pytest.mark.freeze_time("2022-04-19 07:53:05")
 async def test_alert(hass: HomeAssistant) -> None:
     """Test alert discovery."""
     device = ("alert.test", "off", {"friendly_name": "Test alert"})
@@ -1747,7 +1747,7 @@ async def test_alert(hass: HomeAssistant) -> None:
     )
 
 
-@freeze_time("2022-04-19 07:53:05")
+@pytest.mark.freeze_time("2022-04-19 07:53:05")
 async def test_automation(hass: HomeAssistant) -> None:
     """Test automation discovery."""
     device = ("automation.test", "off", {"friendly_name": "Test automation"})
@@ -1769,7 +1769,7 @@ async def test_automation(hass: HomeAssistant) -> None:
     )
 
 
-@freeze_time("2022-04-19 07:53:05")
+@pytest.mark.freeze_time("2022-04-19 07:53:05")
 async def test_group(hass: HomeAssistant) -> None:
     """Test group discovery."""
     device = ("group.test", "off", {"friendly_name": "Test group"})
@@ -4183,7 +4183,7 @@ async def test_initialize_camera_stream(
     )
 
 
-@freeze_time("2022-04-19 07:53:05")
+@pytest.mark.freeze_time("2022-04-19 07:53:05")
 @pytest.mark.parametrize(
     "domain",
     ["button", "input_button"],

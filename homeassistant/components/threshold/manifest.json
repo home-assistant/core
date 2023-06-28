@@ -1,7 +1,7 @@
 {
   "domain": "threshold",
   "name": "Threshold",
-  "codeowners": ["@fabaff"],
+  "codeowners": [],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/threshold",
   "integration_type": "helper",

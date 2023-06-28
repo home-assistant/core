@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime
+from typing import TYPE_CHECKING
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -28,6 +29,45 @@ from homeassistant.util.dt import as_utc
 
 from .const import ATTRIBUTION, CONF_STATION, DOMAIN, NONE_IS_ZERO_SENSORS
 from .coordinator import TVDataUpdateCoordinator
+
+WIND_DIRECTIONS = [
+    "east",
+    "north_east",
+    "east_south_east",
+    "north",
+    "north_north_east",
+    "north_north_west",
+    "north_west",
+    "south",
+    "south_east",
+    "south_south_west",
+    "south_west",
+    "west",
+]
+PRECIPITATION_AMOUNTNAME = [
+    "error",
+    "mild_rain",
+    "moderate_rain",
+    "heavy_rain",
+    "mild_snow_rain",
+    "moderate_snow_rain",
+    "heavy_snow_rain",
+    "mild_snow",
+    "moderate_snow",
+    "heavy_snow",
+    "other",
+    "none",
+    "error",
+]
+PRECIPITATION_TYPE = [
+    "drizzle",
+    "hail",
+    "none",
+    "rain",
+    "snow",
+    "rain_snow_mixed",
+    "freezing_rain",
+]
 
 
 @dataclass
@@ -63,10 +103,13 @@ SENSOR_TYPES: tuple[TrafikverketSensorEntityDescription, ...] = (
     ),
     TrafikverketSensorEntityDescription(
         key="precipitation",
-        api_key="precipitationtype",
+        api_key="precipitationtype_translated",
         name="Precipitation type",
         icon="mdi:weather-snowy-rainy",
         entity_registry_enabled_default=False,
+        translation_key="precipitation",
+        options=PRECIPITATION_TYPE,
+        device_class=SensorDeviceClass.ENUM,
     ),
     TrafikverketSensorEntityDescription(
         key="wind_direction",
@@ -78,9 +121,12 @@ SENSOR_TYPES: tuple[TrafikverketSensorEntityDescription, ...] = (
     ),
     TrafikverketSensorEntityDescription(
         key="wind_direction_text",
-        api_key="winddirectiontext",
+        api_key="winddirectiontext_translated",
         name="Wind direction text",
         icon="mdi:flag-triangle",
+        translation_key="wind_direction_text",
+        options=WIND_DIRECTIONS,
+        device_class=SensorDeviceClass.ENUM,
     ),
     TrafikverketSensorEntityDescription(
         key="wind_speed",
@@ -120,10 +166,13 @@ SENSOR_TYPES: tuple[TrafikverketSensorEntityDescription, ...] = (
     ),
     TrafikverketSensorEntityDescription(
         key="precipitation_amountname",
-        api_key="precipitation_amountname",
+        api_key="precipitation_amountname_translated",
         name="Precipitation name",
         icon="mdi:weather-pouring",
         entity_registry_enabled_default=False,
+        translation_key="precipitation_amountname",
+        options=PRECIPITATION_AMOUNTNAME,
+        device_class=SensorDeviceClass.ENUM,
     ),
     TrafikverketSensorEntityDescription(
         key="measure_time",
@@ -190,7 +239,9 @@ class TrafikverketWeatherStation(
     def native_value(self) -> StateType | datetime:
         """Return state of sensor."""
         if self.entity_description.api_key == "measure_time":
-            return _to_datetime(self.coordinator.data.measure_time)
+            if TYPE_CHECKING:
+                assert self.coordinator.data.measure_time
+            return self.coordinator.data.measure_time
 
         state: StateType = getattr(
             self.coordinator.data, self.entity_description.api_key
@@ -204,4 +255,6 @@ class TrafikverketWeatherStation(
     @property
     def available(self) -> bool:
         """Return if entity is available."""
+        if TYPE_CHECKING:
+            assert self.coordinator.data.active
         return self.coordinator.data.active and super().available

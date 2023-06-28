@@ -159,8 +159,16 @@ class TasmotaDiscoveryUpdate(TasmotaEntity):
         self._removed_from_hass = False
         await super().async_added_to_hass()
 
-        async def discovery_callback(config: TasmotaEntityConfig) -> None:
-            """Handle discovery update."""
+        @callback
+        def discovery_callback(config: TasmotaEntityConfig) -> None:
+            """Handle discovery update.
+
+            If the config has changed we will create a task to
+            do the discovery update.
+
+            As this callback can fire when nothing has changed, this
+            is a normal function to avoid task creation until it is needed.
+            """
             _LOGGER.debug(
                 "Got update for entity with hash: %s '%s'",
                 self._discovery_hash,
@@ -169,7 +177,7 @@ class TasmotaDiscoveryUpdate(TasmotaEntity):
             if not self._tasmota_entity.config_same(config):
                 # Changed payload: Notify component
                 _LOGGER.debug("Updating component: %s", self.entity_id)
-                await self.discovery_update(config)
+                self.hass.async_create_task(self.discovery_update(config))
             else:
                 # Unchanged payload: Ignore to avoid changing states
                 _LOGGER.debug("Ignoring unchanged update for: %s", self.entity_id)

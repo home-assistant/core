@@ -1,9 +1,35 @@
 {
   "title": "Automation",
-  "state": {
+  "entity_component": {
     "_": {
-      "off": "[%key:common::state::off%]",
-      "on": "[%key:common::state::on%]"
+      "name": "[%key:component::automation::title%]",
+      "state": {
+        "off": "[%key:common::state::off%]",
+        "on": "[%key:common::state::on%]"
+      },
+      "state_attributes": {
+        "current": {
+          "name": "Running automations"
+        },
+        "id": {
+          "name": "ID"
+        },
+        "last_triggered": {
+          "name": "Last triggered"
+        },
+        "max": {
+          "name": "Max running automations"
+        },
+        "mode": {
+          "name": "Run mode",
+          "state": {
+            "parallel": "Parallel",
+            "queued": "Queued",
+            "restart": "Restart",
+            "single": "Single"
+          }
+        }
+      }
     }
   },
   "issues": {

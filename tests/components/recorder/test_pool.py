@@ -16,7 +16,7 @@ async def test_recorder_pool_called_from_event_loop() -> None:
         sessionmaker(bind=engine)().connection()
 
 
-def test_recorder_pool(caplog):
+def test_recorder_pool(caplog: pytest.LogCaptureFixture) -> None:
     """Test RecorderPool gives the same connection in the creating thread."""
 
     engine = create_engine("sqlite://", poolclass=RecorderPool)

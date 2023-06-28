@@ -31,7 +31,7 @@ from .mock import MockDevice
 from tests.common import MockConfigEntry
 
 
-async def test_form(hass: HomeAssistant, info: dict[str, Any]):
+async def test_form(hass: HomeAssistant, info: dict[str, Any]) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -63,7 +63,7 @@ async def test_form(hass: HomeAssistant, info: dict[str, Any]):
 
 @pytest.mark.parametrize(
     ("exception_type", "expected_error"),
-    [[DeviceNotFound, "cannot_connect"], [Exception, "unknown"]],
+    [[DeviceNotFound(IP), "cannot_connect"], [Exception, "unknown"]],
 )
 async def test_form_error(hass: HomeAssistant, exception_type, expected_error) -> None:
     """Test we handle errors."""

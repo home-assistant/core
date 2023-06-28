@@ -39,7 +39,7 @@ SENSOR_STATES: dict[str, dict[str, Any]] = {
         ATTR_STATE: "fec0::1",
         ATTR_ICON: "mdi:earth",
     },
-    "sensor.mock_title_device_uptime": {
+    "sensor.mock_title_last_restart": {
         # ATTR_STATE: "2022-02-05T17:46:04+00:00",
         ATTR_DEVICE_CLASS: SensorDeviceClass.TIMESTAMP,
     },

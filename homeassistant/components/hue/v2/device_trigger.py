@@ -46,6 +46,7 @@ DEFAULT_BUTTON_EVENT_TYPES = (
     ButtonEvent.INITIAL_PRESS,
     ButtonEvent.REPEAT,
     ButtonEvent.SHORT_RELEASE,
+    ButtonEvent.LONG_PRESS,
     ButtonEvent.LONG_RELEASE,
 )
 

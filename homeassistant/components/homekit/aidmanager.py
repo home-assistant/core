@@ -13,7 +13,7 @@ from __future__ import annotations
 from collections.abc import Generator
 import random
 
-from fnvhash import fnv1a_32
+from fnv_hash_fast import fnv1a_32
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er

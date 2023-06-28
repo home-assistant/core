@@ -82,3 +82,5 @@ COORDINATOR_FORECAST_HOURLY = "coordinator_forecast_hourly"
 
 OBSERVATION_VALID_TIME = timedelta(minutes=20)
 FORECAST_VALID_TIME = timedelta(minutes=45)
+# A lot of stations update once hourly plus some wiggle room
+UPDATE_TIME_PERIOD = timedelta(minutes=70)

@@ -16,7 +16,11 @@ from homeassistant.components import frontend
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_per_platform, discovery
+from homeassistant.helpers import (
+    config_per_platform,
+    config_validation as cv,
+    discovery,
+)
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -31,6 +35,8 @@ CONTENT_TYPE_MPEG: Final = "audio/mpeg"
 CONTENT_TYPE_NONE: Final = "none"
 
 SCAN_INTERVAL = timedelta(seconds=30)
+
+CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -86,6 +92,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         component = EntityComponent[MailboxEntity](
             logging.getLogger(__name__), DOMAIN, hass, SCAN_INTERVAL
         )
+        component.register_shutdown()
         await component.async_add_entities([mailbox_entity])
 
     setup_tasks = [

@@ -36,6 +36,11 @@ class RssiSensor(CoordinatorEntity[Coordinator], SensorEntity):
     """Sensor device."""
 
     _attr_has_entity_name = True
+    _attr_device_class = SensorDeviceClass.SIGNAL_STRENGTH
+    _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_native_unit_of_measurement = SIGNAL_STRENGTH_DECIBELS_MILLIWATT
+    _attr_entity_registry_enabled_default = False
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
 
     def __init__(
         self,
@@ -47,12 +52,6 @@ class RssiSensor(CoordinatorEntity[Coordinator], SensorEntity):
         super().__init__(coordinator)
         self._attr_unique_id = f"{device.address}-signal-strength"
         self._attr_device_info = device_info
-        self._attr_name = "Signal strength"
-        self._attr_device_class = SensorDeviceClass.SIGNAL_STRENGTH
-        self._attr_state_class = SensorStateClass.MEASUREMENT
-        self._attr_native_unit_of_measurement = SIGNAL_STRENGTH_DECIBELS_MILLIWATT
-        self._attr_entity_registry_enabled_default = False
-        self._attr_entity_category = EntityCategory.DIAGNOSTIC
 
     @property
     def native_value(self) -> StateType:

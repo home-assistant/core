@@ -198,14 +198,14 @@ async def setup_mock_component(hass):
     await hass.async_block_till_done()
 
 
-def test_games_reformat_to_dict(hass: HomeAssistant) -> None:
+def test_games_reformat_to_dict(
+    hass: HomeAssistant, patch_load_json_object: MagicMock
+) -> None:
     """Test old data format is converted to new format."""
+    patch_load_json_object.return_value = MOCK_GAMES_DATA_OLD_STR_FORMAT
     with patch(
-        "homeassistant.components.ps4.load_json",
-        return_value=MOCK_GAMES_DATA_OLD_STR_FORMAT,
-    ), patch("homeassistant.components.ps4.save_json", side_effect=MagicMock()), patch(
-        "os.path.isfile", return_value=True
-    ):
+        "homeassistant.components.ps4.save_json", side_effect=MagicMock()
+    ), patch("os.path.isfile", return_value=True):
         mock_games = ps4.load_games(hass, MOCK_ENTRY_ID)
 
     # New format is a nested dict.
@@ -221,13 +221,12 @@ def test_games_reformat_to_dict(hass: HomeAssistant) -> None:
         assert mock_data[ATTR_MEDIA_CONTENT_TYPE] == MediaType.GAME
 
 
-def test_load_games(hass: HomeAssistant) -> None:
+def test_load_games(hass: HomeAssistant, patch_load_json_object: MagicMock) -> None:
     """Test that games are loaded correctly."""
+    patch_load_json_object.return_value = MOCK_GAMES
     with patch(
-        "homeassistant.components.ps4.load_json", return_value=MOCK_GAMES
-    ), patch("homeassistant.components.ps4.save_json", side_effect=MagicMock()), patch(
-        "os.path.isfile", return_value=True
-    ):
+        "homeassistant.components.ps4.save_json", side_effect=MagicMock()
+    ), patch("os.path.isfile", return_value=True):
         mock_games = ps4.load_games(hass, MOCK_ENTRY_ID)
 
     assert isinstance(mock_games, dict)
@@ -240,29 +239,12 @@ def test_load_games(hass: HomeAssistant) -> None:
     assert mock_data[ATTR_MEDIA_CONTENT_TYPE] == MediaType.GAME
 
 
-def test_loading_games_returns_dict(hass: HomeAssistant) -> None:
+def test_loading_games_returns_dict(
+    hass: HomeAssistant, patch_load_json_object: MagicMock
+) -> None:
     """Test that loading games always returns a dict."""
+    patch_load_json_object.side_effect = HomeAssistantError
     with patch(
-        "homeassistant.components.ps4.load_json", side_effect=HomeAssistantError
-    ), patch("homeassistant.components.ps4.save_json", side_effect=MagicMock()), patch(
-        "os.path.isfile", return_value=True
-    ):
-        mock_games = ps4.load_games(hass, MOCK_ENTRY_ID)
-
-    assert isinstance(mock_games, dict)
-    assert not mock_games
-
-    with patch(
-        "homeassistant.components.ps4.load_json", return_value="Some String"
-    ), patch("homeassistant.components.ps4.save_json", side_effect=MagicMock()), patch(
-        "os.path.isfile", return_value=True
-    ):
-        mock_games = ps4.load_games(hass, MOCK_ENTRY_ID)
-
-    assert isinstance(mock_games, dict)
-    assert not mock_games
-
-    with patch("homeassistant.components.ps4.load_json", return_value=[]), patch(
         "homeassistant.components.ps4.save_json", side_effect=MagicMock()
     ), patch("os.path.isfile", return_value=True):
         mock_games = ps4.load_games(hass, MOCK_ENTRY_ID)

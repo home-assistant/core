@@ -7,6 +7,7 @@ from datetime import timedelta
 from typing import Any
 
 import async_timeout
+from yolink.const import ATTR_DEVICE_SMART_REMOTER
 from yolink.device import YoLinkDevice
 from yolink.exception import YoLinkAuthFailError, YoLinkClientError
 from yolink.home_manager import YoLinkHome
@@ -16,11 +17,16 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import aiohttp_client, config_entry_oauth2_flow
+from homeassistant.helpers import (
+    aiohttp_client,
+    config_entry_oauth2_flow,
+    device_registry as dr,
+)
 
 from . import api
-from .const import DOMAIN
+from .const import DOMAIN, YOLINK_EVENT
 from .coordinator import YoLinkCoordinator
+from .device_trigger import CONF_LONG_PRESS, CONF_SHORT_PRESS
 
 SCAN_INTERVAL = timedelta(minutes=5)
 
@@ -53,9 +59,32 @@ class YoLinkHomeMessageListener(MessageListener):
         device_coordinators = entry_data.device_coordinators
         if not device_coordinators:
             return
-        device_coordiantor = device_coordinators.get(device.device_id)
-        if device_coordiantor is not None:
-            device_coordiantor.async_set_updated_data(msg_data)
+        device_coordinator = device_coordinators.get(device.device_id)
+        if device_coordinator is None:
+            return
+        device_coordinator.async_set_updated_data(msg_data)
+        # handling events
+        if (
+            device_coordinator.device.device_type == ATTR_DEVICE_SMART_REMOTER
+            and msg_data.get("event") is not None
+        ):
+            device_registry = dr.async_get(self._hass)
+            device_entry = device_registry.async_get_device(
+                identifiers={(DOMAIN, device_coordinator.device.device_id)}
+            )
+            if device_entry is None:
+                return
+            key_press_type = None
+            if msg_data["event"]["type"] == "Press":
+                key_press_type = CONF_SHORT_PRESS
+            else:
+                key_press_type = CONF_LONG_PRESS
+            button_idx = msg_data["event"]["keyMask"]
+            event_data = {
+                "type": f"button_{button_idx}_{key_press_type}",
+                "device_id": device_entry.id,
+            }
+            self._hass.bus.async_fire(YOLINK_EVENT, event_data)
 
 
 @dataclass

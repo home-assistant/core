@@ -18,6 +18,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.setup import async_setup_component
 
 from .const import CALL_SERVICE, FIRE_EVENT, REGISTER_CLEARTEXT, RENDER_TEMPLATE, UPDATE
 
@@ -26,6 +27,12 @@ from tests.components.conversation.conftest import mock_agent
 
 # To avoid autoflake8 removing the import
 mock_agent = mock_agent
+
+
+@pytest.fixture
+async def homeassistant(hass):
+    """Load the homeassistant integration."""
+    await async_setup_component(hass, "homeassistant", {})
 
 
 def encrypt_payload(secret_key, payload, encode_json=True):
@@ -421,9 +428,8 @@ async def test_webhook_handle_decryption_fail(
     )
 
     assert resp.status == HTTPStatus.OK
-    webhook_json = await resp.json()
-    assert decrypt_payload(key, webhook_json["encrypted_data"]) == {}
-    assert "Ignoring invalid encrypted payload" in caplog.text
+    assert await resp.json() == {}
+    assert "Ignoring invalid JSON in encrypted payload" in caplog.text
     caplog.clear()
 
     # Break the key, and send JSON data
@@ -434,8 +440,7 @@ async def test_webhook_handle_decryption_fail(
     )
 
     assert resp.status == HTTPStatus.OK
-    webhook_json = await resp.json()
-    assert decrypt_payload(key, webhook_json["encrypted_data"]) == {}
+    assert await resp.json() == {}
     assert "Ignoring encrypted payload because unable to decrypt" in caplog.text
 
 
@@ -466,9 +471,8 @@ async def test_webhook_handle_decryption_legacy_fail(
     )
 
     assert resp.status == HTTPStatus.OK
-    webhook_json = await resp.json()
-    assert decrypt_payload_legacy(key, webhook_json["encrypted_data"]) == {}
-    assert "Ignoring invalid encrypted payload" in caplog.text
+    assert await resp.json() == {}
+    assert "Ignoring invalid JSON in encrypted payload" in caplog.text
     caplog.clear()
 
     # Break the key, and send JSON data
@@ -479,8 +483,7 @@ async def test_webhook_handle_decryption_legacy_fail(
     )
 
     assert resp.status == HTTPStatus.OK
-    webhook_json = await resp.json()
-    assert decrypt_payload_legacy(key, webhook_json["encrypted_data"]) == {}
+    assert await resp.json() == {}
     assert "Ignoring encrypted payload because unable to decrypt" in caplog.text
 
 
@@ -536,16 +539,7 @@ async def test_webhook_handle_decryption_legacy_upgrade(
     )
 
     assert resp.status == HTTPStatus.OK
-
-    webhook_json = await resp.json()
-    assert "encrypted_data" in webhook_json
-
-    # The response should be empty, encrypted with the new method
-    with pytest.raises(Exception):
-        decrypt_payload_legacy(key, webhook_json["encrypted_data"])
-    decrypted_data = decrypt_payload(key, webhook_json["encrypted_data"])
-
-    assert decrypted_data == {}
+    assert await resp.json() == {}
 
 
 async def test_webhook_requires_encryption(
@@ -1027,20 +1021,24 @@ async def test_reregister_sensor(
 
 
 async def test_webhook_handle_conversation_process(
-    hass: HomeAssistant, create_registrations, webhook_client, mock_agent
+    hass: HomeAssistant, homeassistant, create_registrations, webhook_client, mock_agent
 ) -> None:
     """Test that we can converse."""
     webhook_client.server.app.router._frozen = False
 
-    resp = await webhook_client.post(
-        "/api/webhook/{}".format(create_registrations[1]["webhook_id"]),
-        json={
-            "type": "conversation_process",
-            "data": {
-                "text": "Turn the kitchen light off",
+    with patch(
+        "homeassistant.components.conversation.AgentManager.async_get_agent",
+        return_value=mock_agent,
+    ):
+        resp = await webhook_client.post(
+            "/api/webhook/{}".format(create_registrations[1]["webhook_id"]),
+            json={
+                "type": "conversation_process",
+                "data": {
+                    "text": "Turn the kitchen light off",
+                },
             },
-        },
-    )
+        )
 
     assert resp.status == HTTPStatus.OK
     json = await resp.json()

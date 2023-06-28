@@ -26,6 +26,7 @@ from homeassistant.const import (
     STATE_ALARM_TRIGGERED,
 )
 from homeassistant.core import CoreState, HomeAssistant, State
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -224,12 +225,16 @@ async def test_with_invalid_code(hass: HomeAssistant, service, expected_state) -
 
     assert hass.states.get(entity_id).state == STATE_ALARM_DISARMED
 
-    await hass.services.async_call(
-        alarm_control_panel.DOMAIN,
-        service,
-        {ATTR_ENTITY_ID: "alarm_control_panel.test", ATTR_CODE: CODE + "2"},
-        blocking=True,
-    )
+    with pytest.raises(HomeAssistantError, match=r"^Invalid alarm code provided$"):
+        await hass.services.async_call(
+            alarm_control_panel.DOMAIN,
+            service,
+            {
+                ATTR_ENTITY_ID: "alarm_control_panel.test",
+                ATTR_CODE: f"{CODE}2",
+            },
+            blocking=True,
+        )
 
     assert hass.states.get(entity_id).state == STATE_ALARM_DISARMED
 
@@ -1082,7 +1087,8 @@ async def test_disarm_during_trigger_with_invalid_code(hass: HomeAssistant) -> N
 
     assert hass.states.get(entity_id).state == STATE_ALARM_PENDING
 
-    await common.async_alarm_disarm(hass, entity_id=entity_id)
+    with pytest.raises(HomeAssistantError, match=r"^Invalid alarm code provided$"):
+        await common.async_alarm_disarm(hass, entity_id=entity_id)
 
     assert hass.states.get(entity_id).state == STATE_ALARM_PENDING
 
@@ -1125,7 +1131,8 @@ async def test_disarm_with_template_code(hass: HomeAssistant) -> None:
     state = hass.states.get(entity_id)
     assert state.state == STATE_ALARM_ARMED_HOME
 
-    await common.async_alarm_disarm(hass, "def")
+    with pytest.raises(HomeAssistantError, match=r"^Invalid alarm code provided$"):
+        await common.async_alarm_disarm(hass, "def")
 
     state = hass.states.get(entity_id)
     assert state.state == STATE_ALARM_ARMED_HOME

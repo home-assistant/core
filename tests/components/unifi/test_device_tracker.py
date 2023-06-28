@@ -37,8 +37,11 @@ async def test_no_entities(
 
 
 async def test_tracked_wireless_clients(
-    hass, aioclient_mock, mock_unifi_websocket, mock_device_registry
-):
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    mock_unifi_websocket,
+    mock_device_registry,
+) -> None:
     """Verify tracking of wireless clients."""
     client = {
         "ap_mac": "00:00:00:00:02:01",
@@ -83,8 +86,11 @@ async def test_tracked_wireless_clients(
 
 
 async def test_tracked_clients(
-    hass, aioclient_mock, mock_unifi_websocket, mock_device_registry
-):
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    mock_unifi_websocket,
+    mock_device_registry,
+) -> None:
     """Test the update_items function with some clients."""
     client_1 = {
         "ap_mac": "00:00:00:00:02:01",
@@ -138,6 +144,9 @@ async def test_tracked_clients(
     assert len(hass.states.async_entity_ids(TRACKER_DOMAIN)) == 4
     assert hass.states.get("device_tracker.client_1").state == STATE_NOT_HOME
     assert hass.states.get("device_tracker.client_2").state == STATE_NOT_HOME
+    assert (
+        hass.states.get("device_tracker.client_5").attributes["host_name"] == "client_5"
+    )
 
     # Client on SSID not in SSID filter
     assert not hass.states.get("device_tracker.client_3")
@@ -150,7 +159,7 @@ async def test_tracked_clients(
 
     # State change signalling works
 
-    client_1["last_seen"] += 1
+    client_1["last_seen"] = dt_util.as_timestamp(dt_util.utcnow())
     mock_unifi_websocket(message=MessageKey.CLIENT, data=client_1)
     await hass.async_block_till_done()
 
@@ -158,8 +167,11 @@ async def test_tracked_clients(
 
 
 async def test_tracked_wireless_clients_event_source(
-    hass, aioclient_mock, mock_unifi_websocket, mock_device_registry
-):
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    mock_unifi_websocket,
+    mock_device_registry,
+) -> None:
     """Verify tracking of wireless clients based on event source."""
     client = {
         "ap_mac": "00:00:00:00:02:01",
@@ -235,6 +247,7 @@ async def test_tracked_wireless_clients_event_source(
 
     # New data
 
+    client["last_seen"] = dt_util.as_timestamp(dt_util.utcnow())
     mock_unifi_websocket(message=MessageKey.CLIENT, data=client)
     await hass.async_block_till_done()
     assert hass.states.get("device_tracker.client").state == STATE_HOME
@@ -270,8 +283,11 @@ async def test_tracked_wireless_clients_event_source(
 
 
 async def test_tracked_devices(
-    hass, aioclient_mock, mock_unifi_websocket, mock_device_registry
-):
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    mock_unifi_websocket,
+    mock_device_registry,
+) -> None:
     """Test the update_items function with some devices."""
     device_1 = {
         "board_rev": 3,
@@ -345,8 +361,11 @@ async def test_tracked_devices(
 
 
 async def test_remove_clients(
-    hass, aioclient_mock, mock_unifi_websocket, mock_device_registry
-):
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    mock_unifi_websocket,
+    mock_device_registry,
+) -> None:
     """Test the remove_items function with some clients."""
     client_1 = {
         "essid": "ssid",
@@ -381,8 +400,11 @@ async def test_remove_clients(
 
 
 async def test_controller_state_change(
-    hass, aioclient_mock, mock_unifi_websocket, mock_device_registry
-):
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    mock_unifi_websocket,
+    mock_device_registry,
+) -> None:
     """Verify entities state reflect on controller becoming unavailable."""
     client = {
         "essid": "ssid",
@@ -435,7 +457,9 @@ async def test_controller_state_change(
     assert hass.states.get("device_tracker.device").state == STATE_HOME
 
 
-async def test_option_track_clients(hass, aioclient_mock, mock_device_registry):
+async def test_option_track_clients(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, mock_device_registry
+) -> None:
     """Test the tracking of clients can be turned off."""
     wireless_client = {
         "essid": "ssid",
@@ -501,7 +525,9 @@ async def test_option_track_clients(hass, aioclient_mock, mock_device_registry):
     assert hass.states.get("device_tracker.device")
 
 
-async def test_option_track_wired_clients(hass, aioclient_mock, mock_device_registry):
+async def test_option_track_wired_clients(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, mock_device_registry
+) -> None:
     """Test the tracking of wired clients can be turned off."""
     wireless_client = {
         "essid": "ssid",
@@ -567,7 +593,9 @@ async def test_option_track_wired_clients(hass, aioclient_mock, mock_device_regi
     assert hass.states.get("device_tracker.device")
 
 
-async def test_option_track_devices(hass, aioclient_mock, mock_device_registry):
+async def test_option_track_devices(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, mock_device_registry
+) -> None:
     """Test the tracking of devices can be turned off."""
     client = {
         "hostname": "client",
@@ -611,10 +639,22 @@ async def test_option_track_devices(hass, aioclient_mock, mock_device_registry):
     assert hass.states.get("device_tracker.client")
     assert not hass.states.get("device_tracker.device")
 
+    hass.config_entries.async_update_entry(
+        config_entry,
+        options={CONF_TRACK_DEVICES: True},
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.get("device_tracker.client")
+    assert hass.states.get("device_tracker.device")
+
 
 async def test_option_ssid_filter(
-    hass, aioclient_mock, mock_unifi_websocket, mock_device_registry
-):
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    mock_unifi_websocket,
+    mock_device_registry,
+) -> None:
     """Test the SSID filter works.
 
     Client will travel from a supported SSID to an unsupported ssid.
@@ -667,6 +707,11 @@ async def test_option_ssid_filter(
     mock_unifi_websocket(message=MessageKey.CLIENT, data=client_on_ssid2)
     await hass.async_block_till_done()
 
+    new_time = dt_util.utcnow() + controller.option_detection_time
+    with patch("homeassistant.util.dt.utcnow", return_value=new_time):
+        async_fire_time_changed(hass, new_time)
+        await hass.async_block_till_done()
+
     # SSID filter marks client as away
     assert hass.states.get("device_tracker.client").state == STATE_NOT_HOME
 
@@ -690,7 +735,7 @@ async def test_option_ssid_filter(
 
     # Time pass to mark client as away
 
-    new_time = dt_util.utcnow() + controller.option_detection_time
+    new_time += controller.option_detection_time
     with patch("homeassistant.util.dt.utcnow", return_value=new_time):
         async_fire_time_changed(hass, new_time)
         await hass.async_block_till_done()
@@ -709,9 +754,7 @@ async def test_option_ssid_filter(
     mock_unifi_websocket(message=MessageKey.CLIENT, data=client_on_ssid2)
     await hass.async_block_till_done()
 
-    new_time = (
-        dt_util.utcnow() + controller.option_detection_time + timedelta(seconds=1)
-    )
+    new_time += controller.option_detection_time
     with patch("homeassistant.util.dt.utcnow", return_value=new_time):
         async_fire_time_changed(hass, new_time)
         await hass.async_block_till_done()
@@ -720,8 +763,11 @@ async def test_option_ssid_filter(
 
 
 async def test_wireless_client_go_wired_issue(
-    hass, aioclient_mock, mock_unifi_websocket, mock_device_registry
-):
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    mock_unifi_websocket,
+    mock_device_registry,
+) -> None:
     """Test the solution to catch wireless device go wired UniFi issue.
 
     UniFi Network has a known issue that when a wireless device goes away it sometimes gets marked as wired.
@@ -745,10 +791,9 @@ async def test_wireless_client_go_wired_issue(
     # Client is wireless
     client_state = hass.states.get("device_tracker.client")
     assert client_state.state == STATE_HOME
-    assert client_state.attributes["is_wired"] is False
 
     # Trigger wired bug
-    client["last_seen"] += 1
+    client["last_seen"] = dt_util.as_timestamp(dt_util.utcnow())
     client["is_wired"] = True
     mock_unifi_websocket(message=MessageKey.CLIENT, data=client)
     await hass.async_block_till_done()
@@ -756,7 +801,6 @@ async def test_wireless_client_go_wired_issue(
     # Wired bug fix keeps client marked as wireless
     client_state = hass.states.get("device_tracker.client")
     assert client_state.state == STATE_HOME
-    assert client_state.attributes["is_wired"] is False
 
     # Pass time
     new_time = dt_util.utcnow() + controller.option_detection_time
@@ -767,7 +811,6 @@ async def test_wireless_client_go_wired_issue(
     # Marked as home according to the timer
     client_state = hass.states.get("device_tracker.client")
     assert client_state.state == STATE_NOT_HOME
-    assert client_state.attributes["is_wired"] is False
 
     # Try to mark client as connected
     client["last_seen"] += 1
@@ -777,7 +820,6 @@ async def test_wireless_client_go_wired_issue(
     # Make sure it don't go online again until wired bug disappears
     client_state = hass.states.get("device_tracker.client")
     assert client_state.state == STATE_NOT_HOME
-    assert client_state.attributes["is_wired"] is False
 
     # Make client wireless
     client["last_seen"] += 1
@@ -788,12 +830,14 @@ async def test_wireless_client_go_wired_issue(
     # Client is no longer affected by wired bug and can be marked online
     client_state = hass.states.get("device_tracker.client")
     assert client_state.state == STATE_HOME
-    assert client_state.attributes["is_wired"] is False
 
 
 async def test_option_ignore_wired_bug(
-    hass, aioclient_mock, mock_unifi_websocket, mock_device_registry
-):
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    mock_unifi_websocket,
+    mock_device_registry,
+) -> None:
     """Test option to ignore wired bug."""
     client = {
         "ap_mac": "00:00:00:00:02:01",
@@ -817,7 +861,6 @@ async def test_option_ignore_wired_bug(
     # Client is wireless
     client_state = hass.states.get("device_tracker.client")
     assert client_state.state == STATE_HOME
-    assert client_state.attributes["is_wired"] is False
 
     # Trigger wired bug
     client["is_wired"] = True
@@ -827,7 +870,6 @@ async def test_option_ignore_wired_bug(
     # Wired bug in effect
     client_state = hass.states.get("device_tracker.client")
     assert client_state.state == STATE_HOME
-    assert client_state.attributes["is_wired"] is True
 
     # pass time
     new_time = dt_util.utcnow() + controller.option_detection_time
@@ -838,7 +880,6 @@ async def test_option_ignore_wired_bug(
     # Timer marks client as away
     client_state = hass.states.get("device_tracker.client")
     assert client_state.state == STATE_NOT_HOME
-    assert client_state.attributes["is_wired"] is True
 
     # Mark client as connected again
     client["last_seen"] += 1
@@ -848,7 +889,6 @@ async def test_option_ignore_wired_bug(
     # Ignoring wired bug allows client to go home again even while affected
     client_state = hass.states.get("device_tracker.client")
     assert client_state.state == STATE_HOME
-    assert client_state.attributes["is_wired"] is True
 
     # Make client wireless
     client["last_seen"] += 1
@@ -859,10 +899,11 @@ async def test_option_ignore_wired_bug(
     # Client is wireless and still connected
     client_state = hass.states.get("device_tracker.client")
     assert client_state.state == STATE_HOME
-    assert client_state.attributes["is_wired"] is False
 
 
-async def test_restoring_client(hass, aioclient_mock, mock_device_registry):
+async def test_restoring_client(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, mock_device_registry
+) -> None:
     """Verify clients are restored from clients_all if they ever was registered to entity registry."""
     client = {
         "hostname": "client",
@@ -916,7 +957,9 @@ async def test_restoring_client(hass, aioclient_mock, mock_device_registry):
     assert not hass.states.get("device_tracker.not_restored")
 
 
-async def test_dont_track_clients(hass, aioclient_mock, mock_device_registry):
+async def test_dont_track_clients(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, mock_device_registry
+) -> None:
     """Test don't track clients config works."""
     wireless_client = {
         "essid": "ssid",
@@ -976,7 +1019,9 @@ async def test_dont_track_clients(hass, aioclient_mock, mock_device_registry):
     assert hass.states.get("device_tracker.device")
 
 
-async def test_dont_track_devices(hass, aioclient_mock, mock_device_registry):
+async def test_dont_track_devices(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, mock_device_registry
+) -> None:
     """Test don't track devices config works."""
     client = {
         "hostname": "client",
@@ -1002,7 +1047,7 @@ async def test_dont_track_devices(hass, aioclient_mock, mock_device_registry):
         "version": "4.0.42.10433",
     }
 
-    await setup_unifi_integration(
+    config_entry = await setup_unifi_integration(
         hass,
         aioclient_mock,
         options={CONF_TRACK_DEVICES: False},
@@ -1014,8 +1059,20 @@ async def test_dont_track_devices(hass, aioclient_mock, mock_device_registry):
     assert hass.states.get("device_tracker.client")
     assert not hass.states.get("device_tracker.device")
 
+    hass.config_entries.async_update_entry(
+        config_entry,
+        options={CONF_TRACK_DEVICES: True},
+    )
+    await hass.async_block_till_done()
 
-async def test_dont_track_wired_clients(hass, aioclient_mock, mock_device_registry):
+    assert len(hass.states.async_entity_ids(TRACKER_DOMAIN)) == 2
+    assert hass.states.get("device_tracker.client")
+    assert hass.states.get("device_tracker.device")
+
+
+async def test_dont_track_wired_clients(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, mock_device_registry
+) -> None:
     """Test don't track wired clients config works."""
     wireless_client = {
         "essid": "ssid",

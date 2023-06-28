@@ -7,7 +7,11 @@ import logging
 from typing import Any
 
 import transmission_rpc
-from transmission_rpc.error import TransmissionError
+from transmission_rpc.error import (
+    TransmissionAuthError,
+    TransmissionConnectError,
+    TransmissionError,
+)
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
@@ -137,14 +141,13 @@ async def get_api(hass, entry):
         _LOGGER.debug("Successfully connected to %s", host)
         return api
 
+    except TransmissionAuthError as error:
+        _LOGGER.error("Credentials for Transmission client are not valid")
+        raise AuthenticationError from error
+    except TransmissionConnectError as error:
+        _LOGGER.error("Connecting to the Transmission client %s failed", host)
+        raise CannotConnect from error
     except TransmissionError as error:
-        if "401: Unauthorized" in str(error):
-            _LOGGER.error("Credentials for Transmission client are not valid")
-            raise AuthenticationError from error
-        if "111: Connection refused" in str(error):
-            _LOGGER.error("Connecting to the Transmission client %s failed", host)
-            raise CannotConnect from error
-
         _LOGGER.error(error)
         raise UnknownError from error
 

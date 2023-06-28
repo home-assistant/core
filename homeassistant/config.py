@@ -61,7 +61,7 @@ from .helpers import (
 )
 from .helpers.entity_values import EntityValues
 from .helpers.typing import ConfigType
-from .loader import Integration, IntegrationNotFound
+from .loader import ComponentProtocol, Integration, IntegrationNotFound
 from .requirements import RequirementsNotFound, async_get_integration_with_requirements
 from .util.package import is_docker_env
 from .util.unit_system import get_unit_system, validate_unit_system
@@ -95,10 +95,6 @@ default_config:
 # Load frontend themes from the themes folder
 frontend:
   themes: !include_dir_merge_named themes
-
-# Text to speech
-tts:
-  - platform: google_translate
 
 automation: !include {AUTOMATION_CONFIG_PATH}
 script: !include {SCRIPT_CONFIG_PATH}
@@ -681,7 +677,7 @@ def _log_pkg_error(package: str, component: str, config: dict, message: str) -> 
     _LOGGER.error(message)
 
 
-def _identify_config_schema(module: ModuleType) -> str | None:
+def _identify_config_schema(module: ComponentProtocol) -> str | None:
     """Extract the schema and identify list or dict based."""
     if not isinstance(module.CONFIG_SCHEMA, vol.Schema):
         return None

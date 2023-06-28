@@ -3,6 +3,8 @@ import socket
 import ssl
 from unittest.mock import patch
 
+import pytest
+
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.cert_expiry.const import DEFAULT_PORT, DOMAIN
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
@@ -12,6 +14,8 @@ from .const import HOST, PORT
 from .helpers import future_timestamp
 
 from tests.common import MockConfigEntry
+
+pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
 
 async def test_user(hass: HomeAssistant) -> None:
@@ -33,9 +37,6 @@ async def test_user(hass: HomeAssistant) -> None:
     assert result["data"][CONF_HOST] == HOST
     assert result["data"][CONF_PORT] == PORT
     assert result["result"].unique_id == f"{HOST}:{PORT}"
-
-    with patch("homeassistant.components.cert_expiry.sensor.async_setup_entry"):
-        await hass.async_block_till_done()
 
 
 async def test_user_with_bad_cert(hass: HomeAssistant) -> None:
@@ -59,9 +60,6 @@ async def test_user_with_bad_cert(hass: HomeAssistant) -> None:
     assert result["data"][CONF_HOST] == HOST
     assert result["data"][CONF_PORT] == PORT
     assert result["result"].unique_id == f"{HOST}:{PORT}"
-
-    with patch("homeassistant.components.cert_expiry.sensor.async_setup_entry"):
-        await hass.async_block_till_done()
 
 
 async def test_import_host_only(hass: HomeAssistant) -> None:

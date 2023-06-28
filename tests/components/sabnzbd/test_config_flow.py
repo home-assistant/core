@@ -1,7 +1,8 @@
 """Define tests for the Sabnzbd config flow."""
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 from pysabnzbd import SabnzbdApiException
+import pytest
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.sabnzbd import DOMAIN
@@ -31,8 +32,10 @@ VALID_CONFIG_OLD = {
     CONF_SSL: False,
 }
 
+pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
-async def test_create_entry(hass: HomeAssistant) -> None:
+
+async def test_create_entry(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     """Test that the user step works."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -43,10 +46,7 @@ async def test_create_entry(hass: HomeAssistant) -> None:
     with patch(
         "homeassistant.components.sabnzbd.sab.SabnzbdApi.check_available",
         return_value=True,
-    ), patch(
-        "homeassistant.components.sabnzbd.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             VALID_CONFIG,

@@ -3,23 +3,24 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Any, TypedDict
+from typing import Any, Literal, TypedDict
 
 from homeassistant.core import Context
 from homeassistant.helpers import intent
 
 
-@dataclass
+@dataclass(slots=True)
 class ConversationInput:
     """User input to be processed."""
 
     text: str
     context: Context
     conversation_id: str | None
+    device_id: str | None
     language: str
 
 
-@dataclass
+@dataclass(slots=True)
 class ConversationResult:
     """Result of async_process."""
 
@@ -48,6 +49,11 @@ class AbstractConversationAgent(ABC):
     def attribution(self) -> Attribution | None:
         """Return the attribution."""
         return None
+
+    @property
+    @abstractmethod
+    def supported_languages(self) -> list[str] | Literal["*"]:
+        """Return a list of supported languages."""
 
     @abstractmethod
     async def async_process(self, user_input: ConversationInput) -> ConversationResult:

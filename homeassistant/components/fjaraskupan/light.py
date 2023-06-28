@@ -32,6 +32,7 @@ class Light(CoordinatorEntity[Coordinator], LightEntity):
     """Light device."""
 
     _attr_has_entity_name = True
+    _attr_name = None
 
     def __init__(
         self,
@@ -50,9 +51,8 @@ class Light(CoordinatorEntity[Coordinator], LightEntity):
         async with self.coordinator.async_connect_and_update() as device:
             if ATTR_BRIGHTNESS in kwargs:
                 await device.send_dim(int(kwargs[ATTR_BRIGHTNESS] * (100.0 / 255.0)))
-            else:
-                if not self.is_on:
-                    await device.send_command(COMMAND_LIGHT_ON_OFF)
+            elif not self.is_on:
+                await device.send_command(COMMAND_LIGHT_ON_OFF)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""

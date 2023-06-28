@@ -19,6 +19,7 @@ from .const import (
     SERVICE_SCAN_CLIENTS,
 )
 from .errors import MediaNotFound
+from .helpers import get_plex_data
 from .models import PlexMediaSearchResult
 from .server import PlexServer
 
@@ -41,7 +42,7 @@ async def async_setup_services(hass: HomeAssistant) -> None:
             " Service calls will still work for now but the service will be removed in"
             " a future release"
         )
-        for server_id in hass.data[DOMAIN][SERVERS]:
+        for server_id in get_plex_data(hass)[SERVERS]:
             async_dispatcher_send(hass, PLEX_UPDATE_PLATFORMS_SIGNAL.format(server_id))
 
     hass.services.async_register(
@@ -84,7 +85,7 @@ def get_plex_server(
     """Retrieve a configured Plex server by name."""
     if DOMAIN not in hass.data:
         raise HomeAssistantError("Plex integration not configured")
-    servers: dict[str, PlexServer] = hass.data[DOMAIN][SERVERS]
+    servers: dict[str, PlexServer] = get_plex_data(hass)[SERVERS]
     if not servers:
         raise HomeAssistantError("No Plex servers available")
 
@@ -144,7 +145,7 @@ def process_plex_payload(
             plex_server = get_plex_server(hass, plex_server_id=server_id)
         else:
             # Handle legacy payloads without server_id in URL host position
-            if plex_url.host == "search":
+            if plex_url.host == "search":  # noqa: PLR5501
                 content = {}
             else:
                 content = int(plex_url.host)  # type: ignore[arg-type]

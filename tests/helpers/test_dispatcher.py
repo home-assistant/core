@@ -131,7 +131,9 @@ async def test_simple_function_multiargs(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.no_fail_on_log_exception
-async def test_callback_exception_gets_logged(hass, caplog):
+async def test_callback_exception_gets_logged(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test exception raised by signal handler."""
 
     @callback
