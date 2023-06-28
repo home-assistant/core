@@ -361,6 +361,7 @@ omit =
     homeassistant/components/fixer/sensor.py
     homeassistant/components/fjaraskupan/__init__.py
     homeassistant/components/fjaraskupan/binary_sensor.py
+    homeassistant/components/fjaraskupan/coordinator.py
     homeassistant/components/fjaraskupan/fan.py
     homeassistant/components/fjaraskupan/light.py
     homeassistant/components/fjaraskupan/number.py
