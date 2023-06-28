@@ -116,7 +116,7 @@ def _mock_homekit(hass, entry, homekit_mode, entity_filter=None, devices=None):
         exclude_accessory_mode=False,
         entity_config={},
         homekit_mode=homekit_mode,
-        advertise_ip=None,
+        advertise_ips=None,
         entry_id=entry.entry_id,
         entry_title=entry.title,
         devices=devices,
@@ -170,7 +170,7 @@ async def test_setup_min(hass: HomeAssistant, mock_async_zeroconf: None) -> None
         ANY,
         {},
         HOMEKIT_MODE_BRIDGE,
-        "1.2.3.4",
+        ["1.2.3.4", "10.10.10.10"],
         entry.entry_id,
         entry.title,
         devices=[],
@@ -212,7 +212,7 @@ async def test_removing_entry(
         ANY,
         {},
         HOMEKIT_MODE_BRIDGE,
-        "1.2.3.4",
+        ["1.2.3.4", "10.10.10.10"],
         entry.entry_id,
         entry.title,
         devices=[],
@@ -245,7 +245,7 @@ async def test_homekit_setup(
         {},
         {},
         HOMEKIT_MODE_BRIDGE,
-        advertise_ip=None,
+        advertise_ips=None,
         entry_id=entry.entry_id,
         entry_title=entry.title,
     )
@@ -322,7 +322,7 @@ async def test_homekit_setup_ip_address(
     )
 
 
-async def test_homekit_setup_advertise_ip(
+async def test_homekit_setup_advertise_ips(
     hass: HomeAssistant, hk_driver, mock_async_zeroconf: None
 ) -> None:
     """Test setup with given IP address to advertise."""
@@ -1485,7 +1485,7 @@ async def test_yaml_updates_update_config_entry_for_name(
         ANY,
         {},
         HOMEKIT_MODE_BRIDGE,
-        "1.2.3.4",
+        ["1.2.3.4", "10.10.10.10"],
         entry.entry_id,
         entry.title,
         devices=[],
@@ -1858,7 +1858,7 @@ async def test_reload(hass: HomeAssistant, mock_async_zeroconf: None) -> None:
         False,
         {},
         HOMEKIT_MODE_BRIDGE,
-        "1.2.3.4",
+        ["1.2.3.4", "10.10.10.10"],
         entry.entry_id,
         entry.title,
         devices=[],
@@ -1893,7 +1893,7 @@ async def test_reload(hass: HomeAssistant, mock_async_zeroconf: None) -> None:
         False,
         {},
         HOMEKIT_MODE_BRIDGE,
-        "1.2.3.4",
+        ["1.2.3.4", "10.10.10.10"],
         entry.entry_id,
         entry.title,
         devices=[],

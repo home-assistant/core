@@ -26,6 +26,7 @@ async def async_setup_entry(
 class SwitchBotLock(SwitchbotEntity, LockEntity):
     """Representation of a Switchbot lock."""
 
+    _attr_translation_key = "lock"
     _device: switchbot.SwitchbotLock
 
     def __init__(self, coordinator: SwitchbotDataUpdateCoordinator) -> None:

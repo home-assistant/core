@@ -55,7 +55,11 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import EsphomeEntity, esphome_state_property, platform_async_setup_entry
+from .entity import (
+    EsphomeEntity,
+    esphome_state_property,
+    platform_async_setup_entry,
+)
 from .enum_mapper import EsphomeEnumMapper
 
 FAN_QUIET = "quiet"
@@ -69,7 +73,6 @@ async def async_setup_entry(
         hass,
         entry,
         async_add_entities,
-        component_key="climate",
         info_type=ClimateInfo,
         entity_type=EsphomeClimateEntity,
         state_type=ClimateState,

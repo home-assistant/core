@@ -19,6 +19,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import Context, HomeAssistant, HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity, entity_registry as er
+from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.helpers.typing import UNDEFINED
 
 from tests.common import (
@@ -982,6 +983,9 @@ async def _test_friendly_name(
     state = hass.states.async_all()[0]
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == expected_friendly_name
     assert (expected_warning in caplog.text) is warn_implicit_name
+
+    await async_update_entity(hass, ent.entity_id)
+    assert state.attributes.get(ATTR_FRIENDLY_NAME) == expected_friendly_name
 
 
 @pytest.mark.parametrize(
