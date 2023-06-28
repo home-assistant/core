@@ -191,7 +191,6 @@ class MatterClimate(MatterEntity, ClimateEntity):
             clusters.Thermostat.Attributes.LocalTemperature
         ):
             self._attr_current_temperature = value / 100
-            print("current temp", self._attr_current_temperature)
 
         match self.hvac_mode:
             case HVACMode.COOL:
@@ -199,13 +198,11 @@ class MatterClimate(MatterEntity, ClimateEntity):
                     clusters.Thermostat.Attributes.OccupiedCoolingSetpoint
                 )
                 self._attr_target_temperature = target_temp
-                print("target temp", self._attr_target_temperature)
             case HVACMode.HEAT:
                 target_temp = self.get_matter_attribute_value(
                     clusters.Thermostat.Attributes.OccupiedHeatingSetpoint
                 )
                 self._attr_target_temperature = target_temp
-                print("target temp", self._attr_target_temperature)
             case HVACMode.AUTO:
                 # When the system mode is set to "auto," there is no target temperature; instead, there is a target temperature low and high.
                 pass
