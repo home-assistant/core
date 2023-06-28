@@ -293,20 +293,15 @@ class ESPHomeManager:
             event_data = event.data
             new_state: State | None = event_data.get("new_state")
             old_state: State | None = event_data.get("old_state")
+
+            if new_state is None or old_state is None:
+                return
+
             # Only communicate changes to the state or attribute tracked
-            if new_state is None or (
-                old_state is not None
-                and new_state
-                and (
-                    (not attribute and old_state.state == new_state.state)
-                    or (
-                        attribute
-                        and attribute in old_state.attributes
-                        and attribute in new_state.attributes
-                        and old_state.attributes[attribute]
-                        == new_state.attributes[attribute]
-                    )
-                )
+            if (not attribute and old_state.state == new_state.state) or (
+                attribute
+                and old_state.attributes.get(attribute)
+                == new_state.attributes.get(attribute)
             ):
                 return
 
