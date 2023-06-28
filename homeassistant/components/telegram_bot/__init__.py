@@ -532,7 +532,7 @@ class TelegramNotificationService:
                 for key in row_keyboard.split(","):
                     if ":/" in key:
                         # check if command or URL
-                        if "https://" in key:
+                        if key.startswith("https://"):
                             label = key.split(",")[0]
                             url = key[len(label) + 1 :]
                             buttons.append(InlineKeyboardButton(label, url=url))
@@ -550,7 +550,7 @@ class TelegramNotificationService:
             elif isinstance(row_keyboard, list):
                 for entry in row_keyboard:
                     text_btn, data_btn = entry
-                    if "https://" in data_btn:
+                    if data_btn.startswith("https://"):
                         buttons.append(InlineKeyboardButton(text_btn, url=data_btn))
                     else:
                         buttons.append(
