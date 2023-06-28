@@ -65,15 +65,12 @@ def async_setup_legacy(
             return
 
         try:
-            if hasattr(platform, "async_get_engine"):
-                provider = await platform.async_get_engine(
-                    hass, p_config, discovery_info
-                )
+            provider = await platform.async_get_engine(hass, p_config, discovery_info)
 
-                provider.name = p_type
-                provider.hass = hass
+            provider.name = p_type
+            provider.hass = hass
 
-                providers[provider.name] = provider
+            providers[provider.name] = provider
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Error setting up platform: %s", p_type)
             return
