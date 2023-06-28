@@ -190,13 +190,7 @@ class ESPHomeManager:
     @callback
     def async_on_service_call(self, service: HomeassistantServiceCall) -> None:
         """Call service when user automation in ESPHome config is triggered."""
-        entry_data = self.entry_data
         hass = self.hass
-        host = self.host
-        entry = self.entry
-        device_id = self.device_id
-        device_info = entry_data.device_info
-        assert device_info is not None
         domain, service_name = service.service.split(".", 1)
         service_data = service.data
 
@@ -210,15 +204,16 @@ class ESPHomeManager:
                     template.render_complex(data_template, service.variables)
                 )
             except TemplateError as ex:
-                _LOGGER.error("Error rendering data template for %s: %s", host, ex)
+                _LOGGER.error("Error rendering data template for %s: %s", self.host, ex)
                 return
 
         if service.is_event:
+            device_id = self.device_id
             # ESPHome uses service call packet for both events and service calls
             # Ensure the user can only send events of form 'esphome.xyz'
             if domain != "esphome":
                 _LOGGER.error(
-                    "Can only generate events under esphome domain! (%s)", host
+                    "Can only generate events under esphome domain! (%s)", self.host
                 )
                 return
 
@@ -235,13 +230,17 @@ class ESPHomeManager:
                     **service_data,
                 },
             )
-        elif entry.options.get(CONF_ALLOW_SERVICE_CALLS, DEFAULT_ALLOW_SERVICE_CALLS):
+        elif self.entry.options.get(
+            CONF_ALLOW_SERVICE_CALLS, DEFAULT_ALLOW_SERVICE_CALLS
+        ):
             hass.async_create_task(
                 hass.services.async_call(
                     domain, service_name, service_data, blocking=True
                 )
             )
         else:
+            device_info = self.entry_data.device_info
+            assert device_info is not None
             async_create_issue(
                 hass,
                 DOMAIN,
@@ -288,40 +287,36 @@ class ESPHomeManager:
     ) -> None:
         """Subscribe and forward states for requested entities."""
         hass = self.hass
-        entry_data = self.entry_data
 
         async def send_home_assistant_state_event(event: Event) -> None:
             """Forward Home Assistant states updates to ESPHome."""
-
+            event_data = event.data
             # Only communicate changes to the state or attribute tracked
-            if event.data.get("new_state") is None or (
-                event.data.get("old_state") is not None
-                and "new_state" in event.data
+            if (new_state := event_data.get("new_state")) is None or (
+                (old_state := event_data.get("old_state")) is not None
+                and "new_state" in event_data
                 and (
-                    (
-                        not attribute
-                        and event.data["old_state"].state
-                        == event.data["new_state"].state
-                    )
+                    (not attribute and old_state.state == new_state.state)
                     or (
                         attribute
-                        and attribute in event.data["old_state"].attributes
-                        and attribute in event.data["new_state"].attributes
-                        and event.data["old_state"].attributes[attribute]
-                        == event.data["new_state"].attributes[attribute]
+                        and attribute in old_state.attributes
+                        and attribute in new_state.attributes
+                        and old_state.attributes[attribute]
+                        == new_state.attributes[attribute]
                     )
                 )
             ):
                 return
 
             await self._send_home_assistant_state(
-                event.data["entity_id"], attribute, event.data.get("new_state")
+                event.data["entity_id"], attribute, new_state
             )
 
-        unsub = async_track_state_change_event(
-            hass, [entity_id], send_home_assistant_state_event
+        self.entry_data.disconnect_callbacks.append(
+            async_track_state_change_event(
+                hass, [entity_id], send_home_assistant_state_event
+            )
         )
-        entry_data.disconnect_callbacks.append(unsub)
 
         # Send initial state
         hass.async_create_task(
