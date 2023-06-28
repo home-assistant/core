@@ -2,14 +2,12 @@
   "config": {
     "step": {
       "user": {
-        "title": "ecobee API key",
         "description": "Please enter the API key obtained from ecobee.com.",
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]"
         }
       },
       "authorize": {
-        "title": "Authorize app on ecobee.com",
         "description": "Please authorize this app at https://www.ecobee.com/consumerportal/index.html with PIN code:\n\n{pin}\n\nThen, press Submit."
       }
     },
