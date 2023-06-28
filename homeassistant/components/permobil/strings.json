@@ -1,0 +1,35 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Permobil Email",
+        "description": "Enter your email",
+        "data": {
+          "email": "Your permobil email"
+        }
+      },
+      "email_code": {
+        "title": "Enter Code",
+        "description": "Enter the code that was sent to your email.",
+        "data": {
+          "code": "Email code"
+        }
+      },
+      "region": {
+        "title": "Select Region",
+        "description": "Select the region of your account.",
+        "data": {
+          "code": "Region"
+        }
+      }
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "cannot_connect": "Failed to connect",
+      "invalid_auth": "Invalid authentication",
+      "unknown": "Unexpected error"
+    }
+  }
+}

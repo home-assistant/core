@@ -333,6 +333,7 @@ FLOWS = {
         "p1_monitor",
         "panasonic_viera",
         "peco",
+        "permobil",
         "philips_js",
         "pi_hole",
         "picnic",

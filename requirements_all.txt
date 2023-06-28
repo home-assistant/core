@@ -1228,6 +1228,9 @@ mutagen==1.46.0
 # homeassistant.components.mutesync
 mutesync==0.0.1
 
+# homeassistant.components.permobil
+mypermobil==0.1.1
+
 # homeassistant.components.nad
 nad-receiver==0.3.0
 
