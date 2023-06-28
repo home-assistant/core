@@ -90,6 +90,6 @@ class FritzGuestWifiQRImage(FritzBoxBaseEntity, ImageEntity):
             self._current_qr_bytes = qr_bytes
             self.async_write_ha_state()
 
-    def image(self) -> bytes | None:
+    async def async_image(self) -> bytes | None:
         """Return bytes of image."""
         return self._current_qr_bytes
