@@ -861,7 +861,7 @@ gios==3.1.0
 gitterpy==0.1.7
 
 # homeassistant.components.glances
-glances-api==0.4.2
+glances-api==0.4.3
 
 # homeassistant.components.goalzero
 goalzero==0.2.1
