@@ -63,7 +63,7 @@ MAC_AIRPLAY_SERVICE = zeroconf.ZeroconfServiceInfo(
     port=None,
     type="_airplay._tcp.local.",
     name="AABBCCDDEEFF@MacbookAir._airplay._tcp.local.",
-    properties={"model": "Mac14,9"},
+    properties={"model": "Mac14,9", "deviceid": "AA:BB:CC:DD:EE:FF"},
 )
 
 
