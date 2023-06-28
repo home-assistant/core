@@ -254,6 +254,7 @@ FLOWS = {
         "locative",
         "logi_circle",
         "lookin",
+        "loqed",
         "luftdaten",
         "lutron_caseta",
         "lyric",
