@@ -124,6 +124,7 @@ class MatterClimate(MatterEntity, ClimateEntity):
         if value := self.get_matter_attribute_value(
             clusters.Thermostat.Attributes.LocalTemperature
         ):
+            assert isinstance(value, float)
             return value / 100
         return None
 
@@ -134,29 +135,49 @@ class MatterClimate(MatterEntity, ClimateEntity):
             if value := self.get_matter_attribute_value(
                 clusters.Thermostat.Attributes.OccupiedCoolingSetpoint
             ):
+                assert isinstance(value, float)
                 return value / 100
         if value := self.get_matter_attribute_value(
             clusters.Thermostat.Attributes.OccupiedHeatingSetpoint
         ):
+            assert isinstance(value, float)
             return value / 100
         return None
 
-    async def async_set_temperature(self, **kwargs) -> None:
+    async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         target_temp: float | None = kwargs.get(ATTR_TEMPERATURE)
-        if target_temp is None:
+
+        if target_temp is None or self.target_temperature is None:
             return
+
         temp_diff = int((target_temp - self.target_temperature) * 10)
-        command = clusters.Thermostat.Commands.SetpointRaiseLower(2, temp_diff)
+
+        match self.hvac_mode:
+            case HVACMode.HEAT:
+                command = clusters.Thermostat.Commands.SetpointRaiseLower(
+                    clusters.Thermostat.Enums.SetpointAdjustMode.kHeatSetpoint,
+                    temp_diff,
+                )
+            case HVACMode.COOL:
+                command = clusters.Thermostat.Commands.SetpointRaiseLower(
+                    clusters.Thermostat.Enums.SetpointAdjustMode.kCoolSetpoint,
+                    temp_diff,
+                )
+            case HVACMode.AUTO:
+                # not sure how to handle this when system is in auto mode
+                command = clusters.Thermostat.Commands.SetpointRaiseLower(
+                    clusters.Thermostat.Enums.SetpointAdjustMode.kHeatAndCoolSetpoints,
+                    temp_diff,
+                )
+            case _:
+                return
+
         await self.matter_client.send_device_command(
             node_id=self._endpoint.node.node_id,
             endpoint_id=self._endpoint.endpoint_id,
             command=command,
         )
-        # we need to optimistically update the state because there is no attribute
-        # updated event after this command. at least not on my test device
-        self._endpoint.set_attribute_value("4/513/18", int(target_temp * 100))
-        self.async_write_ha_state()
 
     @callback
     def _update_from_device(self) -> None:
@@ -165,6 +186,31 @@ class MatterClimate(MatterEntity, ClimateEntity):
         self.features = self.get_matter_attribute_value(
             clusters.Thermostat.Attributes.FeatureMap
         )
+
+        if value := self.get_matter_attribute_value(
+            clusters.Thermostat.Attributes.LocalTemperature
+        ):
+            self._attr_current_temperature = value / 100
+            print("current temp", self._attr_current_temperature)
+
+        match self.hvac_mode:
+            case HVACMode.COOL:
+                target_temp = self.get_matter_attribute_value(
+                    clusters.Thermostat.Attributes.OccupiedCoolingSetpoint
+                )
+                self._attr_target_temperature = target_temp
+                print("target temp", self._attr_target_temperature)
+            case HVACMode.HEAT:
+                target_temp = self.get_matter_attribute_value(
+                    clusters.Thermostat.Attributes.OccupiedHeatingSetpoint
+                )
+                self._attr_target_temperature = target_temp
+                print("target temp", self._attr_target_temperature)
+            case HVACMode.AUTO:
+                # When the system mode is set to "auto," there is no target temperature; instead, there is a target temperature low and high.
+                pass
+            case _:
+                pass
 
 
 # Discovery schema(s) to map Matter Attributes to HA entities
