@@ -367,7 +367,6 @@ async def websocket_hass_agent_debug(
     )
 
 
-@bind_hass
 def _get_debug_targets(
     hass: HomeAssistant,
     result: RecognizeResult,
