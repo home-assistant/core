@@ -713,7 +713,7 @@ class DefaultAgent(AbstractConversationAgent):
 
         response = intent.IntentResponse(language=self.hass.config.language)
         response.response_type = intent.IntentResponseType.ACTION_DONE
-        response.async_set_speech(speech or "Done")
+        response.async_set_speech(speech or "")
 
         return ConversationResult(response=response)
 
