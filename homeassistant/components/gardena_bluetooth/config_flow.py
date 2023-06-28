@@ -4,22 +4,21 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from bleak import BleakClient
-from bleak.exc import BleakError
-from gardena_bluetooth import CharacteristicNotFound, read_char
+from gardena_bluetooth.client import Client
 from gardena_bluetooth.const import DeviceInformation, ScanService
+from gardena_bluetooth.exceptions import CharacteristicNotFound, CommunicationFailure
 from gardena_bluetooth.parse import ManufacturerData, ProductGroup
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components.bluetooth import (
     BluetoothServiceInfo,
-    async_ble_device_from_address,
     async_discovered_service_info,
 )
 from homeassistant.const import CONF_ADDRESS
 from homeassistant.data_entry_flow import AbortFlow, FlowResult
 
+from . import get_connection
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -60,20 +59,16 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_read_data(self):
         """Try to connect to device and extract information."""
-        assert self.address
-        ble_device = async_ble_device_from_address(
-            self.hass, self.address, connectable=True
-        )
-        assert ble_device
-
+        client = Client(get_connection(self.hass, self.address))
         try:
-            async with BleakClient(ble_device) as client:
-                model = await read_char(client, DeviceInformation.model_number)
-                _LOGGER.debug("Found device with model: %s", model)
-        except (CharacteristicNotFound, BleakError) as exception:
+            model = await client.read_char(DeviceInformation.model_number)
+            _LOGGER.debug("Found device with model: %s", model)
+        except (CharacteristicNotFound, CommunicationFailure) as exception:
             raise AbortFlow(
                 "cannot_connect", description_placeholders={"error": str(exception)}
             ) from exception
+        finally:
+            await client.disconnect()
 
         return {CONF_ADDRESS: self.address}
 

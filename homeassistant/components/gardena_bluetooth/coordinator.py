@@ -1,4 +1,4 @@
-"""Provides the switchbot DataUpdateCoordinator."""
+"""Provides the DataUpdateCoordinator."""
 from __future__ import annotations
 
 from datetime import timedelta
@@ -6,9 +6,8 @@ import logging
 from typing import TYPE_CHECKING, Any
 
 from bleak.exc import BleakError
-from gardena_bluetooth import read_char_raw, write_char
-from gardena_bluetooth.client import CachedClient
-from gardena_bluetooth.exceptions import CharacteristicNoAccess
+from gardena_bluetooth.client import Client
+from gardena_bluetooth.exceptions import CharacteristicNoAccess, CommunicationFailure
 from gardena_bluetooth.parse import Characteristic, CharacteristicType
 
 from homeassistant.components import bluetooth
@@ -28,10 +27,6 @@ SCAN_INTERVAL = timedelta(seconds=60)
 LOGGER = logging.getLogger(__name__)
 
 
-class DeviceUnavailable(UpdateFailed, HomeAssistantError):
-    """Raised if device can't be found."""
-
-
 class Coordinator(DataUpdateCoordinator[dict[str, bytes]]):
     """Class to manage fetching data."""
 
@@ -39,7 +34,7 @@ class Coordinator(DataUpdateCoordinator[dict[str, bytes]]):
         self,
         hass: HomeAssistant,
         logger: logging.Logger,
-        client: CachedClient,
+        client: Client,
         characteristics: set[str],
         device_info: DeviceInfo,
         address: str,
@@ -71,19 +66,15 @@ class Coordinator(DataUpdateCoordinator[dict[str, bytes]]):
             return {}
 
         data: dict[str, bytes] = {}
-        try:
-            async with self.client() as client:
-                for uuid in uuids:
-                    try:
-                        data[uuid] = await read_char_raw(client, uuid)
-                    except CharacteristicNoAccess as exception:
-                        LOGGER.debug(
-                            "Unable to get data for %s due to %s", uuid, exception
-                        )
-        except BleakError as exception:
-            raise UpdateFailed(
-                f"Unable to update data for {uuid} due to {exception}"
-            ) from exception
+        for uuid in uuids:
+            try:
+                data[uuid] = await self.client.read_char_raw(uuid)
+            except CharacteristicNoAccess as exception:
+                LOGGER.debug("Unable to get data for %s due to %s", uuid, exception)
+            except CommunicationFailure as exception:
+                raise UpdateFailed(
+                    f"Unable to update data for {uuid} due to {exception}"
+                ) from exception
         return data
 
     def read_cached(
@@ -99,8 +90,7 @@ class Coordinator(DataUpdateCoordinator[dict[str, bytes]]):
     ) -> None:
         """Write characteristic to device."""
         try:
-            async with self.client() as client:
-                await write_char(client, char, value)
+            await self.client.write_char(char, value)
         except (CharacteristicNoAccess, BleakError) as exception:
             raise HomeAssistantError(
                 f"Unable to write characteristic {char} dur to {exception}"

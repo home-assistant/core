@@ -65,9 +65,7 @@ async def test_failed_connect(
     )
     assert result == snapshot
 
-    mock_client.read_gatt_char.side_effect = CharacteristicNotFound(
-        "something went wrong"
-    )
+    mock_client.read_char.side_effect = CharacteristicNotFound("something went wrong")
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
