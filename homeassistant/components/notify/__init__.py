@@ -19,7 +19,6 @@ from .const import (  # noqa: F401
     ATTR_TITLE,
     DOMAIN,
     NOTIFY_SERVICE_SCHEMA,
-    PERSISTENT_NOTIFICATION_SERVICE_SCHEMA,
     SERVICE_NOTIFY,
     SERVICE_PERSISTENT_NOTIFICATION,
 )
@@ -70,13 +69,19 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             title_tpl.hass = hass
             title = title_tpl.async_render(parse_result=False)
 
-        pn.async_create(hass, message.async_render(parse_result=False), title)
+        notification_id = None
+        if data := service.data.get(ATTR_DATA):
+            notification_id = data.get(pn.ATTR_NOTIFICATION_ID)
+
+        pn.async_create(
+            hass, message.async_render(parse_result=False), title, notification_id
+        )
 
     hass.services.async_register(
         DOMAIN,
         SERVICE_PERSISTENT_NOTIFICATION,
         persistent_notification,
-        schema=PERSISTENT_NOTIFICATION_SERVICE_SCHEMA,
+        schema=NOTIFY_SERVICE_SCHEMA,
     )
 
     return True

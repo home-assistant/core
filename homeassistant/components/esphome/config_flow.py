@@ -20,14 +20,19 @@ import voluptuous as vol
 
 from homeassistant.components import dhcp, zeroconf
 from homeassistant.components.hassio import HassioServiceInfo
-from homeassistant.config_entries import ConfigEntry, ConfigFlow
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.device_registry import format_mac
 
 from . import CONF_DEVICE_NAME, CONF_NOISE_PSK
-from .const import DOMAIN
+from .const import (
+    CONF_ALLOW_SERVICE_CALLS,
+    DEFAULT_ALLOW_SERVICE_CALLS,
+    DEFAULT_NEW_CONFIG_ALLOW_ALLOW_SERVICE_CALLS,
+    DOMAIN,
+)
 from .dashboard import async_get_dashboard, async_set_dashboard_info
 
 ERROR_REQUIRES_ENCRYPTION_KEY = "requires_encryption_key"
@@ -237,6 +242,9 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
             CONF_NOISE_PSK: self._noise_psk or "",
             CONF_DEVICE_NAME: self._device_name,
         }
+        config_options = {
+            CONF_ALLOW_SERVICE_CALLS: DEFAULT_NEW_CONFIG_ALLOW_ALLOW_SERVICE_CALLS,
+        }
         if self._reauth_entry:
             entry = self._reauth_entry
             self.hass.config_entries.async_update_entry(
@@ -253,6 +261,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         return self.async_create_entry(
             title=self._name,
             data=config_data,
+            options=config_options,
         )
 
     async def async_step_encryption_key(
@@ -388,3 +397,38 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
 
         self._noise_psk = noise_psk
         return True
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(
+        config_entry: ConfigEntry,
+    ) -> OptionsFlowHandler:
+        """Get the options flow for this handler."""
+        return OptionsFlowHandler(config_entry)
+
+
+class OptionsFlowHandler(OptionsFlow):
+    """Handle a option flow for esphome."""
+
+    def __init__(self, config_entry: ConfigEntry) -> None:
+        """Initialize options flow."""
+        self.config_entry = config_entry
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Handle options flow."""
+        if user_input is not None:
+            return self.async_create_entry(title="", data=user_input)
+
+        data_schema = vol.Schema(
+            {
+                vol.Required(
+                    CONF_ALLOW_SERVICE_CALLS,
+                    default=self.config_entry.options.get(
+                        CONF_ALLOW_SERVICE_CALLS, DEFAULT_ALLOW_SERVICE_CALLS
+                    ),
+                ): bool,
+            }
+        )
+        return self.async_show_form(step_id="init", data_schema=data_schema)
