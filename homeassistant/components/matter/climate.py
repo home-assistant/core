@@ -115,20 +115,6 @@ class MatterClimate(MatterEntity, ClimateEntity):
         return None
 
     @property
-    def current_humidity(self) -> int | None:
-        """Return the current humidity level (if supported)."""
-
-    @property
-    def current_temperature(self) -> float | None:
-        """Return the current temperature."""
-        if value := self.get_matter_attribute_value(
-            clusters.Thermostat.Attributes.LocalTemperature
-        ):
-            assert isinstance(value, float)
-            return value / 100
-        return None
-
-    @property
     def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         if self.hvac_mode == HVACMode.COOL:
