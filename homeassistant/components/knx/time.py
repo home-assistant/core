@@ -75,13 +75,14 @@ class KNXTime(KnxEntity, TimeEntity, RestoreEntity):
     async def async_added_to_hass(self) -> None:
         """Restore last state."""
         await super().async_added_to_hass()
-        if not self._device.remote_value.readable and (
-            last_state := await self.async_get_last_state()
+        if (
+            not self._device.remote_value.readable
+            and (last_state := await self.async_get_last_state()) is not None
+            and last_state.state not in (STATE_UNKNOWN, STATE_UNAVAILABLE)
         ):
-            if last_state.state not in (STATE_UNKNOWN, STATE_UNAVAILABLE):
-                self._device.remote_value.value = time_time.strptime(
-                    last_state.state, _TIME_TRANSLATION_FORMAT
-                )
+            self._device.remote_value.value = time_time.strptime(
+                last_state.state, _TIME_TRANSLATION_FORMAT
+            )
 
     @property
     def native_value(self) -> dt_time | None:
