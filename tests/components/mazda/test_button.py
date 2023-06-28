@@ -75,6 +75,31 @@ async def test_button_setup_electric_vehicle(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
+    ("electric_vehicle", "entity_id_suffix"),
+    [
+        (True, "start_engine"),
+        (True, "stop_engine"),
+        (True, "turn_on_hazard_lights"),
+        (True, "turn_off_hazard_lights"),
+        (False, "refresh_status"),
+    ],
+)
+async def test_button_not_created(
+    hass: HomeAssistant, electric_vehicle, entity_id_suffix
+) -> None:
+    """Test that button entities are not created when they should not be."""
+    await init_integration(hass, electric_vehicle=electric_vehicle)
+
+    entity_registry = er.async_get(hass)
+
+    entity_id = f"button.my_mazda3_{entity_id_suffix}"
+    entry = entity_registry.async_get(entity_id)
+    assert entry is None
+    state = hass.states.get(entity_id)
+    assert state is None
+
+
+@pytest.mark.parametrize(
     ("electric_vehicle", "entity_id_suffix", "api_method_name"),
     [
         (False, "start_engine", "start_engine"),
