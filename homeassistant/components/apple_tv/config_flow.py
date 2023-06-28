@@ -293,6 +293,8 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="no_devices_found")
         except DeviceAlreadyConfigured:
             return self.async_abort(reason="already_configured")
+        except AbortFlow:
+            raise
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected exception")
             return self.async_abort(reason="unknown")
