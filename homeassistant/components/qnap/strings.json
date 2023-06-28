@@ -30,6 +30,42 @@
       },
       "cpu_temp": {
         "name": "CPU Temperature"
+      },
+      "cpu_usage": {
+        "name": "CPU Usage"
+      },
+      "memory_free": {
+        "name": "Memory Available"
+      },
+      "memory_used": {
+        "name": "Memory Used"
+      },
+      "memory_percent_used": {
+        "name": "Memory Usage"
+      },
+      "network_link_status": {
+        "name": "Network Link"
+      },
+      "network_tx": {
+        "name": "Network Up"
+      },
+      "network_rx": {
+        "name": "Network Down"
+      },
+      "drive_smart_status": {
+        "name": "SMART Status"
+      },
+      "drive_temp": {
+        "name": "Temperature"
+      },
+      "volume_size_used": {
+        "name": "Used Space"
+      },
+      "volume_size_free": {
+        "name": "Free Space"
+      },
+      "volume_percentage_used": {
+        "name": "Volume Used"
       }
     }
   }
