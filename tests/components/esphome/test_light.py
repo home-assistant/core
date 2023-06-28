@@ -18,6 +18,7 @@ from homeassistant.components.light import (
     ATTR_COLOR_TEMP_KELVIN,
     ATTR_EFFECT,
     ATTR_EFFECT_LIST,
+    ATTR_FLASH,
     ATTR_HS_COLOR,
     ATTR_MAX_COLOR_TEMP_KELVIN,
     ATTR_MAX_MIREDS,
@@ -29,6 +30,8 @@ from homeassistant.components.light import (
     ATTR_SUPPORTED_COLOR_MODES,
     ATTR_TRANSITION,
     DOMAIN as LIGHT_DOMAIN,
+    FLASH_LONG,
+    FLASH_SHORT,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_ON,
@@ -143,6 +146,53 @@ async def test_light_brightness(
     )
     mock_client.light_command.assert_has_calls(
         [call(key=1, state=False, transition_length=2.0)]
+    )
+    mock_client.light_command.reset_mock()
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: "light.test_my_light", ATTR_FLASH: FLASH_LONG},
+        blocking=True,
+    )
+    mock_client.light_command.assert_has_calls(
+        [call(key=1, state=False, flash_length=10.0)]
+    )
+    mock_client.light_command.reset_mock()
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: "light.test_my_light", ATTR_TRANSITION: 2},
+        blocking=True,
+    )
+    mock_client.light_command.assert_has_calls(
+        [
+            call(
+                key=1,
+                state=True,
+                transition_length=2.0,
+                color_mode=LightColorCapability.BRIGHTNESS,
+            )
+        ]
+    )
+    mock_client.light_command.reset_mock()
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: "light.test_my_light", ATTR_FLASH: FLASH_SHORT},
+        blocking=True,
+    )
+    mock_client.light_command.assert_has_calls(
+        [
+            call(
+                key=1,
+                state=True,
+                flash_length=2.0,
+                color_mode=LightColorCapability.BRIGHTNESS,
+            )
+        ]
     )
     mock_client.light_command.reset_mock()
 
