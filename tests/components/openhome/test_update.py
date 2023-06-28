@@ -169,4 +169,4 @@ async def test_firmware_update_not_required(hass: HomeAssistant):
             {ATTR_ENTITY_ID: "update.friendly_name_firmware_update"},
             blocking=True,
         )
-        update_firmware.assert_not_called()
+    update_firmware.assert_not_called()

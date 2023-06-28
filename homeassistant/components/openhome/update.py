@@ -48,20 +48,11 @@ class OpenhomeUpdateEntity(UpdateEntity):
     _attr_device_class = UpdateDeviceClass.FIRMWARE
     _attr_supported_features = UpdateEntityFeature.INSTALL
     _attr_has_entity_name = True
-    _attr_name = "Firmware Update"
 
     def __init__(self, device):
         """Initialize a Linn DS update entity."""
         self._device = device
-        self._attr_attr_installed_version = None
-        self._attr_latest_version = None
-        self._attr_release_summary = None
-        self._attr_release_url = None
-
-    @property
-    def unique_id(self):
-        """Return a unique ID."""
-        return f"{self._device.uuid()}-update"
+        self._attr_unique_id = f"{device.uuid()}-update"
 
     @property
     def device_info(self):
@@ -80,26 +71,27 @@ class OpenhomeUpdateEntity(UpdateEntity):
 
         software_status = await self._device.software_status()
 
-        self._attr_installed_version = None
-        self._attr_latest_version = None
-        self._attr_release_summary = None
-        self._attr_release_url = None
+        if not software_status:
+            self._attr_installed_version = None
+            self._attr_latest_version = None
+            self._attr_release_summary = None
+            self._attr_release_url = None
+            return
 
-        if software_status:
-            self._attr_installed_version = software_status["current_software"][
-                "version"
+        self._attr_installed_version = software_status["current_software"][
+            "version"
+        ]
+
+        if software_status["status"] == "update_available":
+            self._attr_latest_version = software_status["update_info"]["updates"][
+                0
+            ]["version"]
+            self._attr_release_summary = software_status["update_info"]["updates"][
+                0
+            ]["description"]
+            self._attr_release_url = software_status["update_info"][
+                "releasenotesuri"
             ]
-
-            if software_status["status"] == "update_available":
-                self._attr_latest_version = software_status["update_info"]["updates"][
-                    0
-                ]["version"]
-                self._attr_release_summary = software_status["update_info"]["updates"][
-                    0
-                ]["description"]
-                self._attr_release_url = software_status["update_info"][
-                    "releasenotesuri"
-                ]
 
     async def async_install(
         self, version: str | None, backup: bool, **kwargs: Any
