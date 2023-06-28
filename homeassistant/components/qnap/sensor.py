@@ -88,7 +88,6 @@ _CPU_MON_COND: tuple[SensorEntityDescription, ...] = (
     ),
     SensorEntityDescription(
         translation_key="cpu_usage",
-        name="CPU Usage",
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:chip",
         state_class=SensorStateClass.MEASUREMENT,
@@ -97,7 +96,6 @@ _CPU_MON_COND: tuple[SensorEntityDescription, ...] = (
 _MEMORY_MON_COND: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         translation_key="memory_free",
-        name="Memory Available",
         native_unit_of_measurement=UnitOfInformation.GIBIBYTES,
         device_class=SensorDeviceClass.DATA_SIZE,
         icon="mdi:memory",
@@ -106,7 +104,6 @@ _MEMORY_MON_COND: tuple[SensorEntityDescription, ...] = (
     ),
     SensorEntityDescription(
         translation_key="memory_used",
-        name="Memory Used",
         native_unit_of_measurement=UnitOfInformation.GIBIBYTES,
         device_class=SensorDeviceClass.DATA_SIZE,
         icon="mdi:memory",
@@ -115,7 +112,6 @@ _MEMORY_MON_COND: tuple[SensorEntityDescription, ...] = (
     ),
     SensorEntityDescription(
         translation_key="memory_percent_used",
-        name="Memory Usage",
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:memory",
         state_class=SensorStateClass.MEASUREMENT,
@@ -124,12 +120,10 @@ _MEMORY_MON_COND: tuple[SensorEntityDescription, ...] = (
 _NETWORK_MON_COND: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         translation_key="network_link_status",
-        name="Network Link",
         icon="mdi:checkbox-marked-circle-outline",
     ),
     SensorEntityDescription(
         translation_key="network_tx",
-        name="Network Up",
         native_unit_of_measurement=UnitOfDataRate.MEBIBYTES_PER_SECOND,
         device_class=SensorDeviceClass.DATA_RATE,
         icon="mdi:upload",
@@ -138,7 +132,6 @@ _NETWORK_MON_COND: tuple[SensorEntityDescription, ...] = (
     ),
     SensorEntityDescription(
         translation_key="network_rx",
-        name="Network Down",
         native_unit_of_measurement=UnitOfDataRate.MEBIBYTES_PER_SECOND,
         device_class=SensorDeviceClass.DATA_RATE,
         icon="mdi:download",
@@ -149,13 +142,11 @@ _NETWORK_MON_COND: tuple[SensorEntityDescription, ...] = (
 _DRIVE_MON_COND: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         translation_key="drive_smart_status",
-        name="SMART Status",
         icon="mdi:checkbox-marked-circle-outline",
         entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         translation_key="drive_temp",
-        name="Temperature",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         icon="mdi:thermometer",
@@ -166,7 +157,6 @@ _DRIVE_MON_COND: tuple[SensorEntityDescription, ...] = (
 _VOLUME_MON_COND: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         translation_key="volume_size_used",
-        name="Used Space",
         native_unit_of_measurement=UnitOfInformation.GIBIBYTES,
         device_class=SensorDeviceClass.DATA_SIZE,
         icon="mdi:chart-pie",
@@ -175,7 +165,6 @@ _VOLUME_MON_COND: tuple[SensorEntityDescription, ...] = (
     ),
     SensorEntityDescription(
         translation_key="volume_size_free",
-        name="Free Space",
         native_unit_of_measurement=UnitOfInformation.GIBIBYTES,
         device_class=SensorDeviceClass.DATA_SIZE,
         icon="mdi:chart-pie",
@@ -184,7 +173,6 @@ _VOLUME_MON_COND: tuple[SensorEntityDescription, ...] = (
     ),
     SensorEntityDescription(
         translation_key="volume_percentage_used",
-        name="Volume Used",
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:chart-pie",
         state_class=SensorStateClass.MEASUREMENT,
