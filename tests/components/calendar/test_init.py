@@ -11,6 +11,7 @@ import voluptuous as vol
 
 from homeassistant.bootstrap import async_setup_component
 from homeassistant.components.calendar import DOMAIN, SERVICE_LIST_EVENTS
+from homeassistant.components.calendar.const import LIST_EVENT_FIELDS
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.util.dt as dt_util
@@ -447,6 +448,9 @@ async def test_list_events_service_duration(
     assert "events" in response
     events = response["events"]
     assert [event["summary"] for event in events] == expected_events
+    for event in events:
+        for key in event:
+            assert key in LIST_EVENT_FIELDS
 
 
 async def test_list_events_positive_duration(hass: HomeAssistant) -> None:
