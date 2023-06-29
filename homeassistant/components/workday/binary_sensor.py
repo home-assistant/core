@@ -178,6 +178,7 @@ class IsWorkdaySensor(BinarySensorEntity):
     """Implementation of a Workday sensor."""
 
     _attr_has_entity_name = True
+    _attr_name = None
 
     def __init__(
         self,
