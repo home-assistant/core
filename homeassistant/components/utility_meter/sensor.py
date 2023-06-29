@@ -147,12 +147,6 @@ async def async_setup_entry(
     else:
         device_info = None
 
-    _LOGGER.debug(
-        "Device source: %s - Device info: %s",
-        device,
-        device_info,
-    )
-
     cron_pattern = None
     delta_values = config_entry.options[CONF_METER_DELTA_VALUES]
     meter_offset = timedelta(days=config_entry.options[CONF_METER_OFFSET])
