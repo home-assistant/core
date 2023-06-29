@@ -197,6 +197,8 @@ class BroadlinkRMSwitch(BroadlinkSwitch):
 class BroadlinkSP1Switch(BroadlinkSwitch):
     """Representation of a Broadlink SP1 switch."""
 
+    _attr_has_entity_name = True
+
     def __init__(self, device):
         """Initialize the switch."""
         super().__init__(device, 1, 0)
@@ -218,6 +220,7 @@ class BroadlinkSP2Switch(BroadlinkSP1Switch):
     """Representation of a Broadlink SP2 switch."""
 
     _attr_assumed_state = False
+    _attr_has_entity_name = True
 
     def __init__(self, device, *args, **kwargs):
         """Initialize the switch."""
@@ -233,6 +236,7 @@ class BroadlinkMP1Slot(BroadlinkSwitch):
     """Representation of a Broadlink MP1 slot."""
 
     _attr_assumed_state = False
+    _attr_has_entity_name = True
 
     def __init__(self, device, slot):
         """Initialize the switch."""
@@ -262,6 +266,7 @@ class BroadlinkBG1Slot(BroadlinkSwitch):
     """Representation of a Broadlink BG1 slot."""
 
     _attr_assumed_state = False
+    _attr_has_entity_name = True
 
     def __init__(self, device, slot):
         """Initialize the switch."""

@@ -107,6 +107,8 @@ async def async_setup_entry(
 class BroadlinkSensor(BroadlinkEntity, SensorEntity):
     """Representation of a Broadlink sensor."""
 
+    _attr_has_entity_name = True
+
     def __init__(self, device, description: SensorEntityDescription) -> None:
         """Initialize the sensor."""
         super().__init__(device)
