@@ -613,9 +613,7 @@ class EntityPlatform:
             device = None
 
             if self.config_entry and device_info is not None:
-                processed_dev_info: dict[str, str | None] = {
-                    "config_entry_id": self.config_entry.entry_id
-                }
+                processed_dev_info: dict[str, str | None] = {}
                 for key in (
                     "connections",
                     "default_manufacturer",
@@ -637,7 +635,9 @@ class EntityPlatform:
                         ]
 
                 if (
-                    "default_name" not in processed_dev_info
+                    # device info that is purely meant for linking doesn't need default name
+                    set(processed_dev_info) > {"identifiers", "connections"}
+                    and "default_name" not in processed_dev_info
                     and not processed_dev_info.get("name")
                 ):
                     processed_dev_info["name"] = self.config_entry.title
@@ -661,7 +661,8 @@ class EntityPlatform:
 
                 try:
                     device = device_registry.async_get_or_create(
-                        **processed_dev_info  # type: ignore[arg-type]
+                        config_entry_id=self.config_entry.entry_id,
+                        **processed_dev_info,  # type: ignore[arg-type]
                     )
                     device_id = device.id
                 except RequiredParameterMissing:
