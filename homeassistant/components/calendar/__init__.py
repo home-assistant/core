@@ -420,7 +420,11 @@ def _list_events_dict_factory(
     obj: Iterable[tuple[str, Any]]
 ) -> dict[str, JsonValueType]:
     """Convert CalendarEvent dataclass items to dictionary of attributes."""
-    return {name: value for name, value in obj if name in LIST_EVENT_FIELDS}
+    return {
+        name: value
+        for name, value in obj
+        if name in LIST_EVENT_FIELDS and value is not None
+    }
 
 
 def _get_datetime_local(
