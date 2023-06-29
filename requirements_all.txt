@@ -497,7 +497,7 @@ beautifulsoup4==4.11.1
 # beewi-smartclim==0.0.10
 
 # homeassistant.components.zha
-bellows==0.35.5
+bellows==0.35.6
 
 # homeassistant.components.bmw_connected_drive
 bimmer-connected==0.13.7
@@ -980,10 +980,10 @@ hole==0.8.0
 holidays==0.21.13
 
 # homeassistant.components.frontend
-home-assistant-frontend==20230608.0
+home-assistant-frontend==20230629.0
 
 # homeassistant.components.conversation
-home-assistant-intents==2023.6.5
+home-assistant-intents==2023.6.28
 
 # homeassistant.components.home_connect
 homeconnect==0.7.2
@@ -1348,7 +1348,7 @@ openerz-api==0.2.0
 openevsewifi==1.1.2
 
 # homeassistant.components.openhome
-openhomedevice==2.0.2
+openhomedevice==2.2.0
 
 # homeassistant.components.opensensemap
 opensensemap-api==0.2.0
@@ -1867,7 +1867,7 @@ pynx584==0.5
 pynzbgetapi==0.2.0
 
 # homeassistant.components.obihai
-pyobihai==1.3.2
+pyobihai==1.4.2
 
 # homeassistant.components.octoprint
 pyoctoprintapi==0.1.11
@@ -2105,7 +2105,7 @@ python-kasa==0.5.1
 # python-lirc==1.2.3
 
 # homeassistant.components.matter
-python-matter-server==3.6.0
+python-matter-server==3.6.3
 
 # homeassistant.components.xiaomi_miio
 python-miio==0.5.12
@@ -2139,7 +2139,7 @@ python-qbittorrent==0.4.3
 python-ripple-api==0.0.3
 
 # homeassistant.components.roborock
-python-roborock==0.23.6
+python-roborock==0.29.2
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.33
@@ -2614,7 +2614,7 @@ venstarcolortouch==0.19
 vilfo-api-client==0.4.1
 
 # homeassistant.components.voip
-voip-utils==0.0.7
+voip-utils==0.1.0
 
 # homeassistant.components.volkszaehler
 volkszaehler==0.4.0
@@ -2687,7 +2687,7 @@ xbox-webapi==2.0.11
 xiaomi-ble==0.17.2
 
 # homeassistant.components.knx
-xknx==2.11.0
+xknx==2.11.1
 
 # homeassistant.components.knx
 xknxproject==3.2.0
@@ -2753,16 +2753,16 @@ ziggo-mediabox-xl==1.1.0
 zigpy-deconz==0.21.0
 
 # homeassistant.components.zha
-zigpy-xbee==0.18.0
+zigpy-xbee==0.18.1
 
 # homeassistant.components.zha
 zigpy-zigate==0.11.0
 
 # homeassistant.components.zha
-zigpy-znp==0.11.1
+zigpy-znp==0.11.2
 
 # homeassistant.components.zha
-zigpy==0.56.0
+zigpy==0.56.1
 
 # homeassistant.components.zoneminder
 zm-py==0.5.2

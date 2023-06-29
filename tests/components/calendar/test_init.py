@@ -4,7 +4,7 @@ from __future__ import annotations
 from datetime import timedelta
 from http import HTTPStatus
 from typing import Any
-from unittest.mock import patch
+from unittest.mock import ANY, patch
 
 import pytest
 import voluptuous as vol
@@ -405,11 +405,17 @@ async def test_list_events_service(hass: HomeAssistant) -> None:
         blocking=True,
         return_response=True,
     )
-    assert response
-    assert "events" in response
-    events = response["events"]
-    assert len(events) == 1
-    assert events[0]["summary"] == "Future Event"
+    assert response == {
+        "events": [
+            {
+                "start": ANY,
+                "end": ANY,
+                "summary": "Future Event",
+                "description": "Future Description",
+                "location": "Future Location",
+            }
+        ]
+    }
 
 
 @pytest.mark.parametrize(
