@@ -136,7 +136,7 @@ async def async_setup_platform(
     else:
         _LOGGER.exception("No locations or stations specified")
         raise PlatformNotReady
- 
+
     _LOGGER.info("Getting feed from %s station(s)", len(dev))
     async_add_entities(dev, True)
 
