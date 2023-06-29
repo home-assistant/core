@@ -96,6 +96,7 @@ class HVACAction(StrEnum):
     HEATING = "heating"
     IDLE = "idle"
     OFF = "off"
+    PREHEATING = "preheating"
 
 
 # These CURRENT_HVAC_* constants are deprecated as of Home Assistant 2022.5.

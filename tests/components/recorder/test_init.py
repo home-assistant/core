@@ -1426,7 +1426,7 @@ def test_service_disable_events_not_recording(
     """Test that events are not recorded when recorder is disabled using service."""
     hass = hass_recorder()
 
-    assert hass.services.call(
+    hass.services.call(
         DOMAIN,
         SERVICE_DISABLE,
         {},
@@ -1460,7 +1460,7 @@ def test_service_disable_events_not_recording(
         )
         assert len(db_events) == 0
 
-    assert hass.services.call(
+    hass.services.call(
         DOMAIN,
         SERVICE_ENABLE,
         {},
@@ -1510,7 +1510,7 @@ def test_service_disable_states_not_recording(
     """Test that state changes are not recorded when recorder is disabled using service."""
     hass = hass_recorder()
 
-    assert hass.services.call(
+    hass.services.call(
         DOMAIN,
         SERVICE_DISABLE,
         {},
@@ -1523,7 +1523,7 @@ def test_service_disable_states_not_recording(
     with session_scope(hass=hass, read_only=True) as session:
         assert len(list(session.query(States))) == 0
 
-    assert hass.services.call(
+    hass.services.call(
         DOMAIN,
         SERVICE_ENABLE,
         {},
@@ -1563,7 +1563,7 @@ def test_service_disable_run_information_recorded(tmp_path: Path) -> None:
         assert db_run_info[0].start is not None
         assert db_run_info[0].end is None
 
-    assert hass.services.call(
+    hass.services.call(
         DOMAIN,
         SERVICE_DISABLE,
         {},

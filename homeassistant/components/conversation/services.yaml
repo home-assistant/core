@@ -20,4 +20,4 @@ process:
       description: Assist engine to process your request
       example: homeassistant
       selector:
-        text:
+        conversation_agent:

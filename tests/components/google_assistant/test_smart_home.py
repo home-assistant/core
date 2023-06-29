@@ -680,7 +680,7 @@ async def test_execute_times_out(
 
     async def slow_turn_on(*args, **kwargs):
         # Make DemoLigt.async_turn_on hang waiting for the turn_on_wait event
-        await turn_on_wait.wait(),
+        await turn_on_wait.wait()
 
     with patch.object(
         hass.services, "async_call", wraps=hass.services.async_call
@@ -743,6 +743,7 @@ async def test_execute_times_out(
         call_service_mock.assert_has_awaits(expected_calls, any_order=True)
 
         turn_on_wait.set()
+        await hass.async_block_till_done()
         await hass.async_block_till_done()
         # The remaining two calls should now have executed
         assert call_service_mock.call_count == 4

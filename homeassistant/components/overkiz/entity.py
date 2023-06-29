@@ -18,6 +18,7 @@ class OverkizEntity(CoordinatorEntity[OverkizDataUpdateCoordinator]):
     """Representation of an Overkiz device entity."""
 
     _attr_has_entity_name = True
+    _attr_name: str | None = None
 
     def __init__(
         self, device_url: str, coordinator: OverkizDataUpdateCoordinator

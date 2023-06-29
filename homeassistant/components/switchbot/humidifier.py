@@ -40,6 +40,7 @@ class SwitchBotHumidifier(SwitchbotSwitchedEntity, HumidifierEntity):
     _attr_available_modes = [MODE_NORMAL, MODE_AUTO]
     _device: switchbot.SwitchbotHumidifier
     _attr_min_humidity = 1
+    _attr_translation_key = "humidifier"
 
     @property
     def is_on(self) -> bool | None:
