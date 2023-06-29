@@ -71,7 +71,6 @@ FLUME_BINARY_NOTIFICATION_SENSORS: tuple[FlumeBinarySensorEntityDescription, ...
     ),
     FlumeBinarySensorEntityDescription(
         key="low_battery",
-        name="Low battery",
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=BinarySensorDeviceClass.BATTERY,
         event_rule=NOTIFICATION_LOW_BATTERY,
