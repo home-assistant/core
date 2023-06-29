@@ -30,7 +30,7 @@ class YouTubeMixin:
     """Mixin for required keys."""
 
     value_fn: Callable[[Any], StateType]
-    entity_picture_fn: Callable[[Any], str]
+    entity_picture_fn: Callable[[Any], str | None]
     attributes_fn: Callable[[Any], dict[str, Any]] | None
 
 
@@ -70,8 +70,8 @@ async def async_setup_entry(
         COORDINATOR
     ]
     async_add_entities(
-        YouTubeSensor(coordinator, sensor_type, channel)
-        for channel in coordinator.data.values()
+        YouTubeSensor(coordinator, sensor_type, channel_id)
+        for channel_id in coordinator.data
         for sensor_type in SENSOR_TYPES
     )
 
@@ -84,16 +84,20 @@ class YouTubeSensor(YouTubeChannelEntity, SensorEntity):
     @property
     def native_value(self) -> StateType:
         """Return the value reported by the sensor."""
-        return self.entity_description.value_fn(self._channel)
+        return self.entity_description.value_fn(self.coordinator.data[self._channel_id])
 
     @property
-    def entity_picture(self) -> str:
+    def entity_picture(self) -> str | None:
         """Return the value reported by the sensor."""
-        return self.entity_description.entity_picture_fn(self._channel)
+        return self.entity_description.entity_picture_fn(
+            self.coordinator.data[self._channel_id]
+        )
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the extra state attributes."""
         if self.entity_description.attributes_fn:
-            return self.entity_description.attributes_fn(self._channel)
+            return self.entity_description.attributes_fn(
+                self.coordinator.data[self._channel_id]
+            )
         return None

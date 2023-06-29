@@ -17,7 +17,7 @@ from homeassistant.util.dt import utcnow
 
 from .conftest import ComponentSetup, ExpectedCredentials
 
-from tests.common import async_fire_time_changed, async_mock_service
+from tests.common import MockConfigEntry, async_fire_time_changed, async_mock_service
 from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import ClientSessionGenerator
 
@@ -221,6 +221,7 @@ async def test_send_text_command_expired_token_refresh_failure(
             {"command": "turn on tv"},
             blocking=True,
         )
+    await hass.async_block_till_done()
 
     assert any(entry.async_get_active_flows(hass, {"reauth"})) == requires_reauth
 
@@ -312,6 +313,7 @@ async def test_send_text_command_media_player(
 async def test_conversation_agent(
     hass: HomeAssistant,
     setup_integration: ComponentSetup,
+    config_entry: MockConfigEntry,
 ) -> None:
     """Test GoogleAssistantConversationAgent."""
     await setup_integration()
@@ -332,8 +334,8 @@ async def test_conversation_agent(
     with patch(
         "homeassistant.components.google_assistant_sdk.TextAssistant"
     ) as mock_text_assistant:
-        await conversation.async_converse(hass, text1, None, Context(), "en-US")
-        await conversation.async_converse(hass, text2, None, Context(), "en-US")
+        await conversation.async_converse(hass, text1, None, Context(), "en-US", agent_id=config_entry.entry_id)
+        await conversation.async_converse(hass, text2, None, Context(), "en-US", agent_id=config_entry.entry_id)
 
     # Assert constructor is called only once since it's reused across requests
     assert mock_text_assistant.call_count == 1
@@ -344,6 +346,7 @@ async def test_conversation_agent(
 
 async def test_conversation_agent_refresh_token(
     hass: HomeAssistant,
+    config_entry: MockConfigEntry,
     setup_integration: ComponentSetup,
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
@@ -362,7 +365,7 @@ async def test_conversation_agent_refresh_token(
     with patch(
         "homeassistant.components.google_assistant_sdk.TextAssistant"
     ) as mock_text_assistant:
-        await conversation.async_converse(hass, text1, None, Context(), "en-US")
+        await conversation.async_converse(hass, text1, None, Context(), "en-US", agent_id=config_entry.entry_id)
 
         # Expire the token between requests
         entry.data["token"]["expires_at"] = time.time() - 3600
@@ -377,7 +380,7 @@ async def test_conversation_agent_refresh_token(
             },
         )
 
-        await conversation.async_converse(hass, text2, None, Context(), "en-US")
+        await conversation.async_converse(hass, text2, None, Context(), "en-US", agent_id=config_entry.entry_id)
 
     # Assert constructor is called twice since the token was expired
     assert mock_text_assistant.call_count == 2
