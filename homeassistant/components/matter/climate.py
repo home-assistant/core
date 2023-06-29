@@ -50,6 +50,8 @@ class MatterClimate(MatterEntity, ClimateEntity):
         ClimateEntityFeature.TARGET_TEMPERATURE
         | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
     )
+    _attr_hvac_mode: HVACMode = HVACMode.OFF
+    _attr_hvac_modes: list[HVACMode] = [HVACMode.OFF]
 
     @property
     def min_temp(self) -> float:
