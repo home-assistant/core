@@ -44,8 +44,6 @@ async def async_setup_entry(
 class BroadlinkLight(BroadlinkEntity, LightEntity):
     """Representation of a Broadlink light."""
 
-    _attr_has_entity_name = True
-
     def __init__(self, device):
         """Initialize the light."""
         super().__init__(device)

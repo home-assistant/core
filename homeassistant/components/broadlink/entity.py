@@ -10,6 +10,7 @@ class BroadlinkEntity(Entity):
     """Representation of a Broadlink entity."""
 
     _attr_should_poll = False
+    _attr_has_entity_name = True
 
     def __init__(self, device):
         """Initialize the entity."""
