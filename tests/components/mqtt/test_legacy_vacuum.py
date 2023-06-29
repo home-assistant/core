@@ -769,8 +769,8 @@ async def test_discovery_broken(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test handling of bad discovery message."""
-    data1 = '{ "name": "Beer",' '  "command_topic": "test_topic#" }'
-    data2 = '{ "name": "Milk",' '  "command_topic": "test_topic" }'
+    data1 = '{ "name": "Beer",  "command_topic": "test_topic#" }'
+    data2 = '{ "name": "Milk",  "command_topic": "test_topic" }'
     await help_test_discovery_broken(
         hass, mqtt_mock_entry, caplog, vacuum.DOMAIN, data1, data2
     )

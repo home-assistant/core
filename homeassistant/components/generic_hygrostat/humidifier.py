@@ -249,6 +249,11 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
         return self._state
 
     @property
+    def current_humidity(self):
+        """Return the measured humidity."""
+        return self._cur_humidity
+
+    @property
     def target_humidity(self):
         """Return the humidity we try to reach."""
         return self._target_humidity
@@ -430,17 +435,14 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
                 elif time is not None:
                     # The time argument is passed only in keep-alive case
                     await self._async_device_turn_on()
-            else:
-                if (
-                    self._device_class == HumidifierDeviceClass.HUMIDIFIER and too_dry
-                ) or (
-                    self._device_class == HumidifierDeviceClass.DEHUMIDIFIER and too_wet
-                ):
-                    _LOGGER.info("Turning on humidifier %s", self._switch_entity_id)
-                    await self._async_device_turn_on()
-                elif time is not None:
-                    # The time argument is passed only in keep-alive case
-                    await self._async_device_turn_off()
+            elif (
+                self._device_class == HumidifierDeviceClass.HUMIDIFIER and too_dry
+            ) or (self._device_class == HumidifierDeviceClass.DEHUMIDIFIER and too_wet):
+                _LOGGER.info("Turning on humidifier %s", self._switch_entity_id)
+                await self._async_device_turn_on()
+            elif time is not None:
+                # The time argument is passed only in keep-alive case
+                await self._async_device_turn_off()
 
     @property
     def _is_device_active(self):

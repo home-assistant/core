@@ -1,4 +1,5 @@
 """Tests for the intent helpers."""
+import asyncio
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -246,3 +247,41 @@ def test_async_remove_no_existing(hass: HomeAssistant) -> None:
     # simply shouldn't cause an exception
 
     assert intent.DATA_KEY not in hass.data
+
+
+async def test_validate_then_run_in_background(hass: HomeAssistant) -> None:
+    """Test we don't execute a service in foreground forever."""
+    hass.states.async_set("light.kitchen", "off")
+    call_done = asyncio.Event()
+    calls = []
+
+    # Register a service that takes 0.1 seconds to execute
+    async def mock_service(call):
+        """Mock service."""
+        await asyncio.sleep(0.1)
+        call_done.set()
+        calls.append(call)
+
+    hass.services.async_register("light", "turn_on", mock_service)
+
+    # Create intent handler with a service timeout of 0.05 seconds
+    handler = intent.ServiceIntentHandler(
+        "TestType", "light", "turn_on", "Turned {} on"
+    )
+    handler.service_timeout = 0.05
+    intent.async_register(hass, handler)
+
+    result = await intent.async_handle(
+        hass,
+        "test",
+        "TestType",
+        slots={"name": {"value": "kitchen"}},
+    )
+
+    assert result.response_type == intent.IntentResponseType.ACTION_DONE
+
+    assert not call_done.is_set()
+    await call_done.wait()
+
+    assert len(calls) == 1
+    assert calls[0].data == {"entity_id": "light.kitchen"}

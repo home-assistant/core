@@ -23,8 +23,8 @@
         "description": "Enter the serial port settings",
         "data": {
           "path": "Serial device path",
-          "baudrate": "port speed",
-          "flow_control": "data flow control"
+          "baudrate": "Port speed",
+          "flow_control": "Data flow control"
         }
       },
       "verify_radio": {
@@ -237,12 +237,12 @@
       "button_5": "Fifth button",
       "button_6": "Sixth button",
       "face_any": "With any/specified face(s) activated",
-      "face_1": "with face 1 activated",
-      "face_2": "with face 2 activated",
-      "face_3": "with face 3 activated",
-      "face_4": "with face 4 activated",
-      "face_5": "with face 5 activated",
-      "face_6": "with face 6 activated"
+      "face_1": "With face 1 activated",
+      "face_2": "With face 2 activated",
+      "face_3": "With face 3 activated",
+      "face_4": "With face 4 activated",
+      "face_5": "With face 5 activated",
+      "face_6": "With face 6 activated"
     }
   }
 }

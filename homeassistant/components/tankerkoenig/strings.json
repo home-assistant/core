@@ -18,7 +18,7 @@
       },
       "select_station": {
         "title": "Select stations to add",
-        "description": "found {stations_count} stations in radius",
+        "description": "Found {stations_count} stations in radius",
         "data": {
           "stations": "Stations"
         }
