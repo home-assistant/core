@@ -7,6 +7,8 @@ from chip.clusters import Objects as clusters
 from matter_server.client.models import device_types
 
 from homeassistant.components.climate import (
+    ATTR_TARGET_TEMP_HIGH,
+    ATTR_TARGET_TEMP_LOW,
     ClimateEntity,
     ClimateEntityDescription,
     ClimateEntityFeature,
@@ -194,38 +196,65 @@ class MatterClimate(MatterEntity, ClimateEntity):
                 clusters.Thermostat.Attributes.OccupiedHeatingSetpoint
             )
 
+    @staticmethod
+    def create_optional_setpoint_command(
+        mode: clusters.Thermostat.Enums.SetpointAdjustMode,
+        target_temp: float | None,
+        current_target_temp: float | None,
+    ) -> clusters.Thermostat.Commands.SetpointRaiseLower | None:
+        """Create a setpoint command if the target temperature is different from the current one."""
+        if target_temp is None or current_target_temp is None:
+            return None
+
+        temp_diff = int((target_temp - current_target_temp) * 10)
+
+        if temp_diff == 0:
+            return None
+
+        return clusters.Thermostat.Commands.SetpointRaiseLower(
+            mode,
+            temp_diff,
+        )
+
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
-        target_temp: float | None = kwargs.get(ATTR_TEMPERATURE)
-
-        if target_temp is None or self.target_temperature is None:
-            return
-
-        temp_diff = int((target_temp - self.target_temperature) * 10)
-
         match self.hvac_mode:
             case HVACMode.HEAT:
-                command = clusters.Thermostat.Commands.SetpointRaiseLower(
+                command = self.create_optional_setpoint_command(
                     clusters.Thermostat.Enums.SetpointAdjustMode.kHeat,
-                    temp_diff,
+                    kwargs.get(ATTR_TEMPERATURE),
+                    self.target_temperature,
                 )
             case HVACMode.COOL:
-                command = clusters.Thermostat.Commands.SetpointRaiseLower(
+                command = self.create_optional_setpoint_command(
                     clusters.Thermostat.Enums.SetpointAdjustMode.kCool,
-                    temp_diff,
+                    kwargs.get(ATTR_TEMPERATURE),
+                    self.target_temperature,
                 )
             case HVACMode.HEAT_COOL:
-                # wait for HA to support write attribute
-                pass
+                # due to ha send both high and low temperature, we need to check which one is changed
+                command = self.create_optional_setpoint_command(
+                    clusters.Thermostat.Enums.SetpointAdjustMode.kHeat,
+                    kwargs.get(ATTR_TARGET_TEMP_LOW),
+                    self.target_temperature_low,
+                )
+
+                if command is None:
+                    command = self.create_optional_setpoint_command(
+                        clusters.Thermostat.Enums.SetpointAdjustMode.kCool,
+                        kwargs.get(ATTR_TARGET_TEMP_HIGH),
+                        self.target_temperature_high,
+                    )
             case _:
                 # Uncertain if there are any modes in HA other than heat and cool that can set the target temperature.
                 return
 
-        await self.matter_client.send_device_command(
-            node_id=self._endpoint.node.node_id,
-            endpoint_id=self._endpoint.endpoint_id,
-            command=command,
-        )
+        if command:
+            await self.matter_client.send_device_command(
+                node_id=self._endpoint.node.node_id,
+                endpoint_id=self._endpoint.endpoint_id,
+                command=command,
+            )
 
     @callback
     def _update_from_device(self) -> None:
