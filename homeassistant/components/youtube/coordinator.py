@@ -53,15 +53,30 @@ class YouTubeDataUpdateCoordinator(DataUpdateCoordinator):
 
     async def _async_update_data(self) -> dict[str, Any]:
         service = await self._auth.get_resource()
-        channels = self.config_entry.options[CONF_CHANNELS]
-        channel_request: HttpRequest = service.channels().list(
-            part="snippet,statistics", id=",".join(channels), maxResults=50
-        )
-        response: dict = await self.hass.async_add_executor_job(channel_request.execute)
+        channels = await self._get_channels(service)
 
         return await self.hass.async_add_executor_job(
-            self._get_channel_data, service, response["items"]
+            self._get_channel_data, service, channels
         )
+
+    async def _get_channels(self, service: Resource) -> list[dict[str, Any]]:
+        data = []
+        received_channels = 0
+        channels = self.config_entry.options[CONF_CHANNELS]
+        while received_channels < len(channels):
+            # We're slicing the channels in chunks of 50 to avoid making the URI too long
+            end = min(received_channels + 50, len(channels))
+            channel_request: HttpRequest = service.channels().list(
+                part="snippet,statistics",
+                id=",".join(channels[received_channels:end]),
+                maxResults=50,
+            )
+            response: dict = await self.hass.async_add_executor_job(
+                channel_request.execute
+            )
+            data.extend(response["items"])
+            received_channels += len(response["items"])
+        return data
 
     def _get_channel_data(
         self, service: Resource, channels: list[dict[str, Any]]

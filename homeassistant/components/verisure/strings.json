@@ -62,14 +62,6 @@
       "ethernet": {
         "name": "Ethernet status"
       }
-    },
-    "sensor": {
-      "humidity": {
-        "name": "[%key:component::sensor::entity_component::humidity::name%]"
-      },
-      "temperature": {
-        "name": "[%key:component::sensor::entity_component::temperature::name%]"
-      }
     }
   }
 }

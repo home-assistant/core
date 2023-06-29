@@ -33,7 +33,14 @@ from homeassistant.const import (
     __version__,
 )
 import homeassistant.core as ha
-from homeassistant.core import HassJob, HomeAssistant, ServiceCall, ServiceResult, State
+from homeassistant.core import (
+    HassJob,
+    HomeAssistant,
+    ServiceCall,
+    ServiceResponse,
+    State,
+    SupportsResponse,
+)
 from homeassistant.exceptions import (
     HomeAssistantError,
     InvalidEntityFormatError,
@@ -1083,58 +1090,44 @@ async def test_serviceregistry_callback_service_raise_exception(
     await hass.async_block_till_done()
 
 
-async def test_serviceregistry_return_values(hass: HomeAssistant) -> None:
-    """Test service call for a service that has return values."""
+@pytest.mark.parametrize(
+    "supports_response",
+    [
+        SupportsResponse.ONLY,
+        SupportsResponse.OPTIONAL,
+    ],
+)
+async def test_serviceregistry_async_return_response(
+    hass: HomeAssistant, supports_response: SupportsResponse
+) -> None:
+    """Test service call for a service that returns response data."""
 
-    def service_handler(call: ServiceCall) -> ServiceResult:
+    async def service_handler(call: ServiceCall) -> ServiceResponse:
         """Service handler coroutine."""
-        assert call.return_values
+        assert call.return_response
         return {"test-reply": "test-value1"}
 
     hass.services.async_register(
         "test_domain",
         "test_service",
         service_handler,
+        supports_response=supports_response,
     )
     result = await hass.services.async_call(
         "test_domain",
         "test_service",
         service_data={},
         blocking=True,
-        return_values=True,
+        return_response=True,
     )
     await hass.async_block_till_done()
     assert result == {"test-reply": "test-value1"}
 
 
-async def test_serviceregistry_async_return_values(hass: HomeAssistant) -> None:
-    """Test service call for an async service that has return values."""
-
-    async def service_handler(call: ServiceCall) -> ServiceResult:
-        """Service handler coroutine."""
-        assert call.return_values
-        return {"test-reply": "test-value1"}
-
-    hass.services.async_register(
-        "test_domain",
-        "test_service",
-        service_handler,
-    )
-    result = await hass.services.async_call(
-        "test_domain",
-        "test_service",
-        service_data={},
-        blocking=True,
-        return_values=True,
-    )
-    await hass.async_block_till_done()
-    assert result == {"test-reply": "test-value1"}
-
-
-async def test_services_call_return_values_requires_blocking(
+async def test_services_call_return_response_requires_blocking(
     hass: HomeAssistant,
 ) -> None:
-    """Test that non-blocking service calls cannot return values."""
+    """Test that non-blocking service calls cannot ask for response data."""
     async_mock_service(hass, "test_domain", "test_service")
     with pytest.raises(ValueError, match="when blocking=False"):
         await hass.services.async_call(
@@ -1142,12 +1135,12 @@ async def test_services_call_return_values_requires_blocking(
             "test_service",
             service_data={},
             blocking=False,
-            return_values=True,
+            return_response=True,
         )
 
 
 @pytest.mark.parametrize(
-    ("return_value", "expected_error"),
+    ("response_data", "expected_error"),
     [
         (True, "expected a dictionary"),
         (False, "expected a dictionary"),
@@ -1156,20 +1149,21 @@ async def test_services_call_return_values_requires_blocking(
         (["some-list"], "expected a dictionary"),
     ],
 )
-async def test_serviceregistry_return_values_invalid(
-    hass: HomeAssistant, return_value: Any, expected_error: str
+async def test_serviceregistry_return_response_invalid(
+    hass: HomeAssistant, response_data: Any, expected_error: str
 ) -> None:
-    """Test service call return values are not returned when there is no result schema."""
+    """Test service call response data must be json serializable objects."""
 
-    def service_handler(call: ServiceCall) -> ServiceResult:
+    def service_handler(call: ServiceCall) -> ServiceResponse:
         """Service handler coroutine."""
-        assert call.return_values
-        return return_value
+        assert call.return_response
+        return response_data
 
     hass.services.async_register(
         "test_domain",
         "test_service",
         service_handler,
+        supports_response=SupportsResponse.ONLY,
     )
     with pytest.raises(HomeAssistantError, match=expected_error):
         await hass.services.async_call(
@@ -1177,32 +1171,78 @@ async def test_serviceregistry_return_values_invalid(
             "test_service",
             service_data={},
             blocking=True,
-            return_values=True,
+            return_response=True,
         )
         await hass.async_block_till_done()
 
 
-async def test_serviceregistry_no_return_values(hass: HomeAssistant) -> None:
-    """Test service call data when not asked for return values."""
+@pytest.mark.parametrize(
+    ("supports_response", "return_response", "expected_error"),
+    [
+        (SupportsResponse.NONE, True, "not support responses"),
+        (SupportsResponse.ONLY, False, "caller did not ask for responses"),
+    ],
+)
+async def test_serviceregistry_return_response_arguments(
+    hass: HomeAssistant,
+    supports_response: SupportsResponse,
+    return_response: bool,
+    expected_error: str,
+) -> None:
+    """Test service call response data invalid arguments."""
 
-    def service_handler(call: ServiceCall) -> None:
+    hass.services.async_register(
+        "test_domain",
+        "test_service",
+        "service_handler",
+        supports_response=supports_response,
+    )
+
+    with pytest.raises(ValueError, match=expected_error):
+        await hass.services.async_call(
+            "test_domain",
+            "test_service",
+            service_data={},
+            blocking=True,
+            return_response=return_response,
+        )
+
+
+@pytest.mark.parametrize(
+    ("return_response", "expected_response_data"),
+    [
+        (True, {"key": "value"}),
+        (False, None),
+    ],
+)
+async def test_serviceregistry_return_response_optional(
+    hass: HomeAssistant,
+    return_response: bool,
+    expected_response_data: Any,
+) -> None:
+    """Test optional service call response data."""
+
+    def service_handler(call: ServiceCall) -> ServiceResponse:
         """Service handler coroutine."""
-        assert not call.return_values
-        return
+        if call.return_response:
+            return {"key": "value"}
+        return None
 
     hass.services.async_register(
         "test_domain",
         "test_service",
         service_handler,
+        supports_response=SupportsResponse.OPTIONAL,
     )
-    result = await hass.services.async_call(
+    response_data = await hass.services.async_call(
         "test_domain",
         "test_service",
         service_data={},
         blocking=True,
+        return_response=return_response,
     )
     await hass.async_block_till_done()
-    assert not result
+    assert response_data == expected_response_data
 
 
 async def test_config_defaults() -> None:

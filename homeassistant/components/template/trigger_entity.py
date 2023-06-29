@@ -18,13 +18,13 @@ class TriggerEntity(TriggerBaseEntity, CoordinatorEntity[TriggerUpdateCoordinato
         config: dict,
     ) -> None:
         """Initialize the entity."""
-        super(CoordinatorEntity, self).__init__(coordinator)
-        super().__init__(hass, config)
+        CoordinatorEntity.__init__(self, coordinator)
+        TriggerBaseEntity.__init__(self, hass, config)
 
     async def async_added_to_hass(self) -> None:
         """Handle being added to Home Assistant."""
-        await super().async_added_to_hass()
-        await super(CoordinatorEntity, self).async_added_to_hass()
+        await TriggerBaseEntity.async_added_to_hass(self)
+        await CoordinatorEntity.async_added_to_hass(self)  # type: ignore[arg-type]
         if self.coordinator.data is not None:
             self._process_data()
 

@@ -82,7 +82,7 @@ from .exceptions import (
 )
 from .helpers.aiohttp_compat import restore_original_aiohttp_cancel_behavior
 from .helpers.json import json_dumps
-from .util import dt as dt_util, location, ulid as ulid_util
+from .util import dt as dt_util, location
 from .util.async_ import (
     cancelling,
     run_callback_threadsafe,
@@ -91,6 +91,7 @@ from .util.async_ import (
 from .util.json import JsonObjectType
 from .util.read_only_dict import ReadOnlyDict
 from .util.timeout import TimeoutManager
+from .util.ulid import ulid, ulid_at_time
 from .util.unit_system import (
     _CONF_UNIT_SYSTEM_IMPERIAL,
     _CONF_UNIT_SYSTEM_US_CUSTOMARY,
@@ -131,7 +132,7 @@ DOMAIN = "homeassistant"
 # How long to wait to log tasks that are blocking
 BLOCK_LOG_TIMEOUT = 60
 
-ServiceResult = JsonObjectType | None
+ServiceResponse = JsonObjectType | None
 
 
 class ConfigSource(StrEnum):
@@ -874,7 +875,7 @@ class Context:
         id: str | None = None,  # pylint: disable=redefined-builtin
     ) -> None:
         """Init the context."""
-        self.id = id or ulid_util.ulid()
+        self.id = id or ulid()
         self.user_id = user_id
         self.parent_id = parent_id
         self.origin_event: Event | None = None
@@ -926,10 +927,14 @@ class Event:
         self.data = data or {}
         self.origin = origin
         self.time_fired = time_fired or dt_util.utcnow()
-        self.context: Context = context or Context(
-            id=ulid_util.ulid_at_time(dt_util.utc_to_timestamp(self.time_fired))
-        )
+        if not context:
+            context = Context(
+                id=ulid_at_time(dt_util.utc_to_timestamp(self.time_fired))
+            )
+        self.context = context
         self._as_dict: ReadOnlyDict[str, Any] | None = None
+        if not context.origin_event:
+            context.origin_event = self
 
     def as_dict(self) -> ReadOnlyDict[str, Any]:
         """Create a dict representation of this Event.
@@ -973,6 +978,8 @@ class EventBus:
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize a new event bus."""
         self._listeners: dict[str, list[_FilterableJob]] = {}
+        self._match_all_listeners: list[_FilterableJob] = []
+        self._listeners[MATCH_ALL] = self._match_all_listeners
         self._hass = hass
 
     @callback
@@ -1019,20 +1026,19 @@ class EventBus:
             )
 
         listeners = self._listeners.get(event_type, [])
+        match_all_listeners = self._match_all_listeners
 
-        # EVENT_HOMEASSISTANT_CLOSE should go only to this listeners
-        match_all_listeners = self._listeners.get(MATCH_ALL)
-        if match_all_listeners is not None and event_type != EVENT_HOMEASSISTANT_CLOSE:
+        if not listeners and not match_all_listeners:
+            return
+
+        # EVENT_HOMEASSISTANT_CLOSE should not be sent to MATCH_ALL listeners
+        if event_type != EVENT_HOMEASSISTANT_CLOSE:
             listeners = match_all_listeners + listeners
 
         event = Event(event_type, event_data, origin, time_fired, context)
-        if not event.context.origin_event:
-            event.context.origin_event = event
 
-        _LOGGER.debug("Bus:Handling %s", event)
-
-        if not listeners:
-            return
+        if _LOGGER.isEnabledFor(logging.DEBUG):
+            _LOGGER.debug("Bus:Handling %s", event)
 
         for job, event_filter, run_immediately in listeners:
             if event_filter is not None:
@@ -1195,7 +1201,7 @@ class EventBus:
             self._listeners[event_type].remove(filterable_job)
 
             # delete event_type list if empty
-            if not self._listeners[event_type]:
+            if not self._listeners[event_type] and event_type != MATCH_ALL:
                 self._listeners.pop(event_type)
         except (KeyError, ValueError):
             # KeyError is key event_type listener did not exist
@@ -1630,7 +1636,7 @@ class StateMachine:
             # https://github.com/python/cpython/blob/c90a862cdcf55dc1753c6466e5fa4a467a13ae24/Modules/_datetimemodule.c#L6323
             timestamp = time.time()
             now = dt_util.utc_from_timestamp(timestamp)
-            context = Context(id=ulid_util.ulid_at_time(timestamp))
+            context = Context(id=ulid_at_time(timestamp))
         else:
             now = dt_util.utcnow()
 
@@ -1655,28 +1661,43 @@ class StateMachine:
         )
 
 
+class SupportsResponse(StrEnum):
+    """Service call response configuration."""
+
+    NONE = "none"
+    """The service does not support responses (the default)."""
+
+    OPTIONAL = "optional"
+    """The service optionally returns response data when asked by the caller."""
+
+    ONLY = "only"
+    """The service is read-only and the caller must always ask for response data."""
+
+
 class Service:
     """Representation of a callable service."""
 
-    __slots__ = ["job", "schema", "domain", "service"]
+    __slots__ = ["job", "schema", "domain", "service", "supports_response"]
 
     def __init__(
         self,
-        func: Callable[[ServiceCall], Coroutine[Any, Any, ServiceResult] | None],
+        func: Callable[[ServiceCall], Coroutine[Any, Any, ServiceResponse] | None],
         schema: vol.Schema | None,
         domain: str,
         service: str,
         context: Context | None = None,
+        supports_response: SupportsResponse = SupportsResponse.NONE,
     ) -> None:
         """Initialize a service."""
         self.job = HassJob(func, f"service {domain}.{service}")
         self.schema = schema
+        self.supports_response = supports_response
 
 
 class ServiceCall:
     """Representation of a call to a service."""
 
-    __slots__ = ["domain", "service", "data", "context", "return_values"]
+    __slots__ = ["domain", "service", "data", "context", "return_response"]
 
     def __init__(
         self,
@@ -1684,14 +1705,14 @@ class ServiceCall:
         service: str,
         data: dict[str, Any] | None = None,
         context: Context | None = None,
-        return_values: bool = False,
+        return_response: bool = False,
     ) -> None:
         """Initialize a service call."""
         self.domain = domain.lower()
         self.service = service.lower()
         self.data = ReadOnlyDict(data or {})
         self.context = context or Context()
-        self.return_values = return_values
+        self.return_response = return_response
 
     def __repr__(self) -> str:
         """Return the representation of the service."""
@@ -1732,13 +1753,24 @@ class ServiceRegistry:
         """
         return service.lower() in self._services.get(domain.lower(), [])
 
+    def supports_response(self, domain: str, service: str) -> SupportsResponse:
+        """Return whether or not the service supports response data.
+
+        This exists so that callers can return more helpful error messages given
+        the context. Will return NONE if the service does not exist as there is
+        other error handling when calling the service if it does not exist.
+        """
+        if not (handler := self._services[domain][service]):
+            return SupportsResponse.NONE
+        return handler.supports_response
+
     def register(
         self,
         domain: str,
         service: str,
         service_func: Callable[
             [ServiceCall],
-            Coroutine[Any, Any, ServiceResult] | None,
+            Coroutine[Any, Any, ServiceResponse] | None,
         ],
         schema: vol.Schema | None = None,
     ) -> None:
@@ -1756,9 +1788,10 @@ class ServiceRegistry:
         domain: str,
         service: str,
         service_func: Callable[
-            [ServiceCall], Coroutine[Any, Any, ServiceResult] | None
+            [ServiceCall], Coroutine[Any, Any, ServiceResponse] | None
         ],
         schema: vol.Schema | None = None,
+        supports_response: SupportsResponse = SupportsResponse.NONE,
     ) -> None:
         """Register a service.
 
@@ -1768,7 +1801,9 @@ class ServiceRegistry:
         """
         domain = domain.lower()
         service = service.lower()
-        service_obj = Service(service_func, schema, domain, service)
+        service_obj = Service(
+            service_func, schema, domain, service, supports_response=supports_response
+        )
 
         if domain in self._services:
             self._services[domain][service] = service_obj
@@ -1815,8 +1850,8 @@ class ServiceRegistry:
         blocking: bool = False,
         context: Context | None = None,
         target: dict[str, Any] | None = None,
-        return_values: bool = False,
-    ) -> ServiceResult:
+        return_response: bool = False,
+    ) -> ServiceResponse:
         """Call a service.
 
         See description of async_call for details.
@@ -1829,7 +1864,7 @@ class ServiceRegistry:
                 blocking,
                 context,
                 target,
-                return_values,
+                return_response,
             ),
             self._hass.loop,
         ).result()
@@ -1842,13 +1877,13 @@ class ServiceRegistry:
         blocking: bool = False,
         context: Context | None = None,
         target: dict[str, Any] | None = None,
-        return_values: bool = False,
-    ) -> ServiceResult:
+        return_response: bool = False,
+    ) -> ServiceResponse:
         """Call a service.
 
         Specify blocking=True to wait until service is executed.
 
-        If return_values=True, indicates that the caller can consume return values
+        If return_response=True, indicates that the caller can consume return values
         from the service, if any. Return values are a dict that can be returned by the
         standard JSON serialization process. Return values can only be used with blocking=True.
 
@@ -1864,13 +1899,24 @@ class ServiceRegistry:
         context = context or Context()
         service_data = service_data or {}
 
-        if return_values and not blocking:
-            raise ValueError("Invalid argument return_values=True when blocking=False")
-
         try:
             handler = self._services[domain][service]
         except KeyError:
             raise ServiceNotFound(domain, service) from None
+
+        if return_response:
+            if not blocking:
+                raise ValueError(
+                    "Invalid argument return_response=True when blocking=False"
+                )
+            if handler.supports_response == SupportsResponse.NONE:
+                raise ValueError(
+                    "Invalid argument return_response=True when handler does not support responses"
+                )
+        elif handler.supports_response == SupportsResponse.ONLY:
+            raise ValueError(
+                "Service call requires responses but caller did not ask for responses"
+            )
 
         if target:
             service_data.update(target)
@@ -1890,7 +1936,7 @@ class ServiceRegistry:
             processed_data = service_data
 
         service_call = ServiceCall(
-            domain, service, processed_data, context, return_values
+            domain, service, processed_data, context, return_response
         )
 
         self._hass.bus.async_fire(
@@ -1909,7 +1955,7 @@ class ServiceRegistry:
             return None
 
         response_data = await coro
-        if not return_values:
+        if not return_response:
             return None
         if not isinstance(response_data, dict):
             raise HomeAssistantError(
@@ -1945,19 +1991,19 @@ class ServiceRegistry:
 
     async def _execute_service(
         self, handler: Service, service_call: ServiceCall
-    ) -> ServiceResult:
+    ) -> ServiceResponse:
         """Execute a service."""
         if handler.job.job_type == HassJobType.Coroutinefunction:
             return await cast(
-                Callable[[ServiceCall], Awaitable[ServiceResult]],
+                Callable[[ServiceCall], Awaitable[ServiceResponse]],
                 handler.job.target,
             )(service_call)
         if handler.job.job_type == HassJobType.Callback:
-            return cast(Callable[[ServiceCall], ServiceResult], handler.job.target)(
+            return cast(Callable[[ServiceCall], ServiceResponse], handler.job.target)(
                 service_call
             )
         return await self._hass.async_add_executor_job(
-            cast(Callable[[ServiceCall], ServiceResult], handler.job.target),
+            cast(Callable[[ServiceCall], ServiceResponse], handler.job.target),
             service_call,
         )
 

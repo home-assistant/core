@@ -121,6 +121,9 @@ class Sun(Entity):
 
     _attr_name = "Sun"
     entity_id = ENTITY_ID
+    # This entity is legacy and does not have a platform.
+    # We can't fix this easily without breaking changes.
+    _no_platform_reported = True
 
     location: Location
     elevation: Elevation
