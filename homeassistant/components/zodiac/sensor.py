@@ -7,7 +7,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.dt import as_local, utcnow
 
 from .const import (
@@ -161,15 +160,6 @@ ZODIAC_ICONS = {
     SIGN_AQUARIUS: "mdi:zodiac-aquarius",
     SIGN_PISCES: "mdi:zodiac-pisces",
 }
-
-
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Set up the Zodiac sensor platform."""
 
 
 async def async_setup_entry(
