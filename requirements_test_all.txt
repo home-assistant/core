@@ -15,9 +15,6 @@ Adax-local==0.1.5
 # homeassistant.components.homekit
 HAP-python==4.6.0
 
-# homeassistant.components.hydrawise
-Hydrawiser==0.2
-
 # homeassistant.components.flick_electric
 PyFlick==0.0.2
 
@@ -735,6 +732,9 @@ httplib2==0.20.4
 
 # homeassistant.components.huawei_lte
 huawei-lte-api==1.6.11
+
+# homeassistant.components.hydrawise
+hydrawiser==0.2
 
 # homeassistant.components.hyperion
 hyperion-py==0.7.5
