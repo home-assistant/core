@@ -10,8 +10,9 @@ from homeassistant.components.climate import (
     ClimateEntityDescription,
     ClimateEntity,
     ClimateEntityFeature,
+    HVACAction,
+    HVACMode,
 )
-from homeassistant.components.climate.const import HVACAction, HVACMode
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, Platform, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
@@ -20,6 +21,9 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .entity import MatterEntity
 from .helpers import get_matter
 from .models import MatterDiscoverySchema
+
+
+TEMPERATURE_SCALING_FACTOR = 100
 
 
 async def async_setup_entry(
@@ -48,23 +52,21 @@ class MatterClimate(MatterEntity, ClimateEntity):
         value = int(
             self.get_matter_attribute_value(clusters.Thermostat.Attributes.SystemMode)
         )
-        if value == clusters.Thermostat.Enums.ThermostatSystemMode.kAuto:
-            return HVACMode.AUTO
-        if value == clusters.Thermostat.Enums.ThermostatSystemMode.kDry:
-            return HVACMode.DRY
-        if value == clusters.Thermostat.Enums.ThermostatSystemMode.kFanOnly:
-            return HVACMode.FAN_ONLY
-        if value in (
-            clusters.Thermostat.Enums.ThermostatSystemMode.kCool,
-            clusters.Thermostat.Enums.ThermostatSystemMode.kPrecooling,
-        ):
-            return HVACMode.COOL
-        if value in (
-            clusters.Thermostat.Enums.ThermostatSystemMode.kHeat,
-            clusters.Thermostat.Enums.ThermostatSystemMode.kEmergencyHeat,
-        ):
-            return HVACMode.HEAT
-        return HVACMode.OFF
+        SystemMode = clusters.Thermostat.Enums.ThermostatSystemMode
+
+        match value:
+            case SystemMode.kAuto:
+                return HVACMode.AUTO
+            case SystemMode.kDry:
+                return HVACMode.DRY
+            case SystemMode.kFanOnly:
+                return HVACMode.FAN_ONLY
+            case SystemMode.kCool | SystemMode.kPrecooling:
+                return HVACMode.COOL
+            case SystemMode.kHeat | SystemMode.kEmergencyHeat:
+                return HVACMode.HEAT
+            case _:
+                return HVACMode.OFF
 
     @property
     def hvac_modes(self) -> list[HVACMode]:
@@ -114,21 +116,36 @@ class MatterClimate(MatterEntity, ClimateEntity):
                 return HVACAction.OFF
         return None
 
+    def _get_temperature_in_degrees(self, attribute) -> float | None:
+        """Return the scaled temperature value for the given attribute."""
+        if value := self.get_matter_attribute_value(attribute):
+            return value / TEMPERATURE_SCALING_FACTOR
+        return None
+
+    @property
+    def current_temperature(self) -> float | None:
+        """Return the current temperature."""
+        return self._get_temperature_in_degrees(
+            clusters.Thermostat.Attributes.LocalTemperature
+        )
+
     @property
     def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
-        if self.hvac_mode == HVACMode.COOL:
-            if value := self.get_matter_attribute_value(
-                clusters.Thermostat.Attributes.OccupiedCoolingSetpoint
-            ):
-                assert isinstance(value, float)
-                return value / 100
-        if value := self.get_matter_attribute_value(
-            clusters.Thermostat.Attributes.OccupiedHeatingSetpoint
-        ):
-            assert isinstance(value, float)
-            return value / 100
-        return None
+        match self.hvac_mode:
+            case HVACMode.COOL:
+                return self._get_temperature_in_degrees(
+                    clusters.Thermostat.Attributes.OccupiedCoolingSetpoint
+                )
+            case HVACMode.HEAT:
+                return self._get_temperature_in_degrees(
+                    clusters.Thermostat.Attributes.OccupiedHeatingSetpoint
+                )
+            case HVACMode.AUTO:
+                # When the system mode is set to "auto," there is no target temperature; instead, there is a target temperature low and high.
+                return None
+            case _:
+                return None
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
@@ -142,18 +159,18 @@ class MatterClimate(MatterEntity, ClimateEntity):
         match self.hvac_mode:
             case HVACMode.HEAT:
                 command = clusters.Thermostat.Commands.SetpointRaiseLower(
-                    clusters.Thermostat.Enums.SetpointAdjustMode.kHeatSetpoint,
+                    clusters.Thermostat.Enums.SetpointAdjustMode.kHeat,
                     temp_diff,
                 )
             case HVACMode.COOL:
                 command = clusters.Thermostat.Commands.SetpointRaiseLower(
-                    clusters.Thermostat.Enums.SetpointAdjustMode.kCoolSetpoint,
+                    clusters.Thermostat.Enums.SetpointAdjustMode.kCool,
                     temp_diff,
                 )
             case HVACMode.AUTO:
                 # not sure how to handle this when system is in auto mode
                 command = clusters.Thermostat.Commands.SetpointRaiseLower(
-                    clusters.Thermostat.Enums.SetpointAdjustMode.kHeatAndCoolSetpoints,
+                    clusters.Thermostat.Enums.SetpointAdjustMode.kBoth,
                     temp_diff,
                 )
             case _:
@@ -172,28 +189,6 @@ class MatterClimate(MatterEntity, ClimateEntity):
         self.features = self.get_matter_attribute_value(
             clusters.Thermostat.Attributes.FeatureMap
         )
-
-        if value := self.get_matter_attribute_value(
-            clusters.Thermostat.Attributes.LocalTemperature
-        ):
-            self._attr_current_temperature = value / 100
-
-        match self.hvac_mode:
-            case HVACMode.COOL:
-                target_temp = self.get_matter_attribute_value(
-                    clusters.Thermostat.Attributes.OccupiedCoolingSetpoint
-                )
-                self._attr_target_temperature = target_temp
-            case HVACMode.HEAT:
-                target_temp = self.get_matter_attribute_value(
-                    clusters.Thermostat.Attributes.OccupiedHeatingSetpoint
-                )
-                self._attr_target_temperature = target_temp
-            case HVACMode.AUTO:
-                # When the system mode is set to "auto," there is no target temperature; instead, there is a target temperature low and high.
-                pass
-            case _:
-                pass
 
 
 # Discovery schema(s) to map Matter Attributes to HA entities
