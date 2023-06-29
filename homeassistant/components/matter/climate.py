@@ -121,7 +121,8 @@ class MatterClimate(MatterEntity, ClimateEntity):
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         current_mode = self.hvac_mode
-        if current_mode in (HVACMode.HEAT, HVACMode.HEAT_COOL):
+        command = None
+        if current_mode in (HVACMode.HEAT, HVACMode.COOL):
             # when current mode is either heat or cool, the temperature arg must be provided.
             temperature = kwargs.get(ATTR_TEMPERATURE)
             if temperature is None:

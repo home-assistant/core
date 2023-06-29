@@ -80,7 +80,7 @@ async def test_thermostat(
     assert state.state == HVAC_MODE_COOL
 
     # change occupied cooling setpoint to 18
-    set_node_attribute(thermostat, 1, 513, 18, 1800)
+    set_node_attribute(thermostat, 1, 513, 17, 1800)
     await trigger_subscription_callback(hass, matter_client)
 
     state = hass.states.get("climate.longan_link_hvac")
