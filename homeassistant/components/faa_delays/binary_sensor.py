@@ -12,7 +12,35 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, FAA_BINARY_SENSORS
+from .const import DOMAIN
+
+FAA_BINARY_SENSORS: tuple[BinarySensorEntityDescription, ...] = (
+    BinarySensorEntityDescription(
+        key="GROUND_DELAY",
+        name="Ground Delay",
+        icon="mdi:airport",
+    ),
+    BinarySensorEntityDescription(
+        key="GROUND_STOP",
+        name="Ground Stop",
+        icon="mdi:airport",
+    ),
+    BinarySensorEntityDescription(
+        key="DEPART_DELAY",
+        name="Departure Delay",
+        icon="mdi:airplane-takeoff",
+    ),
+    BinarySensorEntityDescription(
+        key="ARRIVE_DELAY",
+        name="Arrival Delay",
+        icon="mdi:airplane-landing",
+    ),
+    BinarySensorEntityDescription(
+        key="CLOSURE",
+        name="Closure",
+        icon="mdi:airplane:off",
+    ),
+)
 
 
 async def async_setup_entry(
