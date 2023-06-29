@@ -413,6 +413,7 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
     _color_data_type: ColorTypeData | None = None
     _color_mode: DPCode | None = None
     _color_temp: IntegerTypeData | None = None
+    _attr_name = None
 
     def __init__(
         self,

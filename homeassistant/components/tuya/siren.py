@@ -83,6 +83,7 @@ class TuyaSirenEntity(TuyaEntity, SirenEntity):
     """Tuya Siren Entity."""
 
     _attr_supported_features = SirenEntityFeature.TURN_ON | SirenEntityFeature.TURN_OFF
+    _attr_name = None
 
     def __init__(
         self,
