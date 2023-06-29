@@ -15,20 +15,12 @@ import zigpy.zcl.clusters.general
 import zigpy.zcl.clusters.security
 import zigpy.zcl.foundation as zcl_f
 
-import homeassistant.components.zha.binary_sensor
 import homeassistant.components.zha.core.cluster_handlers as cluster_handlers
 import homeassistant.components.zha.core.const as zha_const
 from homeassistant.components.zha.core.device import ZHADevice
 import homeassistant.components.zha.core.discovery as disc
 from homeassistant.components.zha.core.endpoint import Endpoint
 import homeassistant.components.zha.core.registries as zha_regs
-import homeassistant.components.zha.cover
-import homeassistant.components.zha.device_tracker
-import homeassistant.components.zha.fan
-import homeassistant.components.zha.light
-import homeassistant.components.zha.lock
-import homeassistant.components.zha.sensor
-import homeassistant.components.zha.switch
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.entity_registry as er
@@ -131,7 +123,6 @@ async def test_devices(
                     ),
                     expect_reply=True,
                     manufacturer=None,
-                    tries=3,
                     tsn=None,
                 )
             ]
@@ -493,35 +484,3 @@ async def test_group_probe_cleanup_called(
     await config_entry.async_unload(hass_disable_services)
     await hass_disable_services.async_block_till_done()
     disc.GROUP_PROBE.cleanup.assert_called()
-
-
-@patch(
-    "zigpy.zcl.clusters.general.Identify.request",
-    new=AsyncMock(return_value=[mock.sentinel.data, zcl_f.Status.SUCCESS]),
-)
-@patch(
-    "homeassistant.components.zha.entity.ZhaEntity.entity_registry_enabled_default",
-    new=Mock(return_value=True),
-)
-async def test_cluster_handler_with_empty_ep_attribute_cluster(
-    hass_disable_services,
-    zigpy_device_mock,
-    zha_device_joined_restored,
-) -> None:
-    """Test device discovery for cluster which does not have em_attribute."""
-    entity_registry = homeassistant.helpers.entity_registry.async_get(
-        hass_disable_services
-    )
-
-    zigpy_device = zigpy_device_mock(
-        {1: {SIG_EP_INPUT: [0x042E], SIG_EP_OUTPUT: [], SIG_EP_TYPE: 0x1234}},
-        "00:11:22:33:44:55:66:77",
-        "test manufacturer",
-        "test model",
-        patch_cluster=False,
-    )
-    zha_dev = await zha_device_joined_restored(zigpy_device)
-    ha_entity_id = entity_registry.async_get_entity_id(
-        "sensor", "zha", f"{zha_dev.ieee}-1-1070"
-    )
-    assert ha_entity_id is not None

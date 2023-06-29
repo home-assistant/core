@@ -29,7 +29,9 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.template import Template
+from homeassistant.helpers.template_entity import ManualTriggerEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.util import dt as dt_util
 
 from .const import CONF_COMMAND_TIMEOUT, DEFAULT_TIMEOUT, DOMAIN, LOGGER
 from .sensor import CommandSensorData
@@ -94,24 +96,27 @@ async def async_setup_platform(
         value_template.hass = hass
     data = CommandSensorData(hass, command, command_timeout)
 
+    trigger_entity_config = {
+        CONF_UNIQUE_ID: unique_id,
+        CONF_NAME: Template(name, hass),
+        CONF_DEVICE_CLASS: device_class,
+    }
+
     async_add_entities(
         [
             CommandBinarySensor(
                 data,
-                name,
-                device_class,
+                trigger_entity_config,
                 payload_on,
                 payload_off,
                 value_template,
-                unique_id,
                 scan_interval,
             )
         ],
-        True,
     )
 
 
-class CommandBinarySensor(BinarySensorEntity):
+class CommandBinarySensor(ManualTriggerEntity, BinarySensorEntity):
     """Representation of a command line binary sensor."""
 
     _attr_should_poll = False
@@ -119,23 +124,19 @@ class CommandBinarySensor(BinarySensorEntity):
     def __init__(
         self,
         data: CommandSensorData,
-        name: str,
-        device_class: BinarySensorDeviceClass | None,
+        config: ConfigType,
         payload_on: str,
         payload_off: str,
         value_template: Template | None,
-        unique_id: str | None,
         scan_interval: timedelta,
     ) -> None:
         """Initialize the Command line binary sensor."""
+        super().__init__(self.hass, config)
         self.data = data
-        self._attr_name = name
-        self._attr_device_class = device_class
         self._attr_is_on = None
         self._payload_on = payload_on
         self._payload_off = payload_off
         self._value_template = value_template
-        self._attr_unique_id = unique_id
         self._scan_interval = scan_interval
         self._process_updates: asyncio.Lock | None = None
 
@@ -183,4 +184,12 @@ class CommandBinarySensor(BinarySensorEntity):
         elif value == self._payload_off:
             self._attr_is_on = False
 
+        self._process_manual_data(value)
         self.async_write_ha_state()
+
+    async def async_update(self) -> None:
+        """Update the entity.
+
+        Only used by the generic entity update service.
+        """
+        await self._update_entity_state(dt_util.now())

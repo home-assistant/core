@@ -114,7 +114,7 @@ async def test_websocket_get_actions(
         config_entry_id=config_entry.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    entity_registry.async_get_or_create(
+    entity_entry = entity_registry.async_get_or_create(
         "fake_integration", "test", "5678", device_id=device_entry.id
     )
     expected_actions = [
@@ -122,21 +122,21 @@ async def test_websocket_get_actions(
             "domain": "fake_integration",
             "type": "turn_off",
             "device_id": device_entry.id,
-            "entity_id": "fake_integration.test_5678",
+            "entity_id": entity_entry.id,
             "metadata": {"secondary": False},
         },
         {
             "domain": "fake_integration",
             "type": "turn_on",
             "device_id": device_entry.id,
-            "entity_id": "fake_integration.test_5678",
+            "entity_id": entity_entry.id,
             "metadata": {"secondary": False},
         },
         {
             "domain": "fake_integration",
             "type": "toggle",
             "device_id": device_entry.id,
-            "entity_id": "fake_integration.test_5678",
+            "entity_id": entity_entry.id,
             "metadata": {"secondary": False},
         },
     ]
@@ -169,7 +169,7 @@ async def test_websocket_get_conditions(
         config_entry_id=config_entry.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    entity_registry.async_get_or_create(
+    entity_entry = entity_registry.async_get_or_create(
         "fake_integration", "test", "5678", device_id=device_entry.id
     )
     expected_conditions = [
@@ -178,7 +178,7 @@ async def test_websocket_get_conditions(
             "domain": "fake_integration",
             "type": "is_off",
             "device_id": device_entry.id,
-            "entity_id": "fake_integration.test_5678",
+            "entity_id": entity_entry.id,
             "metadata": {"secondary": False},
         },
         {
@@ -186,7 +186,7 @@ async def test_websocket_get_conditions(
             "domain": "fake_integration",
             "type": "is_on",
             "device_id": device_entry.id,
-            "entity_id": "fake_integration.test_5678",
+            "entity_id": entity_entry.id,
             "metadata": {"secondary": False},
         },
     ]
@@ -223,7 +223,7 @@ async def test_websocket_get_triggers(
         config_entry_id=config_entry.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    entity_registry.async_get_or_create(
+    entity_entry = entity_registry.async_get_or_create(
         "fake_integration", "test", "5678", device_id=device_entry.id
     )
     expected_triggers = [
@@ -232,7 +232,7 @@ async def test_websocket_get_triggers(
             "domain": "fake_integration",
             "type": "changed_states",
             "device_id": device_entry.id,
-            "entity_id": "fake_integration.test_5678",
+            "entity_id": entity_entry.id,
             "metadata": {"secondary": False},
         },
         {
@@ -240,7 +240,7 @@ async def test_websocket_get_triggers(
             "domain": "fake_integration",
             "type": "turned_off",
             "device_id": device_entry.id,
-            "entity_id": "fake_integration.test_5678",
+            "entity_id": entity_entry.id,
             "metadata": {"secondary": False},
         },
         {
@@ -248,7 +248,7 @@ async def test_websocket_get_triggers(
             "domain": "fake_integration",
             "type": "turned_on",
             "device_id": device_entry.id,
-            "entity_id": "fake_integration.test_5678",
+            "entity_id": entity_entry.id,
             "metadata": {"secondary": False},
         },
     ]
