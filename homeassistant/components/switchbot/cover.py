@@ -52,6 +52,7 @@ class SwitchBotCurtainEntity(SwitchbotEntity, CoverEntity, RestoreEntity):
         | CoverEntityFeature.SET_POSITION
     )
     _attr_translation_key = "cover"
+    _attr_name = None
 
     def __init__(self, coordinator: SwitchbotDataUpdateCoordinator) -> None:
         """Initialize the Switchbot."""

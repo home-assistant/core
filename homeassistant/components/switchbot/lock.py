@@ -27,6 +27,7 @@ class SwitchBotLock(SwitchbotEntity, LockEntity):
     """Representation of a Switchbot lock."""
 
     _attr_translation_key = "lock"
+    _attr_name = None
     _device: switchbot.SwitchbotLock
 
     def __init__(self, coordinator: SwitchbotDataUpdateCoordinator) -> None:
