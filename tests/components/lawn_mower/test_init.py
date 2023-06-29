@@ -1,50 +1,69 @@
-"""Test the lawn mower integration."""
-import pytest
+"""The tests for the lawn mower integration."""
+from unittest.mock import MagicMock
 
-from homeassistant.components.lawn_mower.const import DOMAIN
+from homeassistant.components.lawn_mower import LawnMowerEntity, LawnMowerEntityFeature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry
 
 
-@pytest.mark.parametrize("platform", ("sensor",))
-async def test_setup_and_remove_config_entry(
-    hass: HomeAssistant,
-    platform: str,
-) -> None:
-    """Test setting up and removing a config entry."""
-    input_sensor_entity_id = "sensor.input"
-    registry = er.async_get(hass)
-    lawn_mower_entity_id = f"{platform}.my_lawn_mower"
+class MockLawnMowerEntity(LawnMowerEntity):
+    """Mock Lawn Mower device to use in tests."""
 
-    # Setup the config entry
-    config_entry = MockConfigEntry(
-        data={},
-        domain=DOMAIN,
-        options={
-            "entity_id": input_sensor_entity_id,
-            "name": "My lawn_mower",
-        },
-        title="My lawn_mower",
-    )
-    config_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
+    @property
+    def supported_features(self) -> LawnMowerEntityFeature:
+        """Return the list of features."""
+        return 0
 
-    # Check the entity is registered in the entity registry
-    assert registry.async_get(lawn_mower_entity_id) is not None
 
-    # Check the platform is setup correctly
-    state = hass.states.get(lawn_mower_entity_id)
-    # TODO Check the state of the entity has changed as expected
-    assert state.state == "unknown"
-    assert state.attributes == {}
+async def test_sync_start_mowing(hass: HomeAssistant) -> None:
+    """Test if async dock calls sync dock."""
+    lawn_mower = MockLawnMowerEntity()
+    lawn_mower.hass = hass
 
-    # Remove the config entry
-    assert await hass.config_entries.async_remove(config_entry.entry_id)
-    await hass.async_block_till_done()
+    lawn_mower.start_mowing = MagicMock()
+    await lawn_mower.async_start_mowing()
 
-    # Check the state and entity registry entry are removed
-    assert hass.states.get(lawn_mower_entity_id) is None
-    assert registry.async_get(lawn_mower_entity_id) is None
+    assert lawn_mower.start_mowing.called
+
+
+async def test_sync_dock(hass: HomeAssistant) -> None:
+    """Test if async dock calls sync dock."""
+    lawn_mower = MockLawnMowerEntity()
+    lawn_mower.hass = hass
+
+    lawn_mower.dock = MagicMock()
+    await lawn_mower.async_dock()
+
+    assert lawn_mower.dock.called
+
+
+async def test_sync_pause(hass: HomeAssistant) -> None:
+    """Test if async dock calls sync dock."""
+    lawn_mower = MockLawnMowerEntity()
+    lawn_mower.hass = hass
+
+    lawn_mower.pause = MagicMock()
+    await lawn_mower.async_pause()
+
+    assert lawn_mower.pause.called
+
+
+async def test_sync_enable_schedule(hass: HomeAssistant) -> None:
+    """Test if async dock calls sync dock."""
+    lawn_mower = MockLawnMowerEntity()
+    lawn_mower.hass = hass
+
+    lawn_mower.enable_schedule = MagicMock()
+    await lawn_mower.async_enable_schedule()
+
+    assert lawn_mower.enable_schedule.called
+
+
+async def test_sync_disable_schedule(hass: HomeAssistant) -> None:
+    """Test if async dock calls sync dock."""
+    lawn_mower = MockLawnMowerEntity()
+    lawn_mower.hass = hass
+
+    lawn_mower.disable_schedule = MagicMock()
+    await lawn_mower.async_disable_schedule()
+
+    assert lawn_mower.disable_schedule.called
