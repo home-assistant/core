@@ -5,6 +5,7 @@ from typing import Any
 
 from chip.clusters import Objects as clusters
 from matter_server.client.models import device_types
+from matter_server.common.helpers.util import create_attribute_path_from_attribute
 
 from homeassistant.components.climate import (
     ATTR_TARGET_TEMP_HIGH,
@@ -187,6 +188,7 @@ class MatterClimate(MatterEntity, ClimateEntity):
             return self._get_temperature_in_degrees(
                 clusters.Thermostat.Attributes.OccupiedCoolingSetpoint
             )
+        return None
 
     @property
     def target_temperature_low(self) -> float | None:
@@ -195,6 +197,7 @@ class MatterClimate(MatterEntity, ClimateEntity):
             return self._get_temperature_in_degrees(
                 clusters.Thermostat.Attributes.OccupiedHeatingSetpoint
             )
+        return None
 
     @staticmethod
     def create_optional_setpoint_command(
@@ -255,6 +258,25 @@ class MatterClimate(MatterEntity, ClimateEntity):
                 endpoint_id=self._endpoint.endpoint_id,
                 command=command,
             )
+
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
+        hvac_system_mode_map = {
+            HVACMode.HEAT: 4,
+            HVACMode.COOL: 3,
+            HVACMode.HEAT_COOL: 1,
+        }
+        system_mode_path = create_attribute_path_from_attribute(
+            endpoint_id=self._endpoint.endpoint_id,
+            attribute=clusters.Thermostat.Attributes.SystemMode,
+        )
+        system_mode_value = hvac_system_mode_map.get(hvac_mode)
+        if system_mode_value is None:
+            return
+        await self.matter_client.write_attribute(
+            node_id=self._endpoint.node.node_id,
+            attribute_path=system_mode_path,
+            value=system_mode_value,
+        )
 
     @callback
     def _update_from_device(self) -> None:
