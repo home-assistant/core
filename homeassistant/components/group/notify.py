@@ -66,7 +66,7 @@ class GroupNotifyPlatform(BaseNotificationService):
         payload: dict[str, Any] = {ATTR_MESSAGE: message}
         payload.update({key: val for key, val in kwargs.items() if val})
 
-        tasks: list[asyncio.Task[bool | None]] = []
+        tasks: list[asyncio.Task[Any]] = []
         for entity in self.entities:
             sending_payload = deepcopy(payload.copy())
             if (default_data := entity.get(ATTR_DATA)) is not None:
@@ -74,7 +74,7 @@ class GroupNotifyPlatform(BaseNotificationService):
             tasks.append(
                 asyncio.create_task(
                     self.hass.services.async_call(
-                        DOMAIN, entity[ATTR_SERVICE], sending_payload
+                        DOMAIN, entity[ATTR_SERVICE], sending_payload, blocking=True
                     )
                 )
             )

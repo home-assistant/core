@@ -5,8 +5,7 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_MODE, CONF_NAME
 import homeassistant.helpers.config_validation as cv
 
-from .const import DOMAIN, HOME_LOCATION_NAME
-from .weather import FORECAST_MODE
+from .const import DOMAIN, FORECAST_MODE, HOME_LOCATION_NAME
 
 
 class IpmaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):

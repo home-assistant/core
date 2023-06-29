@@ -438,7 +438,7 @@ async def test_airzone_climate_set_hvac_slave_error(hass: HomeAssistant) -> None
         )
 
     state = hass.states.get("climate.dorm_2")
-    assert state.state == HVACMode.OFF
+    assert state.state == HVACMode.HEAT
 
 
 async def test_airzone_climate_set_fan_mode(hass: HomeAssistant) -> None:

@@ -1,6 +1,7 @@
 """The test for sensor entity."""
 from __future__ import annotations
 
+from collections.abc import Generator
 from datetime import date, datetime, timezone
 from decimal import Decimal
 from typing import Any
@@ -11,10 +12,14 @@ from homeassistant.components.number import NumberDeviceClass
 from homeassistant.components.sensor import (
     DEVICE_CLASS_STATE_CLASSES,
     DEVICE_CLASS_UNITS,
+    DOMAIN as SENSOR_DOMAIN,
     SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
     SensorStateClass,
     async_update_suggested_units,
 )
+from homeassistant.config_entries import ConfigEntry, ConfigFlow
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     PERCENTAGE,
@@ -30,15 +35,24 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import STORAGE_KEY as RESTORE_STATE_KEY
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_system import METRIC_SYSTEM, US_CUSTOMARY_SYSTEM
 
 from tests.common import (
+    MockConfigEntry,
+    MockModule,
+    MockPlatform,
     async_mock_restore_state_shutdown_restart,
+    mock_config_flow,
+    mock_integration,
+    mock_platform,
     mock_restore_cache_with_extra_data,
 )
+
+TEST_DOMAIN = "test"
 
 
 @pytest.mark.parametrize(
@@ -2260,3 +2274,91 @@ async def test_unit_conversion_update(
     state = hass.states.get(entity3.entity_id)
     assert state.state == suggested_state
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == suggested_unit
+
+
+class MockFlow(ConfigFlow):
+    """Test flow."""
+
+
+@pytest.fixture(autouse=True)
+def config_flow_fixture(hass: HomeAssistant) -> Generator[None, None, None]:
+    """Mock config flow."""
+    mock_platform(hass, f"{TEST_DOMAIN}.config_flow")
+
+    with mock_config_flow(TEST_DOMAIN, MockFlow):
+        yield
+
+
+async def test_name(hass: HomeAssistant) -> None:
+    """Test sensor name."""
+
+    async def async_setup_entry_init(
+        hass: HomeAssistant, config_entry: ConfigEntry
+    ) -> bool:
+        """Set up test config entry."""
+        await hass.config_entries.async_forward_entry_setup(config_entry, SENSOR_DOMAIN)
+        return True
+
+    mock_platform(hass, f"{TEST_DOMAIN}.config_flow")
+    mock_integration(
+        hass,
+        MockModule(
+            TEST_DOMAIN,
+            async_setup_entry=async_setup_entry_init,
+        ),
+    )
+
+    # Unnamed sensor without device class -> no name
+    entity1 = SensorEntity()
+    entity1.entity_id = "sensor.test1"
+
+    # Unnamed sensor with device class but has_entity_name False -> no name
+    entity2 = SensorEntity()
+    entity2.entity_id = "sensor.test2"
+    entity2._attr_device_class = SensorDeviceClass.BATTERY
+
+    # Unnamed sensor with device class and has_entity_name True -> named
+    entity3 = SensorEntity()
+    entity3.entity_id = "sensor.test3"
+    entity3._attr_device_class = SensorDeviceClass.BATTERY
+    entity3._attr_has_entity_name = True
+
+    # Unnamed sensor with device class and has_entity_name True -> named
+    entity4 = SensorEntity()
+    entity4.entity_id = "sensor.test4"
+    entity4.entity_description = SensorEntityDescription(
+        "test",
+        SensorDeviceClass.BATTERY,
+        has_entity_name=True,
+    )
+
+    async def async_setup_entry_platform(
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        async_add_entities: AddEntitiesCallback,
+    ) -> None:
+        """Set up test stt platform via config entry."""
+        async_add_entities([entity1, entity2, entity3, entity4])
+
+    mock_platform(
+        hass,
+        f"{TEST_DOMAIN}.{SENSOR_DOMAIN}",
+        MockPlatform(async_setup_entry=async_setup_entry_platform),
+    )
+
+    config_entry = MockConfigEntry(domain=TEST_DOMAIN)
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity1.entity_id)
+    assert state.attributes == {}
+
+    state = hass.states.get(entity2.entity_id)
+    assert state.attributes == {"device_class": "battery"}
+
+    state = hass.states.get(entity3.entity_id)
+    assert state.attributes == {"device_class": "battery", "friendly_name": "Battery"}
+
+    state = hass.states.get(entity4.entity_id)
+    assert state.attributes == {"device_class": "battery", "friendly_name": "Battery"}
