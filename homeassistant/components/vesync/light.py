@@ -214,8 +214,7 @@ class VeSyncMulticolorLightHA(VeSyncTunableWhiteLightHA, LightEntity):
                 str(color_value_hsv),
             )
             return None
-        hs_color = color_value_hsv.hue, color_value_hsv.saturation
-        return hs_color
+        return (color_value_hsv.hue, color_value_hsv.saturation)
 
     @property
     def brightness(self) -> int | None:
