@@ -91,14 +91,6 @@ class MatterClimate(MatterEntity, ClimateEntity):
             return value
         return DEFAULT_MAX_TEMP
 
-    def _get_temperature_in_degrees(
-        self, attribute: type[clusters.ClusterAttributeDescriptor]
-    ) -> float | None:
-        """Return the scaled temperature value for the given attribute."""
-        if value := self.get_matter_attribute_value(attribute):
-            return float(value) / TEMPERATURE_SCALING_FACTOR
-        return None
-
     @property
     def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
@@ -124,26 +116,6 @@ class MatterClimate(MatterEntity, ClimateEntity):
             clusters.Thermostat.Attributes.OccupiedHeatingSetpoint
         )
 
-    @staticmethod
-    def create_optional_setpoint_command(
-        mode: clusters.Thermostat.Enums.SetpointAdjustMode,
-        target_temp: float | None,
-        current_target_temp: float | None,
-    ) -> clusters.Thermostat.Commands.SetpointRaiseLower | None:
-        """Create a setpoint command if the target temperature is different from the current one."""
-        if target_temp is None or current_target_temp is None:
-            return None
-
-        temp_diff = int((target_temp - current_target_temp) * 10)
-
-        if temp_diff == 0:
-            return None
-
-        return clusters.Thermostat.Commands.SetpointRaiseLower(
-            mode,
-            temp_diff,
-        )
-
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         current_mode = self.hvac_mode
@@ -152,7 +124,7 @@ class MatterClimate(MatterEntity, ClimateEntity):
             temperature = kwargs.get(ATTR_TEMPERATURE)
             if temperature is None:
                 raise ValueError("Temperature must be provided")
-            command = self.create_optional_setpoint_command(
+            command = self._create_optional_setpoint_command(
                 clusters.Thermostat.Enums.SetpointAdjustMode.kCool
                 if current_mode == HVACMode.COOL
                 else clusters.Thermostat.Enums.SetpointAdjustMode.kHeat,
@@ -167,13 +139,13 @@ class MatterClimate(MatterEntity, ClimateEntity):
                     "temperature_low and/or temperature_high must be provided"
                 )
             # due to ha send both high and low temperature, we need to check which one is changed
-            command = self.create_optional_setpoint_command(
+            command = self._create_optional_setpoint_command(
                 clusters.Thermostat.Enums.SetpointAdjustMode.kHeat,
                 kwargs.get(ATTR_TARGET_TEMP_LOW),
                 self.target_temperature_low,
             )
             if command is None:
-                command = self.create_optional_setpoint_command(
+                command = self._create_optional_setpoint_command(
                     clusters.Thermostat.Enums.SetpointAdjustMode.kCool,
                     kwargs.get(ATTR_TARGET_TEMP_HIGH),
                     self.target_temperature_high,
@@ -258,6 +230,34 @@ class MatterClimate(MatterEntity, ClimateEntity):
                 self._attr_hvac_modes = [HVACMode.HEAT]
             case _:
                 self._attr_hvac_modes = [HVACMode.OFF]
+
+    def _get_temperature_in_degrees(
+        self, attribute: type[clusters.ClusterAttributeDescriptor]
+    ) -> float | None:
+        """Return the scaled temperature value for the given attribute."""
+        if value := self.get_matter_attribute_value(attribute):
+            return float(value) / TEMPERATURE_SCALING_FACTOR
+        return None
+
+    @staticmethod
+    def _create_optional_setpoint_command(
+        mode: clusters.Thermostat.Enums.SetpointAdjustMode,
+        target_temp: float | None,
+        current_target_temp: float | None,
+    ) -> clusters.Thermostat.Commands.SetpointRaiseLower | None:
+        """Create a setpoint command if the target temperature is different from the current one."""
+        if target_temp is None or current_target_temp is None:
+            return None
+
+        temp_diff = int((target_temp - current_target_temp) * 10)
+
+        if temp_diff == 0:
+            return None
+
+        return clusters.Thermostat.Commands.SetpointRaiseLower(
+            mode,
+            temp_diff,
+        )
 
 
 # Discovery schema(s) to map Matter Attributes to HA entities
