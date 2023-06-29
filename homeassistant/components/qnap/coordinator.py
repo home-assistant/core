@@ -5,6 +5,7 @@ from datetime import timedelta
 import logging
 from typing import Any
 
+import async_timeout
 from qnapstats import QNAPStats
 
 from homeassistant.config_entries import ConfigEntry
@@ -57,7 +58,7 @@ class QnapCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
     async def _async_update_data(self) -> dict[str, dict[str, Any]]:
         """Get the latest data from the Qnap API."""
         try:
-            await self.hass.async_add_executor_job(self._sync_update)
-        finally:
-            UpdateFailed(self)
-            
+            async with async_timeout.timeout(CONF_TIMEOUT):
+                return await self.hass.async_add_executor_job(self._sync_update)
+        except (FileNotFoundError) as err:
+            raise UpdateFailed(f"Error communicating with device: {err}") from err
