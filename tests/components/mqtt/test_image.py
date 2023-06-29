@@ -3,8 +3,10 @@ from base64 import b64encode
 from contextlib import suppress
 from http import HTTPStatus
 import json
-from unittest.mock import patch
+import ssl
+from unittest.mock import MagicMock, patch
 
+import httpx
 import pytest
 import respx
 
@@ -200,8 +202,297 @@ async def test_image_b64_encoded_with_availability(
 @respx.mock
 @pytest.mark.freeze_time("2023-04-01 00:00:00+00:00")
 @pytest.mark.parametrize(
+    "hass_config",
+    [
+        {
+            mqtt.DOMAIN: {
+                "image": {
+                    "url_topic": "test/image",
+                    "name": "Test",
+                }
+            }
+        }
+    ],
+)
+async def test_image_from_url(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test setup with URL."""
+    respx.get("http://localhost/test.png").respond(
+        status_code=HTTPStatus.OK, content_type="image/png", content=b"milk"
+    )
+    topic = "test/image"
+
+    await mqtt_mock_entry()
+
+    # Test first with invalid URL
+    async_fire_mqtt_message(hass, topic, b"/tmp/test.png")
+    await hass.async_block_till_done()
+
+    state = hass.states.get("image.test")
+    assert state.state == "2023-04-01T00:00:00+00:00"
+
+    assert "Invalid image URL" in caplog.text
+
+    access_token = state.attributes["access_token"]
+    assert state.attributes == {
+        "access_token": access_token,
+        "entity_picture": f"/api/image_proxy/image.test?token={access_token}",
+        "friendly_name": "Test",
+    }
+
+    async_fire_mqtt_message(hass, topic, b"http://localhost/test.png")
+
+    await hass.async_block_till_done()
+
+    client = await hass_client_no_auth()
+    resp = await client.get(state.attributes["entity_picture"])
+    assert resp.status == HTTPStatus.OK
+    body = await resp.text()
+    assert body == "milk"
+    assert respx.get("http://localhost/test.png").call_count == 1
+
+    state = hass.states.get("image.test")
+    assert state.state == "2023-04-01T00:00:00+00:00"
+
+    # Check the image is not refetched
+    resp = await client.get(state.attributes["entity_picture"])
+    assert resp.status == HTTPStatus.OK
+    body = await resp.text()
+    assert body == "milk"
+    assert respx.get("http://localhost/test.png").call_count == 1
+
+    # Check the image is refetched when receiving a new message on the URL topic
+    respx.get("http://localhost/test.png").respond(
+        status_code=HTTPStatus.OK, content_type="image/png", content=b"milk"
+    )
+    async_fire_mqtt_message(hass, topic, b"http://localhost/test.png")
+
+    await hass.async_block_till_done()
+
+    resp = await client.get(state.attributes["entity_picture"])
+    assert resp.status == HTTPStatus.OK
+    body = await resp.text()
+    assert body == "milk"
+    assert respx.get("http://localhost/test.png").call_count == 2
+
+
+@respx.mock
+@pytest.mark.freeze_time("2023-04-01 00:00:00+00:00")
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        {
+            mqtt.DOMAIN: {
+                "image": {
+                    "url_topic": "test/image",
+                    "name": "Test",
+                    "url_template": "{{ value_json.val }}",
+                }
+            }
+        }
+    ],
+)
+async def test_image_from_url_with_template(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+) -> None:
+    """Test setup with URL."""
+    respx.get("http://localhost/test.png").respond(
+        status_code=HTTPStatus.OK, content_type="image/png", content=b"milk"
+    )
+    topic = "test/image"
+
+    await mqtt_mock_entry()
+
+    state = hass.states.get("image.test")
+    assert state.state == STATE_UNKNOWN
+
+    access_token = state.attributes["access_token"]
+    assert state.attributes == {
+        "access_token": access_token,
+        "entity_picture": f"/api/image_proxy/image.test?token={access_token}",
+        "friendly_name": "Test",
+    }
+
+    async_fire_mqtt_message(hass, topic, '{"val": "http://localhost/test.png"}')
+
+    await hass.async_block_till_done()
+
+    client = await hass_client_no_auth()
+    resp = await client.get(state.attributes["entity_picture"])
+    assert resp.status == HTTPStatus.OK
+    body = await resp.text()
+    assert body == "milk"
+
+    state = hass.states.get("image.test")
+    assert state.state == "2023-04-01T00:00:00+00:00"
+
+
+@respx.mock
+@pytest.mark.freeze_time("2023-04-01 00:00:00+00:00")
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        {
+            mqtt.DOMAIN: {
+                "image": {
+                    "url_topic": "test/image",
+                    "name": "Test",
+                }
+            }
+        }
+    ],
+)
+@pytest.mark.parametrize(
+    ("content_type", "setup_ok"),
+    [
+        ("image/jpg", True),
+        ("image", True),
+        ("image/png", True),
+        ("text/javascript", False),
+    ],
+)
+async def test_image_from_url_content_type(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+    content_type: str,
+    setup_ok: bool,
+) -> None:
+    """Test setup with URL."""
+    respx.get("http://localhost/test.png").respond(
+        status_code=HTTPStatus.OK, content_type=content_type, content=b"milk"
+    )
+    topic = "test/image"
+
+    await mqtt_mock_entry()
+
+    # Test first with invalid URL
+    async_fire_mqtt_message(hass, topic, b"/tmp/test.png")
+    await hass.async_block_till_done()
+
+    state = hass.states.get("image.test")
+    assert state.state == "2023-04-01T00:00:00+00:00"
+
+    access_token = state.attributes["access_token"]
+    assert state.attributes == {
+        "access_token": access_token,
+        "entity_picture": f"/api/image_proxy/image.test?token={access_token}",
+        "friendly_name": "Test",
+    }
+
+    async_fire_mqtt_message(hass, topic, b"http://localhost/test.png")
+
+    await hass.async_block_till_done()
+
+    client = await hass_client_no_auth()
+    resp = await client.get(state.attributes["entity_picture"])
+    assert resp.status == HTTPStatus.OK if setup_ok else HTTPStatus.SERVICE_UNAVAILABLE
+    if setup_ok:
+        body = await resp.text()
+        assert body == "milk"
+
+    state = hass.states.get("image.test")
+    assert state.state == "2023-04-01T00:00:00+00:00" if setup_ok else STATE_UNKNOWN
+
+
+@respx.mock
+@pytest.mark.freeze_time("2023-04-01 00:00:00+00:00")
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        {
+            mqtt.DOMAIN: {
+                "image": {
+                    "url_topic": "test/image",
+                    "name": "Test",
+                    "encoding": "utf-8",
+                }
+            }
+        }
+    ],
+)
+@pytest.mark.parametrize(
+    "side_effect",
+    [
+        httpx.RequestError("server offline", request=MagicMock()),
+        httpx.TimeoutException,
+        ssl.SSLError,
+    ],
+)
+async def test_image_from_url_fails(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+    side_effect: Exception,
+) -> None:
+    """Test setup with minimum configuration."""
+    respx.get("http://localhost/test.png").mock(side_effect=side_effect)
+    topic = "test/image"
+
+    await mqtt_mock_entry()
+
+    state = hass.states.get("image.test")
+    assert state.state == STATE_UNKNOWN
+    access_token = state.attributes["access_token"]
+    assert state.attributes == {
+        "access_token": access_token,
+        "entity_picture": f"/api/image_proxy/image.test?token={access_token}",
+        "friendly_name": "Test",
+    }
+
+    async_fire_mqtt_message(hass, topic, b"http://localhost/test.png")
+
+    await hass.async_block_till_done()
+
+    state = hass.states.get("image.test")
+
+    # The image failed to load, the the last image update is registered
+    # but _last_image was set to `None`
+    assert state.state == "2023-04-01T00:00:00+00:00"
+    client = await hass_client_no_auth()
+    resp = await client.get(state.attributes["entity_picture"])
+    assert resp.status == HTTPStatus.INTERNAL_SERVER_ERROR
+
+
+@respx.mock
+@pytest.mark.freeze_time("2023-04-01 00:00:00+00:00")
+@pytest.mark.parametrize(
     ("hass_config", "error_msg"),
     [
+        (
+            {
+                mqtt.DOMAIN: {
+                    "image": {
+                        "url_topic": "test/image",
+                        "content_type": "image/jpg",
+                        "name": "Test",
+                        "encoding": "utf-8",
+                    }
+                }
+            },
+            "Option `content_type` can not be used together with `url_topic`",
+        ),
+        (
+            {
+                mqtt.DOMAIN: {
+                    "image": {
+                        "url_topic": "test/image",
+                        "image_topic": "test/image-data-topic",
+                        "name": "Test",
+                        "encoding": "utf-8",
+                    }
+                }
+            },
+            "two or more values in the same group of exclusion 'image_topic'",
+        ),
         (
             {
                 mqtt.DOMAIN: {
@@ -211,7 +502,7 @@ async def test_image_b64_encoded_with_availability(
                     }
                 }
             },
-            "Invalid config for [mqtt]: required key not provided @ data['mqtt']['image'][0]['image_topic']. Got None.",
+            "Invalid config for [mqtt]: Expected one of [`image_topic`, `url_topic`], got none",
         ),
     ],
 )
