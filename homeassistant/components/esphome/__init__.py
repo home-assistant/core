@@ -405,7 +405,9 @@ class ESPHomeManager:
                     await async_connect_scanner(hass, entry, cli, entry_data)
                 )
 
-            _async_setup_device_registry(hass, entry, entry_data.device_info)
+            self.device_id = _async_setup_device_registry(
+                hass, entry, entry_data.device_info
+            )
             entry_data.async_update_device_state(hass)
 
             entity_infos, services = await cli.list_entities_services()
