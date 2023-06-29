@@ -8,6 +8,7 @@ from homeassistant.components.weather import (
     ATTR_CONDITION_CLEAR_NIGHT,
     ATTR_CONDITION_SUNNY,
     ATTR_FORECAST_CONDITION,
+    ATTR_FORECAST_HUMIDITY,
     ATTR_FORECAST_NATIVE_TEMP,
     ATTR_FORECAST_NATIVE_WIND_SPEED,
     ATTR_FORECAST_PRECIPITATION_PROBABILITY,
@@ -255,6 +256,9 @@ class NWSWeather(WeatherEntity):
                 )
             else:
                 data[ATTR_FORECAST_NATIVE_TEMP] = None
+
+            if (hum := forecast_entry.get("relativeHumidity")) is not None:
+                data[ATTR_FORECAST_HUMIDITY] = hum.get("value")
 
             if self.mode == DAYNIGHT:
                 data[ATTR_FORECAST_DAYTIME] = forecast_entry.get("isDaytime")
