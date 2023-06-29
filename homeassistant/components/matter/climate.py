@@ -116,10 +116,12 @@ class MatterClimate(MatterEntity, ClimateEntity):
                 return HVACAction.OFF
         return None
 
-    def _get_temperature_in_degrees(self, attribute) -> float | None:
+    def _get_temperature_in_degrees(
+        self, attribute: type[clusters.ClusterAttributeDescriptor]
+    ) -> float | None:
         """Return the scaled temperature value for the given attribute."""
         if value := self.get_matter_attribute_value(attribute):
-            return value / TEMPERATURE_SCALING_FACTOR
+            return float(value) / TEMPERATURE_SCALING_FACTOR
         return None
 
     @property
