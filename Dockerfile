@@ -53,6 +53,7 @@ RUN \
         --only-binary=:all: \
         --find-links "${WHEELS_LINKS}" \
         -e ./homeassistant \
+        --config-settings editable_mode=compat \
     && python3 -m compileall \
         homeassistant/homeassistant
 
