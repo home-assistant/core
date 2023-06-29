@@ -38,23 +38,23 @@ async def test_thermostat(
     set_node_attribute(thermostat, 1, 513, 28, 4)
     await trigger_subscription_callback(hass, matter_client)
 
-    state = hass.states.get("thermostat.longan_link_hvac")
+    state = hass.states.get("climate.longan_link_hvac")
     assert state
-    assert state.attributes["hvac_mode"] == HVAC_MODE_HEAT
+    assert state.state == HVAC_MODE_HEAT
 
     # change occupied heating setpoint to 20
     set_node_attribute(thermostat, 1, 513, 18, 2000)
     await trigger_subscription_callback(hass, matter_client)
 
-    state = hass.states.get("thermostat.longan_link_hvac")
+    state = hass.states.get("climate.longan_link_hvac")
     assert state
-    assert state.attributes["target_temperature"] == 20
+    assert state.attributes["temperature"] == 20
 
     await hass.services.async_call(
-        "thermostat",
+        "climate",
         "set_temperature",
         {
-            "entity_id": "thermostat.longan_link_hvac",
+            "entity_id": "climate.longan_link_hvac",
             "temperature": 25,
         },
         blocking=True,
@@ -68,7 +68,6 @@ async def test_thermostat(
             clusters.Thermostat.Enums.SetpointAdjustMode.kHeat,
             50,
         ),
-        timed_request_timeout_ms=1000,
     )
     matter_client.send_device_command.reset_mock()
 
@@ -76,23 +75,23 @@ async def test_thermostat(
     set_node_attribute(thermostat, 1, 513, 28, 3)
     await trigger_subscription_callback(hass, matter_client)
 
-    state = hass.states.get("thermostat.longan_link_hvac")
+    state = hass.states.get("climate.longan_link_hvac")
     assert state
-    assert state.attributes["hvac_mode"] == HVAC_MODE_COOL
+    assert state.state == HVAC_MODE_COOL
 
     # change occupied cooling setpoint to 18
     set_node_attribute(thermostat, 1, 513, 18, 1800)
     await trigger_subscription_callback(hass, matter_client)
 
-    state = hass.states.get("thermostat.longan_link_hvac")
+    state = hass.states.get("climate.longan_link_hvac")
     assert state
-    assert state.attributes["target_temperature"] == 18
+    assert state.attributes["temperature"] == 18
 
     await hass.services.async_call(
-        "thermostat",
+        "climate",
         "set_temperature",
         {
-            "entity_id": "thermostat.longan_link_hvac",
+            "entity_id": "climate.longan_link_hvac",
             "temperature": 16,
         },
         blocking=True,
@@ -105,6 +104,5 @@ async def test_thermostat(
         command=clusters.Thermostat.Commands.SetpointRaiseLower(
             clusters.Thermostat.Enums.SetpointAdjustMode.kCool, -20
         ),
-        timed_request_timeout_ms=1000,
     )
     matter_client.send_device_command.reset_mock()
