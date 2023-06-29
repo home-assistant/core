@@ -34,10 +34,6 @@ GET_EMAIL_SCHEMA = vol.Schema(
 GET_TOKEN_SCHEMA = vol.Schema({vol.Required(CONF_CODE): cv.string})
 
 
-class CannotConnect(exceptions.HomeAssistantError):
-    """Error to indicate we cannot connect."""
-
-
 class InvalidAuth(exceptions.HomeAssistantError):
     """Error to indicate we cannot connect."""
 
@@ -50,7 +46,6 @@ async def validate_input(p_api: MyPermobil, data: dict[str, Any]) -> None:
     if email:
         p_api.set_email(email)
     if code:
-        code = code.replace(" ", "")
         p_api.set_code(code)
     if token:
         p_api.set_token(token)
@@ -82,9 +77,14 @@ class PermobilConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if not self.p_api:
             session = async_get_clientsession(self.hass)
             self.p_api = MyPermobil(APPLICATION, session=session)
+
         try:
             if user_input is not None:
+                if not user_input.get(CONF_EMAIL):
+                    raise InvalidAuth("empty email")
+
                 # the user has entered data in the first prompt
+                user_input[CONF_EMAIL] = user_input[CONF_EMAIL].replace(" ", "")
                 await validate_input(self.p_api, user_input)
                 self.data[CONF_EMAIL] = user_input[CONF_EMAIL]
                 _LOGGER.debug("Permobil: email %s", self.p_api.email)
@@ -92,12 +92,17 @@ class PermobilConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.error("Permobil: %s", err)
             errors["base"] = f"Pemobil: {err}"
             errors["reason"] = "invalid_email"
+        except InvalidAuth as err:
+            _LOGGER.error("Permobil: %s", err)
+            errors["base"] = "Empty Email"
+            errors["reason"] = "empty_email"
+
         if errors or user_input is None:
             # there were errors in the first prompt
             return self.async_show_form(
                 step_id="user", data_schema=GET_EMAIL_SCHEMA, errors=errors
             )
-        # open the email code prompt
+        # open the select region prompt
         return await self.async_step_region()
 
     async def async_step_region(self, user_input=None) -> FlowResult:
@@ -106,9 +111,10 @@ class PermobilConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if not self.p_api:
             session = async_get_clientsession(self.hass)
             self.p_api = MyPermobil(APPLICATION, session=session)
+
         try:
             if user_input is None:
-                include_internal = self.p_api.email.endswith("@permobil.com")
+                include_internal = self.data[CONF_EMAIL].endswith("@permobil.com")
                 _LOGGER.debug("Permobil: include internals %s", include_internal)
                 self.region_names = await self.p_api.request_region_names(
                     include_internal
@@ -123,13 +129,9 @@ class PermobilConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 await validate_input(self.p_api, user_input)
                 region_name = user_input[CONF_REGION]
                 self.data[CONF_REGION] = self.region_names[region_name]
-                self.p_api.set_region(self.data[CONF_REGION])
                 _LOGGER.debug("Permobil: region %s", self.p_api.region)
                 await self.p_api.request_application_code()
         except KeyError as err:
-            errors["base"] = f"Pemobil: {err}"
-            errors["reason"] = "invalid_region"
-        except MyPermobilClientException as err:
             errors["base"] = f"Pemobil: {err}"
             errors["reason"] = "invalid_region"
         except MyPermobilAPIException as err:
@@ -166,8 +168,12 @@ class PermobilConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         try:
             if user_input is not None:
+                if not user_input.get(CONF_CODE):
+                    raise InvalidAuth("empty code")
+
                 # the user has entered data in the second prompt
                 # set the data
+                user_input[CONF_CODE] = user_input[CONF_CODE].replace(" ", "")
                 await validate_input(self.p_api, user_input)
                 self.data[CONF_CODE] = user_input[CONF_CODE]
                 _LOGGER.debug("Permobil: code %s…", self.data[CONF_CODE][:3])
@@ -180,6 +186,10 @@ class PermobilConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.error("Permobil: %s", err)
             errors["base"] = f"Pemobil: {err}"
             errors["reason"] = "invalid_code"
+        except InvalidAuth as err:
+            _LOGGER.error("Permobil: %s", err)
+            errors["base"] = "Empty Code"
+            errors["reason"] = "empty_code"
 
         if errors or user_input is None:
             return self.async_show_form(

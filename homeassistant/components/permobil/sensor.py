@@ -124,7 +124,11 @@ class PermobilGenericSensor(SensorEntity):
 
     async def async_update(self) -> None:
         """Get battery percentage."""
-        self._attr_native_value = await self._permobil.request_item(self._item)
+        try:
+            self._attr_native_value = await self._permobil.request_item(self._item)
+        except (MyPermobilClientException, MyPermobilAPIException) as err:
+            _LOGGER.error("Error while fetching %s: %s", self._attr_name, err)
+            self._attr_native_value = None
 
 
 class PermobilStateOfChargeSensor(PermobilGenericSensor):
