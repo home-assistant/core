@@ -2614,7 +2614,7 @@ venstarcolortouch==0.19
 vilfo-api-client==0.4.1
 
 # homeassistant.components.voip
-voip-utils==0.0.7
+voip-utils==0.1.0
 
 # homeassistant.components.volkszaehler
 volkszaehler==0.4.0
