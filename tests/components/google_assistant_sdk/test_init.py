@@ -334,8 +334,12 @@ async def test_conversation_agent(
     with patch(
         "homeassistant.components.google_assistant_sdk.TextAssistant"
     ) as mock_text_assistant:
-        await conversation.async_converse(hass, text1, None, Context(), "en-US", agent_id=config_entry.entry_id)
-        await conversation.async_converse(hass, text2, None, Context(), "en-US", agent_id=config_entry.entry_id)
+        await conversation.async_converse(
+            hass, text1, None, Context(), "en-US", config_entry.entry_id
+        )
+        await conversation.async_converse(
+            hass, text2, None, Context(), "en-US", config_entry.entry_id
+        )
 
     # Assert constructor is called only once since it's reused across requests
     assert mock_text_assistant.call_count == 1
@@ -365,7 +369,9 @@ async def test_conversation_agent_refresh_token(
     with patch(
         "homeassistant.components.google_assistant_sdk.TextAssistant"
     ) as mock_text_assistant:
-        await conversation.async_converse(hass, text1, None, Context(), "en-US", agent_id=config_entry.entry_id)
+        await conversation.async_converse(
+            hass, text1, None, Context(), "en-US", config_entry.entry_id
+        )
 
         # Expire the token between requests
         entry.data["token"]["expires_at"] = time.time() - 3600
@@ -380,7 +386,9 @@ async def test_conversation_agent_refresh_token(
             },
         )
 
-        await conversation.async_converse(hass, text2, None, Context(), "en-US", agent_id=config_entry.entry_id)
+        await conversation.async_converse(
+            hass, text2, None, Context(), "en-US", config_entry.entry_id
+        )
 
     # Assert constructor is called twice since the token was expired
     assert mock_text_assistant.call_count == 2
@@ -394,6 +402,7 @@ async def test_conversation_agent_refresh_token(
 
 async def test_conversation_agent_language_changed(
     hass: HomeAssistant,
+    config_entry: MockConfigEntry,
     setup_integration: ComponentSetup,
 ) -> None:
     """Test GoogleAssistantConversationAgent when language is changed."""
@@ -411,8 +420,12 @@ async def test_conversation_agent_language_changed(
     with patch(
         "homeassistant.components.google_assistant_sdk.TextAssistant"
     ) as mock_text_assistant:
-        await conversation.async_converse(hass, text1, None, Context(), "en-US")
-        await conversation.async_converse(hass, text2, None, Context(), "es-ES")
+        await conversation.async_converse(
+            hass, text1, None, Context(), "en-US", config_entry.entry_id
+        )
+        await conversation.async_converse(
+            hass, text2, None, Context(), "es-ES", config_entry.entry_id
+        )
 
     # Assert constructor is called twice since the language was changed
     assert mock_text_assistant.call_count == 2
