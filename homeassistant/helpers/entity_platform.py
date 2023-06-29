@@ -608,18 +608,13 @@ class EntityPlatform:
                     entity.add_to_platform_abort()
                     return
 
-            if self.config_entry is not None:
-                config_entry_id: str | None = self.config_entry.entry_id
-            else:
-                config_entry_id = None
-
             device_info = entity.device_info
             device_id = None
             device = None
 
-            if config_entry_id is not None and device_info is not None:
+            if self.config_entry and device_info is not None:
                 processed_dev_info: dict[str, str | None] = {
-                    "config_entry_id": config_entry_id
+                    "config_entry_id": self.config_entry.entry_id
                 }
                 for key in (
                     "connections",
@@ -640,6 +635,12 @@ class EntityPlatform:
                         processed_dev_info[key] = device_info[
                             key  # type: ignore[literal-required]
                         ]
+
+                if (
+                    "default_name" not in processed_dev_info
+                    and not processed_dev_info.get("name")
+                ):
+                    processed_dev_info["name"] = self.config_entry.title
 
                 if "configuration_url" in device_info:
                     if device_info["configuration_url"] is None:
