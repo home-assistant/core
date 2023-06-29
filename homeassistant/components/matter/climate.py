@@ -169,13 +169,8 @@ class MatterClimate(MatterEntity, ClimateEntity):
                     clusters.Thermostat.Enums.SetpointAdjustMode.kCool,
                     temp_diff,
                 )
-            case HVACMode.AUTO:
-                # not sure how to handle this when system is in auto mode
-                command = clusters.Thermostat.Commands.SetpointRaiseLower(
-                    clusters.Thermostat.Enums.SetpointAdjustMode.kBoth,
-                    temp_diff,
-                )
             case _:
+                # Uncertain if there are any modes in HA other than heat and cool that can set the target temperature.
                 return
 
         await self.matter_client.send_device_command(
@@ -197,7 +192,10 @@ class MatterClimate(MatterEntity, ClimateEntity):
 DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.CLIMATE,
-        entity_description=ClimateEntityDescription(key="MatterThermostat"),
+        entity_description=ClimateEntityDescription(
+            key="MatterThermostat",
+            name=None,
+        ),
         entity_class=MatterClimate,
         required_attributes=(clusters.Thermostat.Attributes.LocalTemperature,),
         optional_attributes=(
