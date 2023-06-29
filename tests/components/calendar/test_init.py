@@ -4,14 +4,13 @@ from __future__ import annotations
 from datetime import timedelta
 from http import HTTPStatus
 from typing import Any
-from unittest.mock import patch
+from unittest.mock import ANY, patch
 
 import pytest
 import voluptuous as vol
 
 from homeassistant.bootstrap import async_setup_component
 from homeassistant.components.calendar import DOMAIN, SERVICE_LIST_EVENTS
-from homeassistant.components.calendar.const import LIST_EVENT_FIELDS
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.util.dt as dt_util
@@ -406,11 +405,17 @@ async def test_list_events_service(hass: HomeAssistant) -> None:
         blocking=True,
         return_response=True,
     )
-    assert response
-    assert "events" in response
-    events = response["events"]
-    assert len(events) == 1
-    assert events[0]["summary"] == "Future Event"
+    assert response == {
+        "events": [
+            {
+                "start": ANY,
+                "end": ANY,
+                "summary": "Future Event",
+                "description": "Future Description",
+                "location": "Future Location",
+            }
+        ]
+    }
 
 
 @pytest.mark.parametrize(
@@ -448,9 +453,6 @@ async def test_list_events_service_duration(
     assert "events" in response
     events = response["events"]
     assert [event["summary"] for event in events] == expected_events
-    for event in events:
-        for key in event:
-            assert key in LIST_EVENT_FIELDS
 
 
 async def test_list_events_positive_duration(hass: HomeAssistant) -> None:

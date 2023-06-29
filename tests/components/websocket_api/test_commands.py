@@ -1769,9 +1769,6 @@ async def test_execute_script_complex_response(
                 "summary": "Future Event",
                 "description": "Future Description",
                 "location": "Future Location",
-                "uid": None,
-                "recurrence_id": None,
-                "rrule": None,
             }
         ]
     }
