@@ -502,14 +502,6 @@ DHCP: list[dict[str, str | bool]] = [
         "macaddress": "A4D578*",
     },
     {
-        "domain": "senseme",
-        "registered_devices": True,
-    },
-    {
-        "domain": "senseme",
-        "macaddress": "20F85E*",
-    },
-    {
         "domain": "sensibo",
         "hostname": "sensibo*",
     },

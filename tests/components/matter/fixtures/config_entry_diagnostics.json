@@ -669,7 +669,9 @@
         "1/1030/65529": [],
         "1/1030/65531": [0, 1, 2, 65528, 65529, 65531, 65532, 65533]
       },
-      "available": true
+      "available": true,
+      "is_bridge": false,
+      "attribute_subscriptions": []
     }
   ],
   "events": []

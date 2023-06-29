@@ -189,7 +189,7 @@ class JellyfinSource(MediaSource):
     async def _build_artists(self, library_id: str) -> list[BrowseMediaSource]:
         """Return all artists in the music library."""
         artists = await self._get_children(library_id, ITEM_TYPE_ARTIST)
-        artists = sorted(artists, key=lambda k: k[ITEM_KEY_NAME])  # type: ignore[no-any-return]
+        artists = sorted(artists, key=lambda k: k[ITEM_KEY_NAME])
         return [await self._build_artist(artist, False) for artist in artists]
 
     async def _build_artist(
@@ -220,7 +220,7 @@ class JellyfinSource(MediaSource):
     async def _build_albums(self, parent_id: str) -> list[BrowseMediaSource]:
         """Return all albums of a single artist as browsable media sources."""
         albums = await self._get_children(parent_id, ITEM_TYPE_ALBUM)
-        albums = sorted(albums, key=lambda k: k[ITEM_KEY_NAME])  # type: ignore[no-any-return]
+        albums = sorted(albums, key=lambda k: k[ITEM_KEY_NAME])
         return [await self._build_album(album, False) for album in albums]
 
     async def _build_album(
@@ -310,7 +310,7 @@ class JellyfinSource(MediaSource):
     async def _build_movies(self, library_id: str) -> list[BrowseMediaSource]:
         """Return all movies in the movie library."""
         movies = await self._get_children(library_id, ITEM_TYPE_MOVIE)
-        movies = sorted(movies, key=lambda k: k[ITEM_KEY_NAME])  # type: ignore[no-any-return]
+        movies = sorted(movies, key=lambda k: k[ITEM_KEY_NAME])
         return [
             self._build_movie(movie)
             for movie in movies
@@ -363,7 +363,7 @@ class JellyfinSource(MediaSource):
     async def _build_tvshow(self, library_id: str) -> list[BrowseMediaSource]:
         """Return all series in the tv library."""
         series = await self._get_children(library_id, ITEM_TYPE_SERIES)
-        series = sorted(series, key=lambda k: k[ITEM_KEY_NAME])  # type: ignore[no-any-return]
+        series = sorted(series, key=lambda k: k[ITEM_KEY_NAME])
         return [await self._build_series(serie, False) for serie in series]
 
     async def _build_series(
@@ -394,7 +394,7 @@ class JellyfinSource(MediaSource):
     async def _build_seasons(self, series_id: str) -> list[BrowseMediaSource]:
         """Return all seasons in the series."""
         seasons = await self._get_children(series_id, ITEM_TYPE_SEASON)
-        seasons = sorted(seasons, key=lambda k: k[ITEM_KEY_NAME])  # type: ignore[no-any-return]
+        seasons = sorted(seasons, key=lambda k: k[ITEM_KEY_NAME])
         return [await self._build_season(season, False) for season in seasons]
 
     async def _build_season(
@@ -425,7 +425,7 @@ class JellyfinSource(MediaSource):
     async def _build_episodes(self, season_id: str) -> list[BrowseMediaSource]:
         """Return all episode in the season."""
         episodes = await self._get_children(season_id, ITEM_TYPE_EPISODE)
-        episodes = sorted(episodes, key=lambda k: k[ITEM_KEY_NAME])  # type: ignore[no-any-return]
+        episodes = sorted(episodes, key=lambda k: k[ITEM_KEY_NAME])
         return [
             self._build_episode(episode)
             for episode in episodes
