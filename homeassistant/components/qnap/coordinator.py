@@ -18,7 +18,7 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
 
@@ -56,4 +56,8 @@ class QnapCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
 
     async def _async_update_data(self) -> dict[str, dict[str, Any]]:
         """Get the latest data from the Qnap API."""
-        return await self.hass.async_add_executor_job(self._sync_update)
+        try:
+            await self.hass.async_add_executor_job(self._sync_update)
+        finally:
+            UpdateFailed(self)
+            
