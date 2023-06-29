@@ -1,7 +1,11 @@
 """Support for Home Assistant iOS app sensors."""
 from __future__ import annotations
 
-from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE
 from homeassistant.core import HomeAssistant, callback
@@ -17,12 +21,12 @@ from .const import DOMAIN
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="level",
-        name="Battery Level",
         native_unit_of_measurement=PERCENTAGE,
+        device_class=SensorDeviceClass.BATTERY,
     ),
     SensorEntityDescription(
         key="state",
-        name="Battery State",
+        translation_key="battery_state",
     ),
 )
 
@@ -59,6 +63,7 @@ class IOSSensor(SensorEntity):
     """Representation of an iOS sensor."""
 
     _attr_should_poll = False
+    _attr_has_entity_name = True
 
     def __init__(
         self, device_name, device, description: SensorEntityDescription
@@ -66,9 +71,6 @@ class IOSSensor(SensorEntity):
         """Initialize the sensor."""
         self.entity_description = description
         self._device = device
-
-        device_name = device[ios.ATTR_DEVICE][ios.ATTR_DEVICE_NAME]
-        self._attr_name = f"{device_name} {description.key}"
 
         device_id = device[ios.ATTR_DEVICE_ID]
         self._attr_unique_id = f"{description.key}_{device_id}"
