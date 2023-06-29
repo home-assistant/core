@@ -18,7 +18,7 @@ PLATFORMS_BY_TYPE = {
         Platform.SWITCH,
     ),
     LitterRobot: (Platform.VACUUM,),
-    LitterRobot3: (Platform.BUTTON,),
+    LitterRobot3: (Platform.BUTTON, Platform.TIME),
     LitterRobot4: (Platform.UPDATE,),
     FeederRobot: (Platform.BUTTON,),
 }

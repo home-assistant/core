@@ -7,10 +7,12 @@ from typing import Any
 from homeassistant.components.weather import (
     ATTR_FORECAST_CONDITION,
     ATTR_FORECAST_TIME,
+    ATTR_WEATHER_CLOUD_COVERAGE,
     ATTR_WEATHER_HUMIDITY,
     ATTR_WEATHER_PRESSURE,
     ATTR_WEATHER_TEMPERATURE,
     ATTR_WEATHER_WIND_BEARING,
+    ATTR_WEATHER_WIND_GUST_SPEED,
     ATTR_WEATHER_WIND_SPEED,
     Forecast,
     WeatherEntity,
@@ -172,6 +174,20 @@ class MetWeather(CoordinatorEntity[MetDataUpdateCoordinator], WeatherEntity):
         """Return the wind direction."""
         return self.coordinator.data.current_weather_data.get(
             ATTR_MAP[ATTR_WEATHER_WIND_BEARING]
+        )
+
+    @property
+    def native_wind_gust_speed(self) -> float | None:
+        """Return the wind gust speed in native units."""
+        return self.coordinator.data.current_weather_data.get(
+            ATTR_MAP[ATTR_WEATHER_WIND_GUST_SPEED]
+        )
+
+    @property
+    def cloud_coverage(self) -> float | None:
+        """Return the cloud coverage."""
+        return self.coordinator.data.current_weather_data.get(
+            ATTR_MAP[ATTR_WEATHER_CLOUD_COVERAGE]
         )
 
     @property

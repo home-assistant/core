@@ -2,6 +2,8 @@
 
 from typing import Any
 
+from roborock.api import AttributeCache
+from roborock.command_cache import CacheableAttribute
 from roborock.containers import Status
 from roborock.exceptions import RoborockException
 from roborock.local_api import RoborockLocalClient
@@ -31,6 +33,10 @@ class RoborockEntity(Entity):
     def api(self) -> RoborockLocalClient:
         """Return the Api."""
         return self._api
+
+    def get_cache(self, attribute: CacheableAttribute) -> AttributeCache:
+        """Get an item from the api cache."""
+        return self._api.cache.get(attribute)
 
     async def send(
         self,
