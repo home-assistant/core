@@ -133,10 +133,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
             await coordinator_alert.async_refresh()
 
-            if not coordinator_alert.last_update_success:
-                raise ConfigEntryNotReady
-
-            hass.data[DOMAIN][department] = True
+            if coordinator_alert.last_update_success:
+                hass.data[DOMAIN][department] = True
         else:
             _LOGGER.warning(
                 (
@@ -158,11 +156,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     undo_listener = entry.add_update_listener(_async_update_listener)
 
     hass.data[DOMAIN][entry.entry_id] = {
+        UNDO_UPDATE_LISTENER: undo_listener,
         COORDINATOR_FORECAST: coordinator_forecast,
         COORDINATOR_RAIN: coordinator_rain,
-        COORDINATOR_ALERT: coordinator_alert,
-        UNDO_UPDATE_LISTENER: undo_listener,
     }
+    if coordinator_alert and coordinator_alert.last_update_success:
+        hass.data[DOMAIN][entry.entry_id][COORDINATOR_ALERT] = coordinator_alert
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

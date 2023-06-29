@@ -16,7 +16,7 @@ from homeassistant.util.dt import utcnow
 
 from .conftest import ComponentSetup, ExpectedCredentials
 
-from tests.common import async_fire_time_changed, async_mock_service
+from tests.common import MockConfigEntry, async_fire_time_changed, async_mock_service
 from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import ClientSessionGenerator
 
@@ -322,6 +322,7 @@ async def test_send_text_command_media_player(
 async def test_conversation_agent(
     hass: HomeAssistant,
     setup_integration: ComponentSetup,
+    config_entry: MockConfigEntry,
 ) -> None:
     """Test GoogleAssistantConversationAgent."""
     await setup_integration()
@@ -348,13 +349,13 @@ async def test_conversation_agent(
         await hass.services.async_call(
             "conversation",
             "process",
-            {"text": text1},
+            {"text": text1, "agent_id": config_entry.entry_id},
             blocking=True,
         )
         await hass.services.async_call(
             "conversation",
             "process",
-            {"text": text2},
+            {"text": text2, "agent_id": config_entry.entry_id},
             blocking=True,
         )
 
@@ -367,6 +368,7 @@ async def test_conversation_agent(
 
 async def test_conversation_agent_refresh_token(
     hass: HomeAssistant,
+    config_entry: MockConfigEntry,
     setup_integration: ComponentSetup,
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
@@ -392,7 +394,7 @@ async def test_conversation_agent_refresh_token(
         await hass.services.async_call(
             "conversation",
             "process",
-            {"text": text1},
+            {"text": text1, "agent_id": config_entry.entry_id},
             blocking=True,
         )
 
@@ -412,7 +414,7 @@ async def test_conversation_agent_refresh_token(
         await hass.services.async_call(
             "conversation",
             "process",
-            {"text": text2},
+            {"text": text2, "agent_id": config_entry.entry_id},
             blocking=True,
         )
 

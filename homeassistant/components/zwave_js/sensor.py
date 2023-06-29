@@ -769,8 +769,9 @@ class ZWaveConfigParameterSensor(ZWaveListSensor):
     @property
     def device_class(self) -> SensorDeviceClass | None:
         """Return sensor device class."""
-        if (device_class := super(ZwaveSensor, self).device_class) is not None:
-            return device_class
+        # mypy doesn't know about fget: https://github.com/python/mypy/issues/6185
+        if (device_class := ZwaveSensor.device_class.fget(self)) is not None:  # type: ignore[attr-defined]
+            return device_class  # type: ignore[no-any-return]
         if (
             self._primary_value.configuration_value_type
             == ConfigurationValueType.ENUMERATED

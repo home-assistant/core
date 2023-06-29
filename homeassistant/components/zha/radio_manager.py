@@ -250,11 +250,12 @@ class ZhaRadioManager:
 
             assert self.current_settings is not None
 
+        metadata = self.current_settings.network_info.metadata["ezsp"]
+
         if (
             self.current_settings.node_info.ieee == self.chosen_backup.node_info.ieee
-            or not self.current_settings.network_info.metadata["ezsp"][
-                "can_write_custom_eui64"
-            ]
+            or metadata["can_rewrite_custom_eui64"]
+            or not metadata["can_burn_userdata_custom_eui64"]
         ):
             # No point in prompting the user if the backup doesn't have a new IEEE
             # address or if there is no way to overwrite the IEEE address a second time

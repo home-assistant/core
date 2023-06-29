@@ -680,7 +680,7 @@ async def test_execute_times_out(
 
     async def slow_turn_on(*args, **kwargs):
         # Make DemoLigt.async_turn_on hang waiting for the turn_on_wait event
-        await turn_on_wait.wait(),
+        await turn_on_wait.wait()
 
     with patch.object(
         hass.services, "async_call", wraps=hass.services.async_call

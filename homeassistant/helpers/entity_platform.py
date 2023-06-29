@@ -31,6 +31,7 @@ from homeassistant.exceptions import (
     PlatformNotReady,
     RequiredParameterMissing,
 )
+from homeassistant.generated import languages
 from homeassistant.setup import async_start_setup
 from homeassistant.util.async_ import run_callback_threadsafe
 
@@ -128,6 +129,8 @@ class EntityPlatform:
         self.entities: dict[str, Entity] = {}
         self.component_translations: dict[str, Any] = {}
         self.platform_translations: dict[str, Any] = {}
+        self.object_id_component_translations: dict[str, Any] = {}
+        self.object_id_platform_translations: dict[str, Any] = {}
         self._tasks: list[asyncio.Task[None]] = []
         # Stop tracking tasks after setup is completed
         self._setup_complete = False
@@ -294,22 +297,43 @@ class EntityPlatform:
         logger = self.logger
         hass = self.hass
         full_name = f"{self.domain}.{self.platform_name}"
+        object_id_language = (
+            hass.config.language
+            if hass.config.language in languages.NATIVE_ENTITY_IDS
+            else languages.DEFAULT_LANGUAGE
+        )
 
-        try:
-            self.component_translations = await translation.async_get_translations(
-                hass, hass.config.language, "entity_component", {self.domain}
+        async def get_translations(
+            language: str, category: str, integration: str
+        ) -> dict[str, Any]:
+            """Get entity translations."""
+            try:
+                return await translation.async_get_translations(
+                    hass, language, category, {integration}
+                )
+            except Exception as err:  # pylint: disable=broad-exception-caught
+                _LOGGER.debug(
+                    "Could not load translations for %s",
+                    integration,
+                    exc_info=err,
+                )
+            return {}
+
+        self.component_translations = await get_translations(
+            hass.config.language, "entity_component", self.domain
+        )
+        self.platform_translations = await get_translations(
+            hass.config.language, "entity", self.platform_name
+        )
+        if object_id_language == hass.config.language:
+            self.object_id_component_translations = self.component_translations
+            self.object_id_platform_translations = self.platform_translations
+        else:
+            self.object_id_component_translations = await get_translations(
+                object_id_language, "entity_component", self.domain
             )
-        except Exception as err:  # pylint: disable=broad-exception-caught
-            _LOGGER.debug(
-                "Could not load translations for %s", self.domain, exc_info=err
-            )
-        try:
-            self.platform_translations = await translation.async_get_translations(
-                hass, hass.config.language, "entity", {self.platform_name}
-            )
-        except Exception as err:  # pylint: disable=broad-exception-caught
-            _LOGGER.debug(
-                "Could not load translations for %s", self.platform_name, exc_info=err
+            self.object_id_platform_translations = await get_translations(
+                object_id_language, "entity", self.platform_name
             )
 
         logger.info("Setting up %s", full_name)
@@ -652,9 +676,11 @@ class EntityPlatform:
                     if entity.use_device_name:
                         suggested_object_id = device_name
                     else:
-                        suggested_object_id = f"{device_name} {entity_name}"
+                        suggested_object_id = (
+                            f"{device_name} {entity.suggested_object_id}"
+                        )
                 if not suggested_object_id:
-                    suggested_object_id = entity_name
+                    suggested_object_id = entity.suggested_object_id
 
             if self.entity_namespace is not None:
                 suggested_object_id = f"{self.entity_namespace} {suggested_object_id}"
@@ -709,7 +735,7 @@ class EntityPlatform:
         # Generate entity ID
         if entity.entity_id is None or generate_new_entity_id:
             suggested_object_id = (
-                suggested_object_id or entity_name or DEVICE_DEFAULT_NAME
+                suggested_object_id or entity.suggested_object_id or DEVICE_DEFAULT_NAME
             )
 
             if self.entity_namespace is not None:
@@ -727,7 +753,7 @@ class EntityPlatform:
 
         if already_exists:
             self.logger.error(
-                f"Entity id already exists - ignoring: {entity.entity_id}"
+                "Entity id already exists - ignoring: %s", entity.entity_id
             )
             entity.add_to_platform_abort()
             return

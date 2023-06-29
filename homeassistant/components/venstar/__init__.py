@@ -123,8 +123,6 @@ class VenstarDataUpdateCoordinator(update_coordinator.DataUpdateCoordinator[None
                 f"Exception during Venstar runtime update: {ex}"
             ) from ex
 
-        return None
-
 
 class VenstarEntity(CoordinatorEntity[VenstarDataUpdateCoordinator]):
     """Representation of a Venstar entity."""

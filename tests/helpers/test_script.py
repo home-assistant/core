@@ -27,7 +27,8 @@ from homeassistant.core import (
     CoreState,
     HomeAssistant,
     ServiceCall,
-    ServiceResult,
+    ServiceResponse,
+    SupportsResponse,
     callback,
 )
 from homeassistant.exceptions import ConditionError, HomeAssistantError, ServiceNotFound
@@ -330,19 +331,21 @@ async def test_calling_service_template(hass: HomeAssistant) -> None:
     )
 
 
-async def test_calling_service_return_values(
+async def test_calling_service_response_data(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
-    """Test the calling of a service with return values."""
+    """Test the calling of a service with response data."""
     context = Context()
 
-    def mock_service(call: ServiceCall) -> ServiceResult:
+    def mock_service(call: ServiceCall) -> ServiceResponse:
         """Mock service call."""
-        if call.return_values:
+        if call.return_response:
             return {"data": "value-12345"}
         return None
 
-    hass.services.async_register("test", "script", mock_service)
+    hass.services.async_register(
+        "test", "script", mock_service, supports_response=SupportsResponse.OPTIONAL
+    )
     sequence = cv.SCRIPT_SCHEMA(
         [
             {
@@ -402,6 +405,50 @@ async def test_calling_service_return_values(
             ],
         }
     )
+
+
+@pytest.mark.parametrize(
+    ("supports_response", "params", "expected_error"),
+    [
+        (
+            SupportsResponse.NONE,
+            {"response_variable": "foo"},
+            "does not support 'response_variable'",
+        ),
+        (SupportsResponse.ONLY, {}, "requires 'response_variable'"),
+    ],
+)
+async def test_service_response_data_errors(
+    hass: HomeAssistant,
+    supports_response: SupportsResponse,
+    params: dict[str, str],
+    expected_error: str,
+) -> None:
+    """Test the calling of a service with response data error cases."""
+    context = Context()
+
+    def mock_service(call: ServiceCall) -> ServiceResponse:
+        """Mock service call."""
+        raise ValueError("Never invoked")
+
+    hass.services.async_register(
+        "test", "script", mock_service, supports_response=supports_response
+    )
+
+    sequence = cv.SCRIPT_SCHEMA(
+        [
+            {
+                "alias": "service step1",
+                "service": "test.script",
+                **params,
+            },
+        ]
+    )
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+
+    with pytest.raises(vol.Invalid, match=expected_error):
+        await script_obj.async_run(context=context)
+        await hass.async_block_till_done()
 
 
 async def test_data_template_with_templated_key(hass: HomeAssistant) -> None:

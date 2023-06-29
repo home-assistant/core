@@ -48,7 +48,9 @@ from homeassistant.core import (
     Event,
     HomeAssistant,
     ServiceCall,
+    ServiceResponse,
     State,
+    SupportsResponse,
     callback,
 )
 from homeassistant.helpers import (
@@ -285,7 +287,12 @@ async def async_test_home_assistant(event_loop, load_registries=True):
 
 
 def async_mock_service(
-    hass: HomeAssistant, domain: str, service: str, schema: vol.Schema | None = None
+    hass: HomeAssistant,
+    domain: str,
+    service: str,
+    schema: vol.Schema | None = None,
+    response: ServiceResponse = None,
+    supports_response: SupportsResponse | None = None,
 ) -> list[ServiceCall]:
     """Set up a fake service & return a calls log list to this service."""
     calls = []
@@ -294,8 +301,18 @@ def async_mock_service(
     def mock_service_log(call):  # pylint: disable=unnecessary-lambda
         """Mock service call."""
         calls.append(call)
+        return response
 
-    hass.services.async_register(domain, service, mock_service_log, schema=schema)
+    if supports_response is None and response is not None:
+        supports_response = SupportsResponse.OPTIONAL
+
+    hass.services.async_register(
+        domain,
+        service,
+        mock_service_log,
+        schema=schema,
+        supports_response=supports_response,
+    )
 
     return calls
 
@@ -511,6 +528,7 @@ def mock_registry(
     registry = er.EntityRegistry(hass)
     if mock_entries is None:
         mock_entries = {}
+    registry.deleted_entities = {}
     registry.entities = er.EntityRegistryItems()
     registry._entities_data = registry.entities.data
     for key, entry in mock_entries.items():
@@ -1218,6 +1236,8 @@ def mock_storage(
         if store._data is None:
             # No data to load
             if store.key not in data:
+                # Make sure the next attempt will still load
+                store._load_task = None
                 return None
 
             mock_data = data.get(store.key)
@@ -1371,19 +1391,6 @@ def async_mock_signal(hass: HomeAssistant, signal: str) -> list[tuple[Any]]:
     async_dispatcher_connect(hass, signal, mock_signal_handler)
 
     return calls
-
-
-def assert_lists_same(a: list[Any], b: list[Any]) -> None:
-    """Compare two lists, ignoring order.
-
-    Check both that all items in a are in b and that all items in b are in a,
-    otherwise assert_lists_same(["1", "1"], ["1", "2"]) could be True.
-    """
-    assert len(a) == len(b)
-    for i in a:
-        assert i in b
-    for i in b:
-        assert i in a
 
 
 _SENTINEL = object()
