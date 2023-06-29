@@ -44,6 +44,7 @@ class MatterClimate(MatterEntity, ClimateEntity):
     _attr_temperature_unit: str = UnitOfTemperature.CELSIUS
     _attr_supported_features: ClimateEntityFeature = (
         ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
     )
 
     @property
@@ -56,7 +57,7 @@ class MatterClimate(MatterEntity, ClimateEntity):
 
         match value:
             case SystemMode.kAuto:
-                return HVACMode.AUTO
+                return HVACMode.HEAT_COOL
             case SystemMode.kDry:
                 return HVACMode.DRY
             case SystemMode.kFanOnly:
@@ -116,6 +117,44 @@ class MatterClimate(MatterEntity, ClimateEntity):
                 return HVACAction.OFF
         return None
 
+    @property
+    def min_temp(self) -> float | None:
+        """Return the minimum temperature."""
+        match self.hvac_mode:
+            case HVACMode.COOL:
+                return self._get_temperature_in_degrees(
+                    clusters.Thermostat.Attributes.AbsMinCoolSetpointLimit
+                )
+            case HVACMode.HEAT:
+                return self._get_temperature_in_degrees(
+                    clusters.Thermostat.Attributes.AbsMinHeatSetpointLimit
+                )
+            case HVACMode.HEAT_COOL:
+                return self._get_temperature_in_degrees(
+                    clusters.Thermostat.Attributes.AbsMinHeatSetpointLimit
+                )
+            case _:
+                return None
+
+    @property
+    def max_temp(self) -> float | None:
+        """Return the maximum temperature."""
+        match self.hvac_mode:
+            case HVACMode.COOL:
+                return self._get_temperature_in_degrees(
+                    clusters.Thermostat.Attributes.AbsMaxCoolSetpointLimit
+                )
+            case HVACMode.HEAT:
+                return self._get_temperature_in_degrees(
+                    clusters.Thermostat.Attributes.AbsMaxHeatSetpointLimit
+                )
+            case HVACMode.HEAT_COOL:
+                return self._get_temperature_in_degrees(
+                    clusters.Thermostat.Attributes.AbsMaxCoolSetpointLimit
+                )
+            case _:
+                return None
+
     def _get_temperature_in_degrees(
         self, attribute: type[clusters.ClusterAttributeDescriptor]
     ) -> float | None:
@@ -143,11 +182,24 @@ class MatterClimate(MatterEntity, ClimateEntity):
                 return self._get_temperature_in_degrees(
                     clusters.Thermostat.Attributes.OccupiedHeatingSetpoint
                 )
-            case HVACMode.AUTO:
-                # When the system mode is set to "auto," there is no target temperature; instead, there is a target temperature low and high.
-                return None
             case _:
                 return None
+
+    @property
+    def target_temperature_high(self) -> float | None:
+        """Return the highbound target temperature we try to reach."""
+        if self.hvac_mode == HVACMode.HEAT_COOL:
+            return self._get_temperature_in_degrees(
+                clusters.Thermostat.Attributes.OccupiedCoolingSetpoint
+            )
+
+    @property
+    def target_temperature_low(self) -> float | None:
+        """Return the lowbound target temperature we try to reach."""
+        if self.hvac_mode == HVACMode.HEAT_COOL:
+            return self._get_temperature_in_degrees(
+                clusters.Thermostat.Attributes.OccupiedHeatingSetpoint
+            )
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
@@ -169,6 +221,9 @@ class MatterClimate(MatterEntity, ClimateEntity):
                     clusters.Thermostat.Enums.SetpointAdjustMode.kCool,
                     temp_diff,
                 )
+            case HVACMode.HEAT_COOL:
+                # wait for HA to support write attribute
+                pass
             case _:
                 # Uncertain if there are any modes in HA other than heat and cool that can set the target temperature.
                 return
