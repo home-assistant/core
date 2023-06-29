@@ -240,7 +240,7 @@ class SelectedEntities:
             return
 
         _LOGGER.warning(
-            "Unable to find referenced %s or it is/they are currently not available",
+            "Unable to find referenced %s or not currently available",
             ", ".join(parts),
         )
 
