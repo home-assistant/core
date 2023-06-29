@@ -200,7 +200,8 @@ class WaqiSensor(SensorEntity):
     @property
     def unique_id(self):
         """Return unique ID."""
-        return self.uid
+        """uid is not necessarily safe as a unique_id"""
+        return uuid4('waqi' + self.uid);
 
     @property
     def extra_state_attributes(self):
