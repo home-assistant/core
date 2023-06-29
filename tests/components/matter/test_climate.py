@@ -6,8 +6,8 @@ from matter_server.client.models.node import MatterNode
 import pytest
 
 from homeassistant.components.climate import (
-    HVAC_MODE_HEAT,
     HVAC_MODE_COOL,
+    HVAC_MODE_HEAT,
 )
 from homeassistant.core import HomeAssistant
 
@@ -103,8 +103,7 @@ async def test_thermostat(
         node_id=thermostat.node_id,
         endpoint_id=1,
         command=clusters.Thermostat.Commands.SetpointRaiseLower(
-            clusters.Thermostat.Enums.SetpointAdjustMode.kCool,
-            -20
+            clusters.Thermostat.Enums.SetpointAdjustMode.kCool, -20
         ),
         timed_request_timeout_ms=1000,
     )

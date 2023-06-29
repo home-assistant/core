@@ -7,8 +7,8 @@ from chip.clusters import Objects as clusters
 from matter_server.client.models import device_types
 
 from homeassistant.components.climate import (
-    ClimateEntityDescription,
     ClimateEntity,
+    ClimateEntityDescription,
     ClimateEntityFeature,
     HVACAction,
     HVACMode,
@@ -21,7 +21,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .entity import MatterEntity
 from .helpers import get_matter
 from .models import MatterDiscoverySchema
-
 
 TEMPERATURE_SCALING_FACTOR = 100
 
@@ -100,21 +99,15 @@ class MatterClimate(MatterEntity, ClimateEntity):
         if running_state := self.get_matter_attribute_value(
             clusters.Thermostat.Attributes.ThermostatRunningState
         ):
-            if running_state == 0:
-                return HVACAction.HEATING
-            if running_state == 1:
-                return HVACAction.COOLING
-            if running_state == 2:
-                return HVACAction.FAN
-        if running_mode := self.get_matter_attribute_value(
-            clusters.Thermostat.Attributes.ThermostatRunningMode
-        ):
-            if running_mode == clusters.Thermostat.Enums.ThermostatRunningMode.kCool:
-                return HVACAction.COOLING
-            if running_mode == clusters.Thermostat.Enums.ThermostatRunningMode.kHeat:
-                return HVACAction.HEATING
-            if running_mode == clusters.Thermostat.Enums.ThermostatRunningMode.kOff:
-                return HVACAction.OFF
+            match running_state:
+                case 1 | 8:
+                    return HVACAction.HEATING
+                case 2 | 16:
+                    return HVACAction.COOLING
+                case 4 | 32 | 64:
+                    return HVACAction.FAN
+                case _:
+                    return HVACAction.OFF
         return None
 
     @property
