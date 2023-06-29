@@ -237,6 +237,12 @@ SENSOR_TYPES = {
         icon="mdi:harddisk",
         state_class=SensorStateClass.MEASUREMENT,
     ),
+    ("uptime", "uptime"): GlancesSensorEntityDescription(
+        key="uptime",
+        type="uptime",
+        name_suffix="Uptime",
+        icon="mdi:clock-time-eight-outline",
+    ),
 }
 
 
@@ -283,6 +289,21 @@ async def async_setup_entry(
                                 sensor_description,
                             )
                         )
+        elif sensor_type == "uptime":
+            if sensor_description := SENSOR_TYPES.get((sensor_type, sensor_type)):
+                _migrate_old_unique_ids(
+                    hass,
+                    f"{coordinator.host}-{name}  {sensor_description.name_suffix}",
+                    f"-{sensor_description.key}",
+                )
+                entities.append(
+                    GlancesSensor(
+                        coordinator,
+                        name,
+                        "",
+                        sensor_description,
+                    )
+                )
         else:
             for sensor in sensors:
                 if sensor_description := SENSOR_TYPES.get((sensor_type, sensor)):
@@ -345,6 +366,8 @@ class GlancesSensor(CoordinatorEntity[GlancesDataUpdateCoordinator], SensorEntit
         """Return the state of the resources."""
         value = self.coordinator.data[self.entity_description.type]
 
-        if isinstance(value.get(self._sensor_name_prefix), dict):
-            return value[self._sensor_name_prefix][self.entity_description.key]
-        return value[self.entity_description.key]
+        if isinstance(value, dict):
+            if isinstance(value.get(self._sensor_name_prefix), dict):
+                return value[self._sensor_name_prefix][self.entity_description.key]
+            return value[self.entity_description.key]
+        return value

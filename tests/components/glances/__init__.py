@@ -208,4 +208,5 @@ HA_SENSOR_DATA: dict[str, Any] = {
             "config": "UU",
         },
     },
+    "uptime": "3 days, 10:25:20",
 }

@@ -43,6 +43,8 @@ async def test_sensor_states(hass: HomeAssistant) -> None:
         assert state.state == HA_SENSOR_DATA["raid"]["md1"]["available"]
     if state := hass.states.get("sensor.0_0_0_0_md1_used"):
         assert state.state == HA_SENSOR_DATA["raid"]["md1"]["used"]
+    if state := hass.states.get("sensor.0_0_0_0_uptime"):
+        assert state.state == HA_SENSOR_DATA["uptime"]
 
 
 @pytest.mark.parametrize(
