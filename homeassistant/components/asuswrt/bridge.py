@@ -17,7 +17,6 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
@@ -83,17 +82,17 @@ class AsusWrtBridge(ABC):
     @property
     def firmware(self) -> str | None:
         """Return firmware information."""
-        return self._firmware or None
+        return self._firmware
 
     @property
     def label_mac(self) -> str | None:
         """Return label mac information."""
-        return self._label_mac or None
+        return self._label_mac
 
     @property
     def model(self) -> str | None:
         """Return model information."""
-        return self._model or None
+        return self._model
 
     @property
     @abstractmethod
@@ -155,10 +154,7 @@ class AsusWrtLegacyBridge(AsusWrtBridge):
 
     async def async_connect(self) -> None:
         """Connect to the device."""
-        try:
-            await self._api.connection.async_connect()
-        except OSError as exc:
-            raise ConfigEntryNotReady from exc
+        await self._api.connection.async_connect()
 
         # get main router properties
         await self._get_label_mac()
@@ -195,30 +191,24 @@ class AsusWrtLegacyBridge(AsusWrtBridge):
 
     async def _get_label_mac(self) -> None:
         """Get label mac information."""
-        if self._label_mac is None:
-            self._label_mac = ""
-            label_mac = await self._get_nvram_info("LABEL_MAC")
-            if label_mac and "label_mac" in label_mac:
-                self._label_mac = format_mac(label_mac["label_mac"])
+        label_mac = await self._get_nvram_info("LABEL_MAC")
+        if label_mac and "label_mac" in label_mac:
+            self._label_mac = format_mac(label_mac["label_mac"])
 
     async def _get_firmware(self) -> None:
         """Get firmware information."""
-        if self._firmware is None:
-            self._firmware = ""
-            firmware = await self._get_nvram_info("FIRMWARE")
-            if firmware and "firmver" in firmware:
-                firmver: str = firmware["firmver"]
-                if "buildno" in firmware:
-                    firmver += f" (build {firmware['buildno']})"
-                self._firmware = firmver
+        firmware = await self._get_nvram_info("FIRMWARE")
+        if firmware and "firmver" in firmware:
+            firmver: str = firmware["firmver"]
+            if "buildno" in firmware:
+                firmver += f" (build {firmware['buildno']})"
+            self._firmware = firmver
 
     async def _get_model(self) -> None:
         """Get model information."""
-        if self._model is None:
-            self._model = ""
-            model = await self._get_nvram_info("MODEL")
-            if model and "model" in model:
-                self._model = model["model"]
+        model = await self._get_nvram_info("MODEL")
+        if model and "model" in model:
+            self._model = model["model"]
 
     async def async_get_available_sensors(self) -> dict[str, dict[str, Any]]:
         """Return a dictionary of available sensors for this bridge."""

@@ -24,7 +24,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.schema_config_entry_flow import (
     SchemaCommonFlowHandler,
@@ -153,7 +152,7 @@ class AsusWrtFlowHandler(ConfigFlow, domain=DOMAIN):
         try:
             await api.async_connect()
 
-        except ConfigEntryNotReady:
+        except OSError:
             _LOGGER.error("Error connecting to the AsusWrt router at %s", host)
             return RESULT_CONN_ERROR, None
 

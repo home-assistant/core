@@ -181,7 +181,10 @@ class AsusWrtRouter:
 
     async def setup(self) -> None:
         """Set up a AsusWrt router."""
-        await self._api.async_connect()
+        try:
+            await self._api.async_connect()
+        except OSError as exc:
+            raise ConfigEntryNotReady from exc
         if not self._api.is_connected:
             raise ConfigEntryNotReady
 
