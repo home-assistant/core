@@ -23,7 +23,7 @@ from homeassistant.const import (
     UnitOfEnergy,
 )
 from homeassistant.core import HomeAssistant, State
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -438,3 +438,88 @@ async def test_setup_and_remove_config_entry(
     # Check the state and entity registry entry are removed
     assert len(hass.states.async_all()) == 0
     assert len(registry.entities) == 0
+
+
+async def test_change_device_source(hass: HomeAssistant) -> None:
+    """Test remove the device registry configuration entry when the source entity changes."""
+
+    device_registry = dr.async_get(hass)
+    entity_registry = er.async_get(hass)
+
+    source_config_entry_1 = MockConfigEntry()
+    source_device_entry_1 = device_registry.async_get_or_create(
+        config_entry_id=source_config_entry_1.entry_id,
+        identifiers={("sensor", "identifier_test1")},
+        connections={("mac", "20:31:32:33:34:35")},
+    )
+    source_entity_1 = entity_registry.async_get_or_create(
+        "sensor",
+        "test",
+        "source1",
+        config_entry=source_config_entry_1,
+        device_id=source_device_entry_1.id,
+    )
+
+    source_config_entry_2 = MockConfigEntry()
+    source_device_entry_2 = device_registry.async_get_or_create(
+        config_entry_id=source_config_entry_2.entry_id,
+        identifiers={("sensor", "identifier_test2")},
+        connections={("mac", "30:31:32:33:34:35")},
+    )
+    source_entity_2 = entity_registry.async_get_or_create(
+        "sensor",
+        "test",
+        "source2",
+        config_entry=source_config_entry_2,
+        device_id=source_device_entry_2.id,
+    )
+
+    await hass.async_block_till_done()
+    assert entity_registry.async_get("sensor.test_source1") is not None
+    assert entity_registry.async_get("sensor.test_source2") is not None
+
+    input_sensor_entity_id_1 = "sensor.test_source1"
+    input_sensor_entity_id_2 = "sensor.test_source2"
+
+    # Setup the config entry
+    utility_meter_config_entry = MockConfigEntry(
+        data={},
+        domain=DOMAIN,
+        options={
+            "cycle": "monthly",
+            "delta_values": False,
+            "name": "Energy",
+            "net_consumption": False,
+            "offset": 0,
+            "periodically_resetting": True,
+            "source": input_sensor_entity_id_1,
+            "tariffs": [],
+        },
+        title="Energy",
+    )
+    utility_meter_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(utility_meter_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    device1 = device_registry.async_get(device_id=source_entity_1.device_id)
+    assert utility_meter_config_entry.entry_id in device1.config_entries
+
+    utility_meter_config_entry.options = {
+        "cycle": "monthly",
+        "delta_values": False,
+        "name": "Energy",
+        "net_consumption": False,
+        "offset": 0,
+        "periodically_resetting": True,
+        "source": input_sensor_entity_id_2,
+        "tariffs": [],
+    }
+    utility_meter_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_reload(utility_meter_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    device1 = device_registry.async_get(device_id=source_entity_1.device_id)
+    assert utility_meter_config_entry.entry_id not in device1.config_entries
+
+    device2 = device_registry.async_get(device_id=source_entity_2.device_id)
+    assert utility_meter_config_entry.entry_id in device2.config_entries

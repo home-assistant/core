@@ -10,7 +10,11 @@ from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ENTITY_ID, CONF_NAME, CONF_UNIQUE_ID, Platform
 from homeassistant.core import HomeAssistant, split_entity_id
-from homeassistant.helpers import discovery, entity_registry as er
+from homeassistant.helpers import (
+    device_registry as dr,
+    discovery,
+    entity_registry as er,
+)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.typing import ConfigType
@@ -181,6 +185,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Utility Meter from a config entry."""
+
+    await async_remove_device_old(hass, entry)
+
     entity_registry = er.async_get(hass)
     hass.data[DATA_UTILITY][entry.entry_id] = {}
     hass.data[DATA_UTILITY][entry.entry_id][DATA_TARIFF_SENSORS] = []
@@ -249,3 +256,22 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
     _LOGGER.info("Migration to version %s successful", config_entry.version)
 
     return True
+
+
+async def async_remove_device_old(hass: HomeAssistant, entry: ConfigEntry):
+    """Remove obsolete source entity devices."""
+    entity_registry = er.async_get(hass)
+    device_registry = dr.async_get(hass)
+
+    source_entity = entity_registry.async_get(entry.options[CONF_SOURCE_SENSOR])
+    for device_entry in dr.async_entries_for_config_entry(
+        device_registry, entry.entry_id
+    ):
+        if (
+            source_entity is None
+            or source_entity.device_id is None
+            or device_entry.id != source_entity.device_id
+        ):
+            device_registry.async_update_device(
+                device_entry.id, remove_config_entry_id=entry.entry_id
+            )
