@@ -234,7 +234,7 @@ aioecowitt==2023.5.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==15.0.0
+aioesphomeapi==15.0.1
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -497,7 +497,7 @@ beautifulsoup4==4.11.1
 # beewi-smartclim==0.0.10
 
 # homeassistant.components.zha
-bellows==0.35.7
+bellows==0.35.8
 
 # homeassistant.components.bmw_connected_drive
 bimmer-connected==0.13.7
@@ -980,7 +980,7 @@ hole==0.8.0
 holidays==0.21.13
 
 # homeassistant.components.frontend
-home-assistant-frontend==20230629.0
+home-assistant-frontend==20230630.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2023.6.28
