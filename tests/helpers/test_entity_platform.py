@@ -1846,12 +1846,13 @@ async def test_device_name_defaulting_config_entry(
 ) -> None:
     """Test setting the device name based on input info."""
     device_info = {
-        "identifiers": {("hue", "1234")},
-        "name": entity_device_name,
+        "connections": {(dr.CONNECTION_NETWORK_MAC, "1234")},
     }
 
     if entity_device_default_name:
         device_info["default_name"] = entity_device_default_name
+    else:
+        device_info["name"] = entity_device_name
 
     class DeviceNameEntity(Entity):
         _attr_unique_id = "qwer"
@@ -1874,6 +1875,6 @@ async def test_device_name_defaulting_config_entry(
     await hass.async_block_till_done()
 
     dev_reg = dr.async_get(hass)
-    device = dev_reg.async_get_device({("hue", "1234")})
+    device = dev_reg.async_get_device(set(), {(dr.CONNECTION_NETWORK_MAC, "1234")})
     assert device is not None
     assert device.name == expected_device_name

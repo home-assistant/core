@@ -61,6 +61,34 @@ PLATFORM_NOT_READY_RETRIES = 10
 DATA_ENTITY_PLATFORM = "entity_platform"
 PLATFORM_NOT_READY_BASE_WAIT_TIME = 30  # seconds
 
+DEVICE_INFO_TYPES = (
+    # link info
+    {
+        "connections",
+        "identifiers",
+    },
+    # primary info
+    {
+        "connections",
+        "identifiers",
+        "entry_type",
+        "manufacturer",
+        "model",
+        "name",
+        "suggested_area",
+        "sw_version",
+        "hw_version",
+        "via_device",
+    },
+    # secondary info
+    {
+        "connections",
+        "default_manufacturer",
+        "default_model",
+        "default_name",
+    },
+)
+
 _LOGGER = getLogger(__name__)
 
 
@@ -633,6 +661,12 @@ class EntityPlatform:
                         processed_dev_info[key] = device_info[
                             key  # type: ignore[literal-required]
                         ]
+
+                keys = set(processed_dev_info)
+                if not any(keys <= allowed for allowed in DEVICE_INFO_TYPES):
+                    raise HomeAssistantError(
+                        "Device info needs to be describe a device, link to existing device or provide extra information."
+                    )
 
                 if (
                     # device info that is purely meant for linking doesn't need default name
