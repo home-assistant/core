@@ -106,3 +106,6 @@ exposure_register:
       default: false
       selector:
         boolean:
+reload:
+  name: Reload
+  description: Reload the KNX integration.

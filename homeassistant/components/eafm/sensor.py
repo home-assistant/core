@@ -100,6 +100,7 @@ class Measurement(CoordinatorEntity, SensorEntity):
         """Initialise the gauge with a data instance and station."""
         super().__init__(coordinator)
         self.key = key
+        self._attr_unique_id = key
 
     @property
     def station_name(self):
@@ -125,11 +126,6 @@ class Measurement(CoordinatorEntity, SensorEntity):
     def name(self):
         """Return the name of the gauge."""
         return f"{self.station_name} {self.parameter_name} {self.qualifier}"
-
-    @property
-    def unique_id(self):
-        """Return the unique id of the gauge."""
-        return self.key
 
     @property
     def device_info(self):

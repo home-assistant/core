@@ -12,7 +12,7 @@
         }
       },
       "options": {
-        "description": "Set workday options for {name}",
+        "description": "Set additional options for {name} configured for country {country}",
         "data": {
           "excludes": "Excludes",
           "days_offset": "Offset",
@@ -39,6 +39,7 @@
   "options": {
     "step": {
       "init": {
+        "description": "Change additional options for {name} configured for country {country}",
         "data": {
           "excludes": "[%key:component::workday::config::step::options::data::excludes%]",
           "days_offset": "[%key:component::workday::config::step::options::data::days_offset%]",

@@ -263,13 +263,12 @@ class IcloudFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     self.api.validate_2fa_code, self._verification_code
                 ):
                     raise PyiCloudException("The code you entered is not valid.")
-            else:
-                if not await self.hass.async_add_executor_job(
-                    self.api.validate_verification_code,
-                    self._trusted_device,
-                    self._verification_code,
-                ):
-                    raise PyiCloudException("The code you entered is not valid.")
+            elif not await self.hass.async_add_executor_job(
+                self.api.validate_verification_code,
+                self._trusted_device,
+                self._verification_code,
+            ):
+                raise PyiCloudException("The code you entered is not valid.")
         except PyiCloudException as error:
             # Reset to the initial 2FA state to allow the user to retry
             _LOGGER.error("Failed to verify verification code: %s", error)
