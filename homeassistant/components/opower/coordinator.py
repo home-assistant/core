@@ -90,16 +90,19 @@ class OpowerCoordinator(DataUpdateCoordinator):
                 consumption_statistic_id,
             )
 
-            if not await get_instance(self.hass).async_add_executor_job(
+            last_stat = await get_instance(self.hass).async_add_executor_job(
                 get_last_statistics, self.hass, 1, consumption_statistic_id, True, set()
-            ):
+            )
+            if not last_stat:
                 _LOGGER.debug("Updating statistic for the first time")
                 cost_reads = await self._async_get_all_cost_reads(account)
                 cost_sum = 0.0
                 consumption_sum = 0.0
                 last_stats_time = None
             else:
-                cost_reads = await self._async_get_recent_cost_reads(account)
+                cost_reads = await self._async_get_recent_cost_reads(
+                    account, last_stat[consumption_statistic_id][0]["start"]
+                )
                 if not cost_reads:
                     _LOGGER.debug("No recent usage/cost data. Skipping update")
                     continue
@@ -200,7 +203,9 @@ class OpowerCoordinator(DataUpdateCoordinator):
             )
         return cost_reads
 
-    async def _async_get_recent_cost_reads(self, account: Account) -> list[CostRead]:
+    async def _async_get_recent_cost_reads(
+        self, account: Account, last_stat_time: float
+    ) -> list[CostRead]:
         """Get cost reads within the past 30 days to allow corrections in data from utilities.
 
         Hourly for electricity, daily for gas.
@@ -210,6 +215,6 @@ class OpowerCoordinator(DataUpdateCoordinator):
             AggregateType.HOUR
             if account.meter_type == MeterType.ELEC
             else AggregateType.DAY,
-            datetime.now() - timedelta(days=30),
+            datetime.fromtimestamp(last_stat_time) - timedelta(days=30),
             datetime.now(),
         )
