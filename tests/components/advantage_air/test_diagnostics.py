@@ -1,4 +1,4 @@
-"""Test the Advantage Air Select Platform."""
+"""Test the Advantage Air Diagnostics."""
 
 from homeassistant.core import HomeAssistant
 
