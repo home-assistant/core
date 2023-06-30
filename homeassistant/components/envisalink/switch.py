@@ -56,6 +56,7 @@ class EnvisalinkSwitch(EnvisalinkDevice, SwitchEntity):
     def __init__(self, hass, zone_number, zone_name, info, controller):
         """Initialize the switch."""
         self._zone_number = zone_number
+        self._attr_unique_id = f"{zone_number}"
 
         super().__init__(zone_name, info, controller)
 

@@ -55,6 +55,7 @@ class EnvisalinkSensor(EnvisalinkDevice, SensorEntity):
         """Initialize the sensor."""
         self._icon = "mdi:alarm"
         self._partition_number = partition_number
+        self._attr_unique_id = f"{partition_number}"
 
         _LOGGER.debug("Setting up sensor for partition: %s", partition_name)
         super().__init__(f"{partition_name} Keypad", info, controller)
