@@ -67,6 +67,7 @@ class RainBirdSwitch(CoordinatorEntity[RainbirdUpdateCoordinator], SwitchEntity)
             self._attr_name = imported_name
             self._attr_has_entity_name = False
         else:
+            self._attr_name = None
             self._attr_has_entity_name = True
         self._state = None
         self._duration_minutes = duration_minutes
