@@ -636,7 +636,10 @@ class EntityPlatform:
 
                 if (
                     # device info that is purely meant for linking doesn't need default name
-                    set(processed_dev_info) > {"identifiers", "connections"}
+                    any(
+                        key not in {"identifiers", "connections"}
+                        for key in (processed_dev_info)
+                    )
                     and "default_name" not in processed_dev_info
                     and not processed_dev_info.get("name")
                 ):
