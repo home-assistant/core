@@ -35,8 +35,7 @@ from homeassistant.const import (
     PERCENTAGE,
     STATE_ON,
     STATE_UNAVAILABLE,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
+    UnitOfTemperature,
     __version__,
 )
 from homeassistant.core import (
@@ -115,8 +114,10 @@ def get_accessory(  # noqa: C901
     """Take state and return an accessory object if supported."""
     if not aid:
         _LOGGER.warning(
-            'The entity "%s" is not supported, since it '
-            "generates an invalid aid, please change it",
+            (
+                'The entity "%s" is not supported, since it '
+                "generates an invalid aid, please change it"
+            ),
             state.entity_id,
         )
         return None
@@ -147,6 +148,11 @@ def get_accessory(  # noqa: C901
             and features & CoverEntityFeature.SET_POSITION
         ):
             a_type = "Window"
+        elif (
+            device_class == CoverDeviceClass.DOOR
+            and features & CoverEntityFeature.SET_POSITION
+        ):
+            a_type = "Door"
         elif features & CoverEntityFeature.SET_POSITION:
             a_type = "WindowCovering"
         elif features & (CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE):
@@ -184,8 +190,8 @@ def get_accessory(  # noqa: C901
         unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
 
         if device_class == SensorDeviceClass.TEMPERATURE or unit in (
-            TEMP_CELSIUS,
-            TEMP_FAHRENHEIT,
+            UnitOfTemperature.CELSIUS,
+            UnitOfTemperature.FAHRENHEIT,
         ):
             a_type = "TemperatureSensor"
         elif device_class == SensorDeviceClass.HUMIDITY and unit == PERCENTAGE:
@@ -213,7 +219,7 @@ def get_accessory(  # noqa: C901
             a_type = "CarbonMonoxideSensor"
         elif device_class == SensorDeviceClass.CO2 or "co2" in state.entity_id:
             a_type = "CarbonDioxideSensor"
-        elif device_class == SensorDeviceClass.ILLUMINANCE or unit in ("lm", LIGHT_LUX):
+        elif device_class == SensorDeviceClass.ILLUMINANCE or unit == LIGHT_LUX:
             a_type = "LightSensor"
 
     elif state.domain == "switch":
@@ -274,8 +280,8 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
             driver=driver,
             display_name=cleanup_name_for_homekit(name),
             aid=aid,
-            iid_manager=driver.iid_manager,
-            *args,
+            iid_manager=HomeIIDManager(driver.iid_storage),
+            *args,  # noqa: B026
             **kwargs,
         )
         self.config = config or {}
@@ -358,12 +364,12 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
             if state is not None:
                 battery_found = state.state
             else:
-                self.linked_battery_sensor = None
                 _LOGGER.warning(
                     "%s: Battery sensor state missing: %s",
                     self.entity_id,
                     self.linked_battery_sensor,
                 )
+                self.linked_battery_sensor = None
 
         if not battery_found:
             return
@@ -574,7 +580,7 @@ class HomeBridge(Bridge):  # type: ignore[misc]
 
     def __init__(self, hass: HomeAssistant, driver: HomeDriver, name: str) -> None:
         """Initialize a Bridge object."""
-        super().__init__(driver, name, iid_manager=driver.iid_manager)
+        super().__init__(driver, name, iid_manager=HomeIIDManager(driver.iid_storage))
         self.set_info_service(
             firmware_revision=format_version(__version__),
             manufacturer=MANUFACTURER,
@@ -607,7 +613,7 @@ class HomeDriver(AccessoryDriver):  # type: ignore[misc]
         entry_id: str,
         bridge_name: str,
         entry_title: str,
-        iid_manager: HomeIIDManager,
+        iid_storage: AccessoryIIDStorage,
         **kwargs: Any,
     ) -> None:
         """Initialize a AccessoryDriver object."""
@@ -616,14 +622,14 @@ class HomeDriver(AccessoryDriver):  # type: ignore[misc]
         self._entry_id = entry_id
         self._bridge_name = bridge_name
         self._entry_title = entry_title
-        self.iid_manager = iid_manager
+        self.iid_storage = iid_storage
 
     @pyhap_callback  # type: ignore[misc]
     def pair(
-        self, client_uuid: UUID, client_public: str, client_permissions: int
+        self, client_username_bytes: bytes, client_public: str, client_permissions: int
     ) -> bool:
         """Override super function to dismiss setup message if paired."""
-        success = super().pair(client_uuid, client_public, client_permissions)
+        success = super().pair(client_username_bytes, client_public, client_permissions)
         if success:
             async_dismiss_setup_message(self.hass, self._entry_id)
         return cast(bool, success)
@@ -657,7 +663,7 @@ class HomeIIDManager(IIDManager):  # type: ignore[misc]
         """Get IID for object."""
         aid = obj.broker.aid
         if isinstance(obj, Characteristic):
-            service = obj.service
+            service: Service = obj.service
             iid = self._iid_storage.get_or_allocate_iid(
                 aid, service.type_id, service.unique_id, obj.type_id, obj.unique_id
             )
@@ -667,6 +673,7 @@ class HomeIIDManager(IIDManager):  # type: ignore[misc]
             )
         if iid in self.objs:
             raise RuntimeError(
-                f"Cannot assign IID {iid} to {obj} as it is already in use by: {self.objs[iid]}"
+                f"Cannot assign IID {iid} to {obj} as it is already in use by:"
+                f" {self.objs[iid]}"
             )
         return iid

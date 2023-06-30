@@ -1,7 +1,7 @@
 """The Litter-Robot integration."""
 from __future__ import annotations
 
-from pylitterbot import FeederRobot, LitterRobot, LitterRobot3, Robot
+from pylitterbot import FeederRobot, LitterRobot, LitterRobot3, LitterRobot4, Robot
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
@@ -18,7 +18,8 @@ PLATFORMS_BY_TYPE = {
         Platform.SWITCH,
     ),
     LitterRobot: (Platform.VACUUM,),
-    LitterRobot3: (Platform.BUTTON,),
+    LitterRobot3: (Platform.BUTTON, Platform.TIME),
+    LitterRobot4: (Platform.UPDATE,),
     FeederRobot: (Platform.BUTTON,),
 }
 

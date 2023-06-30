@@ -1,10 +1,8 @@
 """Test the Google Sheets config flow."""
-
 from collections.abc import Generator
 from unittest.mock import Mock, patch
 
 from gspread import GSpreadException
-import oauth2client
 import pytest
 
 from homeassistant import config_entries
@@ -18,9 +16,13 @@ from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
+from tests.test_util.aiohttp import AiohttpClientMocker
+from tests.typing import ClientSessionGenerator
 
 CLIENT_ID = "1234"
 CLIENT_SECRET = "5678"
+GOOGLE_AUTH_URI = "https://accounts.google.com/o/oauth2/v2/auth"
+GOOGLE_TOKEN_URI = "https://oauth2.googleapis.com/token"
 SHEET_ID = "google-sheet-id"
 TITLE = "Google Sheets"
 
@@ -47,9 +49,9 @@ async def mock_client() -> Generator[Mock, None, None]:
 
 async def test_full_flow(
     hass: HomeAssistant,
-    hass_client_no_auth,
-    aioclient_mock,
-    current_request_with_host,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    current_request_with_host: None,
     setup_credentials,
     mock_client,
 ) -> None:
@@ -66,7 +68,7 @@ async def test_full_flow(
     )
 
     assert result["url"] == (
-        f"{oauth2client.GOOGLE_AUTH_URI}?response_type=code&client_id={CLIENT_ID}"
+        f"{GOOGLE_AUTH_URI}?response_type=code&client_id={CLIENT_ID}"
         "&redirect_uri=https://example.com/auth/external/callback"
         f"&state={state}&scope=https://www.googleapis.com/auth/drive.file"
         "&access_type=offline&prompt=consent"
@@ -83,7 +85,7 @@ async def test_full_flow(
     mock_client.return_value.create = mock_create
 
     aioclient_mock.post(
-        oauth2client.GOOGLE_TOKEN_URI,
+        GOOGLE_TOKEN_URI,
         json={
             "refresh_token": "mock-refresh-token",
             "access_token": "mock-access-token",
@@ -114,9 +116,9 @@ async def test_full_flow(
 
 async def test_create_sheet_error(
     hass: HomeAssistant,
-    hass_client_no_auth,
-    aioclient_mock,
-    current_request_with_host,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    current_request_with_host: None,
     setup_credentials,
     mock_client,
 ) -> None:
@@ -133,7 +135,7 @@ async def test_create_sheet_error(
     )
 
     assert result["url"] == (
-        f"{oauth2client.GOOGLE_AUTH_URI}?response_type=code&client_id={CLIENT_ID}"
+        f"{GOOGLE_AUTH_URI}?response_type=code&client_id={CLIENT_ID}"
         "&redirect_uri=https://example.com/auth/external/callback"
         f"&state={state}&scope=https://www.googleapis.com/auth/drive.file"
         "&access_type=offline&prompt=consent"
@@ -150,7 +152,7 @@ async def test_create_sheet_error(
     mock_client.return_value.create = mock_create
 
     aioclient_mock.post(
-        oauth2client.GOOGLE_TOKEN_URI,
+        GOOGLE_TOKEN_URI,
         json={
             "refresh_token": "mock-refresh-token",
             "access_token": "mock-access-token",
@@ -166,9 +168,9 @@ async def test_create_sheet_error(
 
 async def test_reauth(
     hass: HomeAssistant,
-    hass_client_no_auth,
-    aioclient_mock,
-    current_request_with_host,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    current_request_with_host: None,
     setup_credentials,
     mock_client,
 ) -> None:
@@ -202,7 +204,7 @@ async def test_reauth(
         },
     )
     assert result["url"] == (
-        f"{oauth2client.GOOGLE_AUTH_URI}?response_type=code&client_id={CLIENT_ID}"
+        f"{GOOGLE_AUTH_URI}?response_type=code&client_id={CLIENT_ID}"
         "&redirect_uri=https://example.com/auth/external/callback"
         f"&state={state}&scope=https://www.googleapis.com/auth/drive.file"
         "&access_type=offline&prompt=consent"
@@ -218,7 +220,7 @@ async def test_reauth(
     mock_client.return_value.open_by_key = mock_open
 
     aioclient_mock.post(
-        oauth2client.GOOGLE_TOKEN_URI,
+        GOOGLE_TOKEN_URI,
         json={
             "refresh_token": "mock-refresh-token",
             "access_token": "updated-access-token",
@@ -247,9 +249,9 @@ async def test_reauth(
 
 async def test_reauth_abort(
     hass: HomeAssistant,
-    hass_client_no_auth,
-    aioclient_mock,
-    current_request_with_host,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    current_request_with_host: None,
     setup_credentials,
     mock_client,
 ) -> None:
@@ -283,7 +285,7 @@ async def test_reauth_abort(
         },
     )
     assert result["url"] == (
-        f"{oauth2client.GOOGLE_AUTH_URI}?response_type=code&client_id={CLIENT_ID}"
+        f"{GOOGLE_AUTH_URI}?response_type=code&client_id={CLIENT_ID}"
         "&redirect_uri=https://example.com/auth/external/callback"
         f"&state={state}&scope=https://www.googleapis.com/auth/drive.file"
         "&access_type=offline&prompt=consent"
@@ -300,7 +302,7 @@ async def test_reauth_abort(
     mock_client.return_value.open_by_key = mock_open
 
     aioclient_mock.post(
-        oauth2client.GOOGLE_TOKEN_URI,
+        GOOGLE_TOKEN_URI,
         json={
             "refresh_token": "mock-refresh-token",
             "access_token": "updated-access-token",
@@ -316,9 +318,9 @@ async def test_reauth_abort(
 
 async def test_already_configured(
     hass: HomeAssistant,
-    hass_client_no_auth,
-    aioclient_mock,
-    current_request_with_host,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    current_request_with_host: None,
     setup_credentials,
     mock_client,
 ) -> None:
@@ -346,7 +348,7 @@ async def test_already_configured(
     )
 
     assert result["url"] == (
-        f"{oauth2client.GOOGLE_AUTH_URI}?response_type=code&client_id={CLIENT_ID}"
+        f"{GOOGLE_AUTH_URI}?response_type=code&client_id={CLIENT_ID}"
         "&redirect_uri=https://example.com/auth/external/callback"
         f"&state={state}&scope=https://www.googleapis.com/auth/drive.file"
         "&access_type=offline&prompt=consent"
@@ -363,7 +365,7 @@ async def test_already_configured(
     mock_client.return_value.create = mock_create
 
     aioclient_mock.post(
-        oauth2client.GOOGLE_TOKEN_URI,
+        GOOGLE_TOKEN_URI,
         json={
             "refresh_token": "mock-refresh-token",
             "access_token": "mock-access-token",

@@ -3,8 +3,8 @@
     "flow_title": "{name}",
     "step": {
       "confirm": {
-        "title": "Setup FRITZ!Box Tools",
-        "description": "Discovered FRITZ!Box: {name}\n\nSetup FRITZ!Box Tools to control your {name}",
+        "title": "Set up FRITZ!Box Tools",
+        "description": "Discovered FRITZ!Box: {name}\n\nSet up FRITZ!Box Tools to control your {name}",
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"
@@ -19,8 +19,8 @@
         }
       },
       "user": {
-        "title": "Setup FRITZ!Box Tools",
-        "description": "Setup FRITZ!Box Tools to control your FRITZ!Box.\nMinimum needed: username, password.",
+        "title": "Set up FRITZ!Box Tools",
+        "description": "Set up FRITZ!Box Tools to control your FRITZ!Box.\nMinimum needed: username, password.",
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "port": "[%key:common::config_flow::data::port%]",
@@ -51,6 +51,37 @@
           "old_discovery": "Enable old discovery method"
         }
       }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "is_connected": { "name": "Connection" },
+      "is_linked": { "name": "Link" }
+    },
+    "button": {
+      "cleanup": { "name": "Cleanup" },
+      "firmware_update": { "name": "Firmware update" },
+      "reconnect": { "name": "Reconnect" }
+    },
+    "sensor": {
+      "connection_uptime": { "name": "Connection uptime" },
+      "device_uptime": { "name": "Last restart" },
+      "external_ip": { "name": "External IP" },
+      "external_ipv6": { "name": "External IPv6" },
+      "gb_received": { "name": "GB received" },
+      "gb_sent": { "name": "GB sent" },
+      "kb_s_received": { "name": "Download throughput" },
+      "kb_s_sent": { "name": "Upload throughput" },
+      "link_attenuation_received": {
+        "name": "Link download power attenuation"
+      },
+      "link_attenuation_sent": { "name": "Link upload power attenuation" },
+      "link_kb_s_received": { "name": "Link download throughput" },
+      "link_kb_s_sent": { "name": "Link upload throughput" },
+      "link_noise_margin_received": { "name": "Link download noise margin" },
+      "link_noise_margin_sent": { "name": "Link upload noise margin" },
+      "max_kb_s_received": { "name": "Max connection download throughput" },
+      "max_kb_s_sent": { "name": "Max connection upload throughput" }
     }
   }
 }

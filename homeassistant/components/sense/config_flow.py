@@ -60,6 +60,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Create the entry from the config data."""
         self._auth_data["access_token"] = self._gateway.sense_access_token
         self._auth_data["user_id"] = self._gateway.sense_user_id
+        self._auth_data["device_id"] = self._gateway.device_id
+        self._auth_data["refresh_token"] = self._gateway.refresh_token
         self._auth_data["monitor_id"] = self._gateway.sense_monitor_id
         existing_entry = await self.async_set_unique_id(self._auth_data[CONF_EMAIL])
         if not existing_entry:

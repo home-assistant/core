@@ -1,5 +1,6 @@
 """Tests for the numato sensor platform."""
 from homeassistant.const import STATE_UNKNOWN, Platform
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import discovery
 from homeassistant.setup import async_setup_component
 
@@ -10,7 +11,9 @@ MOCKUP_ENTITY_IDS = {
 }
 
 
-async def test_failing_setups_no_entities(hass, numato_fixture, monkeypatch):
+async def test_failing_setups_no_entities(
+    hass: HomeAssistant, numato_fixture, monkeypatch
+) -> None:
     """When port setup fails, no entity shall be created."""
     monkeypatch.setattr(numato_fixture.NumatoDeviceMock, "setup", mockup_raise)
     assert await async_setup_component(hass, "numato", NUMATO_CFG)
@@ -19,7 +22,9 @@ async def test_failing_setups_no_entities(hass, numato_fixture, monkeypatch):
         assert entity_id not in hass.states.async_entity_ids()
 
 
-async def test_failing_sensor_update(hass, numato_fixture, monkeypatch):
+async def test_failing_sensor_update(
+    hass: HomeAssistant, numato_fixture, monkeypatch
+) -> None:
     """Test condition when a sensor update fails."""
     monkeypatch.setattr(numato_fixture.NumatoDeviceMock, "adc_read", mockup_raise)
     assert await async_setup_component(hass, "numato", NUMATO_CFG)
@@ -27,7 +32,9 @@ async def test_failing_sensor_update(hass, numato_fixture, monkeypatch):
     assert hass.states.get("sensor.numato_adc_mock_port1").state is STATE_UNKNOWN
 
 
-async def test_sensor_setup_without_discovery_info(hass, config, numato_fixture):
+async def test_sensor_setup_without_discovery_info(
+    hass: HomeAssistant, config, numato_fixture
+) -> None:
     """Test handling of empty discovery_info."""
     numato_fixture.discover()
     await discovery.async_load_platform(hass, Platform.SENSOR, "numato", None, config)

@@ -153,11 +153,11 @@ class ProtectMediaPlayer(ProtectDeviceEntity, MediaPlayerEntity):
             await self.device.play_audio(media_id, blocking=False)
         except StreamError as err:
             raise HomeAssistantError(err) from err
-        else:
-            # update state after starting player
-            self._async_updated_event(self.device)
-            # wait until player finishes to update state again
-            await self.device.wait_until_audio_completes()
+
+        # update state after starting player
+        self._async_updated_event(self.device)
+        # wait until player finishes to update state again
+        await self.device.wait_until_audio_completes()
 
         self._async_updated_event(self.device)
 

@@ -33,7 +33,7 @@ CONF_SHOW_INACTIVE = "show_inactive"
 class TileData:
     """Define an object to be stored in `hass.data`."""
 
-    coordinators: dict[str, DataUpdateCoordinator]
+    coordinators: dict[str, DataUpdateCoordinator[None]]
     tiles: dict[str, Tile]
 
 
@@ -42,8 +42,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     @callback
     def async_migrate_callback(entity_entry: RegistryEntry) -> dict | None:
-        """
-        Define a callback to migrate appropriate Tile entities to new unique IDs.
+        """Define a callback to migrate appropriate Tile entities to new unique IDs.
 
         Old: tile_{uuid}
         New: {username}_{uuid}
@@ -94,7 +93,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         except TileError as err:
             raise UpdateFailed(f"Error while retrieving data: {err}") from err
 
-    coordinators = {}
+    coordinators: dict[str, DataUpdateCoordinator[None]] = {}
     coordinator_init_tasks = []
 
     for tile_uuid, tile in tiles.items():

@@ -2,7 +2,7 @@
 from collections import OrderedDict
 
 from homeassistant.components import climate
-from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.const import UnitOfTemperature
 
 DOMAIN = "alexa"
 EVENT_ALEXA_SMART_HOME = "alexa_smart_home"
@@ -61,7 +61,10 @@ CONF_SUPPORTED_LOCALES = (
     "pt-BR",
 )
 
-API_TEMP_UNITS = {TEMP_FAHRENHEIT: "FAHRENHEIT", TEMP_CELSIUS: "CELSIUS"}
+API_TEMP_UNITS = {
+    UnitOfTemperature.FAHRENHEIT: "FAHRENHEIT",
+    UnitOfTemperature.CELSIUS: "CELSIUS",
+}
 
 # Needs to be ordered dict for `async_api_set_thermostat_mode` which does a
 # reverse mapping of this dict and we want to map the first occurrence of OFF
@@ -83,7 +86,8 @@ API_THERMOSTAT_MODES_CUSTOM = {
 }
 API_THERMOSTAT_PRESETS = {climate.PRESET_ECO: "ECO"}
 
-# AlexaModeController does not like a single mode for the fan preset, we add PRESET_MODE_NA if a fan has only one preset_mode
+# AlexaModeController does not like a single mode for the fan preset or humidifier mode,
+# we add PRESET_MODE_NA if a fan / humidifier has only one preset_mode
 PRESET_MODE_NA = "-"
 
 

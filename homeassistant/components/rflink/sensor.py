@@ -14,12 +14,24 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
+    CONCENTRATION_PARTS_PER_MILLION,
     CONF_DEVICES,
     CONF_NAME,
     CONF_SENSOR_TYPE,
     CONF_UNIT_OF_MEASUREMENT,
+    DEGREE,
+    LIGHT_LUX,
+    PERCENTAGE,
+    UV_INDEX,
+    UnitOfElectricCurrent,
+    UnitOfElectricPotential,
+    UnitOfLength,
+    UnitOfPower,
+    UnitOfPrecipitationDepth,
+    UnitOfPressure,
     UnitOfSpeed,
     UnitOfTemperature,
+    UnitOfVolumetricFlux,
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -41,31 +53,188 @@ from . import (
     RflinkDevice,
 )
 
-SENSOR_ICONS = {
-    "humidity": "mdi:water-percent",
-    "battery": "mdi:battery",
-}
-
 SENSOR_TYPES = (
     # check new descriptors against PACKET_FIELDS & UNITS from rflink.parser
-    SensorEntityDescription(
-        key="distance",
-        name="Distance",
-        device_class=SensorDeviceClass.DISTANCE,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
-    SensorEntityDescription(
-        key="barometric_pressure",
-        name="Barometric pressure",
-        device_class=SensorDeviceClass.PRESSURE,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
     SensorEntityDescription(
         key="average_windspeed",
         name="Average windspeed",
         device_class=SensorDeviceClass.WIND_SPEED,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
+    ),
+    SensorEntityDescription(
+        key="barometric_pressure",
+        name="Barometric pressure",
+        device_class=SensorDeviceClass.PRESSURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfPressure.HPA,
+    ),
+    SensorEntityDescription(
+        key="battery",
+        name="Battery",
+        icon="mdi:battery",
+    ),
+    SensorEntityDescription(
+        key="co2_air_quality",
+        name="CO2 air quality",
+        device_class=SensorDeviceClass.CO2,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+    ),
+    SensorEntityDescription(
+        key="command",
+        name="Command",
+        icon="mdi:text",
+    ),
+    SensorEntityDescription(
+        key="current_phase_1",
+        name="Current phase 1",
+        device_class=SensorDeviceClass.CURRENT,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+    ),
+    SensorEntityDescription(
+        key="current_phase_2",
+        name="Current phase 2",
+        device_class=SensorDeviceClass.CURRENT,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+    ),
+    SensorEntityDescription(
+        key="current_phase_3",
+        name="Current phase 3",
+        device_class=SensorDeviceClass.CURRENT,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+    ),
+    SensorEntityDescription(
+        key="distance",
+        name="Distance",
+        device_class=SensorDeviceClass.DISTANCE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfLength.MILLIMETERS,
+    ),
+    SensorEntityDescription(
+        key="doorbell_melody",
+        name="Doorbell melody",
+        icon="mdi:bell",
+    ),
+    SensorEntityDescription(
+        key="firmware",
+        name="Firmware",
+        icon="mdi:information-outline",
+    ),
+    SensorEntityDescription(
+        key="hardware",
+        name="Hardware",
+        icon="mdi:chip",
+    ),
+    SensorEntityDescription(
+        key="humidity",
+        name="Humidity",
+        device_class=SensorDeviceClass.HUMIDITY,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=PERCENTAGE,
+    ),
+    SensorEntityDescription(
+        key="humidity_status",
+        name="Humidity status",
+        icon="mdi:water-percent",
+    ),
+    SensorEntityDescription(
+        key="kilowatt",
+        name="Kilowatt",
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfPower.KILO_WATT,
+    ),
+    SensorEntityDescription(
+        key="light_intensity",
+        name="Light intensity",
+        device_class=SensorDeviceClass.ILLUMINANCE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=LIGHT_LUX,
+    ),
+    SensorEntityDescription(
+        key="meter_value",
+        name="Meter value",
+        icon="mdi:counter",
+    ),
+    SensorEntityDescription(
+        key="noise_level",
+        name="Noise level",
+        icon="mdi:bell-alert",
+    ),
+    SensorEntityDescription(
+        key="rain_rate",
+        name="Rain rate",
+        device_class=SensorDeviceClass.PRECIPITATION_INTENSITY,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR,
+    ),
+    SensorEntityDescription(
+        key="revision",
+        name="Revision",
+        icon="mdi:information",
+    ),
+    SensorEntityDescription(
+        key="temperature",
+        name="Temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+    ),
+    SensorEntityDescription(
+        key="total_rain",
+        name="Total rain",
+        device_class=SensorDeviceClass.PRECIPITATION,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        native_unit_of_measurement=UnitOfPrecipitationDepth.MILLIMETERS,
+    ),
+    SensorEntityDescription(
+        key="uv_intensity",
+        name="UV intensity",
+        icon="mdi:sunglasses",
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UV_INDEX,
+    ),
+    SensorEntityDescription(
+        key="version",
+        name="Version",
+        icon="mdi:information",
+    ),
+    SensorEntityDescription(
+        key="voltage",
+        name="Voltage",
+        device_class=SensorDeviceClass.VOLTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+    ),
+    SensorEntityDescription(
+        key="watt",
+        name="Watt",
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfPower.WATT,
+    ),
+    SensorEntityDescription(
+        key="weather_forecast",
+        name="Weather forecast",
+        icon="mdi:weather-cloudy-clock",
+    ),
+    SensorEntityDescription(
+        key="windchill",
+        name="Wind chill",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+    ),
+    SensorEntityDescription(
+        key="winddirection",
+        name="Wind direction",
+        icon="mdi:compass",
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=DEGREE,
     ),
     SensorEntityDescription(
         key="windgusts",
@@ -82,22 +251,8 @@ SENSOR_TYPES = (
         native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
     ),
     SensorEntityDescription(
-        key="temperature",
-        name="Temperature",
-        device_class=SensorDeviceClass.TEMPERATURE,
-        state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-    ),
-    SensorEntityDescription(
         key="windtemp",
         name="Wind temperature",
-        device_class=SensorDeviceClass.TEMPERATURE,
-        state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-    ),
-    SensorEntityDescription(
-        key="windchill",
-        name="Wind chill",
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
@@ -248,9 +403,3 @@ class RflinkSensor(RflinkDevice, SensorEntity):
     def native_value(self):
         """Return value."""
         return self._state
-
-    @property
-    def icon(self):
-        """Return possible sensor specific icon."""
-        if self._sensor_type in SENSOR_ICONS:
-            return SENSOR_ICONS[self._sensor_type]

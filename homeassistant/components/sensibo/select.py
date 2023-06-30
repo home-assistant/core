@@ -27,6 +27,7 @@ class SensiboSelectDescriptionMixin:
     data_key: str
     value_fn: Callable[[SensiboDevice], str | None]
     options_fn: Callable[[SensiboDevice], list[str] | None]
+    transformation: Callable[[SensiboDevice], dict | None]
 
 
 @dataclass
@@ -44,6 +45,8 @@ DEVICE_SELECT_TYPES = (
         icon="mdi:air-conditioner",
         value_fn=lambda data: data.horizontal_swing_mode,
         options_fn=lambda data: data.horizontal_swing_modes,
+        translation_key="horizontalswing",
+        transformation=lambda data: data.horizontal_swing_modes_translated,
     ),
     SensiboSelectEntityDescription(
         key="light",
@@ -52,6 +55,8 @@ DEVICE_SELECT_TYPES = (
         icon="mdi:flashlight",
         value_fn=lambda data: data.light_mode,
         options_fn=lambda data: data.light_modes,
+        translation_key="light",
+        transformation=lambda data: data.light_modes_translated,
     ),
 )
 
@@ -104,7 +109,8 @@ class SensiboSelect(SensiboDeviceBaseEntity, SelectEntity):
         """Set state to the selected option."""
         if self.entity_description.key not in self.device_data.active_features:
             raise HomeAssistantError(
-                f"Current mode {self.device_data.hvac_mode} doesn't support setting {self.entity_description.name}"
+                f"Current mode {self.device_data.hvac_mode} doesn't support setting"
+                f" {self.entity_description.name}"
             )
 
         await self.async_send_api_call(
@@ -115,6 +121,10 @@ class SensiboSelect(SensiboDeviceBaseEntity, SelectEntity):
     @async_handle_api_call
     async def async_send_api_call(self, key: str, value: Any) -> bool:
         """Make service call to api."""
+        transformation = self.entity_description.transformation(self.device_data)
+        if TYPE_CHECKING:
+            assert transformation is not None
+
         data = {
             "name": self.entity_description.key,
             "value": value,
@@ -124,7 +134,7 @@ class SensiboSelect(SensiboDeviceBaseEntity, SelectEntity):
         result = await self._client.async_set_ac_state_property(
             self._device_id,
             data["name"],
-            data["value"],
+            transformation[data["value"]],
             data["ac_states"],
             data["assumed_state"],
         )

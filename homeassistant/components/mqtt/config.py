@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_VALUE_TEMPLATE
+from homeassistant.const import CONF_OPTIMISTIC, CONF_VALUE_TEMPLATE
 from homeassistant.helpers import config_validation as cv
 
 from .const import (
@@ -13,13 +13,14 @@ from .const import (
     CONF_RETAIN,
     CONF_STATE_TOPIC,
     DEFAULT_ENCODING,
+    DEFAULT_OPTIMISTIC,
     DEFAULT_QOS,
     DEFAULT_RETAIN,
 )
-from .util import _VALID_QOS_SCHEMA, valid_publish_topic, valid_subscribe_topic
+from .util import valid_publish_topic, valid_qos_schema, valid_subscribe_topic
 
 SCHEMA_BASE = {
-    vol.Optional(CONF_QOS, default=DEFAULT_QOS): _VALID_QOS_SCHEMA,
+    vol.Optional(CONF_QOS, default=DEFAULT_QOS): valid_qos_schema,
     vol.Optional(CONF_ENCODING, default=DEFAULT_ENCODING): cv.string,
 }
 
@@ -37,6 +38,7 @@ MQTT_RO_SCHEMA = MQTT_BASE_SCHEMA.extend(
 MQTT_RW_SCHEMA = MQTT_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_COMMAND_TOPIC): valid_publish_topic,
+        vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
         vol.Optional(CONF_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
         vol.Optional(CONF_STATE_TOPIC): valid_subscribe_topic,
     }

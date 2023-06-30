@@ -54,7 +54,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = coordinator
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     entry.async_on_unload(entry.add_update_listener(update_listener))
 
@@ -78,10 +78,12 @@ async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
         client.locations[location_id].auto_bypass_low_battery = bypass
 
 
-class TotalConnectDataUpdateCoordinator(DataUpdateCoordinator):
+class TotalConnectDataUpdateCoordinator(DataUpdateCoordinator[None]):
     """Class to fetch data from TotalConnect."""
 
-    def __init__(self, hass: HomeAssistant, client):
+    config_entry: ConfigEntry
+
+    def __init__(self, hass: HomeAssistant, client: TotalConnectClient) -> None:
         """Initialize."""
         self.hass = hass
         self.client = client
@@ -89,11 +91,11 @@ class TotalConnectDataUpdateCoordinator(DataUpdateCoordinator):
             hass, logger=_LOGGER, name=DOMAIN, update_interval=SCAN_INTERVAL
         )
 
-    async def _async_update_data(self):
+    async def _async_update_data(self) -> None:
         """Update data."""
         await self.hass.async_add_executor_job(self.sync_update_data)
 
-    def sync_update_data(self):
+    def sync_update_data(self) -> None:
         """Fetch synchronous data from TotalConnect."""
         try:
             for location_id in self.client.locations:

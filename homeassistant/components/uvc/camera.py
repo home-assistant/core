@@ -107,14 +107,14 @@ class UnifiVideoCamera(Camera):
         return self._name
 
     @property
-    def supported_features(self) -> int:
+    def supported_features(self) -> CameraEntityFeature:
         """Return supported features."""
         channels = self._caminfo["channels"]
         for channel in channels:
             if channel["isRtspEnabled"]:
                 return CameraEntityFeature.STREAM
 
-        return 0
+        return CameraEntityFeature(0)
 
     @property
     def extra_state_attributes(self):
@@ -246,9 +246,8 @@ class UnifiVideoCamera(Camera):
                     (
                         uri
                         for i, uri in enumerate(channel["rtspUris"])
-                        # pylint: disable=protected-access
+                        # pylint: disable-next=protected-access
                         if re.search(self._nvr._host, uri)
-                        # pylint: enable=protected-access
                     )
                 )
                 return uri

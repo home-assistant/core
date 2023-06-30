@@ -165,9 +165,8 @@ class GenericCamera(Camera):
             self._stream_source.hass = hass
         self._limit_refetch = device_info[CONF_LIMIT_REFETCH_TO_URL_CHANGE]
         self._attr_frame_interval = 1 / device_info[CONF_FRAMERATE]
-        self._attr_supported_features = (
-            CameraEntityFeature.STREAM if self._stream_source else 0
-        )
+        if self._stream_source:
+            self._attr_supported_features = CameraEntityFeature.STREAM
         self.content_type = device_info[CONF_CONTENT_TYPE]
         self.verify_ssl = device_info[CONF_VERIFY_SSL]
         if device_info.get(CONF_RTSP_TRANSPORT):
@@ -201,7 +200,7 @@ class GenericCamera(Camera):
         try:
             async_client = get_async_client(self.hass, verify_ssl=self.verify_ssl)
             response = await async_client.get(
-                url, auth=self._auth, timeout=GET_IMAGE_TIMEOUT
+                url, auth=self._auth, follow_redirects=True, timeout=GET_IMAGE_TIMEOUT
             )
             response.raise_for_status()
             self._last_image = response.content

@@ -14,7 +14,7 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorStateClass,
 )
-from homeassistant.const import CONF_API_KEY, ENERGY_KILO_WATT_HOUR, POWER_WATT
+from homeassistant.const import CONF_API_KEY, UnitOfEnergy, UnitOfPower
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -33,7 +33,6 @@ DAILY_NAME = "Daily Energy Usage"
 ACTIVE_TYPE = "active"
 DAILY_TYPE = "daily"
 
-ICON = "mdi:flash"
 
 MIN_TIME_BETWEEN_DAILY_UPDATES = timedelta(seconds=150)
 MIN_TIME_BETWEEN_ACTIVE_UPDATES = timedelta(seconds=10)
@@ -140,6 +139,8 @@ class NeurioData:
 class NeurioEnergy(SensorEntity):
     """Implementation of a Neurio energy sensor."""
 
+    _attr_icon = "mdi:flash"
+
     def __init__(self, data, name, sensor_type, update_call):
         """Initialize the sensor."""
         self._name = name
@@ -149,11 +150,11 @@ class NeurioEnergy(SensorEntity):
         self._state = None
 
         if sensor_type == ACTIVE_TYPE:
-            self._unit_of_measurement = POWER_WATT
+            self._unit_of_measurement = UnitOfPower.WATT
             self._attr_device_class = SensorDeviceClass.POWER
             self._attr_state_class = SensorStateClass.MEASUREMENT
         elif sensor_type == DAILY_TYPE:
-            self._unit_of_measurement = ENERGY_KILO_WATT_HOUR
+            self._unit_of_measurement = UnitOfEnergy.KILO_WATT_HOUR
             self._attr_device_class = SensorDeviceClass.ENERGY
             self._attr_state_class = SensorStateClass.TOTAL_INCREASING
 
@@ -171,11 +172,6 @@ class NeurioEnergy(SensorEntity):
     def native_unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
         return self._unit_of_measurement
-
-    @property
-    def icon(self):
-        """Icon to use in the frontend, if any."""
-        return ICON
 
     def update(self) -> None:
         """Get the latest data, update state."""

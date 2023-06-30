@@ -13,8 +13,8 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
@@ -51,7 +51,7 @@ BINARY_SENSOR_MAP: dict[type[Robot], tuple[RobotBinarySensorEntityDescription, .
     LitterRobot: (
         RobotBinarySensorEntityDescription[LitterRobot](
             key="sleeping",
-            name="Sleeping",
+            translation_key="sleeping",
             icon="mdi:sleep",
             entity_category=EntityCategory.DIAGNOSTIC,
             entity_registry_enabled_default=False,
@@ -59,7 +59,7 @@ BINARY_SENSOR_MAP: dict[type[Robot], tuple[RobotBinarySensorEntityDescription, .
         ),
         RobotBinarySensorEntityDescription[LitterRobot](
             key="sleep_mode",
-            name="Sleep mode",
+            translation_key="sleep_mode",
             icon="mdi:sleep",
             entity_category=EntityCategory.DIAGNOSTIC,
             entity_registry_enabled_default=False,
@@ -69,7 +69,7 @@ BINARY_SENSOR_MAP: dict[type[Robot], tuple[RobotBinarySensorEntityDescription, .
     Robot: (
         RobotBinarySensorEntityDescription[Robot](
             key="power_status",
-            name="Power status",
+            translation_key="power_status",
             device_class=BinarySensorDeviceClass.PLUG,
             entity_category=EntityCategory.DIAGNOSTIC,
             entity_registry_enabled_default=False,

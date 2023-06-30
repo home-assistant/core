@@ -1,7 +1,7 @@
 """Config flow for Z-Wave JS integration."""
 from __future__ import annotations
 
-from abc import abstractmethod
+from abc import ABC, abstractmethod
 import asyncio
 import logging
 from typing import Any
@@ -14,7 +14,14 @@ from zwave_js_server.version import VersionInfo, get_server_version
 
 from homeassistant import config_entries, exceptions
 from homeassistant.components import usb
-from homeassistant.components.hassio import HassioServiceInfo, is_hassio
+from homeassistant.components.hassio import (
+    AddonError,
+    AddonInfo,
+    AddonManager,
+    AddonState,
+    HassioServiceInfo,
+    is_hassio,
+)
 from homeassistant.components.zeroconf import ZeroconfServiceInfo
 from homeassistant.const import CONF_NAME, CONF_URL
 from homeassistant.core import HomeAssistant, callback
@@ -27,7 +34,7 @@ from homeassistant.data_entry_flow import (
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from . import disconnect_client
-from .addon import AddonError, AddonInfo, AddonManager, AddonState, get_addon_manager
+from .addon import get_addon_manager
 from .const import (
     ADDON_SLUG,
     CONF_ADDON_DEVICE,
@@ -150,7 +157,7 @@ async def async_get_usb_ports(hass: HomeAssistant) -> dict[str, str]:
     return await hass.async_add_executor_job(get_usb_ports)
 
 
-class BaseZwaveJSFlow(FlowHandler):
+class BaseZwaveJSFlow(FlowHandler, ABC):
     """Represent the base config flow for Z-Wave JS."""
 
     def __init__(self) -> None:
@@ -408,7 +415,6 @@ class ConfigFlow(BaseZwaveJSFlow, config_entries.ConfigFlow, domain=DOMAIN):
         vid = discovery_info.vid
         pid = discovery_info.pid
         serial_number = discovery_info.serial_number
-        device = discovery_info.device
         manufacturer = discovery_info.manufacturer
         description = discovery_info.description
         # Zooz uses this vid/pid, but so do 2652 sticks
@@ -423,7 +429,7 @@ class ConfigFlow(BaseZwaveJSFlow, config_entries.ConfigFlow, domain=DOMAIN):
             f"{vid}:{pid}_{serial_number}_{manufacturer}_{description}"
         )
         self._abort_if_unique_id_configured()
-        dev_path = await self.hass.async_add_executor_job(usb.get_serial_by_id, device)
+        dev_path = discovery_info.device
         self.usb_path = dev_path
         self._title = usb.human_readable_device_name(
             dev_path,

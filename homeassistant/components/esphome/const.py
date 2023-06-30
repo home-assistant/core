@@ -1,0 +1,7 @@
+"""ESPHome constants."""
+
+DOMAIN = "esphome"
+
+CONF_ALLOW_SERVICE_CALLS = "allow_service_calls"
+DEFAULT_ALLOW_SERVICE_CALLS = True
+DEFAULT_NEW_CONFIG_ALLOW_ALLOW_SERVICE_CALLS = False

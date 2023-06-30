@@ -13,6 +13,7 @@ calibrate:
   target:
     entity:
       domain: sensor
+      integration: utility_meter
   fields:
     value:
       name: Value

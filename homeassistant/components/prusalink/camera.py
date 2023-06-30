@@ -24,7 +24,7 @@ class PrusaLinkJobPreviewEntity(PrusaLinkEntity, Camera):
 
     last_path = ""
     last_image: bytes
-    _attr_name = "Job Preview"
+    _attr_translation_key = "job_preview"
 
     def __init__(self, coordinator: JobUpdateCoordinator) -> None:
         """Initialize a PrusaLink camera entity."""

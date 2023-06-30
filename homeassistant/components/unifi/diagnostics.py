@@ -11,11 +11,11 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import format_mac
 
-from .const import CONF_CONTROLLER, DOMAIN as UNIFI_DOMAIN
+from .const import DOMAIN as UNIFI_DOMAIN
 from .controller import UniFiController
 
-TO_REDACT = {CONF_CONTROLLER, CONF_PASSWORD}
-REDACT_CONFIG = {CONF_CONTROLLER, CONF_HOST, CONF_PASSWORD, CONF_USERNAME}
+TO_REDACT = {CONF_PASSWORD}
+REDACT_CONFIG = {CONF_HOST, CONF_PASSWORD, CONF_USERNAME}
 REDACT_CLIENTS = {"bssid", "essid"}
 REDACT_DEVICES = {
     "anon_id",
@@ -95,7 +95,6 @@ async def async_get_config_entry_diagnostics(
         async_replace_dict_data(config_entry.as_dict(), macs_to_redact), REDACT_CONFIG
     )
     diag["site_role"] = controller.site_role
-    diag["entities"] = async_replace_dict_data(controller.entities, macs_to_redact)
     diag["clients"] = {
         macs_to_redact[k]: async_redact_data(
             async_replace_dict_data(v.raw, macs_to_redact), REDACT_CLIENTS

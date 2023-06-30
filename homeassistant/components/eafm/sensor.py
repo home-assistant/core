@@ -7,7 +7,7 @@ import async_timeout
 
 from homeassistant.components.sensor import SensorEntity, SensorStateClass
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import LENGTH_METERS
+from homeassistant.const import UnitOfLength
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceEntryType
@@ -23,7 +23,7 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 UNIT_MAPPING = {
-    "http://qudt.org/1.1/vocab/unit#Meter": LENGTH_METERS,
+    "http://qudt.org/1.1/vocab/unit#Meter": UnitOfLength.METERS,
 }
 
 
@@ -100,6 +100,7 @@ class Measurement(CoordinatorEntity, SensorEntity):
         """Initialise the gauge with a data instance and station."""
         super().__init__(coordinator)
         self.key = key
+        self._attr_unique_id = key
 
     @property
     def station_name(self):
@@ -125,11 +126,6 @@ class Measurement(CoordinatorEntity, SensorEntity):
     def name(self):
         """Return the name of the gauge."""
         return f"{self.station_name} {self.parameter_name} {self.qualifier}"
-
-    @property
-    def unique_id(self):
-        """Return the unique id of the gauge."""
-        return self.key
 
     @property
     def device_info(self):

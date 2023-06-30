@@ -3,14 +3,11 @@ from __future__ import annotations
 
 from collections.abc import Coroutine, Mapping
 from functools import partial
-import socket
 from typing import Any
 from urllib.parse import urlparse
 
 import getmac
-import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.components import ssdp
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -18,7 +15,6 @@ from homeassistant.const import (
     CONF_MAC,
     CONF_METHOD,
     CONF_MODEL,
-    CONF_NAME,
     CONF_PORT,
     CONF_TOKEN,
     EVENT_HOMEASSISTANT_STOP,
@@ -26,10 +22,12 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr, entity_registry as er
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    entity_registry as er,
+)
 from homeassistant.helpers.debounce import Debouncer
-from homeassistant.helpers.typing import ConfigType
 
 from .bridge import (
     SamsungTVBridge,
@@ -38,11 +36,9 @@ from .bridge import (
     model_requires_encryption,
 )
 from .const import (
-    CONF_ON_ACTION,
     CONF_SESSION_ID,
     CONF_SSDP_MAIN_TV_AGENT_LOCATION,
     CONF_SSDP_RENDERING_CONTROL_LOCATION,
-    DEFAULT_NAME,
     DOMAIN,
     ENTRY_RELOAD_COOLDOWN,
     LEGACY_PORT,
@@ -53,60 +49,9 @@ from .const import (
     UPNP_SVC_RENDERING_CONTROL,
 )
 
+PLATFORMS = [Platform.MEDIA_PLAYER, Platform.REMOTE]
 
-def ensure_unique_hosts(value: dict[Any, Any]) -> dict[Any, Any]:
-    """Validate that all configs have a unique host."""
-    vol.Schema(vol.Unique("duplicate host entries found"))(
-        [entry[CONF_HOST] for entry in value]
-    )
-    return value
-
-
-PLATFORMS = [Platform.MEDIA_PLAYER]
-
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.All(
-            cv.ensure_list,
-            [
-                cv.deprecated(CONF_PORT),
-                vol.Schema(
-                    {
-                        vol.Required(CONF_HOST): cv.string,
-                        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-                        vol.Optional(CONF_PORT): cv.port,
-                        vol.Optional(CONF_ON_ACTION): cv.SCRIPT_SCHEMA,
-                    }
-                ),
-            ],
-            ensure_unique_hosts,
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
-)
-
-
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the Samsung TV integration."""
-    hass.data[DOMAIN] = {}
-    if DOMAIN not in config:
-        return True
-
-    for entry_config in config[DOMAIN]:
-        ip_address = await hass.async_add_executor_job(
-            socket.gethostbyname, entry_config[CONF_HOST]
-        )
-        hass.data[DOMAIN][ip_address] = {
-            CONF_ON_ACTION: entry_config.get(CONF_ON_ACTION)
-        }
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": config_entries.SOURCE_IMPORT},
-                data=entry_config,
-            )
-        )
-    return True
+CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 
 @callback
@@ -148,10 +93,9 @@ class DebouncedEntryReloader:
         LOGGER.debug("Calling debouncer to get a reload after cooldown")
         await self._debounced_reload.async_call()
 
-    @callback
-    def async_cancel(self) -> None:
+    async def async_shutdown(self) -> None:
         """Cancel any pending reload."""
-        self._debounced_reload.async_cancel()
+        await self._debounced_reload.async_shutdown()
 
     async def _async_reload_entry(self) -> None:
         """Reload entry."""
@@ -179,6 +123,7 @@ async def _async_update_ssdp_locations(hass: HomeAssistant, entry: ConfigEntry) 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up the Samsung TV platform."""
+    hass.data.setdefault(DOMAIN, {})
 
     # Initialize bridge
     if entry.data.get(CONF_METHOD) == METHOD_ENCRYPTED_WEBSOCKET:
@@ -211,11 +156,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # will be a race where the config flow will see the entry
     # as not loaded and may reload it
     debounced_reloader = DebouncedEntryReloader(hass, entry)
-    entry.async_on_unload(debounced_reloader.async_cancel)
+    entry.async_on_unload(debounced_reloader.async_shutdown)
     entry.async_on_unload(entry.add_update_listener(debounced_reloader.async_call))
 
     hass.data[DOMAIN][entry.entry_id] = bridge
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
@@ -282,8 +227,10 @@ async def _async_create_bridge_with_updated_data(
 
     if model_requires_encryption(model) and method != METHOD_ENCRYPTED_WEBSOCKET:
         LOGGER.info(
-            "Detected model %s for %s. Some televisions from H and J series use "
-            "an encrypted protocol but you are using %s which may not be supported",
+            (
+                "Detected model %s for %s. Some televisions from H and J series use "
+                "an encrypted protocol but you are using %s which may not be supported"
+            ),
             model,
             host,
             method,
@@ -321,7 +268,6 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
         en_reg.async_clear_config_entry(config_entry.entry_id)
 
         version = config_entry.version = 2
-        hass.config_entries.async_update_entry(config_entry)
     LOGGER.debug("Migration to version %s successful", version)
 
     return True

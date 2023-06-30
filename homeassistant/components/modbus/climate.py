@@ -17,8 +17,7 @@ from homeassistant.const import (
     CONF_TEMPERATURE_UNIT,
     PRECISION_TENTHS,
     PRECISION_WHOLE,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -32,6 +31,13 @@ from .const import (
     CALL_TYPE_WRITE_REGISTER,
     CALL_TYPE_WRITE_REGISTERS,
     CONF_CLIMATES,
+    CONF_HVAC_MODE_AUTO,
+    CONF_HVAC_MODE_COOL,
+    CONF_HVAC_MODE_DRY,
+    CONF_HVAC_MODE_FAN_ONLY,
+    CONF_HVAC_MODE_HEAT,
+    CONF_HVAC_MODE_HEAT_COOL,
+    CONF_HVAC_MODE_OFF,
     CONF_HVAC_MODE_REGISTER,
     CONF_HVAC_MODE_VALUES,
     CONF_HVAC_ONOFF_REGISTER,
@@ -39,6 +45,7 @@ from .const import (
     CONF_MIN_TEMP,
     CONF_STEP,
     CONF_TARGET_TEMP,
+    CONF_WRITE_REGISTERS,
     DataType,
 )
 from .modbus import ModbusHub
@@ -82,7 +89,9 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
         self._attr_current_temperature = None
         self._attr_target_temperature = None
         self._attr_temperature_unit = (
-            TEMP_FAHRENHEIT if self._unit == "F" else TEMP_CELSIUS
+            UnitOfTemperature.FAHRENHEIT
+            if self._unit == "F"
+            else UnitOfTemperature.CELSIUS
         )
         self._attr_precision = (
             PRECISION_TENTHS if self._precision >= 1 else PRECISION_WHOLE
@@ -98,11 +107,21 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
             self._attr_hvac_modes = cast(list[HVACMode], [])
             self._attr_hvac_mode = None
             self._hvac_mode_mapping: list[tuple[int, HVACMode]] = []
+            self._hvac_mode_write_type = mode_config[CONF_WRITE_REGISTERS]
             mode_value_config = mode_config[CONF_HVAC_MODE_VALUES]
-            for hvac_mode in HVACMode:
-                if hvac_mode.value in mode_value_config:
+
+            for hvac_mode_kw, hvac_mode in (
+                (CONF_HVAC_MODE_OFF, HVACMode.OFF),
+                (CONF_HVAC_MODE_HEAT, HVACMode.HEAT),
+                (CONF_HVAC_MODE_COOL, HVACMode.COOL),
+                (CONF_HVAC_MODE_HEAT_COOL, HVACMode.HEAT_COOL),
+                (CONF_HVAC_MODE_AUTO, HVACMode.AUTO),
+                (CONF_HVAC_MODE_DRY, HVACMode.DRY),
+                (CONF_HVAC_MODE_FAN_ONLY, HVACMode.FAN_ONLY),
+            ):
+                if hvac_mode_kw in mode_value_config:
                     self._hvac_mode_mapping.append(
-                        (mode_value_config[hvac_mode.value], hvac_mode)
+                        (mode_value_config[hvac_mode_kw], hvac_mode)
                     )
                     self._attr_hvac_modes.append(hvac_mode)
 
@@ -114,6 +133,7 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
 
         if CONF_HVAC_ONOFF_REGISTER in config:
             self._hvac_onoff_register = config[CONF_HVAC_ONOFF_REGISTER]
+            self._hvac_onoff_write_type = config[CONF_WRITE_REGISTERS]
             if HVACMode.OFF not in self._attr_hvac_modes:
                 self._attr_hvac_modes.append(HVACMode.OFF)
         else:
@@ -130,23 +150,39 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
         """Set new target hvac mode."""
         if self._hvac_onoff_register is not None:
             # Turn HVAC Off by writing 0 to the On/Off register, or 1 otherwise.
-            await self._hub.async_pymodbus_call(
-                self._slave,
-                self._hvac_onoff_register,
-                0 if hvac_mode == HVACMode.OFF else 1,
-                CALL_TYPE_WRITE_REGISTER,
-            )
+            if self._hvac_onoff_write_type:
+                await self._hub.async_pymodbus_call(
+                    self._slave,
+                    self._hvac_onoff_register,
+                    [0 if hvac_mode == HVACMode.OFF else 1],
+                    CALL_TYPE_WRITE_REGISTERS,
+                )
+            else:
+                await self._hub.async_pymodbus_call(
+                    self._slave,
+                    self._hvac_onoff_register,
+                    0 if hvac_mode == HVACMode.OFF else 1,
+                    CALL_TYPE_WRITE_REGISTER,
+                )
 
         if self._hvac_mode_register is not None:
             # Write a value to the mode register for the desired mode.
             for value, mode in self._hvac_mode_mapping:
                 if mode == hvac_mode:
-                    await self._hub.async_pymodbus_call(
-                        self._slave,
-                        self._hvac_mode_register,
-                        value,
-                        CALL_TYPE_WRITE_REGISTER,
-                    )
+                    if self._hvac_mode_write_type:
+                        await self._hub.async_pymodbus_call(
+                            self._slave,
+                            self._hvac_mode_register,
+                            [value],
+                            CALL_TYPE_WRITE_REGISTERS,
+                        )
+                    else:
+                        await self._hub.async_pymodbus_call(
+                            self._slave,
+                            self._hvac_mode_register,
+                            value,
+                            CALL_TYPE_WRITE_REGISTER,
+                        )
                     break
 
         await self.async_update()

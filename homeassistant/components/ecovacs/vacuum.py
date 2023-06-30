@@ -160,7 +160,6 @@ class EcovacsVacuum(VacuumEntity):
     def set_fan_speed(self, fan_speed: str, **kwargs: Any) -> None:
         """Set fan speed."""
         if self.is_on:
-
             self.device.run(sucks.Clean(mode=self.device.clean_status, speed=fan_speed))
 
     def send_command(

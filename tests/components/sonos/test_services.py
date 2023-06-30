@@ -5,10 +5,11 @@ import pytest
 
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN, SERVICE_JOIN
 from homeassistant.components.sonos.const import DATA_SONOS
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
 
-async def test_media_player_join(hass, async_autosetup_sonos):
+async def test_media_player_join(hass: HomeAssistant, async_autosetup_sonos) -> None:
     """Test join service."""
     valid_entity_id = "media_player.zone_a"
     mocked_entity_id = "media_player.mocked"

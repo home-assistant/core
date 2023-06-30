@@ -4,7 +4,7 @@ from typing import Any
 
 import yaml
 
-from .objects import Input, NodeListClass
+from .objects import Input, NodeDictClass, NodeListClass
 
 # mypy: allow-untyped-calls, no-warn-return-any
 
@@ -12,7 +12,9 @@ from .objects import Input, NodeListClass
 try:
     from yaml import CSafeDumper as FastestAvailableSafeDumper
 except ImportError:
-    from yaml import SafeDumper as FastestAvailableSafeDumper  # type: ignore[misc]
+    from yaml import (  # type: ignore[assignment]
+        SafeDumper as FastestAvailableSafeDumper,
+    )
 
 
 def dump(_dict: dict) -> str:
@@ -69,6 +71,11 @@ def add_representer(klass: Any, representer: Any) -> None:
 
 add_representer(
     OrderedDict,
+    lambda dumper, value: represent_odict(dumper, "tag:yaml.org,2002:map", value),
+)
+
+add_representer(
+    NodeDictClass,
     lambda dumper, value: represent_odict(dumper, "tag:yaml.org,2002:map", value),
 )
 

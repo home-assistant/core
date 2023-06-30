@@ -1,22 +1,34 @@
 """Tests for the for the BMW Connected Drive integration."""
 
-import json
 from pathlib import Path
+from urllib.parse import urlparse
 
-from bimmer_connected.account import MyBMWAccount
-from bimmer_connected.api.utils import log_to_to_file
+from bimmer_connected.api.authentication import MyBMWAuthentication
+from bimmer_connected.const import (
+    REMOTE_SERVICE_POSITION_URL,
+    VEHICLE_CHARGING_DETAILS_URL,
+    VEHICLE_STATE_URL,
+    VEHICLES_URL,
+)
+import httpx
+import respx
 
 from homeassistant import config_entries
 from homeassistant.components.bmw_connected_drive.const import (
+    CONF_GCID,
     CONF_READ_ONLY,
     CONF_REFRESH_TOKEN,
     DOMAIN as BMW_DOMAIN,
 )
 from homeassistant.const import CONF_PASSWORD, CONF_REGION, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.util.dt import utcnow
 
-from tests.common import MockConfigEntry, get_fixture_path, load_fixture
+from tests.common import (
+    MockConfigEntry,
+    get_fixture_path,
+    load_json_array_fixture,
+    load_json_object_fixture,
+)
 
 FIXTURE_USER_INPUT = {
     CONF_USERNAME: "user@domain.com",
@@ -24,6 +36,7 @@ FIXTURE_USER_INPUT = {
     CONF_REGION: "rest_of_world",
 }
 FIXTURE_REFRESH_TOKEN = "SOME_REFRESH_TOKEN"
+FIXTURE_GCID = "SOME_GCID"
 
 FIXTURE_CONFIG_ENTRY = {
     "entry_id": "1",
@@ -34,72 +47,94 @@ FIXTURE_CONFIG_ENTRY = {
         CONF_PASSWORD: FIXTURE_USER_INPUT[CONF_PASSWORD],
         CONF_REGION: FIXTURE_USER_INPUT[CONF_REGION],
         CONF_REFRESH_TOKEN: FIXTURE_REFRESH_TOKEN,
+        CONF_GCID: FIXTURE_GCID,
     },
     "options": {CONF_READ_ONLY: False},
     "source": config_entries.SOURCE_USER,
     "unique_id": f"{FIXTURE_USER_INPUT[CONF_REGION]}-{FIXTURE_USER_INPUT[CONF_REGION]}",
 }
 
+FIXTURE_PATH = Path(get_fixture_path("", integration=BMW_DOMAIN))
+FIXTURE_FILES = {
+    "vehicles": sorted(FIXTURE_PATH.rglob("*-eadrax-vcs_v4_vehicles.json")),
+    "states": {
+        p.stem.split("_")[-1]: p
+        for p in FIXTURE_PATH.rglob("*-eadrax-vcs_v4_vehicles_state_*.json")
+    },
+    "charging": {
+        p.stem.split("_")[-1]: p
+        for p in FIXTURE_PATH.rglob("*-eadrax-crccs_v2_vehicles_*.json")
+    },
+}
 
-async def mock_vehicles_from_fixture(account: MyBMWAccount) -> None:
-    """Load MyBMWVehicle from fixtures and add them to the account."""
 
-    fixture_path = Path(get_fixture_path("", integration=BMW_DOMAIN))
-
-    fixture_vehicles_bmw = list(fixture_path.rglob("vehicles_v2_bmw_*.json"))
-    fixture_vehicles_mini = list(fixture_path.rglob("vehicles_v2_mini_*.json"))
-
-    # Load vehicle base lists as provided by vehicles/v2 API
-    vehicles = {
-        "bmw": [
-            vehicle
-            for bmw_file in fixture_vehicles_bmw
-            for vehicle in json.loads(load_fixture(bmw_file, integration=BMW_DOMAIN))
-        ],
-        "mini": [
-            vehicle
-            for mini_file in fixture_vehicles_mini
-            for vehicle in json.loads(load_fixture(mini_file, integration=BMW_DOMAIN))
-        ],
-    }
-    fetched_at = utcnow()
-
-    # simulate storing fingerprints
-    if account.config.log_response_path:
-        for brand in ["bmw", "mini"]:
-            log_to_to_file(
-                json.dumps(vehicles[brand]),
-                account.config.log_response_path,
-                f"vehicles_v2_{brand}",
+def vehicles_sideeffect(request: httpx.Request) -> httpx.Response:
+    """Return /vehicles response based on x-user-agent."""
+    x_user_agent = request.headers.get("x-user-agent", "").split(";")
+    brand = x_user_agent[1]
+    vehicles = []
+    for vehicle_file in FIXTURE_FILES["vehicles"]:
+        if vehicle_file.name.startswith(brand):
+            vehicles.extend(
+                load_json_array_fixture(vehicle_file, integration=BMW_DOMAIN)
             )
+    return httpx.Response(200, json=vehicles)
 
-    # Create a vehicle with base + specific state as provided by state/VIN API
-    for vehicle_base in [vehicle for brand in vehicles.values() for vehicle in brand]:
-        vehicle_state_path = (
-            Path("vehicles")
-            / vehicle_base["attributes"]["bodyType"]
-            / f"state_{vehicle_base['vin']}_0.json"
+
+def vehicle_state_sideeffect(request: httpx.Request) -> httpx.Response:
+    """Return /vehicles/state response."""
+    try:
+        state_file = FIXTURE_FILES["states"][request.headers["bmw-vin"]]
+        return httpx.Response(
+            200, json=load_json_object_fixture(state_file, integration=BMW_DOMAIN)
         )
-        vehicle_state = json.loads(
-            load_fixture(
-                vehicle_state_path,
+    except KeyError:
+        return httpx.Response(404)
+
+
+def vehicle_charging_sideeffect(request: httpx.Request) -> httpx.Response:
+    """Return /vehicles/state response."""
+    try:
+        charging_file = FIXTURE_FILES["charging"][request.headers["bmw-vin"]]
+        return httpx.Response(
+            200, json=load_json_object_fixture(charging_file, integration=BMW_DOMAIN)
+        )
+    except KeyError:
+        return httpx.Response(404)
+
+
+def mock_vehicles() -> respx.Router:
+    """Return mocked adapter for vehicles."""
+    router = respx.mock(assert_all_called=False)
+
+    # Get vehicle list
+    router.get(VEHICLES_URL).mock(side_effect=vehicles_sideeffect)
+
+    # Get vehicle state
+    router.get(VEHICLE_STATE_URL).mock(side_effect=vehicle_state_sideeffect)
+
+    # Get vehicle charging details
+    router.get(VEHICLE_CHARGING_DETAILS_URL).mock(
+        side_effect=vehicle_charging_sideeffect
+    )
+
+    # Get vehicle position after remote service
+    router.post(urlparse(REMOTE_SERVICE_POSITION_URL).netloc).mock(
+        httpx.Response(
+            200,
+            json=load_json_object_fixture(
+                FIXTURE_PATH / "remote_service" / "eventposition.json",
                 integration=BMW_DOMAIN,
-            )
+            ),
         )
+    )
 
-        account.add_vehicle(
-            vehicle_base,
-            vehicle_state,
-            fetched_at,
-        )
+    return router
 
-        # simulate storing fingerprints
-        if account.config.log_response_path:
-            log_to_to_file(
-                json.dumps(vehicle_state),
-                account.config.log_response_path,
-                f"state_{vehicle_base['vin']}",
-            )
+
+async def mock_login(auth: MyBMWAuthentication) -> None:
+    """Mock a successful login."""
+    auth.access_token = "SOME_ACCESS_TOKEN"
 
 
 async def setup_mocked_integration(hass: HomeAssistant) -> MockConfigEntry:

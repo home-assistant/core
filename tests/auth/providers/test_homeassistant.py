@@ -11,6 +11,7 @@ from homeassistant.auth.providers import (
     auth_provider_from_config,
     homeassistant as hass_auth,
 )
+from homeassistant.core import HomeAssistant
 
 
 @pytest.fixture
@@ -30,13 +31,13 @@ def legacy_data(hass):
     return data
 
 
-async def test_validating_password_invalid_user(data, hass):
+async def test_validating_password_invalid_user(data, hass: HomeAssistant) -> None:
     """Test validating an invalid user."""
     with pytest.raises(hass_auth.InvalidAuth):
         data.validate_login("non-existing", "pw")
 
 
-async def test_not_allow_set_id():
+async def test_not_allow_set_id() -> None:
     """Test we are not allowed to set an ID in config."""
     hass = Mock()
     with pytest.raises(vol.Invalid):
@@ -45,7 +46,7 @@ async def test_not_allow_set_id():
         )
 
 
-async def test_new_users_populate_values(hass, data):
+async def test_new_users_populate_values(hass: HomeAssistant, data) -> None:
     """Test that we populate data for new users."""
     data.add_auth("hello", "test-pass")
     await data.async_save()
@@ -58,7 +59,7 @@ async def test_new_users_populate_values(hass, data):
     assert user.is_active
 
 
-async def test_changing_password_raises_invalid_user(data, hass):
+async def test_changing_password_raises_invalid_user(data, hass: HomeAssistant) -> None:
     """Test that changing password raises invalid user."""
     with pytest.raises(hass_auth.InvalidUser):
         data.change_password("non-existing", "pw")
@@ -67,20 +68,20 @@ async def test_changing_password_raises_invalid_user(data, hass):
 # Modern mode
 
 
-async def test_adding_user(data, hass):
+async def test_adding_user(data, hass: HomeAssistant) -> None:
     """Test adding a user."""
     data.add_auth("test-user", "test-pass")
     data.validate_login(" test-user ", "test-pass")
 
 
-async def test_adding_user_duplicate_username(data, hass):
+async def test_adding_user_duplicate_username(data, hass: HomeAssistant) -> None:
     """Test adding a user with duplicate username."""
     data.add_auth("test-user", "test-pass")
     with pytest.raises(hass_auth.InvalidUser):
         data.add_auth("TEST-user ", "other-pass")
 
 
-async def test_validating_password_invalid_password(data, hass):
+async def test_validating_password_invalid_password(data, hass: HomeAssistant) -> None:
     """Test validating an invalid password."""
     data.add_auth("test-user", "test-pass")
 
@@ -94,7 +95,7 @@ async def test_validating_password_invalid_password(data, hass):
         data.validate_login("test-user", "Test-pass")
 
 
-async def test_changing_password(data, hass):
+async def test_changing_password(data, hass: HomeAssistant) -> None:
     """Test adding a user."""
     data.add_auth("test-user", "test-pass")
     data.change_password("TEST-USER ", "new-pass")
@@ -105,7 +106,7 @@ async def test_changing_password(data, hass):
     data.validate_login("test-UsEr", "new-pass")
 
 
-async def test_login_flow_validates(data, hass):
+async def test_login_flow_validates(data, hass: HomeAssistant) -> None:
     """Test login flow."""
     data.add_auth("test-user", "test-pass")
     await data.async_save()
@@ -136,7 +137,7 @@ async def test_login_flow_validates(data, hass):
     assert result["data"]["username"] == "test-USER"
 
 
-async def test_saving_loading(data, hass):
+async def test_saving_loading(data, hass: HomeAssistant) -> None:
     """Test saving and loading JSON."""
     data.add_auth("test-user", "test-pass")
     data.add_auth("second-user", "second-pass")
@@ -148,7 +149,7 @@ async def test_saving_loading(data, hass):
     data.validate_login("second-user ", "second-pass")
 
 
-async def test_get_or_create_credentials(hass, data):
+async def test_get_or_create_credentials(hass: HomeAssistant, data) -> None:
     """Test that we can get or create credentials."""
     manager = await auth_manager_from_config(hass, [{"type": "homeassistant"}], [])
     provider = manager.auth_providers[0]
@@ -164,13 +165,15 @@ async def test_get_or_create_credentials(hass, data):
 # Legacy mode
 
 
-async def test_legacy_adding_user(legacy_data, hass):
+async def test_legacy_adding_user(legacy_data, hass: HomeAssistant) -> None:
     """Test in legacy mode adding a user."""
     legacy_data.add_auth("test-user", "test-pass")
     legacy_data.validate_login("test-user", "test-pass")
 
 
-async def test_legacy_adding_user_duplicate_username(legacy_data, hass):
+async def test_legacy_adding_user_duplicate_username(
+    legacy_data, hass: HomeAssistant
+) -> None:
     """Test in legacy mode adding a user with duplicate username."""
     legacy_data.add_auth("test-user", "test-pass")
     with pytest.raises(hass_auth.InvalidUser):
@@ -180,7 +183,9 @@ async def test_legacy_adding_user_duplicate_username(legacy_data, hass):
     legacy_data.add_auth("Test-user", "test-pass")
 
 
-async def test_legacy_validating_password_invalid_password(legacy_data, hass):
+async def test_legacy_validating_password_invalid_password(
+    legacy_data, hass: HomeAssistant
+) -> None:
     """Test in legacy mode validating an invalid password."""
     legacy_data.add_auth("test-user", "test-pass")
 
@@ -188,7 +193,7 @@ async def test_legacy_validating_password_invalid_password(legacy_data, hass):
         legacy_data.validate_login("test-user", "invalid-pass")
 
 
-async def test_legacy_changing_password(legacy_data, hass):
+async def test_legacy_changing_password(legacy_data, hass: HomeAssistant) -> None:
     """Test in legacy mode adding a user."""
     user = "test-user"
     legacy_data.add_auth(user, "test-pass")
@@ -200,13 +205,15 @@ async def test_legacy_changing_password(legacy_data, hass):
     legacy_data.validate_login(user, "new-pass")
 
 
-async def test_legacy_changing_password_raises_invalid_user(legacy_data, hass):
+async def test_legacy_changing_password_raises_invalid_user(
+    legacy_data, hass: HomeAssistant
+) -> None:
     """Test in legacy mode that we initialize an empty config."""
     with pytest.raises(hass_auth.InvalidUser):
         legacy_data.change_password("non-existing", "pw")
 
 
-async def test_legacy_login_flow_validates(legacy_data, hass):
+async def test_legacy_login_flow_validates(legacy_data, hass: HomeAssistant) -> None:
     """Test in legacy mode login flow."""
     legacy_data.add_auth("test-user", "test-pass")
     await legacy_data.async_save()
@@ -237,7 +244,7 @@ async def test_legacy_login_flow_validates(legacy_data, hass):
     assert result["data"]["username"] == "test-user"
 
 
-async def test_legacy_saving_loading(legacy_data, hass):
+async def test_legacy_saving_loading(legacy_data, hass: HomeAssistant) -> None:
     """Test in legacy mode saving and loading JSON."""
     legacy_data.add_auth("test-user", "test-pass")
     legacy_data.add_auth("second-user", "second-pass")
@@ -253,7 +260,9 @@ async def test_legacy_saving_loading(legacy_data, hass):
         legacy_data.validate_login("test-user ", "test-pass")
 
 
-async def test_legacy_get_or_create_credentials(hass, legacy_data):
+async def test_legacy_get_or_create_credentials(
+    hass: HomeAssistant, legacy_data
+) -> None:
     """Test in legacy mode that we can get or create credentials."""
     manager = await auth_manager_from_config(hass, [{"type": "homeassistant"}], [])
     provider = manager.auth_providers[0]
@@ -273,7 +282,7 @@ async def test_legacy_get_or_create_credentials(hass, legacy_data):
     assert credentials1 is not credentials3
 
 
-async def test_race_condition_in_data_loading(hass):
+async def test_race_condition_in_data_loading(hass: HomeAssistant) -> None:
     """Test race condition in the hass_auth.Data loading.
 
     Ref issue: https://github.com/home-assistant/core/issues/21569

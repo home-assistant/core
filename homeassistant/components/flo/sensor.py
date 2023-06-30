@@ -9,9 +9,9 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PERCENTAGE,
-    PRESSURE_PSI,
-    TEMP_FAHRENHEIT,
-    VOLUME_GALLONS,
+    UnitOfPressure,
+    UnitOfTemperature,
+    UnitOfVolume,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -22,14 +22,6 @@ from .entity import FloEntity
 
 WATER_ICON = "mdi:water"
 GAUGE_ICON = "mdi:gauge"
-NAME_DAILY_USAGE = "Today's water usage"
-NAME_CURRENT_SYSTEM_MODE = "Current system mode"
-NAME_FLOW_RATE = "Water flow rate"
-NAME_WATER_TEMPERATURE = "Water temperature"
-NAME_AIR_TEMPERATURE = "Temperature"
-NAME_WATER_PRESSURE = "Water pressure"
-NAME_HUMIDITY = "Humidity"
-NAME_BATTERY = "Battery"
 
 
 async def async_setup_entry(
@@ -46,7 +38,7 @@ async def async_setup_entry(
         if device.device_type == "puck_oem":
             entities.extend(
                 [
-                    FloTemperatureSensor(NAME_AIR_TEMPERATURE, device),
+                    FloTemperatureSensor(device, False),
                     FloHumiditySensor(device),
                     FloBatterySensor(device),
                 ]
@@ -57,7 +49,7 @@ async def async_setup_entry(
                     FloDailyUsageSensor(device),
                     FloSystemModeSensor(device),
                     FloCurrentFlowRateSensor(device),
-                    FloTemperatureSensor(NAME_WATER_TEMPERATURE, device),
+                    FloTemperatureSensor(device, True),
                     FloPressureSensor(device),
                 ]
             )
@@ -67,15 +59,15 @@ async def async_setup_entry(
 class FloDailyUsageSensor(FloEntity, SensorEntity):
     """Monitors the daily water usage."""
 
-    _attr_device_class = SensorDeviceClass.VOLUME
     _attr_icon = WATER_ICON
-    _attr_native_unit_of_measurement = VOLUME_GALLONS
+    _attr_native_unit_of_measurement = UnitOfVolume.GALLONS
     _attr_state_class: SensorStateClass = SensorStateClass.TOTAL_INCREASING
     _attr_device_class = SensorDeviceClass.WATER
+    _attr_translation_key = "daily_consumption"
 
     def __init__(self, device):
         """Initialize the daily water usage sensor."""
-        super().__init__("daily_consumption", NAME_DAILY_USAGE, device)
+        super().__init__("daily_consumption", device)
         self._state: float = None
 
     @property
@@ -89,9 +81,11 @@ class FloDailyUsageSensor(FloEntity, SensorEntity):
 class FloSystemModeSensor(FloEntity, SensorEntity):
     """Monitors the current Flo system mode."""
 
+    _attr_translation_key = "current_system_mode"
+
     def __init__(self, device):
         """Initialize the system mode sensor."""
-        super().__init__("current_system_mode", NAME_CURRENT_SYSTEM_MODE, device)
+        super().__init__("current_system_mode", device)
         self._state: str = None
 
     @property
@@ -108,10 +102,11 @@ class FloCurrentFlowRateSensor(FloEntity, SensorEntity):
     _attr_icon = GAUGE_ICON
     _attr_native_unit_of_measurement = "gpm"
     _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
+    _attr_translation_key = "current_flow_rate"
 
     def __init__(self, device):
         """Initialize the flow rate sensor."""
-        super().__init__("current_flow_rate", NAME_FLOW_RATE, device)
+        super().__init__("current_flow_rate", device)
         self._state: float = None
 
     @property
@@ -126,12 +121,14 @@ class FloTemperatureSensor(FloEntity, SensorEntity):
     """Monitors the temperature."""
 
     _attr_device_class = SensorDeviceClass.TEMPERATURE
-    _attr_native_unit_of_measurement = TEMP_FAHRENHEIT
+    _attr_native_unit_of_measurement = UnitOfTemperature.FAHRENHEIT
     _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
 
-    def __init__(self, name, device):
+    def __init__(self, device, is_water):
         """Initialize the temperature sensor."""
-        super().__init__("temperature", name, device)
+        super().__init__("temperature", device)
+        if is_water:
+            self._attr_translation_key = "water_temperature"
         self._state: float = None
 
     @property
@@ -151,7 +148,7 @@ class FloHumiditySensor(FloEntity, SensorEntity):
 
     def __init__(self, device):
         """Initialize the humidity sensor."""
-        super().__init__("humidity", NAME_HUMIDITY, device)
+        super().__init__("humidity", device)
         self._state: float = None
 
     @property
@@ -166,12 +163,13 @@ class FloPressureSensor(FloEntity, SensorEntity):
     """Monitors the water pressure."""
 
     _attr_device_class = SensorDeviceClass.PRESSURE
-    _attr_native_unit_of_measurement = PRESSURE_PSI
+    _attr_native_unit_of_measurement = UnitOfPressure.PSI
     _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
+    _attr_translation_key = "water_pressure"
 
     def __init__(self, device):
         """Initialize the pressure sensor."""
-        super().__init__("water_pressure", NAME_WATER_PRESSURE, device)
+        super().__init__("water_pressure", device)
         self._state: float = None
 
     @property
@@ -191,7 +189,7 @@ class FloBatterySensor(FloEntity, SensorEntity):
 
     def __init__(self, device):
         """Initialize the battery sensor."""
-        super().__init__("battery", NAME_BATTERY, device)
+        super().__init__("battery", device)
         self._state: float = None
 
     @property

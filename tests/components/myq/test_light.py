@@ -1,11 +1,12 @@
 """The scene tests for the myq platform."""
 from homeassistant.components.light import ColorMode
 from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.core import HomeAssistant
 
 from .util import async_init_integration
 
 
-async def test_create_lights(hass):
+async def test_create_lights(hass: HomeAssistant) -> None:
     """Test creation of lights."""
 
     await async_init_integration(hass)

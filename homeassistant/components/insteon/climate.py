@@ -9,7 +9,6 @@ from pyinsteon.constants import ThermostatMode
 from homeassistant.components.climate import (
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
-    DOMAIN as CLIMATE_DOMAIN,
     FAN_AUTO,
     ClimateEntity,
     ClimateEntityFeature,
@@ -17,14 +16,14 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.const import ATTR_TEMPERATURE, Platform, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import SIGNAL_ADD_ENTITIES
 from .insteon_entity import InsteonEntity
-from .utils import async_add_insteon_entities
+from .utils import async_add_insteon_devices, async_add_insteon_entities
 
 FAN_ONLY = "fan_only"
 
@@ -64,15 +63,20 @@ async def async_setup_entry(
         """Add the Insteon entities for the platform."""
         async_add_insteon_entities(
             hass,
-            CLIMATE_DOMAIN,
+            Platform.CLIMATE,
             InsteonClimateEntity,
             async_add_entities,
             discovery_info,
         )
 
-    signal = f"{SIGNAL_ADD_ENTITIES}_{CLIMATE_DOMAIN}"
+    signal = f"{SIGNAL_ADD_ENTITIES}_{Platform.CLIMATE}"
     async_dispatcher_connect(hass, signal, async_add_insteon_climate_entities)
-    async_add_insteon_climate_entities()
+    async_add_insteon_devices(
+        hass,
+        Platform.CLIMATE,
+        InsteonClimateEntity,
+        async_add_entities,
+    )
 
 
 class InsteonClimateEntity(InsteonEntity, ClimateEntity):
@@ -89,8 +93,8 @@ class InsteonClimateEntity(InsteonEntity, ClimateEntity):
     def temperature_unit(self) -> str:
         """Return the unit of measurement."""
         if self._insteon_device.configuration[CELSIUS].value:
-            return TEMP_CELSIUS
-        return TEMP_FAHRENHEIT
+            return UnitOfTemperature.CELSIUS
+        return UnitOfTemperature.FAHRENHEIT
 
     @property
     def current_humidity(self) -> int | None:

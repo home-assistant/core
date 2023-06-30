@@ -6,6 +6,8 @@ from homeassistant.components.hassio import get_os_info
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 
+from .const import DOMAIN
+
 BOARD_NAME = "Home Assistant Yellow"
 MANUFACTURER = "homeassistant"
 MODEL = "yellow"
@@ -22,6 +24,10 @@ def async_info(hass: HomeAssistant) -> list[HardwareInfo]:
     if not board == "yellow":
         raise HomeAssistantError
 
+    config_entries = [
+        entry.entry_id for entry in hass.config_entries.async_entries(DOMAIN)
+    ]
+
     return [
         HardwareInfo(
             board=BoardInfo(
@@ -30,6 +36,7 @@ def async_info(hass: HomeAssistant) -> list[HardwareInfo]:
                 model=MODEL,
                 revision=None,
             ),
+            config_entries=config_entries,
             dongle=None,
             name=BOARD_NAME,
             url=None,

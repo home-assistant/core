@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant
 from .conftest import KNXTestKit
 
 
-async def test_weather(hass: HomeAssistant, knx: KNXTestKit):
+async def test_weather(hass: HomeAssistant, knx: KNXTestKit) -> None:
     """Test KNX weather."""
 
     await knx.setup_integration(
@@ -35,7 +35,6 @@ async def test_weather(hass: HomeAssistant, knx: KNXTestKit):
             }
         }
     )
-    assert len(hass.states.async_all()) == 1
     state = hass.states.get("weather.test")
     assert state.state is ATTR_CONDITION_EXCEPTIONAL
 

@@ -110,6 +110,7 @@
         {
           "id": "11",
           "isEnabled": false,
+          "name": null,
           "acState": {
             "on": false,
             "targetTemperature": 21,

@@ -25,7 +25,7 @@
         }
       },
       "discovery_confirm": {
-        "description": "Do you want to setup {model} ({device_id})?"
+        "description": "Do you want to set up {model} ({device_id})?"
       },
       "user": {
         "menu_options": {
@@ -48,5 +48,15 @@
       "unreachable": "[%key:common::config_flow::error::cannot_connect%]"
     },
     "flow_title": "{model} ({device_id})"
+  },
+  "entity": {
+    "sensor": {
+      "score": {
+        "name": "Score"
+      },
+      "sound_level": {
+        "name": "Sound level"
+      }
+    }
   }
 }

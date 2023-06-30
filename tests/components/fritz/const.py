@@ -138,6 +138,7 @@ MOCK_FB_SERVICES: dict[str, dict] = {
             "NewUptime": 35307,
         },
         "GetExternalIPAddress": {"NewExternalIPAddress": "1.2.3.4"},
+        "X_AVM_DE_GetExternalIPv6Address": {"NewExternalIPv6Address": "fec0::1"},
     },
     "WANPPPConnection1": {
         "GetInfo": {
@@ -193,7 +194,6 @@ MOCK_FB_SERVICES: dict[str, dict] = {
         }
     },
 }
-
 
 MOCK_MESH_DATA = {
     "schema_version": "1.9",

@@ -14,7 +14,7 @@ from homeassistant.components.climate import (
     ClimateEntityFeature,
     HVACMode,
 )
-from homeassistant.const import PRECISION_TENTHS, TEMP_CELSIUS
+from homeassistant.const import PRECISION_TENTHS, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -112,8 +112,10 @@ async def async_setup_platform(
 
         else:
             _LOGGER.warning(
-                "Ignoring: %s (%s), id=%s, name=%s: unknown/invalid zone type, "
-                "report as an issue if you feel this zone type should be supported",
+                (
+                    "Ignoring: %s (%s), id=%s, name=%s: unknown/invalid zone type, "
+                    "report as an issue if you feel this zone type should be supported"
+                ),
                 zone.zoneType,
                 zone.modelType,
                 zone.zoneId,
@@ -126,10 +128,10 @@ async def async_setup_platform(
 class EvoClimateEntity(EvoDevice, ClimateEntity):
     """Base for an evohome Climate device."""
 
-    _attr_temperature_unit = TEMP_CELSIUS
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
     @property
-    def hvac_modes(self) -> list[str]:
+    def hvac_modes(self) -> list[HVACMode]:
         """Return a list of available hvac operation modes."""
         return list(HA_HVAC_TO_TCS)
 
@@ -189,7 +191,7 @@ class EvoZone(EvoChild, EvoClimateEntity):
         )
 
     @property
-    def hvac_mode(self) -> str:
+    def hvac_mode(self) -> HVACMode:
         """Return the current operating mode of a Zone."""
         if self._evo_tcs.systemModeStatus["mode"] in (EVO_AWAY, EVO_HEATOFF):
             return HVACMode.AUTO
@@ -321,9 +323,8 @@ class EvoController(EvoClimateEntity):
         self._attr_preset_modes = [
             TCS_PRESET_TO_HA[m] for m in modes if m in list(TCS_PRESET_TO_HA)
         ]
-        self._attr_supported_features = (
-            ClimateEntityFeature.PRESET_MODE if self._attr_preset_modes else 0
-        )
+        if self._attr_preset_modes:
+            self._attr_supported_features = ClimateEntityFeature.PRESET_MODE
 
     async def async_tcs_svc_request(self, service: str, data: dict[str, Any]) -> None:
         """Process a service request (system mode) for a controller.
@@ -355,7 +356,7 @@ class EvoController(EvoClimateEntity):
         )
 
     @property
-    def hvac_mode(self) -> str:
+    def hvac_mode(self) -> HVACMode:
         """Return the current operating mode of a Controller."""
         tcs_mode = self._evo_tcs.systemModeStatus["mode"]
         return HVACMode.OFF if tcs_mode == EVO_HEATOFF else HVACMode.HEAT

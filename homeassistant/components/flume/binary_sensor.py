@@ -9,8 +9,8 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
@@ -34,8 +34,7 @@ from .entity import FlumeEntity
 from .util import get_valid_flume_devices
 
 BINARY_SENSOR_DESCRIPTION_CONNECTED = BinarySensorEntityDescription(
-    name="Connected",
-    key="connected",
+    key="connected", device_class=BinarySensorDeviceClass.CONNECTIVITY
 )
 
 
@@ -56,14 +55,14 @@ class FlumeBinarySensorEntityDescription(
 FLUME_BINARY_NOTIFICATION_SENSORS: tuple[FlumeBinarySensorEntityDescription, ...] = (
     FlumeBinarySensorEntityDescription(
         key="leak",
-        name="Leak detected",
+        translation_key="leak",
         entity_category=EntityCategory.DIAGNOSTIC,
         event_rule=NOTIFICATION_LEAK_DETECTED,
         icon="mdi:pipe-leak",
     ),
     FlumeBinarySensorEntityDescription(
         key="flow",
-        name="High flow",
+        translation_key="flow",
         entity_category=EntityCategory.DIAGNOSTIC,
         event_rule=NOTIFICATION_HIGH_FLOW,
         icon="mdi:waves",
@@ -125,11 +124,12 @@ async def async_setup_entry(
     async_add_entities(flume_entity_list)
 
 
-class FlumeNotificationBinarySensor(FlumeEntity, BinarySensorEntity):
+class FlumeNotificationBinarySensor(
+    FlumeEntity[FlumeNotificationDataUpdateCoordinator], BinarySensorEntity
+):
     """Binary sensor class."""
 
     entity_description: FlumeBinarySensorEntityDescription
-    coordinator: FlumeNotificationDataUpdateCoordinator
 
     @property
     def is_on(self) -> bool:
@@ -144,11 +144,12 @@ class FlumeNotificationBinarySensor(FlumeEntity, BinarySensorEntity):
         )
 
 
-class FlumeConnectionBinarySensor(FlumeEntity, BinarySensorEntity):
+class FlumeConnectionBinarySensor(
+    FlumeEntity[FlumeDeviceConnectionUpdateCoordinator], BinarySensorEntity
+):
     """Binary Sensor class for WIFI Connection status."""
 
     entity_description: FlumeBinarySensorEntityDescription
-    coordinator: FlumeDeviceConnectionUpdateCoordinator
     _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_device_class = BinarySensorDeviceClass.CONNECTIVITY
 

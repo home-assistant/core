@@ -9,7 +9,6 @@ from pylitterbot.enums import LitterBoxStatus
 import voluptuous as vol
 
 from homeassistant.components.vacuum import (
-    DOMAIN as PLATFORM,
     STATE_CLEANING,
     STATE_DOCKED,
     STATE_ERROR,
@@ -26,7 +25,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.dt as dt_util
 
 from .const import DOMAIN
-from .entity import LitterRobotEntity, async_update_unique_id
+from .entity import LitterRobotEntity
 from .hub import LitterRobotHub
 
 SERVICE_SET_SLEEP_MODE = "set_sleep_mode"
@@ -43,7 +42,9 @@ LITTER_BOX_STATUS_STATE_MAP = {
     LitterBoxStatus.OFF: STATE_OFF,
 }
 
-LITTER_BOX_ENTITY = StateVacuumEntityDescription("litter_box", name="Litter Box")
+LITTER_BOX_ENTITY = StateVacuumEntityDescription(
+    "litter_box", translation_key="litter_box"
+)
 
 
 async def async_setup_entry(
@@ -53,12 +54,10 @@ async def async_setup_entry(
 ) -> None:
     """Set up Litter-Robot cleaner using config entry."""
     hub: LitterRobotHub = hass.data[DOMAIN][entry.entry_id]
-
     entities = [
         LitterRobotCleaner(robot=robot, hub=hub, description=LITTER_BOX_ENTITY)
         for robot in hub.litter_robots()
     ]
-    async_update_unique_id(hass, PLATFORM, entities)
     async_add_entities(entities)
 
     platform = entity_platform.async_get_current_platform()
@@ -121,7 +120,7 @@ class LitterRobotCleaner(LitterRobotEntity[LitterRobot], StateVacuumEntity):
         if time_str is None:
             return None
 
-        if (parsed_time := dt_util.parse_time(time_str)) is None:  # pragma: no cover
+        if (parsed_time := dt_util.parse_time(time_str)) is None:
             return None
 
         return (

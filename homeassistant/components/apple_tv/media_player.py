@@ -138,6 +138,9 @@ class AppleTvMediaPlayer(AppleTVEntity, MediaPlayerEntity):
         # Listen to power updates
         self.atv.power.listener = self
 
+        # Listen to volume updates
+        self.atv.audio.listener = self
+
         if self.atv.features.in_state(FeatureState.Available, FeatureName.AppList):
             self.hass.create_task(self._update_app_list())
 
@@ -201,6 +204,11 @@ class AppleTvMediaPlayer(AppleTVEntity, MediaPlayerEntity):
     @callback
     def powerstate_update(self, old_state: PowerState, new_state: PowerState) -> None:
         """Update power state when it changes."""
+        self.async_write_ha_state()
+
+    @callback
+    def volume_update(self, old_level: float, new_level: float) -> None:
+        """Update volume when it changes."""
         self.async_write_ha_state()
 
     @property
@@ -274,7 +282,7 @@ class AppleTvMediaPlayer(AppleTVEntity, MediaPlayerEntity):
         """Send the play_media command to the media player."""
         # If input (file) has a file format supported by pyatv, then stream it with
         # RAOP. Otherwise try to play it with regular AirPlay.
-        if media_type == MediaType.APP:
+        if media_type in {MediaType.APP, MediaType.URL}:
             await self.atv.apps.launch_app(media_id)
             return
 

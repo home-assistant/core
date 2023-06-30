@@ -6,14 +6,15 @@ from dataclasses import dataclass
 from typing import Any
 
 from homeassistant.components.sensor import (
+    SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import DATA_RATE_KILOBYTES_PER_SECOND, STATE_IDLE, Platform
+from homeassistant.const import STATE_IDLE, Platform, UnitOfDataRate
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_platform
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from . import DelugeEntity
@@ -27,11 +28,11 @@ def get_state(data: dict[str, float], key: str) -> str | float:
     download = data[DATA_KEYS[1]] - data[DATA_KEYS[3]]
     if key == CURRENT_STATUS:
         if upload > 0 and download > 0:
-            return "Up/Down"
+            return "seeding_and_downloading"
         if upload > 0 and download == 0:
-            return "Seeding"
+            return "seeding"
         if upload == 0 and download > 0:
-            return "Downloading"
+            return "downloading"
         return STATE_IDLE
     kb_spd = float(upload if key == UPLOAD_SPEED else download) / 1024
     return round(kb_spd, 2 if kb_spd < 0.1 else 1)
@@ -47,20 +48,24 @@ class DelugeSensorEntityDescription(SensorEntityDescription):
 SENSOR_TYPES: tuple[DelugeSensorEntityDescription, ...] = (
     DelugeSensorEntityDescription(
         key=CURRENT_STATUS,
-        name="Status",
+        translation_key="status",
         value=lambda data: get_state(data, CURRENT_STATUS),
+        device_class=SensorDeviceClass.ENUM,
+        options=["seeding_and_downloading", "seeding", "downloading", "idle"],
     ),
     DelugeSensorEntityDescription(
         key=DOWNLOAD_SPEED,
-        name="Down speed",
-        native_unit_of_measurement=DATA_RATE_KILOBYTES_PER_SECOND,
+        translation_key="download_speed",
+        device_class=SensorDeviceClass.DATA_RATE,
+        native_unit_of_measurement=UnitOfDataRate.KILOBYTES_PER_SECOND,
         state_class=SensorStateClass.MEASUREMENT,
         value=lambda data: get_state(data, DOWNLOAD_SPEED),
     ),
     DelugeSensorEntityDescription(
         key=UPLOAD_SPEED,
-        name="Up speed",
-        native_unit_of_measurement=DATA_RATE_KILOBYTES_PER_SECOND,
+        translation_key="upload_speed",
+        device_class=SensorDeviceClass.DATA_RATE,
+        native_unit_of_measurement=UnitOfDataRate.KILOBYTES_PER_SECOND,
         state_class=SensorStateClass.MEASUREMENT,
         value=lambda data: get_state(data, UPLOAD_SPEED),
     ),
@@ -68,9 +73,7 @@ SENSOR_TYPES: tuple[DelugeSensorEntityDescription, ...] = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: entity_platform.AddEntitiesCallback,
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the Deluge sensor."""
     async_add_entities(

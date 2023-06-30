@@ -2,18 +2,31 @@
 from __future__ import annotations
 
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 from . import issue_handler, websocket_api
 from .const import DOMAIN
-from .issue_handler import ConfirmRepairFlow
+from .issue_handler import ConfirmRepairFlow, RepairsFlowManager
 from .models import RepairsFlow
 
 __all__ = [
-    "DOMAIN",
     "ConfirmRepairFlow",
+    "DOMAIN",
+    "repairs_flow_manager",
     "RepairsFlow",
+    "RepairsFlowManager",
 ]
+CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
+
+
+def repairs_flow_manager(hass: HomeAssistant) -> RepairsFlowManager | None:
+    """Return the repairs flow manager."""
+    if (domain_data := hass.data.get(DOMAIN)) is None:
+        return None
+
+    flow_manager: RepairsFlowManager | None = domain_data.get("flow_manager")
+    return flow_manager
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:

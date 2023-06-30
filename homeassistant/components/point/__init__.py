@@ -18,7 +18,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import config_validation as cv, device_registry
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
@@ -322,9 +322,7 @@ class MinutPointEntity(Entity):
         """Return a device description for device registry."""
         device = self.device.device
         return DeviceInfo(
-            connections={
-                (device_registry.CONNECTION_NETWORK_MAC, device["device_mac"])
-            },
+            connections={(dr.CONNECTION_NETWORK_MAC, device["device_mac"])},
             identifiers={(DOMAIN, device["device_id"])},
             manufacturer="Minut",
             model=f"Point v{device['hardware_version']}",

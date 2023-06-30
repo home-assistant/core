@@ -56,14 +56,14 @@ async def async_setup_entry(hass: HomeAssistant, config: ConfigEntry) -> bool:
 
 
 async def async_unload_entry(hass: HomeAssistant, config: ConfigEntry) -> bool:
-    """Unload the config config and platforms."""
+    """Unload the config and platforms."""
     unload_ok = await hass.config_entries.async_unload_platforms(config, PLATFORMS)
     if unload_ok:
         hass.data[DOMAIN].pop(config.entry_id)
     return unload_ok
 
 
-class VenstarDataUpdateCoordinator(update_coordinator.DataUpdateCoordinator):
+class VenstarDataUpdateCoordinator(update_coordinator.DataUpdateCoordinator[None]):
     """Class to manage fetching Venstar data."""
 
     def __init__(
@@ -122,8 +122,6 @@ class VenstarDataUpdateCoordinator(update_coordinator.DataUpdateCoordinator):
             raise update_coordinator.UpdateFailed(
                 f"Exception during Venstar runtime update: {ex}"
             ) from ex
-
-        return None
 
 
 class VenstarEntity(CoordinatorEntity[VenstarDataUpdateCoordinator]):

@@ -322,10 +322,11 @@ class PairedSensorManager:
             """Define a callback for when new paired sensor data is received."""
             self._hass.async_create_task(self.async_process_latest_paired_sensor_uids())
 
-        cancel_process_task = self._sensor_pair_dump_coordinator.async_add_listener(
-            async_create_process_task
+        self._entry.async_on_unload(
+            self._sensor_pair_dump_coordinator.async_add_listener(
+                async_create_process_task
+            )
         )
-        self._entry.async_on_unload(cancel_process_task)
 
     async def async_pair_sensor(self, uid: str) -> None:
         """Add a new paired sensor coordinator."""

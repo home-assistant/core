@@ -133,7 +133,10 @@ class ConnectMotionGateway:
                 return interface
 
         _LOGGER.error(
-            "Could not find working interface for Motion Blinds host %s, using interface '%s'",
+            (
+                "Could not find working interface for Motion Blinds host %s, using"
+                " interface '%s'"
+            ),
             host,
             self._interface,
         )

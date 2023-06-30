@@ -1,7 +1,10 @@
 """The tests for the london_air platform."""
 from http import HTTPStatus
 
+import requests_mock
+
 from homeassistant.components.london_air.sensor import CONF_LOCATIONS, URL
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import load_fixture
@@ -9,7 +12,9 @@ from tests.common import load_fixture
 VALID_CONFIG = {"sensor": {"platform": "london_air", CONF_LOCATIONS: ["Merton"]}}
 
 
-async def test_valid_state(hass, requests_mock):
+async def test_valid_state(
+    hass: HomeAssistant, requests_mock: requests_mock.Mocker
+) -> None:
     """Test for operational london_air sensor with proper attributes."""
     requests_mock.get(
         URL, text=load_fixture("london_air.json"), status_code=HTTPStatus.OK
@@ -42,7 +47,9 @@ async def test_valid_state(hass, requests_mock):
     assert pollutants[0]["summary"] == "PM10 is Low"
 
 
-async def test_api_failure(hass, requests_mock):
+async def test_api_failure(
+    hass: HomeAssistant, requests_mock: requests_mock.Mocker
+) -> None:
     """Test for failure in the API."""
     requests_mock.get(URL, status_code=HTTPStatus.SERVICE_UNAVAILABLE)
     assert await async_setup_component(hass, "sensor", VALID_CONFIG)

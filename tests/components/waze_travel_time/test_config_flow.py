@@ -21,7 +21,7 @@ from homeassistant.components.waze_travel_time.const import (
 from homeassistant.const import CONF_NAME, CONF_REGION
 from homeassistant.core import HomeAssistant
 
-from .const import MOCK_CONFIG
+from .const import CONFIG_FLOW_USER_INPUT, MOCK_CONFIG
 
 from tests.common import MockConfigEntry
 
@@ -37,7 +37,7 @@ async def test_minimum_fields(hass: HomeAssistant) -> None:
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        MOCK_CONFIG,
+        CONFIG_FLOW_USER_INPUT,
     )
     await hass.async_block_till_done()
 
@@ -116,7 +116,7 @@ async def test_dupe(hass: HomeAssistant) -> None:
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        MOCK_CONFIG,
+        CONFIG_FLOW_USER_INPUT,
     )
     await hass.async_block_till_done()
 
@@ -131,7 +131,7 @@ async def test_dupe(hass: HomeAssistant) -> None:
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        MOCK_CONFIG,
+        CONFIG_FLOW_USER_INPUT,
     )
     await hass.async_block_till_done()
 
@@ -150,7 +150,7 @@ async def test_invalid_config_entry(
     assert result["errors"] == {}
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        MOCK_CONFIG,
+        CONFIG_FLOW_USER_INPUT,
     )
 
     assert result2["type"] == data_entry_flow.FlowResultType.FORM

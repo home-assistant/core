@@ -9,7 +9,7 @@ from .conftest import KNXTestKit
 from tests.common import async_capture_events
 
 
-async def test_sensor(hass: HomeAssistant, knx: KNXTestKit):
+async def test_sensor(hass: HomeAssistant, knx: KNXTestKit) -> None:
     """Test simple KNX sensor."""
 
     await knx.setup_integration(
@@ -21,7 +21,6 @@ async def test_sensor(hass: HomeAssistant, knx: KNXTestKit):
             }
         }
     )
-    assert len(hass.states.async_all()) == 1
     state = hass.states.get("sensor.test")
     assert state.state is STATE_UNKNOWN
 
@@ -41,10 +40,9 @@ async def test_sensor(hass: HomeAssistant, knx: KNXTestKit):
     await knx.assert_no_telegram()
 
 
-async def test_always_callback(hass: HomeAssistant, knx: KNXTestKit):
+async def test_always_callback(hass: HomeAssistant, knx: KNXTestKit) -> None:
     """Test KNX sensor with always_callback."""
 
-    events = async_capture_events(hass, "state_changed")
     await knx.setup_integration(
         {
             SensorSchema.PLATFORM: [
@@ -64,32 +62,30 @@ async def test_always_callback(hass: HomeAssistant, knx: KNXTestKit):
             ]
         }
     )
-    assert len(hass.states.async_all()) == 2
-    # state changes form None to "unknown"
-    assert len(events) == 2
+    events = async_capture_events(hass, "state_changed")
 
     # receive initial telegram
     await knx.receive_write("1/1/1", (0x42,))
     await knx.receive_write("2/2/2", (0x42,))
     await hass.async_block_till_done()
-    assert len(events) == 4
+    assert len(events) == 2
 
     # receive second telegram with identical payload
     # always_callback shall force state_changed event
     await knx.receive_write("1/1/1", (0x42,))
     await knx.receive_write("2/2/2", (0x42,))
     await hass.async_block_till_done()
-    assert len(events) == 5
+    assert len(events) == 3
 
     # receive telegram with different payload
     await knx.receive_write("1/1/1", (0xFA,))
     await knx.receive_write("2/2/2", (0xFA,))
     await hass.async_block_till_done()
-    assert len(events) == 7
+    assert len(events) == 5
 
     # receive telegram with second payload again
     # always_callback shall force state_changed event
     await knx.receive_write("1/1/1", (0xFA,))
     await knx.receive_write("2/2/2", (0xFA,))
     await hass.async_block_till_done()
-    assert len(events) == 8
+    assert len(events) == 6

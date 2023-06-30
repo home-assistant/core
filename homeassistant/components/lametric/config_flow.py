@@ -116,7 +116,10 @@ class LaMetricFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
     async def async_step_choice_enter_manual_or_fetch_cloud(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
-        """Handle the user's choice of entering the manual credentials or fetching the cloud credentials."""
+        """Handle the user's choice.
+
+        Either enter the manual credentials or fetch the cloud credentials.
+        """
         return self.async_show_menu(
             step_id="choice_enter_manual_or_fetch_cloud",
             menu_options=["pick_implementation", "manual_entry"],
@@ -245,6 +248,10 @@ class LaMetricFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
                 updates={CONF_HOST: lametric.host, CONF_API_KEY: lametric.api_key}
             )
 
+        notify_sound: Sound | None = None
+        if device.model != "sa5":
+            notify_sound = Sound(sound=NotificationSound.WIN)
+
         await lametric.notify(
             notification=Notification(
                 priority=NotificationPriority.CRITICAL,
@@ -252,7 +259,7 @@ class LaMetricFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
                 model=Model(
                     cycles=2,
                     frames=[Simple(text="Connected to Home Assistant!", icon=7956)],
-                    sound=Sound(id=NotificationSound.WIN),
+                    sound=notify_sound,
                 ),
             )
         )

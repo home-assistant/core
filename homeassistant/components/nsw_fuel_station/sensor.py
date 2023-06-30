@@ -6,7 +6,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.const import CURRENCY_CENT, VOLUME_LITERS
+from homeassistant.const import CURRENCY_CENT, UnitOfVolume
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -117,7 +117,7 @@ class StationPriceSensor(
         return prices.get((self._station_id, self._fuel_type))
 
     @property
-    def extra_state_attributes(self) -> dict:
+    def extra_state_attributes(self) -> dict[str, int | str]:
         """Return the state attributes of the device."""
         return {
             ATTR_STATION_ID: self._station_id,
@@ -127,7 +127,7 @@ class StationPriceSensor(
     @property
     def native_unit_of_measurement(self) -> str:
         """Return the units of measurement."""
-        return f"{CURRENCY_CENT}/{VOLUME_LITERS}"
+        return f"{CURRENCY_CENT}/{UnitOfVolume.LITERS}"
 
     def _get_station_name(self):
         default_name = f"station {self._station_id}"

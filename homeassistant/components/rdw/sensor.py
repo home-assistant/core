@@ -72,7 +72,7 @@ async def async_setup_entry(
     )
 
 
-class RDWSensorEntity(CoordinatorEntity, SensorEntity):
+class RDWSensorEntity(CoordinatorEntity[DataUpdateCoordinator[Vehicle]], SensorEntity):
     """Defines an RDW sensor."""
 
     entity_description: RDWSensorEntityDescription
@@ -81,7 +81,7 @@ class RDWSensorEntity(CoordinatorEntity, SensorEntity):
     def __init__(
         self,
         *,
-        coordinator: DataUpdateCoordinator,
+        coordinator: DataUpdateCoordinator[Vehicle],
         license_plate: str,
         description: RDWSensorEntityDescription,
     ) -> None:

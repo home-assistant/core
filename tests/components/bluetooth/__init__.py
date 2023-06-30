@@ -5,15 +5,19 @@ import time
 from typing import Any
 from unittest.mock import patch
 
+from bleak import BleakClient
 from bleak.backends.scanner import AdvertisementData, BLEDevice
+from bluetooth_adapters import DEFAULT_ADDRESS
 
 from homeassistant.components.bluetooth import (
     DOMAIN,
     SOURCE_LOCAL,
+    BluetoothServiceInfo,
+    BluetoothServiceInfoBleak,
     async_get_advertisement_callback,
     models,
 )
-from homeassistant.components.bluetooth.const import DEFAULT_ADDRESS
+from homeassistant.components.bluetooth.base_scanner import BaseHaScanner
 from homeassistant.components.bluetooth.manager import BluetoothManager
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -29,6 +33,8 @@ __all__ = (
     "patch_all_discovered_devices",
     "patch_discovered_devices",
     "generate_advertisement_data",
+    "generate_ble_device",
+    "MockBleakClient",
 )
 
 ADVERTISEMENT_DATA_DEFAULTS = {
@@ -41,6 +47,12 @@ ADVERTISEMENT_DATA_DEFAULTS = {
     "tx_power": -127,
 }
 
+BLE_DEVICE_DEFAULTS = {
+    "name": None,
+    "rssi": -127,
+    "details": None,
+}
+
 
 def generate_advertisement_data(**kwargs: Any) -> AdvertisementData:
     """Generate advertisement data with defaults."""
@@ -48,6 +60,28 @@ def generate_advertisement_data(**kwargs: Any) -> AdvertisementData:
     for key, value in ADVERTISEMENT_DATA_DEFAULTS.items():
         new.setdefault(key, value)
     return AdvertisementData(**new)
+
+
+def generate_ble_device(
+    address: str | None = None,
+    name: str | None = None,
+    details: Any | None = None,
+    rssi: int | None = None,
+    **kwargs: Any,
+) -> BLEDevice:
+    """Generate a BLEDevice with defaults."""
+    new = kwargs.copy()
+    if address is not None:
+        new["address"] = address
+    if name is not None:
+        new["name"] = name
+    if details is not None:
+        new["details"] = details
+    if rssi is not None:
+        new["rssi"] = rssi
+    for key, value in BLE_DEVICE_DEFAULTS.items():
+        new.setdefault(key, value)
+    return BLEDevice(**new)
 
 
 def _get_manager() -> BluetoothManager:
@@ -94,7 +128,7 @@ def inject_advertisement_with_time_and_source_connectable(
 ) -> None:
     """Inject an advertisement into the manager from a specific source at a time and connectable status."""
     async_get_advertisement_callback(hass)(
-        models.BluetoothServiceInfoBleak(
+        BluetoothServiceInfoBleak(
             name=adv.local_name or device.name or device.address,
             address=device.address,
             rssi=adv.rssi,
@@ -111,7 +145,7 @@ def inject_advertisement_with_time_and_source_connectable(
 
 
 def inject_bluetooth_service_info_bleak(
-    hass: HomeAssistant, info: models.BluetoothServiceInfoBleak
+    hass: HomeAssistant, info: BluetoothServiceInfoBleak
 ) -> None:
     """Inject an advertisement into the manager with connectable status."""
     advertisement_data = generate_advertisement_data(
@@ -121,7 +155,7 @@ def inject_bluetooth_service_info_bleak(
         service_uuids=info.service_uuids,
         rssi=info.rssi,
     )
-    device = BLEDevice(  # type: ignore[no-untyped-call]
+    device = generate_ble_device(  # type: ignore[no-untyped-call]
         address=info.address,
         name=info.name,
         details={},
@@ -137,7 +171,7 @@ def inject_bluetooth_service_info_bleak(
 
 
 def inject_bluetooth_service_info(
-    hass: HomeAssistant, info: models.BluetoothServiceInfo
+    hass: HomeAssistant, info: BluetoothServiceInfo
 ) -> None:
     """Inject a BluetoothServiceInfo into the manager."""
     advertisement_data = generate_advertisement_data(  # type: ignore[no-untyped-call]
@@ -147,7 +181,7 @@ def inject_bluetooth_service_info(
         service_uuids=info.service_uuids,
         rssi=info.rssi,
     )
-    device = BLEDevice(  # type: ignore[no-untyped-call]
+    device = generate_ble_device(  # type: ignore[no-untyped-call]
         address=info.address,
         name=info.name,
         details={},
@@ -190,3 +224,48 @@ async def _async_setup_with_adapter(
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
     await hass.async_block_till_done()
     return entry
+
+
+class MockBleakClient(BleakClient):
+    """Mock bleak client."""
+
+    def __init__(self, *args, **kwargs):
+        """Mock init."""
+        super().__init__(*args, **kwargs)
+        self._device_path = "/dev/test"
+
+    @property
+    def is_connected(self) -> bool:
+        """Mock connected."""
+        return True
+
+    async def connect(self, *args, **kwargs):
+        """Mock connect."""
+        return True
+
+    async def disconnect(self, *args, **kwargs):
+        """Mock disconnect."""
+
+    async def get_services(self, *args, **kwargs):
+        """Mock get_services."""
+        return []
+
+    async def clear_cache(self, *args, **kwargs):
+        """Mock clear_cache."""
+        return True
+
+
+class FakeScanner(BaseHaScanner):
+    """Fake scanner."""
+
+    @property
+    def discovered_devices(self) -> list[BLEDevice]:
+        """Return a list of discovered devices."""
+        return []
+
+    @property
+    def discovered_devices_and_advertisement_data(
+        self,
+    ) -> dict[str, tuple[BLEDevice, AdvertisementData]]:
+        """Return a list of discovered devices and their advertisement data."""
+        return {}

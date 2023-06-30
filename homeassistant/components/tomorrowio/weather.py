@@ -22,6 +22,7 @@ from homeassistant.const import (
     CONF_API_KEY,
     CONF_NAME,
     UnitOfLength,
+    UnitOfPrecipitationDepth,
     UnitOfPressure,
     UnitOfSpeed,
     UnitOfTemperature,
@@ -73,7 +74,7 @@ async def async_setup_entry(
 class TomorrowioWeatherEntity(TomorrowioEntity, WeatherEntity):
     """Entity that talks to Tomorrow.io v4 API to retrieve weather data."""
 
-    _attr_native_precipitation_unit = UnitOfLength.MILLIMETERS
+    _attr_native_precipitation_unit = UnitOfPrecipitationDepth.MILLIMETERS
     _attr_native_pressure_unit = UnitOfPressure.HPA
     _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_native_visibility_unit = UnitOfLength.KILOMETERS

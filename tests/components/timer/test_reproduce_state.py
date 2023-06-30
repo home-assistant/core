@@ -1,4 +1,6 @@
 """Test reproduce state for Timer."""
+import pytest
+
 from homeassistant.components.timer import (
     ATTR_DURATION,
     SERVICE_CANCEL,
@@ -8,13 +10,15 @@ from homeassistant.components.timer import (
     STATUS_IDLE,
     STATUS_PAUSED,
 )
-from homeassistant.core import State
+from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.state import async_reproduce_state
 
 from tests.common import async_mock_service
 
 
-async def test_reproducing_states(hass, caplog):
+async def test_reproducing_states(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test reproducing Timer states."""
     hass.states.async_set("timer.entity_idle", STATUS_IDLE, {})
     hass.states.async_set("timer.entity_paused", STATUS_PAUSED, {})

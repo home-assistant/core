@@ -19,7 +19,7 @@ from homeassistant.const import (
     CONF_RADIUS,
     CONF_SCAN_INTERVAL,
     EVENT_HOMEASSISTANT_START,
-    LENGTH_KILOMETERS,
+    UnitOfLength,
 )
 from homeassistant.core import Event, HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
@@ -126,7 +126,10 @@ class QldBushfireFeedEntityManager:
     def _init_regular_updates(self) -> None:
         """Schedule regular updates at the specified interval."""
         track_time_interval(
-            self._hass, lambda now: self._feed_manager.update(), self._scan_interval
+            self._hass,
+            lambda now: self._feed_manager.update(),
+            self._scan_interval,
+            cancel_on_shutdown=True,
         )
 
     def get_entry(self, external_id: str) -> QldBushfireAlertFeedEntry | None:
@@ -149,12 +152,12 @@ class QldBushfireFeedEntityManager:
 
 
 class QldBushfireLocationEvent(GeolocationEvent):
-    """This represents an external event with Qld Bushfire feed data."""
+    """Represents an external event with Qld Bushfire feed data."""
 
     _attr_icon = "mdi:fire"
     _attr_should_poll = False
     _attr_source = SOURCE
-    _attr_unit_of_measurement = LENGTH_KILOMETERS
+    _attr_unit_of_measurement = UnitOfLength.KILOMETERS
 
     def __init__(
         self, feed_manager: QldBushfireFeedEntityManager, external_id: str

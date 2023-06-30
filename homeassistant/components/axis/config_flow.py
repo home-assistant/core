@@ -223,20 +223,16 @@ class AxisFlowHandler(config_entries.ConfigFlow, domain=AXIS_DOMAIN):
         return await self.async_step_user()
 
 
-class AxisOptionsFlowHandler(config_entries.OptionsFlow):
+class AxisOptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
     """Handle Axis device options."""
 
-    def __init__(self, config_entry: ConfigEntry) -> None:
-        """Initialize Axis device options flow."""
-        self.config_entry = config_entry
-        self.options = dict(config_entry.options)
-        self.device: AxisNetworkDevice | None = None
+    device: AxisNetworkDevice
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Manage the Axis device options."""
-        self.device = self.hass.data[AXIS_DOMAIN][self.config_entry.unique_id]
+        self.device = self.hass.data[AXIS_DOMAIN][self.config_entry.entry_id]
         return await self.async_step_configure_stream()
 
     async def async_step_configure_stream(
@@ -249,7 +245,6 @@ class AxisOptionsFlowHandler(config_entries.OptionsFlow):
 
         schema = {}
 
-        assert self.device
         vapix = self.device.api.vapix
 
         # Stream profiles

@@ -3,8 +3,10 @@ from __future__ import annotations
 
 from collections.abc import Callable
 import logging
+from operator import attrgetter
 from typing import Any, cast
 
+from typing_extensions import Self
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -95,6 +97,10 @@ RELOAD_SERVICE_SCHEMA = vol.Schema({})
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
 
+ENTITY_ID_SORTER = attrgetter("entity_id")
+
+ZONE_ENTITY_IDS = "zone_entity_ids"
+
 
 @bind_hass
 def async_active_zone(
@@ -105,16 +111,17 @@ def async_active_zone(
     This method must be run in the event loop.
     """
     # Sort entity IDs so that we are deterministic if equal distance to 2 zones
-    zones = (
-        cast(State, hass.states.get(entity_id))
-        for entity_id in sorted(hass.states.async_entity_ids(DOMAIN))
-    )
-
     min_dist = None
     closest = None
-
-    for zone in zones:
-        if zone.state == STATE_UNAVAILABLE or zone.attributes.get(ATTR_PASSIVE):
+    # This can be called before async_setup by device tracker
+    zone_entity_ids: list[str] = hass.data.get(ZONE_ENTITY_IDS, [])
+    for entity_id in zone_entity_ids:
+        zone = hass.states.get(entity_id)
+        if (
+            not zone
+            or zone.state == STATE_UNAVAILABLE
+            or zone.attributes.get(ATTR_PASSIVE)
+        ):
             continue
 
         zone_dist = distance(
@@ -142,6 +149,27 @@ def async_active_zone(
     return closest
 
 
+@callback
+def async_setup_track_zone_entity_ids(hass: HomeAssistant) -> None:
+    """Set up track of entity IDs for zones."""
+    zone_entity_ids: list[str] = hass.states.async_entity_ids(DOMAIN)
+    hass.data[ZONE_ENTITY_IDS] = zone_entity_ids
+
+    @callback
+    def _async_add_zone_entity_id(event_: Event) -> None:
+        """Add zone entity ID."""
+        zone_entity_ids.append(event_.data[ATTR_ENTITY_ID])
+        zone_entity_ids.sort()
+
+    @callback
+    def _async_remove_zone_entity_id(event_: Event) -> None:
+        """Remove zone entity ID."""
+        zone_entity_ids.remove(event_.data[ATTR_ENTITY_ID])
+
+    event.async_track_state_added_domain(hass, DOMAIN, _async_add_zone_entity_id)
+    event.async_track_state_removed_domain(hass, DOMAIN, _async_remove_zone_entity_id)
+
+
 def in_zone(zone: State, latitude: float, longitude: float, radius: float = 0) -> bool:
     """Test if given latitude, longitude is in given zone.
 
@@ -162,7 +190,7 @@ def in_zone(zone: State, latitude: float, longitude: float, radius: float = 0) -
     return zone_dist - radius < cast(float, zone.attributes[ATTR_RADIUS])
 
 
-class ZoneStorageCollection(collection.StorageCollection):
+class ZoneStorageCollection(collection.DictStorageCollection):
     """Zone collection stored in storage."""
 
     CREATE_SCHEMA = vol.Schema(CREATE_FIELDS)
@@ -177,14 +205,16 @@ class ZoneStorageCollection(collection.StorageCollection):
         """Suggest an ID based on the config."""
         return cast(str, info[CONF_NAME])
 
-    async def _update_data(self, data: dict, update_data: dict) -> dict:
+    async def _update_data(self, item: dict, update_data: dict) -> dict:
         """Return a new updated data object."""
         update_data = self.UPDATE_SCHEMA(update_data)
-        return {**data, **update_data}
+        return {**item, **update_data}
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up configured zones as well as Home Assistant zone if necessary."""
+    async_setup_track_zone_entity_ids(hass)
+
     component = entity_component.EntityComponent[Zone](_LOGGER, DOMAIN, hass)
     id_manager = collection.IDManager()
 
@@ -197,7 +227,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     storage_collection = ZoneStorageCollection(
         storage.Store(hass, STORAGE_VERSION, STORAGE_KEY),
-        logging.getLogger(f"{__name__}.storage_collection"),
         id_manager,
     )
     collection.sync_entity_lifecycle(
@@ -209,7 +238,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     await storage_collection.async_load()
 
-    collection.StorageCollectionWebsocket(
+    collection.DictStorageCollectionWebsocket(
         storage_collection, DOMAIN, DOMAIN, CREATE_FIELDS, UPDATE_FIELDS
     ).async_setup(hass)
 
@@ -297,7 +326,7 @@ class Zone(collection.CollectionEntity):
         self._persons_in_zone: set[str] = set()
 
     @classmethod
-    def from_storage(cls, config: ConfigType) -> Zone:
+    def from_storage(cls, config: ConfigType) -> Self:
         """Return entity instance initialized from storage."""
         zone = cls(config)
         zone.editable = True
@@ -305,7 +334,7 @@ class Zone(collection.CollectionEntity):
         return zone
 
     @classmethod
-    def from_yaml(cls, config: ConfigType) -> Zone:
+    def from_yaml(cls, config: ConfigType) -> Self:
         """Return entity instance initialized from yaml."""
         zone = cls(config)
         zone.editable = False

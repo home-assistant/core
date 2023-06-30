@@ -11,7 +11,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PERCENTAGE, SOUND_PRESSURE_WEIGHTED_DBA, TEMP_CELSIUS
+from homeassistant.const import PERCENTAGE, UnitOfSoundPressure, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -21,8 +21,6 @@ from . import MinutPointEntity
 from .const import DOMAIN as POINT_DOMAIN, POINT_DISCOVERY_NEW
 
 _LOGGER = logging.getLogger(__name__)
-
-DEVICE_CLASS_SOUND = "sound_level"
 
 
 @dataclass
@@ -44,7 +42,7 @@ SENSOR_TYPES: tuple[MinutPointSensorEntityDescription, ...] = (
         key="temperature",
         precision=1,
         device_class=SensorDeviceClass.TEMPERATURE,
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
     ),
     MinutPointSensorEntityDescription(
         key="humidity",
@@ -55,9 +53,8 @@ SENSOR_TYPES: tuple[MinutPointSensorEntityDescription, ...] = (
     MinutPointSensorEntityDescription(
         key="sound",
         precision=1,
-        device_class=DEVICE_CLASS_SOUND,
-        icon="mdi:ear-hearing",
-        native_unit_of_measurement=SOUND_PRESSURE_WEIGHTED_DBA,
+        device_class=SensorDeviceClass.SOUND_PRESSURE,
+        native_unit_of_measurement=UnitOfSoundPressure.WEIGHTED_DECIBEL_A,
     ),
 )
 
@@ -92,7 +89,7 @@ class MinutPointSensor(MinutPointEntity, SensorEntity):
 
     def __init__(
         self, point_client, device_id, description: MinutPointSensorEntityDescription
-    ):
+    ) -> None:
         """Initialize the sensor."""
         super().__init__(point_client, device_id, description.device_class)
         self.entity_description = description

@@ -61,8 +61,6 @@ async def test_config_mqtt(hass: HomeAssistant, mqtt: None) -> None:
     flow_id = step["flow_id"]
 
     with patch(
-        "homeassistant.components.mysensors.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.mysensors.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -89,7 +87,6 @@ async def test_config_mqtt(hass: HomeAssistant, mqtt: None) -> None:
         CONF_VERSION: "2.4",
         CONF_GATEWAY_TYPE: "MQTT",
     }
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -121,8 +118,6 @@ async def test_config_serial(hass: HomeAssistant) -> None:
     ), patch(
         "homeassistant.components.mysensors.config_flow.try_connect", return_value=True
     ), patch(
-        "homeassistant.components.mysensors.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.mysensors.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -146,7 +141,6 @@ async def test_config_serial(hass: HomeAssistant) -> None:
         CONF_VERSION: "2.4",
         CONF_GATEWAY_TYPE: "Serial",
     }
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -158,8 +152,6 @@ async def test_config_tcp(hass: HomeAssistant) -> None:
     with patch(
         "homeassistant.components.mysensors.config_flow.try_connect", return_value=True
     ), patch(
-        "homeassistant.components.mysensors.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.mysensors.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -183,7 +175,6 @@ async def test_config_tcp(hass: HomeAssistant) -> None:
         CONF_VERSION: "2.4",
         CONF_GATEWAY_TYPE: "TCP",
     }
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -195,8 +186,6 @@ async def test_fail_to_connect(hass: HomeAssistant) -> None:
     with patch(
         "homeassistant.components.mysensors.config_flow.try_connect", return_value=False
     ), patch(
-        "homeassistant.components.mysensors.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.mysensors.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -215,12 +204,11 @@ async def test_fail_to_connect(hass: HomeAssistant) -> None:
     errors = result["errors"]
     assert errors
     assert errors.get("base") == "cannot_connect"
-    assert len(mock_setup.mock_calls) == 0
     assert len(mock_setup_entry.mock_calls) == 0
 
 
 @pytest.mark.parametrize(
-    "gateway_type, expected_step_id, user_input, err_field, err_string",
+    ("gateway_type", "expected_step_id", "user_input", "err_field", "err_string"),
     [
         (
             CONF_GATEWAY_TYPE_TCP,
@@ -358,8 +346,6 @@ async def test_config_invalid(
         "homeassistant.components.mysensors.gateway.socket.getaddrinfo",
         side_effect=OSError,
     ), patch(
-        "homeassistant.components.mysensors.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.mysensors.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -375,12 +361,11 @@ async def test_config_invalid(
     assert errors
     assert err_field in errors
     assert errors[err_field] == err_string
-    assert len(mock_setup.mock_calls) == 0
     assert len(mock_setup_entry.mock_calls) == 0
 
 
 @pytest.mark.parametrize(
-    "first_input, second_input, expected_result",
+    ("first_input", "second_input", "expected_result"),
     [
         (
             {
@@ -396,7 +381,10 @@ async def test_config_invalid(
                 CONF_TOPIC_IN_PREFIX: "same1",
                 CONF_TOPIC_OUT_PREFIX: "same2",
             },
-            FlowResult(type="form", errors={CONF_TOPIC_IN_PREFIX: "duplicate_topic"}),
+            FlowResult(
+                type=FlowResultType.FORM,
+                errors={CONF_TOPIC_IN_PREFIX: "duplicate_topic"},
+            ),
         ),
         (
             {
@@ -412,7 +400,7 @@ async def test_config_invalid(
                 CONF_TOPIC_IN_PREFIX: "different3",
                 CONF_TOPIC_OUT_PREFIX: "different4",
             },
-            FlowResult(type="create_entry"),
+            FlowResult(type=FlowResultType.CREATE_ENTRY),
         ),
         (
             {
@@ -428,7 +416,10 @@ async def test_config_invalid(
                 CONF_TOPIC_IN_PREFIX: "same1",
                 CONF_TOPIC_OUT_PREFIX: "different4",
             },
-            FlowResult(type="form", errors={CONF_TOPIC_IN_PREFIX: "duplicate_topic"}),
+            FlowResult(
+                type=FlowResultType.FORM,
+                errors={CONF_TOPIC_IN_PREFIX: "duplicate_topic"},
+            ),
         ),
         (
             {
@@ -444,7 +435,10 @@ async def test_config_invalid(
                 CONF_TOPIC_IN_PREFIX: "different1",
                 CONF_TOPIC_OUT_PREFIX: "same1",
             },
-            FlowResult(type="form", errors={CONF_TOPIC_OUT_PREFIX: "duplicate_topic"}),
+            FlowResult(
+                type=FlowResultType.FORM,
+                errors={CONF_TOPIC_OUT_PREFIX: "duplicate_topic"},
+            ),
         ),
         (
             {
@@ -460,7 +454,10 @@ async def test_config_invalid(
                 CONF_TOPIC_IN_PREFIX: "same1",
                 CONF_TOPIC_OUT_PREFIX: "different1",
             },
-            FlowResult(type="form", errors={CONF_TOPIC_IN_PREFIX: "duplicate_topic"}),
+            FlowResult(
+                type=FlowResultType.FORM,
+                errors={CONF_TOPIC_IN_PREFIX: "duplicate_topic"},
+            ),
         ),
         (
             {
@@ -478,7 +475,8 @@ async def test_config_invalid(
                 CONF_VERSION: "2.3",
             },
             FlowResult(
-                type="form", errors={"persistence_file": "duplicate_persistence_file"}
+                type=FlowResultType.FORM,
+                errors={"persistence_file": "duplicate_persistence_file"},
             ),
         ),
         (
@@ -495,7 +493,7 @@ async def test_config_invalid(
                 CONF_TCP_PORT: 343,
                 CONF_VERSION: "2.3",
             },
-            FlowResult(type="create_entry"),
+            FlowResult(type=FlowResultType.CREATE_ENTRY),
         ),
         (
             {
@@ -510,7 +508,7 @@ async def test_config_invalid(
                 CONF_TCP_PORT: 343,
                 CONF_VERSION: "2.3",
             },
-            FlowResult(type="create_entry"),
+            FlowResult(type=FlowResultType.CREATE_ENTRY),
         ),
         (
             {
@@ -527,7 +525,7 @@ async def test_config_invalid(
                 CONF_TCP_PORT: 343,
                 CONF_VERSION: "2.3",
             },
-            FlowResult(type="form", errors={"base": "already_configured"}),
+            FlowResult(type=FlowResultType.FORM, errors={"base": "already_configured"}),
         ),
         (
             {
@@ -544,7 +542,7 @@ async def test_config_invalid(
                 CONF_TCP_PORT: 5003,
                 CONF_VERSION: "2.3",
             },
-            FlowResult(type="create_entry"),
+            FlowResult(type=FlowResultType.CREATE_ENTRY),
         ),
         (
             {
@@ -559,7 +557,7 @@ async def test_config_invalid(
                 CONF_TCP_PORT: 5003,
                 CONF_VERSION: "2.3",
             },
-            FlowResult(type="create_entry"),
+            FlowResult(type=FlowResultType.CREATE_ENTRY),
         ),
         (
             {
@@ -574,7 +572,7 @@ async def test_config_invalid(
                 CONF_VERSION: "2.3",
                 CONF_PERSISTENCE_FILE: "different2.json",
             },
-            FlowResult(type="form", errors={"base": "already_configured"}),
+            FlowResult(type=FlowResultType.FORM, errors={"base": "already_configured"}),
         ),
         (
             {
@@ -588,7 +586,7 @@ async def test_config_invalid(
                 CONF_DEVICE: "COM5",
                 CONF_VERSION: "2.3",
             },
-            FlowResult(type="create_entry"),
+            FlowResult(type=FlowResultType.CREATE_ENTRY),
         ),
         (
             {
@@ -605,7 +603,7 @@ async def test_config_invalid(
                 CONF_VERSION: "2.3",
                 CONF_PERSISTENCE_FILE: "different2.json",
             },
-            FlowResult(type="form", errors={"base": "already_configured"}),
+            FlowResult(type=FlowResultType.FORM, errors={"base": "already_configured"}),
         ),
         (
             {
@@ -623,7 +621,8 @@ async def test_config_invalid(
                 CONF_PERSISTENCE_FILE: "same.json",
             },
             FlowResult(
-                type="form", errors={"persistence_file": "duplicate_persistence_file"}
+                type=FlowResultType.FORM,
+                errors={"persistence_file": "duplicate_persistence_file"},
             ),
         ),
         (
@@ -640,7 +639,7 @@ async def test_config_invalid(
                 CONF_BAUD_RATE: 115200,
                 CONF_VERSION: "1.4",
             },
-            FlowResult(type="create_entry"),
+            FlowResult(type=FlowResultType.CREATE_ENTRY),
         ),
     ],
 )

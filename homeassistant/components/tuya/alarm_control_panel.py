@@ -89,6 +89,7 @@ class TuyaAlarmEntity(TuyaEntity, AlarmControlPanelEntity):
     """Tuya Alarm Entity."""
 
     _attr_icon = "mdi:security"
+    _attr_name = None
 
     def __init__(
         self,
@@ -97,7 +98,6 @@ class TuyaAlarmEntity(TuyaEntity, AlarmControlPanelEntity):
         description: AlarmControlPanelEntityDescription,
     ) -> None:
         """Init Tuya Alarm."""
-        self._attr_supported_features = 0
         super().__init__(device, device_manager)
         self.entity_description = description
         self._attr_unique_id = f"{super().unique_id}{description.key}"

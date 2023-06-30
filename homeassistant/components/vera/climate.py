@@ -14,12 +14,7 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_TEMPERATURE,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
-    Platform,
-)
+from homeassistant.const import ATTR_TEMPERATURE, Platform, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -104,9 +99,9 @@ class VeraThermostat(VeraDevice[veraApi.VeraThermostat], ClimateEntity):
         vera_temp_units = self.vera_device.vera_controller.temperature_units
 
         if vera_temp_units == "F":
-            return TEMP_FAHRENHEIT
+            return UnitOfTemperature.FAHRENHEIT
 
-        return TEMP_CELSIUS
+        return UnitOfTemperature.CELSIUS
 
     @property
     def current_temperature(self) -> float | None:

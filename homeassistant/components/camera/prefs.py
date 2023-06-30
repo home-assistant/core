@@ -1,8 +1,11 @@
 """Preference management for camera component."""
 from __future__ import annotations
 
-from typing import Final, Union, cast
+from collections.abc import Mapping
+from dataclasses import asdict, dataclass
+from typing import Final, cast
 
+from homeassistant.components.stream import Orientation
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -15,26 +18,12 @@ STORAGE_KEY: Final = DOMAIN
 STORAGE_VERSION: Final = 1
 
 
-class CameraEntityPreferences:
-    """Handle preferences for camera entity."""
+@dataclass
+class DynamicStreamSettings:
+    """Stream settings which are managed and updated by the camera entity."""
 
-    def __init__(self, prefs: dict[str, bool | int]) -> None:
-        """Initialize prefs."""
-        self._prefs = prefs
-
-    def as_dict(self) -> dict[str, bool | int]:
-        """Return dictionary version."""
-        return self._prefs
-
-    @property
-    def preload_stream(self) -> bool:
-        """Return if stream is loaded on hass start."""
-        return cast(bool, self._prefs.get(PREF_PRELOAD_STREAM, False))
-
-    @property
-    def orientation(self) -> int:
-        """Return the current stream orientation settings."""
-        return self._prefs.get(PREF_ORIENTATION, 1)
+    preload_stream: bool = False
+    orientation: Orientation = Orientation.NO_TRANSFORM
 
 
 class CameraPreferences:
@@ -45,39 +34,38 @@ class CameraPreferences:
         self._hass = hass
         # The orientation prefs are stored in in the entity registry options
         # The preload_stream prefs are stored in this Store
-        self._store = Store[dict[str, dict[str, Union[bool, int]]]](
+        self._store = Store[dict[str, dict[str, bool | Orientation]]](
             hass, STORAGE_VERSION, STORAGE_KEY
         )
-        # Local copy of the preload_stream prefs
-        self._prefs: dict[str, dict[str, bool | int]] | None = None
-
-    async def async_initialize(self) -> None:
-        """Finish initializing the preferences."""
-        if (prefs := await self._store.async_load()) is None:
-            prefs = {}
-
-        self._prefs = prefs
+        self._dynamic_stream_settings_by_entity_id: dict[
+            str, DynamicStreamSettings
+        ] = {}
 
     async def async_update(
         self,
         entity_id: str,
         *,
         preload_stream: bool | UndefinedType = UNDEFINED,
-        orientation: int | UndefinedType = UNDEFINED,
-        stream_options: dict[str, str] | UndefinedType = UNDEFINED,
-    ) -> dict[str, bool | int]:
+        orientation: Orientation | UndefinedType = UNDEFINED,
+    ) -> dict[str, bool | Orientation]:
         """Update camera preferences.
+
+        Also update the DynamicStreamSettings if they exist.
+        preload_stream is stored in a Store
+        orientation is stored in the Entity Registry
 
         Returns a dict with the preferences on success.
         Raises HomeAssistantError on failure.
         """
+        dynamic_stream_settings = self._dynamic_stream_settings_by_entity_id.get(
+            entity_id
+        )
         if preload_stream is not UNDEFINED:
-            # Prefs already initialized.
-            assert self._prefs is not None
-            if not self._prefs.get(entity_id):
-                self._prefs[entity_id] = {}
-            self._prefs[entity_id][PREF_PRELOAD_STREAM] = preload_stream
-            await self._store.async_save(self._prefs)
+            if dynamic_stream_settings:
+                dynamic_stream_settings.preload_stream = preload_stream
+            preload_prefs = await self._store.async_load() or {}
+            preload_prefs[entity_id] = {PREF_PRELOAD_STREAM: preload_stream}
+            await self._store.async_save(preload_prefs)
 
         if orientation is not UNDEFINED:
             if (registry := er.async_get(self._hass)).async_get(entity_id):
@@ -86,14 +74,29 @@ class CameraPreferences:
                 )
             else:
                 raise HomeAssistantError(
-                    "Orientation is only supported on entities set up through config flows"
+                    "Orientation is only supported on entities set up through config"
+                    " flows"
                 )
-        return self.get(entity_id).as_dict()
+            if dynamic_stream_settings:
+                dynamic_stream_settings.orientation = orientation
+        return asdict(await self.get_dynamic_stream_settings(entity_id))
 
-    def get(self, entity_id: str) -> CameraEntityPreferences:
-        """Get preferences for an entity."""
-        # Prefs are already initialized.
-        assert self._prefs is not None
+    async def get_dynamic_stream_settings(
+        self, entity_id: str
+    ) -> DynamicStreamSettings:
+        """Get the DynamicStreamSettings for the entity."""
+        if settings := self._dynamic_stream_settings_by_entity_id.get(entity_id):
+            return settings
+        # Get preload stream setting from prefs
+        # Get orientation setting from entity registry
         reg_entry = er.async_get(self._hass).async_get(entity_id)
-        er_prefs = reg_entry.options.get(DOMAIN, {}) if reg_entry else {}
-        return CameraEntityPreferences(self._prefs.get(entity_id, {}) | er_prefs)
+        er_prefs: Mapping = reg_entry.options.get(DOMAIN, {}) if reg_entry else {}
+        preload_prefs = await self._store.async_load() or {}
+        settings = DynamicStreamSettings(
+            preload_stream=cast(
+                bool, preload_prefs.get(entity_id, {}).get(PREF_PRELOAD_STREAM, False)
+            ),
+            orientation=er_prefs.get(PREF_ORIENTATION, Orientation.NO_TRANSFORM),
+        )
+        self._dynamic_stream_settings_by_entity_id[entity_id] = settings
+        return settings

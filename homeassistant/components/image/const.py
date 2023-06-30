@@ -1,3 +1,6 @@
-"""Constants for the Image integration."""
+"""Constants for the image integration."""
+from typing import Final
 
-DOMAIN = "image"
+DOMAIN: Final = "image"
+
+IMAGE_TIMEOUT: Final = 10

@@ -79,12 +79,20 @@ effect_pulse:
             - "strobe"
             - "solid"
     brightness:
-      name: Brightness
-      description: Number indicating brightness of the temporary color.
+      name: Brightness value
+      description: Number indicating brightness of the temporary color, where 1 is the minimum brightness and 255 is the maximum brightness supported by the light.
       selector:
         number:
-          min: 0
+          min: 1
           max: 255
+    brightness_pct:
+      name: Brightness
+      description: Percentage indicating the brightness of the temporary color, where 1 is the minimum brightness and 100 is the maximum brightness supported by the light.
+      selector:
+        number:
+          min: 1
+          max: 100
+          unit_of_measurement: "%"
     color_name:
       name: Color name
       description: A human readable color name.
@@ -131,12 +139,38 @@ effect_colorloop:
       domain: light
   fields:
     brightness:
-      name: Brightness
-      description: Number indicating brightness of the effect. Leave this out to maintain the current brightness of each participating light.
+      name: Brightness value
+      description: Number indicating brightness of the color loop, where 1 is the minimum brightness and 255 is the maximum brightness supported by the light.
       selector:
         number:
           min: 0
           max: 255
+    brightness_pct:
+      name: Brightness
+      description: Percentage indicating the brightness of the color loop, where 1 is the minimum brightness and 100 is the maximum brightness supported by the light.
+      selector:
+        number:
+          min: 0
+          max: 100
+          unit_of_measurement: "%"
+    saturation_min:
+      name: Minimum saturation
+      description: Percentage indicating the minimum saturation of the colors in the loop.
+      default: 80
+      selector:
+        number:
+          min: 1
+          max: 100
+          unit_of_measurement: "%"
+    saturation_max:
+      name: Maximum saturation
+      description: Percentage indicating the maximum saturation of the colors in the loop.
+      default: 100
+      selector:
+        number:
+          min: 1
+          max: 100
+          unit_of_measurement: "%"
     period:
       name: Period
       description: Duration between color changes.

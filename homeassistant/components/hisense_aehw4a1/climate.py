@@ -25,12 +25,7 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_TEMPERATURE,
-    PRECISION_WHOLE,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
-)
+from homeassistant.const import ATTR_TEMPERATURE, PRECISION_WHOLE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -184,9 +179,9 @@ class ClimateAehW4a1(ClimateEntity):
         self._on = status["run_status"]
 
         if status["temperature_Fahrenheit"] == "0":
-            self._attr_temperature_unit = TEMP_CELSIUS
+            self._attr_temperature_unit = UnitOfTemperature.CELSIUS
         else:
-            self._attr_temperature_unit = TEMP_FAHRENHEIT
+            self._attr_temperature_unit = UnitOfTemperature.FAHRENHEIT
 
         self._current_temperature = int(status["indoor_temperature_status"], 2)
 
@@ -274,14 +269,14 @@ class ClimateAehW4a1(ClimateEntity):
     @property
     def min_temp(self):
         """Return the minimum temperature."""
-        if self.temperature_unit == TEMP_CELSIUS:
+        if self.temperature_unit == UnitOfTemperature.CELSIUS:
             return MIN_TEMP_C
         return MIN_TEMP_F
 
     @property
     def max_temp(self):
         """Return the maximum temperature."""
-        if self.temperature_unit == TEMP_CELSIUS:
+        if self.temperature_unit == UnitOfTemperature.CELSIUS:
             return MAX_TEMP_C
         return MAX_TEMP_F
 
@@ -301,7 +296,7 @@ class ClimateAehW4a1(ClimateEntity):
             _LOGGER.debug("Setting temp of %s to %s", self._unique_id, temp)
             if self._preset_mode != PRESET_NONE:
                 await self.async_set_preset_mode(PRESET_NONE)
-            if self.temperature_unit == TEMP_CELSIUS:
+            if self.temperature_unit == UnitOfTemperature.CELSIUS:
                 await self._device.command(f"temp_{int(temp)}_C")
             else:
                 await self._device.command(f"temp_{int(temp)}_F")

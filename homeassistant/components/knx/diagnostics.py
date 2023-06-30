@@ -13,12 +13,14 @@ from homeassistant.core import HomeAssistant
 from . import CONFIG_SCHEMA
 from .const import (
     CONF_KNX_KNXKEY_PASSWORD,
+    CONF_KNX_ROUTING_BACKBONE_KEY,
     CONF_KNX_SECURE_DEVICE_AUTHENTICATION,
     CONF_KNX_SECURE_USER_PASSWORD,
     DOMAIN,
 )
 
 TO_REDACT = {
+    CONF_KNX_ROUTING_BACKBONE_KEY,
     CONF_KNX_KNXKEY_PASSWORD,
     CONF_KNX_SECURE_USER_PASSWORD,
     CONF_KNX_SECURE_DEVICE_AUTHENTICATION,
@@ -27,7 +29,7 @@ TO_REDACT = {
 
 async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, config_entry: ConfigEntry
-) -> dict:
+) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
     diag: dict[str, Any] = {}
     knx_module = hass.data[DOMAIN]
@@ -37,6 +39,11 @@ async def async_get_config_entry_diagnostics(
     }
 
     diag["config_entry_data"] = async_redact_data(dict(config_entry.data), TO_REDACT)
+
+    if proj_info := knx_module.project.info:
+        diag["project_info"] = async_redact_data(proj_info, "name")
+    else:
+        diag["project_info"] = None
 
     raw_config = await conf_util.async_hass_config_yaml(hass)
     diag["configuration_yaml"] = raw_config.get(DOMAIN)

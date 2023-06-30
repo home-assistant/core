@@ -16,15 +16,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.components.sensor.recorder import reset_detected
-from homeassistant.const import (
-    ATTR_UNIT_OF_MEASUREMENT,
-    VOLUME_CUBIC_FEET,
-    VOLUME_CUBIC_METERS,
-    VOLUME_GALLONS,
-    VOLUME_LITERS,
-    UnitOfEnergy,
-    UnitOfVolume,
-)
+from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, UnitOfEnergy, UnitOfVolume
 from homeassistant.core import (
     HomeAssistant,
     State,
@@ -49,21 +41,24 @@ SUPPORTED_STATE_CLASSES = {
     SensorStateClass.TOTAL_INCREASING,
 }
 VALID_ENERGY_UNITS: set[str] = {
-    UnitOfEnergy.WATT_HOUR,
-    UnitOfEnergy.KILO_WATT_HOUR,
-    UnitOfEnergy.MEGA_WATT_HOUR,
     UnitOfEnergy.GIGA_JOULE,
+    UnitOfEnergy.KILO_WATT_HOUR,
+    UnitOfEnergy.MEGA_JOULE,
+    UnitOfEnergy.MEGA_WATT_HOUR,
+    UnitOfEnergy.WATT_HOUR,
 }
 VALID_ENERGY_UNITS_GAS = {
-    VOLUME_CUBIC_FEET,
-    VOLUME_CUBIC_METERS,
+    UnitOfVolume.CENTUM_CUBIC_FEET,
+    UnitOfVolume.CUBIC_FEET,
+    UnitOfVolume.CUBIC_METERS,
     *VALID_ENERGY_UNITS,
 }
-VALID_VOLUME_UNITS_WATER = {
-    VOLUME_CUBIC_FEET,
-    VOLUME_CUBIC_METERS,
-    VOLUME_GALLONS,
-    VOLUME_LITERS,
+VALID_VOLUME_UNITS_WATER: set[str] = {
+    UnitOfVolume.CENTUM_CUBIC_FEET,
+    UnitOfVolume.CUBIC_FEET,
+    UnitOfVolume.CUBIC_METERS,
+    UnitOfVolume.GALLONS,
+    UnitOfVolume.LITERS,
 }
 _LOGGER = logging.getLogger(__name__)
 
@@ -79,7 +74,7 @@ async def async_setup_platform(
     await sensor_manager.async_start()
 
 
-@dataclass
+@dataclass(slots=True)
 class SourceAdapter:
     """Adapter to allow sources and their flows to be used as sensors."""
 
@@ -231,6 +226,8 @@ class EnergyCostSensor(SensorEntity):
     """
 
     _attr_entity_registry_visible_default = False
+    _attr_should_poll = False
+
     _wrong_state_class_reported = False
     _wrong_unit_reported = False
 
@@ -437,6 +434,7 @@ class EnergyCostSensor(SensorEntity):
     def add_to_platform_abort(self) -> None:
         """Abort adding an entity to a platform."""
         self.add_finished.set()
+        super().add_to_platform_abort()
 
     async def async_will_remove_from_hass(self) -> None:
         """Handle removing from hass."""

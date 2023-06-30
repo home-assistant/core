@@ -1,13 +1,18 @@
 """Config flow for BleBox devices integration."""
+from __future__ import annotations
+
 import logging
+from typing import Any
 
 from blebox_uniapi.box import Box
-from blebox_uniapi.error import Error, UnsupportedBoxVersion
+from blebox_uniapi.error import Error, UnsupportedBoxResponse, UnsupportedBoxVersion
 from blebox_uniapi.session import ApiHost
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.components import zeroconf
 from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import (
@@ -74,9 +79,67 @@ class BleBoxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             description_placeholders={"address": f"{host}:{port}"},
         )
 
+    async def async_step_zeroconf(
+        self, discovery_info: zeroconf.ZeroconfServiceInfo
+    ) -> FlowResult:
+        """Handle zeroconf discovery."""
+        hass = self.hass
+        ipaddress = (discovery_info.host, discovery_info.port)
+        self.device_config["host"] = discovery_info.host
+        self.device_config["port"] = discovery_info.port
+
+        websession = async_get_clientsession(hass)
+
+        api_host = ApiHost(
+            *ipaddress, DEFAULT_SETUP_TIMEOUT, websession, hass.loop, _LOGGER
+        )
+
+        try:
+            product = await Box.async_from_host(api_host)
+        except UnsupportedBoxVersion:
+            return self.async_abort(reason="unsupported_device_version")
+        except UnsupportedBoxResponse:
+            return self.async_abort(reason="unsupported_device_response")
+
+        self.device_config["name"] = product.name
+        # Check if configured but IP changed since
+        await self.async_set_unique_id(product.unique_id)
+        self._abort_if_unique_id_configured()
+        self.context.update(
+            {
+                "title_placeholders": {
+                    "name": self.device_config["name"],
+                    "host": self.device_config["host"],
+                },
+                "configuration_url": f"http://{discovery_info.host}",
+            }
+        )
+        return await self.async_step_confirm_discovery()
+
+    async def async_step_confirm_discovery(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Handle discovery confirmation."""
+        if user_input is not None:
+            return self.async_create_entry(
+                title=self.device_config["name"],
+                data={
+                    "host": self.device_config["host"],
+                    "port": self.device_config["port"],
+                },
+            )
+
+        return self.async_show_form(
+            step_id="confirm_discovery",
+            description_placeholders={
+                "name": self.device_config["name"],
+                "host": self.device_config["host"],
+                "port": self.device_config["port"],
+            },
+        )
+
     async def async_step_user(self, user_input=None):
         """Handle initial user-triggered config step."""
-
         hass = self.hass
         schema = create_schema(user_input)
 
@@ -97,7 +160,6 @@ class BleBoxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     reason=ADDRESS_ALREADY_CONFIGURED,
                     description_placeholders={"address": f"{host}:{port}"},
                 )
-
         websession = async_get_clientsession(hass)
         api_host = ApiHost(*addr, DEFAULT_SETUP_TIMEOUT, websession, hass.loop, _LOGGER)
         try:
@@ -119,7 +181,7 @@ class BleBoxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
         # Check if configured but IP changed since
-        await self.async_set_unique_id(product.unique_id)
+        await self.async_set_unique_id(product.unique_id, raise_on_progress=False)
         self._abort_if_unique_id_configured()
 
         return self.async_create_entry(title=product.name, data=user_input)

@@ -22,6 +22,10 @@ from homeassistant.core import callback
 from homeassistant.data_entry_flow import AbortFlow, FlowResult
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.schema_config_entry_flow import (
+    SchemaFlowFormStep,
+    SchemaOptionsFlowHandler,
+)
 from homeassistant.util.network import is_ipv6_address
 
 from .const import CONF_CREDENTIALS, CONF_IDENTIFIERS, CONF_START_OFF, DOMAIN
@@ -35,6 +39,15 @@ INPUT_PIN_SCHEMA = vol.Schema({vol.Required(CONF_PIN, default=None): int})
 DEFAULT_START_OFF = False
 
 DISCOVERY_AGGREGATION_TIME = 15  # seconds
+
+OPTIONS_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_START_OFF, default=DEFAULT_START_OFF): bool,
+    }
+)
+OPTIONS_FLOW = {
+    "init": SchemaFlowFormStep(OPTIONS_SCHEMA),
+}
 
 
 async def device_scan(hass, identifier, loop):
@@ -76,9 +89,9 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     @callback
     def async_get_options_flow(
         config_entry: config_entries.ConfigEntry,
-    ) -> AppleTVOptionsFlow:
+    ) -> SchemaOptionsFlowHandler:
         """Get options flow for this handler."""
-        return AppleTVOptionsFlow(config_entry)
+        return SchemaOptionsFlowHandler(config_entry, OPTIONS_FLOW)
 
     def __init__(self):
         """Initialize a new AppleTVConfigFlow."""
@@ -311,18 +324,29 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         all_identifiers = set(self.atv.all_identifiers)
         discovered_ip_address = str(self.atv.address)
         for entry in self._async_current_entries():
-            if not all_identifiers.intersection(
+            existing_identifiers = set(
                 entry.data.get(CONF_IDENTIFIERS, [entry.unique_id])
-            ):
+            )
+            if not all_identifiers.intersection(existing_identifiers):
                 continue
-            if entry.data.get(CONF_ADDRESS) != discovered_ip_address:
+            combined_identifiers = existing_identifiers | all_identifiers
+            if entry.data.get(
+                CONF_ADDRESS
+            ) != discovered_ip_address or combined_identifiers != set(
+                entry.data.get(CONF_IDENTIFIERS, [])
+            ):
                 self.hass.config_entries.async_update_entry(
                     entry,
-                    data={**entry.data, CONF_ADDRESS: discovered_ip_address},
+                    data={
+                        **entry.data,
+                        CONF_ADDRESS: discovered_ip_address,
+                        CONF_IDENTIFIERS: list(combined_identifiers),
+                    },
                 )
-                self.hass.async_create_task(
-                    self.hass.config_entries.async_reload(entry.entry_id)
-                )
+                if entry.source != config_entries.SOURCE_IGNORE:
+                    self.hass.async_create_task(
+                        self.hass.config_entries.async_reload(entry.entry_id)
+                    )
             if not allow_exist:
                 raise DeviceAlreadyConfigured()
 
@@ -383,8 +407,9 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         # Protocol specific arguments
         pair_args = {}
-        if self.protocol == Protocol.DMAP:
+        if self.protocol in {Protocol.AirPlay, Protocol.Companion, Protocol.DMAP}:
             pair_args["name"] = "Home Assistant"
+        if self.protocol == Protocol.DMAP:
             pair_args["zeroconf"] = await zeroconf.async_get_instance(self.hass)
 
         # Initiate the pairing process
@@ -523,35 +548,6 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="reauth_successful")
 
         return self.async_create_entry(title=self.atv.name, data=data)
-
-
-class AppleTVOptionsFlow(config_entries.OptionsFlow):
-    """Handle Apple TV options."""
-
-    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
-        """Initialize Apple TV options flow."""
-        self.config_entry = config_entry
-        self.options = dict(config_entry.options)
-
-    async def async_step_init(self, user_input=None):
-        """Manage the Apple TV options."""
-        if user_input is not None:
-            self.options[CONF_START_OFF] = user_input[CONF_START_OFF]
-            return self.async_create_entry(title="", data=self.options)
-
-        return self.async_show_form(
-            step_id="init",
-            data_schema=vol.Schema(
-                {
-                    vol.Optional(
-                        CONF_START_OFF,
-                        default=self.config_entry.options.get(
-                            CONF_START_OFF, DEFAULT_START_OFF
-                        ),
-                    ): bool,
-                }
-            ),
-        )
 
 
 class DeviceNotFound(HomeAssistantError):

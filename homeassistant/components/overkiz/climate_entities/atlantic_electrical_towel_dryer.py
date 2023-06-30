@@ -12,14 +12,15 @@ from homeassistant.components.climate import (
     ClimateEntityFeature,
     HVACMode,
 )
-from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
+from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 
+from ..const import DOMAIN
 from ..coordinator import OverkizDataUpdateCoordinator
 from ..entity import OverkizEntity
 
 PRESET_DRYING = "drying"
 
-OVERKIZ_TO_HVAC_MODE: dict[str, str] = {
+OVERKIZ_TO_HVAC_MODE: dict[str, HVACMode] = {
     OverkizCommandParam.EXTERNAL: HVACMode.HEAT,  # manu
     OverkizCommandParam.INTERNAL: HVACMode.AUTO,  # prog
     OverkizCommandParam.STANDBY: HVACMode.OFF,
@@ -42,7 +43,8 @@ class AtlanticElectricalTowelDryer(OverkizEntity, ClimateEntity):
 
     _attr_hvac_modes = [*HVAC_MODE_TO_OVERKIZ]
     _attr_preset_modes = [*PRESET_MODE_TO_OVERKIZ]
-    _attr_temperature_unit = TEMP_CELSIUS
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_translation_key = DOMAIN
 
     def __init__(
         self, device_url: str, coordinator: OverkizDataUpdateCoordinator
@@ -57,10 +59,10 @@ class AtlanticElectricalTowelDryer(OverkizEntity, ClimateEntity):
 
         # Not all AtlanticElectricalTowelDryer models support presets, thus we need to check if the command is available
         if self.executor.has_command(OverkizCommand.SET_TOWEL_DRYER_TEMPORARY_STATE):
-            self._attr_supported_features += ClimateEntityFeature.PRESET_MODE
+            self._attr_supported_features |= ClimateEntityFeature.PRESET_MODE
 
     @property
-    def hvac_mode(self) -> str:
+    def hvac_mode(self) -> HVACMode:
         """Return hvac operation ie. heat, cool mode."""
         if OverkizState.CORE_OPERATING_MODE in self.device.states:
             return OVERKIZ_TO_HVAC_MODE[
@@ -69,7 +71,7 @@ class AtlanticElectricalTowelDryer(OverkizEntity, ClimateEntity):
 
         return HVACMode.OFF
 
-    async def async_set_hvac_mode(self, hvac_mode: str) -> None:
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
         await self.executor.async_execute_command(
             OverkizCommand.SET_TOWEL_DRYER_OPERATING_MODE,

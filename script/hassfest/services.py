@@ -3,19 +3,20 @@ from __future__ import annotations
 
 import pathlib
 import re
+from typing import Any
 
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
 
 from homeassistant.const import CONF_SELECTOR
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv, selector
+from homeassistant.helpers import config_validation as cv, selector, service
 from homeassistant.util.yaml import load_yaml
 
-from .model import Integration
+from .model import Config, Integration
 
 
-def exists(value):
+def exists(value: Any) -> Any:
     """Check if value exists."""
     if value is None:
         raise vol.Invalid("Value cannot be None")
@@ -32,6 +33,14 @@ FIELD_SCHEMA = vol.Schema(
         vol.Optional("required"): bool,
         vol.Optional("advanced"): bool,
         vol.Optional(CONF_SELECTOR): selector.validate_selector,
+        vol.Optional("filter"): {
+            vol.Exclusive("attribute", "field_filter"): {
+                vol.Required(str): [vol.All(str, service.validate_attribute_option)],
+            },
+            vol.Exclusive("supported_features", "field_filter"): [
+                vol.All(str, service.validate_supported_feature)
+            ],
+        },
     }
 )
 
@@ -39,9 +48,7 @@ SERVICE_SCHEMA = vol.Schema(
     {
         vol.Required("description"): str,
         vol.Optional("name"): str,
-        vol.Optional("target"): vol.Any(
-            selector.TargetSelector.CONFIG_SCHEMA, None  # pylint: disable=no-member
-        ),
+        vol.Optional("target"): vol.Any(selector.TargetSelector.CONFIG_SCHEMA, None),
         vol.Optional("fields"): vol.Schema({str: FIELD_SCHEMA}),
     }
 )
@@ -63,7 +70,7 @@ def grep_dir(path: pathlib.Path, glob_pattern: str, search_pattern: str) -> bool
     return False
 
 
-def validate_services(integration: Integration):
+def validate_services(integration: Integration) -> None:
     """Validate services."""
     try:
         data = load_yaml(str(integration.path / "services.yaml"))
@@ -92,11 +99,8 @@ def validate_services(integration: Integration):
         )
 
 
-def validate(integrations: dict[str, Integration], config):
+def validate(integrations: dict[str, Integration], config: Config) -> None:
     """Handle dependencies for integrations."""
     # check services.yaml is cool
     for integration in integrations.values():
-        if not integration.manifest:
-            continue
-
         validate_services(integration)

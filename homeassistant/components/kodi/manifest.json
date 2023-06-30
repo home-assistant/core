@@ -1,12 +1,12 @@
 {
   "domain": "kodi",
   "name": "Kodi",
-  "documentation": "https://www.home-assistant.io/integrations/kodi",
   "after_dependencies": ["media_source"],
-  "requirements": ["pykodi==0.2.7"],
   "codeowners": ["@OnFreund", "@cgtobi"],
-  "zeroconf": ["_xbmc-jsonrpc-h._tcp.local."],
   "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/kodi",
   "iot_class": "local_push",
-  "loggers": ["jsonrpc_async", "jsonrpc_base", "jsonrpc_websocket", "pykodi"]
+  "loggers": ["jsonrpc_async", "jsonrpc_base", "jsonrpc_websocket", "pykodi"],
+  "requirements": ["pykodi==0.2.7"],
+  "zeroconf": ["_xbmc-jsonrpc-h._tcp.local."]
 }

@@ -2,13 +2,12 @@
 from __future__ import annotations
 
 from homeassistant.components.sensor import (
-    SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import TIME_MINUTES, UV_INDEX
+from homeassistant.const import UV_INDEX, UnitOfTime
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.dt import as_local, parse_datetime
@@ -51,7 +50,6 @@ SENSOR_DESCRIPTIONS = (
     SensorEntityDescription(
         key=TYPE_CURRENT_OZONE_LEVEL,
         name="Current ozone level",
-        device_class=SensorDeviceClass.OZONE,
         native_unit_of_measurement="du",
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -78,42 +76,42 @@ SENSOR_DESCRIPTIONS = (
         key=TYPE_SAFE_EXPOSURE_TIME_1,
         name="Skin type 1 safe exposure time",
         icon="mdi:timer-outline",
-        native_unit_of_measurement=TIME_MINUTES,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_SAFE_EXPOSURE_TIME_2,
         name="Skin type 2 safe exposure time",
         icon="mdi:timer-outline",
-        native_unit_of_measurement=TIME_MINUTES,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_SAFE_EXPOSURE_TIME_3,
         name="Skin type 3 safe exposure time",
         icon="mdi:timer-outline",
-        native_unit_of_measurement=TIME_MINUTES,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_SAFE_EXPOSURE_TIME_4,
         name="Skin type 4 safe exposure time",
         icon="mdi:timer-outline",
-        native_unit_of_measurement=TIME_MINUTES,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_SAFE_EXPOSURE_TIME_5,
         name="Skin type 5 safe exposure time",
         icon="mdi:timer-outline",
-        native_unit_of_measurement=TIME_MINUTES,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_SAFE_EXPOSURE_TIME_6,
         name="Skin type 6 safe exposure time",
         icon="mdi:timer-outline",
-        native_unit_of_measurement=TIME_MINUTES,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
         state_class=SensorStateClass.MEASUREMENT,
     ),
 )

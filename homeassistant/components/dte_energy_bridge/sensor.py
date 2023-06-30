@@ -9,10 +9,11 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA,
+    SensorDeviceClass,
     SensorEntity,
     SensorStateClass,
 )
-from homeassistant.const import CONF_NAME, POWER_KILO_WATT
+from homeassistant.const import CONF_NAME, UnitOfPower
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -25,8 +26,6 @@ CONF_VERSION = "version"
 
 DEFAULT_NAME = "Current Energy Usage"
 DEFAULT_VERSION = 1
-
-ICON = "mdi:flash"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -56,8 +55,8 @@ def setup_platform(
 class DteEnergyBridgeSensor(SensorEntity):
     """Implementation of the DTE Energy Bridge sensors."""
 
-    _attr_icon = ICON
-    _attr_native_unit_of_measurement = POWER_KILO_WATT
+    _attr_device_class = SensorDeviceClass.POWER
+    _attr_native_unit_of_measurement = UnitOfPower.KILO_WATT
     _attr_state_class = SensorStateClass.MEASUREMENT
 
     def __init__(self, ip_address, name, version):
