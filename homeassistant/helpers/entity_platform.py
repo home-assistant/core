@@ -69,15 +69,16 @@ DEVICE_INFO_TYPES = (
     },
     # primary info
     {
+        "configuration_url",
         "connections",
-        "identifiers",
         "entry_type",
+        "hw_version",
+        "identifiers",
         "manufacturer",
         "model",
         "name",
         "suggested_area",
         "sw_version",
-        "hw_version",
         "via_device",
     },
     # secondary info
@@ -86,6 +87,8 @@ DEVICE_INFO_TYPES = (
         "default_manufacturer",
         "default_model",
         "default_name",
+        # Used by Fritz
+        "via_device",
     },
 )
 
