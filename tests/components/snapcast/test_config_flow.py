@@ -93,3 +93,18 @@ async def test_abort(
 
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+async def test_import(hass: HomeAssistant) -> None:
+    """Test successful import."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_IMPORT},
+        data=TEST_CONNECTION,
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Snapcast"
+    assert result["data"] == {CONF_HOST: "snapserver.test", CONF_PORT: 1705}

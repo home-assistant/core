@@ -6541,8 +6541,8 @@
     "zodiac": {
       "name": "Zodiac",
       "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "local_polling"
+      "config_flow": true,
+      "iot_class": "calculated"
     },
     "zoneminder": {
       "name": "ZoneMinder",

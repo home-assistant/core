@@ -79,6 +79,7 @@ LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
     "dc": (
         TuyaLightEntityDescription(
             key=DPCode.SWITCH_LED,
+            name=None,
             color_mode=DPCode.WORK_MODE,
             brightness=DPCode.BRIGHT_VALUE,
             color_temp=DPCode.TEMP_VALUE,
@@ -90,6 +91,7 @@ LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
     "dd": (
         TuyaLightEntityDescription(
             key=DPCode.SWITCH_LED,
+            name=None,
             color_mode=DPCode.WORK_MODE,
             brightness=DPCode.BRIGHT_VALUE,
             color_temp=DPCode.TEMP_VALUE,
@@ -102,6 +104,7 @@ LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
     "dj": (
         TuyaLightEntityDescription(
             key=DPCode.SWITCH_LED,
+            name=None,
             color_mode=DPCode.WORK_MODE,
             brightness=(DPCode.BRIGHT_VALUE_V2, DPCode.BRIGHT_VALUE),
             color_temp=(DPCode.TEMP_VALUE_V2, DPCode.TEMP_VALUE),
@@ -120,6 +123,7 @@ LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
     "fsd": (
         TuyaLightEntityDescription(
             key=DPCode.SWITCH_LED,
+            name=None,
             color_mode=DPCode.WORK_MODE,
             brightness=DPCode.BRIGHT_VALUE,
             color_temp=DPCode.TEMP_VALUE,
@@ -128,6 +132,7 @@ LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
         # Some ceiling fan lights use LIGHT for DPCode instead of SWITCH_LED
         TuyaLightEntityDescription(
             key=DPCode.LIGHT,
+            name=None,
         ),
     ),
     # Ambient Light
@@ -135,6 +140,7 @@ LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
     "fwd": (
         TuyaLightEntityDescription(
             key=DPCode.SWITCH_LED,
+            name=None,
             color_mode=DPCode.WORK_MODE,
             brightness=DPCode.BRIGHT_VALUE,
             color_temp=DPCode.TEMP_VALUE,
@@ -146,6 +152,7 @@ LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
     "gyd": (
         TuyaLightEntityDescription(
             key=DPCode.SWITCH_LED,
+            name=None,
             color_mode=DPCode.WORK_MODE,
             brightness=DPCode.BRIGHT_VALUE,
             color_temp=DPCode.TEMP_VALUE,
@@ -157,6 +164,7 @@ LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
     "jsq": (
         TuyaLightEntityDescription(
             key=DPCode.SWITCH_LED,
+            name=None,
             color_mode=DPCode.WORK_MODE,
             brightness=DPCode.BRIGHT_VALUE,
             color_data=DPCode.COLOUR_DATA_HSV,
@@ -195,6 +203,7 @@ LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
     "mbd": (
         TuyaLightEntityDescription(
             key=DPCode.SWITCH_LED,
+            name=None,
             color_mode=DPCode.WORK_MODE,
             brightness=DPCode.BRIGHT_VALUE,
             color_data=DPCode.COLOUR_DATA,
@@ -206,6 +215,7 @@ LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
     "qjdcz": (
         TuyaLightEntityDescription(
             key=DPCode.SWITCH_LED,
+            name=None,
             color_mode=DPCode.WORK_MODE,
             brightness=DPCode.BRIGHT_VALUE,
             color_data=DPCode.COLOUR_DATA,
@@ -296,6 +306,7 @@ LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
     "tyndj": (
         TuyaLightEntityDescription(
             key=DPCode.SWITCH_LED,
+            name=None,
             color_mode=DPCode.WORK_MODE,
             brightness=DPCode.BRIGHT_VALUE,
             color_temp=DPCode.TEMP_VALUE,
@@ -307,6 +318,7 @@ LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
     "xdd": (
         TuyaLightEntityDescription(
             key=DPCode.SWITCH_LED,
+            name=None,
             color_mode=DPCode.WORK_MODE,
             brightness=DPCode.BRIGHT_VALUE,
             color_temp=DPCode.TEMP_VALUE,
@@ -322,6 +334,7 @@ LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
     "ykq": (
         TuyaLightEntityDescription(
             key=DPCode.SWITCH_CONTROLLER,
+            name=None,
             color_mode=DPCode.WORK_MODE,
             brightness=DPCode.BRIGHT_CONTROLLER,
             color_temp=DPCode.TEMP_CONTROLLER,
@@ -332,6 +345,7 @@ LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
     "fs": (
         TuyaLightEntityDescription(
             key=DPCode.LIGHT,
+            name=None,
             color_mode=DPCode.WORK_MODE,
             brightness=DPCode.BRIGHT_VALUE,
             color_temp=DPCode.TEMP_VALUE,

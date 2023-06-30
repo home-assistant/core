@@ -1827,3 +1827,53 @@ async def test_translated_device_class_name_influences_entity_id(
 
     assert len(hass.states.async_entity_ids()) == 1
     assert registry.async_get(expected_entity_id) is not None
+
+
+@pytest.mark.parametrize(
+    ("entity_device_name", "entity_device_default_name", "expected_device_name"),
+    [
+        (None, None, "Mock Config Entry Title"),
+        ("", None, "Mock Config Entry Title"),
+        (None, "Hello", "Hello"),
+        ("Mock Device Name", None, "Mock Device Name"),
+    ],
+)
+async def test_device_name_defaulting_config_entry(
+    hass: HomeAssistant,
+    entity_device_name: str,
+    entity_device_default_name: str,
+    expected_device_name: str,
+) -> None:
+    """Test setting the device name based on input info."""
+    device_info = {
+        "identifiers": {("hue", "1234")},
+        "name": entity_device_name,
+    }
+
+    if entity_device_default_name:
+        device_info["default_name"] = entity_device_default_name
+
+    class DeviceNameEntity(Entity):
+        _attr_unique_id = "qwer"
+        _attr_device_info = device_info
+
+    async def async_setup_entry(hass, config_entry, async_add_entities):
+        """Mock setup entry method."""
+        async_add_entities([DeviceNameEntity()])
+        return True
+
+    platform = MockPlatform(async_setup_entry=async_setup_entry)
+    config_entry = MockConfigEntry(
+        title="Mock Config Entry Title", entry_id="super-mock-id"
+    )
+    entity_platform = MockEntityPlatform(
+        hass, platform_name=config_entry.domain, platform=platform
+    )
+
+    assert await entity_platform.async_setup_entry(config_entry)
+    await hass.async_block_till_done()
+
+    dev_reg = dr.async_get(hass)
+    device = dev_reg.async_get_device({("hue", "1234")})
+    assert device is not None
+    assert device.name == expected_device_name
