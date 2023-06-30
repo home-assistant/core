@@ -29,7 +29,6 @@ TEST_HOST2 = "192.168.11.104:8443"
 
 MOCK_GATEWAY_RESPONSE = [Mock(id=TEST_GATEWAY_ID)]
 MOCK_GATEWAY2_RESPONSE = [Mock(id=TEST_GATEWAY_ID3), Mock(id=TEST_GATEWAY_ID2)]
-MOCK_NO_VALID_GATEWAY_RESPONSE = [Mock(id=TEST_GATEWAY_ID3)]
 
 FAKE_ZERO_CONF_INFO = ZeroconfServiceInfo(
     ip_address=ip_address("192.168.0.51"),
@@ -143,56 +142,6 @@ async def test_form_local(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> N
     await hass.async_block_till_done()
 
     assert len(mock_setup_entry.mock_calls) == 1
-
-
-async def test_form_local_no_valid_gateway(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock
-) -> None:
-    """Test we get the form."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    assert result["type"] == "form"
-    assert result["errors"] == {}
-
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {"server": TEST_SERVER},
-    )
-
-    assert result2["type"] == "form"
-    assert result2["step_id"] == "local_or_cloud"
-
-    result3 = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {"api_type": "local"},
-    )
-
-    assert result3["type"] == "form"
-    assert result3["step_id"] == "local"
-
-    with patch("pyoverkiz.client.OverkizClient.login", return_value=True), patch(
-        "pyoverkiz.client.OverkizClient.get_gateways",
-        return_value=MOCK_NO_VALID_GATEWAY_RESPONSE,
-    ), patch(
-        "pyoverkiz.client.OverkizClient.generate_local_token", return_value=True
-    ), patch(
-        "pyoverkiz.client.OverkizClient.activate_local_token", return_value=True
-    ):
-        # with pytest.raises(OverkizException, match="No valid gateway found"):
-        result4 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                "username": TEST_EMAIL,
-                "password": TEST_PASSWORD,
-                "host": "gateway-1234-5678-1234.local:8443",
-            },
-        )
-
-        assert result4["errors"] == {"base": "unknown"}
-
-        await hass.async_block_till_done()
 
 
 # @pytest.mark.parametrize(

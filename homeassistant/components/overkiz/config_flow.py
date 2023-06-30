@@ -13,7 +13,6 @@ from pyoverkiz.exceptions import (
     CozyTouchBadCredentialsException,
     MaintenanceException,
     NotSuchTokenException,
-    OverkizException,
     TooManyAttemptsBannedException,
     TooManyRequestsException,
     UnknownUserException,
@@ -79,15 +78,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             await client.login(register_event_listener=False)
             gateways = await client.get_gateways()
 
-            gateway_id = None
+            gateway_id = ""
             for gateway in gateways:
                 # Overkiz can return multiple gateways, but we only can generate a token
                 # for the main gateway.
                 if is_overkiz_gateway(gateway.id):
                     gateway_id = gateway.id
-
-            if not gateway_id:
-                raise OverkizException("No valid gateway found")
 
             token = await client.generate_local_token(gateway_id)
             uuid = await client.activate_local_token(
