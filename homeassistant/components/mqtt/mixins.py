@@ -1141,10 +1141,27 @@ class MqttEntity(
         elif use_device_class_name:
             # Follow name of device class
             self._attr_has_entity_name = True
+            if CONF_DEVICE in config and CONF_NAME not in config[CONF_DEVICE]:
+                _LOGGER.info(
+                    "No device name set in config: %s,"
+                    "'has_entity_name' was set to True, please set a device name, see also "
+                    "https://developers.home-assistant.io/docs/core/entity/#entity-naming",
+                    config,
+                )
             return
-        if CONF_DEVICE in config:
+        if (device_config := CONF_DEVICE in config) and CONF_NAME in config[
+            CONF_DEVICE
+        ]:
             # Only set has_entity_name if a valid name is set
-            self._attr_has_entity_name = bool(config[CONF_DEVICE].get(CONF_NAME))
+            self._attr_has_entity_name = True
+        elif device_config:
+            self._attr_has_entity_name = False
+            _LOGGER.info(
+                "No device name set in config: %s,"
+                "'has_entity_name' was set to False, this is not recommended, see also "
+                "https://developers.home-assistant.io/docs/core/entity/#entity-naming",
+                config,
+            )
 
     def _setup_from_config(self, config: ConfigType) -> None:
         """(Re)Setup the entity."""
