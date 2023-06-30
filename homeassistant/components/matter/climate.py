@@ -226,7 +226,7 @@ class MatterClimate(MatterEntity, ClimateEntity):
         )
         match control_sequence_value:
             case ControlSequenceEnum.kCoolingAndHeating | ControlSequenceEnum.kCoolingAndHeatingWithReheat:
-                self._attr_hvac_modes = [HVACMode.HEAT, HVACMode.COOL]
+                self._attr_hvac_modes = [HVACMode.HEAT, HVACMode.COOL, HVACMode.HEAT_COOL]
             case ControlSequenceEnum.kCoolingOnly | ControlSequenceEnum.kCoolingWithReheat:
                 self._attr_hvac_modes = [HVACMode.COOL]
             case ControlSequenceEnum.kHeatingOnly | ControlSequenceEnum.kHeatingWithReheat:
