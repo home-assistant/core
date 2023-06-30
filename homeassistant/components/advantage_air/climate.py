@@ -21,6 +21,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
+    ADVANTAGE_AIR_AUTOFAN_ENABLED,
     ADVANTAGE_AIR_STATE_CLOSE,
     ADVANTAGE_AIR_STATE_OFF,
     ADVANTAGE_AIR_STATE_ON,
@@ -39,16 +40,6 @@ ADVANTAGE_AIR_HVAC_MODES = {
 }
 HASS_HVAC_MODES = {v: k for k, v in ADVANTAGE_AIR_HVAC_MODES.items()}
 
-ADVANTAGE_AIR_FAN_MODES = {
-    "auto": FAN_AUTO,
-    "autoAA": FAN_AUTO,
-    "low": FAN_LOW,
-    "medium": FAN_MEDIUM,
-    "high": FAN_HIGH,
-}
-HASS_FAN_MODES = {v: k for k, v in ADVANTAGE_AIR_FAN_MODES.items()}
-FAN_SPEEDS = {FAN_LOW: 30, FAN_MEDIUM: 60, FAN_HIGH: 100}
-
 ADVANTAGE_AIR_MYZONE = "MyZone"
 ADVANTAGE_AIR_MYAUTO = "MyAuto"
 ADVANTAGE_AIR_MYAUTO_ENABLED = "myAutoModeEnabled"
@@ -56,6 +47,7 @@ ADVANTAGE_AIR_MYTEMP = "MyTemp"
 ADVANTAGE_AIR_MYTEMP_ENABLED = "climateControlModeEnabled"
 ADVANTAGE_AIR_HEAT_TARGET = "myAutoHeatTargetTemp"
 ADVANTAGE_AIR_COOL_TARGET = "myAutoCoolTargetTemp"
+ADVANTAGE_AIR_MYFAN = "autoAA"
 
 PARALLEL_UPDATES = 0
 
@@ -132,7 +124,7 @@ class AdvantageAirAC(AdvantageAirAcEntity, ClimateEntity):
     @property
     def fan_mode(self) -> str | None:
         """Return the current fan modes."""
-        return ADVANTAGE_AIR_FAN_MODES.get(self._ac["fan"])
+        return FAN_AUTO if self._ac["fan"] == ADVANTAGE_AIR_MYFAN else self._ac["fan"]
 
     @property
     def target_temperature_high(self) -> float | None:
@@ -170,7 +162,12 @@ class AdvantageAirAC(AdvantageAirAcEntity, ClimateEntity):
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set the Fan Mode."""
-        await self.async_update_ac({"fan": HASS_FAN_MODES.get(fan_mode)})
+        mode = (
+            ADVANTAGE_AIR_MYFAN
+            if self._ac.get(ADVANTAGE_AIR_AUTOFAN_ENABLED)
+            else fan_mode
+        )
+        await self.async_update_ac({"fan": mode})
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set the Temperature."""

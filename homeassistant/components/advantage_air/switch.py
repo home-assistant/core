@@ -7,14 +7,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
+    ADVANTAGE_AIR_AUTOFAN_ENABLED,
     ADVANTAGE_AIR_STATE_OFF,
     ADVANTAGE_AIR_STATE_ON,
     DOMAIN as ADVANTAGE_AIR_DOMAIN,
 )
 from .entity import AdvantageAirAcEntity, AdvantageAirThingEntity
 from .models import AdvantageAirData
-
-ADVANTAGE_AIR_AUTOFAN = "aaAutoFanModeEnabled"
 
 
 async def async_setup_entry(
@@ -31,7 +30,7 @@ async def async_setup_entry(
         for ac_key, ac_device in aircons.items():
             if ac_device["info"]["freshAirStatus"] != "none":
                 entities.append(AdvantageAirFreshAir(instance, ac_key))
-            if ADVANTAGE_AIR_AUTOFAN in ac_device["info"]:
+            if ADVANTAGE_AIR_AUTOFAN_ENABLED in ac_device["info"]:
                 entities.append(AdvantageAirMyFan(instance, ac_key))
     if things := instance.coordinator.data.get("myThings"):
         for thing in things["things"].values():
@@ -81,15 +80,15 @@ class AdvantageAirMyFan(AdvantageAirAcEntity, SwitchEntity):
     @property
     def is_on(self) -> bool:
         """Return the MyFan status."""
-        return self._ac[ADVANTAGE_AIR_AUTOFAN]
+        return self._ac[ADVANTAGE_AIR_AUTOFAN_ENABLED]
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn MyFan on."""
-        await self.async_update_ac({ADVANTAGE_AIR_AUTOFAN: True})
+        await self.async_update_ac({ADVANTAGE_AIR_AUTOFAN_ENABLED: True})
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn MyFan off."""
-        await self.async_update_ac({ADVANTAGE_AIR_AUTOFAN: False})
+        await self.async_update_ac({ADVANTAGE_AIR_AUTOFAN_ENABLED: False})
 
 
 class AdvantageAirRelay(AdvantageAirThingEntity, SwitchEntity):

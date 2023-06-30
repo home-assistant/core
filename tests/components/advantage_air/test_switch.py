@@ -2,10 +2,10 @@
 from json import loads
 
 from homeassistant.components.advantage_air.const import (
+    ADVANTAGE_AIR_AUTOFAN,
     ADVANTAGE_AIR_STATE_OFF,
     ADVANTAGE_AIR_STATE_ON,
 )
-from homeassistant.components.advantage_air.switch import ADVANTAGE_AIR_AUTOFAN
 from homeassistant.components.switch import (
     DOMAIN as SWITCH_DOMAIN,
     SERVICE_TURN_OFF,
