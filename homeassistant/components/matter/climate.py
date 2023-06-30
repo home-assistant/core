@@ -8,6 +8,7 @@ from matter_server.client.models import device_types
 from matter_server.common.helpers.util import create_attribute_path_from_attribute
 
 from homeassistant.components.climate import (
+    ATTR_HVAC_MODE,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
     DEFAULT_MAX_TEMP,
@@ -115,6 +116,10 @@ class MatterClimate(MatterEntity, ClimateEntity):
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
+        target_hvac_mode: HVACMode | None = kwargs.get(ATTR_HVAC_MODE)
+        if target_hvac_mode is not None:
+            await self.async_set_hvac_mode(target_hvac_mode)
+
         current_mode = self.hvac_mode
         command = None
         if current_mode in (HVACMode.HEAT, HVACMode.COOL):
@@ -216,7 +221,11 @@ class MatterClimate(MatterEntity, ClimateEntity):
         )
         match control_sequence_value:
             case ControlSequenceEnum.kCoolingAndHeating | ControlSequenceEnum.kCoolingAndHeatingWithReheat:
-                self._attr_hvac_modes = [HVACMode.HEAT, HVACMode.COOL, HVACMode.HEAT_COOL]
+                self._attr_hvac_modes = [
+                    HVACMode.HEAT,
+                    HVACMode.COOL,
+                    HVACMode.HEAT_COOL,
+                ]
             case ControlSequenceEnum.kCoolingOnly | ControlSequenceEnum.kCoolingWithReheat:
                 self._attr_hvac_modes = [HVACMode.COOL]
             case ControlSequenceEnum.kHeatingOnly | ControlSequenceEnum.kHeatingWithReheat:
