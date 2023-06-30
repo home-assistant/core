@@ -40,6 +40,7 @@ ADVANTAGE_AIR_HVAC_MODES = {
 HASS_HVAC_MODES = {v: k for k, v in ADVANTAGE_AIR_HVAC_MODES.items()}
 
 ADVANTAGE_AIR_FAN_MODES = {
+    "auto": FAN_AUTO,
     "autoAA": FAN_AUTO,
     "low": FAN_LOW,
     "medium": FAN_MEDIUM,
