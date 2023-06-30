@@ -2,7 +2,7 @@
 from json import loads
 
 from homeassistant.components.advantage_air.const import (
-    ADVANTAGE_AIR_AUTOFAN,
+    ADVANTAGE_AIR_AUTOFAN_ENABLED,
     ADVANTAGE_AIR_STATE_OFF,
     ADVANTAGE_AIR_STATE_ON,
 )
@@ -100,7 +100,7 @@ async def test_cover_async_setup_entry(
     assert aioclient_mock.mock_calls[-2][0] == "GET"
     assert aioclient_mock.mock_calls[-2][1].path == "/setAircon"
     data = loads(aioclient_mock.mock_calls[-2][1].query["json"])
-    assert data["ac1"]["info"][ADVANTAGE_AIR_AUTOFAN] is True
+    assert data["ac1"]["info"][ADVANTAGE_AIR_AUTOFAN_ENABLED] is True
     assert aioclient_mock.mock_calls[-1][0] == "GET"
     assert aioclient_mock.mock_calls[-1][1].path == "/getSystemData"
 
@@ -113,7 +113,7 @@ async def test_cover_async_setup_entry(
     assert aioclient_mock.mock_calls[-2][0] == "GET"
     assert aioclient_mock.mock_calls[-2][1].path == "/setAircon"
     data = loads(aioclient_mock.mock_calls[-2][1].query["json"])
-    assert data["ac1"]["info"][ADVANTAGE_AIR_AUTOFAN] is False
+    assert data["ac1"]["info"][ADVANTAGE_AIR_AUTOFAN_ENABLED] is False
     assert aioclient_mock.mock_calls[-1][0] == "GET"
     assert aioclient_mock.mock_calls[-1][1].path == "/getSystemData"
 
