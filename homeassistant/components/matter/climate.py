@@ -150,7 +150,7 @@ class MatterClimate(MatterEntity, ClimateEntity):
             if command is None:
                 command = self._create_optional_setpoint_command(
                     clusters.Thermostat.Enums.SetpointAdjustMode.kCool,
-                    kwargs.get(ATTR_TARGET_TEMP_HIGH),
+                    temperature_high,
                     self.target_temperature_high,
                 )
         if command:
