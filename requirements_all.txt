@@ -497,7 +497,7 @@ beautifulsoup4==4.11.1
 # beewi-smartclim==0.0.10
 
 # homeassistant.components.zha
-bellows==0.35.6
+bellows==0.35.7
 
 # homeassistant.components.bmw_connected_drive
 bimmer-connected==0.13.7
@@ -880,7 +880,7 @@ google-cloud-pubsub==2.13.11
 google-cloud-texttospeech==2.12.3
 
 # homeassistant.components.google_generative_ai_conversation
-google-generativeai==0.1.0rc2
+google-generativeai==0.1.0
 
 # homeassistant.components.nest
 google-nest-sdm==2.2.5
