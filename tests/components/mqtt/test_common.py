@@ -1117,6 +1117,45 @@ async def help_test_entity_device_info_update(
     assert device.name == "Milk"
 
 
+async def help_test_entity_name(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    domain: str,
+    config: ConfigType,
+    expected_friendly_name: str | None = None,
+    device_class: str | None = None,
+) -> None:
+    """Test device name setup with and without a device_class set.
+
+    This is a test helper for the _setup_common_attributes_from_config mixin.
+    """
+    await mqtt_mock_entry()
+    # Add device settings to config
+    config = copy.deepcopy(config[mqtt.DOMAIN][domain])
+    config["device"] = copy.deepcopy(DEFAULT_CONFIG_DEVICE_INFO_ID)
+    config["unique_id"] = "veryunique"
+    expected_entity_name = "test"
+    if device_class is not None:
+        config["device_class"] = device_class
+        # Do not set a name
+        config.pop("name")
+        expected_entity_name = device_class
+
+    registry = dr.async_get(hass)
+
+    data = json.dumps(config)
+    async_fire_mqtt_message(hass, f"homeassistant/{domain}/bla/config", data)
+    await hass.async_block_till_done()
+
+    device = registry.async_get_device({("mqtt", "helloworld")})
+    assert device is not None
+
+    entity_id = f"{domain}.beer_{expected_entity_name}"
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.name == f"Beer {expected_friendly_name}"
+
+
 async def help_test_entity_id_update_subscriptions(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,

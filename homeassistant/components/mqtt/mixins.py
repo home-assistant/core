@@ -1030,8 +1030,8 @@ class MqttEntity(
         self._sub_state: dict[str, EntitySubscription] = {}
 
         # Load config
-        self._setup_common_attributes_from_config(self._config)
         self._setup_from_config(self._config)
+        self._setup_common_attributes_from_config(self._config)
 
         # Initialize entity_id from config
         self._init_entity_id()
@@ -1072,8 +1072,8 @@ class MqttEntity(
             async_handle_schema_error(discovery_payload, err)
             return
         self._config = config
-        self._setup_common_attributes_from_config(self._config)
         self._setup_from_config(self._config)
+        self._setup_common_attributes_from_config(self._config)
 
         # Prepare MQTT subscriptions
         self.attributes_prepare_discovery_update(config)
@@ -1133,10 +1133,15 @@ class MqttEntity(
         if entity_name is not UNDEFINED:
             self._attr_name = entity_name
         elif (
-            self._default_name is not UNDEFINED
-            and not self._default_to_device_class_name()
+            not (use_device_class_name := self._default_to_device_class_name())
+            and self._default_name is not UNDEFINED
         ):
+            # Assign the default name
             self._attr_name = self._default_name
+        elif use_device_class_name:
+            # Follow name of device class
+            self._attr_has_entity_name = True
+            return
         if CONF_DEVICE in config:
             # Only set has_entity_name if a valid name is set
             self._attr_has_entity_name = bool(config[CONF_DEVICE].get(CONF_NAME))
