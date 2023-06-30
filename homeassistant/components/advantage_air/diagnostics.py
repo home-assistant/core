@@ -9,7 +9,18 @@ from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN as ADVANTAGE_AIR_DOMAIN
 
-TO_REDACT = ["dealerPhoneNumber", "latitude", "logoPIN", "longitude", "postCode"]
+TO_REDACT = [
+    "dealerPhoneNumber",
+    "latitude",
+    "logoPIN",
+    "longitude",
+    "postCode",
+    "rid",
+    "deviceNames",
+    "deviceIds",
+    "deviceIdsV2",
+    "backupId",
+]
 
 
 async def async_get_config_entry_diagnostics(
@@ -20,8 +31,8 @@ async def async_get_config_entry_diagnostics(
 
     # Return only the relevant children
     return {
-        "aircon": data.get("aircon"),
-        "lights": data.get("lights"),
-        "things": data.get("things"),
+        "aircon": data.get("aircons"),
+        "lights": data.get("myLights"),
+        "things": data.get("myThings"),
         "system": async_redact_data(data["system"], TO_REDACT),
     }
