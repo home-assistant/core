@@ -1138,7 +1138,8 @@ class MqttEntity(
         ):
             self._attr_name = self._default_name
         if CONF_DEVICE in config:
-            self._attr_has_entity_name = CONF_NAME in config[CONF_DEVICE]
+            # Only set has_entity_name if a valid name is set
+            self._attr_has_entity_name = bool(config[CONF_DEVICE].get(CONF_NAME))
 
     def _setup_from_config(self, config: ConfigType) -> None:
         """(Re)Setup the entity."""
