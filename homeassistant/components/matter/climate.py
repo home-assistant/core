@@ -144,7 +144,7 @@ class MatterClimate(MatterEntity, ClimateEntity):
             # due to ha send both high and low temperature, we need to check which one is changed
             command = self._create_optional_setpoint_command(
                 clusters.Thermostat.Enums.SetpointAdjustMode.kHeat,
-                kwargs.get(ATTR_TARGET_TEMP_LOW),
+                temperature_low,
                 self.target_temperature_low,
             )
             if command is None:
