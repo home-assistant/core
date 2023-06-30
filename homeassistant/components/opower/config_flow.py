@@ -96,9 +96,7 @@ class OpowerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors = await _validate_login(self.hass, data)
             if not errors:
                 self.hass.config_entries.async_update_entry(
-                    self.reauth_entry,
-                    title=f"{data[CONF_UTILITY]} ({data[CONF_USERNAME]})",
-                    data=data,
+                    self.reauth_entry, data=data
                 )
                 await self.hass.config_entries.async_reload(self.reauth_entry.entry_id)
                 return self.async_abort(reason="reauth_successful")
@@ -106,9 +104,7 @@ class OpowerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="reauth_confirm",
             data_schema=vol.Schema(
                 {
-                    vol.Required(
-                        CONF_USERNAME, default=self.reauth_entry.data[CONF_USERNAME]
-                    ): str,
+                    vol.Required(CONF_USERNAME): self.reauth_entry.data[CONF_USERNAME],
                     vol.Required(CONF_PASSWORD): str,
                 }
             ),

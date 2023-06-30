@@ -186,7 +186,8 @@ async def test_form_valid_reauth(
         "homeassistant.components.opower.config_flow.Opower.async_login",
     ) as mock_login:
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"password": "test-password2"}
+            result["flow_id"],
+            {"username": "test-username", "password": "test-password2"},
         )
 
     assert result["type"] == FlowResultType.ABORT
