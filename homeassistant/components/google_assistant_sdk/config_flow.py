@@ -13,13 +13,7 @@ from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_entry_oauth2_flow
 
-from .const import (
-    CONF_ENABLE_CONVERSATION_AGENT,
-    CONF_LANGUAGE_CODE,
-    DEFAULT_NAME,
-    DOMAIN,
-    SUPPORTED_LANGUAGE_CODES,
-)
+from .const import CONF_LANGUAGE_CODE, DEFAULT_NAME, DOMAIN, SUPPORTED_LANGUAGE_CODES
 from .helpers import default_language_code
 
 _LOGGER = logging.getLogger(__name__)
@@ -114,12 +108,6 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                         CONF_LANGUAGE_CODE,
                         default=self.config_entry.options.get(CONF_LANGUAGE_CODE),
                     ): vol.In(SUPPORTED_LANGUAGE_CODES),
-                    vol.Required(
-                        CONF_ENABLE_CONVERSATION_AGENT,
-                        default=self.config_entry.options.get(
-                            CONF_ENABLE_CONVERSATION_AGENT
-                        ),
-                    ): bool,
                 }
             ),
         )

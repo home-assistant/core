@@ -244,6 +244,7 @@ homeassistant.components.overkiz.*
 homeassistant.components.peco.*
 homeassistant.components.persistent_notification.*
 homeassistant.components.pi_hole.*
+homeassistant.components.ping.*
 homeassistant.components.powerwall.*
 homeassistant.components.proximity.*
 homeassistant.components.prusalink.*
@@ -276,7 +277,6 @@ homeassistant.components.scene.*
 homeassistant.components.schedule.*
 homeassistant.components.scrape.*
 homeassistant.components.select.*
-homeassistant.components.senseme.*
 homeassistant.components.sensibo.*
 homeassistant.components.sensirion_ble.*
 homeassistant.components.sensor.*
