@@ -40,7 +40,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.unit_conversion import TemperatureConverter
 
-from .const import DATA_CLIENT, DOMAIN
+from .const import DATA_CLIENT, DOMAIN, LOGGER
 from .discovery import ZwaveDiscoveryInfo
 from .discovery_data_template import DynamicCurrentTempClimateDataTemplate
 from .entity import ZWaveBaseEntity
@@ -236,6 +236,13 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
             else:
                 # treat value as hvac preset
                 all_presets[mode_name] = mode_id
+                # Dry and Fan modes will be migrated to hvac modes
+                # in the future, so we will have them as both hvac modes
+                # and presets for now.
+                if mode_id in (ThermostatMode.DRY, ThermostatMode.FAN):
+                    if hass_mode := ZW_HVAC_MODE_MAP.get(mode_id):
+                        all_modes[hass_mode] = mode_id
+
         self._hvac_modes = all_modes
         self._hvac_presets = all_presets
 
@@ -487,6 +494,12 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
         preset_mode_value = self._hvac_presets.get(preset_mode)
         if preset_mode_value is None:
             raise ValueError(f"Received an invalid preset mode: {preset_mode}")
+        # show a deprecation warning if preset_mode is dry or fan
+        if preset_mode_value in (ThermostatMode.DRY, ThermostatMode.FAN):
+            LOGGER.warning(
+                "Dry and Fan preset modes are deprecated and will be removed. "
+                "Use the corresponding HVAC mode instead"
+            )
         await self._async_set_value(self._current_mode, preset_mode_value)
 
 
