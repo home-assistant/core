@@ -28,6 +28,11 @@ from .helpers import get_matter
 from .models import MatterDiscoverySchema
 
 TEMPERATURE_SCALING_FACTOR = 100
+HVAC_SYSTEM_MODE_MAP = {
+    HVACMode.HEAT: 4,
+    HVACMode.COOL: 3,
+    HVACMode.HEAT_COOL: 1,
+}
 SystemModeEnum = clusters.Thermostat.Enums.ThermostatSystemMode
 ControlSequenceEnum = clusters.Thermostat.Enums.ThermostatControlSequence
 
@@ -56,40 +61,30 @@ class MatterClimate(MatterEntity, ClimateEntity):
     @property
     def min_temp(self) -> float:
         """Return the minimum temperature."""
-        value: float | None = None
-        if self._attr_hvac_mode == HVACMode.COOL:
-            value = self._get_temperature_in_degrees(
-                clusters.Thermostat.Attributes.AbsMinCoolSetpointLimit
-            )
-        elif self._attr_hvac_mode == HVACMode.HEAT:
-            value = self._get_temperature_in_degrees(
-                clusters.Thermostat.Attributes.AbsMinHeatSetpointLimit
-            )
-        elif self._attr_hvac_mode == HVACMode.HEAT_COOL:
-            value = self._get_temperature_in_degrees(
-                clusters.Thermostat.Attributes.AbsMinHeatSetpointLimit
-            )
-        if value is not None:
+        match self._attr_hvac_mode:
+            case HVACMode.COOL:
+                attribute = clusters.Thermostat.Attributes.AbsMinCoolSetpointLimit
+            case HVACMode.HEAT | HVACMode.HEAT_COOL:
+                attribute = clusters.Thermostat.Attributes.AbsMinHeatSetpointLimit
+            case _:
+                return DEFAULT_MIN_TEMP
+
+        if (value := self._get_temperature_in_degrees(attribute)) is not None:
             return value
         return DEFAULT_MIN_TEMP
 
     @property
     def max_temp(self) -> float:
         """Return the maximum temperature."""
-        value: float | None = None
-        if self._attr_hvac_mode == HVACMode.COOL:
-            value = self._get_temperature_in_degrees(
-                clusters.Thermostat.Attributes.AbsMaxCoolSetpointLimit
-            )
-        elif self._attr_hvac_mode == HVACMode.HEAT:
-            value = self._get_temperature_in_degrees(
-                clusters.Thermostat.Attributes.AbsMaxHeatSetpointLimit
-            )
-        elif self._attr_hvac_mode == HVACMode.HEAT_COOL:
-            value = self._get_temperature_in_degrees(
-                clusters.Thermostat.Attributes.AbsMaxCoolSetpointLimit
-            )
-        if value is not None:
+        match self._attr_hvac_mode:
+            case HVACMode.HEAT:
+                attribute = clusters.Thermostat.Attributes.AbsMaxHeatSetpointLimit
+            case HVACMode.COOL | HVACMode.HEAT_COOL:
+                attribute = clusters.Thermostat.Attributes.AbsMaxCoolSetpointLimit
+            case _:
+                return DEFAULT_MAX_TEMP
+
+        if (value := self._get_temperature_in_degrees(attribute)) is not None:
             return value
         return DEFAULT_MAX_TEMP
 
@@ -162,18 +157,13 @@ class MatterClimate(MatterEntity, ClimateEntity):
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
-        hvac_system_mode_map = {
-            HVACMode.HEAT: 4,
-            HVACMode.COOL: 3,
-            HVACMode.HEAT_COOL: 1,
-        }
         system_mode_path = create_attribute_path_from_attribute(
             endpoint_id=self._endpoint.endpoint_id,
             attribute=clusters.Thermostat.Attributes.SystemMode,
         )
-        system_mode_value = hvac_system_mode_map.get(hvac_mode)
+        system_mode_value = HVAC_SYSTEM_MODE_MAP.get(hvac_mode)
         if system_mode_value is None:
-            return
+            raise ValueError("Unsupported hvac mode in Matter")
         await self.matter_client.write_attribute(
             node_id=self._endpoint.node.node_id,
             attribute_path=system_mode_path,
