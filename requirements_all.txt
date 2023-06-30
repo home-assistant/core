@@ -497,7 +497,7 @@ beautifulsoup4==4.11.1
 # beewi-smartclim==0.0.10
 
 # homeassistant.components.zha
-bellows==0.35.6
+bellows==0.35.7
 
 # homeassistant.components.bmw_connected_drive
 bimmer-connected==0.13.7
