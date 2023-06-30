@@ -36,12 +36,3 @@ class LocalCalendarStore:
     def _store(self, ics_content: str) -> None:
         """Persist the calendar to storage."""
         self._path.write_text(ics_content)
-
-    async def async_unlink(self) -> None:
-        """Remove the calendar storage."""
-        async with self._lock:
-            await self._hass.async_add_executor_job(self._unlink)
-
-    def _unlink(self) -> None:
-        """Remove the calendar to storage."""
-        self._path.unlink()
