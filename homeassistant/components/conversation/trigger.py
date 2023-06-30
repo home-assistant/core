@@ -21,7 +21,7 @@ def has_no_punctuation(value: list[str]) -> list[str]:
     """Validate result does not contain punctuation."""
     for sentence in value:
         if PUNCTUATION.search(sentence):
-            raise vol.Invalid(f"contains punctuation: {sentence}")
+            raise vol.Invalid("sentence should not contain punctuation")
 
     return value
 
