@@ -16,10 +16,12 @@ async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, config_entry: ConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    data = hass.data[ADVANTAGE_AIR_DOMAIN][config_entry.entry_id]["coordinator"].data
+    data = hass.data[ADVANTAGE_AIR_DOMAIN][config_entry.entry_id].coordinator.data
 
     # Return only the relevant children
     return {
-        "aircons": data["aircons"],
+        "aircon": data.get("aircon"),
+        "lights": data.get("lights"),
+        "things": data.get("things"),
         "system": async_redact_data(data["system"], TO_REDACT),
     }
