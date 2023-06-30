@@ -1,4 +1,5 @@
 """Test the Advantage Air Diagnostics."""
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.core import HomeAssistant
 
@@ -17,6 +18,7 @@ async def test_select_async_setup_entry(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test select platform."""
 
@@ -27,4 +29,4 @@ async def test_select_async_setup_entry(
 
     entry = await add_mock_config(hass)
     diag = await get_diagnostics_for_config_entry(hass, hass_client, entry)
-    assert diag
+    assert diag == snapshot
