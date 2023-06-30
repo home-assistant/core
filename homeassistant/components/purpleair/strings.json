@@ -79,7 +79,8 @@
       "init": {
         "menu_options": {
           "add_sensor": "Add sensor",
-          "remove_sensor": "Remove sensor"
+          "remove_sensor": "Remove sensor",
+          "settings": "Settings"
         }
       },
       "remove_sensor": {
@@ -89,6 +90,12 @@
         },
         "data_description": {
           "sensor_device_id": "The sensor to remove"
+        }
+      },
+      "settings": {
+        "title": "Settings",
+        "data": {
+          "show_on_map": "Show configured sensor locations on the map"
         }
       }
     },
