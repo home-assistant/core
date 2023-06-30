@@ -1,7 +1,9 @@
 """Test conversation triggers."""
 import pytest
+import voluptuous as vol
 
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import trigger
 from homeassistant.setup import async_setup_component
 
 from tests.common import async_mock_service
@@ -165,3 +167,24 @@ async def test_same_sentence_multiple_triggers(
         ("trigger1", "conversation", "hello"),
         ("trigger2", "conversation", "hello"),
     }
+
+
+@pytest.mark.parametrize(
+    "command",
+    ["hello?", "hello!", "4 a.m."],
+)
+async def test_fails_on_punctuation(hass: HomeAssistant, command: str) -> None:
+    """Test that validation fails when sentences contain punctuation."""
+    with pytest.raises(vol.Invalid):
+        await trigger.async_validate_trigger_config(
+            hass,
+            [
+                {
+                    "id": "trigger1",
+                    "platform": "conversation",
+                    "command": [
+                        command,
+                    ],
+                },
+            ],
+        )
