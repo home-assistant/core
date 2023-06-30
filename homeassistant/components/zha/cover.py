@@ -318,16 +318,12 @@ class KeenVent(Shade):
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
         position = self._position or 100
-        tasks = [
+        await asyncio.gather(
             self._level_cluster_handler.move_to_level_with_on_off(
                 position * 255 / 100, 1
             ),
             self._on_off_cluster_handler.on(),
-        ]
-        results = await asyncio.gather(*tasks, return_exceptions=True)
-        if any(isinstance(result, Exception) for result in results):
-            self.debug("couldn't open cover")
-            return
+        )
 
         self._is_open = True
         self._position = position

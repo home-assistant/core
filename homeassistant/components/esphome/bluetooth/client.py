@@ -233,7 +233,7 @@ class ESPHomeClient(BaseBleakClient):
     ) -> bool:
         """Connect to a specified Peripheral.
 
-        Keyword Args:
+        **kwargs:
             timeout (float): Timeout for required
                 ``BleakScanner.find_device_by_address`` call. Defaults to 10.0.
 

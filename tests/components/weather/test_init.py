@@ -6,12 +6,17 @@ import pytest
 from homeassistant.components.weather import (
     ATTR_CONDITION_SUNNY,
     ATTR_FORECAST,
+    ATTR_FORECAST_APPARENT_TEMP,
+    ATTR_FORECAST_DEW_POINT,
+    ATTR_FORECAST_HUMIDITY,
     ATTR_FORECAST_PRECIPITATION,
     ATTR_FORECAST_PRESSURE,
     ATTR_FORECAST_TEMP,
     ATTR_FORECAST_TEMP_LOW,
     ATTR_FORECAST_WIND_BEARING,
+    ATTR_FORECAST_WIND_GUST_SPEED,
     ATTR_FORECAST_WIND_SPEED,
+    ATTR_WEATHER_APPARENT_TEMPERATURE,
     ATTR_WEATHER_OZONE,
     ATTR_WEATHER_PRECIPITATION_UNIT,
     ATTR_WEATHER_PRESSURE,
@@ -21,12 +26,18 @@ from homeassistant.components.weather import (
     ATTR_WEATHER_VISIBILITY,
     ATTR_WEATHER_VISIBILITY_UNIT,
     ATTR_WEATHER_WIND_BEARING,
+    ATTR_WEATHER_WIND_GUST_SPEED,
     ATTR_WEATHER_WIND_SPEED,
     ATTR_WEATHER_WIND_SPEED_UNIT,
     ROUNDING_PRECISION,
     Forecast,
     WeatherEntity,
     round_temperature,
+)
+from homeassistant.components.weather.const import (
+    ATTR_WEATHER_CLOUD_COVERAGE,
+    ATTR_WEATHER_DEW_POINT,
+    ATTR_WEATHER_HUMIDITY,
 )
 from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
@@ -63,9 +74,12 @@ class MockWeatherEntity(WeatherEntity):
         self._attr_native_pressure = 10
         self._attr_native_pressure_unit = UnitOfPressure.HPA
         self._attr_native_temperature = 20
+        self._attr_native_apparent_temperature = 25
+        self._attr_native_dew_point = 2
         self._attr_native_temperature_unit = UnitOfTemperature.CELSIUS
         self._attr_native_visibility = 30
         self._attr_native_visibility_unit = UnitOfLength.KILOMETERS
+        self._attr_native_wind_gust_speed = 10
         self._attr_native_wind_speed = 3
         self._attr_native_wind_speed_unit = UnitOfSpeed.METERS_PER_SECOND
         self._attr_forecast = [
@@ -73,6 +87,7 @@ class MockWeatherEntity(WeatherEntity):
                 datetime=datetime(2022, 6, 20, 20, 00, 00),
                 native_precipitation=1,
                 native_temperature=20,
+                native_dew_point=2,
             )
         ]
 
@@ -85,6 +100,8 @@ class MockWeatherEntityPrecision(WeatherEntity):
         super().__init__()
         self._attr_condition = ATTR_CONDITION_SUNNY
         self._attr_native_temperature = 20.3
+        self._attr_native_apparent_temperature = 25.3
+        self._attr_native_dew_point = 2.3
         self._attr_native_temperature_unit = UnitOfTemperature.CELSIUS
         self._attr_precision = PRECISION_HALVES
 
@@ -153,21 +170,48 @@ async def test_temperature(
     """Test temperature."""
     hass.config.units = unit_system
     native_value = 38
+    apparent_native_value = 45
+    dew_point_native_value = 32
     state_value = TemperatureConverter.convert(native_value, native_unit, state_unit)
+    apparent_state_value = TemperatureConverter.convert(
+        apparent_native_value, native_unit, state_unit
+    )
 
+    state_value = TemperatureConverter.convert(native_value, native_unit, state_unit)
+    dew_point_state_value = TemperatureConverter.convert(
+        dew_point_native_value, native_unit, state_unit
+    )
     entity0 = await create_entity(
-        hass, native_temperature=native_value, native_temperature_unit=native_unit
+        hass,
+        native_temperature=native_value,
+        native_temperature_unit=native_unit,
+        native_apparent_temperature=apparent_native_value,
+        native_dew_point=dew_point_native_value,
     )
 
     state = hass.states.get(entity0.entity_id)
     forecast = state.attributes[ATTR_FORECAST][0]
 
     expected = state_value
+    apparent_expected = apparent_state_value
+    dew_point_expected = dew_point_state_value
     assert float(state.attributes[ATTR_WEATHER_TEMPERATURE]) == pytest.approx(
         expected, rel=0.1
     )
+    assert float(state.attributes[ATTR_WEATHER_APPARENT_TEMPERATURE]) == pytest.approx(
+        apparent_expected, rel=0.1
+    )
+    assert float(state.attributes[ATTR_WEATHER_DEW_POINT]) == pytest.approx(
+        dew_point_expected, rel=0.1
+    )
     assert state.attributes[ATTR_WEATHER_TEMPERATURE_UNIT] == state_unit
     assert float(forecast[ATTR_FORECAST_TEMP]) == pytest.approx(expected, rel=0.1)
+    assert float(forecast[ATTR_FORECAST_APPARENT_TEMP]) == pytest.approx(
+        apparent_expected, rel=0.1
+    )
+    assert float(forecast[ATTR_FORECAST_DEW_POINT]) == pytest.approx(
+        dew_point_expected, rel=0.1
+    )
     assert float(forecast[ATTR_FORECAST_TEMP_LOW]) == pytest.approx(expected, rel=0.1)
 
 
@@ -189,22 +233,44 @@ async def test_temperature_no_unit(
     """Test temperature when the entity does not declare a native unit."""
     hass.config.units = unit_system
     native_value = 38
+    dew_point_native_value = 32
+    apparent_temp_native_value = 45
     state_value = native_value
+    dew_point_state_value = dew_point_native_value
+    apparent_temp_state_value = apparent_temp_native_value
 
     entity0 = await create_entity(
-        hass, native_temperature=native_value, native_temperature_unit=native_unit
+        hass,
+        native_temperature=native_value,
+        native_temperature_unit=native_unit,
+        native_dew_point=dew_point_native_value,
+        native_apparent_temperature=apparent_temp_native_value,
     )
 
     state = hass.states.get(entity0.entity_id)
     forecast = state.attributes[ATTR_FORECAST][0]
 
     expected = state_value
+    dew_point_expected = dew_point_state_value
+    expected_apparent_temp = apparent_temp_state_value
     assert float(state.attributes[ATTR_WEATHER_TEMPERATURE]) == pytest.approx(
         expected, rel=0.1
     )
+    assert float(state.attributes[ATTR_WEATHER_DEW_POINT]) == pytest.approx(
+        dew_point_expected, rel=0.1
+    )
+    assert float(state.attributes[ATTR_WEATHER_APPARENT_TEMPERATURE]) == pytest.approx(
+        expected_apparent_temp, rel=0.1
+    )
     assert state.attributes[ATTR_WEATHER_TEMPERATURE_UNIT] == state_unit
     assert float(forecast[ATTR_FORECAST_TEMP]) == pytest.approx(expected, rel=0.1)
+    assert float(forecast[ATTR_FORECAST_DEW_POINT]) == pytest.approx(
+        dew_point_expected, rel=0.1
+    )
     assert float(forecast[ATTR_FORECAST_TEMP_LOW]) == pytest.approx(expected, rel=0.1)
+    assert float(forecast[ATTR_FORECAST_APPARENT_TEMP]) == pytest.approx(
+        expected_apparent_temp, rel=0.1
+    )
 
 
 @pytest.mark.parametrize("native_unit", (UnitOfPressure.INHG, UnitOfPressure.INHG))
@@ -306,6 +372,49 @@ async def test_wind_speed(
         expected, rel=1e-2
     )
     assert float(forecast[ATTR_FORECAST_WIND_SPEED]) == pytest.approx(
+        expected, rel=1e-2
+    )
+
+
+@pytest.mark.parametrize(
+    "native_unit",
+    (
+        UnitOfSpeed.MILES_PER_HOUR,
+        UnitOfSpeed.KILOMETERS_PER_HOUR,
+        UnitOfSpeed.METERS_PER_SECOND,
+    ),
+)
+@pytest.mark.parametrize(
+    ("state_unit", "unit_system"),
+    (
+        (UnitOfSpeed.KILOMETERS_PER_HOUR, METRIC_SYSTEM),
+        (UnitOfSpeed.MILES_PER_HOUR, US_CUSTOMARY_SYSTEM),
+    ),
+)
+async def test_wind_gust_speed(
+    hass: HomeAssistant,
+    enable_custom_integrations: None,
+    native_unit: str,
+    state_unit: str,
+    unit_system,
+) -> None:
+    """Test wind speed."""
+    hass.config.units = unit_system
+    native_value = 10
+    state_value = SpeedConverter.convert(native_value, native_unit, state_unit)
+
+    entity0 = await create_entity(
+        hass, native_wind_gust_speed=native_value, native_wind_speed_unit=native_unit
+    )
+
+    state = hass.states.get(entity0.entity_id)
+    forecast = state.attributes[ATTR_FORECAST][0]
+
+    expected = state_value
+    assert float(state.attributes[ATTR_WEATHER_WIND_GUST_SPEED]) == pytest.approx(
+        expected, rel=1e-2
+    )
+    assert float(forecast[ATTR_FORECAST_WIND_GUST_SPEED]) == pytest.approx(
         expected, rel=1e-2
     )
 
@@ -474,21 +583,41 @@ async def test_precipitation_no_unit(
     )
 
 
-async def test_wind_bearing_and_ozone(
+async def test_wind_bearing_ozone_and_cloud_coverage(
     hass: HomeAssistant,
     enable_custom_integrations: None,
 ) -> None:
-    """Test wind bearing."""
+    """Test wind bearing, ozone and cloud coverage."""
     wind_bearing_value = 180
     ozone_value = 10
+    cloud_coverage = 75
 
     entity0 = await create_entity(
-        hass, wind_bearing=wind_bearing_value, ozone=ozone_value
+        hass,
+        wind_bearing=wind_bearing_value,
+        ozone=ozone_value,
+        cloud_coverage=cloud_coverage,
     )
 
     state = hass.states.get(entity0.entity_id)
     assert float(state.attributes[ATTR_WEATHER_WIND_BEARING]) == 180
     assert float(state.attributes[ATTR_WEATHER_OZONE]) == 10
+    assert float(state.attributes[ATTR_WEATHER_CLOUD_COVERAGE]) == 75
+
+
+async def test_humidity(
+    hass: HomeAssistant,
+    enable_custom_integrations: None,
+) -> None:
+    """Test humidity."""
+    humidity_value = 80.2
+
+    entity0 = await create_entity(hass, humidity=humidity_value)
+
+    state = hass.states.get(entity0.entity_id)
+    forecast = state.attributes[ATTR_FORECAST][0]
+    assert float(state.attributes[ATTR_WEATHER_HUMIDITY]) == 80
+    assert float(forecast[ATTR_FORECAST_HUMIDITY]) == 80
 
 
 async def test_none_forecast(
@@ -925,7 +1054,9 @@ async def test_precision_for_temperature(hass: HomeAssistant) -> None:
 
     assert weather.condition == ATTR_CONDITION_SUNNY
     assert weather.native_temperature == 20.3
+    assert weather.native_dew_point == 2.3
     assert weather._temperature_unit == UnitOfTemperature.CELSIUS
     assert weather.precision == PRECISION_HALVES
 
     assert weather.state_attributes[ATTR_WEATHER_TEMPERATURE] == 20.5
+    assert weather.state_attributes[ATTR_WEATHER_DEW_POINT] == 2.5

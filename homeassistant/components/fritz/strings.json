@@ -61,9 +61,6 @@
     "button": {
       "cleanup": { "name": "Cleanup" },
       "firmware_update": { "name": "Firmware update" },
-      "reboot": {
-        "name": "[%key:component::button::entity_component::restart::name%]"
-      },
       "reconnect": { "name": "Reconnect" }
     },
     "sensor": {

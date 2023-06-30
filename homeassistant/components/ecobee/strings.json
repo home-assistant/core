@@ -2,14 +2,12 @@
   "config": {
     "step": {
       "user": {
-        "title": "ecobee API key",
         "description": "Please enter the API key obtained from ecobee.com.",
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]"
         }
       },
       "authorize": {
-        "title": "Authorize app on ecobee.com",
         "description": "Please authorize this app at https://www.ecobee.com/consumerportal/index.html with PIN code:\n\n{pin}\n\nThen, press Submit."
       }
     },
@@ -19,6 +17,16 @@
     },
     "abort": {
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
+    }
+  },
+  "entity": {
+    "number": {
+      "ventilator_min_type_home": {
+        "name": "Ventilator min time home"
+      },
+      "ventilator_min_type_away": {
+        "name": "Ventilator min time away"
+      }
     }
   }
 }
