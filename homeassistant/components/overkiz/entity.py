@@ -120,4 +120,4 @@ class OverkizDescriptiveEntity(OverkizEntity):
             # and append the name of the type of entity
             self._attr_name = f"{self.device.label} {description.name}"
         else:
-            self._attr_name = f"{description.name}"
+            self._attr_name = description.name
