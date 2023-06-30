@@ -168,7 +168,7 @@ BRIDGE_SCHEMA = vol.All(
             vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
             vol.Optional(CONF_IP_ADDRESS): vol.All(ipaddress.ip_address, cv.string),
             vol.Optional(CONF_ADVERTISE_IP): vol.All(
-                cv.ensure_list, ipaddress.ip_address, cv.string
+                cv.ensure_list, [ipaddress.ip_address], [cv.string]
             ),
             vol.Optional(CONF_FILTER, default={}): BASE_FILTER_SCHEMA,
             vol.Optional(CONF_ENTITY_CONFIG, default={}): validate_entity_config,

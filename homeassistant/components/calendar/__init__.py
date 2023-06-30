@@ -60,6 +60,7 @@ from .const import (
     EVENT_TIME_FIELDS,
     EVENT_TYPES,
     EVENT_UID,
+    LIST_EVENT_FIELDS,
     CalendarEntityFeature,
 )
 
@@ -413,6 +414,17 @@ def _api_event_dict_factory(obj: Iterable[tuple[str, Any]]) -> dict[str, Any]:
         else:
             result[name] = value
     return result
+
+
+def _list_events_dict_factory(
+    obj: Iterable[tuple[str, Any]]
+) -> dict[str, JsonValueType]:
+    """Convert CalendarEvent dataclass items to dictionary of attributes."""
+    return {
+        name: value
+        for name, value in obj
+        if name in LIST_EVENT_FIELDS and value is not None
+    }
 
 
 def _get_datetime_local(
@@ -782,9 +794,9 @@ async def async_list_events_service(
     else:
         end = service_call.data[EVENT_END_DATETIME]
     calendar_event_list = await calendar.async_get_events(calendar.hass, start, end)
-    events: list[JsonValueType] = [
-        dataclasses.asdict(event) for event in calendar_event_list
-    ]
     return {
-        "events": events,
+        "events": [
+            dataclasses.asdict(event, dict_factory=_list_events_dict_factory)
+            for event in calendar_event_list
+        ]
     }
