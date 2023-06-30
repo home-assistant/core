@@ -82,7 +82,7 @@ class WirelessTagSwitch(WirelessTagBaseSensor, SwitchEntity):
         super().__init__(api, tag)
         self.entity_description = description
         self._name = f"{self._tag.name} {description.name}"
-        self._attr_unique_id = f"{WIRELESSTAG_DOMAIN}_{self.tag_id}_{description.key}"
+        self._attr_unique_id = f"{self.tag_id}_{description.key}"
 
     def turn_on(self, **kwargs: Any) -> None:
         """Turn on the switch."""
