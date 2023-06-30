@@ -6,7 +6,6 @@ import pytest
 from homeassistant.components.advantage_air.climate import (
     ADVANTAGE_AIR_COOL_TARGET,
     ADVANTAGE_AIR_HEAT_TARGET,
-    HASS_FAN_MODES,
     HASS_HVAC_MODES,
 )
 from homeassistant.components.advantage_air.const import (
@@ -118,7 +117,7 @@ async def test_climate_async_setup_entry(
     assert aioclient_mock.mock_calls[-2][0] == "GET"
     assert aioclient_mock.mock_calls[-2][1].path == "/setAircon"
     data = loads(aioclient_mock.mock_calls[-2][1].query["json"])
-    assert data["ac1"]["info"]["fan"] == HASS_FAN_MODES[FAN_LOW]
+    assert data["ac1"]["info"]["fan"] == FAN_LOW
     assert aioclient_mock.mock_calls[-1][0] == "GET"
     assert aioclient_mock.mock_calls[-1][1].path == "/getSystemData"
 
