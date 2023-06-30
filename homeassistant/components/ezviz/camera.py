@@ -294,7 +294,7 @@ class EzvizCamera(EzvizEntity, Camera):
             self.hass,
             DOMAIN,
             "service_depreciation_alarm_sound_level",
-            breaks_in_ha_version="2023.9.0",
+            breaks_in_ha_version="2024.2.0",
             is_fixable=False,
             severity=ir.IssueSeverity.WARNING,
             translation_key="service_depreciation_alarm_sound_level",
