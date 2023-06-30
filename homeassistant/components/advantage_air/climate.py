@@ -48,7 +48,6 @@ ADVANTAGE_AIR_FAN_MODES = {
 HASS_FAN_MODES = {v: k for k, v in ADVANTAGE_AIR_FAN_MODES.items()}
 FAN_SPEEDS = {FAN_LOW: 30, FAN_MEDIUM: 60, FAN_HIGH: 100}
 
-ADVANTAGE_AIR_AUTOFAN = "aaAutoFanModeEnabled"
 ADVANTAGE_AIR_MYZONE = "MyZone"
 ADVANTAGE_AIR_MYAUTO = "MyAuto"
 ADVANTAGE_AIR_MYAUTO_ENABLED = "myAutoModeEnabled"
@@ -85,7 +84,7 @@ async def async_setup_entry(
 class AdvantageAirAC(AdvantageAirAcEntity, ClimateEntity):
     """AdvantageAir AC unit."""
 
-    _attr_fan_modes = [FAN_LOW, FAN_MEDIUM, FAN_HIGH]
+    _attr_fan_modes = [FAN_LOW, FAN_MEDIUM, FAN_HIGH, FAN_AUTO]
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_target_temperature_step = PRECISION_WHOLE
     _attr_max_temp = 32
@@ -116,10 +115,6 @@ class AdvantageAirAC(AdvantageAirAcEntity, ClimateEntity):
         elif not self._ac.get(ADVANTAGE_AIR_MYTEMP_ENABLED):
             # MyZone
             self._attr_supported_features |= ClimateEntityFeature.TARGET_TEMPERATURE
-
-        # Add "ezfan" mode if supported
-        if self._ac.get(ADVANTAGE_AIR_AUTOFAN):
-            self._attr_fan_modes += [FAN_AUTO]
 
     @property
     def target_temperature(self) -> float | None:

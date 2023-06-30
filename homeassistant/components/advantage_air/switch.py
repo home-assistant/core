@@ -14,6 +14,8 @@ from .const import (
 from .entity import AdvantageAirAcEntity, AdvantageAirThingEntity
 from .models import AdvantageAirData
 
+ADVANTAGE_AIR_AUTOFAN = "aaAutoFanModeEnabled"
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -29,6 +31,8 @@ async def async_setup_entry(
         for ac_key, ac_device in aircons.items():
             if ac_device["info"]["freshAirStatus"] != "none":
                 entities.append(AdvantageAirFreshAir(instance, ac_key))
+            if ADVANTAGE_AIR_AUTOFAN in ac_device["info"]:
+                entities.append(AdvantageAirMyFan(instance, ac_key))
     if things := instance.coordinator.data.get("myThings"):
         for thing in things["things"].values():
             if thing["channelDipState"] == 8:  # 8 = Other relay
@@ -60,6 +64,32 @@ class AdvantageAirFreshAir(AdvantageAirAcEntity, SwitchEntity):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn fresh air off."""
         await self.async_update_ac({"freshAirStatus": ADVANTAGE_AIR_STATE_OFF})
+
+
+class AdvantageAirMyFan(AdvantageAirAcEntity, SwitchEntity):
+    """Representation of Advantage Air MyFan control."""
+
+    _attr_icon = "mdi:fan-auto"
+    _attr_name = "MyFan"
+    _attr_device_class = SwitchDeviceClass.SWITCH
+
+    def __init__(self, instance: AdvantageAirData, ac_key: str) -> None:
+        """Initialize an Advantage Air MyFan control."""
+        super().__init__(instance, ac_key)
+        self._attr_unique_id += "-myfan"
+
+    @property
+    def is_on(self) -> bool:
+        """Return the MyFan status."""
+        return self._ac[ADVANTAGE_AIR_AUTOFAN]
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn MyFan on."""
+        await self.async_update_ac({ADVANTAGE_AIR_AUTOFAN: True})
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn MyFan off."""
+        await self.async_update_ac({ADVANTAGE_AIR_AUTOFAN: False})
 
 
 class AdvantageAirRelay(AdvantageAirThingEntity, SwitchEntity):
