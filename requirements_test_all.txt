@@ -418,7 +418,7 @@ base36==0.1.1
 beautifulsoup4==4.11.1
 
 # homeassistant.components.zha
-bellows==0.35.6
+bellows==0.35.7
 
 # homeassistant.components.bmw_connected_drive
 bimmer-connected==0.13.7
@@ -448,7 +448,7 @@ bluetooth-auto-recovery==1.2.0
 # homeassistant.components.esphome
 # homeassistant.components.ld2410_ble
 # homeassistant.components.led_ble
-bluetooth-data-tools==1.2.0
+bluetooth-data-tools==1.3.0
 
 # homeassistant.components.bond
 bond-async==0.1.23
@@ -690,7 +690,7 @@ google-api-python-client==2.71.0
 google-cloud-pubsub==2.13.11
 
 # homeassistant.components.google_generative_ai_conversation
-google-generativeai==0.1.0rc2
+google-generativeai==0.1.0
 
 # homeassistant.components.nest
 google-nest-sdm==2.2.5
@@ -763,7 +763,7 @@ hole==0.8.0
 holidays==0.21.13
 
 # homeassistant.components.frontend
-home-assistant-frontend==20230628.0
+home-assistant-frontend==20230629.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2023.6.28
@@ -1565,7 +1565,7 @@ python-picnic-api==1.1.0
 python-qbittorrent==0.4.3
 
 # homeassistant.components.roborock
-python-roborock==0.23.6
+python-roborock==0.29.2
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.33

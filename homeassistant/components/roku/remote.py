@@ -37,6 +37,8 @@ async def async_setup_entry(
 class RokuRemote(RokuEntity, RemoteEntity):
     """Device that sends commands to an Roku."""
 
+    _attr_name = None
+
     @property
     def is_on(self) -> bool:
         """Return true if device is on."""
