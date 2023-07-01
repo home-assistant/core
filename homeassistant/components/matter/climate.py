@@ -41,7 +41,7 @@ ControlSequenceEnum = clusters.Thermostat.Enums.ThermostatControlSequence
 
 
 class ThermostatFeature(IntEnum):
-    """Thermostat FeatureMap, Matter spec Thermostat 3.1"""
+    """Thermostat FeatureMap, Matter spec Thermostat 3.1."""
 
     HEAT = 1  # 1 << 0 = 1
     COOL = 2  # 1 << 1 = 2
