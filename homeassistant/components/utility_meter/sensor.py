@@ -94,7 +94,6 @@ DEVICE_CLASS_MAP = {
     UnitOfEnergy.KILO_WATT_HOUR: SensorDeviceClass.ENERGY,
 }
 
-ICON = "mdi:counter"
 
 PRECISION = 3
 PAUSED = "paused"
@@ -323,6 +322,7 @@ class UtilitySensorExtraStoredData(SensorExtraStoredData):
 class UtilityMeterSensor(RestoreSensor):
     """Representation of an utility meter sensor."""
 
+    _attr_icon = "mdi:counter"
     _attr_should_poll = False
 
     def __init__(
@@ -411,7 +411,7 @@ class UtilityMeterSensor(RestoreSensor):
         if (old_state_val := self._validate_state(old_state)) is not None:
             return new_state_val - old_state_val
 
-        _LOGGER.warning(
+        _LOGGER.debug(
             "%s received an invalid state change coming from %s (%s > %s)",
             self.name,
             self._sensor_source_id,
@@ -676,11 +676,6 @@ class UtilityMeterSensor(RestoreSensor):
             state_attr[ATTR_LAST_RESET] = last_reset.isoformat()
 
         return state_attr
-
-    @property
-    def icon(self):
-        """Return the icon to use in the frontend, if any."""
-        return ICON
 
     @property
     def extra_restore_state_data(self) -> UtilitySensorExtraStoredData:

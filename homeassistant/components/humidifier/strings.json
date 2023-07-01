@@ -26,6 +26,34 @@
       "state": {
         "off": "[%key:common::state::off%]",
         "on": "[%key:common::state::on%]"
+      },
+      "state_attributes": {
+        "available_modes": {
+          "name": "Available modes"
+        },
+        "humidity": {
+          "name": "Target humidity"
+        },
+        "max_humidity": {
+          "name": "Max target humidity"
+        },
+        "min_humidity": {
+          "name": "Min target humidity"
+        },
+        "mode": {
+          "name": "Mode",
+          "state": {
+            "normal": "Normal",
+            "eco": "Eco",
+            "away": "Away",
+            "boost": "Boost",
+            "comfort": "Comfort",
+            "home": "Home",
+            "sleep": "Sleep",
+            "auto": "Auto",
+            "baby": "Baby"
+          }
+        }
       }
     },
     "dehumidifier": {
@@ -33,6 +61,12 @@
     },
     "humidifier": {
       "name": "[%key:component::humidifier::entity_component::_::name%]"
+    }
+  },
+  "issues": {
+    "platform_integration_no_support": {
+      "title": "[%key:common::issues::platform_integration_no_support_title%]",
+      "description": "[%key:common::issues::platform_integration_no_support_description%]"
     }
   }
 }

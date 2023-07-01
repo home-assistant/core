@@ -47,6 +47,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     component = hass.data[DOMAIN] = EntityComponent[BaseTrackerEntity](
         LOGGER, DOMAIN, hass
     )
+    component.register_shutdown()
 
     # Clean up old devices created by device tracker entities in the past.
     # Can be removed after 2022.6
@@ -175,7 +176,9 @@ def _async_register_mac(
         # Enable entity
         ent_reg.async_update_entity(entity_id, disabled_by=None)
 
-    hass.bus.async_listen(dr.EVENT_DEVICE_REGISTRY_UPDATED, handle_device_event)
+    hass.bus.async_listen(
+        dr.EVENT_DEVICE_REGISTRY_UPDATED, handle_device_event, run_immediately=True
+    )
 
 
 class BaseTrackerEntity(Entity):

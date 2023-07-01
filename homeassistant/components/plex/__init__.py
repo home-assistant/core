@@ -35,6 +35,7 @@ from .const import (
     CONF_SERVER_IDENTIFIER,
     DISPATCHERS,
     DOMAIN,
+    INVALID_TOKEN_MESSAGE,
     PLATFORMS,
     PLATFORMS_COMPLETED,
     PLEX_SERVER_CONFIG,
@@ -153,6 +154,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         plexapi.exceptions.BadRequest,
         plexapi.exceptions.NotFound,
     ) as error:
+        if INVALID_TOKEN_MESSAGE in str(error):
+            raise ConfigEntryAuthFailed(
+                "Token not accepted, please reauthenticate Plex server"
+                f" '{entry.data[CONF_SERVER]}'"
+            ) from error
         _LOGGER.error(
             "Login to %s failed, verify token and SSL settings: [%s]",
             entry.data[CONF_SERVER],

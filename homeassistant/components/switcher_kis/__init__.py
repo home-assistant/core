@@ -39,7 +39,7 @@ PLATFORMS = [
 
 _LOGGER = logging.getLogger(__name__)
 
-CCONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = vol.Schema(
     vol.All(
         cv.deprecated(DOMAIN),
         {

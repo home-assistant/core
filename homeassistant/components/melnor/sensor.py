@@ -45,6 +45,15 @@ def watering_seconds_left(valve: Valve) -> datetime | None:
     return dt_util.utc_from_timestamp(valve.watering_end_time)
 
 
+def next_cycle(valve: Valve) -> datetime | None:
+    """Return the value of the next_cycle date, only if the cycle is enabled."""
+
+    if valve.schedule_enabled is True:
+        return valve.next_cycle
+
+    return None
+
+
 @dataclass
 class MelnorSensorEntityDescriptionMixin:
     """Mixin for required keys."""
@@ -101,6 +110,12 @@ ZONE_ENTITY_DESCRIPTIONS: list[MelnorZoneSensorEntityDescription] = [
         key="manual_cycle_end",
         name="Manual Cycle End",
         state_fn=watering_seconds_left,
+    ),
+    MelnorZoneSensorEntityDescription(
+        device_class=SensorDeviceClass.TIMESTAMP,
+        key="next_cycle",
+        name="Next Cycle",
+        state_fn=next_cycle,
     ),
 ]
 

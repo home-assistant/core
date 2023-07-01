@@ -13,7 +13,6 @@ from homeassistant.backports.enum import StrEnum
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, RequiredParameterMissing
-from homeassistant.loader import bind_hass
 from homeassistant.util.json import format_unserializable_data
 import homeassistant.util.uuid as uuid_util
 
@@ -747,19 +746,6 @@ async def async_load(hass: HomeAssistant) -> None:
     assert DATA_REGISTRY not in hass.data
     hass.data[DATA_REGISTRY] = DeviceRegistry(hass)
     await hass.data[DATA_REGISTRY].async_load()
-
-
-@bind_hass
-async def async_get_registry(hass: HomeAssistant) -> DeviceRegistry:
-    """Get device registry.
-
-    This is deprecated and will be removed in the future. Use async_get instead.
-    """
-    report(
-        "uses deprecated `async_get_registry` to access device registry, use async_get"
-        " instead"
-    )
-    return async_get(hass)
 
 
 @callback

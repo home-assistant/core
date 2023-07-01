@@ -26,6 +26,8 @@ from homeassistant.util import dt as dt_util
 from .common import async_enable_traffic, find_entity_id, send_attributes_report
 from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_TYPE
 
+from tests.common import async_mock_load_restore_state_from_storage
+
 
 @pytest.fixture(autouse=True)
 def select_select_only():
@@ -176,6 +178,7 @@ async def test_select_restore_state(
 
     entity_id = "select.fakemanufacturer_fakemodel_default_siren_tone"
     core_rs(entity_id, state="Burglar")
+    await async_mock_load_restore_state_from_storage(hass)
 
     zigpy_device = zigpy_device_mock(
         {

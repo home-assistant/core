@@ -24,6 +24,8 @@ from .const import ATTR_PATH, ATTR_URL, DOMAIN, SERVICE_TURN_ON
 
 _LOGGER = logging.getLogger(__name__)
 
+CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
+
 # Extend the existing light.turn_on service schema
 SERVICE_SCHEMA = vol.All(
     cv.has_at_least_one_key(ATTR_URL, ATTR_PATH),

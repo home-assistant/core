@@ -69,7 +69,7 @@ def substitute_translation_references(integration_strings, flattened_translation
 
 def substitute_reference(value, flattened_translations):
     """Substitute localization key references in a translation string."""
-    matches = re.findall(r"\[\%key:((?:[\w]+|[:]{2})*)\%\]", value)
+    matches = re.findall(r"\[\%key:((?:[a-z0-9-_]+|[:]{2})*)\%\]", value)
     if not matches:
         return value
 

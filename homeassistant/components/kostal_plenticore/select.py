@@ -127,7 +127,11 @@ class PlenticoreDataSelect(
     async def async_added_to_hass(self) -> None:
         """Register this entity on the Update Coordinator."""
         await super().async_added_to_hass()
-        self.coordinator.start_fetch_data(self.module_id, self.data_id, self.options)
+        self.async_on_remove(
+            self.coordinator.start_fetch_data(
+                self.module_id, self.data_id, self.options
+            )
+        )
 
     async def async_will_remove_from_hass(self) -> None:
         """Unregister this entity from the Update Coordinator."""

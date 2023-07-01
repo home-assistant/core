@@ -52,38 +52,6 @@ set_default_doorbell_text:
       required: true
       selector:
         text:
-set_doorbell_message:
-  name: Set Doorbell message
-  description: >
-    Use to dynamically set the message on a Doorbell LCD screen. This service should only be used to set dynamic messages (i.e. setting the current outdoor temperature on your Doorbell). Static messages should still be set using the Select entity and can be added/removed using the add_doorbell_text/remove_doorbell_text services.
-  fields:
-    entity_id:
-      name: Doorbell Text
-      description: The Doorbell Text select entity for your Doorbell.
-      example: "select.front_doorbell_camera_doorbell_text"
-      required: true
-      selector:
-        entity:
-          integration: unifiprotect
-          domain: select
-    message:
-      name: Message to display
-      description: The message you would like to display on the LCD screen of your Doorbell. Must be less than 30 characters.
-      example: "Welcome | 09:23 | 25°C"
-      required: true
-      selector:
-        text:
-    duration:
-      name: Duration
-      description: Number of minutes to display the message for before returning to the default message. The default is to not expire.
-      example: 5
-      selector:
-        number:
-          min: 1
-          max: 120
-          step: 1
-          mode: slider
-          unit_of_measurement: minutes
 set_chime_paired_doorbells:
   name: Set Chime Paired Doorbells
   description: >

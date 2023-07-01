@@ -302,10 +302,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     _LOGGER.debug("Begin setup HomeKit for %s", name)
 
     # ip_address and advertise_ip are yaml only
-    ip_address = conf.get(
-        CONF_IP_ADDRESS, await network.async_get_source_ip(hass, MDNS_TARGET_IP)
+    ip_address = conf.get(CONF_IP_ADDRESS, [None])
+    advertise_ip = conf.get(
+        CONF_ADVERTISE_IP, await network.async_get_source_ip(hass, MDNS_TARGET_IP)
     )
-    advertise_ip = conf.get(CONF_ADVERTISE_IP)
     # exclude_accessory_mode is only used for config flow
     # to indicate that the config entry was setup after
     # we started creating config entries for entities that
@@ -597,7 +597,9 @@ class HomeKit:
         await self._async_shutdown_accessory(acc)
         if new_acc := self._async_create_single_accessory([state]):
             self.driver.accessory = new_acc
-            self.hass.async_add_job(new_acc.run)
+            self.hass.async_create_task(
+                new_acc.run(), f"HomeKit Bridge Accessory: {new_acc.entity_id}"
+            )
             await self.async_config_changed()
 
     async def async_reset_accessories_in_bridge_mode(
@@ -637,7 +639,9 @@ class HomeKit:
         await asyncio.sleep(_HOMEKIT_CONFIG_UPDATE_TIME)
         for state in new:
             if acc := self.add_bridge_accessory(state):
-                self.hass.async_add_job(acc.run)
+                self.hass.async_create_task(
+                    acc.run(), f"HomeKit Bridge Accessory: {acc.entity_id}"
+                )
         await self.async_config_changed()
 
     async def async_config_changed(self) -> None:

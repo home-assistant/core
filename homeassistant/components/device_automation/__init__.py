@@ -29,7 +29,10 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import IntegrationNotFound
-from homeassistant.requirements import async_get_integration_with_requirements
+from homeassistant.requirements import (
+    RequirementsNotFound,
+    async_get_integration_with_requirements,
+)
 
 from .const import (  # noqa: F401
     CONF_IS_OFF,
@@ -53,6 +56,8 @@ if TYPE_CHECKING:
 
 
 DOMAIN = "device_automation"
+
+CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 DEVICE_TRIGGER_BASE_SCHEMA: vol.Schema = cv.TRIGGER_BASE_SCHEMA.extend(
     {
@@ -170,6 +175,10 @@ async def async_get_device_automation_platform(
     except IntegrationNotFound as err:
         raise InvalidDeviceAutomationConfig(
             f"Integration '{domain}' not found"
+        ) from err
+    except RequirementsNotFound as err:
+        raise InvalidDeviceAutomationConfig(
+            f"Integration '{domain}' could not be loaded"
         ) from err
     except ImportError as err:
         raise InvalidDeviceAutomationConfig(

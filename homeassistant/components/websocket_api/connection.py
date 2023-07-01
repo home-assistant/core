@@ -48,12 +48,18 @@ class ActiveConnection:
         self.refresh_token_id = refresh_token.id
         self.subscriptions: dict[Hashable, Callable[[], Any]] = {}
         self.last_id = 0
+        self.can_coalesce = False
         self.supported_features: dict[str, float] = {}
         self.handlers: dict[str, tuple[MessageHandler, vol.Schema]] = self.hass.data[
             const.DOMAIN
         ]
         self.binary_handlers: list[BinaryHandler | None] = []
         current_connection.set(self)
+
+    def set_supported_features(self, features: dict[str, float]) -> None:
+        """Set supported features."""
+        self.supported_features = features
+        self.can_coalesce = const.FEATURE_COALESCE_MESSAGES in features
 
     def get_description(self, request: web.Request | None) -> str:
         """Return a description of the connection."""

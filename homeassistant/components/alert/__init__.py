@@ -25,7 +25,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.core import Event, HomeAssistant
+from homeassistant.core import Event, HassJob, HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
@@ -237,7 +237,13 @@ class Alert(Entity):
         """Schedule a notification."""
         delay = self._delay[self._next_delay]
         next_msg = now() + delay
-        self._cancel = async_track_point_in_time(self.hass, self._notify, next_msg)
+        self._cancel = async_track_point_in_time(
+            self.hass,
+            HassJob(
+                self._notify, name="Schedule notify alert", cancel_on_shutdown=True
+            ),
+            next_msg,
+        )
         self._next_delay = min(self._next_delay + 1, len(self._delay) - 1)
 
     async def _notify(self, *args: Any) -> None:

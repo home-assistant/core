@@ -3,9 +3,13 @@ from __future__ import annotations
 
 from datetime import date, datetime, time, timedelta
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from pytrafikverket import TrafikverketTrain
+from pytrafikverket.exceptions import (
+    MultipleTrainAnnouncementFound,
+    NoTrainAnnouncementFound,
+)
 from pytrafikverket.trafikverket_train import StationInfo, TrainStop
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
@@ -15,7 +19,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.util import dt
+from homeassistant.util import dt as dt_util
 
 from .const import CONF_FROM, CONF_TIME, CONF_TO, DOMAIN
 from .util import create_unique_id
@@ -44,7 +48,7 @@ async def async_setup_entry(
     to_station = hass.data[DOMAIN][entry.entry_id][CONF_TO]
     from_station = hass.data[DOMAIN][entry.entry_id][CONF_FROM]
     get_time: str | None = entry.data.get(CONF_TIME)
-    train_time = dt.parse_time(get_time) if get_time else None
+    train_time = dt_util.parse_time(get_time) if get_time else None
 
     async_add_entities(
         [
@@ -85,7 +89,7 @@ def next_departuredate(departure: list[str]) -> date:
 
 def _to_iso_format(traintime: datetime) -> str:
     """Return isoformatted utc time."""
-    return dt.as_utc(traintime).isoformat()
+    return dt_util.as_utc(traintime).isoformat()
 
 
 class TrainSensor(SensorEntity):
@@ -119,21 +123,26 @@ class TrainSensor(SensorEntity):
             name=name,
             configuration_url="https://api.trafikinfo.trafikverket.se/",
         )
+        if TYPE_CHECKING:
+            assert from_station.name and to_station.name
         self._attr_unique_id = create_unique_id(
             from_station.name, to_station.name, departuretime, weekday
         )
 
     async def async_update(self) -> None:
         """Retrieve latest state."""
-        when = dt.now()
+        when = dt_util.now()
         _state: TrainStop | None = None
         if self._time:
             departure_day = next_departuredate(self._weekday)
             when = datetime.combine(
-                departure_day, self._time, dt.get_time_zone(self.hass.config.time_zone)
+                departure_day,
+                self._time,
+                dt_util.get_time_zone(self.hass.config.time_zone),
             )
         try:
             if self._time:
+                _LOGGER.debug("%s, %s, %s", self._from_station, self._to_station, when)
                 _state = await self._train_api.async_get_train_stop(
                     self._from_station, self._to_station, when
                 )
@@ -141,7 +150,7 @@ class TrainSensor(SensorEntity):
                 _state = await self._train_api.async_get_next_train_stop(
                     self._from_station, self._to_station, when
                 )
-        except ValueError as error:
+        except (NoTrainAnnouncementFound, MultipleTrainAnnouncementFound) as error:
             _LOGGER.error("Departure %s encountered a problem: %s", when, error)
 
         if not _state:
@@ -153,11 +162,13 @@ class TrainSensor(SensorEntity):
         self._attr_available = True
 
         # The original datetime doesn't provide a timezone so therefore attaching it here.
-        self._attr_native_value = dt.as_utc(_state.advertised_time_at_location)
+        if TYPE_CHECKING:
+            assert _state.advertised_time_at_location
+        self._attr_native_value = dt_util.as_utc(_state.advertised_time_at_location)
         if _state.time_at_location:
-            self._attr_native_value = dt.as_utc(_state.time_at_location)
+            self._attr_native_value = dt_util.as_utc(_state.time_at_location)
         if _state.estimated_time_at_location:
-            self._attr_native_value = dt.as_utc(_state.estimated_time_at_location)
+            self._attr_native_value = dt_util.as_utc(_state.estimated_time_at_location)
 
         self._update_attributes(_state)
 
@@ -165,7 +176,7 @@ class TrainSensor(SensorEntity):
         """Return extra state attributes."""
 
         attributes: dict[str, Any] = {
-            ATTR_DEPARTURE_STATE: state.get_state().name,
+            ATTR_DEPARTURE_STATE: state.get_state().value,
             ATTR_CANCELED: state.canceled,
             ATTR_DELAY_TIME: None,
             ATTR_PLANNED_TIME: None,

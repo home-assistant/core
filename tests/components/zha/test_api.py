@@ -1,5 +1,8 @@
 """Test ZHA API."""
-from unittest.mock import patch
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+from unittest.mock import call, patch
 
 import pytest
 import zigpy.backups
@@ -9,6 +12,9 @@ from homeassistant.components import zha
 from homeassistant.components.zha import api
 from homeassistant.components.zha.core.const import RadioType
 from homeassistant.core import HomeAssistant
+
+if TYPE_CHECKING:
+    from zigpy.application import ControllerApplication
 
 
 @pytest.fixture(autouse=True)
@@ -29,7 +35,7 @@ async def test_async_get_network_settings_active(
 
 
 async def test_async_get_network_settings_inactive(
-    hass: HomeAssistant, setup_zha, zigpy_app_controller
+    hass: HomeAssistant, setup_zha, zigpy_app_controller: ControllerApplication
 ) -> None:
     """Test reading settings with an inactive ZHA installation."""
     await setup_zha()
@@ -44,17 +50,22 @@ async def test_async_get_network_settings_inactive(
     with patch(
         "bellows.zigbee.application.ControllerApplication.__new__",
         return_value=zigpy_app_controller,
-    ):
+    ), patch.object(
+        zigpy_app_controller, "_load_db", wraps=zigpy_app_controller._load_db
+    ) as mock_load_db, patch.object(
+        zigpy_app_controller,
+        "start_network",
+        wraps=zigpy_app_controller.start_network,
+    ) as mock_start_network:
         settings = await api.async_get_network_settings(hass)
 
-    assert len(zigpy_app_controller._load_db.mock_calls) == 1
-    assert len(zigpy_app_controller.start_network.mock_calls) == 0
-
+    assert len(mock_load_db.mock_calls) == 1
+    assert len(mock_start_network.mock_calls) == 0
     assert settings.network_info.channel == 20
 
 
 async def test_async_get_network_settings_missing(
-    hass: HomeAssistant, setup_zha, zigpy_app_controller
+    hass: HomeAssistant, setup_zha, zigpy_app_controller: ControllerApplication
 ) -> None:
     """Test reading settings with an inactive ZHA installation, no valid channel."""
     await setup_zha()
@@ -95,3 +106,38 @@ async def test_async_get_radio_path_active(hass: HomeAssistant, setup_zha) -> No
 
     radio_path = api.async_get_radio_path(hass)
     assert radio_path == "/dev/ttyUSB0"
+
+
+async def test_change_channel(
+    hass: HomeAssistant, setup_zha, zigpy_app_controller: ControllerApplication
+) -> None:
+    """Test changing the channel."""
+    await setup_zha()
+
+    with patch.object(
+        zigpy_app_controller, "move_network_to_channel", autospec=True
+    ) as mock_move_network_to_channel:
+        await api.async_change_channel(hass, 20)
+
+    assert mock_move_network_to_channel.mock_calls == [call(20)]
+
+
+async def test_change_channel_auto(
+    hass: HomeAssistant, setup_zha, zigpy_app_controller: ControllerApplication
+) -> None:
+    """Test changing the channel automatically using an energy scan."""
+    await setup_zha()
+
+    with patch.object(
+        zigpy_app_controller, "move_network_to_channel", autospec=True
+    ) as mock_move_network_to_channel, patch.object(
+        zigpy_app_controller,
+        "energy_scan",
+        autospec=True,
+        return_value={c: c for c in range(11, 26 + 1)},
+    ), patch.object(
+        api, "pick_optimal_channel", autospec=True, return_value=25
+    ):
+        await api.async_change_channel(hass, "auto")
+
+    assert mock_move_network_to_channel.mock_calls == [call(25)]

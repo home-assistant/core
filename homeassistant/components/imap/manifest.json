@@ -1,7 +1,7 @@
 {
   "domain": "imap",
   "name": "IMAP",
-  "codeowners": ["@engrbm87"],
+  "codeowners": ["@engrbm87", "@jbouwh"],
   "config_flow": true,
   "dependencies": ["repairs"],
   "documentation": "https://www.home-assistant.io/integrations/imap",

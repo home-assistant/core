@@ -39,7 +39,7 @@ MONOTONIC_TIME: Final = monotonic_time_coarse
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
+@dataclass(slots=True)
 class BluetoothScannerDevice:
     """Data for a bluetooth device from a given scanner."""
 
@@ -309,43 +309,28 @@ class BaseHaRemoteScanner(BaseHaScanner):
             # merges the dicts on PropertiesChanged
             prev_device = prev_discovery[0]
             prev_advertisement = prev_discovery[1]
-            if (
-                local_name
-                and prev_device.name
-                and len(prev_device.name) > len(local_name)
-            ):
-                local_name = prev_device.name
-            if service_uuids and service_uuids != prev_advertisement.service_uuids:
-                service_uuids = list(
-                    set(service_uuids + prev_advertisement.service_uuids)
-                )
-            elif not service_uuids:
-                service_uuids = prev_advertisement.service_uuids
-            if service_data and service_data != prev_advertisement.service_data:
-                service_data = {**prev_advertisement.service_data, **service_data}
-            elif not service_data:
-                service_data = prev_advertisement.service_data
-            if (
-                manufacturer_data
-                and manufacturer_data != prev_advertisement.manufacturer_data
-            ):
-                manufacturer_data = {
-                    **prev_advertisement.manufacturer_data,
-                    **manufacturer_data,
-                }
-            elif not manufacturer_data:
-                manufacturer_data = prev_advertisement.manufacturer_data
+            prev_service_uuids = prev_advertisement.service_uuids
+            prev_service_data = prev_advertisement.service_data
+            prev_manufacturer_data = prev_advertisement.manufacturer_data
+            prev_name = prev_device.name
 
-        advertisement_data = AdvertisementData(
-            local_name=None if local_name == "" else local_name,
-            manufacturer_data=manufacturer_data,
-            service_data=service_data,
-            service_uuids=service_uuids,
-            rssi=rssi,
-            tx_power=NO_RSSI_VALUE if tx_power is None else tx_power,
-            platform_data=(),
-        )
-        if prev_discovery:
+            if local_name and prev_name and len(prev_name) > len(local_name):
+                local_name = prev_name
+
+            if service_uuids and service_uuids != prev_service_uuids:
+                service_uuids = list(set(service_uuids + prev_service_uuids))
+            elif not service_uuids:
+                service_uuids = prev_service_uuids
+
+            if service_data and service_data != prev_service_data:
+                service_data = prev_service_data | service_data
+            elif not service_data:
+                service_data = prev_service_data
+
+            if manufacturer_data and manufacturer_data != prev_manufacturer_data:
+                manufacturer_data = prev_manufacturer_data | manufacturer_data
+            elif not manufacturer_data:
+                manufacturer_data = prev_manufacturer_data
             #
             # Bleak updates the BLEDevice via create_or_update_device.
             # We need to do the same to ensure integrations that already
@@ -366,6 +351,16 @@ class BaseHaRemoteScanner(BaseHaScanner):
                 details=self._details | details,
                 rssi=rssi,  # deprecated, will be removed in newer bleak
             )
+
+        advertisement_data = AdvertisementData(
+            local_name=None if local_name == "" else local_name,
+            manufacturer_data=manufacturer_data,
+            service_data=service_data,
+            service_uuids=service_uuids,
+            tx_power=NO_RSSI_VALUE if tx_power is None else tx_power,
+            rssi=rssi,
+            platform_data=(),
+        )
         self._discovered_device_advertisement_datas[address] = (
             device,
             advertisement_data,
@@ -373,12 +368,12 @@ class BaseHaRemoteScanner(BaseHaScanner):
         self._discovered_device_timestamps[address] = now
         self._new_info_callback(
             BluetoothServiceInfoBleak(
-                name=advertisement_data.local_name or device.name or device.address,
-                address=device.address,
+                name=local_name or address,
+                address=address,
                 rssi=rssi,
-                manufacturer_data=advertisement_data.manufacturer_data,
-                service_data=advertisement_data.service_data,
-                service_uuids=advertisement_data.service_uuids,
+                manufacturer_data=manufacturer_data,
+                service_data=service_data,
+                service_uuids=service_uuids,
                 source=self.source,
                 device=device,
                 advertisement=advertisement_data,

@@ -1,9 +1,0 @@
-{
-  "domain": "xbox_live",
-  "name": "Xbox Live",
-  "codeowners": ["@MartinHjelmare"],
-  "documentation": "https://www.home-assistant.io/integrations/xbox_live",
-  "iot_class": "cloud_polling",
-  "loggers": ["xboxapi"],
-  "requirements": ["xboxapi==2.0.1"]
-}

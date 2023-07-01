@@ -29,6 +29,8 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
+
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Intent component."""
@@ -140,16 +142,18 @@ class GetStateIntentHandler(intent.IntentHandler):
                 area=area,
                 domains=domains,
                 device_classes=device_classes,
+                assistant=intent_obj.assistant,
             )
         )
 
         _LOGGER.debug(
-            "Found %s state(s) that matched: name=%s, area=%s, domains=%s, device_classes=%s",
+            "Found %s state(s) that matched: name=%s, area=%s, domains=%s, device_classes=%s, assistant=%s",
             len(states),
             name,
             area,
             domains,
             device_classes,
+            intent_obj.assistant,
         )
 
         # Create response
