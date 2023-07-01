@@ -11,8 +11,13 @@ import pytest
 import voluptuous as vol
 
 import homeassistant
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv, selector, template
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.helpers import (
+    config_validation as cv,
+    issue_registry as ir,
+    selector,
+    template,
+)
 
 
 def test_boolean() -> None:
@@ -1345,9 +1350,9 @@ def test_key_value_schemas_with_default() -> None:
     schema({"mode": "{{ 1 + 1}}"})
 
 
-def test_script(caplog: pytest.LogCaptureFixture) -> None:
-    """Test script validation is user friendly."""
-    for data, msg in (
+@pytest.mark.parametrize(
+    ("config", "error"),
+    (
         ({"delay": "{{ invalid"}, "should be format 'HH:MM'"),
         ({"wait_template": "{{ invalid"}, "invalid template"),
         ({"condition": "invalid"}, "Unexpected value for condition: 'invalid'"),
@@ -1361,20 +1366,33 @@ def test_script(caplog: pytest.LogCaptureFixture) -> None:
             {"condition": "not", "conditions": "not a dynamic template"},
             "Expected a dictionary",
         ),
-        ({"event": None}, "string value is None for dictionary value @ data['event']"),
+        (
+            {"event": None},
+            r"string value is None for dictionary value @ data\['event'\]",
+        ),
         (
             {"device_id": None},
-            "string value is None for dictionary value @ data['device_id']",
+            r"string value is None for dictionary value @ data\['device_id'\]",
         ),
         (
             {"scene": "light.kitchen"},
             "Entity ID 'light.kitchen' does not belong to domain 'scene'",
         ),
-    ):
-        with pytest.raises(vol.Invalid) as excinfo:
-            cv.script_action(data)
-
-        assert msg in str(excinfo.value)
+        (
+            {
+                "alias": "stop step",
+                "stop": "In the name of love",
+                "error": True,
+                "response_variable": "response-value",
+            },
+            "not allowed to add a response to an error stop action",
+        ),
+    ),
+)
+def test_script(caplog: pytest.LogCaptureFixture, config: dict, error: str) -> None:
+    """Test script validation is user friendly."""
+    with pytest.raises(vol.Invalid, match=error):
+        cv.script_action(config)
 
 
 def test_whitespace() -> None:
@@ -1383,7 +1401,7 @@ def test_whitespace() -> None:
 
     for value in (
         None,
-        "" "T",
+        "T",
         "negative",
         "lock",
         "tr  ue",
@@ -1475,7 +1493,7 @@ def test_positive_time_period_template() -> None:
 
 
 def test_empty_schema(caplog: pytest.LogCaptureFixture) -> None:
-    """Test if the current module cannot be inspected."""
+    """Test empty_config_schema."""
     expected_message = (
         "The test_domain integration does not support any configuration parameters"
     )
@@ -1494,3 +1512,81 @@ def test_empty_schema_cant_find_module() -> None:
     """Test if the current module cannot be inspected."""
     with patch("inspect.getmodule", return_value=None):
         cv.empty_config_schema("test_domain")({"test_domain": {"foo": "bar"}})
+
+
+def test_config_entry_only_schema(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test config_entry_only_config_schema."""
+    expected_issue = "config_entry_only_test_domain"
+    expected_message = (
+        "The test_domain integration does not support YAML setup, please remove "
+        "it from your configuration"
+    )
+    issue_registry = ir.async_get(hass)
+
+    cv.config_entry_only_config_schema("test_domain")({})
+    assert expected_message not in caplog.text
+    assert not issue_registry.async_get_issue(HOMEASSISTANT_DOMAIN, expected_issue)
+
+    cv.config_entry_only_config_schema("test_domain")({"test_domain": {}})
+    assert expected_message in caplog.text
+    assert issue_registry.async_get_issue(HOMEASSISTANT_DOMAIN, expected_issue)
+    issue_registry.async_delete(HOMEASSISTANT_DOMAIN, expected_issue)
+
+    cv.config_entry_only_config_schema("test_domain")({"test_domain": {"foo": "bar"}})
+    assert expected_message in caplog.text
+    assert issue_registry.async_get_issue(HOMEASSISTANT_DOMAIN, expected_issue)
+
+
+def test_config_entry_only_schema_cant_find_module() -> None:
+    """Test if the current module cannot be inspected."""
+    with patch("inspect.getmodule", return_value=None):
+        cv.config_entry_only_config_schema("test_domain")(
+            {"test_domain": {"foo": "bar"}}
+        )
+
+
+def test_config_entry_only_schema_no_hass(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test if the the hass context var is not set in our context."""
+    with patch(
+        "homeassistant.helpers.config_validation.async_get_hass",
+        side_effect=LookupError,
+    ):
+        cv.config_entry_only_config_schema("test_domain")(
+            {"test_domain": {"foo": "bar"}}
+        )
+    expected_message = (
+        "The test_domain integration does not support YAML setup, please remove "
+        "it from your configuration"
+    )
+    assert expected_message in caplog.text
+    issue_registry = ir.async_get(hass)
+    assert not issue_registry.issues
+
+
+def test_platform_only_schema(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test config_entry_only_config_schema."""
+    expected_issue = "platform_only_test_domain"
+    expected_message = (
+        "The test_domain integration does not support YAML setup, please remove "
+        "it from your configuration"
+    )
+    issue_registry = ir.async_get(hass)
+
+    cv.platform_only_config_schema("test_domain")({})
+    assert expected_message not in caplog.text
+    assert not issue_registry.async_get_issue(HOMEASSISTANT_DOMAIN, expected_issue)
+
+    cv.platform_only_config_schema("test_domain")({"test_domain": {}})
+    assert expected_message in caplog.text
+    assert issue_registry.async_get_issue(HOMEASSISTANT_DOMAIN, expected_issue)
+    issue_registry.async_delete(HOMEASSISTANT_DOMAIN, expected_issue)
+
+    cv.platform_only_config_schema("test_domain")({"test_domain": {"foo": "bar"}})
+    assert expected_message in caplog.text
+    assert issue_registry.async_get_issue(HOMEASSISTANT_DOMAIN, expected_issue)

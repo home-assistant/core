@@ -3,8 +3,8 @@ from datetime import timedelta
 import logging
 from typing import Any
 
-from ProgettiHWSW.relay import Relay
 import async_timeout
+from ProgettiHWSW.relay import Relay
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry

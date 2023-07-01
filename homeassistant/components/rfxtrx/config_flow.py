@@ -8,8 +8,8 @@ import itertools
 import os
 from typing import Any, TypedDict, cast
 
-import RFXtrx as rfxtrxmod
 from async_timeout import timeout
+import RFXtrx as rfxtrxmod
 import serial
 import serial.tools.list_ports
 import voluptuous as vol

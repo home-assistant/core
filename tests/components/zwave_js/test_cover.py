@@ -1,4 +1,6 @@
 """Test the Z-Wave JS cover platform."""
+import logging
+
 from zwave_js_server.const import (
     CURRENT_STATE_PROPERTY,
     CURRENT_VALUE_PROPERTY,
@@ -24,6 +26,7 @@ from homeassistant.components.cover import (
     CoverDeviceClass,
     CoverEntityFeature,
 )
+from homeassistant.components.zwave_js.const import LOGGER
 from homeassistant.components.zwave_js.helpers import ZwaveValueMatcher
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
@@ -45,6 +48,7 @@ BLIND_COVER_ENTITY = "cover.window_blind_controller"
 SHUTTER_COVER_ENTITY = "cover.flush_shutter"
 AEOTEC_SHUTTER_COVER_ENTITY = "cover.nano_shutter_v_3"
 FIBARO_SHUTTER_COVER_ENTITY = "cover.fgr_222_test_cover"
+LOGGER.setLevel(logging.DEBUG)
 
 
 async def test_window_cover(
@@ -793,5 +797,65 @@ async def test_iblinds_v3_cover(
         "propertyKey": 23,
     }
     assert args["value"] is False
+
+    client.async_send_command.reset_mock()
+
+
+async def test_nice_ibt4zwave_cover(
+    hass: HomeAssistant, client, nice_ibt4zwave, integration
+) -> None:
+    """Test Nice IBT4ZWAVE cover."""
+    entity_id = "cover.portail"
+    state = hass.states.get(entity_id)
+    assert state
+    # This device has no state because there is no position value
+    assert state.state == STATE_CLOSED
+    assert state.attributes[ATTR_SUPPORTED_FEATURES] == (
+        CoverEntityFeature.CLOSE
+        | CoverEntityFeature.OPEN
+        | CoverEntityFeature.SET_POSITION
+        | CoverEntityFeature.STOP
+    )
+    assert ATTR_CURRENT_POSITION in state.attributes
+    assert state.attributes[ATTR_CURRENT_POSITION] == 0
+    assert state.attributes[ATTR_DEVICE_CLASS] == CoverDeviceClass.GATE
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_CLOSE_COVER,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+
+    assert len(client.async_send_command.call_args_list) == 1
+    args = client.async_send_command.call_args[0][0]
+    assert args["command"] == "node.set_value"
+    assert args["nodeId"] == 72
+    assert args["valueId"] == {
+        "endpoint": 0,
+        "commandClass": 38,
+        "property": "targetValue",
+    }
+    assert args["value"] == 0
+
+    client.async_send_command.reset_mock()
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_OPEN_COVER,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+
+    assert len(client.async_send_command.call_args_list) == 1
+    args = client.async_send_command.call_args[0][0]
+    assert args["command"] == "node.set_value"
+    assert args["nodeId"] == 72
+    assert args["valueId"] == {
+        "endpoint": 0,
+        "commandClass": 38,
+        "property": "targetValue",
+    }
+    assert args["value"] == 99
 
     client.async_send_command.reset_mock()
