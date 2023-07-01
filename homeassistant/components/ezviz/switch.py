@@ -13,7 +13,8 @@ from homeassistant.components.switch import (
     SwitchEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DATA_COORDINATOR, DOMAIN
@@ -35,59 +36,92 @@ class EzvizSwitchEntityDescription(
     """Describe a EZVIZ switch."""
 
 
-SWITCH_TYPES: dict[str, EzvizSwitchEntityDescription] = {
-    "305": EzvizSwitchEntityDescription(
-        key="305",
-        name="Light PIR motion activated",
-        device_class=SwitchDeviceClass.SWITCH,
-        supported_ext=str(SupportExt.SupportLightRelate.value),
-    ),
-    "3": EzvizSwitchEntityDescription(
+SWITCH_TYPES: dict[int, EzvizSwitchEntityDescription] = {
+    3: EzvizSwitchEntityDescription(
         key="3",
-        name="Camera status light",
+        name="Status light",
+        translation_key="status_light",
         device_class=SwitchDeviceClass.SWITCH,
         supported_ext=None,
     ),
+    7: EzvizSwitchEntityDescription(
+        key="7",
+        name="Privacy",
+        translation_key="privacy",
+        device_class=SwitchDeviceClass.SWITCH,
+        supported_ext=str(SupportExt.SupportPtzPrivacy.value),
+    ),
+    10: EzvizSwitchEntityDescription(
+        key="10",
+        name="Infrared light",
+        translation_key="infrared_light",
+        device_class=SwitchDeviceClass.SWITCH,
+        supported_ext=str(SupportExt.SupportCloseInfraredLight.value),
+    ),
+    21: EzvizSwitchEntityDescription(
+        key="21",
+        name="Sleep",
+        translation_key="sleep",
+        device_class=SwitchDeviceClass.SWITCH,
+        supported_ext=str(SupportExt.SupportSleep.value),
+    ),
+    22: EzvizSwitchEntityDescription(
+        key="22",
+        name="Audio",
+        translation_key="audio",
+        device_class=SwitchDeviceClass.SWITCH,
+        supported_ext=str(SupportExt.SupportAudioOnoff.value),
+    ),
+    25: EzvizSwitchEntityDescription(
+        key="25",
+        name="Motion Tracking",
+        translation_key="motion_tracking",
+        device_class=SwitchDeviceClass.SWITCH,
+        supported_ext=str(SupportExt.SupportIntelligentTrack.value),
+    ),
+    29: EzvizSwitchEntityDescription(
+        key="29",
+        name="All day video recording",
+        translation_key="all_day_video_recording",
+        device_class=SwitchDeviceClass.SWITCH,
+        supported_ext=str(SupportExt.SupportFulldayRecord.value),
+    ),
+    32: EzvizSwitchEntityDescription(
+        key="32",
+        name="Auto sleep",
+        translation_key="auto_sleep",
+        device_class=SwitchDeviceClass.SWITCH,
+        supported_ext=str(SupportExt.SupportAutoSleep.value),
+    ),
+    301: EzvizSwitchEntityDescription(
+        key="301",
+        name="Flicker light on movement",
+        translation_key="flicker_light_on_movement",
+        device_class=SwitchDeviceClass.SWITCH,
+        supported_ext=str(SupportExt.SupportActiveDefense.value),
+    ),
+    305: EzvizSwitchEntityDescription(
+        key="305",
+        name="PIR motion activated light",
+        translation_key="pir_motion_activated_light",
+        device_class=SwitchDeviceClass.SWITCH,
+        supported_ext=str(SupportExt.SupportLightRelate.value),
+    ),
+    306: EzvizSwitchEntityDescription(
+        key="306",
+        name="Tamper Alarm",
+        translation_key="tamper_alarm",
+        device_class=SwitchDeviceClass.SWITCH,
+        supported_ext=str(SupportExt.SupportTamperAlarm.value),
+    ),
+    650: EzvizSwitchEntityDescription(
+        key="650",
+        name="Follow movement",
+        translation_key="follow_movement",
+        device_class=SwitchDeviceClass.SWITCH,
+        supported_ext=str(SupportExt.SupportTracking.value),
+    ),
 }
-
-
-ALARM_TONE = 1
-LIGHT = 3
-INTELLIGENT_ANALYSIS = 4
-LOG_UPLOAD = 5
-DEFENCE_PLAN = 6
-PRIVACY = 7
-SOUND_LOCALIZATION = 8
-CRUISE = 9
-INFRARED_LIGHT = 10
-WIFI = 11
-WIFI_MARKETING = 12
-WIFI_LIGHT = 13
-PLUG = 14
-SLEEP = 21
-SOUND = 22
-BABY_CARE = 23
-LOGO = 24
-MOBILE_TRACKING = 25
-CHANNELOFFLINE = 26
-ALL_DAY_VIDEO = 29
-AUTO_SLEEP = 32
-ROAMING_STATUS = 34
-DEVICE_4G = 35
-ALARM_REMIND_MODE = 37
-OUTDOOR_RINGING_SOUND = 39
-INTELLIGENT_PQ_SWITCH = 40
-DOORBELL_TALK = 101
-HUMAN_INTELLIGENT_DETECTION = 200
-LIGHT_FLICKER = 301
-DEVICE_HUMAN_RELATE_LIGHT = 41
-TAMPER_ALARM = 306
-DETECTION_TYPE = 451
-OUTLET_RECOVER = 600
-CHIME_INDICATOR_LIGHT = 611
-TRACKING = 650
-CRUISE_TRACKING = 651
-FEATURE_TRACKING = 701
 
 
 async def async_setup_entry(
@@ -100,13 +134,13 @@ async def async_setup_entry(
 
     async_add_entities(
         [
-            EzvizSwitch(coordinator, camera, switch)
+            EzvizSwitch(coordinator, camera, switch_number)
             for camera in coordinator.data
-            for switch in coordinator.data[camera].get("switches")
-            if switch in SWITCH_TYPES
-            if SWITCH_TYPES[switch].supported_ext
+            for switch_number in coordinator.data[camera].get("switches")
+            if switch_number in SWITCH_TYPES
+            if SWITCH_TYPES[switch_number].supported_ext
             in coordinator.data[camera]["supportExt"]
-            or SWITCH_TYPES[switch].supported_ext is None
+            or SWITCH_TYPES[switch_number].supported_ext is None
         ]
     )
 
@@ -117,43 +151,56 @@ class EzvizSwitch(EzvizEntity, SwitchEntity):
     _attr_has_entity_name = True
 
     def __init__(
-        self, coordinator: EzvizDataUpdateCoordinator, serial: str, switch: int
+        self, coordinator: EzvizDataUpdateCoordinator, serial: str, switch_number: int
     ) -> None:
         """Initialize the switch."""
         super().__init__(coordinator, serial)
-        self._name = switch
+        self._switch_number = switch_number
         self._attr_unique_id = (
-            f"{serial}_{self._camera_name}.{DeviceSwitchType(switch).name}"
+            f"{serial}_{self._camera_name}.{DeviceSwitchType(switch_number).name}"
         )
-        self.entity_description = SWITCH_TYPES[str(switch)]
-
-    @property
-    def is_on(self) -> bool:
-        """Return the state of the switch."""
-        return self.data["switches"][self._name]
+        self.entity_description = SWITCH_TYPES[switch_number]
+        self._attr_is_on = self.data["switches"][switch_number]
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Change a device switch on the camera."""
         try:
             update_ok = await self.hass.async_add_executor_job(
-                self.coordinator.ezviz_client.switch_status, self._serial, self._name, 1
+                self.coordinator.ezviz_client.switch_status,
+                self._serial,
+                self._switch_number,
+                1,
             )
 
         except (HTTPError, PyEzvizError) as err:
-            raise PyEzvizError(f"Failed to turn on switch {self._name}") from err
+            raise HomeAssistantError(f"Failed to turn on switch {self.name}") from err
 
         if update_ok:
-            await self.coordinator.async_request_refresh()
+            self._attr_is_on = True
+            self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Change a device switch on the camera."""
         try:
             update_ok = await self.hass.async_add_executor_job(
-                self.coordinator.ezviz_client.switch_status, self._serial, self._name, 0
+                self.coordinator.ezviz_client.switch_status,
+                self._serial,
+                self._switch_number,
+                0,
             )
 
         except (HTTPError, PyEzvizError) as err:
-            raise PyEzvizError(f"Failed to turn off switch {self._name}") from err
+            raise HomeAssistantError(f"Failed to turn off switch {self.name}") from err
 
         if update_ok:
-            await self.coordinator.async_request_refresh()
+            self._attr_is_on = False
+            self.async_write_ha_state()
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        if not self.data["switches"].get(self._switch_number):
+            return
+
+        self._attr_is_on = self.data["switches"][self._switch_number]
+        super()._handle_coordinator_update()
