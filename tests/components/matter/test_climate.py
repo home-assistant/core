@@ -129,8 +129,8 @@ async def test_thermostat(
 
     state = hass.states.get("climate.longan_link_hvac")
     assert state
-    assert state.attributes["target_temperature_low"] == 17
-    assert state.attributes["target_temperature_high"] == 25
+    assert state.attributes["target_temp_low"] == 17
+    assert state.attributes["target_temp_high"] == 25
 
     # change target_temp_low to 18
     await hass.services.async_call(
