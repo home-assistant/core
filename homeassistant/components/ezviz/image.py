@@ -88,7 +88,6 @@ class EzvizLastMotion(EzvizEntity, ImageEntity):
         if not self.data.get("last_alarm_pic"):
             return
 
-        _LOGGER.debug("Image url changed")
         self._attr_image_url = self.data["last_alarm_pic"]
         self._cached_image = None
         self._attr_image_last_updated = dt_util.parse_datetime(
