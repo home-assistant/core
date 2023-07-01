@@ -169,9 +169,11 @@ class MatterClimate(MatterEntity, ClimateEntity):
         command = None
         if current_mode in (HVACMode.HEAT, HVACMode.COOL):
             # when current mode is either heat or cool, the temperature arg must be provided.
-            temperature = kwargs.get(ATTR_TEMPERATURE)
+            temperature: float | None = kwargs.get(ATTR_TEMPERATURE)
             if temperature is None:
                 raise ValueError("Temperature must be provided")
+            if self.target_temperature is None:
+                raise ValueError("current target_temperature should not be None")
             command = self._create_optional_setpoint_command(
                 clusters.Thermostat.Enums.SetpointAdjustMode.kCool
                 if current_mode == HVACMode.COOL
@@ -180,11 +182,18 @@ class MatterClimate(MatterEntity, ClimateEntity):
                 self.target_temperature,
             )
         elif current_mode == HVACMode.HEAT_COOL:
-            temperature_low = kwargs.get(ATTR_TARGET_TEMP_LOW)
-            temperature_high = kwargs.get(ATTR_TARGET_TEMP_HIGH)
-            if temperature_low is None and temperature_high is None:
+            temperature_low: float | None = kwargs.get(ATTR_TARGET_TEMP_LOW)
+            temperature_high: float | None = kwargs.get(ATTR_TARGET_TEMP_HIGH)
+            if temperature_low is None or temperature_high is None:
                 raise ValueError(
-                    "temperature_low and/or temperature_high must be provided"
+                    "temperature_low and temperature_high must be provided"
+                )
+            if (
+                self.target_temperature_low is None
+                or self.target_temperature_high is None
+            ):
+                raise ValueError(
+                    "current target_temperature_low and target_temperature_high should not be None"
                 )
             # due to ha send both high and low temperature, we need to check which one is changed
             command = self._create_optional_setpoint_command(
@@ -274,12 +283,10 @@ class MatterClimate(MatterEntity, ClimateEntity):
     @staticmethod
     def _create_optional_setpoint_command(
         mode: clusters.Thermostat.Enums.SetpointAdjustMode,
-        target_temp: float | None,
-        current_target_temp: float | None,
+        target_temp: float,
+        current_target_temp: float,
     ) -> clusters.Thermostat.Commands.SetpointRaiseLower | None:
         """Create a setpoint command if the target temperature is different from the current one."""
-        if target_temp is None or current_target_temp is None:
-            return None
 
         temp_diff = int((target_temp - current_target_temp) * 10)
 
