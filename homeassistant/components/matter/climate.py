@@ -118,16 +118,24 @@ class MatterClimate(MatterEntity, ClimateEntity):
     @property
     def target_temperature_high(self) -> float | None:
         """Return the highbound target temperature we try to reach."""
-        return self._get_temperature_in_degrees(
-            clusters.Thermostat.Attributes.OccupiedCoolingSetpoint
-        )
+        match self._attr_hvac_mode:
+            case HVACMode.HEAT_COOL:
+                return self._get_temperature_in_degrees(
+                    clusters.Thermostat.Attributes.OccupiedCoolingSetpoint
+                )
+            case _:
+                return None
 
     @property
     def target_temperature_low(self) -> float | None:
         """Return the lowbound target temperature we try to reach."""
-        return self._get_temperature_in_degrees(
-            clusters.Thermostat.Attributes.OccupiedHeatingSetpoint
-        )
+        match self._attr_hvac_mode:
+            case HVACMode.HEAT_COOL:
+                return self._get_temperature_in_degrees(
+                    clusters.Thermostat.Attributes.OccupiedHeatingSetpoint
+                )
+            case _:
+                return None
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
@@ -135,7 +143,7 @@ class MatterClimate(MatterEntity, ClimateEntity):
         if target_hvac_mode is not None:
             await self.async_set_hvac_mode(target_hvac_mode)
 
-        current_mode = self.hvac_mode
+        current_mode = target_hvac_mode or self.hvac_mode
         command = None
         if current_mode in (HVACMode.HEAT, HVACMode.COOL):
             # when current mode is either heat or cool, the temperature arg must be provided.
@@ -183,7 +191,7 @@ class MatterClimate(MatterEntity, ClimateEntity):
         )
         system_mode_value = HVAC_SYSTEM_MODE_MAP.get(hvac_mode)
         if system_mode_value is None:
-            raise ValueError("Unsupported hvac mode in Matter")
+            raise ValueError(f"Unsupported hvac mode {hvac_mode} in Matter")
         await self.matter_client.write_attribute(
             node_id=self._endpoint.node.node_id,
             attribute_path=system_mode_path,
