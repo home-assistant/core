@@ -161,8 +161,10 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
                 error = await self.fetch_device_info()
                 self._noise_psk = None
 
-            if self._device_name:
-                await self._retrieve_encryption_key_from_dashboard()
+            if (
+                self._device_name
+                and await self._retrieve_encryption_key_from_dashboard()
+            ):
                 error = await self.fetch_device_info()
 
             # If the fetched key is invalid, unset it again.
@@ -387,10 +389,10 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
 
         Return boolean if a key was retrieved.
         """
-        if self._device_name is None:
-            return False
-
-        if (dashboard := async_get_dashboard(self.hass)) is None:
+        if (
+            self._device_name is None
+            or (dashboard := async_get_dashboard(self.hass)) is None
+        ):
             return False
 
         await dashboard.async_request_refresh()

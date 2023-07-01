@@ -326,7 +326,6 @@ async def test_user_discovers_name_and_gets_key_from_dashboard_fails(
     mock_client.device_info.side_effect = [
         RequiresEncryptionAPIError,
         InvalidEncryptionKeyAPIError("Wrong key", "test"),
-        RequiresEncryptionAPIError,
         DeviceInfo(
             uses_password=False,
             name="test",
@@ -382,7 +381,6 @@ async def test_user_discovers_name_and_dashboard_is_unavailable(
     mock_client.device_info.side_effect = [
         RequiresEncryptionAPIError,
         InvalidEncryptionKeyAPIError("Wrong key", "test"),
-        RequiresEncryptionAPIError,
         DeviceInfo(
             uses_password=False,
             name="test",
