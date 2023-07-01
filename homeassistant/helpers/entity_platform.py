@@ -668,7 +668,7 @@ class EntityPlatform:
                 keys = set(processed_dev_info)
                 if not any(keys <= allowed for allowed in DEVICE_INFO_TYPES):
                     raise HomeAssistantError(
-                        "Device info needs to be describe a device, link to existing device or provide extra information."
+                        "Device info needs to either describe a device, link to existing device or provide extra information."
                     )
 
                 if (
