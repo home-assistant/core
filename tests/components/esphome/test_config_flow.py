@@ -140,6 +140,19 @@ async def test_user_sets_unique_id(
     assert discovery_result["type"] == FlowResultType.FORM
     assert discovery_result["step_id"] == "discovery_confirm"
 
+    discovery_result = await hass.config_entries.flow.async_configure(
+        discovery_result["flow_id"],
+        {},
+    )
+    assert discovery_result["type"] == FlowResultType.CREATE_ENTRY
+    assert discovery_result["data"] == {
+        CONF_HOST: "192.168.43.183",
+        CONF_PORT: 6053,
+        CONF_PASSWORD: "",
+        CONF_NOISE_PSK: "",
+        CONF_DEVICE_NAME: "test",
+    }
+
     result = await hass.config_entries.flow.async_init(
         "esphome",
         context={"source": config_entries.SOURCE_USER},
@@ -153,16 +166,8 @@ async def test_user_sets_unique_id(
         result["flow_id"],
         {CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
     )
-    assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["data"] == {
-        CONF_HOST: "127.0.0.1",
-        CONF_PORT: 6053,
-        CONF_PASSWORD: "",
-        CONF_NOISE_PSK: "",
-        CONF_DEVICE_NAME: "test",
-    }
-
-    assert not hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
 
 
 async def test_user_resolve_error(
@@ -188,6 +193,53 @@ async def test_user_resolve_error(
     assert len(mock_client.connect.mock_calls) == 1
     assert len(mock_client.device_info.mock_calls) == 1
     assert len(mock_client.disconnect.mock_calls) == 1
+
+
+async def test_user_causes_zeroconf_to_abort(
+    hass: HomeAssistant, mock_client, mock_zeroconf: None, mock_setup_entry: None
+) -> None:
+    """Test that the user flow sets the unique id and aborts the zeroconf flow."""
+    service_info = zeroconf.ZeroconfServiceInfo(
+        host="192.168.43.183",
+        addresses=["192.168.43.183"],
+        hostname="test8266.local.",
+        name="mock_name",
+        port=6053,
+        properties={
+            "mac": "1122334455aa",
+        },
+        type="mock_type",
+    )
+    discovery_result = await hass.config_entries.flow.async_init(
+        "esphome", context={"source": config_entries.SOURCE_ZEROCONF}, data=service_info
+    )
+
+    assert discovery_result["type"] == FlowResultType.FORM
+    assert discovery_result["step_id"] == "discovery_confirm"
+
+    result = await hass.config_entries.flow.async_init(
+        "esphome",
+        context={"source": config_entries.SOURCE_USER},
+        data=None,
+    )
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
+    )
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["data"] == {
+        CONF_HOST: "127.0.0.1",
+        CONF_PORT: 6053,
+        CONF_PASSWORD: "",
+        CONF_NOISE_PSK: "",
+        CONF_DEVICE_NAME: "test",
+    }
+
+    assert not hass.config_entries.flow.async_progress_by_handler(DOMAIN)
 
 
 async def test_user_connection_error(
