@@ -64,5 +64,12 @@
       "title": "Ezviz Detection sensitivity service is being removed",
       "description": "Ezviz Detection sensitivity service is deprecated and will be removed in Home Assistant 2023.8; Please adjust the automation or script that uses the service and select submit below to mark this issue as resolved."
     }
+  },
+  "entity": {
+    "image": {
+      "last_motion_image": {
+        "name": "Last motion image"
+      }
+    }
   }
 }

@@ -5,7 +5,7 @@ import logging
 
 import httpx
 
-from homeassistant.components.image import Image, ImageEntity
+from homeassistant.components.image import Image, ImageEntity, ImageEntityDescription
 from homeassistant.config_entries import (
     ConfigEntry,
 )
@@ -24,6 +24,12 @@ from .entity import EzvizEntity
 
 _LOGGER = logging.getLogger(__name__)
 GET_IMAGE_TIMEOUT = 10
+
+IMAGE_TYPE = ImageEntityDescription(
+    key="last_motion_image",
+    name="Last motion image",
+    translation_key="last_motion_image",
+)
 
 
 async def async_setup_entry(
@@ -51,9 +57,8 @@ class EzvizLastMotion(EzvizEntity, ImageEntity):
         """Initialize a image entity."""
         super().__init__(coordinator, serial)
         ImageEntity.__init__(self, hass)
-        self.hass = hass
         self._attr_unique_id = f"{serial}_last_motion_image"
-        self._attr_name = "Last motion image"
+        self.entity_description = IMAGE_TYPE
         self._attr_image_url = self.data["last_alarm_pic"]
         self._attr_image_last_updated = dt_util.parse_datetime(
             str(self.data["last_alarm_time"])
@@ -68,7 +73,7 @@ class EzvizLastMotion(EzvizEntity, ImageEntity):
             response.raise_for_status()
             return Image(
                 content=response.content,
-                content_type="image/jpeg",
+                content_type="image/jpeg",  # Actually returns binary/octet-stream
             )
         except httpx.TimeoutException:
             _LOGGER.error("%s: Timeout getting image from %s", self.entity_id, url)
@@ -85,10 +90,12 @@ class EzvizLastMotion(EzvizEntity, ImageEntity):
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        if self._attr_image_url == self.data.get("last_alarm_pic"):
+        if self.data.get("last_alarm_pic") and self._attr_image_url == self.data.get(
+            "last_alarm_pic"
+        ):
             return
 
-        _LOGGER.debug("Image url changed")
+        _LOGGER.debug("Image url changed to %s", self.data["last_alarm_pic"])
 
         self._attr_image_url = self.data["last_alarm_pic"]
         self._cached_image = None
