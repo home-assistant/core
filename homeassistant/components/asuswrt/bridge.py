@@ -4,7 +4,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from collections import namedtuple
 import logging
-from typing import Any
+from typing import Any, cast
 
 from aioasuswrt.asuswrt import AsusWrt as AsusWrtLegacy
 
@@ -49,12 +49,7 @@ _LOGGER = logging.getLogger(__name__)
 
 def _get_dict(keys: list, values: list) -> dict[str, Any]:
     """Create a dict from a list of keys and values."""
-    ret_dict: dict[str, Any] = dict.fromkeys(keys)
-
-    for index, key in enumerate(ret_dict):
-        ret_dict[key] = values[index]
-
-    return ret_dict
+    return dict(zip(keys, values))
 
 
 class AsusWrtBridge(ABC):
@@ -150,7 +145,7 @@ class AsusWrtLegacyBridge(AsusWrtBridge):
     @property
     def is_connected(self) -> bool:
         """Get connected status."""
-        return bool(self._api.is_connected)
+        return cast(bool, self._api.is_connected)
 
     async def async_connect(self) -> None:
         """Connect to the device."""
