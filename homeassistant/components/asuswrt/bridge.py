@@ -230,28 +230,14 @@ class AsusWrtLegacyBridge(AsusWrtBridge):
 
     async def _get_available_temperature_sensors(self) -> list[str]:
         """Check which temperature information is available on the router."""
-        try:
-            availability = await self._api.async_find_temperature_commands()
-            available_sensors = [
-                SENSORS_TEMPERATURES[i] for i in range(3) if availability[i]
-            ]
-        except Exception as exc:  # pylint: disable=broad-except
-            _LOGGER.debug(
-                (
-                    "Failed checking temperature sensor availability for ASUS router"
-                    " %s. Exception: %s"
-                ),
-                self.host,
-                exc,
-            )
-            return []
-        return available_sensors
+        availability = await self._api.async_find_temperature_commands()
+        return [SENSORS_TEMPERATURES[i] for i in range(3) if availability[i]]
 
     async def _get_bytes(self) -> dict[str, Any]:
         """Fetch byte information from the router."""
         try:
             datas = await self._api.async_get_bytes_total()
-        except (OSError, ValueError) as exc:
+        except (IndexError, OSError, ValueError) as exc:
             raise UpdateFailed(exc) from exc
 
         return _get_dict(SENSORS_BYTES, datas)
@@ -260,7 +246,7 @@ class AsusWrtLegacyBridge(AsusWrtBridge):
         """Fetch rates information from the router."""
         try:
             rates = await self._api.async_get_current_transfer_rates()
-        except (OSError, ValueError) as exc:
+        except (IndexError, OSError, ValueError) as exc:
             raise UpdateFailed(exc) from exc
 
         return _get_dict(SENSORS_RATES, rates)
@@ -269,7 +255,7 @@ class AsusWrtLegacyBridge(AsusWrtBridge):
         """Fetch load average information from the router."""
         try:
             avg = await self._api.async_get_loadavg()
-        except (OSError, ValueError) as exc:
+        except (IndexError, OSError, ValueError) as exc:
             raise UpdateFailed(exc) from exc
 
         return _get_dict(SENSORS_LOAD_AVG, avg)
