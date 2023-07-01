@@ -61,14 +61,8 @@ PLATFORM_NOT_READY_RETRIES = 10
 DATA_ENTITY_PLATFORM = "entity_platform"
 PLATFORM_NOT_READY_BASE_WAIT_TIME = 30  # seconds
 
-DEVICE_INFO_TYPES = (
-    # link info
-    {
-        "connections",
-        "identifiers",
-    },
-    # primary info
-    {
+DEVICE_INFO_TYPES = {
+    "primary": {
         "configuration_url",
         "connections",
         "entry_type",
@@ -81,8 +75,7 @@ DEVICE_INFO_TYPES = (
         "sw_version",
         "via_device",
     },
-    # secondary info
-    {
+    "secondary": {
         "connections",
         "default_manufacturer",
         "default_model",
@@ -90,7 +83,11 @@ DEVICE_INFO_TYPES = (
         # Used by Fritz
         "via_device",
     },
-)
+    "link": {
+        "connections",
+        "identifiers",
+    },
+}
 
 _LOGGER = getLogger(__name__)
 
@@ -666,7 +663,14 @@ class EntityPlatform:
                         ]
 
                 keys = set(processed_dev_info)
-                if not any(keys <= allowed for allowed in DEVICE_INFO_TYPES):
+                entity_type: str | None = None
+
+                for possible_type, allowed_keys in DEVICE_INFO_TYPES.items():
+                    if keys <= allowed_keys:
+                        entity_type = possible_type
+                        break
+
+                if entity_type is None:
                     raise HomeAssistantError(
                         "Device info needs to either describe a device, "
                         "link to existing device or provide extra information."
