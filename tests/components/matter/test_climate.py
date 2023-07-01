@@ -9,7 +9,7 @@ from homeassistant.components.climate import (
     HVAC_MODE_COOL,
     HVAC_MODE_HEAT,
     HVAC_MODE_HEAT_COOL,
-    HVAC_MODE_OFF,
+    HVACMode,
 )
 from homeassistant.core import HomeAssistant
 
@@ -41,10 +41,10 @@ async def test_thermostat(
     assert state.attributes["min_temp"] == 16
     assert state.attributes["max_temp"] == 30
     assert state.attributes["hvac_modes"] == [
-        HVAC_MODE_COOL,
-        HVAC_MODE_HEAT,
-        HVAC_MODE_OFF,
-        HVAC_MODE_HEAT_COOL,
+        HVACMode.OFF,
+        HVACMode.HEAT,
+        HVACMode.COOL,
+        HVACMode.HEAT_COOL,
     ]
     # change system mode to heat
     set_node_attribute(thermostat, 1, 513, 28, 4)
