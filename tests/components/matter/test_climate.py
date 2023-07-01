@@ -9,6 +9,7 @@ from homeassistant.components.climate import (
     HVAC_MODE_COOL,
     HVAC_MODE_HEAT,
     HVAC_MODE_HEAT_COOL,
+    HVAC_MODE_OFF,
 )
 from homeassistant.core import HomeAssistant
 
@@ -39,6 +40,12 @@ async def test_thermostat(
     assert state
     assert state.attributes["min_temp"] == 16
     assert state.attributes["max_temp"] == 30
+    assert state.attributes["hvac_modes"] == [
+        HVAC_MODE_COOL,
+        HVAC_MODE_HEAT,
+        HVAC_MODE_OFF,
+        HVAC_MODE_HEAT_COOL,
+    ]
     # change system mode to heat
     set_node_attribute(thermostat, 1, 513, 28, 4)
     await trigger_subscription_callback(hass, matter_client)
@@ -153,6 +160,8 @@ async def test_thermostat(
         ),
     )
     matter_client.send_device_command.reset_mock()
+    set_node_attribute(thermostat, 1, 513, 18, 1800)
+    await trigger_subscription_callback(hass, matter_client)
 
     # change target_temp_high to 26
     await hass.services.async_call(
@@ -175,3 +184,5 @@ async def test_thermostat(
         ),
     )
     matter_client.send_device_command.reset_mock()
+    set_node_attribute(thermostat, 1, 513, 17, 2600)
+    await trigger_subscription_callback(hass, matter_client)
