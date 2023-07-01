@@ -93,6 +93,11 @@ class EzvizLight(EzvizEntity, LightEntity):
             )
         )
 
+    @property
+    def is_on(self) -> bool:
+        """Return true if light is on."""
+        return bool(self._attr_is_on)
+
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on light."""
         try:
