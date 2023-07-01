@@ -57,6 +57,7 @@ async def async_pipeline_from_audio_stream(
     pipeline_id: str | None = None,
     conversation_id: str | None = None,
     tts_audio_output: str | None = None,
+    device_id: str | None = None,
 ) -> None:
     """Create an audio pipeline from an audio stream.
 
@@ -64,6 +65,7 @@ async def async_pipeline_from_audio_stream(
     """
     pipeline_input = PipelineInput(
         conversation_id=conversation_id,
+        device_id=device_id,
         stt_metadata=stt_metadata,
         stt_stream=stt_stream,
         run=PipelineRun(

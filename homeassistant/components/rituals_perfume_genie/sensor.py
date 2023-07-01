@@ -40,7 +40,6 @@ class RitualsSensorEntityDescription(
 ENTITY_DESCRIPTIONS = (
     RitualsSensorEntityDescription(
         key="battery_percentage",
-        translation_key="battery_percentage",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.BATTERY,
         value_fn=lambda diffuser: diffuser.battery_percentage,

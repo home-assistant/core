@@ -1091,6 +1091,12 @@
       "config_flow": true,
       "iot_class": "cloud_push"
     },
+    "discovergy": {
+      "name": "Discovergy",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "dlib_face_detect": {
       "name": "Dlib Face Detect",
       "integration_type": "hub",
@@ -1171,6 +1177,12 @@
       "name": "Downloader",
       "integration_type": "hub",
       "config_flow": false
+    },
+    "dremel_3d_printer": {
+      "name": "Dremel 3D Printer",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
     },
     "dsmr": {
       "name": "DSMR Slimme Meter",
@@ -1995,12 +2007,6 @@
         }
       }
     },
-    "goalfeed": {
-      "name": "Goalfeed",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "cloud_push"
-    },
     "goalzero": {
       "name": "Goal Zero Yeti",
       "integration_type": "device",
@@ -2078,7 +2084,7 @@
         },
         "google_translate": {
           "integration_type": "hub",
-          "config_flow": false,
+          "config_flow": true,
           "iot_class": "cloud_push",
           "name": "Google Translate text-to-speech"
         },
@@ -3079,6 +3085,12 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
+    "loqed": {
+      "name": "LOQED Touch Smart Lock",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "luftdaten": {
       "name": "Sensor.Community",
       "integration_type": "device",
@@ -3550,7 +3562,7 @@
     "mystrom": {
       "name": "myStrom",
       "integration_type": "hub",
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "local_polling"
     },
     "mythicbeastsdns": {
@@ -3948,7 +3960,7 @@
     "openhome": {
       "name": "Linn / OpenHome",
       "integration_type": "hub",
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "local_polling"
     },
     "opensensemap": {
@@ -4380,8 +4392,8 @@
       "name": "QNAP",
       "integrations": {
         "qnap": {
-          "integration_type": "hub",
-          "config_flow": false,
+          "integration_type": "device",
+          "config_flow": true,
           "iot_class": "local_polling",
           "name": "QNAP"
         },
@@ -4550,6 +4562,12 @@
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "cloud_polling"
+    },
+    "renson": {
+      "name": "Renson",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling"
     },
     "reolink": {
       "name": "Reolink IP NVR/camera",
@@ -4816,12 +4834,6 @@
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "cloud_polling"
-    },
-    "senseme": {
-      "name": "SenseME",
-      "integration_type": "hub",
-      "config_flow": true,
-      "iot_class": "local_push"
     },
     "sensibo": {
       "name": "Sensibo",
@@ -6529,8 +6541,8 @@
     "zodiac": {
       "name": "Zodiac",
       "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "local_polling"
+      "config_flow": true,
+      "iot_class": "calculated"
     },
     "zoneminder": {
       "name": "ZoneMinder",

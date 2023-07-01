@@ -99,14 +99,17 @@ class ZWaveLock(ZWaveBaseEntity, LockEntity):
     @property
     def is_locked(self) -> bool | None:
         """Return true if the lock is locked."""
-        if self.info.primary_value.value is None:
+        value = self.info.primary_value
+        if value.value is None or (
+            value.command_class == CommandClass.DOOR_LOCK
+            and value.value == DoorLockMode.UNKNOWN
+        ):
             # guard missing value
             return None
-        return int(
-            LOCK_CMD_CLASS_TO_LOCKED_STATE_MAP[
-                CommandClass(self.info.primary_value.command_class)
-            ]
-        ) == int(self.info.primary_value.value)
+        return (
+            LOCK_CMD_CLASS_TO_LOCKED_STATE_MAP[CommandClass(value.command_class)]
+            == self.info.primary_value.value
+        )
 
     async def _set_lock_state(self, target_state: str, **kwargs: Any) -> None:
         """Set the lock state."""

@@ -1,9 +1,10 @@
 """The tests for NEW_NAME device actions."""
 import pytest
+from pytest_unordered import unordered
 
 from homeassistant.components import automation
-from homeassistant.components.NEW_DOMAIN import DOMAIN
 from homeassistant.components.device_automation import DeviceAutomationType
+from homeassistant.components.NEW_DOMAIN import DOMAIN
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -11,7 +12,6 @@ from homeassistant.setup import async_setup_component
 
 from tests.common import (
     MockConfigEntry,
-    assert_lists_same,
     async_get_device_automations,
     async_mock_service,
 )
@@ -44,7 +44,7 @@ async def test_get_actions(
     actions = await async_get_device_automations(
         hass, DeviceAutomationType.ACTION, device_entry.id
     )
-    assert_lists_same(actions, expected_actions)
+    assert actions == unordered(expected_actions)
 
 
 @pytest.mark.parametrize(
@@ -91,7 +91,7 @@ async def test_get_actions_hidden_auxiliary(
     actions = await async_get_device_automations(
         hass, DeviceAutomationType.ACTION, device_entry.id
     )
-    assert_lists_same(actions, expected_actions)
+    assert actions == unordered(expected_actions)
 
 
 async def test_action(hass: HomeAssistant) -> None:

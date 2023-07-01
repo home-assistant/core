@@ -55,19 +55,6 @@ class SlackFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_import(self, import_config: dict[str, str]) -> FlowResult:
-        """Import a config entry from configuration.yaml."""
-        _LOGGER.warning(
-            "Configuration of the Slack integration in YAML is deprecated and "
-            "will be removed in a future release; Your existing configuration "
-            "has been imported into the UI automatically and can be safely removed "
-            "from your configuration.yaml file"
-        )
-        entries = self._async_current_entries()
-        if any(x.data[CONF_API_KEY] == import_config[CONF_API_KEY] for x in entries):
-            return self.async_abort(reason="already_configured")
-        return await self.async_step_user(import_config)
-
     async def _async_try_connect(
         self, token: str
     ) -> tuple[str, None] | tuple[None, dict[str, str]]:
