@@ -149,7 +149,7 @@ class EzvizLight(EzvizEntity, LightEntity):
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        if not self.data["switches"].get(DeviceSwitchType.ALARM_LIGHT.value):
+        if self.data["switches"].get(DeviceSwitchType.ALARM_LIGHT.value) is None:
             return
 
         self._attr_brightness = round(
