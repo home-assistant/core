@@ -52,6 +52,18 @@ class ThermostatFeature(IntEnum):
     LTNE = 64  # 1 << 6 = 64
 
 
+class ThermostatRunningState(IntEnum):
+    """Thermostat Running State, Matter spec Thermostat 7.33."""
+
+    Heat = 1  # 1 << 0 = 1
+    Cool = 2  # 1 << 1 = 2
+    Fan = 4  # 1 << 2 = 4
+    HeatStage2 = 8  # 1 << 3 = 8
+    CoolStage2 = 16  # 1 << 4 = 16
+    FanStage2 = 32  # 1 << 5 = 32
+    FanStage3 = 64  # 1 << 6 = 64
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
@@ -219,11 +231,15 @@ class MatterClimate(MatterEntity, ClimateEntity):
             clusters.Thermostat.Attributes.ThermostatRunningState
         ):
             match running_state_value:
-                case 1 | 8:
+                case ThermostatRunningState.Heat | ThermostatRunningState.HeatStage2:
                     self._attr_hvac_action = HVACAction.HEATING
-                case 2 | 16:
+                case ThermostatRunningState.Cool | ThermostatRunningState.CoolStage2:
                     self._attr_hvac_action = HVACAction.COOLING
-                case 4 | 32 | 64:
+                case (
+                    ThermostatRunningState.Fan
+                    | ThermostatRunningState.FanStage2
+                    | ThermostatRunningState.FanStage3
+                ):
                     self._attr_hvac_action = HVACAction.FAN
                 case _:
                     self._attr_hvac_action = HVACAction.OFF
@@ -231,11 +247,11 @@ class MatterClimate(MatterEntity, ClimateEntity):
         feature_map = int(
             self.get_matter_attribute_value(clusters.Thermostat.Attributes.FeatureMap)
         )
-        if feature_map & 1:
+        if feature_map & ThermostatFeature.HEAT:
             self._attr_hvac_modes.append(HVACMode.HEAT)
-        if feature_map & 2:
+        if feature_map & ThermostatFeature.COOL:
             self._attr_hvac_modes.append(HVACMode.COOL)
-        if feature_map & 32:
+        if feature_map & ThermostatFeature.AUTO:
             self._attr_hvac_modes.append(HVACMode.HEAT_COOL)
 
     def _get_temperature_in_degrees(
