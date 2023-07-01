@@ -264,14 +264,14 @@ async def async_remove_device_old(hass: HomeAssistant, entry: ConfigEntry):
     device_registry = dr.async_get(hass)
 
     source_entity = entity_registry.async_get(entry.options[CONF_SOURCE_SENSOR])
+    source_device_id = None
+    if source_entity is not None and source_entity.device_id is not None:
+        source_device_id = source_entity.device_id
+
     for device_entry in dr.async_entries_for_config_entry(
         device_registry, entry.entry_id
     ):
-        if (
-            source_entity is None
-            or source_entity.device_id is None
-            or device_entry.id != source_entity.device_id
-        ):
+        if device_entry.id != source_device_id:
             device_registry.async_update_device(
                 device_entry.id, remove_config_entry_id=entry.entry_id
             )
