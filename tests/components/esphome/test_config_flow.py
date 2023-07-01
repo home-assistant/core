@@ -1,4 +1,5 @@
 """Test config flow."""
+import asyncio
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from aioesphomeapi import (
@@ -10,6 +11,7 @@ from aioesphomeapi import (
     RequiresEncryptionAPIError,
     ResolveAPIError,
 )
+import aiohttp
 import pytest
 
 from homeassistant import config_entries, data_entry_flow
@@ -35,6 +37,7 @@ from . import VALID_NOISE_PSK
 from tests.common import MockConfigEntry
 
 INVALID_NOISE_PSK = "lSYBYEjQI1bVL8s2Vask4YytGMj1f1epNtmoim2yuTM="
+WRONG_NOISE_PSK = "GP+ciK+nVfTQ/gcz6uOdS+oKEdJgesU+jeu8Ssj2how="
 
 
 @pytest.fixture(autouse=False)
@@ -215,6 +218,214 @@ async def test_user_invalid_password(
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "authenticate"
     assert result["errors"] == {"base": "invalid_auth"}
+
+
+async def test_user_dashboard_has_wrong_key(
+    hass: HomeAssistant,
+    mock_client,
+    mock_dashboard,
+    mock_zeroconf: None,
+    mock_setup_entry: None,
+) -> None:
+    """Test user step with key from dashboard that is incorrect."""
+    mock_client.device_info.side_effect = [
+        RequiresEncryptionAPIError,
+        InvalidEncryptionKeyAPIError,
+        InvalidEncryptionKeyAPIError,
+        DeviceInfo(
+            uses_password=False,
+            name="test",
+            mac_address="11:22:33:44:55:aa",
+        ),
+    ]
+
+    with patch(
+        "homeassistant.components.esphome.dashboard.ESPHomeDashboardAPI.get_encryption_key",
+        return_value=WRONG_NOISE_PSK,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            "esphome",
+            context={"source": config_entries.SOURCE_USER},
+            data={CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "encryption_key"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_NOISE_PSK: VALID_NOISE_PSK}
+    )
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["data"] == {
+        CONF_HOST: "127.0.0.1",
+        CONF_PORT: 6053,
+        CONF_PASSWORD: "",
+        CONF_NOISE_PSK: VALID_NOISE_PSK,
+        CONF_DEVICE_NAME: "test",
+    }
+    assert mock_client.noise_psk == VALID_NOISE_PSK
+
+
+async def test_user_discovers_name_and_gets_key_from_dashboard(
+    hass: HomeAssistant,
+    mock_client,
+    mock_dashboard,
+    mock_zeroconf: None,
+    mock_setup_entry: None,
+) -> None:
+    """Test user step can discover the name and get the key from the dashboard."""
+    mock_client.device_info.side_effect = [
+        RequiresEncryptionAPIError,
+        InvalidEncryptionKeyAPIError("Wrong key", "test"),
+        DeviceInfo(
+            uses_password=False,
+            name="test",
+            mac_address="11:22:33:44:55:aa",
+        ),
+    ]
+
+    mock_dashboard["configured"].append(
+        {
+            "name": "test",
+            "configuration": "test.yaml",
+        }
+    )
+    await dashboard.async_get_dashboard(hass).async_refresh()
+
+    with patch(
+        "homeassistant.components.esphome.dashboard.ESPHomeDashboardAPI.get_encryption_key",
+        return_value=VALID_NOISE_PSK,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            "esphome",
+            context={"source": config_entries.SOURCE_USER},
+            data={CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["data"] == {
+        CONF_HOST: "127.0.0.1",
+        CONF_PORT: 6053,
+        CONF_PASSWORD: "",
+        CONF_NOISE_PSK: VALID_NOISE_PSK,
+        CONF_DEVICE_NAME: "test",
+    }
+    assert mock_client.noise_psk == VALID_NOISE_PSK
+
+
+async def test_user_discovers_name_and_gets_key_from_dashboard_fails(
+    hass: HomeAssistant,
+    mock_client,
+    mock_dashboard,
+    mock_zeroconf: None,
+    mock_setup_entry: None,
+) -> None:
+    """Test user step can discover the name and get the key from the dashboard."""
+    mock_client.device_info.side_effect = [
+        RequiresEncryptionAPIError,
+        InvalidEncryptionKeyAPIError("Wrong key", "test"),
+        RequiresEncryptionAPIError,
+        DeviceInfo(
+            uses_password=False,
+            name="test",
+            mac_address="11:22:33:44:55:aa",
+        ),
+    ]
+
+    mock_dashboard["configured"].append(
+        {
+            "name": "test",
+            "configuration": "test.yaml",
+        }
+    )
+    await dashboard.async_get_dashboard(hass).async_refresh()
+
+    with patch(
+        "homeassistant.components.esphome.dashboard.ESPHomeDashboardAPI.get_encryption_key",
+        side_effect=aiohttp.ClientError,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            "esphome",
+            context={"source": config_entries.SOURCE_USER},
+            data={CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "encryption_key"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_NOISE_PSK: VALID_NOISE_PSK}
+    )
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["data"] == {
+        CONF_HOST: "127.0.0.1",
+        CONF_PORT: 6053,
+        CONF_PASSWORD: "",
+        CONF_NOISE_PSK: VALID_NOISE_PSK,
+        CONF_DEVICE_NAME: "test",
+    }
+    assert mock_client.noise_psk == VALID_NOISE_PSK
+
+
+async def test_user_discovers_name_and_dashboard_is_unavailable(
+    hass: HomeAssistant,
+    mock_client,
+    mock_dashboard,
+    mock_zeroconf: None,
+    mock_setup_entry: None,
+) -> None:
+    """Test user step can discover the name but the dashboard is unavailable."""
+    mock_client.device_info.side_effect = [
+        RequiresEncryptionAPIError,
+        InvalidEncryptionKeyAPIError("Wrong key", "test"),
+        RequiresEncryptionAPIError,
+        DeviceInfo(
+            uses_password=False,
+            name="test",
+            mac_address="11:22:33:44:55:aa",
+        ),
+    ]
+
+    mock_dashboard["configured"].append(
+        {
+            "name": "test",
+            "configuration": "test.yaml",
+        }
+    )
+
+    with patch(
+        "esphome_dashboard_api.ESPHomeDashboardAPI.get_devices",
+        side_effect=asyncio.TimeoutError,
+    ):
+        await dashboard.async_get_dashboard(hass).async_refresh()
+        result = await hass.config_entries.flow.async_init(
+            "esphome",
+            context={"source": config_entries.SOURCE_USER},
+            data={CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "encryption_key"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_NOISE_PSK: VALID_NOISE_PSK}
+    )
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["data"] == {
+        CONF_HOST: "127.0.0.1",
+        CONF_PORT: 6053,
+        CONF_PASSWORD: "",
+        CONF_NOISE_PSK: VALID_NOISE_PSK,
+        CONF_DEVICE_NAME: "test",
+    }
+    assert mock_client.noise_psk == VALID_NOISE_PSK
 
 
 async def test_login_connection_error(
@@ -398,9 +609,9 @@ async def test_user_requires_psk(
     assert result["step_id"] == "encryption_key"
     assert result["errors"] == {}
 
-    assert len(mock_client.connect.mock_calls) == 1
-    assert len(mock_client.device_info.mock_calls) == 1
-    assert len(mock_client.disconnect.mock_calls) == 1
+    assert len(mock_client.connect.mock_calls) == 3
+    assert len(mock_client.device_info.mock_calls) == 3
+    assert len(mock_client.disconnect.mock_calls) == 3
 
 
 async def test_encryption_key_valid_psk(
