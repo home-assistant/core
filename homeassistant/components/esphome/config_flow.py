@@ -161,8 +161,10 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
                 error = await self.fetch_device_info()
                 self._noise_psk = None
 
-            await self._retrieve_encryption_key_from_dashboard()
-            error = await self.fetch_device_info()
+            if self._device_name:
+                await self._retrieve_encryption_key_from_dashboard()
+                error = await self.fetch_device_info()
+
             # If the fetched key is invalid, unset it again.
             if error == ERROR_INVALID_ENCRYPTION_KEY:
                 self._noise_psk = None
