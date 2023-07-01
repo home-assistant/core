@@ -38,18 +38,7 @@ HVAC_SYSTEM_MODE_MAP = {
 }
 SystemModeEnum = clusters.Thermostat.Enums.ThermostatSystemMode
 ControlSequenceEnum = clusters.Thermostat.Enums.ThermostatControlSequence
-
-
-class ThermostatFeature(IntEnum):
-    """Thermostat FeatureMap, Matter spec Thermostat 3.1."""
-
-    HEAT = 1  # 1 << 0 = 1
-    COOL = 2  # 1 << 1 = 2
-    OCC = 4  # 1 << 2 = 4
-    SCH = 8  # 1 << 3 = 8
-    SB = 16  # 1 << 4 = 16
-    AUTO = 32  # 1 << 5 = 32
-    LTNE = 64  # 1 << 6 = 64
+ThermostatFeature = clusters.Thermostat.Bitmaps.ThermostatFeature
 
 
 class ThermostatRunningState(IntEnum):
@@ -247,11 +236,11 @@ class MatterClimate(MatterEntity, ClimateEntity):
         feature_map = int(
             self.get_matter_attribute_value(clusters.Thermostat.Attributes.FeatureMap)
         )
-        if feature_map & ThermostatFeature.HEAT:
+        if feature_map & ThermostatFeature.kHeating:
             self._attr_hvac_modes.append(HVACMode.HEAT)
-        if feature_map & ThermostatFeature.COOL:
+        if feature_map & ThermostatFeature.kCooling:
             self._attr_hvac_modes.append(HVACMode.COOL)
-        if feature_map & ThermostatFeature.AUTO:
+        if feature_map & ThermostatFeature.kAutoMode:
             self._attr_hvac_modes.append(HVACMode.HEAT_COOL)
 
     def _get_temperature_in_degrees(
