@@ -1,6 +1,7 @@
 """Matter climate platform."""
 from __future__ import annotations
 
+from enum import IntEnum
 from typing import Any
 
 from chip.clusters import Objects as clusters
@@ -30,12 +31,23 @@ from .models import MatterDiscoverySchema
 
 TEMPERATURE_SCALING_FACTOR = 100
 HVAC_SYSTEM_MODE_MAP = {
-    HVACMode.HEAT: 4,
-    HVACMode.COOL: 3,
+    HVACMode.OFF: 0,
     HVACMode.HEAT_COOL: 1,
+    HVACMode.COOL: 3,
+    HVACMode.HEAT: 4,
 }
 SystemModeEnum = clusters.Thermostat.Enums.ThermostatSystemMode
 ControlSequenceEnum = clusters.Thermostat.Enums.ThermostatControlSequence
+
+
+class ThermostatFeature(IntEnum):
+    HEAT = 1  # 1 << 0 = 1
+    COOL = 2  # 1 << 1 = 2
+    OCC = 4  # 1 << 2 = 4
+    SCH = 8  # 1 << 3 = 8
+    SB = 16  # 1 << 4 = 16
+    AUTO = 32  # 1 << 5 = 32
+    LTNE = 64  # 1 << 6 = 64
 
 
 async def async_setup_entry(
@@ -213,25 +225,16 @@ class MatterClimate(MatterEntity, ClimateEntity):
                     self._attr_hvac_action = HVACAction.FAN
                 case _:
                     self._attr_hvac_action = HVACAction.OFF
-        # update hvac_modes based on ControlSequenceOfOperation
-        control_sequence_value = int(
-            self.get_matter_attribute_value(
-                clusters.Thermostat.Attributes.ControlSequenceOfOperation
-            )
+        # update hvac_modes based on feature map
+        feature_map = int(
+            self.get_matter_attribute_value(clusters.Thermostat.Attributes.FeatureMap)
         )
-        match control_sequence_value:
-            case ControlSequenceEnum.kCoolingAndHeating | ControlSequenceEnum.kCoolingAndHeatingWithReheat:
-                self._attr_hvac_modes = [
-                    HVACMode.HEAT,
-                    HVACMode.COOL,
-                    HVACMode.HEAT_COOL,
-                ]
-            case ControlSequenceEnum.kCoolingOnly | ControlSequenceEnum.kCoolingWithReheat:
-                self._attr_hvac_modes = [HVACMode.COOL]
-            case ControlSequenceEnum.kHeatingOnly | ControlSequenceEnum.kHeatingWithReheat:
-                self._attr_hvac_modes = [HVACMode.HEAT]
-            case _:
-                self._attr_hvac_modes = [HVACMode.OFF]
+        if feature_map & 1:
+            self._attr_hvac_modes.append(HVACMode.HEAT)
+        if feature_map & 2:
+            self._attr_hvac_modes.append(HVACMode.COOL)
+        if feature_map & 32:
+            self._attr_hvac_modes.append(HVACMode.HEAT_COOL)
 
     def _get_temperature_in_degrees(
         self, attribute: type[clusters.ClusterAttributeDescriptor]
