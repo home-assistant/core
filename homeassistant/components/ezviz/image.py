@@ -56,7 +56,7 @@ class EzvizLastMotion(EzvizEntity, ImageEntity):
         self._attr_name = "Last motion image"
         self._attr_image_url = self.data["last_alarm_pic"]
         self._attr_image_last_updated = dt_util.parse_datetime(
-            self.data["last_alarm_time"]
+            str(self.data["last_alarm_time"])
         )
 
     async def _async_load_image_from_url(self, url: str) -> Image | None:
@@ -95,6 +95,6 @@ class EzvizLastMotion(EzvizEntity, ImageEntity):
         self._attr_image_url = self.data["last_alarm_pic"]
         self._cached_image = None
         self._attr_image_last_updated = dt_util.parse_datetime(
-            self.data["last_alarm_time"]
+            str(self.data["last_alarm_time"])
         )
         super()._handle_coordinator_update()
