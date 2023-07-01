@@ -8,7 +8,7 @@ from pyezviz.exceptions import HTTPError, PyEzvizError
 
 from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.percentage import (
@@ -61,6 +61,7 @@ class EzvizLight(EzvizEntity, LightEntity):
         )
         self._attr_unique_id = f"{serial}_Light"
         self._attr_name = "Light"
+        self._attr_is_on = self.data["switches"][DeviceSwitchType.ALARM_LIGHT.value]
 
     @property
     def brightness(self) -> int | None:
@@ -72,10 +73,6 @@ class EzvizLight(EzvizEntity, LightEntity):
             )
         )
 
-    @property
-    def is_on(self) -> bool:
-        """Return the state of the light."""
-        return self.data["switches"][DeviceSwitchType.ALARM_LIGHT.value]
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on light."""
@@ -104,7 +101,8 @@ class EzvizLight(EzvizEntity, LightEntity):
             ) from err
 
         if update_ok:
-            await self.coordinator.async_request_refresh()
+            self._attr_is_on = True
+            self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off light."""
@@ -122,4 +120,14 @@ class EzvizLight(EzvizEntity, LightEntity):
             ) from err
 
         if update_ok:
-            await self.coordinator.async_request_refresh()
+            self._attr_is_on = True
+            self.async_write_ha_state()
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        if not self.data["switches"].get(DeviceSwitchType.ALARM_LIGHT.value):
+            return
+
+        self._attr_is_on = self.data["switches"][DeviceSwitchType.ALARM_LIGHT.value]
+        super()._handle_coordinator_update()
