@@ -199,7 +199,7 @@ class EzvizSwitch(EzvizEntity, SwitchEntity):
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        if not self.data["switches"].get(self._switch_number):
+        if self.data["switches"].get(self._switch_number) is None:
             return
 
         self._attr_is_on = self.data["switches"][self._switch_number]
