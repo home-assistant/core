@@ -143,24 +143,20 @@ class MatterClimate(MatterEntity, ClimateEntity):
     @property
     def target_temperature_high(self) -> float | None:
         """Return the highbound target temperature we try to reach."""
-        match self._attr_hvac_mode:
-            case HVACMode.HEAT_COOL:
-                return self._get_temperature_in_degrees(
-                    clusters.Thermostat.Attributes.OccupiedCoolingSetpoint
-                )
-            case _:
-                return None
+        if self._attr_hvac_mode == HVACMode.HEAT_COOL:
+            return self._get_temperature_in_degrees(
+                clusters.Thermostat.Attributes.OccupiedCoolingSetpoint
+            )
+        return None
 
     @property
     def target_temperature_low(self) -> float | None:
         """Return the lowbound target temperature we try to reach."""
-        match self._attr_hvac_mode:
-            case HVACMode.HEAT_COOL:
-                return self._get_temperature_in_degrees(
-                    clusters.Thermostat.Attributes.OccupiedHeatingSetpoint
-                )
-            case _:
-                return None
+        if self._attr_hvac_mode == HVACMode.HEAT_COOL:
+            return self._get_temperature_in_degrees(
+                clusters.Thermostat.Attributes.OccupiedHeatingSetpoint
+            )
+        return None
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
