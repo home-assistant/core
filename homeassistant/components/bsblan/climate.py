@@ -71,6 +71,7 @@ class BSBLANClimate(
     """Defines a BSBLAN climate device."""
 
     _attr_has_entity_name = True
+    _attr_name = None
     # Determine preset modes
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE

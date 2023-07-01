@@ -13,7 +13,7 @@ from aioesphomeapi import (
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    ATTR_COLOR_TEMP,
+    ATTR_COLOR_TEMP_KELVIN,
     ATTR_EFFECT,
     ATTR_FLASH,
     ATTR_RGB_COLOR,
@@ -31,7 +31,11 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import EsphomeEntity, esphome_state_property, platform_async_setup_entry
+from .entity import (
+    EsphomeEntity,
+    esphome_state_property,
+    platform_async_setup_entry,
+)
 
 FLASH_LENGTHS = {FLASH_SHORT: 2, FLASH_LONG: 10}
 
@@ -44,7 +48,6 @@ async def async_setup_entry(
         hass,
         entry,
         async_add_entities,
-        component_key="light",
         info_type=LightInfo,
         entity_type=EsphomeLight,
         state_type=LightState,
@@ -96,6 +99,20 @@ _COLOR_MODE_MAPPING = {
         | LightColorCapability.WHITE
     ],
 }
+
+
+def _mired_to_kelvin(mired_temperature: float) -> int:
+    """Convert absolute mired shift to degrees kelvin.
+
+    This function rounds the converted value instead of flooring the value as
+    is done in homeassistant.util.color.color_temperature_mired_to_kelvin().
+
+    If the value of mired_temperature is less than or equal to zero, return
+    the original value to avoid a divide by zero.
+    """
+    if mired_temperature <= 0:
+        return round(mired_temperature)
+    return round(1000000 / mired_temperature)
 
 
 def _color_mode_to_ha(mode: int) -> str:
@@ -198,8 +215,9 @@ class EsphomeLight(EsphomeEntity[LightInfo, LightState], LightEntity):
                 # need to convert cw+ww part to white+color_temp
                 white = data["white"] = max(cw, ww)
                 if white != 0:
-                    min_ct = self.min_mireds
-                    max_ct = self.max_mireds
+                    static_info = self._static_info
+                    min_ct = static_info.min_mireds
+                    max_ct = static_info.max_mireds
                     ct_ratio = ww / (cw + ww)
                     data["color_temperature"] = min_ct + ct_ratio * (max_ct - min_ct)
                 color_modes = _filter_color_modes(
@@ -216,8 +234,9 @@ class EsphomeLight(EsphomeEntity[LightInfo, LightState], LightEntity):
         if (transition := kwargs.get(ATTR_TRANSITION)) is not None:
             data["transition_length"] = transition
 
-        if (color_temp := kwargs.get(ATTR_COLOR_TEMP)) is not None:
-            data["color_temperature"] = color_temp
+        if (color_temp_k := kwargs.get(ATTR_COLOR_TEMP_KELVIN)) is not None:
+            # Do not use kelvin_to_mired here to prevent precision loss
+            data["color_temperature"] = 1000000.0 / color_temp_k
             if _filter_color_modes(color_modes, LightColorCapability.COLOR_TEMPERATURE):
                 color_modes = _filter_color_modes(
                     color_modes, LightColorCapability.COLOR_TEMPERATURE
@@ -345,9 +364,9 @@ class EsphomeLight(EsphomeEntity[LightInfo, LightState], LightEntity):
 
     @property
     @esphome_state_property
-    def color_temp(self) -> int:
-        """Return the CT color value in mireds."""
-        return round(self._state.color_temperature)
+    def color_temp_kelvin(self) -> int:
+        """Return the CT color value in Kelvin."""
+        return _mired_to_kelvin(self._state.color_temperature)
 
     @property
     @esphome_state_property
@@ -385,3 +404,6 @@ class EsphomeLight(EsphomeEntity[LightInfo, LightState], LightEntity):
         self._attr_effect_list = static_info.effects
         self._attr_min_mireds = round(static_info.min_mireds)
         self._attr_max_mireds = round(static_info.max_mireds)
+        if ColorMode.COLOR_TEMP in supported:
+            self._attr_min_color_temp_kelvin = _mired_to_kelvin(static_info.max_mireds)
+            self._attr_max_color_temp_kelvin = _mired_to_kelvin(static_info.min_mireds)
