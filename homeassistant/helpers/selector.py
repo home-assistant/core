@@ -500,6 +500,34 @@ class ConstantSelector(Selector[ConstantSelectorConfig]):
         return self.config["value"]
 
 
+class ConversationAgentSelectorConfig(TypedDict, total=False):
+    """Class to represent a conversation agent selector config."""
+
+    language: str
+
+
+@SELECTORS.register("conversation_agent")
+class COnversationAgentSelector(Selector[ConversationAgentSelectorConfig]):
+    """Selector for a conversation agent."""
+
+    selector_type = "conversation_agent"
+
+    CONFIG_SCHEMA = vol.Schema(
+        {
+            vol.Optional("language"): str,
+        }
+    )
+
+    def __init__(self, config: ConversationAgentSelectorConfig) -> None:
+        """Instantiate a selector."""
+        super().__init__(config)
+
+    def __call__(self, data: Any) -> str:
+        """Validate the passed selection."""
+        agent: str = vol.Schema(str)(data)
+        return agent
+
+
 class DateSelectorConfig(TypedDict):
     """Class to represent a date selector config."""
 

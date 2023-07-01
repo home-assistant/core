@@ -1,20 +1,19 @@
 """Support for Obihai Sensors."""
 from __future__ import annotations
 
-from datetime import timedelta
+import datetime
 
-from pyobihai import PyObihai
+from requests.exceptions import RequestException
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .connectivity import ObihaiConnection
-from .const import OBIHAI
+from .const import DOMAIN, LOGGER, OBIHAI
 
-SCAN_INTERVAL = timedelta(seconds=5)
+SCAN_INTERVAL = datetime.timedelta(seconds=5)
 
 
 async def async_setup_entry(
@@ -22,24 +21,18 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Obihai sensor entries."""
 
-    username = entry.data[CONF_USERNAME]
-    password = entry.data[CONF_PASSWORD]
-    host = entry.data[CONF_HOST]
-    requester = ObihaiConnection(host, username, password)
+    requester: ObihaiConnection = hass.data[DOMAIN][entry.entry_id]
 
-    await hass.async_add_executor_job(requester.update)
     sensors = []
     for key in requester.services:
-        sensors.append(ObihaiServiceSensors(requester.pyobihai, requester.serial, key))
+        sensors.append(ObihaiServiceSensors(requester, key))
 
     if requester.line_services is not None:
         for key in requester.line_services:
-            sensors.append(
-                ObihaiServiceSensors(requester.pyobihai, requester.serial, key)
-            )
+            sensors.append(ObihaiServiceSensors(requester, key))
 
     for key in requester.call_direction:
-        sensors.append(ObihaiServiceSensors(requester.pyobihai, requester.serial, key))
+        sensors.append(ObihaiServiceSensors(requester, key))
 
     async_add_entities(sensors, update_before_add=True)
 
@@ -47,18 +40,21 @@ async def async_setup_entry(
 class ObihaiServiceSensors(SensorEntity):
     """Get the status of each Obihai Lines."""
 
-    def __init__(self, pyobihai: PyObihai, serial: str, service_name: str) -> None:
+    def __init__(self, requester: ObihaiConnection, service_name: str) -> None:
         """Initialize monitor sensor."""
+
+        self.requester = requester
         self._service_name = service_name
         self._attr_name = f"{OBIHAI} {self._service_name}"
-        self._pyobihai = pyobihai
-        self._attr_unique_id = f"{serial}-{self._service_name}"
+        self._pyobihai = requester.pyobihai
+        self._attr_unique_id = f"{requester.serial}-{self._service_name}"
         if self._service_name == "Last Reboot":
             self._attr_device_class = SensorDeviceClass.TIMESTAMP
 
     @property
     def icon(self) -> str:
         """Return an icon."""
+
         if self._service_name == "Call Direction":
             if self._attr_native_value == "No Active Calls":
                 return "mdi:phone-off"
@@ -87,26 +83,40 @@ class ObihaiServiceSensors(SensorEntity):
 
     def update(self) -> None:
         """Update the sensor."""
-        if not self._pyobihai.check_account():
-            self._attr_native_value = None
-            self._attr_available = False
+
+        LOGGER.debug("Running update on %s", self._service_name)
+        try:
+            # port connection, and last caller info
+            if "Caller Info" in self._service_name or "Port" in self._service_name:
+                services = self._pyobihai.get_line_state()
+
+                if services is not None and self._service_name in services:
+                    self._attr_native_value = services.get(self._service_name)
+            elif self._service_name == "Call Direction":
+                call_direction = self._pyobihai.get_call_direction()
+
+                if self._service_name in call_direction:
+                    self._attr_native_value = call_direction.get(self._service_name)
+            else:  # SIP Profile service sensors, phone sensor, and last reboot
+                services = self._pyobihai.get_state()
+
+                if self._service_name in services:
+                    self._attr_native_value = services.get(self._service_name)
+
+            if not self.requester.available:
+                self.requester.available = True
+                LOGGER.info("Connection restored")
+            self._attr_available = True
+
             return
 
-        services = self._pyobihai.get_state()
+        except RequestException as exc:
+            if self.requester.available:
+                LOGGER.warning("Connection failed, Obihai offline? %s", exc)
+        except IndexError as exc:
+            if self.requester.available:
+                LOGGER.warning("Connection failed, bad response: %s", exc)
 
-        if self._service_name in services:
-            self._attr_native_value = services.get(self._service_name)
-
-        services = self._pyobihai.get_line_state()
-
-        if services is not None and self._service_name in services:
-            self._attr_native_value = services.get(self._service_name)
-
-        call_direction = self._pyobihai.get_call_direction()
-
-        if self._service_name in call_direction:
-            self._attr_native_value = call_direction.get(self._service_name)
-
-        if self._attr_native_value is None:
-            self._attr_available = False
-        self._attr_available = True
+        self._attr_native_value = None
+        self._attr_available = False
+        self.requester.available = False

@@ -1652,16 +1652,22 @@ async def test_ws_hass_agent_debug(
     hass: HomeAssistant,
     init_components,
     hass_ws_client: WebSocketGenerator,
+    area_registry: ar.AreaRegistry,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test homeassistant agent debug websocket command."""
     client = await hass_ws_client(hass)
 
+    kitchen_area = area_registry.async_create("kitchen")
     entity_registry.async_get_or_create(
         "light", "demo", "1234", suggested_object_id="kitchen"
     )
-    entity_registry.async_update_entity("light.kitchen", aliases={"my cool light"})
+    entity_registry.async_update_entity(
+        "light.kitchen",
+        aliases={"my cool light"},
+        area_id=kitchen_area.id,
+    )
     hass.states.async_set("light.kitchen", "off")
 
     on_calls = async_mock_service(hass, LIGHT_DOMAIN, "turn_on")
@@ -1673,6 +1679,8 @@ async def test_ws_hass_agent_debug(
             "sentences": [
                 "turn on my cool light",
                 "turn my cool light off",
+                "turn on all lights in the kitchen",
+                "how many lights are on in the kitchen?",
                 "this will not match anything",  # null in results
             ],
         }

@@ -83,6 +83,7 @@ class RoborockVacuum(RoborockCoordinatedEntity, StateVacuumEntity):
         | VacuumEntityFeature.START
     )
     _attr_translation_key = DOMAIN
+    _attr_name = None
 
     def __init__(
         self,
