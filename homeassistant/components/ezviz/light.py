@@ -1,12 +1,18 @@
 """Support for EZVIZ light entity."""
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import Any
 
-from pyezviz.constants import DeviceCatagories, DeviceSwitchType, SupportExt
+from pyezviz.constants import DeviceSwitchType, SupportExt
 from pyezviz.exceptions import HTTPError, PyEzvizError
 
-from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
+from homeassistant.components.light import (
+    ATTR_BRIGHTNESS,
+    ColorMode,
+    LightEntity,
+    LightEntityDescription,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -24,6 +30,28 @@ PARALLEL_UPDATES = 1
 BRIGHTNESS_RANGE = (1, 255)
 
 
+@dataclass
+class EzvizLightEntityDescriptionMixin:
+    """Mixin values for EZVIZ light entities."""
+
+    supported_ext: str
+
+
+@dataclass
+class EzvizLightEntityDescription(
+    LightEntityDescription, EzvizLightEntityDescriptionMixin
+):
+    """Describe a EZVIZ light."""
+
+
+LIGHT_TYPE = EzvizLightEntityDescription(
+    key="light",
+    name="Light",
+    translation_key="light",
+    supported_ext=str(SupportExt.SupportAlarmLight.value),
+)
+
+
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
@@ -36,7 +64,7 @@ async def async_setup_entry(
         EzvizLight(coordinator, camera)
         for camera in coordinator.data
         for capibility, value in coordinator.data[camera]["supportExt"].items()
-        if capibility == str(SupportExt.SupportAlarmLight.value)
+        if capibility == LIGHT_TYPE.supported_ext
         if value == "1"
     )
 
@@ -55,24 +83,15 @@ class EzvizLight(EzvizEntity, LightEntity):
     ) -> None:
         """Initialize the light."""
         super().__init__(coordinator, serial)
-        self.battery_cam_type = bool(
-            self.data["device_category"]
-            == DeviceCatagories.BATTERY_CAMERA_DEVICE_CATEGORY.value
-        )
         self._attr_unique_id = f"{serial}_Light"
-        self._attr_name = "Light"
+        self.entity_description = LIGHT_TYPE
         self._attr_is_on = self.data["switches"][DeviceSwitchType.ALARM_LIGHT.value]
-
-    @property
-    def brightness(self) -> int | None:
-        """Return the brightness of this light between 0..255."""
-        return round(
+        self._attr_brightness = round(
             percentage_to_ranged_value(
                 BRIGHTNESS_RANGE,
                 self.coordinator.data[self._serial]["alarm_light_luminance"],
             )
         )
-
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on light."""
@@ -101,6 +120,8 @@ class EzvizLight(EzvizEntity, LightEntity):
             ) from err
 
         if update_ok:
+            if ATTR_BRIGHTNESS in kwargs:
+                self._attr_brightness = kwargs[ATTR_BRIGHTNESS]
             self._attr_is_on = True
             self.async_write_ha_state()
 
@@ -120,7 +141,9 @@ class EzvizLight(EzvizEntity, LightEntity):
             ) from err
 
         if update_ok:
-            self._attr_is_on = True
+            if ATTR_BRIGHTNESS in kwargs:
+                self._attr_brightness = kwargs[ATTR_BRIGHTNESS]
+            self._attr_is_on = False
             self.async_write_ha_state()
 
     @callback
@@ -129,5 +152,11 @@ class EzvizLight(EzvizEntity, LightEntity):
         if not self.data["switches"].get(DeviceSwitchType.ALARM_LIGHT.value):
             return
 
+        self._attr_brightness = round(
+            percentage_to_ranged_value(
+                BRIGHTNESS_RANGE,
+                self.data["alarm_light_luminance"],
+            )
+        )
         self._attr_is_on = self.data["switches"][DeviceSwitchType.ALARM_LIGHT.value]
         super()._handle_coordinator_update()
