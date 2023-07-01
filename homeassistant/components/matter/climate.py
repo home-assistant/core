@@ -85,6 +85,7 @@ class MatterClimate(MatterEntity, ClimateEntity):
         endpoint: MatterEndpoint,
         entity_info: MatterEntityInfo,
     ) -> None:
+        """Initialize the Matter climate entity."""
         super().__init__(matter_client, endpoint, entity_info)
 
         # set hvac_modes based on feature map
