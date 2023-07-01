@@ -231,7 +231,6 @@ async def test_user_dashboard_has_wrong_key(
     mock_client.device_info.side_effect = [
         RequiresEncryptionAPIError,
         InvalidEncryptionKeyAPIError,
-        InvalidEncryptionKeyAPIError,
         DeviceInfo(
             uses_password=False,
             name="test",
@@ -609,9 +608,9 @@ async def test_user_requires_psk(
     assert result["step_id"] == "encryption_key"
     assert result["errors"] == {}
 
-    assert len(mock_client.connect.mock_calls) == 3
-    assert len(mock_client.device_info.mock_calls) == 3
-    assert len(mock_client.disconnect.mock_calls) == 3
+    assert len(mock_client.connect.mock_calls) == 2
+    assert len(mock_client.device_info.mock_calls) == 2
+    assert len(mock_client.disconnect.mock_calls) == 2
 
 
 async def test_encryption_key_valid_psk(
