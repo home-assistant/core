@@ -10,8 +10,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .api import VodafoneStationApi, VodafoneStationDeviceInfo
 from .const import _LOGGER, DEFAULT_DEVICE_NAME, DOMAIN
+from .coordinator import VodafoneStationDeviceInfo, VodafoneStationRouter
 
 
 async def async_setup_entry(
@@ -20,17 +20,17 @@ async def async_setup_entry(
     """Set up device tracker for Vodafone Station component."""
 
     _LOGGER.debug("Start device trackers setup")
-    api: VodafoneStationApi = hass.data[DOMAIN][entry.entry_id]
+    coordinator: VodafoneStationRouter = hass.data[DOMAIN][entry.entry_id]
 
     tracked: set = set()
 
     @callback
     def update_router() -> None:
         """Update the values of the router."""
-        add_entities(api, async_add_entities, tracked)
+        add_entities(coordinator, async_add_entities, tracked)
 
     entry.async_on_unload(
-        async_dispatcher_connect(hass, api.signal_device_new, update_router)
+        async_dispatcher_connect(hass, coordinator.signal_device_new, update_router)
     )
 
     update_router()
@@ -38,17 +38,19 @@ async def async_setup_entry(
 
 @callback
 def add_entities(
-    api: VodafoneStationApi, async_add_entities: AddEntitiesCallback, tracked: set[str]
+    coordinator: VodafoneStationRouter,
+    async_add_entities: AddEntitiesCallback,
+    tracked: set[str],
 ) -> None:
     """Add new tracker entities from the router."""
     new_tracked = []
 
     _LOGGER.debug("Adding device trackers entities")
-    for mac, device in api.devices.items():
+    for mac, device in coordinator.devices.items():
         if mac in tracked:
             continue
         _LOGGER.debug("New device tracker: %s", device.hostname)
-        new_tracked.append(VodafoneStationTracker(api, device))
+        new_tracked.append(VodafoneStationTracker(coordinator, device))
         tracked.add(mac)
 
     async_add_entities(new_tracked)
@@ -60,10 +62,10 @@ class VodafoneStationTracker(ScannerEntity):
     _attr_should_poll = True
 
     def __init__(
-        self, api: VodafoneStationApi, device: VodafoneStationDeviceInfo
+        self, coordinator: VodafoneStationRouter, device: VodafoneStationDeviceInfo
     ) -> None:
         """Initialize a Vodafone Station device."""
-        self._api = api
+        self._coordinator = coordinator
         self._device: VodafoneStationDeviceInfo = device
         self._attr_unique_id = device._mac
         self._attr_name = device._name or DEFAULT_DEVICE_NAME
@@ -101,7 +103,7 @@ class VodafoneStationTracker(ScannerEntity):
     @property
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return additional attributes of the device."""
-        dev = self._api.devices[self.mac_address]
+        dev = self._coordinator.devices[self.mac_address]
         self._attr_extra_state_attributes = {}
         self._attr_extra_state_attributes["connection_type"] = dev.connection_type
         if "Wifi" in dev.connection_type:
@@ -112,7 +114,7 @@ class VodafoneStationTracker(ScannerEntity):
     @callback
     def async_on_demand_update(self) -> None:
         """Update state."""
-        self._device = self._api.devices[self._device.mac_address]
+        self._device = self._coordinator.devices[self._device.mac_address]
         self._attr_extra_state_attributes = {}
         if self._device.last_activity:
             self._attr_extra_state_attributes[
@@ -125,7 +127,7 @@ class VodafoneStationTracker(ScannerEntity):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                self._api.signal_device_update,
+                self._coordinator.signal_device_update,
                 self.async_on_demand_update,
             )
         )

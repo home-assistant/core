@@ -1,11 +1,10 @@
 """Config flow for Vodafone Station integration."""
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Mapping
 from typing import Any
 
-import aiohttp
+import aiovodafone
 import voluptuous as vol
 
 from homeassistant import core, exceptions
@@ -14,8 +13,8 @@ from homeassistant.config_entries import ConfigEntry, ConfigFlow
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_SSL, CONF_USERNAME
 from homeassistant.data_entry_flow import FlowResult
 
-from .api import VodafoneStationApi
 from .const import _LOGGER, DEFAULT_HOST, DEFAULT_SSL, DEFAULT_USERNAME, DOMAIN
+from .coordinator import VodafoneStationRouter
 
 
 def user_form_schema(user_input: dict[str, Any] | None) -> vol.Schema:
@@ -39,19 +38,18 @@ async def validate_input(
 ) -> dict[str, str]:
     """Validate the user input allows us to connect."""
 
-    api = VodafoneStationApi(
+    coordinator = VodafoneStationRouter(
         data[CONF_HOST], data[CONF_SSL], data[CONF_USERNAME], data[CONF_PASSWORD], hass
     )
 
     try:
-        logged = await api.login()
-    except (asyncio.exceptions.TimeoutError, aiohttp.ClientConnectorError) as err:
+        await coordinator.api.login()
+    except aiovodafone.exceptions.CannotConnect as err:
         raise CannotConnect from err
+    except aiovodafone.exceptions.CannotAuthenticate as err:
+        raise InvalidAuth from err
 
-    if not logged:
-        raise InvalidAuth
-
-    await api.logout()
+    await coordinator.api.logout()
     return {"title": data[CONF_HOST]}
 
 

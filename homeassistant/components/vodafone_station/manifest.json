@@ -4,5 +4,7 @@
   "codeowners": ["@paoloantinori", "@chemelli74"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/vodafone_station",
-  "iot_class": "local_polling"
+  "iot_class": "local_polling",
+  "loggers": ["aiovodafone"],
+  "requirements": ["aiovodafone==0.0.4"]
 }
