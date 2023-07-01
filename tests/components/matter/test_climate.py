@@ -42,17 +42,27 @@ async def test_thermostat(
     thermostat: MatterNode,
 ) -> None:
     """Test thermostat."""
+    # test default temp range
     state = hass.states.get("climate.longan_link_hvac")
     assert state
-    assert state.attributes["min_temp"] == 16
-    assert state.attributes["max_temp"] == 30
-    assert state.attributes["hvac_modes"] == [
-        HVACMode.OFF,
-        HVACMode.HEAT,
-        HVACMode.COOL,
-        HVACMode.HEAT_COOL,
-    ]
+    assert state.attributes["min_temp"] == 7
+    assert state.attributes["max_temp"] == 35
 
+    # test set temperature when target temp is None
+    assert state.attributes["temperature"] is None
+    assert state.state == HVAC_MODE_COOL
+    with pytest.raises(
+        ValueError, match="Current target_temperature should not be None"
+    ):
+        await hass.services.async_call(
+            "climate",
+            "set_temperature",
+            {
+                "entity_id": "climate.longan_link_hvac",
+                "temperature": 22.5,
+            },
+            blocking=True,
+        )
     with pytest.raises(ValueError, match="Temperature must be provided"):
         await hass.services.async_call(
             "climate",
@@ -64,6 +74,44 @@ async def test_thermostat(
             },
             blocking=True,
         )
+
+    # change system mode to heat_cool
+    set_node_attribute(thermostat, 1, 513, 28, 1)
+    await trigger_subscription_callback(hass, matter_client)
+    with pytest.raises(
+        ValueError,
+        match="current target_temperature_low and target_temperature_high should not be None",
+    ):
+        state = hass.states.get("climate.longan_link_hvac")
+        assert state
+        assert state.state == HVAC_MODE_HEAT_COOL
+        await hass.services.async_call(
+            "climate",
+            "set_temperature",
+            {
+                "entity_id": "climate.longan_link_hvac",
+                "target_temp_low": 18,
+                "target_temp_high": 26,
+            },
+            blocking=True,
+        )
+
+    # initial state
+    set_node_attribute(thermostat, 1, 513, 3, 1600)
+    set_node_attribute(thermostat, 1, 513, 4, 3000)
+    set_node_attribute(thermostat, 1, 513, 5, 1600)
+    set_node_attribute(thermostat, 1, 513, 6, 3000)
+    await trigger_subscription_callback(hass, matter_client)
+    state = hass.states.get("climate.longan_link_hvac")
+    assert state
+    assert state.attributes["min_temp"] == 16
+    assert state.attributes["max_temp"] == 30
+    assert state.attributes["hvac_modes"] == [
+        HVACMode.OFF,
+        HVACMode.HEAT,
+        HVACMode.COOL,
+        HVACMode.HEAT_COOL,
+    ]
 
     # test system mode update from device
     set_node_attribute(thermostat, 1, 513, 28, 0)

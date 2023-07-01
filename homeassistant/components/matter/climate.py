@@ -173,7 +173,7 @@ class MatterClimate(MatterEntity, ClimateEntity):
             if temperature is None:
                 raise ValueError("Temperature must be provided")
             if self.target_temperature is None:
-                raise ValueError("current target_temperature should not be None")
+                raise ValueError("Current target_temperature should not be None")
             command = self._create_optional_setpoint_command(
                 clusters.Thermostat.Enums.SetpointAdjustMode.kCool
                 if current_mode == HVACMode.COOL
