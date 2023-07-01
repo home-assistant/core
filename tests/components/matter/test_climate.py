@@ -8,6 +8,7 @@ import pytest
 from homeassistant.components.climate import (
     HVAC_MODE_COOL,
     HVAC_MODE_HEAT,
+    HVAC_MODE_HEAT_COOL,
 )
 from homeassistant.core import HomeAssistant
 
@@ -34,6 +35,10 @@ async def test_thermostat(
     thermostat: MatterNode,
 ) -> None:
     """Test thermostat."""
+    state = hass.states.get("climate.longan_link_hvac")
+    assert state
+    assert state.attributes["min_temp"] == 16
+    assert state.attributes["max_temp"] == 30
     # change system mode to heat
     set_node_attribute(thermostat, 1, 513, 28, 4)
     await trigger_subscription_callback(hass, matter_client)
@@ -103,6 +108,70 @@ async def test_thermostat(
         endpoint_id=1,
         command=clusters.Thermostat.Commands.SetpointRaiseLower(
             clusters.Thermostat.Enums.SetpointAdjustMode.kCool, -20
+        ),
+    )
+    matter_client.send_device_command.reset_mock()
+
+    # change system mode to heat_cool
+    set_node_attribute(thermostat, 1, 513, 28, 1)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("climate.longan_link_hvac")
+    assert state
+    assert state.state == HVAC_MODE_HEAT_COOL
+
+    # change occupied cooling setpoint to 18
+    set_node_attribute(thermostat, 1, 513, 17, 2500)
+    await trigger_subscription_callback(hass, matter_client)
+    # change occupied heating setpoint to 18
+    set_node_attribute(thermostat, 1, 513, 18, 1700)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("climate.longan_link_hvac")
+    assert state
+    assert state.attributes["target_temperature_low"] == 17
+    assert state.attributes["target_temperature_high"] == 25
+
+    # change target_temp_low to 18
+    await hass.services.async_call(
+        "climate",
+        "set_temperature",
+        {
+            "entity_id": "climate.longan_link_hvac",
+            "target_temp_low": 18,
+            "target_temp_high": 25,
+        },
+        blocking=True,
+    )
+
+    assert matter_client.send_device_command.call_count == 1
+    assert matter_client.send_device_command.call_args == call(
+        node_id=thermostat.node_id,
+        endpoint_id=1,
+        command=clusters.Thermostat.Commands.SetpointRaiseLower(
+            clusters.Thermostat.Enums.SetpointAdjustMode.kHeat, 10
+        ),
+    )
+    matter_client.send_device_command.reset_mock()
+
+    # change target_temp_high to 26
+    await hass.services.async_call(
+        "climate",
+        "set_temperature",
+        {
+            "entity_id": "climate.longan_link_hvac",
+            "target_temp_low": 18,
+            "target_temp_high": 26,
+        },
+        blocking=True,
+    )
+
+    assert matter_client.send_device_command.call_count == 1
+    assert matter_client.send_device_command.call_args == call(
+        node_id=thermostat.node_id,
+        endpoint_id=1,
+        command=clusters.Thermostat.Commands.SetpointRaiseLower(
+            clusters.Thermostat.Enums.SetpointAdjustMode.kCool, 10
         ),
     )
     matter_client.send_device_command.reset_mock()
