@@ -118,6 +118,53 @@ async def test_user_connection_updates_host(
     assert entry.data[CONF_HOST] == "127.0.0.1"
 
 
+async def test_user_sets_unique_id(
+    hass: HomeAssistant, mock_client, mock_zeroconf: None, mock_setup_entry: None
+) -> None:
+    """Test that the user flow sets the unique id."""
+    service_info = zeroconf.ZeroconfServiceInfo(
+        host="192.168.43.183",
+        addresses=["192.168.43.183"],
+        hostname="test8266.local.",
+        name="mock_name",
+        port=6053,
+        properties={
+            "mac": "1122334455aa",
+        },
+        type="mock_type",
+    )
+    discovery_result = await hass.config_entries.flow.async_init(
+        "esphome", context={"source": config_entries.SOURCE_ZEROCONF}, data=service_info
+    )
+
+    assert discovery_result["type"] == FlowResultType.FORM
+    assert discovery_result["step_id"] == "discovery_confirm"
+
+    result = await hass.config_entries.flow.async_init(
+        "esphome",
+        context={"source": config_entries.SOURCE_USER},
+        data=None,
+    )
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
+    )
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["data"] == {
+        CONF_HOST: "127.0.0.1",
+        CONF_PORT: 6053,
+        CONF_PASSWORD: "",
+        CONF_NOISE_PSK: "",
+        CONF_DEVICE_NAME: "test",
+    }
+
+    assert not hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+
+
 async def test_user_resolve_error(
     hass: HomeAssistant, mock_client, mock_zeroconf: None, mock_setup_entry: None
 ) -> None:
