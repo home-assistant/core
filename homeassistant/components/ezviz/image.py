@@ -3,7 +3,9 @@ from __future__ import annotations
 
 import logging
 
-from homeassistant.components.image import ImageEntity
+import httpx
+
+from homeassistant.components.image import Image, ImageEntity
 from homeassistant.config_entries import (
     ConfigEntry,
 )
@@ -21,6 +23,7 @@ from .coordinator import EzvizDataUpdateCoordinator
 from .entity import EzvizEntity
 
 _LOGGER = logging.getLogger(__name__)
+GET_IMAGE_TIMEOUT = 10
 
 
 async def async_setup_entry(
@@ -51,12 +54,33 @@ class EzvizLastMotion(EzvizEntity, ImageEntity):
         self.hass = hass
         self._attr_unique_id = f"{serial}_last_motion_image"
         self._attr_name = "Last motion image"
-        self.last_image_url = self.data["last_alarm_pic"]
+        self._attr_image_url = self.data["last_alarm_pic"]
+        self._attr_image_last_updated = dt_util.parse_datetime(
+            self.data["last_alarm_time"]
+        )
 
-    @property
-    def image_url(self) -> str | None:
-        """Return URL of image."""
-        return self.last_image_url
+    async def _async_load_image_from_url(self, url: str) -> Image | None:
+        """Load an image by url."""
+        try:
+            response = await self._client.get(
+                url, timeout=GET_IMAGE_TIMEOUT, follow_redirects=True
+            )
+            response.raise_for_status()
+            return Image(
+                content=response.content,
+                content_type="image/jpeg",
+            )
+        except httpx.TimeoutException:
+            _LOGGER.error("%s: Timeout getting image from %s", self.entity_id, url)
+            return None
+        except (httpx.RequestError, httpx.HTTPStatusError) as err:
+            _LOGGER.error(
+                "%s: Error getting new image from %s: %s",
+                self.entity_id,
+                url,
+                err,
+            )
+            return None
 
     @callback
     def _handle_coordinator_update(self) -> None:
@@ -64,11 +88,13 @@ class EzvizLastMotion(EzvizEntity, ImageEntity):
         if not self.data.get("last_alarm_pic"):
             return
 
-        if self.last_image_url == self.data["last_alarm_pic"]:
+        if self._attr_image_url == self.data["last_alarm_pic"]:
             return
 
         _LOGGER.debug("Image url changed")
-        self.last_image_url = self.data["last_alarm_pic"]
+        self._attr_image_url = self.data["last_alarm_pic"]
         self._cached_image = None
-        self._attr_image_last_updated = dt_util.utcnow()
+        self._attr_image_last_updated = dt_util.parse_datetime(
+            self.data["last_alarm_time"]
+        )
         super()._handle_coordinator_update()
