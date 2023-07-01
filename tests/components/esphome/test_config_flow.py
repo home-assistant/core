@@ -333,7 +333,7 @@ async def test_user_dashboard_has_wrong_key(
         DeviceInfo(
             uses_password=False,
             name="test",
-            mac_address="11:22:33:44:55:aa",
+            mac_address="11:22:33:44:55:AA",
         ),
     ]
 
@@ -380,7 +380,7 @@ async def test_user_discovers_name_and_gets_key_from_dashboard(
         DeviceInfo(
             uses_password=False,
             name="test",
-            mac_address="11:22:33:44:55:aa",
+            mac_address="11:22:33:44:55:AA",
         ),
     ]
 
@@ -483,7 +483,7 @@ async def test_user_discovers_name_and_dashboard_is_unavailable(
         DeviceInfo(
             uses_password=False,
             name="test",
-            mac_address="11:22:33:44:55:aa",
+            mac_address="11:22:33:44:55:AA",
         ),
     ]
 
@@ -1201,7 +1201,7 @@ async def test_zeroconf_encryption_key_via_dashboard(
         DeviceInfo(
             uses_password=False,
             name="test8266",
-            mac_address="11:22:33:44:55:aa",
+            mac_address="11:22:33:44:55:AA",
         ),
     ]
 

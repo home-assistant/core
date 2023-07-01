@@ -350,9 +350,8 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
 
         self._name = self._device_info.friendly_name or self._device_info.name
         self._device_name = self._device_info.name
-        await self.async_set_unique_id(
-            self._device_info.mac_address, raise_on_progress=False
-        )
+        mac_address = format_mac(self._device_info.mac_address)
+        await self.async_set_unique_id(mac_address, raise_on_progress=False)
         if not self._reauth_entry:
             self._abort_if_unique_id_configured(
                 updates={CONF_HOST: self._host, CONF_PORT: self._port}
