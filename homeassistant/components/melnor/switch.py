@@ -45,6 +45,7 @@ ZONE_ENTITY_DESCRIPTIONS = [
         device_class=SwitchDeviceClass.SWITCH,
         icon="mdi:sprinkler",
         key="manual",
+        name=None,
         on_off_fn=lambda valve, bool: valve.set_is_watering(bool),
         state_fn=lambda valve: valve.is_watering,
     ),
