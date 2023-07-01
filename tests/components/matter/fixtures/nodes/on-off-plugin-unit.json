@@ -6,7 +6,7 @@
   "attributes": {
     "0/29/0": [
       {
-        "type": 22,
+        "deviceType": 22,
         "revision": 1
       }
     ],
@@ -118,7 +118,7 @@
     ],
     "1/29/0": [
       {
-        "type": 266,
+        "deviceType": 266,
         "revision": 1
       }
     ],

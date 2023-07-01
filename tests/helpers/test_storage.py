@@ -14,7 +14,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.helpers import storage
-from homeassistant.util import dt
+from homeassistant.util import dt as dt_util
 from homeassistant.util.color import RGBColor
 
 from tests.common import async_fire_time_changed, async_test_home_assistant
@@ -113,7 +113,7 @@ async def test_saving_with_delay(
     store.async_delay_save(lambda: MOCK_DATA, 1)
     assert store.key not in hass_storage
 
-    async_fire_time_changed(hass, dt.utcnow() + timedelta(seconds=1))
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=1))
     await hass.async_block_till_done()
     assert hass_storage[store.key] == {
         "version": MOCK_VERSION,
@@ -135,7 +135,7 @@ async def test_saving_on_final_write(
     hass.state = CoreState.stopping
     await hass.async_block_till_done()
 
-    async_fire_time_changed(hass, dt.utcnow() + timedelta(seconds=10))
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=10))
     await hass.async_block_till_done()
     assert store.key not in hass_storage
 
@@ -159,7 +159,7 @@ async def test_not_delayed_saving_while_stopping(
     hass.state = CoreState.stopping
 
     store.async_delay_save(lambda: MOCK_DATA, 1)
-    async_fire_time_changed(hass, dt.utcnow() + timedelta(seconds=2))
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=2))
     await hass.async_block_till_done()
     assert store.key not in hass_storage
 
@@ -177,7 +177,7 @@ async def test_not_delayed_saving_after_stopping(
     await hass.async_block_till_done()
     assert store.key not in hass_storage
 
-    async_fire_time_changed(hass, dt.utcnow() + timedelta(seconds=15))
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=15))
     await hass.async_block_till_done()
     assert store.key not in hass_storage
 
@@ -230,7 +230,7 @@ async def test_writing_while_writing_delay(
         "data": {"delay": "no"},
     }
 
-    async_fire_time_changed(hass, dt.utcnow() + timedelta(seconds=1))
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=1))
     await hass.async_block_till_done()
     assert hass_storage[store.key] == {
         "version": MOCK_VERSION,
@@ -260,7 +260,7 @@ async def test_multiple_delay_save_calls(
         "data": {"delay": "no"},
     }
 
-    async_fire_time_changed(hass, dt.utcnow() + timedelta(seconds=1))
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=1))
     await hass.async_block_till_done()
     assert hass_storage[store.key] == {
         "version": MOCK_VERSION,
@@ -496,7 +496,7 @@ async def test_changing_delayed_written_data(
 
     loaded_data["hello"] = "earth"
 
-    async_fire_time_changed(hass, dt.utcnow() + timedelta(seconds=1))
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=1))
     await hass.async_block_till_done()
     assert hass_storage[store.key] == {
         "version": MOCK_VERSION,

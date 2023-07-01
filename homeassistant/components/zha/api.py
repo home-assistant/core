@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 
 from zigpy.backups import NetworkBackup
 from zigpy.config import CONF_DEVICE, CONF_DEVICE_PATH
+from zigpy.types import Channels
+from zigpy.util import pick_optimal_channel
 
 from .core.const import (
     CONF_RADIO_TYPE,
@@ -111,3 +113,22 @@ def async_get_radio_path(
         config_entry = _get_config_entry(hass)
 
     return config_entry.data[CONF_DEVICE][CONF_DEVICE_PATH]
+
+
+async def async_change_channel(
+    hass: HomeAssistant, new_channel: int | Literal["auto"]
+) -> None:
+    """Migrate the ZHA network to a new channel."""
+
+    zha_gateway: ZHAGateway = _get_gateway(hass)
+    app = zha_gateway.application_controller
+
+    if new_channel == "auto":
+        channel_energy = await app.energy_scan(
+            channels=Channels.ALL_CHANNELS,
+            duration_exp=4,
+            count=1,
+        )
+        new_channel = pick_optimal_channel(channel_energy)
+
+    await app.move_network_to_channel(new_channel)

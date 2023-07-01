@@ -21,6 +21,7 @@ else:
 
 COMMENT_REQUIREMENTS = (
     "Adafruit_BBIO",
+    "atenpdu",  # depends on pysnmp which is not maintained at this time
     "avea",  # depends on bluepy
     "avion",
     "beacontools",
@@ -105,7 +106,7 @@ regex==2021.8.28
 # requirements so we can directly link HA versions to these library versions.
 anyio==3.6.2
 h11==0.14.0
-httpcore==0.16.3
+httpcore==0.17.0
 
 # Ensure we have a hyperframe version that works in Python 3.10
 # 5.2.0 fixed a collections abc deprecation
@@ -131,9 +132,8 @@ authlib<1.0
 # Version 2.0 added typing, prevent accidental fallbacks
 backoff>=2.0
 
-# Breaking change in version
-# https://github.com/samuelcolvin/pydantic/issues/4092
-pydantic!=1.9.1
+# Require to avoid issues with decorators (#93904). v2 has breaking changes.
+pydantic>=1.10.8,<2.0
 
 # Breaks asyncio
 # https://github.com/pubnub/python/issues/130
@@ -155,9 +155,9 @@ matplotlib==3.6.1
 # cryptography 40.0.1 is installed with botocore
 pyOpenSSL>=23.1.0
 
-# uamqp newer versions we currently can't build for armv7/armhf
-# Limit this to Python 3.10, to not block Python 3.11 dev for now
-uamqp==1.6.0;python_version<'3.11'
+# protobuf must be in package constraints for the wheel
+# builder to build binary wheels
+protobuf==4.23.1
 
 # faust-cchardet: Ensure we have a version we can build wheels
 # 2.1.18 is the first version that works with our wheel builder
@@ -167,6 +167,25 @@ faust-cchardet>=2.1.18
 # which break wheel builds so we need at least 11.0.1
 # https://github.com/aaugustin/websockets/issues/1329
 websockets>=11.0.1
+
+# pyasn1 0.5.0 has breaking changes which cause pysnmplib to fail
+# until they are resolved, we need to pin pyasn1 to 0.4.8 and
+# pysnmplib to 5.0.21 to avoid the issue.
+# https://github.com/pyasn1/pyasn1/pull/30#issuecomment-1517564335
+# https://github.com/pysnmp/pysnmp/issues/51
+pyasn1==0.4.8
+pysnmplib==5.0.21
+# pysnmp is no longer maintained and does not work with newer
+# python
+pysnmp==1000000000.0.0
+
+# pyminiaudio 1.58 is missing files in the package
+# https://github.com/irmen/pyminiaudio/issues/67
+miniaudio==1.57
+
+# The get-mac package has been replaced with getmac. Installing get-mac alongside getmac
+# breaks getmac due to them both sharing the same python package name inside 'getmac'.
+get-mac==1000000000.0.0
 """
 
 IGNORE_PRE_COMMIT_HOOK_ID = (

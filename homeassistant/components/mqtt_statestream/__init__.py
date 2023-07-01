@@ -41,6 +41,11 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the MQTT state feed."""
+    # Make sure MQTT integration is enabled and the client is available
+    if not await mqtt.async_wait_for_mqtt_client(hass):
+        _LOGGER.error("MQTT integration is not available")
+        return False
+
     conf: ConfigType = config[DOMAIN]
     publish_filter = convert_include_exclude_filter(conf)
     base_topic: str = conf[CONF_BASE_TOPIC]

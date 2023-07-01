@@ -1,6 +1,6 @@
 {
   "domain": "androidtv",
-  "name": "Android TV",
+  "name": "Android Debug Bridge",
   "codeowners": ["@JeffLIrion", "@ollo69"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/androidtv",

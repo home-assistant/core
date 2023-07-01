@@ -37,8 +37,8 @@ from homeassistant.helpers.typing import StateType
 from homeassistant.util.dt import as_utc, parse_datetime
 
 from .const import DOMAIN
-from .renault_coordinator import T
-from .renault_entities import RenaultDataEntity, RenaultDataEntityDescription
+from .coordinator import T
+from .entity import RenaultDataEntity, RenaultDataEntityDescription
 from .renault_hub import RenaultHub
 from .renault_vehicle import RenaultVehicleProxy
 

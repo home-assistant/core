@@ -38,7 +38,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-from homeassistant.util import dt
+from homeassistant.util import dt as dt_util
 
 from tests.common import async_fire_time_changed, async_mock_service
 from tests.components.vacuum import common
@@ -179,7 +179,7 @@ async def test_methods(hass: HomeAssistant) -> None:
     state = hass.states.get(ENTITY_VACUUM_STATE)
     assert state.state == STATE_RETURNING
 
-    async_fire_time_changed(hass, dt.utcnow() + timedelta(seconds=31))
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=31))
     await hass.async_block_till_done()
     state = hass.states.get(ENTITY_VACUUM_STATE)
     assert state.state == STATE_DOCKED

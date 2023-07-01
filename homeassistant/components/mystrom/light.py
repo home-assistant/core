@@ -31,8 +31,6 @@ DEFAULT_NAME = "myStrom bulb"
 EFFECT_RAINBOW = "rainbow"
 EFFECT_SUNRISE = "sunrise"
 
-MYSTROM_EFFECT_LIST = [EFFECT_RAINBOW, EFFECT_SUNRISE]
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
@@ -74,52 +72,15 @@ class MyStromLight(LightEntity):
     _attr_color_mode = ColorMode.HS
     _attr_supported_color_modes = {ColorMode.HS}
     _attr_supported_features = LightEntityFeature.EFFECT | LightEntityFeature.FLASH
+    _attr_effect_list = [EFFECT_RAINBOW, EFFECT_SUNRISE]
 
     def __init__(self, bulb, name, mac):
         """Initialize the light."""
         self._bulb = bulb
-        self._name = name
-        self._state = None
-        self._available = False
-        self._brightness = 0
-        self._color_h = 0
-        self._color_s = 0
-        self._mac = mac
-
-    @property
-    def name(self):
-        """Return the display name of this light."""
-        return self._name
-
-    @property
-    def unique_id(self):
-        """Return a unique ID."""
-        return self._mac
-
-    @property
-    def brightness(self):
-        """Return the brightness of the light."""
-        return self._brightness
-
-    @property
-    def hs_color(self):
-        """Return the color of the light."""
-        return self._color_h, self._color_s
-
-    @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return self._available
-
-    @property
-    def effect_list(self):
-        """Return the list of supported effects."""
-        return MYSTROM_EFFECT_LIST
-
-    @property
-    def is_on(self):
-        """Return true if light is on."""
-        return self._state
+        self._attr_name = name
+        self._attr_available = False
+        self._attr_unique_id = mac
+        self._attr_hs_color = 0, 0
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the light."""
@@ -130,7 +91,10 @@ class MyStromLight(LightEntity):
             color_h, color_s = kwargs[ATTR_HS_COLOR]
         elif ATTR_BRIGHTNESS in kwargs:
             # Brightness update, keep color
-            color_h, color_s = self._color_h, self._color_s
+            if self.hs_color is not None:
+                color_h, color_s = self.hs_color
+            else:
+                color_h, color_s = 0, 0  # Back to white
         else:
             color_h, color_s = 0, 0  # Back to white
 
@@ -159,7 +123,7 @@ class MyStromLight(LightEntity):
         """Fetch new state data for this light."""
         try:
             await self._bulb.get_state()
-            self._state = self._bulb.state
+            self._attr_is_on = self._bulb.state
 
             colors = self._bulb.color
             try:
@@ -168,11 +132,10 @@ class MyStromLight(LightEntity):
                 color_s, color_v = colors.split(";")
                 color_h = 0
 
-            self._color_h = int(color_h)
-            self._color_s = int(color_s)
-            self._brightness = int(color_v) * 255 / 100
+            self._attr_hs_color = int(color_h), int(color_s)
+            self._attr_brightness = int(int(color_v) * 255 / 100)
 
-            self._available = True
+            self._attr_available = True
         except MyStromConnectionError:
             _LOGGER.warning("No route to myStrom bulb")
-            self._available = False
+            self._attr_available = False

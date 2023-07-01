@@ -1,6 +1,8 @@
 """The sql component."""
 from __future__ import annotations
 
+import logging
+
 import voluptuous as vol
 
 from homeassistant.components.recorder import CONF_DB_URL, get_instance
@@ -24,6 +26,9 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_COLUMN_NAME, CONF_QUERY, DOMAIN, PLATFORMS
+from .util import redact_credentials
+
+_LOGGER = logging.getLogger(__name__)
 
 
 def validate_sql_select(value: str) -> str:
@@ -85,6 +90,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up SQL from a config entry."""
+    _LOGGER.debug(
+        "Comparing %s and %s",
+        redact_credentials(entry.options.get(CONF_DB_URL)),
+        redact_credentials(get_instance(hass).db_url),
+    )
     if entry.options.get(CONF_DB_URL) == get_instance(hass).db_url:
         remove_configured_db_url_if_not_needed(hass, entry)
 

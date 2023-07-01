@@ -236,11 +236,20 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
 
             if CONF_BRIGHTNESS_TEMPLATE in self._config:
                 try:
-                    self._attr_brightness = int(
+                    if brightness := int(
                         self._value_templates[CONF_BRIGHTNESS_TEMPLATE](msg.payload)
-                    )
+                    ):
+                        self._attr_brightness = brightness
+                    else:
+                        _LOGGER.debug(
+                            "Ignoring zero brightness value for entity %s",
+                            self.entity_id,
+                        )
+
                 except ValueError:
-                    _LOGGER.warning("Invalid brightness value received")
+                    _LOGGER.warning(
+                        "Invalid brightness value received from %s", msg.topic
+                    )
 
             if CONF_COLOR_TEMP_TEMPLATE in self._config:
                 try:

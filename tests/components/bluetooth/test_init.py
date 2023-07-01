@@ -8,7 +8,6 @@ from bleak import BleakError
 from bleak.backends.scanner import AdvertisementData, BLEDevice
 from bluetooth_adapters import DEFAULT_ADDRESS
 import pytest
-from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import (
@@ -894,6 +893,48 @@ async def test_discovery_match_by_service_data_uuid_when_format_changes(
         # 6th discovery should not generate a flow because the
         # we already saw an advertisement with the service_data_uuid
         inject_advertisement(hass, device, xiaomi_format_adv)
+        await hass.async_block_till_done()
+        assert len(mock_config_flow.mock_calls) == 0
+        mock_config_flow.reset_mock()
+
+
+async def test_discovery_match_by_service_data_uuid_bthome(
+    hass: HomeAssistant, mock_bleak_scanner_start: MagicMock, macos_adapter: None
+) -> None:
+    """Test bluetooth discovery match by service_data_uuid for bthome."""
+    mock_bt = [
+        {
+            "domain": "bthome",
+            "service_data_uuid": "0000fcd2-0000-1000-8000-00805f9b34fb",
+        },
+    ]
+    with patch(
+        "homeassistant.components.bluetooth.async_get_bluetooth", return_value=mock_bt
+    ):
+        await async_setup_with_default_adapter(hass)
+
+    with patch.object(hass.config_entries.flow, "async_init") as mock_config_flow:
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+
+        assert len(mock_bleak_scanner_start.mock_calls) == 1
+
+        device = generate_ble_device("44:44:33:11:23:45", "Shelly Button")
+        button_adv = generate_advertisement_data(
+            local_name="Shelly Button",
+            service_uuids=[],
+            manufacturer_data={},
+            service_data={"0000fcd2-0000-1000-8000-00805f9b34fb": b"@\x00k\x01d:\x01"},
+        )
+        # 1st discovery should generate a flow because the service data uuid matches
+        inject_advertisement(hass, device, button_adv)
+        await hass.async_block_till_done()
+        assert len(mock_config_flow.mock_calls) == 1
+        mock_config_flow.reset_mock()
+
+        # 2nd discovery should not generate a flow because the
+        # we already saw an advertisement with the service_data_uuid
+        inject_advertisement(hass, device, button_adv)
         await hass.async_block_till_done()
         assert len(mock_config_flow.mock_calls) == 0
         mock_config_flow.reset_mock()
@@ -2880,35 +2921,13 @@ async def test_discover_new_usb_adapters_with_firmware_fallback_delay(
     assert len(hass.config_entries.flow.async_progress(DOMAIN)) == 1
 
 
-async def test_issue_outdated_haos(
-    hass: HomeAssistant,
-    mock_bleak_scanner_start: MagicMock,
-    one_adapter: None,
-    operating_system_85: None,
-    snapshot: SnapshotAssertion,
-) -> None:
-    """Test we create an issue on outdated haos."""
-    entry = MockConfigEntry(
-        domain=bluetooth.DOMAIN, data={}, unique_id="00:00:00:00:00:01"
-    )
-    entry.add_to_hass(hass)
-    assert await async_setup_component(hass, bluetooth.DOMAIN, {})
-    await hass.async_block_till_done()
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
-    await hass.async_block_till_done()
-    registry = async_get_issue_registry(hass)
-    issue = registry.async_get_issue(DOMAIN, "haos_outdated")
-    assert issue is not None
-    assert issue == snapshot
-
-
-async def test_issue_outdated_haos_no_adapters(
+async def test_issue_outdated_haos_removed(
     hass: HomeAssistant,
     mock_bleak_scanner_start: MagicMock,
     no_adapters: None,
     operating_system_85: None,
 ) -> None:
-    """Test we do not create an issue on outdated haos if there are no adapters."""
+    """Test we do not create an issue on outdated haos anymore."""
     assert await async_setup_component(hass, bluetooth.DOMAIN, {})
     await hass.async_block_till_done()
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)

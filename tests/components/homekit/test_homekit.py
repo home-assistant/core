@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from unittest.mock import ANY, AsyncMock, MagicMock, Mock, patch
+from uuid import uuid1
 
 from pyhap.accessory import Accessory
 from pyhap.const import CATEGORY_CAMERA, CATEGORY_TELEVISION
@@ -164,12 +165,12 @@ async def test_setup_min(hass: HomeAssistant, mock_async_zeroconf: None) -> None
         hass,
         BRIDGE_NAME,
         DEFAULT_PORT,
-        "1.2.3.4",
+        [None],
         ANY,
         ANY,
         {},
         HOMEKIT_MODE_BRIDGE,
-        None,
+        "1.2.3.4",
         entry.entry_id,
         entry.title,
         devices=[],
@@ -206,12 +207,12 @@ async def test_removing_entry(
         hass,
         BRIDGE_NAME,
         DEFAULT_PORT,
-        "1.2.3.4",
+        [None],
         ANY,
         ANY,
         {},
         HOMEKIT_MODE_BRIDGE,
-        None,
+        "1.2.3.4",
         entry.entry_id,
         entry.title,
         devices=[],
@@ -747,6 +748,7 @@ async def test_homekit_start_with_a_device(
     entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_NAME: "mock_name", CONF_PORT: 12345}
     )
+    assert await async_setup_component(hass, "homeassistant", {})
     assert await async_setup_component(hass, "demo", {"demo": {}})
     await hass.async_block_till_done()
 
@@ -815,14 +817,10 @@ async def test_homekit_reset_accessories(
     homekit = _mock_homekit(hass, entry, HOMEKIT_MODE_BRIDGE)
 
     with patch(f"{PATH_HOMEKIT}.HomeKit", return_value=homekit), patch(
-        "pyhap.accessory.Bridge.add_accessory"
-    ) as mock_add_accessory, patch(
         "pyhap.accessory_driver.AccessoryDriver.config_changed"
-    ), patch(
-        "pyhap.accessory_driver.AccessoryDriver.async_start"
-    ), patch(
+    ), patch("pyhap.accessory_driver.AccessoryDriver.async_start"), patch(
         f"{PATH_HOMEKIT}.accessories.HomeAccessory.run"
-    ), patch.object(
+    ) as mock_run_accessory, patch.object(
         homekit_base, "_HOMEKIT_CONFIG_UPDATE_TIME", 0
     ):
         await async_init_entry(hass, entry)
@@ -837,8 +835,9 @@ async def test_homekit_reset_accessories(
             blocking=True,
         )
         await hass.async_block_till_done()
+        await hass.async_block_till_done()
 
-        assert mock_add_accessory.called
+        assert mock_run_accessory.called
         homekit.status = STATUS_READY
         await homekit.async_stop()
 
@@ -870,11 +869,11 @@ async def test_homekit_unpair(
         homekit.driver.aio_stop_event = MagicMock()
 
         state = homekit.driver.state
-        state.add_paired_client("client1", "any", b"1")
-        state.add_paired_client("client2", "any", b"0")
-        state.add_paired_client("client3", "any", b"1")
-        state.add_paired_client("client4", "any", b"0")
-        state.add_paired_client("client5", "any", b"0")
+        state.add_paired_client(str(uuid1()).encode("utf-8"), "any", b"1")
+        state.add_paired_client(str(uuid1()).encode("utf-8"), "any", b"0")
+        state.add_paired_client(str(uuid1()).encode("utf-8"), "any", b"1")
+        state.add_paired_client(str(uuid1()).encode("utf-8"), "any", b"0")
+        state.add_paired_client(str(uuid1()).encode("utf-8"), "any", b"0")
 
         formatted_mac = dr.format_mac(state.mac)
         hk_bridge_dev = device_registry.async_get_device(
@@ -919,7 +918,8 @@ async def test_homekit_unpair_missing_device_id(
         homekit.driver.aio_stop_event = MagicMock()
 
         state = homekit.driver.state
-        state.add_paired_client("client1", "any", b"1")
+        client_1 = str(uuid1()).encode("utf-8")
+        state.add_paired_client(client_1, "any", b"1")
         with pytest.raises(HomeAssistantError):
             await hass.services.async_call(
                 DOMAIN,
@@ -928,7 +928,7 @@ async def test_homekit_unpair_missing_device_id(
                 blocking=True,
             )
         await hass.async_block_till_done()
-        state.paired_clients = {"client1": "any"}
+        state.paired_clients = {client_1.decode("utf-8"): "any"}
         homekit.status = STATUS_STOPPED
 
 
@@ -969,7 +969,8 @@ async def test_homekit_unpair_not_homekit_device(
         )
 
         state = homekit.driver.state
-        state.add_paired_client("client1", "any", b"1")
+        client_1 = str(uuid1()).encode("utf-8")
+        state.add_paired_client(client_1, "any", b"1")
         with pytest.raises(HomeAssistantError):
             await hass.services.async_call(
                 DOMAIN,
@@ -978,7 +979,7 @@ async def test_homekit_unpair_not_homekit_device(
                 blocking=True,
             )
         await hass.async_block_till_done()
-        state.paired_clients = {"client1": "any"}
+        state.paired_clients = {client_1.decode("utf-8"): "any"}
         homekit.status = STATUS_STOPPED
 
 
@@ -1479,12 +1480,12 @@ async def test_yaml_updates_update_config_entry_for_name(
         hass,
         BRIDGE_NAME,
         12345,
-        "1.2.3.4",
+        [None],
         ANY,
         ANY,
         {},
         HOMEKIT_MODE_BRIDGE,
-        None,
+        "1.2.3.4",
         entry.entry_id,
         entry.title,
         devices=[],
@@ -1837,12 +1838,12 @@ async def test_reload(hass: HomeAssistant, mock_async_zeroconf: None) -> None:
         hass,
         "reloadable",
         12345,
-        "1.2.3.4",
+        [None],
         ANY,
         False,
         {},
         HOMEKIT_MODE_BRIDGE,
-        None,
+        "1.2.3.4",
         entry.entry_id,
         entry.title,
         devices=[],
@@ -1872,12 +1873,12 @@ async def test_reload(hass: HomeAssistant, mock_async_zeroconf: None) -> None:
         hass,
         "reloadable",
         45678,
-        "1.2.3.4",
+        [None],
         ANY,
         False,
         {},
         HOMEKIT_MODE_BRIDGE,
-        None,
+        "1.2.3.4",
         entry.entry_id,
         entry.title,
         devices=[],

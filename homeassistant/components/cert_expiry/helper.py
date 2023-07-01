@@ -3,7 +3,7 @@ import socket
 import ssl
 
 from homeassistant.core import HomeAssistant
-from homeassistant.util import dt
+from homeassistant.util import dt as dt_util
 
 from .const import TIMEOUT
 from .errors import (
@@ -52,4 +52,4 @@ async def get_cert_expiry_timestamp(
         raise ValidationFailure(err.args[0]) from err
 
     ts_seconds = ssl.cert_time_to_seconds(cert["notAfter"])
-    return dt.utc_from_timestamp(ts_seconds)
+    return dt_util.utc_from_timestamp(ts_seconds)

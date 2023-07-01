@@ -18,6 +18,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.setup import async_setup_component
 
 from .const import CALL_SERVICE, FIRE_EVENT, REGISTER_CLEARTEXT, RENDER_TEMPLATE, UPDATE
 
@@ -26,6 +27,12 @@ from tests.components.conversation.conftest import mock_agent
 
 # To avoid autoflake8 removing the import
 mock_agent = mock_agent
+
+
+@pytest.fixture
+async def homeassistant(hass):
+    """Load the homeassistant integration."""
+    await async_setup_component(hass, "homeassistant", {})
 
 
 def encrypt_payload(secret_key, payload, encode_json=True):
@@ -1014,7 +1021,7 @@ async def test_reregister_sensor(
 
 
 async def test_webhook_handle_conversation_process(
-    hass: HomeAssistant, create_registrations, webhook_client, mock_agent
+    hass: HomeAssistant, homeassistant, create_registrations, webhook_client, mock_agent
 ) -> None:
     """Test that we can converse."""
     webhook_client.server.app.router._frozen = False

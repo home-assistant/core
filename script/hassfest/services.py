@@ -34,10 +34,10 @@ FIELD_SCHEMA = vol.Schema(
         vol.Optional("advanced"): bool,
         vol.Optional(CONF_SELECTOR): selector.validate_selector,
         vol.Optional("filter"): {
-            vol.Optional("attribute"): {
+            vol.Exclusive("attribute", "field_filter"): {
                 vol.Required(str): [vol.All(str, service.validate_attribute_option)],
             },
-            vol.Optional("supported_features"): [
+            vol.Exclusive("supported_features", "field_filter"): [
                 vol.All(str, service.validate_supported_feature)
             ],
         },

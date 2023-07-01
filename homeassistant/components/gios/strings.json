@@ -74,7 +74,7 @@
         "name": "[%key:component::sensor::entity_component::pm10::name%]"
       },
       "pm10_index": {
-        "name": "Particulate matter 10 μm index",
+        "name": "PM10 index",
         "state": {
           "very_bad": "[%key:component::gios::entity::sensor::aqi::state::very_bad%]",
           "bad": "[%key:component::gios::entity::sensor::aqi::state::bad%]",
@@ -88,7 +88,7 @@
         "name": "[%key:component::sensor::entity_component::pm25::name%]"
       },
       "pm25_index": {
-        "name": "Particulate matter 2.5 μm index",
+        "name": "PM2.5 index",
         "state": {
           "very_bad": "[%key:component::gios::entity::sensor::aqi::state::very_bad%]",
           "bad": "[%key:component::gios::entity::sensor::aqi::state::bad%]",

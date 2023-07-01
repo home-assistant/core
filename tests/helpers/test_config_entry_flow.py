@@ -355,7 +355,6 @@ async def test_webhook_config_flow_registers_webhook(
     assert result["data"]["webhook_id"] is not None
 
 
-@patch("homeassistant.components.cloud.STARTUP_REPAIR_DELAY", 0)
 async def test_webhook_create_cloudhook(
     hass: HomeAssistant, webhook_flow_conf: None
 ) -> None:
@@ -411,7 +410,6 @@ async def test_webhook_create_cloudhook(
     assert result["require_restart"] is False
 
 
-@patch("homeassistant.components.cloud.STARTUP_REPAIR_DELAY", 0)
 async def test_webhook_create_cloudhook_aborts_not_connected(
     hass: HomeAssistant, webhook_flow_conf: None
 ) -> None:

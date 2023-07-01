@@ -468,6 +468,10 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
                 return
 
             device_value = float(payload)
+            if device_value == 0:
+                _LOGGER.debug("Ignoring zero brightness from '%s'", msg.topic)
+                return
+
             percent_bright = device_value / self._config[CONF_BRIGHTNESS_SCALE]
             self._attr_brightness = min(round(percent_bright * 255), 255)
 

@@ -15,7 +15,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
-from homeassistant.helpers import event
+from homeassistant.helpers import config_validation as cv, event
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.integration_platform import (
     async_process_integration_platform_for_component,
@@ -78,6 +78,9 @@ _PHASE_UPDATES = {
     PHASE_SMALL_DAY: timedelta(minutes=2),
     PHASE_DAY: timedelta(minutes=4),
 }
+
+
+CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:

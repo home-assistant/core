@@ -6,7 +6,8 @@ from typing import Any
 
 from bimmer_connected.api.authentication import MyBMWAuthentication
 from bimmer_connected.api.regions import get_region_from_name
-from httpx import HTTPError
+from bimmer_connected.models import MyBMWAPIError, MyBMWAuthError
+from httpx import RequestError
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
@@ -15,7 +16,7 @@ from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 
 from . import DOMAIN
-from .const import CONF_ALLOWED_REGIONS, CONF_READ_ONLY, CONF_REFRESH_TOKEN
+from .const import CONF_ALLOWED_REGIONS, CONF_GCID, CONF_READ_ONLY, CONF_REFRESH_TOKEN
 
 DATA_SCHEMA = vol.Schema(
     {
@@ -41,13 +42,17 @@ async def validate_input(
 
     try:
         await auth.login()
-    except HTTPError as ex:
+    except MyBMWAuthError as ex:
+        raise InvalidAuth from ex
+    except (MyBMWAPIError, RequestError) as ex:
         raise CannotConnect from ex
 
     # Return info that you want to store in the config entry.
     retval = {"title": f"{data[CONF_USERNAME]}{data.get(CONF_SOURCE, '')}"}
     if auth.refresh_token:
         retval[CONF_REFRESH_TOKEN] = auth.refresh_token
+    if auth.gcid:
+        retval[CONF_GCID] = auth.gcid
     return retval
 
 
@@ -77,9 +82,12 @@ class BMWConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 entry_data = {
                     **user_input,
                     CONF_REFRESH_TOKEN: info.get(CONF_REFRESH_TOKEN),
+                    CONF_GCID: info.get(CONF_GCID),
                 }
             except CannotConnect:
                 errors["base"] = "cannot_connect"
+            except InvalidAuth:
+                errors["base"] = "invalid_auth"
 
             if info:
                 if self._reauth_entry:
@@ -160,3 +168,7 @@ class BMWOptionsFlow(config_entries.OptionsFlowWithConfigEntry):
 
 class CannotConnect(exceptions.HomeAssistantError):
     """Error to indicate we cannot connect."""
+
+
+class InvalidAuth(exceptions.HomeAssistantError):
+    """Error to indicate there is invalid auth."""

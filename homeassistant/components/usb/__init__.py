@@ -24,7 +24,7 @@ from homeassistant.core import (
     callback as hass_callback,
 )
 from homeassistant.data_entry_flow import BaseServiceInfo
-from homeassistant.helpers import discovery_flow, system_info
+from homeassistant.helpers import config_validation as cv, discovery_flow, system_info
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import USBMatcher, async_get_usb
@@ -46,6 +46,8 @@ __all__ = [
     "USBCallbackMatcher",
     "UsbServiceInfo",
 ]
+
+CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 
 class USBCallbackMatcher(USBMatcher):
@@ -101,7 +103,7 @@ def async_is_plugged_in(hass: HomeAssistant, matcher: USBCallbackMatcher) -> boo
     )
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(slots=True)
 class UsbServiceInfo(BaseServiceInfo):
     """Prepared info from usb entries."""
 
@@ -205,10 +207,16 @@ class USBDiscovery:
         """Set up USB Discovery."""
         await self._async_start_monitor()
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, self.async_start)
+        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.async_stop)
 
     async def async_start(self, event: Event) -> None:
         """Start USB Discovery and run a manual scan."""
         await self._async_scan_serial()
+
+    async def async_stop(self, event: Event) -> None:
+        """Stop USB Discovery."""
+        if self._request_debouncer:
+            await self._request_debouncer.async_shutdown()
 
     async def _async_start_monitor(self) -> None:
         """Start monitoring hardware with pyudev."""

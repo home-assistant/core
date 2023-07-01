@@ -86,6 +86,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         component = EntityComponent[MailboxEntity](
             logging.getLogger(__name__), DOMAIN, hass, SCAN_INTERVAL
         )
+        component.register_shutdown()
         await component.async_add_entities([mailbox_entity])
 
     setup_tasks = [

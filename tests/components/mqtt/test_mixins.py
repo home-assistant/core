@@ -33,14 +33,14 @@ from tests.typing import MqttMockHAClientGenerator
 @patch("homeassistant.components.mqtt.PLATFORMS", [Platform.SENSOR])
 async def test_availability_with_shared_state_topic(
     hass: HomeAssistant,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
 ) -> None:
     """Test the state is not changed twice.
 
     When an entity with a shared state_topic and availability_topic becomes available
     The state should only change once.
     """
-    await mqtt_mock_entry_no_yaml_config()
+    await mqtt_mock_entry()
 
     events = []
 

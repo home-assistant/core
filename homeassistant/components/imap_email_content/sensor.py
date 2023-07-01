@@ -26,17 +26,18 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.ssl import client_context
 
+from .const import (
+    ATTR_BODY,
+    ATTR_FROM,
+    ATTR_SUBJECT,
+    CONF_FOLDER,
+    CONF_SENDERS,
+    CONF_SERVER,
+    DEFAULT_PORT,
+)
+from .repairs import async_process_issue
+
 _LOGGER = logging.getLogger(__name__)
-
-CONF_SERVER = "server"
-CONF_SENDERS = "senders"
-CONF_FOLDER = "folder"
-
-ATTR_FROM = "from"
-ATTR_BODY = "body"
-ATTR_SUBJECT = "subject"
-
-DEFAULT_PORT = 993
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -78,6 +79,8 @@ def setup_platform(
         config[CONF_SENDERS],
         value_template,
     )
+
+    hass.add_job(async_process_issue, hass, config)
 
     if sensor.connected:
         add_entities([sensor], True)

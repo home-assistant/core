@@ -1,4 +1,5 @@
 """Test The generic (IP Camera) config flow."""
+import contextlib
 import errno
 from http import HTTPStatus
 import os.path
@@ -330,7 +331,10 @@ async def test_still_template(
     expected_errors,
 ) -> None:
     """Test we can handle various templates."""
-    respx.get(url).respond(stream=fakeimgbytes_png)
+    with contextlib.suppress(httpx.InvalidURL):
+        # There is no need to mock the request if its an
+        # invalid url because we will never make the request
+        respx.get(url).respond(stream=fakeimgbytes_png)
     data = TESTDATA.copy()
     data.pop(CONF_STREAM_SOURCE)
     data[CONF_STILL_IMAGE_URL] = template
