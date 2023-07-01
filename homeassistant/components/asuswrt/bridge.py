@@ -152,9 +152,12 @@ class AsusWrtLegacyBridge(AsusWrtBridge):
         await self._api.connection.async_connect()
 
         # get main router properties
-        await self._get_label_mac()
-        await self._get_firmware()
-        await self._get_model()
+        if self._label_mac is None:
+            await self._get_label_mac()
+        if self._firmware is None:
+            await self._get_firmware()
+        if self._model is None:
+            await self._get_model()
 
     async def async_disconnect(self) -> None:
         """Disconnect to the device."""
