@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from enum import IntEnum
-from typing import Any
+from typing import Any, TYPE_CHECKING
 
 from chip.clusters import Objects as clusters
 from matter_server.client.models import device_types
@@ -28,6 +28,12 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .entity import MatterEntity
 from .helpers import get_matter
 from .models import MatterDiscoverySchema
+
+if TYPE_CHECKING:
+    from matter_server.client import MatterClient
+    from matter_server.client.models.node import MatterEndpoint
+
+    from .discovery import MatterEntityInfo
 
 TEMPERATURE_SCALING_FACTOR = 100
 HVAC_SYSTEM_MODE_MAP = {
@@ -72,7 +78,26 @@ class MatterClimate(MatterEntity, ClimateEntity):
         | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
     )
     _attr_hvac_mode: HVACMode = HVACMode.OFF
-    _attr_hvac_modes: list[HVACMode] = [HVACMode.OFF]
+
+    def __init__(
+        self,
+        matter_client: MatterClient,
+        endpoint: MatterEndpoint,
+        entity_info: MatterEntityInfo,
+    ) -> None:
+        super().__init__(matter_client, endpoint, entity_info)
+
+        # set hvac_modes based on feature map
+        self._attr_hvac_modes: list[HVACMode] = [HVACMode.OFF]
+        feature_map = int(
+            self.get_matter_attribute_value(clusters.Thermostat.Attributes.FeatureMap)
+        )
+        if feature_map & ThermostatFeature.kHeating:
+            self._attr_hvac_modes.append(HVACMode.HEAT)
+        if feature_map & ThermostatFeature.kCooling:
+            self._attr_hvac_modes.append(HVACMode.COOL)
+        if feature_map & ThermostatFeature.kAutoMode:
+            self._attr_hvac_modes.append(HVACMode.HEAT_COOL)
 
     @property
     def min_temp(self) -> float:
@@ -240,16 +265,6 @@ class MatterClimate(MatterEntity, ClimateEntity):
                     self._attr_hvac_action = HVACAction.FAN
                 case _:
                     self._attr_hvac_action = HVACAction.OFF
-        # update hvac_modes based on feature map
-        feature_map = int(
-            self.get_matter_attribute_value(clusters.Thermostat.Attributes.FeatureMap)
-        )
-        if feature_map & ThermostatFeature.kHeating:
-            self._attr_hvac_modes.append(HVACMode.HEAT)
-        if feature_map & ThermostatFeature.kCooling:
-            self._attr_hvac_modes.append(HVACMode.COOL)
-        if feature_map & ThermostatFeature.kAutoMode:
-            self._attr_hvac_modes.append(HVACMode.HEAT_COOL)
 
     def _get_temperature_in_degrees(
         self, attribute: type[clusters.ClusterAttributeDescriptor]
