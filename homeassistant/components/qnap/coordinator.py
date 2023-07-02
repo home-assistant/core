@@ -63,11 +63,6 @@ class QnapCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
         """Get the latest data from the Qnap API."""
         try:
             result = await self.hass.async_add_executor_job(self._sync_update)
-        except (
-            ConnectError,
-            HTTPError,
-            ConnectTimeout,
-            Exception
-        ) as err:
+        except (ConnectError, HTTPError, ConnectTimeout, Exception) as err:
             raise UpdateFailed(f"Error communicating with device: {err}") from err
         return result
