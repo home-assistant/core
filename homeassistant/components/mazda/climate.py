@@ -66,7 +66,7 @@ async def async_setup_entry(
 class MazdaClimateEntity(MazdaEntity, ClimateEntity):
     """Class for a Mazda climate entity."""
 
-    _attr_name = "Climate"
+    _attr_translation_key = "climate"
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
     )
