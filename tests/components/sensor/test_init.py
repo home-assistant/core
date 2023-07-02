@@ -1144,6 +1144,9 @@ async def test_unit_conversion_priority_precision(
         "sensor": {"suggested_display_precision": 2},
         "sensor.private": {"suggested_unit_of_measurement": automatic_unit},
     }
+    assert float(async_rounded_state(hass, entity0.entity_id, state)) == pytest.approx(
+        round(automatic_state, 2)
+    )
 
     # Unregistered entity -> Follow native unit
     state = hass.states.get(entity1.entity_id)
