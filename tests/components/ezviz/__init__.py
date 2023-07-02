@@ -75,6 +75,7 @@ TEST = {
 }
 
 API_LOGIN_RETURN_VALIDATE = {
+    CONF_USERNAME: "test-username",
     CONF_SESSION_ID: "fake_token",
     CONF_RF_SESSION_ID: "fake_rf_token",
     CONF_URL: "apiieu.ezvizlife.com",

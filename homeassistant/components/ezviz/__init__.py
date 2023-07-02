@@ -66,11 +66,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         ezviz_client = EzvizClient(
             token={
-                CONF_SESSION_ID: entry.data.get(CONF_SESSION_ID),
-                CONF_RF_SESSION_ID: entry.data.get(CONF_RF_SESSION_ID),
-                "api_url": entry.data.get(CONF_URL),
+                CONF_SESSION_ID: entry.data[CONF_SESSION_ID],
+                CONF_RF_SESSION_ID: entry.data[CONF_RF_SESSION_ID],
+                "api_url": entry.data[CONF_URL],
             },
-            timeout=entry.options.get(CONF_TIMEOUT, DEFAULT_TIMEOUT),
+            timeout=entry.options[CONF_TIMEOUT],
         )
 
         try:

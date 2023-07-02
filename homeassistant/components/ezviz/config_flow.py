@@ -66,6 +66,7 @@ def _validate_and_create_auth(data: dict) -> dict[str, Any]:
     ezviz_token = ezviz_client.login()
 
     auth_data = {
+        CONF_USERNAME: data[CONF_USERNAME],
         CONF_SESSION_ID: ezviz_token[CONF_SESSION_ID],
         CONF_RF_SESSION_ID: ezviz_token[CONF_RF_SESSION_ID],
         CONF_URL: ezviz_token["api_url"],
@@ -335,7 +336,6 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
 
         for item in self._async_current_entries():
             if item.data.get(CONF_TYPE) == ATTR_TYPE_CLOUD:
-                self.context["title_placeholders"] = {ATTR_SERIAL: item.title}
                 entry = await self.async_set_unique_id(item.unique_id)
 
         if not entry:
