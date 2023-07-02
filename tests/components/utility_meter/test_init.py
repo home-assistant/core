@@ -446,6 +446,7 @@ async def test_change_device_source(hass: HomeAssistant) -> None:
     device_registry = dr.async_get(hass)
     entity_registry = er.async_get(hass)
 
+    # Configure source entity 1 (with a linked device)
     source_config_entry_1 = MockConfigEntry()
     source_device_entry_1 = device_registry.async_get_or_create(
         config_entry_id=source_config_entry_1.entry_id,
@@ -460,6 +461,7 @@ async def test_change_device_source(hass: HomeAssistant) -> None:
         device_id=source_device_entry_1.id,
     )
 
+    # Configure source entity 2 (with a linked device)
     source_config_entry_2 = MockConfigEntry()
     source_device_entry_2 = device_registry.async_get_or_create(
         config_entry_id=source_config_entry_2.entry_id,
@@ -474,14 +476,28 @@ async def test_change_device_source(hass: HomeAssistant) -> None:
         device_id=source_device_entry_2.id,
     )
 
+    # Configure source entity 3 (without a device)
+    source_config_entry_3 = MockConfigEntry()
+    source_entity_3 = entity_registry.async_get_or_create(
+        "sensor",
+        "test",
+        "source3",
+        config_entry=source_config_entry_3,
+    )
+
     await hass.async_block_till_done()
-    assert entity_registry.async_get("sensor.test_source1") is not None
-    assert entity_registry.async_get("sensor.test_source2") is not None
 
     input_sensor_entity_id_1 = "sensor.test_source1"
     input_sensor_entity_id_2 = "sensor.test_source2"
+    input_sensor_entity_id_3 = "sensor.test_source3"
 
-    # Setup the config entry
+    # Test the existence of configured source entities
+    assert entity_registry.async_get(input_sensor_entity_id_1) is not None
+    assert entity_registry.async_get(input_sensor_entity_id_2) is not None
+    assert entity_registry.async_get(input_sensor_entity_id_3) is not None
+
+    # Setup the config entry with source entity 1 (with a linked device)
+    current_entity_source = source_entity_1
     utility_meter_config_entry = MockConfigEntry(
         data={},
         domain=DOMAIN,
@@ -492,7 +508,7 @@ async def test_change_device_source(hass: HomeAssistant) -> None:
             "net_consumption": False,
             "offset": 0,
             "periodically_resetting": True,
-            "source": input_sensor_entity_id_1,
+            "source": current_entity_source.entity_id,
             "tariffs": [],
         },
         title="Energy",
@@ -501,9 +517,75 @@ async def test_change_device_source(hass: HomeAssistant) -> None:
     assert await hass.config_entries.async_setup(utility_meter_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    device1 = device_registry.async_get(device_id=source_entity_1.device_id)
-    assert utility_meter_config_entry.entry_id in device1.config_entries
+    # Confirm that the configuration entry has been added to the source entity 1 (current) device registry
+    current_device = device_registry.async_get(
+        device_id=current_entity_source.device_id
+    )
+    assert utility_meter_config_entry.entry_id in current_device.config_entries
 
+    # Change configuration options to use source entity 2 (with a linked device) and reload the integration
+    previous_entity_source = source_entity_1
+    current_entity_source = source_entity_2
+    utility_meter_config_entry.options = {
+        "cycle": "monthly",
+        "delta_values": False,
+        "name": "Energy",
+        "net_consumption": False,
+        "offset": 0,
+        "periodically_resetting": True,
+        "source": current_entity_source.entity_id,
+        "tariffs": [],
+    }
+    utility_meter_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_reload(utility_meter_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Confirm that the configuration entry has been removed from the source entity 1 (previous) device registry
+    previous_device = device_registry.async_get(
+        device_id=previous_entity_source.device_id
+    )
+    assert utility_meter_config_entry.entry_id not in previous_device.config_entries
+
+    # Confirm that the configuration entry has been added to the source entity 2 (current) device registry
+    current_device = device_registry.async_get(
+        device_id=current_entity_source.device_id
+    )
+    assert utility_meter_config_entry.entry_id in current_device.config_entries
+
+    # Change configuration options to use source entity 3 (without a device) and reload the integration
+    previous_entity_source = source_entity_2
+    current_entity_source = source_entity_3
+    utility_meter_config_entry.options = {
+        "cycle": "monthly",
+        "delta_values": False,
+        "name": "Energy",
+        "net_consumption": False,
+        "offset": 0,
+        "periodically_resetting": True,
+        "source": current_entity_source.entity_id,
+        "tariffs": [],
+    }
+    utility_meter_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_reload(utility_meter_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Confirm that the configuration entry has been removed from the source entity 2 (previous) device registry
+    previous_device = device_registry.async_get(
+        device_id=previous_entity_source.device_id
+    )
+    assert utility_meter_config_entry.entry_id not in previous_device.config_entries
+
+    # Confirm that there is no device with the helper configuration entry
+    assert (
+        dr.async_entries_for_config_entry(
+            device_registry, utility_meter_config_entry.entry_id
+        )
+        == []
+    )
+
+    # Change configuration options to use source entity 2 (with a linked device) and reload the integration
+    previous_entity_source = source_entity_3
+    current_entity_source = source_entity_2
     utility_meter_config_entry.options = {
         "cycle": "monthly",
         "delta_values": False,
@@ -518,8 +600,8 @@ async def test_change_device_source(hass: HomeAssistant) -> None:
     assert await hass.config_entries.async_reload(utility_meter_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    device1 = device_registry.async_get(device_id=source_entity_1.device_id)
-    assert utility_meter_config_entry.entry_id not in device1.config_entries
-
-    device2 = device_registry.async_get(device_id=source_entity_2.device_id)
-    assert utility_meter_config_entry.entry_id in device2.config_entries
+    # Confirm that the configuration entry has been added to the source entity 2 (current) device registry
+    current_device = device_registry.async_get(
+        device_id=current_entity_source.device_id
+    )
+    assert utility_meter_config_entry.entry_id in current_device.config_entries
