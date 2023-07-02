@@ -60,7 +60,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(conf_host)
         self._abort_if_unique_id_configured()
 
-        result, credentials = await komfovent_api.get_credentials(
+        result, credentials = komfovent_api.get_credentials(
             conf_host, conf_username, conf_password
         )
         if result != komfovent_api.KomfoventConnectionResult.SUCCESS:
@@ -70,4 +70,4 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if result != komfovent_api.KomfoventConnectionResult.SUCCESS:
             return self.__return_error(result)
 
-        return self.async_create_entry(title=settings.name, data=credentials)
+        return self.async_create_entry(title=settings.name, data=user_input)
