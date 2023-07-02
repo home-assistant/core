@@ -302,7 +302,7 @@
     }
   },
   "device_class": {
-    "co": "carbon_monoxide",
+    "co": "carbon monoxide",
     "cold": "cold",
     "gas": "gas",
     "heat": "heat",

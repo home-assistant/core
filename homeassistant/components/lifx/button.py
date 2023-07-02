@@ -24,7 +24,7 @@ RESTART_BUTTON_DESCRIPTION = ButtonEntityDescription(
 
 IDENTIFY_BUTTON_DESCRIPTION = ButtonEntityDescription(
     key=IDENTIFY,
-    name="Identify",
+    device_class=ButtonDeviceClass.IDENTIFY,
     entity_category=EntityCategory.CONFIG,
 )
 

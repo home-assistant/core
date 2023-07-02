@@ -30,6 +30,7 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_TYPE,
     EVENT_HOMEASSISTANT_STOP,
+    SERVICE_RELOAD,
     Platform,
 )
 from homeassistant.core import Event, HomeAssistant, ServiceCall
@@ -90,6 +91,7 @@ from .schema import (
     SensorSchema,
     SwitchSchema,
     TextSchema,
+    TimeSchema,
     WeatherSchema,
     ga_validator,
     sensor_type_validator,
@@ -143,6 +145,7 @@ CONFIG_SCHEMA = vol.Schema(
                     **SensorSchema.platform_node(),
                     **SwitchSchema.platform_node(),
                     **TextSchema.platform_node(),
+                    **TimeSchema.platform_node(),
                     **WeatherSchema.platform_node(),
                 }
             ),
@@ -309,6 +312,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         knx_module.service_exposure_register_modify,
         schema=SERVICE_KNX_EXPOSURE_REGISTER_SCHEMA,
     )
+
+    async def _reload_integration(call: ServiceCall) -> None:
+        """Reload the integration."""
+        await hass.config_entries.async_reload(entry.entry_id)
+        hass.bus.async_fire(f"event_{DOMAIN}_reloaded", context=call.context)
+
+    async_register_admin_service(hass, DOMAIN, SERVICE_RELOAD, _reload_integration)
 
     await register_panel(hass)
 

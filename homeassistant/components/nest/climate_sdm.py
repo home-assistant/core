@@ -99,6 +99,7 @@ class ThermostatEntity(ClimateEntity):
     _attr_max_temp = MAX_TEMP
     _attr_has_entity_name = True
     _attr_should_poll = False
+    _attr_name = None
 
     def __init__(self, device: Device) -> None:
         """Initialize ThermostatEntity."""
