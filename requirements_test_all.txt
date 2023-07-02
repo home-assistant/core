@@ -1540,7 +1540,7 @@ python-izone==1.2.9
 python-juicenet==1.1.0
 
 # homeassistant.components.tplink
-python-kasa==0.5.1
+python-kasa[speedups]==0.5.2
 
 # homeassistant.components.matter
 python-matter-server==3.6.3
