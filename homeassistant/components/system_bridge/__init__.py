@@ -46,11 +46,13 @@ PLATFORMS = [
 CONF_BRIDGE = "bridge"
 CONF_KEY = "key"
 CONF_TEXT = "text"
+CONF_STATE = "state"
 
 SERVICE_OPEN_PATH = "open_path"
 SERVICE_OPEN_URL = "open_url"
 SERVICE_SEND_KEYPRESS = "send_keypress"
 SERVICE_SEND_TEXT = "send_text"
+SERVICE_POWER = "power"
 
 
 async def async_setup_entry(
@@ -188,6 +190,25 @@ async def async_setup_entry(
             KeyboardText(text=call.data[CONF_TEXT])
         )
 
+    async def handle_power(call: ServiceCall) -> None:
+        """Handle the send_keypress service call."""
+        coordinator: SystemBridgeDataUpdateCoordinator = hass.data[DOMAIN][
+            call.data[CONF_BRIDGE]
+        ]
+        match call.data[CONF_STATE]:
+            case "sleep":
+                await coordinator.websocket_client.power_sleep()
+            case "hibernate":
+                await coordinator.websocket_client.power_hibernate()
+            case "restart":
+                await coordinator.websocket_client.power_restart()
+            case "shutdown":
+                await coordinator.websocket_client.power_shutdown()
+            case "lock":
+                await coordinator.websocket_client.power_lock()
+            case "logout":
+                await coordinator.websocket_client.power_logout()
+
     hass.services.async_register(
         DOMAIN,
         SERVICE_OPEN_PATH,
@@ -232,6 +253,18 @@ async def async_setup_entry(
             {
                 vol.Required(CONF_BRIDGE): valid_device,
                 vol.Required(CONF_TEXT): cv.string,
+            },
+        ),
+    )
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_POWER,
+        handle_power,
+        schema=vol.Schema(
+            {
+                vol.Required(CONF_BRIDGE): valid_device,
+                vol.Required(CONF_STATE): cv.string,
             },
         ),
     )
