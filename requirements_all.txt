@@ -1087,6 +1087,9 @@ kiwiki-client==0.1.1
 # homeassistant.components.knx
 knx-frontend==2023.6.23.191712
 
+# homeassistant.components.komfovent
+komfovent-api==0.0.1
+
 # homeassistant.components.konnected
 konnected==1.2.0
 
