@@ -2005,7 +2005,7 @@ youless-api==1.0.1
 zamg==0.2.2
 
 # homeassistant.components.zeroconf
-zeroconf==0.69.0
+zeroconf==0.70.0
 
 # homeassistant.components.zeversolar
 zeversolar==0.3.1
