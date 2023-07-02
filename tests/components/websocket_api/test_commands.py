@@ -24,7 +24,10 @@ from homeassistant.setup import DATA_SETUP_TIME, async_setup_component
 from homeassistant.util.json import json_loads
 
 from tests.common import MockEntity, MockEntityPlatform, MockUser, async_mock_service
-from tests.typing import ClientSessionGenerator, WebSocketGenerator
+from tests.typing import (
+    ClientSessionGenerator,
+    WebSocketGenerator,
+)
 
 STATE_KEY_SHORT_NAMES = {
     "entity_id": "e",
@@ -1672,7 +1675,9 @@ async def test_test_condition(hass: HomeAssistant, websocket_client) -> None:
 
 async def test_execute_script(hass: HomeAssistant, websocket_client) -> None:
     """Test testing a condition."""
-    calls = async_mock_service(hass, "domain_test", "test_service")
+    calls = async_mock_service(
+        hass, "domain_test", "test_service", response={"hello": "world"}
+    )
 
     await websocket_client.send_json(
         {
@@ -1682,7 +1687,9 @@ async def test_execute_script(hass: HomeAssistant, websocket_client) -> None:
                 {
                     "service": "domain_test.test_service",
                     "data": {"hello": "world"},
-                }
+                    "response_variable": "service_result",
+                },
+                {"stop": "done", "response_variable": "service_result"},
             ],
         }
     )
@@ -1691,6 +1698,7 @@ async def test_execute_script(hass: HomeAssistant, websocket_client) -> None:
     assert msg_no_var["id"] == 5
     assert msg_no_var["type"] == const.TYPE_RESULT
     assert msg_no_var["success"]
+    assert msg_no_var["result"]["response"] == {"hello": "world"}
 
     await websocket_client.send_json(
         {
@@ -1725,6 +1733,45 @@ async def test_execute_script(hass: HomeAssistant, websocket_client) -> None:
     assert call.service == "test_service"
     assert call.data == {"hello": "From variable"}
     assert call.context.as_dict() == msg_var["result"]["context"]
+
+
+async def test_execute_script_complex_response(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test testing a condition."""
+    await async_setup_component(hass, "calendar", {"calendar": {"platform": "demo"}})
+    await hass.async_block_till_done()
+    ws_client = await hass_ws_client(hass)
+
+    await ws_client.send_json_auto_id(
+        {
+            "type": "execute_script",
+            "sequence": [
+                {
+                    "service": "calendar.list_events",
+                    "data": {"duration": {"hours": 24, "minutes": 0, "seconds": 0}},
+                    "target": {"entity_id": "calendar.calendar_1"},
+                    "response_variable": "service_result",
+                },
+                {"stop": "done", "response_variable": "service_result"},
+            ],
+        }
+    )
+
+    msg_no_var = await ws_client.receive_json()
+    assert msg_no_var["type"] == const.TYPE_RESULT
+    assert msg_no_var["success"]
+    assert msg_no_var["result"]["response"] == {
+        "events": [
+            {
+                "start": ANY,
+                "end": ANY,
+                "summary": "Future Event",
+                "description": "Future Description",
+                "location": "Future Location",
+            }
+        ]
+    }
 
 
 async def test_subscribe_unsubscribe_bootstrap_integrations(
@@ -1773,11 +1820,17 @@ async def test_integration_setup_info(
     ("key", "config"),
     (
         ("trigger", {"platform": "event", "event_type": "hello"}),
+        ("trigger", [{"platform": "event", "event_type": "hello"}]),
         (
             "condition",
             {"condition": "state", "entity_id": "hello.world", "state": "paulus"},
         ),
+        (
+            "condition",
+            [{"condition": "state", "entity_id": "hello.world", "state": "paulus"}],
+        ),
         ("action", {"service": "domain_test.test_service"}),
+        ("action", [{"service": "domain_test.test_service"}]),
     ),
 )
 async def test_validate_config_works(websocket_client, key, config) -> None:
@@ -1808,7 +1861,8 @@ async def test_validate_config_works(websocket_client, key, config) -> None:
             },
             (
                 "Unexpected value for condition: 'non_existing'. Expected and, device,"
-                " not, numeric_state, or, state, sun, template, time, trigger, zone"
+                " not, numeric_state, or, state, sun, template, time, trigger, zone "
+                "@ data[0]"
             ),
         ),
         (

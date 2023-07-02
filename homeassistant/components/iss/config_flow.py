@@ -3,7 +3,7 @@
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_NAME, CONF_SHOW_ON_MAP
+from homeassistant.const import CONF_SHOW_ON_MAP
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 
@@ -33,7 +33,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             return self.async_create_entry(
-                title=user_input.get(CONF_NAME, DEFAULT_NAME),
+                title=DEFAULT_NAME,
                 data={},
                 options={CONF_SHOW_ON_MAP: user_input.get(CONF_SHOW_ON_MAP, False)},
             )

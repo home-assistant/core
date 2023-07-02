@@ -7,6 +7,7 @@ process:
       name: Text
       description: Transcribed text
       example: Turn all lights on
+      required: true
       selector:
         text:
     language:
@@ -20,4 +21,4 @@ process:
       description: Assist engine to process your request
       example: homeassistant
       selector:
-        text:
+        conversation_agent:
