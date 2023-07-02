@@ -15,7 +15,7 @@ from .coordinator import EzvizDataUpdateCoordinator
 from .entity import EzvizEntity
 
 PARALLEL_UPDATES = 1
-
+###
 BINARY_SENSOR_TYPES: dict[str, BinarySensorEntityDescription] = {
     "Motion_Trigger": BinarySensorEntityDescription(
         key="Motion_Trigger",
