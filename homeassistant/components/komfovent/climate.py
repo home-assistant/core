@@ -1,6 +1,8 @@
 """Ventilation Units from Komfovent integration."""
 from __future__ import annotations
 
+from typing import cast
+
 import komfovent_api
 
 from homeassistant.components.climate import (
@@ -13,7 +15,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN, PARAM_HOST, PARAM_PASSWORD, PARAM_USERNAME
+from .const import DOMAIN
 
 
 async def async_setup_entry(
@@ -22,49 +24,51 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Komfovent unit control."""
-    conf_host = str(entry.data[PARAM_HOST])
-    conf_username = str(entry.data[PARAM_USERNAME])
-    conf_password = str(entry.data[PARAM_PASSWORD])
+    conf = cast(komfovent_api.KomfoventCredentials, entry.data)
 
-    unit = await komfovent_api.create_unit(conf_host, conf_username, conf_password)
-    async_add_entities([KomfoventDevice(unit)], True)
+    result, settings = await komfovent_api.get_settings(conf)
+    if result == komfovent_api.KomfoventConnectionResult.SUCCESS:
+        async_add_entities([KomfoventDevice(conf, settings)], True)
 
 
 class KomfoventDevice(ClimateEntity):
     """Representation of a ventilation unit."""
 
-    _attr_preset_modes = [
-        "AWAY",
-        "NORMAL",
-        "INTENSIVE",
-        "BOOST",
-        "KITCHEN",
-        "FIREPLACE",
-        "OVERRIDE",
-        "HOLIDAYS",
-    ]
+    _attr_preset_modes = [mode.name for mode in komfovent_api.KomfoventOperatingModes]
     _attr_supported_features = ClimateEntityFeature.PRESET_MODE
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
-    def __init__(self, device) -> None:
-        """Initialize the heater."""
-        self._komfovent_device = device
-        self._attr_unique_id = self._komfovent_device.get_id()
+    def __init__(
+        self,
+        conf: komfovent_api.KomfoventCredentials,
+        settings: komfovent_api.KomfoventSettings,
+    ) -> None:
+        """Initialize the ventilation unit."""
+        self._komfovent_credentials = conf
+        self._komfovent_settings = settings
+
+        self._attr_unique_id = settings.serial_number
+        self._attr_name = settings.name
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, str(self._attr_unique_id))},
-            model=self._komfovent_device.get_model(),
+            identifiers={(DOMAIN, settings.serial_number)},
+            model=settings.model,
+            name=settings.name,
+            sw_version=settings.version,
             manufacturer="Komfovent",
         )
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new target temperature."""
-        await self._komfovent_device.set_preset(preset_mode)
+        await komfovent_api.set_operating_mode(self._komfovent_credentials, preset_mode)
 
     async def async_update(self) -> None:
         """Get the latest data."""
-        data = await self._komfovent_device.refresh()
-        self._attr_available = data is not None
-        if data is None:
+        result, status = await komfovent_api.get_unit_status(
+            self._komfovent_credentials
+        )
+        if result != komfovent_api.KomfoventConnectionResult.SUCCESS or status is None:
+            self._attr_available = False
             return
-        self._attr_preset_mode = data["preset"]
-        self._attr_current_temperature = data["current_temperature"]
+        self._attr_available = True
+        self._attr_preset_mode = status.mode
+        self._attr_current_temperature = status.temp_extract
