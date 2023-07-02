@@ -888,22 +888,22 @@ def async_update_suggested_units(hass: HomeAssistant) -> None:
         )
 
 
+def _display_precision(hass: HomeAssistant, entity_id: str) -> int | None:
+    """Return the display precision."""
+    if not (entry := er.async_get(hass).async_get(entity_id)) or not (
+        sensor_options := entry.options.get(DOMAIN)
+    ):
+        return None
+    if (display_precision := sensor_options.get("display_precision")) is not None:
+        return cast(int, display_precision)
+    return sensor_options.get("suggested_display_precision")
+
+
 @callback
 def async_rounded_state(hass: HomeAssistant, entity_id: str, state: State) -> str:
     """Return the state rounded for presentation."""
-
-    def display_precision() -> int | None:
-        """Return the display precision."""
-        if not (entry := er.async_get(hass).async_get(entity_id)) or not (
-            sensor_options := entry.options.get(DOMAIN)
-        ):
-            return None
-        if (display_precision := sensor_options.get("display_precision")) is not None:
-            return cast(int, display_precision)
-        return sensor_options.get("suggested_display_precision")
-
     value = state.state
-    if (precision := display_precision()) is None:
+    if (precision := _display_precision(hass, entity_id)) is None:
         return value
 
     with suppress(TypeError, ValueError):

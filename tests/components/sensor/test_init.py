@@ -17,6 +17,7 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
+    async_rounded_state,
     async_update_suggested_units,
 )
 from homeassistant.config_entries import ConfigEntry, ConfigFlow
@@ -600,9 +601,14 @@ async def test_custom_unit(
     assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
     await hass.async_block_till_done()
 
-    state = hass.states.get(entity0.entity_id)
+    entity_id = entity0.entity_id
+    state = hass.states.get(entity_id)
     assert state.state == custom_state
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == state_unit
+
+    assert (
+        async_rounded_state(hass, entity_id, hass.states.get(entity_id)) == custom_state
+    )
 
 
 @pytest.mark.parametrize(
