@@ -563,7 +563,7 @@ async def test_restore_sensor_restore_state(
             UnitOfPressure.HPA,
             UnitOfPressure.HPA,
             -0.00,
-            "0",
+            "0.0",
         ),
     ],
 )
