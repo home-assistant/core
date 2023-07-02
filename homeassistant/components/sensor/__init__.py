@@ -9,7 +9,6 @@ from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal, InvalidOperation as DecimalInvalidOperation
 import logging
 from math import ceil, floor, log10
-import re
 from typing import Any, Final, cast, final
 
 from typing_extensions import Self
@@ -89,8 +88,6 @@ from .websocket_api import async_setup as async_setup_ws_api
 _LOGGER: Final = logging.getLogger(__name__)
 
 ENTITY_ID_FORMAT: Final = DOMAIN + ".{}"
-
-NEGATIVE_ZERO_PATTERN = re.compile(r"^-(0\.?0*)$")
 
 SCAN_INTERVAL: Final = timedelta(seconds=30)
 
