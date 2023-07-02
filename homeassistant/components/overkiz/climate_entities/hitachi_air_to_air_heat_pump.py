@@ -59,7 +59,7 @@ SWING_STATE = {
     Protocol.HLRR_WIFI: OverkizState.HLRRWIFI_SWING,
 }
 
-OVERKIZ_TO_HVAC_MODES: dict[str, str] = {
+OVERKIZ_TO_HVAC_MODES: dict[str, HVACMode] = {
     OverkizCommandParam.AUTOHEATING: HVACMode.AUTO,
     OverkizCommandParam.AUTOCOOLING: HVACMode.AUTO,
     OverkizCommandParam.ON: HVACMode.HEAT,
@@ -155,7 +155,7 @@ class HitachiAirToAirHeatPump(OverkizEntity, ClimateEntity):
             self._attr_device_info["manufacturer"] = "Hitachi"
 
     @property
-    def hvac_mode(self) -> str:
+    def hvac_mode(self) -> HVACMode:
         """Return hvac operation ie. heat, cool mode."""
         if (
             state := self.device.states[MAIN_OPERATION_STATE[self.protocol]]
@@ -167,7 +167,7 @@ class HitachiAirToAirHeatPump(OverkizEntity, ClimateEntity):
 
         return HVACMode.OFF
 
-    async def async_set_hvac_mode(self, hvac_mode: str) -> None:
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
         if hvac_mode == HVACMode.OFF:
             await self._global_control(main_operation=OverkizCommandParam.OFF)
@@ -218,7 +218,7 @@ class HitachiAirToAirHeatPump(OverkizEntity, ClimateEntity):
         if (
             temperature := self.device.states[OverkizState.CORE_TARGET_TEMPERATURE]
         ) and temperature.value_as_int:
-            return temperature.value_as_int
+            return int(temperature.value_as_int)
 
         return None
 
@@ -228,7 +228,7 @@ class HitachiAirToAirHeatPump(OverkizEntity, ClimateEntity):
         if (
             state := self.device.states[ROOM_TEMPERATURE_STATE[self.protocol]]
         ) and state.value_as_int:
-            return state.value_as_int
+            return int(state.value_as_int)
 
         return None
 
@@ -296,10 +296,13 @@ class HitachiAirToAirHeatPump(OverkizEntity, ClimateEntity):
         """Execute globalControl command with all parameters. There is no option to only set a single parameter, without passing al other values."""
         main_operation = (
             main_operation
-            or cast(
-                State, self.device.states[MAIN_OPERATION_STATE[self.protocol]]
-            ).value_as_str.lower(),
+            or str(
+                cast(
+                    State, self.device.states[MAIN_OPERATION_STATE[self.protocol]]
+                ).value_as_str
+            ).lower()
         )
+
         target_temperature = (
             target_temperature
             or cast(
@@ -309,24 +312,30 @@ class HitachiAirToAirHeatPump(OverkizEntity, ClimateEntity):
 
         fan_mode = (
             fan_mode
-            or cast(
-                State, self.device.states[FAN_SPEED_STATE[self.protocol]]
-            ).value_as_str.lower()
+            or str(
+                cast(
+                    State, self.device.states[FAN_SPEED_STATE[self.protocol]]
+                ).value_as_str
+            ).lower()
         )
 
         hvac_mode = (
             hvac_mode
-            or cast(
-                State, self.device.states[MODE_CHANGE_STATE[self.protocol]]
-            ).value_as_str.lower()
+            or str(
+                cast(
+                    State, self.device.states[MODE_CHANGE_STATE[self.protocol]]
+                ).value_as_str
+            ).lower()
         )
 
         if self.device.states.get(SWING_STATE[self.protocol]):
             swing_mode = (
                 swing_mode
-                or cast(
-                    State, self.device.states[SWING_STATE[self.protocol]]
-                ).value_as_str.lower()
+                or str(
+                    cast(
+                        State, self.device.states[SWING_STATE[self.protocol]]
+                    ).value_as_str
+                ).lower()
             )
 
         else:
@@ -352,8 +361,13 @@ class HitachiAirToAirHeatPump(OverkizEntity, ClimateEntity):
                 swing_mode,  # Swing Mode
             )
         else:
-            leave_home = leave_home or cast(
-                str, self.device.states[LEAVE_HOME_STATE[self.protocol]]
+            leave_home = (
+                leave_home
+                or str(
+                    cast(
+                        State, self.device.states[LEAVE_HOME_STATE[self.protocol]]
+                    ).value_as_str
+                ).lower()
             )
 
             await self.executor.async_execute_command(
