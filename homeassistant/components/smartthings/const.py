@@ -39,6 +39,7 @@ PLATFORMS = [
     Platform.LIGHT,
     Platform.LOCK,
     Platform.COVER,
+    Platform.MEDIA_PLAYER,
     Platform.SWITCH,
     Platform.BINARY_SENSOR,
     Platform.SENSOR,
