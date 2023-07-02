@@ -93,7 +93,7 @@ ENTITY_ID_FORMAT: Final = DOMAIN + ".{}"
 
 NEGATIVE_ZERO_PATTERN = re.compile(r"^-(0\.?0*)$")
 
-PY_311 = sys.version_info[:3] >= (3, 1, 1)
+PY_311 = sys.version_info >= (3, 11, 0)
 
 SCAN_INTERVAL: Final = timedelta(seconds=30)
 
