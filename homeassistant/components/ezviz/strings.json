@@ -71,5 +71,18 @@
         }
       }
     }
+  },
+  "entity": {
+    "binary_sensor": {
+      "motion_trigger": {
+        "name": "Motion"
+      },
+      "alarm_schedules_enabled": {
+        "name": "Alarm schedules"
+      },
+      "encrypted": {
+        "name": "Encryption"
+      }
+    }
   }
 }

@@ -15,16 +15,24 @@ from .coordinator import EzvizDataUpdateCoordinator
 from .entity import EzvizEntity
 
 PARALLEL_UPDATES = 1
-###
+
 BINARY_SENSOR_TYPES: dict[str, BinarySensorEntityDescription] = {
     "Motion_Trigger": BinarySensorEntityDescription(
         key="Motion_Trigger",
+        name="Motion",
+        translation_key="motion_trigger",
         device_class=BinarySensorDeviceClass.MOTION,
     ),
     "alarm_schedules_enabled": BinarySensorEntityDescription(
-        key="alarm_schedules_enabled"
+        key="alarm_schedules_enabled",
+        name="Alarm schedules",
+        translation_key="alarm_schedules_enabled",
     ),
-    "encrypted": BinarySensorEntityDescription(key="encrypted"),
+    "encrypted": BinarySensorEntityDescription(
+        key="encrypted",
+        name="Encryption",
+        translation_key="encrypted",
+    ),
 }
 
 
@@ -50,6 +58,8 @@ async def async_setup_entry(
 class EzvizBinarySensor(EzvizEntity, BinarySensorEntity):
     """Representation of a EZVIZ sensor."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self,
         coordinator: EzvizDataUpdateCoordinator,
@@ -59,7 +69,6 @@ class EzvizBinarySensor(EzvizEntity, BinarySensorEntity):
         """Initialize the sensor."""
         super().__init__(coordinator, serial)
         self._sensor_name = binary_sensor
-        self._attr_name = f"{self._camera_name} {binary_sensor.title()}"
         self._attr_unique_id = f"{serial}_{self._camera_name}.{binary_sensor}"
         self.entity_description = BINARY_SENSOR_TYPES[binary_sensor]
 
