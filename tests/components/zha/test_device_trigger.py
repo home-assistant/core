@@ -9,6 +9,7 @@ import zigpy.zcl.clusters.general as general
 
 import homeassistant.components.automation as automation
 from homeassistant.components.device_automation import DeviceAutomationType
+from homeassistant.components.zha.core.const import ATTR_ENDPOINT_ID
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
@@ -23,7 +24,12 @@ from tests.common import (
     async_get_device_automations,
     async_mock_service,
 )
-from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa: F401
+
+
+@pytest.fixture(autouse=True, name="stub_blueprint_populate")
+def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
+    """Stub copying the blueprints to the config folder."""
+
 
 ON = 1
 OFF = 0
@@ -190,7 +196,7 @@ async def test_if_fires_on_event(hass: HomeAssistant, mock_devices, calls) -> No
     zigpy_device.device_automation_triggers = {
         (SHAKEN, SHAKEN): {COMMAND: COMMAND_SHAKE},
         (DOUBLE_PRESS, DOUBLE_PRESS): {COMMAND: COMMAND_DOUBLE},
-        (SHORT_PRESS, SHORT_PRESS): {COMMAND: COMMAND_SINGLE},
+        (SHORT_PRESS, SHORT_PRESS): {COMMAND: COMMAND_SINGLE, ATTR_ENDPOINT_ID: 1},
         (LONG_PRESS, LONG_PRESS): {COMMAND: COMMAND_HOLD},
         (LONG_RELEASE, LONG_RELEASE): {COMMAND: COMMAND_HOLD},
     }
@@ -223,8 +229,8 @@ async def test_if_fires_on_event(hass: HomeAssistant, mock_devices, calls) -> No
 
     await hass.async_block_till_done()
 
-    channel = zha_device.channels.pools[0].client_channels["1:0x0006"]
-    channel.zha_send_event(COMMAND_SINGLE, [])
+    cluster_handler = zha_device.endpoints[1].client_cluster_handlers["1:0x0006"]
+    cluster_handler.zha_send_event(COMMAND_SINGLE, [])
     await hass.async_block_till_done()
 
     assert len(calls) == 1

@@ -56,5 +56,12 @@
     "error": {
       "code_format_mismatch": "The default PIN code does not match the required number of digits"
     }
+  },
+  "entity": {
+    "binary_sensor": {
+      "ethernet": {
+        "name": "Ethernet status"
+      }
+    }
   }
 }

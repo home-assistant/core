@@ -70,6 +70,7 @@ class PhilipsTVMediaPlayer(
 
     _attr_device_class = MediaPlayerDeviceClass.TV
     _attr_has_entity_name = True
+    _attr_name = None
 
     def __init__(
         self,
@@ -391,7 +392,9 @@ class PhilipsTVMediaPlayer(
         )
 
     async def async_browse_media(
-        self, media_content_type: str | None = None, media_content_id: str | None = None
+        self,
+        media_content_type: MediaType | str | None = None,
+        media_content_id: str | None = None,
     ) -> BrowseMedia:
         """Implement the websocket media browsing helper."""
         if not self._tv.on:
@@ -413,7 +416,7 @@ class PhilipsTVMediaPlayer(
 
     async def async_get_browse_image(
         self,
-        media_content_type: str,
+        media_content_type: MediaType | str,
         media_content_id: str,
         media_image_id: str | None = None,
     ) -> tuple[bytes | None, str | None]:

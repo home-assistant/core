@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+import logging
 
 from lacrosse_view import Sensor
 
@@ -22,13 +23,16 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
 )
 
-from .const import DOMAIN, LOGGER
+from .const import DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass
@@ -169,7 +173,7 @@ async def async_setup_entry(
                     f"title=LaCrosse%20View%20Unsupported%20sensor%20field:%20{field}"
                 )
 
-                LOGGER.warning(message)
+                _LOGGER.warning(message)
                 continue
             sensor_list.append(
                 LaCrosseViewSensor(
@@ -203,13 +207,13 @@ class LaCrosseViewSensor(
 
         self.entity_description = description
         self._attr_unique_id = f"{sensor.sensor_id}-{description.key}"
-        self._attr_device_info = {
-            "identifiers": {(DOMAIN, sensor.sensor_id)},
-            "name": sensor.name,
-            "manufacturer": "LaCrosse Technology",
-            "model": sensor.model,
-            "via_device": (DOMAIN, sensor.location.id),
-        }
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, sensor.sensor_id)},
+            name=sensor.name,
+            manufacturer="LaCrosse Technology",
+            model=sensor.model,
+            via_device=(DOMAIN, sensor.location.id),
+        )
         self.index = index
 
     @property

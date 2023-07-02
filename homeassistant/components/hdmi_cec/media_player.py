@@ -30,6 +30,7 @@ from homeassistant.components.media_player import (
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
     MediaPlayerState,
+    MediaType,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -105,7 +106,9 @@ class CecPlayerEntity(CecEntity, MediaPlayerEntity):
         self.send_keypress(KEY_STOP)
         self._attr_state = MediaPlayerState.IDLE
 
-    def play_media(self, media_type: str, media_id: str, **kwargs: Any) -> None:
+    def play_media(
+        self, media_type: MediaType | str, media_id: str, **kwargs: Any
+    ) -> None:
         """Not supported."""
         raise NotImplementedError()
 

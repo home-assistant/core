@@ -20,7 +20,6 @@ async def test_climate_basic_temperature_set(
     hass: HomeAssistant, knx: KNXTestKit
 ) -> None:
     """Test KNX climate basic."""
-    events = async_capture_events(hass, "state_changed")
     await knx.setup_integration(
         {
             ClimateSchema.PLATFORM: {
@@ -31,9 +30,7 @@ async def test_climate_basic_temperature_set(
             }
         }
     )
-    assert len(hass.states.async_all()) == 1
-    assert len(events) == 1
-    events.pop()
+    events = async_capture_events(hass, "state_changed")
 
     # read temperature
     await knx.assert_read("1/2/3")
@@ -57,7 +54,6 @@ async def test_climate_basic_temperature_set(
 
 async def test_climate_hvac_mode(hass: HomeAssistant, knx: KNXTestKit) -> None:
     """Test KNX climate hvac mode."""
-    events = async_capture_events(hass, "state_changed")
     await knx.setup_integration(
         {
             ClimateSchema.PLATFORM: {
@@ -72,9 +68,7 @@ async def test_climate_hvac_mode(hass: HomeAssistant, knx: KNXTestKit) -> None:
             }
         }
     )
-    assert len(hass.states.async_all()) == 1
-    assert len(events) == 1
-    events.pop()
+    async_capture_events(hass, "state_changed")
 
     await hass.async_block_till_done()
     # read states state updater
@@ -112,7 +106,6 @@ async def test_climate_preset_mode(
     hass: HomeAssistant, knx: KNXTestKit, entity_registry: er.EntityRegistry
 ) -> None:
     """Test KNX climate preset mode."""
-    events = async_capture_events(hass, "state_changed")
     await knx.setup_integration(
         {
             ClimateSchema.PLATFORM: {
@@ -125,9 +118,7 @@ async def test_climate_preset_mode(
             }
         }
     )
-    assert len(hass.states.async_all()) == 1
-    assert len(events) == 1
-    events.pop()
+    events = async_capture_events(hass, "state_changed")
 
     await hass.async_block_till_done()
     # read states state updater
@@ -177,7 +168,6 @@ async def test_climate_preset_mode(
 
 async def test_update_entity(hass: HomeAssistant, knx: KNXTestKit) -> None:
     """Test update climate entity for KNX."""
-    events = async_capture_events(hass, "state_changed")
     await knx.setup_integration(
         {
             ClimateSchema.PLATFORM: {
@@ -192,9 +182,7 @@ async def test_update_entity(hass: HomeAssistant, knx: KNXTestKit) -> None:
     )
     assert await async_setup_component(hass, "homeassistant", {})
     await hass.async_block_till_done()
-    assert len(hass.states.async_all()) == 1
-    assert len(events) == 1
-    events.pop()
+    async_capture_events(hass, "state_changed")
 
     await hass.async_block_till_done()
     # read states state updater

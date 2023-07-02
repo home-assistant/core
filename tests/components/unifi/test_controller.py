@@ -6,8 +6,6 @@ from http import HTTPStatus
 from unittest.mock import Mock, patch
 
 import aiounifi
-from aiounifi.models.event import EventKey
-from aiounifi.models.message import MessageKey
 from aiounifi.websocket import WebsocketState
 import pytest
 
@@ -182,8 +180,8 @@ async def setup_unifi_integration(
     config_entry.add_to_hass(hass)
 
     if known_wireless_clients:
-        hass.data[UNIFI_WIRELESS_CLIENTS].update_data(
-            known_wireless_clients, config_entry
+        hass.data[UNIFI_WIRELESS_CLIENTS].wireless_clients.update(
+            known_wireless_clients
         )
 
     if aioclient_mock:
@@ -244,8 +242,6 @@ async def test_controller_setup(
     assert controller.mac is None
 
     assert controller.signal_reachable == "unifi-reachable-1"
-    assert controller.signal_update == "unifi-update-1"
-    assert controller.signal_remove == "unifi-remove-1"
     assert controller.signal_options_update == "unifi-options-1"
     assert controller.signal_heartbeat_missed == "unifi-heartbeat-missed"
 
@@ -383,41 +379,6 @@ async def test_connection_state_signalling(
 
     # Controller is once again connected
     assert hass.states.get("device_tracker.client").state == "home"
-
-
-async def test_wireless_client_event_calls_update_wireless_devices(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, mock_unifi_websocket
-) -> None:
-    """Call update_wireless_devices method when receiving wireless client event."""
-    client_1_dict = {
-        "essid": "ssid",
-        "disabled": False,
-        "hostname": "client_1",
-        "ip": "10.0.0.4",
-        "is_wired": False,
-        "last_seen": dt_util.as_timestamp(dt_util.utcnow()),
-        "mac": "00:00:00:00:00:01",
-    }
-    await setup_unifi_integration(
-        hass,
-        aioclient_mock,
-        clients_response=[client_1_dict],
-        known_wireless_clients=(client_1_dict["mac"],),
-    )
-
-    with patch(
-        "homeassistant.components.unifi.controller.UniFiController.update_wireless_clients",
-        return_value=None,
-    ) as wireless_clients_mock:
-        event = {
-            "datetime": "2020-01-20T19:37:04Z",
-            "user": "00:00:00:00:00:01",
-            "key": EventKey.WIRELESS_CLIENT_CONNECTED.value,
-            "msg": "User[11:22:33:44:55:66] has connected to WLAN",
-            "time": 1579549024893,
-        }
-        mock_unifi_websocket(message=MessageKey.EVENT, data=event)
-        assert wireless_clients_mock.assert_called_once
 
 
 async def test_reconnect_mechanism(

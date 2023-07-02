@@ -3,6 +3,7 @@ import asyncio
 import threading
 from unittest.mock import patch
 
+import py
 import pytest
 
 from homeassistant import core, runner
@@ -28,7 +29,7 @@ async def test_cumulative_shutdown_timeout_less_than_supervisor() -> None:
     )
 
 
-async def test_setup_and_run_hass(hass: HomeAssistant, tmpdir) -> None:
+async def test_setup_and_run_hass(hass: HomeAssistant, tmpdir: py.path.local) -> None:
     """Test we can setup and run."""
     test_dir = tmpdir.mkdir("config")
     default_config = runner.RuntimeConfig(test_dir)
@@ -42,7 +43,7 @@ async def test_setup_and_run_hass(hass: HomeAssistant, tmpdir) -> None:
     assert mock_run.called
 
 
-def test_run(hass: HomeAssistant, tmpdir) -> None:
+def test_run(hass: HomeAssistant, tmpdir: py.path.local) -> None:
     """Test we can run."""
     test_dir = tmpdir.mkdir("config")
     default_config = runner.RuntimeConfig(test_dir)
@@ -57,7 +58,9 @@ def test_run(hass: HomeAssistant, tmpdir) -> None:
     assert mock_run.called
 
 
-def test_run_executor_shutdown_throws(hass: HomeAssistant, tmpdir) -> None:
+def test_run_executor_shutdown_throws(
+    hass: HomeAssistant, tmpdir: py.path.local
+) -> None:
     """Test we can run and we still shutdown if the executor shutdown throws."""
     test_dir = tmpdir.mkdir("config")
     default_config = runner.RuntimeConfig(test_dir)
@@ -79,7 +82,7 @@ def test_run_executor_shutdown_throws(hass: HomeAssistant, tmpdir) -> None:
 
 
 def test_run_does_not_block_forever_with_shielded_task(
-    hass: HomeAssistant, tmpdir, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant, tmpdir: py.path.local, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test we can shutdown and not block forever."""
     test_dir = tmpdir.mkdir("config")

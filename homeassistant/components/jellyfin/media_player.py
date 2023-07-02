@@ -90,6 +90,7 @@ class JellyfinMediaPlayer(JellyfinEntity, MediaPlayerEntity):
                 sw_version=self.app_version,
                 via_device=(DOMAIN, coordinator.server_id),
             )
+            self._attr_name = None
         else:
             self._attr_device_info = None
             self._attr_has_entity_name = False
@@ -262,7 +263,7 @@ class JellyfinMediaPlayer(JellyfinEntity, MediaPlayerEntity):
         self._attr_state = MediaPlayerState.IDLE
 
     def play_media(
-        self, media_type: str, media_id: str, **kwargs: dict[str, Any]
+        self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
         """Play a piece of media."""
         self.coordinator.api_client.jellyfin.remote_play_media(
@@ -283,7 +284,9 @@ class JellyfinMediaPlayer(JellyfinEntity, MediaPlayerEntity):
             self.coordinator.api_client.jellyfin.remote_unmute(self.session_id)
 
     async def async_browse_media(
-        self, media_content_type: str | None = None, media_content_id: str | None = None
+        self,
+        media_content_type: MediaType | str | None = None,
+        media_content_id: str | None = None,
     ) -> BrowseMedia:
         """Return a BrowseMedia instance.
 

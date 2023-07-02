@@ -42,7 +42,7 @@
           "host": "[%key:common::config_flow::data::ip%]",
           "token": "[%key:common::config_flow::data::api_token%]"
         },
-        "description": "You will need the 32 character [%key:common::config_flow::data::api_token%], see https://www.home-assistant.io/integrations/xiaomi_miio#retrieving-the-access-token for instructions. Please note, that this [%key:common::config_flow::data::api_token%] is different from the key used by the Xiaomi Aqara integration."
+        "description": "You will need the 32 character API token, see https://www.home-assistant.io/integrations/xiaomi_miio#retrieving-the-access-token for instructions. Please note, that this API token is different from the key used by the Xiaomi Aqara integration."
       },
       "connect": {
         "data": {

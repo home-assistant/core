@@ -7,8 +7,7 @@ from unittest.mock import Mock
 from pyunifiprotect.data import Camera, Event, EventType
 
 from homeassistant.components.recorder import Recorder
-from homeassistant.components.recorder.db_schema import StateAttributes, States
-from homeassistant.components.recorder.util import session_scope
+from homeassistant.components.recorder.history import get_significant_states
 from homeassistant.components.unifiprotect.binary_sensor import EVENT_SENSORS
 from homeassistant.components.unifiprotect.const import (
     ATTR_EVENT_ID,
@@ -16,7 +15,7 @@ from homeassistant.components.unifiprotect.const import (
     DEFAULT_ATTRIBUTION,
 )
 from homeassistant.const import ATTR_ATTRIBUTION, ATTR_FRIENDLY_NAME, STATE_ON, Platform
-from homeassistant.core import HomeAssistant, State
+from homeassistant.core import HomeAssistant
 
 from .utils import MockUFPFixture, ids_from_device_description, init_entry
 
@@ -32,7 +31,7 @@ async def test_exclude_attributes(
     fixed_now: datetime,
 ) -> None:
     """Test binary_sensor has event_id and event_score excluded from recording."""
-
+    now = fixed_now
     await init_entry(hass, ufp, [doorbell, unadopted_camera])
 
     _, entity_id = ids_from_device_description(
@@ -70,22 +69,12 @@ async def test_exclude_attributes(
     assert state.attributes[ATTR_EVENT_SCORE] == 100
     await async_wait_recording_done(hass)
 
-    def _fetch_states() -> list[State]:
-        with session_scope(hass=hass) as session:
-            native_states = []
-            for db_state, db_state_attributes in session.query(
-                States, StateAttributes
-            ).outerjoin(
-                StateAttributes, States.attributes_id == StateAttributes.attributes_id
-            ):
-                state = db_state.to_native()
-                state.attributes = db_state_attributes.to_native()
-                native_states.append(state)
-            return native_states
-
-    states: list[State] = await hass.async_add_executor_job(_fetch_states)
-    assert len(states) > 1
-    for state in states:
-        assert ATTR_EVENT_SCORE not in state.attributes
-        assert ATTR_EVENT_ID not in state.attributes
-        assert ATTR_FRIENDLY_NAME in state.attributes
+    states = await hass.async_add_executor_job(
+        get_significant_states, hass, now, None, hass.states.async_entity_ids()
+    )
+    assert len(states) >= 1
+    for entity_states in states.values():
+        for state in entity_states:
+            assert ATTR_EVENT_SCORE not in state.attributes
+            assert ATTR_EVENT_ID not in state.attributes
+            assert ATTR_FRIENDLY_NAME in state.attributes

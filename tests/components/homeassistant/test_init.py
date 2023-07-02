@@ -14,6 +14,7 @@ from homeassistant.components.homeassistant import (
     SERVICE_CHECK_CONFIG,
     SERVICE_RELOAD_ALL,
     SERVICE_RELOAD_CORE_CONFIG,
+    SERVICE_RELOAD_CUSTOM_TEMPLATES,
     SERVICE_SET_LOCATION,
 )
 from homeassistant.const import (
@@ -575,6 +576,21 @@ async def test_save_persistent_states(hass: HomeAssistant) -> None:
         assert mock_save.called
 
 
+async def test_reload_custom_templates(hass: HomeAssistant) -> None:
+    """Test we can call reload_custom_templates."""
+    await async_setup_component(hass, "homeassistant", {})
+    with patch(
+        "homeassistant.components.homeassistant.async_load_custom_templates",
+        return_value=None,
+    ) as mock_load_custom_templates:
+        await hass.services.async_call(
+            "homeassistant",
+            SERVICE_RELOAD_CUSTOM_TEMPLATES,
+            blocking=True,
+        )
+        assert mock_load_custom_templates.called
+
+
 async def test_reload_all(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
@@ -586,6 +602,7 @@ async def test_reload_all(
     notify = async_mock_service(hass, "notify", "reload")
     core_config = async_mock_service(hass, "homeassistant", "reload_core_config")
     themes = async_mock_service(hass, "frontend", "reload_themes")
+    jinja = async_mock_service(hass, "homeassistant", "reload_custom_templates")
 
     with patch(
         "homeassistant.config.async_check_ha_config_file",
@@ -632,3 +649,4 @@ async def test_reload_all(
     assert len(test2) == 1
     assert len(core_config) == 1
     assert len(themes) == 1
+    assert len(jinja) == 1

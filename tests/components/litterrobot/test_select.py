@@ -1,9 +1,12 @@
 """Test the Litter-Robot select entity."""
-from pylitterbot import LitterRobot3
+from unittest.mock import AsyncMock, MagicMock
+
+from pylitterbot import LitterRobot3, LitterRobot4
 import pytest
 
 from homeassistant.components.select import (
     ATTR_OPTION,
+    ATTR_OPTIONS,
     DOMAIN as PLATFORM_DOMAIN,
     SERVICE_SELECT_OPTION,
 )
@@ -14,6 +17,7 @@ from homeassistant.helpers import entity_registry as er
 from .conftest import setup_integration
 
 SELECT_ENTITY_ID = "select.test_clean_cycle_wait_time_minutes"
+PANEL_BRIGHTNESS_ENTITY_ID = "select.test_panel_brightness"
 
 
 async def test_wait_time_select(
@@ -63,3 +67,38 @@ async def test_invalid_wait_time_select(hass: HomeAssistant, mock_account) -> No
             blocking=True,
         )
     assert not mock_account.robots[0].set_wait_time.called
+
+
+async def test_panel_brightness_select(
+    hass: HomeAssistant,
+    mock_account_with_litterrobot_4: MagicMock,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Tests the wait time select entity."""
+    await setup_integration(hass, mock_account_with_litterrobot_4, PLATFORM_DOMAIN)
+
+    select = hass.states.get(PANEL_BRIGHTNESS_ENTITY_ID)
+    assert select
+    assert len(select.attributes[ATTR_OPTIONS]) == 3
+
+    entity_entry = entity_registry.async_get(PANEL_BRIGHTNESS_ENTITY_ID)
+    assert entity_entry
+    assert entity_entry.entity_category is EntityCategory.CONFIG
+
+    data = {ATTR_ENTITY_ID: PANEL_BRIGHTNESS_ENTITY_ID}
+
+    robot: LitterRobot4 = mock_account_with_litterrobot_4.robots[0]
+    robot.set_panel_brightness = AsyncMock(return_value=True)
+    count = 0
+    for option in select.attributes[ATTR_OPTIONS]:
+        count += 1
+        data[ATTR_OPTION] = option
+
+        await hass.services.async_call(
+            PLATFORM_DOMAIN,
+            SERVICE_SELECT_OPTION,
+            data,
+            blocking=True,
+        )
+
+        assert robot.set_panel_brightness.call_count == count

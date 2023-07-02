@@ -41,7 +41,7 @@ set_water_heater_timer:
   target:
     entity:
       integration: tado
-      domain: climate
+      domain: water_heater
   fields:
     time_period:
       name: Time period

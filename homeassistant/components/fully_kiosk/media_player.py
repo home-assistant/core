@@ -8,6 +8,7 @@ from homeassistant.components.media_player import (
     BrowseMedia,
     MediaPlayerEntity,
     MediaPlayerState,
+    MediaType,
     async_process_play_media_url,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -32,6 +33,7 @@ async def async_setup_entry(
 class FullyMediaPlayer(FullyKioskEntity, MediaPlayerEntity):
     """Representation of a Fully Kiosk Browser media player entity."""
 
+    _attr_name = None
     _attr_supported_features = MEDIA_SUPPORT_FULLYKIOSK
     _attr_assumed_state = True
 
@@ -42,7 +44,7 @@ class FullyMediaPlayer(FullyKioskEntity, MediaPlayerEntity):
         self._attr_state = MediaPlayerState.IDLE
 
     async def async_play_media(
-        self, media_type: str, media_id: str, **kwargs: Any
+        self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
         """Play a piece of media."""
         if media_source.is_media_source_id(media_id):
@@ -71,7 +73,7 @@ class FullyMediaPlayer(FullyKioskEntity, MediaPlayerEntity):
 
     async def async_browse_media(
         self,
-        media_content_type: str | None = None,
+        media_content_type: MediaType | str | None = None,
         media_content_id: str | None = None,
     ) -> BrowseMedia:
         """Implement the WebSocket media browsing helper."""

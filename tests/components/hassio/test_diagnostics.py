@@ -211,5 +211,6 @@ async def test_diagnostics(
     assert "core" in diagnostics["coordinator_data"]
     assert "supervisor" in diagnostics["coordinator_data"]
     assert "os" in diagnostics["coordinator_data"]
+    assert "host" in diagnostics["coordinator_data"]
 
-    assert len(diagnostics["devices"]) == 5
+    assert len(diagnostics["devices"]) == 6

@@ -3,6 +3,8 @@ from __future__ import annotations
 
 from typing import TypeVar
 
+from reolink_aio.api import DUAL_LENS_MODELS
+
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
@@ -75,12 +77,16 @@ class ReolinkChannelCoordinatorEntity(ReolinkHostCoordinatorEntity):
 
         self._channel = channel
 
+        dev_ch = channel
+        if self._host.api.model in DUAL_LENS_MODELS:
+            dev_ch = 0
+
         if self._host.api.is_nvr:
             self._attr_device_info = DeviceInfo(
-                identifiers={(DOMAIN, f"{self._host.unique_id}_ch{self._channel}")},
+                identifiers={(DOMAIN, f"{self._host.unique_id}_ch{dev_ch}")},
                 via_device=(DOMAIN, self._host.unique_id),
-                name=self._host.api.camera_name(self._channel),
-                model=self._host.api.camera_model(self._channel),
+                name=self._host.api.camera_name(dev_ch),
+                model=self._host.api.camera_model(dev_ch),
                 manufacturer=self._host.api.manufacturer,
                 configuration_url=self._conf_url,
             )

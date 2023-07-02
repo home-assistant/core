@@ -80,6 +80,7 @@ class AnthemAVR(MediaPlayerEntity):
             self._attr_name = f"zone {zone_number}"
             self._attr_unique_id = f"{mac_address}_{zone_number}"
         else:
+            self._attr_name = None
             self._attr_unique_id = mac_address
 
         self._attr_device_info = DeviceInfo(

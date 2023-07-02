@@ -272,6 +272,8 @@ class HKDevice:
                     self.hass,
                     self.async_update_available_state,
                     timedelta(seconds=BLE_AVAILABILITY_CHECK_INTERVAL),
+                    name=f"HomeKit Device {self.unique_id} BLE availability "
+                    "check poll",
                 )
             )
             # BLE devices always get an RSSI sensor as well
@@ -286,7 +288,10 @@ class HKDevice:
         # in the log about concurrent polling.
         self.config_entry.async_on_unload(
             async_track_time_interval(
-                self.hass, self.async_request_update, self.pairing.poll_interval
+                self.hass,
+                self.async_request_update,
+                self.pairing.poll_interval,
+                name=f"HomeKit Device {self.unique_id} availability check poll",
             )
         )
 
@@ -709,7 +714,7 @@ class HKDevice:
             if not self._polling_lock_warned:
                 _LOGGER.warning(
                     (
-                        "HomeKit controller update skipped as previous poll still in"
+                        "HomeKit device update skipped as previous poll still in"
                         " flight: %s"
                     ),
                     self.unique_id,
@@ -720,7 +725,7 @@ class HKDevice:
         if self._polling_lock_warned:
             _LOGGER.info(
                 (
-                    "HomeKit controller no longer detecting back pressure - not"
+                    "HomeKit device no longer detecting back pressure - not"
                     " skipping poll: %s"
                 ),
                 self.unique_id,
@@ -728,7 +733,7 @@ class HKDevice:
             self._polling_lock_warned = False
 
         async with self._polling_lock:
-            _LOGGER.debug("Starting HomeKit controller update: %s", self.unique_id)
+            _LOGGER.debug("Starting HomeKit device update: %s", self.unique_id)
 
             try:
                 new_values_dict = await self.get_characteristics(
@@ -750,7 +755,7 @@ class HKDevice:
             self._poll_failures = 0
             self.process_new_events(new_values_dict)
 
-            _LOGGER.debug("Finished HomeKit controller update: %s", self.unique_id)
+            _LOGGER.debug("Finished HomeKit device update: %s", self.unique_id)
 
     def process_new_events(
         self, new_values_dict: dict[tuple[int, int], dict[str, Any]]

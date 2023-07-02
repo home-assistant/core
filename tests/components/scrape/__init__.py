@@ -29,65 +29,13 @@ def return_integration_config(
     return config
 
 
-def return_config(
-    select,
-    name,
-    *,
-    attribute=None,
-    index=None,
-    template=None,
-    uom=None,
-    device_class=None,
-    state_class=None,
-    authentication=None,
-    username=None,
-    password=None,
-    headers=None,
-    unique_id=None,
-    remove_platform=False,
-) -> dict[str, dict[str, Any]]:
-    """Return config."""
-    config = {
-        "platform": "scrape",
-        "resource": "https://www.home-assistant.io",
-        "select": select,
-        "name": name,
-        "index": 0,
-        "verify_ssl": True,
-    }
-    if remove_platform:
-        config.pop("platform")
-    if attribute:
-        config["attribute"] = attribute
-    if index:
-        config["index"] = index
-    if template:
-        config["value_template"] = template
-    if uom:
-        config["unit_of_measurement"] = uom
-    if device_class:
-        config["device_class"] = device_class
-    if state_class:
-        config["state_class"] = state_class
-    if authentication:
-        config["authentication"] = authentication
-    if username:
-        config["username"] = username
-        config["password"] = password
-    if headers:
-        config["headers"] = headers
-    if unique_id:
-        config["unique_id"] = unique_id
-    return config
-
-
 class MockRestData:
     """Mock RestData."""
 
     def __init__(
         self,
         payload,
-    ):
+    ) -> None:
         """Init RestDataMock."""
         self.data: str | None = None
         self.payload = payload

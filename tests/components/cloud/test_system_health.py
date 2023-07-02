@@ -3,6 +3,7 @@ import asyncio
 from unittest.mock import Mock
 
 from aiohttp import ClientError
+from hass_nabucasa.remote import CertificateStatus
 
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -32,15 +33,20 @@ async def test_cloud_system_health(
         relayer_server="cloud.bla.com",
         acme_server="cert-server",
         is_logged_in=True,
-        remote=Mock(is_connected=False, snitun_server="us-west-1"),
+        remote=Mock(
+            is_connected=False,
+            snitun_server="us-west-1",
+            certificate_status=CertificateStatus.READY,
+        ),
         expiration_date=now,
         is_connected=True,
         client=Mock(
+            relayer_region="xx-earth-616",
             prefs=Mock(
                 remote_enabled=True,
                 alexa_enabled=True,
                 google_enabled=False,
-            )
+            ),
         ),
     )
 
@@ -53,7 +59,9 @@ async def test_cloud_system_health(
     assert info == {
         "logged_in": True,
         "subscription_expiration": now,
+        "certificate_status": "ready",
         "relayer_connected": True,
+        "relayer_region": "xx-earth-616",
         "remote_enabled": True,
         "remote_connected": False,
         "remote_server": "us-west-1",

@@ -11,7 +11,7 @@ from homeassistant.loader import bind_hass
 from homeassistant.util.async_ import gather_with_concurrency
 
 FLOW_INIT_LIMIT = 2
-DISCOVERY_FLOW_DISPATCHER = "discovery_flow_disptacher"
+DISCOVERY_FLOW_DISPATCHER = "discovery_flow_dispatcher"
 
 
 @bind_hass

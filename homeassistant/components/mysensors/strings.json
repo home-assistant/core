@@ -19,7 +19,7 @@
         "description": "Ethernet gateway setup",
         "data": {
           "device": "IP address of the gateway",
-          "tcp_port": "port",
+          "tcp_port": "[%key:common::config_flow::data::port%]",
           "version": "MySensors version",
           "persistence_file": "persistence file (leave empty to auto-generate)"
         }
@@ -30,17 +30,17 @@
           "device": "Serial port",
           "baud_rate": "baud rate",
           "version": "MySensors version",
-          "persistence_file": "persistence file (leave empty to auto-generate)"
+          "persistence_file": "Persistence file (leave empty to auto-generate)"
         }
       },
       "gw_mqtt": {
         "description": "MQTT gateway setup",
         "data": {
-          "retain": "mqtt retain",
-          "topic_in_prefix": "prefix for input topics (topic_in_prefix)",
-          "topic_out_prefix": "prefix for output topics (topic_out_prefix)",
+          "retain": "MQTT retain",
+          "topic_in_prefix": "Prefix for input topics (topic_in_prefix)",
+          "topic_out_prefix": "Prefix for output topics (topic_out_prefix)",
           "version": "MySensors version",
-          "persistence_file": "persistence file (leave empty to auto-generate)"
+          "persistence_file": "Persistence file (leave empty to auto-generate)"
         }
       }
     },
@@ -82,30 +82,6 @@
       "not_a_number": "Please enter a number",
       "port_out_of_range": "Port number must be at least 1 and at most 65535",
       "unknown": "[%key:common::config_flow::error::unknown%]"
-    }
-  },
-  "issues": {
-    "deprecated_entity": {
-      "title": "The {deprecated_entity} entity will be removed",
-      "fix_flow": {
-        "step": {
-          "confirm": {
-            "title": "The {deprecated_entity} entity will be removed",
-            "description": "Update any automations or scripts that use this entity in service calls using the `{deprecated_service}` service to instead use the `{alternate_service}` service with a target entity ID of `{alternate_target}`."
-          }
-        }
-      }
-    },
-    "deprecated_service": {
-      "title": "The {deprecated_service} service will be removed",
-      "fix_flow": {
-        "step": {
-          "confirm": {
-            "title": "The {deprecated_service} service will be removed",
-            "description": "Update any automations or scripts that use this service to instead use the `{alternate_service}` service with a target entity ID of `{alternate_target}`."
-          }
-        }
-      }
     }
   }
 }

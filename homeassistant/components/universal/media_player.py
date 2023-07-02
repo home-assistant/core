@@ -44,6 +44,8 @@ from homeassistant.components.media_player import (
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
     MediaPlayerState,
+    MediaType,
+    RepeatMode,
 )
 from homeassistant.components.media_player.browse_media import BrowseMedia
 from homeassistant.const import (
@@ -93,6 +95,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 ATTR_ACTIVE_CHILD = "active_child"
 
+CONF_ACTIVE_CHILD_TEMPLATE = "active_child_template"
 CONF_ATTRS = "attributes"
 CONF_CHILDREN = "children"
 CONF_COMMANDS = "commands"
@@ -126,6 +129,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_BROWSE_MEDIA_ENTITY): cv.string,
         vol.Optional(CONF_UNIQUE_ID): cv.string,
         vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
+        vol.Optional(CONF_ACTIVE_CHILD_TEMPLATE): cv.template,
         vol.Optional(CONF_STATE_TEMPLATE): cv.template,
     },
     extra=vol.REMOVE_EXTRA,
@@ -159,6 +163,8 @@ class UniversalMediaPlayer(MediaPlayerEntity):
         self.hass = hass
         self._name = config.get(CONF_NAME)
         self._children = config.get(CONF_CHILDREN)
+        self._active_child_template = config.get(CONF_ACTIVE_CHILD_TEMPLATE)
+        self._active_child_template_result = None
         self._cmds = config.get(CONF_COMMANDS)
         self._attrs = {}
         for key, val in config.get(CONF_ATTRS).items():
@@ -184,23 +190,35 @@ class UniversalMediaPlayer(MediaPlayerEntity):
 
         @callback
         def _async_on_template_update(event, updates):
-            """Update ha state when dependencies update."""
-            result = updates.pop().result
+            """Update state when template state changes."""
+            for data in updates:
+                template = data.template
+                result = data.result
 
-            if isinstance(result, TemplateError):
-                self._state_template_result = None
-            else:
-                self._state_template_result = result
+                if template == self._state_template:
+                    self._state_template_result = (
+                        None if isinstance(result, TemplateError) else result
+                    )
+                if template == self._active_child_template:
+                    self._active_child_template_result = (
+                        None if isinstance(result, TemplateError) else result
+                    )
 
             if event:
                 self.async_set_context(event.context)
 
             self.async_schedule_update_ha_state(True)
 
-        if self._state_template is not None:
+        track_templates: list[TrackTemplate] = []
+        if self._state_template:
+            track_templates.append(TrackTemplate(self._state_template, None))
+        if self._active_child_template:
+            track_templates.append(TrackTemplate(self._active_child_template, None))
+
+        if track_templates:
             result = async_track_template_result(
                 self.hass,
-                [TrackTemplate(self._state_template, None)],
+                track_templates,
                 _async_on_template_update,
             )
             self.hass.bus.async_listen_once(
@@ -574,7 +592,7 @@ class UniversalMediaPlayer(MediaPlayerEntity):
         await self._async_call_service(SERVICE_MEDIA_SEEK, data)
 
     async def async_play_media(
-        self, media_type: str, media_id: str, **kwargs: Any
+        self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
         """Play a piece of media."""
         data = {ATTR_MEDIA_CONTENT_TYPE: media_type, ATTR_MEDIA_CONTENT_ID: media_id}
@@ -613,7 +631,7 @@ class UniversalMediaPlayer(MediaPlayerEntity):
         data = {ATTR_MEDIA_SHUFFLE: shuffle}
         await self._async_call_service(SERVICE_SHUFFLE_SET, data, allow_override=True)
 
-    async def async_set_repeat(self, repeat: str) -> None:
+    async def async_set_repeat(self, repeat: RepeatMode) -> None:
         """Set repeat mode."""
         data = {ATTR_MEDIA_REPEAT: repeat}
         await self._async_call_service(SERVICE_REPEAT_SET, data, allow_override=True)
@@ -628,7 +646,7 @@ class UniversalMediaPlayer(MediaPlayerEntity):
 
     async def async_browse_media(
         self,
-        media_content_type: str | None = None,
+        media_content_type: MediaType | str | None = None,
         media_content_id: str | None = None,
     ) -> BrowseMedia:
         """Return a BrowseMedia instance."""
@@ -642,6 +660,9 @@ class UniversalMediaPlayer(MediaPlayerEntity):
 
     async def async_update(self) -> None:
         """Update state in HA."""
+        if self._active_child_template_result:
+            self._child_state = self.hass.states.get(self._active_child_template_result)
+            return
         self._child_state = None
         for child_name in self._children:
             if (child_state := self.hass.states.get(child_name)) and (

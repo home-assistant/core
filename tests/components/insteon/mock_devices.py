@@ -11,14 +11,14 @@ from pyinsteon.device_types.ipdb import (
     GeneralController_RemoteLinc,
     Hub,
     SensorsActuators_IOLink,
-    SwitchedLightingControl_SwitchLinc,
+    SwitchedLightingControl_SwitchLinc02,
 )
 from pyinsteon.managers.saved_devices_manager import dict_to_aldb_record
 from pyinsteon.topics import DEVICE_LIST_CHANGED
 from pyinsteon.utils import subscribe_topic
 
 
-class MockSwitchLinc(SwitchedLightingControl_SwitchLinc):
+class MockSwitchLinc(SwitchedLightingControl_SwitchLinc02):
     """Mock SwitchLinc device."""
 
     @property
@@ -151,11 +151,11 @@ class MockDevices:
             for flag in operating_flags:
                 value = operating_flags[flag]
                 if device.operating_flags.get(flag):
-                    device.operating_flags[flag].load(value)
+                    device.operating_flags[flag].set_value(value)
             for flag in properties:
                 value = properties[flag]
                 if device.properties.get(flag):
-                    device.properties[flag].load(value)
+                    device.properties[flag].set_value(value)
 
     async def async_add_device(self, address=None, multiple=False):
         """Mock the async_add_device method."""

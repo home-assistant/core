@@ -17,7 +17,7 @@ from homeassistant.components.netatmo.const import (
 from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.util import dt
+from homeassistant.util import dt as dt_util
 
 from .common import fake_post_request, selected_platforms, simulate_webhook
 
@@ -420,7 +420,7 @@ async def test_camera_reconnect_webhook(hass: HomeAssistant, config_entry) -> No
 
         async_fire_time_changed(
             hass,
-            dt.utcnow() + timedelta(seconds=60),
+            dt_util.utcnow() + timedelta(seconds=60),
         )
         await hass.async_block_till_done()
         assert fake_post_hits >= calls

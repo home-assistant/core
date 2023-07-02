@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from homeassistant.components.homeassistant import SERVICE_UPDATE_ENTITY
-from homeassistant.components.rituals_perfume_genie.const import COORDINATORS, DOMAIN
+from homeassistant.components.rituals_perfume_genie.const import DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -38,7 +38,7 @@ async def test_switch_entity(
 
     entry = entity_registry.async_get("switch.genie")
     assert entry
-    assert entry.unique_id == diffuser.hublot
+    assert entry.unique_id == f"{diffuser.hublot}-is_on"
 
 
 async def test_switch_handle_coordinator_update(hass: HomeAssistant) -> None:
@@ -47,7 +47,7 @@ async def test_switch_handle_coordinator_update(hass: HomeAssistant) -> None:
     diffuser = mock_diffuser_v1_battery_cartridge()
     await init_integration(hass, config_entry, [diffuser])
     await async_setup_component(hass, "homeassistant", {})
-    coordinator = hass.data[DOMAIN][config_entry.entry_id][COORDINATORS]["lot123v1"]
+    coordinator = hass.data[DOMAIN][config_entry.entry_id]["lot123v1"]
     diffuser.is_on = False
 
     state = hass.states.get("switch.genie")

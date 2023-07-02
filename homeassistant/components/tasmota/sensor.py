@@ -268,7 +268,6 @@ async def async_setup_entry(
 class TasmotaSensor(TasmotaAvailability, TasmotaDiscoveryUpdate, SensorEntity):
     """Representation of a Tasmota sensor."""
 
-    _attr_force_update = True
     _tasmota_entity: tasmota_sensor.TasmotaSensor
 
     def __init__(self, **kwds: Any) -> None:

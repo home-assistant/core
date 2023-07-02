@@ -4,25 +4,35 @@ from __future__ import annotations
 from datetime import timedelta
 from functools import partial
 import logging
+import re
 from typing import Any
 
 import transmission_rpc
-from transmission_rpc.error import TransmissionError
+from transmission_rpc.error import (
+    TransmissionAuthError,
+    TransmissionConnectError,
+    TransmissionError,
+)
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import (
     CONF_HOST,
     CONF_ID,
+    CONF_NAME,
     CONF_PASSWORD,
     CONF_PORT,
     CONF_SCAN_INTERVAL,
     CONF_USERNAME,
     Platform,
 )
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import config_validation as cv, selector
+from homeassistant.helpers import (
+    config_validation as cv,
+    entity_registry as er,
+    selector,
+)
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 
@@ -87,9 +97,41 @@ CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 PLATFORMS = [Platform.SENSOR, Platform.SWITCH]
 
+MIGRATION_NAME_TO_KEY = {
+    # Sensors
+    "Down Speed": "download",
+    "Up Speed": "upload",
+    "Status": "status",
+    "Active Torrents": "active_torrents",
+    "Paused Torrents": "paused_torrents",
+    "Total Torrents": "total_torrents",
+    "Completed Torrents": "completed_torrents",
+    "Started Torrents": "started_torrents",
+    # Switches
+    "Switch": "on_off",
+    "Turtle Mode": "turtle_mode",
+}
+
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Set up the Transmission Component."""
+
+    @callback
+    def update_unique_id(
+        entity_entry: er.RegistryEntry,
+    ) -> dict[str, Any] | None:
+        """Update unique ID of entity entry."""
+        match = re.search(
+            f"{config_entry.data[CONF_HOST]}-{config_entry.data[CONF_NAME]} (?P<name>.+)",
+            entity_entry.unique_id,
+        )
+
+        if match and (key := MIGRATION_NAME_TO_KEY.get(match.group("name"))):
+            return {"new_unique_id": f"{config_entry.entry_id}-{key}"}
+        return None
+
+    await er.async_migrate_entries(hass, config_entry.entry_id, update_unique_id)
+
     client = TransmissionClient(hass, config_entry)
     hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = client
 
@@ -137,14 +179,13 @@ async def get_api(hass, entry):
         _LOGGER.debug("Successfully connected to %s", host)
         return api
 
+    except TransmissionAuthError as error:
+        _LOGGER.error("Credentials for Transmission client are not valid")
+        raise AuthenticationError from error
+    except TransmissionConnectError as error:
+        _LOGGER.error("Connecting to the Transmission client %s failed", host)
+        raise CannotConnect from error
     except TransmissionError as error:
-        if "401: Unauthorized" in str(error):
-            _LOGGER.error("Credentials for Transmission client are not valid")
-            raise AuthenticationError from error
-        if "111: Connection refused" in str(error):
-            _LOGGER.error("Connecting to the Transmission client %s failed", host)
-            raise CannotConnect from error
-
         _LOGGER.error(error)
         raise UnknownError from error
 

@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import Any, cast
 
 from roonapi import split_media_path
 import voluptuous as vol
@@ -12,6 +12,7 @@ from homeassistant.components.media_player import (
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
     MediaPlayerState,
+    MediaType,
     RepeatMode,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -158,7 +159,10 @@ class RoonDevice(MediaPlayerEntity):
             dev_model = self.player_data["source_controls"][0].get("display_name")
         return DeviceInfo(
             identifiers={(DOMAIN, self.unique_id)},
-            name=self.name,
+            # Instead of setting the device name to the entity name, roon
+            # should be updated to set has_entity_name = True, and set the entity
+            # name to None
+            name=cast(str | None, self.name),
             manufacturer="RoonLabs",
             model=dev_model,
             via_device=(DOMAIN, self._server.roon_id),
@@ -394,7 +398,9 @@ class RoonDevice(MediaPlayerEntity):
             raise ValueError(f"Unsupported repeat mode: {repeat}")
         self._server.roonapi.repeat(self.output_id, REPEAT_MODE_MAPPING_TO_ROON[repeat])
 
-    def play_media(self, media_type: str, media_id: str, **kwargs: Any) -> None:
+    def play_media(
+        self, media_type: MediaType | str, media_id: str, **kwargs: Any
+    ) -> None:
         """Send the play_media command to the media player."""
 
         _LOGGER.debug("Playback request for %s / %s", media_type, media_id)
@@ -495,7 +501,9 @@ class RoonDevice(MediaPlayerEntity):
         )
 
     async def async_browse_media(
-        self, media_content_type: str | None = None, media_content_id: str | None = None
+        self,
+        media_content_type: MediaType | str | None = None,
+        media_content_id: str | None = None,
     ) -> BrowseMedia:
         """Implement the websocket media browsing helper."""
         return await self.hass.async_add_executor_job(

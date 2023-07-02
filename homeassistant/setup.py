@@ -18,8 +18,9 @@ from .const import (
     PLATFORM_FORMAT,
     Platform,
 )
-from .core import CALLBACK_TYPE
+from .core import CALLBACK_TYPE, DOMAIN as HOMEASSISTANT_DOMAIN
 from .exceptions import DependencyError, HomeAssistantError
+from .helpers.issue_registry import IssueSeverity, async_create_issue
 from .helpers.typing import ConfigType
 from .util import dt as dt_util, ensure_unique_string
 
@@ -67,7 +68,8 @@ def async_set_domains_to_be_loaded(hass: core.HomeAssistant, domains: set[str]) 
      - Properly handle after_dependencies.
      - Keep track of domains which will load but have not yet finished loading
     """
-    hass.data[DATA_SETUP_DONE] = {domain: asyncio.Event() for domain in domains}
+    hass.data.setdefault(DATA_SETUP_DONE, {})
+    hass.data[DATA_SETUP_DONE].update({domain: asyncio.Event() for domain in domains})
 
 
 def setup_component(hass: core.HomeAssistant, domain: str, config: ConfigType) -> bool:
@@ -172,7 +174,7 @@ async def _async_setup_component(
     """
     integration: loader.Integration | None = None
 
-    def log_error(msg: str) -> None:
+    def log_error(msg: str, exc_info: Exception | None = None) -> None:
         """Log helper."""
         if integration is None:
             custom = ""
@@ -180,7 +182,9 @@ async def _async_setup_component(
         else:
             custom = "" if integration.is_built_in else "custom integration "
             link = integration.documentation
-        _LOGGER.error("Setup failed for %s%s: %s", custom, domain, msg)
+        _LOGGER.error(
+            "Setup failed for %s%s: %s", custom, domain, msg, exc_info=exc_info
+        )
         async_notify_setup_error(hass, domain, link)
 
     try:
@@ -210,7 +214,7 @@ async def _async_setup_component(
     try:
         component = integration.get_component()
     except ImportError as err:
-        log_error(f"Unable to import component: {err}")
+        log_error(f"Unable to import component: {err}", err)
         return False
 
     processed_config = await conf_util.async_process_component_config(
@@ -220,6 +224,34 @@ async def _async_setup_component(
     if processed_config is None:
         log_error("Invalid config.")
         return False
+
+    # Detect attempt to setup integration which can be setup only from config entry
+    if (
+        domain in processed_config
+        and not hasattr(component, "async_setup")
+        and not hasattr(component, "setup")
+        and not hasattr(component, "CONFIG_SCHEMA")
+    ):
+        _LOGGER.error(
+            (
+                "The %s integration does not support YAML setup, please remove it from "
+                "your configuration"
+            ),
+            domain,
+        )
+        async_create_issue(
+            hass,
+            HOMEASSISTANT_DOMAIN,
+            f"config_entry_only_{domain}",
+            is_fixable=False,
+            severity=IssueSeverity.ERROR,
+            issue_domain=domain,
+            translation_key="config_entry_only",
+            translation_placeholders={
+                "domain": domain,
+                "add_integration": f"/config/integrations/dashboard/add?domain={domain}",
+            },
+        )
 
     start = timer()
     _LOGGER.info("Setting up %s", domain)
@@ -236,7 +268,7 @@ async def _async_setup_component(
                 SLOW_SETUP_WARNING,
             )
 
-        task = None
+        task: Awaitable[bool] | None = None
         result: Any | bool = True
         try:
             if hasattr(component, "async_setup"):
