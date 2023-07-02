@@ -7,7 +7,7 @@ from homeassistant.helpers import entity_registry as er
 
 from .api_responses import EXPECTED_STATE_EV_IMPERIAL
 
-DEVICE_ID = "device_tracker.test_vehicle_2_location"
+DEVICE_ID = "device_tracker.test_vehicle_2"
 
 
 async def test_location(hass: HomeAssistant, ev_entry) -> None:
