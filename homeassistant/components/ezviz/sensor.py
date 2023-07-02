@@ -18,7 +18,6 @@ from .entity import EzvizEntity
 PARALLEL_UPDATES = 1
 
 SENSOR_TYPES: dict[str, SensorEntityDescription] = {
-    "sw_version": SensorEntityDescription(key="sw_version"),
     "battery_level": SensorEntityDescription(
         key="battery_level",
         native_unit_of_measurement=PERCENTAGE,
