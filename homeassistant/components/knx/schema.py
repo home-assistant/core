@@ -936,6 +936,25 @@ class TextSchema(KNXPlatformSchema):
     )
 
 
+class TimeSchema(KNXPlatformSchema):
+    """Voluptuous schema for KNX time."""
+
+    PLATFORM = Platform.TIME
+
+    DEFAULT_NAME = "KNX Time"
+
+    ENTITY_SCHEMA = vol.Schema(
+        {
+            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+            vol.Optional(CONF_RESPOND_TO_READ, default=False): cv.boolean,
+            vol.Optional(CONF_SYNC_STATE, default=True): sync_state_validator,
+            vol.Required(KNX_ADDRESS): ga_list_validator,
+            vol.Optional(CONF_STATE_ADDRESS): ga_list_validator,
+            vol.Optional(CONF_ENTITY_CATEGORY): ENTITY_CATEGORIES_SCHEMA,
+        }
+    )
+
+
 class WeatherSchema(KNXPlatformSchema):
     """Voluptuous schema for KNX weather station."""
 

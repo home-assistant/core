@@ -13,8 +13,8 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import FreedomproDataUpdateCoordinator
 from .const import DOMAIN
+from .coordinator import FreedomproDataUpdateCoordinator
 
 
 async def async_setup_entry(
@@ -31,7 +31,10 @@ async def async_setup_entry(
 
 
 class Device(CoordinatorEntity[FreedomproDataUpdateCoordinator], LockEntity):
-    """Representation of an Freedompro lock."""
+    """Representation of a Freedompro lock."""
+
+    _attr_has_entity_name = True
+    _attr_name = None
 
     def __init__(
         self,
@@ -45,7 +48,6 @@ class Device(CoordinatorEntity[FreedomproDataUpdateCoordinator], LockEntity):
         self._hass = hass
         self._session = aiohttp_client.async_get_clientsession(self._hass)
         self._api_key = api_key
-        self._attr_name = device["name"]
         self._attr_unique_id = device["uid"]
         self._type = device["type"]
         self._characteristics = device["characteristics"]
@@ -55,7 +57,7 @@ class Device(CoordinatorEntity[FreedomproDataUpdateCoordinator], LockEntity):
             },
             manufacturer="Freedompro",
             model=self._type,
-            name=self.name,
+            name=device["name"],
         )
 
     @callback

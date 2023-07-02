@@ -388,7 +388,7 @@ class IASZoneClusterHandler(ClusterHandler):
         self.debug("finished IASZoneClusterHandler configuration")
 
     @callback
-    def attribute_updated(self, attrid, value):
+    def attribute_updated(self, attrid: int, value: Any, _: Any) -> None:
         """Handle attribute updates on this cluster."""
         if attrid == IasZone.attributes_by_name["zone_status"].id:
             self.async_send_signal(

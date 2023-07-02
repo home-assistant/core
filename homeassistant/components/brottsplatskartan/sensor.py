@@ -47,7 +47,7 @@ async def async_setup_platform(
         hass,
         DOMAIN,
         "deprecated_yaml",
-        breaks_in_ha_version="2023.7.0",
+        breaks_in_ha_version="2023.11.0",
         is_fixable=False,
         severity=IssueSeverity.WARNING,
         translation_key="deprecated_yaml",
@@ -83,6 +83,7 @@ class BrottsplatskartanSensor(SensorEntity):
 
     _attr_attribution = ATTRIBUTION
     _attr_has_entity_name = True
+    _attr_name = None
 
     def __init__(self, bpk: BrottsplatsKartan, name: str, entry_id: str) -> None:
         """Initialize the Brottsplatskartan sensor."""

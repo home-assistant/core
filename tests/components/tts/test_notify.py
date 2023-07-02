@@ -1,7 +1,9 @@
 """The tests for the TTS component."""
+from unittest.mock import patch
+
 import pytest
 
-from homeassistant.components import media_player, notify, tts
+from homeassistant.components import notify, tts
 from homeassistant.components.media_player import (
     DOMAIN as DOMAIN_MP,
     SERVICE_PLAY_MEDIA,
@@ -22,6 +24,16 @@ async def internal_url_mock(hass: HomeAssistant) -> None:
         hass,
         {"internal_url": "http://example.local:8123"},
     )
+
+
+@pytest.fixture(autouse=True)
+async def disable_platforms() -> None:
+    """Disable demo platforms."""
+    with patch(
+        "homeassistant.components.demo.COMPONENTS_WITH_CONFIG_ENTRY_DEMO_PLATFORM",
+        [],
+    ):
+        yield
 
 
 async def test_setup_legacy_platform(hass: HomeAssistant) -> None:
@@ -62,7 +74,6 @@ async def test_setup_legacy_service(hass: HomeAssistant) -> None:
 
     config = {
         tts.DOMAIN: {"platform": "demo"},
-        media_player.DOMAIN: {"platform": "demo"},
         notify.DOMAIN: {
             "platform": "tts",
             "name": "tts_test",
