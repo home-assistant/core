@@ -648,6 +648,7 @@ build.json @home-assistant/supervisor
 /homeassistant/components/kodi/ @OnFreund @cgtobi
 /tests/components/kodi/ @OnFreund @cgtobi
 /homeassistant/components/komfovent/ @ProstoSanja
+/tests/components/komfovent/ @ProstoSanja
 /homeassistant/components/konnected/ @heythisisnate
 /tests/components/konnected/ @heythisisnate
 /homeassistant/components/kostal_plenticore/ @stegm

@@ -840,6 +840,9 @@ kegtron-ble==0.4.0
 # homeassistant.components.knx
 knx-frontend==2023.6.23.191712
 
+# homeassistant.components.komfovent
+komfovent-api==0.0.2
+
 # homeassistant.components.konnected
 konnected==1.2.0
 
