@@ -158,12 +158,15 @@ class HitachiAirToAirHeatPump(OverkizEntity, ClimateEntity):
     def hvac_mode(self) -> HVACMode:
         """Return hvac operation ie. heat, cool mode."""
         if (
-            state := self.device.states[MAIN_OPERATION_STATE[self.protocol]]
-        ) and state.value_as_str:
-            if state.value_as_str.lower() == OverkizCommandParam.OFF:
+            main_op_state := self.device.states[MAIN_OPERATION_STATE[self.protocol]]
+        ) and main_op_state.value_as_str:
+            if main_op_state.value_as_str.lower() == OverkizCommandParam.OFF:
                 return HVACMode.OFF
 
-            return OVERKIZ_TO_HVAC_MODES[state.value_as_str.lower()]
+        if (
+            mode_change_state := self.device.states[MODE_CHANGE_STATE[self.protocol]]
+        ) and mode_change_state.value_as_str:
+            return OVERKIZ_TO_HVAC_MODES[str(mode_change_state.value_as_str).lower()]
 
         return HVACMode.OFF
 
