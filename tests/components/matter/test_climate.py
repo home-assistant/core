@@ -3,6 +3,7 @@ from unittest.mock import MagicMock, call
 
 from chip.clusters import Objects as clusters
 from matter_server.client.models.node import MatterNode
+from matter_server.common.helpers.util import create_attribute_path_from_attribute
 import pytest
 
 from homeassistant.components.climate import (
@@ -333,3 +334,35 @@ async def test_thermostat(
     matter_client.send_device_command.reset_mock()
     set_node_attribute(thermostat, 1, 513, 17, 2600)
     await trigger_subscription_callback(hass, matter_client)
+
+    await hass.services.async_call(
+        "climate",
+        "set_hvac_mode",
+        {
+            "entity_id": "climate.longan_link_hvac",
+            "hvac_mode": HVAC_MODE_HEAT,
+        },
+        blocking=True,
+    )
+
+    assert matter_client.write_attribute.call_count == 1
+    assert matter_client.write_attribute.call_args == call(
+        node_id=thermostat.node_id,
+        attribute_path=create_attribute_path_from_attribute(
+            endpoint_id=1,
+            attribute=clusters.Thermostat.Attributes.SystemMode,
+        ),
+        value=4,
+    )
+    matter_client.send_device_command.reset_mock()
+
+    with pytest.raises(ValueError, match="Unsupported hvac mode dry in Matter"):
+        await hass.services.async_call(
+            "climate",
+            "set_hvac_mode",
+            {
+                "entity_id": "climate.longan_link_hvac",
+                "hvac_mode": HVACMode.DRY,
+            },
+            blocking=True,
+        )
