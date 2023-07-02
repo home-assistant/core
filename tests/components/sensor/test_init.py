@@ -557,6 +557,14 @@ async def test_restore_sensor_restore_state(
             100,
             "38",
         ),
+        (
+            SensorDeviceClass.ATMOSPHERIC_PRESSURE,
+            UnitOfPressure.INHG,
+            UnitOfPressure.HPA,
+            UnitOfPressure.HPA,
+            -0.00,
+            "0",
+        ),
     ],
 )
 async def test_custom_unit(
