@@ -641,7 +641,8 @@ class SensorEntity(Entity):
                 value = f"{converted_numerical_value:.{precision}f}"
                 # This can be replaced with adding the z option when we drop support for
                 # Python 3.10
-                value = NEGATIVE_ZERO_PATTERN.sub(r"\1", value)
+                if value.startswith("-0."):
+                    value = NEGATIVE_ZERO_PATTERN.sub(r"\1", value)
             else:
                 value = converted_numerical_value
 
@@ -906,6 +907,7 @@ def async_rounded_state(hass: HomeAssistant, entity_id: str, state: State) -> st
         value = f"{numerical_value:.{precision}f}"
         # This can be replaced with adding the z option when we drop support for
         # Python 3.10
-        value = NEGATIVE_ZERO_PATTERN.sub(r"\1", value)
+        if value.startswith("-0."):
+            value = NEGATIVE_ZERO_PATTERN.sub(r"\1", value)
 
     return value
