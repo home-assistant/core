@@ -729,7 +729,7 @@ def socket_timeout(value: Any | None) -> object:
 
 # pylint: disable=no-value-for-parameter
 def url(value: Any) -> str:
-    """Validate an URL."""
+    """Validate an http or https URL."""
     url_in = str(value)
 
     if urlparse(url_in).scheme in ["http", "https"]:
@@ -746,6 +746,18 @@ def url_no_path(value: Any) -> str:
         raise vol.Invalid("url it not allowed to have a path component")
 
     return url_in
+
+
+def absolute_or_relative_url(value: Any) -> str:
+    """Validate an absolute or relative http or https URL."""
+    if value and type(value) == str:
+        parsed_url = urlparse(value)
+        if parsed_url.scheme != "":
+            return url(value)
+        if parsed_url.path != "":
+            return value
+
+    raise vol.Invalid("invalid url")
 
 
 def x10_address(value: str) -> str:

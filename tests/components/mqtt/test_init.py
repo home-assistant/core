@@ -790,6 +790,21 @@ def test_entity_device_info_schema() -> None:
             "configuration_url": "http://example.com",
         }
     )
+    # relative configuration_url
+    MQTT_ENTITY_DEVICE_INFO_SCHEMA(
+        {
+            "identifiers": ["helloworld", "hello"],
+            "connections": [
+                [dr.CONNECTION_NETWORK_MAC, "02:5b:26:a8:dc:12"],
+                [dr.CONNECTION_ZIGBEE, "zigbee_id"],
+            ],
+            "manufacturer": "Whatever",
+            "name": "Beer",
+            "model": "Glass",
+            "sw_version": "0.1-beta",
+            "configuration_url": "/api/hassio_ingress/XXXXXXXXXX",
+        }
+    )
     # no identifiers
     with pytest.raises(vol.Invalid):
         MQTT_ENTITY_DEVICE_INFO_SCHEMA(

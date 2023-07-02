@@ -145,6 +145,37 @@ def test_url_no_path() -> None:
         assert schema(value)
 
 
+def test_absolute_or_relative_url() -> None:
+    """Test absolute or relative URL."""
+    schema = vol.Schema(cv.absolute_or_relative_url)
+
+    for value in (
+        None,
+        "",
+        100,
+        "htp://ha.io",
+        "http://??,**",
+        "https://??,**",
+    ):
+        with pytest.raises(vol.MultipleInvalid):
+            schema(value)
+
+    for value in (
+        "http://localhost",
+        "https://localhost/test/index.html",
+        "http://home-assistant.io",
+        "http://home-assistant.io/test/",
+        "https://community.home-assistant.io/",
+    ):
+        assert schema(value)
+
+    for value in (
+        "/api/test/",
+        "subresource",
+    ):
+        assert schema(value)
+
+
 def test_platform_config() -> None:
     """Test platform config validation."""
     options = ({}, {"hello": "world"})
