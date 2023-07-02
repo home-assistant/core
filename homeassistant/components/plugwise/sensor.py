@@ -343,6 +343,7 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
         native_unit_of_measurement=LIGHT_LUX,
         device_class=SensorDeviceClass.ILLUMINANCE,
         state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key="modulation_level",

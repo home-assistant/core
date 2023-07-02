@@ -4,15 +4,17 @@ from __future__ import annotations
 from binascii import unhexlify
 from copy import deepcopy
 from typing import TYPE_CHECKING
-from unittest.mock import ANY, AsyncMock, call, patch
+from unittest.mock import ANY, AsyncMock, MagicMock, call, patch
 
 import pytest
 import voluptuous as vol
 import zigpy.backups
 import zigpy.profiles.zha
 import zigpy.types
+from zigpy.types.named import EUI64
 import zigpy.zcl.clusters.general as general
 import zigpy.zcl.clusters.security as security
+import zigpy.zdo.types as zdo_types
 
 from homeassistant.components.websocket_api import const
 from homeassistant.components.zha import DOMAIN
@@ -26,6 +28,8 @@ from homeassistant.components.zha.core.const import (
     ATTR_MODEL,
     ATTR_NEIGHBORS,
     ATTR_QUIRK_APPLIED,
+    ATTR_TYPE,
+    BINDINGS,
     CLUSTER_TYPE_IN,
     EZSP_OVERWRITE_EUI64,
     GROUP_ID,
@@ -37,6 +41,7 @@ from homeassistant.components.zha.websocket_api import (
     ATTR_INSTALL_CODE,
     ATTR_QR_CODE,
     ATTR_SOURCE_IEEE,
+    ATTR_TARGET_IEEE,
     ID,
     SERVICE_PERMIT,
     TYPE,
@@ -884,3 +889,90 @@ async def test_websocket_change_channel(
     assert msg["success"]
 
     change_channel_mock.mock_calls == [call(ANY, new_channel)]
+
+
+@pytest.mark.parametrize(
+    "operation",
+    [("bind", zdo_types.ZDOCmd.Bind_req), ("unbind", zdo_types.ZDOCmd.Unbind_req)],
+)
+async def test_websocket_bind_unbind_devices(
+    operation: tuple[str, zdo_types.ZDOCmd],
+    app_controller: ControllerApplication,
+    zha_client,
+) -> None:
+    """Test websocket API for binding and unbinding devices to devices."""
+
+    command_type, req = operation
+    with patch(
+        "homeassistant.components.zha.websocket_api.async_binding_operation",
+        autospec=True,
+    ) as binding_operation_mock:
+        await zha_client.send_json(
+            {
+                ID: 27,
+                TYPE: f"zha/devices/{command_type}",
+                ATTR_SOURCE_IEEE: IEEE_SWITCH_DEVICE,
+                ATTR_TARGET_IEEE: IEEE_GROUPABLE_DEVICE,
+            }
+        )
+        msg = await zha_client.receive_json()
+
+    assert msg["id"] == 27
+    assert msg["type"] == const.TYPE_RESULT
+    assert msg["success"]
+    assert binding_operation_mock.mock_calls == [
+        call(
+            ANY,
+            EUI64.convert(IEEE_SWITCH_DEVICE),
+            EUI64.convert(IEEE_GROUPABLE_DEVICE),
+            req,
+        )
+    ]
+
+
+@pytest.mark.parametrize("command_type", ["bind", "unbind"])
+async def test_websocket_bind_unbind_group(
+    command_type: str,
+    app_controller: ControllerApplication,
+    zha_client,
+) -> None:
+    """Test websocket API for binding and unbinding devices to groups."""
+
+    test_group_id = 0x0001
+    gateway_mock = MagicMock()
+    with patch(
+        "homeassistant.components.zha.websocket_api.get_gateway",
+        return_value=gateway_mock,
+    ):
+        device_mock = MagicMock()
+        bind_mock = AsyncMock()
+        unbind_mock = AsyncMock()
+        device_mock.async_bind_to_group = bind_mock
+        device_mock.async_unbind_from_group = unbind_mock
+        gateway_mock.get_device = MagicMock()
+        gateway_mock.get_device.return_value = device_mock
+        await zha_client.send_json(
+            {
+                ID: 27,
+                TYPE: f"zha/groups/{command_type}",
+                ATTR_SOURCE_IEEE: IEEE_SWITCH_DEVICE,
+                GROUP_ID: test_group_id,
+                BINDINGS: [
+                    {
+                        ATTR_ENDPOINT_ID: 1,
+                        ID: 6,
+                        ATTR_NAME: "OnOff",
+                        ATTR_TYPE: "out",
+                    },
+                ],
+            }
+        )
+        msg = await zha_client.receive_json()
+
+    assert msg["id"] == 27
+    assert msg["type"] == const.TYPE_RESULT
+    assert msg["success"]
+    if command_type == "bind":
+        assert bind_mock.mock_calls == [call(test_group_id, ANY)]
+    elif command_type == "unbind":
+        assert unbind_mock.mock_calls == [call(test_group_id, ANY)]

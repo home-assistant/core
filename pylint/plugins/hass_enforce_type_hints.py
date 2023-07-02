@@ -573,7 +573,7 @@ _ENTITY_MATCH: list[TypeHintMatch] = [
     ),
     TypeHintMatch(
         function_name="name",
-        return_type=["str", None],
+        return_type=["str", "UndefinedType", None],
     ),
     TypeHintMatch(
         function_name="state",
@@ -1023,15 +1023,15 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 ),
                 TypeHintMatch(
                     function_name="hvac_mode",
-                    return_type=["HVACMode", "str", None],
+                    return_type=["HVACMode", None],
                 ),
                 TypeHintMatch(
                     function_name="hvac_modes",
-                    return_type=["list[HVACMode]", "list[str]"],
+                    return_type="list[HVACMode]",
                 ),
                 TypeHintMatch(
                     function_name="hvac_action",
-                    return_type=["HVACAction", "str", None],
+                    return_type=["HVACAction", None],
                 ),
                 TypeHintMatch(
                     function_name="current_temperature",

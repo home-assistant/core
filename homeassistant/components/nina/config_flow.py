@@ -18,12 +18,13 @@ from homeassistant.helpers.entity_registry import (
 
 from .const import (
     _LOGGER,
-    CONF_FILTER_CORONA,
+    CONF_HEADLINE_FILTER,
     CONF_MESSAGE_SLOTS,
     CONF_REGIONS,
     CONST_REGION_MAPPING,
     CONST_REGIONS,
     DOMAIN,
+    NO_MATCH_REGEX,
 )
 
 
@@ -125,6 +126,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 if group_input := user_input.get(group):
                     user_input[CONF_REGIONS] += group_input
 
+            if not user_input[CONF_HEADLINE_FILTER]:
+                user_input[CONF_HEADLINE_FILTER] = NO_MATCH_REGEX
+
             if user_input[CONF_REGIONS]:
                 return self.async_create_entry(
                     title="NINA",
@@ -144,7 +148,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     vol.Required(CONF_MESSAGE_SLOTS, default=5): vol.All(
                         int, vol.Range(min=1, max=20)
                     ),
-                    vol.Required(CONF_FILTER_CORONA, default=True): cv.boolean,
+                    vol.Optional(CONF_HEADLINE_FILTER, default=""): cv.string,
                 }
             ),
             errors=errors,
@@ -255,10 +259,10 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                         CONF_MESSAGE_SLOTS,
                         default=self.data[CONF_MESSAGE_SLOTS],
                     ): vol.All(int, vol.Range(min=1, max=20)),
-                    vol.Required(
-                        CONF_FILTER_CORONA,
-                        default=self.data[CONF_FILTER_CORONA],
-                    ): cv.boolean,
+                    vol.Optional(
+                        CONF_HEADLINE_FILTER,
+                        default=self.data[CONF_HEADLINE_FILTER],
+                    ): cv.string,
                 }
             ),
             errors=errors,

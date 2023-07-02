@@ -20,7 +20,7 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
 
-async def test_attributes(hass: HomeAssistant) -> None:
+async def test_attributes(hass: HomeAssistant, disable_platforms) -> None:
     """Test weather attributes."""
     assert await async_setup_component(
         hass, weather.DOMAIN, {"weather": {"platform": "demo"}}
