@@ -9,6 +9,7 @@ from homeassistant.components.humidifier import (
     MODE_AWAY,
     MODE_NORMAL,
     PLATFORM_SCHEMA,
+    HumidifierAction,
     HumidifierDeviceClass,
     HumidifierEntity,
     HumidifierEntityFeature,
@@ -158,6 +159,7 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
         self._is_away = False
         if not self._device_class:
             self._device_class = HumidifierDeviceClass.HUMIDIFIER
+        self._attr_action = HumidifierAction.IDLE
 
     async def async_added_to_hass(self):
         """Run when entity about to be added."""
@@ -361,6 +363,15 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
         """Handle humidifier switch state changes."""
         if new_state is None:
             return
+
+        if new_state.state == STATE_ON:
+            if self._device_class == HumidifierDeviceClass.DEHUMIDIFIER:
+                self._attr_action = HumidifierAction.DRYING
+            else:
+                self._attr_action = HumidifierAction.HUMIDIFYING
+        else:
+            self._attr_action = HumidifierAction.IDLE
+
         self.async_schedule_update_ha_state()
 
     async def _async_update_humidity(self, humidity):
@@ -435,17 +446,14 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
                 elif time is not None:
                     # The time argument is passed only in keep-alive case
                     await self._async_device_turn_on()
-            else:
-                if (
-                    self._device_class == HumidifierDeviceClass.HUMIDIFIER and too_dry
-                ) or (
-                    self._device_class == HumidifierDeviceClass.DEHUMIDIFIER and too_wet
-                ):
-                    _LOGGER.info("Turning on humidifier %s", self._switch_entity_id)
-                    await self._async_device_turn_on()
-                elif time is not None:
-                    # The time argument is passed only in keep-alive case
-                    await self._async_device_turn_off()
+            elif (
+                self._device_class == HumidifierDeviceClass.HUMIDIFIER and too_dry
+            ) or (self._device_class == HumidifierDeviceClass.DEHUMIDIFIER and too_wet):
+                _LOGGER.info("Turning on humidifier %s", self._switch_entity_id)
+                await self._async_device_turn_on()
+            elif time is not None:
+                # The time argument is passed only in keep-alive case
+                await self._async_device_turn_off()
 
     @property
     def _is_device_active(self):

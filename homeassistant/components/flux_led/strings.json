@@ -32,5 +32,62 @@
         }
       }
     }
+  },
+  "entity": {
+    "button": {
+      "unpair_remotes": {
+        "name": "Unpair remotes"
+      }
+    },
+    "number": {
+      "pixels_per_segment": {
+        "name": "Pixels per segment"
+      },
+      "segments": {
+        "name": "Segments"
+      },
+      "music_pixels_per_segment": {
+        "name": "Music pixels per segment"
+      },
+      "music_segments": {
+        "name": "Music segments"
+      },
+      "effect_speed": {
+        "name": "Effect speed"
+      }
+    },
+    "select": {
+      "operating_mode": {
+        "name": "Operating mode"
+      },
+      "wiring": {
+        "name": "Wiring"
+      },
+      "ic_type": {
+        "name": "IC type"
+      },
+      "remote_config": {
+        "name": "Remote config"
+      },
+      "white_channel": {
+        "name": "White channel"
+      },
+      "power_restored": {
+        "name": "Power restored"
+      }
+    },
+    "sensor": {
+      "paired_remotes": {
+        "name": "Paired remotes"
+      }
+    },
+    "switch": {
+      "remote_access": {
+        "name": "Remote access"
+      },
+      "music": {
+        "name": "Music"
+      }
+    }
   }
 }
