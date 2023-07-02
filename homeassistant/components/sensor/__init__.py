@@ -10,6 +10,7 @@ from decimal import Decimal, InvalidOperation as DecimalInvalidOperation
 import logging
 from math import ceil, floor, log10
 import re
+import sys
 from typing import Any, Final, cast, final
 
 from typing_extensions import Self
@@ -91,6 +92,8 @@ _LOGGER: Final = logging.getLogger(__name__)
 ENTITY_ID_FORMAT: Final = DOMAIN + ".{}"
 
 NEGATIVE_ZERO_PATTERN = re.compile(r"^-(0\.?0*)$")
+
+PY_311 = sys.version_info[:3] >= (3, 1, 1)
 
 SCAN_INTERVAL: Final = timedelta(seconds=30)
 
@@ -638,9 +641,12 @@ class SensorEntity(Entity):
                 )
                 precision = precision + floor(ratio_log)
 
-                value = f"{converted_numerical_value:.{precision}f}"
-                if value.startswith("-0") and NEGATIVE_ZERO_PATTERN.match(value):
-                    value = value[1:]
+                if PY_311:
+                    value = f"{converted_numerical_value:z.{precision}f}"
+                else:
+                    value = f"{converted_numerical_value:.{precision}f}"
+                    if value.startswith("-0") and NEGATIVE_ZERO_PATTERN.match(value):
+                        value = value[1:]
             else:
                 value = converted_numerical_value
 
@@ -902,8 +908,11 @@ def async_rounded_state(hass: HomeAssistant, entity_id: str, state: State) -> st
 
     with suppress(TypeError, ValueError):
         numerical_value = float(value)
-        value = f"{numerical_value:.{precision}f}"
-        if value.startswith("-0") and NEGATIVE_ZERO_PATTERN.match(value):
-            value = value[1:]
+        if PY_311:
+            value = f"{numerical_value:z.{precision}f}"
+        else:
+            value = f"{numerical_value:.{precision}f}"
+            if value.startswith("-0") and NEGATIVE_ZERO_PATTERN.match(value):
+                value = value[1:]
 
     return value
