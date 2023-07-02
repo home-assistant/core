@@ -6,7 +6,7 @@ import logging
 from typing import Any
 
 from qnapstats import QNAPStats
-from requests.exceptions import ConnectionError as ConnectError, HTTPError, ConnectTimeout
+from requests.exceptions import ConnectionError, HTTPError, ConnectTimeout
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -59,7 +59,6 @@ class QnapCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
         """Get the latest data from the Qnap API."""
         try:
             result = await self.hass.async_add_executor_job(self._sync_update)
-        except (ConnectError, HTTPError, ConnectTimeout, TypeError, Exception) as err:
+        except (ConnectionError, HTTPError, ConnectTimeout, TypeError, Exception) as err:
             raise UpdateFailed(f"Error communicating with device: {err}") from err
-        else:
-            return result
+        return result
