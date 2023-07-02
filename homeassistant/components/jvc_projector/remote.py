@@ -52,6 +52,8 @@ async def async_setup_entry(
 class JvcProjectorRemote(JvcProjectorEntity, RemoteEntity):
     """Representation of a JVC Projector device."""
 
+    _attr_name = None
+
     @property
     def is_on(self) -> bool:
         """Return True if entity is on."""

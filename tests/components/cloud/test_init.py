@@ -137,7 +137,7 @@ async def test_on_connect(hass: HomeAssistant, mock_cloud_fixture) -> None:
     """Test cloud on connect triggers."""
     cl: Cloud[cloud.client.CloudClient] = hass.data["cloud"]
 
-    assert len(cl.iot._on_connect) == 4
+    assert len(cl.iot._on_connect) == 3
 
     assert len(hass.states.async_entity_ids("binary_sensor")) == 0
 

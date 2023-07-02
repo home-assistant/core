@@ -28,7 +28,12 @@ from homeassistant.const import (
     UnitOfTime,
 )
 from homeassistant.core import Event, HomeAssistant, State, callback
-from homeassistant.helpers import config_validation as cv, entity_registry as er
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    entity_registry as er,
+)
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -140,6 +145,28 @@ async def async_setup_entry(
         registry, config_entry.options[CONF_SOURCE_SENSOR]
     )
 
+    source_entity = er.EntityRegistry.async_get(registry, source_entity_id)
+    dev_reg = dr.async_get(hass)
+    # Resolve source entity device
+    if (
+        (source_entity is not None)
+        and (source_entity.device_id is not None)
+        and (
+            (
+                device := dev_reg.async_get(
+                    device_id=source_entity.device_id,
+                )
+            )
+            is not None
+        )
+    ):
+        device_info = DeviceInfo(
+            identifiers=device.identifiers,
+            connections=device.connections,
+        )
+    else:
+        device_info = None
+
     unit_prefix = config_entry.options[CONF_UNIT_PREFIX]
     if unit_prefix == "none":
         unit_prefix = None
@@ -152,6 +179,7 @@ async def async_setup_entry(
         unique_id=config_entry.entry_id,
         unit_prefix=unit_prefix,
         unit_time=config_entry.options[CONF_UNIT_TIME],
+        device_info=device_info,
     )
 
     async_add_entities([integral])
@@ -194,6 +222,7 @@ class IntegrationSensor(RestoreSensor):
         unique_id: str | None,
         unit_prefix: str | None,
         unit_time: UnitOfTime,
+        device_info: DeviceInfo | None = None,
     ) -> None:
         """Initialize the integration sensor."""
         self._attr_unique_id = unique_id
@@ -211,6 +240,7 @@ class IntegrationSensor(RestoreSensor):
         self._attr_icon = "mdi:chart-histogram"
         self._source_entity: str = source_entity
         self._last_valid_state: Decimal | None = None
+        self._attr_device_info = device_info
 
     def _unit(self, source_unit: str) -> str:
         """Derive unit from the source sensor, SI prefix and time unit."""
