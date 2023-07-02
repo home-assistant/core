@@ -18,5 +18,12 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
+  },
+  "entity": {
+    "climate": {
+      "ventilation_unit": {
+        "name": "Ventilation unit"
+      }
+    }
   }
 }

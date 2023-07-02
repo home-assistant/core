@@ -43,6 +43,7 @@ class KomfoventDevice(ClimateEntity):
     _attr_preset_modes = [mode.name for mode in komfovent_api.KomfoventOperatingModes]
     _attr_supported_features = ClimateEntityFeature.PRESET_MODE
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_translation_key = "ventilation_unit"
 
     def __init__(
         self,
@@ -54,7 +55,6 @@ class KomfoventDevice(ClimateEntity):
         self._komfovent_settings = settings
 
         self._attr_unique_id = settings.serial_number
-        self._attr_name = settings.name
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, settings.serial_number)},
             model=settings.model,
