@@ -148,10 +148,10 @@ class WallConnectorEntity(CoordinatorEntity):
         """Return information about the device."""
         return DeviceInfo(
             identifiers={(DOMAIN, self.wall_connector_data.serial_number)},
-            default_name=WALLCONNECTOR_DEVICE_NAME,
+            name=WALLCONNECTOR_DEVICE_NAME,
             model=self.wall_connector_data.part_number,
             sw_version=self.wall_connector_data.firmware_version,
-            default_manufacturer="Tesla",
+            manufacturer="Tesla",
         )
 
 
