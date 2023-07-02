@@ -670,13 +670,11 @@ georss-qld-bushfire-alert-client==0.5
 
 # homeassistant.components.dlna_dmr
 # homeassistant.components.kef
+# homeassistant.components.minecraft_server
 # homeassistant.components.nmap_tracker
 # homeassistant.components.samsungtv
 # homeassistant.components.upnp
 getmac==0.8.2
-
-# homeassistant.components.minecraft_server
-getmac==0.9.4
 
 # homeassistant.components.gios
 gios==3.1.0
