@@ -113,6 +113,9 @@
       "cpu_user_load": {
         "name": "CPU utilization (user)"
       },
+      "device_size_total": {
+        "name": "Device size"
+      },
       "disk_smart_status": {
         "name": "Status (smart)"
       },
@@ -148,6 +151,15 @@
       },
       "network_up": {
         "name": "Upload throughput"
+      },
+      "partitions_all_percentage_used": {
+        "name": "Partitions used"
+      },
+      "partitions_all_size_total": {
+        "name": "Partitions size"
+      },
+      "partitions_all_size_used": {
+        "name": "Partitions used space"
       },
       "temperature": {
         "name": "[%key:component::sensor::entity_component::temperature::name%]"
