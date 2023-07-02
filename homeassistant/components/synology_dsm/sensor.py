@@ -275,6 +275,7 @@ EXTERNAL_USB_SENSORS: tuple[SynologyDSMSensorEntityDescription, ...] = (
         suggested_display_precision=2,
         device_class=SensorDeviceClass.DATA_SIZE,
         icon="mdi:chart-pie",
+        entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SynologyDSMSensorEntityDescription(
@@ -296,6 +297,14 @@ EXTERNAL_USB_SENSORS: tuple[SynologyDSMSensorEntityDescription, ...] = (
         suggested_unit_of_measurement=UnitOfInformation.GIBIBYTES,
         suggested_display_precision=2,
         device_class=SensorDeviceClass.DATA_SIZE,
+        icon="mdi:chart-pie",
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SynologyDSMSensorEntityDescription(
+        api_key=SynoCoreExternalUSB.API_KEY,
+        key="partitions_all_percentage_used",
+        translation_key="partitions_all_percentage_used",
+        native_unit_of_measurement=PERCENTAGE,
         icon="mdi:chart-pie",
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -468,7 +477,7 @@ class SynoDSMExternalUSBSensor(SynologyDSMDeviceEntity, SynoDSMSensor):
     @property
     def native_value(self) -> StateType:
         """Return the state."""
-        device = self._api.external_usb.get_devices.get(self._device_id)
+        device = self._api.external_usb.get_devices.get(str(self._device_id))
         attr = getattr(device, self.entity_description.key)
         if callable(attr):
             attr = attr()
