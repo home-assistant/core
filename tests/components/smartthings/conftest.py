@@ -270,6 +270,12 @@ def device_factory_fixture():
                 "deviceTypeName": "Switch",
                 "deviceNetworkType": "ZWAVE",
             },
+            "ocf": {
+                "manufacturerName": "Generic manufacturer",
+                "modelNumber": "123",
+                "hwVersion": "v4.56",
+                "firmwareVersion": "v7.89",
+            },
             "type": "DTH",
         }
         device = DeviceEntity(api, data=device_data)

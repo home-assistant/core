@@ -66,8 +66,8 @@ async def test_entity_and_device_attributes(
     assert entry.configuration_url == "https://account.smartthings.com"
     assert entry.identifiers == {(DOMAIN, device.device_id)}
     assert entry.name == device.label
-    assert entry.model == device.device_type_name
-    assert entry.manufacturer == "Unavailable"
+    assert entry.model == device.status.ocf_model_number
+    assert entry.manufacturer == "Generic manufacturer"
 
 
 async def test_update_from_signal(hass: HomeAssistant, device_factory) -> None:
