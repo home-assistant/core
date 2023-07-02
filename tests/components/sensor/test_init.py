@@ -566,6 +566,14 @@ async def test_restore_sensor_restore_state(
             -0.00,
             "0.0",
         ),
+        (
+            SensorDeviceClass.ATMOSPHERIC_PRESSURE,
+            UnitOfPressure.INHG,
+            UnitOfPressure.HPA,
+            UnitOfPressure.HPA,
+            -0.00001,
+            "0",
+        ),
     ],
 )
 async def test_custom_unit(
@@ -916,7 +924,7 @@ async def test_custom_unit_change(
             "1000000",
             "1093613",
             SensorDeviceClass.DISTANCE,
-        ),
+        )
     ],
 )
 async def test_unit_conversion_priority(
@@ -1188,6 +1196,20 @@ async def test_unit_conversion_priority_precision(
     state = hass.states.get(entity2.entity_id)
     assert float(state.state) == pytest.approx(custom_state)
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == custom_unit
+
+    # Set a display_precision, this should have priority over suggested_display_precision
+    entity_registry.async_update_entity_options(
+        entity0.entity_id,
+        "sensor",
+        {"suggested_display_precision": 2, "display_precision": 4},
+    )
+    entry0 = entity_registry.async_get(entity0.entity_id)
+    assert entry0.options["sensor"]["suggested_display_precision"] == 2
+    assert entry0.options["sensor"]["display_precision"] == 4
+    await hass.async_block_till_done()
+    assert float(async_rounded_state(hass, entity0.entity_id, state)) == pytest.approx(
+        round(custom_state, 4)
+    )
 
 
 @pytest.mark.parametrize(
@@ -2379,3 +2401,18 @@ async def test_name(hass: HomeAssistant) -> None:
 
     state = hass.states.get(entity4.entity_id)
     assert state.attributes == {"device_class": "battery", "friendly_name": "Battery"}
+
+
+def test_async_rounded_state_unregistered_entity_is_passthrough(
+    hass: HomeAssistant,
+) -> None:
+    """Test async_rounded_state on unregistered entity is passthrough.
+
+    The -0 should only be dropped when there is a conversion.
+    """
+    hass.states.async_set("sensor.test", "1.004")
+    state = hass.states.get("sensor.test")
+    assert async_rounded_state(hass, "sensor.test", state) == "1.004"
+    hass.states.async_set("sensor.test", "-0.0")
+    state = hass.states.get("sensor.test")
+    assert async_rounded_state(hass, "sensor.test", state) == "-0.0"
