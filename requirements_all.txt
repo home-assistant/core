@@ -234,7 +234,7 @@ aioecowitt==2023.5.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==15.0.1
+aioesphomeapi==15.1.1
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -1810,7 +1810,7 @@ pymailgunner==1.4
 pymata-express==1.19
 
 # homeassistant.components.mazda
-pymazda==0.3.8
+pymazda==0.3.9
 
 # homeassistant.components.mediaroom
 pymediaroom==0.6.5.4
@@ -2099,7 +2099,7 @@ python-join-api==0.0.9
 python-juicenet==1.1.0
 
 # homeassistant.components.tplink
-python-kasa==0.5.1
+python-kasa[speedups]==0.5.2
 
 # homeassistant.components.lirc
 # python-lirc==1.2.3
@@ -2735,7 +2735,7 @@ zamg==0.2.2
 zengge==0.2
 
 # homeassistant.components.zeroconf
-zeroconf==0.69.0
+zeroconf==0.70.0
 
 # homeassistant.components.zeversolar
 zeversolar==0.3.1
