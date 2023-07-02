@@ -2406,13 +2406,34 @@ async def test_name(hass: HomeAssistant) -> None:
 def test_async_rounded_state_unregistered_entity_is_passthrough(
     hass: HomeAssistant,
 ) -> None:
-    """Test async_rounded_state on unregistered entity is passthrough.
-
-    The -0 should only be dropped when there is a conversion.
-    """
+    """Test async_rounded_state on unregistered entity is passthrough."""
     hass.states.async_set("sensor.test", "1.004")
     state = hass.states.get("sensor.test")
     assert async_rounded_state(hass, "sensor.test", state) == "1.004"
     hass.states.async_set("sensor.test", "-0.0")
     state = hass.states.get("sensor.test")
     assert async_rounded_state(hass, "sensor.test", state) == "-0.0"
+
+
+def test_async_rounded_state_registered_entity_with_display_precision(
+    hass: HomeAssistant,
+) -> None:
+    """Test async_rounded_state on registered with display precision.
+
+    The -0 should be dropped.
+    """
+    entity_registry = er.async_get(hass)
+
+    entry = entity_registry.async_get_or_create("sensor", "test", "very_unique")
+    entity_registry.async_update_entity_options(
+        entry.entity_id,
+        "sensor",
+        {"suggested_display_precision": 2, "display_precision": 4},
+    )
+    entity_id = entry.entity_id
+    hass.states.async_set(entity_id, "1.004")
+    state = hass.states.get(entity_id)
+    assert async_rounded_state(hass, entity_id, state) == "1.0040"
+    hass.states.async_set(entity_id, "-0.0")
+    state = hass.states.get(entity_id)
+    assert async_rounded_state(hass, entity_id, state) == "0.0000"
