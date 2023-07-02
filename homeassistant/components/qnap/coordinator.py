@@ -5,9 +5,8 @@ from datetime import timedelta
 import logging
 from typing import Any
 
-import async_timeout
 from qnapstats import QNAPStats
-from requests.exceptions import ConnectionError as ConnectError, HTTPError, Timeout
+from requests.exceptions import ConnectionError as ConnectError, HTTPError, ConnectTimeout
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -59,7 +58,8 @@ class QnapCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
     async def _async_update_data(self) -> dict[str, dict[str, Any]]:
         """Get the latest data from the Qnap API."""
         try:
-            async with async_timeout.timeout(DEFAULT_TIMEOUT):
-                return await self.hass.async_add_executor_job(self._sync_update)
-        except (ConnectError, HTTPError, Timeout, ValueError, TypeError) as err:
+            result = await self.hass.async_add_executor_job(self._sync_update)
+        except (ConnectError, HTTPError, ConnectTimeout, TypeError, Exception) as err:
             raise UpdateFailed(f"Error communicating with device: {err}") from err
+        else:
+            return result
