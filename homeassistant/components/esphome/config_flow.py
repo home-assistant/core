@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections import OrderedDict
 from collections.abc import Mapping
+import json
 import logging
 from typing import Any
 
@@ -407,6 +408,11 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
             noise_psk = await dashboard.api.get_encryption_key(device["configuration"])
         except aiohttp.ClientError as err:
             _LOGGER.error("Error talking to the dashboard: %s", err)
+            return False
+        except json.JSONDecodeError as err:
+            _LOGGER.error(
+                "Error parsing response from dashboard: %s", err, exc_info=True
+            )
             return False
 
         self._noise_psk = noise_psk
