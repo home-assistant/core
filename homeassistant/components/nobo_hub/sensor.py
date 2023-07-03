@@ -12,7 +12,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_MODEL,
     ATTR_NAME,
-    ATTR_SUGGESTED_AREA,
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
@@ -57,16 +56,18 @@ class NoboTemperatureSensor(SensorEntity):
         self._attr_unique_id = component[ATTR_SERIAL]
         self._attr_name = "Temperature"
         self._attr_has_entity_name = True
+        zone_id = component[ATTR_ZONE_ID]
+        suggested_area = None
+        if zone_id != "-1":
+            suggested_area = hub.zones[zone_id][ATTR_NAME]
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, component[ATTR_SERIAL])},
             name=component[ATTR_NAME],
             manufacturer=NOBO_MANUFACTURER,
             model=component[ATTR_MODEL].name,
             via_device=(DOMAIN, hub.hub_info[ATTR_SERIAL]),
+            suggested_area=suggested_area,
         )
-        zone_id = component[ATTR_ZONE_ID]
-        if zone_id != "-1":
-            self._attr_device_info[ATTR_SUGGESTED_AREA] = hub.zones[zone_id][ATTR_NAME]
         self._read_state()
 
     async def async_added_to_hass(self) -> None:
