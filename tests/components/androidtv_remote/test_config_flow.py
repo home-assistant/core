@@ -857,3 +857,59 @@ async def test_reauth_flow_cannot_connect(
     await hass.async_block_till_done()
     assert len(mock_unload_entry.mock_calls) == 0
     assert len(mock_setup_entry.mock_calls) == 0
+
+
+async def test_options_flow(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_api: MagicMock
+) -> None:
+    """Test options flow."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_api.disconnect.call_count == 0
+    assert mock_api.async_connect.call_count == 1
+
+    # Trigger options flow, first time
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+    assert result["type"] == "form"
+    assert result["step_id"] == "init"
+    data_schema = result["data_schema"].schema
+    assert set(data_schema) == {"enable_ime"}
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={"enable_ime": False},
+    )
+    assert result["type"] == "create_entry"
+    assert mock_config_entry.options == {"enable_ime": False}
+    await hass.async_block_till_done()
+
+    assert mock_api.disconnect.call_count == 1
+    assert mock_api.async_connect.call_count == 2
+
+    # Trigger options flow, second time, no change, doesn't reload
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={"enable_ime": False},
+    )
+    assert result["type"] == "create_entry"
+    assert mock_config_entry.options == {"enable_ime": False}
+    await hass.async_block_till_done()
+
+    assert mock_api.disconnect.call_count == 1
+    assert mock_api.async_connect.call_count == 2
+
+    # Trigger options flow, third time, change, reloads
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={"enable_ime": True},
+    )
+    assert result["type"] == "create_entry"
+    assert mock_config_entry.options == {"enable_ime": True}
+    await hass.async_block_till_done()
+
+    assert mock_api.disconnect.call_count == 2
+    assert mock_api.async_connect.call_count == 3
