@@ -1238,9 +1238,9 @@ async def test_entity_service_call_warn_referenced(
     )
     await service.entity_service_call(hass, {}, "", call)
     assert (
-        "Unable to find referenced areas non-existent-area, devices"
-        " non-existent-device, entities non.existent" in caplog.text
-    )
+        "Referenced areas non-existent-area, devices non-existent-device, "
+        "entities non.existent are missing or not currently available"
+    ) in caplog.text
 
 
 async def test_async_extract_entities_warn_referenced(
@@ -1259,9 +1259,9 @@ async def test_async_extract_entities_warn_referenced(
     extracted = await service.async_extract_entities(hass, {}, call)
     assert len(extracted) == 0
     assert (
-        "Unable to find referenced areas non-existent-area, devices"
-        " non-existent-device, entities non.existent" in caplog.text
-    )
+        "Referenced areas non-existent-area, devices non-existent-device, "
+        "entities non.existent are missing or not currently available"
+    ) in caplog.text
 
 
 async def test_async_extract_config_entry_ids(hass: HomeAssistant) -> None:

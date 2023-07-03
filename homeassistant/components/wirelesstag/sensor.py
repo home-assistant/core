@@ -100,6 +100,7 @@ class WirelessTagSensor(WirelessTagBaseSensor, SensorEntity):
         self._sensor_type = description.key
         self.entity_description = description
         self._name = self._tag.name
+        self._attr_unique_id = f"{self.tag_id}_{self._sensor_type}"
 
         # I want to see entity_id as:
         # sensor.wirelesstag_bedroom_temperature

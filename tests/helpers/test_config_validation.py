@@ -1350,9 +1350,9 @@ def test_key_value_schemas_with_default() -> None:
     schema({"mode": "{{ 1 + 1}}"})
 
 
-def test_script(caplog: pytest.LogCaptureFixture) -> None:
-    """Test script validation is user friendly."""
-    for data, msg in (
+@pytest.mark.parametrize(
+    ("config", "error"),
+    (
         ({"delay": "{{ invalid"}, "should be format 'HH:MM'"),
         ({"wait_template": "{{ invalid"}, "invalid template"),
         ({"condition": "invalid"}, "Unexpected value for condition: 'invalid'"),
@@ -1366,20 +1366,33 @@ def test_script(caplog: pytest.LogCaptureFixture) -> None:
             {"condition": "not", "conditions": "not a dynamic template"},
             "Expected a dictionary",
         ),
-        ({"event": None}, "string value is None for dictionary value @ data['event']"),
+        (
+            {"event": None},
+            r"string value is None for dictionary value @ data\['event'\]",
+        ),
         (
             {"device_id": None},
-            "string value is None for dictionary value @ data['device_id']",
+            r"string value is None for dictionary value @ data\['device_id'\]",
         ),
         (
             {"scene": "light.kitchen"},
             "Entity ID 'light.kitchen' does not belong to domain 'scene'",
         ),
-    ):
-        with pytest.raises(vol.Invalid) as excinfo:
-            cv.script_action(data)
-
-        assert msg in str(excinfo.value)
+        (
+            {
+                "alias": "stop step",
+                "stop": "In the name of love",
+                "error": True,
+                "response_variable": "response-value",
+            },
+            "not allowed to add a response to an error stop action",
+        ),
+    ),
+)
+def test_script(caplog: pytest.LogCaptureFixture, config: dict, error: str) -> None:
+    """Test script validation is user friendly."""
+    with pytest.raises(vol.Invalid, match=error):
+        cv.script_action(config)
 
 
 def test_whitespace() -> None:
@@ -1388,7 +1401,7 @@ def test_whitespace() -> None:
 
     for value in (
         None,
-        "" "T",
+        "T",
         "negative",
         "lock",
         "tr  ue",

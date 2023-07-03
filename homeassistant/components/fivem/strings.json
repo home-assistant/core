@@ -17,5 +17,23 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
     }
+  },
+  "entity": {
+    "binary_sensor": {
+      "status": {
+        "name": "Status"
+      }
+    },
+    "sensor": {
+      "max_players": {
+        "name": "Players max"
+      },
+      "online_players": {
+        "name": "Players online"
+      },
+      "resources": {
+        "name": "Resources"
+      }
+    }
   }
 }

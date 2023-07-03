@@ -21,8 +21,6 @@ HYPERION_MODEL_NAME = f"{HYPERION_MANUFACTURER_NAME}-NG"
 HYPERION_RELEASES_URL = "https://github.com/hyperion-project/hyperion.ng/releases"
 HYPERION_VERSION_WARN_CUTOFF = "2.0.0-alpha.9"
 
-NAME_SUFFIX_HYPERION_LIGHT = ""
-NAME_SUFFIX_HYPERION_PRIORITY_LIGHT = "Priority"
 NAME_SUFFIX_HYPERION_COMPONENT_SWITCH = "Component"
 NAME_SUFFIX_HYPERION_CAMERA = ""
 
@@ -32,5 +30,4 @@ SIGNAL_ENTITY_REMOVE = f"{DOMAIN}_entity_remove_signal.{{}}"
 
 TYPE_HYPERION_CAMERA = "hyperion_camera"
 TYPE_HYPERION_LIGHT = "hyperion_light"
-TYPE_HYPERION_PRIORITY_LIGHT = "hyperion_priority_light"
 TYPE_HYPERION_COMPONENT_SWITCH_BASE = "hyperion_component_switch"

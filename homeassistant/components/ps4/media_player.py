@@ -192,12 +192,10 @@ class PS4Device(MediaPlayerEntity):
                             self.async_get_title_data(title_id, name),
                             "ps4.media_player-get_title_data",
                         )
-                else:
-                    if self.state != MediaPlayerState.IDLE:
-                        self.idle()
-            else:
-                if self.state != MediaPlayerState.STANDBY:
-                    self.state_standby()
+                elif self.state != MediaPlayerState.IDLE:
+                    self.idle()
+            elif self.state != MediaPlayerState.STANDBY:
+                self.state_standby()
 
         elif self._retry > DEFAULT_RETRIES:
             self.state_unknown()
