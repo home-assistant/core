@@ -27,12 +27,6 @@
   },
   "entity": {
     "binary_sensor": {
-      "leak": {
-        "name": "Leak detector"
-      },
-      "missing": {
-        "name": "Missing"
-      },
       "safe": {
         "name": "Safe"
       },
