@@ -23,15 +23,15 @@ from homeassistant.const import PRECISION_HALVES, PRECISION_WHOLE, UnitOfTempera
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from .const import (
+    DOMAIN,
+    FAN_CIRCULATE,
+    PRESET_PERMANENT_HOLD,
+    PRESET_TEMPORARY_HOLD,
+    PRESET_VACATION,
+)
 from .coordinator import AprilaireCoordinator
 from .entity import BaseAprilaireEntity
-
-FAN_CIRCULATE = "Circulate"
-
-PRESET_TEMPORARY_HOLD = "Temporary"
-PRESET_PERMANENT_HOLD = "Permanent"
-PRESET_VACATION = "Vacation"
 
 HVAC_MODE_MAP = {
     1: HVACMode.OFF,
@@ -111,13 +111,10 @@ class AprilaireClimate(BaseAprilaireEntity, ClimateEntity):
         """Get supported features."""
         features = 0
 
-        if Attribute.MODE not in self._coordinator.data:
-            features = features | ClimateEntityFeature.TARGET_TEMPERATURE
+        if self._coordinator.data.get(Attribute.MODE) == 5:
+            features = features | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
         else:
-            if self._coordinator.data.get(Attribute.MODE) == 5:
-                features = features | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
-            else:
-                features = features | ClimateEntityFeature.TARGET_TEMPERATURE
+            features = features | ClimateEntityFeature.TARGET_TEMPERATURE
 
         if self._coordinator.data.get(Attribute.HUMIDIFICATION_AVAILABLE) == 2:
             features = features | ClimateEntityFeature.TARGET_HUMIDITY

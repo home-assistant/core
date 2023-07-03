@@ -6,7 +6,7 @@ import logging
 from typing import cast
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP, Platform
+from homeassistant.const import CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import Event, HomeAssistant
 
 from .const import DOMAIN, LOG_NAME
@@ -25,12 +25,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, **kwargs) -
 
     config = entry.data
 
-    host = config.get("host")
+    host = config.get(CONF_HOST)
     if host is None or len(host) == 0:
         logger.error("Invalid host %s", host)
         return False
 
-    port = config.get("port")
+    port = config.get(CONF_PORT)
     if port is None or port <= 0:
         logger.error("Invalid port %s", port)
         return False
