@@ -73,7 +73,7 @@ SENSOR_TYPES = (
     # Internal temperature (probe tip)
     MeaterSensorEntityDescription(
         key="internal",
-        translation_key="ambient",
+        translation_key="internal",
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
