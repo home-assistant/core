@@ -1121,13 +1121,8 @@ class MqttEntity(
     def config_schema() -> vol.Schema:
         """Return the config schema."""
 
-    def _setup_common_attributes_from_config(self, config: ConfigType) -> None:
-        """(Re)Setup the common attributes for the entity."""
-        self._attr_entity_category = config.get(CONF_ENTITY_CATEGORY)
-        self._attr_entity_registry_enabled_default = bool(
-            config.get(CONF_ENABLED_BY_DEFAULT)
-        )
-        self._attr_icon = config.get(CONF_ICON)
+    def _set_entity_name(self, config: ConfigType) -> None:
+        """Help setting the entity name if needed."""
         entity_name: str | None | UndefinedType = config.get(CONF_NAME, UNDEFINED)
         # Only set _attr_name if it is needed
         if entity_name is not UNDEFINED:
@@ -1142,7 +1137,7 @@ class MqttEntity(
             # Follow name of device class
             self._attr_has_entity_name = True
             if CONF_DEVICE in config and CONF_NAME not in config[CONF_DEVICE]:
-                _LOGGER.info(
+                _LOGGER.warning(
                     "No device name set in config: %s,"
                     "'has_entity_name' was set to True, please set a device name, see also "
                     "https://developers.home-assistant.io/docs/core/entity/#entity-naming",
@@ -1156,12 +1151,22 @@ class MqttEntity(
             self._attr_has_entity_name = True
         elif device_config:
             self._attr_has_entity_name = False
-            _LOGGER.info(
+            _LOGGER.warning(
                 "No device name set in config: %s,"
                 "'has_entity_name' was set to False, this is not recommended, see also "
                 "https://developers.home-assistant.io/docs/core/entity/#entity-naming",
                 config,
             )
+
+    def _setup_common_attributes_from_config(self, config: ConfigType) -> None:
+        """(Re)Setup the common attributes for the entity."""
+        self._attr_entity_category = config.get(CONF_ENTITY_CATEGORY)
+        self._attr_entity_registry_enabled_default = bool(
+            config.get(CONF_ENABLED_BY_DEFAULT)
+        )
+        self._attr_icon = config.get(CONF_ICON)
+        # Set the entity name if needed
+        self._set_entity_name(config)
 
     def _setup_from_config(self, config: ConfigType) -> None:
         """(Re)Setup the entity."""
