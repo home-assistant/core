@@ -64,17 +64,17 @@
     },
     "climate": {
       "climate": {
-        "name": "Climate"
+        "name": "[%key:component::climate::title%]"
       }
     },
     "device_tracker": {
       "device_tracker": {
-        "name": "Device tracker"
+        "name": "[%key:component::device_tracker::title%]"
       }
     },
     "lock": {
       "lock": {
-        "name": "Lock"
+        "name": "[%key:component::lock::title%]"
       }
     },
     "sensor": {
