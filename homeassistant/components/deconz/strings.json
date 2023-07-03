@@ -85,7 +85,7 @@
       "dim_down": "Dim down",
       "left": "Left",
       "right": "Right",
-      "open": "Open",
+      "open": "[%key:common::state::open%]",
       "close": "Close",
       "both_buttons": "Both buttons",
       "top_buttons": "Top buttons",
