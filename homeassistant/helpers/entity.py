@@ -1112,24 +1112,26 @@ class Entity(ABC):
 
         ent_reg = er.async_get(self.hass)
         old = self.registry_entry
-        self.registry_entry = ent_reg.async_get(data["entity_id"])
-        self._async_load_device_entry()
+        registry_entry = ent_reg.async_get(data["entity_id"])
+        assert registry_entry is not None
+        self.registry_entry = registry_entry
 
-        assert self.registry_entry is not None
+        if device_id := registry_entry.device_id:
+            self.device_entry = dr.async_get(self.hass).async_get(device_id)
 
-        if self.registry_entry.disabled:
+        if registry_entry.disabled:
             await self.async_remove()
             return
 
         assert old is not None
-        if self.registry_entry.entity_id == old.entity_id:
+        if registry_entry.entity_id == old.entity_id:
             self.async_registry_entry_updated()
             self.async_write_ha_state()
             return
 
         await self.async_remove(force_remove=True)
 
-        self.entity_id = self.registry_entry.entity_id
+        self.entity_id = registry_entry.entity_id
         await self.platform.async_add_entities([self])
 
     @callback
@@ -1151,15 +1153,8 @@ class Entity(ABC):
         if "name" not in data["changes"] and "name_by_user" not in data["changes"]:
             return
 
-        self._async_load_device_entry()
+        self.device_entry = dr.async_get(self.hass).async_get(data["device_id"])
         self.async_write_ha_state()
-
-    def _async_load_device_entry(self) -> None:
-        """Load the device registry entry."""
-        registry_entry = self.registry_entry
-        assert registry_entry is not None
-        if device_id := registry_entry.device_id:
-            self.device_entry = dr.async_get(self.hass).async_get(device_id)
 
     @callback
     def _async_subscribe_device_updates(self) -> None:
