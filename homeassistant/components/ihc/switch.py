@@ -18,12 +18,12 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Load IHC switches based on a config entry."""
-    controller_id: str = str(config_entry.unique_id)
-    controller_data = hass.data[DOMAIN][controller_id]
+    controller_id: str = str(entry.unique_id)
+    controller_data = hass.data[DOMAIN][entry.entry_id]
     ihc_controller: IHCController = controller_data[IHC_CONTROLLER]
     switches = []
     if "switch" in controller_data and controller_data["switch"]:

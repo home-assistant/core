@@ -10,6 +10,7 @@ from .const import (
     ATTR_VALUE,
     DOMAIN,
     IHC_CONTROLLER,
+    IHC_CONTROLLER_ID,
     SERVICE_PULSE,
     SERVICE_SET_RUNTIME_VALUE_BOOL,
     SERVICE_SET_RUNTIME_VALUE_FLOAT,
@@ -54,10 +55,13 @@ def setup_service_functions(hass: HomeAssistant) -> None:
 
     def _get_controller(call):
         controller_id = call.data[ATTR_CONTROLLER_ID]
-        # if no controller id is specified use the first one
-        if controller_id == "":
-            controller_id = next(iter(hass.data[DOMAIN]))
-        return hass.data[DOMAIN][controller_id][IHC_CONTROLLER]
+        if controller_id != "":
+            for data in hass.data[DOMAIN].values():
+                if data[IHC_CONTROLLER_ID] == controller_id:
+                    return data[IHC_CONTROLLER]
+        # if the controller id was not found or specified we use the first one
+        entry_id = next(iter(hass.data[DOMAIN]))
+        return hass.data[DOMAIN][entry_id][IHC_CONTROLLER]
 
     async def async_set_runtime_value_bool(call):
         """Set a IHC runtime bool value service function."""

@@ -12,7 +12,13 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 from .auto_setup import autosetup_ihc_products
-from .const import CONF_AUTOSETUP, DOMAIN, IHC_CONTROLLER, IHC_PLATFORMS
+from .const import (
+    CONF_AUTOSETUP,
+    DOMAIN,
+    IHC_CONTROLLER,
+    IHC_CONTROLLER_ID,
+    IHC_PLATFORMS,
+)
 from .manual_setup import MANUAL_SETUP_SCHEMA, manual_setup
 from .migrate import migrate_configuration
 from .service_functions import setup_service_functions
@@ -56,16 +62,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _LOGGER.error("Unable to authenticate on IHC controller")
         return False
     hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][controller_id] = {
+    hass.data[DOMAIN][entry.entry_id] = {
         IHC_CONTROLLER: ihc_controller,
+        IHC_CONTROLLER_ID: controller_id,
     }
     if not await setup_controller_device(hass, ihc_controller, entry):
         return False
     if autosetup:
         await hass.async_add_executor_job(
-            autosetup_ihc_products, hass, ihc_controller, controller_id
+            autosetup_ihc_products, hass, ihc_controller, entry
         )
-    await hass.async_add_executor_job(manual_setup, hass, controller_id)
+    await hass.async_add_executor_job(manual_setup, hass, entry)
     hass.async_create_task(
         hass.config_entries.async_forward_entry_setups(entry, IHC_PLATFORMS)
     )
@@ -76,25 +83,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(
-        config_entry, IHC_PLATFORMS
-    )
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, IHC_PLATFORMS)
     if not unload_ok:
         return False
-    controller_id = config_entry.unique_id
-    ihc_controller = hass.data[DOMAIN][controller_id][IHC_CONTROLLER]
+    ihc_controller = hass.data[DOMAIN][entry.entry_id][IHC_CONTROLLER]
     ihc_controller.disconnect()
-    hass.data[DOMAIN].pop(controller_id)
+    hass.data[DOMAIN].pop(entry.entry_id)
     if hass.data[DOMAIN]:
         hass.data.pop(DOMAIN)
     return True
 
 
-async def async_update_options(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+async def async_update_options(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Update options."""
-    await hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def setup_controller_device(

@@ -7,6 +7,7 @@ from ihcsdk.ihccontroller import IHCController
 import voluptuous as vol
 
 from homeassistant.config import load_yaml_config_file
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_TYPE, CONF_UNIT_OF_MEASUREMENT, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -85,7 +86,7 @@ AUTO_SETUP_SCHEMA = vol.Schema(
 
 
 def autosetup_ihc_products(
-    hass: HomeAssistant, ihc_controller: IHCController, controller_id: str
+    hass: HomeAssistant, ihc_controller: IHCController, entry: ConfigEntry
 ) -> bool:
     """Auto setup of IHC products from the IHC project file."""
     if not (project_xml := ihc_controller.get_project()):
@@ -103,12 +104,14 @@ def autosetup_ihc_products(
     except vol.Invalid as exception:
         _LOGGER.error("Invalid IHC auto setup data: %s", exception)
         return False
+    assert entry.unique_id is not None
+    controller_id: str = entry.unique_id
     groups = project.findall(".//group")
     for platform in IHC_PLATFORMS:
         platform_setup = auto_setup_conf[platform]
         discovery_info = get_discovery_info(platform_setup, groups, controller_id)
         if discovery_info:
-            hass.data[DOMAIN][controller_id][platform] = discovery_info
+            hass.data[DOMAIN][entry.entry_id][platform] = discovery_info
     return True
 
 

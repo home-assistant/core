@@ -6,6 +6,7 @@ import voluptuous as vol
 
 from homeassistant.components.binary_sensor import DEVICE_CLASSES_SCHEMA
 from homeassistant.config import load_yaml_config_file
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ID, CONF_NAME, CONF_TYPE, CONF_UNIT_OF_MEASUREMENT
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -106,7 +107,7 @@ MANUAL_SETUP_SCHEMA = vol.Schema(
 )
 
 
-def manual_setup(hass: HomeAssistant, controller_id: str) -> None:
+def manual_setup(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Manual setup of IHC devices."""
     yaml_path = hass.config.path(MANUAL_SETUP_YAML)
     if not os.path.isfile(yaml_path):
@@ -117,7 +118,8 @@ def manual_setup(hass: HomeAssistant, controller_id: str) -> None:
     except vol.Invalid as exception:
         _LOGGER.error("Invalid IHC manual setup data: %s", exception)
         return
-
+    assert entry.unique_id is not None
+    controller_id: str = entry.unique_id
     # Find the controller config for this controller
     controller_conf = None
     for conf in ihc_conf:
@@ -152,7 +154,7 @@ def manual_setup(hass: HomeAssistant, controller_id: str) -> None:
                 }
                 discovery_info[name] = device
         if discovery_info:
-            if platform in hass.data[DOMAIN][controller_id]:
-                hass.data[DOMAIN][controller_id][platform].update(discovery_info)
+            if platform in hass.data[DOMAIN][entry.entry_id]:
+                hass.data[DOMAIN][entry.entry_id][platform].update(discovery_info)
             else:
-                hass.data[DOMAIN][controller_id][platform] = discovery_info
+                hass.data[DOMAIN][entry.entry_id][platform] = discovery_info

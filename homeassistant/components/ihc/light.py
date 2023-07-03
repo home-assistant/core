@@ -20,7 +20,7 @@ async def async_setup_entry(
 ) -> None:
     """Load IHC lights based on a config entry."""
     controller_id: str = str(entry.unique_id)
-    controller_data = hass.data[DOMAIN][controller_id]
+    controller_data = hass.data[DOMAIN][entry.entry_id]
     ihc_controller: IHCController = controller_data[IHC_CONTROLLER]
     lights = []
     if "light" in controller_data and controller_data["light"]:
