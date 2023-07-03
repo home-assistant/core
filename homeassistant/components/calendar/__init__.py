@@ -422,7 +422,7 @@ def _list_events_dict_factory(
     """Convert CalendarEvent dataclass items to dictionary of attributes."""
     return {
         name: value
-        for name, value in obj
+        for name, value in _event_dict_factory(obj).items()
         if name in LIST_EVENT_FIELDS and value is not None
     }
 
