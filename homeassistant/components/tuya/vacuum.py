@@ -153,14 +153,6 @@ class TuyaVacuumEntity(TuyaEntity, StateVacuumEntity):
             return None
         return TUYA_STATUS_TO_HA.get(status)
 
-    def turn_on(self, **kwargs: Any) -> None:
-        """Turn the device on."""
-        self._send_command([{"code": DPCode.POWER, "value": True}])
-
-    def turn_off(self, **kwargs: Any) -> None:
-        """Turn the device off."""
-        self._send_command([{"code": DPCode.POWER, "value": False}])
-
     def start(self, **kwargs: Any) -> None:
         """Start the device."""
         self._send_command([{"code": DPCode.POWER_GO, "value": True}])
