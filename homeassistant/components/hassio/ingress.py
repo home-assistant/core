@@ -17,6 +17,7 @@ from yarl import URL
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.typing import UNDEFINED
 
 from .const import X_HASS_SOURCE, X_INGRESS_PATH
 
@@ -162,12 +163,13 @@ class HassIOIngress(HomeAssistantView):
             skip_auto_headers={hdrs.CONTENT_TYPE},
         ) as result:
             headers = _response_header(result)
-
+            content_length_int = 0
+            content_length = result.headers.get(hdrs.CONTENT_LENGTH, UNDEFINED)
             # Simple request
-            if (
-                hdrs.CONTENT_LENGTH in result.headers
-                and int(result.headers.get(hdrs.CONTENT_LENGTH, 0)) < 4194000
-            ) or result.status in (204, 304):
+            if result.status in (204, 304) or (
+                content_length is not UNDEFINED
+                and (content_length_int := int(content_length or 0)) < 4194000
+            ):
                 # Return Response
                 body = await result.read()
                 simple_response = web.Response(
@@ -176,7 +178,8 @@ class HassIOIngress(HomeAssistantView):
                     content_type=result.content_type,
                     body=body,
                 )
-                simple_response.enable_compression()
+                if content_length_int > 128:
+                    simple_response.enable_compression()
                 await simple_response.prepare(request)
                 return simple_response
 
