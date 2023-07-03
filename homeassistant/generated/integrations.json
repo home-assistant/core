@@ -6545,7 +6545,6 @@
       "iot_class": "local_polling"
     },
     "zodiac": {
-      "name": "Zodiac",
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "calculated"
@@ -6695,6 +6694,7 @@
     "tod",
     "uptime",
     "utility_meter",
-    "waze_travel_time"
+    "waze_travel_time",
+    "zodiac"
   ]
 }
