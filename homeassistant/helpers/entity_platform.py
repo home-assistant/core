@@ -726,6 +726,8 @@ class EntityPlatform:
                 )
 
             entity.registry_entry = entry
+            if device:
+                entity.device_entry = device
             entity.entity_id = entry.entity_id
 
         # We won't generate an entity ID if the platform has already set one

@@ -277,6 +277,9 @@ class Entity(ABC):
     # Entry in the entity registry
     registry_entry: er.RegistryEntry | None = None
 
+    # The device entry for this entity
+    device_entry: dr.DeviceEntry | None = None
+
     # Hold list for functions to call on remove.
     _on_remove: list[CALLBACK_TYPE] | None = None
 
@@ -763,13 +766,7 @@ class Entity(ABC):
         if name is UNDEFINED:
             name = None
 
-        if not self.has_entity_name or not self.registry_entry:
-            return name
-
-        device_registry = dr.async_get(self.hass)
-        if not (device_id := self.registry_entry.device_id) or not (
-            device_entry := device_registry.async_get(device_id)
-        ):
+        if not self.has_entity_name or not (device_entry := self.device_entry):
             return name
 
         if self.use_device_name:
@@ -1116,6 +1113,8 @@ class Entity(ABC):
         ent_reg = er.async_get(self.hass)
         old = self.registry_entry
         self.registry_entry = ent_reg.async_get(data["entity_id"])
+        self._async_load_device_entry()
+
         assert self.registry_entry is not None
 
         if self.registry_entry.disabled:
@@ -1152,7 +1151,17 @@ class Entity(ABC):
         if "name" not in data["changes"] and "name_by_user" not in data["changes"]:
             return
 
+        self._async_load_device_entry()
         self.async_write_ha_state()
+
+    def _async_load_device_entry(self) -> None:
+        """Load the device registry entry."""
+        registry_entry = self.registry_entry
+        assert registry_entry is not None
+        if device_id := registry_entry.device_id:
+            self.device_entry = dr.async_get(self.hass).async_get(device_id)
+        else:
+            self.device_entry = None
 
     @callback
     def _async_subscribe_device_updates(self) -> None:
