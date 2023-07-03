@@ -53,7 +53,6 @@ class AbodeSensor(AbodeDevice, SensorEntity):
     """A sensor implementation for Abode devices."""
 
     _device: AbodeSense
-    _attr_has_entity_name = True
 
     def __init__(
         self,
