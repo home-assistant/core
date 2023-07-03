@@ -40,6 +40,9 @@ RESPONSE_HEADERS_FILTER = {
     hdrs.CONTENT_ENCODING,
 }
 
+MIN_COMPRESSED_SIZE = 128
+MAX_SIMPLE_RESPONSE_SIZE = 4194000
+
 
 @callback
 def async_setup_ingress_view(hass: HomeAssistant, host: str):
@@ -168,7 +171,8 @@ class HassIOIngress(HomeAssistantView):
             # Simple request
             if result.status in (204, 304) or (
                 content_length is not UNDEFINED
-                and (content_length_int := int(content_length or 0)) < 4194000
+                and (content_length_int := int(content_length or 0))
+                <= MAX_SIMPLE_RESPONSE_SIZE
             ):
                 # Return Response
                 body = await result.read()
@@ -178,7 +182,7 @@ class HassIOIngress(HomeAssistantView):
                     content_type=result.content_type,
                     body=body,
                 )
-                if content_length_int > 128:
+                if content_length_int > MIN_COMPRESSED_SIZE:
                     simple_response.enable_compression()
                 await simple_response.prepare(request)
                 return simple_response
