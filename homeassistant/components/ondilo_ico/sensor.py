@@ -35,48 +35,46 @@ from .const import DOMAIN
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="temperature",
-        name="Temperature",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="orp",
-        name="Oxydo Reduction Potential",
+        translation_key="oxydo_reduction_potential",
         native_unit_of_measurement=UnitOfElectricPotential.MILLIVOLT,
         icon="mdi:pool",
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="ph",
-        name="pH",
+        translation_key="ph",
         icon="mdi:pool",
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="tds",
-        name="TDS",
+        translation_key="tds",
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
         icon="mdi:pool",
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="battery",
-        name="Battery",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.BATTERY,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="rssi",
-        name="RSSI",
+        translation_key="rssi",
         icon="mdi:wifi",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="salt",
-        name="Salt",
+        translation_key="salt",
         native_unit_of_measurement="mg/L",
         icon="mdi:pool",
         state_class=SensorStateClass.MEASUREMENT,
@@ -139,6 +137,8 @@ class OndiloICO(
 ):
     """Representation of a Sensor."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self,
         coordinator: DataUpdateCoordinator[list[dict[str, Any]]],
@@ -154,7 +154,6 @@ class OndiloICO(
         pooldata = self._pooldata()
         self._attr_unique_id = f"{pooldata['ICO']['serial_number']}-{description.key}"
         self._device_name = pooldata["name"]
-        self._attr_name = f"{self._device_name} {description.name}"
 
     def _pooldata(self):
         """Get pool data dict."""
