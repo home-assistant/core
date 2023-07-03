@@ -22,6 +22,22 @@ from .const import X_HASS_SOURCE, X_INGRESS_PATH
 
 _LOGGER = logging.getLogger(__name__)
 
+INIT_HEADERS_FILTER = {
+    hdrs.CONTENT_LENGTH,
+    hdrs.CONTENT_ENCODING,
+    hdrs.TRANSFER_ENCODING,
+    hdrs.SEC_WEBSOCKET_EXTENSIONS,
+    hdrs.SEC_WEBSOCKET_PROTOCOL,
+    hdrs.SEC_WEBSOCKET_VERSION,
+    hdrs.SEC_WEBSOCKET_KEY,
+}
+RESPONSE_HEADERS_FILTER = {
+    hdrs.TRANSFER_ENCODING,
+    hdrs.CONTENT_LENGTH,
+    hdrs.CONTENT_TYPE,
+    hdrs.CONTENT_ENCODING,
+}
+
 
 @callback
 def async_setup_ingress_view(hass: HomeAssistant, host: str):
@@ -179,24 +195,22 @@ class HassIOIngress(HomeAssistantView):
             return response
 
 
+@lru_cache(maxsize=32)
+def _forwarded_for_header(forward_for: str | None, peer_name: str) -> str:
+    """Create X-Forwarded-For header."""
+    connected_ip = ip_address(peer_name)
+    if forward_for:
+        return f"{forward_for}, {connected_ip!s}"
+    return f"{connected_ip!s}"
+
+
 def _init_header(request: web.Request, token: str) -> CIMultiDict | dict[str, str]:
     """Create initial header."""
-    headers = {}
-
-    # filter flags
-    for name, value in request.headers.items():
-        if name in (
-            hdrs.CONTENT_LENGTH,
-            hdrs.CONTENT_ENCODING,
-            hdrs.TRANSFER_ENCODING,
-            hdrs.SEC_WEBSOCKET_EXTENSIONS,
-            hdrs.SEC_WEBSOCKET_PROTOCOL,
-            hdrs.SEC_WEBSOCKET_VERSION,
-            hdrs.SEC_WEBSOCKET_KEY,
-        ):
-            continue
-        headers[name] = value
-
+    headers = {
+        name: value
+        for name, value in request.headers.items()
+        if name not in INIT_HEADERS_FILTER
+    }
     # Ingress information
     headers[X_HASS_SOURCE] = "core.ingress"
     headers[X_INGRESS_PATH] = f"/api/hassio_ingress/{token}"
@@ -208,12 +222,7 @@ def _init_header(request: web.Request, token: str) -> CIMultiDict | dict[str, st
         _LOGGER.error("Can't set forward_for header, missing peername")
         raise HTTPBadRequest()
 
-    connected_ip = ip_address(peername[0])
-    if forward_for:
-        forward_for = f"{forward_for}, {connected_ip!s}"
-    else:
-        forward_for = f"{connected_ip!s}"
-    headers[hdrs.X_FORWARDED_FOR] = forward_for
+    headers[hdrs.X_FORWARDED_FOR] = _forwarded_for_header(forward_for, peername[0])
 
     # Set X-Forwarded-Host
     if not (forward_host := request.headers.get(hdrs.X_FORWARDED_HOST)):
@@ -231,31 +240,20 @@ def _init_header(request: web.Request, token: str) -> CIMultiDict | dict[str, st
 
 def _response_header(response: aiohttp.ClientResponse) -> dict[str, str]:
     """Create response header."""
-    headers = {}
-
-    for name, value in response.headers.items():
-        if name in (
-            hdrs.TRANSFER_ENCODING,
-            hdrs.CONTENT_LENGTH,
-            hdrs.CONTENT_TYPE,
-            hdrs.CONTENT_ENCODING,
-        ):
-            continue
-        headers[name] = value
-
-    return headers
+    return {
+        name: value
+        for name, value in response.headers.items()
+        if name not in RESPONSE_HEADERS_FILTER
+    }
 
 
 def _is_websocket(request: web.Request) -> bool:
     """Return True if request is a websocket."""
     headers = request.headers
-
-    if (
+    return bool(
         "upgrade" in headers.get(hdrs.CONNECTION, "").lower()
         and headers.get(hdrs.UPGRADE, "").lower() == "websocket"
-    ):
-        return True
-    return False
+    )
 
 
 async def _websocket_forward(ws_from, ws_to):
