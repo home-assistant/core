@@ -322,7 +322,7 @@ def round_nicely(number):
 
 
 class QNAPSensor(CoordinatorEntity[QnapCoordinator], SensorEntity):
-    """Base class for a QNAP sensor."""    
+    """Base class for a QNAP sensor."""
 
     _attr_has_entity_name = True
 
