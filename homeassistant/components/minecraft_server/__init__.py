@@ -179,12 +179,7 @@ class MinecraftServer:
             self.players_online = status_response.players.online
             self.players_max = status_response.players.max
             self.latency_time = status_response.latency
-
-            # For some servers MOTD is not the key 'text' but rather the description directly.
-            try:
-                self.motd = (status_response.description).get("text")  # type: ignore[attr-defined]
-            except AttributeError:
-                self.motd = status_response.description
+            self.motd = status_response.motd.to_plain()
 
             self.players_list = []
             if status_response.players.sample is not None:

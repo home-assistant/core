@@ -4,7 +4,7 @@ import asyncio
 from unittest.mock import patch
 
 import aiodns
-from mcstatus.server import PingResponse
+from mcstatus.status_response import JavaStatusResponse
 
 from homeassistant.components.minecraft_server.const import (
     DEFAULT_NAME,
@@ -31,7 +31,7 @@ class QueryMock:
         self.ttl = None
 
 
-STATUS_RESPONSE_RAW = {
+JAVA_STATUS_RESPONSE_RAW = {
     "description": {"text": "Dummy Description"},
     "version": {"name": "Dummy Version", "protocol": 123},
     "players": {
@@ -104,7 +104,9 @@ async def test_same_host(hass: HomeAssistant) -> None:
         side_effect=aiodns.error.DNSError,
     ), patch(
         "mcstatus.server.JavaServer.async_status",
-        return_value=PingResponse(STATUS_RESPONSE_RAW),
+        return_value=JavaStatusResponse(
+            None, None, None, None, JAVA_STATUS_RESPONSE_RAW, None
+        ),
     ):
         unique_id = "mc.dummyserver.com-25565"
         config_data = {
@@ -174,7 +176,9 @@ async def test_connection_succeeded_with_srv_record(hass: HomeAssistant) -> None
         return_value=SRV_RECORDS,
     ), patch(
         "mcstatus.server.JavaServer.async_status",
-        return_value=PingResponse(STATUS_RESPONSE_RAW),
+        return_value=JavaStatusResponse(
+            None, None, None, None, JAVA_STATUS_RESPONSE_RAW, None
+        ),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=USER_INPUT_SRV
@@ -193,7 +197,9 @@ async def test_connection_succeeded_with_host(hass: HomeAssistant) -> None:
         side_effect=aiodns.error.DNSError,
     ), patch(
         "mcstatus.server.JavaServer.async_status",
-        return_value=PingResponse(STATUS_RESPONSE_RAW),
+        return_value=JavaStatusResponse(
+            None, None, None, None, JAVA_STATUS_RESPONSE_RAW, None
+        ),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=USER_INPUT
@@ -212,7 +218,9 @@ async def test_connection_succeeded_with_ip4(hass: HomeAssistant) -> None:
         side_effect=aiodns.error.DNSError,
     ), patch(
         "mcstatus.server.JavaServer.async_status",
-        return_value=PingResponse(STATUS_RESPONSE_RAW),
+        return_value=JavaStatusResponse(
+            None, None, None, None, JAVA_STATUS_RESPONSE_RAW, None
+        ),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=USER_INPUT_IPV4
@@ -231,7 +239,9 @@ async def test_connection_succeeded_with_ip6(hass: HomeAssistant) -> None:
         side_effect=aiodns.error.DNSError,
     ), patch(
         "mcstatus.server.JavaServer.async_status",
-        return_value=PingResponse(STATUS_RESPONSE_RAW),
+        return_value=JavaStatusResponse(
+            None, None, None, None, JAVA_STATUS_RESPONSE_RAW, None
+        ),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=USER_INPUT_IPV6
