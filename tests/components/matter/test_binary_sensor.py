@@ -1,9 +1,13 @@
 """Test Matter binary sensors."""
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from matter_server.client.models.node import MatterNode
 import pytest
 
+from homeassistant.components.matter.binary_sensor import (
+    DISCOVERY_SCHEMAS as BINARY_SENSOR_SCHEMAS,
+)
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
 from .common import (
@@ -11,6 +15,18 @@ from .common import (
     setup_integration_with_node_fixture,
     trigger_subscription_callback,
 )
+
+
+@pytest.fixture(autouse=True)
+def binary_sensor_platform():
+    """Load only the binary sensor platform."""
+    with patch(
+        "homeassistant.components.matter.discovery.DISCOVERY_SCHEMAS",
+        new={
+            Platform.BINARY_SENSOR: BINARY_SENSOR_SCHEMAS,
+        },
+    ):
+        yield
 
 
 @pytest.fixture(name="contact_sensor_node")
@@ -75,3 +91,24 @@ async def test_occupancy_sensor(
     state = hass.states.get("binary_sensor.mock_occupancy_sensor_occupancy")
     assert state
     assert state.state == "off"
+
+
+# This tests needs to be adjusted to remove lingering tasks
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
+async def test_battery_sensor(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    door_lock: MatterNode,
+) -> None:
+    """Test battery sensor."""
+    entity_id = "binary_sensor.mock_door_lock_battery"
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "off"
+
+    set_node_attribute(door_lock, 1, 47, 14, 1)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "on"
