@@ -19,10 +19,10 @@ from homeassistant.util.ssl import (
 
 from .frame import warn_use
 
-# We have a lot of integrations that poll every 60 seconds
+# We have a lot of integrations that poll every 10-30 seconds
 # and we want to keep the connection open for a while so we
 # don't have to reconnect every time.
-KEEP_ALIVE_TIMEOUT = 65
+KEEP_ALIVE_TIMEOUT = 32
 DATA_ASYNC_CLIENT = "httpx_async_client"
 DATA_ASYNC_CLIENT_NOVERIFY = "httpx_async_client_noverify"
 DEFAULT_LIMITS = limits = httpx.Limits(keepalive_expiry=KEEP_ALIVE_TIMEOUT)
