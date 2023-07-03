@@ -170,12 +170,14 @@ class HassIOIngress(HomeAssistantView):
             ) or result.status in (204, 304):
                 # Return Response
                 body = await result.read()
-                return web.Response(
+                simple_response = web.Response(
                     headers=headers,
                     status=result.status,
                     content_type=result.content_type,
                     body=body,
                 )
+                simple_response.enable_compression()
+                return simple_response
 
             # Stream response
             response = web.StreamResponse(status=result.status, headers=headers)
