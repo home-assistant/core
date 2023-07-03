@@ -14,10 +14,12 @@ from .const import DOMAIN
 class NanoleafEntity(CoordinatorEntity[DataUpdateCoordinator[None]]):
     """Representation of a Nanoleaf entity."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self, nanoleaf: Nanoleaf, coordinator: DataUpdateCoordinator[None]
     ) -> None:
-        """Initialize an Nanoleaf entity."""
+        """Initialize a Nanoleaf entity."""
         super().__init__(coordinator)
         self._nanoleaf = nanoleaf
         self._attr_device_info = DeviceInfo(
