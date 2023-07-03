@@ -199,9 +199,7 @@ class HassIOIngress(HomeAssistantView):
 def _forwarded_for_header(forward_for: str | None, peer_name: str) -> str:
     """Create X-Forwarded-For header."""
     connected_ip = ip_address(peer_name)
-    if forward_for:
-        return f"{forward_for}, {connected_ip!s}"
-    return f"{connected_ip!s}"
+    return f"{forward_for}, {connected_ip!s}" if forward_for else f"{connected_ip!s}"
 
 
 def _init_header(request: web.Request, token: str) -> CIMultiDict | dict[str, str]:
