@@ -16,6 +16,7 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -192,15 +193,15 @@ class MeaterProbeTemperature(
         """Initialise the sensor."""
         super().__init__(coordinator)
         self._attr_name = f"Meater Probe {description.name}"
-        self._attr_device_info = {
-            "identifiers": {
+        self._attr_device_info = DeviceInfo(
+            identifiers={
                 # Serial numbers are unique identifiers within a specific domain
                 (DOMAIN, device_id)
             },
-            "manufacturer": "Apption Labs",
-            "model": "Meater Probe",
-            "name": f"Meater Probe {device_id}",
-        }
+            manufacturer="Apption Labs",
+            model="Meater Probe",
+            name=f"Meater Probe {device_id}",
+        )
         self._attr_unique_id = f"{device_id}-{description.key}"
 
         self.device_id = device_id
