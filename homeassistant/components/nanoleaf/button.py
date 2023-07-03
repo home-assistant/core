@@ -27,7 +27,6 @@ async def async_setup_entry(
 class NanoleafIdentifyButton(NanoleafEntity, ButtonEntity):
     """Representation of a Nanoleaf identify button."""
 
-    _attr_icon = "mdi:magnify"
     _attr_entity_category = EntityCategory.CONFIG
     _attr_device_class = ButtonDeviceClass.IDENTIFY
 
