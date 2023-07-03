@@ -26,6 +26,7 @@ INIT_HEADERS_FILTER = {
     hdrs.CONTENT_LENGTH,
     hdrs.CONTENT_ENCODING,
     hdrs.TRANSFER_ENCODING,
+    hdrs.ACCEPT_ENCODING,  # Avoid local compression, as we will compress at the border
     hdrs.SEC_WEBSOCKET_EXTENSIONS,
     hdrs.SEC_WEBSOCKET_PROTOCOL,
     hdrs.SEC_WEBSOCKET_VERSION,
