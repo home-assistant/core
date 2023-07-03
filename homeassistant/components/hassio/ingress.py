@@ -185,8 +185,9 @@ class HassIOIngress(HomeAssistantView):
             response.content_type = result.content_type
 
             try:
+                response.enable_compression()
                 await response.prepare(request)
-                async for data in result.content.iter_chunked(4096):
+                async for data in result.content.iter_chunked(8192):
                     await response.write(data)
 
             except (
