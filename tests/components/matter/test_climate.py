@@ -366,3 +366,34 @@ async def test_thermostat(
             },
             blocking=True,
         )
+
+    # change target_temp and hvac_mode in the same call
+    matter_client.send_device_command.reset_mock()
+    matter_client.write_attribute.reset_mock()
+    await hass.services.async_call(
+        "climate",
+        "set_temperature",
+        {
+            "entity_id": "climate.longan_link_hvac",
+            "temperature": 22,
+            "hvac_mode": HVACMode.COOL,
+        },
+        blocking=True,
+    )
+    assert matter_client.write_attribute.call_count == 1
+    assert matter_client.write_attribute.call_args == call(
+        node_id=thermostat.node_id,
+        attribute_path=create_attribute_path_from_attribute(
+            endpoint_id=1,
+            attribute=clusters.Thermostat.Attributes.SystemMode,
+        ),
+        value=3,
+    )
+    assert matter_client.send_device_command.call_count == 1
+    assert matter_client.send_device_command.call_args == call(
+        node_id=thermostat.node_id,
+        endpoint_id=1,
+        command=clusters.Thermostat.Commands.SetpointRaiseLower(
+            clusters.Thermostat.Enums.SetpointAdjustMode.kCool, -40
+        ),
+    )

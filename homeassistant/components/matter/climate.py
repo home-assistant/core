@@ -169,6 +169,11 @@ class MatterClimate(MatterEntity, ClimateEntity):
             attribute_path=system_mode_path,
             value=system_mode_value,
         )
+        # we need to optimistically update the attribute's value here
+        # to prevent a race condition when adjusting the mode and temperature
+        # in the same call
+        self._endpoint.set_attribute_value(system_mode_path, system_mode_value)
+        self._update_from_device()
 
     @callback
     def _update_from_device(self) -> None:
