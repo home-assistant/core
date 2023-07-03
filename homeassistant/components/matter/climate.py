@@ -100,65 +100,6 @@ class MatterClimate(MatterEntity, ClimateEntity):
         if feature_map & ThermostatFeature.kAutoMode:
             self._attr_hvac_modes.append(HVACMode.HEAT_COOL)
 
-    @property
-    def min_temp(self) -> float:
-        """Return the minimum temperature."""
-        match self._attr_hvac_mode:
-            case HVACMode.COOL:
-                attribute = clusters.Thermostat.Attributes.AbsMinCoolSetpointLimit
-            case HVACMode.HEAT | HVACMode.HEAT_COOL:
-                attribute = clusters.Thermostat.Attributes.AbsMinHeatSetpointLimit
-            case _:
-                return DEFAULT_MIN_TEMP
-
-        if (value := self._get_temperature_in_degrees(attribute)) is not None:
-            return value
-        return DEFAULT_MIN_TEMP
-
-    @property
-    def max_temp(self) -> float:
-        """Return the maximum temperature."""
-        match self._attr_hvac_mode:
-            case HVACMode.HEAT:
-                attribute = clusters.Thermostat.Attributes.AbsMaxHeatSetpointLimit
-            case HVACMode.COOL | HVACMode.HEAT_COOL:
-                attribute = clusters.Thermostat.Attributes.AbsMaxCoolSetpointLimit
-            case _:
-                return DEFAULT_MAX_TEMP
-
-        if (value := self._get_temperature_in_degrees(attribute)) is not None:
-            return value
-        return DEFAULT_MAX_TEMP
-
-    @property
-    def target_temperature(self) -> float | None:
-        """Return the temperature we try to reach."""
-        if self._attr_hvac_mode == HVACMode.COOL:
-            return self._get_temperature_in_degrees(
-                clusters.Thermostat.Attributes.OccupiedCoolingSetpoint
-            )
-        return self._get_temperature_in_degrees(
-            clusters.Thermostat.Attributes.OccupiedHeatingSetpoint
-        )
-
-    @property
-    def target_temperature_high(self) -> float | None:
-        """Return the highbound target temperature we try to reach."""
-        if self._attr_hvac_mode == HVACMode.HEAT_COOL:
-            return self._get_temperature_in_degrees(
-                clusters.Thermostat.Attributes.OccupiedCoolingSetpoint
-            )
-        return None
-
-    @property
-    def target_temperature_low(self) -> float | None:
-        """Return the lowbound target temperature we try to reach."""
-        if self._attr_hvac_mode == HVACMode.HEAT_COOL:
-            return self._get_temperature_in_degrees(
-                clusters.Thermostat.Attributes.OccupiedHeatingSetpoint
-            )
-        return None
-
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         target_hvac_mode: HVACMode | None = kwargs.get(ATTR_HVAC_MODE)
@@ -271,6 +212,44 @@ class MatterClimate(MatterEntity, ClimateEntity):
                     self._attr_hvac_action = HVACAction.FAN
                 case _:
                     self._attr_hvac_action = HVACAction.OFF
+        # update target_temperature
+        if self._attr_hvac_mode == HVACMode.COOL:
+            self._attr_target_temperature = self._get_temperature_in_degrees(
+                clusters.Thermostat.Attributes.OccupiedCoolingSetpoint
+            )
+        else:
+            self._attr_target_temperature = self._get_temperature_in_degrees(
+                clusters.Thermostat.Attributes.OccupiedHeatingSetpoint
+            )
+        # update target temperature high/low
+        if self._attr_hvac_mode == HVACMode.HEAT_COOL:
+            self._attr_target_temperature_high = self._get_temperature_in_degrees(
+                clusters.Thermostat.Attributes.OccupiedCoolingSetpoint
+            )
+            self._attr_target_temperature_low = self._get_temperature_in_degrees(
+                clusters.Thermostat.Attributes.OccupiedHeatingSetpoint
+            )
+        else:
+            self._attr_target_temperature_high = None
+            self._attr_target_temperature_low = None
+        # update min_temp
+        if self._attr_hvac_mode == HVACMode.COOL:
+            attribute = clusters.Thermostat.Attributes.AbsMinCoolSetpointLimit
+        else:
+            attribute = clusters.Thermostat.Attributes.AbsMinHeatSetpointLimit
+        if (value := self._get_temperature_in_degrees(attribute)) is not None:
+            self._attr_min_temp = value
+        else:
+            self._attr_min_temp = DEFAULT_MIN_TEMP
+        # update max_temp
+        if self._attr_hvac_mode in (HVACMode.COOL, HVACMode.HEAT_COOL):
+            attribute = clusters.Thermostat.Attributes.AbsMaxHeatSetpointLimit
+        else:
+            attribute = clusters.Thermostat.Attributes.AbsMaxCoolSetpointLimit
+        if (value := self._get_temperature_in_degrees(attribute)) is not None:
+            self._attr_max_temp = value
+        else:
+            self._attr_max_temp = DEFAULT_MAX_TEMP
 
     def _get_temperature_in_degrees(
         self, attribute: type[clusters.ClusterAttributeDescriptor]
