@@ -71,14 +71,12 @@ BINARY_SENSOR_DESCRIPTIONS = (
     ),
     NotionBinarySensorDescription(
         key=SENSOR_LEAK,
-        translation_key="leak",
         device_class=BinarySensorDeviceClass.MOISTURE,
         listener_kind=ListenerKind.LEAK_STATUS,
         on_state="leak",
     ),
     NotionBinarySensorDescription(
         key=SENSOR_MISSING,
-        translation_key="missing",
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
         entity_category=EntityCategory.DIAGNOSTIC,
         listener_kind=ListenerKind.CONNECTED,
