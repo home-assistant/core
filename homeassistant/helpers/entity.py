@@ -1160,8 +1160,6 @@ class Entity(ABC):
         assert registry_entry is not None
         if device_id := registry_entry.device_id:
             self.device_entry = dr.async_get(self.hass).async_get(device_id)
-        else:
-            self.device_entry = None
 
     @callback
     def _async_subscribe_device_updates(self) -> None:
