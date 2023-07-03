@@ -21,8 +21,8 @@ from .frame import warn_use
 
 # We have a lot of integrations that poll every 10-30 seconds
 # and we want to keep the connection open for a while so we
-# don't have to reconnect every time.
-KEEP_ALIVE_TIMEOUT = 32
+# don't have to reconnect every time so we use 15s to match aiohttp.
+KEEP_ALIVE_TIMEOUT = 15
 DATA_ASYNC_CLIENT = "httpx_async_client"
 DATA_ASYNC_CLIENT_NOVERIFY = "httpx_async_client_noverify"
 DEFAULT_LIMITS = limits = httpx.Limits(keepalive_expiry=KEEP_ALIVE_TIMEOUT)
