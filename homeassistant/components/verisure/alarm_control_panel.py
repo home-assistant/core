@@ -35,6 +35,7 @@ class VerisureAlarm(
 
     _attr_code_format = CodeFormat.NUMBER
     _attr_has_entity_name = True
+    _attr_name = None
     _attr_supported_features = (
         AlarmControlPanelEntityFeature.ARM_HOME
         | AlarmControlPanelEntityFeature.ARM_AWAY
