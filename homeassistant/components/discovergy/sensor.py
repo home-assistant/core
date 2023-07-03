@@ -1,6 +1,7 @@
 """Discovergy sensor entity."""
 from dataclasses import dataclass, field
 
+from helpers.entity import DeviceInfo
 from pydiscovergy.models import Meter
 
 from homeassistant.components.sensor import (
@@ -11,10 +12,6 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_IDENTIFIERS,
-    ATTR_MANUFACTURER,
-    ATTR_MODEL,
-    ATTR_NAME,
     UnitOfElectricPotential,
     UnitOfEnergy,
     UnitOfPower,
@@ -198,12 +195,12 @@ class DiscovergySensor(CoordinatorEntity[DiscovergyUpdateCoordinator], SensorEnt
 
         self.entity_description = description
         self._attr_unique_id = f"{meter.full_serial_number}-{data_key}"
-        self._attr_device_info = {
-            ATTR_IDENTIFIERS: {(DOMAIN, meter.get_meter_id())},
-            ATTR_NAME: f"{meter.measurement_type.capitalize()} {meter.location.street} {meter.location.street_number}",
-            ATTR_MODEL: f"{meter.type} {meter.full_serial_number}",
-            ATTR_MANUFACTURER: MANUFACTURER,
-        }
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, meter.get_meter_id())},
+            name=f"{meter.measurement_type.capitalize()} {meter.location.street} {meter.location.street_number}",
+            model=f"{meter.type} {meter.full_serial_number}",
+            manufacturer=MANUFACTURER,
+        )
 
     @property
     def native_value(self) -> StateType:
