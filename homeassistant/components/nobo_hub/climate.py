@@ -18,10 +18,7 @@ from homeassistant.components.climate import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_IDENTIFIERS,
     ATTR_NAME,
-    ATTR_SUGGESTED_AREA,
-    ATTR_VIA_DEVICE,
     PRECISION_TENTHS,
     UnitOfTemperature,
 )
@@ -95,12 +92,12 @@ class NoboZone(ClimateEntity):
         self._attr_hvac_mode = HVACMode.AUTO
         self._attr_hvac_modes = [HVACMode.HEAT, HVACMode.AUTO]
         self._override_type = override_type
-        self._attr_device_info: DeviceInfo = {
-            ATTR_IDENTIFIERS: {(DOMAIN, f"{hub.hub_serial}:{zone_id}")},
-            ATTR_NAME: hub.zones[zone_id][ATTR_NAME],
-            ATTR_VIA_DEVICE: (DOMAIN, hub.hub_info[ATTR_SERIAL]),
-            ATTR_SUGGESTED_AREA: hub.zones[zone_id][ATTR_NAME],
-        }
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, f"{hub.hub_serial}:{zone_id}")},
+            name=hub.zones[zone_id][ATTR_NAME],
+            via_device=(DOMAIN, hub.hub_info[ATTR_SERIAL]),
+            suggested_area=hub.zones[zone_id][ATTR_NAME],
+        )
         self._read_state()
 
     async def async_added_to_hass(self) -> None:
