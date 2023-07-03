@@ -27,13 +27,12 @@ class NotionSensorDescription(SensorEntityDescription, NotionEntityDescriptionMi
 SENSOR_DESCRIPTIONS = (
     NotionSensorDescription(
         key=SENSOR_MOLD,
-        name="Mold risk",
+        translation_key="mold_risk",
         icon="mdi:liquid-spot",
         listener_kind=ListenerKind.MOLD,
     ),
     NotionSensorDescription(
         key=SENSOR_TEMPERATURE,
-        name="Temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
