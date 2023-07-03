@@ -170,7 +170,7 @@ async def async_setup_entry(
 
     coordinator: OpowerCoordinator = hass.data[DOMAIN][entry.entry_id]
     entities: list[OpowerSensor] = []
-    forecasts: list[Forecast] = coordinator.data.values()
+    forecasts = coordinator.data.values()
     for forecast in forecasts:
         device_id = f"{coordinator.api.utility.subdomain()}_{forecast.account.utility_account_id}"
         device = DeviceInfo(
