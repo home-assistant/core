@@ -232,7 +232,7 @@ def _init_header(request: web.Request, token: str) -> CIMultiDict | dict[str, st
     # Set X-Forwarded-Proto
     forward_proto = request.headers.get(hdrs.X_FORWARDED_PROTO)
     if not forward_proto:
-        forward_proto = request.url.scheme
+        forward_proto = request.scheme
     headers[hdrs.X_FORWARDED_PROTO] = forward_proto
 
     return headers
