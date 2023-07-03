@@ -1896,7 +1896,6 @@
       "iot_class": "cloud_polling"
     },
     "generic": {
-      "name": "Generic Camera",
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_push"
@@ -6664,6 +6663,7 @@
     "emulated_roku",
     "filesize",
     "garages_amsterdam",
+    "generic",
     "google_travel_time",
     "group",
     "growatt_server",
