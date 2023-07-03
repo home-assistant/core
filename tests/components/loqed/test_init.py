@@ -58,6 +58,58 @@ async def test_setup_webhook_in_bridge(
     lock.registerWebhook.assert_called_with(f"{get_url(hass)}/api/webhook/Webhook_id")
 
 
+async def test_setup_cloudhook_in_bridge(
+    hass: HomeAssistant, config_entry: MockConfigEntry, lock: loqed.Lock
+):
+    """Test webhook setup in loqed bridge."""
+    config: dict[str, Any] = {DOMAIN: {}}
+    config_entry.add_to_hass(hass)
+
+    lock_status = json.loads(load_fixture("loqed/status_ok.json"))
+    webhooks_fixture = json.loads(load_fixture("loqed/get_all_webhooks.json"))
+    lock.getWebhooks = AsyncMock(side_effect=[[], webhooks_fixture])
+
+    with patch("loqedAPI.loqed.LoqedAPI.async_get_lock", return_value=lock), patch(
+        "loqedAPI.loqed.LoqedAPI.async_get_lock_details", return_value=lock_status
+    ), patch(
+        "homeassistant.components.cloud.async_active_subscription", return_value=True
+    ), patch(
+        "homeassistant.components.cloud.async_create_cloudhook",
+        return_value=webhooks_fixture[0]["url"],
+    ):
+        await async_setup_component(hass, DOMAIN, config)
+        await hass.async_block_till_done()
+
+    lock.registerWebhook.assert_called_with(f"{get_url(hass)}/api/webhook/Webhook_id")
+
+
+async def test_setup_cloudhook_from_entry_in_bridge(
+    hass: HomeAssistant, cloud_config_entry: MockConfigEntry, lock: loqed.Lock
+):
+    """Test webhook setup in loqed bridge."""
+    webhooks_fixture = json.loads(load_fixture("loqed/get_all_webhooks.json"))
+
+    config: dict[str, Any] = {DOMAIN: {}}
+    cloud_config_entry.add_to_hass(hass)
+
+    lock_status = json.loads(load_fixture("loqed/status_ok.json"))
+
+    lock.getWebhooks = AsyncMock(side_effect=[[], webhooks_fixture])
+
+    with patch("loqedAPI.loqed.LoqedAPI.async_get_lock", return_value=lock), patch(
+        "loqedAPI.loqed.LoqedAPI.async_get_lock_details", return_value=lock_status
+    ), patch(
+        "homeassistant.components.cloud.async_active_subscription", return_value=True
+    ), patch(
+        "homeassistant.components.cloud.async_create_cloudhook",
+        return_value=webhooks_fixture[0]["url"],
+    ):
+        await async_setup_component(hass, DOMAIN, config)
+        await hass.async_block_till_done()
+
+    lock.registerWebhook.assert_called_with(f"{get_url(hass)}/api/webhook/Webhook_id")
+
+
 async def test_unload_entry(hass, integration: MockConfigEntry, lock: loqed.Lock):
     """Test successful unload of entry."""
 
