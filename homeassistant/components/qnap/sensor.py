@@ -322,7 +322,9 @@ def round_nicely(number):
 
 
 class QNAPSensor(CoordinatorEntity[QnapCoordinator], SensorEntity):
-    """Base class for a QNAP sensor."""
+    """Base class for a QNAP sensor."""    
+
+    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -346,13 +348,6 @@ class QNAPSensor(CoordinatorEntity[QnapCoordinator], SensorEntity):
             sw_version=self.coordinator.data["system_stats"]["firmware"]["version"],
             manufacturer="QNAP",
         )
-
-    @property
-    def name(self):
-        """Return the name of the sensor, if any."""
-        if self.monitor_device is not None:
-            return f"{self.device_name} {self.entity_description.name} ({self.monitor_device})"
-        return f"{self.device_name} {self.entity_description.name}"
 
 
 class QNAPCPUSensor(QNAPSensor):
@@ -470,16 +465,6 @@ class QNAPDriveSensor(QNAPSensor):
 
         if self.entity_description.key == "drive_temp":
             return int(data["temp_c"]) if data["temp_c"] is not None else 0
-
-    @property
-    def name(self):
-        """Return the name of the sensor, if any."""
-        server_name = self.coordinator.data["system_stats"]["system"]["name"]
-
-        return (
-            f"{server_name} {self.entity_description.name} (Drive"
-            f" {self.monitor_device})"
-        )
 
     @property
     def extra_state_attributes(self):
