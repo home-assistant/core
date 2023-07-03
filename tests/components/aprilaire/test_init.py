@@ -102,7 +102,7 @@ async def test_async_setup_entry_ready(
         "pyaprilaire.client.AprilaireClient",
         return_value=client,
     ), patch(
-        "custom_components.aprilaire.coordinator.AprilaireCoordinator.wait_for_ready",
+        "homeassistant.components.aprilaire.coordinator.AprilaireCoordinator.wait_for_ready",
         new=wait_for_ready,
     ):
         setup_result = await async_setup_entry(hass, config_entry, logger=logger)
@@ -126,7 +126,7 @@ async def test_async_setup_entry_not_ready(
         "pyaprilaire.client.AprilaireClient",
         return_value=client,
     ), patch(
-        "custom_components.aprilaire.coordinator.AprilaireCoordinator.wait_for_ready",
+        "homeassistant.components.aprilaire.coordinator.AprilaireCoordinator.wait_for_ready",
         new=wait_for_ready,
     ), caplog.at_level(logging.INFO, logger=logger.name):
         setup_result = await async_setup_entry(hass, config_entry, logger=logger)
@@ -205,10 +205,10 @@ async def test_unload_entry_ok(
         "pyaprilaire.client.AprilaireClient",
         return_value=client,
     ), patch(
-        "custom_components.aprilaire.coordinator.AprilaireCoordinator.wait_for_ready",
+        "homeassistant.components.aprilaire.coordinator.AprilaireCoordinator.wait_for_ready",
         new=wait_for_ready,
     ), patch(
-        "custom_components.aprilaire.coordinator.AprilaireCoordinator.stop_listen",
+        "homeassistant.components.aprilaire.coordinator.AprilaireCoordinator.stop_listen",
         new=stop_listen_mock,
     ):
         await async_setup_entry(hass, config_entry, logger=logger)
@@ -237,7 +237,7 @@ async def test_unload_entry_not_ok(
         "pyaprilaire.client.AprilaireClient",
         return_value=client,
     ), patch(
-        "custom_components.aprilaire.coordinator.AprilaireCoordinator.wait_for_ready",
+        "homeassistant.components.aprilaire.coordinator.AprilaireCoordinator.wait_for_ready",
         new=wait_for_ready,
     ):
         await async_setup_entry(hass, config_entry, logger=logger)

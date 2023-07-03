@@ -66,8 +66,8 @@ class AprilaireCoordinator(DataUpdateCoordinator):
             device = device_registry.async_get_device(old_device_info["identifiers"])
 
             if device is not None:
-                new_device_info.pop("identifiers")
-                new_device_info.pop("connections")
+                new_device_info.pop("identifiers", None)
+                new_device_info.pop("connections", None)
 
                 device_registry.async_update_device(
                     device_id=device.id, **new_device_info  # type: ignore[misc]

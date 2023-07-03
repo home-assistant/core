@@ -111,9 +111,9 @@ async def climate(config_entry: ConfigEntry, hass: HomeAssistant) -> AprilaireCl
     return climate
 
 
-def test_climate_entity_name(climate: AprilaireClimate) -> None:
+def test_climate_name(climate: AprilaireClimate) -> None:
     """Test the entity name."""
-    assert climate.entity_name == "Thermostat"
+    assert climate.name == "Thermostat"
 
 
 def test_climate_min_temp(climate: AprilaireClimate) -> None:
@@ -332,15 +332,15 @@ def test_target_temperature(climate: AprilaireClimate) -> None:
 
     with (
         patch(
-            "custom_components.aprilaire.climate.AprilaireClimate.target_temperature_low",
+            "homeassistant.components.aprilaire.climate.AprilaireClimate.target_temperature_low",
             new=target_temperature_low_mock,
         ),
         patch(
-            "custom_components.aprilaire.climate.AprilaireClimate.target_temperature_high",
+            "homeassistant.components.aprilaire.climate.AprilaireClimate.target_temperature_high",
             new=target_temperature_high_mock,
         ),
         patch(
-            "custom_components.aprilaire.climate.AprilaireClimate.hvac_mode",
+            "homeassistant.components.aprilaire.climate.AprilaireClimate.hvac_mode",
             new=hvac_mode_mock,
         ),
     ):

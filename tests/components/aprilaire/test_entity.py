@@ -35,7 +35,7 @@ async def test_available_on_init(coordinator: AprilaireCoordinator) -> None:
 
     update_available_mock = Mock()
     with patch(
-        "custom_components.aprilaire.entity.BaseAprilaireEntity._update_available",
+        "homeassistant.components.aprilaire.entity.BaseAprilaireEntity._update_available",
         new=update_available_mock,
     ):
         BaseAprilaireEntity(coordinator)
@@ -49,7 +49,7 @@ async def test_handle_coordinator_update(coordinator: AprilaireCoordinator) -> N
     async_write_ha_state_mock = Mock()
 
     with patch(
-        "custom_components.aprilaire.entity.BaseAprilaireEntity._update_available",
+        "homeassistant.components.aprilaire.entity.BaseAprilaireEntity._update_available",
         new=update_available_mock,
     ), patch(
         "homeassistant.helpers.entity.Entity.async_write_ha_state",
@@ -138,23 +138,10 @@ def test_unique_id(coordinator: AprilaireCoordinator) -> None:
     coordinator.data["mac_address"] = "1:2:3:4:5:6"
 
     with patch(
-        "custom_components.aprilaire.entity.BaseAprilaireEntity.entity_name",
+        "homeassistant.components.aprilaire.entity.BaseAprilaireEntity.name",
         new="Test Entity",
     ):
         assert entity.unique_id == "1_2_3_4_5_6_test_entity"
-
-
-def test_name(coordinator: AprilaireCoordinator) -> None:
-    """Test the entity name."""
-
-    entity = BaseAprilaireEntity(coordinator)
-    coordinator.device_name = "Aprilaire"
-
-    with patch(
-        "custom_components.aprilaire.entity.BaseAprilaireEntity.entity_name",
-        new="Test Entity",
-    ):
-        assert entity.name == "Aprilaire Test Entity"
 
 
 def test_extra_state_attributes(coordinator: AprilaireCoordinator) -> None:

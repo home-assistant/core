@@ -99,7 +99,7 @@ async def test_unique_id_abort() -> None:
     show_form_mock.assert_called_once_with(
         step_id="user",
         data_schema=STEP_USER_DATA_SCHEMA,
-        errors={"base": "already_configured"},
+        errors={"base": "Flow aborted: already_configured"},
     )
 
 
