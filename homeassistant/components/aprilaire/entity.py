@@ -42,9 +42,7 @@ class BaseAprilaireEntity(CoordinatorEntity, Entity):
 
         stopped: bool = self._coordinator.data.get(Attribute.STOPPED, None)
 
-        if stopped:
-            self._attr_available = False
-        elif not connected:
+        if stopped or not connected:
             self._attr_available = False
         else:
             self._attr_available = (

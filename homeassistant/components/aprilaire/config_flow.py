@@ -12,7 +12,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_PORT
-from homeassistant.data_entry_flow import AbortFlow, FlowResult
+from homeassistant.data_entry_flow import FlowResult
 
 from .const import DOMAIN, LOG_NAME
 
@@ -47,8 +47,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 f'aprilaire_{user_input[CONF_HOST].replace(".", "")}{user_input[CONF_PORT]}'
             )
             self._abort_if_unique_id_configured()
-        except AbortFlow as err:
-            errors["base"] = err.reason
         except Exception as err:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected exception")
             errors["base"] = str(err)
