@@ -264,8 +264,8 @@ SERVICE_LIST_EVENTS_SCHEMA: Final = vol.All(
     cv.has_at_most_one_key(EVENT_END_DATETIME, EVENT_DURATION),
     cv.make_entity_service_schema(
         {
-            vol.Optional(EVENT_START_DATETIME): datetime.datetime,
-            vol.Optional(EVENT_END_DATETIME): datetime.datetime,
+            vol.Optional(EVENT_START_DATETIME): cv.datetime,
+            vol.Optional(EVENT_END_DATETIME): cv.datetime,
             vol.Optional(EVENT_DURATION): vol.All(
                 cv.time_period, cv.positive_timedelta
             ),
