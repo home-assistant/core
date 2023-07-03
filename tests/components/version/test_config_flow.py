@@ -141,15 +141,15 @@ async def test_advanced_form_container(hass: HomeAssistant) -> None:
         return_value=True,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_IMAGE: "odroid-n2-homeassistant"}
+            result["flow_id"], {CONF_CHANNEL: "Beta"}
         )
         await hass.async_block_till_done()
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"] == VERSION_SOURCE_DOCKER_HUB
+    assert result["title"] == f"{VERSION_SOURCE_DOCKER_HUB} Beta"
     assert result["data"] == {
         **DEFAULT_CONFIGURATION,
-        CONF_IMAGE: "odroid-n2-homeassistant",
+        CONF_CHANNEL: "beta",
         CONF_SOURCE: HaVersionSource.CONTAINER,
         CONF_VERSION_SOURCE: VERSION_SOURCE_DOCKER_HUB,
     }

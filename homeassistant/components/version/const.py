@@ -114,10 +114,6 @@ VALID_IMAGES: Final = [
     "tinker",
 ]
 
-VALID_CONTAINER_IMAGES: Final[list[str]] = [
-    f"{image}{POSTFIX_CONTAINER_NAME}" if image != DEFAULT_IMAGE else image
-    for image in VALID_IMAGES
-]
 VALID_CHANNELS: Final[list[str]] = [
     str(channel.value).title() for channel in HaVersionChannel
 ]

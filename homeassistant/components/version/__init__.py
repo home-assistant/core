@@ -15,6 +15,7 @@ from .const import (
     CONF_CHANNEL,
     CONF_IMAGE,
     CONF_SOURCE,
+    DEFAULT_IMAGE,
     DOMAIN,
     PLATFORMS,
 )
@@ -26,12 +27,23 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up the version integration from a config entry."""
 
-    board = entry.data[CONF_BOARD]
+    source = entry.data[CONF_SOURCE]
 
-    if board not in BOARD_MAP:
+    if (board := entry.data[CONF_BOARD]) not in BOARD_MAP:
         _LOGGER.error(
             'Board "%s" is (no longer) valid. Please remove the integration "%s"',
             board,
+            entry.title,
+        )
+        return False
+
+    if (image := entry.data[CONF_IMAGE]) != DEFAULT_IMAGE and source in (
+        "container",
+        "docker",
+    ):
+        _LOGGER.error(
+            'Image "%s" is (no longer) valid. Please remove the integration "%s"',
+            image,
             entry.title,
         )
         return False
@@ -40,8 +52,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass=hass,
         api=HaVersion(
             session=async_get_clientsession(hass),
-            source=entry.data[CONF_SOURCE],
-            image=entry.data[CONF_IMAGE],
+            source=source,
+            image=image,
             board=BOARD_MAP[board],
             channel=entry.data[CONF_CHANNEL].lower(),
         ),

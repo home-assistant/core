@@ -26,7 +26,6 @@ from .const import (
     STEP_VERSION_SOURCE,
     VALID_BOARDS,
     VALID_CHANNELS,
-    VALID_CONTAINER_IMAGES,
     VALID_IMAGES,
     VERSION_SOURCE_LOCAL,
     VERSION_SOURCE_MAP,
@@ -101,14 +100,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                             vol.Required(CONF_BOARD, default=DEFAULT_BOARD): vol.In(
                                 VALID_BOARDS
                             ),
-                        }
-                    )
-                else:
-                    data_schema = data_schema.extend(
-                        {
-                            vol.Required(CONF_IMAGE, default=DEFAULT_IMAGE): vol.In(
-                                VALID_CONTAINER_IMAGES
-                            )
                         }
                     )
             else:
