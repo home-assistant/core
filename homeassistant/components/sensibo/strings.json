@@ -64,7 +64,7 @@
         "state": {
           "on": "On",
           "dim": "Dim",
-          "off": "Off"
+          "off": "[%key:common::state::off%]"
         }
       }
     }

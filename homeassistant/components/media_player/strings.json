@@ -122,7 +122,7 @@
           "name": "Repeat",
           "state": {
             "all": "All",
-            "off": "Off",
+            "off": "[%key:common::state::off%]",
             "one": "One"
           }
         },
