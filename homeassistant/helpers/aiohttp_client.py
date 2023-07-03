@@ -59,6 +59,11 @@ WARN_CLOSE_MSG = "closes the Home Assistant aiohttp session"
 MAXIMUM_CONNECTIONS = 4096
 MAXIMUM_CONNECTIONS_PER_HOST = 100
 
+# We have a lot of integrations that poll every 60 seconds
+# and we want to keep the connection open for a while so we
+# don't have to reconnect every time.
+KEEP_ALIVE_TIMEOUT = 65
+
 
 class HassClientResponse(aiohttp.ClientResponse):
     """aiohttp.ClientResponse with a json method that uses json_loads by default."""
@@ -284,6 +289,7 @@ def _async_get_connector(
     connector = aiohttp.TCPConnector(
         enable_cleanup_closed=ENABLE_CLEANUP_CLOSED,
         ssl=ssl_context,
+        keepalive_timeout=KEEP_ALIVE_TIMEOUT,
         limit=MAXIMUM_CONNECTIONS,
         limit_per_host=MAXIMUM_CONNECTIONS_PER_HOST,
     )
