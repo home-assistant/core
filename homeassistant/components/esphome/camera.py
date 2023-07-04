@@ -21,9 +21,9 @@ from .entity import (
     platform_async_setup_entry,
 )
 
-ESPHOME_CAMERA_TIMEOUT_SECONDS = 5  # This is hardcoded in ESPHome
-MAXIMUM_WIFI_LATENCY_SECONDS = 5
-CAMERA_TIMEOUT = ESPHOME_CAMERA_TIMEOUT_SECONDS + MAXIMUM_WIFI_LATENCY_SECONDS
+CAMERA_TIMEOUT = (
+    10  # ESPHome camera timeout is 5 seconds, but we add some buffer for wifi latency
+)
 
 
 async def async_setup_entry(
