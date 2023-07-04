@@ -75,7 +75,6 @@ class RoborockVacuum(RoborockCoordinatedEntity, StateVacuumEntity):
         | VacuumEntityFeature.RETURN_HOME
         | VacuumEntityFeature.FAN_SPEED
         | VacuumEntityFeature.BATTERY
-        | VacuumEntityFeature.STATUS
         | VacuumEntityFeature.SEND_COMMAND
         | VacuumEntityFeature.LOCATE
         | VacuumEntityFeature.CLEAN_SPOT
@@ -109,11 +108,6 @@ class RoborockVacuum(RoborockCoordinatedEntity, StateVacuumEntity):
     def fan_speed(self) -> str | None:
         """Return the fan speed of the vacuum cleaner."""
         return self._device_status.fan_power.name
-
-    @property
-    def status(self) -> str | None:
-        """Return the status of the vacuum cleaner."""
-        return self._device_status.state.name
 
     async def async_start(self) -> None:
         """Start the vacuum."""
