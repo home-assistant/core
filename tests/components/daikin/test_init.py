@@ -41,6 +41,7 @@ async def test_unique_id_migrate(hass: HomeAssistant) -> None:
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=HOST,
+        title=None,
         data={CONF_HOST: HOST, KEY_MAC: HOST},
     )
     config_entry.add_to_hass(hass)
