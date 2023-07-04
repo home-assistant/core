@@ -158,6 +158,11 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
             # without encryption.
             response = ERROR_REQUIRES_ENCRYPTION_KEY
         else:
+            # After 2024.08, stop trying to fetch device info without encryption
+            # so we can avoid probe requests to check for password. At this point
+            # most devices should announce encryption support and password is
+            # deprecated and can be discovered by trying to connect only after they
+            # interact with the flow since it is expected to be a rare case.
             response = await self.fetch_device_info()
 
         if response == ERROR_REQUIRES_ENCRYPTION_KEY:
