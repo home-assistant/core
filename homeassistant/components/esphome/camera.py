@@ -2,10 +2,13 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable, Coroutine
+from functools import partial
 from typing import Any
 
 from aioesphomeapi import CameraInfo, CameraState
 from aiohttp import web
+import async_timeout
 
 from homeassistant.components import camera
 from homeassistant.components.camera import Camera
@@ -17,6 +20,10 @@ from .entity import (
     EsphomeEntity,
     platform_async_setup_entry,
 )
+
+ESPHOME_CAMERA_TIMEOUT_SECONDS = 5  # This is hardcoded in ESPHome
+MAXIMUM_WIFI_LATENCY_SECONDS = 5
+CAMERA_TIMEOUT = ESPHOME_CAMERA_TIMEOUT_SECONDS + MAXIMUM_WIFI_LATENCY_SECONDS
 
 
 async def async_setup_entry(
@@ -40,48 +47,43 @@ class EsphomeCamera(Camera, EsphomeEntity[CameraInfo, CameraState]):
         """Initialize."""
         Camera.__init__(self)
         EsphomeEntity.__init__(self, *args, **kwargs)
-        self._image_cond = asyncio.Condition()
+        self._image_event = asyncio.Event()
 
     @callback
     def _on_state_update(self) -> None:
         """Notify listeners of new image when update arrives."""
         super()._on_state_update()
-        self.hass.async_create_task(self._on_state_update_coro())
-
-    async def _on_state_update_coro(self) -> None:
-        async with self._image_cond:
-            self._image_cond.notify_all()
+        image_event = self._image_event
+        image_event.set()
+        image_event.clear()
 
     async def async_camera_image(
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
         """Return single camera image bytes."""
-        if not self.available:
-            return None
-        await self._client.request_single_image()
-        async with self._image_cond:
-            await self._image_cond.wait()
-            if not self.available:
-                # Availability can change while waiting for 'self._image.cond'
-                return None  # type: ignore[unreachable]
-            return self._state.data[:]
+        return await self._async_request_image(self._client.request_single_image)
 
-    async def _async_camera_stream_image(self) -> bytes | None:
-        """Return a single camera image in a stream."""
+    async def _async_request_image(
+        self, request_method: Callable[[], Coroutine[Any, Any, None]]
+    ) -> bytes | None:
+        """Wait for an image to be available and return it."""
         if not self.available:
             return None
-        await self._client.request_image_stream()
-        async with self._image_cond:
-            await self._image_cond.wait()
-            if not self.available:
-                # Availability can change while waiting for 'self._image.cond'
-                return None  # type: ignore[unreachable]
-            return self._state.data[:]
+        await request_method()
+        async with async_timeout.timeout(CAMERA_TIMEOUT):
+            await self._image_event.wait()
+        if not self.available:
+            # Availability can change while waiting for 'image_event'
+            return None  # type: ignore[unreachable]
+        return self._state.data
 
     async def handle_async_mjpeg_stream(
         self, request: web.Request
     ) -> web.StreamResponse:
         """Serve an HTTP MJPEG stream from the camera."""
         return await camera.async_get_still_stream(
-            request, self._async_camera_stream_image, camera.DEFAULT_CONTENT_TYPE, 0.0
+            request,
+            partial(self._async_request_image, self._client.request_image_stream),
+            camera.DEFAULT_CONTENT_TYPE,
+            0.0,
         )
