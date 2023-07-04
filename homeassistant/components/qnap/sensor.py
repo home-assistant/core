@@ -102,22 +102,24 @@ _MEMORY_MON_COND: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="memory_free",
         name="Memory Available",
-        native_unit_of_measurement=UnitOfInformation.GIBIBYTES,
+        native_unit_of_measurement=UnitOfInformation.MEBIBYTES,
         device_class=SensorDeviceClass.DATA_SIZE,
         icon="mdi:memory",
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=0,
+        suggested_unit_of_measurement=UnitOfInformation.GIBIBYTES,
     ),
     SensorEntityDescription(
         key="memory_used",
         name="Memory Used",
-        native_unit_of_measurement=UnitOfInformation.GIBIBYTES,
+        native_unit_of_measurement=UnitOfInformation.MEBIBYTES,
         device_class=SensorDeviceClass.DATA_SIZE,
         icon="mdi:memory",
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=0,
+        suggested_unit_of_measurement=UnitOfInformation.GIBIBYTES,
     ),
     SensorEntityDescription(
         key="memory_percent_used",
@@ -372,18 +374,18 @@ class QNAPMemorySensor(QNAPSensor):
     @property
     def native_value(self):
         """Return the state of the sensor."""
-        free = float(self.coordinator.data["system_stats"]["memory"]["free"]) / 1024
+        free = float(self.coordinator.data["system_stats"]["memory"]["free"])
         if self.entity_description.key == "memory_free":
             return free
 
-        total = float(self.coordinator.data["system_stats"]["memory"]["total"]) / 1024
+        total = float(self.coordinator.data["system_stats"]["memory"]["total")
 
         used = total - free
         if self.entity_description.key == "memory_used":
             return used
 
         if self.entity_description.key == "memory_percent_used":
-            return used / total * 100
+            return used / total
 
     @property
     def extra_state_attributes(self):
