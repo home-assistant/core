@@ -34,8 +34,14 @@ class Discovery:
 
 
 def get_name(device: AirthingsDevice) -> str:
-    """Generate name with identifier for device."""
-    return f"{device.name} ({device.identifier})"
+    """Generate name device."""
+
+    name = f"Airthings {device.model}"
+
+    # Only append `device.identifier` to the name if it exists.
+    if device.identifier != "":
+        name += f" ({device.identifier})"
+    return name
 
 
 class AirthingsDeviceUpdateError(Exception):

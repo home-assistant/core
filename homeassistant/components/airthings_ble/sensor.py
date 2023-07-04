@@ -162,7 +162,11 @@ class AirthingsSensor(
         super().__init__(coordinator)
         self.entity_description = entity_description
 
-        name = f"{airthings_device.name} {airthings_device.identifier}"
+        name = f"Airthings {airthings_device.model}"
+
+        # Only append `device.identifier` to the name if it exists.
+        if airthings_device.identifier != "":
+            name += f" ({airthings_device.identifier})"
 
         self._attr_unique_id = f"{name}_{entity_description.key}"
 
@@ -178,6 +182,7 @@ class AirthingsSensor(
             manufacturer="Airthings",
             hw_version=airthings_device.hw_version,
             sw_version=airthings_device.sw_version,
+            model=airthings_device.model,
         )
 
     @property
