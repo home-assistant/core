@@ -4,7 +4,9 @@ from unittest.mock import MagicMock
 from matter_server.client.models.node import MatterNode
 import pytest
 
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 from .common import (
     set_node_attribute,
@@ -189,13 +191,20 @@ async def test_battery_sensor(
     eve_contact_sensor_node: MatterNode,
 ) -> None:
     """Test battery sensor."""
-    state = hass.states.get("sensor.eve_door_battery")
+    entity_id = "sensor.eve_door_battery"
+    state = hass.states.get(entity_id)
     assert state
     assert state.state == "100"
 
     set_node_attribute(eve_contact_sensor_node, 1, 47, 12, 100)
     await trigger_subscription_callback(hass, matter_client)
 
-    state = hass.states.get("sensor.eve_door_battery")
+    state = hass.states.get(entity_id)
     assert state
     assert state.state == "50"
+
+    entity_registry = er.async_get(hass)
+    entry = entity_registry.async_get(entity_id)
+
+    assert entry
+    assert entry.entity_category == EntityCategory.DIAGNOSTIC

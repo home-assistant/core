@@ -7,8 +7,9 @@ import pytest
 from homeassistant.components.matter.binary_sensor import (
     DISCOVERY_SCHEMAS as BINARY_SENSOR_SCHEMAS,
 )
-from homeassistant.const import Platform
+from homeassistant.const import EntityCategory, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 from .common import (
     set_node_attribute,
@@ -105,3 +106,9 @@ async def test_battery_sensor(
     state = hass.states.get(entity_id)
     assert state
     assert state.state == "on"
+
+    entity_registry = er.async_get(hass)
+    entry = entity_registry.async_get(entity_id)
+
+    assert entry
+    assert entry.entity_category == EntityCategory.DIAGNOSTIC
