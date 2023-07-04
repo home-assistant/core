@@ -238,6 +238,15 @@ def test_device_selector_schema(schema, valid_selections, invalid_selections) ->
         (
             {
                 "filter": [
+                    {"supported_features": [1]},
+                ]
+            },
+            ("light.abc123", "blah.blah", FAKE_UUID),
+            (None,),
+        ),
+        (
+            {
+                "filter": [
                     {
                         "supported_features": [
                             "light.LightEntityFeature.EFFECT",
@@ -259,8 +268,6 @@ def test_entity_selector_schema(schema, valid_selections, invalid_selections) ->
 @pytest.mark.parametrize(
     "schema",
     (
-        # Feature should be string specifying an enum member, not an int
-        {"filter": [{"supported_features": [1]}]},
         # Invalid feature
         {"filter": [{"supported_features": ["blah"]}]},
         # Unknown feature enum
