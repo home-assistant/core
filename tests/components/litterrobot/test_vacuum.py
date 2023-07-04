@@ -20,7 +20,7 @@ from homeassistant.components.vacuum import (
 )
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.entity_registry as er
+from homeassistant.helpers import entity_registry as er, issue_registry as ir
 
 from .common import VACUUM_ENTITY_ID
 from .conftest import setup_integration
@@ -100,8 +100,16 @@ async def test_vacuum_with_error(
     [
         (SERVICE_START, "start_cleaning", None),
         (SERVICE_STOP, "set_power_status", None),
-        (SERVICE_TURN_OFF, "set_power_status", None),
-        (SERVICE_TURN_ON, "set_power_status", None),
+        (
+            SERVICE_TURN_OFF,
+            "set_power_status",
+            {"issues": {(DOMAIN, "service_deprecation_turn_off")}},
+        ),
+        (
+            SERVICE_TURN_ON,
+            "set_power_status",
+            {"issues": {(DOMAIN, "service_deprecation_turn_on")}},
+        ),
         (
             SERVICE_SET_SLEEP_MODE,
             "set_sleep_mode",
@@ -128,7 +136,7 @@ async def test_commands(
 
     extra = extra or {}
     data = {ATTR_ENTITY_ID: VACUUM_ENTITY_ID, **extra.get("data", {})}
-    deprecated = extra.get("deprecated", False)
+    issues = extra.get("issues", set())
 
     await hass.services.async_call(
         COMPONENT_SERVICE_DOMAIN.get(service, PLATFORM_DOMAIN),
@@ -137,4 +145,6 @@ async def test_commands(
         blocking=True,
     )
     getattr(mock_account.robots[0], command).assert_called_once()
-    assert (f"'{DOMAIN}.{service}' service is deprecated" in caplog.text) is deprecated
+
+    issue_registry = ir.async_get(hass)
+    assert set(issue_registry.issues.keys()) == issues

@@ -20,7 +20,11 @@ from homeassistant.components.vacuum import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_OFF
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv, entity_platform
+from homeassistant.helpers import (
+    config_validation as cv,
+    entity_platform,
+    issue_registry as ir,
+)
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.dt as dt_util
 
@@ -81,6 +85,8 @@ class LitterRobotCleaner(LitterRobotEntity[LitterRobot], StateVacuumEntity):
         | VacuumEntityFeature.TURN_OFF
         | VacuumEntityFeature.TURN_ON
     )
+    _turn_off_call_reported: bool = False
+    _turn_on_call_reported: bool = False
 
     @property
     def state(self) -> str:
@@ -97,10 +103,34 @@ class LitterRobotCleaner(LitterRobotEntity[LitterRobot], StateVacuumEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the cleaner on, starting a clean cycle."""
         await self.robot.set_power_status(True)
+        if self._turn_on_call_reported:
+            return
+        self._turn_on_call_reported = True
+        ir.async_create_issue(
+            self.hass,
+            DOMAIN,
+            "service_deprecation_turn_on",
+            breaks_in_ha_version="2024.2.0",
+            is_fixable=False,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="service_deprecation_turn_on",
+        )
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the unit off, stopping any cleaning in progress as is."""
         await self.robot.set_power_status(False)
+        if self._turn_off_call_reported:
+            return
+        self._turn_off_call_reported = True
+        ir.async_create_issue(
+            self.hass,
+            DOMAIN,
+            "service_deprecation_turn_off",
+            breaks_in_ha_version="2024.2.0",
+            is_fixable=False,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="service_deprecation_turn_off",
+        )
 
     async def async_start(self) -> None:
         """Start a clean cycle."""
