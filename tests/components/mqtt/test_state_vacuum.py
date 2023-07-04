@@ -29,6 +29,7 @@ from homeassistant.components.vacuum import (
 )
 from homeassistant.const import CONF_NAME, ENTITY_MATCH_ALL, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 
 from .test_common import (
     help_custom_config,
@@ -242,13 +243,15 @@ async def test_commands_without_supported_features(
     mqtt_mock.async_publish.assert_not_called()
     mqtt_mock.async_publish.reset_mock()
 
-    await common.async_set_fan_speed(hass, "medium", "vacuum.mqtttest")
+    with pytest.raises(HomeAssistantError):
+        await common.async_set_fan_speed(hass, "medium", "vacuum.mqtttest")
     mqtt_mock.async_publish.assert_not_called()
     mqtt_mock.async_publish.reset_mock()
 
-    await common.async_send_command(
-        hass, "44 FE 93", {"key": "value"}, entity_id="vacuum.mqtttest"
-    )
+    with pytest.raises(HomeAssistantError):
+        await common.async_send_command(
+            hass, "44 FE 93", {"key": "value"}, entity_id="vacuum.mqtttest"
+        )
     mqtt_mock.async_publish.assert_not_called()
 
 
