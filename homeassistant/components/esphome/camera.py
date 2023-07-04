@@ -81,9 +81,9 @@ class EsphomeCamera(Camera, EsphomeEntity[CameraInfo, CameraState]):
         self, request: web.Request
     ) -> web.StreamResponse:
         """Serve an HTTP MJPEG stream from the camera."""
+        stream_request = partial(
+            self._async_request_image, self._client.request_image_stream
+        )
         return await camera.async_get_still_stream(
-            request,
-            partial(self._async_request_image, self._client.request_image_stream),
-            camera.DEFAULT_CONTENT_TYPE,
-            0.0,
+            request, stream_request, camera.DEFAULT_CONTENT_TYPE, 0.0
         )
