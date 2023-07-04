@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import datetime, timedelta
+import re
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -24,6 +26,7 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.util.dt import utcnow
 
 from . import GlancesDataUpdateCoordinator
 from .const import CPU_ICON, DOMAIN
@@ -242,6 +245,7 @@ SENSOR_TYPES = {
         type="uptime",
         name_suffix="Uptime",
         icon="mdi:clock-time-eight-outline",
+        device_class=SensorDeviceClass.TIMESTAMP,
     ),
 }
 
@@ -297,7 +301,7 @@ async def async_setup_entry(
                     f"-{sensor_description.key}",
                 )
                 entities.append(
-                    GlancesSensor(
+                    GlancesTimestampSensor(
                         coordinator,
                         name,
                         "",
@@ -362,7 +366,7 @@ class GlancesSensor(CoordinatorEntity[GlancesDataUpdateCoordinator], SensorEntit
         return False
 
     @property
-    def native_value(self) -> StateType:
+    def native_value(self) -> StateType | datetime:
         """Return the state of the resources."""
         value = self.coordinator.data[self.entity_description.type]
 
@@ -371,3 +375,23 @@ class GlancesSensor(CoordinatorEntity[GlancesDataUpdateCoordinator], SensorEntit
                 return value[self._sensor_name_prefix][self.entity_description.key]
             return value[self.entity_description.key]
         return value
+
+
+class GlancesTimestampSensor(GlancesSensor):
+    """Implementation of a Glances Timestamp sensor."""
+
+    @property
+    def native_value(self) -> StateType | datetime:
+        """Return the state of the resources."""
+        value = self.coordinator.data[self.entity_description.type]
+        if dt_str := re.search("\\d+:\\d+:\\d+", value):
+            dt_value = datetime.strptime(dt_str.group(), "%H:%M:%S")
+            days_re = re.match("(\\d+) day", value)
+            days = int(days_re.groups()[0]) if days_re is not None else 0
+            return utcnow() - timedelta(
+                days=days,
+                hours=dt_value.hour,
+                minutes=dt_value.minute,
+                seconds=dt_value.second,
+            )
+        return None
