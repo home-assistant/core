@@ -35,27 +35,30 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, **kwargs) -
         logger.error("Invalid port %s", port)
         return False
 
-    coordinator = AprilaireCoordinator(hass, host, port, logger)
-    await coordinator.start_listen()
+    if coordinator := hass.data.get(DOMAIN, {}).get(entry.unique_id):
+        await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    else:
+        coordinator = AprilaireCoordinator(hass, host, port, logger)
+        await coordinator.start_listen()
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
+        hass.data.setdefault(DOMAIN, {})[entry.unique_id] = coordinator
 
-    async def ready_callback(ready: bool):
-        if ready:
-            await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+        async def ready_callback(ready: bool):
+            if ready:
+                await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-            async def _async_close(_: Event) -> None:
-                coordinator.stop_listen()  # pragma: no cover
+                async def _async_close(_: Event) -> None:
+                    coordinator.stop_listen()  # pragma: no cover
 
-            entry.async_on_unload(
-                hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_close)
-            )
-        else:
-            logger.error("Failed to wait for ready")
+                entry.async_on_unload(
+                    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_close)
+                )
+            else:
+                logger.error("Failed to wait for ready")
 
-            coordinator.stop_listen()
+                coordinator.stop_listen()
 
-    await coordinator.wait_for_ready(ready_callback)
+        await coordinator.wait_for_ready(ready_callback)
 
     return True
 
@@ -65,7 +68,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
     if unload_ok:
-        coordinator: AprilaireCoordinator = hass.data[DOMAIN].pop(entry.entry_id)
+        coordinator: AprilaireCoordinator = hass.data[DOMAIN].pop(entry.unique_id)
         coordinator.stop_listen()
 
     return unload_ok

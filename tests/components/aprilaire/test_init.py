@@ -25,7 +25,7 @@ def logger() -> logging.Logger:
 
 
 @pytest.fixture
-def entry_id() -> str:
+def unique_id() -> str:
     """Return a random ID."""
     return uuid_util.random_uuid_hex()
 
@@ -43,12 +43,12 @@ def hass() -> HomeAssistant:
 
 
 @pytest.fixture
-def config_entry(entry_id: str) -> ConfigEntry:
+def config_entry(unique_id: str) -> ConfigEntry:
     """Return a mock config entry."""
 
     config_entry_mock = AsyncMock(ConfigEntry)
     config_entry_mock.data = {"host": "test123", "port": 123}
-    config_entry_mock.entry_id = entry_id
+    config_entry_mock.unique_id = unique_id
 
     return config_entry_mock
 
@@ -63,7 +63,7 @@ async def test_async_setup_entry(
     caplog: pytest.LogCaptureFixture,
     client: AprilaireClient,
     config_entry: ConfigEntry,
-    entry_id: str,
+    unique_id: str,
     hass: HomeAssistant,
     logger: logging.Logger,
 ) -> None:
@@ -79,7 +79,7 @@ async def test_async_setup_entry(
 
     client.start_listen.assert_called_once()
 
-    assert isinstance(hass.data[DOMAIN][entry_id], AprilaireCoordinator)
+    assert isinstance(hass.data[DOMAIN][unique_id], AprilaireCoordinator)
 
     assert caplog.record_tuples == [
         ("root", logging.ERROR, "Missing MAC address, cannot create unique ID"),

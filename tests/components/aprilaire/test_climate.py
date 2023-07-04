@@ -63,16 +63,16 @@ def coordinator(
 
 
 @pytest.fixture
-def entry_id() -> str:
+def unique_id() -> str:
     """Return a random ID."""
     return uuid_util.random_uuid_hex()
 
 
 @pytest.fixture
-def hass(coordinator: AprilaireCoordinator, entry_id: str) -> HomeAssistant:
+def hass(coordinator: AprilaireCoordinator, unique_id: str) -> HomeAssistant:
     """Return a mock HomeAssistant instance."""
     hass_mock = AsyncMock(HomeAssistant)
-    hass_mock.data = {DOMAIN: {entry_id: coordinator}}
+    hass_mock.data = {DOMAIN: {unique_id: coordinator}}
     hass_mock.config_entries = AsyncMock(ConfigEntries)
     hass_mock.bus = AsyncMock(EventBus)
     hass_mock.config = Mock(Config)
@@ -81,11 +81,11 @@ def hass(coordinator: AprilaireCoordinator, entry_id: str) -> HomeAssistant:
 
 
 @pytest.fixture
-def config_entry(entry_id: str) -> ConfigEntry:
+def config_entry(unique_id: str) -> ConfigEntry:
     """Return a mock config entry."""
     config_entry_mock = AsyncMock(ConfigEntry)
     config_entry_mock.data = {"host": "test123", "port": 123}
-    config_entry_mock.entry_id = entry_id
+    config_entry_mock.unique_id = unique_id
 
     return config_entry_mock
 

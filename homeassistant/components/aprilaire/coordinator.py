@@ -81,7 +81,9 @@ class AprilaireCoordinator(DataUpdateCoordinator):
         """Stop listening for data."""
         self.client.stop_listen()
 
-    async def wait_for_ready(self, ready_callback: Callable[[bool], Awaitable[None]]):
+    async def wait_for_ready(
+        self, ready_callback: Callable[[bool], Awaitable[bool]]
+    ) -> bool:
         """Wait for the client to be ready."""
 
         if not self.data or Attribute.MAC_ADDRESS not in self.data:
@@ -93,7 +95,7 @@ class AprilaireCoordinator(DataUpdateCoordinator):
                 self.logger.error("Missing MAC address, cannot create unique ID")
                 await ready_callback(False)
 
-                return
+                return False
 
         if not self.data or Attribute.NAME not in self.data:
             await self.client.wait_for_response(FunctionalDomain.IDENTIFICATION, 4, 30)
@@ -108,6 +110,8 @@ class AprilaireCoordinator(DataUpdateCoordinator):
             await self.client.wait_for_response(FunctionalDomain.SENSORS, 2, 30)
 
         await ready_callback(True)
+
+        return True
 
     @property
     def device_name(self) -> str:

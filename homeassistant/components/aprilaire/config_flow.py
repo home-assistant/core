@@ -2,12 +2,9 @@
 
 from __future__ import annotations
 
-import asyncio
 import logging
 from typing import Any
 
-import pyaprilaire.client
-from pyaprilaire.const import Attribute, FunctionalDomain
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -15,6 +12,7 @@ from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.data_entry_flow import FlowResult
 
 from .const import DOMAIN, LOG_NAME
+from .coordinator import AprilaireCoordinator
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
@@ -51,22 +49,22 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.exception("Unexpected exception")
             errors["base"] = str(err)
         else:
-            client = pyaprilaire.client.AprilaireClient(
-                user_input[CONF_HOST], user_input[CONF_PORT], lambda data: None, _LOGGER
+            coordinator = AprilaireCoordinator(
+                self.hass, user_input[CONF_HOST], user_input[CONF_PORT], _LOGGER
             )
+            await coordinator.start_listen()
 
-            await client.start_listen()
+            async def ready_callback(ready: bool):
+                if ready:
+                    self.hass.data.setdefault(DOMAIN, {})[self.unique_id] = coordinator
+                else:
+                    _LOGGER.error("Failed to wait for ready")
 
-            data = await client.wait_for_response(
-                FunctionalDomain.IDENTIFICATION, 2, 30
-            )
+                    coordinator.stop_listen()
 
-            client.stop_listen()
+            ready = await coordinator.wait_for_ready(ready_callback)
 
-            if data and Attribute.MAC_ADDRESS in data:
-                # Sleeping to not overload the socket
-                await asyncio.sleep(5)
-
+            if ready:
                 return self.async_create_entry(title="Aprilaire", data=user_input)
 
             errors["base"] = "connection_failed"

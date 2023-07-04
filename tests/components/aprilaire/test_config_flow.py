@@ -33,7 +33,7 @@ def client() -> AprilaireClient:
 
 
 @pytest.fixture
-def entry_id() -> str:
+def unique_id() -> str:
     """Return a random ID."""
     return uuid_util.random_uuid_hex()
 
@@ -50,12 +50,12 @@ def hass() -> HomeAssistant:
 
 
 @pytest.fixture
-def config_entry(entry_id: str) -> ConfigEntry:
+def config_entry(unique_id: str) -> ConfigEntry:
     """Return a mock config entry."""
 
     config_entry_mock = AsyncMock(ConfigEntry)
     config_entry_mock.data = {"host": "test123", "port": 123}
-    config_entry_mock.entry_id = entry_id
+    config_entry_mock.unique_id = unique_id
 
     return config_entry_mock
 
@@ -167,16 +167,18 @@ async def test_config_flow_invalid_data(client: AprilaireClient) -> None:
     )
 
 
-async def test_config_flow_data(client: AprilaireClient) -> None:
+async def test_config_flow_data(
+    client: AprilaireClient, hass: HomeAssistant, unique_id: str
+) -> None:
     """Test the config flow with valid data."""
 
     show_form_mock = Mock()
     set_unique_id_mock = AsyncMock()
     abort_if_unique_id_configured_mock = Mock()
     create_entry_mock = Mock()
-    sleep_mock = AsyncMock()
 
     config_flow = ConfigFlow()
+    config_flow.hass = hass
     config_flow.async_show_form = show_form_mock
     config_flow.async_set_unique_id = set_unique_id_mock
     config_flow._abort_if_unique_id_configured = abort_if_unique_id_configured_mock
@@ -184,9 +186,7 @@ async def test_config_flow_data(client: AprilaireClient) -> None:
 
     client.wait_for_response = AsyncMock(return_value={"mac_address": "test"})
 
-    with patch("pyaprilaire.client.AprilaireClient", return_value=client), patch(
-        "asyncio.sleep", new=sleep_mock
-    ):
+    with patch("pyaprilaire.client.AprilaireClient", return_value=client):
         await config_flow.async_step_user(
             {
                 "host": "localhost",
@@ -195,11 +195,11 @@ async def test_config_flow_data(client: AprilaireClient) -> None:
         )
 
     client.start_listen.assert_called_once()
-    client.wait_for_response.assert_called_once_with(
-        FunctionalDomain.IDENTIFICATION, 2, 30
-    )
-    client.stop_listen.assert_called_once()
-    sleep_mock.assert_awaited_once()
+    client.wait_for_response.assert_any_call(FunctionalDomain.IDENTIFICATION, 2, 30)
+    client.wait_for_response.assert_any_call(FunctionalDomain.IDENTIFICATION, 4, 30)
+    client.wait_for_response.assert_any_call(FunctionalDomain.CONTROL, 7, 30)
+    client.wait_for_response.assert_any_call(FunctionalDomain.SENSORS, 2, 30)
+    client.stop_listen.assert_not_called()
 
     create_entry_mock.assert_called_once_with(
         title="Aprilaire",
