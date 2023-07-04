@@ -107,7 +107,7 @@ _MEMORY_MON_COND: tuple[SensorEntityDescription, ...] = (
         icon="mdi:memory",
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
-        suggested_display_precision=0,
+        suggested_display_precision=1,
         suggested_unit_of_measurement=UnitOfInformation.GIBIBYTES,
     ),
     SensorEntityDescription(
@@ -118,7 +118,7 @@ _MEMORY_MON_COND: tuple[SensorEntityDescription, ...] = (
         icon="mdi:memory",
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
-        suggested_display_precision=0,
+        suggested_display_precision=1,
         suggested_unit_of_measurement=UnitOfInformation.GIBIBYTES,
     ),
     SensorEntityDescription(
@@ -385,14 +385,14 @@ class QNAPMemorySensor(QNAPSensor):
             return used
 
         if self.entity_description.key == "memory_percent_used":
-            return used / total
+            return used / total * 100
 
     @property
     def extra_state_attributes(self):
         """Return the state attributes."""
         if self.coordinator.data:
             data = self.coordinator.data["system_stats"]["memory"]
-            size = round(float(data["total"]) / 1024, 1)
+            size = round(float(data["total"]) / 1024, 2)
             return {ATTR_MEMORY_SIZE: f"{size} {UnitOfInformation.GIBIBYTES}"}
 
 
