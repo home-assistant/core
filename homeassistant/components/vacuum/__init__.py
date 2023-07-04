@@ -145,6 +145,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         "async_toggle",
         [VacuumEntityFeature.TURN_OFF | VacuumEntityFeature.TURN_ON],
     )
+    # start_pause is a legacy service, only supported by VacuumEntity, and only needs
+    # VacuumEntityFeature.PAUSE
     component.async_register_entity_service(
         SERVICE_START_PAUSE,
         {},
