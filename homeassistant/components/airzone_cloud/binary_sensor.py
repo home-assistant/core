@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from typing import Any, Final
 
 from aioairzone_cloud.const import (
+    AZD_ACTIVE,
     AZD_ERRORS,
     AZD_PROBLEMS,
     AZD_SYSTEMS,
@@ -48,6 +49,10 @@ SYSTEM_BINARY_SENSOR_TYPES: Final[tuple[AirzoneBinarySensorEntityDescription, ..
 
 
 ZONE_BINARY_SENSOR_TYPES: Final[tuple[AirzoneBinarySensorEntityDescription, ...]] = (
+    AirzoneBinarySensorEntityDescription(
+        device_class=BinarySensorDeviceClass.RUNNING,
+        key=AZD_ACTIVE,
+    ),
     AirzoneBinarySensorEntityDescription(
         attributes={
             "warnings": AZD_WARNINGS,

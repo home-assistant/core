@@ -1,19 +1,4 @@
 # Describes the format for available fan services
-set_speed:
-  name: Set speed
-  description: Set fan speed.
-  target:
-    entity:
-      domain: fan
-  fields:
-    speed:
-      name: Speed
-      description: Speed setting.
-      required: true
-      example: "low"
-      selector:
-        text:
-
 set_preset_mode:
   name: Set preset mode
   description: Set preset mode for a fan device.
@@ -53,12 +38,6 @@ turn_on:
     entity:
       domain: fan
   fields:
-    speed:
-      name: Speed
-      description: Speed setting.
-      example: "high"
-      selector:
-        text:
     percentage:
       name: Percentage
       description: Percentage speed setting.

@@ -23,11 +23,6 @@
     }
   },
   "entity": {
-    "button": {
-      "identify": {
-        "name": "Identify"
-      }
-    },
     "sensor": {
       "charge_power": {
         "name": "Charging power"
