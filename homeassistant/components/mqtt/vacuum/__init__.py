@@ -66,6 +66,10 @@ def warn_for_deprecation_legacy_schema(
 
 def validate_mqtt_vacuum_discovery(config_value: ConfigType) -> ConfigType:
     """Validate MQTT vacuum schema."""
+
+    # The legacy schema for MQTT vacuum was deprecated with HA Core 2023.7.0
+    # and is will be removed with HA Core 2024.2.0
+
     schemas = {LEGACY: DISCOVERY_SCHEMA_LEGACY, STATE: DISCOVERY_SCHEMA_STATE}
     config: ConfigType = schemas[config_value[CONF_SCHEMA]](config_value)
     return config
