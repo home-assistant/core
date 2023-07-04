@@ -174,7 +174,7 @@ async def test_issues(
     await hass.services.async_call(
         COMPONENT_SERVICE_DOMAIN.get(service, PLATFORM_DOMAIN),
         service,
-        {},
+        {ATTR_ENTITY_ID: VACUUM_ENTITY_ID},
         blocking=True,
     )
 
