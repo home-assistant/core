@@ -18,7 +18,7 @@ from homeassistant.const import (
     STATE_ON,
     EntityCategory,
 )
-from homeassistant.core import Context, HomeAssistant, ServiceCall
+from homeassistant.core import Context, HomeAssistant, ServiceCall, SupportsResponse
 from homeassistant.helpers import (
     device_registry as dr,
     entity_registry as er,
@@ -575,8 +575,31 @@ async def test_async_get_all_descriptions(hass: HomeAssistant) -> None:
     hass.services.async_register(
         logger.DOMAIN, "another_new_service", lambda x: None, None
     )
+    hass.services.async_register(
+        logger.DOMAIN,
+        "service_with_optional_response",
+        lambda x: None,
+        None,
+        SupportsResponse.OPTIONAL,
+    )
+    hass.services.async_register(
+        logger.DOMAIN,
+        "service_with_only_response",
+        lambda x: None,
+        None,
+        SupportsResponse.ONLY,
+    )
+
     descriptions = await service.async_get_all_descriptions(hass)
     assert "another_new_service" in descriptions[logger.DOMAIN]
+    assert "service_with_optional_response" in descriptions[logger.DOMAIN]
+    assert descriptions[logger.DOMAIN]["service_with_optional_response"][
+        "response"
+    ] == {"optional": True}
+    assert "service_with_only_response" in descriptions[logger.DOMAIN]
+    assert descriptions[logger.DOMAIN]["service_with_only_response"]["response"] == {
+        "optional": False
+    }
 
     # Verify the cache returns the same object
     assert await service.async_get_all_descriptions(hass) is descriptions
@@ -714,7 +737,8 @@ async def test_call_context_target_all(
         return_value=Mock(
             permissions=PolicyPermissions(
                 {"entities": {"entity_ids": {"light.kitchen": True}}}, None
-            )
+            ),
+            is_admin=False,
         ),
     ):
         await service.entity_service_call(
@@ -767,7 +791,7 @@ async def test_call_context_target_specific_no_auth(
     """Check targeting specific entities without auth."""
     with pytest.raises(exceptions.Unauthorized) as err, patch(
         "homeassistant.auth.AuthManager.async_get_user",
-        return_value=Mock(permissions=PolicyPermissions({}, None)),
+        return_value=Mock(permissions=PolicyPermissions({}, None), is_admin=False),
     ):
         await service.entity_service_call(
             hass,
@@ -1214,9 +1238,9 @@ async def test_entity_service_call_warn_referenced(
     )
     await service.entity_service_call(hass, {}, "", call)
     assert (
-        "Unable to find referenced areas non-existent-area, devices"
-        " non-existent-device, entities non.existent" in caplog.text
-    )
+        "Referenced areas non-existent-area, devices non-existent-device, "
+        "entities non.existent are missing or not currently available"
+    ) in caplog.text
 
 
 async def test_async_extract_entities_warn_referenced(
@@ -1235,9 +1259,9 @@ async def test_async_extract_entities_warn_referenced(
     extracted = await service.async_extract_entities(hass, {}, call)
     assert len(extracted) == 0
     assert (
-        "Unable to find referenced areas non-existent-area, devices"
-        " non-existent-device, entities non.existent" in caplog.text
-    )
+        "Referenced areas non-existent-area, devices non-existent-device, "
+        "entities non.existent are missing or not currently available"
+    ) in caplog.text
 
 
 async def test_async_extract_config_entry_ids(hass: HomeAssistant) -> None:

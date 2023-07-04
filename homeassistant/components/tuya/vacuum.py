@@ -78,6 +78,7 @@ class TuyaVacuumEntity(TuyaEntity, StateVacuumEntity):
 
     _fan_speed: EnumTypeData | None = None
     _battery_level: IntegerTypeData | None = None
+    _attr_name = None
 
     def __init__(self, device: TuyaDevice, device_manager: TuyaDeviceManager) -> None:
         """Init Tuya vacuum."""
@@ -151,14 +152,6 @@ class TuyaVacuumEntity(TuyaEntity, StateVacuumEntity):
         if not (status := self.device.status.get(DPCode.STATUS)):
             return None
         return TUYA_STATUS_TO_HA.get(status)
-
-    def turn_on(self, **kwargs: Any) -> None:
-        """Turn the device on."""
-        self._send_command([{"code": DPCode.POWER, "value": True}])
-
-    def turn_off(self, **kwargs: Any) -> None:
-        """Turn the device off."""
-        self._send_command([{"code": DPCode.POWER, "value": False}])
 
     def start(self, **kwargs: Any) -> None:
         """Start the device."""

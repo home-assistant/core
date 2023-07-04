@@ -32,6 +32,7 @@ from aioairzone_cloud.const import (
     API_SYSTEM_NUMBER,
     API_TYPE,
     API_WARNINGS,
+    API_WS_CONNECTED,
     API_WS_FW,
     API_WS_ID,
     API_WS_IDS,
@@ -160,6 +161,7 @@ def mock_get_device_status(device: Device) -> dict[str, Any]:
         return {
             API_ERRORS: [],
             API_IS_CONNECTED: True,
+            API_WS_CONNECTED: True,
             API_LOCAL_TEMP: {
                 API_CELSIUS: 21,
                 API_FAH: 70,
@@ -170,12 +172,14 @@ def mock_get_device_status(device: Device) -> dict[str, Any]:
         return {
             API_ERRORS: [],
             API_IS_CONNECTED: True,
+            API_WS_CONNECTED: True,
             API_WARNINGS: [],
         }
     if device.get_id() == "zone2":
         return {
             API_HUMIDITY: 24,
             API_IS_CONNECTED: True,
+            API_WS_CONNECTED: True,
             API_LOCAL_TEMP: {
                 API_FAH: 77,
                 API_CELSIUS: 25,
@@ -185,6 +189,7 @@ def mock_get_device_status(device: Device) -> dict[str, Any]:
     return {
         API_HUMIDITY: 30,
         API_IS_CONNECTED: True,
+        API_WS_CONNECTED: True,
         API_LOCAL_TEMP: {
             API_FAH: 68,
             API_CELSIUS: 20,

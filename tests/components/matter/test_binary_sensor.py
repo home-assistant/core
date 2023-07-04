@@ -31,7 +31,7 @@ async def test_contact_sensor(
     contact_sensor_node: MatterNode,
 ) -> None:
     """Test contact sensor."""
-    state = hass.states.get("binary_sensor.mock_contact_sensor_contact")
+    state = hass.states.get("binary_sensor.mock_contact_sensor_door")
     assert state
     assert state.state == "off"
 
@@ -40,7 +40,7 @@ async def test_contact_sensor(
         hass, matter_client, data=(contact_sensor_node.node_id, "1/69/0", False)
     )
 
-    state = hass.states.get("binary_sensor.mock_contact_sensor_contact")
+    state = hass.states.get("binary_sensor.mock_contact_sensor_door")
     assert state
     assert state.state == "on"
 

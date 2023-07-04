@@ -27,10 +27,10 @@ def setup_platform(
 
 def calendar_data_future() -> CalendarEvent:
     """Representation of a Demo Calendar for a future event."""
-    one_hour_from_now = dt_util.now() + datetime.timedelta(minutes=30)
+    half_hour_from_now = dt_util.now() + datetime.timedelta(minutes=30)
     return CalendarEvent(
-        start=one_hour_from_now,
-        end=one_hour_from_now + datetime.timedelta(minutes=60),
+        start=half_hour_from_now,
+        end=half_hour_from_now + datetime.timedelta(minutes=60),
         summary="Future Event",
         description="Future Description",
         location="Future Location",
@@ -67,4 +67,17 @@ class DemoCalendar(CalendarEntity):
         end_date: datetime.datetime,
     ) -> list[CalendarEvent]:
         """Return calendar events within a datetime range."""
+        if start_date.tzinfo is None:
+            start_date = start_date.replace(
+                tzinfo=dt_util.get_time_zone(hass.config.time_zone)
+            )
+        if end_date.tzinfo is None:
+            end_date = end_date.replace(
+                tzinfo=dt_util.get_time_zone(hass.config.time_zone)
+            )
+        assert start_date < end_date
+        if self._event.start_datetime_local >= end_date:
+            return []
+        if self._event.end_datetime_local < start_date:
+            return []
         return [self._event]

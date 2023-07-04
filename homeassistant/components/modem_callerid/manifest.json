@@ -8,7 +8,7 @@
   "integration_type": "device",
   "iot_class": "local_polling",
   "loggers": ["phone_modem"],
-  "requirements": ["phone_modem==0.1.1"],
+  "requirements": ["phone-modem==0.1.1"],
   "usb": [
     {
       "vid": "0572",

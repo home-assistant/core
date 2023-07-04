@@ -7,7 +7,7 @@ import logging
 import os
 from typing import Any
 
-from aiohttp import ClientError, ClientResponseError
+from aiohttp import ClientError, ClientResponseError, ClientSession
 from yalexs.api_async import ApiAsync
 from yalexs.authenticator_async import AuthenticationState, AuthenticatorAsync
 from yalexs.authenticator_common import Authentication
@@ -16,7 +16,6 @@ from yalexs.exceptions import AugustApiAIOHTTPError
 
 from homeassistant.const import CONF_PASSWORD, CONF_TIMEOUT, CONF_USERNAME
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import aiohttp_client
 
 from .const import (
     CONF_ACCESS_TOKEN_CACHE_FILE,
@@ -35,12 +34,9 @@ _LOGGER = logging.getLogger(__name__)
 class AugustGateway:
     """Handle the connection to August."""
 
-    def __init__(self, hass: HomeAssistant) -> None:
+    def __init__(self, hass: HomeAssistant, aiohttp_session: ClientSession) -> None:
         """Init the connection."""
-        # Create an aiohttp session instead of using the default one since the
-        # default one is likely to trigger august's WAF if another integration
-        # is also using Cloudflare
-        self._aiohttp_session = aiohttp_client.async_create_clientsession(hass)
+        self._aiohttp_session = aiohttp_session
         self._token_refresh_lock = asyncio.Lock()
         self._access_token_cache_file: str | None = None
         self._hass: HomeAssistant = hass

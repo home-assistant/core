@@ -5,5 +5,5 @@
   "documentation": "https://www.home-assistant.io/integrations/beewi_smartclim",
   "iot_class": "local_polling",
   "loggers": ["beewi_smartclim"],
-  "requirements": ["beewi_smartclim==0.0.10"]
+  "requirements": ["beewi-smartclim==0.0.10"]
 }

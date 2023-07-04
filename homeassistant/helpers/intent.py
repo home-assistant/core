@@ -57,6 +57,16 @@ def async_register(hass: HomeAssistant, handler: IntentHandler) -> None:
     intents[handler.intent_type] = handler
 
 
+@callback
+@bind_hass
+def async_remove(hass: HomeAssistant, intent_type: str) -> None:
+    """Remove an intent from Home Assistant."""
+    if (intents := hass.data.get(DATA_KEY)) is None:
+        return
+
+    intents.pop(intent_type, None)
+
+
 @bind_hass
 async def async_handle(
     hass: HomeAssistant,
@@ -483,14 +493,35 @@ class ServiceIntentHandler(IntentHandler):
     async def async_call_service(self, intent_obj: Intent, state: State) -> None:
         """Call service on entity."""
         hass = intent_obj.hass
-        await hass.services.async_call(
-            self.domain,
-            self.service,
-            {ATTR_ENTITY_ID: state.entity_id},
-            context=intent_obj.context,
-            blocking=True,
-            limit=self.service_timeout,
+        await self._run_then_background(
+            hass.async_create_task(
+                hass.services.async_call(
+                    self.domain,
+                    self.service,
+                    {ATTR_ENTITY_ID: state.entity_id},
+                    context=intent_obj.context,
+                    blocking=True,
+                ),
+                f"intent_call_service_{self.domain}_{self.service}",
+            )
         )
+
+    async def _run_then_background(self, task: asyncio.Task) -> None:
+        """Run task with timeout to (hopefully) catch validation errors.
+
+        After the timeout the task will continue to run in the background.
+        """
+        try:
+            await asyncio.wait({task}, timeout=self.service_timeout)
+        except asyncio.TimeoutError:
+            pass
+        except asyncio.CancelledError:
+            # Task calling us was cancelled, so cancel service call task, and wait for
+            # it to be cancelled, within reason, before leaving.
+            _LOGGER.debug("Service call was cancelled: %s", task.get_name())
+            task.cancel()
+            await asyncio.wait({task}, timeout=5)
+            raise
 
 
 class IntentCategory(Enum):
