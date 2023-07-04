@@ -119,3 +119,5 @@ class OverkizDescriptiveEntity(OverkizEntity):
             # In case of sub device, use the provided label
             # and append the name of the type of entity
             self._attr_name = f"{self.device.label} {description.name}"
+        elif isinstance(description.name, str):
+            self._attr_name = description.name

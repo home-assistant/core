@@ -95,7 +95,7 @@
       "mop_intensity": {
         "name": "Mop intensity",
         "state": {
-          "off": "Off",
+          "off": "[%key:common::state::off%]",
           "low": "Low",
           "mild": "Mild",
           "medium": "Medium",
@@ -126,7 +126,7 @@
               "balanced": "Balanced",
               "custom": "Custom",
               "gentle": "Gentle",
-              "off": "Off",
+              "off": "[%key:common::state::off%]",
               "max": "Max",
               "max_plus": "Max plus",
               "medium": "Medium",

@@ -264,8 +264,8 @@ SERVICE_LIST_EVENTS_SCHEMA: Final = vol.All(
     cv.has_at_most_one_key(EVENT_END_DATETIME, EVENT_DURATION),
     cv.make_entity_service_schema(
         {
-            vol.Optional(EVENT_START_DATETIME): datetime.datetime,
-            vol.Optional(EVENT_END_DATETIME): datetime.datetime,
+            vol.Optional(EVENT_START_DATETIME): cv.datetime,
+            vol.Optional(EVENT_END_DATETIME): cv.datetime,
             vol.Optional(EVENT_DURATION): vol.All(
                 cv.time_period, cv.positive_timedelta
             ),
@@ -422,7 +422,7 @@ def _list_events_dict_factory(
     """Convert CalendarEvent dataclass items to dictionary of attributes."""
     return {
         name: value
-        for name, value in obj
+        for name, value in _event_dict_factory(obj).items()
         if name in LIST_EVENT_FIELDS and value is not None
     }
 

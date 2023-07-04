@@ -53,6 +53,10 @@ AIDOO_BINARY_SENSOR_TYPES: Final[tuple[AirzoneBinarySensorEntityDescription, ...
 
 ZONE_BINARY_SENSOR_TYPES: Final[tuple[AirzoneBinarySensorEntityDescription, ...]] = (
     AirzoneBinarySensorEntityDescription(
+        device_class=BinarySensorDeviceClass.RUNNING,
+        key=AZD_ACTIVE,
+    ),
+    AirzoneBinarySensorEntityDescription(
         attributes={
             "warnings": AZD_WARNINGS,
         },
