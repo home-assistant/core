@@ -77,6 +77,7 @@ class LitterRobotCleaner(LitterRobotEntity[LitterRobot], StateVacuumEntity):
     _attr_supported_features = (
         VacuumEntityFeature.START
         | VacuumEntityFeature.STATE
+        | VacuumEntityFeature.STOP
         | VacuumEntityFeature.TURN_OFF
         | VacuumEntityFeature.TURN_ON
     )
@@ -104,6 +105,10 @@ class LitterRobotCleaner(LitterRobotEntity[LitterRobot], StateVacuumEntity):
     async def async_start(self) -> None:
         """Start a clean cycle."""
         await self.robot.start_cleaning()
+
+    async def async_stop(self, **kwargs: Any) -> None:
+        """Stop the vacuum cleaner."""
+        await self.robot.set_power_status(False)
 
     async def async_set_sleep_mode(
         self, enabled: bool, start_time: str | None = None

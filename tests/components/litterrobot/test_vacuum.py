@@ -12,6 +12,7 @@ from homeassistant.components.vacuum import (
     ATTR_STATUS,
     DOMAIN as PLATFORM_DOMAIN,
     SERVICE_START,
+    SERVICE_STOP,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_DOCKED,
@@ -98,6 +99,7 @@ async def test_vacuum_with_error(
     ("service", "command", "extra"),
     [
         (SERVICE_START, "start_cleaning", None),
+        (SERVICE_STOP, "set_power_status", None),
         (SERVICE_TURN_OFF, "set_power_status", None),
         (SERVICE_TURN_ON, "set_power_status", None),
         (
