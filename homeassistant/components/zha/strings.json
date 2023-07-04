@@ -226,7 +226,7 @@
       "dim_down": "Dim down",
       "left": "Left",
       "right": "Right",
-      "open": "[%key:common::state::open%]",
+      "open": "Open",
       "close": "Close",
       "both_buttons": "Both buttons",
       "button": "Button",
