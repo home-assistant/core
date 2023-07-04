@@ -46,9 +46,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await async_finish_startup(None)
     else:
         entry.async_on_unload(
-            hass.bus.async_listen_once(
-                EVENT_HOMEASSISTANT_STARTED, async_finish_startup
-            )
+            hass.bus.async_listen(EVENT_HOMEASSISTANT_STARTED, async_finish_startup)
         )
 
     return True
