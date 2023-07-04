@@ -2732,7 +2732,7 @@ youless-api==1.0.1
 yt-dlp==2023.3.4
 
 # homeassistant.components.zamg
-zamg==0.2.2
+zamg==0.2.4
 
 # homeassistant.components.zengge
 zengge==0.2
