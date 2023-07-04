@@ -63,6 +63,21 @@ class WebSocketAdapter(logging.LoggerAdapter):
 class WebSocketHandler:
     """Handle an active websocket client connection."""
 
+    __slots__ = (
+        "_hass",
+        "_request",
+        "_wsock",
+        "_handle_task",
+        "_writer_task",
+        "_closing",
+        "_authenticated",
+        "_logger",
+        "_peak_checker_unsub",
+        "_connection",
+        "_message_queue",
+        "_ready_future",
+    )
+
     def __init__(self, hass: HomeAssistant, request: web.Request) -> None:
         """Initialize an active connection."""
         self._hass = hass
@@ -201,8 +216,9 @@ class WebSocketHandler:
             return
 
         message_queue.append(message)
-        if self._ready_future and not self._ready_future.done():
-            self._ready_future.set_result(None)
+        ready_future = self._ready_future
+        if ready_future and not ready_future.done():
+            ready_future.set_result(None)
 
         peak_checker_active = self._peak_checker_unsub is not None
 
