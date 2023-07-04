@@ -64,7 +64,6 @@ DEFAULT_SERVICES = (
     VacuumEntityFeature.START
     | VacuumEntityFeature.STOP
     | VacuumEntityFeature.RETURN_HOME
-    | VacuumEntityFeature.STATUS
     | VacuumEntityFeature.BATTERY
     | VacuumEntityFeature.CLEAN_SPOT
 )
@@ -199,7 +198,7 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
     def _setup_from_config(self, config: ConfigType) -> None:
         """(Re)Setup the entity."""
         supported_feature_strings: list[str] = config[CONF_SUPPORTED_FEATURES]
-        self._attr_supported_features = strings_to_services(
+        self._attr_supported_features = VacuumEntityFeature.STATE | strings_to_services(
             supported_feature_strings, STRING_TO_SERVICE
         )
         self._attr_fan_speed_list = config[CONF_FAN_SPEED_LIST]
