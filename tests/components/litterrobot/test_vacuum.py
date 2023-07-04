@@ -148,3 +148,37 @@ async def test_commands(
 
     issue_registry = ir.async_get(hass)
     assert set(issue_registry.issues.keys()) == issues
+
+
+@pytest.mark.parametrize(
+    ("service", "issue_id"),
+    [
+        (SERVICE_TURN_OFF, "service_deprecation_turn_off"),
+        (SERVICE_TURN_ON, "service_deprecation_turn_on"),
+    ],
+)
+async def test_issues(
+    hass: HomeAssistant,
+    mock_account: MagicMock,
+    caplog: pytest.LogCaptureFixture,
+    service: str,
+    issue_id: str,
+) -> None:
+    """Test issues raised by calling deprecated services."""
+    await setup_integration(hass, mock_account, PLATFORM_DOMAIN)
+
+    vacuum = hass.states.get(VACUUM_ENTITY_ID)
+    assert vacuum
+    assert vacuum.state == STATE_DOCKED
+
+    await hass.services.async_call(
+        COMPONENT_SERVICE_DOMAIN.get(service, PLATFORM_DOMAIN),
+        service,
+        {},
+        blocking=True,
+    )
+
+    issue_registry = ir.async_get(hass)
+    issue = issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert issue.is_fixable is True
+    assert issue.is_persistent is True
