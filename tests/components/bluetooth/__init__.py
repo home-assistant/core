@@ -206,8 +206,7 @@ def patch_all_discovered_devices(mock_discovered: list[BLEDevice]) -> None:
         original_history[scanner] = data.copy()
         data.clear()
     if scanners:
-        first_scanner = scanners[0]
-        data = first_scanner.discovered_devices_and_advertisement_data
+        data = scanners[0].discovered_devices_and_advertisement_data
         data.clear()
         data.update(
             {device.address: (device, MagicMock()) for device in mock_discovered}
