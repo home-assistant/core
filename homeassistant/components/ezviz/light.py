@@ -154,14 +154,15 @@ class EzvizLight(EzvizEntity, LightEntity):
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        if self.data["switches"].get(DeviceSwitchType.ALARM_LIGHT.value) is None:
-            return
+        if self.data["switches"].get(DeviceSwitchType.ALARM_LIGHT.value):
+            self._attr_is_on = self.data["switches"][DeviceSwitchType.ALARM_LIGHT.value]
 
-        self._attr_brightness = round(
-            percentage_to_ranged_value(
-                BRIGHTNESS_RANGE,
-                self.data["alarm_light_luminance"],
+        if isinstance(self.data["alarm_light_luminance"], int):
+            self._attr_brightness = round(
+                percentage_to_ranged_value(
+                    BRIGHTNESS_RANGE,
+                    self.data["alarm_light_luminance"],
+                )
             )
-        )
-        self._attr_is_on = self.data["switches"][DeviceSwitchType.ALARM_LIGHT.value]
+
         super()._handle_coordinator_update()
