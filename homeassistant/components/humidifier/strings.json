@@ -34,7 +34,7 @@
             "humidifying": "Humidifying",
             "drying": "Drying",
             "idle": "Idle",
-            "off": "Off"
+            "off": "[%key:common::state::off%]"
           }
         },
         "available_modes": {
