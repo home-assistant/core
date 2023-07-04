@@ -79,6 +79,11 @@ class ReolinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self._username = entry_data[CONF_USERNAME]
         self._password = entry_data[CONF_PASSWORD]
         self._reauth = True
+        _LOGGER.error(self.context)
+        self.context["title_placeholders"] = {
+            "ip_address": entry_data[CONF_HOST],
+            #"hostname": discovery_info.hostname,
+        }
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
