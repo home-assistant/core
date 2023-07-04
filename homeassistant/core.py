@@ -1724,6 +1724,8 @@ class ServiceCall:
 class ServiceRegistry:
     """Offer the services over the eventbus."""
 
+    __slots__ = ("_services", "_hass")
+
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize a service registry."""
         self._services: dict[str, dict[str, Service]] = {}
