@@ -310,6 +310,7 @@ omit =
     homeassistant/components/esphome/camera.py
     homeassistant/components/esphome/domain_data.py
     homeassistant/components/esphome/entry_data.py
+    homeassistant/components/esphome/manager.py
     homeassistant/components/etherscan/sensor.py
     homeassistant/components/eufy/*
     homeassistant/components/eufylife_ble/__init__.py
