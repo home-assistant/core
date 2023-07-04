@@ -1,4 +1,4 @@
-"""Define tests for the Airzone init."""
+"""Define tests for the Daikin init."""
 from unittest.mock import AsyncMock, PropertyMock, patch
 
 import pytest
