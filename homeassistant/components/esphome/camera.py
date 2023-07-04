@@ -46,15 +46,17 @@ class EsphomeCamera(Camera, EsphomeEntity[CameraInfo, CameraState]):
         """Initialize."""
         Camera.__init__(self)
         EsphomeEntity.__init__(self, *args, **kwargs)
-        self._image_event = asyncio.Event()
+        self._loop = asyncio.get_running_loop()
+        self._image_futures: list[asyncio.Future[None]] = []
 
     @callback
     def _on_state_update(self) -> None:
         """Notify listeners of new image when update arrives."""
         super()._on_state_update()
-        image_event = self._image_event
-        image_event.set()
-        image_event.clear()
+        for future in self._image_futures:
+            if not future.done():
+                future.set_result(None)
+        self._image_futures.clear()
 
     async def async_camera_image(
         self, width: int | None = None, height: int | None = None
@@ -68,9 +70,11 @@ class EsphomeCamera(Camera, EsphomeEntity[CameraInfo, CameraState]):
         """Wait for an image to be available and return it."""
         if not self.available:
             return None
+        image_future = self._loop.create_future()
+        self._image_futures.append(image_future)
         await request_method()
         async with async_timeout.timeout(CAMERA_TIMEOUT):
-            await self._image_event.wait()
+            await image_future
         if not self.available:
             # Availability can change while waiting for 'image_event'
             return None  # type: ignore[unreachable]
