@@ -6,6 +6,8 @@ turn_on:
   target:
     entity:
       domain: vacuum
+      supported_features:
+        - vacuum.VacuumEntityFeature.TURN_ON
 
 turn_off:
   name: Turn off
@@ -13,6 +15,8 @@ turn_off:
   target:
     entity:
       domain: vacuum
+      supported_features:
+        - vacuum.VacuumEntityFeature.TURN_OFF
 
 stop:
   name: Stop
@@ -20,6 +24,8 @@ stop:
   target:
     entity:
       domain: vacuum
+      supported_features:
+        - vacuum.VacuumEntityFeature.STOP
 
 locate:
   name: Locate
@@ -27,6 +33,8 @@ locate:
   target:
     entity:
       domain: vacuum
+      supported_features:
+        - vacuum.VacuumEntityFeature.LOCATE
 
 start_pause:
   name: Start/Pause
@@ -34,6 +42,8 @@ start_pause:
   target:
     entity:
       domain: vacuum
+      supported_features:
+        - vacuum.VacuumEntityFeature.PAUSE
 
 start:
   name: Start
@@ -41,6 +51,8 @@ start:
   target:
     entity:
       domain: vacuum
+      supported_features:
+        - vacuum.VacuumEntityFeature.START
 
 pause:
   name: Pause
@@ -48,6 +60,8 @@ pause:
   target:
     entity:
       domain: vacuum
+      supported_features:
+        - vacuum.VacuumEntityFeature.PAUSE
 
 return_to_base:
   name: Return to base
@@ -55,6 +69,8 @@ return_to_base:
   target:
     entity:
       domain: vacuum
+      supported_features:
+        - vacuum.VacuumEntityFeature.RETURN_HOME
 
 clean_spot:
   name: Clean spot
