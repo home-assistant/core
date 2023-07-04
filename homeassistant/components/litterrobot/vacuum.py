@@ -77,7 +77,6 @@ class LitterRobotCleaner(LitterRobotEntity[LitterRobot], StateVacuumEntity):
     _attr_supported_features = (
         VacuumEntityFeature.START
         | VacuumEntityFeature.STATE
-        | VacuumEntityFeature.STATUS
         | VacuumEntityFeature.TURN_OFF
         | VacuumEntityFeature.TURN_ON
     )
