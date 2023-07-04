@@ -139,22 +139,24 @@ _NETWORK_MON_COND: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="network_tx",
         name="Network Up",
-        native_unit_of_measurement=UnitOfDataRate.MEBIBYTES_PER_SECOND,
+        native_unit_of_measurement=UnitOfDataRate.BITS_PER_SECOND,
         device_class=SensorDeviceClass.DATA_RATE,
         icon="mdi:upload",
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
-        suggested_display_precision=2,
+        suggested_display_precision=1,
+        suggested_unit_of_measurement=UnitOfDataRate.MEGABITS_PER_SECOND,
     ),
     SensorEntityDescription(
         key="network_rx",
         name="Network Down",
-        native_unit_of_measurement=UnitOfDataRate.MEBIBYTES_PER_SECOND,
+        native_unit_of_measurement=UnitOfDataRate.BITS_PER_SECOND,
         device_class=SensorDeviceClass.DATA_RATE,
         icon="mdi:download",
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
-        suggested_display_precision=2,
+        suggested_display_precision=1,
+        suggested_unit_of_measurement=UnitOfDataRate.MEGABITS_PER_SECOND,
     ),
 )
 _DRIVE_MON_COND: tuple[SensorEntityDescription, ...] = (
@@ -408,10 +410,10 @@ class QNAPNetworkSensor(QNAPSensor):
 
         data = self.coordinator.data["bandwidth"][self.monitor_device]
         if self.entity_description.key == "network_tx":
-            return data["tx"] / 1024 / 1024
+            return data["tx"]
 
         if self.entity_description.key == "network_rx":
-            return data["rx"] / 1024 / 1024
+            return data["rx"]
 
     @property
     def extra_state_attributes(self):
@@ -423,8 +425,6 @@ class QNAPNetworkSensor(QNAPSensor):
                 ATTR_MASK: data["mask"],
                 ATTR_MAC: data["mac"],
                 ATTR_MAX_SPEED: data["max_speed"],
-                ATTR_PACKETS_TX: data["tx_packets"],
-                ATTR_PACKETS_RX: data["rx_packets"],
                 ATTR_PACKETS_ERR: data["err_packets"],
             }
 
