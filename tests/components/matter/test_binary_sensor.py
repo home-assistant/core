@@ -29,36 +29,27 @@ def binary_sensor_platform():
         yield
 
 
-@pytest.fixture(name="contact_sensor_node")
-async def contact_sensor_node_fixture(
-    hass: HomeAssistant, matter_client: MagicMock
-) -> MatterNode:
-    """Fixture for a contact sensor node."""
-    return await setup_integration_with_node_fixture(
-        hass, "contact-sensor", matter_client
-    )
-
-
 # This tests needs to be adjusted to remove lingering tasks
 @pytest.mark.parametrize("expected_lingering_tasks", [True])
 async def test_contact_sensor(
     hass: HomeAssistant,
     matter_client: MagicMock,
-    contact_sensor_node: MatterNode,
+    eve_contact_sensor_node: MatterNode,
 ) -> None:
     """Test contact sensor."""
-    state = hass.states.get("binary_sensor.mock_contact_sensor_door")
-    assert state
-    assert state.state == "off"
-
-    set_node_attribute(contact_sensor_node, 1, 69, 0, False)
-    await trigger_subscription_callback(
-        hass, matter_client, data=(contact_sensor_node.node_id, "1/69/0", False)
-    )
-
-    state = hass.states.get("binary_sensor.mock_contact_sensor_door")
+    entity_id = "binary_sensor.eve_door_door"
+    state = hass.states.get(entity_id)
     assert state
     assert state.state == "on"
+
+    set_node_attribute(eve_contact_sensor_node, 1, 69, 0, True)
+    await trigger_subscription_callback(
+        hass, matter_client, data=(eve_contact_sensor_node.node_id, "1/69/0", True)
+    )
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "off"
 
 
 @pytest.fixture(name="occupancy_sensor_node")
@@ -107,7 +98,9 @@ async def test_battery_sensor(
     assert state.state == "off"
 
     set_node_attribute(door_lock, 1, 47, 14, 1)
-    await trigger_subscription_callback(hass, matter_client)
+    await trigger_subscription_callback(
+        hass, matter_client, data=(door_lock.node_id, "1/47/14", 1)
+    )
 
     state = hass.states.get(entity_id)
     assert state
