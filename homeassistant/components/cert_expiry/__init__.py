@@ -38,11 +38,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if entry.unique_id is None:
         hass.config_entries.async_update_entry(entry, unique_id=f"{host}:{port}")
 
-    async def async_finish_startup(_):
+    async def _async_finish_startup(_):
         await coordinator.async_refresh()
         await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    async_at_started(hass, async_finish_startup)
+    async_at_started(hass, _async_finish_startup)
     return True
 
 
