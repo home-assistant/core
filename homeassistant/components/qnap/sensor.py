@@ -378,7 +378,7 @@ class QNAPMemorySensor(QNAPSensor):
         if self.entity_description.key == "memory_free":
             return free
 
-        total = float(self.coordinator.data["system_stats"]["memory"]["total")
+        total = float(self.coordinator.data["system_stats"]["memory"]["total"])
 
         used = total - free
         if self.entity_description.key == "memory_used":
@@ -392,7 +392,7 @@ class QNAPMemorySensor(QNAPSensor):
         """Return the state attributes."""
         if self.coordinator.data:
             data = self.coordinator.data["system_stats"]["memory"]
-            size = float(data["total"]) / 1024
+            size = round(float(data["total"]) / 1024, 1)
             return {ATTR_MEMORY_SIZE: f"{size} {UnitOfInformation.GIBIBYTES}"}
 
 
