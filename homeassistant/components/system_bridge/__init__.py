@@ -180,7 +180,8 @@ async def async_setup_entry(
             call.data[CONF_BRIDGE]
         ]
         await getattr(
-            coordinator.websocket_client, f"power_{call.data[CONF_COMMAND]}"
+            coordinator.websocket_client,
+            POWER_COMMAND_MAP[call.data[CONF_COMMAND]],
         )()
 
     async def handle_open_url(call: ServiceCall) -> None:
