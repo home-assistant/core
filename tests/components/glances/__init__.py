@@ -1,6 +1,9 @@
 """Tests for Glances."""
 
+from datetime import timedelta
 from typing import Any
+
+from homeassistant.util.dt import utcnow
 
 MOCK_USER_INPUT: dict[str, Any] = {
     "host": "0.0.0.0",
@@ -208,5 +211,5 @@ HA_SENSOR_DATA: dict[str, Any] = {
             "config": "UU",
         },
     },
-    "uptime": "3 days, 10:25:20",
+    "uptime": utcnow() - timedelta(days=3, hours=10, minutes=25, seconds=10),
 }
