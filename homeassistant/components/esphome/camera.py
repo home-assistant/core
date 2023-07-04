@@ -47,16 +47,28 @@ class EsphomeCamera(Camera, EsphomeEntity[CameraInfo, CameraState]):
         Camera.__init__(self)
         EsphomeEntity.__init__(self, *args, **kwargs)
         self._loop = asyncio.get_running_loop()
-        self._image_futures: list[asyncio.Future[None]] = []
+        self._image_futures: list[asyncio.Future[bool | None]] = []
+
+    @callback
+    def _set_futures(self, result: bool) -> None:
+        """Set futures to done."""
+        for future in self._image_futures:
+            if not future.done():
+                future.set_result(result)
+        self._image_futures.clear()
+
+    @callback
+    def _on_device_update(self) -> None:
+        """Handle device going available or unavailable."""
+        super()._on_device_update()
+        if not self.available:
+            self._set_futures(False)
 
     @callback
     def _on_state_update(self) -> None:
         """Notify listeners of new image when update arrives."""
         super()._on_state_update()
-        for future in self._image_futures:
-            if not future.done():
-                future.set_result(None)
-        self._image_futures.clear()
+        self._set_futures(True)
 
     async def async_camera_image(
         self, width: int | None = None, height: int | None = None
@@ -74,10 +86,8 @@ class EsphomeCamera(Camera, EsphomeEntity[CameraInfo, CameraState]):
         self._image_futures.append(image_future)
         await request_method()
         async with async_timeout.timeout(CAMERA_TIMEOUT):
-            await image_future
-        if not self.available:
-            # Availability can change while waiting for 'image_event'
-            return None  # type: ignore[unreachable]
+            if not await image_future:
+                return None
         return self._state.data
 
     async def handle_async_mjpeg_stream(
