@@ -8,10 +8,10 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
     CONF_PORT,
-    EVENT_HOMEASSISTANT_STARTED,
     Platform,
 )
-from homeassistant.core import CoreState, HomeAssistant
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DEFAULT_PORT, DOMAIN
@@ -42,13 +42,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await coordinator.async_refresh()
         await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    if hass.state == CoreState.running:
-        await async_finish_startup(None)
-    else:
-        entry.async_on_unload(
-            hass.bus.async_listen(EVENT_HOMEASSISTANT_STARTED, async_finish_startup)
-        )
-
+    async_at_started(hass, async_finish_startup)
     return True
 
 
