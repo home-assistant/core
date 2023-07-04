@@ -1,4 +1,9 @@
-"""Support for Legacy MQTT vacuum."""
+"""Support for Legacy MQTT vacuum.
+
+The legacy schema for MQTT vacuum was deprecated with HA Core 2023.7.0
+and is will be removed with HA Core 2024.2.0
+"""
+
 from __future__ import annotations
 
 from collections.abc import Callable

@@ -124,6 +124,31 @@ def vacuum_platform_only():
         yield
 
 
+@pytest.mark.parametrize(
+    ("hass_config", "deprecated"),
+    [
+        ({mqtt.DOMAIN: {vacuum.DOMAIN: {"name": "test", "schema": "legacy"}}}, True),
+        ({mqtt.DOMAIN: {vacuum.DOMAIN: {"name": "test"}}}, True),
+        ({mqtt.DOMAIN: {vacuum.DOMAIN: {"name": "test", "schema": "state"}}}, False),
+    ],
+)
+async def test_deprecation(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+    deprecated: bool,
+) -> None:
+    """Test that the depration warning for the legacy schema works."""
+    assert await mqtt_mock_entry()
+    entity = hass.states.get("vacuum.test")
+    assert entity is not None
+
+    if deprecated:
+        assert "Deprecated `legacy` schema detected for MQTT vacuum" in caplog.text
+    else:
+        assert "Deprecated `legacy` schema detected for MQTT vacuum" not in caplog.text
+
+
 @pytest.mark.parametrize("hass_config", [DEFAULT_CONFIG])
 async def test_default_supported_features(
     hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
