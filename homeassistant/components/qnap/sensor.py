@@ -95,6 +95,7 @@ _CPU_MON_COND: tuple[SensorEntityDescription, ...] = (
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:chip",
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=0,
     ),
 )
 _MEMORY_MON_COND: tuple[SensorEntityDescription, ...] = (
@@ -106,7 +107,7 @@ _MEMORY_MON_COND: tuple[SensorEntityDescription, ...] = (
         icon="mdi:memory",
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
-        suggested_display_precision=1,
+        suggested_display_precision=0,
     ),
     SensorEntityDescription(
         key="memory_used",
@@ -116,7 +117,7 @@ _MEMORY_MON_COND: tuple[SensorEntityDescription, ...] = (
         icon="mdi:memory",
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
-        suggested_display_precision=1,
+        suggested_display_precision=0,
     ),
     SensorEntityDescription(
         key="memory_percent_used",
@@ -141,7 +142,7 @@ _NETWORK_MON_COND: tuple[SensorEntityDescription, ...] = (
         icon="mdi:upload",
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
-        suggested_display_precision=1,
+        suggested_display_precision=2,
     ),
     SensorEntityDescription(
         key="network_rx",
@@ -151,7 +152,7 @@ _NETWORK_MON_COND: tuple[SensorEntityDescription, ...] = (
         icon="mdi:download",
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
-        suggested_display_precision=1,
+        suggested_display_precision=2,
     ),
 )
 _DRIVE_MON_COND: tuple[SensorEntityDescription, ...] = (
