@@ -180,22 +180,24 @@ _VOLUME_MON_COND: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="volume_size_used",
         name="Used Space",
-        native_unit_of_measurement=UnitOfInformation.GIBIBYTES,
+        native_unit_of_measurement=UnitOfInformation.BYTES,
         device_class=SensorDeviceClass.DATA_SIZE,
         icon="mdi:chart-pie",
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=1,
+        suggested_unit_of_measurement=UnitOfInformation.GIBIBYTES,
     ),
     SensorEntityDescription(
         key="volume_size_free",
         name="Free Space",
-        native_unit_of_measurement=UnitOfInformation.GIBIBYTES,
+        native_unit_of_measurement=UnitOfInformation.BYTES,
         device_class=SensorDeviceClass.DATA_SIZE,
         icon="mdi:chart-pie",
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=1,
+        suggested_unit_of_measurement=UnitOfInformation.GIBIBYTES,
     ),
     SensorEntityDescription(
         key="volume_percentage_used",
@@ -503,11 +505,11 @@ class QNAPVolumeSensor(QNAPSensor):
         """Return the state of the sensor."""
         data = self.coordinator.data["volumes"][self.monitor_device]
 
-        free_gb = int(data["free_size"]) / 1024 / 1024 / 1024
+        free_gb = int(data["free_size"])
         if self.entity_description.key == "volume_size_free":
             return free_gb
 
-        total_gb = int(data["total_size"]) / 1024 / 1024 / 1024
+        total_gb = int(data["total_size"])
 
         used_gb = total_gb - free_gb
         if self.entity_description.key == "volume_size_used":
@@ -524,5 +526,5 @@ class QNAPVolumeSensor(QNAPSensor):
             total_gb = int(data["total_size"]) / 1024 / 1024 / 1024
 
             return {
-                ATTR_VOLUME_SIZE: f"{round(total_gb), 1} {UnitOfInformation.GIBIBYTES}"
+                ATTR_VOLUME_SIZE: f"{round(total_gb, 1)} {UnitOfInformation.GIBIBYTES}"
             }
