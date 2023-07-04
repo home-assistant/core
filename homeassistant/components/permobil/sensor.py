@@ -85,7 +85,29 @@ async def async_setup_entry(
         token=config.get(CONF_TOKEN),
         expiration_date=config.get(CONF_TTL),
     )
+
     p_api.self_authenticate()
+
+    p_api_unit: str = KM
+    try:
+        # find out what unit of distance the user has set
+        p_api_unit = str(await p_api.request_item(BATTERY_DISTANCE_UNIT))
+    except (MyPermobilClientException, MyPermobilAPIException) as err:
+        _LOGGER.error("Permobil: %s", err)
+
+    if p_api_unit not in [KM, MILES]:
+        _LOGGER.error("Unknown unit of distance: %s", p_api_unit)
+
+    # translate the Permobils unit of distance to a Home Assistant unit of distance
+    # default to kilometers if the unit is unknown
+    ha_unit = UnitOfLength.MILES if p_api_unit == MILES else UnitOfLength.KILOMETERS
+    user_specific_sensors = [
+        PermobilDistanceLeftSensor(p_api, unit=ha_unit),
+        PermobilMaxDistanceLeftSensor(p_api, unit=ha_unit),
+        PermobilUsageDistanceSensor(p_api, unit=ha_unit),
+        PermobilRecordDistanceSensor(p_api, unit=ha_unit),
+    ]
+
     # create the sensors that are not user specific
     non_specific_sensors = [
         PermobilStateOfChargeSensor(p_api),
@@ -97,19 +119,6 @@ async def async_setup_entry(
         PermobilWattHoursLeftSensor(p_api),
         PermobilUsageAdjustmentsSensor(p_api),
         PermobilRecordAdjustmentsSensor(p_api),
-    ]
-    # find out what unit of distance the user has set
-    p_api_unit = await p_api.request_item(BATTERY_DISTANCE_UNIT)
-    if p_api_unit not in [KM, MILES]:
-        _LOGGER.error("Unknown unit of distance: %s", p_api_unit)
-    # translate the Permobils unit of distance to a Home Assistant unit of distance
-    # default to kilometers if the unit is unknown
-    ha_unit = UnitOfLength.MILES if p_api_unit == MILES else UnitOfLength.KILOMETERS
-    user_specific_sensors = [
-        PermobilDistanceLeftSensor(p_api, unit=ha_unit),
-        PermobilMaxDistanceLeftSensor(p_api, unit=ha_unit),
-        PermobilUsageDistanceSensor(p_api, unit=ha_unit),
-        PermobilRecordDistanceSensor(p_api, unit=ha_unit),
     ]
 
     sensors = non_specific_sensors + user_specific_sensors
@@ -192,7 +201,7 @@ class PermobilChargingSensor(BinarySensorEntity):
     async def async_update(self) -> None:
         """Get charging status."""
         try:
-            self._attr_is_on = await self._permobil.request_item(self._item)
+            self._attr_is_on = bool(await self._permobil.request_item(self._item))
         except (MyPermobilClientException, MyPermobilAPIException):
             # if we can't get the charging status, assume it is not charging
             self._attr_is_on = False
