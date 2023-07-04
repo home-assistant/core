@@ -112,8 +112,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Handle the initial step."""
         if user_input is not None:
-            address = user_input[CONF_ADDRESS]
-            self.address = address
+            self.address = user_input[CONF_ADDRESS]
             await self.async_set_unique_id(self.address, raise_on_progress=False)
             self._abort_if_unique_id_configured()
             return await self.async_step_confirm()
