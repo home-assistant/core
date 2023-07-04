@@ -6,8 +6,9 @@ from datetime import timedelta
 import logging
 
 import async_timeout
-from iammeter import real_time_api
-from iammeter.power_meter import IamMeterError
+from iammeter.client import IamMeter
+
+# from iammeter.power_meter import IamMeterError
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
@@ -52,17 +53,18 @@ async def async_setup_platform(
     config_port = config[CONF_PORT]
     config_name = config[CONF_NAME]
     try:
-        async with async_timeout.timeout(PLATFORM_TIMEOUT):
-            api = await real_time_api(config_host, config_port)
-    except (IamMeterError, asyncio.TimeoutError) as err:
+        api = await hass.async_add_executor_job(
+            IamMeter, config_host, config_port, config_name
+        )
+    except asyncio.TimeoutError as err:
         _LOGGER.error("Device is not ready")
         raise PlatformNotReady from err
 
     async def async_update_data():
         try:
             async with async_timeout.timeout(PLATFORM_TIMEOUT):
-                return await api.get_data()
-        except (IamMeterError, asyncio.TimeoutError) as err:
+                return await hass.async_add_executor_job(api.client.get_data)
+        except asyncio.TimeoutError as err:
             raise UpdateFailed from err
 
     coordinator = DataUpdateCoordinator(
@@ -77,45 +79,43 @@ async def async_setup_platform(
     )
     await coordinator.async_refresh()
     entities = []
-    for sensor_name, (row, idx, unit) in api.iammeter.sensor_map().items():
-        serial_number = api.iammeter.serial_number
-        uid = f"{serial_number}-{row}-{idx}"
-        entities.append(IamMeter(coordinator, uid, sensor_name, unit, config_name))
+    for sensor_name, val in api.measurement.items():
+        if sensor_name == "sn":
+            serial_number = val
+            continue
+        if sensor_name in ("Model", "mac"):
+            continue
+        uid = f"{serial_number}-{sensor_name}"
+        entities.append(IamMeterSensor(coordinator, uid, sensor_name, config_name))
     async_add_entities(entities)
 
 
-class IamMeter(CoordinatorEntity, SensorEntity):
+class IamMeterSensor(CoordinatorEntity, SensorEntity):
     """Class for a sensor."""
 
-    def __init__(self, coordinator, uid, sensor_name, unit, dev_name):
+    def __init__(self, coordinator, uid, sensor_name, dev_name) -> None:
         """Initialize an iammeter sensor."""
         super().__init__(coordinator)
         self.uid = uid
         self.sensor_name = sensor_name
-        self.unit = unit
         self.dev_name = dev_name
 
     @property
-    def native_value(self):
+    def native_value(self) -> float:
         """Return the state of the sensor."""
-        return self.coordinator.data.data[self.sensor_name]
+        return self.coordinator.data.get(self.sensor_name, None)
 
     @property
-    def unique_id(self):
+    def unique_id(self) -> str:
         """Return unique id."""
         return self.uid
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Name of this iammeter attribute."""
         return f"{self.dev_name} {self.sensor_name}"
 
     @property
-    def icon(self):
+    def icon(self) -> str:
         """Icon for each sensor."""
         return "mdi:flash"
-
-    @property
-    def native_unit_of_measurement(self):
-        """Return the unit of measurement."""
-        return self.unit
