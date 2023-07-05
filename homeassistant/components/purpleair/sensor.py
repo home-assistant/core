@@ -166,7 +166,7 @@ SENSOR_DESCRIPTIONS = [
     ),
     PurpleAirSensorEntityDescription(
         key="voc",
-        name="VOC",
+        translation_key="voc",
         device_class=SensorDeviceClass.AQI,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda sensor: sensor.voc,
