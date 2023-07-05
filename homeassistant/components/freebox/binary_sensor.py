@@ -9,22 +9,17 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant,, callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     EntityCategory,
 )
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 from .home_base import FreeboxHomeEntity
 from .router import FreeboxRouter
-
-
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -59,7 +54,7 @@ async def async_setup_entry(
 
     if binary_entities:
         async_add_entities(binary_entities, True)
-        
+
     for nodeid, node in router.home_devices.items():
         if nodeid in tracked:
             continue
@@ -86,9 +81,6 @@ async def async_setup_entry(
         async_add_entities(new_trackeddws, True)
     if new_trackedcover:
         async_add_entities(new_trackedcover, True)
-        
-        
-     
 
 
 class FreeboxPir(FreeboxHomeEntity, BinarySensorEntity):
@@ -217,4 +209,3 @@ class FreeboxRaidDegradedSensor(BinarySensorEntity):
                 self.async_on_demand_update,
             )
         )
-
