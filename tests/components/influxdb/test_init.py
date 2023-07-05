@@ -920,13 +920,6 @@ async def test_event_listener_invalid_type(
             "latitude": "2.2",
             "invalid_attribute": ["value1", "value2"],
         }
-        state = MagicMock(
-            state=in_,
-            domain="fake",
-            entity_id="fake.entity_id",
-            object_id="entity_id",
-            attributes=attrs,
-        )
         body = [
             {
                 "measurement": "foobars",
@@ -944,7 +937,7 @@ async def test_event_listener_invalid_type(
         if out[1] is not None:
             body[0]["fields"]["value"] = out[1]
 
-        hass.states.async_set(state.entity_id, state.state, state.attributes)
+        hass.states.async_set("fake.entity_id", in_, attrs)
         await hass.async_block_till_done()
         hass.data[influxdb.DOMAIN].block_till_done()
 
@@ -1195,13 +1188,6 @@ async def test_event_listener_component_measurement_attr(
         {"domain": "other", "id": "just_fake", "attrs": {}, "res": "other"},
     ]
     for comp in test_components:
-        state = MagicMock(
-            state=1,
-            domain=comp["domain"],
-            entity_id=f"{comp['domain']}.{comp['id']}",
-            object_id=comp["id"],
-            attributes=comp["attrs"],
-        )
         body = [
             {
                 "measurement": comp["res"],
@@ -1210,7 +1196,7 @@ async def test_event_listener_component_measurement_attr(
                 "fields": {"value": 1},
             }
         ]
-        hass.states.async_set(state.entity_id, state.state, state.attributes)
+        hass.states.async_set(f"{comp['domain']}.{comp['id']}", 1, comp["attrs"])
         await hass.async_block_till_done()
         hass.data[influxdb.DOMAIN].block_till_done()
 
@@ -1276,18 +1262,6 @@ async def test_event_listener_ignore_attributes(
     ]
     for comp in test_components:
         entity_id = f"{comp['domain']}.{comp['id']}"
-        state = MagicMock(
-            state=1,
-            domain=comp["domain"],
-            entity_id=entity_id,
-            object_id=comp["id"],
-            attributes={
-                "ignore": 1,
-                "id_ignore": 1,
-                "glob_ignore": 1,
-                "domain_ignore": 1,
-            },
-        )
         fields = {"value": 1}
         fields.update(comp["attrs"])
         body = [
@@ -1298,7 +1272,16 @@ async def test_event_listener_ignore_attributes(
                 "fields": fields,
             }
         ]
-        hass.states.async_set(state.entity_id, state.state, state.attributes)
+        hass.states.async_set(
+            entity_id,
+            1,
+            {
+                "ignore": 1,
+                "id_ignore": 1,
+                "glob_ignore": 1,
+                "domain_ignore": 1,
+            },
+        )
         await hass.async_block_till_done()
         hass.data[influxdb.DOMAIN].block_till_done()
 
@@ -1336,14 +1319,6 @@ async def test_event_listener_ignore_attributes_overlapping_entities(
     }
     config.update(config_ext)
     await _setup(hass, mock_client, config, get_write_api)
-
-    state = MagicMock(
-        state=1,
-        domain="sensor",
-        entity_id="sensor.fake",
-        object_id="fake",
-        attributes={"ignore": 1},
-    )
     body = [
         {
             "measurement": "units",
@@ -1352,7 +1327,7 @@ async def test_event_listener_ignore_attributes_overlapping_entities(
             "fields": {"value": 1},
         }
     ]
-    hass.states.async_set(state.entity_id, state.state, state.attributes)
+    hass.states.async_set("sensor.fake", 1, {"ignore": 1})
     await hass.async_block_till_done()
     hass.data[influxdb.DOMAIN].block_till_done()
 
@@ -1387,20 +1362,12 @@ async def test_event_listener_scheduled_write(
     config = {"max_retries": 1}
     config.update(config_ext)
     await _setup(hass, mock_client, config, get_write_api)
-
-    state = MagicMock(
-        state=1,
-        domain="fake",
-        entity_id="entity.entity_id",
-        object_id="entity_id",
-        attributes={},
-    )
     write_api = get_write_api(mock_client)
     write_api.side_effect = OSError("foo")
 
     # Write fails
     with patch.object(influxdb.time, "sleep") as mock_sleep:
-        hass.states.async_set(state.entity_id, state.state, state.attributes)
+        hass.states.async_set("entity.entity_id", 1)
         await hass.async_block_till_done()
         hass.data[influxdb.DOMAIN].block_till_done()
         assert mock_sleep.called
@@ -1409,7 +1376,7 @@ async def test_event_listener_scheduled_write(
     # Write works again
     write_api.side_effect = None
     with patch.object(influxdb.time, "sleep") as mock_sleep:
-        hass.states.async_set(state.entity_id, "2", state.attributes)
+        hass.states.async_set("entity.entity_id", "2")
         await hass.async_block_till_done()
         hass.data[influxdb.DOMAIN].block_till_done()
         assert not mock_sleep.called
