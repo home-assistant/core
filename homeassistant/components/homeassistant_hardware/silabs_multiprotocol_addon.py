@@ -530,16 +530,9 @@ class OptionsFlowHandler(config_entries.OptionsFlow, ABC):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Notify that there may be unknown multipan platforms."""
-        multipan_manager = await get_addon_manager(self.hass)
-        active_platforms = await multipan_manager.async_active_platforms()
-
         if user_input is None:
             return self.async_show_form(
                 step_id="notify_unknown_multipan_user",
-                description_placeholders={
-                    "active_platforms": ", ".join(active_platforms),
-                    "known_platforms": ", ".join(["otbr", "zha"]),
-                },
             )
         return await self.async_step_change_channel()
 
