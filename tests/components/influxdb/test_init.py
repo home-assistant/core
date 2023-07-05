@@ -534,13 +534,6 @@ async def test_event_listener_states(
     await _setup(hass, mock_client, config_ext, get_write_api)
 
     for state_state in (1, "unknown", "", "unavailable"):
-        state = MagicMock(
-            state=state_state,
-            domain="fake",
-            entity_id="fake.entity_id",
-            object_id="entity_id",
-            attributes={},
-        )
         body = [
             {
                 "measurement": "fake.entity_id",
@@ -549,7 +542,7 @@ async def test_event_listener_states(
                 "fields": {"value": 1},
             }
         ]
-        hass.states.async_set(state.entity_id, state.state, state.attributes)
+        hass.states.async_set("fake.entity_id", state_state)
         await hass.async_block_till_done()
         hass.data[influxdb.DOMAIN].block_till_done()
 
