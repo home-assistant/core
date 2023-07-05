@@ -1,9 +1,12 @@
 """Support for Roborock number."""
+import asyncio
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
+import logging
 from typing import Any
 
-from roborock.roborock_typing import RoborockCommand
+from roborock.api import AttributeCache
+from roborock.command_cache import CacheableAttribute
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
 from homeassistant.config_entries import ConfigEntry
@@ -16,15 +19,17 @@ from .const import DOMAIN
 from .coordinator import RoborockDataUpdateCoordinator
 from .device import RoborockEntity
 
+_LOGGER = logging.getLogger(__name__)
+
 
 @dataclass
 class RoborockNumberDescriptionMixin:
-    """Define an entity description mixin for number entities."""
+    """Define an entity description mixin for button entities."""
 
-    # Gets the current value of the number entity.
-    get_value: Callable[[RoborockEntity], Coroutine[Any, Any, int]]
-    # Sets the current value of the number entity.
-    set_value: Callable[[RoborockEntity, int], Coroutine[Any, Any, dict]]
+    # Gets the status of the switch
+    cache_key: CacheableAttribute
+    # Sets the status of the switch
+    update_value: Callable[[AttributeCache, float], Coroutine[Any, Any, dict]]
 
 
 @dataclass
@@ -42,11 +47,9 @@ NUMBER_DESCRIPTIONS: list[RoborockNumberDescription] = [
         native_min_value=0,
         native_max_value=100,
         native_unit_of_measurement=PERCENTAGE,
-        get_value=lambda entity: entity.api.get_sound_volume(),
-        set_value=lambda entity, value: entity.send(
-            RoborockCommand.CHANGE_SOUND_VOLUME, value
-        ),
+        cache_key=CacheableAttribute.sound_volume,
         entity_category=EntityCategory.CONFIG,
+        update_value=lambda cache, value: cache.update_value([int(value)]),
     )
 ]
 
@@ -57,22 +60,37 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Roborock number platform."""
-
     coordinators: dict[str, RoborockDataUpdateCoordinator] = hass.data[DOMAIN][
         config_entry.entry_id
     ]
-    async_add_entities(
-        (
-            RoborockNumberEntity(
-                f"{description.key}_{slugify(device_id)}",
-                coordinator,
-                description,
-            )
-            for device_id, coordinator in coordinators.items()
-            for description in NUMBER_DESCRIPTIONS
+    possible_entities: list[
+        tuple[RoborockDataUpdateCoordinator, RoborockNumberDescription]
+    ] = [
+        (coordinator, description)
+        for coordinator in coordinators.values()
+        for description in NUMBER_DESCRIPTIONS
+    ]
+    # We need to check if this function is supported by the device.
+    results = await asyncio.gather(
+        *(
+            coordinator.api.cache.get(description.cache_key).async_value()
+            for coordinator, description in possible_entities
         ),
-        True,
+        return_exceptions=True,
     )
+    valid_entities: list[RoborockNumberEntity] = []
+    for (coordinator, description), result in zip(possible_entities, results):
+        if result is None or isinstance(result, Exception):
+            _LOGGER.debug("Not adding entity because of %s", result)
+        else:
+            valid_entities.append(
+                RoborockNumberEntity(
+                    f"{description.key}_{slugify(coordinator.roborock_device_info.device.duid)}",
+                    coordinator,
+                    description,
+                )
+            )
+    async_add_entities(valid_entities)
 
 
 class RoborockNumberEntity(RoborockEntity, NumberEntity):
@@ -90,11 +108,13 @@ class RoborockNumberEntity(RoborockEntity, NumberEntity):
         self.entity_description = entity_description
         super().__init__(unique_id, coordinator.device_info, coordinator.api)
 
+    @property
+    def native_value(self) -> float | None:
+        """Get native value."""
+        return self.get_cache(self.entity_description.cache_key).value
+
     async def async_set_native_value(self, value: float) -> None:
         """Set number value."""
-        await self.entity_description.set_value(self, int(value))
-
-    async def async_update(self) -> None:
-        """Update number."""
-        number = await self.entity_description.get_value(self)
-        self._attr_native_value = float(number)
+        await self.entity_description.update_value(
+            self.get_cache(self.entity_description.cache_key), value
+        )
