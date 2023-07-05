@@ -18,6 +18,11 @@ from aiohttp.typedefs import JSONDecoder, StrOrURL
 from aiohttp.web_exceptions import HTTPMovedPermanently, HTTPRedirection
 from aiohttp.web_log import AccessLogger
 from aiohttp.web_protocol import RequestHandler
+from aiohttp.web_urldispatcher import (
+    AbstractResource,
+    UrlDispatcher,
+    UrlMappingMatchInfo,
+)
 from cryptography import x509
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
@@ -303,6 +308,10 @@ class HomeAssistantHTTP:
                 "max_field_size": MAX_LINE_SIZE,
             },
         )
+        # By default aiohttp does a linear search for routing rules,
+        # we have a lot of routes, so use a dict lookup with a fallback
+        # to the linear search.
+        self.app._router = FastUrlDispatcher()  # pylint: disable=protected-access
         self.hass = hass
         self.ssl_certificate = ssl_certificate
         self.ssl_peer_certificate = ssl_peer_certificate
@@ -565,3 +574,40 @@ async def start_http_server_and_save_config(
         ]
 
     store.async_delay_save(lambda: conf, SAVE_DELAY)
+
+
+class FastUrlDispatcher(UrlDispatcher):
+    """UrlDispatcher that uses a dict lookup for resolving."""
+
+    def __init__(self) -> None:
+        """Initialize the dispatcher."""
+        super().__init__()
+        self._resource_index: dict[str, AbstractResource] = {}
+
+    def register_resource(self, resource: AbstractResource) -> None:
+        """Register a resource."""
+        super().register_resource(resource)
+        canonical = resource.canonical
+        if "{" in canonical:  # strip at the first { to allow for variables
+            canonical = canonical.split("{")[0]
+            canonical = canonical.rstrip("/")
+        self._resource_index[canonical] = resource
+
+    async def resolve(self, request: web.Request) -> UrlMappingMatchInfo:
+        """Resolve a request."""
+        url_parts = request.rel_url.raw_parts
+        resource_index = self._resource_index
+        # Walk the url parts looking for candidates
+        for i in range(len(url_parts), 1, -1):
+            url_part = "/" + "/".join(url_parts[1:i])
+            if (resource_candidate := resource_index.get(url_part)) is not None and (
+                match_dict := (await resource_candidate.resolve(request))[0]
+            ) is not None:
+                return match_dict
+        # Next try the index view if we don't have a match
+        if (index_view_candidate := resource_index.get("/")) is not None and (
+            match_dict := (await index_view_candidate.resolve(request))[0]
+        ) is not None:
+            return match_dict
+        # Finally, fallback to the linear search
+        return await super().resolve(request)

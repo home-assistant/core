@@ -31,7 +31,6 @@ from typing import (
     TYPE_CHECKING,
     Any,
     Generic,
-    NamedTuple,
     ParamSpec,
     TypeVar,
     cast,
@@ -964,12 +963,11 @@ class Event:
         return f"<Event {self.event_type}[{str(self.origin)[0]}]>"
 
 
-class _FilterableJob(NamedTuple):
-    """Event listener job to be executed with optional filter."""
-
-    job: HassJob[[Event], Coroutine[Any, Any, None] | None]
-    event_filter: Callable[[Event], bool] | None
-    run_immediately: bool
+_FilterableJobType = tuple[
+    HassJob[[Event], Coroutine[Any, Any, None] | None],  # job
+    Callable[[Event], bool] | None,  # event_filter
+    bool,  # run_immediately
+]
 
 
 class EventBus:
@@ -977,8 +975,8 @@ class EventBus:
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize a new event bus."""
-        self._listeners: dict[str, list[_FilterableJob]] = {}
-        self._match_all_listeners: list[_FilterableJob] = []
+        self._listeners: dict[str, list[_FilterableJobType]] = {}
+        self._match_all_listeners: list[_FilterableJobType] = []
         self._listeners[MATCH_ALL] = self._match_all_listeners
         self._hass = hass
 
@@ -1105,14 +1103,12 @@ class EventBus:
             raise HomeAssistantError(f"Event listener {listener} is not a callback")
         return self._async_listen_filterable_job(
             event_type,
-            _FilterableJob(
-                HassJob(listener, f"listen {event_type}"), event_filter, run_immediately
-            ),
+            (HassJob(listener, f"listen {event_type}"), event_filter, run_immediately),
         )
 
     @callback
     def _async_listen_filterable_job(
-        self, event_type: str, filterable_job: _FilterableJob
+        self, event_type: str, filterable_job: _FilterableJobType
     ) -> CALLBACK_TYPE:
         self._listeners.setdefault(event_type, []).append(filterable_job)
 
@@ -1159,7 +1155,7 @@ class EventBus:
 
         This method must be run in the event loop.
         """
-        filterable_job: _FilterableJob | None = None
+        filterable_job: _FilterableJobType | None = None
 
         @callback
         def _onetime_listener(event: Event) -> None:
@@ -1181,7 +1177,7 @@ class EventBus:
             _onetime_listener, listener, ("__name__", "__qualname__", "__module__"), []
         )
 
-        filterable_job = _FilterableJob(
+        filterable_job = (
             HassJob(_onetime_listener, f"onetime listen {event_type} {listener}"),
             None,
             False,
@@ -1191,7 +1187,7 @@ class EventBus:
 
     @callback
     def _async_remove_listener(
-        self, event_type: str, filterable_job: _FilterableJob
+        self, event_type: str, filterable_job: _FilterableJobType
     ) -> None:
         """Remove a listener of a specific event_type.
 
@@ -1413,6 +1409,8 @@ class State:
 
 class StateMachine:
     """Helper class that tracks the state of different entities."""
+
+    __slots__ = ("_states", "_reservations", "_bus", "_loop")
 
     def __init__(self, bus: EventBus, loop: asyncio.events.AbstractEventLoop) -> None:
         """Initialize state machine."""
@@ -1697,7 +1695,7 @@ class Service:
 class ServiceCall:
     """Representation of a call to a service."""
 
-    __slots__ = ["domain", "service", "data", "context", "return_response"]
+    __slots__ = ("domain", "service", "data", "context", "return_response")
 
     def __init__(
         self,
@@ -1708,8 +1706,8 @@ class ServiceCall:
         return_response: bool = False,
     ) -> None:
         """Initialize a service call."""
-        self.domain = domain.lower()
-        self.service = service.lower()
+        self.domain = domain
+        self.service = service
         self.data = ReadOnlyDict(data or {})
         self.context = context or Context()
         self.return_response = return_response
@@ -1894,15 +1892,20 @@ class ServiceRegistry:
 
         This method is a coroutine.
         """
-        domain = domain.lower()
-        service = service.lower()
         context = context or Context()
         service_data = service_data or {}
 
         try:
             handler = self._services[domain][service]
         except KeyError:
-            raise ServiceNotFound(domain, service) from None
+            # Almost all calls are already lower case, so we avoid
+            # calling lower() on the arguments in the common case.
+            domain = domain.lower()
+            service = service.lower()
+            try:
+                handler = self._services[domain][service]
+            except KeyError:
+                raise ServiceNotFound(domain, service) from None
 
         if return_response:
             if not blocking:
@@ -1942,8 +1945,8 @@ class ServiceRegistry:
         self._hass.bus.async_fire(
             EVENT_CALL_SERVICE,
             {
-                ATTR_DOMAIN: domain.lower(),
-                ATTR_SERVICE: service.lower(),
+                ATTR_DOMAIN: domain,
+                ATTR_SERVICE: service,
                 ATTR_SERVICE_DATA: service_data,
             },
             context=context,
@@ -1951,7 +1954,10 @@ class ServiceRegistry:
 
         coro = self._execute_service(handler, service_call)
         if not blocking:
-            self._run_service_in_background(coro, service_call)
+            self._hass.async_create_task(
+                self._run_service_call_catch_exceptions(coro, service_call),
+                f"service call background {service_call.domain}.{service_call.service}",
+            )
             return None
 
         response_data = await coro
@@ -1963,49 +1969,42 @@ class ServiceRegistry:
             )
         return response_data
 
-    def _run_service_in_background(
+    async def _run_service_call_catch_exceptions(
         self,
         coro_or_task: Coroutine[Any, Any, Any] | asyncio.Task[Any],
         service_call: ServiceCall,
     ) -> None:
         """Run service call in background, catching and logging any exceptions."""
-
-        async def catch_exceptions() -> None:
-            try:
-                await coro_or_task
-            except Unauthorized:
-                _LOGGER.warning(
-                    "Unauthorized service called %s/%s",
-                    service_call.domain,
-                    service_call.service,
-                )
-            except asyncio.CancelledError:
-                _LOGGER.debug("Service was cancelled: %s", service_call)
-            except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception("Error executing service: %s", service_call)
-
-        self._hass.async_create_task(
-            catch_exceptions(),
-            f"service call background {service_call.domain}.{service_call.service}",
-        )
+        try:
+            await coro_or_task
+        except Unauthorized:
+            _LOGGER.warning(
+                "Unauthorized service called %s/%s",
+                service_call.domain,
+                service_call.service,
+            )
+        except asyncio.CancelledError:
+            _LOGGER.debug("Service was cancelled: %s", service_call)
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.exception("Error executing service: %s", service_call)
 
     async def _execute_service(
         self, handler: Service, service_call: ServiceCall
     ) -> ServiceResponse:
         """Execute a service."""
-        if handler.job.job_type == HassJobType.Coroutinefunction:
-            return await cast(
-                Callable[[ServiceCall], Awaitable[ServiceResponse]],
-                handler.job.target,
-            )(service_call)
-        if handler.job.job_type == HassJobType.Callback:
-            return cast(Callable[[ServiceCall], ServiceResponse], handler.job.target)(
-                service_call
-            )
-        return await self._hass.async_add_executor_job(
-            cast(Callable[[ServiceCall], ServiceResponse], handler.job.target),
-            service_call,
-        )
+        job = handler.job
+        target = job.target
+        if job.job_type == HassJobType.Coroutinefunction:
+            if TYPE_CHECKING:
+                target = cast(Callable[..., Coroutine[Any, Any, _R]], target)
+            return await target(service_call)
+        if job.job_type == HassJobType.Callback:
+            if TYPE_CHECKING:
+                target = cast(Callable[..., _R], target)
+            return target(service_call)
+        if TYPE_CHECKING:
+            target = cast(Callable[..., _R], target)
+        return await self._hass.async_add_executor_job(target, service_call)
 
 
 class Config:

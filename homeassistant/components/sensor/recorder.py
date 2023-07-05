@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from collections.abc import Iterable, MutableMapping
+from collections.abc import Callable, Iterable, MutableMapping
 import datetime
 import itertools
 import logging
@@ -224,6 +224,8 @@ def _normalize_states(
 
     converter = statistics.STATISTIC_UNIT_TO_UNIT_CONVERTER[statistics_unit]
     valid_fstates: list[tuple[float, State]] = []
+    convert: Callable[[float], float]
+    last_unit: str | None | object = object()
 
     for fstate, state in fstates:
         state_unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
@@ -247,15 +249,13 @@ def _normalize_states(
                     LINK_DEV_STATISTICS,
                 )
             continue
+        if state_unit != last_unit:
+            # The unit of measurement has changed since the last state change
+            # recreate the converter factory
+            convert = converter.converter_factory(state_unit, statistics_unit)
+            last_unit = state_unit
 
-        valid_fstates.append(
-            (
-                converter.convert(
-                    fstate, from_unit=state_unit, to_unit=statistics_unit
-                ),
-                state,
-            )
-        )
+        valid_fstates.append((convert(fstate), state))
 
     return statistics_unit, valid_fstates
 
