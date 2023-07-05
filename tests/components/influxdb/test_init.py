@@ -1407,14 +1407,6 @@ async def test_event_listener_backlog_full(
     """Test the event listener drops old events when backlog gets full."""
     await _setup(hass, mock_client, config_ext, get_write_api)
 
-    state = MagicMock(
-        state=1,
-        domain="fake",
-        entity_id="entity.id",
-        object_id="entity",
-        attributes={},
-    )
-
     monotonic_time = 0
 
     def fast_monotonic():
@@ -1424,7 +1416,7 @@ async def test_event_listener_backlog_full(
         return monotonic_time
 
     with patch("homeassistant.components.influxdb.time.monotonic", new=fast_monotonic):
-        hass.states.async_set(state.entity_id, state.state, state.attributes)
+        hass.states.async_set("entity.id", 1)
         await hass.async_block_till_done()
         hass.data[influxdb.DOMAIN].block_till_done()
 
@@ -1454,15 +1446,6 @@ async def test_event_listener_attribute_name_conflict(
 ) -> None:
     """Test the event listener when an attribute conflicts with another field."""
     await _setup(hass, mock_client, config_ext, get_write_api)
-
-    attrs = {"value": "value_str"}
-    state = MagicMock(
-        state=1,
-        domain="fake",
-        entity_id="fake.something",
-        object_id="something",
-        attributes=attrs,
-    )
     body = [
         {
             "measurement": "fake.something",
@@ -1471,7 +1454,7 @@ async def test_event_listener_attribute_name_conflict(
             "fields": {"value": 1, "value__str": "value_str"},
         }
     ]
-    hass.states.async_set(state.entity_id, state.state, state.attributes)
+    hass.states.async_set("fake.something", 1, {"value": "value_str"})
     await hass.async_block_till_done()
     hass.data[influxdb.DOMAIN].block_till_done()
 
