@@ -522,23 +522,8 @@ class OptionsFlowHandler(config_entries.OptionsFlow, ABC):
         """Reconfigure the addon."""
         multipan_manager = await get_addon_manager(self.hass)
         active_platforms = await multipan_manager.async_active_platforms()
-        if len(active_platforms) == 0:
-            return await self.async_step_notify_no_multipan_user()
-        if len(active_platforms) == 1:
+        if set(active_platforms) != {"otbr", "zha"}:
             return await self.async_step_notify_unknown_multipan_user()
-        return await self.async_step_change_channel()
-
-    async def async_step_notify_no_multipan_user(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """Notify that there may be unknown multipan platforms."""
-        if user_input is None:
-            return self.async_show_form(
-                step_id="notify_no_multipan_user",
-                description_placeholders={
-                    "known_platforms": ", ".join(["otbr", "zha"])
-                },
-            )
         return await self.async_step_change_channel()
 
     async def async_step_notify_unknown_multipan_user(

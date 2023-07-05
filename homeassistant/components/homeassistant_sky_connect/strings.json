@@ -30,10 +30,6 @@
         "title": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::step::notify_channel_change::title%]",
         "description": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::step::notify_channel_change::description%]"
       },
-      "notify_no_multipan_user": {
-        "title": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::step::notify_no_multipan_user::title%]",
-        "description": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::step::notify_no_multipan_user::description%]"
-      },
       "notify_unknown_multipan_user": {
         "title": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::step::notify_unknown_multipan_user::title%]",
         "description": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::step::notify_unknown_multipan_user::description%]"

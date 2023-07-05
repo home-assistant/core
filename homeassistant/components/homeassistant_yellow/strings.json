@@ -44,10 +44,6 @@
           "multipan_settings": "Configure IEEE 802.15.4 radio multiprotocol support"
         }
       },
-      "notify_no_multipan_user": {
-        "title": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::step::notify_no_multipan_user::title%]",
-        "description": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::step::notify_no_multipan_user::description%]"
-      },
       "notify_unknown_multipan_user": {
         "title": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::step::notify_unknown_multipan_user::title%]",
         "description": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::step::notify_unknown_multipan_user::description%]"

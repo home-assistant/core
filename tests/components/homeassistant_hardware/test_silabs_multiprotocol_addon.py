@@ -138,17 +138,6 @@ def mock_multiprotocol_platform(
     return platform
 
 
-@pytest.fixture
-def mock_multiprotocol_platform_2(
-    hass: HomeAssistant,
-) -> Generator[FakeConfigFlow, None, None]:
-    """Fixture for a test silabs multiprotocol platform."""
-    hass.config.components.add(TEST_DOMAIN_2)
-    platform = MockMultiprotocolPlatform()
-    mock_platform(hass, f"{TEST_DOMAIN_2}.silabs_multiprotocol", platform)
-    return platform
-
-
 def get_suggested(schema, key):
     """Get suggested value for key in voluptuous schema."""
     for k in schema:
@@ -468,68 +457,7 @@ async def test_option_flow_addon_installed_other_device(
 @pytest.mark.parametrize(
     ("configured_channel", "suggested_channel"), [(None, "15"), (11, "11")]
 )
-async def test_option_flow_addon_installed_same_device_reconfigure_no_user(
-    hass: HomeAssistant,
-    addon_info,
-    addon_store_info,
-    addon_installed,
-    configured_channel: int | None,
-    suggested_channel: int,
-) -> None:
-    """Test reconfiguring the multi pan addon."""
-    mock_integration(hass, MockModule("hassio"))
-    addon_info.return_value["options"]["device"] = "/dev/ttyTEST123"
-
-    multipan_manager = await silabs_multiprotocol_addon.get_addon_manager(hass)
-    multipan_manager._channel = configured_channel
-
-    # Setup the config entry
-    config_entry = MockConfigEntry(
-        data={},
-        domain=TEST_DOMAIN,
-        options={},
-        title="Test HW",
-    )
-    config_entry.add_to_hass(hass)
-
-    with patch(
-        "homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon.is_hassio",
-        side_effect=Mock(return_value=True),
-    ):
-        result = await hass.config_entries.options.async_init(config_entry.entry_id)
-        assert result["type"] == FlowResultType.MENU
-        assert result["step_id"] == "addon_menu"
-
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        {"next_step_id": "reconfigure_addon"},
-    )
-    assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "notify_no_multipan_user"
-    assert result["description_placeholders"] == {"known_platforms": "otbr, zha"}
-
-    result = await hass.config_entries.options.async_configure(result["flow_id"], {})
-    assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "change_channel"
-    assert get_suggested(result["data_schema"].schema, "channel") == suggested_channel
-
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"], {"channel": "14"}
-    )
-    assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "notify_channel_change"
-    assert result["description_placeholders"] == {"delay_minutes": "5"}
-
-    result = await hass.config_entries.options.async_configure(result["flow_id"], {})
-    assert result["type"] == FlowResultType.CREATE_ENTRY
-
-    assert multipan_manager._channel == 14
-
-
-@pytest.mark.parametrize(
-    ("configured_channel", "suggested_channel"), [(None, "15"), (11, "11")]
-)
-async def test_option_flow_addon_installed_same_device_reconfigure_single_user(
+async def test_option_flow_addon_installed_same_device_reconfigure_unexpected_users(
     hass: HomeAssistant,
     addon_info,
     addon_store_info,
@@ -595,13 +523,11 @@ async def test_option_flow_addon_installed_same_device_reconfigure_single_user(
 @pytest.mark.parametrize(
     ("configured_channel", "suggested_channel"), [(None, "15"), (11, "11")]
 )
-async def test_option_flow_addon_installed_same_device_reconfigure_two_users(
+async def test_option_flow_addon_installed_same_device_reconfigure_expected_users(
     hass: HomeAssistant,
     addon_info,
     addon_store_info,
     addon_installed,
-    mock_multiprotocol_platform: MockMultiprotocolPlatform,
-    mock_multiprotocol_platform_2: MockMultiprotocolPlatform,
     configured_channel: int | None,
     suggested_channel: int,
 ) -> None:
@@ -621,13 +547,19 @@ async def test_option_flow_addon_installed_same_device_reconfigure_two_users(
     )
     config_entry.add_to_hass(hass)
 
-    config_entry_2 = MockConfigEntry(
-        data={},
-        domain=TEST_DOMAIN_2,
-        options={},
-        title="Test HW",
-    )
-    config_entry_2.add_to_hass(hass)
+    mock_multiprotocol_platforms = {}
+    for domain in ["otbr", "zha"]:
+        mock_multiprotocol_platform = MockMultiprotocolPlatform()
+        mock_multiprotocol_platforms[domain] = mock_multiprotocol_platform
+        mock_multiprotocol_platform.channel = configured_channel
+        mock_multiprotocol_platform.using_multipan = True
+
+        hass.config.components.add(domain)
+        mock_platform(
+            hass, f"{domain}.silabs_multiprotocol", mock_multiprotocol_platform
+        )
+        hass.bus.async_fire(EVENT_COMPONENT_LOADED, {ATTR_COMPONENT: domain})
+    await hass.async_block_till_done()
 
     with patch(
         "homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon.is_hassio",
@@ -655,8 +587,8 @@ async def test_option_flow_addon_installed_same_device_reconfigure_two_users(
     result = await hass.config_entries.options.async_configure(result["flow_id"], {})
     assert result["type"] == FlowResultType.CREATE_ENTRY
 
-    assert mock_multiprotocol_platform.change_channel_calls == [(14, 300)]
-    assert mock_multiprotocol_platform_2.change_channel_calls == [(14, 300)]
+    for domain in ["otbr", "zha"]:
+        assert mock_multiprotocol_platforms[domain].change_channel_calls == [(14, 300)]
     assert multipan_manager._channel == 14
 
 
@@ -1190,6 +1122,6 @@ async def test_active_plaforms(
             hass, f"{domain}.silabs_multiprotocol", mock_multiprotocol_platform
         )
         hass.bus.async_fire(EVENT_COMPONENT_LOADED, {ATTR_COMPONENT: domain})
-        await hass.async_block_till_done()
 
+    await hass.async_block_till_done()
     assert await multipan_manager.async_active_platforms() == active_platforms
