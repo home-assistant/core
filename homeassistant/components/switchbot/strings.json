@@ -44,7 +44,7 @@
     },
     "abort": {
       "already_configured_device": "[%key:common::config_flow::abort::already_configured_device%]",
-      "no_devices_found": "No supported SwitchBot devices found in range; If the device is in range, ensure the scanner has active scanning enabled, as SwitchBot devices cannot be discovered with passive scans. If you need clarification on whether the device is in-range, check diagnostics for the Bluetooth scanner to see if the MAC address of the SwitchBot device is present",
+      "no_devices_found": "No supported SwitchBot devices found in range; If the device is in range, ensure the scanner has active scanning enabled, as SwitchBot devices cannot be discovered with passive scans. Active scans can be re-enabled once the device is configured. If you need clarification on whether the device is in-range, check diagnostics for the Bluetooth scanner to see if the MAC address of the SwitchBot device is present.",
       "unknown": "[%key:common::config_flow::error::unknown%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "switchbot_unsupported_type": "Unsupported Switchbot Type."
