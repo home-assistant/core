@@ -172,6 +172,9 @@ play_media:
     announce:
       name: Announce
       description: If the media should be played as an announcement.
+      filter:
+        supported_features:
+          - media_player.MediaPlayerEntityFeature.MEDIA_ANNOUNCE
       required: false
       example: "true"
       selector:
