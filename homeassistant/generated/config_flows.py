@@ -326,6 +326,7 @@ FLOWS = {
         "opentherm_gw",
         "openuv",
         "openweathermap",
+        "opower",
         "oralb",
         "otbr",
         "overkiz",
