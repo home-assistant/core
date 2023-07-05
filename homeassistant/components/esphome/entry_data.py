@@ -14,6 +14,7 @@ from aioesphomeapi import (
     APIVersion,
     BinarySensorInfo,
     CameraInfo,
+    CameraState,
     ClimateInfo,
     CoverInfo,
     DeviceInfo,
@@ -339,8 +340,9 @@ class RuntimeEntryData:
         if (
             current_state == state
             and subscription_key not in stale_state
+            and state_type is not CameraState
             and not (
-                type(state) is SensorState  # pylint: disable=unidiomatic-typecheck
+                state_type is SensorState  # pylint: disable=unidiomatic-typecheck
                 and (platform_info := self.info.get(SensorInfo))
                 and (entity_info := platform_info.get(state.key))
                 and (cast(SensorInfo, entity_info)).force_update
