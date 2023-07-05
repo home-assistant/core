@@ -31,9 +31,9 @@ async def test_raid_array_degraded(hass: HomeAssistant, router: Mock) -> None:
     )
 
     # Now simulate we degraded
-    DATA_STORAGE_GET_RAIDS_DEGRADED = deepcopy(DATA_STORAGE_GET_RAIDS)
-    DATA_STORAGE_GET_RAIDS_DEGRADED[0]["degraded"] = True
-    router().storage.get_raids.return_value = DATA_STORAGE_GET_RAIDS_DEGRADED
+    data_storage_get_raids_degraded = deepcopy(DATA_STORAGE_GET_RAIDS)
+    data_storage_get_raids_degraded[0]["degraded"] = True
+    router().storage.get_raids.return_value = data_storage_get_raids_degraded
     # Simulate an update
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=60))
     # To execute the save
