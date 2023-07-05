@@ -506,6 +506,7 @@ async def test_option_flow_addon_installed_same_device_reconfigure_no_user(
     )
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "notify_no_multipan_user"
+    assert result["description_placeholders"] == {"known_platforms": "otbr, zha"}
 
     result = await hass.config_entries.options.async_configure(result["flow_id"], {})
     assert result["type"] == FlowResultType.FORM
@@ -567,7 +568,10 @@ async def test_option_flow_addon_installed_same_device_reconfigure_single_user(
     )
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "notify_unknown_multipan_user"
-    assert result["description_placeholders"] == {"active_platforms": "test"}
+    assert result["description_placeholders"] == {
+        "active_platforms": "test",
+        "known_platforms": "otbr, zha",
+    }
 
     result = await hass.config_entries.options.async_configure(result["flow_id"], {})
     assert result["type"] == FlowResultType.FORM

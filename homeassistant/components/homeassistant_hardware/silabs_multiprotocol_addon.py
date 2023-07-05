@@ -535,6 +535,9 @@ class OptionsFlowHandler(config_entries.OptionsFlow, ABC):
         if user_input is None:
             return self.async_show_form(
                 step_id="notify_no_multipan_user",
+                description_placeholders={
+                    "known_platforms": ", ".join(["otbr", "zha"])
+                },
             )
         return await self.async_step_change_channel()
 
@@ -549,7 +552,8 @@ class OptionsFlowHandler(config_entries.OptionsFlow, ABC):
             return self.async_show_form(
                 step_id="notify_unknown_multipan_user",
                 description_placeholders={
-                    "active_platforms": ", ".join(active_platforms)
+                    "active_platforms": ", ".join(active_platforms),
+                    "known_platforms": ", ".join(["otbr", "zha"]),
                 },
             )
         return await self.async_step_change_channel()
