@@ -1,8 +1,8 @@
 """Sensor to indicate whether the current day is a workday."""
 from __future__ import annotations
 
-from datetime import date, timedelta
-from typing import Any
+from datetime import date, datetime, timedelta
+from typing import TYPE_CHECKING, Any
 
 import holidays
 from holidays import DateLike, HolidayBase
@@ -39,6 +39,8 @@ from .const import (
     DOMAIN,
     LOGGER,
 )
+
+ATTR_NEXT_UPDATE = "next_update"
 
 
 def valid_country(value: Any) -> str:
@@ -178,7 +180,6 @@ class IsWorkdaySensor(BinarySensorEntity):
     """Implementation of a Workday sensor."""
 
     _attr_has_entity_name = True
-    _attr_name = None
 
     def __init__(
         self,
@@ -194,11 +195,7 @@ class IsWorkdaySensor(BinarySensorEntity):
         self._workdays = workdays
         self._excludes = excludes
         self._days_offset = days_offset
-        self._attr_extra_state_attributes = {
-            CONF_WORKDAYS: workdays,
-            CONF_EXCLUDES: excludes,
-            CONF_OFFSET: days_offset,
-        }
+        self._next_update: datetime | None = None
         self._attr_unique_id = entry_id
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
@@ -207,6 +204,18 @@ class IsWorkdaySensor(BinarySensorEntity):
             model=holidays.__version__,
             name=name,
         )
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any] | None:
+        """Return the state attributes of the sensor."""
+        if TYPE_CHECKING:
+            assert self._next_update is not None
+        return {
+            CONF_WORKDAYS: self._workdays,
+            CONF_EXCLUDES: self._excludes,
+            CONF_OFFSET: self._days_offset,
+            ATTR_NEXT_UPDATE: self._next_update,
+        }
 
     def is_include(self, day: str, now: date) -> bool:
         """Check if given day is in the includes list."""
@@ -228,16 +237,42 @@ class IsWorkdaySensor(BinarySensorEntity):
 
     async def async_update(self) -> None:
         """Get date and look whether it is a holiday."""
+        adjusted_date = dt_util.now() + timedelta(days=self._days_offset)
+
+        self._attr_is_on = self._calculate_state(adjusted_date)
+
+        self._calculate_next_update()
+
+    def _calculate_next_update(self) -> None:
+        """Datetime when the next update to the state."""
+        # Check current state.
+        current_state = self._attr_is_on
+        state = current_state
+
+        adjusted_date = dt_util.start_of_local_day(dt_util.now()) + timedelta(
+            days=self._days_offset
+        )
+
+        while current_state == state:
+            adjusted_date = adjusted_date + timedelta(days=1)
+
+            state = self._calculate_state(adjusted_date)
+
+        self._next_update = adjusted_date
+
+    def _calculate_state(self, adjusted_date) -> bool:
+        """Calculate workday state based on a date."""
         # Default is no workday
-        self._attr_is_on = False
+        is_on = False
 
         # Get ISO day of the week (1 = Monday, 7 = Sunday)
-        adjusted_date = dt_util.now() + timedelta(days=self._days_offset)
         day = adjusted_date.isoweekday() - 1
         day_of_week = ALLOWED_DAYS[day]
 
         if self.is_include(day_of_week, adjusted_date):
-            self._attr_is_on = True
+            is_on = True
 
         if self.is_exclude(day_of_week, adjusted_date):
-            self._attr_is_on = False
+            is_on = False
+
+        return is_on
