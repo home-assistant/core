@@ -41,8 +41,6 @@ from .core.const import (
 )
 from .core.discovery import GROUP_PROBE
 
-BRACKETED_IP_ADDRESS_REGEX = re.compile(r"^(socket|tcp)://\[\d+\.\d+\.\d+\.\d+\]:\d+$")
-
 DEVICE_CONFIG_SCHEMA_ENTRY = vol.Schema({vol.Optional(CONF_TYPE): cv.string})
 ZHA_CONFIG_SCHEMA = {
     vol.Optional(CONF_BAUDRATE): cv.positive_int,
@@ -99,7 +97,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     path = config_entry.data[CONF_DEVICE][CONF_DEVICE_PATH]
     data = copy.deepcopy(dict(config_entry.data))
 
-    if BRACKETED_IP_ADDRESS_REGEX.match(path):
+    if re.match(r"^(socket|tcp)://\[\d+\.\d+\.\d+\.\d+\]:\d+$", path):
         data[CONF_DEVICE][CONF_DEVICE_PATH] = path.replace("[", "").replace("]", "")
         hass.config_entries.async_update_entry(config_entry, data=data)
 
