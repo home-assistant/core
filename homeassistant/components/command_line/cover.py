@@ -30,6 +30,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.template import Template
+from homeassistant.helpers.template_entity import ManualTriggerEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util, slugify
 
@@ -72,7 +73,7 @@ async def async_setup_platform(
             hass,
             DOMAIN,
             "deprecated_yaml_cover",
-            breaks_in_ha_version="2023.8.0",
+            breaks_in_ha_version="2023.12.0",
             is_fixable=False,
             severity=IssueSeverity.WARNING,
             translation_key="deprecated_platform_yaml",
@@ -90,16 +91,20 @@ async def async_setup_platform(
         ):  # Backward compatibility. Can be removed after deprecation
             device_config[CONF_NAME] = name
 
+        trigger_entity_config = {
+            CONF_UNIQUE_ID: device_config.get(CONF_UNIQUE_ID),
+            CONF_NAME: Template(device_config.get(CONF_NAME, device_name), hass),
+        }
+
         covers.append(
             CommandCover(
-                device_config.get(CONF_NAME, device_name),
+                trigger_entity_config,
                 device_config[CONF_COMMAND_OPEN],
                 device_config[CONF_COMMAND_CLOSE],
                 device_config[CONF_COMMAND_STOP],
                 device_config.get(CONF_COMMAND_STATE),
                 value_template,
                 device_config[CONF_COMMAND_TIMEOUT],
-                device_config.get(CONF_UNIQUE_ID),
                 device_config.get(CONF_SCAN_INTERVAL, SCAN_INTERVAL),
             )
         )
@@ -111,25 +116,24 @@ async def async_setup_platform(
     async_add_entities(covers)
 
 
-class CommandCover(CoverEntity):
+class CommandCover(ManualTriggerEntity, CoverEntity):
     """Representation a command line cover."""
 
     _attr_should_poll = False
 
     def __init__(
         self,
-        name: str,
+        config: ConfigType,
         command_open: str,
         command_close: str,
         command_stop: str,
         command_state: str | None,
         value_template: Template | None,
         timeout: int,
-        unique_id: str | None,
         scan_interval: timedelta,
     ) -> None:
         """Initialize the cover."""
-        self._attr_name = name
+        super().__init__(self.hass, config)
         self._state: int | None = None
         self._command_open = command_open
         self._command_close = command_close
@@ -137,7 +141,6 @@ class CommandCover(CoverEntity):
         self._command_state = command_state
         self._value_template = value_template
         self._timeout = timeout
-        self._attr_unique_id = unique_id
         self._scan_interval = scan_interval
         self._process_updates: asyncio.Lock | None = None
 
@@ -218,7 +221,8 @@ class CommandCover(CoverEntity):
             self._state = None
             if payload:
                 self._state = int(payload)
-            await self.async_update_ha_state(True)
+            self._process_manual_data(payload)
+            self.async_write_ha_state()
 
     async def async_update(self) -> None:
         """Update the entity.

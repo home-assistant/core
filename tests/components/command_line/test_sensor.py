@@ -172,7 +172,7 @@ async def test_template_render_with_quote(hass: HomeAssistant) -> None:
         assert len(check_output.mock_calls) == 1
         check_output.assert_called_with(
             'echo "sensor_value" "3 4"',
-            shell=True,  # nosec # shell by design
+            shell=True,  # noqa: S604 # shell by design
             timeout=15,
             close_fds=False,
         )

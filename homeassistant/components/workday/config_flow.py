@@ -247,7 +247,10 @@ class WorkdayConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="options",
             data_schema=new_schema,
             errors=errors,
-            description_placeholders={"name": self.data[CONF_NAME]},
+            description_placeholders={
+                "name": self.data[CONF_NAME],
+                "country": self.data[CONF_COUNTRY],
+            },
         )
 
 
@@ -304,6 +307,10 @@ class WorkdayOptionsFlowHandler(OptionsFlowWithConfigEntry):
             step_id="init",
             data_schema=new_schema,
             errors=errors,
+            description_placeholders={
+                "name": self.options[CONF_NAME],
+                "country": self.options[CONF_COUNTRY],
+            },
         )
 
 

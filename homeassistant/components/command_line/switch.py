@@ -74,7 +74,7 @@ async def async_setup_platform(
             hass,
             DOMAIN,
             "deprecated_yaml_switch",
-            breaks_in_ha_version="2023.8.0",
+            breaks_in_ha_version="2023.12.0",
             is_fixable=False,
             severity=IssueSeverity.WARNING,
             translation_key="deprecated_platform_yaml",
@@ -238,7 +238,7 @@ class CommandSwitch(ManualTriggerEntity, SwitchEntity):
             if payload or value:
                 self._attr_is_on = (value or payload).lower() == "true"
             self._process_manual_data(payload)
-            await self.async_update_ha_state(True)
+            self.async_write_ha_state()
 
     async def async_update(self) -> None:
         """Update the entity.

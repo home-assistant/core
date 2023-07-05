@@ -499,7 +499,7 @@ class PipelineRun:
         self.intent_agent = agent_info.id
 
     async def recognize_intent(
-        self, intent_input: str, conversation_id: str | None
+        self, intent_input: str, conversation_id: str | None, device_id: str | None
     ) -> str:
         """Run intent recognition portion of pipeline. Returns text to speak."""
         if self.intent_agent is None:
@@ -512,6 +512,8 @@ class PipelineRun:
                     "engine": self.intent_agent,
                     "language": self.pipeline.conversation_language,
                     "intent_input": intent_input,
+                    "conversation_id": conversation_id,
+                    "device_id": device_id,
                 },
             )
         )
@@ -521,6 +523,7 @@ class PipelineRun:
                 hass=self.hass,
                 text=intent_input,
                 conversation_id=conversation_id,
+                device_id=device_id,
                 context=self.context,
                 language=self.pipeline.conversation_language,
                 agent_id=self.intent_agent,
@@ -655,6 +658,8 @@ class PipelineInput:
 
     conversation_id: str | None = None
 
+    device_id: str | None = None
+
     async def execute(self) -> None:
         """Run pipeline."""
         self.run.start()
@@ -678,7 +683,9 @@ class PipelineInput:
                 if current_stage == PipelineStage.INTENT:
                     assert intent_input is not None
                     tts_input = await self.run.recognize_intent(
-                        intent_input, self.conversation_id
+                        intent_input,
+                        self.conversation_id,
+                        self.device_id,
                     )
                     current_stage = PipelineStage.TTS
 
@@ -730,17 +737,30 @@ class PipelineInput:
                 )
 
         start_stage_index = PIPELINE_STAGE_ORDER.index(self.run.start_stage)
+        end_stage_index = PIPELINE_STAGE_ORDER.index(self.run.end_stage)
 
         prepare_tasks = []
 
-        if start_stage_index <= PIPELINE_STAGE_ORDER.index(PipelineStage.STT):
+        if (
+            start_stage_index
+            <= PIPELINE_STAGE_ORDER.index(PipelineStage.STT)
+            <= end_stage_index
+        ):
             # self.stt_metadata can't be None or we'd raise above
             prepare_tasks.append(self.run.prepare_speech_to_text(self.stt_metadata))  # type: ignore[arg-type]
 
-        if start_stage_index <= PIPELINE_STAGE_ORDER.index(PipelineStage.INTENT):
+        if (
+            start_stage_index
+            <= PIPELINE_STAGE_ORDER.index(PipelineStage.INTENT)
+            <= end_stage_index
+        ):
             prepare_tasks.append(self.run.prepare_recognize_intent())
 
-        if start_stage_index <= PIPELINE_STAGE_ORDER.index(PipelineStage.TTS):
+        if (
+            start_stage_index
+            <= PIPELINE_STAGE_ORDER.index(PipelineStage.TTS)
+            <= end_stage_index
+        ):
             prepare_tasks.append(self.run.prepare_text_to_speech())
 
         if prepare_tasks:
@@ -944,6 +964,7 @@ class PipelineData:
 
     pipeline_runs: dict[str, LimitedSizeDict[str, PipelineRunDebug]]
     pipeline_store: PipelineStorageCollection
+    pipeline_devices: set[str] = field(default_factory=set, init=False)
 
 
 @dataclass

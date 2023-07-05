@@ -148,7 +148,7 @@ async def test_poll_when_cover_has_command_state(
         await hass.async_block_till_done()
         check_output.assert_called_once_with(
             "echo state",
-            shell=True,  # nosec # shell by design
+            shell=True,  # noqa: S604 # shell by design
             timeout=15,
             close_fds=False,
         )
