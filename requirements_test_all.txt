@@ -763,7 +763,7 @@ hole==0.8.0
 holidays==0.21.13
 
 # homeassistant.components.frontend
-home-assistant-frontend==20230703.0
+home-assistant-frontend==20230705.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2023.6.28
@@ -2005,7 +2005,7 @@ yolink-api==0.2.9
 youless-api==1.0.1
 
 # homeassistant.components.zamg
-zamg==0.2.2
+zamg==0.2.4
 
 # homeassistant.components.zeroconf
 zeroconf==0.70.0
