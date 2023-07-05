@@ -30,5 +30,33 @@
         }
       }
     }
+  },
+  "entity": {
+    "binary_sensor": {
+      "leak": {
+        "name": "Leak detected"
+      },
+      "moved": {
+        "name": "Recently moved"
+      }
+    },
+    "button": {
+      "reset_diagnostics": {
+        "name": "Reset valve diagnostics"
+      }
+    },
+    "sensor": {
+      "uptime": {
+        "name": "Uptime"
+      }
+    },
+    "switch": {
+      "onboard_access_point": {
+        "name": "Onboard access point"
+      },
+      "valve_controller": {
+        "name": "Valve controller"
+      }
+    }
   }
 }

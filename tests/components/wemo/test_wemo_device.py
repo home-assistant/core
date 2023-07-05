@@ -1,5 +1,6 @@
 """Tests for wemo_device.py."""
 import asyncio
+from dataclasses import asdict
 from datetime import timedelta
 from unittest.mock import call, patch
 
@@ -84,7 +85,7 @@ async def test_long_press_event(
         "name": device.wemo.name,
         "params": "testing_params",
         "type": EVENT_TYPE_LONG_PRESS,
-        "unique_id": device.wemo.serialnumber,
+        "unique_id": device.wemo.serial_number,
     }
 
 
@@ -186,6 +187,31 @@ async def test_dli_device_info(
 
     assert device_entries[0].configuration_url == "http://127.0.0.1"
     assert device_entries[0].identifiers == {(DOMAIN, "123456789")}
+
+
+async def test_options_enable_subscription_false(
+    hass, pywemo_registry, pywemo_device, wemo_entity
+):
+    """Test setting Options.enable_subscription = False."""
+    config_entry = hass.config_entries.async_get_entry(wemo_entity.config_entry_id)
+    assert hass.config_entries.async_update_entry(
+        config_entry,
+        options=asdict(
+            wemo_device.Options(enable_subscription=False, enable_long_press=False)
+        ),
+    )
+    await hass.async_block_till_done()
+    pywemo_registry.unregister.assert_called_once_with(pywemo_device)
+
+
+async def test_options_enable_long_press_false(hass, pywemo_device, wemo_entity):
+    """Test setting Options.enable_long_press = False."""
+    config_entry = hass.config_entries.async_get_entry(wemo_entity.config_entry_id)
+    assert hass.config_entries.async_update_entry(
+        config_entry, options=asdict(wemo_device.Options(enable_long_press=False))
+    )
+    await hass.async_block_till_done()
+    pywemo_device.remove_long_press_virtual_device.assert_called_once_with()
 
 
 class TestInsight:

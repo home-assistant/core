@@ -215,6 +215,9 @@ async def start_client(
     LOGGER.info("Connection to Zwave JS Server initialized")
 
     assert client.driver
+    async_dispatcher_send(
+        hass, f"{DOMAIN}_{client.driver.controller.home_id}_connected_to_server"
+    )
 
     await driver_events.setup(client.driver)
 
@@ -314,7 +317,9 @@ class ControllerEvents:
         self.discovered_value_ids: dict[str, set[str]] = defaultdict(set)
         self.driver_events = driver_events
         self.dev_reg = driver_events.dev_reg
-        self.registered_unique_ids: dict[str, dict[str, set[str]]] = defaultdict(dict)
+        self.registered_unique_ids: dict[str, dict[str, set[str]]] = defaultdict(
+            lambda: defaultdict(set)
+        )
         self.node_events = NodeEvents(hass, self)
 
     @callback
@@ -485,9 +490,6 @@ class NodeEvents:
         LOGGER.debug("Processing node %s", node)
         # register (or update) node in device registry
         device = self.controller_events.register_node_in_dev_reg(node)
-        # We only want to create the defaultdict once, even on reinterviews
-        if device.id not in self.controller_events.registered_unique_ids:
-            self.controller_events.registered_unique_ids[device.id] = defaultdict(set)
 
         # Remove any old value ids if this is a reinterview.
         self.controller_events.discovered_value_ids.pop(device.id, None)

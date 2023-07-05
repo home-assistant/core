@@ -34,5 +34,20 @@
         }
       }
     }
+  },
+  "entity": {
+    "binary_sensor": {
+      "health": {
+        "name": "Health"
+      }
+    },
+    "sensor": {
+      "movies": {
+        "name": "Movies"
+      },
+      "start_time": {
+        "name": "Start time"
+      }
+    }
   }
 }

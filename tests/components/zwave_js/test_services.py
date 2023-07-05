@@ -678,6 +678,7 @@ async def test_refresh_value(
         {ATTR_ENTITY_ID: CLIMATE_RADIO_THERMOSTAT_ENTITY},
         blocking=True,
     )
+    await hass.async_block_till_done()
     assert len(client.async_send_command.call_args_list) == 1
     args = client.async_send_command.call_args[0][0]
     assert args["command"] == "node.poll_value"
@@ -701,6 +702,7 @@ async def test_refresh_value(
         },
         blocking=True,
     )
+    await hass.async_block_till_done()
     assert len(client.async_send_command.call_args_list) == 8
 
     client.async_send_command.reset_mock()
@@ -716,6 +718,7 @@ async def test_refresh_value(
         },
         blocking=True,
     )
+    await hass.async_block_till_done()
     assert len(client.async_send_command.call_args_list) == 8
 
     client.async_send_command.reset_mock()
@@ -733,6 +736,7 @@ async def test_refresh_value(
         },
         blocking=True,
     )
+    await hass.async_block_till_done()
     assert len(client.async_send_command.call_args_list) == 8
 
     client.async_send_command.reset_mock()
@@ -1593,6 +1597,7 @@ async def test_invoke_cc_api(
         },
         blocking=True,
     )
+    await hass.async_block_till_done()
     assert len(client.async_send_command.call_args_list) == 1
     args = client.async_send_command.call_args[0][0]
     assert args["command"] == "endpoint.invoke_cc_api"
@@ -1645,6 +1650,7 @@ async def test_invoke_cc_api(
         },
         blocking=True,
     )
+    await hass.async_block_till_done()
     assert len(client.async_send_command.call_args_list) == 1
     args = client.async_send_command.call_args[0][0]
     assert args["command"] == "endpoint.invoke_cc_api"

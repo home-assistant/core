@@ -94,7 +94,7 @@ async def test_command_line_output(hass: HomeAssistant) -> None:
 
         assert hass.services.has_service(NOTIFY_DOMAIN, "test3")
 
-        assert await hass.services.async_call(
+        await hass.services.async_call(
             NOTIFY_DOMAIN, "test3", {"message": message}, blocking=True
         )
         with open(filename, encoding="UTF-8") as handle:
@@ -122,7 +122,7 @@ async def test_error_for_none_zero_exit_code(
 ) -> None:
     """Test if an error is logged for non zero exit codes."""
 
-    assert await hass.services.async_call(
+    await hass.services.async_call(
         NOTIFY_DOMAIN, "test4", {"message": "error"}, blocking=True
     )
     assert "Command failed" in caplog.text
@@ -149,7 +149,7 @@ async def test_timeout(
     caplog: pytest.LogCaptureFixture, hass: HomeAssistant, load_yaml_integration: None
 ) -> None:
     """Test blocking is not forever."""
-    assert await hass.services.async_call(
+    await hass.services.async_call(
         NOTIFY_DOMAIN, "test5", {"message": "error"}, blocking=True
     )
     assert "Timeout" in caplog.text
@@ -185,13 +185,13 @@ async def test_subprocess_exceptions(
             subprocess.SubprocessError(),
         ]
 
-        assert await hass.services.async_call(
+        await hass.services.async_call(
             NOTIFY_DOMAIN, "test6", {"message": "error"}, blocking=True
         )
         assert check_output.call_count == 2
         assert "Timeout for command" in caplog.text
 
-        assert await hass.services.async_call(
+        await hass.services.async_call(
             NOTIFY_DOMAIN, "test6", {"message": "error"}, blocking=True
         )
         assert check_output.call_count == 4
