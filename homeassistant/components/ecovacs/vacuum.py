@@ -53,8 +53,7 @@ class EcovacsVacuum(StateVacuumEntity):
         | VacuumEntityFeature.RETURN_HOME
         | VacuumEntityFeature.CLEAN_SPOT
         | VacuumEntityFeature.STOP
-        | VacuumEntityFeature.TURN_OFF
-        | VacuumEntityFeature.TURN_ON
+        | VacuumEntityFeature.START
         | VacuumEntityFeature.LOCATE
         | VacuumEntityFeature.STATE
         | VacuumEntityFeature.SEND_COMMAND
@@ -158,14 +157,10 @@ class EcovacsVacuum(StateVacuumEntity):
 
         self.device.run(sucks.Charge())
 
-    def turn_on(self, **kwargs: Any) -> None:
+    def start(self, **kwargs: Any) -> None:
         """Turn the vacuum on and start cleaning."""
 
         self.device.run(sucks.Clean())
-
-    def turn_off(self, **kwargs: Any) -> None:
-        """Turn the vacuum off stopping the cleaning and returning home."""
-        self.return_to_base()
 
     def stop(self, **kwargs: Any) -> None:
         """Stop the vacuum cleaner."""
