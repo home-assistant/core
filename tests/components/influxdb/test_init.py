@@ -392,7 +392,6 @@ async def test_event_listener(
             object_id="entity_id",
             attributes=attrs,
         )
-        MagicMock(data={"new_state": state}, time_fired=12345)
         body = [
             {
                 "measurement": "foobars",
@@ -464,7 +463,6 @@ async def test_event_listener_no_units(
             object_id="entity_id",
             attributes=attrs,
         )
-        MagicMock(data={"new_state": state}, time_fired=12345)
         body = [
             {
                 "measurement": "fake.entity_id",
@@ -515,7 +513,6 @@ async def test_event_listener_inf(
         object_id="entity_id",
         attributes=attrs,
     )
-    MagicMock(data={"new_state": state}, time_fired=12345)
     body = [
         {
             "measurement": "fake.entity_id",
@@ -565,7 +562,6 @@ async def test_event_listener_states(
             object_id="entity_id",
             attributes={},
         )
-        MagicMock(data={"new_state": state}, time_fired=12345)
         body = [
             {
                 "measurement": "fake.entity_id",
@@ -598,7 +594,6 @@ async def execute_filter_test(hass: HomeAssistant, tests, write_api, get_mock_ca
             object_id=entity_id,
             attributes={},
         )
-        MagicMock(data={"new_state": state}, time_fired=12345)
         body = [
             {
                 "measurement": test.id,
@@ -960,7 +955,6 @@ async def test_event_listener_invalid_type(
             object_id="entity_id",
             attributes=attrs,
         )
-        MagicMock(data={"new_state": state}, time_fired=12345)
         body = [
             {
                 "measurement": "foobars",
@@ -1021,7 +1015,6 @@ async def test_event_listener_default_measurement(
         object_id="ok",
         attributes={},
     )
-    MagicMock(data={"new_state": state}, time_fired=12345)
     body = [
         {
             "measurement": "state",
@@ -1073,7 +1066,6 @@ async def test_event_listener_unit_of_measurement_field(
         object_id="entity_id",
         attributes=attrs,
     )
-    MagicMock(data={"new_state": state}, time_fired=12345)
     body = [
         {
             "measurement": "state",
@@ -1125,7 +1117,6 @@ async def test_event_listener_tags_attributes(
         object_id="something",
         attributes=attrs,
     )
-    MagicMock(data={"new_state": state}, time_fired=12345)
     body = [
         {
             "measurement": "fake.something",
@@ -1195,7 +1186,6 @@ async def test_event_listener_component_override_measurement(
             object_id=comp["id"],
             attributes={},
         )
-        MagicMock(data={"new_state": state}, time_fired=12345)
         body = [
             {
                 "measurement": comp["res"],
@@ -1269,7 +1259,6 @@ async def test_event_listener_component_measurement_attr(
             object_id=comp["id"],
             attributes=comp["attrs"],
         )
-        MagicMock(data={"new_state": state}, time_fired=12345)
         body = [
             {
                 "measurement": comp["res"],
@@ -1356,7 +1345,6 @@ async def test_event_listener_ignore_attributes(
                 "domain_ignore": 1,
             },
         )
-        MagicMock(data={"new_state": state}, time_fired=12345)
         fields = {"value": 1}
         fields.update(comp["attrs"])
         body = [
@@ -1413,7 +1401,6 @@ async def test_event_listener_ignore_attributes_overlapping_entities(
         object_id="fake",
         attributes={"ignore": 1},
     )
-    MagicMock(data={"new_state": state}, time_fired=12345)
     body = [
         {
             "measurement": "units",
@@ -1465,7 +1452,6 @@ async def test_event_listener_scheduled_write(
         object_id="entity_id",
         attributes={},
     )
-    MagicMock(data={"new_state": state}, time_fired=12345)
     write_api = get_write_api(mock_client)
     write_api.side_effect = OSError("foo")
 
@@ -1518,7 +1504,6 @@ async def test_event_listener_backlog_full(
         object_id="entity",
         attributes={},
     )
-    MagicMock(data={"new_state": state}, time_fired=12345)
 
     monotonic_time = 0
 
@@ -1568,7 +1553,6 @@ async def test_event_listener_attribute_name_conflict(
         object_id="something",
         attributes=attrs,
     )
-    MagicMock(data={"new_state": state}, time_fired=12345)
     body = [
         {
             "measurement": "fake.something",
@@ -1704,7 +1688,6 @@ async def test_invalid_inputs_error(
         object_id="something",
         attributes={},
     )
-    MagicMock(data={"new_state": state}, time_fired=12345)
 
     with patch(f"{INFLUX_PATH}.time.sleep") as sleep:
         hass.states.async_set(state.entity_id, state.state, state.attributes)
@@ -1807,7 +1790,6 @@ async def test_precision(
         object_id="entity",
         attributes=attrs,
     )
-    MagicMock(data={"new_state": state}, time_fired=12345)
     body = [
         {
             "measurement": "foobars",
