@@ -142,23 +142,9 @@ async def async_migrate_unique_id(
     new_name = api.device.values.get("name")
 
     @callback
-    def update_unique_id(entity_entry: er.RegistryEntry) -> dict[str, str] | None:
+    def _update_unique_id(entity_entry: er.RegistryEntry) -> dict[str, str] | None:
         """Update unique ID of entity entry."""
-        if entity_entry.unique_id.startswith(new_unique_id):
-            # Already correct, nothing to do
-            return None
-
-        unique_id_parts = entity_entry.unique_id.split("-")
-        unique_id_parts[0] = new_unique_id
-        entity_new_unique_id = "-".join(unique_id_parts)
-
-        _LOGGER.info(
-            "Migrating entity %s from %s to new id %s",
-            entity_entry.entity_id,
-            entity_entry.unique_id,
-            entity_new_unique_id,
-        )
-        return {"new_unique_id": entity_new_unique_id}
+        return update_unique_id(entity_entry, new_unique_id)
 
     if new_unique_id != old_unique_id:
         # Migrate devices
@@ -183,10 +169,32 @@ async def async_migrate_unique_id(
                     )
 
         # Migrate entities
-        await er.async_migrate_entries(hass, config_entry.entry_id, update_unique_id)
+        await er.async_migrate_entries(hass, config_entry.entry_id, _update_unique_id)
 
         new_data = {**config_entry.data, KEY_MAC: dr.format_mac(new_unique_id)}
 
         hass.config_entries.async_update_entry(
             config_entry, unique_id=new_unique_id, data=new_data
         )
+
+
+@callback
+def update_unique_id(
+    entity_entry: er.RegistryEntry, unique_id: str
+) -> dict[str, str] | None:
+    """Update unique ID of entity entry."""
+    if entity_entry.unique_id.startswith(unique_id):
+        # Already correct, nothing to do
+        return None
+
+    unique_id_parts = entity_entry.unique_id.split("-")
+    unique_id_parts[0] = unique_id
+    entity_new_unique_id = "-".join(unique_id_parts)
+
+    _LOGGER.info(
+        "Migrating entity %s from %s to new id %s",
+        entity_entry.entity_id,
+        entity_entry.unique_id,
+        entity_new_unique_id,
+    )
+    return {"new_unique_id": entity_new_unique_id}

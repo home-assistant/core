@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, PropertyMock, patch
 from aiohttp import ClientConnectionError
 import pytest
 
+from homeassistant.components.daikin import update_unique_id
 from homeassistant.components.daikin.const import DOMAIN, KEY_MAC
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST
@@ -68,7 +69,10 @@ async def test_unique_id_migrate(hass: HomeAssistant, mock_daikin) -> None:
 
     assert device_registry.async_get_device({}, {(KEY_MAC, HOST)}).name is None
 
-    assert entity_registry.async_get("climate.daikin_127_0_0_1").unique_id == HOST
+    entity = entity_registry.async_get("climate.daikin_127_0_0_1")
+    assert entity.unique_id == HOST
+    assert update_unique_id(entity, MAC) is not None
+
     assert entity_registry.async_get("switch.none_zone_1").unique_id.startswith(HOST)
 
     type(mock_daikin).mac = PropertyMock(return_value=MAC)
@@ -85,7 +89,10 @@ async def test_unique_id_migrate(hass: HomeAssistant, mock_daikin) -> None:
         device_registry.async_get_device({}, {(KEY_MAC, MAC)}).name == "DaikinAP00000"
     )
 
-    assert entity_registry.async_get("climate.daikin_127_0_0_1").unique_id == MAC
+    entity = entity_registry.async_get("climate.daikin_127_0_0_1")
+    assert entity.unique_id == MAC
+    assert update_unique_id(entity, MAC) is None
+
     assert entity_registry.async_get("switch.none_zone_1").unique_id.startswith(MAC)
 
 
