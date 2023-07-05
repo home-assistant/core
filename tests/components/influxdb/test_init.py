@@ -385,13 +385,6 @@ async def test_event_listener(
             "updated_at": datetime.datetime(2017, 1, 1, 0, 0),
             "multi_periods": "0.120.240.2023873",
         }
-        state = MagicMock(
-            state=in_,
-            domain="fake",
-            entity_id="fake.entity_id",
-            object_id="entity_id",
-            attributes=attrs,
-        )
         body = [
             {
                 "measurement": "foobars",
@@ -417,7 +410,7 @@ async def test_event_listener(
         if out[1] is not None:
             body[0]["fields"]["value"] = out[1]
 
-        hass.states.async_set(state.entity_id, state.state, state.attributes)
+        hass.states.async_set("fake.entity_id", in_, attrs)
         await hass.async_block_till_done()
         hass.data[influxdb.DOMAIN].block_till_done()
 
@@ -1007,14 +1000,6 @@ async def test_event_listener_default_measurement(
     config = {"default_measurement": "state"}
     config.update(config_ext)
     await _setup(hass, mock_client, config, get_write_api)
-
-    state = MagicMock(
-        state=1,
-        domain="fake",
-        entity_id="fake.ok",
-        object_id="ok",
-        attributes={},
-    )
     body = [
         {
             "measurement": "state",
@@ -1023,7 +1008,7 @@ async def test_event_listener_default_measurement(
             "fields": {"value": 1},
         }
     ]
-    hass.states.async_set(state.entity_id, state.state, state.attributes)
+    hass.states.async_set("fake.ok", 1)
     await hass.async_block_till_done()
     hass.data[influxdb.DOMAIN].block_till_done()
 
@@ -1059,13 +1044,6 @@ async def test_event_listener_unit_of_measurement_field(
     await _setup(hass, mock_client, config, get_write_api)
 
     attrs = {"unit_of_measurement": "foobars"}
-    state = MagicMock(
-        state="foo",
-        domain="fake",
-        entity_id="fake.entity_id",
-        object_id="entity_id",
-        attributes=attrs,
-    )
     body = [
         {
             "measurement": "state",
@@ -1074,7 +1052,7 @@ async def test_event_listener_unit_of_measurement_field(
             "fields": {"state": "foo", "unit_of_measurement_str": "foobars"},
         }
     ]
-    hass.states.async_set(state.entity_id, state.state, state.attributes)
+    hass.states.async_set("fake.entity_id", "foo", attrs)
     await hass.async_block_till_done()
     hass.data[influxdb.DOMAIN].block_till_done()
 
@@ -1110,13 +1088,6 @@ async def test_event_listener_tags_attributes(
     await _setup(hass, mock_client, config, get_write_api)
 
     attrs = {"friendly_fake": "tag_str", "field_fake": "field_str"}
-    state = MagicMock(
-        state=1,
-        domain="fake",
-        entity_id="fake.something",
-        object_id="something",
-        attributes=attrs,
-    )
     body = [
         {
             "measurement": "fake.something",
@@ -1129,7 +1100,7 @@ async def test_event_listener_tags_attributes(
             "fields": {"value": 1, "field_fake_str": "field_str"},
         }
     ]
-    hass.states.async_set(state.entity_id, state.state, state.attributes)
+    hass.states.async_set("fake.something", 1, attrs)
     await hass.async_block_till_done()
     hass.data[influxdb.DOMAIN].block_till_done()
 
@@ -1179,13 +1150,6 @@ async def test_event_listener_component_override_measurement(
         {"domain": "other", "id": "just_fake", "res": "other.just_fake"},
     ]
     for comp in test_components:
-        state = MagicMock(
-            state=1,
-            domain=comp["domain"],
-            entity_id=f"{comp['domain']}.{comp['id']}",
-            object_id=comp["id"],
-            attributes={},
-        )
         body = [
             {
                 "measurement": comp["res"],
@@ -1194,7 +1158,7 @@ async def test_event_listener_component_override_measurement(
                 "fields": {"value": 1},
             }
         ]
-        hass.states.async_set(state.entity_id, state.state, state.attributes)
+        hass.states.async_set(f"{comp['domain']}.{comp['id']}", 1)
         await hass.async_block_till_done()
         hass.data[influxdb.DOMAIN].block_till_done()
 
