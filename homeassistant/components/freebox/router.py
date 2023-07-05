@@ -161,7 +161,6 @@ class FreeboxRouter:
                 "serial": syst_datas["serial"],
             }
 
-
             self.call_list = await self._api.call.get_calls_log()
 
             await self._update_disks_sensors()
@@ -193,8 +192,12 @@ class FreeboxRouter:
 
     async def _update_raids_sensors(self) -> None:
         """Update Freebox raids."""
-        # None at first request
-        fbx_raids: list[dict[str, Any]] = await self._api.storage.get_raids() or []
+        try:
+            # None at first request
+            fbx_raids: list[dict[str, Any]] = await self._api.storage.get_raids() or []
+        except BaseException:
+            _LOGGER.warning("The Freebox API exception during update raid sensors")
+            raise
 
         for fbx_raid in fbx_raids:
             self.raids[fbx_raid["id"]] = fbx_raid
