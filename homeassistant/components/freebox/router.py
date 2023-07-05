@@ -78,6 +78,7 @@ class FreeboxRouter:
 
         self.devices: dict[str, dict[str, Any]] = {}
         self.disks: dict[int, dict[str, Any]] = {}
+        self.raids: dict[int, dict[str, Any]] = {}
         self.sensors_temperature: dict[str, int] = {}
         self.sensors_connection: dict[str, float] = {}
         self.call_list: list[dict[str, Any]] = []
@@ -160,9 +161,11 @@ class FreeboxRouter:
                 "serial": syst_datas["serial"],
             }
 
+
             self.call_list = await self._api.call.get_calls_log()
 
             await self._update_disks_sensors()
+            await self._update_raids_sensors()
         except HttpRequestError as error:
             _LOGGER.warning("The Freebox API URL sensors error %s", error)
             return
@@ -187,6 +190,14 @@ class FreeboxRouter:
 
         for fbx_disk in fbx_disks:
             self.disks[fbx_disk["id"]] = fbx_disk
+
+    async def _update_raids_sensors(self) -> None:
+        """Update Freebox raids."""
+        # None at first request
+        fbx_raids: list[dict[str, Any]] = await self._api.storage.get_raids() or []
+
+        for fbx_raid in fbx_raids:
+            self.raids[fbx_raid["id"]] = fbx_raid
 
     async def update_home_devices(self) -> None:
         """Update Home devices (alarm, light, sensor, switch, remote ...)."""
