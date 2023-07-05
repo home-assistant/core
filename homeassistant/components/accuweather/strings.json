@@ -722,74 +722,74 @@
       "wet_bulb_temperature": {
         "name": "Wet bulb temperature"
       },
-      "wind": {
-        "name": "Wind"
+      "wind_speed": {
+        "name": "Wind speed"
       },
       "wind_chill_temperature": {
         "name": "Wind chill temperature"
       },
-      "wind_gust": {
-        "name": "Wind gust"
+      "wind_gust_speed": {
+        "name": "Wind gust speed"
       },
-      "wind_gust_day_0d": {
-        "name": "Wind gust day 0"
+      "wind_gust_speed_day_0d": {
+        "name": "Wind gust speed day 0"
       },
-      "wind_gust_day_1d": {
-        "name": "Wind gust day 1"
+      "wind_gust_speed_day_1d": {
+        "name": "Wind gust speed day 1"
       },
-      "wind_gust_day_2d": {
-        "name": "Wind gust day 2"
+      "wind_gust_speed_day_2d": {
+        "name": "Wind gust speed day 2"
       },
-      "wind_gust_day_3d": {
-        "name": "Wind gust day 3"
+      "wind_gust_speed_day_3d": {
+        "name": "Wind gust speed day 3"
       },
-      "wind_gust_day_4d": {
-        "name": "Wind gust day 4"
+      "wind_gust_speed_day_4d": {
+        "name": "Wind gust speed day 4"
       },
-      "wind_gust_night_0d": {
-        "name": "Wind gust night 0"
+      "wind_gust_speed_night_0d": {
+        "name": "Wind gust speed night 0"
       },
-      "wind_gust_night_1d": {
-        "name": "Wind gust night 1"
+      "wind_gust_speed_night_1d": {
+        "name": "Wind gust speed night 1"
       },
-      "wind_gust_night_2d": {
-        "name": "Wind gust night 2"
+      "wind_gust_speed_night_2d": {
+        "name": "Wind gust speed night 2"
       },
-      "wind_gust_night_3d": {
-        "name": "Wind gust night 3"
+      "wind_gust_speed_night_3d": {
+        "name": "Wind gust speed night 3"
       },
-      "wind_gust_night_4d": {
-        "name": "Wind gust night 4"
+      "wind_gust_speed_night_4d": {
+        "name": "Wind gust speed night 4"
       },
-      "wind_day_0d": {
-        "name": "Wind day 0"
+      "wind_speed_day_0d": {
+        "name": "Wind speed day 0"
       },
-      "wind_day_1d": {
-        "name": "Wind day 1"
+      "wind_speed_day_1d": {
+        "name": "Wind speed day 1"
       },
-      "wind_day_2d": {
-        "name": "Wind day 2"
+      "wind_speed_day_2d": {
+        "name": "Wind speed day 2"
       },
-      "wind_day_3d": {
-        "name": "Wind day 3"
+      "wind_speed_day_3d": {
+        "name": "Wind speed day 3"
       },
-      "wind_day_4d": {
-        "name": "Wind day 4"
+      "wind_speed_day_4d": {
+        "name": "Wind speed day 4"
       },
-      "wind_night_0d": {
-        "name": "Wind night 0"
+      "wind_speed_night_0d": {
+        "name": "Wind speed night 0"
       },
-      "wind_night_1d": {
-        "name": "Wind night 1"
+      "wind_speed_night_1d": {
+        "name": "Wind speed night 1"
       },
-      "wind_night_2d": {
-        "name": "Wind night 2"
+      "wind_speed_night_2d": {
+        "name": "Wind speed night 2"
       },
-      "wind_night_3d": {
-        "name": "Wind night 3"
+      "wind_speed_night_3d": {
+        "name": "Wind speed night 3"
       },
-      "wind_night_4d": {
-        "name": "Wind night 4"
+      "wind_speed_night_4d": {
+        "name": "Wind speed night 4"
       }
     }
   },
