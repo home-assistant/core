@@ -181,12 +181,17 @@ class SmartThingsMediaPlayer(SmartThingsEntity, MediaPlayerEntity):
     @property
     def state(self) -> MediaPlayerState | None:
         """State of the media player."""
-        if self._device.status.switch:
-            if self.source is not None and self.source in CONTROLLABLE_SOURCES:
-                if self._device.status.playback_status in VALUE_TO_STATE:
-                    return VALUE_TO_STATE[self._device.status.playback_status]
-            return MediaPlayerState.ON
-        return MediaPlayerState.OFF
+        if not self._device.status.switch:
+            return MediaPlayerState.OFF
+            
+        if (
+            self.source is not None 
+            and self.source in CONTROLLABLE_SOURCES
+            and self._device.status.playback_status in VALUE_TO_STATE
+        ):
+            return VALUE_TO_STATE[self._device.status.playback_status]
+                    
+        return MediaPlayerState.ON
 
     @property
     def is_volume_muted(self) -> bool | None:
