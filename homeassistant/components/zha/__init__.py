@@ -41,9 +41,7 @@ from .core.const import (
 )
 from .core.discovery import GROUP_PROBE
 
-BRACKETED_IP_ADDRESS_REGEX = re.compile(
-    r"^socket://\[(?P<host>\d+\.\d+\.\d+\.\d+)\]:(?P<port>\d+)$"
-)
+BRACKETED_IP_ADDRESS_REGEX = re.compile(r"^(socket|tcp)://\[\d+\.\d+\.\d+\.\d+\]:\d+$")
 
 DEVICE_CONFIG_SCHEMA_ENTRY = vol.Schema({vol.Optional(CONF_TYPE): cv.string})
 ZHA_CONFIG_SCHEMA = {
