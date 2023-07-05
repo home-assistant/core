@@ -11,7 +11,6 @@ from homeassistant.components.vacuum import (
     STATE_DOCKED,
     STATE_ERROR,
     STATE_IDLE,
-    STATE_PAUSED,
     STATE_RETURNING,
     StateVacuumEntity,
     VacuumEntityFeature,
@@ -67,13 +66,8 @@ class EcovacsVacuum(StateVacuumEntity):
         vacuum = self.device.vacuum
 
         self.error = None
-        self._attr_unique_id = vacuum.get("did")
-
-        if vacuum.get("nick") is not None:
-            self._attr_name = str(vacuum["nick"])
-        else:
-            # In case there is no nickname defined, use the device id
-            self._attr_name = str(format(vacuum["did"]))
+        self._attr_unique_id = vacuum["did"]
+        self._attr_name = vacuum.get("nick", vacuum["did"])
 
         _LOGGER.debug("StateVacuum initialized: %s", self.name)
 
@@ -113,12 +107,12 @@ class EcovacsVacuum(StateVacuumEntity):
             return STATE_DOCKED
 
         if self.device.vacuum_status == sucks.CLEAN_MODE_STOP:
-            return STATE_PAUSED
+            return STATE_IDLE
 
         if self.device.vacuum_status == sucks.CHARGE_MODE_RETURNING:
             return STATE_RETURNING
 
-        return STATE_IDLE
+        return None
 
     @property
     def battery_level(self) -> int | None:
