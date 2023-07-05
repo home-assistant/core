@@ -4,6 +4,7 @@ from typing import Any
 from unittest.mock import patch
 
 from aioairzone_cloud.const import (
+    API_ACTIVE,
     API_AZ_AIDOO,
     API_AZ_SYSTEM,
     API_AZ_ZONE,
@@ -177,6 +178,7 @@ def mock_get_device_status(device: Device) -> dict[str, Any]:
         }
     if device.get_id() == "zone2":
         return {
+            API_ACTIVE: False,
             API_HUMIDITY: 24,
             API_IS_CONNECTED: True,
             API_WS_CONNECTED: True,
@@ -187,6 +189,7 @@ def mock_get_device_status(device: Device) -> dict[str, Any]:
             API_WARNINGS: [],
         }
     return {
+        API_ACTIVE: True,
         API_HUMIDITY: 30,
         API_IS_CONNECTED: True,
         API_WS_CONNECTED: True,

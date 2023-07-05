@@ -62,9 +62,9 @@
       },
       "light": {
         "state": {
-          "on": "On",
+          "on": "[%key:common::state::on%]",
           "dim": "Dim",
-          "off": "Off"
+          "off": "[%key:common::state::off%]"
         }
       }
     }
