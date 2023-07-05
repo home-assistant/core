@@ -2005,7 +2005,7 @@ yolink-api==0.2.9
 youless-api==1.0.1
 
 # homeassistant.components.zamg
-zamg==0.2.2
+zamg==0.2.4
 
 # homeassistant.components.zeroconf
 zeroconf==0.70.0
