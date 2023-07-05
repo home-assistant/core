@@ -3,6 +3,7 @@ import asyncio
 import copy
 import logging
 import os
+import re
 
 import voluptuous as vol
 from zhaquirks import setup as setup_quirks
@@ -39,6 +40,10 @@ from .core.const import (
     RadioType,
 )
 from .core.discovery import GROUP_PROBE
+
+BRACKETED_IP_ADDRESS_REGEX = re.compile(
+    r"^socket://\[(?P<host>\d+\.\d+\.\d+\.\d+)\]:(?P<port>\d+)$"
+)
 
 DEVICE_CONFIG_SCHEMA_ENTRY = vol.Schema({vol.Optional(CONF_TYPE): cv.string})
 ZHA_CONFIG_SCHEMA = {
@@ -91,13 +96,13 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     Will automatically load components to support devices found on the network.
     """
 
-    # Strip whitespace around `socket://` URIs, this is no longer accepted by zigpy
-    # This will be removed in 2023.7.0
+    # Remove brackets around IP addresses, this no longer works in CPython 3.11.4
+    # This will be removed in 2023.11.0
     path = config_entry.data[CONF_DEVICE][CONF_DEVICE_PATH]
     data = copy.deepcopy(dict(config_entry.data))
 
-    if path.startswith("socket://") and path != path.strip():
-        data[CONF_DEVICE][CONF_DEVICE_PATH] = path.strip()
+    if BRACKETED_IP_ADDRESS_REGEX.match(path):
+        data[CONF_DEVICE][CONF_DEVICE_PATH] = path.replace("[", "").replace("]", "")
         hass.config_entries.async_update_entry(config_entry, data=data)
 
     zha_data = hass.data.setdefault(DATA_ZHA, {})
