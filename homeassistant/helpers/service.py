@@ -617,7 +617,8 @@ async def async_get_all_descriptions(
             cache_key = (domain, service_name)
             description = descriptions_cache.get(cache_key)
             # Cache missing descriptions
-            if description is None and (domain_yaml := loaded.get(domain)):
+            if description is None:
+                domain_yaml = loaded.get(domain) or {}
                 yaml_description = domain_yaml.get(  # type: ignore[union-attr]
                     service_name, {}
                 )
