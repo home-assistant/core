@@ -523,5 +523,6 @@ FLOWS = {
         "zha",
         "zwave_js",
         "zwave_me",
+        "refoss",
     ],
 }
