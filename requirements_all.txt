@@ -2743,3 +2743,6 @@ zwave-js-server-python==0.48.0
 
 # homeassistant.components.zwave_me
 zwave_me_ws==0.4.2
+
+# homeassistant.components.refoss
+refoss-ha==1.0.3

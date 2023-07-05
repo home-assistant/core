@@ -1,4 +1,4 @@
-"""Coordinators for the refoss integration."""
+"""Coordinators for the Refoss integration."""
 from typing import  TypeVar, List,Optional,Iterable
 import async_timeout
 import threading

@@ -1,4 +1,4 @@
-"""Entity for Shelly."""
+"""Entity for Refoss."""
 
 from homeassistant.helpers.entity import DeviceInfo,Entity
 from typing import Optional,List
