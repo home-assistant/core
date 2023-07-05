@@ -53,7 +53,6 @@ def warn_for_deprecation_legacy_schema(
         translation_key,
         breaks_in_ha_version="2024.2.0",
         is_fixable=False,
-        is_persistent=True,
         translation_key=translation_key,
         learn_more_url=MQTT_VACUUM_DOCS_URL,
         severity=IssueSeverity.WARNING,
