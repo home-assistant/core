@@ -606,7 +606,7 @@ async def test_async_get_all_descriptions(hass: HomeAssistant) -> None:
 
 
 async def test_async_get_all_descriptions_failing_integration(
-    hass: HomeAssistant,
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test async_get_all_descriptions when async_get_integrations returns an exception."""
     group = hass.components.group
@@ -629,6 +629,7 @@ async def test_async_get_all_descriptions_failing_integration(
         descriptions = await service.async_get_all_descriptions(hass)
 
     assert len(descriptions) == 2
+    assert "Failed to load integration: logger" in caplog.text
 
     # Services are None if the load fails but should
     # not raise

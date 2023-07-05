@@ -594,11 +594,14 @@ async def async_get_all_descriptions(
 
     if missing:
         ints_or_excs = await async_get_integrations(hass, missing)
-        integrations = [
-            int_or_exc
-            for int_or_exc in ints_or_excs.values()
-            if isinstance(int_or_exc, Integration)
-        ]
+        integrations: list[Integration] = []
+        for domain, int_or_exc in ints_or_excs.items():
+            if type(int_or_exc) is Integration:  # pylint: disable=unidiomatic-typecheck
+                integrations.append(int_or_exc)
+                continue
+            if TYPE_CHECKING:
+                assert isinstance(int_or_exc, Exception)
+            _LOGGER.error("Failed to load integration: %s", domain, exc_info=int_or_exc)
         contents = await hass.async_add_executor_job(
             _load_services_files, hass, integrations
         )
