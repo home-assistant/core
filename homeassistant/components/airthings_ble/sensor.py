@@ -162,7 +162,7 @@ class AirthingsSensor(
         super().__init__(coordinator)
         self.entity_description = entity_description
 
-        name = f"Airthings {airthings_device.model}"
+        name = airthings_device.name
 
         # Only append `device.identifier` to the name if it exists.
         if airthings_device.identifier != "":

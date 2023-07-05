@@ -33,17 +33,6 @@ class Discovery:
     device: AirthingsDevice
 
 
-def get_name(device: AirthingsDevice) -> str:
-    """Generate name device."""
-
-    name = f"Airthings {device.model}"
-
-    # Only append `device.identifier` to the name if it exists.
-    if device.identifier != "":
-        name += f" ({device.identifier})"
-    return name
-
-
 class AirthingsDeviceUpdateError(Exception):
     """Custom error class for device updates."""
 
@@ -101,7 +90,7 @@ class AirthingsConfigFlow(ConfigFlow, domain=DOMAIN):
         except Exception:  # pylint: disable=broad-except
             return self.async_abort(reason="unknown")
 
-        name = get_name(device)
+        name = device.name
         self.context["title_placeholders"] = {"name": name}
         self._discovered_device = Discovery(name, discovery_info, device)
 
@@ -155,14 +144,14 @@ class AirthingsConfigFlow(ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason="cannot_connect")
             except Exception:  # pylint: disable=broad-except
                 return self.async_abort(reason="unknown")
-            name = get_name(device)
+            name = device.name
             self._discovered_devices[address] = Discovery(name, discovery_info, device)
 
         if not self._discovered_devices:
             return self.async_abort(reason="no_devices_found")
 
         titles = {
-            address: get_name(discovery.device)
+            address: discovery.device.name
             for (address, discovery) in self._discovered_devices.items()
         }
         return self.async_show_form(
