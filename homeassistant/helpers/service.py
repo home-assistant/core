@@ -574,17 +574,15 @@ async def async_get_all_descriptions(
     missing = set()
     all_services = []
     for domain in services:
-        for service in services[domain]:
-            cache_key = (domain, service)
+        for service_name in services[domain]:
+            cache_key = (domain, service_name)
             all_services.append(cache_key)
             if cache_key not in descriptions_cache:
                 missing.add(domain)
 
     # If we have a complete cache, check if it is still valid
-    if ALL_SERVICE_DESCRIPTIONS_CACHE in hass.data:
-        previous_all_services, previous_descriptions_cache = hass.data[
-            ALL_SERVICE_DESCRIPTIONS_CACHE
-        ]
+    if all_cache := hass.data.get(ALL_SERVICE_DESCRIPTIONS_CACHE):
+        previous_all_services, previous_descriptions_cache = all_cache
         # If the services are the same, we can return the cache
         if previous_all_services == all_services:
             return cast(dict[str, dict[str, Any]], previous_descriptions_cache)
@@ -609,11 +607,12 @@ async def async_get_all_descriptions(
 
     # Build response
     descriptions: dict[str, dict[str, Any]] = {}
-    for domain in services:
+    for domain, services_map in services.items():
         descriptions[domain] = {}
+        domain_descriptions = descriptions[domain]
 
-        for service in services[domain]:
-            cache_key = (domain, service)
+        for service_name in services_map:
+            cache_key = (domain, service_name)
             description = descriptions_cache.get(cache_key)
 
             # Cache missing descriptions
@@ -621,7 +620,7 @@ async def async_get_all_descriptions(
                 domain_yaml = loaded[domain]
 
                 yaml_description = domain_yaml.get(  # type: ignore[union-attr]
-                    service, {}
+                    service_name, {}
                 )
 
                 # Don't warn for missing services, because it triggers false
@@ -637,7 +636,7 @@ async def async_get_all_descriptions(
                     description["target"] = yaml_description["target"]
 
                 if (
-                    response := hass.services.supports_response(domain, service)
+                    response := hass.services.supports_response(domain, service_name)
                 ) != SupportsResponse.NONE:
                     description["response"] = {
                         "optional": response == SupportsResponse.OPTIONAL,
@@ -645,7 +644,7 @@ async def async_get_all_descriptions(
 
                 descriptions_cache[cache_key] = description
 
-            descriptions[domain][service] = description
+            domain_descriptions[service_name] = description
 
     hass.data[ALL_SERVICE_DESCRIPTIONS_CACHE] = (all_services, descriptions)
     return descriptions
