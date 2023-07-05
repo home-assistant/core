@@ -619,6 +619,11 @@ async def async_get_all_descriptions(
             # Cache missing descriptions
             if description is None:
                 domain_yaml = loaded.get(domain) or {}
+                # The YAML may be empty for dynamically defined
+                # services (ie shell_command) that never call
+                # service.async_set_service_schema for the dynamic
+                # service
+
                 yaml_description = domain_yaml.get(  # type: ignore[union-attr]
                     service_name, {}
                 )
