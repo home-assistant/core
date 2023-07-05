@@ -744,7 +744,7 @@ async def test_thermostat_warning_when_setting_dry_preset(
     )
 
     assert (
-        "Dry and Fan preset modes are deprecated and will be removed. Use the corresponding Dry and Fan HVAC modes instead"
+        "Dry and Fan preset modes are deprecated and will be removed in a future release. Use the corresponding Dry and Fan HVAC modes instead"
         in caplog.text
     )
 
@@ -771,6 +771,6 @@ async def test_thermostat_warning_when_setting_fan_preset(
     )
 
     assert (
-        "Dry and Fan preset modes are deprecated and will be removed. Use the corresponding Dry and Fan HVAC modes instead"
+        "Dry and Fan preset modes are deprecated and will be removed in a future release. Use the corresponding Dry and Fan HVAC modes instead"
         in caplog.text
     )
