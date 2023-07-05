@@ -23,6 +23,8 @@ async def test_update_success(
     value: float,
 ) -> None:
     """Test allowed changing values for number entities."""
+    # Ensure that the entity exist, as these test can pass even if there is no entity.
+    assert hass.states.get(entity_id) is not None
     with patch(
         "homeassistant.components.roborock.coordinator.RoborockLocalClient.send_message"
     ) as mock_send_message:
