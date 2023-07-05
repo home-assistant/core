@@ -1,7 +1,7 @@
 """Support for MQTT vacuums."""
 
 # The legacy schema for MQTT vacuum was deprecated with HA Core 2023.7.0
-# and is will be removed with HA Core 2024.2.0
+# and will be removed with HA Core 2024.2.0
 
 from __future__ import annotations
 
@@ -37,7 +37,7 @@ MQTT_VACUUM_DOCS_URL = "https://www.home-assistant.io/integrations/vacuum.mqtt/"
 
 
 # The legacy schema for MQTT vacuum was deprecated with HA Core 2023.7.0
-# and is will be removed with HA Core 2024.2.0
+# and will be removed with HA Core 2024.2.0
 def warn_for_deprecation_legacy_schema(
     hass: HomeAssistant, config: ConfigType, discovery_data: DiscoveryInfoType | None
 ) -> None:
@@ -68,7 +68,7 @@ def validate_mqtt_vacuum_discovery(config_value: ConfigType) -> ConfigType:
     """Validate MQTT vacuum schema."""
 
     # The legacy schema for MQTT vacuum was deprecated with HA Core 2023.7.0
-    # and is will be removed with HA Core 2024.2.0
+    # and will be removed with HA Core 2024.2.0
 
     schemas = {LEGACY: DISCOVERY_SCHEMA_LEGACY, STATE: DISCOVERY_SCHEMA_STATE}
     config: ConfigType = schemas[config_value[CONF_SCHEMA]](config_value)
@@ -79,7 +79,7 @@ def validate_mqtt_vacuum_modern(config_value: ConfigType) -> ConfigType:
     """Validate MQTT vacuum modern schema."""
 
     # The legacy schema for MQTT vacuum was deprecated with HA Core 2023.7.0
-    # and is will be removed with HA Core 2024.2.0
+    # and will be removed with HA Core 2024.2.0
 
     schemas = {
         LEGACY: PLATFORM_SCHEMA_LEGACY_MODERN,
@@ -120,7 +120,7 @@ async def _async_setup_entity(
     """Set up the MQTT vacuum."""
 
     # The legacy schema for MQTT vacuum was deprecated with HA Core 2023.7.0
-    # and is will be removed with HA Core 2024.2.0
+    # and will be removed with HA Core 2024.2.0
     warn_for_deprecation_legacy_schema(hass, config, discovery_data)
     setup_entity = {
         LEGACY: async_setup_entity_legacy,
