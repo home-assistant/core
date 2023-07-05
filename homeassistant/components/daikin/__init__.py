@@ -146,27 +146,38 @@ async def async_migrate_unique_id(
         """Update unique ID of entity entry."""
         return update_unique_id(entity_entry, new_unique_id)
 
-    if new_unique_id != old_unique_id:
-        # Migrate devices
-        for device_entry in dr.async_entries_for_config_entry(
-            dev_reg, config_entry.entry_id
-        ):
-            for connection in device_entry.connections:
-                if connection[1] == old_unique_id:
-                    new_connections = {
-                        (CONNECTION_NETWORK_MAC, dr.format_mac(new_unique_id))
-                    }
-                    _LOGGER.info(
-                        "Migrating device %s to %s and connections to %s",
-                        device_entry.name,
-                        new_name,
-                        new_connections,
-                    )
-                    dev_reg.async_update_device(
-                        device_entry.id,
-                        name=new_name,
-                        merge_connections=new_connections,
-                    )
+    if new_unique_id == old_unique_id:
+        return
+
+    # Migrate devices
+    for device_entry in dr.async_entries_for_config_entry(
+        dev_reg, config_entry.entry_id
+    ):
+        for connection in device_entry.connections:
+            if connection[1] == old_unique_id:
+                new_connections = {
+                    (CONNECTION_NETWORK_MAC, dr.format_mac(new_unique_id))
+                }
+
+                _LOGGER.debug(
+                    "Migrating device %s connections to %s",
+                    device_entry.name,
+                    new_connections,
+                )
+                dev_reg.async_update_device(
+                    device_entry.id,
+                    merge_connections=new_connections,
+                )
+
+        if device_entry.name is None:
+            _LOGGER.debug(
+                "Migrating device name to %s",
+                new_name,
+            )
+            dev_reg.async_update_device(
+                device_entry.id,
+                name=new_name,
+            )
 
         # Migrate entities
         await er.async_migrate_entries(hass, config_entry.entry_id, _update_unique_id)
@@ -191,7 +202,7 @@ def update_unique_id(
     unique_id_parts[0] = unique_id
     entity_new_unique_id = "-".join(unique_id_parts)
 
-    _LOGGER.info(
+    _LOGGER.debug(
         "Migrating entity %s from %s to new id %s",
         entity_entry.entity_id,
         entity_entry.unique_id,
