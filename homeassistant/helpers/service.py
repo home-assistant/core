@@ -621,7 +621,6 @@ async def async_get_all_descriptions(
 
                 # Don't warn for missing services, because it triggers false
                 # positives for things like scripts, that register as a service
-
                 description = {
                     "name": yaml_description.get("name", ""),
                     "description": yaml_description.get("description", ""),

@@ -605,6 +605,76 @@ async def test_async_get_all_descriptions(hass: HomeAssistant) -> None:
     assert await service.async_get_all_descriptions(hass) is descriptions
 
 
+async def test_async_get_all_descriptions_failing_integration(
+    hass: HomeAssistant,
+) -> None:
+    """Test async_get_all_descriptions when async_get_integrations returns an exception."""
+    group = hass.components.group
+    group_config = {group.DOMAIN: {}}
+    await async_setup_component(hass, group.DOMAIN, group_config)
+    descriptions = await service.async_get_all_descriptions(hass)
+
+    assert len(descriptions) == 1
+
+    assert "description" in descriptions["group"]["reload"]
+    assert "fields" in descriptions["group"]["reload"]
+
+    logger = hass.components.logger
+    logger_config = {logger.DOMAIN: {}}
+    await async_setup_component(hass, logger.DOMAIN, logger_config)
+    with patch(
+        "homeassistant.helpers.service.async_get_integrations",
+        return_value={"logger": ImportError},
+    ):
+        descriptions = await service.async_get_all_descriptions(hass)
+
+    assert len(descriptions) == 2
+
+    # Services are None if the load fails but should
+    # not raise
+    assert descriptions[logger.DOMAIN]["set_level"] is None
+
+    hass.services.async_register(logger.DOMAIN, "new_service", lambda x: None, None)
+    service.async_set_service_schema(
+        hass, logger.DOMAIN, "new_service", {"description": "new service"}
+    )
+    descriptions = await service.async_get_all_descriptions(hass)
+    assert "description" in descriptions[logger.DOMAIN]["new_service"]
+    assert descriptions[logger.DOMAIN]["new_service"]["description"] == "new service"
+
+    hass.services.async_register(
+        logger.DOMAIN, "another_new_service", lambda x: None, None
+    )
+    hass.services.async_register(
+        logger.DOMAIN,
+        "service_with_optional_response",
+        lambda x: None,
+        None,
+        SupportsResponse.OPTIONAL,
+    )
+    hass.services.async_register(
+        logger.DOMAIN,
+        "service_with_only_response",
+        lambda x: None,
+        None,
+        SupportsResponse.ONLY,
+    )
+
+    descriptions = await service.async_get_all_descriptions(hass)
+    assert "another_new_service" in descriptions[logger.DOMAIN]
+    assert "service_with_optional_response" in descriptions[logger.DOMAIN]
+    assert descriptions[logger.DOMAIN]["service_with_optional_response"][
+        "response"
+    ] == {"optional": True}
+    assert "service_with_only_response" in descriptions[logger.DOMAIN]
+    assert descriptions[logger.DOMAIN]["service_with_only_response"]["response"] == {
+        "optional": False
+    }
+
+    # Verify the cache returns the same object
+    assert await service.async_get_all_descriptions(hass) is descriptions
+
+
 async def test_call_with_required_features(hass: HomeAssistant, mock_entities) -> None:
     """Test service calls invoked only if entity has required features."""
     test_service_mock = AsyncMock(return_value=None)
