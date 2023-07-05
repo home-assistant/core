@@ -373,7 +373,6 @@ class ScannerEntity(BaseTrackerEntity):
         # Entities without a unique ID don't have a device
         if (
             not self.registry_entry
-            or not self.platform
             or not self.platform.config_entry
             or not self.mac_address
             or (device_entry := self.find_device_entry()) is None

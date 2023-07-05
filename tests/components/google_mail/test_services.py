@@ -81,6 +81,9 @@ async def test_reauth_trigger(
             blocking=True,
         )
 
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
     flows = hass.config_entries.flow.async_progress()
 
     assert len(flows) == 1

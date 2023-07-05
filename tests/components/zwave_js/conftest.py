@@ -433,6 +433,12 @@ def leviton_zw4sf_state_fixture():
     return json.loads(load_fixture("zwave_js/leviton_zw4sf_state.json"))
 
 
+@pytest.fixture(name="fan_honeywell_39358_state", scope="session")
+def fan_honeywell_39358_state_fixture():
+    """Load the fan node state fixture data."""
+    return json.loads(load_fixture("zwave_js/fan_honeywell_39358_state.json"))
+
+
 @pytest.fixture(name="gdc_zw062_state", scope="session")
 def motorized_barrier_cover_state_fixture():
     """Load the motorized barrier cover node state fixture data."""
@@ -945,6 +951,14 @@ def hs_fc200_fixture(client, hs_fc200_state):
 def leviton_zw4sf_fixture(client, leviton_zw4sf_state):
     """Mock a fan node."""
     node = Node(client, copy.deepcopy(leviton_zw4sf_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="fan_honeywell_39358")
+def fan_honeywell_39358_fixture(client, fan_honeywell_39358_state):
+    """Mock a fan node."""
+    node = Node(client, copy.deepcopy(fan_honeywell_39358_state))
     client.driver.controller.nodes[node.node_id] = node
     return node
 
