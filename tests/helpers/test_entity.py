@@ -1002,7 +1002,7 @@ async def _test_friendly_name(
         (True, "Entity Blu", "Device Bla", "Device Bla Entity Blu", False),
         (True, None, "Device Bla", "Device Bla", False),
         (True, "Entity Blu", UNDEFINED, "Entity Blu", False),
-        (True, "Entity Blu", None, "Entity Blu", False),
+        (True, "Entity Blu", None, "Mock Title Entity Blu", False),
     ),
 )
 async def test_friendly_name_attr(
