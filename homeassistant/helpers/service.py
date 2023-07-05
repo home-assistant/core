@@ -566,7 +566,9 @@ async def async_get_all_descriptions(
     hass: HomeAssistant,
 ) -> dict[str, dict[str, Any]]:
     """Return descriptions (i.e. user documentation) for all service calls."""
-    descriptions_cache = hass.data.setdefault(SERVICE_DESCRIPTION_CACHE, {})
+    descriptions_cache: dict[
+        tuple[str, str], dict[str, Any] | None
+    ] = hass.data.setdefault(SERVICE_DESCRIPTION_CACHE, {})
     services = hass.services.async_services()
 
     # See if there are new services not seen before.
@@ -597,13 +599,10 @@ async def async_get_all_descriptions(
             for int_or_exc in ints_or_excs.values()
             if isinstance(int_or_exc, Integration)
         ]
-
         contents = await hass.async_add_executor_job(
             _load_services_files, hass, integrations
         )
-
-        for domain, content in zip(missing, contents):
-            loaded[domain] = content
+        loaded = dict(zip(missing, contents))
 
     # Build response
     descriptions: dict[str, dict[str, Any]] = {}
@@ -614,11 +613,8 @@ async def async_get_all_descriptions(
         for service_name in services_map:
             cache_key = (domain, service_name)
             description = descriptions_cache.get(cache_key)
-
             # Cache missing descriptions
-            if description is None:
-                domain_yaml = loaded[domain]
-
+            if description is None and (domain_yaml := loaded.get(domain)):
                 yaml_description = domain_yaml.get(  # type: ignore[union-attr]
                     service_name, {}
                 )
@@ -666,7 +662,9 @@ def async_set_service_schema(
     hass: HomeAssistant, domain: str, service: str, schema: dict[str, Any]
 ) -> None:
     """Register a description for a service."""
-    hass.data.setdefault(SERVICE_DESCRIPTION_CACHE, {})
+    descriptions_cache: dict[
+        tuple[str, str], dict[str, Any] | None
+    ] = hass.data.setdefault(SERVICE_DESCRIPTION_CACHE, {})
 
     description = {
         "name": schema.get("name", ""),
@@ -678,7 +676,7 @@ def async_set_service_schema(
         description["target"] = schema["target"]
 
     hass.data.pop(ALL_SERVICE_DESCRIPTIONS_CACHE, None)
-    hass.data[SERVICE_DESCRIPTION_CACHE][(domain, service)] = description
+    descriptions_cache[(domain, service)] = description
 
 
 @bind_hass
