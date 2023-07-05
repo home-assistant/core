@@ -8,7 +8,7 @@ import pytest
 
 import homeassistant.components.google_pubsub as google_pubsub
 from homeassistant.components.google_pubsub import DateTimeJSONEncoder as victim
-from homeassistant.core import HomeAssistant, split_entity_id
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 GOOGLE_PUBSUB_PATH = "homeassistant.components.google_pubsub"
@@ -107,19 +107,6 @@ async def test_full_config(hass: HomeAssistant, mock_client) -> None:
     assert mock_client.from_service_account_json.call_args[0][0] == os.path.join(
         hass.config.config_dir, "creds"
     )
-
-
-def make_event(entity_id):
-    """Make a mock event for test."""
-    domain = split_entity_id(entity_id)[0]
-    state = mock.MagicMock(
-        state="not blank",
-        domain=domain,
-        entity_id=entity_id,
-        object_id="entity",
-        attributes={},
-    )
-    return mock.MagicMock(data={"new_state": state}, time_fired=12345)
 
 
 async def _setup(hass, filter_config):
