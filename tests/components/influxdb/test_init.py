@@ -559,13 +559,6 @@ async def execute_filter_test(hass: HomeAssistant, tests, write_api, get_mock_ca
     """Execute all tests for a given filtering test."""
     for test in tests:
         domain, entity_id = split_entity_id(test.id)
-        state = MagicMock(
-            state=1,
-            domain=domain,
-            entity_id=test.id,
-            object_id=entity_id,
-            attributes={},
-        )
         body = [
             {
                 "measurement": test.id,
@@ -574,7 +567,7 @@ async def execute_filter_test(hass: HomeAssistant, tests, write_api, get_mock_ca
                 "fields": {"value": 1},
             }
         ]
-        hass.states.async_set(test.id, state.state, state.attributes)
+        hass.states.async_set(test.id, 1)
         await hass.async_block_till_done()
         hass.data[influxdb.DOMAIN].block_till_done()
 
@@ -1574,16 +1567,9 @@ async def test_invalid_inputs_error(
 
     write_api = get_write_api(mock_client)
     write_api.side_effect = test_exception
-    state = MagicMock(
-        state=1,
-        domain="fake",
-        entity_id="fake.something",
-        object_id="something",
-        attributes={},
-    )
 
     with patch(f"{INFLUX_PATH}.time.sleep") as sleep:
-        hass.states.async_set(state.entity_id, state.state, state.attributes)
+        hass.states.async_set("fake.something", 1)
         await hass.async_block_till_done()
         hass.data[influxdb.DOMAIN].block_till_done()
 
@@ -1673,16 +1659,6 @@ async def test_precision(
     await _setup(hass, mock_client, config, get_write_api)
 
     value = "1.9"
-    attrs = {
-        "unit_of_measurement": "foobars",
-    }
-    state = MagicMock(
-        state=value,
-        domain="fake",
-        entity_id="fake.entity_id",
-        object_id="entity",
-        attributes=attrs,
-    )
     body = [
         {
             "measurement": "foobars",
@@ -1691,7 +1667,13 @@ async def test_precision(
             "fields": {"value": float(value)},
         }
     ]
-    hass.states.async_set(state.entity_id, state.state, state.attributes)
+    hass.states.async_set(
+        "fake.entity_id",
+        value,
+        {
+            "unit_of_measurement": "foobars",
+        },
+    )
     await hass.async_block_till_done()
     hass.data[influxdb.DOMAIN].block_till_done()
 
