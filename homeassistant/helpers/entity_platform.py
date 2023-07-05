@@ -19,6 +19,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import (
     CALLBACK_TYPE,
+    DOMAIN as HOMEASSISTANT_DOMAIN,
     CoreState,
     HomeAssistant,
     ServiceCall,
@@ -218,11 +219,12 @@ class EntityPlatform:
             )
             async_create_issue(
                 self.hass,
-                self.domain,
+                HOMEASSISTANT_DOMAIN,
                 f"platform_integration_no_support_{self.domain}_{self.platform_name}",
                 is_fixable=False,
+                issue_domain=self.domain,
                 severity=IssueSeverity.ERROR,
-                translation_key="platform_integration_no_support",
+                translation_key="no_platform_setup",
                 translation_placeholders={
                     "domain": self.domain,
                     "platform": self.platform_name,

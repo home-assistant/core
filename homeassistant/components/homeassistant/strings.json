@@ -19,6 +19,10 @@
     "platform_only": {
       "title": "The {domain} integration does not support YAML configuration under its own key",
       "description": "The {domain} integration does not support configuration under its own key, it must be configured under its supported platforms.\n\nTo resolve this:\n\n1. Remove `{domain}:` from your YAML configuration file.\n\n2. Restart Home Assistant."
+    },
+    "no_platform_setup": {
+      "title": "Platform setup not supported",
+      "description": "The {platform} platform for the {domain} integration does not support platform setup.\n\nTo resolve this:\n\n1. Remove `{platform}:` under the `{domain}:` key from your YAML configuration file.\n\n2. Restart Home Assistant."
     }
   },
   "system_health": {
