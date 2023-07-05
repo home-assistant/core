@@ -1477,11 +1477,12 @@ async def test_platform_with_no_setup(
         in caplog.text
     )
     issue = issue_registry.async_get_issue(
-        domain="mock-integration",
+        domain="homeassistant",
         issue_id="platform_integration_no_support_mock-integration_mock-platform",
     )
     assert issue
-    assert issue.translation_key == "platform_integration_no_support"
+    assert issue.issue_domain == "mock-integration"
+    assert issue.translation_key == "no_platform_setup"
 
 
 async def test_platforms_sharing_services(hass: HomeAssistant) -> None:
