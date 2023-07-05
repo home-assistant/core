@@ -526,7 +526,7 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
         # show a deprecation warning if preset_mode is dry or fan
         if preset_mode_value in (ThermostatMode.DRY, ThermostatMode.FAN):
             LOGGER.warning(
-                "Dry and Fan preset modes are deprecated and will be removed. "
+                "Dry and Fan preset modes are deprecated and will be removed in a future release. "
                 "Use the corresponding Dry and Fan HVAC modes instead"
             )
         await self._async_set_value(self._current_mode, preset_mode_value)
