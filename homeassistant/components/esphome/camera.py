@@ -8,7 +8,6 @@ from typing import Any
 
 from aioesphomeapi import CameraInfo, CameraState
 from aiohttp import web
-import async_timeout
 
 from homeassistant.components import camera
 from homeassistant.components.camera import Camera
@@ -20,9 +19,6 @@ from .entity import (
     EsphomeEntity,
     platform_async_setup_entry,
 )
-
-# ESPHome camera timeout is 5 seconds, but we add some buffer for wifi latency
-CAMERA_TIMEOUT = 10
 
 
 async def async_setup_entry(
@@ -85,9 +81,8 @@ class EsphomeCamera(Camera, EsphomeEntity[CameraInfo, CameraState]):
         image_future = self._loop.create_future()
         self._image_futures.append(image_future)
         await request_method()
-        async with async_timeout.timeout(CAMERA_TIMEOUT):
-            if not await image_future:
-                return None
+        if not await image_future:
+            return None
         return self._state.data
 
     async def handle_async_mjpeg_stream(
