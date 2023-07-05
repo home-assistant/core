@@ -1153,3 +1153,39 @@ async def test_load_preferences(hass: HomeAssistant) -> None:
     await multipan_manager2.async_setup()
 
     assert multipan_manager._channel == multipan_manager2._channel
+
+
+@pytest.mark.parametrize(
+    (
+        "multipan_platforms",
+        "active_platforms",
+    ),
+    [
+        ({}, []),
+        ({TEST_DOMAIN: False}, []),
+        ({TEST_DOMAIN: True}, [TEST_DOMAIN]),
+        ({TEST_DOMAIN: True, TEST_DOMAIN_2: False}, [TEST_DOMAIN]),
+        ({TEST_DOMAIN: True, TEST_DOMAIN_2: True}, [TEST_DOMAIN, TEST_DOMAIN_2]),
+    ],
+)
+async def test_active_plaforms(
+    hass: HomeAssistant,
+    multipan_platforms: dict[str, bool],
+    active_platforms: list[str],
+) -> None:
+    """Test async_active_platforms."""
+    multipan_manager = await silabs_multiprotocol_addon.get_addon_manager(hass)
+
+    for domain, platform_using_multipan in multipan_platforms.items():
+        mock_multiprotocol_platform = MockMultiprotocolPlatform()
+        mock_multiprotocol_platform.channel = 11
+        mock_multiprotocol_platform.using_multipan = platform_using_multipan
+
+        hass.config.components.add(domain)
+        mock_platform(
+            hass, f"{domain}.silabs_multiprotocol", mock_multiprotocol_platform
+        )
+        hass.bus.async_fire(EVENT_COMPONENT_LOADED, {ATTR_COMPONENT: domain})
+        await hass.async_block_till_done()
+
+    assert await multipan_manager.async_active_platforms() == active_platforms
