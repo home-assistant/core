@@ -83,6 +83,7 @@ class PureEnergieSensorEntity(
 ):
     """Defines an Pure Energie sensor."""
 
+    _attr_has_entity_name = True
     entity_description: PureEnergieSensorEntityDescription
 
     def __init__(
