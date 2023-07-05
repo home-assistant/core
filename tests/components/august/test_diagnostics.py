@@ -141,4 +141,5 @@ async def test_diagnostics(
                 "zWaveEnabled": False,
             }
         },
+        "brand": "august",
     }

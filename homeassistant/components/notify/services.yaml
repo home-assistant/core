@@ -51,3 +51,11 @@ persistent_notification:
       example: "Your Garage Door Friend"
       selector:
         text:
+    data:
+      name: Data
+      description:
+        Extended information for notification. Optional depending on the
+        platform.
+      example: platform specific
+      selector:
+        object:

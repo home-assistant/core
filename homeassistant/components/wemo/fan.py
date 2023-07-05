@@ -86,6 +86,7 @@ class WemoHumidifier(WemoBinaryStateEntity, FanEntity):
 
     _attr_supported_features = FanEntityFeature.SET_SPEED
     wemo: Humidifier
+    _last_fan_on_mode: FanMode
 
     def __init__(self, coordinator: DeviceCoordinator) -> None:
         """Initialize the WeMo switch."""

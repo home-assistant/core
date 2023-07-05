@@ -326,7 +326,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Huawei LTE component from config entry."""
     url = entry.data[CONF_URL]
 
-    def get_connection() -> Connection:
+    def _connect() -> Connection:
         """Set up a connection."""
         if entry.options.get(CONF_UNAUTHENTICATED_MODE):
             _LOGGER.debug("Connecting in unauthenticated mode, reduced feature set")
@@ -341,7 +341,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         return connection
 
     try:
-        connection = await hass.async_add_executor_job(get_connection)
+        connection = await hass.async_add_executor_job(_connect)
     except LoginErrorInvalidCredentialsException as ex:
         raise ConfigEntryAuthFailed from ex
     except Timeout as ex:

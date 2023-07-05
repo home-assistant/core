@@ -62,28 +62,27 @@ class HomeConnectSensor(HomeConnectEntity, SensorEntity):
         status = self.device.appliance.status
         if self._key not in status:
             self._state = None
-        else:
-            if self.device_class == SensorDeviceClass.TIMESTAMP:
-                if ATTR_VALUE not in status[self._key]:
-                    self._state = None
-                elif (
-                    self._state is not None
-                    and self._sign == 1
-                    and self._state < dt_util.utcnow()
-                ):
-                    # if the date is supposed to be in the future but we're
-                    # already past it, set state to None.
-                    self._state = None
-                else:
-                    seconds = self._sign * float(status[self._key][ATTR_VALUE])
-                    self._state = dt_util.utcnow() + timedelta(seconds=seconds)
+        elif self.device_class == SensorDeviceClass.TIMESTAMP:
+            if ATTR_VALUE not in status[self._key]:
+                self._state = None
+            elif (
+                self._state is not None
+                and self._sign == 1
+                and self._state < dt_util.utcnow()
+            ):
+                # if the date is supposed to be in the future but we're
+                # already past it, set state to None.
+                self._state = None
             else:
-                self._state = status[self._key].get(ATTR_VALUE)
-                if self._key == BSH_OPERATION_STATE:
-                    # Value comes back as an enum, we only really care about the
-                    # last part, so split it off
-                    # https://developer.home-connect.com/docs/status/operation_state
-                    self._state = self._state.split(".")[-1]
+                seconds = self._sign * float(status[self._key][ATTR_VALUE])
+                self._state = dt_util.utcnow() + timedelta(seconds=seconds)
+        else:
+            self._state = status[self._key].get(ATTR_VALUE)
+            if self._key == BSH_OPERATION_STATE:
+                # Value comes back as an enum, we only really care about the
+                # last part, so split it off
+                # https://developer.home-connect.com/docs/status/operation_state
+                self._state = self._state.split(".")[-1]
         _LOGGER.debug("Updated, new state: %s", self._state)
 
     @property

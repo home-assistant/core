@@ -9,6 +9,7 @@ from datetime import datetime, timedelta
 import json
 from unittest.mock import patch, sentinel
 
+from freezegun import freeze_time
 import pytest
 from sqlalchemy import text
 
@@ -223,15 +224,11 @@ def test_state_changes_during_period(
     point = start + timedelta(seconds=1)
     end = point + timedelta(seconds=1)
 
-    with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=start
-    ):
+    with freeze_time(start) as freezer:
         set_state("idle")
         set_state("YouTube")
 
-    with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=point
-    ):
+        freezer.move_to(point)
         states = [
             set_state("idle"),
             set_state("Netflix"),
@@ -239,9 +236,7 @@ def test_state_changes_during_period(
             set_state("YouTube"),
         ]
 
-    with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=end
-    ):
+        freezer.move_to(end)
         set_state("Netflix")
         set_state("Plex")
 
@@ -272,32 +267,23 @@ def test_state_changes_during_period_descending(
     point4 = start + timedelta(seconds=1, microseconds=300)
     end = point + timedelta(seconds=1, microseconds=400)
 
-    with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=start
-    ):
+    with freeze_time(start) as freezer:
         set_state("idle")
         set_state("YouTube")
 
-    with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=point
-    ):
+        freezer.move_to(point)
         states = [set_state("idle")]
-    with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=point2
-    ):
+
+        freezer.move_to(point2)
         states.append(set_state("Netflix"))
-    with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=point3
-    ):
+
+        freezer.move_to(point3)
         states.append(set_state("Plex"))
-    with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=point4
-    ):
+
+        freezer.move_to(point4)
         states.append(set_state("YouTube"))
 
-    with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=end
-    ):
+        freezer.move_to(end)
         set_state("Netflix")
         set_state("Plex")
 
@@ -379,21 +365,15 @@ def test_get_last_state_changes(hass_recorder: Callable[..., HomeAssistant]) -> 
     start = dt_util.utcnow() - timedelta(minutes=2)
     point = start + timedelta(minutes=1)
     point2 = point + timedelta(minutes=1, seconds=1)
+    states = []
 
-    with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=start
-    ):
+    with freeze_time(start) as freezer:
         set_state("1")
 
-    states = []
-    with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=point
-    ):
+        freezer.move_to(point)
         states.append(set_state("2"))
 
-    with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=point2
-    ):
+        freezer.move_to(point2)
         states.append(set_state("3"))
 
     hist = history.get_last_state_changes(hass, 2, entity_id)
@@ -415,21 +395,15 @@ def test_get_last_state_change(hass_recorder: Callable[..., HomeAssistant]) -> N
     start = dt_util.utcnow() - timedelta(minutes=2)
     point = start + timedelta(minutes=1)
     point2 = point + timedelta(minutes=1, seconds=1)
+    states = []
 
-    with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=start
-    ):
+    with freeze_time(start) as freezer:
         set_state("1")
 
-    states = []
-    with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=point
-    ):
+        freezer.move_to(point)
         set_state("2")
 
-    with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=point2
-    ):
+        freezer.move_to(point2)
         states.append(set_state("3"))
 
     hist = history.get_last_state_changes(hass, 1, entity_id)
@@ -457,14 +431,10 @@ def test_ensure_state_can_be_copied(
     start = dt_util.utcnow() - timedelta(minutes=2)
     point = start + timedelta(minutes=1)
 
-    with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=start
-    ):
+    with freeze_time(start) as freezer:
         set_state("1")
 
-    with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=point
-    ):
+        freezer.move_to(point)
         set_state("2")
 
     hist = history.get_last_state_changes(hass, 2, entity_id)
@@ -694,29 +664,18 @@ def test_get_significant_states_only(
         points.append(start + timedelta(minutes=i))
 
     states = []
-    with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=start
-    ):
+    with freeze_time(start) as freezer:
         set_state("123", attributes={"attribute": 10.64})
 
-    with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow",
-        return_value=points[0],
-    ):
+        freezer.move_to(points[0])
         # Attributes are different, state not
         states.append(set_state("123", attributes={"attribute": 21.42}))
 
-    with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow",
-        return_value=points[1],
-    ):
+        freezer.move_to(points[1])
         # state is different, attributes not
         states.append(set_state("32", attributes={"attribute": 21.42}))
 
-    with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow",
-        return_value=points[2],
-    ):
+        freezer.move_to(points[2])
         # everything is different
         states.append(set_state("412", attributes={"attribute": 54.23}))
 
@@ -805,9 +764,7 @@ def record_states(hass) -> tuple[datetime, datetime, dict[str, list[State]]]:
     four = three + timedelta(seconds=1)
 
     states = {therm: [], therm2: [], mp: [], mp2: [], mp3: [], script_c: []}
-    with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=one
-    ):
+    with freeze_time(one) as freezer:
         states[mp].append(
             set_state(mp, "idle", attributes={"media_title": str(sentinel.mt1)})
         )
@@ -821,17 +778,12 @@ def record_states(hass) -> tuple[datetime, datetime, dict[str, list[State]]]:
             set_state(therm, 20, attributes={"current_temperature": 19.5})
         )
 
-    with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow",
-        return_value=one + timedelta(microseconds=1),
-    ):
+        freezer.move_to(one + timedelta(microseconds=1))
         states[mp].append(
             set_state(mp, "YouTube", attributes={"media_title": str(sentinel.mt2)})
         )
 
-    with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=two
-    ):
+        freezer.move_to(two)
         # This state will be skipped only different in time
         set_state(mp, "YouTube", attributes={"media_title": str(sentinel.mt3)})
         # This state will be skipped because domain is excluded
@@ -846,9 +798,7 @@ def record_states(hass) -> tuple[datetime, datetime, dict[str, list[State]]]:
             set_state(therm2, 20, attributes={"current_temperature": 19})
         )
 
-    with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=three
-    ):
+        freezer.move_to(three)
         states[mp].append(
             set_state(mp, "Netflix", attributes={"media_title": str(sentinel.mt4)})
         )

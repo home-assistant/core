@@ -35,7 +35,14 @@ class EntityFilter:
         self._exclude_d = set(config[CONF_EXCLUDE_DOMAINS])
         self._include_eg = _convert_globs_to_pattern(config[CONF_INCLUDE_ENTITY_GLOBS])
         self._exclude_eg = _convert_globs_to_pattern(config[CONF_EXCLUDE_ENTITY_GLOBS])
-        self._filter: Callable[[str], bool] | None = None
+        self._filter = _generate_filter_from_sets_and_pattern_lists(
+            self._include_d,
+            self._include_e,
+            self._exclude_d,
+            self._exclude_e,
+            self._include_eg,
+            self._exclude_eg,
+        )
 
     def explicitly_included(self, entity_id: str) -> bool:
         """Check if an entity is explicitly included."""
@@ -49,17 +56,12 @@ class EntityFilter:
             bool(self._exclude_eg and self._exclude_eg.match(entity_id))
         )
 
+    def get_filter(self) -> Callable[[str], bool]:
+        """Return the filter function."""
+        return self._filter
+
     def __call__(self, entity_id: str) -> bool:
         """Run the filter."""
-        if self._filter is None:
-            self._filter = _generate_filter_from_sets_and_pattern_lists(
-                self._include_d,
-                self._include_e,
-                self._exclude_d,
-                self._exclude_e,
-                self._include_eg,
-                self._exclude_eg,
-            )
         return self._filter(entity_id)
 
 
@@ -183,22 +185,6 @@ def _generate_filter_from_sets_and_pattern_lists(
     have_exclude = bool(exclude_e or exclude_d or exclude_eg)
     have_include = bool(include_e or include_d or include_eg)
 
-    def entity_included(domain: str, entity_id: str) -> bool:
-        """Return true if entity matches inclusion filters."""
-        return (
-            entity_id in include_e
-            or domain in include_d
-            or (bool(include_eg and include_eg.match(entity_id)))
-        )
-
-    def entity_excluded(domain: str, entity_id: str) -> bool:
-        """Return true if entity matches exclusion filters."""
-        return (
-            entity_id in exclude_e
-            or domain in exclude_d
-            or (bool(exclude_eg and exclude_eg.match(entity_id)))
-        )
-
     # Case 1 - No filter
     # - All entities included
     if not have_include and not have_exclude:
@@ -211,12 +197,16 @@ def _generate_filter_from_sets_and_pattern_lists(
     # - Otherwise: exclude
     if have_include and not have_exclude:
 
-        def entity_filter_2(entity_id: str) -> bool:
-            """Return filter function for case 2."""
-            domain = split_entity_id(entity_id)[0]
-            return entity_included(domain, entity_id)
+        def entity_included(entity_id: str) -> bool:
+            """Return true if entity matches inclusion filters."""
+            return (
+                entity_id in include_e
+                or split_entity_id(entity_id)[0] in include_d
+                or (bool(include_eg and include_eg.match(entity_id)))
+            )
 
-        return entity_filter_2
+        # Return filter function for case 2
+        return entity_included
 
     # Case 3 - Only excludes
     # - Entity listed in exclude: exclude
@@ -225,12 +215,15 @@ def _generate_filter_from_sets_and_pattern_lists(
     # - Otherwise: include
     if not have_include and have_exclude:
 
-        def entity_filter_3(entity_id: str) -> bool:
-            """Return filter function for case 3."""
-            domain = split_entity_id(entity_id)[0]
-            return not entity_excluded(domain, entity_id)
+        def entity_not_excluded(entity_id: str) -> bool:
+            """Return true if entity matches exclusion filters."""
+            return not (
+                entity_id in exclude_e
+                or split_entity_id(entity_id)[0] in exclude_d
+                or (exclude_eg and exclude_eg.match(entity_id))
+            )
 
-        return entity_filter_3
+        return entity_not_excluded
 
     # Case 4 - Domain and/or glob includes (may also have excludes)
     # - Entity listed in entities include: include

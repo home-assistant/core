@@ -28,17 +28,17 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import subscription
-from .config import MQTT_RO_SCHEMA
+from .config import MQTT_BASE_SCHEMA
 from .const import CONF_PAYLOAD_RESET, CONF_QOS, CONF_STATE_TOPIC
 from .debug_info import log_messages
 from .mixins import (
+    CONF_JSON_ATTRS_TOPIC,
     MQTT_ENTITY_COMMON_SCHEMA,
     MqttEntity,
     async_setup_entry_helper,
-    warn_for_legacy_schema,
 )
 from .models import MqttValueTemplate, ReceiveMessage, ReceivePayloadType
-from .util import get_mqtt_data
+from .util import get_mqtt_data, valid_subscribe_topic
 
 CONF_PAYLOAD_HOME = "payload_home"
 CONF_PAYLOAD_NOT_HOME = "payload_not_home"
@@ -47,8 +47,20 @@ CONF_SOURCE_TYPE = "source_type"
 DEFAULT_PAYLOAD_RESET = "None"
 DEFAULT_SOURCE_TYPE = SourceType.GPS
 
-PLATFORM_SCHEMA_MODERN = MQTT_RO_SCHEMA.extend(
+
+def valid_config(config: ConfigType) -> ConfigType:
+    """Check if there is a state topic or json_attributes_topic."""
+    if CONF_STATE_TOPIC not in config and CONF_JSON_ATTRS_TOPIC not in config:
+        raise vol.MultipleInvalid(
+            f"Invalid device tracker config, missing {CONF_STATE_TOPIC} or {CONF_JSON_ATTRS_TOPIC}, got: {config}"
+        )
+    return config
+
+
+PLATFORM_SCHEMA_MODERN_BASE = MQTT_BASE_SCHEMA.extend(
     {
+        vol.Optional(CONF_STATE_TOPIC): valid_subscribe_topic,
+        vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
         vol.Optional(CONF_NAME): cv.string,
         vol.Optional(CONF_PAYLOAD_HOME, default=STATE_HOME): cv.string,
         vol.Optional(CONF_PAYLOAD_NOT_HOME, default=STATE_NOT_HOME): cv.string,
@@ -56,15 +68,14 @@ PLATFORM_SCHEMA_MODERN = MQTT_RO_SCHEMA.extend(
         vol.Optional(CONF_SOURCE_TYPE, default=DEFAULT_SOURCE_TYPE): vol.In(
             SOURCE_TYPES
         ),
-    }
+    },
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
+PLATFORM_SCHEMA_MODERN = vol.All(PLATFORM_SCHEMA_MODERN_BASE, valid_config)
 
-DISCOVERY_SCHEMA = PLATFORM_SCHEMA_MODERN.extend({}, extra=vol.REMOVE_EXTRA)
 
-# Configuring MQTT Device Trackers under the device_tracker platform key was deprecated
-# in HA Core 2022.6
-# Setup for the legacy YAML format was removed in HA Core 2022.12
-PLATFORM_SCHEMA = vol.All(warn_for_legacy_schema(device_tracker.DOMAIN))
+DISCOVERY_SCHEMA = vol.All(
+    PLATFORM_SCHEMA_MODERN_BASE.extend({}, extra=vol.REMOVE_EXTRA), valid_config
+)
 
 
 async def async_setup_entry(
@@ -138,12 +149,15 @@ class MqttDeviceTracker(MqttEntity, TrackerEntity):
 
             get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
+        state_topic: str | None = self._config.get(CONF_STATE_TOPIC)
+        if state_topic is None:
+            return
         self._sub_state = subscription.async_prepare_subscribe_topics(
             self.hass,
             self._sub_state,
             {
                 "state_topic": {
-                    "topic": self._config[CONF_STATE_TOPIC],
+                    "topic": state_topic,
                     "msg_callback": message_received,
                     "qos": self._config[CONF_QOS],
                 }

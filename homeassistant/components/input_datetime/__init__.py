@@ -272,7 +272,7 @@ class InputDatetime(collection.CollectionEntity, RestoreEntity):
         if self.state is not None:
             return
 
-        default_value = py_datetime.datetime.today().strftime("%Y-%m-%d 00:00:00")
+        default_value = py_datetime.datetime.today().strftime(f"{FMT_DATE} 00:00:00")
 
         # Priority 2: Old state
         if (old_state := await self.async_get_last_state()) is None:
@@ -292,13 +292,12 @@ class InputDatetime(collection.CollectionEntity, RestoreEntity):
             else:
                 current_datetime = py_datetime.datetime.combine(date, DEFAULT_TIME)
 
+        elif (time := dt_util.parse_time(old_state.state)) is None:
+            current_datetime = dt_util.parse_datetime(default_value)
         else:
-            if (time := dt_util.parse_time(old_state.state)) is None:
-                current_datetime = dt_util.parse_datetime(default_value)
-            else:
-                current_datetime = py_datetime.datetime.combine(
-                    py_datetime.date.today(), time
-                )
+            current_datetime = py_datetime.datetime.combine(
+                py_datetime.date.today(), time
+            )
 
         self._current_datetime = current_datetime.replace(
             tzinfo=dt_util.DEFAULT_TIME_ZONE

@@ -1,9 +1,14 @@
 """Test intent_script component."""
+from unittest.mock import patch
+
+from homeassistant import config as hass_config
 from homeassistant.bootstrap import async_setup_component
+from homeassistant.components.intent_script import DOMAIN
+from homeassistant.const import SERVICE_RELOAD
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import intent
 
-from tests.common import async_mock_service
+from tests.common import async_mock_service, get_fixture_path
 
 
 async def test_intent_script(hass: HomeAssistant) -> None:
@@ -134,3 +139,49 @@ async def test_intent_script_falsy_reprompt(hass: HomeAssistant) -> None:
 
     assert response.card["simple"]["title"] == "Hello Paulus"
     assert response.card["simple"]["content"] == "Content for Paulus"
+
+
+async def test_reload(hass: HomeAssistant) -> None:
+    """Verify we can reload intent config."""
+
+    config = {"intent_script": {"NewIntent1": {"speech": {"text": "HelloWorld123"}}}}
+
+    await async_setup_component(hass, "intent_script", config)
+    await hass.async_block_till_done()
+
+    intents = hass.data.get(intent.DATA_KEY)
+
+    assert len(intents) == 1
+    assert intents.get("NewIntent1")
+
+    yaml_path = get_fixture_path("configuration.yaml", "intent_script")
+
+    with patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_RELOAD,
+            {},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+    assert len(intents) == 1
+
+    assert intents.get("NewIntent1") is None
+    assert intents.get("NewIntent2")
+
+    yaml_path = get_fixture_path("configuration_no_entry.yaml", "intent_script")
+
+    with patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_RELOAD,
+            {},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+    # absence of intent_script from the configuration.yaml should delete all intents.
+    assert len(intents) == 0
+    assert intents.get("NewIntent1") is None
+    assert intents.get("NewIntent2") is None

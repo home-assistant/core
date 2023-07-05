@@ -13,7 +13,7 @@
   "integration_type": "hub",
   "iot_class": "cloud_polling",
   "loggers": ["boto3", "botocore", "pyhumps", "pyoverkiz", "s3transfer"],
-  "requirements": ["pyoverkiz==1.7.8"],
+  "requirements": ["pyoverkiz==1.9.0"],
   "zeroconf": [
     {
       "type": "_kizbox._tcp.local.",

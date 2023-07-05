@@ -1,4 +1,4 @@
-"""Support for Wyoming text to speech services."""
+"""Support for Wyoming text-to-speech services."""
 from collections import defaultdict
 import io
 import logging
@@ -25,7 +25,7 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up Wyoming speech to text."""
+    """Set up Wyoming speech-to-text."""
     service: WyomingService = hass.data[DOMAIN][config_entry.entry_id]
     async_add_entities(
         [
@@ -35,7 +35,7 @@ async def async_setup_entry(
 
 
 class WyomingTtsProvider(tts.TextToSpeechEntity):
-    """Wyoming text to speech provider."""
+    """Wyoming text-to-speech provider."""
 
     def __init__(
         self,
@@ -94,7 +94,7 @@ class WyomingTtsProvider(tts.TextToSpeechEntity):
         """Return a list of supported voices for a language."""
         return self._voices.get(language)
 
-    async def async_get_tts_audio(self, message, language, options=None):
+    async def async_get_tts_audio(self, message, language, options):
         """Load TTS from UNIX socket."""
         try:
             async with AsyncTcpClient(self.service.host, self.service.port) as client:
@@ -129,7 +129,7 @@ class WyomingTtsProvider(tts.TextToSpeechEntity):
         except (OSError, WyomingError):
             return (None, None)
 
-        if (options is None) or (options[tts.ATTR_AUDIO_OUTPUT] == "wav"):
+        if options[tts.ATTR_AUDIO_OUTPUT] == "wav":
             return ("wav", data)
 
         # Raw output (convert to 16Khz, 16-bit mono)
