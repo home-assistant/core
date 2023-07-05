@@ -429,22 +429,6 @@ class VacuumEntity(_BaseVacuum, ToggleEntity):
         """
         await self.hass.async_add_executor_job(partial(self.start_pause, **kwargs))
 
-    @final
-    async def async_pause(self) -> None:
-        """Pause the cleaning task.
-
-        Not supported by VacuumEntity.
-        """
-        raise NotImplementedError()
-
-    @final
-    async def async_start(self) -> None:
-        """Start or resume the cleaning task.
-
-        Not supported by VacuumEntity.
-        """
-        raise NotImplementedError()
-
 
 @dataclass
 class StateVacuumEntityDescription(EntityDescription):
@@ -492,35 +476,3 @@ class StateVacuumEntity(_BaseVacuum):
         This method must be run in the event loop.
         """
         await self.hass.async_add_executor_job(self.pause)
-
-    @final
-    async def async_start_pause(self, **kwargs: Any) -> None:
-        """Start, pause or resume the cleaning task.
-
-        Not supported by StateVacuumEntity.
-        """
-        raise NotImplementedError()
-
-    @final
-    async def async_turn_on(self, **kwargs: Any) -> None:
-        """Turn the vacuum on and start cleaning.
-
-        Not supported by StateVacuumEntity.
-        """
-        raise NotImplementedError()
-
-    @final
-    async def async_turn_off(self, **kwargs: Any) -> None:
-        """Turn the vacuum off stopping the cleaning and returning home.
-
-        Not supported by StateVacuumEntity.
-        """
-        raise NotImplementedError()
-
-    @final
-    async def async_toggle(self, **kwargs: Any) -> None:
-        """Toggle the vacuum cleaner on or off.
-
-        Not supported by StateVacuumEntity.
-        """
-        raise NotImplementedError()
