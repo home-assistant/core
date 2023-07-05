@@ -247,6 +247,12 @@ class SensorDeviceClass(StrEnum):
     Unit of measurement: `µg/m³`
     """
 
+    PH = "ph"
+    """Potential hidrogen (acidity/alkalinity).
+
+    Unit of measurement: Unitless
+    """
+
     PM1 = "pm1"
     """Particulate matter <= 1 μm.
 
@@ -509,6 +515,7 @@ DEVICE_CLASS_UNITS: dict[SensorDeviceClass, set[type[StrEnum] | str | None]] = {
     SensorDeviceClass.NITROGEN_MONOXIDE: {CONCENTRATION_MICROGRAMS_PER_CUBIC_METER},
     SensorDeviceClass.NITROUS_OXIDE: {CONCENTRATION_MICROGRAMS_PER_CUBIC_METER},
     SensorDeviceClass.OZONE: {CONCENTRATION_MICROGRAMS_PER_CUBIC_METER},
+    SensorDeviceClass.PH: {None},
     SensorDeviceClass.PM1: {CONCENTRATION_MICROGRAMS_PER_CUBIC_METER},
     SensorDeviceClass.PM10: {CONCENTRATION_MICROGRAMS_PER_CUBIC_METER},
     SensorDeviceClass.PM25: {CONCENTRATION_MICROGRAMS_PER_CUBIC_METER},
@@ -576,6 +583,7 @@ DEVICE_CLASS_STATE_CLASSES: dict[SensorDeviceClass, set[SensorStateClass]] = {
     SensorDeviceClass.NITROGEN_MONOXIDE: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.NITROUS_OXIDE: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.OZONE: {SensorStateClass.MEASUREMENT},
+    SensorDeviceClass.PH: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.PM1: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.PM10: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.PM25: {SensorStateClass.MEASUREMENT},
