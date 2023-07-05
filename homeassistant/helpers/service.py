@@ -590,7 +590,7 @@ async def async_get_all_descriptions(
             return cast(dict[str, dict[str, Any]], previous_descriptions_cache)
 
     # Files we loaded for missing descriptions
-    loaded = {}
+    loaded: dict[str, JSON_TYPE] = {}
 
     if missing:
         ints_or_excs = await async_get_integrations(hass, missing)
