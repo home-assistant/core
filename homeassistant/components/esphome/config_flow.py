@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections import OrderedDict
 from collections.abc import Mapping
+import json
 import logging
 from typing import Any
 
@@ -39,6 +40,8 @@ ERROR_REQUIRES_ENCRYPTION_KEY = "requires_encryption_key"
 ERROR_INVALID_ENCRYPTION_KEY = "invalid_psk"
 ESPHOME_URL = "https://esphome.io/"
 _LOGGER = logging.getLogger(__name__)
+
+ZERO_NOISE_PSK = "MDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDA="
 
 
 class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
@@ -149,11 +152,22 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
     async def _async_try_fetch_device_info(self) -> FlowResult:
         error = await self.fetch_device_info()
 
-        if (
-            error == ERROR_REQUIRES_ENCRYPTION_KEY
-            and await self._retrieve_encryption_key_from_dashboard()
-        ):
-            error = await self.fetch_device_info()
+        if error == ERROR_REQUIRES_ENCRYPTION_KEY:
+            if not self._device_name and not self._noise_psk:
+                # If device name is not set we can send a zero noise psk
+                # to get the device name which will allow us to populate
+                # the device name and hopefully get the encryption key
+                # from the dashboard.
+                self._noise_psk = ZERO_NOISE_PSK
+                error = await self.fetch_device_info()
+                self._noise_psk = None
+
+            if (
+                self._device_name
+                and await self._retrieve_encryption_key_from_dashboard()
+            ):
+                error = await self.fetch_device_info()
+
             # If the fetched key is invalid, unset it again.
             if error == ERROR_INVALID_ENCRYPTION_KEY:
                 self._noise_psk = None
@@ -323,7 +337,10 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
             self._device_info = await cli.device_info()
         except RequiresEncryptionAPIError:
             return ERROR_REQUIRES_ENCRYPTION_KEY
-        except InvalidEncryptionKeyAPIError:
+        except InvalidEncryptionKeyAPIError as ex:
+            if ex.received_name:
+                self._device_name = ex.received_name
+                self._name = ex.received_name
             return ERROR_INVALID_ENCRYPTION_KEY
         except ResolveAPIError:
             return "resolve_error"
@@ -334,9 +351,8 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
 
         self._name = self._device_info.friendly_name or self._device_info.name
         self._device_name = self._device_info.name
-        await self.async_set_unique_id(
-            self._device_info.mac_address, raise_on_progress=False
-        )
+        mac_address = format_mac(self._device_info.mac_address)
+        await self.async_set_unique_id(mac_address, raise_on_progress=False)
         if not self._reauth_entry:
             self._abort_if_unique_id_configured(
                 updates={CONF_HOST: self._host, CONF_PORT: self._port}
@@ -373,14 +389,13 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
 
         Return boolean if a key was retrieved.
         """
-        if self._device_name is None:
-            return False
-
-        if (dashboard := async_get_dashboard(self.hass)) is None:
+        if (
+            self._device_name is None
+            or (dashboard := async_get_dashboard(self.hass)) is None
+        ):
             return False
 
         await dashboard.async_request_refresh()
-
         if not dashboard.last_update_success:
             return False
 
@@ -393,6 +408,11 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
             noise_psk = await dashboard.api.get_encryption_key(device["configuration"])
         except aiohttp.ClientError as err:
             _LOGGER.error("Error talking to the dashboard: %s", err)
+            return False
+        except json.JSONDecodeError as err:
+            _LOGGER.error(
+                "Error parsing response from dashboard: %s", err, exc_info=True
+            )
             return False
 
         self._noise_psk = noise_psk

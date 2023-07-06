@@ -23,7 +23,7 @@ class LoqedEntity(CoordinatorEntity[LoqedDataCoordinator]):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, lock_id)},
             manufacturer="LOQED",
-            name="LOQED Lock",
+            name=coordinator.device_name,
             model="Touch Smart Lock",
             connections={(CONNECTION_NETWORK_MAC, lock_id)},
         )
