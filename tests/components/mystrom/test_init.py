@@ -142,7 +142,7 @@ async def test_init_cannot_connect_because_of_get_state(
     """Test error handling for failing get_state."""
     with patch(
         "pymystrom.get_device_info",
-        side_effect=AsyncMock(return_value={"type": 101, "mac": DEVICE_MAC}),
+        side_effect=AsyncMock(return_value=get_default_device_response(101)),
     ), patch(
         "pymystrom.switch.MyStromSwitch.get_state", side_effect=MyStromConnectionError()
     ), patch(
@@ -151,4 +151,4 @@ async def test_init_cannot_connect_because_of_get_state(
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    assert config_entry.state == ConfigEntryState.SETUP_ERROR
+    assert config_entry.state == ConfigEntryState.SETUP_RETRY
