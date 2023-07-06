@@ -171,7 +171,7 @@ class AirthingsSensor(
             and airthings_device.identifier != ""
         ):
             identifier = airthings_device.identifier
-            name += f" {identifier}"
+            name += f" ({identifier})"
         else:
             # Use `address` as a fallback for Mac. This does not give any value to the user,
             # so we don't need to add it to the name.
