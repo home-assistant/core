@@ -10,7 +10,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import DOMAIN as DAIKIN_DOMAIN, DaikinApi
-
 from .const import ATTR_STATE_OFF
 
 ZONE_ICON = "mdi:home-circle"
@@ -39,7 +38,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up Daikin climate based on config_entry."""
     daikin_api: DaikinApi = hass.data[DAIKIN_DOMAIN][entry.entry_id]
-    switches: list[DaikinZoneSwitch | DaikinStreamerSwitch] = []
+    switches: list[DaikinZoneSwitch | DaikinStreamerSwitch | DaikinToggleSwitch] = []
     if zones := daikin_api.device.zones:
         switches.extend(
             [
@@ -144,9 +143,7 @@ class DaikinToggleSwitch(SwitchEntity):
     @property
     def is_on(self) -> bool:
         """Return the state of the sensor."""
-        return (
-            ATTR_STATE_OFF not in self._api.device.represent(DAIKIN_ATTR_MODE)
-        )
+        return ATTR_STATE_OFF not in self._api.device.represent(DAIKIN_ATTR_MODE)
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -163,4 +160,4 @@ class DaikinToggleSwitch(SwitchEntity):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the zone off."""
-        await self._api.device.set({DAIKIN_ATTR_MODE:ATTR_STATE_OFF})
+        await self._api.device.set({DAIKIN_ATTR_MODE: ATTR_STATE_OFF})
