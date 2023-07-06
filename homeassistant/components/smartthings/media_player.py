@@ -24,8 +24,11 @@ CONTROLLABLE_SOURCES = ["bluetooth", "wifi"]
 
 VALUE_TO_STATE = {
     "buffering": MediaPlayerState.BUFFERING,
+    "pause": MediaPlayerState.PAUSED,
     "paused": MediaPlayerState.PAUSED,
+    "play": MediaPlayerState.PLAYING,
     "playing": MediaPlayerState.PLAYING,
+    "stop": MediaPlayerState.IDLE,
     "stopped": MediaPlayerState.IDLE,
 }
 
