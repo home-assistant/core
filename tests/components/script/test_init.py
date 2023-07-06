@@ -1625,7 +1625,7 @@ async def test_responses(hass: HomeAssistant, response: Any) -> None:
     )
 
 
-async def test_responses_error(hass: HomeAssistant) -> None:
+async def test_responses_no_response(hass: HomeAssistant) -> None:
     """Test response variable not set."""
     mock_restore_cache(hass, ())
     assert await async_setup_component(
@@ -1645,6 +1645,7 @@ async def test_responses_error(hass: HomeAssistant) -> None:
         },
     )
 
+    # Validate we can call it with return_response
     assert (
         await hass.services.async_call(
             DOMAIN, "test", {"greeting": "world"}, blocking=True, return_response=True
