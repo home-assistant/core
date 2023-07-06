@@ -9,7 +9,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_CLIENT_ID, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
-from .const import DOMAIN, VICARE_DEVICE_CONFIG
+from .const import DOMAIN, VICARE_DEVICE_LIST
 
 TO_REDACT = {CONF_CLIENT_ID, CONF_PASSWORD, CONF_USERNAME}
 
@@ -19,7 +19,7 @@ async def async_get_config_entry_diagnostics(
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
     # Currently we only support a single device
-    device = hass.data[DOMAIN][entry.entry_id][VICARE_DEVICE_CONFIG]
+    device = hass.data[DOMAIN][entry.entry_id][VICARE_DEVICE_LIST][0]
     data: dict[str, Any] = json.loads(
         await hass.async_add_executor_job(device.dump_secure)
     )
