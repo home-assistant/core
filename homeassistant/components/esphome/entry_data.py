@@ -14,6 +14,7 @@ from aioesphomeapi import (
     APIVersion,
     BinarySensorInfo,
     CameraInfo,
+    CameraState,
     ClimateInfo,
     CoverInfo,
     DeviceInfo,
@@ -94,6 +95,7 @@ class RuntimeEntryData:
     info: dict[type[EntityInfo], dict[int, EntityInfo]] = field(default_factory=dict)
     services: dict[int, UserService] = field(default_factory=dict)
     available: bool = False
+    expected_disconnect: bool = False  # Last disconnect was expected (e.g. deep sleep)
     device_info: DeviceInfo | None = None
     api_version: APIVersion = field(default_factory=APIVersion)
     cleanup_callbacks: list[Callable[[], None]] = field(default_factory=list)
@@ -338,8 +340,9 @@ class RuntimeEntryData:
         if (
             current_state == state
             and subscription_key not in stale_state
+            and state_type is not CameraState
             and not (
-                type(state) is SensorState  # pylint: disable=unidiomatic-typecheck
+                state_type is SensorState  # pylint: disable=unidiomatic-typecheck
                 and (platform_info := self.info.get(SensorInfo))
                 and (entity_info := platform_info.get(state.key))
                 and (cast(SensorInfo, entity_info)).force_update

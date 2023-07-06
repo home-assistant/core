@@ -25,5 +25,25 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]"
     }
+  },
+  "entity": {
+    "binary_sensor": {
+      "clean_cycle": {
+        "name": "Clean cycle"
+      }
+    },
+    "select": {
+      "infrared_brightness": {
+        "name": "Infrared brightness"
+      },
+      "theme": {
+        "name": "Theme"
+      }
+    },
+    "sensor": {
+      "rssi": {
+        "name": "RSSI"
+      }
+    }
   }
 }
