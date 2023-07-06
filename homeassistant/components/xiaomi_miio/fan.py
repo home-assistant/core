@@ -292,6 +292,8 @@ async def async_setup_entry(
 class XiaomiGenericDevice(XiaomiCoordinatedMiioEntity, FanEntity):
     """Representation of a generic Xiaomi device."""
 
+    _attr_name = None
+
     def __init__(self, device, entry, unique_id, coordinator):
         """Initialize the generic Xiaomi device."""
         super().__init__(device, entry, unique_id, coordinator)
