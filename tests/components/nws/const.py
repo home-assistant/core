@@ -61,6 +61,9 @@ DEFAULT_OBSERVATION = {
     "windGust": 20,
 }
 
+CLEAR_NIGHT_OBSERVATION = DEFAULT_OBSERVATION.copy()
+CLEAR_NIGHT_OBSERVATION["iconTime"] = "night"
+
 SENSOR_EXPECTED_OBSERVATION_METRIC = {
     "dewpoint": "5",
     "temperature": "10",
