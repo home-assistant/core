@@ -32,6 +32,14 @@ async def _async_get_device_state(
         raise ConfigEntryNotReady() from err
 
 
+def _get_mystrom_bulb(host: str, mac: str) -> MyStromBulb:
+    return MyStromBulb(host, mac)
+
+
+def _get_mystrom_switch(host: str) -> MyStromSwitch:
+    return MyStromSwitch(host)
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up myStrom from a config entry."""
     host = entry.data[CONF_HOST]
@@ -44,12 +52,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     device_type = info["type"]
     if device_type in [101, 106, 107]:
-        device = MyStromSwitch(host)
+        device = _get_mystrom_switch(host)
         platforms = PLATFORMS_SWITCH
         await _async_get_device_state(device, info["ip"])
-    elif device_type == 102:
+    elif device_type in [102, 105]:
         mac = info["mac"]
-        device = MyStromBulb(host, mac)
+        device = _get_mystrom_bulb(host, mac)
         platforms = PLATFORMS_BULB
         await _async_get_device_state(device, info["ip"])
         if device.bulb_type not in ["rgblamp", "strip"]:
@@ -77,8 +85,10 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     device_type = hass.data[DOMAIN][entry.entry_id].info["type"]
     if device_type in [101, 106, 107]:
         platforms = PLATFORMS_SWITCH
-    elif device_type == 102:
+    elif device_type in [102, 105]:
         platforms = PLATFORMS_BULB
+    else:
+        platforms = []
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, platforms):
         hass.data[DOMAIN].pop(entry.entry_id)
 
