@@ -164,9 +164,9 @@ class AirthingsSensor(
 
         name = f"{airthings_device.name}"
         if airthings_device.identifier != "":
-            name += f"({airthings_device.identifier})"
+            name += f" ({airthings_device.identifier})"
 
-        self._attr_unique_id = f"{airthings_device.name}_{entity_description.key}"
+        self._attr_unique_id = f"{name}_{entity_description.key}"
         self._id = airthings_device.address
         self._attr_device_info = DeviceInfo(
             connections={
