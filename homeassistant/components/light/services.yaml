@@ -63,6 +63,7 @@ turn_on:
       advanced: true
       selector:
         select:
+          translation_key: color_name
           options:
             - "homeassistant"
             - "aliceblue"
@@ -434,6 +435,7 @@ toggle:
       advanced: true
       selector:
         select:
+          translation_key: color_name
           options:
             - "homeassistant"
             - "aliceblue"

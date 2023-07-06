@@ -138,6 +138,19 @@ def validate_services(config: Config, integration: Integration) -> None:
                             f"Service {service_name} has a field {field_name} with no description and is not in the translations file",
                         )
 
+                if "selector" in field_schema:
+                    with contextlib.suppress(KeyError):
+                        translation_key = field_schema["selector"]["select"][
+                            "translation_key"
+                        ]
+                        try:
+                            strings["selector"][translation_key]
+                        except KeyError:
+                            integration.add_error(
+                                "services",
+                                f"Service {service_name} has a field {field_name} with a selector with a translation key {translation_key} that is not in the translations file",
+                            )
+
 
 def validate(integrations: dict[str, Integration], config: Config) -> None:
     """Handle dependencies for integrations."""
