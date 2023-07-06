@@ -53,13 +53,6 @@ class PhilipsTVRecordingOngoing(
         )
 
     @property
-    def available(self) -> bool:
-        """Return true if entity is available."""
-        if not super().available:
-            return False
-        return True
-
-    @property
     def is_on(self) -> bool:
         """Return True if at least one recording is ongoing."""
         for rec in self.coordinator.api.recordings_list["recordings"]:
@@ -89,13 +82,6 @@ class PhilipsTVRecordingNew(
                 (DOMAIN, coordinator.unique_id),
             }
         )
-
-    @property
-    def available(self) -> bool:
-        """Return true if entity is available."""
-        if not super().available:
-            return False
-        return True
 
     @property
     def is_on(self) -> bool:
