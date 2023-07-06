@@ -22,6 +22,16 @@ PLATFORMS_BULB = [Platform.LIGHT]
 _LOGGER = logging.getLogger(__name__)
 
 
+async def _async_get_device_state(
+    device: MyStromSwitch | MyStromBulb, ip_address: str
+) -> None:
+    try:
+        await device.get_state()
+    except MyStromConnectionError as err:
+        _LOGGER.error("No route to myStrom plug: %s", ip_address)
+        raise ConfigEntryNotReady() from err
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up myStrom from a config entry."""
     host = entry.data[CONF_HOST]
@@ -36,10 +46,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if device_type in [101, 106, 107]:
         device = MyStromSwitch(host)
         platforms = PLATFORMS_SWITCH
+        await _async_get_device_state(device, info["ip"])
     elif device_type == 102:
         mac = info["mac"]
         device = MyStromBulb(host, mac)
         platforms = PLATFORMS_BULB
+        await _async_get_device_state(device, info["ip"])
         if device.bulb_type not in ["rgblamp", "strip"]:
             _LOGGER.error(
                 "Device %s (%s) is not a myStrom bulb nor myStrom LED Strip",
@@ -50,12 +62,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     else:
         _LOGGER.error("Unsupported myStrom device type: %s", device_type)
         return False
-
-    try:
-        await device.get_state()
-    except MyStromConnectionError as err:
-        _LOGGER.error("No route to myStrom plug: %s", info["ip"])
-        raise ConfigEntryNotReady() from err
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = MyStromData(
         device=device,
