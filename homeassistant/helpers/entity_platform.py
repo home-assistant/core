@@ -762,6 +762,12 @@ class EntityPlatform:
         self, device_info: DeviceInfo
     ) -> dev_reg.DeviceEntry | None:
         """Process a device info."""
+        keys = set(device_info)
+
+        # If no keys or not enough info to match up, abort
+        if not keys or len(keys & {"connections", "identifiers"}) == 0:
+            return None
+
         if device_info.get("configuration_url") is not None:
             if urlparse(device_info["configuration_url"]).scheme not in [
                 "http",
@@ -773,12 +779,6 @@ class EntityPlatform:
                     device_info["configuration_url"],
                 )
                 return None
-
-        keys = set(device_info)
-
-        # If no keys or not enough info to match up, abort
-        if not keys or len(keys & {"connections", "identifiers"}) == 0:
-            return None
 
         device_info_type: str | None = None
 
