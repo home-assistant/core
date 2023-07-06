@@ -22,8 +22,8 @@ from homeassistant.helpers.typing import ConfigType
 from .const import DOMAIN, LOGGER, SCAN_INTERVAL
 from .coordinator import HydrawiseDataUpdateCoordinator
 
-# Deprecated since Home Assistant 2023.7.0
-# Can be removed completely in 2023.10.0
+# Deprecated since Home Assistant 2023.8.0
+# Can be removed completely in 2024.2.0
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(
@@ -45,7 +45,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         hass,
         DOMAIN,
         "deprecated_yaml",
-        breaks_in_ha_version="2023.10.0",
+        breaks_in_ha_version="2024.2.0",
         is_fixable=False,
         severity=IssueSeverity.WARNING,
         translation_key="deprecated_yaml",
