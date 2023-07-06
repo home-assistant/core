@@ -162,9 +162,16 @@ class AirthingsSensor(
         super().__init__(coordinator)
         self.entity_description = entity_description
 
-        name = airthings_device.name
+        if airthings_device.model == "" and airthings_device.identifier == "":
+            name = f"{airthings_device.name} ({airthings_device.identifier})"
+        else:
+            name = "Airthings"
+            if airthings_device.model != "":
+                name += f" {airthings_device.model}"
+            if airthings_device.identifier != "":
+                name += f" ({airthings_device.identifier})"
 
-        self._attr_unique_id = f"{name}_{entity_description.key}"
+        self._attr_unique_id = f"{airthings_device.name}_{airthings_device.identifier}_{entity_description.key}"
 
         self._id = airthings_device.address
         self._attr_device_info = DeviceInfo(
