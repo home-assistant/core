@@ -762,43 +762,19 @@ class EntityPlatform:
         self, device_info: DeviceInfo
     ) -> dev_reg.DeviceEntry | None:
         """Process a device info."""
-        processed_dev_info: DeviceInfo = {}
-        for key in (
-            "connections",
-            "default_manufacturer",
-            "default_model",
-            "default_name",
-            "entry_type",
-            "hw_version",
-            "identifiers",
-            "manufacturer",
-            "model",
-            "name",
-            "suggested_area",
-            "sw_version",
-            "via_device",
-        ):
-            if key in device_info:
-                processed_dev_info[key] = device_info[key]  # type: ignore [literal-required]
+        if device_info.get("configuration_url") is not None:
+            if urlparse(device_info["configuration_url"]).scheme not in [
+                "http",
+                "https",
+                "homeassistant",
+            ]:
+                _LOGGER.error(
+                    "Ignoring device info with invalid configuration_url '%s'",
+                    device_info["configuration_url"],
+                )
+                return None
 
-        if "configuration_url" in device_info:
-            if device_info["configuration_url"] is None:
-                processed_dev_info["configuration_url"] = None
-            else:
-                configuration_url = str(device_info["configuration_url"])
-                if urlparse(configuration_url).scheme in [
-                    "http",
-                    "https",
-                    "homeassistant",
-                ]:
-                    processed_dev_info["configuration_url"] = configuration_url
-                else:
-                    _LOGGER.warning(
-                        "Ignoring invalid device configuration_url '%s'",
-                        configuration_url,
-                    )
-
-        keys = set(processed_dev_info)
+        keys = set(device_info)
 
         # If no keys or not enough info to match up, abort
         if not keys or len(keys & {"connections", "identifiers"}) == 0:
@@ -824,14 +800,17 @@ class EntityPlatform:
         if (
             # device info that is purely meant for linking doesn't need default name
             device_info_type != "link"
-            and "default_name" not in processed_dev_info
-            and not processed_dev_info.get("name")
+            and "default_name" not in device_info
+            and not device_info.get("name")
         ):
-            processed_dev_info["name"] = self.config_entry.title
+            device_info = {
+                **device_info,  # type: ignore[misc]
+                "name": self.config_entry.title,
+            }
 
         return dev_reg.async_get(self.hass).async_get_or_create(
             config_entry_id=self.config_entry.entry_id,
-            **processed_dev_info,
+            **device_info,
         )
 
     async def async_reset(self) -> None:

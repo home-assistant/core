@@ -1169,57 +1169,6 @@ async def test_device_info_not_overrides(hass: HomeAssistant) -> None:
     assert device2.model == "test-model"
 
 
-async def test_device_info_invalid_url(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
-) -> None:
-    """Test device info is forwarded correctly."""
-    registry = dr.async_get(hass)
-    registry.async_get_or_create(
-        config_entry_id="123",
-        connections=set(),
-        identifiers={("hue", "via-id")},
-        manufacturer="manufacturer",
-        model="via",
-    )
-
-    async def async_setup_entry(hass, config_entry, async_add_entities):
-        """Mock setup entry method."""
-        async_add_entities(
-            [
-                # Valid device info, but invalid url
-                MockEntity(
-                    unique_id="qwer",
-                    device_info={
-                        "identifiers": {("hue", "1234")},
-                        "configuration_url": "foo://192.168.0.100/config",
-                    },
-                ),
-            ]
-        )
-        return True
-
-    platform = MockPlatform(async_setup_entry=async_setup_entry)
-    config_entry = MockConfigEntry(entry_id="super-mock-id")
-    entity_platform = MockEntityPlatform(
-        hass, platform_name=config_entry.domain, platform=platform
-    )
-
-    assert await entity_platform.async_setup_entry(config_entry)
-    await hass.async_block_till_done()
-
-    assert len(hass.states.async_entity_ids()) == 1
-
-    device = registry.async_get_device({("hue", "1234")})
-    assert device is not None
-    assert device.identifiers == {("hue", "1234")}
-    assert device.configuration_url is None
-
-    assert (
-        "Ignoring invalid device configuration_url 'foo://192.168.0.100/config'"
-        in caplog.text
-    )
-
-
 async def test_device_info_homeassistant_url(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
@@ -1890,6 +1839,11 @@ async def test_device_name_defaulting_config_entry(
             "name": "bla",
             "default_name": "yo",
         },
+        # Invalid configuration URL
+        {
+            "identifiers": {("hue", "1234")},
+            "configuration_url": "foo://192.168.0.100/config",
+        },
     ],
 )
 async def test_device_type_checking(
@@ -1919,3 +1873,6 @@ async def test_device_type_checking(
 
     dev_reg = dr.async_get(hass)
     assert len(dev_reg.devices) == 0
+    # Entity should still be registered
+    ent_reg = er.async_get(hass)
+    assert ent_reg.async_get("test_domain.test_qwer") is not None
