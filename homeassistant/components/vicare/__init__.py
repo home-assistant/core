@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from contextlib import suppress
 from dataclasses import dataclass
 import logging
 import os
@@ -96,6 +97,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.data[DOMAIN].pop(entry.entry_id)
 
     with suppress(FileNotFoundError):
-        await hass.async_add_executor_job(os.remove, hass.config.path(STORAGE_DIR, _TOKEN_FILENAME))
+        await hass.async_add_executor_job(
+            os.remove, 
+            hass.config.path(STORAGE_DIR, _TOKEN_FILENAME)
+        )
 
     return unload_ok
