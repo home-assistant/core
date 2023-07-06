@@ -28,7 +28,7 @@ from homeassistant.const import (
     UnitOfInformation,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import DeviceInfo
@@ -235,12 +235,17 @@ async def async_setup_platform(
 
     async_create_issue(
         hass,
-        DOMAIN,
+        HOMEASSISTANT_DOMAIN,
         "deprecated_yaml",
         breaks_in_ha_version="2023.12.0",
         is_fixable=False,
+        issue_domain=DOMAIN,
         severity=IssueSeverity.WARNING,
         translation_key="deprecated_yaml",
+        translation_placeholders={
+            "domain": DOMAIN,
+            "integration_title": "QNAP",
+        },
     )
 
     hass.async_create_task(
