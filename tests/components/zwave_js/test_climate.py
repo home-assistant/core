@@ -744,7 +744,7 @@ async def test_thermostat_raise_repair_issue_when_setting_dry_preset(
         blocking=True,
     )
 
-    issue_id = f"dry_preset_deprecation_{CLIMATE_AIDOO_HVAC_UNIT_ENTITY}"
+    issue_id = f"dry_fan_preset_deprecation_{CLIMATE_AIDOO_HVAC_UNIT_ENTITY}"
     issue_registry = ir.async_get(hass)
     assert issue_registry.async_get_issue(
         domain=DOMAIN,
@@ -773,7 +773,7 @@ async def test_thermostat_raise_repair_issue_when_setting_fan_preset(
         blocking=True,
     )
 
-    issue_id = f"fan_preset_deprecation_{CLIMATE_AIDOO_HVAC_UNIT_ENTITY}"
+    issue_id = f"dry_fan_preset_deprecation_{CLIMATE_AIDOO_HVAC_UNIT_ENTITY}"
     issue_registry = ir.async_get(hass)
     assert issue_registry.async_get_issue(
         domain=DOMAIN,
