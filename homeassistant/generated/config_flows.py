@@ -538,5 +538,6 @@ FLOWS = {
         "zodiac",
         "zwave_js",
         "zwave_me",
+        "refoss",
     ],
 }
