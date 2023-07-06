@@ -39,9 +39,10 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import (
     CONF_HEATING_TYPE,
     DOMAIN,
-    VICARE_API,
-    VICARE_DEVICE_CONFIG,
+    HEATING_TYPE_TO_CREATOR_METHOD,
+    VICARE_DEVICE_LIST,
     VICARE_NAME,
+    HeatingType,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -113,22 +114,26 @@ async def async_setup_entry(
     """Set up the ViCare climate platform."""
     name = VICARE_NAME
     entities = []
-    api = hass.data[DOMAIN][config_entry.entry_id][VICARE_API]
-    circuits = await hass.async_add_executor_job(_get_circuits, api)
 
-    for circuit in circuits:
-        suffix = ""
-        if len(circuits) > 1:
-            suffix = f" {circuit.id}"
-
-        entity = ViCareClimate(
-            f"{name} Heating{suffix}",
-            api,
-            circuit,
-            hass.data[DOMAIN][config_entry.entry_id][VICARE_DEVICE_CONFIG],
-            config_entry.data[CONF_HEATING_TYPE],
-        )
-        entities.append(entity)
+    for device in hass.data[DOMAIN][config_entry.entry_id][VICARE_DEVICE_LIST]:
+        api = getattr(
+            device,
+            HEATING_TYPE_TO_CREATOR_METHOD[HeatingType(config_entry.data[CONF_HEATING_TYPE])],
+        )()
+        circuits = await hass.async_add_executor_job(_get_circuits, api)
+        for circuit in circuits:
+            suffix = ""
+            if len(circuits) > 1:
+                suffix = f" {circuit.id}"
+    
+            entity = ViCareClimate(
+                f"{name} Heating{suffix}",
+                api,
+                circuit,
+                device,
+                config_entry.data[CONF_HEATING_TYPE],
+            )
+            entities.append(entity)
 
     platform = entity_platform.async_get_current_platform()
 
