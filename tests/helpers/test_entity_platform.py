@@ -1779,16 +1779,23 @@ async def test_translated_device_class_name_influences_entity_id(
 
 
 @pytest.mark.parametrize(
-    ("entity_device_name", "entity_device_default_name", "expected_device_name"),
+    (
+        "config_entry_title",
+        "entity_device_name",
+        "entity_device_default_name",
+        "expected_device_name",
+    ),
     [
-        (None, None, "Mock Config Entry Title"),
-        ("", None, "Mock Config Entry Title"),
-        (None, "Hello", "Hello"),
-        ("Mock Device Name", None, "Mock Device Name"),
+        ("", None, None, "test"),
+        ("Mock Config Entry Title", None, None, "Mock Config Entry Title"),
+        ("Mock Config Entry Title", "", None, "Mock Config Entry Title"),
+        ("Mock Config Entry Title", None, "Hello", "Hello"),
+        ("Mock Config Entry Title", "Mock Device Name", None, "Mock Device Name"),
     ],
 )
 async def test_device_name_defaulting_config_entry(
     hass: HomeAssistant,
+    config_entry_title: str,
     entity_device_name: str,
     entity_device_default_name: str,
     expected_device_name: str,
@@ -1813,9 +1820,7 @@ async def test_device_name_defaulting_config_entry(
         return True
 
     platform = MockPlatform(async_setup_entry=async_setup_entry)
-    config_entry = MockConfigEntry(
-        title="Mock Config Entry Title", entry_id="super-mock-id"
-    )
+    config_entry = MockConfigEntry(title=config_entry_title, entry_id="super-mock-id")
     entity_platform = MockEntityPlatform(
         hass, platform_name=config_entry.domain, platform=platform
     )
