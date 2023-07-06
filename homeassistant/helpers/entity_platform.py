@@ -771,18 +771,6 @@ class EntityPlatform:
             )
             return None
 
-        if device_info.get("configuration_url") is not None:
-            if urlparse(device_info["configuration_url"]).scheme not in [
-                "http",
-                "https",
-                "homeassistant",
-            ]:
-                self.logger.error(
-                    "Ignoring device info with invalid configuration_url '%s'",
-                    device_info["configuration_url"],
-                )
-                return None
-
         device_info_type: str | None = None
 
         for possible_type, allowed_keys in DEVICE_INFO_TYPES.items():
@@ -798,14 +786,21 @@ class EntityPlatform:
             )
             return None
 
+        if device_info.get("configuration_url") is not None:
+            if urlparse(device_info["configuration_url"]).scheme not in [
+                "http",
+                "https",
+                "homeassistant",
+            ]:
+                self.logger.error(
+                    "Ignoring device info with invalid configuration_url '%s'",
+                    device_info["configuration_url"],
+                )
+                return None
+
         assert self.config_entry is not None
 
-        if (
-            # device info that is purely meant for linking doesn't need default name
-            device_info_type != "link"
-            and "default_name" not in device_info
-            and not device_info.get("name")
-        ):
+        if device_info_type == "primary" and not device_info.get("name"):
             device_info = {
                 **device_info,  # type: ignore[misc]
                 "name": self.config_entry.title,
