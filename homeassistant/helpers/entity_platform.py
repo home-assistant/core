@@ -787,15 +787,15 @@ class EntityPlatform:
             )
             return None
 
-        if device_info.get("configuration_url") is not None:
-            if urlparse(device_info["configuration_url"]).scheme not in [
+        if (config_url := device_info.get("configuration_url")) is not None:
+            if type(config_url) is not str or urlparse(config_url).scheme not in [
                 "http",
                 "https",
                 "homeassistant",
             ]:
                 self.logger.error(
                     "Ignoring device info with invalid configuration_url '%s'",
-                    device_info["configuration_url"],
+                    config_url,
                 )
                 return None
 
