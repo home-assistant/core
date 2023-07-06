@@ -11,10 +11,14 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import DOMAIN as DAIKIN_DOMAIN, DaikinApi
 
+from .const import ATTR_STATE_OFF
+
 ZONE_ICON = "mdi:home-circle"
 STREAMER_ICON = "mdi:air-filter"
+TOGGLE_ICON = "mdi:power"
 DAIKIN_ATTR_ADVANCED = "adv"
 DAIKIN_ATTR_STREAMER = "streamer"
+DAIKIN_ATTR_MODE = "mode"
 
 
 async def async_setup_platform(
@@ -49,6 +53,7 @@ async def async_setup_entry(
         # device supports the streamer, so assume so if it does support
         # advanced modes.
         switches.append(DaikinStreamerSwitch(daikin_api))
+    switches.append(DaikinToggleSwitch(daikin_api))
     async_add_entities(switches)
 
 
@@ -119,3 +124,43 @@ class DaikinStreamerSwitch(SwitchEntity):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the zone off."""
         await self._api.device.set_streamer("off")
+
+
+class DaikinToggleSwitch(SwitchEntity):
+    """Switch state."""
+
+    _attr_icon = TOGGLE_ICON
+    _attr_has_entity_name = True
+
+    def __init__(self, daikin_api: DaikinApi) -> None:
+        """Initialize switch."""
+        self._api = daikin_api
+
+    @property
+    def unique_id(self) -> str:
+        """Return a unique ID."""
+        return f"{self._api.device.mac}-toggle"
+
+    @property
+    def is_on(self) -> bool:
+        """Return the state of the sensor."""
+        return (
+            ATTR_STATE_OFF not in self._api.device.represent(DAIKIN_ATTR_MODE)
+        )
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return a device description for device registry."""
+        return self._api.device_info
+
+    async def async_update(self) -> None:
+        """Retrieve latest state."""
+        await self._api.async_update()
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn the zone on."""
+        await self._api.device.set({})
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn the zone off."""
+        await self._api.device.set({DAIKIN_ATTR_MODE:ATTR_STATE_OFF})
