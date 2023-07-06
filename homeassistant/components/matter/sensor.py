@@ -135,4 +135,18 @@ DISCOVERY_SCHEMAS = [
         entity_class=MatterSensor,
         required_attributes=(clusters.PowerSource.Attributes.BatPercentRemaining,),
     ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="GenericSwitch",
+            device_class=SensorDeviceClass.ENUM,
+            measurement_to_ha=lambda x: x,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(
+            clusters.Switch.Attributes.CurrentPosition,
+            clusters.Switch.Attributes.NumberOfPositions,
+        ),
+        optional_attributes=(clusters.Switch.Attributes.MultiPressMax,),
+    ),
 ]
