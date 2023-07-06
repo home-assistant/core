@@ -630,11 +630,10 @@ class EntityPlatform:
                     entity.add_to_platform_abort()
                     return
 
-            device_info = entity.device_info
-            device: dev_reg.DeviceEntry | None = None
-
-            if self.config_entry and device_info is not None:
+            if self.config_entry and (device_info := entity.device_info):
                 device = self._async_process_device_info(device_info)
+            else:
+                device = None
 
             # An entity may suggest the entity_id by setting entity_id itself
             suggested_entity_id: str | None = entity.entity_id
@@ -765,7 +764,11 @@ class EntityPlatform:
         keys = set(device_info)
 
         # If no keys or not enough info to match up, abort
-        if not keys or len(keys & {"connections", "identifiers"}) == 0:
+        if len(keys & {"connections", "identifiers"}) == 0:
+            self.logger.error(
+                "Ignoring device info without identifiers or connections: %s",
+                device_info,
+            )
             return None
 
         if device_info.get("configuration_url") is not None:
@@ -774,7 +777,7 @@ class EntityPlatform:
                 "https",
                 "homeassistant",
             ]:
-                _LOGGER.error(
+                self.logger.error(
                     "Ignoring device info with invalid configuration_url '%s'",
                     device_info["configuration_url"],
                 )
