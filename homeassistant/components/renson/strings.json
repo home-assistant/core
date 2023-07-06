@@ -11,5 +11,79 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     }
+  },
+  "entity": {
+    "sensor": {
+      "co2_quality_category": {
+        "name": "CO2 quality category",
+        "state": {
+          "good": "Good",
+          "bad": "Bad",
+          "poor": "Poor"
+        }
+      },
+      "air_quality_category": {
+        "name": "Air quality category",
+        "state": {
+          "good": "[%key:component::renson::entity::sensor::co2_quality_category::state::good%]",
+          "bad": "[%key:component::renson::entity::sensor::co2_quality_category::state::bad%]",
+          "poor": "[%key:component::renson::entity::sensor::co2_quality_category::state::poor%]"
+        }
+      },
+      "air_quality": {
+        "name": "Air quality"
+      },
+      "ventilation_level": {
+        "name": "Ventilation level"
+      },
+      "total_airflow_out": {
+        "name": "Total airflow out"
+      },
+      "total_airflow_in": {
+        "name": "Total airflow in"
+      },
+      "outdoor_air_temperature": {
+        "name": "Outdoor air temperature"
+      },
+      "extract_air_temperature": {
+        "name": "Extract air temperature"
+      },
+      "filter_change": {
+        "name": "Filter change"
+      },
+      "manual_level": {
+        "name": "Manual level"
+      },
+      "breeze_temperature": {
+        "name": "Breeze temperature"
+      },
+      "breeze_level": {
+        "name": "Breeze level"
+      },
+      "start_day_time": {
+        "name": "Start day time"
+      },
+      "start_night_time": {
+        "name": "Start night time"
+      },
+      "day_pollution_level": {
+        "name": "Day pollution level"
+      },
+      "night_pollution_level": {
+        "name": "Night pollution level"
+      },
+      "co2_threshold": {
+        "name": "CO2 threshold"
+      },
+      "co2_hysteresis": {
+        "name": "CO2 hysteresis"
+      },
+      "bypass_activation_temperature": {
+        "name": "Bypass activation temperature"
+      },
+      "bypass_level": {
+        "name": "Bypass level"
+      }
+    }
   }
 }
