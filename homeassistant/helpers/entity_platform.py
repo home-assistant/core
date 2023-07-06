@@ -60,6 +60,11 @@ DATA_ENTITY_PLATFORM = "entity_platform"
 PLATFORM_NOT_READY_BASE_WAIT_TIME = 30  # seconds
 
 DEVICE_INFO_TYPES = {
+    # Order is important or else link types are detected as primary
+    "link": {
+        "connections",
+        "identifiers",
+    },
     "primary": {
         "configuration_url",
         "connections",
@@ -80,10 +85,6 @@ DEVICE_INFO_TYPES = {
         "default_name",
         # Used by Fritz
         "via_device",
-    },
-    "link": {
-        "connections",
-        "identifiers",
     },
 }
 
