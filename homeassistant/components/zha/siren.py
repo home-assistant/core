@@ -22,9 +22,9 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_call_later
 
 from .core import discovery
-from .core.channels.security import IasWd
+from .core.cluster_handlers.security import IasWd
 from .core.const import (
-    CHANNEL_IAS_WD,
+    CLUSTER_HANDLER_IAS_WD,
     DATA_ZHA,
     SIGNAL_ADD_ENTITIES,
     WARNING_DEVICE_MODE_BURGLAR,
@@ -43,7 +43,7 @@ from .core.registries import ZHA_ENTITIES
 from .entity import ZhaEntity
 
 if TYPE_CHECKING:
-    from .core.channels.base import ZigbeeChannel
+    from .core.cluster_handlers import ClusterHandler
     from .core.device import ZHADevice
 
 MULTI_MATCH = functools.partial(ZHA_ENTITIES.multipass_match, Platform.SIREN)
@@ -70,15 +70,17 @@ async def async_setup_entry(
     config_entry.async_on_unload(unsub)
 
 
-@MULTI_MATCH(channel_names=CHANNEL_IAS_WD)
+@MULTI_MATCH(cluster_handler_names=CLUSTER_HANDLER_IAS_WD)
 class ZHASiren(ZhaEntity, SirenEntity):
     """Representation of a ZHA siren."""
+
+    _attr_name: str = "Siren"
 
     def __init__(
         self,
         unique_id: str,
         zha_device: ZHADevice,
-        channels: list[ZigbeeChannel],
+        cluster_handlers: list[ClusterHandler],
         **kwargs,
     ) -> None:
         """Init this siren."""
@@ -97,8 +99,8 @@ class ZHASiren(ZhaEntity, SirenEntity):
             WARNING_DEVICE_MODE_FIRE_PANIC: "Fire Panic",
             WARNING_DEVICE_MODE_EMERGENCY_PANIC: "Emergency Panic",
         }
-        super().__init__(unique_id, zha_device, channels, **kwargs)
-        self._channel: IasWd = cast(IasWd, channels[0])
+        super().__init__(unique_id, zha_device, cluster_handlers, **kwargs)
+        self._cluster_handler: IasWd = cast(IasWd, cluster_handlers[0])
         self._attr_is_on: bool = False
         self._off_listener: Callable[[], None] | None = None
 
@@ -107,22 +109,28 @@ class ZHASiren(ZhaEntity, SirenEntity):
         if self._off_listener:
             self._off_listener()
             self._off_listener = None
-        tone_cache = self._channel.data_cache.get(WD.Warning.WarningMode.__name__)
+        tone_cache = self._cluster_handler.data_cache.get(
+            WD.Warning.WarningMode.__name__
+        )
         siren_tone = (
             tone_cache.value
             if tone_cache is not None
             else WARNING_DEVICE_MODE_EMERGENCY
         )
         siren_duration = DEFAULT_DURATION
-        level_cache = self._channel.data_cache.get(WD.Warning.SirenLevel.__name__)
+        level_cache = self._cluster_handler.data_cache.get(
+            WD.Warning.SirenLevel.__name__
+        )
         siren_level = (
             level_cache.value if level_cache is not None else WARNING_DEVICE_SOUND_HIGH
         )
-        strobe_cache = self._channel.data_cache.get(Strobe.__name__)
+        strobe_cache = self._cluster_handler.data_cache.get(Strobe.__name__)
         should_strobe = (
             strobe_cache.value if strobe_cache is not None else Strobe.No_Strobe
         )
-        strobe_level_cache = self._channel.data_cache.get(WD.StrobeLevel.__name__)
+        strobe_level_cache = self._cluster_handler.data_cache.get(
+            WD.StrobeLevel.__name__
+        )
         strobe_level = (
             strobe_level_cache.value
             if strobe_level_cache is not None
@@ -134,7 +142,7 @@ class ZHASiren(ZhaEntity, SirenEntity):
             siren_tone = tone
         if (level := kwargs.get(ATTR_VOLUME_LEVEL)) is not None:
             siren_level = int(level)
-        await self._channel.issue_start_warning(
+        await self._cluster_handler.issue_start_warning(
             mode=siren_tone,
             warning_duration=siren_duration,
             siren_level=siren_level,
@@ -150,7 +158,7 @@ class ZHASiren(ZhaEntity, SirenEntity):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off siren."""
-        await self._channel.issue_start_warning(
+        await self._cluster_handler.issue_start_warning(
             mode=WARNING_DEVICE_MODE_STOP, strobe=WARNING_DEVICE_STROBE_NO
         )
         self._attr_is_on = False

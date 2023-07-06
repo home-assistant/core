@@ -23,9 +23,13 @@
         "description": "Enter the serial port settings",
         "data": {
           "path": "Serial device path",
-          "baudrate": "port speed",
-          "flow_control": "data flow control"
+          "baudrate": "Port speed",
+          "flow_control": "Data flow control"
         }
+      },
+      "verify_radio": {
+        "title": "Radio is not recommended",
+        "description": "The radio you are using ({name}) is not recommended and support for it may be removed in the future. Please see the Zigbee Home Automation integration's documentation for [a list of recommended adapters]({docs_recommended_adapters_url})."
       },
       "choose_formation_strategy": {
         "title": "Network Formation",
@@ -115,6 +119,10 @@
           "baudrate": "[%key:component::zha::config::step::manual_port_config::data::baudrate%]",
           "flow_control": "[%key:component::zha::config::step::manual_port_config::data::flow_control%]"
         }
+      },
+      "verify_radio": {
+        "title": "[%key:component::zha::config::step::verify_radio::title%]",
+        "description": "[%key:component::zha::config::step::verify_radio::description%]"
       },
       "choose_formation_strategy": {
         "title": "[%key:component::zha::config::step::choose_formation_strategy::title%]",
@@ -229,12 +237,12 @@
       "button_5": "Fifth button",
       "button_6": "Sixth button",
       "face_any": "With any/specified face(s) activated",
-      "face_1": "with face 1 activated",
-      "face_2": "with face 2 activated",
-      "face_3": "with face 3 activated",
-      "face_4": "with face 4 activated",
-      "face_5": "with face 5 activated",
-      "face_6": "with face 6 activated"
+      "face_1": "With face 1 activated",
+      "face_2": "With face 2 activated",
+      "face_3": "With face 3 activated",
+      "face_4": "With face 4 activated",
+      "face_5": "With face 5 activated",
+      "face_6": "With face 6 activated"
     }
   }
 }

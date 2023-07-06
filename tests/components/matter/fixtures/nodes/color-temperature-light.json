@@ -6,7 +6,7 @@
   "attributes": {
     "0/29/0": [
       {
-        "type": 22,
+        "deviceType": 22,
         "revision": 1
       }
     ],
@@ -202,7 +202,7 @@
     ],
     "1/29/0": [
       {
-        "type": 268,
+        "deviceType": 268,
         "revision": 1
       }
     ],
@@ -313,5 +313,6 @@
     "1/4/65529": [0, 5, 2, 4, 3, 1],
     "1/4/65531": [0, 65528, 65529, 65531, 65532, 65533]
   },
-  "available": true
+  "available": true,
+  "attribute_subscriptions": []
 }

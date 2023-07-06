@@ -4,7 +4,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import timedelta
 
-from homewizard_energy.features import Features
 from homewizard_energy.models import Data, Device, State, System
 
 from homeassistant.const import Platform
@@ -30,6 +29,5 @@ class DeviceResponseEntry:
 
     device: Device
     data: Data
-    features: Features
-    state: State | None
+    state: State | None = None
     system: System | None = None

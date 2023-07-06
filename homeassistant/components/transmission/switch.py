@@ -36,33 +36,24 @@ async def async_setup_entry(
 class TransmissionSwitch(SwitchEntity):
     """Representation of a Transmission switch."""
 
+    _attr_has_entity_name = True
     _attr_should_poll = False
 
     def __init__(self, switch_type, switch_name, tm_client, client_name):
         """Initialize the Transmission switch."""
-        self._name = switch_name
-        self.client_name = client_name
+        self._attr_name = switch_name
         self.type = switch_type
         self._tm_client = tm_client
         self._state = STATE_OFF
         self._data = None
         self.unsub_update = None
+        self._attr_unique_id = f"{tm_client.config_entry.entry_id}-{switch_type}"
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, tm_client.config_entry.entry_id)},
             manufacturer="Transmission",
             name=client_name,
         )
-
-    @property
-    def name(self):
-        """Return the name of the switch."""
-        return f"{self.client_name} {self._name}"
-
-    @property
-    def unique_id(self):
-        """Return the unique id of the entity."""
-        return f"{self._tm_client.api.host}-{self.name}"
 
     @property
     def is_on(self):
@@ -118,7 +109,7 @@ class TransmissionSwitch(SwitchEntity):
         if self.type == "on_off":
             self._data = self._tm_client.api.data
             if self._data:
-                active = self._data.activeTorrentCount > 0
+                active = self._data.active_torrent_count > 0
 
         elif self.type == "turtle_mode":
             active = self._tm_client.api.get_alt_speed_enabled()

@@ -35,7 +35,6 @@ _LOGGER = logging.getLogger(__name__)
 
 MAX_UPLOAD_SIZE = 1024 * 1024 * 1024
 
-# pylint: disable=implicit-str-concat
 NO_TIMEOUT = re.compile(
     r"^(?:"
     r"|backups/.+/full"

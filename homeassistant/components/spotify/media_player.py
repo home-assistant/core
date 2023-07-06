@@ -95,6 +95,7 @@ def spotify_exception_handler(func):
             self._attr_available = False
             if exc.reason == "NO_ACTIVE_DEVICE":
                 raise HomeAssistantError("No active playback device found") from None
+            raise HomeAssistantError(f"Spotify error: {exc.reason}") from exc
 
     return wrapper
 
@@ -105,6 +106,7 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
     _attr_has_entity_name = True
     _attr_icon = "mdi:spotify"
     _attr_media_image_remotely_accessible = False
+    _attr_name = None
 
     def __init__(
         self,

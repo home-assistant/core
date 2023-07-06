@@ -4,6 +4,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
+from functools import partial
 from typing import Any
 
 from xknx import XKNX
@@ -53,7 +54,6 @@ class KNXSystemEntityDescription(SensorEntityDescription):
 SYSTEM_ENTITY_DESCRIPTIONS = (
     KNXSystemEntityDescription(
         key="individual_address",
-        name="Individual Address",
         always_available=False,
         icon="mdi:router-network",
         should_poll=False,
@@ -61,7 +61,6 @@ SYSTEM_ENTITY_DESCRIPTIONS = (
     ),
     KNXSystemEntityDescription(
         key="connected_since",
-        name="Connected since",
         always_available=False,
         device_class=SensorDeviceClass.TIMESTAMP,
         should_poll=False,
@@ -69,16 +68,14 @@ SYSTEM_ENTITY_DESCRIPTIONS = (
     ),
     KNXSystemEntityDescription(
         key="connection_type",
-        name="Connection type",
         always_available=False,
         device_class=SensorDeviceClass.ENUM,
         options=[opt.value for opt in XknxConnectionType],
         should_poll=False,
-        value_fn=lambda knx: knx.xknx.connection_manager.connection_type.value,  # type: ignore[no-any-return]
+        value_fn=lambda knx: knx.xknx.connection_manager.connection_type.value,
     ),
     KNXSystemEntityDescription(
         key="telegrams_incoming",
-        name="Telegrams incoming",
         icon="mdi:upload-network",
         entity_registry_enabled_default=False,
         force_update=True,
@@ -87,14 +84,12 @@ SYSTEM_ENTITY_DESCRIPTIONS = (
     ),
     KNXSystemEntityDescription(
         key="telegrams_incoming_error",
-        name="Telegrams incoming Error",
         icon="mdi:help-network",
         state_class=SensorStateClass.TOTAL_INCREASING,
         value_fn=lambda knx: knx.xknx.connection_manager.cemi_count_incoming_error,
     ),
     KNXSystemEntityDescription(
         key="telegrams_outgoing",
-        name="Telegrams outgoing",
         icon="mdi:download-network",
         entity_registry_enabled_default=False,
         force_update=True,
@@ -103,14 +98,12 @@ SYSTEM_ENTITY_DESCRIPTIONS = (
     ),
     KNXSystemEntityDescription(
         key="telegrams_outgoing_error",
-        name="Telegrams outgoing Error",
         icon="mdi:close-network",
         state_class=SensorStateClass.TOTAL_INCREASING,
         value_fn=lambda knx: knx.xknx.connection_manager.cemi_count_outgoing_error,
     ),
     KNXSystemEntityDescription(
         key="telegram_count",
-        name="Telegrams",
         icon="mdi:plus-network",
         force_update=True,
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -192,6 +185,8 @@ class KNXSensor(KnxEntity, SensorEntity):
 class KNXSystemSensor(SensorEntity):
     """Representation of a KNX system sensor."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self,
         knx: KNXModule,
@@ -203,6 +198,7 @@ class KNXSystemSensor(SensorEntity):
 
         self._attr_device_info = knx.interface_device.device_info
         self._attr_should_poll = description.should_poll
+        self._attr_translation_key = description.key
         self._attr_unique_id = f"_{knx.entry.entry_id}_{description.key}"
 
     @property
@@ -226,9 +222,9 @@ class KNXSystemSensor(SensorEntity):
         self.knx.xknx.connection_manager.register_connection_state_changed_cb(
             self.after_update_callback
         )
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Disconnect device object when removed."""
-        self.knx.xknx.connection_manager.unregister_connection_state_changed_cb(
-            self.after_update_callback
+        self.async_on_remove(
+            partial(
+                self.knx.xknx.connection_manager.unregister_connection_state_changed_cb,
+                self.after_update_callback,
+            )
         )

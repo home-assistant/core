@@ -42,7 +42,7 @@ async def async_setup_entry(
             [
                 DaikinZoneSwitch(daikin_api, zone_id)
                 for zone_id, zone in enumerate(zones)
-                if zone != ("-", "0")
+                if zone[0] != "-"
             ]
         )
     if daikin_api.device.support_advanced_modes:
@@ -90,11 +90,11 @@ class DaikinZoneSwitch(SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the zone on."""
-        await self._api.device.set_zone(self._zone_id, "1")
+        await self._api.device.set_zone(self._zone_id, "zone_onoff", "1")
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the zone off."""
-        await self._api.device.set_zone(self._zone_id, "0")
+        await self._api.device.set_zone(self._zone_id, "zone_onoff", "0")
 
 
 class DaikinStreamerSwitch(SwitchEntity):

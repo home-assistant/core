@@ -79,6 +79,10 @@ class ReolinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self._username = entry_data[CONF_USERNAME]
         self._password = entry_data[CONF_PASSWORD]
         self._reauth = True
+        self.context["title_placeholders"]["ip_address"] = entry_data[CONF_HOST]
+        self.context["title_placeholders"]["hostname"] = self.context[
+            "title_placeholders"
+        ]["name"]
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
@@ -178,7 +182,7 @@ class ReolinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             data_schema = data_schema.extend(
                 {
                     vol.Optional(CONF_PORT): cv.positive_int,
-                    vol.Optional(CONF_USE_HTTPS): bool,
+                    vol.Required(CONF_USE_HTTPS, default=False): bool,
                 }
             )
 

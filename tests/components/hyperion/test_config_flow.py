@@ -150,8 +150,6 @@ async def _configure_flow(
     user_input = user_input or {}
 
     with patch(
-        "homeassistant.components.hyperion.async_setup", return_value=True
-    ), patch(
         "homeassistant.components.hyperion.async_setup_entry",
         return_value=True,
     ):
@@ -797,10 +795,8 @@ async def test_options_effect_show_list(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
         assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
 
-        # effect1 and effect3 only, so effect2 & external sources are hidden.
-        assert result["data"][CONF_EFFECT_HIDE_LIST] == sorted(
-            ["effect2"] + const.KEY_COMPONENTID_EXTERNAL_SOURCES
-        )
+        # effect1 and effect3 only, so effect2 is hidden.
+        assert result["data"][CONF_EFFECT_HIDE_LIST] == ["effect2"]
 
 
 async def test_options_effect_hide_list_cannot_connect(hass: HomeAssistant) -> None:
@@ -836,9 +832,7 @@ async def test_reauth_success(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.hyperion.client.HyperionClient", return_value=client
-    ), patch("homeassistant.components.hyperion.async_setup", return_value=True), patch(
-        "homeassistant.components.hyperion.async_setup_entry", return_value=True
-    ):
+    ), patch("homeassistant.components.hyperion.async_setup_entry", return_value=True):
         result = await _init_flow(
             hass,
             source=SOURCE_REAUTH,

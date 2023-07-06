@@ -4,18 +4,18 @@ from typing import Any
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
-    DOMAIN as COVER_DOMAIN,
     CoverEntity,
     CoverEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import SIGNAL_ADD_ENTITIES
 from .insteon_entity import InsteonEntity
-from .utils import async_add_insteon_entities
+from .utils import async_add_insteon_devices, async_add_insteon_entities
 
 
 async def async_setup_entry(
@@ -29,12 +29,17 @@ async def async_setup_entry(
     def async_add_insteon_cover_entities(discovery_info=None):
         """Add the Insteon entities for the platform."""
         async_add_insteon_entities(
-            hass, COVER_DOMAIN, InsteonCoverEntity, async_add_entities, discovery_info
+            hass, Platform.COVER, InsteonCoverEntity, async_add_entities, discovery_info
         )
 
-    signal = f"{SIGNAL_ADD_ENTITIES}_{COVER_DOMAIN}"
+    signal = f"{SIGNAL_ADD_ENTITIES}_{Platform.COVER}"
     async_dispatcher_connect(hass, signal, async_add_insteon_cover_entities)
-    async_add_insteon_cover_entities()
+    async_add_insteon_devices(
+        hass,
+        Platform.COVER,
+        InsteonCoverEntity,
+        async_add_entities,
+    )
 
 
 class InsteonCoverEntity(InsteonEntity, CoverEntity):

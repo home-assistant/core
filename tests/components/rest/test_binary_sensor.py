@@ -2,6 +2,7 @@
 
 import asyncio
 from http import HTTPStatus
+import ssl
 from unittest.mock import MagicMock, patch
 
 import httpx
@@ -79,6 +80,28 @@ async def test_setup_failed_connect(
     await hass.async_block_till_done()
     assert len(hass.states.async_all(BINARY_SENSOR_DOMAIN)) == 0
     assert "server offline" in caplog.text
+
+
+@respx.mock
+async def test_setup_fail_on_ssl_erros(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test setup when connection error occurs."""
+    respx.get("https://localhost").mock(side_effect=ssl.SSLError("ssl error"))
+    assert await async_setup_component(
+        hass,
+        BINARY_SENSOR_DOMAIN,
+        {
+            BINARY_SENSOR_DOMAIN: {
+                "platform": DOMAIN,
+                "resource": "https://localhost",
+                "method": "GET",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    assert len(hass.states.async_all(BINARY_SENSOR_DOMAIN)) == 0
+    assert "ssl error" in caplog.text
 
 
 @respx.mock

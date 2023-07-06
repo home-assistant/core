@@ -58,7 +58,7 @@ CONF_RELAYER_SERVER = "relayer_server"
 CONF_REMOTE_SNI_SERVER = "remote_sni_server"
 CONF_REMOTESTATE_SERVER = "remotestate_server"
 CONF_THINGTALK_SERVER = "thingtalk_server"
-CONF_VOICE_SERVER = "voice_server"
+CONF_SERVICEHANDLERS_SERVER = "servicehandlers_server"
 
 MODE_DEV = "development"
 MODE_PROD = "production"

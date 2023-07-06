@@ -7,5 +7,5 @@
   "integration_type": "service",
   "iot_class": "cloud_polling",
   "quality_scale": "platinum",
-  "requirements": ["forecast_solar==2.2.0"]
+  "requirements": ["forecast-solar==3.0.0"]
 }

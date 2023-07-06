@@ -352,7 +352,6 @@ def create_state_changed_event_from_old_new(
     row.context_id_bin = None
     row.friendly_name = None
     row.icon = None
-    row.old_format_icon = None
     row.context_user_id_bin = None
     row.context_parent_id_bin = None
     row.old_state_id = old_state and 1
@@ -2640,7 +2639,7 @@ async def test_get_events_with_device_ids(
 
         @ha.callback
         def async_describe_events(
-            hass: HomeAssistant,
+            hass: HomeAssistant,  # noqa: N805
             async_describe_event: Callable[
                 [str, str, Callable[[Event], dict[str, str]]], None
             ],

@@ -18,7 +18,7 @@ from homeassistant.components.light import (
 )
 from homeassistant.const import CONF_NAME, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
-from homeassistant.util import dt
+from homeassistant.util import dt as dt_util
 
 from .conftest import KNXTestKit
 
@@ -764,7 +764,7 @@ async def test_light_rgbw_individual(hass: HomeAssistant, knx: KNXTestKit) -> No
     # # individual color debounce takes 0.2 seconds if not all 4 addresses received
     knx.assert_state("light.test", STATE_ON)
     async_fire_time_changed(
-        hass, dt.utcnow() + timedelta(seconds=XknxLight.DEBOUNCE_TIMEOUT)
+        hass, dt_util.utcnow() + timedelta(seconds=XknxLight.DEBOUNCE_TIMEOUT)
     )
     await knx.xknx.task_registry.block_till_done()
     knx.assert_state("light.test", STATE_OFF)

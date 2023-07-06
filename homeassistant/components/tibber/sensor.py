@@ -606,7 +606,7 @@ class TibberDataCoordinator(DataUpdateCoordinator[None]):
                 )
 
                 last_stats = await get_instance(self.hass).async_add_executor_job(
-                    get_last_statistics, self.hass, 1, statistic_id, True, {}
+                    get_last_statistics, self.hass, 1, statistic_id, True, set()
                 )
 
                 if not last_stats:
