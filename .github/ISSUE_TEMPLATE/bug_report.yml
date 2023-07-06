@@ -59,7 +59,7 @@ body:
     attributes:
       label: Integration causing the issue
       description: >
-        The name of the integration. For example: Automation, Philips Hue, ...
+        The name of the integration, for example Automation or Philips Hue.
   - type: input
     id: integration_link
     attributes:
