@@ -14,7 +14,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN, PARAM_HOST, PARAM_PASSWORD, PARAM_USERNAME
+from .const import DOMAIN, PARAM_HOST, PARAM_PASSWORD, PARAM_USERNAME, MANUFACTURER
 
 
 async def async_setup_entry(
@@ -44,6 +44,7 @@ class KomfoventDevice(ClimateEntity):
     _attr_supported_features = ClimateEntityFeature.PRESET_MODE
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_translation_key = "ventilation_unit"
+    _attr_name = None
 
     def __init__(
         self,
@@ -60,7 +61,7 @@ class KomfoventDevice(ClimateEntity):
             model=settings.model,
             name=settings.name,
             sw_version=settings.version,
-            manufacturer="Komfovent",
+            manufacturer=MANUFACTURER,
         )
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
