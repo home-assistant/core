@@ -86,5 +86,153 @@
         }
       }
     }
+  },
+  "services": {
+    "turn_on": {
+      "name": "Turn on",
+      "description": "Turn on one or more lights and adjust properties of the light, even when they are turned on already.",
+      "fields": {
+        "transition": {
+          "name": "Transition",
+          "description": "Duration it takes to get to next state."
+        },
+        "rgb_color": {
+          "name": "Color",
+          "description": "The color for the light (based on RGB - red, green, blue)."
+        },
+        "rgbw_color": {
+          "name": "RGBW-color",
+          "description": "A list containing four integers between 0 and 255 representing the RGBW (red, green, blue, white) color for the light."
+        },
+        "rgbww_color": {
+          "name": "RGBWW-color",
+          "description": "A list containing five integers between 0 and 255 representing the RGBWW (red, green, blue, cold white, warm white) color for the light."
+        },
+        "color_name": {
+          "name": "Color name",
+          "description": "A human readable color name."
+        },
+        "hs_color": {
+          "name": "Hue/Sat color",
+          "description": "Color for the light in hue/sat format. Hue is 0-360 and Sat is 0-100."
+        },
+        "xy_color": {
+          "name": "XY-color",
+          "description": "Color for the light in XY-format."
+        },
+        "color_temp": {
+          "name": "Color temperature",
+          "description": "Color temperature for the light in mireds."
+        },
+        "kelvin": {
+          "name": "Color temperature (Kelvin)",
+          "description": "Color temperature for the light in Kelvin."
+        },
+        "brightness": {
+          "name": "Brightness value",
+          "description": "Number indicating brightness, where 0 turns the light off, 1 is the minimum brightness and 255 is the maximum brightness supported by the light."
+        },
+        "brightness_pct": {
+          "name": "Brightness",
+          "description": "Number indicating percentage of full brightness, where 0 turns the light off, 1 is the minimum brightness and 100 is the maximum brightness supported by the light."
+        },
+        "brightness_step": {
+          "name": "Brightness step value",
+          "description": "Change brightness by an amount."
+        },
+        "brightness_step_pct": {
+          "name": "Brightness step",
+          "description": "Change brightness by a percentage."
+        },
+        "white": {
+          "name": "White",
+          "description": "Set the light to white mode."
+        },
+        "profile": {
+          "name": "Profile",
+          "description": "Name of a light profile to use."
+        },
+        "flash": {
+          "name": "Flash",
+          "description": "If the light should flash."
+        },
+        "effect": {
+          "name": "Effect",
+          "description": "Light effect."
+        }
+      }
+    },
+    "turn_off": {
+      "name": "Turn off",
+      "description": "Turn off one or more lights.",
+      "fields": {
+        "transition": {
+          "name": "[%key:component::light::services::turn_on::fields::transition::name%]",
+          "description": "[%key:component::light::services::turn_on::fields::transition::description%]"
+        },
+        "flash": {
+          "name": "[%key:component::light::services::turn_on::fields::flash::name%]",
+          "description": "[%key:component::light::services::turn_on::fields::flash::description%]"
+        }
+      }
+    },
+    "toggle": {
+      "name": "Toggle",
+      "description": "Toggles one or more lights, from on to off, or, off to on, based on their current state.",
+      "fields": {
+        "transition": {
+          "name": "[%key:component::light::services::turn_on::fields::transition::name%]",
+          "description": "[%key:component::light::services::turn_on::fields::transition::description%]"
+        },
+        "rgb_color": {
+          "name": "[%key:component::light::services::turn_on::fields::rgb_color::name%]",
+          "description": "[%key:component::light::services::turn_on::fields::rgb_color::description%]"
+        },
+        "color_name": {
+          "name": "[%key:component::light::services::turn_on::fields::color_name::name%]",
+          "description": "[%key:component::light::services::turn_on::fields::color_name::description%]"
+        },
+        "hs_color": {
+          "name": "[%key:component::light::services::turn_on::fields::hs_color::name%]",
+          "description": "[%key:component::light::services::turn_on::fields::hs_color::description%]"
+        },
+        "xy_color": {
+          "name": "[%key:component::light::services::turn_on::fields::xy_color::name%]",
+          "description": "[%key:component::light::services::turn_on::fields::xy_color::description%]"
+        },
+        "color_temp": {
+          "name": "[%key:component::light::services::turn_on::fields::color_temp::name%]",
+          "description": "[%key:component::light::services::turn_on::fields::color_temp::description%]"
+        },
+        "kelvin": {
+          "name": "[%key:component::light::services::turn_on::fields::kelvin::name%]",
+          "description": "[%key:component::light::services::turn_on::fields::kelvin::description%]"
+        },
+        "brightness": {
+          "name": "[%key:component::light::services::turn_on::fields::brightness::name%]",
+          "description": "[%key:component::light::services::turn_on::fields::brightness::description%]"
+        },
+        "brightness_pct": {
+          "name": "[%key:component::light::services::turn_on::fields::brightness_pct::name%]",
+          "description": "[%key:component::light::services::turn_on::fields::brightness_pct::description%]"
+        },
+        "white": {
+          "name": "[%key:component::light::services::turn_on::fields::white::name%]",
+          "description": "[%key:component::light::services::turn_on::fields::white::description%]"
+        },
+        "profile": {
+          "name": "[%key:component::light::services::turn_on::fields::profile::name%]",
+          "description": "[%key:component::light::services::turn_on::fields::profile::description%]"
+        },
+        "flash": {
+          "name": "[%key:component::light::services::turn_on::fields::flash::name%]",
+          "description": "[%key:component::light::services::turn_on::fields::flash::description%]"
+        },
+        "effect": {
+          "name": "[%key:component::light::services::turn_on::fields::effect::name%]",
+          "description": "[%key:component::light::services::turn_on::fields::effect::description%]"
+        }
+      }
+    }
   }
 }
