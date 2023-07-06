@@ -50,6 +50,7 @@ from . import (
     device_registry,
     entity_registry,
     template,
+    translation,
 )
 from .selector import TargetSelector
 from .typing import ConfigType, TemplateVarsType
@@ -561,6 +562,27 @@ def _load_services_files(
     return [_load_services_file(hass, integration) for integration in integrations]
 
 
+async def _get_service_translation(
+    hass: HomeAssistant, domain: str, service: str, key: str
+) -> Any | None:
+    """Get service translation for key."""
+    translations: dict[str, Any] = {}
+
+    try:
+        translations = await translation.async_get_translations(
+            hass, hass.config.language, "service", {domain}
+        )
+    except Exception as err:  # pylint: disable=broad-exception-caught
+        _LOGGER.debug(
+            "Could not load translations for service %s.%s",
+            domain,
+            service,
+            exc_info=err,
+        )
+
+    return translations.get(f"component.{domain}.service.{service}.{key}")
+
+
 @bind_hass
 async def async_get_all_descriptions(
     hass: HomeAssistant,
@@ -628,10 +650,29 @@ async def async_get_all_descriptions(
                 # positives for things like scripts, that register as a service
 
                 description = {
-                    "name": yaml_description.get("name", ""),
-                    "description": yaml_description.get("description", ""),
                     "fields": yaml_description.get("fields", {}),
                 }
+
+                # get translations for service name and description
+                for key in ("name", "description"):
+                    translated = await _get_service_translation(
+                        hass, domain, service, key
+                    )
+
+                    if (
+                        translated is not None
+                        and yaml_description.get(key, "") is not None
+                    ):
+                        _LOGGER.debug(
+                            "%s for service %s.%s found in strings.json. Consider removing it from services.yaml",
+                            translated,
+                            domain,
+                            service,
+                        )
+
+                    description[key] = (
+                        translated if not None else yaml_description.get(key, "")
+                    )
 
                 if "target" in yaml_description:
                     description["target"] = yaml_description["target"]
