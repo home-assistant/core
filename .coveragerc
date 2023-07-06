@@ -1538,7 +1538,10 @@ omit =
     homeassistant/components/zwave_me/switch.py
     homeassistant/components/electrasmart/climate.py
     homeassistant/components/electrasmart/__init__.py
-    homeassistant/components/refoss/*
+    homeassistant/components/refoss/__init__.py
+    homeassistant/components/refoss/coordinator.py
+    homeassistant/components/refoss/device.py
+    homeassistant/components/refoss/switch.py
 
 [report]
 # Regexes for lines to exclude from consideration
