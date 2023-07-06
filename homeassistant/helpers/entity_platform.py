@@ -217,17 +217,27 @@ class EntityPlatform:
                 self.platform_name,
                 self.domain,
             )
+            learn_more_url = None
+            if self.platform and "custom_components" not in self.platform.__file__:  # type: ignore[attr-defined]
+                learn_more_url = (
+                    f"https://www.home-assistant.io/integrations/{self.platform_name}/"
+                )
+            platform_key = f"platform: {self.platform_name}"
+            yaml_example = f"```yaml\n{self.domain}:\n  - {platform_key}\n```"
             async_create_issue(
                 self.hass,
                 HOMEASSISTANT_DOMAIN,
                 f"platform_integration_no_support_{self.domain}_{self.platform_name}",
                 is_fixable=False,
-                issue_domain=self.domain,
+                issue_domain=self.platform_name,
+                learn_more_url=learn_more_url,
                 severity=IssueSeverity.ERROR,
                 translation_key="no_platform_setup",
                 translation_placeholders={
                     "domain": self.domain,
                     "platform": self.platform_name,
+                    "platform_key": platform_key,
+                    "yaml_example": yaml_example,
                 },
             )
 
