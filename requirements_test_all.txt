@@ -763,7 +763,7 @@ hole==0.8.0
 holidays==0.21.13
 
 # homeassistant.components.frontend
-home-assistant-frontend==20230703.0
+home-assistant-frontend==20230705.1
 
 # homeassistant.components.conversation
 home-assistant-intents==2023.6.28
@@ -1200,7 +1200,7 @@ pycoolmasternet-async==0.1.5
 pycsspeechtts==1.0.8
 
 # homeassistant.components.daikin
-pydaikin==2.9.0
+pydaikin==2.10.5
 
 # homeassistant.components.deconz
 pydeconz==113
@@ -1442,7 +1442,7 @@ pyps4-2ndscreen==1.3.1
 pyqwikswitch==0.93
 
 # homeassistant.components.rainbird
-pyrainbird==2.0.0
+pyrainbird==2.1.0
 
 # homeassistant.components.risco
 pyrisco==0.5.7
@@ -2005,7 +2005,7 @@ yolink-api==0.2.9
 youless-api==1.0.1
 
 # homeassistant.components.zamg
-zamg==0.2.2
+zamg==0.2.4
 
 # homeassistant.components.zeroconf
 zeroconf==0.70.0

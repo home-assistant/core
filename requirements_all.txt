@@ -980,7 +980,7 @@ hole==0.8.0
 holidays==0.21.13
 
 # homeassistant.components.frontend
-home-assistant-frontend==20230703.0
+home-assistant-frontend==20230705.1
 
 # homeassistant.components.conversation
 home-assistant-intents==2023.6.28
@@ -1618,7 +1618,7 @@ pycsspeechtts==1.0.8
 # pycups==1.9.73
 
 # homeassistant.components.daikin
-pydaikin==2.9.0
+pydaikin==2.10.5
 
 # homeassistant.components.danfoss_air
 pydanfossair==0.1.0
@@ -1627,7 +1627,7 @@ pydanfossair==0.1.0
 pydeconz==113
 
 # homeassistant.components.delijn
-pydelijn==1.0.0
+pydelijn==1.1.0
 
 # homeassistant.components.dexcom
 pydexcom==0.2.3
@@ -1941,7 +1941,7 @@ pyqwikswitch==0.93
 pyrail==0.0.3
 
 # homeassistant.components.rainbird
-pyrainbird==2.0.0
+pyrainbird==2.1.0
 
 # homeassistant.components.recswitch
 pyrecswitch==1.0.2
@@ -2732,7 +2732,7 @@ youless-api==1.0.1
 yt-dlp==2023.3.4
 
 # homeassistant.components.zamg
-zamg==0.2.2
+zamg==0.2.4
 
 # homeassistant.components.zengge
 zengge==0.2
