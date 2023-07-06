@@ -115,6 +115,15 @@ def validate_services(config: Config, integration: Integration) -> None:
     # For each service in the integration, check if the description if set,
     # if not, check if it's in the strings file. If not, add an error.
     for service_name, service_schema in services.items():
+        if "name" not in service_schema:
+            try:
+                strings["services"][service_name]["name"]
+            except KeyError:
+                integration.add_error(
+                    "services",
+                    f"Service {service_name} has no name and is not in the translations file",
+                )
+
         if "description" not in service_schema:
             try:
                 strings["services"][service_name]["description"]
@@ -124,32 +133,32 @@ def validate_services(config: Config, integration: Integration) -> None:
                     f"Service {service_name} has no description and is not in the translations file",
                 )
 
-            # The same check is done for the description in each of the fields of the
-            # service schema.
-            for field_name, field_schema in service_schema.get("fields", {}).items():
-                if "description" not in field_schema:
+        # The same check is done for the description in each of the fields of the
+        # service schema.
+        for field_name, field_schema in service_schema.get("fields", {}).items():
+            if "description" not in field_schema:
+                try:
+                    strings["services"][service_name]["fields"][field_name][
+                        "description"
+                    ]
+                except KeyError:
+                    integration.add_error(
+                        "services",
+                        f"Service {service_name} has a field {field_name} with no description and is not in the translations file",
+                    )
+
+            if "selector" in field_schema:
+                with contextlib.suppress(KeyError):
+                    translation_key = field_schema["selector"]["select"][
+                        "translation_key"
+                    ]
                     try:
-                        strings["services"][service_name]["fields"][field_name][
-                            "description"
-                        ]
+                        strings["selector"][translation_key]
                     except KeyError:
                         integration.add_error(
                             "services",
-                            f"Service {service_name} has a field {field_name} with no description and is not in the translations file",
+                            f"Service {service_name} has a field {field_name} with a selector with a translation key {translation_key} that is not in the translations file",
                         )
-
-                if "selector" in field_schema:
-                    with contextlib.suppress(KeyError):
-                        translation_key = field_schema["selector"]["select"][
-                            "translation_key"
-                        ]
-                        try:
-                            strings["selector"][translation_key]
-                        except KeyError:
-                            integration.add_error(
-                                "services",
-                                f"Service {service_name} has a field {field_name} with a selector with a translation key {translation_key} that is not in the translations file",
-                            )
 
 
 def validate(integrations: dict[str, Integration], config: Config) -> None:
