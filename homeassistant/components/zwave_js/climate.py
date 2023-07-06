@@ -36,9 +36,10 @@ from homeassistant.const import ATTR_TEMPERATURE, PRECISION_TENTHS, UnitOfTemper
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.util.unit_conversion import TemperatureConverter
 
-from .const import DATA_CLIENT, DOMAIN, LOGGER
+from .const import DATA_CLIENT, DOMAIN
 from .discovery import ZwaveDiscoveryInfo
 from .discovery_data_template import DynamicCurrentTempClimateDataTemplate
 from .entity import ZWaveBaseEntity
@@ -526,10 +527,20 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
         # Dry and Fan preset modes are deprecated as of 2023.8
         # Use Dry and Fan HVAC modes instead
         if preset_mode_value in (ThermostatMode.DRY, ThermostatMode.FAN):
-            LOGGER.warning(
-                "Dry and Fan preset modes are deprecated and will be removed in a future release. "
-                "Use the corresponding Dry and Fan HVAC modes instead"
+            async_create_issue(
+                self.hass,
+                DOMAIN,
+                f"{preset_mode.lower()}_preset_deprecation_{self.entity_id}",
+                is_fixable=False,
+                is_persistent=True,
+                severity=IssueSeverity.WARNING,
+                translation_key="dry_fan_presets_deprecation",
+                translation_placeholders={
+                    "entity_id": self.entity_id,
+                    "preset_name": preset_mode,
+                },
             )
+
         await self._async_set_value(self._current_mode, preset_mode_value)
 
 
