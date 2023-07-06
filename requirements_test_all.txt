@@ -763,7 +763,7 @@ hole==0.8.0
 holidays==0.21.13
 
 # homeassistant.components.frontend
-home-assistant-frontend==20230703.0
+home-assistant-frontend==20230705.1
 
 # homeassistant.components.conversation
 home-assistant-intents==2023.6.28
@@ -1200,7 +1200,7 @@ pycoolmasternet-async==0.1.5
 pycsspeechtts==1.0.8
 
 # homeassistant.components.daikin
-pydaikin==2.9.0
+pydaikin==2.10.5
 
 # homeassistant.components.deconz
 pydeconz==113
