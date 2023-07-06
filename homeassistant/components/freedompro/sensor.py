@@ -13,8 +13,8 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import FreedomproDataUpdateCoordinator
 from .const import DOMAIN
+from .coordinator import FreedomproDataUpdateCoordinator
 
 DEVICE_CLASS_MAP = {
     "temperatureSensor": SensorDeviceClass.TEMPERATURE,
@@ -52,7 +52,7 @@ async def async_setup_entry(
 
 
 class Device(CoordinatorEntity[FreedomproDataUpdateCoordinator], SensorEntity):
-    """Representation of an Freedompro sensor."""
+    """Representation of a Freedompro sensor."""
 
     _attr_has_entity_name = True
     _attr_name = None

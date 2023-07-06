@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from hassil.recognize import PUNCTUATION
 import voluptuous as vol
 
 from homeassistant.const import CONF_COMMAND, CONF_PLATFORM
@@ -15,10 +16,22 @@ from . import HOME_ASSISTANT_AGENT, _get_agent_manager
 from .const import DOMAIN
 from .default_agent import DefaultAgent
 
+
+def has_no_punctuation(value: list[str]) -> list[str]:
+    """Validate result does not contain punctuation."""
+    for sentence in value:
+        if PUNCTUATION.search(sentence):
+            raise vol.Invalid("sentence should not contain punctuation")
+
+    return value
+
+
 TRIGGER_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_PLATFORM): DOMAIN,
-        vol.Required(CONF_COMMAND): vol.All(cv.ensure_list, [cv.string]),
+        vol.Required(CONF_COMMAND): vol.All(
+            cv.ensure_list, [cv.string], has_no_punctuation
+        ),
     }
 )
 
@@ -51,7 +64,7 @@ async def async_attach_trigger(
         ):
             await future
 
-        return None
+        return "Done"
 
     default_agent = await _get_agent_manager(hass).async_get_agent(HOME_ASSISTANT_AGENT)
     assert isinstance(default_agent, DefaultAgent)

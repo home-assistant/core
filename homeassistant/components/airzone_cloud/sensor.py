@@ -89,7 +89,6 @@ async def async_setup_entry(
                     AirzoneAidooSensor(
                         coordinator,
                         description,
-                        entry,
                         aidoo_id,
                         aidoo_data,
                     )
@@ -103,7 +102,6 @@ async def async_setup_entry(
                     AirzoneWebServerSensor(
                         coordinator,
                         description,
-                        entry,
                         ws_id,
                         ws_data,
                     )
@@ -117,7 +115,6 @@ async def async_setup_entry(
                     AirzoneZoneSensor(
                         coordinator,
                         description,
-                        entry,
                         zone_id,
                         zone_data,
                     )
@@ -144,18 +141,18 @@ class AirzoneSensor(AirzoneEntity, SensorEntity):
 class AirzoneAidooSensor(AirzoneAidooEntity, AirzoneSensor):
     """Define an Airzone Cloud Aidoo sensor."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self,
         coordinator: AirzoneUpdateCoordinator,
         description: SensorEntityDescription,
-        entry: ConfigEntry,
         aidoo_id: str,
         aidoo_data: dict[str, Any],
     ) -> None:
         """Initialize."""
-        super().__init__(coordinator, entry, aidoo_id, aidoo_data)
+        super().__init__(coordinator, aidoo_id, aidoo_data)
 
-        self._attr_has_entity_name = True
         self._attr_unique_id = f"{aidoo_id}_{description.key}"
         self.entity_description = description
 
@@ -165,18 +162,18 @@ class AirzoneAidooSensor(AirzoneAidooEntity, AirzoneSensor):
 class AirzoneWebServerSensor(AirzoneWebServerEntity, AirzoneSensor):
     """Define an Airzone Cloud WebServer sensor."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self,
         coordinator: AirzoneUpdateCoordinator,
         description: SensorEntityDescription,
-        entry: ConfigEntry,
         ws_id: str,
         ws_data: dict[str, Any],
     ) -> None:
         """Initialize."""
-        super().__init__(coordinator, entry, ws_id, ws_data)
+        super().__init__(coordinator, ws_id, ws_data)
 
-        self._attr_has_entity_name = True
         self._attr_unique_id = f"{ws_id}_{description.key}"
         self.entity_description = description
 
@@ -186,18 +183,18 @@ class AirzoneWebServerSensor(AirzoneWebServerEntity, AirzoneSensor):
 class AirzoneZoneSensor(AirzoneZoneEntity, AirzoneSensor):
     """Define an Airzone Cloud Zone sensor."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self,
         coordinator: AirzoneUpdateCoordinator,
         description: SensorEntityDescription,
-        entry: ConfigEntry,
         zone_id: str,
         zone_data: dict[str, Any],
     ) -> None:
         """Initialize."""
-        super().__init__(coordinator, entry, zone_id, zone_data)
+        super().__init__(coordinator, zone_id, zone_data)
 
-        self._attr_has_entity_name = True
         self._attr_unique_id = f"{zone_id}_{description.key}"
         self.entity_description = description
 

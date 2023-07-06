@@ -16,6 +16,7 @@ from homeassistant.components.vacuum import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import slugify
 
@@ -75,7 +76,6 @@ class RoborockVacuum(RoborockCoordinatedEntity, StateVacuumEntity):
         | VacuumEntityFeature.RETURN_HOME
         | VacuumEntityFeature.FAN_SPEED
         | VacuumEntityFeature.BATTERY
-        | VacuumEntityFeature.STATUS
         | VacuumEntityFeature.SEND_COMMAND
         | VacuumEntityFeature.LOCATE
         | VacuumEntityFeature.CLEAN_SPOT
@@ -83,6 +83,7 @@ class RoborockVacuum(RoborockCoordinatedEntity, StateVacuumEntity):
         | VacuumEntityFeature.START
     )
     _attr_translation_key = DOMAIN
+    _attr_name = None
 
     def __init__(
         self,
@@ -108,11 +109,6 @@ class RoborockVacuum(RoborockCoordinatedEntity, StateVacuumEntity):
     def fan_speed(self) -> str | None:
         """Return the fan speed of the vacuum cleaner."""
         return self._device_status.fan_power.name
-
-    @property
-    def status(self) -> str | None:
-        """Return the status of the vacuum cleaner."""
-        return self._device_status.state.name
 
     async def async_start(self) -> None:
         """Start the vacuum."""
@@ -151,6 +147,16 @@ class RoborockVacuum(RoborockCoordinatedEntity, StateVacuumEntity):
             await self.async_pause()
         else:
             await self.async_start()
+        ir.async_create_issue(
+            self.hass,
+            DOMAIN,
+            "service_deprecation_start_pause",
+            breaks_in_ha_version="2024.2.0",
+            is_fixable=True,
+            is_persistent=True,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="service_deprecation_start_pause",
+        )
 
     async def async_send_command(
         self,

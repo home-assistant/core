@@ -11,8 +11,8 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import FreedomproDataUpdateCoordinator
 from .const import DOMAIN
+from .coordinator import FreedomproDataUpdateCoordinator
 
 DEVICE_CLASS_MAP = {
     "smokeSensor": BinarySensorDeviceClass.SMOKE,
@@ -44,7 +44,7 @@ async def async_setup_entry(
 
 
 class Device(CoordinatorEntity[FreedomproDataUpdateCoordinator], BinarySensorEntity):
-    """Representation of an Freedompro binary_sensor."""
+    """Representation of a Freedompro binary_sensor."""
 
     _attr_has_entity_name = True
     _attr_name = None
