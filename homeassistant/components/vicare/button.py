@@ -20,7 +20,7 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import ViCareRequiredKeysMixinWithSet
-from .const import DOMAIN, VICARE_API, VICARE_DEVICE_CONFIG, VICARE_NAME
+from .const import CONF_HEATING_TYPE, DOMAIN, HEATING_TYPE_TO_CREATOR_METHOD, VICARE_DEVICE_LIST, VICARE_NAME, HeatingType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -74,20 +74,23 @@ async def async_setup_entry(
 ) -> None:
     """Create the ViCare button entities."""
     name = VICARE_NAME
-    api = hass.data[DOMAIN][config_entry.entry_id][VICARE_API]
-
     entities = []
 
-    for description in BUTTON_DESCRIPTIONS:
-        entity = await hass.async_add_executor_job(
-            _build_entity,
-            f"{name} {description.name}",
-            api,
-            hass.data[DOMAIN][config_entry.entry_id][VICARE_DEVICE_CONFIG],
-            description,
-        )
-        if entity is not None:
-            entities.append(entity)
+    for device in hass.data[DOMAIN][config_entry.entry_id][VICARE_DEVICE_LIST]:
+        api = getattr(
+            device,
+            HEATING_TYPE_TO_CREATOR_METHOD[HeatingType(config_entry.data[CONF_HEATING_TYPE])],
+        )()
+        for description in BUTTON_DESCRIPTIONS:
+            entity = await hass.async_add_executor_job(
+                _build_entity,
+                f"{name} {description.name}",
+                api,
+                device,
+                description,
+            )
+            if entity is not None:
+                entities.append(entity)
 
     async_add_entities(entities)
 
