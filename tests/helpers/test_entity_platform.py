@@ -1878,3 +1878,44 @@ async def test_device_name_defaulting_config_entry(
     device = dev_reg.async_get_device(set(), {(dr.CONNECTION_NETWORK_MAC, "1234")})
     assert device is not None
     assert device.name == expected_device_name
+
+
+@pytest.mark.parametrize(
+    ("device_info"),
+    [
+        {},
+        {"name": "bla"},
+        {"default_name": "bla"},
+        {
+            "name": "bla",
+            "default_name": "yo",
+        },
+    ],
+)
+async def test_device_type_checking(
+    hass: HomeAssistant,
+    device_info: dict,
+) -> None:
+    """Test catching invalid device info."""
+
+    class DeviceNameEntity(Entity):
+        _attr_unique_id = "qwer"
+        _attr_device_info = device_info
+
+    async def async_setup_entry(hass, config_entry, async_add_entities):
+        """Mock setup entry method."""
+        async_add_entities([DeviceNameEntity()])
+        return True
+
+    platform = MockPlatform(async_setup_entry=async_setup_entry)
+    config_entry = MockConfigEntry(
+        title="Mock Config Entry Title", entry_id="super-mock-id"
+    )
+    entity_platform = MockEntityPlatform(
+        hass, platform_name=config_entry.domain, platform=platform
+    )
+
+    assert await entity_platform.async_setup_entry(config_entry)
+
+    dev_reg = dr.async_get(hass)
+    assert len(dev_reg.devices) == 0
