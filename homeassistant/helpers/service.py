@@ -665,7 +665,7 @@ async def async_get_all_descriptions(
                     ):
                         _LOGGER.debug(
                             "%s for service %s.%s found in strings.json. Consider removing it from services.yaml",
-                            translated,
+                            key.capitalize(),
                             domain,
                             service,
                         )
