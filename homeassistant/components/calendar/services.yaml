@@ -4,6 +4,8 @@ create_event:
   target:
     entity:
       domain: calendar
+      supported_features:
+        - calendar.CalendarEntityFeature.CREATE_EVENT
   fields:
     summary:
       name: Summary

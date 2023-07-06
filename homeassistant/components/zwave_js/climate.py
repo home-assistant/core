@@ -9,8 +9,6 @@ from zwave_js_server.const.command_class.thermostat import (
     THERMOSTAT_CURRENT_TEMP_PROPERTY,
     THERMOSTAT_HUMIDITY_PROPERTY,
     THERMOSTAT_MODE_PROPERTY,
-    THERMOSTAT_MODE_SETPOINT_MAP,
-    THERMOSTAT_MODES,
     THERMOSTAT_OPERATING_STATE_PROPERTY,
     THERMOSTAT_SETPOINT_PROPERTY,
     ThermostatMode,
@@ -40,13 +38,45 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.unit_conversion import TemperatureConverter
 
-from .const import DATA_CLIENT, DOMAIN
+from .const import DATA_CLIENT, DOMAIN, LOGGER
 from .discovery import ZwaveDiscoveryInfo
 from .discovery_data_template import DynamicCurrentTempClimateDataTemplate
 from .entity import ZWaveBaseEntity
 from .helpers import get_value_of_zwave_value
 
 PARALLEL_UPDATES = 0
+
+THERMOSTAT_MODES = [
+    ThermostatMode.OFF,
+    ThermostatMode.HEAT,
+    ThermostatMode.COOL,
+    ThermostatMode.AUTO,
+    ThermostatMode.AUTO_CHANGE_OVER,
+    ThermostatMode.FAN,
+    ThermostatMode.DRY,
+]
+
+THERMOSTAT_MODE_SETPOINT_MAP: dict[int, list[ThermostatSetpointType]] = {
+    ThermostatMode.OFF: [],
+    ThermostatMode.HEAT: [ThermostatSetpointType.HEATING],
+    ThermostatMode.COOL: [ThermostatSetpointType.COOLING],
+    ThermostatMode.AUTO: [
+        ThermostatSetpointType.HEATING,
+        ThermostatSetpointType.COOLING,
+    ],
+    ThermostatMode.AUXILIARY: [ThermostatSetpointType.HEATING],
+    ThermostatMode.FURNACE: [ThermostatSetpointType.FURNACE],
+    ThermostatMode.DRY: [ThermostatSetpointType.DRY_AIR],
+    ThermostatMode.MOIST: [ThermostatSetpointType.MOIST_AIR],
+    ThermostatMode.AUTO_CHANGE_OVER: [ThermostatSetpointType.AUTO_CHANGEOVER],
+    ThermostatMode.HEATING_ECON: [ThermostatSetpointType.ENERGY_SAVE_HEATING],
+    ThermostatMode.COOLING_ECON: [ThermostatSetpointType.ENERGY_SAVE_COOLING],
+    ThermostatMode.AWAY: [
+        ThermostatSetpointType.AWAY_HEATING,
+        ThermostatSetpointType.AWAY_COOLING,
+    ],
+    ThermostatMode.FULL_POWER: [ThermostatSetpointType.FULL_POWER],
+}
 
 # Map Z-Wave HVAC Mode to Home Assistant value
 # Note: We treat "auto" as "heat_cool" as most Z-Wave devices
@@ -233,9 +263,15 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
                 # treat value as hvac mode
                 if hass_mode := ZW_HVAC_MODE_MAP.get(mode_id):
                     all_modes[hass_mode] = mode_id
+                # Dry and Fan modes are in the process of being migrated from
+                # presets to hvac modes. In the meantime, we will set them as
+                # both, presets and hvac modes, to maintain backwards compatibility
+                if mode_id in (ThermostatMode.DRY, ThermostatMode.FAN):
+                    all_presets[mode_name] = mode_id
             else:
                 # treat value as hvac preset
                 all_presets[mode_name] = mode_id
+
         self._hvac_modes = all_modes
         self._hvac_presets = all_presets
 
@@ -487,6 +523,13 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
         preset_mode_value = self._hvac_presets.get(preset_mode)
         if preset_mode_value is None:
             raise ValueError(f"Received an invalid preset mode: {preset_mode}")
+        # Dry and Fan preset modes are deprecated as of 2023.8
+        # Use Dry and Fan HVAC modes instead
+        if preset_mode_value in (ThermostatMode.DRY, ThermostatMode.FAN):
+            LOGGER.warning(
+                "Dry and Fan preset modes are deprecated and will be removed in a future release. "
+                "Use the corresponding Dry and Fan HVAC modes instead"
+            )
         await self._async_set_value(self._current_mode, preset_mode_value)
 
 
