@@ -804,7 +804,7 @@ class EntityPlatform:
         if device_info_type == "primary" and not device_info.get("name"):
             device_info = {
                 **device_info,  # type: ignore[misc]
-                "name": self.config_entry.title or self.config_entry.domain,
+                "name": self.config_entry.title,
             }
 
         return dev_reg.async_get(self.hass).async_get_or_create(

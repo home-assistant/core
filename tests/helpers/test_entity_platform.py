@@ -1786,7 +1786,6 @@ async def test_translated_device_class_name_influences_entity_id(
         "expected_device_name",
     ),
     [
-        ("", None, None, "test"),
         ("Mock Config Entry Title", None, None, "Mock Config Entry Title"),
         ("Mock Config Entry Title", "", None, "Mock Config Entry Title"),
         ("Mock Config Entry Title", None, "Hello", "Hello"),
