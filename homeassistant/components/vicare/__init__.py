@@ -98,8 +98,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     with suppress(FileNotFoundError):
         await hass.async_add_executor_job(
-            os.remove, 
-            hass.config.path(STORAGE_DIR, _TOKEN_FILENAME)
+            os.remove, hass.config.path(STORAGE_DIR, _TOKEN_FILENAME)
         )
 
     return unload_ok
