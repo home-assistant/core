@@ -100,7 +100,7 @@ async def test_imperial_metric(
 
 
 async def test_night_clear(hass: HomeAssistant, mock_simple_nws, no_sensor) -> None:
-    """Test with none values in observation and forecast dicts."""
+    """Test with clear-night in observation."""
     instance = mock_simple_nws.return_value
     instance.observation = CLEAR_NIGHT_OBSERVATION
 
