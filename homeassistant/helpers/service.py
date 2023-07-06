@@ -683,6 +683,13 @@ def async_set_service_schema(
     if "target" in schema:
         description["target"] = schema["target"]
 
+    if (
+        response := hass.services.supports_response(domain, service)
+    ) != SupportsResponse.NONE:
+        description["response"] = {
+            "optional": response == SupportsResponse.OPTIONAL,
+        }
+
     hass.data.pop(ALL_SERVICE_DESCRIPTIONS_CACHE, None)
     descriptions_cache[(domain, service)] = description
 

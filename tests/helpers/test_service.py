@@ -589,6 +589,19 @@ async def test_async_get_all_descriptions(hass: HomeAssistant) -> None:
         None,
         SupportsResponse.ONLY,
     )
+    hass.services.async_register(
+        logger.DOMAIN,
+        "another_service_with_response",
+        lambda x: None,
+        None,
+        SupportsResponse.OPTIONAL,
+    )
+    service.async_set_service_schema(
+        hass,
+        logger.DOMAIN,
+        "another_service_with_response",
+        {"description": "response service"},
+    )
 
     descriptions = await service.async_get_all_descriptions(hass)
     assert "another_new_service" in descriptions[logger.DOMAIN]
@@ -599,6 +612,10 @@ async def test_async_get_all_descriptions(hass: HomeAssistant) -> None:
     assert "service_with_only_response" in descriptions[logger.DOMAIN]
     assert descriptions[logger.DOMAIN]["service_with_only_response"]["response"] == {
         "optional": False
+    }
+    assert "another_service_with_response" in descriptions[logger.DOMAIN]
+    assert descriptions[logger.DOMAIN]["another_service_with_response"]["response"] == {
+        "optional": True
     }
 
     # Verify the cache returns the same object
