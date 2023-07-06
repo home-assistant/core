@@ -66,8 +66,8 @@ body:
       label: Link to integration documentation on our website
       placeholder: "https://www.home-assistant.io/integrations/..."
       description: |
-        Providing a link [to the documentation][docs] helps us categorize the issue and might speed up 
-        issue analysis by automatically informing a contributor, while also providing a useful reference for others.
+        Providing a link [to the documentation][docs] helps us categorize the issue and might speed up the
+        investigation by automatically informing a contributor, while also providing a useful reference for others.
 
         [docs]: https://www.home-assistant.io/integrations
 
