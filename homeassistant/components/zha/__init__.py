@@ -86,6 +86,19 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
+def _clean_serial_port_path(path: str) -> str:
+    """Clean the serial port path, applying corrections where necessary."""
+
+    if path.startswith("socket://"):
+        path = path.strip()
+
+    # Removes extraneous brackets from IP addresses (they don't parse in CPython 3.11.4)
+    if re.match(r"^socket://\[\d+\.\d+\.\d+\.\d+\]:\d+$", path):
+        path = path.replace("[", "").replace("]", "")
+
+    return path
+
+
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Set up ZHA.
 
@@ -95,10 +108,12 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     # Remove brackets around IP addresses, this no longer works in CPython 3.11.4
     # This will be removed in 2023.11.0
     path = config_entry.data[CONF_DEVICE][CONF_DEVICE_PATH]
+    cleaned_path = _clean_serial_port_path(path)
     data = copy.deepcopy(dict(config_entry.data))
 
-    if re.match(r"^(socket|tcp)://\[\d+\.\d+\.\d+\.\d+\]:\d+$", path):
-        data[CONF_DEVICE][CONF_DEVICE_PATH] = path.replace("[", "").replace("]", "")
+    if path != cleaned_path:
+        _LOGGER.debug("Cleaned serial port path %r -> %r", path, cleaned_path)
+        data[CONF_DEVICE][CONF_DEVICE_PATH] = cleaned_path
         hass.config_entries.async_update_entry(config_entry, data=data)
 
     zha_data = hass.data.setdefault(DATA_ZHA, {})
