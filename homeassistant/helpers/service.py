@@ -670,9 +670,10 @@ async def async_get_all_descriptions(
                             service,
                         )
 
-                    description[key] = (
-                        translated if not None else yaml_description.get(key, "")
-                    )
+                    if translated is not None:
+                        description[key] = translated
+                    else:
+                        description[key] = yaml_description.get(key, "")
 
                 if "target" in yaml_description:
                     description["target"] = yaml_description["target"]
