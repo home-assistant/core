@@ -36,7 +36,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if device_type in [101, 106, 107]:
         device = MyStromSwitch(host)
         platforms = PLATFORMS_SWITCH
-    elif device_type == 102:
+    elif device_type in [102, 105]:
         mac = info["mac"]
         device = MyStromBulb(host, mac)
         platforms = PLATFORMS_BULB
