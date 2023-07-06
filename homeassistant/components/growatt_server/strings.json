@@ -83,7 +83,7 @@
         "name": "Intelligent Power Management temperature"
       },
       "inverter_temperature": {
-        "name": "Energytoday"
+        "name": "Inverter temperature"
       },
       "mix_statement_of_charge": {
         "name": "Statement of charge"
