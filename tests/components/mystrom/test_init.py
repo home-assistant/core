@@ -7,6 +7,7 @@ from homeassistant.components.mystrom.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
+from . import get_default_device_response
 from .conftest import DEVICE_MAC
 
 from tests.common import MockConfigEntry
@@ -21,7 +22,7 @@ async def init_integration(
     """Inititialize integration for testing."""
     with patch(
         "pymystrom.get_device_info",
-        side_effect=AsyncMock(return_value={"type": device_type, "mac": DEVICE_MAC}),
+        side_effect=AsyncMock(return_value=get_default_device_response(device_type)),
     ), patch("pymystrom.switch.MyStromSwitch.get_state", return_value={}), patch(
         "pymystrom.bulb.MyStromBulb.get_state", return_value={}
     ), patch(
