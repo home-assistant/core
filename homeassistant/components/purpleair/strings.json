@@ -134,8 +134,8 @@
       "uptime": {
         "name": "Uptime"
       },
-      "voc": {
-        "name": "[%key:component::sensor::entity_component::volatile_organic_compounds::name%]"
+      "voc_aqi": {
+        "name": "Volatile organic compounds air quality index"
       }
     }
   }
