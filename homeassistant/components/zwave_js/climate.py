@@ -509,7 +509,7 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
             async_create_issue(
                 self.hass,
                 DOMAIN,
-                f"dry_fan_preset_deprecation_{self.entity_id}",
+                f"dry_fan_presets_deprecation_{self.entity_id}",
                 is_fixable=True,
                 is_persistent=True,
                 severity=IssueSeverity.WARNING,
