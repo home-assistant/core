@@ -162,16 +162,24 @@ class AirthingsSensor(
         super().__init__(coordinator)
         self.entity_description = entity_description
 
-        if airthings_device.model == "" and airthings_device.identifier == "":
-            name = f"{airthings_device.name} ({airthings_device.identifier})"
+        if airthings_device.name != "":
+            name = airthings_device.name
         else:
-            name = "Airthings"
-            if airthings_device.model != "":
-                name += f" {airthings_device.model}"
-            if airthings_device.identifier != "":
-                name += f" ({airthings_device.identifier})"
+            name = f"Airthings {airthings_device.model}"
+        if (
+            airthings_device.identifier is not None
+            and airthings_device.identifier != ""
+        ):
+            identifier = airthings_device.identifier
+            name += f" {identifier}"
+        else:
+            # Use `address` as a fallback for Mac. This does not give any value to the user,
+            # so we don't need to add it to the name.
+            identifier = airthings_device.address
 
-        self._attr_unique_id = f"{airthings_device.name}_{airthings_device.identifier}_{entity_description.key}"
+        self._attr_unique_id = (
+            f"{airthings_device.name}_{identifier}_{entity_description.key}"
+        )
 
         self._id = airthings_device.address
         self._attr_device_info = DeviceInfo(
