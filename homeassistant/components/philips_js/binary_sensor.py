@@ -43,7 +43,8 @@ class PhilipsTVRecordingOngoing(
 
         super().__init__(coordinator)
 
-        self._attr_name = f"{coordinator.system['name']} Recording ongoing"
+        self._attr_has_entity_name = True
+        self._attr_translation_key = "recording_ongoing"
         self._attr_icon = "mdi:record-rec"
         self._attr_unique_id = f"{coordinator.unique_id}_recording_ongoing"
         self._attr_device_info = DeviceInfo(
@@ -74,7 +75,8 @@ class PhilipsTVRecordingNew(
 
         super().__init__(coordinator)
 
-        self._attr_name = f"{coordinator.system['name']} New recording available"
+        self._attr_has_entity_name = True
+        self._attr_translation_key = "recording_new"
         self._attr_icon = "mdi:new-box"
         self._attr_unique_id = f"{coordinator.unique_id}_recording_new"
         self._attr_device_info = DeviceInfo(

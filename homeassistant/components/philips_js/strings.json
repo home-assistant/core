@@ -39,5 +39,15 @@
     "trigger_type": {
       "turn_on": "Device is requested to turn on"
     }
+  },
+  "entity": {
+    "binary_sensor": {
+      "recording_new": {
+        "name": "New recording available"
+      },
+      "recording_ongoing": {
+        "name": "Recording ongoing"
+      }
+    }
   }
 }
