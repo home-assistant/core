@@ -1,15 +1,17 @@
 """Support for Proxmox VE."""
 from __future__ import annotations
 
-from datetime import timedelta
 from typing import Any
 
 from proxmoxer import AuthenticationError, ProxmoxAPI
-from proxmoxer.core import ResourceException
 import requests.exceptions
 from requests.exceptions import ConnectTimeout, SSLError
 import voluptuous as vol
 
+from homeassistant.components.proxmoxve.coordinator import (
+    ProxmoxClient,
+    ProxmoxDataUpdateCoordinator,
+)
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -39,7 +41,6 @@ from .const import (
     PROXMOX_CLIENTS,
     TYPE_CONTAINER,
     TYPE_VM,
-    UPDATE_INTERVAL,
 )
 
 PLATFORMS = [Platform.BINARY_SENSOR]
@@ -141,7 +142,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     # Create a coordinator for each vm/container
     for host_config in config[DOMAIN]:
-        host_name = host_config["host"]
+        host_name = host_config[CONF_HOST]
         coordinators[host_name] = {}
 
         proxmox_client = hass.data[PROXMOX_CLIENTS][host_name]
@@ -150,15 +151,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         if proxmox_client is None:
             continue
 
-        proxmox = proxmox_client.get_api_client()
-
-        for node_config in host_config["nodes"]:
-            node_name = node_config["node"]
+        for node_config in host_config[CONF_NODES]:
+            node_name = node_config[CONF_NODE]
             node_coordinators = coordinators[host_name][node_name] = {}
 
-            for vm_id in node_config["vms"]:
-                coordinator = create_coordinator_container_vm(
-                    hass, proxmox, host_name, node_name, vm_id, TYPE_VM
+            for vm_id in node_config[CONF_VMS]:
+                coordinator = ProxmoxDataUpdateCoordinator(
+                    hass, proxmox_client, host_name, node_name, vm_id, TYPE_VM
                 )
 
                 # Fetch initial data
@@ -166,9 +165,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
                 node_coordinators[vm_id] = coordinator
 
-            for container_id in node_config["containers"]:
-                coordinator = create_coordinator_container_vm(
-                    hass, proxmox, host_name, node_name, container_id, TYPE_CONTAINER
+            for container_id in node_config[CONF_CONTAINERS]:
+                coordinator = ProxmoxDataUpdateCoordinator(
+                    hass,
+                    proxmox_client,
+                    host_name,
+                    node_name,
+                    container_id,
+                    TYPE_CONTAINER,
                 )
 
                 # Fetch initial data
@@ -182,117 +186,3 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         )
 
     return True
-
-
-def create_coordinator_container_vm(
-    hass: HomeAssistant,
-    proxmox: ProxmoxAPI,
-    host_name: str,
-    node_name: str,
-    vm_id: int,
-    vm_type: int,
-) -> DataUpdateCoordinator[dict[str, Any] | None]:
-    """Create and return a DataUpdateCoordinator for a vm/container."""
-
-    async def async_update_data() -> dict[str, Any] | None:
-        """Call the api and handle the response."""
-
-        def poll_api() -> dict[str, Any] | None:
-            """Call the api."""
-            vm_status = call_api_container_vm(proxmox, node_name, vm_id, vm_type)
-            return vm_status
-
-        vm_status = await hass.async_add_executor_job(poll_api)
-
-        if vm_status is None:
-            _LOGGER.warning(
-                "Vm/Container %s unable to be found in node %s", vm_id, node_name
-            )
-            return None
-
-        return parse_api_container_vm(vm_status)
-
-    return DataUpdateCoordinator(
-        hass,
-        _LOGGER,
-        name=f"proxmox_coordinator_{host_name}_{node_name}_{vm_id}",
-        update_method=async_update_data,
-        update_interval=timedelta(seconds=UPDATE_INTERVAL),
-    )
-
-
-def parse_api_container_vm(status: dict[str, Any]) -> dict[str, Any]:
-    """Get the container or vm api data and return it formatted in a dictionary.
-
-    It is implemented in this way to allow for more data to be added for sensors
-    in the future.
-    """
-
-    return {"status": status["status"], "name": status["name"]}
-
-
-def call_api_container_vm(
-    proxmox: ProxmoxAPI,
-    node_name: str,
-    vm_id: int,
-    machine_type: int,
-) -> dict[str, Any] | None:
-    """Make proper api calls."""
-    status = None
-
-    try:
-        if machine_type == TYPE_VM:
-            status = proxmox.nodes(node_name).qemu(vm_id).status.current.get()
-        elif machine_type == TYPE_CONTAINER:
-            status = proxmox.nodes(node_name).lxc(vm_id).status.current.get()
-    except (ResourceException, requests.exceptions.ConnectionError):
-        return None
-
-    return status
-
-
-class ProxmoxClient:
-    """A wrapper for the proxmoxer ProxmoxAPI client."""
-
-    _proxmox: ProxmoxAPI
-
-    def __init__(
-        self,
-        host: str,
-        port: int,
-        user: str,
-        realm: str,
-        password: str,
-        verify_ssl: bool,
-    ) -> None:
-        """Initialize the ProxmoxClient."""
-
-        self._host = host
-        self._port = port
-        self._user = user
-        self._realm = realm
-        self._password = password
-        self._verify_ssl = verify_ssl
-
-    def build_client(self) -> None:
-        """Construct the ProxmoxAPI client.
-
-        Allows inserting the realm within the `user` value.
-        """
-
-        if "@" in self._user:
-            user_id = self._user
-        else:
-            user_id = f"{self._user}@{self._realm}"
-
-        self._proxmox = ProxmoxAPI(
-            self._host,
-            port=self._port,
-            user=user_id,
-            password=self._password,
-            verify_ssl=self._verify_ssl,
-        )
-
-    def get_api_client(self) -> ProxmoxAPI:
-        """Return the ProxmoxAPI client."""
-        return self._proxmox

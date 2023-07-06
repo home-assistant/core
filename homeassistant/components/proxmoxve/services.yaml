@@ -1,0 +1,25 @@
+# Describes the format for available Proxmox VE services
+
+set_vm_status:
+  name: Set VM Status
+  description: "Call a Proxmox VE status method on a VM. This method requires VM.PowerMgmt permission."
+  target:
+    entity:
+      integration: proxmoxve
+      domain: binary_sensor
+  fields:
+    status_command:
+      name: Status Command
+      description: Name of setting status command.
+      required: true
+      example: "start"
+      selector:
+        select:
+          options:
+            - "reboot"
+            - "reset"
+            - "resume"
+            - "shutdown"
+            - "start"
+            - "stop"
+            - "suspend"
