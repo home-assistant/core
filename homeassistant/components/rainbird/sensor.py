@@ -42,6 +42,8 @@ async def async_setup_entry(
 class RainBirdSensor(CoordinatorEntity[RainbirdUpdateCoordinator], SensorEntity):
     """A sensor implementation for Rain Bird device."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self,
         coordinator: RainbirdUpdateCoordinator,
