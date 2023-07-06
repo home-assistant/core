@@ -1481,8 +1481,15 @@ async def test_platform_with_no_setup(
         issue_id="platform_integration_no_support_mock-integration_mock-platform",
     )
     assert issue
-    assert issue.issue_domain == "mock-integration"
+    assert issue.issue_domain == "mock-platform"
+    assert issue.learn_more_url is None
     assert issue.translation_key == "no_platform_setup"
+    assert issue.translation_placeholders == {
+        "domain": "mock-integration",
+        "platform": "mock-platform",
+        "platform_key": "platform: mock-platform",
+        "yaml_example": "```yaml\nmock-integration:\n  - platform: mock-platform\n```",
+    }
 
 
 async def test_platforms_sharing_services(hass: HomeAssistant) -> None:
