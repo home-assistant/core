@@ -5,14 +5,14 @@ from trello import TrelloClient
 
 from homeassistant.components.sensor import SensorEntity, SensorStateClass
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_API_KEY
+from homeassistant.const import CONF_API_KEY, CONF_API_TOKEN
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import CONF_API_TOKEN, CONF_BOARD_IDS, DOMAIN, Board, List
+from .const import CONF_BOARD_IDS, DOMAIN, Board, List
 from .coordinator import TrelloDataUpdateCoordinator
 
 
