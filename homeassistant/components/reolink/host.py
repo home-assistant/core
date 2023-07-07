@@ -403,8 +403,8 @@ class ReolinkHost:
                 raise ReolinkWebhookException(
                     f"Error registering URL for webhook {event_id}: "
                     "HomeAssistant URL is not available, go to "
-                    "Settings->System->Network->Home Assistant URL and correct the URLs,
-                    [more information](https://www.home-assistant.io/more-info/no-url-available/#configuring-the-instance-url)"
+                    "Settings->System->Network->Home Assistant URL and correct the URLs, "
+                    "[more information](https://www.home-assistant.io/more-info/no-url-available/#configuring-the-instance-url)"
                 ) from err
 
         webhook_path = webhook.async_generate_path(event_id)
