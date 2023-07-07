@@ -41,7 +41,6 @@ from .const import (
     VICARE_CUBIC_METER,
     VICARE_DEVICE_LIST,
     VICARE_KWH,
-    VICARE_NAME,
     VICARE_UNIT_TO_UNIT_OF_MEASUREMENT,
     HeatingType,
 )
@@ -590,7 +589,7 @@ def _build_entity(name, vicare_api, device_config, sensor):
 
 
 async def _entities_from_descriptions(
-    hass, name, entities, sensor_descriptions, iterables, device
+    hass, entities, sensor_descriptions, iterables, device
 ):
     """Create entities from descriptions and list of burners/circuits."""
     for description in sensor_descriptions:
@@ -600,7 +599,7 @@ async def _entities_from_descriptions(
                 suffix = f" {current.id}"
             entity = await hass.async_add_executor_job(
                 _build_entity,
-                f"{name} {description.name}{suffix}",
+                f"{description.name}{suffix}",
                 current,
                 device,
                 description,
@@ -615,7 +614,6 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Create the ViCare sensor devices."""
-    name = VICARE_NAME
     entities = []
 
     for device in hass.data[DOMAIN][config_entry.entry_id][VICARE_DEVICE_LIST]:
@@ -628,7 +626,7 @@ async def async_setup_entry(
         for description in GLOBAL_SENSORS:
             entity = await hass.async_add_executor_job(
                 _build_entity,
-                f"{name} {description.name}",
+                f"{description.name}",
                 api,
                 device,
                 description,
@@ -638,21 +636,21 @@ async def async_setup_entry(
 
         try:
             await _entities_from_descriptions(
-                hass, name, entities, CIRCUIT_SENSORS, api.circuits, device
+                hass, entities, CIRCUIT_SENSORS, api.circuits, device
             )
         except PyViCareNotSupportedFeatureError:
             _LOGGER.info("No circuits found")
 
         try:
             await _entities_from_descriptions(
-                hass, name, entities, BURNER_SENSORS, api.burners, device
+                hass, entities, BURNER_SENSORS, api.burners, device
             )
         except PyViCareNotSupportedFeatureError:
             _LOGGER.info("No burners found")
 
         try:
             await _entities_from_descriptions(
-                hass, name, entities, COMPRESSOR_SENSORS, api.compressors, device
+                hass, entities, COMPRESSOR_SENSORS, api.compressors, device
             )
         except PyViCareNotSupportedFeatureError:
             _LOGGER.info("No compressors found")
@@ -663,6 +661,7 @@ async def async_setup_entry(
 class ViCareSensor(SensorEntity):
     """Representation of a ViCare sensor."""
 
+    _attr_has_entity_name = True
     entity_description: ViCareSensorEntityDescription
 
     def __init__(
@@ -680,7 +679,7 @@ class ViCareSensor(SensorEntity):
         """Return device info for this device."""
         return DeviceInfo(
             identifiers={(DOMAIN, self._device_config.getConfig().serial)},
-            name=self._device_config.getModel(),
+            name=f"{self._device_config.getModel()}-{self._device_config.getConfig().serial}",
             manufacturer="Viessmann",
             model=self._device_config.getModel(),
             configuration_url="https://developer.viessmann.com/",
