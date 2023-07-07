@@ -60,7 +60,9 @@ DATA_ENTITY_PLATFORM = "entity_platform"
 PLATFORM_NOT_READY_BASE_WAIT_TIME = 30  # seconds
 
 DEVICE_INFO_TYPES = {
-    # Order is important or else link types are detected as primary
+    # Device info is categorized by finding the first device info type which has all
+    # the keys of the device info. The link device info type must be kept first
+    # to make it preferred over primary.
     "link": {
         "connections",
         "identifiers",
@@ -774,6 +776,7 @@ class EntityPlatform:
 
         device_info_type: str | None = None
 
+        # Find the first device info type which has all keys in the device info
         for possible_type, allowed_keys in DEVICE_INFO_TYPES.items():
             if keys <= allowed_keys:
                 device_info_type = possible_type
