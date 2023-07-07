@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -30,6 +30,14 @@ async def async_setup_entry(
         async_add_entities([PhilipsTVRecordingNew(coordinator)])
 
 
+def _check_for_one(self, entry, value) -> bool:
+    """Return True if at least one specified value is available within entry of list."""
+    for rec in self.coordinator.api.recordings_list["recordings"]:
+        if rec[entry] == value:
+            return True
+    return False
+
+
 class PhilipsTVRecordingOngoing(
     CoordinatorEntity[PhilipsTVDataUpdateCoordinator], BinarySensorEntity
 ):
@@ -53,13 +61,15 @@ class PhilipsTVRecordingOngoing(
             }
         )
 
-    @property
-    def is_on(self) -> bool:
-        """Return True if at least one recording is ongoing."""
-        for rec in self.coordinator.api.recordings_list["recordings"]:
-            if rec["RecordingType"] == "RECORDING_ONGOING":
-                return True
-        return False
+    def _update_from_coordinator(self):
+        """Set is_on true if at least one recording is ongoing."""
+        self._attr_is_on = _check_for_one(self, "RecordingType", "RECORDING_ONGOING")
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self._update_from_coordinator()
+        super()._handle_coordinator_update()
 
 
 class PhilipsTVRecordingNew(
@@ -85,10 +95,12 @@ class PhilipsTVRecordingNew(
             }
         )
 
-    @property
-    def is_on(self) -> bool:
-        """Return True if at least one recording is new."""
-        for rec in self.coordinator.api.recordings_list["recordings"]:
-            if rec["RecordingType"] == "RECORDING_NEW":
-                return True
-        return False
+    def _update_from_coordinator(self):
+        """Set is_on true if at least one recording is new."""
+        self._attr_is_on = _check_for_one(self, "RecordingType", "RECORDING_NEW")
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self._update_from_coordinator()
+        super()._handle_coordinator_update()
