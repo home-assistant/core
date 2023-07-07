@@ -732,7 +732,7 @@ def url(value: Any) -> str:
     """Validate an URL."""
     url_in = str(value)
 
-    if urlparse(url_in).scheme in ["http", "https"]:
+    if urlparse(url_in).scheme in ["http", "https", "homeassistant"]:
         return cast(str, vol.Schema(vol.Url())(url_in))
 
     raise vol.Invalid("invalid url")

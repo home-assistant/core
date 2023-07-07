@@ -123,6 +123,7 @@ def test_url() -> None:
         "http://home-assistant.io",
         "http://home-assistant.io/test/",
         "https://community.home-assistant.io/",
+        "homeassistant://api/hassio_ingress/XXXXXXX",
     ):
         assert schema(value)
 
