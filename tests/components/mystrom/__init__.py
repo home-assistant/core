@@ -16,8 +16,7 @@ def get_default_device_response(device_type: int | None) -> dict[str, Any]:
         "connected": True,
         "signal": 94,
     }
-    if device_type is not None:
-        response["type"] = device_type
+    response.setdefault("type", device_type)
     return response
 
 
