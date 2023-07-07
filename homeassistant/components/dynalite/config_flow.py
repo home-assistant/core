@@ -33,7 +33,7 @@ class DynaliteFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         async_create_issue(
             self.hass,
             HOMEASSISTANT_DOMAIN,
-            "deprecated_yaml",
+            f"deprecated_yaml_{DOMAIN}",
             is_fixable=False,
             is_persistent=False,
             issue_domain=DOMAIN,
