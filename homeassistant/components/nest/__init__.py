@@ -113,24 +113,20 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.http.register_view(NestEventMediaView(hass))
     hass.http.register_view(NestEventMediaThumbnailView(hass))
 
-    if DOMAIN in config:
-        # Legacy YAML Cases can include (1) using the Legacy Works With Nest APIs
-        # which will fail here with a repair issue or (2) using SDM API with yaml
-        # which was previously removed and will fail below in the config entry
-        if CONF_PROJECT_ID not in config:
-            ir.async_create_issue(
-                hass,
-                DOMAIN,
-                "legacy_nest_deprecated",
-                breaks_in_ha_version="2023.8.0",
-                is_fixable=False,
-                severity=ir.IssueSeverity.WARNING,
-                translation_key="legacy_nest_deprecated",
-                translation_placeholders={
-                    "documentation_url": "https://www.home-assistant.io/integrations/nest/",
-                },
-            )
-            return False
+    if DOMAIN in config and CONF_PROJECT_ID not in config[DOMAIN]:
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            "legacy_nest_deprecated",
+            breaks_in_ha_version="2023.8.0",
+            is_fixable=False,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="legacy_nest_deprecated",
+            translation_placeholders={
+                "documentation_url": "https://www.home-assistant.io/integrations/nest/",
+            },
+        )
+        return False
     return True
 
 
