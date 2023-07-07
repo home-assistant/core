@@ -6,7 +6,8 @@ import asyncio
 import os
 from pathlib import Path
 import tempfile
-from typing import Any
+from typing import Any, cast
+from urllib.parse import urlparse
 
 import async_timeout
 import voluptuous as vol
@@ -129,6 +130,16 @@ def valid_subscribe_topic(topic: Any) -> str:
             )
 
     return validated_topic
+
+
+def valid_config_url(value: Any) -> str:
+    """Validate a an URL from the MQTT device schema."""
+    url_in = str(value)
+
+    if urlparse(url_in).scheme in ["http", "https", "homeassistant"]:
+        return cast(str, vol.Schema(vol.Url())(url_in))
+
+    raise vol.Invalid("invalid url")
 
 
 def valid_subscribe_topic_template(value: Any) -> template.Template:

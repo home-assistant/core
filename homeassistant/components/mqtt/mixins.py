@@ -96,7 +96,12 @@ from .subscription import (
     async_subscribe_topics,
     async_unsubscribe_topics,
 )
-from .util import get_mqtt_data, mqtt_config_entry_enabled, valid_subscribe_topic
+from .util import (
+    get_mqtt_data,
+    mqtt_config_entry_enabled,
+    valid_config_url,
+    valid_subscribe_topic,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -215,7 +220,7 @@ MQTT_ENTITY_DEVICE_INFO_SCHEMA = vol.All(
             vol.Optional(CONF_SW_VERSION): cv.string,
             vol.Optional(CONF_VIA_DEVICE): cv.string,
             vol.Optional(CONF_SUGGESTED_AREA): cv.string,
-            vol.Optional(CONF_CONFIGURATION_URL): cv.url,
+            vol.Optional(CONF_CONFIGURATION_URL): valid_config_url,
         }
     ),
     validate_device_has_at_least_one_identifier,
