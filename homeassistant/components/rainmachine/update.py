@@ -62,6 +62,7 @@ class RainMachineUpdateEntity(RainMachineEntity, UpdateEntity):
     """Define a RainMachine update entity."""
 
     _attr_device_class = UpdateDeviceClass.FIRMWARE
+    _attr_name = None
     _attr_supported_features = (
         UpdateEntityFeature.INSTALL
         | UpdateEntityFeature.PROGRESS
