@@ -2261,7 +2261,7 @@ rapt-ble==0.1.2
 raspyrfm-client==1.2.8
 
 # homeassistant.components.refoss
-refoss-ha==1.0.3
+refoss-ha==1.0.5
 
 # homeassistant.components.rainmachine
 regenmaschine==2023.06.0

@@ -10,15 +10,15 @@ from refoss_ha.controller.device import BaseDevice
 from refoss_ha.util import calculate_id
 from refoss_ha.enums import Namespace
 from refoss_ha.const import DOMAIN, LOGGER
-from .coordinator import MerossCoordinator
+from .coordinator import RefossCoordinator
 
 
-class MerossDevice(Entity):
+class RefossDevice(Entity):
     def __init__(
         self,
         device: BaseDevice,
         channel: int,
-        coordinator: MerossCoordinator,
+        coordinator: RefossCoordinator,
         platform: str,
         supplementary_classifiers: Optional[List[str]] = None,
     ):
@@ -66,7 +66,7 @@ class MerossDevice(Entity):
     def device_info(self) -> DeviceInfo:
         device_info = DeviceInfo(
             identifiers={(DOMAIN, self._device_id)},
-            manufacturer="meross",
+            manufacturer="refoss",
             model=self._model,
             name=self.device.dev_name,
             connections={(CONNECTION_NETWORK_MAC, self._device_id)},

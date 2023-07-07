@@ -8,12 +8,10 @@ from homeassistant.data_entry_flow import FlowResult
 from homeassistant.const import CONF_MAC
 
 from refoss_ha.util import get_mac_address
-from refoss_ha.const import (
-    DOMAIN,
-)
+from refoss_ha.const import DOMAIN
 
 
-class MerossConfigFlow(ConfigFlow, domain=DOMAIN):
+class RefossConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
 
     async def async_step_user(

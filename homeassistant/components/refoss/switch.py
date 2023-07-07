@@ -11,8 +11,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from refoss_ha.const import DOMAIN, DEVICE_LIST_COORDINATOR, HA_SWITCH, LOGGER
 from refoss_ha.controller.toggle import ToggleXMix
 from refoss_ha.controller.device import BaseDevice
-from .device import MerossDevice
-from . import MerossCoordinator
+from .device import RefossDevice
+from . import RefossCoordinator
 
 
 async def async_setup_entry(
@@ -21,24 +21,25 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     def entity_adder_callback():
-        coordinator: MerossCoordinator = hass.data[DOMAIN][DEVICE_LIST_COORDINATOR]
+        coordinator: RefossCoordinator = hass.data[DOMAIN][DEVICE_LIST_COORDINATOR]
 
         devicelist = coordinator.find_devices()
 
         new_entities = []
         try:
             for device in devicelist:
-                if isinstance(device, ToggleXMix):
-                    if len(device.channels) > 0:
-                        for channel in device.channels:
-                            w = SwitchEntityWrapper(
-                                device=device, channel=channel, coordinator=coordinator
-                            )
-                            if (
-                                w.unique_id
-                                not in hass.data[DOMAIN]["ADDED_ENTITIES_IDS"]
-                            ):
-                                new_entities.append(w)
+                if not isinstance(device, ToggleXMix):
+                    continue
+
+                if len(device.channels) == 0:
+                    continue
+
+                for channel in device.channels:
+                    w = SwitchEntityWrapper(
+                        device=device, channel=channel, coordinator=coordinator
+                    )
+                    if w.unique_id not in hass.data[DOMAIN]["ADDED_ENTITIES_IDS"]:
+                        new_entities.append(w)
         except Exception as e:
             LOGGER.warning(f"setup switch fail,err:{e}")
             raise e
@@ -50,15 +51,15 @@ async def async_setup_entry(
     entity_adder_callback()
 
 
-class MerossSwitchDevice(ToggleXMix, BaseDevice):
+class SwitchDevice(ToggleXMix, BaseDevice):
     pass
 
 
-class SwitchEntityWrapper(MerossDevice, SwitchEntity):
-    device: MerossSwitchDevice
+class SwitchEntityWrapper(RefossDevice, SwitchEntity):
+    device: SwitchDevice
 
     def __init__(
-        self, device: MerossSwitchDevice, channel, coordinator: MerossCoordinator
+        self, device: SwitchDevice, channel, coordinator: RefossCoordinator
     ) -> None:
         super().__init__(
             device=device, channel=channel, coordinator=coordinator, platform=HA_SWITCH

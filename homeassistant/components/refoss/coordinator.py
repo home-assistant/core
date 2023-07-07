@@ -13,11 +13,11 @@ from homeassistant.helpers.typing import HomeAssistantType
 from refoss_ha.socket_util import pushStateDataList
 from refoss_ha.http_device import HttpDeviceInfo
 from refoss_ha.controller.device import BaseDevice
-from refoss_ha.socket_util import MerossSocket
+from refoss_ha.socket_util import SocketUtil
 from refoss_ha.enums import Namespace
 from refoss_ha.controller.toggle import ToggleXMix
 from refoss_ha.controller.system import SystemAllMixin
-from refoss_ha.const import LOGGER
+from refoss_ha.const import LOGGER, PUSH
 
 T = TypeVar("T", bound=BaseDevice)
 
@@ -28,7 +28,7 @@ _ABILITY_MATRIX = {
 }
 
 
-class MerossCoordinator(DataUpdateCoordinator):
+class RefossCoordinator(DataUpdateCoordinator):
     def __init__(
         self,
         hass: HomeAssistantType,
@@ -39,7 +39,7 @@ class MerossCoordinator(DataUpdateCoordinator):
         self._entry = config_entry
         self._devices_by_internal_id = {}
         self._setup_done = False
-        self.merossSocket = MerossSocket()
+        self.socket = SocketUtil()
         self._loop = asyncio.get_event_loop() if loop is None else loop
 
         super().__init__(
@@ -55,14 +55,12 @@ class MerossCoordinator(DataUpdateCoordinator):
             raise ValueError("This coordinator was already set up")
 
         # Listening for socket messages
-        self.merossSocket.startReveiveMsg()
+        self.socket.startReveiveMsg()
 
-        t = threading.Thread(
-            target=self.HandlePushState, args=(self.merossSocket.event,)
-        )
+        t = threading.Thread(target=self.HandlePushState, args=(self.socket.event,))
         t.start()
 
-        devicelist = self.merossSocket.async_socket_find_devices()
+        devicelist = self.socket.async_socket_find_devices()
         self.async_set_updated_data({device.uuid: device for device in devicelist})
 
         await self.async_device_discovery(cached_http_device_list=devicelist)
@@ -72,7 +70,7 @@ class MerossCoordinator(DataUpdateCoordinator):
 
     async def _async_fetch_data(self):
         async with async_timeout.timeout(10):
-            devices = self.merossSocket.async_socket_find_devices()
+            devices = self.socket.async_socket_find_devices()
             return {device.uuid: device for device in devices}
 
     def find_devices(self, device_uuids: Optional[Iterable[str]] = None) -> List[T]:
@@ -108,7 +106,7 @@ class MerossCoordinator(DataUpdateCoordinator):
                 e,
             )
         if abilities is not None:
-            device = build_meross_device_from_abilities(
+            device = build_device_from_abilities(
                 http_device_info=device_info, device_abilities=abilities
             )
 
@@ -124,13 +122,9 @@ class MerossCoordinator(DataUpdateCoordinator):
             self._devices_by_internal_id[device.uuid] = device
 
     def lookup_base_by_uuid(self, device_uuid: str) -> None:
-        res = list(
-            filter(
-                lambda d: d.uuid == device_uuid,
-                self._devices_by_internal_id.values(),
-            )
-        )
-
+        res = [
+            d for d in self._devices_by_internal_id.values() if d.uuid == device_uuid
+        ]
         if len(res) > 1:
             LOGGER.warning(f"Multiple devices found for device_uuid {device_uuid}")
             return None
@@ -141,16 +135,16 @@ class MerossCoordinator(DataUpdateCoordinator):
 
     async def async_device_discovery(
         self,
-        meross_device_uuid: str = None,
+        device_uuid: str = None,
         cached_http_device_list: List[HttpDeviceInfo] = None,
     ) -> List[BaseDevice]:
         if cached_http_device_list is None:
-            http_devices = self.merossSocket.async_socket_find_devices()
+            http_devices = self.socket.async_socket_find_devices()
         else:
             http_devices = cached_http_device_list
 
-        if meross_device_uuid is not None:
-            http_devices = filter(lambda d: d.uuid == meross_device_uuid, http_devices)
+        if device_uuid is not None:
+            http_devices = [d for d in http_devices if d.uuid == device_uuid]
 
         res = []
         for device in http_devices:
@@ -176,14 +170,15 @@ class MerossCoordinator(DataUpdateCoordinator):
 
             if data is not None:
                 try:
-                    namespace = data.get("header", {}).get("namespace")
-                    uuid = data.get("header", {}).get("uuid")
-                    method = data.get("header", {}).get("method")
+                    header = data.get("header", {})
+                    namespace = header.get("namespace")
+                    uuid = header.get("uuid")
+                    method = header.get("method")
                     payload = data.get("payload")
                     if namespace is None or uuid is None or payload is None:
                         continue
 
-                    if method != "PUSH":
+                    if method != PUSH:
                         continue
 
                     baseDevice: BaseDevice = self.lookup_base_by_uuid(uuid)
@@ -204,7 +199,7 @@ class MerossCoordinator(DataUpdateCoordinator):
 _dynamic_types = {}
 
 
-def build_meross_device_from_abilities(
+def build_device_from_abilities(
     http_device_info: HttpDeviceInfo, device_abilities: dict
 ) -> BaseDevice:
     cached_type = _lookup_cached_type(
