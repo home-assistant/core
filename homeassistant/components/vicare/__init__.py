@@ -19,7 +19,6 @@ from .const import (
     DOMAIN,
     HEATING_TYPE_TO_CREATOR_METHOD,
     PLATFORMS,
-    VICARE_API,
     VICARE_DEVICE_LIST,
     HeatingType,
 )
