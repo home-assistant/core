@@ -20,7 +20,14 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import ViCareRequiredKeysMixinWithSet
-from .const import CONF_HEATING_TYPE, DOMAIN, HEATING_TYPE_TO_CREATOR_METHOD, VICARE_DEVICE_LIST, VICARE_NAME, HeatingType
+from .const import (
+    CONF_HEATING_TYPE,
+    DOMAIN,
+    HEATING_TYPE_TO_CREATOR_METHOD,
+    VICARE_DEVICE_LIST,
+    VICARE_NAME,
+    HeatingType,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -79,7 +86,9 @@ async def async_setup_entry(
     for device in hass.data[DOMAIN][config_entry.entry_id][VICARE_DEVICE_LIST]:
         api = getattr(
             device,
-            HEATING_TYPE_TO_CREATOR_METHOD[HeatingType(config_entry.data[CONF_HEATING_TYPE])],
+            HEATING_TYPE_TO_CREATOR_METHOD[
+                HeatingType(config_entry.data[CONF_HEATING_TYPE])
+            ],
         )()
         for description in BUTTON_DESCRIPTIONS:
             entity = await hass.async_add_executor_job(
