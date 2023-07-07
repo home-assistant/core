@@ -723,7 +723,7 @@ async def test_thermostat_dry_and_fan_both_hvac_mode_and_preset(
     ]
 
 
-async def test_thermostat_raise_repair_issue_when_setting_dry_preset(
+async def test_thermostat_raise_repair_issue_and_warning_when_setting_dry_preset(
     hass: HomeAssistant,
     client,
     climate_airzone_aidoo_control_hvac_unit,
@@ -746,20 +746,25 @@ async def test_thermostat_raise_repair_issue_when_setting_dry_preset(
 
     issue_id = f"dry_fan_presets_deprecation_{CLIMATE_AIDOO_HVAC_UNIT_ENTITY}"
     issue_registry = ir.async_get(hass)
+
     assert issue_registry.async_get_issue(
         domain=DOMAIN,
         issue_id=issue_id,
     )
+    assert (
+        "Dry and Fan preset modes are deprecated and will be removed in a future release. Use the corresponding Dry and Fan HVAC modes instead"
+        in caplog.text
+    )
 
 
-async def test_thermostat_raise_repair_issue_when_setting_fan_preset(
+async def test_thermostat_raise_repair_issue_and_warning_when_setting_fan_preset(
     hass: HomeAssistant,
     client,
     climate_airzone_aidoo_control_hvac_unit,
     integration,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test raise of repair issue when setting Fan preset."""
+    """Test raise of repair issue and warning log when setting Fan preset."""
     state = hass.states.get(CLIMATE_AIDOO_HVAC_UNIT_ENTITY)
     assert state
 
@@ -775,7 +780,12 @@ async def test_thermostat_raise_repair_issue_when_setting_fan_preset(
 
     issue_id = f"dry_fan_presets_deprecation_{CLIMATE_AIDOO_HVAC_UNIT_ENTITY}"
     issue_registry = ir.async_get(hass)
+
     assert issue_registry.async_get_issue(
         domain=DOMAIN,
         issue_id=issue_id,
+    )
+    assert (
+        "Dry and Fan preset modes are deprecated and will be removed in a future release. Use the corresponding Dry and Fan HVAC modes instead"
+        in caplog.text
     )
