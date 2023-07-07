@@ -60,7 +60,6 @@ class ServiceDetails(NamedTuple):
 SERVICE_HANDLERS = {
     SERVICE_ENIGMA2: ServiceDetails("media_player", "enigma2"),
     "yamaha": ServiceDetails("media_player", "yamaha"),
-    "openhome": ServiceDetails("media_player", "openhome"),
     "bluesound": ServiceDetails("media_player", "bluesound"),
 }
 
@@ -87,6 +86,7 @@ MIGRATED_SERVICE_HANDLERS = [
     SERVICE_MOBILE_APP,
     SERVICE_NETGEAR,
     SERVICE_OCTOPRINT,
+    "openhome",
     "philips_hue",
     SERVICE_SAMSUNG_PRINTER,
     "sonos",
