@@ -23,7 +23,14 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import ViCareRequiredKeysMixin
-from .const import CONF_HEATING_TYPE, DOMAIN, HEATING_TYPE_TO_CREATOR_METHOD, VICARE_NAME, VICARE_DEVICE_LIST, HeatingType
+from .const import (
+    CONF_HEATING_TYPE,
+    DOMAIN,
+    HEATING_TYPE_TO_CREATOR_METHOD,
+    VICARE_NAME,
+    VICARE_DEVICE_LIST,
+    HeatingType,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -148,7 +155,9 @@ async def async_setup_entry(
     for device in hass.data[DOMAIN][config_entry.entry_id][VICARE_DEVICE_LIST]:
         api = getattr(
             device,
-            HEATING_TYPE_TO_CREATOR_METHOD[HeatingType(config_entry.data[CONF_HEATING_TYPE])],
+            HEATING_TYPE_TO_CREATOR_METHOD[
+                HeatingType(config_entry.data[CONF_HEATING_TYPE])
+            ],
         )()
         for description in GLOBAL_SENSORS:
             entity = await hass.async_add_executor_job(
@@ -160,21 +169,21 @@ async def async_setup_entry(
             )
             if entity is not None:
                 entities.append(entity)
-    
+
         try:
             await _entities_from_descriptions(
                 hass, name, entities, CIRCUIT_SENSORS, api.circuits, device
             )
         except PyViCareNotSupportedFeatureError:
             _LOGGER.info("No circuits found")
-    
+
         try:
             await _entities_from_descriptions(
                 hass, name, entities, BURNER_SENSORS, api.burners, device
             )
         except PyViCareNotSupportedFeatureError:
             _LOGGER.info("No burners found")
-    
+
         try:
             await _entities_from_descriptions(
                 hass, name, entities, COMPRESSOR_SENSORS, api.compressors, device
