@@ -87,14 +87,16 @@ async def async_setup_entry(
     for device in hass.data[DOMAIN][config_entry.entry_id][VICARE_DEVICE_LIST]:
         api = getattr(
             device,
-            HEATING_TYPE_TO_CREATOR_METHOD[HeatingType(config_entry.data[CONF_HEATING_TYPE])],
+            HEATING_TYPE_TO_CREATOR_METHOD[
+                HeatingType(config_entry.data[CONF_HEATING_TYPE])
+            ],
         )()
         circuits = await hass.async_add_executor_job(_get_circuits, api)
         for circuit in circuits:
             suffix = ""
             if len(circuits) > 1:
                 suffix = f" {circuit.id}"
-    
+
             entity = ViCareWater(
                 f"{name} Water{suffix}",
                 api,
