@@ -130,7 +130,7 @@
   "selector": {
     "set_ca_cert": {
       "options": {
-        "off": "Off",
+        "off": "[%key:common::state::off%]",
         "auto": "Auto",
         "custom": "Custom"
       }

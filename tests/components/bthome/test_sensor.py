@@ -862,6 +862,57 @@ async def test_v1_sensors(
             "A4:C1:38:8D:18:B2",
             make_bthome_v2_adv(
                 "A4:C1:38:8D:18:B2",
+                b"\x44\x50\x5D\x39\x61\x64",
+            ),
+            None,
+            [
+                {
+                    "sensor_entity": "sensor.test_device_18b2_timestamp",
+                    "friendly_name": "Test Device 18B2 Timestamp",
+                    "unit_of_measurement": "s",
+                    "state_class": "measurement",
+                    "expected_state": "2023-05-14T19:41:17+00:00",
+                },
+            ],
+        ),
+        (
+            "A4:C1:38:8D:18:B2",
+            make_bthome_v2_adv(
+                "A4:C1:38:8D:18:B2",
+                b"\x44\x51\x87\x56",
+            ),
+            None,
+            [
+                {
+                    "sensor_entity": "sensor.test_device_18b2_acceleration",
+                    "friendly_name": "Test Device 18B2 Acceleration",
+                    "unit_of_measurement": "m/s²",
+                    "state_class": "measurement",
+                    "expected_state": "22.151",
+                },
+            ],
+        ),
+        (
+            "A4:C1:38:8D:18:B2",
+            make_bthome_v2_adv(
+                "A4:C1:38:8D:18:B2",
+                b"\x44\x52\x87\x56",
+            ),
+            None,
+            [
+                {
+                    "sensor_entity": "sensor.test_device_18b2_gyroscope",
+                    "friendly_name": "Test Device 18B2 Gyroscope",
+                    "unit_of_measurement": "°/s",
+                    "state_class": "measurement",
+                    "expected_state": "22.151",
+                },
+            ],
+        ),
+        (
+            "A4:C1:38:8D:18:B2",
+            make_bthome_v2_adv(
+                "A4:C1:38:8D:18:B2",
                 b"\x40\x4b\x13\x8a\x14",
             ),
             None,

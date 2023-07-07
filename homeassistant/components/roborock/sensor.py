@@ -13,7 +13,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EntityCategory, UnitOfTime
+from homeassistant.const import AREA_SQUARE_METERS, EntityCategory, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -99,6 +99,20 @@ SENSOR_DESCRIPTIONS = [
         entity_category=EntityCategory.DIAGNOSTIC,
         options=RoborockStateCode.keys(),
     ),
+    RoborockSensorDescription(
+        key="cleaning_area",
+        icon="mdi:texture-box",
+        translation_key="cleaning_area",
+        value_fn=lambda data: data.status.square_meter_clean_area,
+        native_unit_of_measurement=AREA_SQUARE_METERS,
+    ),
+    RoborockSensorDescription(
+        key="total_cleaning_area",
+        icon="mdi:texture-box",
+        translation_key="total_cleaning_area",
+        value_fn=lambda data: data.clean_summary.square_meter_clean_area,
+        native_unit_of_measurement=AREA_SQUARE_METERS,
+    ),
 ]
 
 
@@ -119,6 +133,7 @@ async def async_setup_entry(
         )
         for device_id, coordinator in coordinators.items()
         for description in SENSOR_DESCRIPTIONS
+        if description.value_fn(coordinator.roborock_device_info.props) is not None
     )
 
 

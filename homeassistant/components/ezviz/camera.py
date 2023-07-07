@@ -312,7 +312,7 @@ class EzvizCamera(EzvizEntity, Camera):
             self.hass,
             DOMAIN,
             "service_depreciation_detection_sensibility",
-            breaks_in_ha_version="2023.8.0",
+            breaks_in_ha_version="2023.12.0",
             is_fixable=False,
             severity=ir.IssueSeverity.WARNING,
             translation_key="service_depreciation_detection_sensibility",

@@ -120,7 +120,7 @@ async def _async_setup_emulated_hue(hass: HomeAssistant, conf: ConfigType) -> No
             hass,
             emulated_hue.DOMAIN,
             {emulated_hue.DOMAIN: conf},
-        ),
+        )
         await hass.async_block_till_done()
 
 
@@ -135,8 +135,25 @@ async def base_setup(hass):
     )
 
 
+@pytest.fixture(autouse=True)
+async def wanted_platforms_only() -> None:
+    """Enable only the wanted demo platforms."""
+    with patch(
+        "homeassistant.components.demo.COMPONENTS_WITH_CONFIG_ENTRY_DEMO_PLATFORM",
+        [
+            const.Platform.CLIMATE,
+            const.Platform.COVER,
+            const.Platform.FAN,
+            const.Platform.HUMIDIFIER,
+            const.Platform.LIGHT,
+            const.Platform.MEDIA_PLAYER,
+        ],
+    ):
+        yield
+
+
 @pytest.fixture
-async def demo_setup(hass):
+async def demo_setup(hass, wanted_platforms_only):
     """Fixture to setup demo platforms."""
     # We need to do this to get access to homeassistant/turn_(on,off)
     setups = [
@@ -144,12 +161,7 @@ async def demo_setup(hass):
         setup.async_setup_component(
             hass, http.DOMAIN, {http.DOMAIN: {http.CONF_SERVER_PORT: HTTP_SERVER_PORT}}
         ),
-        *[
-            setup.async_setup_component(
-                hass, comp.DOMAIN, {comp.DOMAIN: [{"platform": "demo"}]}
-            )
-            for comp in (light, climate, humidifier, media_player, fan, cover)
-        ],
+        setup.async_setup_component(hass, "demo", {}),
         setup.async_setup_component(
             hass,
             script.DOMAIN,

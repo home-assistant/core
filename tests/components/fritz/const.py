@@ -195,7 +195,6 @@ MOCK_FB_SERVICES: dict[str, dict] = {
     },
 }
 
-
 MOCK_MESH_DATA = {
     "schema_version": "1.9",
     "nodes": [

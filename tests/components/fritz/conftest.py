@@ -43,6 +43,10 @@ class FritzConnectionMock:  # pylint: disable=too-few-public-methods
         else:
             self.call_action = self._call_action
 
+    def override_services(self, services) -> None:
+        """Overrire services data."""
+        self._services = services
+
     def _call_action(self, service: str, action: str, **kwargs):
         LOGGER.debug(
             "_call_action service: %s, action: %s, **kwargs: %s",
