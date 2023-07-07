@@ -189,8 +189,6 @@ class DeviceFilterSelectorConfig(TypedDict, total=False):
     integration: str
     manufacturer: str
     model: str
-    entity: EntityFilterSelectorConfig | list[EntityFilterSelectorConfig]
-    filter: DeviceFilterSelectorConfig | list[DeviceFilterSelectorConfig]
 
 
 class ActionSelectorConfig(TypedDict):
@@ -502,6 +500,34 @@ class ConstantSelector(Selector[ConstantSelectorConfig]):
         return self.config["value"]
 
 
+class ConversationAgentSelectorConfig(TypedDict, total=False):
+    """Class to represent a conversation agent selector config."""
+
+    language: str
+
+
+@SELECTORS.register("conversation_agent")
+class COnversationAgentSelector(Selector[ConversationAgentSelectorConfig]):
+    """Selector for a conversation agent."""
+
+    selector_type = "conversation_agent"
+
+    CONFIG_SCHEMA = vol.Schema(
+        {
+            vol.Optional("language"): str,
+        }
+    )
+
+    def __init__(self, config: ConversationAgentSelectorConfig) -> None:
+        """Instantiate a selector."""
+        super().__init__(config)
+
+    def __call__(self, data: Any) -> str:
+        """Validate the passed selection."""
+        agent: str = vol.Schema(str)(data)
+        return agent
+
+
 class DateSelectorConfig(TypedDict):
     """Class to represent a date selector config."""
 
@@ -546,14 +572,12 @@ class DateTimeSelector(Selector[DateTimeSelectorConfig]):
         return data
 
 
-class DeviceSelectorConfig(TypedDict, total=False):
+class DeviceSelectorConfig(DeviceFilterSelectorConfig, total=False):
     """Class to represent a device selector config."""
 
-    integration: str
-    manufacturer: str
-    model: str
     entity: EntityFilterSelectorConfig | list[EntityFilterSelectorConfig]
     multiple: bool
+    filter: DeviceFilterSelectorConfig | list[DeviceFilterSelectorConfig]
 
 
 @SELECTORS.register("device")
@@ -622,6 +646,7 @@ class EntitySelectorConfig(EntityFilterSelectorConfig, total=False):
     exclude_entities: list[str]
     include_entities: list[str]
     multiple: bool
+    filter: EntityFilterSelectorConfig | list[EntityFilterSelectorConfig]
 
 
 @SELECTORS.register("entity")

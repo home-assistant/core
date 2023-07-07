@@ -47,9 +47,9 @@
   },
   "device_automation": {
     "trigger_subtype": {
-      "away": "away",
-      "schedule": "schedule",
-      "hg": "frost guard"
+      "away": "Away",
+      "schedule": "Schedule",
+      "hg": "Frost guard"
     },
     "trigger_type": {
       "turned_off": "{entity_name} turned off",

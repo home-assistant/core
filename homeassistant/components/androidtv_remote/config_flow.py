@@ -135,7 +135,8 @@ class AndroidTVRemoteConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.host = discovery_info.host
         self.name = discovery_info.name.removesuffix("._androidtvremote2._tcp.local.")
         self.mac = discovery_info.properties.get("bt")
-        assert self.mac
+        if not self.mac:
+            return self.async_abort(reason="cannot_connect")
         await self.async_set_unique_id(format_mac(self.mac))
         self._abort_if_unique_id_configured(
             updates={CONF_HOST: self.host, CONF_NAME: self.name}

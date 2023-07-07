@@ -311,10 +311,11 @@ async def test_no_restore_state(
     await init_integration(hass)
     # restore from cache
     state = hass.states.get(entity_id)
-    state.state = "unknown"
+    assert state.state == "unknown"
 
+    mock_sensor1_api.get_machine_state.return_value = MachineState.RunningMainCycle
     state = await update_sensor_state(hass, entity_id, mock_sensor1_api)
-    state.state = datetime.now().isoformat()
+    assert state.state != "unknown"
 
 
 async def test_callback(

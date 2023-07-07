@@ -253,10 +253,7 @@ async def test_fail_setup_if_no_command_topic(
     """Test if command fails with command topic."""
     with pytest.raises(AssertionError):
         await mqtt_mock_entry()
-    assert (
-        "Invalid config for [mqtt]: required key not provided @ data['mqtt']['light'][0]['command_topic']. Got None."
-        in caplog.text
-    )
+    assert "Invalid config for [mqtt]: required key not provided" in caplog.text
 
 
 @pytest.mark.parametrize(
@@ -2419,9 +2416,7 @@ async def test_discovery_ignores_extra_keys(
     """Test discovery ignores extra keys that are not blocked."""
     await mqtt_mock_entry()
     # inserted `platform` key should be ignored
-    data = (
-        '{ "name": "Beer",' '  "platform": "mqtt",' '  "command_topic": "test_topic"}'
-    )
+    data = '{ "name": "Beer",  "platform": "mqtt",  "command_topic": "test_topic"}'
     async_fire_mqtt_message(hass, "homeassistant/light/bla/config", data)
     await hass.async_block_till_done()
     state = hass.states.get("light.beer")

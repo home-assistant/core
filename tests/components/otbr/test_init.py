@@ -1,7 +1,7 @@
 """Test the Open Thread Border Router integration."""
 import asyncio
 from http import HTTPStatus
-from unittest.mock import ANY, AsyncMock, MagicMock, Mock, patch
+from unittest.mock import ANY, AsyncMock, MagicMock, patch
 
 import aiohttp
 import pytest
@@ -59,7 +59,9 @@ async def test_import_dataset(hass: HomeAssistant) -> None:
     )
 
 
-async def test_import_share_radio_channel_collision(hass: HomeAssistant) -> None:
+async def test_import_share_radio_channel_collision(
+    hass: HomeAssistant, multiprotocol_addon_manager_mock
+) -> None:
     """Test the active dataset is imported at setup.
 
     This imports a dataset with different channel than ZHA when ZHA and OTBR share
@@ -67,8 +69,7 @@ async def test_import_share_radio_channel_collision(hass: HomeAssistant) -> None
     """
     issue_registry = ir.async_get(hass)
 
-    networksettings = Mock()
-    networksettings.network_info.channel = 15
+    multiprotocol_addon_manager_mock.async_get_channel.return_value = 15
 
     config_entry = MockConfigEntry(
         data=CONFIG_ENTRY_DATA,
@@ -81,13 +82,7 @@ async def test_import_share_radio_channel_collision(hass: HomeAssistant) -> None
         "python_otbr_api.OTBR.get_active_dataset_tlvs", return_value=DATASET_CH16
     ), patch(
         "homeassistant.components.thread.dataset_store.DatasetStore.async_add"
-    ) as mock_add, patch(
-        "homeassistant.components.otbr.util.zha_api.async_get_radio_path",
-        return_value="socket://core-silabs-multiprotocol:9999",
-    ), patch(
-        "homeassistant.components.otbr.util.zha_api.async_get_network_settings",
-        return_value=networksettings,
-    ):
+    ) as mock_add:
         assert await hass.config_entries.async_setup(config_entry.entry_id)
 
     mock_add.assert_called_once_with(otbr.DOMAIN, DATASET_CH16.hex())
@@ -99,7 +94,7 @@ async def test_import_share_radio_channel_collision(hass: HomeAssistant) -> None
 
 @pytest.mark.parametrize("dataset", [DATASET_CH15, DATASET_NO_CHANNEL])
 async def test_import_share_radio_no_channel_collision(
-    hass: HomeAssistant, dataset: bytes
+    hass: HomeAssistant, multiprotocol_addon_manager_mock, dataset: bytes
 ) -> None:
     """Test the active dataset is imported at setup.
 
@@ -107,8 +102,7 @@ async def test_import_share_radio_no_channel_collision(
     """
     issue_registry = ir.async_get(hass)
 
-    networksettings = Mock()
-    networksettings.network_info.channel = 15
+    multiprotocol_addon_manager_mock.async_get_channel.return_value = 15
 
     config_entry = MockConfigEntry(
         data=CONFIG_ENTRY_DATA,
@@ -121,13 +115,7 @@ async def test_import_share_radio_no_channel_collision(
         "python_otbr_api.OTBR.get_active_dataset_tlvs", return_value=dataset
     ), patch(
         "homeassistant.components.thread.dataset_store.DatasetStore.async_add"
-    ) as mock_add, patch(
-        "homeassistant.components.otbr.util.zha_api.async_get_radio_path",
-        return_value="socket://core-silabs-multiprotocol:9999",
-    ), patch(
-        "homeassistant.components.otbr.util.zha_api.async_get_network_settings",
-        return_value=networksettings,
-    ):
+    ) as mock_add:
         assert await hass.config_entries.async_setup(config_entry.entry_id)
 
     mock_add.assert_called_once_with(otbr.DOMAIN, dataset.hex())

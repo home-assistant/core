@@ -11,16 +11,17 @@ from homeassistant.const import (
     PERCENTAGE,
     UnitOfElectricPotential,
     UnitOfPower,
+    UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from . import MOCK_STATUS, init_integration
+from . import MOCK_STATUS, async_init_integration
 
 
 async def test_sensor(hass: HomeAssistant) -> None:
     """Test states of sensor."""
-    await init_integration(hass, status=MOCK_STATUS)
+    await async_init_integration(hass, status=MOCK_STATUS)
     registry = er.async_get(hass)
 
     # Test a representative string sensor.
@@ -56,6 +57,15 @@ async def test_sensor(hass: HomeAssistant) -> None:
     assert entry
     assert entry.unique_id == "XXXXXXXXXXXX_battv"
 
+    # test a representative time sensor.
+    state = hass.states.get("sensor.ups_self_test_interval")
+    assert state
+    assert state.state == "7"
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfTime.DAYS
+    entry = registry.async_get("sensor.ups_self_test_interval")
+    assert entry
+    assert entry.unique_id == "XXXXXXXXXXXX_stesti"
+
     # Test a representative percentage sensor.
     state = hass.states.get("sensor.ups_load")
     assert state
@@ -79,7 +89,7 @@ async def test_sensor(hass: HomeAssistant) -> None:
 
 async def test_sensor_disabled(hass: HomeAssistant) -> None:
     """Test sensor disabled by default."""
-    await init_integration(hass)
+    await async_init_integration(hass)
     registry = er.async_get(hass)
 
     # Test a representative integration-disabled sensor.

@@ -358,7 +358,7 @@ async def test_camera_option_stream_url_template(
         },
         options={
             CONF_STREAM_URL_TEMPLATE: (
-                f"http://127.0.0.1:{stream_server.port}/" "{{ name }}/{{ id }}"
+                f"http://127.0.0.1:{stream_server.port}/{{{{ name }}}}/{{{{ id }}}}"
             )
         },
     )

@@ -1,9 +1,7 @@
 """Websocket constants."""
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Awaitable, Callable
-from concurrent import futures
 from typing import TYPE_CHECKING, Any, Final
 
 from homeassistant.core import HomeAssistant
@@ -42,10 +40,6 @@ ERR_TEMPLATE_ERROR: Final = "template_error"
 
 TYPE_RESULT: Final = "result"
 
-# Define the possible errors that occur when connections are cancelled.
-# Originally, this was just asyncio.CancelledError, but issue #9546 showed
-# that futures.CancelledErrors can also occur in some situations.
-CANCELLATION_ERRORS: Final = (asyncio.CancelledError, futures.CancelledError)
 
 # Event types
 SIGNAL_WEBSOCKET_CONNECTED: Final = "websocket_connected"

@@ -4,6 +4,7 @@ import copy
 import pytest
 from zwave_js_server.const.command_class.meter import MeterType
 from zwave_js_server.event import Event
+from zwave_js_server.exceptions import FailedZWaveCommand
 from zwave_js_server.model.node import Node
 
 from homeassistant.components.sensor import (
@@ -29,14 +30,17 @@ from homeassistant.const import (
     PERCENTAGE,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    UV_INDEX,
     EntityCategory,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
     UnitOfEnergy,
     UnitOfPower,
     UnitOfTemperature,
+    UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from .common import (
@@ -89,11 +93,9 @@ async def test_numeric_sensor(
 
     assert state
     assert state.state == "0.0"
-    # TODO: Add UV_INDEX unit of measurement to this sensor
-    assert ATTR_UNIT_OF_MEASUREMENT not in state.attributes
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UV_INDEX
     assert ATTR_DEVICE_CLASS not in state.attributes
-    # TODO: Add measurement state class to this sensor
-    assert ATTR_STATE_CLASS not in state.attributes
+    assert state.attributes[ATTR_STATE_CLASS] == SensorStateClass.MEASUREMENT
 
     state = hass.states.get("sensor.hsm200_illuminance")
 
@@ -263,49 +265,52 @@ async def test_node_status_sensor(
     hass: HomeAssistant, client, lock_id_lock_as_id150, integration
 ) -> None:
     """Test node status sensor is created and gets updated on node state changes."""
-    NODE_STATUS_ENTITY = "sensor.z_wave_module_for_id_lock_150_and_101_node_status"
+    node_status_entity_id = "sensor.z_wave_module_for_id_lock_150_and_101_node_status"
     node = lock_id_lock_as_id150
     ent_reg = er.async_get(hass)
-    entity_entry = ent_reg.async_get(NODE_STATUS_ENTITY)
+    entity_entry = ent_reg.async_get(node_status_entity_id)
 
     assert not entity_entry.disabled
     assert entity_entry.entity_category is EntityCategory.DIAGNOSTIC
-    assert hass.states.get(NODE_STATUS_ENTITY).state == "alive"
+    assert hass.states.get(node_status_entity_id).state == "alive"
 
     # Test transitions work
     event = Event(
         "dead", data={"source": "node", "event": "dead", "nodeId": node.node_id}
     )
     node.receive_event(event)
-    assert hass.states.get(NODE_STATUS_ENTITY).state == "dead"
-    assert hass.states.get(NODE_STATUS_ENTITY).attributes[ATTR_ICON] == "mdi:robot-dead"
+    assert hass.states.get(node_status_entity_id).state == "dead"
+    assert (
+        hass.states.get(node_status_entity_id).attributes[ATTR_ICON] == "mdi:robot-dead"
+    )
 
     event = Event(
         "wake up", data={"source": "node", "event": "wake up", "nodeId": node.node_id}
     )
     node.receive_event(event)
-    assert hass.states.get(NODE_STATUS_ENTITY).state == "awake"
-    assert hass.states.get(NODE_STATUS_ENTITY).attributes[ATTR_ICON] == "mdi:eye"
+    assert hass.states.get(node_status_entity_id).state == "awake"
+    assert hass.states.get(node_status_entity_id).attributes[ATTR_ICON] == "mdi:eye"
 
     event = Event(
         "sleep", data={"source": "node", "event": "sleep", "nodeId": node.node_id}
     )
     node.receive_event(event)
-    assert hass.states.get(NODE_STATUS_ENTITY).state == "asleep"
-    assert hass.states.get(NODE_STATUS_ENTITY).attributes[ATTR_ICON] == "mdi:sleep"
+    assert hass.states.get(node_status_entity_id).state == "asleep"
+    assert hass.states.get(node_status_entity_id).attributes[ATTR_ICON] == "mdi:sleep"
 
     event = Event(
         "alive", data={"source": "node", "event": "alive", "nodeId": node.node_id}
     )
     node.receive_event(event)
-    assert hass.states.get(NODE_STATUS_ENTITY).state == "alive"
+    assert hass.states.get(node_status_entity_id).state == "alive"
     assert (
-        hass.states.get(NODE_STATUS_ENTITY).attributes[ATTR_ICON] == "mdi:heart-pulse"
+        hass.states.get(node_status_entity_id).attributes[ATTR_ICON]
+        == "mdi:heart-pulse"
     )
 
     # Disconnect the client and make sure the entity is still available
     await client.disconnect()
-    assert hass.states.get(NODE_STATUS_ENTITY).state != STATE_UNAVAILABLE
+    assert hass.states.get(node_status_entity_id).state != STATE_UNAVAILABLE
 
     # Assert a node status sensor entity is not created for the controller
     driver = client.driver
@@ -330,15 +335,15 @@ async def test_node_status_sensor_not_ready(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test node status sensor is created and available if node is not ready."""
-    NODE_STATUS_ENTITY = "sensor.z_wave_module_for_id_lock_150_and_101_node_status"
+    node_status_entity_id = "sensor.z_wave_module_for_id_lock_150_and_101_node_status"
     node = lock_id_lock_as_id150_not_ready
     assert not node.ready
     ent_reg = er.async_get(hass)
-    entity_entry = ent_reg.async_get(NODE_STATUS_ENTITY)
+    entity_entry = ent_reg.async_get(node_status_entity_id)
 
     assert not entity_entry.disabled
-    assert hass.states.get(NODE_STATUS_ENTITY)
-    assert hass.states.get(NODE_STATUS_ENTITY).state == "alive"
+    assert hass.states.get(node_status_entity_id)
+    assert hass.states.get(node_status_entity_id).state == "alive"
 
     # Mark node as ready
     event = Event(
@@ -352,18 +357,18 @@ async def test_node_status_sensor_not_ready(
     )
     node.receive_event(event)
     assert node.ready
-    assert hass.states.get(NODE_STATUS_ENTITY)
-    assert hass.states.get(NODE_STATUS_ENTITY).state == "alive"
+    assert hass.states.get(node_status_entity_id)
+    assert hass.states.get(node_status_entity_id).state == "alive"
 
     await hass.services.async_call(
         DOMAIN,
         SERVICE_REFRESH_VALUE,
         {
-            ATTR_ENTITY_ID: NODE_STATUS_ENTITY,
+            ATTR_ENTITY_ID: node_status_entity_id,
         },
         blocking=True,
     )
-
+    await hass.async_block_till_done()
     assert "There is no value to refresh for this entity" in caplog.text
 
 
@@ -416,6 +421,18 @@ async def test_reset_meter(
     assert args["args"] == [{"type": 1, "targetValue": 2}]
 
     client.async_send_command_no_wait.reset_mock()
+
+    client.async_send_command_no_wait.side_effect = FailedZWaveCommand(
+        "test", 1, "test"
+    )
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_RESET_METER,
+            {ATTR_ENTITY_ID: METER_ENERGY_SENSOR},
+            blocking=True,
+        )
 
 
 async def test_meter_attributes(
@@ -606,7 +623,7 @@ NODE_STATISTICS_SUFFIXES_UNKNOWN = {
 
 
 async def test_statistics_sensors(
-    hass: HomeAssistant, zp3111, client, integration
+    hass: HomeAssistant, zp3111, client, integration, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test statistics sensors."""
     ent_reg = er.async_get(hass)
@@ -727,6 +744,74 @@ async def test_statistics_sensors(
         (NODE_STATISTICS_ENTITY_PREFIX, NODE_STATISTICS_SUFFIXES_UNKNOWN),
     ):
         for suffix_key, val in suffixes.items():
-            state = hass.states.get(f"{prefix}{suffix_key}")
+            entity_id = f"{prefix}{suffix_key}"
+            state = hass.states.get(entity_id)
             assert state
             assert state.state == str(val)
+
+            await hass.services.async_call(
+                DOMAIN,
+                SERVICE_REFRESH_VALUE,
+                {ATTR_ENTITY_ID: entity_id},
+                blocking=True,
+            )
+    await hass.async_block_till_done()
+    assert caplog.text.count("There is no value to refresh for this entity") == len(
+        [
+            *CONTROLLER_STATISTICS_SUFFIXES,
+            *CONTROLLER_STATISTICS_SUFFIXES_UNKNOWN,
+            *NODE_STATISTICS_SUFFIXES,
+            *NODE_STATISTICS_SUFFIXES_UNKNOWN,
+        ]
+    )
+
+
+ENERGY_PRODUCTION_ENTITY_MAP = {
+    "energy_production_power": {
+        "state": 1.23,
+        "attributes": {
+            "unit_of_measurement": UnitOfPower.WATT,
+            "device_class": SensorDeviceClass.POWER,
+            "state_class": SensorStateClass.MEASUREMENT,
+        },
+    },
+    "energy_production_total": {
+        "state": 1234.56,
+        "attributes": {
+            "unit_of_measurement": UnitOfEnergy.WATT_HOUR,
+            "device_class": SensorDeviceClass.ENERGY,
+            "state_class": SensorStateClass.TOTAL_INCREASING,
+        },
+    },
+    "energy_production_today": {
+        "state": 123.45,
+        "attributes": {
+            "unit_of_measurement": UnitOfEnergy.WATT_HOUR,
+            "device_class": SensorDeviceClass.ENERGY,
+            "state_class": SensorStateClass.TOTAL_INCREASING,
+        },
+    },
+    "energy_production_time": {
+        "state": 123456.0,
+        "attributes": {
+            "unit_of_measurement": UnitOfTime.SECONDS,
+            "device_class": SensorDeviceClass.DURATION,
+        },
+        "missing_attributes": ["state_class"],
+    },
+}
+
+
+async def test_energy_production_sensors(
+    hass: HomeAssistant, energy_production, client, integration
+) -> None:
+    """Test sensors for Energy Production CC."""
+    for entity_id_suffix, state_data in ENERGY_PRODUCTION_ENTITY_MAP.items():
+        state = hass.states.get(f"sensor.node_2_{entity_id_suffix}")
+        assert state
+        assert state.state == str(state_data["state"])
+        for attr, val in state_data["attributes"].items():
+            assert state.attributes[attr] == val
+
+        for attr in state_data.get("missing_attributes", []):
+            assert attr not in state.attributes

@@ -6,5 +6,5 @@
   "documentation": "https://www.home-assistant.io/integrations/progettihwsw",
   "iot_class": "local_polling",
   "loggers": ["ProgettiHWSW"],
-  "requirements": ["progettihwsw==0.1.1"]
+  "requirements": ["ProgettiHWSW==0.1.1"]
 }

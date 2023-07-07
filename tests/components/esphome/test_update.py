@@ -7,6 +7,7 @@ import pytest
 
 from homeassistant.components.esphome.dashboard import async_get_dashboard
 from homeassistant.components.update import UpdateEntityFeature
+from homeassistant.const import STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
@@ -149,8 +150,12 @@ async def test_update_static_info(
     assert state.state == "off"
 
 
+@pytest.mark.parametrize(
+    "expected_disconnect_state", [(True, STATE_ON), (False, STATE_UNAVAILABLE)]
+)
 async def test_update_device_state_for_availability(
     hass: HomeAssistant,
+    expected_disconnect_state: tuple[bool, str],
     mock_config_entry,
     mock_device_info,
     mock_dashboard,
@@ -167,6 +172,7 @@ async def test_update_device_state_for_availability(
     signal_device_updated = f"esphome_{mock_config_entry.entry_id}_on_device_update"
     runtime_data = Mock(
         available=True,
+        expected_disconnect=False,
         device_info=mock_device_info,
         signal_device_updated=signal_device_updated,
     )
@@ -183,11 +189,14 @@ async def test_update_device_state_for_availability(
     assert state is not None
     assert state.state == "on"
 
+    expected_disconnect, expected_state = expected_disconnect_state
+
     runtime_data.available = False
+    runtime_data.expected_disconnect = expected_disconnect
     async_dispatcher_send(hass, signal_device_updated)
 
     state = hass.states.get("update.none_firmware")
-    assert state.state == "unavailable"
+    assert state.state == expected_state
 
     # Deep sleep devices should still be available
     runtime_data.device_info = dataclasses.replace(

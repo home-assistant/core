@@ -163,7 +163,7 @@ class CoverPositionMixin(ZWaveBaseEntity, CoverEntity):
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
         assert self._target_position_value
-        await self.info.node.async_set_value(
+        await self._async_set_value(
             self._target_position_value,
             self.percent_to_zwave_position(kwargs[ATTR_POSITION]),
         )
@@ -171,14 +171,14 @@ class CoverPositionMixin(ZWaveBaseEntity, CoverEntity):
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
         assert self._target_position_value
-        await self.info.node.async_set_value(
+        await self._async_set_value(
             self._target_position_value, self._fully_open_position
         )
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close cover."""
         assert self._target_position_value
-        await self.info.node.async_set_value(
+        await self._async_set_value(
             self._target_position_value, self._fully_closed_position
         )
 
@@ -186,7 +186,7 @@ class CoverPositionMixin(ZWaveBaseEntity, CoverEntity):
         """Stop cover."""
         assert self._stop_position_value
         # Stop the cover, will stop regardless of the actual direction of travel.
-        await self.info.node.async_set_value(self._stop_position_value, False)
+        await self._async_set_value(self._stop_position_value, False)
 
 
 class CoverTiltMixin(ZWaveBaseEntity, CoverEntity):
@@ -259,7 +259,7 @@ class CoverTiltMixin(ZWaveBaseEntity, CoverEntity):
     async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Move the cover tilt to a specific position."""
         assert self._target_tilt_value
-        await self.info.node.async_set_value(
+        await self._async_set_value(
             self._target_tilt_value,
             self.percent_to_zwave_tilt(kwargs[ATTR_TILT_POSITION]),
         )
@@ -267,22 +267,18 @@ class CoverTiltMixin(ZWaveBaseEntity, CoverEntity):
     async def async_open_cover_tilt(self, **kwargs: Any) -> None:
         """Open the cover tilt."""
         assert self._target_tilt_value
-        await self.info.node.async_set_value(
-            self._target_tilt_value, self._fully_open_tilt
-        )
+        await self._async_set_value(self._target_tilt_value, self._fully_open_tilt)
 
     async def async_close_cover_tilt(self, **kwargs: Any) -> None:
         """Close the cover tilt."""
         assert self._target_tilt_value
-        await self.info.node.async_set_value(
-            self._target_tilt_value, self._fully_closed_tilt
-        )
+        await self._async_set_value(self._target_tilt_value, self._fully_closed_tilt)
 
     async def async_stop_cover_tilt(self, **kwargs: Any) -> None:
         """Stop the cover tilt."""
         assert self._stop_tilt_value
         # Stop the tilt, will stop regardless of the actual direction of travel.
-        await self.info.node.async_set_value(self._stop_tilt_value, False)
+        await self._async_set_value(self._stop_tilt_value, False)
 
 
 class ZWaveMultilevelSwitchCover(CoverPositionMixin):
@@ -309,8 +305,10 @@ class ZWaveMultilevelSwitchCover(CoverPositionMixin):
         self._attr_device_class = CoverDeviceClass.WINDOW
         if self.info.platform_hint and self.info.platform_hint.startswith("shutter"):
             self._attr_device_class = CoverDeviceClass.SHUTTER
-        if self.info.platform_hint and self.info.platform_hint.startswith("blind"):
+        elif self.info.platform_hint and self.info.platform_hint.startswith("blind"):
             self._attr_device_class = CoverDeviceClass.BLIND
+        elif self.info.platform_hint and self.info.platform_hint.startswith("gate"):
+            self._attr_device_class = CoverDeviceClass.GATE
 
 
 class ZWaveTiltCover(ZWaveMultilevelSwitchCover, CoverTiltMixin):
@@ -455,8 +453,8 @@ class ZwaveMotorizedBarrier(ZWaveBaseEntity, CoverEntity):
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the garage door."""
-        await self.info.node.async_set_value(self._target_state, BarrierState.OPEN)
+        await self._async_set_value(self._target_state, BarrierState.OPEN)
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the garage door."""
-        await self.info.node.async_set_value(self._target_state, BarrierState.CLOSED)
+        await self._async_set_value(self._target_state, BarrierState.CLOSED)

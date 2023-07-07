@@ -93,7 +93,7 @@
           "low": "Low",
           "middle": "Middle",
           "high": "High",
-          "closed": "Closed"
+          "closed": "[%key:common::state::closed%]"
         }
       },
       "vacuum_collection": {
