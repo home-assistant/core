@@ -1,6 +1,7 @@
 # Describes the format for available siren services
 
 turn_on:
+  name: Turn on
   description: Turn siren on.
   target:
     entity:
@@ -29,12 +30,14 @@ turn_on:
         text:
 
 turn_off:
+  name: Turn off
   description: Turn siren off.
   target:
     entity:
       domain: siren
 
 toggle:
+  name: Toggle
   description: Toggles a siren.
   target:
     entity:
