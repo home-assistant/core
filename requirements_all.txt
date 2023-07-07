@@ -980,7 +980,7 @@ hole==0.8.0
 holidays==0.21.13
 
 # homeassistant.components.frontend
-home-assistant-frontend==20230705.0
+home-assistant-frontend==20230705.1
 
 # homeassistant.components.conversation
 home-assistant-intents==2023.6.28
@@ -1618,7 +1618,7 @@ pycsspeechtts==1.0.8
 # pycups==1.9.73
 
 # homeassistant.components.daikin
-pydaikin==2.9.0
+pydaikin==2.10.5
 
 # homeassistant.components.danfoss_air
 pydanfossair==0.1.0
@@ -1861,7 +1861,7 @@ pynuki==1.6.2
 pynut2==2.1.2
 
 # homeassistant.components.nws
-pynws==1.4.1
+pynws==1.5.0
 
 # homeassistant.components.nx584
 pynx584==0.5
@@ -1941,7 +1941,7 @@ pyqwikswitch==0.93
 pyrail==0.0.3
 
 # homeassistant.components.rainbird
-pyrainbird==2.0.0
+pyrainbird==2.1.0
 
 # homeassistant.components.recswitch
 pyrecswitch==1.0.2

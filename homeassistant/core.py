@@ -973,6 +973,8 @@ _FilterableJobType = tuple[
 class EventBus:
     """Allow the firing of and listening for events."""
 
+    __slots__ = ("_listeners", "_match_all_listeners", "_hass")
+
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize a new event bus."""
         self._listeners: dict[str, list[_FilterableJobType]] = {}
@@ -1410,6 +1412,8 @@ class State:
 class StateMachine:
     """Helper class that tracks the state of different entities."""
 
+    __slots__ = ("_states", "_reservations", "_bus", "_loop")
+
     def __init__(self, bus: EventBus, loop: asyncio.events.AbstractEventLoop) -> None:
         """Initialize state machine."""
         self._states: dict[str, State] = {}
@@ -1723,6 +1727,8 @@ class ServiceCall:
 
 class ServiceRegistry:
     """Offer the services over the eventbus."""
+
+    __slots__ = ("_services", "_hass")
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize a service registry."""
