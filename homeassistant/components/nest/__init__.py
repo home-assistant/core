@@ -172,7 +172,6 @@ class SignalUpdateCallback:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Nest from a config entry with dispatch between old/new flows."""
     if DATA_SDM not in entry.data:
-        _LOGGER.warning("Removing legacy Works With Nest API config entry")
         hass.async_create_task(hass.config_entries.async_remove(entry.entry_id))
         return False
 

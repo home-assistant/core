@@ -297,12 +297,10 @@ async def test_legacy_works_with_nest_yaml(
 
 @pytest.mark.parametrize("nest_test_config", [TEST_CONFIG_ENTRY_LEGACY])
 async def test_legacy_works_with_nest_cleanup(
-    hass: HomeAssistant, warning_caplog, config, setup_platform
+    hass: HomeAssistant, setup_platform
 ) -> None:
     """Test legacy works with nest config entries are silently removed once yaml is removed."""
     await setup_platform()
-
-    assert "Removing legacy Works With Nest" in warning_caplog.text
 
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 0
