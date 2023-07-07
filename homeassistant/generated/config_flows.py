@@ -369,6 +369,7 @@ FLOWS = {
         "rapt_ble",
         "rdw",
         "recollect_waste",
+        "refoss",
         "renault",
         "renson",
         "reolink",
@@ -538,6 +539,5 @@ FLOWS = {
         "zodiac",
         "zwave_js",
         "zwave_me",
-        "refoss",
     ],
 }

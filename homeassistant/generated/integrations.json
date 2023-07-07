@@ -4550,6 +4550,12 @@
       "config_flow": false,
       "iot_class": "cloud_polling"
     },
+    "refoss": {
+      "name": "Refoss",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "rejseplanen": {
       "name": "Rejseplanen",
       "integration_type": "hub",
@@ -6569,12 +6575,6 @@
     },
     "zwave_me": {
       "name": "Z-Wave.Me",
-      "integration_type": "hub",
-      "config_flow": true,
-      "iot_class": "local_push"
-    },
-    "refoss": {
-      "name": "Refoss",
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_push"
