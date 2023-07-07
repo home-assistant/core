@@ -30,6 +30,9 @@ HAP-python==4.7.0
 # homeassistant.components.tasmota
 HATasmota==0.6.5
 
+# homeassistant.components.hydrawise
+Hydrawiser==0.2
+
 # homeassistant.components.doods
 # homeassistant.components.generic
 # homeassistant.components.image_upload
@@ -782,9 +785,6 @@ httplib2==0.20.4
 
 # homeassistant.components.huawei_lte
 huawei-lte-api==1.6.11
-
-# homeassistant.components.hydrawise
-hydrawiser==0.2
 
 # homeassistant.components.hyperion
 hyperion-py==0.7.5
