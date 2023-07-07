@@ -1,8 +1,8 @@
 {
-  "Name": "FOLDER",
+  "Name": "EPISODE",
   "OriginalTitle": "string",
   "ServerId": "SERVER-UUID",
-  "Id": "FOLDER-UUID",
+  "Id": "EPISODE-UUID",
   "Etag": "string",
   "SourceType": "string",
   "PlaylistItemId": "string",
@@ -33,7 +33,7 @@
     {
       "Protocol": "File",
       "Id": "string",
-      "Path": "string",
+      "Path": "/media/tvshows/Series/Season 01/S01E01.mp4",
       "EncoderPath": "string",
       "EncoderProtocol": "File",
       "Type": "Default",
@@ -183,9 +183,9 @@
     "property2": "string"
   },
   "IsHD": true,
-  "IsFolder": true,
-  "ParentId": "c54e2d15-b5eb-48b7-9b04-53f376904b1e",
-  "Type": "CollectionFolder",
+  "IsFolder": false,
+  "ParentId": "FOLDER-UUID",
+  "Type": "Episode",
   "People": [
     {
       "Name": "string",
@@ -298,7 +298,7 @@
     }
   ],
   "Album": "string",
-  "CollectionType": "tvshows",
+  "CollectionType": "string",
   "DisplayOrder": "string",
   "AlbumId": "21af9851-8e39-43a9-9c47-513d3b9e99fc",
   "AlbumPrimaryImageTag": "string",
