@@ -129,6 +129,10 @@ class ReolinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             except ApiError as err:
                 placeholders["error"] = str(err)
                 errors[CONF_HOST] = "api_error"
+            except ApiError as err:
+                placeholders["error"] = str(err)
+                placeholders["more_info"] = "https://www.home-assistant.io/more-info/no-url-available/#configuring-the-instance-url"
+                errors["base"] = "webhook_exception"
             except (ReolinkError, ReolinkException) as err:
                 placeholders["error"] = str(err)
                 errors[CONF_HOST] = "cannot_connect"
