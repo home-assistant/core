@@ -503,12 +503,12 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
         preset_mode_value = self._hvac_presets.get(preset_mode)
         if preset_mode_value is None:
             raise ValueError(f"Received an invalid preset mode: {preset_mode}")
-        # Dry and Fan preset modes are deprecated as of 2023.8
-        # Use Dry and Fan HVAC modes instead
+        # Dry and Fan preset modes are deprecated as of Home Assistant 2023.8.
+        # Please use Dry and Fan HVAC modes instead.
         if preset_mode_value in (ThermostatMode.DRY, ThermostatMode.FAN):
             LOGGER.warning(
-                "Dry and Fan preset modes are deprecated and will be removed in a future release. "
-                "Use the corresponding Dry and Fan HVAC modes instead"
+                "Dry and Fan preset modes are deprecated and will be removed in Home Assistant 2024.2. "
+                "Please use the corresponding Dry and Fan HVAC modes instead"
             )
             async_create_issue(
                 self.hass,

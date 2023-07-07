@@ -752,7 +752,7 @@ async def test_thermostat_raise_repair_issue_and_warning_when_setting_dry_preset
         issue_id=issue_id,
     )
     assert (
-        "Dry and Fan preset modes are deprecated and will be removed in a future release. Use the corresponding Dry and Fan HVAC modes instead"
+        "Dry and Fan preset modes are deprecated and will be removed in Home Assistant 2024.2. Please use the corresponding Dry and Fan HVAC modes instead"
         in caplog.text
     )
 
@@ -786,6 +786,6 @@ async def test_thermostat_raise_repair_issue_and_warning_when_setting_fan_preset
         issue_id=issue_id,
     )
     assert (
-        "Dry and Fan preset modes are deprecated and will be removed in a future release. Use the corresponding Dry and Fan HVAC modes instead"
+        "Dry and Fan preset modes are deprecated and will be removed in Home Assistant 2024.2. Please use the corresponding Dry and Fan HVAC modes instead"
         in caplog.text
     )
