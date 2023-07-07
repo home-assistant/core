@@ -27,8 +27,10 @@ from homeassistant.util.dt import utcnow
 from .const import DEFAULT_NAME, DOMAIN, PLAYER_EVENT
 
 STATE_MAPPING = {
-    PlayerState.IDLE: MediaPlayerState.IDLE,
+    PlayerState.STOPPED: MediaPlayerState.IDLE,
     PlayerState.PLAYING: MediaPlayerState.PLAYING,
+    PlayerState.BUFFER_READY: MediaPlayerState.PLAYING,
+    PlayerState.BUFFERING: MediaPlayerState.PLAYING,
     PlayerState.PAUSED: MediaPlayerState.PAUSED,
 }
 
