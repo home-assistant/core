@@ -90,9 +90,7 @@ class EzvizLastMotion(EzvizEntity, ImageEntity):
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        if self.data.get("last_alarm_pic") and self._attr_image_url == self.data.get(
-            "last_alarm_pic"
-        ):
+        if self.data.get("last_alarm_pic") == self._attr_image_url:
             return
 
         _LOGGER.debug("Image url changed to %s", self.data["last_alarm_pic"])
