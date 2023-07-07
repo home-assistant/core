@@ -138,15 +138,25 @@ DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
         entity_description=MatterSensorEntityDescription(
-            key="GenericSwitch",
-            device_class=SensorDeviceClass.ENUM,
+            key="GenericSwitchCurrentPosition",
+            device_class=None,
             measurement_to_ha=lambda x: x,
         ),
         entity_class=MatterSensor,
         required_attributes=(
             clusters.Switch.Attributes.CurrentPosition,
+        ),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="GenericSwitchTotalPositions",
+            device_class=None,
+            measurement_to_ha=lambda x: x,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(
             clusters.Switch.Attributes.NumberOfPositions,
         ),
-        optional_attributes=(clusters.Switch.Attributes.MultiPressMax,),
     ),
 ]
