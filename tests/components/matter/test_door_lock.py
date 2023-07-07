@@ -16,17 +16,8 @@ from homeassistant.core import HomeAssistant
 
 from .common import (
     set_node_attribute,
-    setup_integration_with_node_fixture,
     trigger_subscription_callback,
 )
-
-
-@pytest.fixture(name="door_lock")
-async def door_lock_fixture(
-    hass: HomeAssistant, matter_client: MagicMock
-) -> MatterNode:
-    """Fixture for a door lock node."""
-    return await setup_integration_with_node_fixture(hass, "door-lock", matter_client)
 
 
 # This tests needs to be adjusted to remove lingering tasks

@@ -1,5 +1,6 @@
 """Test config flow."""
 import asyncio
+import json
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from aioesphomeapi import (
@@ -414,8 +415,13 @@ async def test_user_discovers_name_and_gets_key_from_dashboard(
     assert mock_client.noise_psk == VALID_NOISE_PSK
 
 
+@pytest.mark.parametrize(
+    "dashboard_exception",
+    [aiohttp.ClientError(), json.JSONDecodeError("test", "test", 0)],
+)
 async def test_user_discovers_name_and_gets_key_from_dashboard_fails(
     hass: HomeAssistant,
+    dashboard_exception: Exception,
     mock_client,
     mock_dashboard,
     mock_zeroconf: None,
@@ -442,7 +448,7 @@ async def test_user_discovers_name_and_gets_key_from_dashboard_fails(
 
     with patch(
         "homeassistant.components.esphome.dashboard.ESPHomeDashboardAPI.get_encryption_key",
-        side_effect=aiohttp.ClientError,
+        side_effect=dashboard_exception,
     ):
         result = await hass.config_entries.flow.async_init(
             "esphome",

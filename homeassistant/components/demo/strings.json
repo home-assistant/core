@@ -81,7 +81,7 @@
               "2": "2",
               "3": "3",
               "auto": "Auto",
-              "off": "Off"
+              "off": "[%key:common::state::off%]"
             }
           }
         }
