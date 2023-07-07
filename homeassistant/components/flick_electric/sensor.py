@@ -34,6 +34,7 @@ class FlickPricingSensor(SensorEntity):
 
     _attr_attribution = "Data provided by Flick Electric"
     _attr_native_unit_of_measurement = f"{CURRENCY_CENT}/{UnitOfEnergy.KILO_WATT_HOUR}"
+    _attr_has_entity_name = True
     _attr_translation_key = "power_price"
     _attributes: dict[str, Any] = {}
 

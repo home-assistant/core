@@ -27,5 +27,22 @@
         }
       }
     }
+  },
+  "entity": {
+    "binary_sensor": {
+      "rainsensor": {
+        "name": "Rainsensor"
+      }
+    },
+    "number": {
+      "rain_delay": {
+        "name": "Rain delay"
+      }
+    },
+    "sensor": {
+      "raindelay": {
+        "name": "Raindelay"
+      }
+    }
   }
 }

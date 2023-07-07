@@ -85,7 +85,7 @@ class VeSyncBaseEntity(Entity):
             identifiers={(DOMAIN, self.base_unique_id)},
             name=self.base_name,
             model=self.device.device_type,
-            default_manufacturer="VeSync",
+            manufacturer="VeSync",
             sw_version=self.device.current_firm_version,
         )
 

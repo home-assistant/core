@@ -1,4 +1,5 @@
 set_custom_effect:
+  name: Set custom effect
   description: Set a custom light effect.
   target:
     entity:
@@ -37,6 +38,7 @@ set_custom_effect:
             - "jump"
             - "strobe"
 set_zones:
+  name: Set zones
   description: Set strip zones for Addressable v3 controllers (0xA3).
   target:
     entity:
@@ -78,6 +80,7 @@ set_zones:
             - "jump"
             - "breathing"
 set_music_mode:
+  name: Set music mode
   description: Configure music mode on Controller RGB with MIC (0x08), Addressable v2 (0xA2), and Addressable v3 (0xA3) devices that have a built-in microphone.
   target:
     entity:

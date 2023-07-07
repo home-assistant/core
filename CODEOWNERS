@@ -899,6 +899,8 @@ build.json @home-assistant/supervisor
 /tests/components/openweathermap/ @fabaff @freekode @nzapponi
 /homeassistant/components/opnsense/ @mtreinish
 /tests/components/opnsense/ @mtreinish
+/homeassistant/components/opower/ @tronikos
+/tests/components/opower/ @tronikos
 /homeassistant/components/oralb/ @bdraco @Lash-L
 /tests/components/oralb/ @bdraco @Lash-L
 /homeassistant/components/oru/ @bvlaicu
@@ -1002,8 +1004,8 @@ build.json @home-assistant/supervisor
 /tests/components/rapt_ble/ @sairon
 /homeassistant/components/raspberry_pi/ @home-assistant/core
 /tests/components/raspberry_pi/ @home-assistant/core
-/homeassistant/components/rdw/ @frenck
-/tests/components/rdw/ @frenck
+/homeassistant/components/rdw/ @frenck @joostlek
+/tests/components/rdw/ @frenck @joostlek
 /homeassistant/components/recollect_waste/ @bachya
 /tests/components/recollect_waste/ @bachya
 /homeassistant/components/recorder/ @home-assistant/core
