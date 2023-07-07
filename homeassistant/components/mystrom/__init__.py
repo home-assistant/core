@@ -50,8 +50,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _LOGGER.error("No route to myStrom plug: %s", host)
         raise ConfigEntryNotReady() from err
 
-    if "type" not in info:
-        info["type"] = 101
+    info.setdefault("type", 101)
 
     device_type = info["type"]
     if device_type in [101, 106, 107]:
