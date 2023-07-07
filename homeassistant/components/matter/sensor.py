@@ -140,6 +140,7 @@ DISCOVERY_SCHEMAS = [
         entity_description=MatterSensorEntityDescription(
             key="GenericSwitchCurrentPosition",
             device_class=None,
+            translation_key="generic_switch_current",
             measurement_to_ha=lambda x: x,
         ),
         entity_class=MatterSensor,
@@ -152,6 +153,7 @@ DISCOVERY_SCHEMAS = [
         entity_description=MatterSensorEntityDescription(
             key="GenericSwitchTotalPositions",
             device_class=None,
+            translation_key="generic_switch_total",
             measurement_to_ha=lambda x: x,
         ),
         entity_class=MatterSensor,

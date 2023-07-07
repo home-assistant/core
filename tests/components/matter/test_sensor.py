@@ -63,6 +63,16 @@ async def temperature_sensor_node_fixture(
     )
 
 
+@pytest.fixture(name="generic_switch_node")
+async def generic_switch_node_fixture(
+    hass: HomeAssistant, matter_client: MagicMock
+) -> MatterNode:
+    """Fixture for a generic switch node."""
+    return await setup_integration_with_node_fixture(
+        hass, "generic-switch", matter_client
+    )
+
+
 # This tests needs to be adjusted to remove lingering tasks
 @pytest.mark.parametrize("expected_lingering_tasks", [True])
 async def test_sensor_null_value(
@@ -208,3 +218,24 @@ async def test_battery_sensor(
 
     assert entry
     assert entry.entity_category == EntityCategory.DIAGNOSTIC
+
+# This tests needs to be adjusted to remove lingering tasks
+async def test_generic_switch(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    generic_switch_node: MatterNode,
+) -> None:
+    """Test flow sensor."""
+    current_state = hass.states.get("sensor.mock_generic_switch")
+    assert current_state
+    assert current_state.state == "0"
+    max_state = hass.states.get("sensor.mock_generic_switch_2")
+    assert max_state
+    assert max_state.state == "2"
+
+    set_node_attribute(generic_switch_node, 1, 59, 1, 1)
+    await trigger_subscription_callback(hass, matter_client)
+
+    current_state = hass.states.get("sensor.mock_generic_switch")
+    assert current_state
+    assert current_state.state == "1"

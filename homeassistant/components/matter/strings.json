@@ -48,6 +48,12 @@
     "sensor": {
       "flow": {
         "name": "Flow"
+      },
+      "generic_switch_current": {
+        "name": "Current state"
+      },
+      "generic_switch_total": {
+        "name": "Total states"
       }
     }
   }
