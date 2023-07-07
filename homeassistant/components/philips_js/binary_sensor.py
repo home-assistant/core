@@ -1,6 +1,8 @@
 """Philips TV binary sensors."""
 from __future__ import annotations
 
+from haphilipsjs import PhilipsTV
+
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -30,9 +32,9 @@ async def async_setup_entry(
         async_add_entities([PhilipsTVRecordingNew(coordinator)])
 
 
-def _check_for_one(self, entry, value) -> bool:
+def _check_for_one(api: PhilipsTV, entry: str, value: str) -> bool:
     """Return True if at least one specified value is available within entry of list."""
-    for rec in self.coordinator.api.recordings_list["recordings"]:
+    for rec in api.recordings_list["recordings"]:
         if rec[entry] == value:
             return True
     return False
@@ -63,7 +65,9 @@ class PhilipsTVRecordingOngoing(
 
     def _update_from_coordinator(self):
         """Set is_on true if at least one recording is ongoing."""
-        self._attr_is_on = _check_for_one(self, "RecordingType", "RECORDING_ONGOING")
+        self._attr_is_on = _check_for_one(
+            self.coordinator.api, "RecordingType", "RECORDING_ONGOING"
+        )
 
     @callback
     def _handle_coordinator_update(self) -> None:
@@ -97,7 +101,9 @@ class PhilipsTVRecordingNew(
 
     def _update_from_coordinator(self):
         """Set is_on true if at least one recording is new."""
-        self._attr_is_on = _check_for_one(self, "RecordingType", "RECORDING_NEW")
+        self._attr_is_on = _check_for_one(
+            self.coordinator.api, "RecordingType", "RECORDING_NEW"
+        )
 
     @callback
     def _handle_coordinator_update(self) -> None:
