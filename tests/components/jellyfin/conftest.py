@@ -74,6 +74,8 @@ def mock_api() -> MagicMock:
     jf_api.sessions.return_value = load_json_fixture("sessions.json")
 
     jf_api.artwork.side_effect = api_artwork_side_effect
+    jf_api.audio_url.side_effect = api_audio_url_side_effect
+    jf_api.video_url.side_effect = api_video_url_side_effect
     jf_api.user_items.side_effect = api_user_items_side_effect
     jf_api.get_item.side_effect = api_get_item_side_effect
     jf_api.get_media_folders.return_value = load_json_fixture("get-media-folders.json")
@@ -86,7 +88,7 @@ def mock_api() -> MagicMock:
 def mock_config() -> MagicMock:
     """Return a mocked JellyfinClient."""
     jf_config = create_autospec(Config)
-    jf_config.data = {}
+    jf_config.data = {"auth.server": "http://localhost"}
 
     return jf_config
 
@@ -136,6 +138,18 @@ def api_artwork_side_effect(*args, **kwargs):
     ext = "jpg"
 
     return f"http://localhost/Items/{item_id}/Images/{art}.{ext}"
+
+
+def api_audio_url_side_effect(*args, **kwargs):
+    """Handle variable responses for audio_url method."""
+    item_id = args[0]
+    return f"http://localhost/Audio/{item_id}/universal?UserId=test-username,DeviceId=TEST-UUID,MaxStreamingBitrate=140000000"
+
+
+def api_video_url_side_effect(*args, **kwargs):
+    """Handle variable responses for video_url method."""
+    item_id = args[0]
+    return f"http://localhost/Videos/{item_id}/stream?static=true,DeviceId=TEST-UUID,api_key=TEST-API-KEY"
 
 
 def api_get_item_side_effect(*args):
