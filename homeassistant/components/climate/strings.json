@@ -53,7 +53,7 @@
         "hvac_action": {
           "name": "Current action",
           "state": {
-            "off": "Off",
+            "off": "[%key:common::state::off%]",
             "preheating": "Preheating",
             "heating": "Heating",
             "cooling": "Cooling",

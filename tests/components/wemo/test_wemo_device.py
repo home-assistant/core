@@ -214,37 +214,6 @@ async def test_options_enable_long_press_false(hass, pywemo_device, wemo_entity)
     pywemo_device.remove_long_press_virtual_device.assert_called_once_with()
 
 
-async def test_options_polling_interval_seconds(hass, pywemo_device, wemo_entity):
-    """Test setting Options.polling_interval_seconds = 45."""
-    config_entry = hass.config_entries.async_get_entry(wemo_entity.config_entry_id)
-    assert hass.config_entries.async_update_entry(
-        config_entry,
-        options=asdict(
-            wemo_device.Options(
-                enable_subscription=False,
-                enable_long_press=False,
-                polling_interval_seconds=45,
-            )
-        ),
-    )
-    await hass.async_block_till_done()
-
-    # Move time forward to capture the new interval.
-    async_fire_time_changed(hass, utcnow() + timedelta(seconds=31))
-    await hass.async_block_till_done()
-    pywemo_device.get_state.reset_mock()
-
-    # Make sure no polling occurs before 45 seconds.
-    async_fire_time_changed(hass, utcnow() + timedelta(seconds=31))
-    await hass.async_block_till_done()
-    pywemo_device.get_state.assert_not_called()
-
-    # Polling occurred after the interval.
-    async_fire_time_changed(hass, utcnow() + timedelta(seconds=46))
-    await hass.async_block_till_done()
-    pywemo_device.get_state.assert_has_calls([call(True), call()])
-
-
 class TestInsight:
     """Tests specific to the WeMo Insight device."""
 

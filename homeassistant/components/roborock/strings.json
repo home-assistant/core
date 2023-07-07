@@ -95,7 +95,7 @@
       "mop_intensity": {
         "name": "Mop intensity",
         "state": {
-          "off": "Off",
+          "off": "[%key:common::state::off%]",
           "low": "Low",
           "mild": "Mild",
           "medium": "Medium",
@@ -126,7 +126,7 @@
               "balanced": "Balanced",
               "custom": "Custom",
               "gentle": "Gentle",
-              "off": "Off",
+              "off": "[%key:common::state::off%]",
               "max": "Max",
               "max_plus": "Max plus",
               "medium": "Medium",
@@ -138,6 +138,12 @@
           }
         }
       }
+    }
+  },
+  "issues": {
+    "service_deprecation_start_pause": {
+      "title": "Roborock vacuum support for vacuum.start_pause is being removed",
+      "description": "Roborock vacuum support for the vacuum.start_pause service is deprecated and will be removed in Home Assistant 2024.2; Please adjust any automation or script that uses the service to instead call vacuum.pause or vacuum.start and select submit below to mark this issue as resolved."
     }
   }
 }

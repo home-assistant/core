@@ -59,9 +59,9 @@
     "select": {
       "open_closed_pedestrian": {
         "state": {
-          "open": "Open",
+          "open": "[%key:common::state::open%]",
           "pedestrian": "Pedestrian",
-          "closed": "Closed"
+          "closed": "[%key:common::state::closed%]"
         }
       },
       "memorized_simple_volume": {
@@ -121,8 +121,8 @@
       },
       "three_way_handle_direction": {
         "state": {
-          "closed": "Closed",
-          "open": "Open",
+          "closed": "[%key:common::state::closed%]",
+          "open": "[%key:common::state::open%]",
           "tilt": "Tilt"
         }
       }
