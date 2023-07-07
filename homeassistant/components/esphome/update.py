@@ -111,7 +111,11 @@ class ESPHomeUpdateEntity(CoordinatorEntity[ESPHomeDashboard], UpdateEntity):
         """
         return (
             super().available
-            and (self._entry_data.available or self._device_info.has_deep_sleep)
+            and (
+                self._entry_data.available
+                or self._entry_data.expected_disconnect
+                or self._device_info.has_deep_sleep
+            )
             and self._device_info.name in self.coordinator.data
         )
 

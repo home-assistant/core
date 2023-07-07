@@ -324,9 +324,7 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
             color_name = MULTI_COLOR_MAP[color]
             colors_dict[color_name] = value
         # set updated color object
-        await self.info.node.async_set_value(
-            combined_color_val, colors_dict, zwave_transition
-        )
+        await self._async_set_value(combined_color_val, colors_dict, zwave_transition)
 
     async def _async_set_brightness(
         self, brightness: int | None, transition: float | None = None
@@ -350,7 +348,7 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
                 zwave_transition = {TRANSITION_DURATION_OPTION: "default"}
 
         # setting a value requires setting targetValue
-        await self.info.node.async_set_value(
+        await self._async_set_value(
             self._target_brightness, zwave_brightness, zwave_transition
         )
         # We do an optimistic state update when setting to a previous value

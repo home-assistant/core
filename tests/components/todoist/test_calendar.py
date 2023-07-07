@@ -4,6 +4,7 @@ from http import HTTPStatus
 from typing import Any
 from unittest.mock import AsyncMock, patch
 import urllib
+import zoneinfo
 
 import pytest
 from todoist_api_python.models import Collaborator, Due, Label, Project, Task
@@ -26,14 +27,16 @@ from homeassistant.util import dt as dt_util
 from tests.typing import ClientSessionGenerator
 
 SUMMARY = "A task"
+# Set our timezone to CST/Regina so we can check calculations
+# This keeps UTC-6 all year round
+TZ_NAME = "America/Regina"
+TIMEZONE = zoneinfo.ZoneInfo(TZ_NAME)
 
 
 @pytest.fixture(autouse=True)
 def set_time_zone(hass: HomeAssistant):
     """Set the time zone for the tests."""
-    # Set our timezone to CST/Regina so we can check calculations
-    # This keeps UTC-6 all year round
-    hass.config.set_time_zone("America/Regina")
+    hass.config.set_time_zone(TZ_NAME)
 
 
 @pytest.fixture(name="due")
@@ -189,7 +192,8 @@ async def test_update_entity_for_custom_project_no_due_date_on(
     "due",
     [
         Due(
-            date=(dt_util.now() + timedelta(days=3)).strftime("%Y-%m-%d"),
+            # Note: This runs before the test fixture that sets the timezone
+            date=(dt_util.now(TIMEZONE) + timedelta(days=3)).strftime("%Y-%m-%d"),
             is_recurring=False,
             string="3 days from today",
         )
