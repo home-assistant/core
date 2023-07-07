@@ -2119,9 +2119,6 @@ python-mpd2==3.0.5
 # homeassistant.components.mystrom
 python-mystrom==2.2.0
 
-# homeassistant.components.nest
-python-nest==4.2.0
-
 # homeassistant.components.swiss_public_transport
 python-opendata-transport==0.3.0
 

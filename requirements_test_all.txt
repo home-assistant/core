@@ -1554,9 +1554,6 @@ python-miio==0.5.12
 # homeassistant.components.mystrom
 python-mystrom==2.2.0
 
-# homeassistant.components.nest
-python-nest==4.2.0
-
 # homeassistant.components.otbr
 # homeassistant.components.thread
 python-otbr-api==2.2.0
