@@ -168,6 +168,7 @@ SENSOR_DESCRIPTIONS = [
         # This sensor is an air quality index for VOCs. More info at https://github.com/home-assistant/core/pull/84896
         key="voc",
         translation_key="voc_aqi",
+        device_class=SensorDeviceClass.AQI,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda sensor: sensor.voc,
     ),
