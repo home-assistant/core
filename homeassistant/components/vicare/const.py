@@ -14,7 +14,6 @@ PLATFORMS = [
 ]
 
 VICARE_DEVICE_LIST = "device_list"
-VICARE_NAME = "ViCare"
 
 CONF_CIRCUIT = "circuit"
 CONF_HEATING_TYPE = "heating_type"
