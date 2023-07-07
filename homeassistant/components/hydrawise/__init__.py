@@ -1,6 +1,5 @@
 """Support for Hydrawise cloud."""
 
-from datetime import timedelta
 
 from hydrawiser.core import Hydrawiser
 from requests.exceptions import ConnectTimeout, HTTPError
@@ -41,6 +40,9 @@ PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.SENSOR, Platform.S
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Hunter Hydrawise component."""
+    if DOMAIN not in config:
+        return True
+
     async_create_issue(
         hass,
         DOMAIN,
@@ -50,16 +52,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         severity=IssueSeverity.WARNING,
         translation_key="deprecated_yaml",
     )
-    if not hass.config_entries.async_entries(DOMAIN) and DOMAIN not in hass.data:
-        # No config entry exists and configuration.yaml config exists; trigger the import flow.
-        data = {CONF_API_KEY: config[DOMAIN][CONF_ACCESS_TOKEN]}
-        if CONF_SCAN_INTERVAL in config[DOMAIN]:
-            data[CONF_SCAN_INTERVAL] = config[DOMAIN][CONF_SCAN_INTERVAL].seconds
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": SOURCE_IMPORT}, data=data
-            )
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data={CONF_API_KEY: config[DOMAIN][CONF_ACCESS_TOKEN]},
         )
+    )
     return True
 
 
@@ -67,18 +66,17 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     """Set up Hydrawise from a config entry."""
     hass.data.setdefault(DOMAIN, {})
     access_token = config_entry.data[CONF_API_KEY]
-    scan_interval = config_entry.data[CONF_SCAN_INTERVAL]
     try:
         hydrawise = await hass.async_add_executor_job(Hydrawiser, access_token)
-        hass.data[DOMAIN][config_entry.entry_id] = HydrawiseDataUpdateCoordinator(
-            hass, hydrawise, timedelta(seconds=scan_interval)
-        )
     except (ConnectTimeout, HTTPError) as ex:
         LOGGER.error("Unable to connect to Hydrawise cloud service: %s", str(ex))
         raise ConfigEntryNotReady(
             f"Unable to connect to Hydrawise cloud service: {ex}"
         ) from ex
 
+    hass.data[DOMAIN][config_entry.entry_id] = HydrawiseDataUpdateCoordinator(
+        hass, hydrawise, SCAN_INTERVAL
+    )
     if not hydrawise.controller_info or not hydrawise.controller_status:
         raise ConfigEntryNotReady("Hydrawise data not loaded")
 
