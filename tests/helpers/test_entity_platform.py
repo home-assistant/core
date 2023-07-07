@@ -1836,10 +1836,13 @@ async def test_device_name_defaulting_config_entry(
 @pytest.mark.parametrize(
     ("device_info"),
     [
+        # No identifiers
         {},
         {"name": "bla"},
         {"default_name": "bla"},
+        # Match multiple types
         {
+            "identifiers": {("hue", "1234")},
             "name": "bla",
             "default_name": "yo",
         },
@@ -1850,7 +1853,7 @@ async def test_device_name_defaulting_config_entry(
         },
     ],
 )
-async def test_device_type_checking(
+async def test_device_type_error_checking(
     hass: HomeAssistant,
     device_info: dict,
 ) -> None:
