@@ -219,6 +219,7 @@ async def test_battery_sensor(
     assert entry
     assert entry.entity_category == EntityCategory.DIAGNOSTIC
 
+
 # This tests needs to be adjusted to remove lingering tasks
 async def test_generic_switch(
     hass: HomeAssistant,
