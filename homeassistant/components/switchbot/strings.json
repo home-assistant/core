@@ -64,12 +64,6 @@
       "calibration": {
         "name": "Calibration"
       },
-      "motion": {
-        "name": "[%key:component::binary_sensor::entity_component::motion::name%]"
-      },
-      "door_open": {
-        "name": "[%key:component::binary_sensor::entity_component::door::name%]"
-      },
       "door_timeout": {
         "name": "Timeout"
       },
@@ -101,9 +95,6 @@
       },
       "humidity": {
         "name": "[%key:component::sensor::entity_component::humidity::name%]"
-      },
-      "temperature": {
-        "name": "[%key:component::sensor::entity_component::temperature::name%]"
       },
       "power": {
         "name": "[%key:component::sensor::entity_component::power::name%]"
