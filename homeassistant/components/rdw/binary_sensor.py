@@ -41,13 +41,13 @@ class RDWBinarySensorEntityDescription(
 BINARY_SENSORS: tuple[RDWBinarySensorEntityDescription, ...] = (
     RDWBinarySensorEntityDescription(
         key="liability_insured",
-        name="Liability insured",
+        translation_key="liability_insured",
         icon="mdi:shield-car",
         is_on_fn=lambda vehicle: vehicle.liability_insured,
     ),
     RDWBinarySensorEntityDescription(
         key="pending_recall",
-        name="Pending recall",
+        translation_key="pending_recall",
         device_class=BinarySensorDeviceClass.PROBLEM,
         is_on_fn=lambda vehicle: vehicle.pending_recall,
     ),

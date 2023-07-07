@@ -21,7 +21,6 @@ from homeassistant.core import HomeAssistant
 from .const import (
     COLLECTION_TYPE_MOVIES,
     COLLECTION_TYPE_MUSIC,
-    COLLECTION_TYPE_TVSHOWS,
     DOMAIN,
     ITEM_KEY_COLLECTION_TYPE,
     ITEM_KEY_ID,
@@ -155,10 +154,7 @@ class JellyfinSource(MediaSource):
             return await self._build_music_library(library, include_children)
         if collection_type == COLLECTION_TYPE_MOVIES:
             return await self._build_movie_library(library, include_children)
-        if collection_type == COLLECTION_TYPE_TVSHOWS:
-            return await self._build_tv_library(library, include_children)
-
-        raise BrowseError(f"Unsupported collection type {collection_type}")
+        return await self._build_tv_library(library, include_children)
 
     async def _build_music_library(
         self, library: dict[str, Any], include_children: bool

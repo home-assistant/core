@@ -1,4 +1,5 @@
 sequence_effect:
+  name: Sequence effect
   description: Set a sequence effect
   target:
     entity:
@@ -6,6 +7,7 @@ sequence_effect:
       domain: light
   fields:
     sequence:
+      name: Sequence
       description: List of HSV sequences (Max 16)
       example: |
         - [340, 20, 50]
@@ -15,6 +17,7 @@ sequence_effect:
       selector:
         object:
     segments:
+      name: Segments
       description: List of Segments (0 for all)
       example: 0, 2, 4, 6, 8
       default: 0
@@ -22,6 +25,7 @@ sequence_effect:
       selector:
         object:
     brightness:
+      name: Brightness
       description: Initial brightness
       example: 80
       default: 100
@@ -33,6 +37,7 @@ sequence_effect:
           max: 100
           unit_of_measurement: "%"
     duration:
+      name: Duration
       description: Duration
       example: 0
       default: 0
@@ -44,6 +49,7 @@ sequence_effect:
           max: 5000
           unit_of_measurement: "ms"
     repeat_times:
+      name: Repetitions
       description: Repetitions (0 for continuous)
       example: 0
       default: 0
@@ -54,6 +60,7 @@ sequence_effect:
           step: 1
           max: 10
     transition:
+      name: Transition
       description: Transition
       example: 2000
       default: 0
@@ -65,6 +72,7 @@ sequence_effect:
           max: 6000
           unit_of_measurement: "ms"
     spread:
+      name: Spread
       description: Speed of spread
       example: 1
       default: 0
@@ -75,6 +83,7 @@ sequence_effect:
           step: 1
           max: 16
     direction:
+      name: Direction
       description: Direction
       example: 1
       default: 4
@@ -85,6 +94,7 @@ sequence_effect:
           step: 1
           max: 4
 random_effect:
+  name: Random effect
   description: Set a random effect
   target:
     entity:
