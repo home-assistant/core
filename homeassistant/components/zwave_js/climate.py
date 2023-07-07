@@ -514,6 +514,7 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
                 self.hass,
                 DOMAIN,
                 f"dry_fan_presets_deprecation_{self.entity_id}",
+                breaks_in_ha_version="2024.2.0",
                 is_fixable=True,
                 is_persistent=True,
                 severity=IssueSeverity.WARNING,
