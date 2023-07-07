@@ -224,7 +224,7 @@ async def test_async_get_hass_can_be_called(hass: HomeAssistant) -> None:
             if ha.async_get_hass() is hass:
                 return True
             raise Exception
-        except (LookupError, HomeAssistantError):
+        except HomeAssistantError:
             return False
 
         raise Exception
