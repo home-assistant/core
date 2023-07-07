@@ -41,7 +41,6 @@ from .const import (
     DOMAIN,
     HEATING_TYPE_TO_CREATOR_METHOD,
     VICARE_DEVICE_LIST,
-    VICARE_NAME,
     HeatingType,
 )
 
@@ -112,7 +111,6 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the ViCare climate platform."""
-    name = VICARE_NAME
     entities = []
 
     for device in hass.data[DOMAIN][config_entry.entry_id][VICARE_DEVICE_LIST]:
@@ -129,7 +127,7 @@ async def async_setup_entry(
                 suffix = f" {circuit.id}"
 
             entity = ViCareClimate(
-                f"{name} Heating{suffix}",
+                f"Heating{suffix}",
                 api,
                 circuit,
                 device,
@@ -151,6 +149,7 @@ async def async_setup_entry(
 class ViCareClimate(ClimateEntity):
     """Representation of the ViCare heating climate device."""
 
+    _attr_has_entity_name = True
     _attr_precision = PRECISION_TENTHS
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
@@ -182,7 +181,7 @@ class ViCareClimate(ClimateEntity):
         """Return device info for this device."""
         return DeviceInfo(
             identifiers={(DOMAIN, self._device_config.getConfig().serial)},
-            name=self._device_config.getModel(),
+            name=f"{self._device_config.getModel()}-{self._device_config.getConfig().serial}",
             manufacturer="Viessmann",
             model=self._device_config.getModel(),
             configuration_url="https://developer.viessmann.com/",
