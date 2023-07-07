@@ -25,7 +25,6 @@ from .const import (
     DOMAIN,
     HEATING_TYPE_TO_CREATOR_METHOD,
     VICARE_DEVICE_LIST,
-    VICARE_NAME,
     HeatingType,
 )
 
@@ -80,7 +79,6 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Create the ViCare button entities."""
-    name = VICARE_NAME
     entities = []
 
     for device in hass.data[DOMAIN][config_entry.entry_id][VICARE_DEVICE_LIST]:
@@ -93,7 +91,7 @@ async def async_setup_entry(
         for description in BUTTON_DESCRIPTIONS:
             entity = await hass.async_add_executor_job(
                 _build_entity,
-                f"{name} {description.name}",
+                f"{description.name}",
                 api,
                 device,
                 description,
@@ -107,6 +105,7 @@ async def async_setup_entry(
 class ViCareButton(ButtonEntity):
     """Representation of a ViCare button."""
 
+    _attr_has_entity_name = True
     entity_description: ViCareButtonEntityDescription
 
     def __init__(
@@ -136,7 +135,7 @@ class ViCareButton(ButtonEntity):
         """Return device info for this device."""
         return DeviceInfo(
             identifiers={(DOMAIN, self._device_config.getConfig().serial)},
-            name=self._device_config.getModel(),
+            name=f"{self._device_config.getModel()}-{self._device_config.getConfig().serial}",
             manufacturer="Viessmann",
             model=self._device_config.getModel(),
             configuration_url="https://developer.viessmann.com/",
