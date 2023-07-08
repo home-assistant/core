@@ -1582,3 +1582,51 @@ async def test_trigger_entity_restore_state(
     assert state.attributes["entity_picture"] == "/local/dogs.png"
     assert state.attributes["plus_one"] == 3
     assert state.attributes["another"] == 1
+
+
+@pytest.mark.parametrize(("count", "domain"), [(1, "template")])
+@pytest.mark.parametrize(
+    "config",
+    [
+        {
+            "template": [
+                {
+                    "unique_id": "listening-test-event",
+                    "trigger": {"platform": "event", "event_type": "test_event"},
+                    "action": [
+                        {
+                            "variables": {
+                                "my_variable": "{{ trigger.event.data.beer + 1 }}"
+                            },
+                        },
+                        {
+                            "stop": "Stop running",
+                            "response_variable": "my_variable",
+                        },
+                    ],
+                    "sensor": [
+                        {
+                            "name": "Hello Name",
+                            "state": "{{ response + 1 }}",
+                        }
+                    ],
+                },
+            ],
+        },
+    ],
+)
+async def test_trigger_action(
+    hass: HomeAssistant, start_ha, entity_registry: er.EntityRegistry
+) -> None:
+    """Test trigger entity with an action works."""
+    state = hass.states.get("sensor.hello_name")
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+
+    context = Context()
+    hass.bus.async_fire("test_event", {"beer": 1}, context=context)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.hello_name")
+    assert state.state == "3"
+    assert state.context is context
