@@ -19,10 +19,10 @@
   },
   "entity": {
     "sensor": {
-      "total_energy_today": {
+      "power_consumption": {
         "name": "Power consumption"
       },
-      "power_consumption": {
+      "total_energy_today": {
         "name": "Total energy today"
       }
     }
