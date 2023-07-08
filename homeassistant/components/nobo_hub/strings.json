@@ -55,11 +55,6 @@
       "week_profile": {
         "name": "week profile"
       }
-    },
-    "sensor": {
-      "temperature": {
-        "name": "[%key:component::sensor::entity_component::temperature::name%]"
-      }
     }
   }
 }
