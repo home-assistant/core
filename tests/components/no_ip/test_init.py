@@ -15,7 +15,7 @@ DOMAIN = "test.example.com"
 
 PASSWORD = "xyz789"
 
-UPDATE_URL = no_ip.UPDATE_URL
+UPDATE_URL = no_ip.const.UPDATE_URL
 
 USERNAME = "abc@123.com"
 
