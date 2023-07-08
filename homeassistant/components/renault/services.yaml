@@ -1,4 +1,5 @@
 ac_start:
+  name: Start A/C
   description: Start A/C on vehicle.
   fields:
     vehicle:
@@ -25,6 +26,7 @@ ac_start:
         text:
 
 ac_cancel:
+  name: Cancel A/C
   description: Cancel A/C on vehicle.
   fields:
     vehicle:
@@ -36,6 +38,7 @@ ac_cancel:
           integration: renault
 
 charge_set_schedules:
+  name: Update charge schedule
   description: Update charge schedule on vehicle.
   fields:
     vehicle:

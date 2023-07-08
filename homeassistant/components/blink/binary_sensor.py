@@ -27,17 +27,15 @@ _LOGGER = logging.getLogger(__name__)
 BINARY_SENSORS_TYPES: tuple[BinarySensorEntityDescription, ...] = (
     BinarySensorEntityDescription(
         key=TYPE_BATTERY,
-        name="Battery",
         device_class=BinarySensorDeviceClass.BATTERY,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     BinarySensorEntityDescription(
         key=TYPE_CAMERA_ARMED,
-        name="Camera Armed",
+        translation_key="camera_armed",
     ),
     BinarySensorEntityDescription(
         key=TYPE_MOTION_DETECTED,
-        name="Motion Detected",
         device_class=BinarySensorDeviceClass.MOTION,
     ),
 )

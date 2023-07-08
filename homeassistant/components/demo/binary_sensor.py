@@ -38,6 +38,7 @@ class DemoBinarySensor(BinarySensorEntity):
     """representation of a Demo binary sensor."""
 
     _attr_has_entity_name = True
+    _attr_name = None
     _attr_should_poll = False
 
     def __init__(
@@ -49,7 +50,6 @@ class DemoBinarySensor(BinarySensorEntity):
     ) -> None:
         """Initialize the demo sensor."""
         self._unique_id = unique_id
-        self._attr_name = None
         self._state = state
         self._attr_device_class = device_class
         self._attr_device_info = DeviceInfo(
