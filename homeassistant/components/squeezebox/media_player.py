@@ -234,6 +234,7 @@ class SqueezeBoxEntity(MediaPlayerEntity):
         | MediaPlayerEntityFeature.CLEAR_PLAYLIST
         | MediaPlayerEntityFeature.STOP
         | MediaPlayerEntityFeature.GROUPING
+        | MediaPlayerEntityFeature.MEDIA_ENQUEUE
     )
 
     def __init__(self, player):
