@@ -668,6 +668,7 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
     "rqbj": (
         TuyaSensorEntityDescription(
             key=DPCode.GAS_SENSOR_VALUE,
+            name=None,
             icon="mdi:gas-cylinder",
             state_class=SensorStateClass.MEASUREMENT,
         ),
@@ -790,6 +791,7 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
     "ylcg": (
         TuyaSensorEntityDescription(
             key=DPCode.PRESSURE_VALUE,
+            name=None,
             device_class=SensorDeviceClass.PRESSURE,
             state_class=SensorStateClass.MEASUREMENT,
         ),

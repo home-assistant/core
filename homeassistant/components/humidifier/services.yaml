@@ -6,6 +6,8 @@ set_mode:
   target:
     entity:
       domain: humidifier
+      supported_features:
+        - humidifier.HumidifierEntityFeature.MODES
   fields:
     mode:
       description: New mode

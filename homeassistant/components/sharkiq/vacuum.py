@@ -77,7 +77,6 @@ class SharkVacuumEntity(CoordinatorEntity[SharkIqUpdateCoordinator], StateVacuum
         | VacuumEntityFeature.RETURN_HOME
         | VacuumEntityFeature.START
         | VacuumEntityFeature.STATE
-        | VacuumEntityFeature.STATUS
         | VacuumEntityFeature.STOP
         | VacuumEntityFeature.LOCATE
     )

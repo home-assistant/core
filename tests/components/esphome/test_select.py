@@ -25,6 +25,20 @@ async def test_pipeline_selector(
     assert state.state == "preferred"
 
 
+async def test_vad_sensitivity_select(
+    hass: HomeAssistant,
+    mock_voice_assistant_v1_entry,
+) -> None:
+    """Test VAD sensitivity select.
+
+    Functionality is tested in assist_pipeline/test_select.py.
+    This test is only to ensure it is set up.
+    """
+    state = hass.states.get("select.test_finished_speaking_detection")
+    assert state is not None
+    assert state.state == "default"
+
+
 async def test_select_generic_entity(
     hass: HomeAssistant, mock_client: APIClient, mock_generic_device_entry
 ) -> None:
