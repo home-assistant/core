@@ -793,7 +793,9 @@ async def async_list_events_service(
         end = start + service_call.data[EVENT_DURATION]
     else:
         end = service_call.data[EVENT_END_DATETIME]
-    calendar_event_list = await calendar.async_get_events(calendar.hass, start, end)
+    calendar_event_list = await calendar.async_get_events(
+        calendar.hass, dt_util.as_local(start), dt_util.as_local(end)
+    )
     return {
         "events": [
             dataclasses.asdict(event, dict_factory=_list_events_dict_factory)

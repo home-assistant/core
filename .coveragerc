@@ -182,7 +182,6 @@ omit =
     homeassistant/components/crownstone/listeners.py
     homeassistant/components/cups/sensor.py
     homeassistant/components/currencylayer/sensor.py
-    homeassistant/components/daikin/__init__.py
     homeassistant/components/daikin/climate.py
     homeassistant/components/daikin/sensor.py
     homeassistant/components/daikin/switch.py
@@ -305,11 +304,10 @@ omit =
     homeassistant/components/escea/__init__.py
     homeassistant/components/escea/climate.py
     homeassistant/components/escea/discovery.py
-    homeassistant/components/esphome/__init__.py
     homeassistant/components/esphome/bluetooth/*
-    homeassistant/components/esphome/camera.py
     homeassistant/components/esphome/domain_data.py
     homeassistant/components/esphome/entry_data.py
+    homeassistant/components/esphome/manager.py
     homeassistant/components/etherscan/sensor.py
     homeassistant/components/eufy/*
     homeassistant/components/eufylife_ble/__init__.py
@@ -652,6 +650,7 @@ omit =
     homeassistant/components/lookin/light.py
     homeassistant/components/lookin/media_player.py
     homeassistant/components/lookin/sensor.py
+    homeassistant/components/loqed/sensor.py
     homeassistant/components/luci/device_tracker.py
     homeassistant/components/luftdaten/sensor.py
     homeassistant/components/lupusec/*
