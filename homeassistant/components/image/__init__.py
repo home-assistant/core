@@ -189,22 +189,22 @@ class ImageEntity(Entity):
 
     async def _async_load_image_from_url(self, url: str) -> Image | None:
         """Load an image by url."""
-        if not response := self._fetch_url(url):
-            return None
-        content_type = response.headers.get("content-type")
-        try:
-            return Image(
-                content=response.content,
-                content_type=valid_image_content_type(content_type),
-            )
-        except ImageContentTypeError:
-            _LOGGER.error(
-                "%s: Image from %s has invalid content type: %s",
-                self.entity_id,
-                url,
-                content_type,
-            )
-            return None
+        if response := await self._fetch_url(url):
+            content_type = response.headers.get("content-type")
+            try:
+                return Image(
+                    content=response.content,
+                    content_type=valid_image_content_type(content_type),
+                )
+            except ImageContentTypeError:
+                _LOGGER.error(
+                    "%s: Image from %s has invalid content type: %s",
+                    self.entity_id,
+                    url,
+                    content_type,
+                )
+                return None
+        return None
 
     async def async_image(self) -> bytes | None:
         """Return bytes of image."""
