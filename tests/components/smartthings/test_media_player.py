@@ -52,6 +52,10 @@ async def test_entity_and_device_attributes(
         {
             Attribute.switch: "on",
             Attribute.supported_input_sources: ["bluetooth", "wifi"],
+            Attribute.mnmo: "123",
+            Attribute.mnmn: "Generic manufacturer",
+            Attribute.mnhw: "v4.56",
+            Attribute.mnfv: "v7.89",
         },
     )
     entity_registry = er.async_get(hass)
@@ -68,8 +72,10 @@ async def test_entity_and_device_attributes(
     assert entry.configuration_url == "https://account.smartthings.com"
     assert entry.identifiers == {(DOMAIN, device.device_id)}
     assert entry.name == device.label
-    assert entry.model == device.device_type_name
-    assert entry.manufacturer == "Unavailable"
+    assert entry.model == "123"
+    assert entry.manufacturer == "Generic manufacturer"
+    assert entry.hw_version == "v4.56"
+    assert entry.sw_version == "v7.89"
 
 
 async def test_turn_off(hass: HomeAssistant, device_factory) -> None:
