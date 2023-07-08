@@ -13,6 +13,8 @@ from homeassistant.components.waze_travel_time.const import (
     DOMAIN,
     IMPERIAL_UNITS,
 )
+from homeassistant.components.waze_travel_time.sensor import SERVICE_UPDATE_TRAVEL_TIME
+from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 
 from .const import MOCK_CONFIG
@@ -75,6 +77,71 @@ async def test_sensor(hass: HomeAssistant) -> None:
         == "min"
     )
     assert hass.states.get("sensor.waze_travel_time").attributes["icon"] == "mdi:car"
+
+
+@pytest.mark.parametrize(
+    ("data", "options"),
+    [(MOCK_CONFIG, DEFAULT_OPTIONS)],
+)
+@pytest.mark.usefixtures("mock_update", "mock_config")
+async def test_update_travel_time_service(hass: HomeAssistant) -> None:
+    """Test update travel time service."""
+    response = await hass.services.async_call(
+        DOMAIN,
+        SERVICE_UPDATE_TRAVEL_TIME,
+        target={ATTR_ENTITY_ID: "sensor.waze_travel_time"},
+        blocking=True,
+        return_response=True,
+    )
+
+    assert response == {
+        "sensor.waze_travel_time": {
+            "duration": 150,
+            "distance": 300,
+            "route": "My route",
+            "origin": "location1",
+            "destination": "location2",
+        }
+    }
+
+
+@pytest.mark.parametrize(
+    ("data", "options"),
+    [(MOCK_CONFIG, DEFAULT_OPTIONS)],
+)
+@pytest.mark.usefixtures("mock_config")
+async def test_update_travel_time_service_non_blocking(
+    hass: HomeAssistant, mock_update
+) -> None:
+    """Test update travel time service."""
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_UPDATE_TRAVEL_TIME,
+        target={ATTR_ENTITY_ID: "sensor.waze_travel_time"},
+    )
+    await hass.async_block_till_done()
+    assert mock_update.call_count == 2
+
+
+@pytest.mark.usefixtures("mock_update_wrcerror")
+async def test_update_travel_time_service_wrcerror(hass: HomeAssistant) -> None:
+    """Test update travel time service with a failed response."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data=MOCK_CONFIG, options=DEFAULT_OPTIONS, entry_id="test"
+    )
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    response = await hass.services.async_call(
+        DOMAIN,
+        SERVICE_UPDATE_TRAVEL_TIME,
+        target={ATTR_ENTITY_ID: "sensor.waze_travel_time"},
+        blocking=True,
+        return_response=True,
+    )
+
+    assert response == {"sensor.waze_travel_time": {}}
 
 
 @pytest.mark.parametrize(

@@ -59,5 +59,11 @@
         "au": "Australia"
       }
     }
+  },
+  "services": {
+    "update_travel_time": {
+      "name": "Update Travel Time",
+      "description": "Update the travel time for a configured Waze route."
+    }
   }
 }

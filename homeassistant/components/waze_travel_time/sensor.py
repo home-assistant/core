@@ -22,7 +22,13 @@ from homeassistant.const import (
     UnitOfLength,
     UnitOfTime,
 )
-from homeassistant.core import CoreState, HomeAssistant
+from homeassistant.core import (
+    CoreState,
+    HomeAssistant,
+    ServiceResponse,
+    SupportsResponse,
+)
+from homeassistant.helpers import entity_platform
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.httpx_client import get_async_client
@@ -53,6 +59,7 @@ SCAN_INTERVAL = timedelta(minutes=5)
 PARALLEL_UPDATES = 1
 
 SECONDS_BETWEEN_API_CALLS = 0.5
+SERVICE_UPDATE_TRAVEL_TIME = "update_travel_time"
 
 
 async def async_setup_entry(
@@ -73,8 +80,15 @@ async def async_setup_entry(
     )
 
     sensor = WazeTravelTime(config_entry.entry_id, name, origin, destination, data)
-
     async_add_entities([sensor], False)
+
+    platform = entity_platform.async_get_current_platform()
+    platform.async_register_entity_service(
+        SERVICE_UPDATE_TRAVEL_TIME,
+        {},
+        "async_update_travel_time",
+        supports_response=SupportsResponse.OPTIONAL,
+    )
 
 
 class WazeTravelTime(SensorEntity):
@@ -156,6 +170,11 @@ class WazeTravelTime(SensorEntity):
         finally:
             self.hass.data[DOMAIN][SEMAPHORE].release()
 
+    async def async_update_travel_time(self) -> ServiceResponse:
+        """Update the sensor and return all info."""
+        await self.async_update()
+        return self.extra_state_attributes or {}
+
 
 class WazeTravelTimeData:
     """WazeTravelTime Data object."""
@@ -168,9 +187,9 @@ class WazeTravelTimeData:
         self.client = WazeRouteCalculator(region=region, client=client)
         self.origin: str | None = None
         self.destination: str | None = None
-        self.duration = None
-        self.distance = None
-        self.route = None
+        self.duration: float | None = None
+        self.distance: float | None = None
+        self.route: str | None = None
 
     async def async_update(self):
         """Update WazeRouteCalculator Sensor."""

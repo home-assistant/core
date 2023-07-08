@@ -1,0 +1,5 @@
+update_travel_time:
+  target:
+    entity:
+      integration: waze_travel_time
+      domain: sensor
