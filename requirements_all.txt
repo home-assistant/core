@@ -35,7 +35,7 @@ HATasmota==0.6.5
 Hydrawiser==0.2
 
 # homeassistant.components.mastodon
-Mastodon.py==1.5.1
+Mastodon.py==1.8.1
 
 # homeassistant.components.doods
 # homeassistant.components.generic

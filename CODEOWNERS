@@ -716,7 +716,7 @@ build.json @home-assistant/supervisor
 /tests/components/lutron_caseta/ @swails @bdraco @danaues
 /homeassistant/components/lyric/ @timmo001
 /tests/components/lyric/ @timmo001
-/homeassistant/components/mastodon/ @fabaff
+/homeassistant/components/mastodon/ @fabaff @thejeffreystone
 /homeassistant/components/matter/ @home-assistant/matter
 /tests/components/matter/ @home-assistant/matter
 /homeassistant/components/mazda/ @bdr99
