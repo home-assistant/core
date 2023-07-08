@@ -67,14 +67,6 @@ class DemoCalendar(CalendarEntity):
         end_date: datetime.datetime,
     ) -> list[CalendarEvent]:
         """Return calendar events within a datetime range."""
-        if start_date.tzinfo is None:
-            start_date = start_date.replace(
-                tzinfo=dt_util.get_time_zone(hass.config.time_zone)
-            )
-        if end_date.tzinfo is None:
-            end_date = end_date.replace(
-                tzinfo=dt_util.get_time_zone(hass.config.time_zone)
-            )
         assert start_date < end_date
         if self._event.start_datetime_local >= end_date:
             return []

@@ -589,6 +589,98 @@ async def test_async_get_all_descriptions(hass: HomeAssistant) -> None:
         None,
         SupportsResponse.ONLY,
     )
+    hass.services.async_register(
+        logger.DOMAIN,
+        "another_service_with_response",
+        lambda x: None,
+        None,
+        SupportsResponse.OPTIONAL,
+    )
+    service.async_set_service_schema(
+        hass,
+        logger.DOMAIN,
+        "another_service_with_response",
+        {"description": "response service"},
+    )
+
+    descriptions = await service.async_get_all_descriptions(hass)
+    assert "another_new_service" in descriptions[logger.DOMAIN]
+    assert "service_with_optional_response" in descriptions[logger.DOMAIN]
+    assert descriptions[logger.DOMAIN]["service_with_optional_response"][
+        "response"
+    ] == {"optional": True}
+    assert "service_with_only_response" in descriptions[logger.DOMAIN]
+    assert descriptions[logger.DOMAIN]["service_with_only_response"]["response"] == {
+        "optional": False
+    }
+    assert "another_service_with_response" in descriptions[logger.DOMAIN]
+    assert descriptions[logger.DOMAIN]["another_service_with_response"]["response"] == {
+        "optional": True
+    }
+
+    # Verify the cache returns the same object
+    assert await service.async_get_all_descriptions(hass) is descriptions
+
+
+async def test_async_get_all_descriptions_failing_integration(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test async_get_all_descriptions when async_get_integrations returns an exception."""
+    group = hass.components.group
+    group_config = {group.DOMAIN: {}}
+    await async_setup_component(hass, group.DOMAIN, group_config)
+    descriptions = await service.async_get_all_descriptions(hass)
+
+    assert len(descriptions) == 1
+
+    assert "description" in descriptions["group"]["reload"]
+    assert "fields" in descriptions["group"]["reload"]
+
+    logger = hass.components.logger
+    logger_config = {logger.DOMAIN: {}}
+    await async_setup_component(hass, logger.DOMAIN, logger_config)
+    with patch(
+        "homeassistant.helpers.service.async_get_integrations",
+        return_value={"logger": ImportError},
+    ):
+        descriptions = await service.async_get_all_descriptions(hass)
+
+    assert len(descriptions) == 2
+    assert "Failed to load integration: logger" in caplog.text
+
+    # Services are empty defaults if the load fails but should
+    # not raise
+    assert descriptions[logger.DOMAIN]["set_level"] == {
+        "description": "",
+        "fields": {},
+        "name": "",
+    }
+
+    hass.services.async_register(logger.DOMAIN, "new_service", lambda x: None, None)
+    service.async_set_service_schema(
+        hass, logger.DOMAIN, "new_service", {"description": "new service"}
+    )
+    descriptions = await service.async_get_all_descriptions(hass)
+    assert "description" in descriptions[logger.DOMAIN]["new_service"]
+    assert descriptions[logger.DOMAIN]["new_service"]["description"] == "new service"
+
+    hass.services.async_register(
+        logger.DOMAIN, "another_new_service", lambda x: None, None
+    )
+    hass.services.async_register(
+        logger.DOMAIN,
+        "service_with_optional_response",
+        lambda x: None,
+        None,
+        SupportsResponse.OPTIONAL,
+    )
+    hass.services.async_register(
+        logger.DOMAIN,
+        "service_with_only_response",
+        lambda x: None,
+        None,
+        SupportsResponse.ONLY,
+    )
 
     descriptions = await service.async_get_all_descriptions(hass)
     assert "another_new_service" in descriptions[logger.DOMAIN]
@@ -603,6 +695,33 @@ async def test_async_get_all_descriptions(hass: HomeAssistant) -> None:
 
     # Verify the cache returns the same object
     assert await service.async_get_all_descriptions(hass) is descriptions
+
+
+async def test_async_get_all_descriptions_dynamically_created_services(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test async_get_all_descriptions when async_get_integrations when services are dynamic."""
+    group = hass.components.group
+    group_config = {group.DOMAIN: {}}
+    await async_setup_component(hass, group.DOMAIN, group_config)
+    descriptions = await service.async_get_all_descriptions(hass)
+
+    assert len(descriptions) == 1
+
+    assert "description" in descriptions["group"]["reload"]
+    assert "fields" in descriptions["group"]["reload"]
+
+    shell_command = hass.components.shell_command
+    shell_command_config = {shell_command.DOMAIN: {"test_service": "ls /bin"}}
+    await async_setup_component(hass, shell_command.DOMAIN, shell_command_config)
+    descriptions = await service.async_get_all_descriptions(hass)
+
+    assert len(descriptions) == 2
+    assert descriptions[shell_command.DOMAIN]["test_service"] == {
+        "description": "",
+        "fields": {},
+        "name": "",
+    }
 
 
 async def test_call_with_required_features(hass: HomeAssistant, mock_entities) -> None:
