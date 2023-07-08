@@ -30,10 +30,14 @@ def async_describe_events(
         if TYPE_CHECKING:
             data = cast(BTHomeBleEvent, data)  # type: ignore[assignment]
         device = dr.async_get(data["device_id"])
-        name = device.name if device else data["address"]
+        name = device and device.name or f'BTHome {data["address"]}'
+        if properties := data["event_properties"]:
+            message = f"{data['event_class']} {data['event_type']}: {properties}"
+        else:
+            message = f"{data['event_class']} {data['event_type']}"
         return {
-            LOGBOOK_ENTRY_NAME: f"BTHome {name}",
-            LOGBOOK_ENTRY_MESSAGE: f"{data['event_class']} {data['event_type']}: {data['event_properties']}",
+            LOGBOOK_ENTRY_NAME: name,
+            LOGBOOK_ENTRY_MESSAGE: message,
         }
 
     async_describe_event(DOMAIN, BTHOME_BLE_EVENT, async_describe_bthome_event)
