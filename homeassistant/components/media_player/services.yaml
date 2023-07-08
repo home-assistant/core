@@ -154,6 +154,9 @@ play_media:
     enqueue:
       name: Enqueue
       description: If the content should be played now or be added to the queue.
+      filter:
+        supported_features:
+          - media_player.MediaPlayerEntityFeature.MEDIA_ENQUEUE
       required: false
       selector:
         select:
