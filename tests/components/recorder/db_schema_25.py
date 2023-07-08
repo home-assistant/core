@@ -6,7 +6,7 @@ import json
 import logging
 from typing import Any, TypedDict, cast, overload
 
-from fnvhash import fnv1a_32
+from fnv_hash_fast import fnv1a_32
 from sqlalchemy import (
     BigInteger,
     Boolean,
@@ -23,7 +23,6 @@ from sqlalchemy import (
 )
 from sqlalchemy.dialects import mysql, oracle, postgresql
 from sqlalchemy.engine.row import Row
-from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.orm import declarative_base, relationship
 from sqlalchemy.orm.session import Session
 
@@ -322,16 +321,11 @@ class StatisticsBase:
 
     id = Column(Integer, Identity(), primary_key=True)
     created = Column(DATETIME_TYPE, default=dt_util.utcnow)
-
-    @declared_attr  # type: ignore[misc]
-    def metadata_id(self) -> Column:
-        """Define the metadata_id column for sub classes."""
-        return Column(
-            Integer,
-            ForeignKey(f"{TABLE_STATISTICS_META}.id", ondelete="CASCADE"),
-            index=True,
-        )
-
+    metadata_id = Column(
+        Integer,
+        ForeignKey(f"{TABLE_STATISTICS_META}.id", ondelete="CASCADE"),
+        index=True,
+    )
     start = Column(DATETIME_TYPE, index=True)
     mean = Column(DOUBLE_TYPE)
     min = Column(DOUBLE_TYPE)

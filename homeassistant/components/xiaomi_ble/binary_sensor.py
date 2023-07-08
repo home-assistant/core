@@ -1,6 +1,7 @@
 """Support for Xiaomi binary sensors."""
 from __future__ import annotations
 
+from xiaomi_ble import SLEEPY_DEVICE_MODELS
 from xiaomi_ble.parser import (
     BinarySensorDeviceClass as XiaomiBinarySensorDeviceClass,
     ExtendedBinarySensorDeviceClass,
@@ -19,6 +20,7 @@ from homeassistant.components.bluetooth.passive_update_processor import (
     PassiveBluetoothProcessorCoordinator,
     PassiveBluetoothProcessorEntity,
 )
+from homeassistant.const import ATTR_MODEL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.sensor import sensor_device_info_to_hass_device_info
@@ -128,3 +130,12 @@ class XiaomiBluetoothSensorEntity(
     def is_on(self) -> bool | None:
         """Return the native value."""
         return self.processor.entity_data.get(self.entity_key)
+
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        if self.device_info and self.device_info[ATTR_MODEL] in SLEEPY_DEVICE_MODELS:
+            # These devices sleep for an indeterminate amount of time
+            # so there is no way to track their availability.
+            return True
+        return super().available

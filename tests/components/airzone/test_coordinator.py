@@ -10,7 +10,7 @@ from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.util.dt import utcnow
 
-from .util import CONFIG, HVAC_MOCK
+from .util import CONFIG, HVAC_MOCK, HVAC_VERSION_MOCK
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -31,6 +31,9 @@ async def test_coordinator_client_connector_error(hass: HomeAssistant) -> None:
     ) as mock_hvac, patch(
         "homeassistant.components.airzone.AirzoneLocalApi.get_hvac_systems",
         side_effect=SystemOutOfRange,
+    ), patch(
+        "homeassistant.components.airzone.AirzoneLocalApi.get_version",
+        return_value=HVAC_VERSION_MOCK,
     ), patch(
         "homeassistant.components.airzone.AirzoneLocalApi.get_webserver",
         side_effect=InvalidMethod,

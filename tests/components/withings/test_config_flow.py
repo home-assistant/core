@@ -19,6 +19,8 @@ from homeassistant.helpers.config_entry_oauth2_flow import AUTH_CALLBACK_PATH
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
+from tests.test_util.aiohttp import AiohttpClientMocker
+from tests.typing import ClientSessionGenerator
 
 
 async def test_config_non_unique_profile(hass: HomeAssistant) -> None:
@@ -37,7 +39,10 @@ async def test_config_non_unique_profile(hass: HomeAssistant) -> None:
 
 
 async def test_config_reauth_profile(
-    hass: HomeAssistant, hass_client_no_auth, aioclient_mock, current_request_with_host
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    current_request_with_host: None,
 ) -> None:
     """Test reauth an existing profile re-creates the config entry."""
     hass_config = {

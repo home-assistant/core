@@ -10,7 +10,7 @@ from pynina import ApiError
 
 from homeassistant import data_entry_flow
 from homeassistant.components.nina.const import (
-    CONF_FILTER_CORONA,
+    CONF_HEADLINE_FILTER,
     CONF_MESSAGE_SLOTS,
     CONF_REGIONS,
     CONST_REGION_A_TO_D,
@@ -37,7 +37,7 @@ DUMMY_DATA: dict[str, Any] = {
     CONST_REGION_M_TO_Q: ["071380000000_0", "071380000000_1"],
     CONST_REGION_R_TO_U: ["072320000000_0", "072320000000_1"],
     CONST_REGION_V_TO_Z: ["081270000000_0", "081270000000_1"],
-    CONF_FILTER_CORONA: True,
+    CONF_HEADLINE_FILTER: ".*corona.*",
 }
 
 DUMMY_RESPONSE_REGIONS: dict[str, Any] = json.loads(
@@ -54,7 +54,6 @@ async def test_show_set_form(hass: HomeAssistant) -> None:
         "pynina.baseApi.BaseAPI._makeRequest",
         wraps=mocked_request_function,
     ):
-
         result: dict[str, Any] = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}
         )
@@ -69,7 +68,6 @@ async def test_step_user_connection_error(hass: HomeAssistant) -> None:
         "pynina.baseApi.BaseAPI._makeRequest",
         side_effect=ApiError("Could not connect to Api"),
     ):
-
         result: dict[str, Any] = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=deepcopy(DUMMY_DATA)
         )
@@ -84,7 +82,6 @@ async def test_step_user_unexpected_exception(hass: HomeAssistant) -> None:
         "pynina.baseApi.BaseAPI._makeRequest",
         side_effect=Exception("DUMMY"),
     ):
-
         result: dict[str, Any] = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=deepcopy(DUMMY_DATA)
         )
@@ -101,7 +98,6 @@ async def test_step_user(hass: HomeAssistant) -> None:
         "homeassistant.components.nina.async_setup_entry",
         return_value=True,
     ):
-
         result: dict[str, Any] = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=deepcopy(DUMMY_DATA)
         )
@@ -116,9 +112,8 @@ async def test_step_user_no_selection(hass: HomeAssistant) -> None:
         "pynina.baseApi.BaseAPI._makeRequest",
         wraps=mocked_request_function,
     ):
-
         result: dict[str, Any] = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data={}
+            DOMAIN, context={"source": SOURCE_USER}, data={CONF_HEADLINE_FILTER: ""}
         )
 
         assert result["type"] == data_entry_flow.FlowResultType.FORM
@@ -150,7 +145,7 @@ async def test_options_flow_init(hass: HomeAssistant) -> None:
         domain=DOMAIN,
         title="NINA",
         data={
-            CONF_FILTER_CORONA: deepcopy(DUMMY_DATA[CONF_FILTER_CORONA]),
+            CONF_HEADLINE_FILTER: deepcopy(DUMMY_DATA[CONF_HEADLINE_FILTER]),
             CONF_MESSAGE_SLOTS: deepcopy(DUMMY_DATA[CONF_MESSAGE_SLOTS]),
             CONST_REGION_A_TO_D: deepcopy(DUMMY_DATA[CONST_REGION_A_TO_D]),
             CONF_REGIONS: {"095760000000": "Aach"},
@@ -188,7 +183,7 @@ async def test_options_flow_init(hass: HomeAssistant) -> None:
         assert result["data"] is None
 
         assert dict(config_entry.data) == {
-            CONF_FILTER_CORONA: deepcopy(DUMMY_DATA[CONF_FILTER_CORONA]),
+            CONF_HEADLINE_FILTER: deepcopy(DUMMY_DATA[CONF_HEADLINE_FILTER]),
             CONF_MESSAGE_SLOTS: deepcopy(DUMMY_DATA[CONF_MESSAGE_SLOTS]),
             CONST_REGION_A_TO_D: ["072350000000_1"],
             CONST_REGION_E_TO_H: [],
@@ -234,6 +229,7 @@ async def test_options_flow_with_no_selection(hass: HomeAssistant) -> None:
                 CONST_REGION_M_TO_Q: [],
                 CONST_REGION_R_TO_U: [],
                 CONST_REGION_V_TO_Z: [],
+                CONF_HEADLINE_FILTER: "",
             },
         )
 

@@ -2,10 +2,11 @@
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 from .camera import MjpegCamera
-from .const import CONF_MJPEG_URL, CONF_STILL_IMAGE_URL, PLATFORMS
+from .const import CONF_MJPEG_URL, CONF_STILL_IMAGE_URL, DOMAIN, PLATFORMS
 from .util import filter_urllib3_logging
 
 __all__ = [
@@ -15,8 +16,10 @@ __all__ = [
     "filter_urllib3_logging",
 ]
 
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
-def setup(hass: HomeAssistant, config: ConfigType) -> bool:
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the MJPEG IP Camera integration."""
     filter_urllib3_logging()
     return True

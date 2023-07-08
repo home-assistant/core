@@ -7,10 +7,12 @@ from typing import Any
 from homeassistant.components.weather import (
     ATTR_FORECAST_CONDITION,
     ATTR_FORECAST_TIME,
+    ATTR_WEATHER_CLOUD_COVERAGE,
     ATTR_WEATHER_HUMIDITY,
     ATTR_WEATHER_PRESSURE,
     ATTR_WEATHER_TEMPERATURE,
     ATTR_WEATHER_WIND_BEARING,
+    ATTR_WEATHER_WIND_GUST_SPEED,
     ATTR_WEATHER_WIND_SPEED,
     Forecast,
     WeatherEntity,
@@ -35,9 +37,6 @@ from homeassistant.util.unit_system import METRIC_SYSTEM
 from . import MetDataUpdateCoordinator
 from .const import ATTR_MAP, CONDITIONS_MAP, CONF_TRACK_HOME, DOMAIN, FORECAST_MAP
 
-ATTRIBUTION = (
-    "Weather forecast from met.no, delivered by the Norwegian Meteorological Institute."
-)
 DEFAULT_NAME = "Met.no"
 
 
@@ -74,6 +73,10 @@ def format_condition(condition: str) -> str:
 class MetWeather(CoordinatorEntity[MetDataUpdateCoordinator], WeatherEntity):
     """Implementation of a Met.no weather condition."""
 
+    _attr_attribution = (
+        "Weather forecast from met.no, delivered by the Norwegian "
+        "Meteorological Institute."
+    )
     _attr_has_entity_name = True
     _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_native_precipitation_unit = UnitOfPrecipitationDepth.MILLIMETERS
@@ -94,7 +97,7 @@ class MetWeather(CoordinatorEntity[MetDataUpdateCoordinator], WeatherEntity):
         self._hourly = hourly
 
     @property
-    def track_home(self) -> (Any | bool):
+    def track_home(self) -> Any | bool:
         """Return if we are tracking home."""
         return self._config.get(CONF_TRACK_HOME, False)
 
@@ -174,9 +177,18 @@ class MetWeather(CoordinatorEntity[MetDataUpdateCoordinator], WeatherEntity):
         )
 
     @property
-    def attribution(self) -> str:
-        """Return the attribution."""
-        return ATTRIBUTION
+    def native_wind_gust_speed(self) -> float | None:
+        """Return the wind gust speed in native units."""
+        return self.coordinator.data.current_weather_data.get(
+            ATTR_MAP[ATTR_WEATHER_WIND_GUST_SPEED]
+        )
+
+    @property
+    def cloud_coverage(self) -> float | None:
+        """Return the cloud coverage."""
+        return self.coordinator.data.current_weather_data.get(
+            ATTR_MAP[ATTR_WEATHER_CLOUD_COVERAGE]
+        )
 
     @property
     def forecast(self) -> list[Forecast] | None:
@@ -206,7 +218,7 @@ class MetWeather(CoordinatorEntity[MetDataUpdateCoordinator], WeatherEntity):
     def device_info(self) -> DeviceInfo:
         """Device info."""
         return DeviceInfo(
-            default_name="Forecast",
+            name="Forecast",
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN,)},  # type: ignore[arg-type]
             manufacturer="Met.no",

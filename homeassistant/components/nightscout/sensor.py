@@ -37,7 +37,7 @@ async def async_setup_entry(
 class NightscoutSensor(SensorEntity):
     """Implementation of a Nightscout sensor."""
 
-    def __init__(self, api: NightscoutAPI, name, unique_id):
+    def __init__(self, api: NightscoutAPI, name, unique_id) -> None:
         """Initialize the Nightscout sensor."""
         self.api = api
         self._attr_unique_id = unique_id

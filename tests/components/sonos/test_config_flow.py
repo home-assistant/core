@@ -3,17 +3,18 @@ from __future__ import annotations
 
 from unittest.mock import MagicMock, patch
 
-from homeassistant import config_entries, core
+from homeassistant import config_entries
 from homeassistant.components import ssdp, zeroconf
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.components.sonos.const import DATA_SONOS_DISCOVERY_MANAGER, DOMAIN
 from homeassistant.const import CONF_HOSTS
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 
 async def test_user_form(
-    hass: core.HomeAssistant, zeroconf_payload: zeroconf.ZeroconfServiceInfo
-):
+    hass: HomeAssistant, zeroconf_payload: zeroconf.ZeroconfServiceInfo
+) -> None:
     """Test we get the user initiated form."""
 
     # Ensure config flow will fail if no devices discovered yet
@@ -59,7 +60,7 @@ async def test_user_form(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_user_form_already_created(hass: core.HomeAssistant):
+async def test_user_form_already_created(hass: HomeAssistant) -> None:
     """Ensure we abort a flow if the entry is already created from config."""
     config = {DOMAIN: {MP_DOMAIN: {CONF_HOSTS: "192.168.4.2"}}}
     with patch(
@@ -77,8 +78,8 @@ async def test_user_form_already_created(hass: core.HomeAssistant):
 
 
 async def test_zeroconf_form(
-    hass: core.HomeAssistant, zeroconf_payload: zeroconf.ZeroconfServiceInfo
-):
+    hass: HomeAssistant, zeroconf_payload: zeroconf.ZeroconfServiceInfo
+) -> None:
     """Test we pass Zeroconf discoveries to the manager."""
 
     mock_manager = hass.data[DATA_SONOS_DISCOVERY_MANAGER] = MagicMock()
@@ -112,7 +113,7 @@ async def test_zeroconf_form(
     assert len(mock_manager.mock_calls) == 2
 
 
-async def test_ssdp_discovery(hass: core.HomeAssistant, soco):
+async def test_ssdp_discovery(hass: HomeAssistant, soco) -> None:
     """Test that SSDP discoveries create a config flow."""
 
     await hass.config_entries.flow.async_init(
@@ -153,7 +154,7 @@ async def test_ssdp_discovery(hass: core.HomeAssistant, soco):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_zeroconf_sonos_v1(hass: core.HomeAssistant):
+async def test_zeroconf_sonos_v1(hass: HomeAssistant) -> None:
     """Test we pass sonos devices to the discovery manager with v1 firmware devices."""
 
     mock_manager = hass.data[DATA_SONOS_DISCOVERY_MANAGER] = MagicMock()
@@ -205,8 +206,8 @@ async def test_zeroconf_sonos_v1(hass: core.HomeAssistant):
 
 
 async def test_zeroconf_form_not_sonos(
-    hass: core.HomeAssistant, zeroconf_payload: zeroconf.ZeroconfServiceInfo
-):
+    hass: HomeAssistant, zeroconf_payload: zeroconf.ZeroconfServiceInfo
+) -> None:
     """Test we abort on non-sonos devices."""
     mock_manager = hass.data[DATA_SONOS_DISCOVERY_MANAGER] = MagicMock()
 

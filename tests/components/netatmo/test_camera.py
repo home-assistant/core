@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock, patch
 
 import pyatmo
 import pytest
+import requests_mock
 
 from homeassistant.components import camera
 from homeassistant.components.camera import STATE_STREAMING
@@ -14,15 +15,18 @@ from homeassistant.components.netatmo.const import (
     SERVICE_SET_PERSONS_HOME,
 )
 from homeassistant.const import CONF_WEBHOOK_ID
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.util import dt
+from homeassistant.util import dt as dt_util
 
 from .common import fake_post_request, selected_platforms, simulate_webhook
 
 from tests.common import async_capture_events, async_fire_time_changed
 
 
-async def test_setup_component_with_webhook(hass, config_entry, netatmo_auth):
+async def test_setup_component_with_webhook(
+    hass: HomeAssistant, config_entry, netatmo_auth
+) -> None:
     """Test setup with webhook."""
     with selected_platforms(["camera"]):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
@@ -129,7 +133,9 @@ async def test_setup_component_with_webhook(hass, config_entry, netatmo_auth):
 IMAGE_BYTES_FROM_STREAM = b"test stream image bytes"
 
 
-async def test_camera_image_local(hass, config_entry, requests_mock, netatmo_auth):
+async def test_camera_image_local(
+    hass: HomeAssistant, config_entry, requests_mock: requests_mock.Mocker, netatmo_auth
+) -> None:
     """Test retrieval or local camera image."""
     with selected_platforms(["camera"]):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
@@ -155,7 +161,9 @@ async def test_camera_image_local(hass, config_entry, requests_mock, netatmo_aut
     assert image.content == IMAGE_BYTES_FROM_STREAM
 
 
-async def test_camera_image_vpn(hass, config_entry, requests_mock, netatmo_auth):
+async def test_camera_image_vpn(
+    hass: HomeAssistant, config_entry, requests_mock: requests_mock.Mocker, netatmo_auth
+) -> None:
     """Test retrieval of remote camera image."""
     with selected_platforms(["camera"]):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
@@ -179,7 +187,9 @@ async def test_camera_image_vpn(hass, config_entry, requests_mock, netatmo_auth)
     assert image.content == IMAGE_BYTES_FROM_STREAM
 
 
-async def test_service_set_person_away(hass, config_entry, netatmo_auth):
+async def test_service_set_person_away(
+    hass: HomeAssistant, config_entry, netatmo_auth
+) -> None:
     """Test service to set person as away."""
     with selected_platforms(["camera"]):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
@@ -216,7 +226,9 @@ async def test_service_set_person_away(hass, config_entry, netatmo_auth):
         )
 
 
-async def test_service_set_person_away_invalid_person(hass, config_entry, netatmo_auth):
+async def test_service_set_person_away_invalid_person(
+    hass: HomeAssistant, config_entry, netatmo_auth
+) -> None:
     """Test service to set invalid person as away."""
     with selected_platforms(["camera"]):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
@@ -243,8 +255,8 @@ async def test_service_set_person_away_invalid_person(hass, config_entry, netatm
 
 
 async def test_service_set_persons_home_invalid_person(
-    hass, config_entry, netatmo_auth
-):
+    hass: HomeAssistant, config_entry, netatmo_auth
+) -> None:
     """Test service to set invalid persons as home."""
     with selected_platforms(["camera"]):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
@@ -270,7 +282,9 @@ async def test_service_set_persons_home_invalid_person(
     assert excinfo.value.args == ("Person(s) not registered ['Batman']",)
 
 
-async def test_service_set_persons_home(hass, config_entry, netatmo_auth):
+async def test_service_set_persons_home(
+    hass: HomeAssistant, config_entry, netatmo_auth
+) -> None:
     """Test service to set persons as home."""
     with selected_platforms(["camera"]):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
@@ -294,7 +308,9 @@ async def test_service_set_persons_home(hass, config_entry, netatmo_auth):
         )
 
 
-async def test_service_set_camera_light(hass, config_entry, netatmo_auth):
+async def test_service_set_camera_light(
+    hass: HomeAssistant, config_entry, netatmo_auth
+) -> None:
     """Test service to set the outdoor camera light mode."""
     with selected_platforms(["camera"]):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
@@ -324,7 +340,9 @@ async def test_service_set_camera_light(hass, config_entry, netatmo_auth):
         mock_set_state.assert_called_once_with(expected_data)
 
 
-async def test_service_set_camera_light_invalid_type(hass, config_entry, netatmo_auth):
+async def test_service_set_camera_light_invalid_type(
+    hass: HomeAssistant, config_entry, netatmo_auth
+) -> None:
     """Test service to set the indoor camera light mode."""
     with selected_platforms(["camera"]):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
@@ -350,10 +368,10 @@ async def test_service_set_camera_light_invalid_type(hass, config_entry, netatmo
     await hass.async_block_till_done()
 
     mock_set_state.assert_not_called()
-    assert excinfo.value.args == ("NACamera <Hall> does not have a floodlight",)
+    assert "NACamera <Hall> does not have a floodlight" in excinfo.value.args[0]
 
 
-async def test_camera_reconnect_webhook(hass, config_entry):
+async def test_camera_reconnect_webhook(hass: HomeAssistant, config_entry) -> None:
     """Test webhook event on camera reconnect."""
     fake_post_hits = 0
 
@@ -402,13 +420,15 @@ async def test_camera_reconnect_webhook(hass, config_entry):
 
         async_fire_time_changed(
             hass,
-            dt.utcnow() + timedelta(seconds=60),
+            dt_util.utcnow() + timedelta(seconds=60),
         )
         await hass.async_block_till_done()
         assert fake_post_hits >= calls
 
 
-async def test_webhook_person_event(hass, config_entry, netatmo_auth):
+async def test_webhook_person_event(
+    hass: HomeAssistant, config_entry, netatmo_auth
+) -> None:
     """Test that person events are handled."""
     with selected_platforms(["camera"]):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
@@ -445,7 +465,7 @@ async def test_webhook_person_event(hass, config_entry, netatmo_auth):
     assert test_netatmo_event
 
 
-async def test_setup_component_no_devices(hass, config_entry):
+async def test_setup_component_no_devices(hass: HomeAssistant, config_entry) -> None:
     """Test setup with no devices."""
     fake_post_hits = 0
 
@@ -474,7 +494,9 @@ async def test_setup_component_no_devices(hass, config_entry):
         assert fake_post_hits == 11
 
 
-async def test_camera_image_raises_exception(hass, config_entry, requests_mock):
+async def test_camera_image_raises_exception(
+    hass: HomeAssistant, config_entry, requests_mock: requests_mock.Mocker
+) -> None:
     """Test setup with no devices."""
     fake_post_hits = 0
 

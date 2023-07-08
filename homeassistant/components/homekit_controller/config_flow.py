@@ -91,10 +91,10 @@ def find_existing_host(
 
 
 def ensure_pin_format(pin: str, allow_insecure_setup_codes: Any = None) -> str:
-    """
-    Ensure a pin code is correctly formatted.
+    """Ensure a pin code is correctly formatted.
 
-    Ensures a pin code is in the format 111-11-111. Handles codes with and without dashes.
+    Ensures a pin code is in the format 111-11-111.
+    Handles codes with and without dashes.
 
     If incorrect code is entered, an exception is raised.
     """
@@ -285,7 +285,8 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             if self.controller is None:
                 await self._async_setup_controller()
 
-            # mypy can't see that self._async_setup_controller() always sets self.controller or throws
+            # mypy can't see that self._async_setup_controller() always
+            # sets self.controller or throws
             assert self.controller
 
             pairing = self.controller.load_pairing(
@@ -345,7 +346,8 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if model in HOMEKIT_IGNORE:
             return self.async_abort(reason="ignored_model")
 
-        # If this is a HomeKit bridge/accessory exported by *this* HA instance ignore it.
+        # If this is a HomeKit bridge/accessory exported
+        # by *this* HA instance ignore it.
         if await self._hkid_is_homekit(hkid):
             return self.async_abort(reason="ignored_model")
 
@@ -367,15 +369,11 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="ignored_model")
 
         # Late imports in case BLE is not available
-        from aiohomekit.controller.ble.discovery import (  # pylint: disable=import-outside-toplevel
-            BleDiscovery,
-        )
-        from aiohomekit.controller.ble.manufacturer_data import (  # pylint: disable=import-outside-toplevel
-            HomeKitAdvertisement,
-        )
+        # pylint: disable-next=import-outside-toplevel
+        from aiohomekit.controller.ble.discovery import BleDiscovery
 
-        await self.async_set_unique_id(discovery_info.address)
-        self._abort_if_unique_id_configured()
+        # pylint: disable-next=import-outside-toplevel
+        from aiohomekit.controller.ble.manufacturer_data import HomeKitAdvertisement
 
         mfr_data = discovery_info.manufacturer_data
 
@@ -385,6 +383,9 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             )
         except ValueError:
             return self.async_abort(reason="ignored_model")
+
+        await self.async_set_unique_id(normalize_hkid(device.id))
+        self._abort_if_unique_id_configured()
 
         if not (device.status_flags & StatusFlags.UNPAIRED):
             return self.async_abort(reason="already_paired")

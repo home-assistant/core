@@ -18,6 +18,7 @@ class OverkizEntity(CoordinatorEntity[OverkizDataUpdateCoordinator]):
     """Representation of an Overkiz device entity."""
 
     _attr_has_entity_name = True
+    _attr_name: str | None = None
 
     def __init__(
         self, device_url: str, coordinator: OverkizDataUpdateCoordinator
@@ -53,11 +54,12 @@ class OverkizEntity(CoordinatorEntity[OverkizDataUpdateCoordinator]):
 
     def generate_device_info(self) -> DeviceInfo:
         """Return device registry information for this entity."""
-        # Some devices, such as the Smart Thermostat have several devices in one physical device,
-        # with same device url, terminated by '#' and a number.
+        # Some devices, such as the Smart Thermostat have several devices
+        # in one physical device, with same device url, terminated by '#' and a number.
         # In this case, we use the base device url as the device identifier.
         if self.is_sub_device:
-            # Only return the url of the base device, to inherit device name and model from parent device.
+            # Only return the url of the base device, to inherit device name
+            # and model from parent device.
             return {
                 "identifiers": {(DOMAIN, self.executor.base_device_url)},
             }
@@ -114,5 +116,8 @@ class OverkizDescriptiveEntity(OverkizEntity):
         self._attr_unique_id = f"{super().unique_id}-{self.entity_description.key}"
 
         if self.is_sub_device:
-            # In case of sub device, use the provided label and append the name of the type of entity
+            # In case of sub device, use the provided label
+            # and append the name of the type of entity
             self._attr_name = f"{self.device.label} {description.name}"
+        elif isinstance(description.name, str):
+            self._attr_name = description.name

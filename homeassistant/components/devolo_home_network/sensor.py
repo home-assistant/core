@@ -15,8 +15,8 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -26,7 +26,7 @@ from .const import (
     DOMAIN,
     NEIGHBORING_WIFI_NETWORKS,
 )
-from .entity import DevoloEntity
+from .entity import DevoloCoordinatorEntity
 
 _DataT = TypeVar(
     "_DataT",
@@ -54,7 +54,6 @@ SENSOR_TYPES: dict[str, DevoloSensorEntityDescription[Any]] = {
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         icon="mdi:lan",
-        name="Connected PLC devices",
         value_func=lambda data: len(
             {device.mac_address_from for device in data.data_rates}
         ),
@@ -62,7 +61,6 @@ SENSOR_TYPES: dict[str, DevoloSensorEntityDescription[Any]] = {
     CONNECTED_WIFI_CLIENTS: DevoloSensorEntityDescription[list[ConnectedStationInfo]](
         key=CONNECTED_WIFI_CLIENTS,
         icon="mdi:wifi",
-        name="Connected Wifi clients",
         state_class=SensorStateClass.MEASUREMENT,
         value_func=len,
     ),
@@ -71,7 +69,6 @@ SENSOR_TYPES: dict[str, DevoloSensorEntityDescription[Any]] = {
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         icon="mdi:wifi-marker",
-        name="Neighboring Wifi networks",
         value_func=len,
     ),
 }
@@ -116,7 +113,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class DevoloSensorEntity(DevoloEntity[_DataT], SensorEntity):
+class DevoloSensorEntity(DevoloCoordinatorEntity[_DataT], SensorEntity):
     """Representation of a devolo sensor."""
 
     entity_description: DevoloSensorEntityDescription[_DataT]

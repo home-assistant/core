@@ -68,7 +68,6 @@
       },
       "sensor": {
         "title": "[%key:component::group::config::step::user::title%]",
-        "description": "If \"ignore non-numeric\" is enabled, the group's state is calculated if at least one member has a numerical value. If \"ignore non-numeric\" is disabled, the group's state is calculated only if all group members have numerical values.",
         "data": {
           "ignore_non_numeric": "Ignore non-numeric",
           "entities": "Members",
@@ -134,7 +133,7 @@
         }
       },
       "sensor": {
-        "description": "[%key:component::group::config::step::sensor::description%]",
+        "description": "If \"ignore non-numeric\" is enabled, the group's state is calculated if at least one member has a numerical value. If \"ignore non-numeric\" is disabled, the group's state is calculated only if all group members have numerical values.",
         "data": {
           "ignore_non_numeric": "[%key:component::group::config::step::sensor::data::ignore_non_numeric%]",
           "entities": "[%key:component::group::config::step::sensor::data::entities%]",
@@ -156,18 +155,40 @@
       }
     }
   },
-  "state": {
+  "entity_component": {
     "_": {
-      "off": "[%key:common::state::off%]",
-      "on": "[%key:common::state::on%]",
-      "home": "[%key:component::device_tracker::state::_::home%]",
-      "not_home": "[%key:component::device_tracker::state::_::not_home%]",
-      "open": "[%key:common::state::open%]",
-      "closed": "[%key:common::state::closed%]",
-      "locked": "[%key:common::state::locked%]",
-      "unlocked": "[%key:common::state::unlocked%]",
-      "ok": "[%key:component::binary_sensor::state::problem::off%]",
-      "problem": "[%key:component::binary_sensor::state::problem::on%]"
+      "name": "[%key:component::group::title%]",
+      "state": {
+        "off": "[%key:common::state::off%]",
+        "on": "[%key:common::state::on%]",
+        "home": "[%key:component::device_tracker::entity_component::_::state::home%]",
+        "not_home": "[%key:component::device_tracker::entity_component::_::state::not_home%]",
+        "open": "[%key:common::state::open%]",
+        "closed": "[%key:common::state::closed%]",
+        "locked": "[%key:common::state::locked%]",
+        "unlocked": "[%key:common::state::unlocked%]",
+        "ok": "[%key:component::binary_sensor::entity_component::problem::state::off%]",
+        "problem": "[%key:component::binary_sensor::entity_component::problem::state::on%]"
+      },
+      "state_attributes": {
+        "entity_id": {
+          "name": "Members"
+        }
+      }
+    }
+  },
+  "selector": {
+    "type": {
+      "options": {
+        "min": "Minimum",
+        "max": "Maximum",
+        "mean": "Arithmetic mean",
+        "median": "Median",
+        "last": "Most recently updated",
+        "range": "Statistical range",
+        "sum": "Sum",
+        "product": "Product"
+      }
     }
   }
 }

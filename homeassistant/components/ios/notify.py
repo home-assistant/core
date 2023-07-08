@@ -66,7 +66,7 @@ def get_service(
 class iOSNotificationService(BaseNotificationService):
     """Implement the notification service for iOS."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the service."""
 
     @property

@@ -1,9 +1,0 @@
-{
-    "state": {
-        "_": {
-            "active": "aktiven",
-            "idle": "V pripravljenosti",
-            "paused": "Na pavzi"
-        }
-    }
-}

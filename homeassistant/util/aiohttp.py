@@ -10,7 +10,7 @@ from aiohttp import payload, web
 from aiohttp.typedefs import JSONDecoder
 from multidict import CIMultiDict, MultiDict
 
-from homeassistant.helpers.json import json_loads
+from .json import json_loads
 
 
 class MockStreamReader:
@@ -89,7 +89,7 @@ def serialize_response(response: web.Response) -> dict[str, Any]:
     elif isinstance(body, bytes):
         body_decoded = body.decode(response.charset or "utf-8")
     else:
-        raise ValueError("Unknown payload encoding")
+        raise TypeError("Unknown payload encoding")
 
     return {
         "status": response.status,

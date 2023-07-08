@@ -1,4 +1,4 @@
-"""Config Flow for zamg the Austrian "Zentralanstalt für Meteorologie und Geodynamik" integration."""
+"""Config Flow for the zamg integration."""
 from __future__ import annotations
 
 from typing import Any

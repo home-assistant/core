@@ -27,7 +27,7 @@ def assert_sensor_state(
     assert state
     actual_state = state.state
     assert actual_state == expected_state
-    for (key, value) in attributes.items():
+    for key, value in attributes.items():
         assert key in state.attributes
         assert state.attributes[key] == value
 

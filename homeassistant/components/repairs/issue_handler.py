@@ -27,7 +27,7 @@ class ConfirmRepairFlow(RepairsFlow):
         self, user_input: dict[str, str] | None = None
     ) -> data_entry_flow.FlowResult:
         """Handle the first step of a fix flow."""
-        return await (self.async_step_confirm())
+        return await self.async_step_confirm()
 
     async def async_step_confirm(
         self, user_input: dict[str, str] | None = None

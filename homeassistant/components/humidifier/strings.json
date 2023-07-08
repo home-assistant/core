@@ -20,10 +20,59 @@
       "turn_off": "Turn off {entity_name}"
     }
   },
-  "state": {
+  "entity_component": {
     "_": {
-      "off": "[%key:common::state::off%]",
-      "on": "[%key:common::state::on%]"
+      "name": "[%key:component::humidifier::title%]",
+      "state": {
+        "off": "[%key:common::state::off%]",
+        "on": "[%key:common::state::on%]"
+      },
+      "state_attributes": {
+        "action": {
+          "name": "Action",
+          "state": {
+            "humidifying": "Humidifying",
+            "drying": "Drying",
+            "idle": "Idle",
+            "off": "[%key:common::state::off%]"
+          }
+        },
+        "available_modes": {
+          "name": "Available modes"
+        },
+        "current_humidity": {
+          "name": "Current humidity"
+        },
+        "humidity": {
+          "name": "Target humidity"
+        },
+        "max_humidity": {
+          "name": "Max target humidity"
+        },
+        "min_humidity": {
+          "name": "Min target humidity"
+        },
+        "mode": {
+          "name": "Mode",
+          "state": {
+            "normal": "Normal",
+            "eco": "Eco",
+            "away": "Away",
+            "boost": "Boost",
+            "comfort": "Comfort",
+            "home": "Home",
+            "sleep": "Sleep",
+            "auto": "Auto",
+            "baby": "Baby"
+          }
+        }
+      }
+    },
+    "dehumidifier": {
+      "name": "Dehumidifier"
+    },
+    "humidifier": {
+      "name": "[%key:component::humidifier::entity_component::_::name%]"
     }
   }
 }

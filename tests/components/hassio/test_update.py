@@ -1,5 +1,4 @@
 """The tests for the hassio update entities."""
-
 import os
 from unittest.mock import patch
 
@@ -7,10 +6,13 @@ import pytest
 
 from homeassistant.components.hassio import DOMAIN
 from homeassistant.components.hassio.handler import HassioAPIError
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
+from tests.test_util.aiohttp import AiohttpClientMocker
+from tests.typing import WebSocketGenerator
 
 MOCK_ENVIRON = {"SUPERVISOR": "127.0.0.1", "SUPERVISOR_TOKEN": "abcdefgh"}
 
@@ -125,6 +127,38 @@ def mock_all(aioclient_mock, request):
             },
         },
     )
+    aioclient_mock.get(
+        "http://127.0.0.1/core/stats",
+        json={
+            "result": "ok",
+            "data": {
+                "cpu_percent": 0.99,
+                "memory_usage": 182611968,
+                "memory_limit": 3977146368,
+                "memory_percent": 4.59,
+                "network_rx": 362570232,
+                "network_tx": 82374138,
+                "blk_read": 46010945536,
+                "blk_write": 15051526144,
+            },
+        },
+    )
+    aioclient_mock.get(
+        "http://127.0.0.1/supervisor/stats",
+        json={
+            "result": "ok",
+            "data": {
+                "cpu_percent": 0.99,
+                "memory_usage": 182611968,
+                "memory_limit": 3977146368,
+                "memory_percent": 4.59,
+                "network_rx": 362570232,
+                "network_tx": 82374138,
+                "blk_read": 46010945536,
+                "blk_write": 15051526144,
+            },
+        },
+    )
     aioclient_mock.get("http://127.0.0.1/addons/test/changelog", text="")
     aioclient_mock.get(
         "http://127.0.0.1/addons/test/info",
@@ -155,7 +189,7 @@ def mock_all(aioclient_mock, request):
 
 
 @pytest.mark.parametrize(
-    "entity_id,expected_state, auto_update",
+    ("entity_id", "expected_state", "auto_update"),
     [
         ("update.home_assistant_operating_system_update", "on", False),
         ("update.home_assistant_supervisor_update", "on", True),
@@ -165,12 +199,12 @@ def mock_all(aioclient_mock, request):
     ],
 )
 async def test_update_entities(
-    hass,
+    hass: HomeAssistant,
     entity_id,
     expected_state,
     auto_update,
-    aioclient_mock,
-):
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
     """Test update entities."""
     config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
     config_entry.add_to_hass(hass)
@@ -192,7 +226,9 @@ async def test_update_entities(
     assert state.attributes["auto_update"] is auto_update
 
 
-async def test_update_addon(hass, aioclient_mock):
+async def test_update_addon(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test updating addon update entity."""
     config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
     config_entry.add_to_hass(hass)
@@ -211,7 +247,7 @@ async def test_update_addon(hass, aioclient_mock):
         json={"result": "ok", "data": {}},
     )
 
-    assert await hass.services.async_call(
+    await hass.services.async_call(
         "update",
         "install",
         {"entity_id": "update.test_update"},
@@ -219,7 +255,9 @@ async def test_update_addon(hass, aioclient_mock):
     )
 
 
-async def test_update_os(hass, aioclient_mock):
+async def test_update_os(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test updating OS update entity."""
     config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
     config_entry.add_to_hass(hass)
@@ -238,7 +276,7 @@ async def test_update_os(hass, aioclient_mock):
         json={"result": "ok", "data": {}},
     )
 
-    assert await hass.services.async_call(
+    await hass.services.async_call(
         "update",
         "install",
         {"entity_id": "update.home_assistant_operating_system_update"},
@@ -246,7 +284,9 @@ async def test_update_os(hass, aioclient_mock):
     )
 
 
-async def test_update_core(hass, aioclient_mock):
+async def test_update_core(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test updating core update entity."""
     config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
     config_entry.add_to_hass(hass)
@@ -265,7 +305,7 @@ async def test_update_core(hass, aioclient_mock):
         json={"result": "ok", "data": {}},
     )
 
-    assert await hass.services.async_call(
+    await hass.services.async_call(
         "update",
         "install",
         {"entity_id": "update.home_assistant_os_update"},
@@ -273,7 +313,9 @@ async def test_update_core(hass, aioclient_mock):
     )
 
 
-async def test_update_supervisor(hass, aioclient_mock):
+async def test_update_supervisor(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test updating supervisor update entity."""
     config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
     config_entry.add_to_hass(hass)
@@ -292,7 +334,7 @@ async def test_update_supervisor(hass, aioclient_mock):
         json={"result": "ok", "data": {}},
     )
 
-    assert await hass.services.async_call(
+    await hass.services.async_call(
         "update",
         "install",
         {"entity_id": "update.home_assistant_supervisor_update"},
@@ -300,7 +342,9 @@ async def test_update_supervisor(hass, aioclient_mock):
     )
 
 
-async def test_update_addon_with_error(hass, aioclient_mock):
+async def test_update_addon_with_error(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test updating addon update entity with error."""
     config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
     config_entry.add_to_hass(hass)
@@ -327,7 +371,9 @@ async def test_update_addon_with_error(hass, aioclient_mock):
         )
 
 
-async def test_update_os_with_error(hass, aioclient_mock):
+async def test_update_os_with_error(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test updating OS update entity with error."""
     config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
     config_entry.add_to_hass(hass)
@@ -354,7 +400,9 @@ async def test_update_os_with_error(hass, aioclient_mock):
         )
 
 
-async def test_update_supervisor_with_error(hass, aioclient_mock):
+async def test_update_supervisor_with_error(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test updating supervisor update entity with error."""
     config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
     config_entry.add_to_hass(hass)
@@ -381,7 +429,9 @@ async def test_update_supervisor_with_error(hass, aioclient_mock):
         )
 
 
-async def test_update_core_with_error(hass, aioclient_mock):
+async def test_update_core_with_error(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test updating core update entity with error."""
     config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
     config_entry.add_to_hass(hass)
@@ -408,7 +458,11 @@ async def test_update_core_with_error(hass, aioclient_mock):
         )
 
 
-async def test_release_notes_between_versions(hass, aioclient_mock, hass_ws_client):
+async def test_release_notes_between_versions(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
     """Test release notes between versions."""
     config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
     config_entry.add_to_hass(hass)
@@ -440,7 +494,11 @@ async def test_release_notes_between_versions(hass, aioclient_mock, hass_ws_clie
     assert "New updates" in result["result"]
 
 
-async def test_release_notes_full(hass, aioclient_mock, hass_ws_client):
+async def test_release_notes_full(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
     """Test release notes no match."""
     config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
     config_entry.add_to_hass(hass)
@@ -472,7 +530,11 @@ async def test_release_notes_full(hass, aioclient_mock, hass_ws_client):
     assert "New updates" in result["result"]
 
 
-async def test_not_release_notes(hass, aioclient_mock, hass_ws_client):
+async def test_not_release_notes(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
     """Test handling where there are no release notes."""
     config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
     config_entry.add_to_hass(hass)
@@ -503,7 +565,7 @@ async def test_not_release_notes(hass, aioclient_mock, hass_ws_client):
     assert result["result"] is None
 
 
-async def test_no_os_entity(hass):
+async def test_no_os_entity(hass: HomeAssistant) -> None:
     """Test handling where there is no os entity."""
     with patch.dict(os.environ, MOCK_ENVIRON), patch(
         "homeassistant.components.hassio.HassIO.get_info",
@@ -525,7 +587,9 @@ async def test_no_os_entity(hass):
     assert not hass.states.get("update.home_assistant_operating_system_update")
 
 
-async def test_setting_up_core_update_when_addon_fails(hass, caplog):
+async def test_setting_up_core_update_when_addon_fails(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test setting up core update when single addon fails."""
     with patch.dict(os.environ, MOCK_ENVIRON), patch(
         "homeassistant.components.hassio.HassIO.get_addon_stats",

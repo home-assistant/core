@@ -25,13 +25,14 @@ from homeassistant.const import (
     STATE_NOT_HOME,
     STATE_UNAVAILABLE,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util import slugify
 from homeassistant.util.dt import utcnow
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
-ASUSWRT_LIB = "homeassistant.components.asuswrt.router.AsusWrt"
+ASUSWRT_LIB = "homeassistant.components.asuswrt.bridge.AsusWrtLegacy"
 
 HOST = "myrouter.asuswrt.com"
 IP_ADDRESS = "192.168.1.1"
@@ -50,7 +51,7 @@ MAC_ADDR = "a1:b2:c3:d4:e5:f6"
 MOCK_BYTES_TOTAL = [60000000000, 50000000000]
 MOCK_CURRENT_TRANSFER_RATES = [20000000, 10000000]
 MOCK_LOAD_AVG = [1.1, 1.2, 1.3]
-MOCK_TEMPERATURES = {"2.4GHz": 40, "5.0GHz": 0, "CPU": 71.2}
+MOCK_TEMPERATURES = {"2.4GHz": 40.0, "5.0GHz": 0.0, "CPU": 71.2}
 MOCK_MAC_1 = "A1:B1:C1:D1:E1:F1"
 MOCK_MAC_2 = "A2:B2:C2:D2:E2:F2"
 MOCK_MAC_3 = "A3:B3:C3:D3:E3:F3"
@@ -217,12 +218,12 @@ def _setup_entry(hass, config, sensors, unique_id=None):
     [None, MAC_ADDR],
 )
 async def test_sensors(
-    hass,
+    hass: HomeAssistant,
     connect,
     mock_devices,
     create_device_registry_devices,
     entry_unique_id,
-):
+) -> None:
     """Test creating AsusWRT default sensors and tracker."""
     config_entry, sensor_prefix = _setup_entry(
         hass, CONFIG_DATA, SENSORS_DEFAULT, entry_unique_id
@@ -291,9 +292,9 @@ async def test_sensors(
 
 
 async def test_loadavg_sensors(
-    hass,
+    hass: HomeAssistant,
     connect,
-):
+) -> None:
     """Test creating an AsusWRT load average sensors."""
     config_entry, sensor_prefix = _setup_entry(hass, CONFIG_DATA, SENSORS_LOADAVG)
     config_entry.add_to_hass(hass)
@@ -310,32 +311,10 @@ async def test_loadavg_sensors(
     assert hass.states.get(f"{sensor_prefix}_load_avg_15m").state == "1.3"
 
 
-async def test_temperature_sensors_fail(
-    hass,
-    connect,
-    mock_available_temps,
-):
-    """Test fail creating AsusWRT temperature sensors."""
-    config_entry, sensor_prefix = _setup_entry(hass, CONFIG_DATA, SENSORS_TEMP)
-    config_entry.add_to_hass(hass)
-
-    # Only length of 3 booleans is valid. Checking the exception handling.
-    mock_available_temps.pop(2)
-
-    # initial devices setup
-    assert await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    # assert temperature availability exception is handled correctly
-    assert not hass.states.get(f"{sensor_prefix}_2_4ghz_temperature")
-    assert not hass.states.get(f"{sensor_prefix}_5ghz_temperature")
-    assert not hass.states.get(f"{sensor_prefix}_cpu_temperature")
-
-
 async def test_temperature_sensors(
-    hass,
+    hass: HomeAssistant,
     connect,
-):
+) -> None:
     """Test creating a AsusWRT temperature sensors."""
     config_entry, sensor_prefix = _setup_entry(hass, CONFIG_DATA, SENSORS_TEMP)
     config_entry.add_to_hass(hass)
@@ -356,7 +335,7 @@ async def test_temperature_sensors(
     "side_effect",
     [OSError, None],
 )
-async def test_connect_fail(hass, side_effect):
+async def test_connect_fail(hass: HomeAssistant, side_effect) -> None:
     """Test AsusWRT connect fail."""
 
     # init config entry
@@ -379,7 +358,7 @@ async def test_connect_fail(hass, side_effect):
         assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_sensors_polling_fails(hass, connect_sens_fail):
+async def test_sensors_polling_fails(hass: HomeAssistant, connect_sens_fail) -> None:
     """Test AsusWRT sensors are unavailable when polling fails."""
     config_entry, sensor_prefix = _setup_entry(hass, CONFIG_DATA, SENSORS_ALL)
     config_entry.add_to_hass(hass)
@@ -398,7 +377,7 @@ async def test_sensors_polling_fails(hass, connect_sens_fail):
     assert hass.states.get(f"{sensor_prefix}_devices_connected").state == "0"
 
 
-async def test_options_reload(hass, connect):
+async def test_options_reload(hass: HomeAssistant, connect) -> None:
     """Test AsusWRT integration is reload changing an options that require this."""
     config_entry = MockConfigEntry(domain=DOMAIN, data=CONFIG_DATA, unique_id=MAC_ADDR)
     config_entry.add_to_hass(hass)

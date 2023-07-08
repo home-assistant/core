@@ -1,9 +1,10 @@
 """The sensor tests for the tado platform."""
+from homeassistant.core import HomeAssistant
 
 from .util import async_init_integration
 
 
-async def test_air_con(hass):
+async def test_air_con(hass: HomeAssistant) -> None:
     """Test creation of aircon climate."""
 
     await async_init_integration(hass)
@@ -21,8 +22,8 @@ async def test_air_con(hass):
         "hvac_modes": ["off", "auto", "heat", "cool", "heat_cool", "dry", "fan_only"],
         "max_temp": 31.0,
         "min_temp": 16.0,
-        "preset_mode": "home",
-        "preset_modes": ["away", "home"],
+        "preset_mode": "auto",
+        "preset_modes": ["away", "home", "auto"],
         "supported_features": 25,
         "target_temp_step": 1,
         "temperature": 17.8,
@@ -32,7 +33,7 @@ async def test_air_con(hass):
     assert all(item in state.attributes.items() for item in expected_attributes.items())
 
 
-async def test_heater(hass):
+async def test_heater(hass: HomeAssistant) -> None:
     """Test creation of heater climate."""
 
     await async_init_integration(hass)
@@ -48,8 +49,8 @@ async def test_heater(hass):
         "hvac_modes": ["off", "auto", "heat"],
         "max_temp": 31.0,
         "min_temp": 16.0,
-        "preset_mode": "home",
-        "preset_modes": ["away", "home"],
+        "preset_mode": "auto",
+        "preset_modes": ["away", "home", "auto"],
         "supported_features": 17,
         "target_temp_step": 1,
         "temperature": 20.5,
@@ -59,7 +60,7 @@ async def test_heater(hass):
     assert all(item in state.attributes.items() for item in expected_attributes.items())
 
 
-async def test_smartac_with_swing(hass):
+async def test_smartac_with_swing(hass: HomeAssistant) -> None:
     """Test creation of smart ac with swing climate."""
 
     await async_init_integration(hass)
@@ -77,8 +78,8 @@ async def test_smartac_with_swing(hass):
         "hvac_modes": ["off", "auto", "heat", "cool", "heat_cool", "dry", "fan_only"],
         "max_temp": 30.0,
         "min_temp": 16.0,
-        "preset_mode": "home",
-        "preset_modes": ["away", "home"],
+        "preset_mode": "auto",
+        "preset_modes": ["away", "home", "auto"],
         "swing_modes": ["on", "off"],
         "supported_features": 57,
         "target_temp_step": 1.0,

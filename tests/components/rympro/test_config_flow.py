@@ -68,14 +68,14 @@ async def test_form(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "exception, error",
+    ("exception", "error"),
     [
         (UnauthorizedError, "invalid_auth"),
         (CannotConnectError, "cannot_connect"),
         (Exception, "unknown"),
     ],
 )
-async def test_login_error(hass, exception, error):
+async def test_login_error(hass: HomeAssistant, exception, error) -> None:
     """Test we handle config flow errors."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -96,8 +96,32 @@ async def test_login_error(hass, exception, error):
     assert result2["type"] == FlowResultType.FORM
     assert result2["errors"] == {"base": error}
 
+    with patch(
+        "homeassistant.components.rympro.config_flow.RymPro.login",
+        return_value="test-token",
+    ), patch(
+        "homeassistant.components.rympro.config_flow.RymPro.account_info",
+        return_value={"accountNumber": TEST_DATA[CONF_UNIQUE_ID]},
+    ), patch(
+        "homeassistant.components.rympro.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            {
+                CONF_EMAIL: TEST_DATA[CONF_EMAIL],
+                CONF_PASSWORD: TEST_DATA[CONF_PASSWORD],
+            },
+        )
+        await hass.async_block_till_done()
 
-async def test_form_already_exists(hass, _config_entry):
+    assert result3["type"] == FlowResultType.CREATE_ENTRY
+    assert result3["title"] == TEST_DATA[CONF_EMAIL]
+    assert result3["data"] == TEST_DATA
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_form_already_exists(hass: HomeAssistant, _config_entry) -> None:
     """Test that a flow with an existing account aborts."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -123,7 +147,7 @@ async def test_form_already_exists(hass, _config_entry):
     assert result2["reason"] == "already_configured"
 
 
-async def test_form_reauth(hass, _config_entry):
+async def test_form_reauth(hass: HomeAssistant, _config_entry) -> None:
     """Test reauthentication."""
 
     result = await hass.config_entries.flow.async_init(
@@ -162,7 +186,7 @@ async def test_form_reauth(hass, _config_entry):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_reauth_with_new_account(hass, _config_entry):
+async def test_form_reauth_with_new_account(hass: HomeAssistant, _config_entry) -> None:
     """Test reauthentication with new account."""
 
     result = await hass.config_entries.flow.async_init(

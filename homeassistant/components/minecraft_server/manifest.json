@@ -1,11 +1,11 @@
 {
   "domain": "minecraft_server",
   "name": "Minecraft Server",
+  "codeowners": ["@elmurato"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/minecraft_server",
-  "requirements": ["aiodns==3.0.0", "getmac==0.8.2", "mcstatus==6.0.0"],
-  "codeowners": ["@elmurato"],
-  "quality_scale": "silver",
   "iot_class": "local_polling",
-  "loggers": ["dnspython", "mcstatus"]
+  "loggers": ["dnspython", "mcstatus"],
+  "quality_scale": "silver",
+  "requirements": ["aiodns==3.0.0", "getmac==0.8.2", "mcstatus==6.0.0"]
 }

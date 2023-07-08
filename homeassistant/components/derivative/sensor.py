@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING
 
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import PLATFORM_SCHEMA, RestoreSensor, SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
@@ -19,10 +19,14 @@ from homeassistant.const import (
     UnitOfTime,
 )
 from homeassistant.core import Event, HomeAssistant, State, callback
-from homeassistant.helpers import config_validation as cv, entity_registry as er
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    entity_registry as er,
+)
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
-from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import (
@@ -87,6 +91,28 @@ async def async_setup_entry(
         registry, config_entry.options[CONF_SOURCE]
     )
 
+    source_entity = registry.async_get(source_entity_id)
+    dev_reg = dr.async_get(hass)
+    # Resolve source entity device
+    if (
+        (source_entity is not None)
+        and (source_entity.device_id is not None)
+        and (
+            (
+                device := dev_reg.async_get(
+                    device_id=source_entity.device_id,
+                )
+            )
+            is not None
+        )
+    ):
+        device_info = DeviceInfo(
+            identifiers=device.identifiers,
+            connections=device.connections,
+        )
+    else:
+        device_info = None
+
     unit_prefix = config_entry.options[CONF_UNIT_PREFIX]
     if unit_prefix == "none":
         unit_prefix = None
@@ -100,6 +126,7 @@ async def async_setup_entry(
         unit_of_measurement=None,
         unit_prefix=unit_prefix,
         unit_time=config_entry.options[CONF_UNIT_TIME],
+        device_info=device_info,
     )
 
     async_add_entities([derivative_sensor])
@@ -126,7 +153,7 @@ async def async_setup_platform(
     async_add_entities([derivative])
 
 
-class DerivativeSensor(RestoreEntity, SensorEntity):
+class DerivativeSensor(RestoreSensor, SensorEntity):
     """Representation of an derivative sensor."""
 
     _attr_icon = ICON
@@ -143,9 +170,11 @@ class DerivativeSensor(RestoreEntity, SensorEntity):
         unit_prefix: str | None,
         unit_time: UnitOfTime,
         unique_id: str | None,
+        device_info: DeviceInfo | None = None,
     ) -> None:
         """Initialize the derivative sensor."""
         self._attr_unique_id = unique_id
+        self._attr_device_info = device_info
         self._sensor_source_id = source_entity
         self._round_digits = round_digits
         self._state: float | int | Decimal = 0
@@ -170,9 +199,13 @@ class DerivativeSensor(RestoreEntity, SensorEntity):
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         await super().async_added_to_hass()
-        if (state := await self.async_get_last_state()) is not None:
+        restored_data = await self.async_get_last_sensor_data()
+        if restored_data:
+            self._attr_native_unit_of_measurement = (
+                restored_data.native_unit_of_measurement
+            )
             try:
-                self._state = Decimal(state.state)
+                self._state = Decimal(restored_data.native_value)  # type: ignore[arg-type]
             except SyntaxError as err:
                 _LOGGER.warning("Could not restore last state: %s", err)
 
@@ -245,7 +278,7 @@ class DerivativeSensor(RestoreEntity, SensorEntity):
                 derivative = new_derivative
             else:
                 derivative = Decimal(0)
-                for (start, end, value) in self._state_list:
+                for start, end, value in self._state_list:
                     weight = calculate_weight(start, end, new_state.last_updated)
                     derivative = derivative + (value * Decimal(weight))
 

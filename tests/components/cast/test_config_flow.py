@@ -6,11 +6,12 @@ import pytest
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import cast
 from homeassistant.components.cast.home_assistant_cast import CAST_USER_NAME
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
 
-async def test_creating_entry_sets_up_media_player(hass):
+async def test_creating_entry_sets_up_media_player(hass: HomeAssistant) -> None:
     """Test setting up Cast loads the media player."""
     with patch(
         "homeassistant.components.cast.media_player.async_setup_entry",
@@ -38,12 +39,11 @@ async def test_creating_entry_sets_up_media_player(hass):
 @pytest.mark.parametrize(
     "source",
     [
-        config_entries.SOURCE_IMPORT,
         config_entries.SOURCE_USER,
         config_entries.SOURCE_ZEROCONF,
     ],
 )
-async def test_single_instance(hass, source):
+async def test_single_instance(hass: HomeAssistant, source) -> None:
     """Test we only allow a single config flow."""
     MockConfigEntry(domain="cast").add_to_hass(hass)
     await hass.async_block_till_done()
@@ -55,7 +55,7 @@ async def test_single_instance(hass, source):
     assert result["reason"] == "single_instance_allowed"
 
 
-async def test_user_setup(hass):
+async def test_user_setup(hass: HomeAssistant) -> None:
     """Test we can finish a config flow."""
     result = await hass.config_entries.flow.async_init(
         "cast", context={"source": config_entries.SOURCE_USER}
@@ -75,7 +75,7 @@ async def test_user_setup(hass):
     }
 
 
-async def test_user_setup_options(hass):
+async def test_user_setup_options(hass: HomeAssistant) -> None:
     """Test we can finish a config flow."""
     result = await hass.config_entries.flow.async_init(
         "cast", context={"source": config_entries.SOURCE_USER}
@@ -97,7 +97,7 @@ async def test_user_setup_options(hass):
     }
 
 
-async def test_zeroconf_setup(hass):
+async def test_zeroconf_setup(hass: HomeAssistant) -> None:
     """Test we can finish a config flow through zeroconf."""
     result = await hass.config_entries.flow.async_init(
         "cast", context={"source": config_entries.SOURCE_ZEROCONF}
@@ -117,7 +117,7 @@ async def test_zeroconf_setup(hass):
     }
 
 
-async def test_zeroconf_setup_onboarding(hass):
+async def test_zeroconf_setup_onboarding(hass: HomeAssistant) -> None:
     """Test we automatically finish a config flow through zeroconf during onboarding."""
     with patch(
         "homeassistant.components.onboarding.async_is_onboarded", return_value=False
@@ -139,7 +139,7 @@ async def test_zeroconf_setup_onboarding(hass):
 
 def get_suggested(schema, key):
     """Get suggested value for key in voluptuous schema."""
-    for k in schema.keys():
+    for k in schema:
         if k == key:
             if k.description is None or "suggested_value" not in k.description:
                 return None
@@ -172,7 +172,7 @@ def get_suggested(schema, key):
         ),
     ],
 )
-async def test_option_flow(hass, parameter_data):
+async def test_option_flow(hass: HomeAssistant, parameter_data) -> None:
     """Test config flow options."""
     basic_parameters = ["known_hosts"]
     advanced_parameters = ["ignore_cec", "uuid"]
@@ -266,7 +266,7 @@ async def test_option_flow(hass, parameter_data):
     assert dict(config_entry.data) == expected_data
 
 
-async def test_known_hosts(hass, castbrowser_mock):
+async def test_known_hosts(hass: HomeAssistant, castbrowser_mock) -> None:
     """Test known hosts is passed to pychromecasts."""
     result = await hass.config_entries.flow.async_init(
         "cast", context={"source": config_entries.SOURCE_USER}

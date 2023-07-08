@@ -10,12 +10,18 @@ import voluptuous as vol
 from homeassistant.components import automation, group, person, script, websocket_api
 from homeassistant.components.homeassistant import scene
 from homeassistant.core import HomeAssistant, callback, split_entity_id
-from homeassistant.helpers import device_registry, entity_registry
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    entity_registry as er,
+)
 from homeassistant.helpers.entity import entity_sources as get_entity_sources
 from homeassistant.helpers.typing import ConfigType
 
 DOMAIN = "search"
 _LOGGER = logging.getLogger(__name__)
+
+CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -31,7 +37,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             (
                 "area",
                 "automation",
-                "blueprint",
+                "automation_blueprint",
                 "config_entry",
                 "device",
                 "entity",
@@ -39,6 +45,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 "person",
                 "scene",
                 "script",
+                "script_blueprint",
             )
         ),
         vol.Required("item_id"): str,
@@ -53,8 +60,8 @@ def websocket_search_related(
     """Handle search."""
     searcher = Searcher(
         hass,
-        device_registry.async_get(hass),
-        entity_registry.async_get(hass),
+        dr.async_get(hass),
+        er.async_get(hass),
         get_entity_sources(hass),
     )
     connection.send_result(
@@ -75,10 +82,12 @@ class Searcher:
     DONT_RESOLVE = {
         "area",
         "automation",
+        "automation_blueprint",
         "config_entry",
         "group",
         "scene",
         "script",
+        "script_blueprint",
     }
     # These types exist as an entity and so need cleanup in results
     EXIST_AS_ENTITY = {"automation", "group", "person", "scene", "script"}
@@ -86,8 +95,8 @@ class Searcher:
     def __init__(
         self,
         hass: HomeAssistant,
-        device_reg: device_registry.DeviceRegistry,
-        entity_reg: entity_registry.EntityRegistry,
+        device_reg: dr.DeviceRegistry,
+        entity_reg: er.EntityRegistry,
         entity_sources: dict[str, dict[str, str]],
     ) -> None:
         """Search results."""
@@ -141,12 +150,10 @@ class Searcher:
     @callback
     def _resolve_area(self, area_id) -> None:
         """Resolve an area."""
-        for device in device_registry.async_entries_for_area(self._device_reg, area_id):
+        for device in dr.async_entries_for_area(self._device_reg, area_id):
             self._add_or_resolve("device", device.id)
 
-        for entity_entry in entity_registry.async_entries_for_area(
-            self._entity_reg, area_id
-        ):
+        for entity_entry in er.async_entries_for_area(self._entity_reg, area_id):
             self._add_or_resolve("entity", entity_entry.entity_id)
 
         for entity_id in script.scripts_with_area(self.hass, area_id):
@@ -172,18 +179,34 @@ class Searcher:
         for area in automation.areas_in_automation(self.hass, automation_entity_id):
             self._add_or_resolve("area", area)
 
+        if blueprint := automation.blueprint_in_automation(
+            self.hass, automation_entity_id
+        ):
+            self._add_or_resolve("automation_blueprint", blueprint)
+
+    @callback
+    def _resolve_automation_blueprint(self, blueprint_path) -> None:
+        """Resolve an automation blueprint.
+
+        Will only be called if blueprint is an entry point.
+        """
+        for entity_id in automation.automations_with_blueprint(
+            self.hass, blueprint_path
+        ):
+            self._add_or_resolve("automation", entity_id)
+
     @callback
     def _resolve_config_entry(self, config_entry_id) -> None:
         """Resolve a config entry.
 
         Will only be called if config entry is an entry point.
         """
-        for device_entry in device_registry.async_entries_for_config_entry(
+        for device_entry in dr.async_entries_for_config_entry(
             self._device_reg, config_entry_id
         ):
             self._add_or_resolve("device", device_entry.id)
 
-        for entity_entry in entity_registry.async_entries_for_config_entry(
+        for entity_entry in er.async_entries_for_config_entry(
             self._entity_reg, config_entry_id
         ):
             self._add_or_resolve("entity", entity_entry.entity_id)
@@ -203,9 +226,7 @@ class Searcher:
             # We do not resolve device_entry.via_device_id because that
             # device is not related data-wise inside HA.
 
-        for entity_entry in entity_registry.async_entries_for_device(
-            self._entity_reg, device_id
-        ):
+        for entity_entry in er.async_entries_for_device(self._entity_reg, device_id):
             self._add_or_resolve("entity", entity_entry.entity_id)
 
         for entity_id in script.scripts_with_device(self.hass, device_id):
@@ -293,3 +314,15 @@ class Searcher:
 
         for area in script.areas_in_script(self.hass, script_entity_id):
             self._add_or_resolve("area", area)
+
+        if blueprint := script.blueprint_in_script(self.hass, script_entity_id):
+            self._add_or_resolve("script_blueprint", blueprint)
+
+    @callback
+    def _resolve_script_blueprint(self, blueprint_path) -> None:
+        """Resolve a script blueprint.
+
+        Will only be called if blueprint is an entry point.
+        """
+        for entity_id in script.scripts_with_blueprint(self.hass, blueprint_path):
+            self._add_or_resolve("script", entity_id)

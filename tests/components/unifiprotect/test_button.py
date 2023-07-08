@@ -23,7 +23,7 @@ from .utils import (
 
 async def test_button_chime_remove(
     hass: HomeAssistant, ufp: MockUFPFixture, chime: Chime
-):
+) -> None:
     """Test removing and re-adding a light device."""
 
     await init_entry(hass, ufp, [chime])
@@ -38,7 +38,7 @@ async def test_reboot_button(
     hass: HomeAssistant,
     ufp: MockUFPFixture,
     chime: Chime,
-):
+) -> None:
     """Test button entity."""
 
     await init_entry(hass, ufp, [chime])
@@ -70,7 +70,7 @@ async def test_chime_button(
     hass: HomeAssistant,
     ufp: MockUFPFixture,
     chime: Chime,
-):
+) -> None:
     """Test button entity."""
 
     await init_entry(hass, ufp, [chime])
@@ -99,7 +99,7 @@ async def test_chime_button(
 
 async def test_adopt_button(
     hass: HomeAssistant, ufp: MockUFPFixture, doorlock: Doorlock, doorbell: Camera
-):
+) -> None:
     """Test button entity."""
 
     doorlock._api = ufp.api
@@ -140,7 +140,7 @@ async def test_adopt_button(
 
 async def test_adopt_button_removed(
     hass: HomeAssistant, ufp: MockUFPFixture, doorlock: Doorlock, doorbell: Camera
-):
+) -> None:
     """Test button entity."""
 
     entity_id = "button.test_lock_adopt_device"

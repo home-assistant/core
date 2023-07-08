@@ -39,7 +39,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.storage import Store
-from homeassistant.util import dt
+from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
 from .entity import BroadlinkEntity
@@ -107,6 +107,7 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
     """Representation of a Broadlink remote."""
 
     _attr_has_entity_name = True
+    _attr_name = None
 
     def __init__(self, device, codes, flags):
         """Initialize the remote."""
@@ -330,8 +331,8 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
         )
 
         try:
-            start_time = dt.utcnow()
-            while (dt.utcnow() - start_time) < LEARNING_TIMEOUT:
+            start_time = dt_util.utcnow()
+            while (dt_util.utcnow() - start_time) < LEARNING_TIMEOUT:
                 await asyncio.sleep(1)
                 try:
                     code = await device.async_request(device.api.check_data)
@@ -368,8 +369,8 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
         )
 
         try:
-            start_time = dt.utcnow()
-            while (dt.utcnow() - start_time) < LEARNING_TIMEOUT:
+            start_time = dt_util.utcnow()
+            while (dt_util.utcnow() - start_time) < LEARNING_TIMEOUT:
                 await asyncio.sleep(1)
                 found = await device.async_request(device.api.check_frequency)
                 if found:
@@ -403,8 +404,8 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
         )
 
         try:
-            start_time = dt.utcnow()
-            while (dt.utcnow() - start_time) < LEARNING_TIMEOUT:
+            start_time = dt_util.utcnow()
+            while (dt_util.utcnow() - start_time) < LEARNING_TIMEOUT:
                 await asyncio.sleep(1)
                 try:
                     code = await device.async_request(device.api.check_data)

@@ -108,6 +108,7 @@ async def async_setup_entry(
 class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
     """Representation of a Roku media player on the network."""
 
+    _attr_name = None
     _attr_supported_features = (
         MediaPlayerEntityFeature.PREVIOUS_TRACK
         | MediaPlayerEntityFeature.NEXT_TRACK
@@ -252,7 +253,7 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
         return None
 
     @property
-    def source_list(self) -> list:
+    def source_list(self) -> list[str]:
         """List of available input sources."""
         return ["Home"] + sorted(
             app.name for app in self.coordinator.data.apps if app.name is not None
@@ -265,7 +266,7 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
 
     async def async_get_browse_image(
         self,
-        media_content_type: str,
+        media_content_type: MediaType | str,
         media_content_id: str,
         media_image_id: str | None = None,
     ) -> tuple[bytes | None, str | None]:
@@ -278,7 +279,7 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
 
     async def async_browse_media(
         self,
-        media_content_type: str | None = None,
+        media_content_type: MediaType | str | None = None,
         media_content_id: str | None = None,
     ) -> BrowseMedia:
         """Implement the websocket media browsing helper."""
@@ -353,7 +354,7 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
 
     @roku_exception_handler()
     async def async_play_media(
-        self, media_type: str, media_id: str, **kwargs: Any
+        self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
         """Play media from a URL or file, launch an application, or tune to a channel."""
         extra: dict[str, Any] = kwargs.get(ATTR_MEDIA_EXTRA) or {}

@@ -79,7 +79,6 @@ class TemperatureSensor(SensorBase):
 
     _attr_device_class = SensorDeviceClass.TEMPERATURE
     _attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
-    _attr_name = "Temperature"
 
     @property
     def native_value(self) -> float:
@@ -96,7 +95,6 @@ class HumiditySensor(SensorBase):
 
     _attr_device_class = SensorDeviceClass.HUMIDITY
     _attr_native_unit_of_measurement = PERCENTAGE
-    _attr_name = "Humidity"
 
     @property
     def native_value(self) -> int:

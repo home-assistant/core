@@ -4,10 +4,12 @@ from datetime import timedelta
 import pytest
 
 from homeassistant.components import no_ip
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
 from tests.common import async_fire_time_changed
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 DOMAIN = "test.example.com"
 
@@ -38,7 +40,7 @@ def setup_no_ip(hass, aioclient_mock):
     )
 
 
-async def test_setup(hass, aioclient_mock):
+async def test_setup(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) -> None:
     """Test setup works if update passes."""
     aioclient_mock.get(UPDATE_URL, params={"hostname": DOMAIN}, text="nochg 0.0.0.0")
 
@@ -55,7 +57,9 @@ async def test_setup(hass, aioclient_mock):
     assert aioclient_mock.call_count == 2
 
 
-async def test_setup_fails_if_update_fails(hass, aioclient_mock):
+async def test_setup_fails_if_update_fails(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test setup fails if first update fails."""
     aioclient_mock.get(UPDATE_URL, params={"hostname": DOMAIN}, text="nohost")
 
@@ -68,7 +72,9 @@ async def test_setup_fails_if_update_fails(hass, aioclient_mock):
     assert aioclient_mock.call_count == 1
 
 
-async def test_setup_fails_if_wrong_auth(hass, aioclient_mock):
+async def test_setup_fails_if_wrong_auth(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test setup fails if first update fails through wrong authentication."""
     aioclient_mock.get(UPDATE_URL, params={"hostname": DOMAIN}, text="badauth")
 

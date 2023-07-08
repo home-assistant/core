@@ -14,6 +14,7 @@ from homeassistant.const import (
     STATE_HOME,
     STATE_NOT_HOME,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util import slugify
@@ -164,7 +165,7 @@ async def webhook_id(hass, geofency_client):
     return result["result"].data["webhook_id"]
 
 
-async def test_data_validation(geofency_client, webhook_id):
+async def test_data_validation(geofency_client, webhook_id) -> None:
     """Test data validation."""
     url = f"/api/webhook/{webhook_id}"
 
@@ -182,7 +183,9 @@ async def test_data_validation(geofency_client, webhook_id):
         assert req.status == HTTPStatus.UNPROCESSABLE_ENTITY
 
 
-async def test_gps_enter_and_exit_home(hass, geofency_client, webhook_id):
+async def test_gps_enter_and_exit_home(
+    hass: HomeAssistant, geofency_client, webhook_id
+) -> None:
     """Test GPS based zone enter and exit."""
     url = f"/api/webhook/{webhook_id}"
 
@@ -227,7 +230,9 @@ async def test_gps_enter_and_exit_home(hass, geofency_client, webhook_id):
     assert len(ent_reg.entities) == 1
 
 
-async def test_beacon_enter_and_exit_home(hass, geofency_client, webhook_id):
+async def test_beacon_enter_and_exit_home(
+    hass: HomeAssistant, geofency_client, webhook_id
+) -> None:
     """Test iBeacon based zone enter and exit - a.k.a stationary iBeacon."""
     url = f"/api/webhook/{webhook_id}"
 
@@ -248,7 +253,9 @@ async def test_beacon_enter_and_exit_home(hass, geofency_client, webhook_id):
     assert state_name == STATE_NOT_HOME
 
 
-async def test_beacon_enter_and_exit_car(hass, geofency_client, webhook_id):
+async def test_beacon_enter_and_exit_car(
+    hass: HomeAssistant, geofency_client, webhook_id
+) -> None:
     """Test use of mobile iBeacon."""
     url = f"/api/webhook/{webhook_id}"
 
@@ -288,7 +295,9 @@ async def test_beacon_enter_and_exit_car(hass, geofency_client, webhook_id):
     assert state_name == STATE_HOME
 
 
-async def test_load_unload_entry(hass, geofency_client, webhook_id):
+async def test_load_unload_entry(
+    hass: HomeAssistant, geofency_client, webhook_id
+) -> None:
     """Test that the appropriate dispatch signals are added and removed."""
     url = f"/api/webhook/{webhook_id}"
 

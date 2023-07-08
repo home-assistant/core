@@ -56,3 +56,14 @@ incomplete_all:
 clear_completed_items:
   name: Clear completed items
   description: Clear completed items from the shopping list.
+
+sort:
+  name: Sort all items
+  description: Sort all items by name in the shopping list.
+  fields:
+    reverse:
+      name: Sort reverse
+      description: Whether to sort in reverse (descending) order.
+      default: false
+      selector:
+        boolean:

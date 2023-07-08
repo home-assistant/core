@@ -1,8 +1,6 @@
 """The tests for the Update component."""
-from collections.abc import Awaitable, Callable
 from unittest.mock import MagicMock, patch
 
-from aiohttp import ClientWebSocketResponse
 import pytest
 
 from homeassistant.components.update import (
@@ -32,14 +30,15 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNKNOWN,
+    EntityCategory,
 )
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockEntityPlatform, mock_restore_cache
+from tests.typing import WebSocketGenerator
 
 
 class MockUpdateEntity(UpdateEntity):
@@ -50,6 +49,7 @@ async def test_update(hass: HomeAssistant) -> None:
     """Test getting data from the mocked update entity."""
     update = MockUpdateEntity()
     update.hass = hass
+    update.platform = MockEntityPlatform(hass)
 
     update._attr_installed_version = "1.0.0"
     update._attr_latest_version = "1.0.1"
@@ -58,7 +58,10 @@ async def test_update(hass: HomeAssistant) -> None:
     update._attr_title = "Title"
 
     assert update.entity_category is EntityCategory.DIAGNOSTIC
-    assert update.entity_picture is None
+    assert (
+        update.entity_picture
+        == "https://brands.home-assistant.io/_/test_platform/icon.png"
+    )
     assert update.installed_version == "1.0.0"
     assert update.latest_version == "1.0.1"
     assert update.release_summary == "Summary"
@@ -76,13 +79,6 @@ async def test_update(hass: HomeAssistant) -> None:
         ATTR_SKIPPED_VERSION: None,
         ATTR_TITLE: "Title",
     }
-
-    # Test with platform
-    update.platform = MockEntityPlatform(hass)
-    assert (
-        update.entity_picture
-        == "https://brands.home-assistant.io/_/test_platform/icon.png"
-    )
 
     # Test no update available
     update._attr_installed_version = "1.0.0"
@@ -297,7 +293,7 @@ async def test_entity_with_auto_update(
     # Should not be able to skip the update
     with pytest.raises(
         HomeAssistantError,
-        match="Skipping update is not supported for Update with auto update",
+        match="Skipping update is not supported for update.update_with_auto_update",
     ):
         await hass.services.async_call(
             DOMAIN,
@@ -309,7 +305,7 @@ async def test_entity_with_auto_update(
     # Should not be able to clear a skipped the update
     with pytest.raises(
         HomeAssistantError,
-        match="Clearing skipped update is not supported for Update with auto update",
+        match="Clearing skipped update is not supported for update.update_with_auto_update",
     ):
         await hass.services.async_call(
             DOMAIN,
@@ -681,7 +677,7 @@ async def test_restore_state(
 async def test_release_notes(
     hass: HomeAssistant,
     enable_custom_integrations: None,
-    hass_ws_client: Callable[[HomeAssistant], Awaitable[ClientWebSocketResponse]],
+    hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test getting the release notes over the websocket connection."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
@@ -707,7 +703,7 @@ async def test_release_notes(
 async def test_release_notes_entity_not_found(
     hass: HomeAssistant,
     enable_custom_integrations: None,
-    hass_ws_client: Callable[[HomeAssistant], Awaitable[ClientWebSocketResponse]],
+    hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test getting the release notes for not found entity."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
@@ -734,7 +730,7 @@ async def test_release_notes_entity_not_found(
 async def test_release_notes_entity_does_not_support_release_notes(
     hass: HomeAssistant,
     enable_custom_integrations: None,
-    hass_ws_client: Callable[[HomeAssistant], Awaitable[ClientWebSocketResponse]],
+    hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test getting the release notes for entity that does not support release notes."""
     platform = getattr(hass.components, f"test.{DOMAIN}")

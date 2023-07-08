@@ -13,10 +13,11 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.components.plex import DOMAIN as PLEX_DOMAIN, PLEX_URI_SCHEME
 from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
 
-async def test_plex_play_media(hass, async_autosetup_sonos):
+async def test_plex_play_media(hass: HomeAssistant, async_autosetup_sonos) -> None:
     """Test playing media via the Plex integration."""
     mock_plex_server = Mock()
     mock_lookup = mock_plex_server.lookup_media
@@ -33,7 +34,7 @@ async def test_plex_play_media(hass, async_autosetup_sonos):
         "homeassistant.components.sonos.media_player.SonosMediaPlayerEntity.set_shuffle"
     ) as mock_shuffle:
         # Test successful Plex service call
-        assert await hass.services.async_call(
+        await hass.services.async_call(
             MP_DOMAIN,
             SERVICE_PLAY_MEDIA,
             {
@@ -58,7 +59,7 @@ async def test_plex_play_media(hass, async_autosetup_sonos):
             '"album_name": "Album", "shuffle": 1}'
         )
 
-        assert await hass.services.async_call(
+        await hass.services.async_call(
             MP_DOMAIN,
             SERVICE_PLAY_MEDIA,
             {
@@ -106,7 +107,7 @@ async def test_plex_play_media(hass, async_autosetup_sonos):
             "homeassistant.components.plex.services.get_plex_server",
             return_value=mock_plex_server,
         ):
-            assert await hass.services.async_call(
+            await hass.services.async_call(
                 MP_DOMAIN,
                 SERVICE_PLAY_MEDIA,
                 {

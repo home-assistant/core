@@ -171,7 +171,7 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
     async def async_update_volume(self) -> None:
         """Update volume information."""
         volume_info = await self.client.get_volume_info()
-        if volume_level := volume_info.get("volume"):
+        if (volume_level := volume_info.get("volume")) is not None:
             self.volume_level = volume_level / 100
             self.volume_muted = volume_info.get("mute", False)
             self.volume_target = volume_info.get("target")

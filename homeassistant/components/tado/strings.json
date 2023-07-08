@@ -29,5 +29,18 @@
         "title": "Adjust Tado options."
       }
     }
+  },
+  "entity": {
+    "climate": {
+      "tado": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "auto": "Auto"
+            }
+          }
+        }
+      }
+    }
   }
 }

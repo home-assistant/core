@@ -1,12 +1,22 @@
 """The init tests for the nexia platform."""
-
+import aiohttp
 
 from homeassistant.components.nexia.const import DOMAIN
+from homeassistant.config_entries import ConfigEntryState
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity_registry import EntityRegistry
 from homeassistant.setup import async_setup_component
 
 from .util import async_init_integration
+
+from tests.typing import WebSocketGenerator
+
+
+async def test_setup_retry_client_os_error(hass: HomeAssistant) -> None:
+    """Verify we retry setup on aiohttp.ClientOSError."""
+    config_entry = await async_init_integration(hass, exception=aiohttp.ClientOSError)
+    assert config_entry.state == ConfigEntryState.SETUP_RETRY
 
 
 async def remove_device(ws_client, device_id, config_entry_id):
@@ -23,7 +33,9 @@ async def remove_device(ws_client, device_id, config_entry_id):
     return response["success"]
 
 
-async def test_device_remove_devices(hass, hass_ws_client):
+async def test_device_remove_devices(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test we can only remove a device that no longer exists."""
     await async_setup_component(hass, "config", {})
     config_entry = await async_init_integration(hass)

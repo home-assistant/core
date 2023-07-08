@@ -49,28 +49,8 @@ def async_remove_shelly_entity(
         entity_reg.async_remove(entity_id)
 
 
-def get_block_device_name(device: BlockDevice) -> str:
-    """Get Block device name."""
-    return cast(str, device.settings["name"] or device.settings["device"]["hostname"])
-
-
-def get_rpc_device_name(device: RpcDevice) -> str:
-    """Get RPC device name."""
-    return cast(str, device.config["sys"]["device"].get("name") or device.hostname)
-
-
-def get_device_name(device: BlockDevice | RpcDevice) -> str:
-    """Get device name."""
-    if isinstance(device, BlockDevice):
-        return get_block_device_name(device)
-
-    return get_rpc_device_name(device)
-
-
 def get_number_of_channels(device: BlockDevice, block: Block) -> int:
     """Get number of channels for block type."""
-    assert isinstance(device.shelly, dict)
-
     channels = None
 
     if block.type == "input":
@@ -105,7 +85,7 @@ def get_block_entity_name(
 
 def get_block_channel_name(device: BlockDevice, block: Block | None) -> str:
     """Get name based on device and channel name."""
-    entity_name = get_block_device_name(device)
+    entity_name = device.name
 
     if (
         not block
@@ -275,7 +255,11 @@ def get_block_device_sleep_period(settings: dict[str, Any]) -> int:
 
 
 def get_rpc_device_sleep_period(config: dict[str, Any]) -> int:
-    """Return the device sleep period in seconds or 0 for non sleeping devices."""
+    """Return the device sleep period in seconds or 0 for non sleeping devices.
+
+    sys.sleep.wakeup_period value is deprecated and not available in Shelly
+    firmware 1.0.0 or later.
+    """
     return cast(int, config["sys"].get("sleep", {}).get("wakeup_period", 0))
 
 
@@ -304,9 +288,10 @@ def get_model_name(info: dict[str, Any]) -> str:
 
 def get_rpc_channel_name(device: RpcDevice, key: str) -> str:
     """Get name based on device and channel name."""
+    key = key.replace("emdata", "em")
     if device.config.get("switch:0"):
         key = key.replace("input", "switch")
-    device_name = get_rpc_device_name(device)
+    device_name = device.name
     entity_name: str | None = None
     if key in device.config:
         entity_name = device.config[key].get("name", device_name)
@@ -367,7 +352,7 @@ def is_block_channel_type_light(settings: dict[str, Any], channel: int) -> bool:
 
 def is_rpc_channel_type_light(config: dict[str, Any], channel: int) -> bool:
     """Return true if rpc channel consumption type is set to light."""
-    con_types = config["sys"]["ui_data"].get("consumption_types")
+    con_types = config["sys"].get("ui_data", {}).get("consumption_types")
     return con_types is not None and con_types[channel].lower().startswith("light")
 
 

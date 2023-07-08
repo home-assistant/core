@@ -26,6 +26,7 @@ from homeassistant.const import (
     LIGHT_LUX,
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+    EntityCategory,
     Platform,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
@@ -36,7 +37,6 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType
 
@@ -55,8 +55,7 @@ class HomeKitSensorEntityDescription(SensorEntityDescription):
 
 
 def thread_node_capability_to_str(char: Characteristic) -> str:
-    """
-    Return the thread device type as a string.
+    """Return the thread device type as a string.
 
     The underlying value is a bitmask, but we want to turn that to
     a human readable string. Some devices will have multiple capabilities.
@@ -93,8 +92,7 @@ def thread_node_capability_to_str(char: Characteristic) -> str:
 
 
 def thread_status_to_str(char: Characteristic) -> str:
-    """
-    Return the thread status as a string.
+    """Return the thread status as a string.
 
     The underlying value is a bitmask, but we want to turn that to
     a human readable string. So we check the flags in order. E.g. BORDER_ROUTER implies
@@ -333,6 +331,12 @@ SIMPLE_SENSOR: dict[str, HomeKitSensorEntityDescription] = {
         native_unit_of_measurement=UnitOfSoundPressure.DECIBEL,
         device_class=SensorDeviceClass.SOUND_PRESSURE,
     ),
+    CharacteristicsTypes.FILTER_LIFE_LEVEL: HomeKitSensorEntityDescription(
+        key=CharacteristicsTypes.FILTER_LIFE_LEVEL,
+        name="Filter Life",
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=PERCENTAGE,
+    ),
 }
 
 
@@ -501,8 +505,7 @@ class HomeKitBatterySensor(HomeKitSensor):
 
 
 class SimpleSensor(CharacteristicEntity, SensorEntity):
-    """
-    A simple sensor for a single characteristic.
+    """A simple sensor for a single characteristic.
 
     This may be an additional secondary entity that is part of another service. An
     example is a switch that has an energy sensor.

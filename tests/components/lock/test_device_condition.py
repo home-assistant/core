@@ -1,5 +1,6 @@
 """The tests for Lock device conditions."""
 import pytest
+from pytest_unordered import unordered
 
 import homeassistant.components.automation as automation
 from homeassistant.components.device_automation import DeviceAutomationType
@@ -10,33 +11,23 @@ from homeassistant.const import (
     STATE_LOCKING,
     STATE_UNLOCKED,
     STATE_UNLOCKING,
+    EntityCategory,
 )
-from homeassistant.helpers import device_registry
-from homeassistant.helpers.entity import EntityCategory
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity_registry import RegistryEntryHider
 from homeassistant.setup import async_setup_component
 
 from tests.common import (
     MockConfigEntry,
-    assert_lists_same,
     async_get_device_automations,
     async_mock_service,
-    mock_device_registry,
-    mock_registry,
 )
-from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa: F401
 
 
-@pytest.fixture
-def device_reg(hass):
-    """Return an empty, loaded, registry."""
-    return mock_device_registry(hass)
-
-
-@pytest.fixture
-def entity_reg(hass):
-    """Return an empty, loaded, registry."""
-    return mock_registry(hass)
+@pytest.fixture(autouse=True, name="stub_blueprint_populate")
+def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
+    """Stub copying the blueprints to the config folder."""
 
 
 @pytest.fixture
@@ -45,22 +36,28 @@ def calls(hass):
     return async_mock_service(hass, "test", "automation")
 
 
-async def test_get_conditions(hass, device_reg, entity_reg):
+async def test_get_conditions(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test we get the expected conditions from a lock."""
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
-    device_entry = device_reg.async_get_or_create(
+    device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    entity_reg.async_get_or_create(DOMAIN, "test", "5678", device_id=device_entry.id)
+    entity_entry = entity_registry.async_get_or_create(
+        DOMAIN, "test", "5678", device_id=device_entry.id
+    )
     expected_conditions = [
         {
             "condition": "device",
             "domain": DOMAIN,
             "type": condition,
             "device_id": device_entry.id,
-            "entity_id": f"{DOMAIN}.test_5678",
+            "entity_id": entity_entry.id,
             "metadata": {"secondary": False},
         }
         for condition in [
@@ -74,11 +71,11 @@ async def test_get_conditions(hass, device_reg, entity_reg):
     conditions = await async_get_device_automations(
         hass, DeviceAutomationType.CONDITION, device_entry.id
     )
-    assert_lists_same(conditions, expected_conditions)
+    assert conditions == unordered(expected_conditions)
 
 
 @pytest.mark.parametrize(
-    "hidden_by,entity_category",
+    ("hidden_by", "entity_category"),
     (
         (RegistryEntryHider.INTEGRATION, None),
         (RegistryEntryHider.USER, None),
@@ -87,20 +84,20 @@ async def test_get_conditions(hass, device_reg, entity_reg):
     ),
 )
 async def test_get_conditions_hidden_auxiliary(
-    hass,
-    device_reg,
-    entity_reg,
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
     hidden_by,
     entity_category,
-):
+) -> None:
     """Test we get the expected conditions from a hidden or auxiliary entity."""
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
-    device_entry = device_reg.async_get_or_create(
+    device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    entity_reg.async_get_or_create(
+    entity_entry = entity_registry.async_get_or_create(
         DOMAIN,
         "test",
         "5678",
@@ -114,7 +111,7 @@ async def test_get_conditions_hidden_auxiliary(
             "domain": DOMAIN,
             "type": condition,
             "device_id": device_entry.id,
-            "entity_id": f"{DOMAIN}.test_5678",
+            "entity_id": entity_entry.id,
             "metadata": {"secondary": True},
         }
         for condition in [
@@ -128,12 +125,16 @@ async def test_get_conditions_hidden_auxiliary(
     conditions = await async_get_device_automations(
         hass, DeviceAutomationType.CONDITION, device_entry.id
     )
-    assert_lists_same(conditions, expected_conditions)
+    assert conditions == unordered(expected_conditions)
 
 
-async def test_if_state(hass, calls):
+async def test_if_state(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, calls
+) -> None:
     """Test for turn_on and turn_off conditions."""
-    hass.states.async_set("lock.entity", STATE_LOCKED)
+    entry = entity_registry.async_get_or_create(DOMAIN, "test", "5678")
+
+    hass.states.async_set(entry.entity_id, STATE_LOCKED)
 
     assert await async_setup_component(
         hass,
@@ -147,7 +148,7 @@ async def test_if_state(hass, calls):
                             "condition": "device",
                             "domain": DOMAIN,
                             "device_id": "",
-                            "entity_id": "lock.entity",
+                            "entity_id": entry.id,
                             "type": "is_locked",
                         }
                     ],
@@ -165,7 +166,7 @@ async def test_if_state(hass, calls):
                             "condition": "device",
                             "domain": DOMAIN,
                             "device_id": "",
-                            "entity_id": "lock.entity",
+                            "entity_id": entry.id,
                             "type": "is_unlocked",
                         }
                     ],
@@ -183,7 +184,7 @@ async def test_if_state(hass, calls):
                             "condition": "device",
                             "domain": DOMAIN,
                             "device_id": "",
-                            "entity_id": "lock.entity",
+                            "entity_id": entry.id,
                             "type": "is_unlocking",
                         }
                     ],
@@ -201,7 +202,7 @@ async def test_if_state(hass, calls):
                             "condition": "device",
                             "domain": DOMAIN,
                             "device_id": "",
-                            "entity_id": "lock.entity",
+                            "entity_id": entry.id,
                             "type": "is_locking",
                         }
                     ],
@@ -219,7 +220,7 @@ async def test_if_state(hass, calls):
                             "condition": "device",
                             "domain": DOMAIN,
                             "device_id": "",
-                            "entity_id": "lock.entity",
+                            "entity_id": entry.id,
                             "type": "is_jammed",
                         }
                     ],
@@ -239,27 +240,68 @@ async def test_if_state(hass, calls):
     assert len(calls) == 1
     assert calls[0].data["some"] == "is_locked - event - test_event1"
 
-    hass.states.async_set("lock.entity", STATE_UNLOCKED)
+    hass.states.async_set(entry.entity_id, STATE_UNLOCKED)
     hass.bus.async_fire("test_event1")
     hass.bus.async_fire("test_event2")
     await hass.async_block_till_done()
     assert len(calls) == 2
     assert calls[1].data["some"] == "is_unlocked - event - test_event2"
 
-    hass.states.async_set("lock.entity", STATE_UNLOCKING)
+    hass.states.async_set(entry.entity_id, STATE_UNLOCKING)
     hass.bus.async_fire("test_event3")
     await hass.async_block_till_done()
     assert len(calls) == 3
     assert calls[2].data["some"] == "is_unlocking - event - test_event3"
 
-    hass.states.async_set("lock.entity", STATE_LOCKING)
+    hass.states.async_set(entry.entity_id, STATE_LOCKING)
     hass.bus.async_fire("test_event4")
     await hass.async_block_till_done()
     assert len(calls) == 4
     assert calls[3].data["some"] == "is_locking - event - test_event4"
 
-    hass.states.async_set("lock.entity", STATE_JAMMED)
+    hass.states.async_set(entry.entity_id, STATE_JAMMED)
     hass.bus.async_fire("test_event5")
     await hass.async_block_till_done()
     assert len(calls) == 5
     assert calls[4].data["some"] == "is_jammed - event - test_event5"
+
+
+async def test_if_state_legacy(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, calls
+) -> None:
+    """Test for turn_on and turn_off conditions."""
+    entry = entity_registry.async_get_or_create(DOMAIN, "test", "5678")
+
+    hass.states.async_set(entry.entity_id, STATE_LOCKED)
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": {"platform": "event", "event_type": "test_event1"},
+                    "condition": [
+                        {
+                            "condition": "device",
+                            "domain": DOMAIN,
+                            "device_id": "",
+                            "entity_id": entry.entity_id,
+                            "type": "is_locked",
+                        }
+                    ],
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {
+                            "some": "is_locked - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                        },
+                    },
+                },
+            ]
+        },
+    )
+    hass.bus.async_fire("test_event1")
+    hass.bus.async_fire("test_event2")
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+    assert calls[0].data["some"] == "is_locked - event - test_event1"

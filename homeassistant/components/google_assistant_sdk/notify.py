@@ -20,13 +20,12 @@ LANG_TO_BROADCAST_COMMAND = {
     "it": ("Trasmetti {0}", "Trasmetti in {1} {0}"),
     "ja": ("{0}とブロードキャストして", "{0}と{1}にブロードキャストして"),
     "ko": ("{0} 라고 방송해 줘", "{0} 라고 {1}에 방송해 줘"),
-    "pt": ("Transmite {0}", "Transmite para {1} {0}"),
+    "pt": ("Transmitir {0}", "Transmitir {0} para {1}"),
 }
 
 
 def broadcast_commands(language_code: str):
-    """
-    Get the commands for broadcasting a message for the given language code.
+    """Get the commands for broadcasting a message for the given language code.
 
     Return type is a tuple where [0] is for broadcasting to your entire home,
     while [1] is for broadcasting to a specific target.

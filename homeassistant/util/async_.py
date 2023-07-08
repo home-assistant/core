@@ -1,9 +1,9 @@
 """Asyncio utilities."""
 from __future__ import annotations
 
-from asyncio import Semaphore, coroutines, ensure_future, gather, get_running_loop
+from asyncio import Future, Semaphore, gather, get_running_loop
 from asyncio.events import AbstractEventLoop
-from collections.abc import Awaitable, Callable, Coroutine
+from collections.abc import Awaitable, Callable
 import concurrent.futures
 import functools
 import logging
@@ -20,27 +20,11 @@ _R = TypeVar("_R")
 _P = ParamSpec("_P")
 
 
-def fire_coroutine_threadsafe(
-    coro: Coroutine[Any, Any, Any], loop: AbstractEventLoop
-) -> None:
-    """Submit a coroutine object to a given event loop.
-
-    This method does not provide a way to retrieve the result and
-    is intended for fire-and-forget use. This reduces the
-    work involved to fire the function on the loop.
-    """
-    ident = loop.__dict__.get("_thread_ident")
-    if ident is not None and ident == threading.get_ident():
-        raise RuntimeError("Cannot be called from within the event loop")
-
-    if not coroutines.iscoroutine(coro):
-        raise TypeError(f"A coroutine object is required: {coro}")
-
-    def callback() -> None:
-        """Handle the firing of a coroutine."""
-        ensure_future(coro, loop=loop)
-
-    loop.call_soon_threadsafe(callback)
+def cancelling(task: Future[Any]) -> bool:
+    """Return True if task is done or cancelling."""
+    # https://docs.python.org/3/library/asyncio-task.html#asyncio.Task.cancelling
+    # is new in Python 3.11
+    return bool((cancelling_ := getattr(task, "cancelling", None)) and cancelling_())
 
 
 def run_callback_threadsafe(

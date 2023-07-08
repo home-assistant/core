@@ -68,8 +68,7 @@ def setup_platform(
 
 
 class WashingtonStateTransportSensor(SensorEntity):
-    """
-    Sensor that reads the WSDOT web API.
+    """Sensor that reads the WSDOT web API.
 
     WSDOT provides ferry schedules, toll rates, weather conditions,
     mountain pass conditions, and more. Subclasses of this

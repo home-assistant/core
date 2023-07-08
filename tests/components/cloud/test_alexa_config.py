@@ -6,11 +6,30 @@ import pytest
 
 from homeassistant.components.alexa import errors
 from homeassistant.components.cloud import ALEXA_SCHEMA, alexa_config
+from homeassistant.components.cloud.const import (
+    PREF_ALEXA_DEFAULT_EXPOSE,
+    PREF_ALEXA_ENTITY_CONFIGS,
+    PREF_SHOULD_EXPOSE,
+)
+from homeassistant.components.cloud.prefs import CloudPreferences
+from homeassistant.components.homeassistant.exposed_entities import (
+    DATA_EXPOSED_ENTITIES,
+    ExposedEntities,
+    async_expose_entity,
+    async_get_entity_settings,
+)
+from homeassistant.const import (
+    EVENT_HOMEASSISTANT_START,
+    EVENT_HOMEASSISTANT_STARTED,
+    EntityCategory,
+)
+from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.entity import EntityCategory
+from homeassistant.setup import async_setup_component
 
-from tests.common import async_fire_time_changed, mock_registry
+from tests.common import async_fire_time_changed
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 @pytest.fixture
@@ -19,10 +38,22 @@ def cloud_stub():
     return Mock(is_logged_in=True, subscription_expired=False)
 
 
-async def test_alexa_config_expose_entity_prefs(hass, cloud_prefs, cloud_stub):
-    """Test Alexa config should expose using prefs."""
-    entity_registry = mock_registry(hass)
+def expose_new(hass, expose_new):
+    """Enable exposing new entities to Alexa."""
+    exposed_entities: ExposedEntities = hass.data[DATA_EXPOSED_ENTITIES]
+    exposed_entities.async_set_expose_new_entities("cloud.alexa", expose_new)
 
+
+def expose_entity(hass, entity_id, should_expose):
+    """Expose an entity to Alexa."""
+    async_expose_entity(hass, "cloud.alexa", entity_id, should_expose)
+
+
+async def test_alexa_config_expose_entity_prefs(
+    hass: HomeAssistant, cloud_prefs, cloud_stub, entity_registry: er.EntityRegistry
+) -> None:
+    """Test Alexa config should expose using prefs."""
+    assert await async_setup_component(hass, "homeassistant", {})
     entity_entry1 = entity_registry.async_get_or_create(
         "light",
         "test",
@@ -51,52 +82,61 @@ async def test_alexa_config_expose_entity_prefs(hass, cloud_prefs, cloud_stub):
         suggested_object_id="hidden_user_light",
         hidden_by=er.RegistryEntryHider.USER,
     )
+    entity_entry5 = entity_registry.async_get_or_create(
+        "light",
+        "test",
+        "light_basement_id",
+        suggested_object_id="basement",
+    )
+    entity_entry6 = entity_registry.async_get_or_create(
+        "light",
+        "test",
+        "light_entrance_id",
+        suggested_object_id="entrance",
+    )
 
-    entity_conf = {"should_expose": False}
     await cloud_prefs.async_update(
-        alexa_entity_configs={"light.kitchen": entity_conf},
-        alexa_default_expose=["light"],
         alexa_enabled=True,
         alexa_report_state=False,
     )
+    expose_new(hass, True)
+    expose_entity(hass, entity_entry5.entity_id, False)
     conf = alexa_config.CloudAlexaConfig(
         hass, ALEXA_SCHEMA({}), "mock-user-id", cloud_prefs, cloud_stub
     )
     await conf.async_initialize()
 
-    assert not conf.should_expose("light.kitchen")
-    assert not conf.should_expose(entity_entry1.entity_id)
-    assert not conf.should_expose(entity_entry2.entity_id)
-    assert not conf.should_expose(entity_entry3.entity_id)
-    assert not conf.should_expose(entity_entry4.entity_id)
-
-    entity_conf["should_expose"] = True
+    # an entity which is not in the entity registry can be exposed
+    expose_entity(hass, "light.kitchen", True)
     assert conf.should_expose("light.kitchen")
     # categorized and hidden entities should not be exposed
     assert not conf.should_expose(entity_entry1.entity_id)
     assert not conf.should_expose(entity_entry2.entity_id)
     assert not conf.should_expose(entity_entry3.entity_id)
     assert not conf.should_expose(entity_entry4.entity_id)
+    # this has been hidden
+    assert not conf.should_expose(entity_entry5.entity_id)
+    # exposed by default
+    assert conf.should_expose(entity_entry6.entity_id)
 
-    entity_conf["should_expose"] = None
-    assert conf.should_expose("light.kitchen")
-    # categorized and hidden entities should not be exposed
-    assert not conf.should_expose(entity_entry1.entity_id)
-    assert not conf.should_expose(entity_entry2.entity_id)
-    assert not conf.should_expose(entity_entry3.entity_id)
-    assert not conf.should_expose(entity_entry4.entity_id)
+    expose_entity(hass, entity_entry5.entity_id, True)
+    assert conf.should_expose(entity_entry5.entity_id)
+
+    expose_entity(hass, entity_entry5.entity_id, None)
+    assert not conf.should_expose(entity_entry5.entity_id)
 
     assert "alexa" not in hass.config.components
-    await cloud_prefs.async_update(
-        alexa_default_expose=["sensor"],
-    )
     await hass.async_block_till_done()
     assert "alexa" in hass.config.components
-    assert not conf.should_expose("light.kitchen")
+    assert not conf.should_expose(entity_entry5.entity_id)
 
 
-async def test_alexa_config_report_state(hass, cloud_prefs, cloud_stub):
+async def test_alexa_config_report_state(
+    hass: HomeAssistant, cloud_prefs, cloud_stub
+) -> None:
     """Test Alexa config should expose using prefs."""
+    assert await async_setup_component(hass, "homeassistant", {})
+
     await cloud_prefs.async_update(
         alexa_report_state=False,
     )
@@ -126,8 +166,12 @@ async def test_alexa_config_report_state(hass, cloud_prefs, cloud_stub):
     assert conf.is_reporting_states is False
 
 
-async def test_alexa_config_invalidate_token(hass, cloud_prefs, aioclient_mock):
+async def test_alexa_config_invalidate_token(
+    hass: HomeAssistant, cloud_prefs, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test Alexa config should expose using prefs."""
+    assert await async_setup_component(hass, "homeassistant", {})
+
     aioclient_mock.post(
         "https://example/access_token",
         json={
@@ -164,7 +208,7 @@ async def test_alexa_config_invalidate_token(hass, cloud_prefs, aioclient_mock):
 
 
 @pytest.mark.parametrize(
-    "reject_reason,expected_exception",
+    ("reject_reason", "expected_exception"),
     [
         ("RefreshTokenNotFound", errors.RequireRelink),
         ("UnknownRegion", errors.RequireRelink),
@@ -172,13 +216,21 @@ async def test_alexa_config_invalidate_token(hass, cloud_prefs, aioclient_mock):
     ],
 )
 async def test_alexa_config_fail_refresh_token(
-    hass,
+    hass: HomeAssistant,
     cloud_prefs,
-    aioclient_mock,
+    aioclient_mock: AiohttpClientMocker,
+    entity_registry: er.EntityRegistry,
     reject_reason,
     expected_exception,
-):
+) -> None:
     """Test Alexa config failing to refresh token."""
+    assert await async_setup_component(hass, "homeassistant", {})
+    # Enable exposing new entities to Alexa
+    expose_new(hass, True)
+    # Register a fan entity
+    entity_entry = entity_registry.async_get_or_create(
+        "fan", "test", "unique", suggested_object_id="test_fan"
+    )
 
     aioclient_mock.post(
         "https://example/access_token",
@@ -210,7 +262,7 @@ async def test_alexa_config_fail_refresh_token(
     assert conf.should_report_state is False
     assert conf.is_reporting_states is False
 
-    hass.states.async_set("fan.test_fan", "off")
+    hass.states.async_set(entity_entry.entity_id, "off")
 
     # Enable state reporting
     await cloud_prefs.async_update(alexa_report_state=True)
@@ -221,7 +273,7 @@ async def test_alexa_config_fail_refresh_token(
     assert conf.is_reporting_states is True
 
     # Change states to trigger event listener
-    hass.states.async_set("fan.test_fan", "on")
+    hass.states.async_set(entity_entry.entity_id, "on")
     await hass.async_block_till_done()
 
     # Invalidate the token and try to fetch another
@@ -234,7 +286,7 @@ async def test_alexa_config_fail_refresh_token(
     )
 
     # Change states to trigger event listener
-    hass.states.async_set("fan.test_fan", "off")
+    hass.states.async_set(entity_entry.entity_id, "off")
     await hass.async_block_till_done()
 
     # Check state reporting is still wanted in cloud prefs, but disabled for Alexa
@@ -285,15 +337,31 @@ def patch_sync_helper():
         yield to_update, to_remove
 
 
-async def test_alexa_update_expose_trigger_sync(hass, cloud_prefs, cloud_stub):
+async def test_alexa_update_expose_trigger_sync(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, cloud_prefs, cloud_stub
+) -> None:
     """Test Alexa config responds to updating exposed entities."""
-    hass.states.async_set("binary_sensor.door", "on")
+    assert await async_setup_component(hass, "homeassistant", {})
+    # Enable exposing new entities to Alexa
+    expose_new(hass, True)
+    # Register entities
+    binary_sensor_entry = entity_registry.async_get_or_create(
+        "binary_sensor", "test", "unique", suggested_object_id="door"
+    )
+    sensor_entry = entity_registry.async_get_or_create(
+        "sensor", "test", "unique", suggested_object_id="temp"
+    )
+    light_entry = entity_registry.async_get_or_create(
+        "light", "test", "unique", suggested_object_id="kitchen"
+    )
+
+    hass.states.async_set(binary_sensor_entry.entity_id, "on")
     hass.states.async_set(
-        "sensor.temp",
+        sensor_entry.entity_id,
         "23",
         {"device_class": "temperature", "unit_of_measurement": "°C"},
     )
-    hass.states.async_set("light.kitchen", "off")
+    hass.states.async_set(light_entry.entity_id, "off")
 
     await cloud_prefs.async_update(
         alexa_enabled=True,
@@ -303,36 +371,30 @@ async def test_alexa_update_expose_trigger_sync(hass, cloud_prefs, cloud_stub):
         hass, ALEXA_SCHEMA({}), "mock-user-id", cloud_prefs, cloud_stub
     )
     await conf.async_initialize()
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    await hass.async_block_till_done()
 
     with patch_sync_helper() as (to_update, to_remove):
-        await cloud_prefs.async_update_alexa_entity_config(
-            entity_id="light.kitchen", should_expose=True
-        )
+        expose_entity(hass, light_entry.entity_id, True)
         await hass.async_block_till_done()
         async_fire_time_changed(hass, fire_all=True)
         await hass.async_block_till_done()
 
     assert conf._alexa_sync_unsub is None
-    assert to_update == ["light.kitchen"]
+    assert to_update == [light_entry.entity_id]
     assert to_remove == []
 
     with patch_sync_helper() as (to_update, to_remove):
-        await cloud_prefs.async_update_alexa_entity_config(
-            entity_id="light.kitchen", should_expose=False
-        )
-        await cloud_prefs.async_update_alexa_entity_config(
-            entity_id="binary_sensor.door", should_expose=True
-        )
-        await cloud_prefs.async_update_alexa_entity_config(
-            entity_id="sensor.temp", should_expose=True
-        )
+        expose_entity(hass, light_entry.entity_id, False)
+        expose_entity(hass, binary_sensor_entry.entity_id, True)
+        expose_entity(hass, sensor_entry.entity_id, True)
         await hass.async_block_till_done()
         async_fire_time_changed(hass, fire_all=True)
         await hass.async_block_till_done()
 
     assert conf._alexa_sync_unsub is None
-    assert sorted(to_update) == ["binary_sensor.door", "sensor.temp"]
-    assert to_remove == ["light.kitchen"]
+    assert sorted(to_update) == [binary_sensor_entry.entity_id, sensor_entry.entity_id]
+    assert to_remove == [light_entry.entity_id]
 
     with patch_sync_helper() as (to_update, to_remove):
         await cloud_prefs.async_update(
@@ -342,54 +404,65 @@ async def test_alexa_update_expose_trigger_sync(hass, cloud_prefs, cloud_stub):
 
     assert conf._alexa_sync_unsub is None
     assert to_update == []
-    assert to_remove == ["binary_sensor.door", "sensor.temp", "light.kitchen"]
+    assert to_remove == [
+        binary_sensor_entry.entity_id,
+        sensor_entry.entity_id,
+        light_entry.entity_id,
+    ]
 
 
-async def test_alexa_entity_registry_sync(hass, mock_cloud_login, cloud_prefs):
+async def test_alexa_entity_registry_sync(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_cloud_login,
+    cloud_prefs,
+) -> None:
     """Test Alexa config responds to entity registry."""
+    # Enable exposing new entities to Alexa
+    expose_new(hass, True)
+
     await alexa_config.CloudAlexaConfig(
         hass, ALEXA_SCHEMA({}), "mock-user-id", cloud_prefs, hass.data["cloud"]
     ).async_initialize()
 
     with patch_sync_helper() as (to_update, to_remove):
-        hass.bus.async_fire(
-            er.EVENT_ENTITY_REGISTRY_UPDATED,
-            {"action": "create", "entity_id": "light.kitchen"},
+        entry = entity_registry.async_get_or_create(
+            "light", "test", "unique", suggested_object_id="kitchen"
         )
         await hass.async_block_till_done()
 
-    assert to_update == ["light.kitchen"]
+    assert to_update == [entry.entity_id]
     assert to_remove == []
 
     with patch_sync_helper() as (to_update, to_remove):
         hass.bus.async_fire(
             er.EVENT_ENTITY_REGISTRY_UPDATED,
-            {"action": "remove", "entity_id": "light.kitchen"},
+            {"action": "remove", "entity_id": entry.entity_id},
         )
         await hass.async_block_till_done()
 
     assert to_update == []
-    assert to_remove == ["light.kitchen"]
+    assert to_remove == [entry.entity_id]
 
     with patch_sync_helper() as (to_update, to_remove):
         hass.bus.async_fire(
             er.EVENT_ENTITY_REGISTRY_UPDATED,
             {
                 "action": "update",
-                "entity_id": "light.kitchen",
+                "entity_id": entry.entity_id,
                 "changes": ["entity_id"],
                 "old_entity_id": "light.living_room",
             },
         )
         await hass.async_block_till_done()
 
-    assert to_update == ["light.kitchen"]
+    assert to_update == [entry.entity_id]
     assert to_remove == ["light.living_room"]
 
     with patch_sync_helper() as (to_update, to_remove):
         hass.bus.async_fire(
             er.EVENT_ENTITY_REGISTRY_UPDATED,
-            {"action": "update", "entity_id": "light.kitchen", "changes": ["icon"]},
+            {"action": "update", "entity_id": entry.entity_id, "changes": ["icon"]},
         )
         await hass.async_block_till_done()
 
@@ -397,8 +470,11 @@ async def test_alexa_entity_registry_sync(hass, mock_cloud_login, cloud_prefs):
     assert to_remove == []
 
 
-async def test_alexa_update_report_state(hass, cloud_prefs, cloud_stub):
+async def test_alexa_update_report_state(
+    hass: HomeAssistant, cloud_prefs, cloud_stub
+) -> None:
     """Test Alexa config responds to reporting state."""
+    assert await async_setup_component(hass, "homeassistant", {})
     await cloud_prefs.async_update(
         alexa_report_state=False,
     )
@@ -419,7 +495,9 @@ async def test_alexa_update_report_state(hass, cloud_prefs, cloud_stub):
     assert len(mock_sync.mock_calls) == 1
 
 
-def test_enabled_requires_valid_sub(hass, mock_expired_cloud_login, cloud_prefs):
+def test_enabled_requires_valid_sub(
+    hass: HomeAssistant, mock_expired_cloud_login, cloud_prefs
+) -> None:
     """Test that alexa config enabled requires a valid Cloud sub."""
     assert cloud_prefs.alexa_enabled
     assert hass.data["cloud"].is_logged_in
@@ -432,8 +510,11 @@ def test_enabled_requires_valid_sub(hass, mock_expired_cloud_login, cloud_prefs)
     assert not config.enabled
 
 
-async def test_alexa_handle_logout(hass, cloud_prefs, cloud_stub):
+async def test_alexa_handle_logout(
+    hass: HomeAssistant, cloud_prefs, cloud_stub
+) -> None:
     """Test Alexa config responds to logging out."""
+    assert await async_setup_component(hass, "homeassistant", {})
     aconf = alexa_config.CloudAlexaConfig(
         hass, ALEXA_SCHEMA({}), "mock-user-id", cloud_prefs, cloud_stub
     )
@@ -459,3 +540,334 @@ async def test_alexa_handle_logout(hass, cloud_prefs, cloud_stub):
         await hass.async_block_till_done()
 
     assert len(mock_enable.return_value.mock_calls) == 1
+
+
+@pytest.mark.parametrize("alexa_settings_version", [1, 2])
+async def test_alexa_config_migrate_expose_entity_prefs(
+    hass: HomeAssistant,
+    cloud_prefs: CloudPreferences,
+    cloud_stub,
+    entity_registry: er.EntityRegistry,
+    alexa_settings_version: int,
+) -> None:
+    """Test migrating Alexa entity config."""
+    hass.state = CoreState.starting
+
+    assert await async_setup_component(hass, "homeassistant", {})
+    hass.states.async_set("light.state_only", "on")
+    entity_exposed = entity_registry.async_get_or_create(
+        "light",
+        "test",
+        "light_exposed",
+        suggested_object_id="exposed",
+    )
+
+    entity_migrated = entity_registry.async_get_or_create(
+        "light",
+        "test",
+        "light_migrated",
+        suggested_object_id="migrated",
+    )
+
+    entity_config = entity_registry.async_get_or_create(
+        "light",
+        "test",
+        "light_config",
+        suggested_object_id="config",
+        entity_category=EntityCategory.CONFIG,
+    )
+
+    entity_default = entity_registry.async_get_or_create(
+        "light",
+        "test",
+        "light_default",
+        suggested_object_id="default",
+    )
+
+    entity_blocked = entity_registry.async_get_or_create(
+        "group",
+        "test",
+        "group_all_locks",
+        suggested_object_id="all_locks",
+    )
+    assert entity_blocked.entity_id == "group.all_locks"
+
+    await cloud_prefs.async_update(
+        alexa_enabled=True,
+        alexa_report_state=False,
+        alexa_settings_version=alexa_settings_version,
+    )
+    expose_entity(hass, entity_migrated.entity_id, False)
+
+    cloud_prefs._prefs[PREF_ALEXA_ENTITY_CONFIGS]["light.unknown"] = {
+        PREF_SHOULD_EXPOSE: True
+    }
+    cloud_prefs._prefs[PREF_ALEXA_ENTITY_CONFIGS]["light.state_only"] = {
+        PREF_SHOULD_EXPOSE: False
+    }
+    cloud_prefs._prefs[PREF_ALEXA_ENTITY_CONFIGS][entity_exposed.entity_id] = {
+        PREF_SHOULD_EXPOSE: True
+    }
+    cloud_prefs._prefs[PREF_ALEXA_ENTITY_CONFIGS][entity_migrated.entity_id] = {
+        PREF_SHOULD_EXPOSE: True
+    }
+    conf = alexa_config.CloudAlexaConfig(
+        hass, ALEXA_SCHEMA({}), "mock-user-id", cloud_prefs, cloud_stub
+    )
+    await conf.async_initialize()
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    await hass.async_block_till_done()
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    await hass.async_block_till_done()
+
+    assert async_get_entity_settings(hass, "light.unknown") == {
+        "cloud.alexa": {"should_expose": True}
+    }
+    assert async_get_entity_settings(hass, "light.state_only") == {
+        "cloud.alexa": {"should_expose": False}
+    }
+    assert async_get_entity_settings(hass, entity_exposed.entity_id) == {
+        "cloud.alexa": {"should_expose": True}
+    }
+    assert async_get_entity_settings(hass, entity_migrated.entity_id) == {
+        "cloud.alexa": {"should_expose": True}
+    }
+    assert async_get_entity_settings(hass, entity_config.entity_id) == {
+        "cloud.alexa": {"should_expose": False}
+    }
+    assert async_get_entity_settings(hass, entity_default.entity_id) == {
+        "cloud.alexa": {"should_expose": True}
+    }
+    assert async_get_entity_settings(hass, entity_blocked.entity_id) == {
+        "cloud.alexa": {"should_expose": False}
+    }
+
+
+async def test_alexa_config_migrate_expose_entity_prefs_v2_no_exposed(
+    hass: HomeAssistant,
+    cloud_prefs: CloudPreferences,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test migrating Alexa entity config from v2 to v3 when no entity is exposed."""
+    hass.state = CoreState.starting
+
+    assert await async_setup_component(hass, "homeassistant", {})
+    hass.states.async_set("light.state_only", "on")
+    entity_migrated = entity_registry.async_get_or_create(
+        "light",
+        "test",
+        "light_migrated",
+        suggested_object_id="migrated",
+    )
+    await cloud_prefs.async_update(
+        alexa_enabled=True,
+        alexa_report_state=False,
+        alexa_settings_version=2,
+    )
+    expose_entity(hass, "light.state_only", False)
+    expose_entity(hass, entity_migrated.entity_id, False)
+
+    cloud_prefs._prefs[PREF_ALEXA_ENTITY_CONFIGS]["light.state_only"] = {
+        PREF_SHOULD_EXPOSE: True
+    }
+    cloud_prefs._prefs[PREF_ALEXA_ENTITY_CONFIGS][entity_migrated.entity_id] = {
+        PREF_SHOULD_EXPOSE: True
+    }
+    conf = alexa_config.CloudAlexaConfig(
+        hass, ALEXA_SCHEMA({}), "mock-user-id", cloud_prefs, Mock(is_logged_in=False)
+    )
+    await conf.async_initialize()
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    await hass.async_block_till_done()
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    await hass.async_block_till_done()
+
+    assert async_get_entity_settings(hass, "light.state_only") == {
+        "cloud.alexa": {"should_expose": True}
+    }
+    assert async_get_entity_settings(hass, entity_migrated.entity_id) == {
+        "cloud.alexa": {"should_expose": True}
+    }
+
+
+async def test_alexa_config_migrate_expose_entity_prefs_v2_exposed(
+    hass: HomeAssistant,
+    cloud_prefs: CloudPreferences,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test migrating Alexa entity config from v2 to v3 when an entity is exposed."""
+    hass.state = CoreState.starting
+
+    assert await async_setup_component(hass, "homeassistant", {})
+    hass.states.async_set("light.state_only", "on")
+    entity_migrated = entity_registry.async_get_or_create(
+        "light",
+        "test",
+        "light_migrated",
+        suggested_object_id="migrated",
+    )
+    await cloud_prefs.async_update(
+        alexa_enabled=True,
+        alexa_report_state=False,
+        alexa_settings_version=2,
+    )
+    expose_entity(hass, "light.state_only", False)
+    expose_entity(hass, entity_migrated.entity_id, True)
+
+    cloud_prefs._prefs[PREF_ALEXA_ENTITY_CONFIGS]["light.state_only"] = {
+        PREF_SHOULD_EXPOSE: True
+    }
+    cloud_prefs._prefs[PREF_ALEXA_ENTITY_CONFIGS][entity_migrated.entity_id] = {
+        PREF_SHOULD_EXPOSE: True
+    }
+    conf = alexa_config.CloudAlexaConfig(
+        hass, ALEXA_SCHEMA({}), "mock-user-id", cloud_prefs, Mock(is_logged_in=False)
+    )
+    await conf.async_initialize()
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    await hass.async_block_till_done()
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    await hass.async_block_till_done()
+
+    assert async_get_entity_settings(hass, "light.state_only") == {
+        "cloud.alexa": {"should_expose": False}
+    }
+    assert async_get_entity_settings(hass, entity_migrated.entity_id) == {
+        "cloud.alexa": {"should_expose": True}
+    }
+
+
+async def test_alexa_config_migrate_expose_entity_prefs_default_none(
+    hass: HomeAssistant,
+    cloud_prefs: CloudPreferences,
+    cloud_stub,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test migrating Alexa entity config."""
+    hass.state = CoreState.starting
+
+    assert await async_setup_component(hass, "homeassistant", {})
+    entity_default = entity_registry.async_get_or_create(
+        "light",
+        "test",
+        "light_default",
+        suggested_object_id="default",
+    )
+
+    await cloud_prefs.async_update(
+        alexa_enabled=True,
+        alexa_report_state=False,
+        alexa_settings_version=1,
+    )
+
+    cloud_prefs._prefs[PREF_ALEXA_DEFAULT_EXPOSE] = None
+    conf = alexa_config.CloudAlexaConfig(
+        hass, ALEXA_SCHEMA({}), "mock-user-id", cloud_prefs, cloud_stub
+    )
+    await conf.async_initialize()
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    await hass.async_block_till_done()
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    await hass.async_block_till_done()
+
+    assert async_get_entity_settings(hass, entity_default.entity_id) == {
+        "cloud.alexa": {"should_expose": True}
+    }
+
+
+async def test_alexa_config_migrate_expose_entity_prefs_default(
+    hass: HomeAssistant,
+    cloud_prefs: CloudPreferences,
+    cloud_stub,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test migrating Alexa entity config."""
+    hass.state = CoreState.starting
+
+    assert await async_setup_component(hass, "homeassistant", {})
+
+    binary_sensor_supported = entity_registry.async_get_or_create(
+        "binary_sensor",
+        "test",
+        "binary_sensor_supported",
+        original_device_class="door",
+        suggested_object_id="supported",
+    )
+
+    binary_sensor_unsupported = entity_registry.async_get_or_create(
+        "binary_sensor",
+        "test",
+        "binary_sensor_unsupported",
+        original_device_class="battery",
+        suggested_object_id="unsupported",
+    )
+
+    light = entity_registry.async_get_or_create(
+        "light",
+        "test",
+        "unique",
+        suggested_object_id="light",
+    )
+
+    sensor_supported = entity_registry.async_get_or_create(
+        "sensor",
+        "test",
+        "sensor_supported",
+        original_device_class="temperature",
+        suggested_object_id="supported",
+    )
+
+    sensor_unsupported = entity_registry.async_get_or_create(
+        "sensor",
+        "test",
+        "sensor_unsupported",
+        original_device_class="battery",
+        suggested_object_id="unsupported",
+    )
+
+    water_heater = entity_registry.async_get_or_create(
+        "water_heater",
+        "test",
+        "unique",
+        suggested_object_id="water_heater",
+    )
+
+    await cloud_prefs.async_update(
+        alexa_enabled=True,
+        alexa_report_state=False,
+        alexa_settings_version=1,
+    )
+
+    cloud_prefs._prefs[PREF_ALEXA_DEFAULT_EXPOSE] = [
+        "binary_sensor",
+        "light",
+        "sensor",
+        "water_heater",
+    ]
+    conf = alexa_config.CloudAlexaConfig(
+        hass, ALEXA_SCHEMA({}), "mock-user-id", cloud_prefs, cloud_stub
+    )
+    await conf.async_initialize()
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    await hass.async_block_till_done()
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    await hass.async_block_till_done()
+
+    assert async_get_entity_settings(hass, binary_sensor_supported.entity_id) == {
+        "cloud.alexa": {"should_expose": True}
+    }
+    assert async_get_entity_settings(hass, binary_sensor_unsupported.entity_id) == {
+        "cloud.alexa": {"should_expose": False}
+    }
+    assert async_get_entity_settings(hass, light.entity_id) == {
+        "cloud.alexa": {"should_expose": True}
+    }
+    assert async_get_entity_settings(hass, sensor_supported.entity_id) == {
+        "cloud.alexa": {"should_expose": True}
+    }
+    assert async_get_entity_settings(hass, sensor_unsupported.entity_id) == {
+        "cloud.alexa": {"should_expose": False}
+    }
+    assert async_get_entity_settings(hass, water_heater.entity_id) == {
+        "cloud.alexa": {"should_expose": False}
+    }

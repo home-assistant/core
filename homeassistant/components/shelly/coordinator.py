@@ -51,7 +51,7 @@ from .const import (
     UPDATE_PERIOD_MULTIPLIER,
     BLEScannerMode,
 )
-from .utils import device_update_info, get_device_name, get_rpc_device_wakeup_period
+from .utils import device_update_info, get_rpc_device_wakeup_period
 
 _DeviceT = TypeVar("_DeviceT", bound="BlockDevice|RpcDevice")
 
@@ -86,7 +86,7 @@ class ShellyCoordinatorBase(DataUpdateCoordinator[None], Generic[_DeviceT]):
         self.entry = entry
         self.device = device
         self.device_id: str | None = None
-        device_name = get_device_name(device) if device.initialized else entry.title
+        device_name = device.name if device.initialized else entry.title
         interval_td = timedelta(seconds=update_interval)
         super().__init__(hass, LOGGER, name=device_name, update_interval=interval_td)
 
@@ -97,7 +97,7 @@ class ShellyCoordinatorBase(DataUpdateCoordinator[None], Generic[_DeviceT]):
             immediate=False,
             function=self._async_reload_entry,
         )
-        entry.async_on_unload(self._debounced_reload.async_cancel)
+        entry.async_on_unload(self._debounced_reload.async_shutdown)
 
     @property
     def model(self) -> str:
@@ -161,6 +161,7 @@ class ShellyBlockCoordinator(ShellyCoordinatorBase[BlockDevice]):
         self._last_mode: str | None = None
         self._last_effect: int | None = None
         self._last_input_events_count: dict = {}
+        self._last_target_temp: float | None = None
 
         entry.async_on_unload(
             self.async_add_listener(self._async_device_updates_handler)
@@ -193,6 +194,11 @@ class ShellyBlockCoordinator(ShellyCoordinatorBase[BlockDevice]):
         for block in self.device.blocks:
             if block.type == "device":
                 cfg_changed = block.cfgChanged
+
+            # Shelly TRV sends information about changing the configuration for no
+            # reason, reloading the config entry is not needed for it.
+            if self.model == "SHTRV-01":
+                self._last_cfg_changed = None
 
             # For dual mode bulbs ignore change if it is due to mode/effect change
             if self.model in DUAL_MODE_LIGHT_MODELS:
@@ -529,7 +535,10 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
     async def shutdown(self) -> None:
         """Shutdown the coordinator."""
         if self.device.connected:
-            await async_stop_scanner(self.device)
+            try:
+                await async_stop_scanner(self.device)
+            except InvalidAuthError:
+                self.entry.async_start_reauth(self.hass)
         await self.device.shutdown()
         await self._async_disconnected()
 

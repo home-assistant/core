@@ -1,9 +1,9 @@
 {
   "domain": "calendar",
   "name": "Calendar",
-  "documentation": "https://www.home-assistant.io/integrations/calendar",
-  "dependencies": ["http"],
   "codeowners": ["@home-assistant/core"],
-  "quality_scale": "internal",
-  "integration_type": "entity"
+  "dependencies": ["http"],
+  "documentation": "https://www.home-assistant.io/integrations/calendar",
+  "integration_type": "entity",
+  "quality_scale": "internal"
 }

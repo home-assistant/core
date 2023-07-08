@@ -30,7 +30,7 @@ NEW_FIRMWARE = "ESP: 1.1.51 / PIC: 10512.2560.2.53 / TOF: 4.0.65.4"
 
 async def test_robot_with_no_update(
     hass: HomeAssistant, mock_account_with_litterrobot_4: MagicMock
-):
+) -> None:
     """Tests the update entity was set up."""
     robot: LitterRobot4 = mock_account_with_litterrobot_4.robots[0]
     robot.has_firmware_update = AsyncMock(return_value=False)
@@ -53,7 +53,7 @@ async def test_robot_with_no_update(
 
 async def test_robot_with_update(
     hass: HomeAssistant, mock_account_with_litterrobot_4: MagicMock
-):
+) -> None:
     """Tests the update entity was set up."""
     robot: LitterRobot4 = mock_account_with_litterrobot_4.robots[0]
     robot.has_firmware_update = AsyncMock(return_value=True)
@@ -90,7 +90,7 @@ async def test_robot_with_update(
 
 async def test_robot_with_update_already_in_progress(
     hass: HomeAssistant, mock_account_with_litterrobot_4: MagicMock
-):
+) -> None:
     """Tests the update entity was set up."""
     robot: LitterRobot4 = mock_account_with_litterrobot_4.robots[0]
     robot._update_data({"isFirmwareUpdateTriggered": True}, partial=True)

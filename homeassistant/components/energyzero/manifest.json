@@ -1,10 +1,10 @@
 {
   "domain": "energyzero",
   "name": "EnergyZero",
+  "codeowners": ["@klaasnicolaas"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/energyzero",
-  "requirements": ["energyzero==0.3.1"],
-  "codeowners": ["@klaasnicolaas"],
   "iot_class": "cloud_polling",
-  "quality_scale": "platinum"
+  "quality_scale": "platinum",
+  "requirements": ["energyzero==0.4.1"]
 }

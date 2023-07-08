@@ -15,6 +15,18 @@ ENTRY_CONFIG = {
 class MockLocation:
     """Mock Location from pyipma."""
 
+    async def fire_risk(self, api):
+        """Mock Fire Risk."""
+        RCM = namedtuple(
+            "RCM",
+            [
+                "dico",
+                "rcm",
+                "coordinates",
+            ],
+        )
+        return RCM("some place", 3, (0, 0))
+
     async def observation(self, api):
         """Mock Observation."""
         Observation = namedtuple(

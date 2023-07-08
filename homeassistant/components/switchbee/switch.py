@@ -79,7 +79,6 @@ class SwitchBeeSwitchEntity(SwitchBeeDeviceEntity[_DeviceTypeT], SwitchEntity):
         coordinator_device = self._get_coordinator_device()
 
         if coordinator_device.state == -1:
-
             self._check_if_became_offline()
             return
 

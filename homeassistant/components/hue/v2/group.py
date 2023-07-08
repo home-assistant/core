@@ -177,7 +177,7 @@ class GroupedHueLight(HueBaseEntity, LightEntity):
 
         if flash is not None:
             await self.async_set_flash(flash)
-            # flash can not be sent with other commands at the same time
+            # flash cannot be sent with other commands at the same time
             return
 
         await self.bridge.async_request_call(

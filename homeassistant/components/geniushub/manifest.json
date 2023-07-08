@@ -1,9 +1,9 @@
 {
   "domain": "geniushub",
   "name": "Genius Hub",
+  "codeowners": ["@manzanotti"],
   "documentation": "https://www.home-assistant.io/integrations/geniushub",
-  "requirements": ["geniushub-client==0.7.0"],
-  "codeowners": ["@zxdavb"],
   "iot_class": "local_polling",
-  "loggers": ["geniushubclient"]
+  "loggers": ["geniushubclient"],
+  "requirements": ["geniushub-client==0.7.0"]
 }

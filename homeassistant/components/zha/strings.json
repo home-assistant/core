@@ -23,15 +23,20 @@
         "description": "Enter the serial port settings",
         "data": {
           "path": "Serial device path",
-          "baudrate": "port speed",
-          "flow_control": "data flow control"
+          "baudrate": "Port speed",
+          "flow_control": "Data flow control"
         }
+      },
+      "verify_radio": {
+        "title": "Radio is not recommended",
+        "description": "The radio you are using ({name}) is not recommended and support for it may be removed in the future. Please see the Zigbee Home Automation integration's documentation for [a list of recommended adapters]({docs_recommended_adapters_url})."
       },
       "choose_formation_strategy": {
         "title": "Network Formation",
         "description": "Choose the network settings for your radio.",
         "menu_options": {
-          "form_new_network": "Erase network settings and form a new network",
+          "form_new_network": "Erase network settings and create a new network",
+          "form_initial_network": "Create a network",
           "reuse_settings": "Keep radio network settings",
           "choose_automatic_backup": "Restore an automatic backup",
           "upload_manual_backup": "Upload a manual backup"
@@ -86,11 +91,11 @@
       },
       "intent_migrate": {
         "title": "Migrate to a new radio",
-        "description": "Your old radio will be factory reset.  If you are using a combined Z-Wave and Zigbee adapter like the HUSBZB-1, this will only reset the Zigbee portion.\n\nDo you wish to continue?"
+        "description": "Before plugging in your new radio, your old radio needs to be reset.  An automatic backup will be performed.  If you are using a combined Z-Wave and Zigbee adapter like the HUSBZB-1, this will only reset the Zigbee portion.\n\n*Note: if you are migrating from a **ConBee/RaspBee**, make sure it is running firmware `0x26720700` or newer! Otherwise, some devices may not be controllable after migrating until they are power cycled.*\n\nDo you wish to continue?"
       },
       "instruct_unplug": {
         "title": "Unplug your old radio",
-        "description": "Your old radio has been reset.  If the hardware is no longer needed, you can now unplug it."
+        "description": "Your old radio has been reset.  If the hardware is no longer needed, you can now unplug it.\n\nYou can now plug in your new radio."
       },
       "choose_serial_port": {
         "title": "[%key:component::zha::config::step::choose_serial_port::title%]",
@@ -115,11 +120,16 @@
           "flow_control": "[%key:component::zha::config::step::manual_port_config::data::flow_control%]"
         }
       },
+      "verify_radio": {
+        "title": "[%key:component::zha::config::step::verify_radio::title%]",
+        "description": "[%key:component::zha::config::step::verify_radio::description%]"
+      },
       "choose_formation_strategy": {
         "title": "[%key:component::zha::config::step::choose_formation_strategy::title%]",
         "description": "[%key:component::zha::config::step::choose_formation_strategy::description%]",
         "menu_options": {
           "form_new_network": "[%key:component::zha::config::step::choose_formation_strategy::menu_options::form_new_network%]",
+          "form_initial_network": "[%key:component::zha::config::step::choose_formation_strategy::menu_options::form_initial_network%]",
           "reuse_settings": "[%key:component::zha::config::step::choose_formation_strategy::menu_options::reuse_settings%]",
           "choose_automatic_backup": "[%key:component::zha::config::step::choose_formation_strategy::menu_options::choose_automatic_backup%]",
           "upload_manual_backup": "[%key:component::zha::config::step::choose_formation_strategy::menu_options::upload_manual_backup%]"
@@ -227,12 +237,12 @@
       "button_5": "Fifth button",
       "button_6": "Sixth button",
       "face_any": "With any/specified face(s) activated",
-      "face_1": "with face 1 activated",
-      "face_2": "with face 2 activated",
-      "face_3": "with face 3 activated",
-      "face_4": "with face 4 activated",
-      "face_5": "with face 5 activated",
-      "face_6": "with face 6 activated"
+      "face_1": "With face 1 activated",
+      "face_2": "With face 2 activated",
+      "face_3": "With face 3 activated",
+      "face_4": "With face 4 activated",
+      "face_5": "With face 5 activated",
+      "face_6": "With face 6 activated"
     }
   }
 }

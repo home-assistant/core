@@ -6,18 +6,19 @@ import pytest
 from homeassistant import config as hass_config, setup
 from homeassistant.components.ping import DOMAIN
 from homeassistant.const import SERVICE_RELOAD
+from homeassistant.core import HomeAssistant
 
 from tests.common import get_fixture_path
 
 
 @pytest.fixture
-def mock_ping():
+def mock_ping() -> None:
     """Mock icmplib.ping."""
     with patch("homeassistant.components.ping.icmp_ping"):
         yield
 
 
-async def test_reload(hass, mock_ping):
+async def test_reload(hass: HomeAssistant, mock_ping: None) -> None:
     """Verify we can reload trend sensors."""
 
     await setup.async_setup_component(

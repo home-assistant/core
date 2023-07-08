@@ -43,7 +43,7 @@ CAN_EXPAND_TYPE = {
     MEDIA_TYPE_DIRECTORY,
 }
 # The keys and values in the below dict are identical only because the
-# HA constants happen to align with the Owntone constants.
+# HA constants happen to align with the OwnTone constants.
 OWNTONE_TYPE_TO_MEDIA_TYPE = {
     "track": MediaType.TRACK,
     "playlist": MediaType.PLAYLIST,
@@ -58,13 +58,13 @@ MEDIA_TYPE_TO_OWNTONE_TYPE = {v: k for k, v in OWNTONE_TYPE_TO_MEDIA_TYPE.items(
 # media_content_id is a uri in the form of SCHEMA:Title:OwnToneURI:Subtype (Subtype only used for Genre)
 # OwnToneURI is in format library:type:id (for directories, id is path)
 # media_content_type - type of item (mostly used to check if playable or can expand)
-# Owntone type may differ from media_content_type when media_content_type is a directory
-# Owntone type is used in our own branching, but media_content_type is used for determining playability
+# OwnTone type may differ from media_content_type when media_content_type is a directory
+# OwnTone type is used in our own branching, but media_content_type is used for determining playability
 
 
 @dataclass
 class MediaContent:
-    """Class for representing Owntone media content."""
+    """Class for representing OwnTone media content."""
 
     title: str
     type: str
@@ -87,7 +87,7 @@ class MediaContent:
 
 
 def create_owntone_uri(media_type: str, id_or_path: str) -> str:
-    """Create an Owntone uri."""
+    """Create an OwnTone uri."""
     return f"library:{MEDIA_TYPE_TO_OWNTONE_TYPE[media_type]}:{quote(id_or_path)}"
 
 
@@ -113,7 +113,7 @@ def is_owntone_media_content_id(media_content_id: str) -> bool:
 
 
 def convert_to_owntone_uri(media_content_id: str) -> str:
-    """Convert media_content_id to Owntone URI."""
+    """Convert media_content_id to OwnTone URI."""
     return ":".join(media_content_id.split(":")[2:-1])
 
 
@@ -231,7 +231,7 @@ def create_browse_media_response(
     for item in result:
         if item.get("data_kind") == "spotify" or (
             "path" in item and cast(str, item["path"]).startswith("spotify")
-        ):  # Exclude spotify data from Owntone library
+        ):  # Exclude spotify data from OwnTone library
             continue
         assert isinstance(item["uri"], str)
         media_type = OWNTONE_TYPE_TO_MEDIA_TYPE[item["uri"].split(":")[1]]
@@ -275,7 +275,7 @@ def create_browse_media_response(
 
 
 def base_owntone_library() -> BrowseMedia:
-    """Return the base of our Owntone library."""
+    """Return the base of our OwnTone library."""
     children = [
         BrowseMedia(
             title=name,
@@ -290,10 +290,10 @@ def base_owntone_library() -> BrowseMedia:
         for name, (media_class, media_type, media_subtype) in TOP_LEVEL_LIBRARY.items()
     ]
     return BrowseMedia(
-        title="Owntone Library",
+        title="OwnTone Library",
         media_class=MediaClass.APP,
         media_content_id=create_media_content_id(
-            title="Owntone Library", media_type=MediaType.APP
+            title="OwnTone Library", media_type=MediaType.APP
         ),
         media_content_type=MediaType.APP,
         can_play=False,
@@ -308,10 +308,10 @@ def library(other: Sequence[BrowseMedia] | None) -> BrowseMedia:
 
     top_level_items = [
         BrowseMedia(
-            title="Owntone Library",
+            title="OwnTone Library",
             media_class=MediaClass.APP,
             media_content_id=create_media_content_id(
-                title="Owntone Library", media_type=MediaType.APP
+                title="OwnTone Library", media_type=MediaType.APP
             ),
             media_content_type=MediaType.APP,
             can_play=False,
@@ -323,7 +323,7 @@ def library(other: Sequence[BrowseMedia] | None) -> BrowseMedia:
         top_level_items.extend(other)
 
     return BrowseMedia(
-        title="Owntone",
+        title="OwnTone",
         media_class=MediaClass.DIRECTORY,
         media_content_id="",
         media_content_type=MEDIA_TYPE_DIRECTORY,

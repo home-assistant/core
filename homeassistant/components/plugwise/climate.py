@@ -39,9 +39,10 @@ async def async_setup_entry(
 
 
 class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity):
-    """Representation of an Plugwise thermostat."""
+    """Representation of a Plugwise thermostat."""
 
     _attr_has_entity_name = True
+    _attr_name = None
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_translation_key = DOMAIN
 
@@ -122,7 +123,8 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity):
         # When control_state is present, prefer this data
         if (control_state := self.device.get("control_state")) == "cooling":
             return HVACAction.COOLING
-        # Support preheating state as heating, until preheating is added as a separate state
+        # Support preheating state as heating,
+        # until preheating is added as a separate state
         if control_state in ["heating", "preheating"]:
             return HVACAction.HEATING
         if control_state == "off":

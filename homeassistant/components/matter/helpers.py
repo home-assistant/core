@@ -6,13 +6,13 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import device_registry as dr
 
-from .const import DOMAIN
+from .const import DOMAIN, ID_TYPE_DEVICE_ID
 
 if TYPE_CHECKING:
-    from matter_server.common.models.node import MatterNode
-    from matter_server.common.models.node_device import AbstractMatterNodeDevice
-    from matter_server.common.models.server_information import ServerInfo
+    from matter_server.client.models.node import MatterEndpoint, MatterNode
+    from matter_server.common.models import ServerInfoMessage
 
     from .adapter import MatterAdapter
 
@@ -36,7 +36,7 @@ def get_matter(hass: HomeAssistant) -> MatterAdapter:
 
 
 def get_operational_instance_id(
-    server_info: ServerInfo,
+    server_info: ServerInfoMessage,
     node: MatterNode,
 ) -> str:
     """Return `Operational Instance Name` for given MatterNode."""
@@ -48,13 +48,58 @@ def get_operational_instance_id(
 
 
 def get_device_id(
-    server_info: ServerInfo,
-    node_device: AbstractMatterNodeDevice,
+    server_info: ServerInfoMessage,
+    endpoint: MatterEndpoint,
 ) -> str:
-    """Return HA device_id for the given MatterNodeDevice."""
-    operational_instance_id = get_operational_instance_id(
-        server_info, node_device.node()
+    """Return HA device_id for the given MatterEndpoint."""
+    operational_instance_id = get_operational_instance_id(server_info, endpoint.node)
+    # Append endpoint ID if this endpoint is a bridged or composed device
+    if endpoint.is_composed_device:
+        compose_parent = endpoint.node.get_compose_parent(endpoint.endpoint_id)
+        assert compose_parent is not None
+        postfix = str(compose_parent.endpoint_id)
+    elif endpoint.is_bridged_device:
+        postfix = str(endpoint.endpoint_id)
+    else:
+        # this should be compatible with previous versions
+        postfix = "MatterNodeDevice"
+    return f"{operational_instance_id}-{postfix}"
+
+
+async def get_node_from_device_entry(
+    hass: HomeAssistant, device: dr.DeviceEntry
+) -> MatterNode | None:
+    """Return MatterNode from device entry."""
+    matter = get_matter(hass)
+    device_id_type_prefix = f"{ID_TYPE_DEVICE_ID}_"
+    device_id_full = next(
+        (
+            identifier[1]
+            for identifier in device.identifiers
+            if identifier[0] == DOMAIN
+            and identifier[1].startswith(device_id_type_prefix)
+        ),
+        None,
     )
-    # Append nodedevice(type) to differentiate between a root node
-    # and bridge within Home Assistant devices.
-    return f"{operational_instance_id}-{node_device.__class__.__name__}"
+
+    if device_id_full is None:
+        raise ValueError(f"Device {device.id} is not a Matter device")
+
+    device_id = device_id_full.lstrip(device_id_type_prefix)
+    matter_client = matter.matter_client
+    server_info = matter_client.server_info
+
+    if server_info is None:
+        raise RuntimeError("Matter server information is not available")
+
+    node = next(
+        (
+            node
+            for node in matter_client.get_nodes()
+            for endpoint in node.endpoints.values()
+            if get_device_id(server_info, endpoint) == device_id
+        ),
+        None,
+    )
+
+    return node

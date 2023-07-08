@@ -347,7 +347,9 @@ class YamahaDevice(MediaPlayerEntity):
         """Select input source."""
         self.receiver.input = self._reverse_mapping.get(source, source)
 
-    def play_media(self, media_type: str, media_id: str, **kwargs: Any) -> None:
+    def play_media(
+        self, media_type: MediaType | str, media_id: str, **kwargs: Any
+    ) -> None:
         """Play media from an ID.
 
         This exposes a pass through for various input sources in the

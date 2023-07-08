@@ -24,7 +24,7 @@ EPOCHORDINAL = dt.datetime(1970, 1, 1).toordinal()
 
 # Copyright (c) Django Software Foundation and individual contributors.
 # All rights reserved.
-# https://github.com/django/django/blob/master/LICENSE
+# https://github.com/django/django/blob/main/LICENSE
 DATETIME_RE = re.compile(
     r"(?P<year>\d{4})-(?P<month>\d{1,2})-(?P<day>\d{1,2})"
     r"[T ](?P<hour>\d{1,2}):(?P<minute>\d{1,2})"
@@ -34,7 +34,7 @@ DATETIME_RE = re.compile(
 
 # Copyright (c) Django Software Foundation and individual contributors.
 # All rights reserved.
-# https://github.com/django/django/blob/master/LICENSE
+# https://github.com/django/django/blob/main/LICENSE
 STANDARD_DURATION_RE = re.compile(
     r"^"
     r"(?:(?P<days>-?\d+) (days?, )?)?"
@@ -48,7 +48,7 @@ STANDARD_DURATION_RE = re.compile(
 
 # Copyright (c) Django Software Foundation and individual contributors.
 # All rights reserved.
-# https://github.com/django/django/blob/master/LICENSE
+# https://github.com/django/django/blob/main/LICENSE
 ISO8601_DURATION_RE = re.compile(
     r"^(?P<sign>[-+]?)"
     r"P"
@@ -63,7 +63,7 @@ ISO8601_DURATION_RE = re.compile(
 
 # Copyright (c) Django Software Foundation and individual contributors.
 # All rights reserved.
-# https://github.com/django/django/blob/master/LICENSE
+# https://github.com/django/django/blob/main/LICENSE
 POSTGRES_INTERVAL_RE = re.compile(
     r"^"
     r"(?:(?P<days>-?\d+) (days? ?))?"
@@ -81,7 +81,8 @@ def set_default_time_zone(time_zone: dt.tzinfo) -> None:
 
     Async friendly.
     """
-    global DEFAULT_TIME_ZONE  # pylint: disable=global-statement
+    # pylint: disable-next=global-statement
+    global DEFAULT_TIME_ZONE  # noqa: PLW0603
 
     assert isinstance(time_zone, dt.tzinfo)
 
@@ -145,9 +146,10 @@ def as_local(dattim: dt.datetime) -> dt.datetime:
     return dattim.astimezone(DEFAULT_TIME_ZONE)
 
 
-def utc_from_timestamp(timestamp: float) -> dt.datetime:
-    """Return a UTC time from a timestamp."""
-    return dt.datetime.utcfromtimestamp(timestamp).replace(tzinfo=UTC)
+# We use a partial here to improve performance by avoiding the global lookup
+# of UTC and the function call overhead.
+utc_from_timestamp = partial(dt.datetime.fromtimestamp, tz=UTC)
+"""Return a UTC time from a timestamp."""
 
 
 def utc_to_timestamp(utc_dt: dt.datetime) -> float:
@@ -177,7 +179,7 @@ def start_of_local_day(dt_or_d: dt.date | dt.datetime | None = None) -> dt.datet
 
 # Copyright (c) Django Software Foundation and individual contributors.
 # All rights reserved.
-# https://github.com/django/django/blob/master/LICENSE
+# https://github.com/django/django/blob/main/LICENSE
 def parse_datetime(dt_str: str) -> dt.datetime | None:
     """Parse a string and return a datetime.datetime.
 

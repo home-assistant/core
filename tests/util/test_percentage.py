@@ -28,7 +28,7 @@ SMALL_ORDERED_LIST = [SPEED_1, SPEED_2, SPEED_3, SPEED_4]
 LARGE_ORDERED_LIST = [SPEED_1, SPEED_2, SPEED_3, SPEED_4, SPEED_5, SPEED_6, SPEED_7]
 
 
-async def test_ordered_list_item_to_percentage():
+async def test_ordered_list_item_to_percentage() -> None:
     """Test percentage of an item in an ordered list."""
 
     assert ordered_list_item_to_percentage(LEGACY_ORDERED_LIST, SPEED_LOW) == 33
@@ -52,7 +52,7 @@ async def test_ordered_list_item_to_percentage():
         assert ordered_list_item_to_percentage([], SPEED_1)
 
 
-async def test_percentage_to_ordered_list_item():
+async def test_percentage_to_ordered_list_item() -> None:
     """Test item that most closely matches the percentage in an ordered list."""
 
     assert percentage_to_ordered_list_item(SMALL_ORDERED_LIST, 1) == SPEED_1
@@ -102,7 +102,7 @@ async def test_percentage_to_ordered_list_item():
         assert percentage_to_ordered_list_item([], 100)
 
 
-async def test_ranged_value_to_percentage_large():
+async def test_ranged_value_to_percentage_large() -> None:
     """Test a large range of low and high values convert a single value to a percentage."""
     range = (1, 255)
 
@@ -112,7 +112,7 @@ async def test_ranged_value_to_percentage_large():
     assert ranged_value_to_percentage(range, 1) == 0
 
 
-async def test_percentage_to_ranged_value_large():
+async def test_percentage_to_ranged_value_large() -> None:
     """Test a large range of low and high values convert a percentage to a single value."""
     range = (1, 255)
 
@@ -125,7 +125,7 @@ async def test_percentage_to_ranged_value_large():
     assert math.ceil(percentage_to_ranged_value(range, 4)) == 11
 
 
-async def test_ranged_value_to_percentage_small():
+async def test_ranged_value_to_percentage_small() -> None:
     """Test a small range of low and high values convert a single value to a percentage."""
     range = (1, 6)
 
@@ -137,7 +137,7 @@ async def test_ranged_value_to_percentage_small():
     assert ranged_value_to_percentage(range, 6) == 100
 
 
-async def test_percentage_to_ranged_value_small():
+async def test_percentage_to_ranged_value_small() -> None:
     """Test a small range of low and high values convert a percentage to a single value."""
     range = (1, 6)
 
@@ -149,7 +149,7 @@ async def test_percentage_to_ranged_value_small():
     assert math.ceil(percentage_to_ranged_value(range, 100)) == 6
 
 
-async def test_ranged_value_to_percentage_starting_at_one():
+async def test_ranged_value_to_percentage_starting_at_one() -> None:
     """Test a range that starts with 1."""
     range = (1, 4)
 
@@ -159,7 +159,7 @@ async def test_ranged_value_to_percentage_starting_at_one():
     assert ranged_value_to_percentage(range, 4) == 100
 
 
-async def test_ranged_value_to_percentage_starting_high():
+async def test_ranged_value_to_percentage_starting_high() -> None:
     """Test a range that does not start with 1."""
     range = (101, 255)
 
@@ -170,7 +170,7 @@ async def test_ranged_value_to_percentage_starting_high():
     assert ranged_value_to_percentage(range, 255) == 100
 
 
-async def test_ranged_value_to_percentage_starting_zero():
+async def test_ranged_value_to_percentage_starting_zero() -> None:
     """Test a range that starts with 0."""
     range = (0, 3)
 

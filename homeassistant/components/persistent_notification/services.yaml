@@ -4,14 +4,14 @@ create:
   fields:
     message:
       name: Message
-      description: Message body of the notification. [Templates accepted]
+      description: Message body of the notification.
       required: true
       example: Please check your configuration.yaml.
       selector:
         text:
     title:
       name: Title
-      description: Optional title for your notification. [Templates accepted]
+      description: Optional title for your notification.
       example: Test notification
       selector:
         text:
@@ -34,14 +34,6 @@ dismiss:
       selector:
         text:
 
-mark_read:
-  name: Mark read
-  description: Mark a notification read.
-  fields:
-    notification_id:
-      name: Notification ID
-      description: Target ID of the notification, which should be mark read.
-      required: true
-      example: 1234
-      selector:
-        text:
+dismiss_all:
+  name: Dismiss All
+  description: Remove all notifications.

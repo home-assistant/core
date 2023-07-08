@@ -40,6 +40,11 @@ from .utils import async_dispatch_id as _ufpd, async_get_devices_by_type
 
 _LOGGER = logging.getLogger(__name__)
 ProtectDeviceType = ProtectAdoptableDeviceModel | NVR
+SMART_EVENTS = {
+    EventType.SMART_DETECT,
+    EventType.SMART_AUDIO_DETECT,
+    EventType.SMART_DETECT_LINE,
+}
 
 
 @callback
@@ -149,8 +154,7 @@ class ProtectData:
 
     @callback
     def async_add_pending_camera_id(self, camera_id: str) -> None:
-        """
-        Add pending camera.
+        """Add pending camera.
 
         A "pending camera" is one that has been adopted by not had its camera channels
         initialized yet. Will cause Websocket code to check for channels to be
@@ -224,6 +228,25 @@ class ProtectData:
 
         # trigger updates for camera that the event references
         elif isinstance(obj, Event):
+            if obj.type in SMART_EVENTS:
+                if obj.camera is not None:
+                    if obj.end is None:
+                        _LOGGER.debug(
+                            "%s (%s): New smart detection started for %s (%s)",
+                            obj.camera.name,
+                            obj.camera.mac,
+                            obj.smart_detect_types,
+                            obj.id,
+                        )
+                    else:
+                        _LOGGER.debug(
+                            "%s (%s): Smart detection ended for %s (%s)",
+                            obj.camera.name,
+                            obj.camera.mac,
+                            obj.smart_detect_types,
+                            obj.id,
+                        )
+
             if obj.type == EventType.DEVICE_ADOPTED:
                 if obj.metadata is not None and obj.metadata.device_id is not None:
                     device = self.api.bootstrap.get_device_from_id(

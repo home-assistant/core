@@ -1,0 +1,8 @@
+{
+  "title": "Time",
+  "entity_component": {
+    "_": {
+      "name": "[%key:component::time::title%]"
+    }
+  }
+}

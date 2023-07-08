@@ -1,5 +1,4 @@
-"""
-Provide a mock lock platform.
+"""Provide a mock lock platform.
 
 Call init before using it in your tests to ensure clean test data.
 """
@@ -43,6 +42,11 @@ async def async_setup_platform(
 
 class MockLock(MockEntity, LockEntity):
     """Mock Lock class."""
+
+    @property
+    def code_format(self) -> str | None:
+        """Return code format."""
+        return self._handle("code_format")
 
     @property
     def is_locked(self):

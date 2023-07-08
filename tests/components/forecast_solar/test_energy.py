@@ -15,7 +15,7 @@ async def test_energy_solar_forecast(
     mock_forecast_solar: MagicMock,
 ) -> None:
     """Test the Forecast.Solar energy platform solar forecast."""
-    mock_forecast_solar.estimate.return_value.wh_hours = {
+    mock_forecast_solar.estimate.return_value.wh_period = {
         datetime(2021, 6, 27, 13, 0, tzinfo=timezone.utc): 12,
         datetime(2021, 6, 27, 14, 0, tzinfo=timezone.utc): 8,
     }

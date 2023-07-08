@@ -1,17 +1,17 @@
 {
   "domain": "songpal",
   "name": "Sony Songpal",
+  "codeowners": ["@rytilahti", "@shenxn"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/songpal",
-  "requirements": ["python-songpal==0.15.1"],
-  "codeowners": ["@rytilahti", "@shenxn"],
+  "iot_class": "local_push",
+  "loggers": ["songpal"],
+  "quality_scale": "gold",
+  "requirements": ["python-songpal==0.15.2"],
   "ssdp": [
     {
       "st": "urn:schemas-sony-com:service:ScalarWebAPI:1",
       "manufacturer": "Sony Corporation"
     }
-  ],
-  "quality_scale": "gold",
-  "iot_class": "local_push",
-  "loggers": ["songpal"]
+  ]
 }

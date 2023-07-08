@@ -1,8 +1,0 @@
-{
-    "issues": {
-        "pending_removal": {
-            "description": "Magicseaweed \u672c\u5730\u7aef\u6574\u5408\u5373\u5c07\u7531 Home Assistant \u4e2d\u79fb\u9664\u3001\u4e26\u65bc Home Assistant 2023.3 \u7248\u5f8c\u7121\u6cd5\u518d\u4f7f\u7528\u3002\n\n\u7531 configuration.yaml \u6a94\u6848\u4e2d\u79fb\u9664 YAML \u8a2d\u5b9a\u4e26\u91cd\u555f Home Assistant to \u4ee5\u4fee\u6b63\u6b64\u554f\u984c\u3002",
-            "title": "Magicseaweed \u6574\u5408\u5373\u5c07\u79fb\u9664"
-        }
-    }
-}

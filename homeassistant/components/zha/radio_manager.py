@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 import contextlib
+from contextlib import suppress
 import copy
 import logging
 import os
@@ -11,7 +12,7 @@ from typing import Any
 import voluptuous as vol
 from zigpy.application import ControllerApplication
 import zigpy.backups
-from zigpy.config import CONF_DEVICE, CONF_DEVICE_PATH
+from zigpy.config import CONF_DEVICE, CONF_DEVICE_PATH, CONF_NWK_BACKUP_ENABLED
 from zigpy.exceptions import NetworkNotFormed
 
 from homeassistant import config_entries
@@ -37,6 +38,12 @@ AUTOPROBE_RADIOS = (
     RadioType.znp,
     RadioType.deconz,
     RadioType.zigate,
+)
+
+RECOMMENDED_RADIOS = (
+    RadioType.ezsp,
+    RadioType.znp,
+    RadioType.deconz,
 )
 
 CONNECT_DELAY_S = 1.0
@@ -126,6 +133,7 @@ class ZhaRadioManager:
 
         app_config[CONF_DATABASE] = database_path
         app_config[CONF_DEVICE] = self.device_settings
+        app_config[CONF_NWK_BACKUP_ENABLED] = False
         app_config = self.radio_type.controller.SCHEMA(app_config)
 
         app = await self.radio_type.controller.new(
@@ -206,6 +214,7 @@ class ZhaRadioManager:
 
             # The list of backups will always exist
             self.backups = app.backups.backups.copy()
+            self.backups.sort(reverse=True, key=lambda b: b.backup_time)
 
         return backup
 
@@ -241,11 +250,12 @@ class ZhaRadioManager:
 
             assert self.current_settings is not None
 
+        metadata = self.current_settings.network_info.metadata["ezsp"]
+
         if (
             self.current_settings.node_info.ieee == self.chosen_backup.node_info.ieee
-            or not self.current_settings.network_info.metadata["ezsp"][
-                "can_write_custom_eui64"
-            ]
+            or metadata["can_rewrite_custom_eui64"]
+            or not metadata["can_burn_userdata_custom_eui64"]
         ):
             # No point in prompting the user if the backup doesn't have a new IEEE
             # address or if there is no way to overwrite the IEEE address a second time
@@ -320,11 +330,9 @@ class ZhaMultiPANMigrationHelper:
             # ZHA is using another radio, do nothing
             return False
 
-        try:
+        # OperationNotAllowed: ZHA is not running
+        with suppress(config_entries.OperationNotAllowed):
             await self._hass.config_entries.async_unload(self._config_entry.entry_id)
-        except config_entries.OperationNotAllowed:
-            # ZHA is not running
-            pass
 
         # Temporarily connect to the old radio to read its settings
         config_entry_data = self._config_entry.data
@@ -381,8 +389,6 @@ class ZhaMultiPANMigrationHelper:
         _LOGGER.debug("Restored backup after %s retries", retry)
 
         # Launch ZHA again
-        try:
+        # OperationNotAllowed: ZHA is not unloaded
+        with suppress(config_entries.OperationNotAllowed):
             await self._hass.config_entries.async_setup(self._config_entry.entry_id)
-        except config_entries.OperationNotAllowed:
-            # ZHA is not unloaded
-            pass

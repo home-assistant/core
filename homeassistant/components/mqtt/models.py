@@ -21,6 +21,8 @@ from homeassistant.helpers.service_info.mqtt import ReceivePayloadType
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, TemplateVarsType
 
 if TYPE_CHECKING:
+    from paho.mqtt.client import MQTTMessage
+
     from .client import MQTT, Subscription
     from .debug_info import TimestampedPublishMessage
     from .device_trigger import Trigger
@@ -260,11 +262,21 @@ class EntityTopicState:
         self.subscribe_calls: dict[str, Entity] = {}
 
     @callback
-    def process_write_state_requests(self) -> None:
+    def process_write_state_requests(self, msg: MQTTMessage) -> None:
         """Process the write state requests."""
         while self.subscribe_calls:
             _, entity = self.subscribe_calls.popitem()
-            entity.async_write_ha_state()
+            try:
+                entity.async_write_ha_state()
+            except Exception:  # pylint: disable=broad-except
+                _LOGGER.error(
+                    "Exception raised when updating state of %s, topic: "
+                    "'%s' with payload: %s",
+                    entity.entity_id,
+                    msg.topic,
+                    msg.payload,
+                    exc_info=True,
+                )
 
     @callback
     def write_state_request(self, entity: Entity) -> None:
@@ -276,8 +288,8 @@ class EntityTopicState:
 class MqttData:
     """Keep the MQTT entry data."""
 
-    client: MQTT | None = None
-    config: ConfigType | None = None
+    client: MQTT
+    config: ConfigType
     debug_info_entities: dict[str, EntityDebugInfo] = field(default_factory=dict)
     debug_info_triggers: dict[tuple[str, str], TriggerDebugInfo] = field(
         default_factory=dict
@@ -295,11 +307,9 @@ class MqttData:
     integration_unsubscribe: dict[str, CALLBACK_TYPE] = field(default_factory=dict)
     last_discovery: float = 0.0
     reload_dispatchers: list[CALLBACK_TYPE] = field(default_factory=list)
-    reload_entry: bool = False
     reload_handlers: dict[str, Callable[[], Coroutine[Any, Any, None]]] = field(
         default_factory=dict
     )
-    reload_needed: bool = False
     state_write_requests: EntityTopicState = field(default_factory=EntityTopicState)
     subscriptions_to_restore: list[Subscription] = field(default_factory=list)
     tags: dict[str, dict[str, MQTTTagScanner]] = field(default_factory=dict)

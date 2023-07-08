@@ -155,7 +155,7 @@ class AxisNetworkDevice:
 
         Called when config entry is updated.
         This is a static method because a class method (bound method),
-        can not be used with weak references.
+        cannot be used with weak references.
         """
         device: AxisNetworkDevice = hass.data[AXIS_DOMAIN][entry.entry_id]
         device.api.config.host = device.host
@@ -218,7 +218,7 @@ class AxisNetworkDevice:
         """Stop stream."""
         if self.api.stream.state != State.STOPPED:
             self.api.stream.connection_status_callback.clear()
-            self.api.stream.stop()
+        self.api.stream.stop()
 
     async def shutdown(self, event) -> None:
         """Stop the event stream."""

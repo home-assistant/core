@@ -308,6 +308,12 @@ async def test_invalid_state(recorder_mock: Recorder, hass: HomeAssistant) -> No
         assert await async_setup_component(hass, "sensor", config)
         await hass.async_block_till_done()
 
+        hass.states.async_set("sensor.test_monitored", "unknown")
+        await hass.async_block_till_done()
+
+        state = hass.states.get("sensor.test")
+        assert state.state == STATE_UNKNOWN
+
         hass.states.async_set("sensor.test_monitored", STATE_UNAVAILABLE)
         await hass.async_block_till_done()
 
@@ -359,8 +365,7 @@ async def test_outlier(values: list[State]) -> None:
 
 
 def test_outlier_step(values: list[State]) -> None:
-    """
-    Test step-change handling in outlier.
+    """Test step-change handling in outlier.
 
     Test if outlier filter handles long-running step-changes correctly.
     It should converge to no longer filter once just over half the

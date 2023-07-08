@@ -1,5 +1,4 @@
-"""
-Test for Nest sensors platform for the Smart Device Management API.
+"""Test for Nest sensors platform for the Smart Device Management API.
 
 These tests fake out the subscriber/devicemanager, and are not using a real
 pubsub subscriber.
@@ -43,7 +42,7 @@ def device_traits() -> dict[str, Any]:
 
 async def test_thermostat_device(
     hass: HomeAssistant, create_device: CreateDevice, setup_platform: PlatformSetup
-):
+) -> None:
     """Test a thermostat with temperature and humidity sensors."""
     create_device.create(
         {
@@ -96,7 +95,7 @@ async def test_thermostat_device(
 
 async def test_thermostat_device_available(
     hass: HomeAssistant, create_device: CreateDevice, setup_platform: PlatformSetup
-):
+) -> None:
     """Test a thermostat with temperature and humidity sensors that is Online."""
     create_device.create(
         {
@@ -122,7 +121,7 @@ async def test_thermostat_device_available(
 
 async def test_thermostat_device_unavailable(
     hass: HomeAssistant, create_device: CreateDevice, setup_platform: PlatformSetup
-):
+) -> None:
     """Test a thermostat with temperature and humidity sensors that is Offline."""
     create_device.create(
         {
@@ -146,7 +145,7 @@ async def test_thermostat_device_unavailable(
     assert humidity.state == STATE_UNAVAILABLE
 
 
-async def test_no_devices(hass: HomeAssistant, setup_platform: PlatformSetup):
+async def test_no_devices(hass: HomeAssistant, setup_platform: PlatformSetup) -> None:
     """Test no devices returned by the api."""
     await setup_platform()
 

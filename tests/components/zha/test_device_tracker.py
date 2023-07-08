@@ -12,6 +12,7 @@ from homeassistant.components.zha.core.registries import (
     SMARTTHINGS_ARRIVAL_SENSOR_DEVICE_TYPE,
 )
 from homeassistant.const import STATE_HOME, STATE_NOT_HOME, STATE_UNAVAILABLE, Platform
+from homeassistant.core import HomeAssistant
 import homeassistant.util.dt as dt_util
 
 from .common import (
@@ -62,12 +63,14 @@ def zigpy_device_dt(zigpy_device_mock):
     return zigpy_device_mock(endpoints)
 
 
-async def test_device_tracker(hass, zha_device_joined_restored, zigpy_device_dt):
+async def test_device_tracker(
+    hass: HomeAssistant, zha_device_joined_restored, zigpy_device_dt
+) -> None:
     """Test ZHA device tracker platform."""
 
     zha_device = await zha_device_joined_restored(zigpy_device_dt)
     cluster = zigpy_device_dt.endpoints.get(1).power
-    entity_id = await find_entity_id(Platform.DEVICE_TRACKER, zha_device, hass)
+    entity_id = find_entity_id(Platform.DEVICE_TRACKER, zha_device, hass)
     assert entity_id is not None
 
     assert hass.states.get(entity_id).state == STATE_NOT_HOME

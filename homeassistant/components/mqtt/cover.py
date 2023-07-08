@@ -1,6 +1,7 @@
 """Support for MQTT cover devices."""
 from __future__ import annotations
 
+from contextlib import suppress
 import functools
 import logging
 from typing import Any
@@ -30,9 +31,9 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.json import JSON_DECODE_EXCEPTIONS, json_loads
 from homeassistant.helpers.service_info.mqtt import ReceivePayloadType
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.util.json import JSON_DECODE_EXCEPTIONS, json_loads
 
 from . import subscription
 from .config import MQTT_BASE_SCHEMA
@@ -45,12 +46,7 @@ from .const import (
     DEFAULT_OPTIMISTIC,
 )
 from .debug_info import log_messages
-from .mixins import (
-    MQTT_ENTITY_COMMON_SCHEMA,
-    MqttEntity,
-    async_setup_entry_helper,
-    warn_for_legacy_schema,
-)
+from .mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity, async_setup_entry_helper
 from .models import MqttCommandTemplate, MqttValueTemplate, ReceiveMessage
 from .util import get_mqtt_data, valid_publish_topic, valid_subscribe_topic
 
@@ -204,19 +200,11 @@ _PLATFORM_SCHEMA_BASE = MQTT_BASE_SCHEMA.extend(
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
 
 PLATFORM_SCHEMA_MODERN = vol.All(
-    cv.removed("tilt_invert_state"),
     _PLATFORM_SCHEMA_BASE,
     validate_options,
 )
 
-# Configuring MQTT Covers under the cover platform key was deprecated in HA Core 2022.6
-# Setup for the legacy YAML format was removed in HA Core 2022.12
-PLATFORM_SCHEMA = vol.All(
-    warn_for_legacy_schema(cover.DOMAIN),
-)
-
 DISCOVERY_SCHEMA = vol.All(
-    cv.removed("tilt_invert_state"),
     _PLATFORM_SCHEMA_BASE.extend({}, extra=vol.REMOVE_EXTRA),
     validate_options,
 )
@@ -414,10 +402,8 @@ class MqttCover(MqttEntity, CoverEntity):
                 _LOGGER.debug("Ignoring empty position message from '%s'", msg.topic)
                 return
 
-            try:
+            with suppress(*JSON_DECODE_EXCEPTIONS):
                 payload_dict = json_loads(payload)
-            except JSON_DECODE_EXCEPTIONS:
-                pass
 
             if payload_dict and isinstance(payload_dict, dict):
                 if "position" not in payload_dict:
@@ -749,8 +735,7 @@ class MqttCover(MqttEntity, CoverEntity):
     def find_in_range_from_percent(
         self, percentage: float, range_type: str = TILT_PAYLOAD
     ) -> int:
-        """
-        Find the adjusted value for 0-100% within the specified range.
+        """Find the adjusted value for 0-100% within the specified range.
 
         if the range is 80-180 and the percentage is 90
         this method would determine the value to send on the topic

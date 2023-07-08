@@ -42,7 +42,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event, HomeAssistant, State, callback
 from homeassistant.data_entry_flow import BaseServiceInfo
-from homeassistant.helpers import discovery_flow
+from homeassistant.helpers import config_validation as cv, discovery_flow
 from homeassistant.helpers.device_registry import (
     CONNECTION_NETWORK_MAC,
     DeviceRegistry,
@@ -59,9 +59,13 @@ from homeassistant.loader import DHCPMatcher, async_get_dhcp
 from homeassistant.util.async_ import run_callback_threadsafe
 from homeassistant.util.network import is_invalid, is_link_local, is_loopback
 
+from .const import DOMAIN
+
 if TYPE_CHECKING:
     from scapy.packet import Packet
     from scapy.sendrecv import AsyncSniffer
+
+CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 FILTER = "udp and (port 67 or 68)"
 REQUESTED_ADDR = "requested_addr"
@@ -77,7 +81,7 @@ SCAN_INTERVAL = timedelta(minutes=60)
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
+@dataclass(slots=True)
 class DhcpServiceInfo(BaseServiceInfo):
     """Prepared info from dhcp entries."""
 
@@ -260,7 +264,10 @@ class NetworkWatcher(WatcherBase):
         """Start scanning for new devices on the network."""
         self._discover_hosts = DiscoverHosts()
         self._unsub = async_track_time_interval(
-            self.hass, self.async_start_discover, SCAN_INTERVAL
+            self.hass,
+            self.async_start_discover,
+            SCAN_INTERVAL,
+            name="DHCP network watcher",
         )
         self.async_start_discover()
 

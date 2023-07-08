@@ -3,7 +3,7 @@ import asyncio
 from datetime import timedelta
 import logging
 from socket import timeout
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from motionblinds import DEVICE_TYPES_WIFI, AsyncMotionMulticast, ParseException
 
@@ -43,20 +43,18 @@ class DataUpdateCoordinatorMotionBlinds(DataUpdateCoordinator):
 
     def __init__(
         self,
-        hass,
-        logger,
-        coordinator_info,
+        hass: HomeAssistant,
+        logger: logging.Logger,
+        coordinator_info: dict[str, Any],
         *,
-        name,
-        update_interval=None,
-        update_method=None,
+        name: str,
+        update_interval: timedelta,
     ) -> None:
         """Initialize global data updater."""
         super().__init__(
             hass,
             logger,
             name=name,
-            update_method=update_method,
             update_interval=update_interval,
         )
 

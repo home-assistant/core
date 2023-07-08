@@ -9,8 +9,7 @@ from aioshelly.block_device import Block
 from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError, RpcCallError
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.entity import DeviceInfo, Entity, EntityDescription
@@ -20,7 +19,6 @@ from homeassistant.helpers.entity_registry import (
     async_entries_for_config_entry,
     async_get as er_async_get,
 )
-from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -85,7 +83,8 @@ def async_setup_block_attribute_entities(
             if getattr(block, sensor_id, None) in (-1, None):
                 continue
 
-            # Filter and remove entities that according to settings should not create an entity
+            # Filter and remove entities that according to settings
+            # should not create an entity
             if description.removal_condition and description.removal_condition(
                 coordinator.device.settings, block
             ):
@@ -193,25 +192,21 @@ def async_setup_rpc_attribute_entities(
             ] and not description.supported(coordinator.device.status[key]):
                 continue
 
-            # Filter and remove entities that according to settings/status should not create an entity
+            # Filter and remove entities that according to settings/status
+            # should not create an entity
             if description.removal_condition and description.removal_condition(
                 coordinator.device.config, coordinator.device.status, key
             ):
                 domain = sensor_class.__module__.split(".")[-1]
                 unique_id = f"{coordinator.mac}-{key}-{sensor_id}"
                 async_remove_shelly_entity(hass, domain, unique_id)
-            else:
-                if description.use_polling_coordinator:
-                    if not sleep_period:
-                        entities.append(
-                            sensor_class(
-                                polling_coordinator, key, sensor_id, description
-                            )
-                        )
-                else:
+            elif description.use_polling_coordinator:
+                if not sleep_period:
                     entities.append(
-                        sensor_class(coordinator, key, sensor_id, description)
+                        sensor_class(polling_coordinator, key, sensor_id, description)
                     )
+            else:
+                entities.append(sensor_class(coordinator, key, sensor_id, description))
     if not entities:
         return
 
@@ -275,6 +270,10 @@ def async_setup_entry_rest(
 class BlockEntityDescription(EntityDescription):
     """Class to describe a BLOCK entity."""
 
+    # BlockEntity does not support UNDEFINED or None,
+    # restrict the type to str.
+    name: str = ""
+
     icon_fn: Callable[[dict], str] | None = None
     unit_fn: Callable[[dict], str] | None = None
     value: Callable[[Any], Any] = lambda val: val
@@ -295,6 +294,10 @@ class RpcEntityRequiredKeysMixin:
 class RpcEntityDescription(EntityDescription, RpcEntityRequiredKeysMixin):
     """Class to describe a RPC entity."""
 
+    # BlockEntity does not support UNDEFINED or None,
+    # restrict the type to str.
+    name: str = ""
+
     value: Callable[[Any, Any], Any] | None = None
     available: Callable[[dict], bool] | None = None
     removal_condition: Callable[[dict, dict, str], bool] | None = None
@@ -306,6 +309,10 @@ class RpcEntityDescription(EntityDescription, RpcEntityRequiredKeysMixin):
 @dataclass
 class RestEntityDescription(EntityDescription):
     """Class to describe a REST entity."""
+
+    # BlockEntity does not support UNDEFINED or None,
+    # restrict the type to str.
+    name: str = ""
 
     value: Callable[[dict, Any], Any] | None = None
     extra_state_attributes: Callable[[dict], dict | None] | None = None
@@ -551,7 +558,7 @@ class ShellyRpcAttributeEntity(ShellyRpcEntity, Entity):
         return self.entity_description.available(self.sub_status)
 
 
-class ShellySleepingBlockAttributeEntity(ShellyBlockAttributeEntity, RestoreEntity):
+class ShellySleepingBlockAttributeEntity(ShellyBlockAttributeEntity):
     """Represent a shelly sleeping block attribute entity."""
 
     # pylint: disable=super-init-not-called
@@ -566,8 +573,7 @@ class ShellySleepingBlockAttributeEntity(ShellyBlockAttributeEntity, RestoreEnti
     ) -> None:
         """Initialize the sleeping sensor."""
         self.sensors = sensors
-        self.last_state: StateType = None
-        self.last_unit: str | None = None
+        self.last_state: State | None = None
         self.coordinator = coordinator
         self.attribute = attribute
         self.block: Block | None = block  # type: ignore[assignment]
@@ -588,16 +594,6 @@ class ShellySleepingBlockAttributeEntity(ShellyBlockAttributeEntity, RestoreEnti
         elif entry is not None:
             self._attr_unique_id = entry.unique_id
             self._attr_name = cast(str, entry.original_name)
-
-    async def async_added_to_hass(self) -> None:
-        """Handle entity which will be added."""
-        await super().async_added_to_hass()
-
-        last_state = await self.async_get_last_state()
-
-        if last_state is not None:
-            self.last_state = last_state.state
-            self.last_unit = last_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
 
     @callback
     def _update_callback(self) -> None:
@@ -634,7 +630,7 @@ class ShellySleepingBlockAttributeEntity(ShellyBlockAttributeEntity, RestoreEnti
                 return
 
 
-class ShellySleepingRpcAttributeEntity(ShellyRpcAttributeEntity, RestoreEntity):
+class ShellySleepingRpcAttributeEntity(ShellyRpcAttributeEntity):
     """Helper class to represent a sleeping rpc attribute."""
 
     entity_description: RpcEntityDescription
@@ -649,8 +645,7 @@ class ShellySleepingRpcAttributeEntity(ShellyRpcAttributeEntity, RestoreEntity):
         entry: RegistryEntry | None = None,
     ) -> None:
         """Initialize the sleeping sensor."""
-        self.last_state: StateType = None
-        self.last_unit: str | None = None
+        self.last_state: State | None = None
         self.coordinator = coordinator
         self.key = key
         self.attribute = attribute
@@ -671,13 +666,3 @@ class ShellySleepingRpcAttributeEntity(ShellyRpcAttributeEntity, RestoreEntity):
             )
         elif entry is not None:
             self._attr_name = cast(str, entry.original_name)
-
-    async def async_added_to_hass(self) -> None:
-        """Handle entity which will be added."""
-        await super().async_added_to_hass()
-
-        last_state = await self.async_get_last_state()
-
-        if last_state is not None:
-            self.last_state = last_state.state
-            self.last_unit = last_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)

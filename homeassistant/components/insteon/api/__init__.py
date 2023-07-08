@@ -28,6 +28,12 @@ from .properties import (
     websocket_reset_properties,
     websocket_write_properties,
 )
+from .scenes import (
+    websocket_delete_scene,
+    websocket_get_scene,
+    websocket_get_scenes,
+    websocket_save_scene,
+)
 
 URL_BASE = "/insteon_static"
 
@@ -38,6 +44,11 @@ def async_load_api(hass):
     websocket_api.async_register_command(hass, websocket_get_device)
     websocket_api.async_register_command(hass, websocket_add_device)
     websocket_api.async_register_command(hass, websocket_cancel_add_device)
+
+    websocket_api.async_register_command(hass, websocket_get_scenes)
+    websocket_api.async_register_command(hass, websocket_get_scene)
+    websocket_api.async_register_command(hass, websocket_save_scene)
+    websocket_api.async_register_command(hass, websocket_delete_scene)
 
     websocket_api.async_register_command(hass, websocket_get_aldb)
     websocket_api.async_register_command(hass, websocket_change_aldb_record)

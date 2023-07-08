@@ -1,4 +1,7 @@
-"""Home Assistant component for accessing the Wallbox Portal API. The number component allows control of charging current."""
+"""Home Assistant component for accessing the Wallbox Portal API.
+
+The number component allows control of charging current.
+"""
 from __future__ import annotations
 
 from dataclasses import dataclass
