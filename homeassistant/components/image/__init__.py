@@ -167,18 +167,14 @@ class ImageEntity(Entity):
         """Return bytes of image."""
         raise NotImplementedError()
 
-    async def _async_load_image_from_url(self, url: str) -> Image | None:
-        """Load an image by url."""
+    async def _fetch_url(self, url: str) -> httpx.Response | None:
+        """Fetch a URL."""
         try:
             response = await self._client.get(
                 url, timeout=GET_IMAGE_TIMEOUT, follow_redirects=True
             )
             response.raise_for_status()
-            content_type = response.headers.get("content-type")
-            return Image(
-                content=response.content,
-                content_type=valid_image_content_type(content_type),
-            )
+            return response
         except httpx.TimeoutException:
             _LOGGER.error("%s: Timeout getting image from %s", self.entity_id, url)
             return None
@@ -190,6 +186,17 @@ class ImageEntity(Entity):
                 err,
             )
             return None
+
+    async def _async_load_image_from_url(self, url: str) -> Image | None:
+        """Load an image by url."""
+        if not response := self._fetch_url(url):
+            return None
+        content_type = response.headers.get("content-type")
+        try:
+            return Image(
+                content=response.content,
+                content_type=valid_image_content_type(content_type),
+            )
         except ImageContentTypeError:
             _LOGGER.error(
                 "%s: Image from %s has invalid content type: %s",
