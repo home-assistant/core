@@ -1,4 +1,8 @@
 """The tests for the Legacy Mqtt vacuum platform."""
+
+# The legacy schema for MQTT vacuum was deprecated with HA Core 2023.8.0
+# and will be removed with HA Core 2024.2.0
+
 from copy import deepcopy
 import json
 from typing import Any

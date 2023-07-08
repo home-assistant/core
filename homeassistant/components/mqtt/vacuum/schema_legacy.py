@@ -1,6 +1,6 @@
 """Support for Legacy MQTT vacuum.
 
-The legacy schema for MQTT vacuum was deprecated with HA Core 2023.7.0
+The legacy schema for MQTT vacuum was deprecated with HA Core 2023.8.0
 and is will be removed with HA Core 2024.2.0
 """
 
