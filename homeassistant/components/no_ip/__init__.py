@@ -35,7 +35,7 @@ async def async_setup(hass: HomeAssistant, hass_config: ConfigType) -> bool:
         hass,
         DOMAIN,
         "deprecated_yaml",
-        breaks_in_ha_version="2023.12.0",
+        breaks_in_ha_version="2024.6.0",
         is_fixable=False,
         severity=IssueSeverity.WARNING,
         translation_key="deprecated_yaml",
@@ -51,9 +51,6 @@ async def async_setup(hass: HomeAssistant, hass_config: ConfigType) -> bool:
                     CONF_DOMAIN: hass_config[DOMAIN].get(CONF_DOMAIN),
                     CONF_USERNAME: hass_config[DOMAIN].get(CONF_USERNAME),
                     CONF_PASSWORD: hass_config[DOMAIN].get(CONF_PASSWORD),
-                    CONF_TIMEOUT: hass_config[DOMAIN].get(
-                        CONF_TIMEOUT, DEFAULT_TIMEOUT
-                    ),
                 },
             )
         )
