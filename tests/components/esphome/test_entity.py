@@ -101,3 +101,32 @@ async def test_entities_removed(
     await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
     assert len(hass_storage[storage_key]["data"]["binary_sensor"]) == 1
+
+
+async def test_entity_info_object_ids(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: Callable[
+        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
+        Awaitable[MockESPHomeDevice],
+    ],
+) -> None:
+    """Test how object ids affect entity id."""
+    entity_info = [
+        BinarySensorInfo(
+            object_id="object_id_is_used",
+            key=1,
+            name="my binary_sensor",
+            unique_id="my_binary_sensor",
+        )
+    ]
+    states = []
+    user_service = []
+    await mock_esphome_device(
+        mock_client=mock_client,
+        entity_info=entity_info,
+        user_service=user_service,
+        states=states,
+    )
+    state = hass.states.get("binary_sensor.test_object_id_is_used")
+    assert state is not None
