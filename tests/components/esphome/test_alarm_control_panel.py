@@ -242,6 +242,6 @@ async def test_generic_alarm_control_panel_missing_state(
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("alarm_control_panel.test_my_alarm_control_panel")
+    state = hass.states.get("alarm_control_panel.test_myalarm_control_panel")
     assert state is not None
     assert state.state == STATE_UNKNOWN
