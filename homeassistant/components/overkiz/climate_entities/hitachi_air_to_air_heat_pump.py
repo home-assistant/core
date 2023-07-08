@@ -245,7 +245,7 @@ class HitachiAirToAirHeatPump(OverkizEntity, ClimateEntity):
         """Return the current preset mode, e.g., home, away, temp."""
         if (
             self.protocol == Protocol.OVP
-            and (state := self.device.states["core:HolidaysModeState"])
+            and (state := self.device.states[OverkizState.CORE_HOLIDAYS_MODE_STATE])
             and state.value_as_str
         ):
             if state.value_as_str == OverkizCommandParam.ON:
