@@ -19,6 +19,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import (
     CALLBACK_TYPE,
+    DOMAIN as HOMEASSISTANT_DOMAIN,
     CoreState,
     HomeAssistant,
     ServiceCall,
@@ -216,16 +217,27 @@ class EntityPlatform:
                 self.platform_name,
                 self.domain,
             )
+            learn_more_url = None
+            if self.platform and "custom_components" not in self.platform.__file__:  # type: ignore[attr-defined]
+                learn_more_url = (
+                    f"https://www.home-assistant.io/integrations/{self.platform_name}/"
+                )
+            platform_key = f"platform: {self.platform_name}"
+            yaml_example = f"```yaml\n{self.domain}:\n  - {platform_key}\n```"
             async_create_issue(
                 self.hass,
-                self.domain,
+                HOMEASSISTANT_DOMAIN,
                 f"platform_integration_no_support_{self.domain}_{self.platform_name}",
                 is_fixable=False,
+                issue_domain=self.platform_name,
+                learn_more_url=learn_more_url,
                 severity=IssueSeverity.ERROR,
-                translation_key="platform_integration_no_support",
+                translation_key="no_platform_setup",
                 translation_placeholders={
                     "domain": self.domain,
                     "platform": self.platform_name,
+                    "platform_key": platform_key,
+                    "yaml_example": yaml_example,
                 },
             )
 
@@ -608,19 +620,12 @@ class EntityPlatform:
                     entity.add_to_platform_abort()
                     return
 
-            if self.config_entry is not None:
-                config_entry_id: str | None = self.config_entry.entry_id
-            else:
-                config_entry_id = None
-
             device_info = entity.device_info
             device_id = None
             device = None
 
-            if config_entry_id is not None and device_info is not None:
-                processed_dev_info: dict[str, str | None] = {
-                    "config_entry_id": config_entry_id
-                }
+            if self.config_entry and device_info is not None:
+                processed_dev_info: dict[str, str | None] = {}
                 for key in (
                     "connections",
                     "default_manufacturer",
@@ -641,6 +646,17 @@ class EntityPlatform:
                             key  # type: ignore[literal-required]
                         ]
 
+                if (
+                    # device info that is purely meant for linking doesn't need default name
+                    any(
+                        key not in {"identifiers", "connections"}
+                        for key in (processed_dev_info)
+                    )
+                    and "default_name" not in processed_dev_info
+                    and not processed_dev_info.get("name")
+                ):
+                    processed_dev_info["name"] = self.config_entry.title
+
                 if "configuration_url" in device_info:
                     if device_info["configuration_url"] is None:
                         processed_dev_info["configuration_url"] = None
@@ -660,7 +676,8 @@ class EntityPlatform:
 
                 try:
                     device = device_registry.async_get_or_create(
-                        **processed_dev_info  # type: ignore[arg-type]
+                        config_entry_id=self.config_entry.entry_id,
+                        **processed_dev_info,  # type: ignore[arg-type]
                     )
                     device_id = device.id
                 except RequiredParameterMissing:

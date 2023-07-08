@@ -3010,7 +3010,6 @@
       "iot_class": "cloud_push"
     },
     "local_calendar": {
-      "name": "Local Calendar",
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_polling"
@@ -4016,6 +4015,12 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
+    "opower": {
+      "name": "Opower",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "opple": {
       "name": "Opple",
       "integration_type": "hub",
@@ -4818,7 +4823,6 @@
       "iot_class": "local_polling"
     },
     "season": {
-      "name": "Season",
       "integration_type": "service",
       "config_flow": true,
       "iot_class": "local_polling"
@@ -6541,8 +6545,8 @@
     "zodiac": {
       "name": "Zodiac",
       "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "local_polling"
+      "config_flow": true,
+      "iot_class": "calculated"
     },
     "zoneminder": {
       "name": "ZoneMinder",
@@ -6671,6 +6675,7 @@
     "input_text",
     "integration",
     "islamic_prayer_times",
+    "local_calendar",
     "local_ip",
     "min_max",
     "mobile_app",
@@ -6681,6 +6686,7 @@
     "proximity",
     "rpi_power",
     "schedule",
+    "season",
     "shopping_list",
     "sun",
     "switch_as_x",
