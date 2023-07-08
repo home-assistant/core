@@ -18,6 +18,7 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_USERNAME,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import aiohttp_client
@@ -56,10 +57,17 @@ class UpdateError(HomeAssistantError):
 
 
 async def async_validate_no_ip(
-    session: aiohttp.ClientSession, domain: str, auth_str: bytes
+    hass: HomeAssistant, user_input: dict[str, Any]
 ) -> dict[str, str]:
     """Update No-IP.com."""
-    params = {"hostname": domain}
+    no_ip_domain = user_input[CONF_DOMAIN]
+    user = user_input[CONF_USERNAME]
+    password = user_input[CONF_PASSWORD]
+
+    auth_str = base64.b64encode(f"{user}:{password}".encode())
+
+    session = aiohttp_client.async_create_clientsession(hass)
+    params = {"hostname": no_ip_domain}
 
     headers = {
         AUTHORIZATION: f"Basic {auth_str.decode('utf-8')}",
@@ -70,7 +78,6 @@ async def async_validate_no_ip(
         async with async_timeout.timeout(DEFAULT_TIMEOUT):
             resp = await session.get(UPDATE_URL, params=params, headers=headers)
             body = await resp.text()
-
             if body.startswith("good") or body.startswith("nochg"):
                 ipAddress = body.split(" ")[1]
                 return {"title": MANUFACTURER, CONF_IP_ADDRESS: ipAddress}
@@ -81,7 +88,7 @@ async def async_validate_no_ip(
         raise aiohttp.ClientError from error
 
     except asyncio.TimeoutError as error:
-        _LOGGER.warning("Timeout from No-IP.com API for domain: %s", domain)
+        _LOGGER.warning("Timeout from No-IP.com API for domain: %s", no_ip_domain)
         raise aiohttp.ClientError from error
 
 
@@ -94,21 +101,15 @@ class NoIPConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle the initial step."""
+        if self._async_current_entries():
+            return self.async_abort(reason="single_instance_allowed")
         errors = {}
 
         result = None
 
         if user_input:
-            no_ip_domain = user_input[CONF_DOMAIN]
-            user = user_input[CONF_USERNAME]
-            password = user_input[CONF_PASSWORD]
-
-            auth_str = base64.b64encode(f"{user}:{password}".encode())
-
-            session = aiohttp_client.async_create_clientsession(self.hass)
-
             try:
-                result = await async_validate_no_ip(session, no_ip_domain, auth_str)
+                result = await async_validate_no_ip(self.hass, user_input)
             except UpdateError as error:
                 errors["base"] = error.args[0]
             except aiohttp.ClientError:
@@ -133,12 +134,17 @@ class NoIPConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, import_data: dict[str, Any] | None = None
     ) -> FlowResult:
         """Import No-IP.com config from configuration.yaml."""
-
-        _LOGGER.debug(
-            "Starting import of sensor from configuration.yaml - %s", import_data
-        )
         if import_data:
-            self._async_abort_entries_match({CONF_DOMAIN: import_data[CONF_DOMAIN]})
+            self._async_abort_entries_match(
+                {
+                    CONF_DOMAIN: import_data[CONF_DOMAIN],
+                    CONF_USERNAME: import_data[CONF_USERNAME],
+                }
+            )
+
+            _LOGGER.debug(
+                "Starting import of sensor from configuration.yaml - %s", import_data
+            )
             # Process the imported configuration data further
             return await self.async_step_user(import_data)
 
