@@ -18,15 +18,15 @@ import pytest
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import dhcp, zeroconf
 from homeassistant.components.esphome import (
-    CONF_DEVICE_NAME,
-    CONF_NOISE_PSK,
-    DOMAIN,
     DomainData,
     dashboard,
 )
 from homeassistant.components.esphome.const import (
     CONF_ALLOW_SERVICE_CALLS,
+    CONF_DEVICE_NAME,
+    CONF_NOISE_PSK,
     DEFAULT_NEW_CONFIG_ALLOW_ALLOW_SERVICE_CALLS,
+    DOMAIN,
 )
 from homeassistant.components.hassio import HassioServiceInfo
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
