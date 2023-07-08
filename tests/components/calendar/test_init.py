@@ -4,8 +4,9 @@ from __future__ import annotations
 from datetime import timedelta
 from http import HTTPStatus
 from typing import Any
-from unittest.mock import ANY, patch
+from unittest.mock import patch
 
+from freezegun import freeze_time
 import pytest
 import voluptuous as vol
 
@@ -386,21 +387,34 @@ async def test_create_event_service_invalid_params(
         )
 
 
-async def test_list_events_service(hass: HomeAssistant) -> None:
-    """Test listing events from the service call using exlplicit start and end time."""
+@freeze_time("2023-06-22 10:30:00+00:00")
+@pytest.mark.parametrize(
+    ("start_time", "end_time"),
+    [
+        ("2023-06-22T04:30:00-06:00", "2023-06-22T06:30:00-06:00"),
+        ("2023-06-22T04:30:00", "2023-06-22T06:30:00"),
+        ("2023-06-22T10:30:00Z", "2023-06-22T12:30:00Z"),
+    ],
+)
+async def test_list_events_service(
+    hass: HomeAssistant, set_time_zone: None, start_time: str, end_time: str
+) -> None:
+    """Test listing events from the service call using exlplicit start and end time.
+
+    This test uses a fixed date/time so that it can deterministically test the
+    string output values.
+    """
+
     await async_setup_component(hass, "calendar", {"calendar": {"platform": "demo"}})
     await hass.async_block_till_done()
-
-    start = dt_util.now()
-    end = start + timedelta(days=1)
 
     response = await hass.services.async_call(
         DOMAIN,
         SERVICE_LIST_EVENTS,
         {
             "entity_id": "calendar.calendar_1",
-            "start_date_time": start,
-            "end_date_time": end,
+            "start_date_time": start_time,
+            "end_date_time": end_time,
         },
         blocking=True,
         return_response=True,
@@ -408,8 +422,8 @@ async def test_list_events_service(hass: HomeAssistant) -> None:
     assert response == {
         "events": [
             {
-                "start": ANY,
-                "end": ANY,
+                "start": "2023-06-22T05:00:00-06:00",
+                "end": "2023-06-22T06:00:00-06:00",
                 "summary": "Future Event",
                 "description": "Future Description",
                 "location": "Future Location",

@@ -10,6 +10,7 @@ from homeassistant.const import Platform
 from homeassistant.core import callback
 
 from .binary_sensor import DISCOVERY_SCHEMAS as BINARY_SENSOR_SCHEMAS
+from .climate import DISCOVERY_SCHEMAS as CLIMATE_SENSOR_SCHEMAS
 from .cover import DISCOVERY_SCHEMAS as COVER_SCHEMAS
 from .light import DISCOVERY_SCHEMAS as LIGHT_SCHEMAS
 from .lock import DISCOVERY_SCHEMAS as LOCK_SCHEMAS
@@ -19,6 +20,7 @@ from .switch import DISCOVERY_SCHEMAS as SWITCH_SCHEMAS
 
 DISCOVERY_SCHEMAS: dict[Platform, list[MatterDiscoverySchema]] = {
     Platform.BINARY_SENSOR: BINARY_SENSOR_SCHEMAS,
+    Platform.CLIMATE: CLIMATE_SENSOR_SCHEMAS,
     Platform.COVER: COVER_SCHEMAS,
     Platform.LIGHT: LIGHT_SCHEMAS,
     Platform.LOCK: LOCK_SCHEMAS,

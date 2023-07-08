@@ -30,7 +30,7 @@ see:
         text:
     gps:
       name: GPS coordinates
-      description: GPS coordinates where device is located (latitude, longitude).
+      description: GPS coordinates where device is located, specified by latitude and longitude.
       example: "[51.509802, -0.086692]"
       selector:
         object:

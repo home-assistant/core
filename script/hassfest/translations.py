@@ -34,6 +34,7 @@ ALLOW_NAME_TRANSLATION = {
     "google_travel_time",
     "homekit_controller",
     "islamic_prayer_times",
+    "local_calendar",
     "local_ip",
     "nmap_tracker",
     "rpi_power",
