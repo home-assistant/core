@@ -39,67 +39,67 @@ class KaleidescapeSensorEntityDescription(
 SENSOR_TYPES: tuple[KaleidescapeSensorEntityDescription, ...] = (
     KaleidescapeSensorEntityDescription(
         key="media_location",
-        name="Media Location",
+        translation_key="media_location",
         icon="mdi:monitor",
         value_fn=lambda device: device.automation.movie_location,
     ),
     KaleidescapeSensorEntityDescription(
         key="play_status",
-        name="Play Status",
+        translation_key="play_status",
         icon="mdi:monitor",
         value_fn=lambda device: device.movie.play_status,
     ),
     KaleidescapeSensorEntityDescription(
         key="play_speed",
-        name="Play Speed",
+        translation_key="play_speed",
         icon="mdi:monitor",
         value_fn=lambda device: device.movie.play_speed,
     ),
     KaleidescapeSensorEntityDescription(
         key="video_mode",
-        name="Video Mode",
+        translation_key="video_mode",
         icon="mdi:monitor-screenshot",
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda device: device.automation.video_mode,
     ),
     KaleidescapeSensorEntityDescription(
         key="video_color_eotf",
-        name="Video Color EOTF",
+        translation_key="video_color_eotf",
         icon="mdi:monitor-eye",
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda device: device.automation.video_color_eotf,
     ),
     KaleidescapeSensorEntityDescription(
         key="video_color_space",
-        name="Video Color Space",
+        translation_key="video_color_space",
         icon="mdi:monitor-eye",
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda device: device.automation.video_color_space,
     ),
     KaleidescapeSensorEntityDescription(
         key="video_color_depth",
-        name="Video Color Depth",
+        translation_key="video_color_depth",
         icon="mdi:monitor-eye",
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda device: device.automation.video_color_depth,
     ),
     KaleidescapeSensorEntityDescription(
         key="video_color_sampling",
-        name="Video Color Sampling",
+        translation_key="video_color_sampling",
         icon="mdi:monitor-eye",
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda device: device.automation.video_color_sampling,
     ),
     KaleidescapeSensorEntityDescription(
         key="screen_mask_ratio",
-        name="Screen Mask Ratio",
+        translation_key="screen_mask_ratio",
         icon="mdi:monitor-screenshot",
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda device: device.automation.screen_mask_ratio,
     ),
     KaleidescapeSensorEntityDescription(
         key="screen_mask_top_trim_rel",
-        name="Screen Mask Top Trim Rel",
+        translation_key="screen_mask_top_trim_rel",
         icon="mdi:monitor-screenshot",
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=PERCENTAGE,
@@ -107,7 +107,7 @@ SENSOR_TYPES: tuple[KaleidescapeSensorEntityDescription, ...] = (
     ),
     KaleidescapeSensorEntityDescription(
         key="screen_mask_bottom_trim_rel",
-        name="Screen Mask Bottom Trim Rel",
+        translation_key="screen_mask_bottom_trim_rel",
         icon="mdi:monitor-screenshot",
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=PERCENTAGE,
@@ -115,14 +115,14 @@ SENSOR_TYPES: tuple[KaleidescapeSensorEntityDescription, ...] = (
     ),
     KaleidescapeSensorEntityDescription(
         key="screen_mask_conservative_ratio",
-        name="Screen Mask Conservative Ratio",
+        translation_key="screen_mask_conservative_ratio",
         icon="mdi:monitor-screenshot",
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda device: device.automation.screen_mask_conservative_ratio,
     ),
     KaleidescapeSensorEntityDescription(
         key="screen_mask_top_mask_abs",
-        name="Screen Mask Top Mask Abs",
+        translation_key="screen_mask_top_mask_abs",
         icon="mdi:monitor-screenshot",
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=PERCENTAGE,
@@ -130,7 +130,7 @@ SENSOR_TYPES: tuple[KaleidescapeSensorEntityDescription, ...] = (
     ),
     KaleidescapeSensorEntityDescription(
         key="screen_mask_bottom_mask_abs",
-        name="Screen Mask Bottom Mask Abs",
+        translation_key="screen_mask_bottom_mask_abs",
         icon="mdi:monitor-screenshot",
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=PERCENTAGE,
@@ -138,14 +138,14 @@ SENSOR_TYPES: tuple[KaleidescapeSensorEntityDescription, ...] = (
     ),
     KaleidescapeSensorEntityDescription(
         key="cinemascape_mask",
-        name="Cinemascape Mask",
+        translation_key="cinemascape_mask",
         icon="mdi:monitor-star",
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda device: device.automation.cinemascape_mask,
     ),
     KaleidescapeSensorEntityDescription(
         key="cinemascape_mode",
-        name="Cinemascape Mode",
+        translation_key="cinemascape_mode",
         icon="mdi:monitor-star",
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda device: device.automation.cinemascape_mode,
@@ -177,7 +177,6 @@ class KaleidescapeSensor(KaleidescapeEntity, SensorEntity):
         super().__init__(device)
         self.entity_description = entity_description
         self._attr_unique_id = f"{self._attr_unique_id}-{entity_description.key}"
-        self._attr_name = f"{self._attr_name} {entity_description.name}"
 
     @property
     def native_value(self) -> StateType:

@@ -10,9 +10,8 @@ from enum import Enum
 import functools
 import logging
 from random import randint
-from types import MappingProxyType, MethodType
+from types import MappingProxyType
 from typing import TYPE_CHECKING, Any, TypeVar, cast
-import weakref
 
 from typing_extensions import Self
 
@@ -303,9 +302,7 @@ class ConfigEntry:
         self.supports_remove_device: bool | None = None
 
         # Listeners to call on update
-        self.update_listeners: list[
-            weakref.ReferenceType[UpdateListenerType] | weakref.WeakMethod
-        ] = []
+        self.update_listeners: list[UpdateListenerType] = []
 
         # Reason why config entry is in a failed state
         self.reason: str | None = None
@@ -653,16 +650,8 @@ class ConfigEntry:
 
         Returns function to unlisten.
         """
-        weak_listener: Any
-        # weakref.ref is not applicable to a bound method, e.g.,
-        # method of a class instance, as reference will die immediately.
-        if hasattr(listener, "__self__"):
-            weak_listener = weakref.WeakMethod(cast(MethodType, listener))
-        else:
-            weak_listener = weakref.ref(listener)
-        self.update_listeners.append(weak_listener)
-
-        return lambda: self.update_listeners.remove(weak_listener)
+        self.update_listeners.append(listener)
+        return lambda: self.update_listeners.remove(listener)
 
     def as_dict(self) -> dict[str, Any]:
         """Return dictionary version of this entry."""
@@ -1348,12 +1337,11 @@ class ConfigEntries:
         if not changed:
             return False
 
-        for listener_ref in entry.update_listeners:
-            if (listener := listener_ref()) is not None:
-                self.hass.async_create_task(
-                    listener(self.hass, entry),
-                    f"config entry update listener {entry.title} {entry.domain} {entry.domain}",
-                )
+        for listener in entry.update_listeners:
+            self.hass.async_create_task(
+                listener(self.hass, entry),
+                f"config entry update listener {entry.title} {entry.domain} {entry.domain}",
+            )
 
         self._async_schedule_save()
         self._async_dispatch(ConfigEntryChange.UPDATED, entry)
