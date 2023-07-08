@@ -1,0 +1,39 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "domain": "Your fully qualified domain name (FQDN)",
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "timeout": "Timeout (in seconds) for the API calls.",
+          "scan_interval": "Update interval"
+        }
+      }
+    },
+    "error": {
+      "nohost": "Hostname supplied does not exist under specified account",
+      "badauth": "Invalid username password combination",
+      "badagent": "Client disabled",
+      "!donator": "An update request was sent with a feature that is not available",
+      "abuse": "Username is blocked due to abuse",
+      "911": "A fatal error on No-IP's side such as a database outage"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "timeout": "Timeout (in seconds) for the API calls.",
+          "scan_interval": "Update interval"
+        }
+      }
+    }
+  },
+  "issues": {
+    "deprecated_yaml": {
+      "title": "The No-IP.com YAML configuration is being removed",
+      "description": "Configuring No-IP.com using YAML is being removed.\n\nYour existing YAML configuration has been imported into the UI automatically.\n\nRemove the No-IP.com YAML configuration from your configuration.yaml file and restart Home Assistant to fix this issue."
+    }
+  }
+}
