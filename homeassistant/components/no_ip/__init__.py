@@ -11,6 +11,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType
 
+from .config_flow import async_validate_no_ip
 from .const import DATA_HASS_CONFIG, DEFAULT_TIMEOUT, DOMAIN, PLATFORMS
 from .coordinator import NoIPDataUpdateCoordinator
 
@@ -43,17 +44,17 @@ async def async_setup(hass: HomeAssistant, hass_config: ConfigType) -> bool:
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][DATA_HASS_CONFIG] = hass_config
     if DOMAIN in hass_config:
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": config_entries.SOURCE_IMPORT},
-                data={
-                    CONF_DOMAIN: hass_config[DOMAIN].get(CONF_DOMAIN),
-                    CONF_USERNAME: hass_config[DOMAIN].get(CONF_USERNAME),
-                    CONF_PASSWORD: hass_config[DOMAIN].get(CONF_PASSWORD),
-                },
+        try:
+            await async_validate_no_ip(hass, hass_config[DOMAIN])
+            hass.async_create_task(
+                hass.config_entries.flow.async_init(
+                    DOMAIN,
+                    context={"source": config_entries.SOURCE_IMPORT},
+                    data=hass_config[DOMAIN],
+                )
             )
-        )
+        except Exception:  # pylint: disable=broad-except
+            return False
     return True
 
 

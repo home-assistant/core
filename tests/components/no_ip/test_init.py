@@ -1,4 +1,4 @@
-"""Test the NO-IP component."""
+"""Test the No-IP.com component."""
 from datetime import timedelta
 
 import pytest
@@ -21,7 +21,7 @@ USERNAME = "abc@123.com"
 
 
 @pytest.fixture
-def setup_no_ip(hass, aioclient_mock):
+def setup_no_ip(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) -> None:
     """Fixture that sets up NO-IP."""
     aioclient_mock.get(UPDATE_URL, params={"hostname": DOMAIN}, text="good 0.0.0.0")
 
@@ -56,11 +56,11 @@ async def test_setup(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) -
         },
     )
     assert result
-    assert aioclient_mock.call_count == 1
+    assert aioclient_mock.call_count == 3
 
     async_fire_time_changed(hass, utcnow() + timedelta(minutes=5))
     await hass.async_block_till_done()
-    assert aioclient_mock.call_count == 1
+    assert aioclient_mock.call_count == 4
 
 
 async def test_setup_fails_if_update_fails(
@@ -68,6 +68,27 @@ async def test_setup_fails_if_update_fails(
 ) -> None:
     """Test setup fails if first update fails."""
     aioclient_mock.get(UPDATE_URL, params={"hostname": DOMAIN}, text="nohost")
+
+    result = await async_setup_component(
+        hass,
+        no_ip.const.DOMAIN,
+        {
+            no_ip.const.DOMAIN: {
+                "domain": DOMAIN,
+                "username": USERNAME,
+                "password": PASSWORD,
+            }
+        },
+    )
+    assert not result
+    assert aioclient_mock.call_count == 1
+
+
+async def test_setup_fails_if_wrong_badagent(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test setup fails if user-agent does not match format."""
+    aioclient_mock.get(UPDATE_URL, params={"hostname": DOMAIN}, text="badagent")
 
     result = await async_setup_component(
         hass,

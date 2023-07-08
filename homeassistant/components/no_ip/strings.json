@@ -16,6 +16,9 @@
       "!donator": "An update request was sent with a feature that is not available",
       "abuse": "Username is blocked due to abuse",
       "911": "A fatal error on No-IP's side such as a database outage"
+    },
+    "abort": {
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
     }
   },
   "issues": {
