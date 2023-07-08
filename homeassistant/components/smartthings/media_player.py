@@ -20,8 +20,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import SmartThingsEntity
 from .const import DATA_BROKERS, DOMAIN
 
-CONTROLLABLE_SOURCES = ["bluetooth", "wifi"]
-
 VALUE_TO_STATE = {
     "buffering": MediaPlayerState.BUFFERING,
     "pause": MediaPlayerState.PAUSED,
@@ -231,7 +229,3 @@ class SmartThingsMediaPlayer(SmartThingsEntity, MediaPlayerEntity):
         if self.supported_features & MediaPlayerEntityFeature.REPEAT_SET:
             return self._device.status.playback_repeat_mode
         return None
-
-    async def async_update(self) -> None:
-        """Update the entity."""
-        await self._device.command("main", "refresh", "refresh")
