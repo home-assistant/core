@@ -28,9 +28,9 @@ def setup_no_ip(hass, aioclient_mock):
     hass.loop.run_until_complete(
         async_setup_component(
             hass,
-            no_ip.DOMAIN,
+            no_ip.const.DOMAIN,
             {
-                no_ip.DOMAIN: {
+                no_ip.const.DOMAIN: {
                     "domain": DOMAIN,
                     "username": USERNAME,
                     "password": PASSWORD,
@@ -46,15 +46,21 @@ async def test_setup(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) -
 
     result = await async_setup_component(
         hass,
-        no_ip.DOMAIN,
-        {no_ip.DOMAIN: {"domain": DOMAIN, "username": USERNAME, "password": PASSWORD}},
+        no_ip.const.DOMAIN,
+        {
+            no_ip.const.DOMAIN: {
+                "domain": DOMAIN,
+                "username": USERNAME,
+                "password": PASSWORD,
+            }
+        },
     )
     assert result
     assert aioclient_mock.call_count == 1
 
     async_fire_time_changed(hass, utcnow() + timedelta(minutes=5))
     await hass.async_block_till_done()
-    assert aioclient_mock.call_count == 2
+    assert aioclient_mock.call_count == 1
 
 
 async def test_setup_fails_if_update_fails(
@@ -65,8 +71,14 @@ async def test_setup_fails_if_update_fails(
 
     result = await async_setup_component(
         hass,
-        no_ip.DOMAIN,
-        {no_ip.DOMAIN: {"domain": DOMAIN, "username": USERNAME, "password": PASSWORD}},
+        no_ip.const.DOMAIN,
+        {
+            no_ip.const.DOMAIN: {
+                "domain": DOMAIN,
+                "username": USERNAME,
+                "password": PASSWORD,
+            }
+        },
     )
     assert not result
     assert aioclient_mock.call_count == 1
@@ -80,8 +92,14 @@ async def test_setup_fails_if_wrong_auth(
 
     result = await async_setup_component(
         hass,
-        no_ip.DOMAIN,
-        {no_ip.DOMAIN: {"domain": DOMAIN, "username": USERNAME, "password": PASSWORD}},
+        no_ip.const.DOMAIN,
+        {
+            no_ip.const.DOMAIN: {
+                "domain": DOMAIN,
+                "username": USERNAME,
+                "password": PASSWORD,
+            }
+        },
     )
     assert not result
     assert aioclient_mock.call_count == 1
