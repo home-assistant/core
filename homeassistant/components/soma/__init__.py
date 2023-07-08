@@ -108,6 +108,8 @@ def soma_api_call(api_call):
 class SomaEntity(Entity):
     """Representation of a generic Soma device."""
 
+    _attr_has_entity_name = True
+
     def __init__(self, device, api):
         """Initialize the Soma device."""
         self.device = device
@@ -128,11 +130,6 @@ class SomaEntity(Entity):
         return self.device["mac"]
 
     @property
-    def name(self):
-        """Return the name of the device."""
-        return self.device["name"]
-
-    @property
     def device_info(self) -> DeviceInfo:
         """Return device specific attributes.
 
@@ -141,7 +138,7 @@ class SomaEntity(Entity):
         return DeviceInfo(
             identifiers={(DOMAIN, self.unique_id)},
             manufacturer="Wazombi Labs",
-            name=self.name,
+            name=self.device["name"],
         )
 
     def set_position(self, position: int) -> None:
