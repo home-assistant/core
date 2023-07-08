@@ -2520,7 +2520,7 @@ async def test_thermostat_dual(hass: HomeAssistant) -> None:
         "climate#test_thermostat",
         "climate.set_temperature",
         hass,
-        payload={"targetSetpointDelta": {"value": 20.0, "scale": "CELSIUS"}},
+        payload={"targetSetpointDelta": {"value": 6.0, "scale": "CELSIUS"}},
     )
     assert msg["event"]["payload"]["type"] == "TEMPERATURE_VALUE_OUT_OF_RANGE"
 
@@ -2531,7 +2531,7 @@ async def test_thermostat_dual(hass: HomeAssistant) -> None:
         "climate#test_thermostat",
         "climate.set_temperature",
         hass,
-        payload={"targetSetpointDelta": {"value": -20.0, "scale": "CELSIUS"}},
+        payload={"targetSetpointDelta": {"value": -6.0, "scale": "CELSIUS"}},
     )
     assert msg["event"]["payload"]["type"] == "TEMPERATURE_VALUE_OUT_OF_RANGE"
 
