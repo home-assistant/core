@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 
-from plugwise import ActuatorData, DeviceData, Smile
+from plugwise import ActuatorData, Smile
 
 from homeassistant.components.number import (
     NumberDeviceClass,
@@ -31,7 +31,6 @@ class PlugwiseEntityDescriptionMixin:
     native_min_value_fn: Callable[[ActuatorData], float]
     native_step_fn: Callable[[ActuatorData], float]
     native_value_fn: Callable[[ActuatorData], float]
-    actuator_fn: Callable[[DeviceData], ActuatorData | None]
 
 
 @dataclass
@@ -53,7 +52,6 @@ NUMBER_TYPES = (
         native_min_value_fn=lambda data: data["lower_bound"],
         native_step_fn=lambda data: data["resolution"],
         native_value_fn=lambda data: data["setpoint"],
-        actuator_fn=lambda data: data.get("maximum_boiler_temperature"),
     ),
 )
 
@@ -72,10 +70,11 @@ async def async_setup_entry(
     entities: list[PlugwiseNumberEntity] = []
     for device_id, device in coordinator.data.devices.items():
         for description in NUMBER_TYPES:
-            if (actuator := description.actuator_fn(device)) and "setpoint" in actuator:
-                entities.append(
-                    PlugwiseNumberEntity(coordinator, device_id, description, actuator)
-                )
+            if device.get(description.key) is not None:
+                if device[description.key].get("setpoint") is not None:  # type: ignore [literal-required]
+                    entities.append(
+                        PlugwiseNumberEntity(coordinator, device_id, description)
+                    )
 
     async_add_entities(entities)
 
@@ -90,11 +89,10 @@ class PlugwiseNumberEntity(PlugwiseEntity, NumberEntity):
         coordinator: PlugwiseDataUpdateCoordinator,
         device_id: str,
         description: PlugwiseNumberEntityDescription,
-        actuator: ActuatorData,
     ) -> None:
         """Initiate Plugwise Number."""
         super().__init__(coordinator, device_id)
-        self.actuator = actuator
+        self.actuator = self.device[device_id][description.key]  # type: ignore [literal-required]
         self.entity_description = description
         self._attr_unique_id = f"{device_id}-{description.key}"
         self._attr_mode = NumberMode.BOX
