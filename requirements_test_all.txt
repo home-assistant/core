@@ -427,7 +427,6 @@ bellows==0.35.5
 bimmer-connected==0.13.7
 
 # homeassistant.components.bluetooth
-# homeassistant.components.gardena_bluetooth
 bleak-retry-connector==3.0.2
 
 # homeassistant.components.bluetooth
@@ -647,7 +646,7 @@ fritzconnection==1.12.0
 gTTS==2.2.4
 
 # homeassistant.components.gardena_bluetooth
-gardena_bluetooth==1.0.0
+gardena_bluetooth==1.0.1
 
 # homeassistant.components.google_assistant_sdk
 gassist-text==0.0.10
