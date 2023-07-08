@@ -41,8 +41,6 @@ from .helpers import async_get_blueprints
 
 PACKAGE_MERGE_HINT = "list"
 
-_CONDITION_SCHEMA = vol.All(cv.ensure_list, [cv.CONDITION_SCHEMA])
-
 _MINIMAL_PLATFORM_SCHEMA = vol.Schema(
     {
         CONF_ID: str,
@@ -65,7 +63,7 @@ PLATFORM_SCHEMA = vol.All(
             vol.Optional(CONF_INITIAL_STATE): cv.boolean,
             vol.Optional(CONF_HIDE_ENTITY): cv.boolean,
             vol.Required(CONF_TRIGGER): cv.TRIGGER_SCHEMA,
-            vol.Optional(CONF_CONDITION): _CONDITION_SCHEMA,
+            vol.Optional(CONF_CONDITION): cv.CONDITIONS_SCHEMA,
             vol.Optional(CONF_VARIABLES): cv.SCRIPT_VARIABLES_SCHEMA,
             vol.Optional(CONF_TRIGGER_VARIABLES): cv.SCRIPT_VARIABLES_SCHEMA,
             vol.Required(CONF_ACTION): cv.SCRIPT_SCHEMA,

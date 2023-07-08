@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name        = "homeassistant"
-version     = "2023.7.0.dev0"
+version     = "2023.8.0.dev0"
 license     = {text = "Apache-2.0"}
 description = "Open-source home automation platform running on Python 3."
 readme      = "README.rst"
@@ -50,7 +50,7 @@ dependencies    = [
     "python-slugify==4.0.1",
     "PyYAML==6.0",
     "requests==2.31.0",
-    "typing_extensions>=4.6.3,<5.0",
+    "typing-extensions>=4.7.0,<5.0",
     "ulid-transform==0.7.2",
     "voluptuous==0.13.1",
     "voluptuous-serialize==2.6.0",
@@ -190,7 +190,7 @@ disable = [
     "invalid-character-nul", # PLE2514
     "invalid-character-sub", # PLE2512
     "invalid-character-zero-width-space", # PLE2515
-    "logging-too-few-args", # PLE1206 
+    "logging-too-few-args", # PLE1206
     "logging-too-many-args", # PLE1205
     "missing-format-string-key", # F524
     "mixed-format-string", # F506

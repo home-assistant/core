@@ -8,7 +8,7 @@ from chip.clusters import Objects as clusters
 
 from homeassistant.components.lock import LockEntity, LockEntityDescription
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
+from homeassistant.const import ATTR_CODE, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -34,6 +34,26 @@ class MatterLock(MatterEntity, LockEntity):
     features: int | None = None
 
     @property
+    def code_format(self) -> str | None:
+        """Regex for code format or None if no code is required."""
+        if self.get_matter_attribute_value(
+            clusters.DoorLock.Attributes.RequirePINforRemoteOperation
+        ):
+            min_pincode_length = int(
+                self.get_matter_attribute_value(
+                    clusters.DoorLock.Attributes.MinPINCodeLength
+                )
+            )
+            max_pincode_length = int(
+                self.get_matter_attribute_value(
+                    clusters.DoorLock.Attributes.MaxPINCodeLength
+                )
+            )
+            return f"^\\d{{{min_pincode_length},{max_pincode_length}}}$"
+
+        return None
+
+    @property
     def supports_door_position_sensor(self) -> bool:
         """Return True if the lock supports door position sensor."""
         if self.features is None:
@@ -56,11 +76,25 @@ class MatterLock(MatterEntity, LockEntity):
 
     async def async_lock(self, **kwargs: Any) -> None:
         """Lock the lock with pin if needed."""
-        await self.send_device_command(command=clusters.DoorLock.Commands.LockDoor())
+        code: str = kwargs.get(
+            ATTR_CODE,
+            self._lock_option_default_code,
+        )
+        code_bytes = code.encode() if code else None
+        await self.send_device_command(
+            command=clusters.DoorLock.Commands.LockDoor(code_bytes)
+        )
 
     async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the lock with pin if needed."""
-        await self.send_device_command(command=clusters.DoorLock.Commands.UnlockDoor())
+        code: str = kwargs.get(
+            ATTR_CODE,
+            self._lock_option_default_code,
+        )
+        code_bytes = code.encode() if code else None
+        await self.send_device_command(
+            command=clusters.DoorLock.Commands.UnlockDoor(code_bytes)
+        )
 
     @callback
     def _update_from_device(self) -> None:
@@ -133,7 +167,7 @@ class DoorLockFeature(IntFlag):
 DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.LOCK,
-        entity_description=LockEntityDescription(key="MatterLock"),
+        entity_description=LockEntityDescription(key="MatterLock", name=None),
         entity_class=MatterLock,
         required_attributes=(clusters.DoorLock.Attributes.LockState,),
         optional_attributes=(clusters.DoorLock.Attributes.DoorState,),

@@ -69,7 +69,7 @@
         "state": {
           "bright": "Bright",
           "dim": "Dim",
-          "off": "Off"
+          "off": "[%key:common::state::off%]"
         }
       },
       "display_orientation": {

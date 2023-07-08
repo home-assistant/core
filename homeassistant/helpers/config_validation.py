@@ -93,7 +93,7 @@ from homeassistant.core import (
     split_entity_id,
     valid_entity_id,
 )
-from homeassistant.exceptions import TemplateError
+from homeassistant.exceptions import HomeAssistantError, TemplateError
 from homeassistant.generated import currencies
 from homeassistant.generated.countries import COUNTRIES
 from homeassistant.generated.languages import LANGUAGES
@@ -609,7 +609,7 @@ def template(value: Any | None) -> template_helper.Template:
         raise vol.Invalid("template value should be a string")
 
     hass: HomeAssistant | None = None
-    with contextlib.suppress(LookupError):
+    with contextlib.suppress(HomeAssistantError):
         hass = async_get_hass()
 
     template_value = template_helper.Template(str(value), hass)
@@ -631,7 +631,7 @@ def dynamic_template(value: Any | None) -> template_helper.Template:
         raise vol.Invalid("template value does not contain a dynamic template")
 
     hass: HomeAssistant | None = None
-    with contextlib.suppress(LookupError):
+    with contextlib.suppress(HomeAssistantError):
         hass = async_get_hass()
 
     template_value = template_helper.Template(str(value), hass)
@@ -1098,7 +1098,7 @@ def _no_yaml_config_schema(
         # pylint: disable-next=import-outside-toplevel
         from .issue_registry import IssueSeverity, async_create_issue
 
-        with contextlib.suppress(LookupError):
+        with contextlib.suppress(HomeAssistantError):
             hass = async_get_hass()
             async_create_issue(
                 hass,
@@ -1527,6 +1527,7 @@ CONDITION_SCHEMA: vol.Schema = vol.Schema(
     )
 )
 
+CONDITIONS_SCHEMA = vol.All(ensure_list, [CONDITION_SCHEMA])
 
 dynamic_template_condition_action = vol.All(
     # Wrap a shorthand template condition action in a template condition
@@ -1690,7 +1691,11 @@ _SCRIPT_STOP_SCHEMA = vol.Schema(
         **SCRIPT_ACTION_BASE_SCHEMA,
         vol.Required(CONF_STOP): vol.Any(None, string),
         vol.Exclusive(CONF_ERROR, "error_or_response"): boolean,
-        vol.Exclusive(CONF_RESPONSE_VARIABLE, "error_or_response"): str,
+        vol.Exclusive(
+            CONF_RESPONSE_VARIABLE,
+            "error_or_response",
+            msg="not allowed to add a response to an error stop action",
+        ): str,
     }
 )
 

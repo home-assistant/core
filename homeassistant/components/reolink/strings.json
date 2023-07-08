@@ -60,7 +60,7 @@
     "select": {
       "floodlight_mode": {
         "state": {
-          "off": "Off",
+          "off": "[%key:common::state::off%]",
           "auto": "Auto",
           "schedule": "Schedule"
         }
@@ -74,7 +74,7 @@
       },
       "auto_quick_reply_message": {
         "state": {
-          "off": "Off"
+          "off": "[%key:common::state::off%]"
         }
       },
       "auto_track_method": {

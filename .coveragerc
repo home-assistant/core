@@ -124,7 +124,6 @@ omit =
     homeassistant/components/bluetooth_tracker/*
     homeassistant/components/bmw_connected_drive/__init__.py
     homeassistant/components/bmw_connected_drive/binary_sensor.py
-    homeassistant/components/bmw_connected_drive/button.py
     homeassistant/components/bmw_connected_drive/coordinator.py
     homeassistant/components/bmw_connected_drive/lock.py
     homeassistant/components/bmw_connected_drive/notify.py
@@ -183,7 +182,6 @@ omit =
     homeassistant/components/crownstone/listeners.py
     homeassistant/components/cups/sensor.py
     homeassistant/components/currencylayer/sensor.py
-    homeassistant/components/daikin/__init__.py
     homeassistant/components/daikin/climate.py
     homeassistant/components/daikin/sensor.py
     homeassistant/components/daikin/switch.py
@@ -306,12 +304,10 @@ omit =
     homeassistant/components/escea/__init__.py
     homeassistant/components/escea/climate.py
     homeassistant/components/escea/discovery.py
-    homeassistant/components/esphome/__init__.py
     homeassistant/components/esphome/bluetooth/*
-    homeassistant/components/esphome/camera.py
     homeassistant/components/esphome/domain_data.py
     homeassistant/components/esphome/entry_data.py
-    homeassistant/components/esphome/light.py
+    homeassistant/components/esphome/manager.py
     homeassistant/components/etherscan/sensor.py
     homeassistant/components/eufy/*
     homeassistant/components/eufylife_ble/__init__.py
@@ -363,6 +359,7 @@ omit =
     homeassistant/components/fixer/sensor.py
     homeassistant/components/fjaraskupan/__init__.py
     homeassistant/components/fjaraskupan/binary_sensor.py
+    homeassistant/components/fjaraskupan/coordinator.py
     homeassistant/components/fjaraskupan/fan.py
     homeassistant/components/fjaraskupan/light.py
     homeassistant/components/fjaraskupan/number.py
@@ -653,6 +650,7 @@ omit =
     homeassistant/components/lookin/light.py
     homeassistant/components/lookin/media_player.py
     homeassistant/components/lookin/sensor.py
+    homeassistant/components/loqed/sensor.py
     homeassistant/components/luci/device_tracker.py
     homeassistant/components/luftdaten/sensor.py
     homeassistant/components/lupusec/*
@@ -860,6 +858,9 @@ omit =
     homeassistant/components/openweathermap/sensor.py
     homeassistant/components/openweathermap/weather_update_coordinator.py
     homeassistant/components/opnsense/__init__.py
+    homeassistant/components/opower/__init__.py
+    homeassistant/components/opower/coordinator.py
+    homeassistant/components/opower/sensor.py
     homeassistant/components/opnsense/device_tracker.py
     homeassistant/components/opple/light.py
     homeassistant/components/oru/*
