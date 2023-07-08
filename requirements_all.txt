@@ -864,7 +864,7 @@ gitterpy==0.1.7
 glances-api==0.4.3
 
 # homeassistant.components.goalzero
-goalzero==0.2.1
+goalzero==0.2.2
 
 # homeassistant.components.goodwe
 goodwe==0.2.31
