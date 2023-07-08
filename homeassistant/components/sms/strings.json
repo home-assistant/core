@@ -26,9 +26,6 @@
       "network_code": { "name": "GSM network code" },
       "network_name": { "name": "Network name" },
       "signal_percent": { "name": "Signal percent" },
-      "signal_strength": {
-        "name": "[%key:component::sensor::entity_component::signal_strength::name%]"
-      },
       "state": { "name": "Network status" }
     }
   }
