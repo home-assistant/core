@@ -24,7 +24,7 @@ SCAN_INTERVAL = timedelta(days=1)
 
 FIRMWARE_UPDATE_ENTITY = UpdateEntityDescription(
     key="firmware",
-    name="Firmware",
+    translation_key="firmware",
     device_class=UpdateDeviceClass.FIRMWARE,
 )
 

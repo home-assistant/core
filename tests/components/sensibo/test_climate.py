@@ -86,21 +86,21 @@ async def test_climate(
     assert state1.state == "heat"
     assert state1.attributes == {
         "hvac_modes": [
-            "cool",
-            "heat",
-            "dry",
             "heat_cool",
+            "cool",
+            "dry",
             "fan_only",
+            "heat",
             "off",
         ],
         "min_temp": 10,
         "max_temp": 20,
         "target_temp_step": 1,
-        "fan_modes": ["quiet", "low", "medium"],
+        "fan_modes": ["low", "medium", "quiet"],
         "swing_modes": [
-            "stopped",
-            "fixedtop",
             "fixedmiddletop",
+            "fixedtop",
+            "stopped",
         ],
         "current_temperature": 21.2,
         "temperature": 25,

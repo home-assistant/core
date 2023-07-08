@@ -1112,20 +1112,21 @@ def test_get_trigger_platform_failure() -> None:
 
 
 async def test_server_reconnect_event(
-    hass: HomeAssistant, client, lock_schlage_be469, integration
+    hass: HomeAssistant,
+    client,
+    lock_schlage_be469,
+    lock_schlage_be469_state,
+    integration,
 ) -> None:
     """Test that when we reconnect to server, event triggers reattach."""
     trigger_type = f"{DOMAIN}.event"
-    node: Node = lock_schlage_be469
-    dev_reg = async_get_dev_reg(hass)
-    device = dev_reg.async_get_device(
-        {get_device_id(client.driver, lock_schlage_be469)}
-    )
-    assert device
+    old_node: Node = lock_schlage_be469
 
     event_name = "interview stage completed"
 
-    original_len = len(node._listeners.get(event_name, []))
+    old_node = client.driver.controller.nodes[20]
+
+    original_len = len(old_node._listeners.get(event_name, []))
 
     assert await async_setup_component(
         hass,
@@ -1147,34 +1148,65 @@ async def test_server_reconnect_event(
         },
     )
 
-    assert len(node._listeners.get(event_name, [])) == original_len + 1
-    old_listener = node._listeners.get(event_name, [])[original_len]
+    assert len(old_node._listeners.get(event_name, [])) == original_len + 1
+    old_listener = old_node._listeners.get(event_name, [])[original_len]
 
+    # Remove node so that we can create a new node instance and make sure the listener
+    # attaches
+    node_removed_event = Event(
+        type="node removed",
+        data={
+            "source": "controller",
+            "event": "node removed",
+            "replaced": False,
+            "node": lock_schlage_be469_state,
+        },
+    )
+    client.driver.controller.receive_event(node_removed_event)
+    assert 20 not in client.driver.controller.nodes
+    await hass.async_block_till_done()
+
+    # Add node like new server connection would
+    node_added_event = Event(
+        type="node added",
+        data={
+            "source": "controller",
+            "event": "node added",
+            "node": lock_schlage_be469_state,
+            "result": {},
+        },
+    )
+    client.driver.controller.receive_event(node_added_event)
+    await hass.async_block_till_done()
+
+    # Reload integration to trigger the dispatch signal
     await hass.config_entries.async_reload(integration.entry_id)
     await hass.async_block_till_done()
 
-    # Make sure there is still a listener added for the trigger
-    assert len(node._listeners.get(event_name, [])) == original_len + 1
+    # Make sure there is a listener added for the trigger to the new node
+    new_node = client.driver.controller.nodes[20]
+    assert len(new_node._listeners.get(event_name, [])) == original_len + 1
 
-    # Make sure the old listener was removed
-    assert old_listener not in node._listeners.get(event_name, [])
+    # Make sure the old listener is no longer referenced
+    assert old_listener not in new_node._listeners.get(event_name, [])
 
 
 async def test_server_reconnect_value_updated(
-    hass: HomeAssistant, client, lock_schlage_be469, integration
+    hass: HomeAssistant,
+    client,
+    lock_schlage_be469,
+    lock_schlage_be469_state,
+    integration,
 ) -> None:
     """Test that when we reconnect to server, value_updated triggers reattach."""
     trigger_type = f"{DOMAIN}.value_updated"
-    node: Node = lock_schlage_be469
-    dev_reg = async_get_dev_reg(hass)
-    device = dev_reg.async_get_device(
-        {get_device_id(client.driver, lock_schlage_be469)}
-    )
-    assert device
+    old_node: Node = lock_schlage_be469
 
     event_name = "value updated"
 
-    original_len = len(node._listeners.get(event_name, []))
+    old_node = client.driver.controller.nodes[20]
+
+    original_len = len(old_node._listeners.get(event_name, []))
 
     assert await async_setup_component(
         hass,
@@ -1196,14 +1228,44 @@ async def test_server_reconnect_value_updated(
         },
     )
 
-    assert len(node._listeners.get(event_name, [])) == original_len + 1
-    old_listener = node._listeners.get(event_name, [])[original_len]
+    assert len(old_node._listeners.get(event_name, [])) == original_len + 1
+    old_listener = old_node._listeners.get(event_name, [])[original_len]
 
+    # Remove node so that we can create a new node instance and make sure the listener
+    # attaches
+    node_removed_event = Event(
+        type="node removed",
+        data={
+            "source": "controller",
+            "event": "node removed",
+            "replaced": False,
+            "node": lock_schlage_be469_state,
+        },
+    )
+    client.driver.controller.receive_event(node_removed_event)
+    assert 20 not in client.driver.controller.nodes
+    await hass.async_block_till_done()
+
+    # Add node like new server connection would
+    node_added_event = Event(
+        type="node added",
+        data={
+            "source": "controller",
+            "event": "node added",
+            "node": lock_schlage_be469_state,
+            "result": {},
+        },
+    )
+    client.driver.controller.receive_event(node_added_event)
+    await hass.async_block_till_done()
+
+    # Reload integration to trigger the dispatch signal
     await hass.config_entries.async_reload(integration.entry_id)
     await hass.async_block_till_done()
 
-    # Make sure there is still a listener added for the trigger
-    assert len(node._listeners.get(event_name, [])) == original_len + 1
+    # Make sure there is a listener added for the trigger to the new node
+    new_node = client.driver.controller.nodes[20]
+    assert len(new_node._listeners.get(event_name, [])) == original_len + 1
 
-    # Make sure the old listener was removed
-    assert old_listener not in node._listeners.get(event_name, [])
+    # Make sure the old listener is no longer referenced
+    assert old_listener not in new_node._listeners.get(event_name, [])

@@ -41,7 +41,7 @@ from homeassistant.const import (
     UnitOfEnergy,
 )
 from homeassistant.core import CoreState, HomeAssistant, State
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -1458,3 +1458,81 @@ def test_calculate_adjustment_invalid_new_state(
     new_state: State = State(entity_id="sensor.test", state="unknown")
     assert mock_sensor.calculate_adjustment(None, new_state) is None
     assert "Invalid state unknown" in caplog.text
+
+
+async def test_device_id(hass: HomeAssistant) -> None:
+    """Test for source entity device for Utility Meter."""
+    device_registry = dr.async_get(hass)
+    entity_registry = er.async_get(hass)
+
+    source_config_entry = MockConfigEntry()
+    source_device_entry = device_registry.async_get_or_create(
+        config_entry_id=source_config_entry.entry_id,
+        identifiers={("sensor", "identifier_test")},
+        connections={("mac", "30:31:32:33:34:35")},
+    )
+    source_entity = entity_registry.async_get_or_create(
+        "sensor",
+        "test",
+        "source",
+        config_entry=source_config_entry,
+        device_id=source_device_entry.id,
+    )
+    await hass.async_block_till_done()
+    assert entity_registry.async_get("sensor.test_source") is not None
+
+    utility_meter_config_entry = MockConfigEntry(
+        data={},
+        domain=DOMAIN,
+        options={
+            "cycle": "monthly",
+            "delta_values": False,
+            "name": "Energy",
+            "net_consumption": False,
+            "offset": 0,
+            "periodically_resetting": True,
+            "source": "sensor.test_source",
+            "tariffs": ["peak", "offpeak"],
+        },
+        title="Energy",
+    )
+
+    utility_meter_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(utility_meter_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    utility_meter_entity = entity_registry.async_get("sensor.energy_peak")
+    assert utility_meter_entity is not None
+    assert utility_meter_entity.device_id == source_entity.device_id
+
+    utility_meter_entity = entity_registry.async_get("sensor.energy_offpeak")
+    assert utility_meter_entity is not None
+    assert utility_meter_entity.device_id == source_entity.device_id
+
+    utility_meter_no_tariffs_config_entry = MockConfigEntry(
+        data={},
+        domain=DOMAIN,
+        options={
+            "cycle": "monthly",
+            "delta_values": False,
+            "name": "Energy",
+            "net_consumption": False,
+            "offset": 0,
+            "periodically_resetting": True,
+            "source": "sensor.test_source",
+            "tariffs": [],
+        },
+        title="Energy",
+    )
+
+    utility_meter_no_tariffs_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(
+        utility_meter_no_tariffs_config_entry.entry_id
+    )
+    await hass.async_block_till_done()
+
+    utility_meter_no_tariffs_entity = entity_registry.async_get("sensor.energy")
+    assert utility_meter_no_tariffs_entity is not None
+    assert utility_meter_no_tariffs_entity.device_id == source_entity.device_id

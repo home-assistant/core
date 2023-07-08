@@ -12,6 +12,14 @@ extend-select = [
     "PT022", # No teardown in fixture, replace useless yield with return
 ]
 
+extend-ignore = [
+    "PLC", # pylint
+    "PLE", # pylint
+    "PLR", # pylint
+    "PLW", # pylint
+    "N815", # Variable {name} in class scope should not be mixedCase
+]
+
 [isort]
 known-first-party = [
     "homeassistant",

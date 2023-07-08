@@ -163,6 +163,8 @@ async def async_setup_entry(
 class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
     """Representation of a Sensibo device."""
 
+    _attr_name = None
+
     def __init__(
         self, coordinator: SensiboDataUpdateCoordinator, device_id: str
     ) -> None:
