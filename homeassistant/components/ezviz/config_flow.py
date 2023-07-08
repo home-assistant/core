@@ -336,6 +336,7 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
 
         for item in self._async_current_entries():
             if item.data.get(CONF_TYPE) == ATTR_TYPE_CLOUD:
+                self.context["title_placeholders"] = {ATTR_SERIAL: item.title}
                 entry = await self.async_set_unique_id(item.unique_id)
 
         if not entry:
