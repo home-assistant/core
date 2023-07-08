@@ -59,7 +59,7 @@ SENSOR_TYPES: tuple[SkybellSensorEntityDescription, ...] = (
     ),
     SkybellSensorEntityDescription(
         key=CONST.ATTR_LAST_CHECK_IN,
-        translation_key=CONST.ATTR_LAST_CHECK_IN,
+        translation_key="last_check_in",
         icon="mdi:clock",
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.TIMESTAMP,
@@ -83,7 +83,7 @@ SENSOR_TYPES: tuple[SkybellSensorEntityDescription, ...] = (
     ),
     SkybellSensorEntityDescription(
         key=CONST.ATTR_WIFI_SSID,
-        translation_key=CONST.ATTR_WIFI_SSID,
+        translation_key="wifi_ssid",
         icon="mdi:wifi-settings",
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -91,7 +91,7 @@ SENSOR_TYPES: tuple[SkybellSensorEntityDescription, ...] = (
     ),
     SkybellSensorEntityDescription(
         key=CONST.ATTR_WIFI_STATUS,
-        translation_key=CONST.ATTR_WIFI_STATUS,
+        translation_key="wifi_status",
         icon="mdi:wifi-strength-3",
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
