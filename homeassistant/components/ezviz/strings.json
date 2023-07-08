@@ -42,7 +42,7 @@
           "sms_code": "MFA Code"
         }
       },
-      "reauth_mfa_confirm": {
+      "reauth_mfa": {
         "title": "EZVIZ Cloud MFA Authentication",
         "description": "Enter MFA code to authenticate ezviz cloud account",
         "data": {
