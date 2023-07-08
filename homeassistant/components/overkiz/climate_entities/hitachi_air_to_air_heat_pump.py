@@ -166,7 +166,7 @@ class HitachiAirToAirHeatPump(OverkizEntity, ClimateEntity):
         if (
             mode_change_state := self.device.states[MODE_CHANGE_STATE[self.protocol]]
         ) and mode_change_state.value_as_str:
-            return OVERKIZ_TO_HVAC_MODES[str(mode_change_state.value_as_str).lower()]
+            return OVERKIZ_TO_HVAC_MODES[mode_change_state.value_as_str.lower()]
 
         return HVACMode.OFF
 
@@ -221,7 +221,7 @@ class HitachiAirToAirHeatPump(OverkizEntity, ClimateEntity):
         if (
             temperature := self.device.states[OverkizState.CORE_TARGET_TEMPERATURE]
         ) and temperature.value_as_int:
-            return int(temperature.value_as_int)
+            return temperature.value_as_int
 
         return None
 
@@ -231,7 +231,7 @@ class HitachiAirToAirHeatPump(OverkizEntity, ClimateEntity):
         if (
             state := self.device.states[ROOM_TEMPERATURE_STATE[self.protocol]]
         ) and state.value_as_int:
-            return int(state.value_as_int)
+            return state.value_as_int
 
         return None
 
@@ -280,12 +280,25 @@ class HitachiAirToAirHeatPump(OverkizEntity, ClimateEntity):
         if self.protocol == Protocol.OVP:
             if preset_mode == PRESET_HOLIDAY_MODE:
                 await self.executor.async_execute_command(
-                    OverkizCommand.SET_HOLIDAYS, OverkizCommandParam.ON  # add to OverkizCommand
+                    OverkizCommand.SET_HOLIDAYS,
+                    OverkizCommandParam.ON,  # add to OverkizCommand
                 )
             if preset_mode == PRESET_NONE:
                 await self.executor.async_execute_command(
-                    OverkizCommand.SET_HOLIDAYS, OverkizCommandParam.OFF  # add to OverkizCommand
+                    OverkizCommand.SET_HOLIDAYS,
+                    OverkizCommandParam.OFF,  # add to OverkizCommand
                 )
+
+    def _control_backfill(
+        self, value: str | None, state_name: str, fallback_value: str
+    ) -> str:
+        """Overkiz doesn't accept commands with undefined parameters. This function is guaranteed to return a `str` which is the provided `value` if set, or the current device state if set, or the provided `fallback_value` otherwise."""
+        if value:
+            return value
+        state = cast(State, self.device.states[state_name])
+        if state and state.value_as_str:
+            return state.value_as_str.lower()
+        return fallback_value
 
     async def _global_control(
         self,
@@ -296,89 +309,52 @@ class HitachiAirToAirHeatPump(OverkizEntity, ClimateEntity):
         swing_mode: str | None = None,
         leave_home: str | None = None,
     ) -> None:
-        """Execute globalControl command with all parameters. There is no option to only set a single parameter, without passing al other values."""
-        main_operation = (
-            main_operation
-            or str(
-                cast(
-                    State, self.device.states[MAIN_OPERATION_STATE[self.protocol]]
-                ).value_as_str
-            ).lower()
+        """Execute globalControl command with all parameters. There is no option to only set a single parameter, without passing all other values."""
+
+        main_operation = main_operation or OverkizCommandParam.ON
+        target_temperature = target_temperature or self.target_temperature
+        fan_mode = self._control_backfill(
+            fan_mode,
+            FAN_SPEED_STATE[self.protocol],
+            OverkizCommandParam.AUTO,
         )
-
-        target_temperature = (
-            target_temperature
-            or cast(
-                State, self.device.states[OverkizState.CORE_TARGET_TEMPERATURE]
-            ).value_as_int
+        hvac_mode = self._control_backfill(
+            hvac_mode,
+            MODE_CHANGE_STATE[self.protocol],
+            OverkizCommandParam.AUTO_MODE,
         )
-
-        fan_mode = (
-            fan_mode
-            or str(
-                cast(
-                    State, self.device.states[FAN_SPEED_STATE[self.protocol]]
-                ).value_as_str
-            ).lower()
+        swing_mode = self._control_backfill(
+            swing_mode,
+            SWING_STATE[self.protocol],
+            OverkizCommandParam.STOP,
         )
-
-        hvac_mode = (
-            hvac_mode
-            or str(
-                cast(
-                    State, self.device.states[MODE_CHANGE_STATE[self.protocol]]
-                ).value_as_str
-            ).lower()
-        )
-
-        if self.device.states.get(SWING_STATE[self.protocol]):
-            swing_mode = (
-                swing_mode
-                or str(
-                    cast(
-                        State, self.device.states[SWING_STATE[self.protocol]]
-                    ).value_as_str
-                ).lower()
-            )
-
-        else:
-            swing_mode = None  # Exception: globalControl() : Invalid value for command parameter p5 : expected (optional) string value (timer, manu, holidays) but got  (String)
 
         if self.protocol == Protocol.OVP:
-            # globalControl() : Invalid value for command parameter p3 : expected string value (auto, hi, med, lo, silent) but got medium (String)
+            # OVP protocol has specific fan_mode values; they require cleaning in case protocol HLLR_WIFI values are leaking
             if fan_mode == OverkizCommandParam.MEDIUM:
                 fan_mode = OverkizCommandParam.MED
-
-            if fan_mode == OverkizCommandParam.HIGH:
+            elif fan_mode == OverkizCommandParam.HIGH:
                 fan_mode = OverkizCommandParam.HI
-
-            if fan_mode == OverkizCommandParam.LOW:
+            elif fan_mode == OverkizCommandParam.LOW:
                 fan_mode = OverkizCommandParam.LO
 
-            await self.executor.async_execute_command(
-                OverkizCommand.GLOBAL_CONTROL,
-                main_operation,  # Main Operation
-                target_temperature,  # Target Temperature
-                fan_mode,  # Fan Mode
-                hvac_mode,  # Mode
-                swing_mode,  # Swing Mode
-            )
-        else:
-            leave_home = (
-                leave_home
-                or str(
-                    cast(
-                        State, self.device.states[LEAVE_HOME_STATE[self.protocol]]
-                    ).value_as_str
-                ).lower()
-            )
+        command_data = [
+            main_operation,  # Main Operation
+            target_temperature,  # Target Temperature
+            fan_mode,  # Fan Mode
+            hvac_mode,  # Mode
+            swing_mode,  # Swing Mode
+        ]
 
-            await self.executor.async_execute_command(
-                OverkizCommand.GLOBAL_CONTROL,
-                main_operation,  # Main Operation
-                target_temperature,  # Target Temperature
-                fan_mode,  # Fan Mode
-                hvac_mode,  # Mode
-                swing_mode,  # Swing Mode
-                leave_home,  # Leave Home
+        if self.protocol == Protocol.HLRR_WIFI:
+            # HLLR_WIFI protocol requires the additional leave_mode parameter
+            leave_home = self._control_backfill(
+                leave_home,
+                LEAVE_HOME_STATE[self.protocol],
+                OverkizCommandParam.OFF,
             )
+            command_data.append(leave_home)
+
+        await self.executor.async_execute_command(
+            OverkizCommand.GLOBAL_CONTROL, *command_data
+        )
