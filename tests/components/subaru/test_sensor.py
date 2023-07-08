@@ -143,7 +143,7 @@ def _assert_data(hass, expected_state):
     expected_states = {}
     for item in sensor_list:
         expected_states[
-            f"sensor.{slugify(f'{TEST_DEVICE_NAME} {item.name}')}"
+            f"sensor.{slugify(f'{TEST_DEVICE_NAME} {item.translation_key}')}"
         ] = expected_state[item.key]
 
     for sensor, value in expected_states.items():
