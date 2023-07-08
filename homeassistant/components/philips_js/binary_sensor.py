@@ -28,8 +28,9 @@ async def async_setup_entry(
         coordinator.api.json_feature_supported("recordings", "List")
         and coordinator.api.api_version == 6
     ):
-        async_add_entities([PhilipsTVRecordingOngoing(coordinator)])
-        async_add_entities([PhilipsTVRecordingNew(coordinator)])
+        async_add_entities(
+            [PhilipsTVRecordingOngoing(coordinator), PhilipsTVRecordingNew(coordinator)]
+        )
 
 
 def _check_for_recording_entry(api: PhilipsTV, entry: str, value: str) -> bool:
