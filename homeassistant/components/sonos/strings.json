@@ -26,9 +26,6 @@
     "sensor": {
       "audio_input_format": {
         "name": "Audio input format"
-      },
-      "sonar_favorites": {
-        "name": "Sonos favorites"
       }
     }
   }
