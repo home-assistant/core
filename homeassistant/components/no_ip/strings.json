@@ -5,9 +5,7 @@
         "data": {
           "domain": "Your fully qualified domain name (FQDN)",
           "username": "[%key:common::config_flow::data::username%]",
-          "password": "[%key:common::config_flow::data::password%]",
-          "timeout": "Timeout (in seconds) for the API calls.",
-          "scan_interval": "Update interval"
+          "password": "[%key:common::config_flow::data::password%]"
         }
       }
     },
@@ -18,16 +16,6 @@
       "!donator": "An update request was sent with a feature that is not available",
       "abuse": "Username is blocked due to abuse",
       "911": "A fatal error on No-IP's side such as a database outage"
-    }
-  },
-  "options": {
-    "step": {
-      "init": {
-        "data": {
-          "timeout": "Timeout (in seconds) for the API calls.",
-          "scan_interval": "Update interval"
-        }
-      }
     }
   },
   "issues": {

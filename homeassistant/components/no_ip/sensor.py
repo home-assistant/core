@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-import logging
 from typing import cast
 
 from homeassistant.components.sensor import RestoreSensor, SensorEntity
@@ -17,8 +16,6 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, MANUFACTURER, TRACKER_UPDATE_STR
 from .coordinator import NoIPDataUpdateCoordinator
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class NoIPBaseEntity(CoordinatorEntity[NoIPDataUpdateCoordinator], RestoreSensor):
@@ -53,7 +50,6 @@ class NoIPBaseEntity(CoordinatorEntity[NoIPDataUpdateCoordinator], RestoreSensor
         for unsub in self._unsub_dispatchers[:]:
             unsub()
             self._unsub_dispatchers.remove(unsub)
-        _LOGGER.debug("When entity is remove on hass")
         self._unsub_dispatchers = []
 
 
@@ -64,7 +60,6 @@ async def async_setup_entry(
 ) -> None:
     """Set up the NoIP sensors from config entry."""
     coordinator: NoIPDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
-    _LOGGER.error(coordinator.data)
     entities: list[NoIPSensor] = []
     entities.append(NoIPSensor(coordinator))
     async_add_entities(entities)

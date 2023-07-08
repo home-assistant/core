@@ -16,25 +16,18 @@ from homeassistant.const import (
     CONF_DOMAIN,
     CONF_IP_ADDRESS,
     CONF_PASSWORD,
-    CONF_SCAN_INTERVAL,
-    CONF_TIMEOUT,
     CONF_USERNAME,
 )
-from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.selector import (
-    NumberSelector,
-    NumberSelectorConfig,
-    NumberSelectorMode,
     TextSelector,
     TextSelectorConfig,
     TextSelectorType,
 )
 
 from .const import (
-    DEFAULT_SCAN_INTERVAL,
     DEFAULT_TIMEOUT,
     DOMAIN,
     HA_USER_AGENT,
@@ -55,21 +48,6 @@ DATA_SCHEMA = {
     vol.Required(CONF_PASSWORD): TextSelector(
         TextSelectorConfig(type=TextSelectorType.PASSWORD)
     ),
-    vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): NumberSelector(
-        NumberSelectorConfig(
-            min=10,
-            max=9999,
-            mode=NumberSelectorMode.BOX,
-            unit_of_measurement="seconds",
-        ),
-    ),
-    vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL): NumberSelector(
-        NumberSelectorConfig(
-            min=1,
-            unit_of_measurement="minutes",
-            mode=NumberSelectorMode.BOX,
-        ),
-    ),
 }
 
 
@@ -78,7 +56,7 @@ class UpdateError(HomeAssistantError):
 
 
 async def async_validate_no_ip(
-    session: aiohttp.ClientSession, domain: str, auth_str: bytes, timeout: int
+    session: aiohttp.ClientSession, domain: str, auth_str: bytes
 ) -> dict[str, str]:
     """Update No-IP.com."""
     params = {"hostname": domain}
@@ -89,7 +67,7 @@ async def async_validate_no_ip(
     }
 
     try:
-        async with async_timeout.timeout(timeout):
+        async with async_timeout.timeout(DEFAULT_TIMEOUT):
             resp = await session.get(UPDATE_URL, params=params, headers=headers)
             body = await resp.text()
 
@@ -112,14 +90,6 @@ class NoIPConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    @staticmethod
-    @callback
-    def async_get_options_flow(
-        config_entry: config_entries.ConfigEntry,
-    ) -> NoIPOptionsFlowHandler:
-        """Return Option handler."""
-        return NoIPOptionsFlowHandler(config_entry)
-
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
@@ -130,7 +100,6 @@ class NoIPConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input:
             no_ip_domain = user_input[CONF_DOMAIN]
-            timeout = user_input[CONF_TIMEOUT]
             user = user_input[CONF_USERNAME]
             password = user_input[CONF_PASSWORD]
 
@@ -139,15 +108,12 @@ class NoIPConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             session = aiohttp_client.async_create_clientsession(self.hass)
 
             try:
-                result = await async_validate_no_ip(
-                    session, no_ip_domain, auth_str, timeout
-                )
+                result = await async_validate_no_ip(session, no_ip_domain, auth_str)
             except UpdateError as error:
                 errors["base"] = error.args[0]
             except aiohttp.ClientError:
                 errors["base"] = "cannot_connect"
             except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             if result:
                 return self.async_create_entry(
@@ -156,12 +122,6 @@ class NoIPConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         CONF_DOMAIN: user_input[CONF_DOMAIN],
                         CONF_USERNAME: user_input[CONF_USERNAME],
                         CONF_PASSWORD: user_input[CONF_PASSWORD],
-                    },
-                    options={
-                        CONF_TIMEOUT: user_input.get(CONF_TIMEOUT, DEFAULT_TIMEOUT),
-                        CONF_SCAN_INTERVAL: user_input.get(
-                            CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
-                        ),
                     },
                 )
 
@@ -183,43 +143,3 @@ class NoIPConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return await self.async_step_user(import_data)
 
         return self.async_abort(reason="No configuration to import.")
-
-
-class NoIPOptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
-    """Handle a option config flow for No-IP.com integration."""
-
-    async def async_step_init(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """Handle options flow."""
-        options = self.options
-        errors: dict[str, str] = {}
-        data_schema = vol.Schema(
-            {
-                vol.Optional(
-                    CONF_TIMEOUT, default=options.get(CONF_TIMEOUT, DEFAULT_TIMEOUT)
-                ): NumberSelector(
-                    NumberSelectorConfig(
-                        min=10,
-                        mode=NumberSelectorMode.BOX,
-                        unit_of_measurement="seconds",
-                    ),
-                ),
-                vol.Optional(
-                    CONF_SCAN_INTERVAL,
-                    default=options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL),
-                ): NumberSelector(
-                    NumberSelectorConfig(
-                        min=1,
-                        unit_of_measurement="minutes",
-                        mode=NumberSelectorMode.BOX,
-                    ),
-                ),
-            }
-        )
-        if user_input is not None:
-            return self.async_create_entry(title=MANUFACTURER, data=user_input)
-
-        return self.async_show_form(
-            step_id="init", data_schema=data_schema, errors=errors, last_step=True
-        )

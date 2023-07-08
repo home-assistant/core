@@ -14,14 +14,19 @@ from homeassistant.const import (
     CONF_DOMAIN,
     CONF_IP_ADDRESS,
     CONF_PASSWORD,
-    CONF_TIMEOUT,
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import DEFAULT_TIMEOUT, DOMAIN, HA_USER_AGENT, UPDATE_URL
+from .const import (
+    DEFAULT_SCAN_INTERVAL,
+    DEFAULT_TIMEOUT,
+    DOMAIN,
+    HA_USER_AGENT,
+    UPDATE_URL,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,19 +36,17 @@ class NoIPDataUpdateCoordinator(DataUpdateCoordinator):
 
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Initialize No-IP.com data updater."""
-        intervale = entry.options.get(CONF_TIMEOUT, 5)
         super().__init__(
             hass=hass,
             logger=_LOGGER,
             name=f"{DOMAIN}-{entry.entry_id}",
-            update_interval=timedelta(minutes=intervale),
+            update_interval=timedelta(minutes=DEFAULT_SCAN_INTERVAL),
         )
         self.config_entry = entry
 
         self.no_ip_domain = self.config_entry.data[CONF_DOMAIN]
         self.params = {"hostname": self.no_ip_domain}
 
-        self.timeout = self.config_entry.data.get(CONF_TIMEOUT, DEFAULT_TIMEOUT)
         user = self.config_entry.data[CONF_USERNAME]
         password = self.config_entry.data[CONF_PASSWORD]
         auth_str = base64.b64encode(f"{user}:{password}".encode())
@@ -60,7 +63,7 @@ class NoIPDataUpdateCoordinator(DataUpdateCoordinator):
 
         session = aiohttp_client.async_create_clientsession(self.hass)
 
-        async with async_timeout.timeout(self.timeout):
+        async with async_timeout.timeout(DEFAULT_TIMEOUT):
             resp = await session.get(
                 UPDATE_URL, params=self.params, headers=self.headers
             )
