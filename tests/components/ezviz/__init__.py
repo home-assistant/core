@@ -81,6 +81,9 @@ API_LOGIN_RETURN_VALIDATE = {
     CONF_URL: "apiieu.ezvizlife.com",
     CONF_TYPE: ATTR_TYPE_CLOUD,
 }
+USER_INPUT_MFA_CODE = {
+    "sms_code": "123456",
+}
 
 
 def _patch_async_setup_entry(return_value=True):

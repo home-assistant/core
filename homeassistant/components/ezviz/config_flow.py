@@ -51,31 +51,6 @@ DEFAULT_OPTIONS = {
 }
 
 
-def _validate_and_create_auth(data: dict) -> dict[str, Any]:
-    """Try to login to EZVIZ cloud account and return token."""
-    # Verify cloud credentials by attempting a login request with username and password.
-    # Return login token.
-
-    ezviz_client = EzvizClient(
-        data[CONF_USERNAME],
-        data[CONF_PASSWORD],
-        data[CONF_URL],
-        data.get(CONF_TIMEOUT, DEFAULT_TIMEOUT),
-    )
-
-    ezviz_token = ezviz_client.login()
-
-    auth_data = {
-        CONF_USERNAME: data[CONF_USERNAME],
-        CONF_SESSION_ID: ezviz_token[CONF_SESSION_ID],
-        CONF_RF_SESSION_ID: ezviz_token[CONF_RF_SESSION_ID],
-        CONF_URL: ezviz_token["api_url"],
-        CONF_TYPE: ATTR_TYPE_CLOUD,
-    }
-
-    return auth_data
-
-
 def _test_camera_rtsp_creds(data: dict) -> None:
     """Try DESCRIBE on RTSP camera with credentials."""
 
@@ -105,6 +80,32 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for EZVIZ."""
 
     VERSION = 1
+    ezviz_client: EzvizClient
+    entry_data: ConfigEntry
+
+    def _validate_and_create_auth(self, data: dict) -> dict[str, Any]:
+        """Try to login to EZVIZ cloud account and return token."""
+        # Verify cloud credentials by attempting a login request with username and password.
+        # Return login token.
+
+        self.ezviz_client = EzvizClient(
+            data[CONF_USERNAME],
+            data[CONF_PASSWORD],
+            data[CONF_URL],
+            data.get(CONF_TIMEOUT, DEFAULT_TIMEOUT),
+        )
+
+        ezviz_token = self.ezviz_client.login(sms_code=data.get("sms_code"))
+
+        auth_data = {
+            CONF_USERNAME: data[CONF_USERNAME],
+            CONF_SESSION_ID: ezviz_token[CONF_SESSION_ID],
+            CONF_RF_SESSION_ID: ezviz_token[CONF_RF_SESSION_ID],
+            CONF_URL: ezviz_token["api_url"],
+            CONF_TYPE: ATTR_TYPE_CLOUD,
+        }
+
+        return auth_data
 
     async def _validate_and_create_camera_rtsp(self, data: dict) -> FlowResult:
         """Try DESCRIBE on RTSP camera with credentials."""
@@ -177,7 +178,7 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
 
             try:
                 auth_data = await self.hass.async_add_executor_job(
-                    _validate_and_create_auth, user_input
+                    self._validate_and_create_auth, user_input
                 )
 
             except InvalidURL:
@@ -187,7 +188,12 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
 
             except EzvizAuthVerificationCode:
-                errors["base"] = "mfa_required"
+                self.context["data"] = {
+                    CONF_USERNAME: user_input[CONF_USERNAME],
+                    CONF_PASSWORD: user_input[CONF_PASSWORD],
+                    CONF_URL: user_input[CONF_URL],
+                }
+                return await self.async_step_user_mfa_confirm()
 
             except PyEzvizError:
                 errors["base"] = "invalid_auth"
@@ -230,7 +236,7 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
 
             try:
                 auth_data = await self.hass.async_add_executor_job(
-                    _validate_and_create_auth, user_input
+                    self._validate_and_create_auth, user_input
                 )
 
             except InvalidURL:
@@ -240,7 +246,12 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
 
             except EzvizAuthVerificationCode:
-                errors["base"] = "mfa_required"
+                self.context["data"] = {
+                    CONF_USERNAME: user_input[CONF_USERNAME],
+                    CONF_PASSWORD: user_input[CONF_PASSWORD],
+                    CONF_URL: user_input[CONF_URL],
+                }
+                return await self.async_step_user_mfa_confirm()
 
             except PyEzvizError:
                 errors["base"] = "invalid_auth"
@@ -346,14 +357,20 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
 
             try:
                 auth_data = await self.hass.async_add_executor_job(
-                    _validate_and_create_auth, user_input
+                    self._validate_and_create_auth, user_input
                 )
 
             except (InvalidHost, InvalidURL):
                 errors["base"] = "invalid_host"
 
             except EzvizAuthVerificationCode:
-                errors["base"] = "mfa_required"
+                self.entry_data = entry
+                self.context["data"] = {
+                    CONF_USERNAME: user_input[CONF_USERNAME],
+                    CONF_PASSWORD: user_input[CONF_PASSWORD],
+                    CONF_URL: user_input[CONF_URL],
+                }
+                return await self.async_step_reauth_mfa()
 
             except (PyEzvizError, AuthTestResultFailed):
                 errors["base"] = "invalid_auth"
@@ -385,6 +402,111 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="reauth_confirm",
             data_schema=data_schema,
             errors=errors,
+        )
+
+    async def async_step_reauth_mfa(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Handle a MFA based authentication flow for reauth."""
+        errors = {}
+        auth_data = {}
+
+        if user_input is not None:
+            user_input[CONF_USERNAME] = self.context["data"][CONF_USERNAME]
+            user_input[CONF_PASSWORD] = self.context["data"][CONF_PASSWORD]
+            user_input[CONF_URL] = self.context["data"][CONF_URL]
+
+            try:
+                auth_data = await self.hass.async_add_executor_job(
+                    self._validate_and_create_auth, user_input
+                )
+
+            except InvalidURL:
+                errors["base"] = "invalid_host"
+
+            except InvalidHost:
+                errors["base"] = "cannot_connect"
+
+            except EzvizAuthVerificationCode:
+                errors["base"] = "mfa_required"
+
+            except PyEzvizError:
+                errors["base"] = "invalid_auth"
+
+            except Exception:  # pylint: disable=broad-except
+                _LOGGER.exception("Unexpected exception")
+                return self.async_abort(reason="unknown")
+
+            else:
+                self.hass.config_entries.async_update_entry(
+                    self.entry_data,
+                    data=auth_data,
+                )
+
+                await self.hass.config_entries.async_reload(self.entry_data.entry_id)
+
+                return self.async_abort(reason="reauth_successful")
+
+        data_schema_mfa_code = vol.Schema(
+            {
+                vol.Required("sms_code"): str,
+            }
+        )
+
+        return self.async_show_form(
+            step_id="reauth_mfa",
+            data_schema=data_schema_mfa_code,
+            errors=errors,
+        )
+
+    async def async_step_user_mfa_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Handle a MFA based user initiated authentication flow."""
+        errors = {}
+        auth_data = {}
+
+        if user_input is not None:
+            user_input[CONF_USERNAME] = self.context["data"][CONF_USERNAME]
+            user_input[CONF_PASSWORD] = self.context["data"][CONF_PASSWORD]
+            user_input[CONF_URL] = self.context["data"][CONF_URL]
+
+            try:
+                auth_data = await self.hass.async_add_executor_job(
+                    self._validate_and_create_auth, user_input
+                )
+
+            except InvalidURL:
+                errors["base"] = "invalid_host"
+
+            except InvalidHost:
+                errors["base"] = "cannot_connect"
+
+            except EzvizAuthVerificationCode:
+                errors["base"] = "mfa_required"
+
+            except PyEzvizError:
+                errors["base"] = "invalid_auth"
+
+            except Exception:  # pylint: disable=broad-except
+                _LOGGER.exception("Unexpected exception")
+                return self.async_abort(reason="unknown")
+
+            else:
+                return self.async_create_entry(
+                    title=user_input[CONF_USERNAME],
+                    data=auth_data,
+                    options=DEFAULT_OPTIONS,
+                )
+
+        data_schema_mfa_code = vol.Schema(
+            {
+                vol.Required("sms_code"): str,
+            }
+        )
+
+        return self.async_show_form(
+            step_id="user_mfa_confirm", data_schema=data_schema_mfa_code, errors=errors
         )
 
 

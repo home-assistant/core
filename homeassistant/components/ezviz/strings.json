@@ -34,6 +34,20 @@
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"
         }
+      },
+      "user_mfa_confirm": {
+        "title": "EZVIZ Cloud MFA Authentication",
+        "description": "Enter MFA code to authenticate ezviz cloud account",
+        "data": {
+          "sms_code": "MFA Code"
+        }
+      },
+      "reauth_mfa_confirm": {
+        "title": "EZVIZ Cloud MFA Authentication",
+        "description": "Enter MFA code to authenticate ezviz cloud account",
+        "data": {
+          "sms_code": "MFA Code"
+        }
       }
     },
     "error": {

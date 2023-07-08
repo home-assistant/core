@@ -38,6 +38,7 @@ from homeassistant.data_entry_flow import FlowResultType
 from . import (
     API_LOGIN_RETURN_VALIDATE,
     DISCOVERY_INFO,
+    USER_INPUT_MFA_CODE,
     USER_INPUT_VALIDATE,
     _patch_async_setup_entry,
     init_integration,
@@ -58,6 +59,46 @@ async def test_user_form(hass: HomeAssistant, ezviz_config_flow) -> None:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             USER_INPUT_VALIDATE,
+        )
+    await hass.async_block_till_done()
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["title"] == "test-username"
+    assert result["data"] == {**API_LOGIN_RETURN_VALIDATE}
+
+    assert len(mock_setup_entry.mock_calls) == 1
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "already_configured_account"
+
+
+async def test_user_form_mfa(hass: HomeAssistant, ezviz_config_flow) -> None:
+    """Test we handle mfa exception on user form. Should return mfa step."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+
+    ezviz_config_flow.side_effect = EzvizAuthVerificationCode
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        USER_INPUT_VALIDATE,
+    )
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "user_mfa_confirm"
+    assert result["errors"] == {}
+
+    ezviz_config_flow.side_effect = None
+    with _patch_async_setup_entry() as mock_setup_entry:
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            USER_INPUT_MFA_CODE,
         )
     await hass.async_block_till_done()
 
@@ -106,6 +147,56 @@ async def test_user_custom_url(hass: HomeAssistant, ezviz_config_flow) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+async def test_user_form_custom_url_mfa(hass: HomeAssistant, ezviz_config_flow) -> None:
+    """Test we handle mfa exception on user form with custom url. Should return and run mfa step."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_USERNAME: "test-username",
+            CONF_PASSWORD: "test-password",
+            CONF_URL: CONF_CUSTOMIZE,
+        },
+    )
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "user_custom_url"
+    assert result["errors"] == {}
+
+    ezviz_config_flow.side_effect = EzvizAuthVerificationCode
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_URL: "test-user"},
+    )
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "user_mfa_confirm"
+    assert result["errors"] == {}
+
+    ezviz_config_flow.side_effect = None
+    with _patch_async_setup_entry() as mock_setup_entry:
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            USER_INPUT_MFA_CODE,
+        )
+    await hass.async_block_till_done()
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["title"] == "test-username"
+    assert result["data"] == {**API_LOGIN_RETURN_VALIDATE}
+
+    assert len(mock_setup_entry.mock_calls) == 1
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "already_configured_account"
+
+
 async def test_async_step_reauth(hass: HomeAssistant, ezviz_config_flow) -> None:
     """Test the reauth step."""
 
@@ -142,6 +233,60 @@ async def test_async_step_reauth(hass: HomeAssistant, ezviz_config_flow) -> None
             CONF_USERNAME: "test-username",
             CONF_PASSWORD: "test-password",
         },
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+
+
+async def test_async_step_reauth_mfa(hass: HomeAssistant, ezviz_config_flow) -> None:
+    """Test the reauth step if account is enabled for MFA."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+
+    with _patch_async_setup_entry() as mock_setup_entry:
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            USER_INPUT_VALIDATE,
+        )
+    await hass.async_block_till_done()
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["title"] == "test-username"
+    assert result["data"] == {**API_LOGIN_RETURN_VALIDATE}
+
+    assert len(mock_setup_entry.mock_calls) == 1
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_REAUTH}, data=USER_INPUT_VALIDATE
+    )
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert result["errors"] == {}
+
+    ezviz_config_flow.side_effect = EzvizAuthVerificationCode
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_USERNAME: "test-username",
+            CONF_PASSWORD: "test-password",
+        },
+    )
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "reauth_mfa"
+    assert result["errors"] == {}
+
+    ezviz_config_flow.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        USER_INPUT_MFA_CODE,
     )
     await hass.async_block_till_done()
 
@@ -274,17 +419,6 @@ async def test_user_form_exception(hass: HomeAssistant, ezviz_config_flow) -> No
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "invalid_host"}
-
-    ezviz_config_flow.side_effect = EzvizAuthVerificationCode
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        USER_INPUT_VALIDATE,
-    )
-
-    assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "user"
-    assert result["errors"] == {"base": "mfa_required"}
 
     ezviz_config_flow.side_effect = HTTPError
 
@@ -510,17 +644,6 @@ async def test_user_custom_url_exception(
     assert result["step_id"] == "user_custom_url"
     assert result["errors"] == {"base": "invalid_auth"}
 
-    ezviz_config_flow.side_effect = EzvizAuthVerificationCode
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_URL: "test-user"},
-    )
-
-    assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "user_custom_url"
-    assert result["errors"] == {"base": "mfa_required"}
-
     ezviz_config_flow.side_effect = Exception
 
     result = await hass.config_entries.flow.async_configure(
@@ -591,20 +714,6 @@ async def test_async_step_reauth_exception(
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
     assert result["errors"] == {"base": "invalid_host"}
-
-    ezviz_config_flow.side_effect = EzvizAuthVerificationCode()
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_USERNAME: "test-username",
-            CONF_PASSWORD: "test-password",
-        },
-    )
-    await hass.async_block_till_done()
-
-    assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "reauth_confirm"
-    assert result["errors"] == {"base": "mfa_required"}
 
     ezviz_config_flow.side_effect = PyEzvizError()
     result = await hass.config_entries.flow.async_configure(
