@@ -32,7 +32,7 @@ async def async_setup_entry(
         async_add_entities([PhilipsTVRecordingNew(coordinator)])
 
 
-def _check_for_one(api: PhilipsTV, entry: str, value: str) -> bool:
+def _check_for_recording_entry(api: PhilipsTV, entry: str, value: str) -> bool:
     """Return True if at least one specified value is available within entry of list."""
     for rec in api.recordings_list["recordings"]:
         if rec[entry] == value:
@@ -65,7 +65,7 @@ class PhilipsTVRecordingOngoing(
 
     def _update_from_coordinator(self):
         """Set is_on true if at least one recording is ongoing."""
-        self._attr_is_on = _check_for_one(
+        self._attr_is_on = _check_for_recording_entry(
             self.coordinator.api, "RecordingType", "RECORDING_ONGOING"
         )
 
@@ -101,7 +101,7 @@ class PhilipsTVRecordingNew(
 
     def _update_from_coordinator(self):
         """Set is_on true if at least one recording is new."""
-        self._attr_is_on = _check_for_one(
+        self._attr_is_on = _check_for_recording_entry(
             self.coordinator.api, "RecordingType", "RECORDING_NEW"
         )
 
