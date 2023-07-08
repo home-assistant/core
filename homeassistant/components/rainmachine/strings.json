@@ -28,5 +28,74 @@
         }
       }
     }
+  },
+  "entity": {
+    "binary_sensor": {
+      "flow_sensor": {
+        "name": "Flow sensor"
+      },
+      "freeze": {
+        "name": "Freeze restrictions"
+      },
+      "hourly": {
+        "name": "Hourly restrictions"
+      },
+      "month": {
+        "name": "Month restrictions"
+      },
+      "raindelay": {
+        "name": "Rain delay restrictions"
+      },
+      "rainsensor": {
+        "name": "Rain sensor restrictions"
+      },
+      "weekday": {
+        "name": "Weekday restrictions"
+      }
+    },
+    "select": {
+      "freeze_protection_temperature": {
+        "name": "Freeze protection temperature"
+      }
+    },
+    "sensor": {
+      "flow_sensor_clicks_cubic_meter": {
+        "name": "Flow sensor clicks per cubic meter"
+      },
+      "flow_sensor_consumed_liters": {
+        "name": "Flow sensor consumed liters"
+      },
+      "flow_sensor_leak_clicks": {
+        "name": "Flow sensor leak clicks"
+      },
+      "flow_sensor_leak_volume": {
+        "name": "Flow sensor leak volume"
+      },
+      "flow_sensor_start_index": {
+        "name": "Flow sensor start index"
+      },
+      "flow_sensor_watering_clicks": {
+        "name": "Flow sensor clicks"
+      },
+      "last_leak_detected": {
+        "name": "Last leak detected"
+      },
+      "rain_sensor_rain_start": {
+        "name": "Rain sensor rain start"
+      }
+    },
+    "switch": {
+      "freeze_protect_enabled": {
+        "name": "Freeze protection"
+      },
+      "hot_days_extra_watering": {
+        "name": "Extra water on hot days"
+      }
+    },
+    "update": {
+      "firmware": {
+        "name": "Firmware"
+      }
+    }
   }
 }
