@@ -671,12 +671,20 @@ async def handle_execute_script(
     """Handle execute script command."""
     # Circular dep
     # pylint: disable-next=import-outside-toplevel
-    from homeassistant.helpers.script import Script
+    from homeassistant.helpers.script import Script, async_validate_actions_config
+
+    script_config = await async_validate_actions_config(hass, msg["sequence"])
 
     context = connection.context(msg)
-    script_obj = Script(hass, msg["sequence"], f"{const.DOMAIN} script", const.DOMAIN)
-    await script_obj.async_run(msg.get("variables"), context=context)
-    connection.send_result(msg["id"], {"context": context})
+    script_obj = Script(hass, script_config, f"{const.DOMAIN} script", const.DOMAIN)
+    response = await script_obj.async_run(msg.get("variables"), context=context)
+    connection.send_result(
+        msg["id"],
+        {
+            "context": context,
+            "response": response,
+        },
+    )
 
 
 @callback
@@ -719,14 +727,14 @@ async def handle_validate_config(
 
     for key, schema, validator in (
         ("trigger", cv.TRIGGER_SCHEMA, trigger.async_validate_trigger_config),
-        ("condition", cv.CONDITION_SCHEMA, condition.async_validate_condition_config),
+        ("condition", cv.CONDITIONS_SCHEMA, condition.async_validate_conditions_config),
         ("action", cv.SCRIPT_SCHEMA, script.async_validate_actions_config),
     ):
         if key not in msg:
             continue
 
         try:
-            await validator(hass, schema(msg[key]))  # type: ignore[operator]
+            await validator(hass, schema(msg[key]))
         except vol.Invalid as err:
             result[key] = {"valid": False, "error": str(err)}
         else:

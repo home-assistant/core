@@ -39,6 +39,7 @@ class AbodeCamera(AbodeDevice, Camera):
     """Representation of an Abode camera."""
 
     _device: AbodeCam
+    _attr_name = None
 
     def __init__(self, data: AbodeSystem, device: AbodeDev, event: Event) -> None:
         """Initialize the Abode device."""
