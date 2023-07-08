@@ -16,5 +16,20 @@
       "title": "Networking error: subscriptions failed",
       "description": "Falling back to polling, functionality may be limited.\n\nSonos device at {device_ip} cannot reach Home Assistant at {listener_address}.\n\nSee our [documentation]({sub_fail_url}) for more information on how to solve this issue."
     }
+  },
+  "entity": {
+    "binary_sensor": {
+      "microphone": {
+        "name": "Microphone"
+      }
+    },
+    "sensor": {
+      "audio_input_format": {
+        "name": "Audio input format"
+      },
+      "sonar_favorites": {
+        "name": "Sonos favorites"
+      }
+    }
   }
 }
