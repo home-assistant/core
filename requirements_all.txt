@@ -130,8 +130,6 @@ RestrictedPython==6.0
 RtmAPI==0.7.2
 
 # homeassistant.components.recorder
-SQLAlchemy==2.0.15
-
 # homeassistant.components.sql
 SQLAlchemy==2.0.18
 
