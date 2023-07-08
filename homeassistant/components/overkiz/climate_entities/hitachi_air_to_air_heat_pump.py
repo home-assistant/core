@@ -284,7 +284,7 @@ class HitachiAirToAirHeatPump(OverkizEntity, ClimateEntity):
                 )
             if preset_mode == PRESET_NONE:
                 await self.executor.async_execute_command(
-                    "setHolidays", OverkizCommandParam.OFF  # add to OverkizCommand
+                    OverkizCommand.SET_HOLIDAYS, OverkizCommandParam.OFF  # add to OverkizCommand
                 )
 
     async def _global_control(
