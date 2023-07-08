@@ -6289,7 +6289,6 @@
       "iot_class": "cloud_polling"
     },
     "workday": {
-      "name": "Workday",
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_polling"
@@ -6695,6 +6694,7 @@
     "tod",
     "uptime",
     "utility_meter",
-    "waze_travel_time"
+    "waze_travel_time",
+    "workday"
   ]
 }
