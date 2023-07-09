@@ -540,6 +540,7 @@ class UnitOfElectricEfficiency(StrEnum):
 
     MILES_PER_KILOWATT_HOUR = "mi/kWh"
     WATT_HOUR_PER_KM = "Wh/km"
+    KILOMETERS_PER_KILOWATT_HOUR = "km/kWh"
 
 # Electric_current units
 class UnitOfElectricCurrent(StrEnum):
