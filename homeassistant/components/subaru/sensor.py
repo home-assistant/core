@@ -276,14 +276,19 @@ async def _async_migrate_entries(
     """Migrate sensor entries from HA<=2022.10 to use preferred unique_id."""
     entity_registry = er.async_get(hass)
 
-    all_sensors = []
-    all_sensors.extend(EV_SENSORS)
-    all_sensors.extend(API_GEN_2_SENSORS)
-    all_sensors.extend(SAFETY_SENSORS)
-
-    # Old unique_id is (previously title-cased) sensor name
-    # (e.g. "VIN_Avg Fuel Consumption")
-    replacements = {str(s.name).upper(): s.key for s in all_sensors}
+    replacements = {
+        "ODOMETER": sc.ODOMETER,
+        "AVG FUEL CONSUMPTION": sc.AVG_FUEL_CONSUMPTION,
+        "RANGE": sc.DIST_TO_EMPTY,
+        "TIRE PRESSURE FL": sc.TIRE_PRESSURE_FL,
+        "TIRE PRESSURE FR": sc.TIRE_PRESSURE_FR,
+        "TIRE PRESSURE RL": sc.TIRE_PRESSURE_RL,
+        "TIRE PRESSURE RR": sc.TIRE_PRESSURE_RR,
+        "FUEL LEVEL": sc.REMAINING_FUEL_PERCENT,
+        "EV RANGE": sc.EV_DISTANCE_TO_EMPTY,
+        "EV BATTERY LEVEL": sc.EV_STATE_OF_CHARGE_PERCENT,
+        "EV TIME TO FULL CHARGE": sc.EV_TIME_TO_FULLY_CHARGED_UTC,
+    }
 
     @callback
     def update_unique_id(entry: er.RegistryEntry) -> dict[str, Any] | None:
