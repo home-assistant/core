@@ -59,7 +59,7 @@ TYPE_FREEZE_PROTECTION_TEMPERATURE = "freeze_protection_temperature"
 SELECT_DESCRIPTIONS = (
     FreezeProtectionSelectDescription(
         key=TYPE_FREEZE_PROTECTION_TEMPERATURE,
-        name="Freeze protection temperature",
+        translation_key=TYPE_FREEZE_PROTECTION_TEMPERATURE,
         icon="mdi:thermometer",
         entity_category=EntityCategory.CONFIG,
         api_category=DATA_RESTRICTIONS_UNIVERSAL,

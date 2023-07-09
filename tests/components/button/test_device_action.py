@@ -29,7 +29,7 @@ async def test_get_actions(
         config_entry_id=config_entry.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    entity_registry.async_get_or_create(
+    entity_entry = entity_registry.async_get_or_create(
         DOMAIN, "test", "5678", device_id=device_entry.id
     )
     expected_actions = [
@@ -37,7 +37,7 @@ async def test_get_actions(
             "domain": DOMAIN,
             "type": "press",
             "device_id": device_entry.id,
-            "entity_id": "button.test_5678",
+            "entity_id": entity_entry.id,
             "metadata": {"secondary": False},
         }
     ]
@@ -70,7 +70,7 @@ async def test_get_actions_hidden_auxiliary(
         config_entry_id=config_entry.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    entity_registry.async_get_or_create(
+    entity_entry = entity_registry.async_get_or_create(
         DOMAIN,
         "test",
         "5678",
@@ -84,7 +84,7 @@ async def test_get_actions_hidden_auxiliary(
             "domain": DOMAIN,
             "type": action,
             "device_id": device_entry.id,
-            "entity_id": f"{DOMAIN}.test_5678",
+            "entity_id": entity_entry.id,
             "metadata": {"secondary": True},
         }
         for action in ["press"]
@@ -95,8 +95,10 @@ async def test_get_actions_hidden_auxiliary(
     assert actions == unordered(expected_actions)
 
 
-async def test_action(hass: HomeAssistant) -> None:
+async def test_action(hass: HomeAssistant, entity_registry: er.EntityRegistry) -> None:
     """Test for press action."""
+    entry = entity_registry.async_get_or_create(DOMAIN, "test", "5678")
+
     assert await async_setup_component(
         hass,
         automation.DOMAIN,
@@ -110,7 +112,7 @@ async def test_action(hass: HomeAssistant) -> None:
                     "action": {
                         "domain": DOMAIN,
                         "device_id": "abcdefgh",
-                        "entity_id": "button.entity",
+                        "entity_id": entry.id,
                         "type": "press",
                     },
                 },
@@ -125,4 +127,41 @@ async def test_action(hass: HomeAssistant) -> None:
     assert len(press_calls) == 1
     assert press_calls[0].domain == DOMAIN
     assert press_calls[0].service == "press"
-    assert press_calls[0].data == {"entity_id": "button.entity"}
+    assert press_calls[0].data == {"entity_id": entry.entity_id}
+
+
+async def test_action_legacy(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test for press action."""
+    entry = entity_registry.async_get_or_create(DOMAIN, "test", "5678")
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": {
+                        "platform": "event",
+                        "event_type": "test_event",
+                    },
+                    "action": {
+                        "domain": DOMAIN,
+                        "device_id": "abcdefgh",
+                        "entity_id": entry.entity_id,
+                        "type": "press",
+                    },
+                },
+            ]
+        },
+    )
+
+    press_calls = async_mock_service(hass, DOMAIN, "press")
+
+    hass.bus.async_fire("test_event")
+    await hass.async_block_till_done()
+    assert len(press_calls) == 1
+    assert press_calls[0].domain == DOMAIN
+    assert press_calls[0].service == "press"
+    assert press_calls[0].data == {"entity_id": entry.entity_id}

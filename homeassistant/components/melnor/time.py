@@ -42,7 +42,7 @@ ZONE_ENTITY_DESCRIPTIONS: list[MelnorZoneTimeEntityDescription] = [
     MelnorZoneTimeEntityDescription(
         entity_category=EntityCategory.CONFIG,
         key="frequency_start_time",
-        name="Schedule Start Time",
+        translation_key="frequency_start_time",
         set_time_fn=lambda valve, value: valve.set_frequency_start_time(value),
         state_fn=lambda valve: valve.frequency.start_time,
     ),
