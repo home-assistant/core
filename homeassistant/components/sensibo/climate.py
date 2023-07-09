@@ -27,7 +27,7 @@ from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.unit_conversion import TemperatureConverter
 
-from .const import DOMAIN, LOGGER
+from .const import DOMAIN
 from .coordinator import SensiboDataUpdateCoordinator
 from .entity import SensiboDeviceBaseEntity, async_handle_api_call
 
@@ -327,9 +327,8 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
         if "fanLevel" not in self.device_data.active_features:
             raise HomeAssistantError("Current mode doesn't support setting Fanlevel")
         if fan_mode not in AVAILABLE_FAN_MODES:
-            LOGGER.warning(
-                "Climate fan_mode %s is not supported by the integration, please open an issue",
-                fan_mode,
+            raise HomeAssistantError(
+                f"Climate fan mode {fan_mode} is not supported by the integration, please open an issue"
             )
 
         transformation = self.device_data.fan_modes_translated
@@ -373,9 +372,8 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
         if "swing" not in self.device_data.active_features:
             raise HomeAssistantError("Current mode doesn't support setting Swing")
         if swing_mode not in AVAILABLE_SWING_MODES:
-            LOGGER.warning(
-                "Climate swing_mode %s is not supported by the integration, please open an issue",
-                swing_mode,
+            raise HomeAssistantError(
+                f"Climate swing mode {swing_mode} is not supported by the integration, please open an issue"
             )
 
         transformation = self.device_data.swing_modes_translated

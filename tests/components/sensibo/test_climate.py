@@ -1322,16 +1322,39 @@ async def test_climate_fan_mode_and_swing_mode_not_supported(
     load_int: ConfigEntry,
     monkeypatch: pytest.MonkeyPatch,
     get_data: SensiboData,
-    caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test the Sensibo climate fan_mode and swing_mode not supported is logging error."""
+    """Test the Sensibo climate fan_mode and swing_mode not supported is raising error."""
 
     state1 = hass.states.get("climate.hallway")
     assert state1.attributes["fan_mode"] == "high"
     assert state1.attributes["swing_mode"] == "stopped"
 
-    monkeypatch.setattr(get_data.parsed["ABC999111"], "swing_mode", "faulty_swing_mode")
-    monkeypatch.setattr(get_data.parsed["ABC999111"], "fan_mode", "faulty_fan_mode")
+    with patch(
+        "homeassistant.components.sensibo.util.SensiboClient.async_set_ac_state_property",
+    ), pytest.raises(
+        HomeAssistantError,
+        match="Climate swing mode faulty_swing_mode is not supported by the integration, please open an issue",
+    ):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_SWING_MODE,
+            {ATTR_ENTITY_ID: state1.entity_id, ATTR_SWING_MODE: "faulty_swing_mode"},
+            blocking=True,
+        )
+
+    with patch(
+        "homeassistant.components.sensibo.util.SensiboClient.async_set_ac_state_property",
+    ), pytest.raises(
+        HomeAssistantError,
+        match="Climate fan mode faulty_fan_mode is not supported by the integration, please open an issue",
+    ):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_FAN_MODE,
+            {ATTR_ENTITY_ID: state1.entity_id, ATTR_FAN_MODE: "faulty_fan_mode"},
+            blocking=True,
+        )
+
     with patch(
         "homeassistant.components.sensibo.coordinator.SensiboClient.async_get_devices_data",
         return_value=get_data,
@@ -1342,14 +1365,6 @@ async def test_climate_fan_mode_and_swing_mode_not_supported(
         )
         await hass.async_block_till_done()
 
-    state3 = hass.states.get("climate.hallway")
-    assert state3.attributes["fan_mode"] is None
-    assert state3.attributes["swing_mode"] is None
-    assert (
-        "Climate entity fan_mode is faulty_fan_mode which is not supported by the integration"
-        in caplog.text
-    )
-    assert (
-        "Climate entity swing_mode is faulty_swing_mode which is not supported by the integration"
-        in caplog.text
-    )
+    state2 = hass.states.get("climate.hallway")
+    assert state2.attributes["fan_mode"] == "high"
+    assert state2.attributes["swing_mode"] == "stopped"
