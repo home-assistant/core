@@ -1,10 +1,10 @@
 {
   "domain": "trafikverket_camera",
   "name": "Trafikverket Camera",
-  "documentation": "https://www.home-assistant.io/integrations/trafikverket_camera",
-  "requirements": ["pytrafikverket==0.2.1"],
   "codeowners": ["@gjohansson-ST"],
   "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/trafikverket_camera",
   "iot_class": "cloud_polling",
-  "loggers": ["pytrafikverket"]
+  "loggers": ["pytrafikverket"],
+  "requirements": ["pytrafikverket==0.3.3"]
 }
