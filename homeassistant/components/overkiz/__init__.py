@@ -277,6 +277,9 @@ async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
             username=username, password=password, session=session, server=server
         )
 
-        await client.delete_local_token(
-            gateway_id=cast(str, entry.unique_id), uuid=token_uuid
-        )
+        try:
+            await client.delete_local_token(
+                gateway_id=cast(str, entry.unique_id), uuid=token_uuid
+            )
+        except NotSuchTokenException:
+            LOGGER.debug("Token is invalid / has been already removed")
