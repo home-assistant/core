@@ -15,5 +15,5 @@
   "iot_class": "cloud_polling",
   "loggers": ["pysensibo"],
   "quality_scale": "platinum",
-  "requirements": ["pysensibo==1.0.28"]
+  "requirements": ["pysensibo==1.0.31"]
 }

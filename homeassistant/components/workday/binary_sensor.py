@@ -92,7 +92,7 @@ async def async_setup_platform(
         hass,
         DOMAIN,
         "deprecated_yaml",
-        breaks_in_ha_version="2023.7.0",
+        breaks_in_ha_version="2023.11.0",
         is_fixable=False,
         severity=IssueSeverity.WARNING,
         translation_key="deprecated_yaml",
@@ -120,15 +120,16 @@ async def async_setup_entry(
     sensor_name: str = entry.options[CONF_NAME]
     workdays: list[str] = entry.options[CONF_WORKDAYS]
 
+    cls: HolidayBase = getattr(holidays, country)
     year: int = (dt_util.now() + timedelta(days=days_offset)).year
-    obj_holidays: HolidayBase = getattr(holidays, country)(years=year)
 
-    if province:
-        try:
-            obj_holidays = getattr(holidays, country)(subdiv=province, years=year)
-        except NotImplementedError:
-            LOGGER.error("There is no subdivision %s in country %s", province, country)
-            return
+    if province and province not in cls.subdivisions:
+        LOGGER.error("There is no subdivision %s in country %s", province, country)
+        return
+
+    obj_holidays = cls(
+        subdiv=province, years=year, language=cls.default_language
+    )  # type: ignore[operator]
 
     # Add custom holidays
     try:
@@ -178,6 +179,7 @@ class IsWorkdaySensor(BinarySensorEntity):
     """Implementation of a Workday sensor."""
 
     _attr_has_entity_name = True
+    _attr_name = None
 
     def __init__(
         self,

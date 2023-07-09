@@ -302,7 +302,7 @@
     }
   },
   "device_class": {
-    "co": "carbon_monoxide",
+    "co": "carbon monoxide",
     "cold": "cold",
     "gas": "gas",
     "heat": "heat",
@@ -314,11 +314,5 @@
     "smoke": "smoke",
     "sound": "sound",
     "vibration": "vibration"
-  },
-  "issues": {
-    "platform_integration_no_support": {
-      "title": "[%key:common::issues::platform_integration_no_support_title%]",
-      "description": "[%key:common::issues::platform_integration_no_support_description%]"
-    }
   }
 }

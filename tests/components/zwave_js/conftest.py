@@ -365,6 +365,14 @@ def climate_adc_t3000_state_fixture():
     return json.loads(load_fixture("zwave_js/climate_adc_t3000_state.json"))
 
 
+@pytest.fixture(name="climate_airzone_aidoo_control_hvac_unit_state", scope="session")
+def climate_airzone_aidoo_control_hvac_unit_state_fixture():
+    """Load the climate Airzone Aidoo Control HVAC Unit state fixture data."""
+    return json.loads(
+        load_fixture("zwave_js/climate_airzone_aidoo_control_hvac_unit_state.json")
+    )
+
+
 @pytest.fixture(name="climate_danfoss_lc_13_state", scope="session")
 def climate_danfoss_lc_13_state_fixture():
     """Load Danfoss (LC-13) electronic radiator thermostat node state fixture data."""
@@ -822,6 +830,16 @@ def climate_adc_t3000_missing_fan_mode_states_fixture(client, climate_adc_t3000_
         ):
             del value["metadata"]["states"]
     node = Node(client, data)
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="climate_airzone_aidoo_control_hvac_unit")
+def climate_airzone_aidoo_control_hvac_unit_fixture(
+    client, climate_airzone_aidoo_control_hvac_unit_state
+):
+    """Mock a climate Airzone Aidoo Control HVAC node."""
+    node = Node(client, copy.deepcopy(climate_airzone_aidoo_control_hvac_unit_state))
     client.driver.controller.nodes[node.node_id] = node
     return node
 
