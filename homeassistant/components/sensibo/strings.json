@@ -31,23 +31,45 @@
     }
   },
   "entity": {
-    "sensor": {
-      "sensitivity": {
-        "state": {
-          "n": "Normal",
-          "s": "Sensitive"
-        }
+    "binary_sensor": {
+      "filter_clean": {
+        "name": "Filter clean required"
       },
-      "smart_type": {
-        "state": {
-          "temperature": "Temperature",
-          "feelslike": "Feels like",
-          "humidity": "Humidity"
-        }
+      "is_main_sensor": {
+        "name": "Main sensor"
+      },
+      "room_occupied": {
+        "name": "Room occupied"
+      },
+      "pure_ac_integration": {
+        "name": "Pure Boost linked with AC"
+      },
+      "pure_geo_integration": {
+        "name": "Pure Boost linked with presence"
+      },
+      "pure_measure_integration": {
+        "name": "Pure Boost linked with indoor air quality"
+      },
+      "pure_prime_integration": {
+        "name": "Pure Boost linked with outdoor air quality"
+      }
+    },
+    "button": {
+      "reset_filter": {
+        "name": "Reset filter"
+      }
+    },
+    "number": {
+      "calibration_temperature": {
+        "name": "Temperature calibration"
+      },
+      "calibration_humidity": {
+        "name": "Humidity calibration"
       }
     },
     "select": {
       "horizontalswing": {
+        "name": "Horizontal swing",
         "state": {
           "stopped": "Stopped",
           "fixedleft": "Fixed left",
@@ -61,11 +83,78 @@
         }
       },
       "light": {
+        "name": "Light",
         "state": {
           "on": "[%key:common::state::on%]",
           "dim": "Dim",
           "off": "[%key:common::state::off%]"
         }
+      }
+    },
+    "sensor": {
+      "filter_last_reset": {
+        "name": "Filter last reset"
+      },
+      "rssi": {
+        "name": "RSSI"
+      },
+      "battery_voltage": {
+        "name": "Battery voltage"
+      },
+      "sensitivity": {
+        "name": "Pure sensitivity",
+        "state": {
+          "n": "Normal",
+          "s": "Sensitive"
+        }
+      },
+      "timer_time": {
+        "name": "Timer end time"
+      },
+      "feels_like": {
+        "name": "Temperature feels like"
+      },
+      "climate_react_low": {
+        "name": "Climate React low temperature threshold"
+      },
+      "climate_react_high": {
+        "name": "Climate React high temperature threshold"
+      },
+      "smart_type": {
+        "name": "Climate React type",
+        "state": {
+          "temperature": "Temperature",
+          "feelslike": "Feels like",
+          "humidity": "Humidity"
+        }
+      },
+      "airq_tvoc": {
+        "name": "AirQ TVOC"
+      },
+      "airq_co2": {
+        "name": "AirQ CO2"
+      },
+      "tvoc": {
+        "name": "TVOC"
+      },
+      "ethanol": {
+        "name": "Ethanol"
+      }
+    },
+    "switch": {
+      "timer_on_switch": {
+        "name": "Timer"
+      },
+      "climate_react_switch": {
+        "name": "Climate React"
+      },
+      "pure_boost_switch": {
+        "name": "Pure Boost"
+      }
+    },
+    "update": {
+      "fw_ver_available": {
+        "name": "Update available"
       }
     }
   }

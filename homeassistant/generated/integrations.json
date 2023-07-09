@@ -1896,7 +1896,6 @@
       "iot_class": "cloud_polling"
     },
     "generic": {
-      "name": "Generic Camera",
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_push"
@@ -4823,7 +4822,6 @@
       "iot_class": "local_polling"
     },
     "season": {
-      "name": "Season",
       "integration_type": "service",
       "config_flow": true,
       "iot_class": "local_polling"
@@ -6291,7 +6289,6 @@
       "iot_class": "cloud_polling"
     },
     "workday": {
-      "name": "Workday",
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_polling"
@@ -6664,6 +6661,7 @@
     "emulated_roku",
     "filesize",
     "garages_amsterdam",
+    "generic",
     "google_travel_time",
     "group",
     "growatt_server",
@@ -6687,6 +6685,7 @@
     "proximity",
     "rpi_power",
     "schedule",
+    "season",
     "shopping_list",
     "sun",
     "switch_as_x",
@@ -6695,6 +6694,7 @@
     "tod",
     "uptime",
     "utility_meter",
-    "waze_travel_time"
+    "waze_travel_time",
+    "workday"
   ]
 }

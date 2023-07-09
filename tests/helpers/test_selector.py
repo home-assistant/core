@@ -240,6 +240,22 @@ def test_device_selector_schema(schema, valid_selections, invalid_selections) ->
                 "filter": [
                     {
                         "supported_features": [
+                            [
+                                "light.LightEntityFeature.EFFECT",
+                                "light.LightEntityFeature.TRANSITION",
+                            ]
+                        ]
+                    },
+                ]
+            },
+            ("light.abc123", "blah.blah", FAKE_UUID),
+            (None,),
+        ),
+        (
+            {
+                "filter": [
+                    {
+                        "supported_features": [
                             "light.LightEntityFeature.EFFECT",
                             "light.LightEntityFeature.TRANSITION",
                         ]
