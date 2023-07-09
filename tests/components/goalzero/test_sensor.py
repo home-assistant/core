@@ -66,7 +66,7 @@ async def test_sensors(
     assert state.state == "1330"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.ENERGY
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfEnergy.WATT_HOUR
-    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
+    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.TOTAL
     state = hass.states.get(f"sensor.{DEFAULT_NAME}_volts")
     assert state.state == "12.0"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.VOLTAGE
