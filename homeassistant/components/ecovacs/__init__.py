@@ -1,4 +1,5 @@
 """Support for Ecovacs Deebot vacuums."""
+from functools import partial
 import logging
 import random
 import string
@@ -46,13 +47,14 @@ ECOVACS_API_DEVICEID = "".join(
 )
 
 
-def setup(hass: HomeAssistant, config: ConfigType) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Ecovacs component."""
     _LOGGER.debug("Creating new Ecovacs component")
 
     hass.data[ECOVACS_DEVICES] = []
 
-    ecovacs_api = EcoVacsAPI(
+    ecovacs_api = await hass.async_add_executor_job(
+        EcoVacsAPI,
         ECOVACS_API_DEVICEID,
         config[DOMAIN].get(CONF_USERNAME),
         EcoVacsAPI.md5(config[DOMAIN].get(CONF_PASSWORD)),
@@ -60,7 +62,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         config[DOMAIN].get(CONF_CONTINENT),
     )
 
-    devices = ecovacs_api.devices()
+    devices = await hass.async_add_executor_job(ecovacs_api.devices)
     _LOGGER.debug("Ecobot devices: %s", devices)
 
     for device in devices:
@@ -69,28 +71,32 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
             device.get("did"),
             device.get("nick"),
         )
-        vacbot = VacBot(
-            ecovacs_api.uid,
-            ecovacs_api.REALM,
-            ecovacs_api.resource,
-            ecovacs_api.user_access_token,
-            device,
-            config[DOMAIN].get(CONF_CONTINENT).lower(),
-            monitor=True,
+        vacbot = await hass.async_add_executor_job(
+            partial(
+                VacBot,
+                ecovacs_api.uid,
+                ecovacs_api.REALM,
+                ecovacs_api.resource,
+                ecovacs_api.user_access_token,
+                device,
+                config[DOMAIN].get(CONF_CONTINENT).lower(),
+                monitor=True,
+            )
         )
         hass.data[ECOVACS_DEVICES].append(vacbot)
 
-    def stop(event: object) -> None:
+    async def async_stop(event: object) -> None:
         """Shut down open connections to Ecovacs XMPP server."""
-        for device in hass.data[ECOVACS_DEVICES]:
+        devices: list[VacBot] = hass.data[ECOVACS_DEVICES]
+        for device in devices:
             _LOGGER.info(
                 "Shutting down connection to Ecovacs device %s",
                 device.vacuum.get("did"),
             )
-            device.disconnect()
+            await hass.async_add_executor_job(device.disconnect)
 
     # Listen for HA stop to disconnect.
-    hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop)
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_stop)
 
     if hass.data[ECOVACS_DEVICES]:
         _LOGGER.debug("Starting vacuum components")
