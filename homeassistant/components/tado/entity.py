@@ -34,6 +34,7 @@ class TadoHomeEntity(Entity):
     """Base implementation for Tado home."""
 
     _attr_should_poll = False
+    _attr_has_entity_name = True
 
     def __init__(self, tado):
         """Initialize a Tado home."""
@@ -56,6 +57,7 @@ class TadoHomeEntity(Entity):
 class TadoZoneEntity(Entity):
     """Base implementation for Tado zone."""
 
+    _attr_has_entity_name = True
     _attr_should_poll = False
 
     def __init__(self, zone_name, home_id, zone_id):
