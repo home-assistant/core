@@ -334,8 +334,8 @@ def test_type_switches(type_name, entity_id, state, attrs, config) -> None:
             "vacuum.dock_vacuum",
             "docked",
             {
-                ATTR_SUPPORTED_FEATURES: vacuum.SUPPORT_START
-                | vacuum.SUPPORT_RETURN_HOME
+                ATTR_SUPPORTED_FEATURES: vacuum.VacuumEntityFeature.START
+                | vacuum.VacuumEntityFeature.RETURN_HOME
             },
         ),
         ("Vacuum", "vacuum.basic_vacuum", "off", {}),

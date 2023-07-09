@@ -95,23 +95,6 @@ class VacuumEntityFeature(IntFlag):
     START = 8192
 
 
-# These SUPPORT_* constants are deprecated as of Home Assistant 2022.5.
-# Please use the VacuumEntityFeature enum instead.
-SUPPORT_TURN_ON = 1
-SUPPORT_TURN_OFF = 2
-SUPPORT_PAUSE = 4
-SUPPORT_STOP = 8
-SUPPORT_RETURN_HOME = 16
-SUPPORT_FAN_SPEED = 32
-SUPPORT_BATTERY = 64
-SUPPORT_STATUS = 128
-SUPPORT_SEND_COMMAND = 256
-SUPPORT_LOCATE = 512
-SUPPORT_CLEAN_SPOT = 1024
-SUPPORT_MAP = 2048
-SUPPORT_STATE = 4096
-SUPPORT_START = 8192
-
 # mypy: disallow-any-generics
 
 

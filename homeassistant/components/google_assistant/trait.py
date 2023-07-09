@@ -612,7 +612,7 @@ class LocatorTrait(_Trait):
     @staticmethod
     def supported(domain, features, device_class, _):
         """Test if state is supported."""
-        return domain == vacuum.DOMAIN and features & vacuum.SUPPORT_LOCATE
+        return domain == vacuum.DOMAIN and features & vacuum.VacuumEntityFeature.LOCATE
 
     def sync_attributes(self):
         """Return locator attributes for a sync request."""
@@ -652,7 +652,7 @@ class EnergyStorageTrait(_Trait):
     @staticmethod
     def supported(domain, features, device_class, _):
         """Test if state is supported."""
-        return domain == vacuum.DOMAIN and features & vacuum.SUPPORT_BATTERY
+        return domain == vacuum.DOMAIN and features & vacuum.VacuumEntityFeature.BATTERY
 
     def sync_attributes(self):
         """Return EnergyStorage attributes for a sync request."""
@@ -721,7 +721,7 @@ class StartStopTrait(_Trait):
         if domain == vacuum.DOMAIN:
             return {
                 "pausable": self.state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
-                & vacuum.SUPPORT_PAUSE
+                & vacuum.VacuumEntityFeature.PAUSE
                 != 0
             }
         if domain == cover.DOMAIN:

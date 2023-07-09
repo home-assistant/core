@@ -364,7 +364,7 @@ async def test_locate_vacuum(hass: HomeAssistant) -> None:
     """Test locate trait support for vacuum domain."""
     assert helpers.get_google_type(vacuum.DOMAIN, None) is not None
     assert trait.LocatorTrait.supported(
-        vacuum.DOMAIN, vacuum.SUPPORT_LOCATE, None, None
+        vacuum.DOMAIN, vacuum.VacuumEntityFeature.LOCATE, None, None
     )
 
     trt = trait.LocatorTrait(
@@ -372,7 +372,7 @@ async def test_locate_vacuum(hass: HomeAssistant) -> None:
         State(
             "vacuum.bla",
             vacuum.STATE_IDLE,
-            {ATTR_SUPPORTED_FEATURES: vacuum.SUPPORT_LOCATE},
+            {ATTR_SUPPORTED_FEATURES: vacuum.VacuumEntityFeature.LOCATE},
         ),
         BASIC_CONFIG,
     )
@@ -395,7 +395,7 @@ async def test_energystorage_vacuum(hass: HomeAssistant) -> None:
     """Test EnergyStorage trait support for vacuum domain."""
     assert helpers.get_google_type(vacuum.DOMAIN, None) is not None
     assert trait.EnergyStorageTrait.supported(
-        vacuum.DOMAIN, vacuum.SUPPORT_BATTERY, None, None
+        vacuum.DOMAIN, vacuum.VacuumEntityFeature.BATTERY, None, None
     )
 
     trt = trait.EnergyStorageTrait(
@@ -404,7 +404,7 @@ async def test_energystorage_vacuum(hass: HomeAssistant) -> None:
             "vacuum.bla",
             vacuum.STATE_DOCKED,
             {
-                ATTR_SUPPORTED_FEATURES: vacuum.SUPPORT_BATTERY,
+                ATTR_SUPPORTED_FEATURES: vacuum.VacuumEntityFeature.BATTERY,
                 ATTR_BATTERY_LEVEL: 100,
             },
         ),
@@ -430,7 +430,7 @@ async def test_energystorage_vacuum(hass: HomeAssistant) -> None:
             "vacuum.bla",
             vacuum.STATE_CLEANING,
             {
-                ATTR_SUPPORTED_FEATURES: vacuum.SUPPORT_BATTERY,
+                ATTR_SUPPORTED_FEATURES: vacuum.VacuumEntityFeature.BATTERY,
                 ATTR_BATTERY_LEVEL: 20,
             },
         ),
@@ -469,7 +469,7 @@ async def test_startstop_vacuum(hass: HomeAssistant) -> None:
         State(
             "vacuum.bla",
             vacuum.STATE_PAUSED,
-            {ATTR_SUPPORTED_FEATURES: vacuum.SUPPORT_PAUSE},
+            {ATTR_SUPPORTED_FEATURES: vacuum.VacuumEntityFeature.PAUSE},
         ),
         BASIC_CONFIG,
     )
