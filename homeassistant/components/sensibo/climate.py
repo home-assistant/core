@@ -261,45 +261,27 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
     @property
     def fan_mode(self) -> str | None:
         """Return the fan setting."""
-        if (fan_mode := self.device_data.fan_mode) in AVAILABLE_FAN_MODES:
-            return fan_mode
-        LOGGER.warning(
-            "Climate entity fan_mode is %s which is not supported by the integration, please open an issue",
-            fan_mode,
-        )
-        return None
+        fan_mode: str | None = self.device_data.fan_mode
+        return fan_mode
 
     @property
     def fan_modes(self) -> list[str] | None:
         """Return the list of available fan modes."""
-        if fan_modes := self.device_data.fan_modes:
-            fan_modes_set = set(fan_modes)
-            available_fan_modes = sorted(
-                set(fan_modes_set).intersection(AVAILABLE_FAN_MODES)
-            )
-            return list(available_fan_modes)
+        if self.device_data.fan_modes:
+            return self.device_data.fan_modes
         return None
 
     @property
     def swing_mode(self) -> str | None:
         """Return the swing setting."""
-        if (swing_mode := self.device_data.swing_mode) in AVAILABLE_SWING_MODES:
-            return swing_mode
-        LOGGER.warning(
-            "Climate entity swing_mode is %s which is not supported by the integration, please open an issue",
-            swing_mode,
-        )
-        return None
+        swing_mode: str | None = self.device_data.swing_mode
+        return swing_mode
 
     @property
     def swing_modes(self) -> list[str] | None:
         """Return the list of available swing modes."""
-        if swing_modes := self.device_data.swing_modes:
-            swing_modes_set = set(swing_modes)
-            available_swing_modes = sorted(
-                set(swing_modes_set).intersection(AVAILABLE_SWING_MODES)
-            )
-            return list(available_swing_modes)
+        if self.device_data.swing_modes:
+            return self.device_data.swing_modes
         return None
 
     @property
@@ -344,6 +326,11 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
         """Set new target fan mode."""
         if "fanLevel" not in self.device_data.active_features:
             raise HomeAssistantError("Current mode doesn't support setting Fanlevel")
+        if fan_mode not in AVAILABLE_FAN_MODES:
+            LOGGER.warning(
+                "Climate fan_mode %s is not supported by the integration, please open an issue",
+                fan_mode,
+            )
 
         transformation = self.device_data.fan_modes_translated
         await self.async_send_api_call(
@@ -385,6 +372,11 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
         """Set new target swing operation."""
         if "swing" not in self.device_data.active_features:
             raise HomeAssistantError("Current mode doesn't support setting Swing")
+        if swing_mode not in AVAILABLE_SWING_MODES:
+            LOGGER.warning(
+                "Climate swing_mode %s is not supported by the integration, please open an issue",
+                swing_mode,
+            )
 
         transformation = self.device_data.swing_modes_translated
         await self.async_send_api_call(
