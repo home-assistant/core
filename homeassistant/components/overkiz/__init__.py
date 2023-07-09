@@ -197,14 +197,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        # Remove local auth token if entry with Local API is unloaded
-        if token_uuid := entry.data.get(CONF_TOKEN_UUID):
-            data: HomeAssistantOverkizData = hass.data[DOMAIN][entry.entry_id]
-            await data.coordinator.client.delete_local_token(
-                cast(str, entry.unique_id), token_uuid
-            )
 
+    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
@@ -267,3 +261,22 @@ async def _async_migrate_entries(
     await er.async_migrate_entries(hass, config_entry.entry_id, update_unique_id)
 
     return True
+
+
+async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Remove local token if applicable, before removing the Config Entry."""
+
+    if token_uuid := entry.data.get(CONF_TOKEN_UUID):
+        # Create Overkiz cloud client for removal of the local token
+        username = entry.data[CONF_USERNAME]
+        password = entry.data[CONF_PASSWORD]
+        server = SUPPORTED_SERVERS[entry.data[CONF_SERVER]]
+
+        session = async_create_clientsession(hass)
+        client = OverkizClient(
+            username=username, password=password, session=session, server=server
+        )
+
+        await client.delete_local_token(
+            gateway_id=cast(str, entry.unique_id), uuid=token_uuid
+        )
