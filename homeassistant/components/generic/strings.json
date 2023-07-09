@@ -1,4 +1,5 @@
 {
+  "title": "Generic Camera",
   "config": {
     "error": {
       "unknown": "[%key:common::config_flow::error::unknown%]",

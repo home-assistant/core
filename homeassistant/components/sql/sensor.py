@@ -101,6 +101,8 @@ async def async_setup_entry(
     unit: str | None = entry.options.get(CONF_UNIT_OF_MEASUREMENT)
     template: str | None = entry.options.get(CONF_VALUE_TEMPLATE)
     column_name: str = entry.options[CONF_COLUMN_NAME]
+    device_class: SensorDeviceClass | None = entry.options.get(CONF_DEVICE_CLASS, None)
+    state_class: SensorStateClass | None = entry.options.get(CONF_STATE_CLASS, None)
 
     value_template: Template | None = None
     if template is not None:
@@ -122,8 +124,8 @@ async def async_setup_entry(
         entry.entry_id,
         db_url,
         False,
-        None,
-        None,
+        device_class,
+        state_class,
         async_add_entities,
     )
 

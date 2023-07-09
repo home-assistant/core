@@ -149,9 +149,6 @@ async def test_camera_single_image_unavailable_during_request(
 
     async def _mock_camera_image():
         await mock_device.mock_disconnect(False)
-        # Currently there is a bug where the camera will block
-        # forever if we don't send a response
-        mock_device.set_state(CameraState(key=1, data=SMALLEST_VALID_JPEG_BYTES))
 
     mock_client.request_single_image = _mock_camera_image
 

@@ -5,6 +5,8 @@ set_preset_mode:
   target:
     entity:
       domain: fan
+      supported_features:
+        - fan.FanEntityFeature.PRESET_MODE
   fields:
     preset_mode:
       name: Preset mode
@@ -20,6 +22,8 @@ set_percentage:
   target:
     entity:
       domain: fan
+      supported_features:
+        - fan.FanEntityFeature.SET_SPEED
   fields:
     percentage:
       name: Percentage
@@ -41,6 +45,9 @@ turn_on:
     percentage:
       name: Percentage
       description: Percentage speed setting.
+      filter:
+        supported_features:
+          - fan.FanEntityFeature.SET_SPEED
       selector:
         number:
           min: 0
@@ -50,6 +57,9 @@ turn_on:
       name: Preset mode
       description: Preset mode setting.
       example: "auto"
+      filter:
+        supported_features:
+          - fan.FanEntityFeature.PRESET_MODE
       selector:
         text:
 
@@ -66,6 +76,8 @@ oscillate:
   target:
     entity:
       domain: fan
+      supported_features:
+        - fan.FanEntityFeature.OSCILLATE
   fields:
     oscillating:
       name: Oscillating
@@ -87,6 +99,8 @@ set_direction:
   target:
     entity:
       domain: fan
+      supported_features:
+        - fan.FanEntityFeature.DIRECTION
   fields:
     direction:
       name: Direction
@@ -106,6 +120,8 @@ increase_speed:
   target:
     entity:
       domain: fan
+      supported_features:
+        - fan.FanEntityFeature.SET_SPEED
   fields:
     percentage_step:
       advanced: true
@@ -123,6 +139,8 @@ decrease_speed:
   target:
     entity:
       domain: fan
+      supported_features:
+        - fan.FanEntityFeature.SET_SPEED
   fields:
     percentage_step:
       advanced: true

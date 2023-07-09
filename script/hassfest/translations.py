@@ -31,6 +31,7 @@ ALLOW_NAME_TRANSLATION = {
     "emulated_roku",
     "faa_delays",
     "garages_amsterdam",
+    "generic",
     "google_travel_time",
     "homekit_controller",
     "islamic_prayer_times",
