@@ -1,7 +1,6 @@
 """The trafikverket_train component."""
 from __future__ import annotations
 
-import logging
 from typing import Any
 
 from pytrafikverket import TrafikverketTrain
@@ -20,8 +19,6 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CONF_FROM, CONF_TO, DOMAIN, PLATFORMS
 from .coordinator import TVDataUpdateCoordinator
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
