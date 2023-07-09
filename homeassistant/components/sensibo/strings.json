@@ -286,7 +286,7 @@
         "name": "Climate React type",
         "state": {
           "temperature": "[%key:component::sensor::entity_component::temperature::name%]",
-          "feelslike": "[%key:component::sensibo::entity::switch::sensibo_switch::state_attributes::type::state::feelslike%]",
+          "feelslike": "[%key:component::sensibo::entity::switch::climate_react_switch::state_attributes::type::state::feelslike%]",
           "humidity": "[%key:component::sensor::entity_component::humidity::name%]"
         }
       },
@@ -305,15 +305,7 @@
     },
     "switch": {
       "timer_on_switch": {
-        "name": "Timer"
-      },
-      "climate_react_switch": {
-        "name": "Climate React"
-      },
-      "pure_boost_switch": {
-        "name": "Pure Boost"
-      },
-      "sensibo_switch": {
+        "name": "Timer",
         "state_attributes": {
           "id": { "name": "Id" },
           "turn_on": {
@@ -322,7 +314,12 @@
               "true": "[%key:common::state::on%]",
               "false": "[%key:common::state::off%]"
             }
-          },
+          }
+        }
+      },
+      "climate_react_switch": {
+        "name": "Climate React",
+        "state_attributes": {
           "type": {
             "name": "Type",
             "state": {
@@ -332,6 +329,9 @@
             }
           }
         }
+      },
+      "pure_boost_switch": {
+        "name": "Pure Boost"
       }
     },
     "update": {

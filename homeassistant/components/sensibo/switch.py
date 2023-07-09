@@ -103,7 +103,6 @@ class SensiboDeviceSwitch(SensiboDeviceBaseEntity, SwitchEntity):
     """Representation of a Sensibo Device Switch."""
 
     entity_description: SensiboDeviceSwitchEntityDescription
-    _attr_translation_key = "sensibo_switch"
 
     def __init__(
         self,
