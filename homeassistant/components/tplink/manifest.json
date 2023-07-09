@@ -9,19 +9,19 @@
       "registered_devices": true
     },
     {
-      "hostname": "es*",
+      "hostname": "e[sp]*",
       "macaddress": "54AF97*"
     },
     {
-      "hostname": "ep*",
+      "hostname": "e[sp]*",
       "macaddress": "E848B8*"
     },
     {
-      "hostname": "ep*",
+      "hostname": "e[sp]*",
       "macaddress": "1C61B4*"
     },
     {
-      "hostname": "ep*",
+      "hostname": "e[sp]*",
       "macaddress": "003192*"
     },
     {
@@ -131,6 +131,10 @@
     {
       "hostname": "k[lp]*",
       "macaddress": "6C5AB0*"
+    },
+    {
+      "hostname": "k[lp]*",
+      "macaddress": "54AF97*"
     }
   ],
   "documentation": "https://www.home-assistant.io/integrations/tplink",
