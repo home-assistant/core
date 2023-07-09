@@ -52,7 +52,7 @@ async def test_coordinator(
 
 
 @pytest.mark.parametrize(
-    "sideeffect,p_error,entry_state",
+    ("sideeffect", "p_error", "entry_state"),
     [
         (
             ValueError("Source: Security, message: Invalid authentication"),

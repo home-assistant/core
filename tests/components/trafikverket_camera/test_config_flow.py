@@ -49,7 +49,7 @@ async def test_form(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "error_message,base_error",
+    ("error_message", "base_error"),
     [
         (
             "Source: Security, message: Invalid authentication",
@@ -141,7 +141,7 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "sideeffect,p_error",
+    ("sideeffect", "p_error"),
     [
         (
             "Source: Security, message: Invalid authentication",

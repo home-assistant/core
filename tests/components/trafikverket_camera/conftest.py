@@ -10,7 +10,7 @@ from pytrafikverket.trafikverket_camera import CameraInfo
 from homeassistant.components.trafikverket_camera.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
-from homeassistant.util import dt
+from homeassistant.util import dt as dt_util
 
 from . import ENTRY_CONFIG
 
@@ -61,8 +61,8 @@ def fixture_get_camera() -> CameraInfo:
         direction="180",
         fullsizephoto=True,
         location="Test location",
-        modified=datetime(2022, 4, 4, 4, 4, 4, tzinfo=dt.UTC),
-        phototime=datetime(2022, 4, 4, 4, 4, 4, tzinfo=dt.UTC),
+        modified=datetime(2022, 4, 4, 4, 4, 4, tzinfo=dt_util.UTC),
+        phototime=datetime(2022, 4, 4, 4, 4, 4, tzinfo=dt_util.UTC),
         photourl="https://www.testurl.com/test_photo.jpg",
         status="Running",
         camera_type="Road",

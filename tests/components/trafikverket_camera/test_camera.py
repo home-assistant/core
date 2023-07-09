@@ -5,14 +5,13 @@ from datetime import timedelta
 from unittest.mock import patch
 
 import pytest
-from pytest import MonkeyPatch
 from pytrafikverket.trafikverket_camera import CameraInfo
 
 from homeassistant.components.camera import async_get_image
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.util import dt
+from homeassistant.util import dt as dt_util
 
 from tests.common import async_fire_time_changed
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -21,7 +20,7 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 async def test_camera(
     hass: HomeAssistant,
     load_int: ConfigEntry,
-    monkeypatch: MonkeyPatch,
+    monkeypatch: pytest.MonkeyPatch,
     aioclient_mock: AiohttpClientMocker,
     get_camera: CameraInfo,
 ) -> None:
@@ -46,7 +45,7 @@ async def test_camera(
         )
         async_fire_time_changed(
             hass,
-            dt.utcnow() + timedelta(minutes=6),
+            dt_util.utcnow() + timedelta(minutes=6),
         )
         await hass.async_block_till_done()
 
@@ -65,16 +64,14 @@ async def test_camera(
         "https://www.testurl.com/test_photo.jpg?type=fullsize",
         status=404,
     )
-    print(get_camera)
 
     with patch(
         "homeassistant.components.trafikverket_camera.coordinator.TrafikverketCamera.async_get_camera",
         return_value=get_camera,
     ):
-
         async_fire_time_changed(
             hass,
-            dt.utcnow() + timedelta(minutes=6),
+            dt_util.utcnow() + timedelta(minutes=6),
         )
         await hass.async_block_till_done()
 
