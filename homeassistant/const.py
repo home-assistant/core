@@ -534,6 +534,12 @@ ENERGY_MEGA_WATT_HOUR: Final = "MWh"
 ENERGY_WATT_HOUR: Final = "Wh"
 """Deprecated: please use UnitOfEnergy.WATT_HOUR."""
 
+# Electric_vehicle_efficiency units
+class UnitOfElectricEfficiency(StrEnum):
+    """A mesaure of distance to power ratio showing efficiency of electric vehicle travel"""
+
+    MILES_PER_KILOWATT_HOUR = "mi/kWh"
+    WATT_HOUR_PER_KM = "Wh/km"
 
 # Electric_current units
 class UnitOfElectricCurrent(StrEnum):
