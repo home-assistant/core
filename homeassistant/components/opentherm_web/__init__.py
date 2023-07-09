@@ -11,7 +11,12 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from .const import DOMAIN, HOST, LOGGER, SCAN_INTERVAL, SECRET
 from .opentherm_web_api import OpenThermWebApi
 
-PLATFORMS: list[Platform] = [Platform.CLIMATE, Platform.WATER_HEATER]
+PLATFORMS: list[Platform] = [
+    Platform.CLIMATE,
+    Platform.WATER_HEATER,
+    Platform.SENSOR,
+    Platform.BINARY_SENSOR,
+]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
