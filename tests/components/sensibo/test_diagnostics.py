@@ -21,4 +21,11 @@ async def test_diagnostics(
 
     diag = await get_diagnostics_for_config_entry(hass, hass_client, entry)
 
-    assert diag == snapshot
+    assert diag["ABC999111"]["ac_states"] == snapshot
+    assert diag["ABC999111"]["full_capabilities"] == snapshot
+    assert diag["ABC999111"]["fan_modes_translated"] == snapshot
+    assert diag["ABC999111"]["swing_modes_translated"] == snapshot
+    assert diag["ABC999111"]["horizontal_swing_modes_translated"] == snapshot
+    assert diag["ABC999111"]["smart_low_state"] == snapshot
+    assert diag["ABC999111"]["smart_high_state"] == snapshot
+    assert diag["ABC999111"]["pure_conf"] == snapshot
