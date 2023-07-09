@@ -12,7 +12,7 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import CONF_LOCATION, DOMAIN
+from .const import DOMAIN
 from .coordinator import TVDataUpdateCoordinator
 
 
@@ -30,7 +30,6 @@ async def async_setup_entry(
             TVCamera(
                 coordinator,
                 entry.title,
-                entry.data[CONF_LOCATION],
                 entry.entry_id,
             )
         ],
@@ -48,7 +47,6 @@ class TVCamera(CoordinatorEntity[TVDataUpdateCoordinator], Camera):
         self,
         coordinator: TVDataUpdateCoordinator,
         name: str,
-        location: str,
         entry_id: str,
     ) -> None:
         """Initialize the camera."""
