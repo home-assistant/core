@@ -4,7 +4,8 @@ from __future__ import annotations
 from datetime import timedelta
 import logging
 
-from mill import Mill
+# from mill import Mill
+from .mill_lib import Mill
 from mill_local import Mill as MillLocal
 
 from homeassistant.config_entries import ConfigEntry
@@ -61,7 +62,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             entry.data[CONF_PASSWORD],
             websession=async_get_clientsession(hass),
         )
-        update_interval = timedelta(seconds=30)
+        update_interval = timedelta(seconds=60)
         key = entry.data[CONF_USERNAME]
         conn_type = CLOUD
 

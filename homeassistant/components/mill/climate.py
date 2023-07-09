@@ -1,12 +1,11 @@
 """Support for mill wifi-enabled home heaters."""
 from typing import Any
 
-import mill
+# import mill
+from . import mill_lib as mill
 import voluptuous as vol
 
 from homeassistant.components.climate import (
-    FAN_OFF,
-    FAN_ON,
     ClimateEntity,
     ClimateEntityFeature,
     HVACAction,
@@ -18,7 +17,7 @@ from homeassistant.const import (
     CONF_IP_ADDRESS,
     CONF_USERNAME,
     PRECISION_HALVES,
-    PRECISION_WHOLE,
+    PRECISION_TENTHS,
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
@@ -90,7 +89,6 @@ async def async_setup_entry(
 class MillHeater(CoordinatorEntity[MillDataUpdateCoordinator], ClimateEntity):
     """Representation of a Mill Thermostat device."""
 
-    _attr_fan_modes = [FAN_ON, FAN_OFF]
     _attr_has_entity_name = True
     _attr_max_temp = MAX_TEMP
     _attr_min_temp = MIN_TEMP
@@ -111,23 +109,13 @@ class MillHeater(CoordinatorEntity[MillDataUpdateCoordinator], ClimateEntity):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, heater.device_id)},
             manufacturer=MANUFACTURER,
-            model=f"Generation {heater.generation}",
+            model=heater.model,
             name=heater.name,
         )
-        if heater.is_gen1:
-            self._attr_hvac_modes = [HVACMode.HEAT]
-        else:
-            self._attr_hvac_modes = [HVACMode.HEAT, HVACMode.OFF]
+        self._attr_hvac_modes = [HVACMode.HEAT, HVACMode.OFF]
 
-        if heater.generation < 3:
-            self._attr_supported_features = (
-                ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.FAN_MODE
-            )
-            self._attr_target_temperature_step = PRECISION_WHOLE
-        else:
-            self._attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
-            self._attr_target_temperature_step = PRECISION_HALVES
-
+        self._attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
+        self._attr_target_temperature_step = PRECISION_TENTHS
         self._update_attr(heater)
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
@@ -136,14 +124,6 @@ class MillHeater(CoordinatorEntity[MillDataUpdateCoordinator], ClimateEntity):
             return
         await self.coordinator.mill_data_connection.set_heater_temp(
             self._id, float(temperature)
-        )
-        await self.coordinator.async_request_refresh()
-
-    async def async_set_fan_mode(self, fan_mode: str) -> None:
-        """Set new target fan mode."""
-        fan_status = 1 if fan_mode == FAN_ON else 0
-        await self.coordinator.mill_data_connection.heater_control(
-            self._id, fan_status=fan_status
         )
         await self.coordinator.async_request_refresh()
 
@@ -178,23 +158,16 @@ class MillHeater(CoordinatorEntity[MillDataUpdateCoordinator], ClimateEntity):
         self._available = heater.available
         self._attr_extra_state_attributes = {
             "open_window": heater.open_window,
-            "heating": heater.is_heating,
-            "controlled_by_tibber": heater.tibber_control,
-            "heater_generation": heater.generation,
         }
-        if heater.room:
-            self._attr_extra_state_attributes["room"] = heater.room.name
-            self._attr_extra_state_attributes["avg_room_temp"] = heater.room.avg_temp
-        else:
-            self._attr_extra_state_attributes["room"] = "Independent device"
+        self._attr_extra_state_attributes["room"] = heater.room_name
+        # self._attr_extra_state_attributes["avg_room_temp"] = heater.room_avg_temp
         self._attr_target_temperature = heater.set_temp
         self._attr_current_temperature = heater.current_temp
-        self._attr_fan_mode = FAN_ON if heater.fan_status == 1 else HVACMode.OFF
-        if heater.is_heating == 1:
+        if heater.is_heating:
             self._attr_hvac_action = HVACAction.HEATING
         else:
             self._attr_hvac_action = HVACAction.IDLE
-        if heater.is_gen1 or heater.power_status == 1:
+        if heater.power_status:
             self._attr_hvac_mode = HVACMode.HEAT
         else:
             self._attr_hvac_mode = HVACMode.OFF
