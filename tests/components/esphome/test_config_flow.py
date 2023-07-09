@@ -1308,3 +1308,45 @@ async def test_option_flow(
     assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["data"] == {CONF_ALLOW_SERVICE_CALLS: option_value}
     assert len(mock_reload.mock_calls) == int(option_value)
+
+
+async def test_user_discovers_name_no_dashboard(
+    hass: HomeAssistant,
+    mock_client,
+    mock_zeroconf: None,
+    mock_setup_entry: None,
+) -> None:
+    """Test user step can discover the name and the there is not dashboard."""
+    mock_client.device_info.side_effect = [
+        RequiresEncryptionAPIError,
+        InvalidEncryptionKeyAPIError("Wrong key", "test"),
+        DeviceInfo(
+            uses_password=False,
+            name="test",
+            mac_address="11:22:33:44:55:AA",
+        ),
+    ]
+
+    result = await hass.config_entries.flow.async_init(
+        "esphome",
+        context={"source": config_entries.SOURCE_USER},
+        data={CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "encryption_key"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_NOISE_PSK: VALID_NOISE_PSK}
+    )
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["data"] == {
+        CONF_HOST: "127.0.0.1",
+        CONF_PORT: 6053,
+        CONF_PASSWORD: "",
+        CONF_NOISE_PSK: VALID_NOISE_PSK,
+        CONF_DEVICE_NAME: "test",
+    }
+    assert mock_client.noise_psk == VALID_NOISE_PSK
