@@ -309,7 +309,7 @@
         "state_attributes": {
           "id": { "name": "Id" },
           "turn_on": {
-            "name": "Turn on",
+            "name": "Turns on",
             "state": {
               "true": "[%key:common::state::on%]",
               "false": "[%key:common::state::off%]"
