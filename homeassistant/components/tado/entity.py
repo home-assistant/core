@@ -8,6 +8,7 @@ class TadoDeviceEntity(Entity):
     """Base implementation for Tado device."""
 
     _attr_should_poll = False
+    _attr_has_entity_name = True
 
     def __init__(self, device_info):
         """Initialize a Tado device."""
