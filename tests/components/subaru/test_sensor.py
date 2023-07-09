@@ -65,9 +65,9 @@ async def test_sensors_missing_vin_data(hass: HomeAssistant, ev_entry) -> None:
             {
                 "domain": SENSOR_DOMAIN,
                 "platform": SUBARU_DOMAIN,
-                "unique_id": f"{TEST_VIN_2_EV}_{API_GEN_2_SENSORS[0].name}",
+                "unique_id": f"{TEST_VIN_2_EV}_Avg fuel consumption",
             },
-            f"{TEST_VIN_2_EV}_{API_GEN_2_SENSORS[0].name}",
+            f"{TEST_VIN_2_EV}_Avg fuel consumption",
             f"{TEST_VIN_2_EV}_{API_GEN_2_SENSORS[0].key}",
         ),
     ],
