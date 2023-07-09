@@ -203,7 +203,7 @@
             }
           },
           "targettemperature": {
-            "name": "[%key:component::climate::entity_component::_::state_attributes::temperature%]"
+            "name": "[%key:component::climate::entity_component::_::state_attributes::temperature::name%]"
           },
           "temperatureunit": {
             "name": "Temperature unit",
@@ -240,7 +240,7 @@
             "state": {
               "feelslike": "Feels like",
               "temperature": "[%key:component::sensor::entity_component::temperature::name%]",
-              "humidity": "[%key:component::sensor::entity_component::temperature::humidity%]"
+              "humidity": "[%key:component::sensor::entity_component::humidity::name%]"
             }
           }
         }
