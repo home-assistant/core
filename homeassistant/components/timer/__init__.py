@@ -309,7 +309,7 @@ class Timer(collection.CollectionEntity, RestoreEntity):
                 self.hass,
                 DOMAIN,
                 "deprecated_duration_in_start",
-                breaks_in_ha_version="2023.8.0",
+                breaks_in_ha_version="2024.3.0",
                 is_fixable=True,
                 is_persistent=True,
                 severity=IssueSeverity.WARNING,
