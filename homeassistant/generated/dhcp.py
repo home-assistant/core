@@ -623,6 +623,11 @@ DHCP: list[dict[str, str | bool]] = [
     {
         "domain": "tplink",
         "hostname": "hs*",
+        "macaddress": "9C5322*",
+    },
+    {
+        "domain": "tplink",
+        "hostname": "hs*",
         "macaddress": "1C3BF3*",
     },
     {
