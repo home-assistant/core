@@ -89,6 +89,7 @@ ATTR_FORECAST_WIND_BEARING: Final = "wind_bearing"
 ATTR_FORECAST_NATIVE_WIND_GUST_SPEED: Final = "native_wind_gust_speed"
 ATTR_FORECAST_WIND_GUST_SPEED: Final = "wind_gust_speed"
 ATTR_FORECAST_NATIVE_WIND_SPEED: Final = "native_wind_speed"
+ATTR_FORECAST_UV_INDEX: Final = "uv_index"
 ATTR_FORECAST_WIND_SPEED: Final = "wind_speed"
 ATTR_FORECAST_NATIVE_DEW_POINT: Final = "native_dew_point"
 ATTR_FORECAST_DEW_POINT: Final = "dew_point"
@@ -146,6 +147,7 @@ class Forecast(TypedDict, total=False):
     native_wind_speed: float | None
     wind_speed: None
     native_dew_point: float | None
+    uv_index: int | None
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:

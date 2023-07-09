@@ -10,6 +10,7 @@ from homeassistant.components.weather import (
     ATTR_FORECAST_NATIVE_TEMP,
     ATTR_FORECAST_NATIVE_WIND_SPEED,
     ATTR_FORECAST_PRECIPITATION_PROBABILITY,
+    ATTR_FORECAST_UV_INDEX,
     ATTR_FORECAST_WIND_BEARING,
     Forecast,
     WeatherEntity,
@@ -64,6 +65,8 @@ def _build_forecast_data(timestep: Timestep) -> Forecast:
         data[ATTR_FORECAST_WIND_BEARING] = timestep.wind_direction.value
     if timestep.wind_speed:
         data[ATTR_FORECAST_NATIVE_WIND_SPEED] = timestep.wind_speed.value
+    if timestep.uv:
+        data[ATTR_FORECAST_UV_INDEX] = int(timestep.uv.value)
     return data
 
 
