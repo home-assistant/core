@@ -21,13 +21,14 @@ from . import (
     register_platform_config_for_migration_to_config_entry,
 )
 from .config_flow import (
+    CONF_ENOCEAN_DEVICE_TYPE_ID,
     CONF_ENOCEAN_DEVICES,
-    CONF_ENOCEAN_EEP,
-    CONF_ENOCEAN_MANUFACTURER,
-    CONF_ENOCEAN_MODEL,
 )
 from .device import EnOceanEntity
-from .supported_device_type import EnOceanSupportedDeviceType
+from .supported_device_type import (
+    EnOceanSupportedDeviceType,
+    get_supported_enocean_device_types,
+)
 
 DEFAULT_NAME = ""
 DEPENDENCIES = ["enocean"]
@@ -63,7 +64,11 @@ async def async_setup_entry(
     devices = config_entry.options.get(CONF_ENOCEAN_DEVICES, [])
 
     for device in devices:
-        if device["eep"] in ["F6-02-01", "F6-02-02"]:
+        device_type_id = device[CONF_ENOCEAN_DEVICE_TYPE_ID]
+        device_type = get_supported_enocean_device_types()[device_type_id]
+        eep = device_type.eep
+
+        if eep in ["F6-02-01", "F6-02-02"]:
             device_id = from_hex_string(device["id"])
 
             async_add_entities(
@@ -72,11 +77,7 @@ async def async_setup_entry(
                         device_id,
                         device["name"],
                         Platform.BINARY_SENSOR.value + "-0",
-                        EnOceanSupportedDeviceType(
-                            manufacturer=device[CONF_ENOCEAN_MANUFACTURER],
-                            model=device[CONF_ENOCEAN_MODEL],
-                            eep=device[CONF_ENOCEAN_EEP],
-                        ),
+                        device_type,
                         None,
                     )
                 ]

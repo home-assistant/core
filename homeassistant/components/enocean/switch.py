@@ -19,13 +19,14 @@ from . import (
     register_platform_config_for_migration_to_config_entry,
 )
 from .config_flow import (
+    CONF_ENOCEAN_DEVICE_TYPE_ID,
     CONF_ENOCEAN_DEVICES,
-    CONF_ENOCEAN_EEP,
-    CONF_ENOCEAN_MANUFACTURER,
-    CONF_ENOCEAN_MODEL,
 )
 from .device import EnOceanEntity
-from .supported_device_type import EnOceanSupportedDeviceType
+from .supported_device_type import (
+    EnOceanSupportedDeviceType,
+    get_supported_enocean_device_types,
+)
 
 CONF_CHANNEL = "channel"
 DEFAULT_NAME = ""
@@ -60,12 +61,16 @@ async def async_setup_entry(
     devices = entry.options.get(CONF_ENOCEAN_DEVICES, [])
 
     for device in devices:
-        if device["eep"][0:5] == "D2-01":
+        device_type_id = device[CONF_ENOCEAN_DEVICE_TYPE_ID]
+        device_type = get_supported_enocean_device_types()[device_type_id]
+        eep = device_type.eep
+
+        if eep[0:5] == "D2-01":
             device_id = from_hex_string(device["id"])
 
             # number of switches depends on EEP's TYPE value:
             num_switches = 0
-            eep_type = int(device["eep"][6:8], 16)
+            eep_type = int(eep[6:8], 16)
 
             if eep_type in range(0x00, 0x10):
                 num_switches = 1
@@ -84,11 +89,7 @@ async def async_setup_entry(
                         dev_id=device_id,
                         dev_name=device["name"],
                         channel=0,
-                        dev_type=EnOceanSupportedDeviceType(
-                            manufacturer=device[CONF_ENOCEAN_MANUFACTURER],
-                            model=device[CONF_ENOCEAN_MODEL],
-                            eep=device[CONF_ENOCEAN_EEP],
-                        ),
+                        dev_type=device_type,
                         name="Switch",
                     ),
                 )
@@ -99,11 +100,7 @@ async def async_setup_entry(
                             dev_id=device_id,
                             dev_name=device["name"],
                             channel=channel,
-                            dev_type=EnOceanSupportedDeviceType(
-                                manufacturer=device[CONF_ENOCEAN_MANUFACTURER],
-                                model=device[CONF_ENOCEAN_MODEL],
-                                eep=device[CONF_ENOCEAN_EEP],
-                            ),
+                            dev_type=device_type,
                             name="Switch " + str(channel + 1),
                         ),
                     )

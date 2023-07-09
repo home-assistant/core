@@ -35,7 +35,7 @@
       "add_device": {
         "title": "Add new EnOcean device",
         "data": {
-          "device_type": "Manufacturer and model or EnOcean Equipment Profile (EEP)",
+          "device_type_id": "Manufacturer and model or EnOcean Equipment Profile (EEP)",
           "id": "Device ID",
           "name": "Name",
           "sender_id": "Sender ID (can be left empty for sensors)",
@@ -52,7 +52,7 @@
         "title": "Edit EnOcean device",
         "data": {
           "id": "Device ID",
-          "device_type": "Manufacturer and model or EnOcean Equipment Profile (EEP)",
+          "device_type_id": "Manufacturer and model or EnOcean Equipment Profile (EEP)",
           "name": "Name",
           "sender_id": "Sender ID (can be left empty for sensors)"
         },

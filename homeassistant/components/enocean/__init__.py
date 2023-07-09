@@ -17,49 +17,15 @@ from homeassistant.helpers.typing import ConfigType
 from .config_flow import (
     CONF_ENOCEAN_DEVICE_ID,
     CONF_ENOCEAN_DEVICE_NAME,
+    CONF_ENOCEAN_DEVICE_TYPE_ID,
     CONF_ENOCEAN_DEVICES,
-    CONF_ENOCEAN_EEP,
-    CONF_ENOCEAN_MANUFACTURER,
-    CONF_ENOCEAN_MODEL,
     CONF_ENOCEAN_SENDER_ID,
 )
 from .const import DATA_ENOCEAN, DOMAIN, ENOCEAN_DONGLE, LOGGER, PLATFORMS
 from .dongle import EnOceanDongle
 from .supported_device_type import (
-    EEP_A5_02_0A,
-    EEP_A5_02_0B,
-    EEP_A5_02_01,
-    EEP_A5_02_02,
-    EEP_A5_02_03,
-    EEP_A5_02_04,
-    EEP_A5_02_05,
-    EEP_A5_02_06,
-    EEP_A5_02_07,
-    EEP_A5_02_08,
-    EEP_A5_02_09,
-    EEP_A5_02_1A,
-    EEP_A5_02_1B,
-    EEP_A5_02_10,
-    EEP_A5_02_11,
-    EEP_A5_02_12,
-    EEP_A5_02_13,
-    EEP_A5_02_14,
-    EEP_A5_02_15,
-    EEP_A5_02_16,
-    EEP_A5_02_17,
-    EEP_A5_02_18,
-    EEP_A5_02_19,
-    EEP_A5_04_01,
-    EEP_A5_04_02,
-    EEP_A5_12_01,
-    EEP_D2_01_07,
-    EEP_D2_01_11,
-    EEP_D2_01_13,
-    EEP_D2_01_14,
-    EEP_F6_02_01,
-    EEP_F6_10_00,
-    ELTAKO_FUD61,
     EnOceanSupportedDeviceType,
+    get_supported_enocean_device_types,
 )
 
 CONFIG_SCHEMA = vol.Schema(
@@ -263,9 +229,7 @@ def _setup_yaml_import(
             enocean_devices_to_add.append(
                 {
                     CONF_ENOCEAN_DEVICE_ID: device_id,
-                    CONF_ENOCEAN_EEP: import_config.device_type.eep,
-                    CONF_ENOCEAN_MANUFACTURER: import_config.device_type.manufacturer,
-                    CONF_ENOCEAN_MODEL: import_config.device_type.model,
+                    CONF_ENOCEAN_DEVICE_TYPE_ID: import_config.device_type.unique_id,
                     CONF_ENOCEAN_DEVICE_NAME: import_config.device_name,
                     CONF_ENOCEAN_SENDER_ID: import_config.sender_id,
                 }
@@ -429,7 +393,7 @@ def _get_binary_sensor_import_config(
     return EnOceanImportConfig(
         new_unique_ids=[new_unique_id],
         old_unique_ids={new_unique_id: old_unique_id},
-        device_type=EEP_F6_02_01,
+        device_type=get_supported_enocean_device_types()["F6-02-01"],
         device_name=device_name,
         sender_id="",
     )
@@ -465,7 +429,7 @@ def _get_light_import_config(
     return EnOceanImportConfig(
         new_unique_ids=[new_unique_id],
         old_unique_ids={new_unique_id: old_unique_id},
-        device_type=ELTAKO_FUD61,
+        device_type=get_supported_enocean_device_types()["Eltako_FUD61NPN"],
         sender_id=sender_id_as_list,
         device_name=device_name,
     )
@@ -479,7 +443,7 @@ def _get_switch_import_config(
     device_id_as_list = from_hex_string(device_id)
 
     # 1 channel device
-    device_type = EEP_D2_01_07
+    device_type = get_supported_enocean_device_types()["D2-01-07"]
     max_channel = 0
 
     new_unique_ids = []
@@ -505,18 +469,18 @@ def _get_switch_import_config(
         device_name = "Imported EnOcean switch " + device_id
 
     if max_channel < 2:
-        device_type = EEP_D2_01_11
+        device_type = get_supported_enocean_device_types()["D2-01-11"]
     elif max_channel < 4:
-        device_type = EEP_D2_01_13
+        device_type = get_supported_enocean_device_types()["D2-01-13"]
     elif max_channel < 8:
-        device_type = EEP_D2_01_14
+        device_type = get_supported_enocean_device_types()["D2-01-14"]
     else:
         LOGGER.warning(
             "Import of EnOcean switch '%s' will be incomplete: too many channels (%i). Only 1, 2, 4, or 8 channels are supported; importer will configure 8 channels",
             device_id,
             max_channel + 1,
         )
-        device_type = EEP_D2_01_14
+        device_type = get_supported_enocean_device_types()["D2-01-14"]
 
     return EnOceanImportConfig(
         new_unique_ids=new_unique_ids,
@@ -553,7 +517,7 @@ def _get_sensor_import_config(
                 device_id,
             )
         return EnOceanImportConfig(
-            device_type=EEP_A5_12_01,
+            device_type=get_supported_enocean_device_types()["A5-12-01"],
             new_unique_ids=[new_unique_id],
             old_unique_ids={new_unique_id: old_unique_id},
             device_name=device_name,
@@ -567,7 +531,7 @@ def _get_sensor_import_config(
             )
 
         return EnOceanImportConfig(
-            device_type=EEP_F6_10_00,
+            device_type=get_supported_enocean_device_types()["F6-10-00"],
             new_unique_ids=[new_unique_id],
             old_unique_ids={new_unique_id: old_unique_id},
             device_name=device_name,
@@ -612,10 +576,10 @@ def _get_sensor_import_config(
                 return None
 
             if min_temp == 0 and max_temp == 40:
-                device_type = EEP_A5_04_01
+                device_type = get_supported_enocean_device_types()["A5-04-01"]
 
             if min_temp == -20 and max_temp == 60:
-                device_type = EEP_A5_04_02
+                device_type = get_supported_enocean_device_types()["A5-04-02"]
 
             if device_type is None:
                 LOGGER.warning(
@@ -707,51 +671,51 @@ def _get_a5_02_device_type(
 ) -> EnOceanSupportedDeviceType | None:
     """Return a suitable device type for the temperature scale."""
     if (min_temp, max_temp) == (-40, 0):
-        return EEP_A5_02_01
+        return get_supported_enocean_device_types()["A5-02-01"]
     if (min_temp, max_temp) == (-30, 10):
-        return EEP_A5_02_02
+        return get_supported_enocean_device_types()["A5-02-02"]
     if (min_temp, max_temp) == (-20, 20):
-        return EEP_A5_02_03
+        return get_supported_enocean_device_types()["A5-02-03"]
     if (min_temp, max_temp) == (-10, 30):
-        return EEP_A5_02_04
+        return get_supported_enocean_device_types()["A5-02-04"]
     if (min_temp, max_temp) == (0, 40):
-        return EEP_A5_02_05
+        return get_supported_enocean_device_types()["A5-02-05"]
     if (min_temp, max_temp) == (10, 50):
-        return EEP_A5_02_06
+        return get_supported_enocean_device_types()["A5-02-06"]
     if (min_temp, max_temp) == (20, 60):
-        return EEP_A5_02_07
+        return get_supported_enocean_device_types()["A5-02-07"]
     if (min_temp, max_temp) == (30, 70):
-        return EEP_A5_02_08
+        return get_supported_enocean_device_types()["A5-02-08"]
     if (min_temp, max_temp) == (40, 80):
-        return EEP_A5_02_09
+        return get_supported_enocean_device_types()["A5-02-09"]
     if (min_temp, max_temp) == (50, 90):
-        return EEP_A5_02_0A
+        return get_supported_enocean_device_types()["A5-02-0A"]
     if (min_temp, max_temp) == (60, 100):
-        return EEP_A5_02_0B
+        return get_supported_enocean_device_types()["A5-02-0B"]
     if (min_temp, max_temp) == (-60, 20):
-        return EEP_A5_02_10
+        return get_supported_enocean_device_types()["A5-02-10"]
     if (min_temp, max_temp) == (-50, 30):
-        return EEP_A5_02_11
+        return get_supported_enocean_device_types()["A5-02-11"]
     if (min_temp, max_temp) == (-40, 40):
-        return EEP_A5_02_12
+        return get_supported_enocean_device_types()["A5-02-12"]
     if (min_temp, max_temp) == (-30, 50):
-        return EEP_A5_02_13
+        return get_supported_enocean_device_types()["A5-02-13"]
     if (min_temp, max_temp) == (-20, 60):
-        return EEP_A5_02_14
+        return get_supported_enocean_device_types()["A5-02-14"]
     if (min_temp, max_temp) == (-10, 70):
-        return EEP_A5_02_15
+        return get_supported_enocean_device_types()["A5-02-15"]
     if (min_temp, max_temp) == (0, 80):
-        return EEP_A5_02_16
+        return get_supported_enocean_device_types()["A5-02-16"]
     if (min_temp, max_temp) == (10, 90):
-        return EEP_A5_02_17
+        return get_supported_enocean_device_types()["A5-02-17"]
     if (min_temp, max_temp) == (20, 100):
-        return EEP_A5_02_18
+        return get_supported_enocean_device_types()["A5-02-18"]
     if (min_temp, max_temp) == (30, 110):
-        return EEP_A5_02_19
+        return get_supported_enocean_device_types()["A5-02-19"]
     if (min_temp, max_temp) == (40, 120):
-        return EEP_A5_02_1A
+        return get_supported_enocean_device_types()["A5-02-1A"]
     if (min_temp, max_temp) == (50, 130):
-        return EEP_A5_02_1B
+        return get_supported_enocean_device_types()["A5-02-1B"]
 
     return None
 

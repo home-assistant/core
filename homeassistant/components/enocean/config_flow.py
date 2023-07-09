@@ -12,16 +12,17 @@ from homeassistant.helpers import selector
 
 from . import dongle
 from .const import DOMAIN, ERROR_INVALID_DONGLE_PATH, LOGGER
-from .supported_device_type import ENOCEAN_SUPPORTED_DEVICES, EnOceanSupportedDeviceType
+from .supported_device_type import (
+    EnOceanSupportedDeviceType,
+    get_supported_enocean_device_types,
+)
 
 # config
 CONF_ENOCEAN_DEVICES = "devices"
 CONF_ENOCEAN_DEVICE_ID = "id"
 CONF_ENOCEAN_DEVICE_NAME = "name"
-CONF_ENOCEAN_EEP = "eep"
 CONF_ENOCEAN_MANAGE_DEVICE_COMMANDS = "manage_device_command"
-CONF_ENOCEAN_MANUFACTURER = "manufacturer"
-CONF_ENOCEAN_MODEL = "model"
+CONF_ENOCEAN_DEVICE_TYPE_ID = "device_type_id"
 CONF_ENOCEAN_SENDER_ID = "sender_id"
 
 # step ids
@@ -45,7 +46,7 @@ ENOCEAN_ERROR_INVALID_SENDER_ID = "invalid_sender_id"
 # others
 ENOCEAN_DEFAULT_DEVICE_ID = "00:00:00:00"
 ENOCEAN_DEFAULT_DEVICE_NAME = "EnOcean device"
-ENOCEAN_DEVICE_TYPE = "device_type"
+ENOCEAN_DEVICE_TYPE_ID = "device_type_id"
 
 
 class EnOceanFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -187,16 +188,8 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             else:
                 errors[CONF_ENOCEAN_DEVICE_ID] = ENOCEAN_ERROR_INVALID_DEVICE_ID
 
-            # find the device type belonging to the selected type id;
-            # since it was selected based on the list of supported devices,
-            # this will always succeed; i.e.: after the for loop, device_type
-            # will be set to a meaningful value
-            device_type_id = user_input[ENOCEAN_DEVICE_TYPE]
-            device_type = EnOceanSupportedDeviceType()
-            for esd in ENOCEAN_SUPPORTED_DEVICES:
-                if esd.unique_id == device_type_id:
-                    device_type = esd
-                    break
+            device_type_id = user_input[ENOCEAN_DEVICE_TYPE_ID]
+            device_type = get_supported_enocean_device_types()[device_type_id]
 
             sender_id = user_input[CONF_ENOCEAN_SENDER_ID].strip()
             if sender_id != "":
@@ -213,9 +206,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 devices.append(
                     {
                         CONF_ENOCEAN_DEVICE_ID: device_id,
-                        CONF_ENOCEAN_EEP: device_type.eep,
-                        CONF_ENOCEAN_MANUFACTURER: device_type.manufacturer,
-                        CONF_ENOCEAN_MODEL: device_type.model,
+                        CONF_ENOCEAN_DEVICE_TYPE_ID: device_type.unique_id,
                         CONF_ENOCEAN_DEVICE_NAME: device_name,
                         CONF_ENOCEAN_SENDER_ID: sender_id,
                     }
@@ -231,14 +222,15 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             default_sender_id = sender_id
 
         supported_devices = [
-            esd.select_option_dict for esd in ENOCEAN_SUPPORTED_DEVICES
+            esd.select_option_dict
+            for esd in list(get_supported_enocean_device_types().values())
         ]
         supported_devices.sort(key=lambda entry: entry["label"].upper())
 
         add_device_schema = vol.Schema(
             {
                 vol.Required(
-                    ENOCEAN_DEVICE_TYPE,
+                    ENOCEAN_DEVICE_TYPE_ID,
                     default=default_device_type,
                 ): selector.SelectSelector(
                     selector.SelectSelectorConfig(options=supported_devices)
@@ -331,11 +323,9 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         if device is not None:  # user_input will be ignored in this case
             device_id = device[CONF_ENOCEAN_DEVICE_ID]
             device_name = device[CONF_ENOCEAN_DEVICE_NAME]
-            device_type = EnOceanSupportedDeviceType(
-                eep=device[CONF_ENOCEAN_EEP],
-                manufacturer=device[CONF_ENOCEAN_MANUFACTURER],
-                model=device[CONF_ENOCEAN_MODEL],
-            )
+            device_type = get_supported_enocean_device_types()[
+                device[CONF_ENOCEAN_DEVICE_TYPE_ID]
+            ]
             sender_id = device[CONF_ENOCEAN_SENDER_ID]
 
         elif user_input is not None:
@@ -350,15 +340,8 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 else:
                     errors[CONF_ENOCEAN_SENDER_ID] = ENOCEAN_ERROR_INVALID_SENDER_ID
 
-            # find the device type belonging to the selected type id;
-            # since it was selected based on the list of supported devices,
-            # this will always succeed; i.e.: after the for loop, device_type
-            # will be set to a meaningful value
-            device_type_id = user_input[ENOCEAN_DEVICE_TYPE]
-            for esd in ENOCEAN_SUPPORTED_DEVICES:
-                if esd.unique_id == device_type_id:
-                    device_type = esd
-                    break
+            device_type_id = user_input[ENOCEAN_DEVICE_TYPE_ID]
+            device_type = get_supported_enocean_device_types()[device_type_id]
 
             # device name must not be empty
             device_name = user_input[CONF_ENOCEAN_DEVICE_NAME].strip()
@@ -368,9 +351,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             if not errors:
                 for dev in devices:
                     if dev[CONF_ENOCEAN_DEVICE_ID] == device_id:
-                        dev[CONF_ENOCEAN_EEP] = device_type.eep
-                        dev[CONF_ENOCEAN_MANUFACTURER] = device_type.manufacturer
-                        dev[CONF_ENOCEAN_MODEL] = device_type.model
+                        dev[CONF_ENOCEAN_DEVICE_TYPE_ID] = device_type.unique_id
                         dev[CONF_ENOCEAN_DEVICE_NAME] = device_name
                         dev[CONF_ENOCEAN_SENDER_ID] = sender_id
                         break
@@ -380,7 +361,8 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 )
 
         supported_devices = [
-            esd.select_option_dict for esd in ENOCEAN_SUPPORTED_DEVICES
+            esd.select_option_dict
+            for esd in list(get_supported_enocean_device_types().values())
         ]
         supported_devices.sort(key=lambda entry: entry["label"].upper())
 
@@ -392,7 +374,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                     selector.SelectSelectorConfig(options=[device_id])
                 ),
                 vol.Required(
-                    ENOCEAN_DEVICE_TYPE, default=device_type.unique_id
+                    ENOCEAN_DEVICE_TYPE_ID, default=device_type.unique_id
                 ): selector.SelectSelector(
                     selector.SelectSelectorConfig(options=supported_devices)
                 ),
