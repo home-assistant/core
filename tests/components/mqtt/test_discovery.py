@@ -1115,7 +1115,6 @@ async def test_discovery_expansion_2(
 
 
 @patch("homeassistant.components.mqtt.PLATFORMS", [Platform.SWITCH])
-@pytest.mark.no_fail_on_log_exception
 async def test_discovery_expansion_3(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
@@ -1146,10 +1145,7 @@ async def test_discovery_expansion_3(
     assert hass.states.get("switch.DiscoveryExpansionTest1") is None
     # Make sure the malformed availability data does not trip up discovery by asserting
     # there are schema valdiation errors in the log
-    assert (
-        "voluptuous.error.MultipleInvalid: expected a dictionary @ data['availability'][0]"
-        in caplog.text
-    )
+    assert "expected a dictionary @ data['availability'][0]" in caplog.text
 
 
 async def test_discovery_expansion_without_encoding_and_value_template_1(

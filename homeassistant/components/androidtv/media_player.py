@@ -296,7 +296,6 @@ class ADBDevice(MediaPlayerEntity):
                 self._process_config,
             )
         )
-        return
 
     @property
     def media_image_hash(self) -> str | None:

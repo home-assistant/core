@@ -190,6 +190,13 @@ class BinarySensorEntity(Entity):
     _attr_is_on: bool | None = None
     _attr_state: None = None
 
+    def _default_to_device_class_name(self) -> bool:
+        """Return True if an unnamed entity should be named by its device class.
+
+        For binary sensors this is True if the entity has a device class.
+        """
+        return self.device_class is not None
+
     @property
     def device_class(self) -> BinarySensorDeviceClass | None:
         """Return the class of this entity."""

@@ -52,6 +52,7 @@ BASE_SUPPORTED_FEATURES = (
     | MediaPlayerEntityFeature.PLAY_MEDIA
     | MediaPlayerEntityFeature.GROUPING
     | MediaPlayerEntityFeature.BROWSE_MEDIA
+    | MediaPlayerEntityFeature.MEDIA_ENQUEUE
 )
 
 PLAY_STATE_TO_STATE = {
