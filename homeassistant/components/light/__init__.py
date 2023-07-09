@@ -655,7 +655,12 @@ class Profile:
     color_y: float | None = dataclasses.field(repr=False)
     brightness: int | None
     transition: int | None = None
+    color: str | None = None
+    color_rgbww: tuple[int, int, int, int, int] | None = dataclasses.field(init=False)
+    color_rgbw: tuple[int, int, int, int] | None = dataclasses.field(init=False)
+    color_rgb: tuple[int, int, int] | None = dataclasses.field(init=False)
     hs_color: tuple[float, float] | None = dataclasses.field(init=False)
+    color_temp_kelvin: int | None = dataclasses.field(init=False)
 
     SCHEMA = vol.Schema(
         vol.Any(
@@ -676,18 +681,85 @@ class Profile:
                     vol.Any(VALID_TRANSITION, _coerce_none),
                 )
             ),
+            vol.ExactSequence(
+                (
+                    str,
+                    vol.Any(cv.small_float, _coerce_none),
+                    vol.Any(cv.small_float, _coerce_none),
+                    vol.Any(cv.byte, _coerce_none),
+                    vol.Any(VALID_TRANSITION, _coerce_none),
+                    vol.Any(str, _coerce_none),
+                )
+            ),
         )
     )
 
     def __post_init__(self) -> None:
-        """Convert xy to hs color."""
-        if None in (self.color_x, self.color_y):
-            self.hs_color = None
-            return
+        def is_float(f):
+            try:
+                float(f)
+                return True
+            except ValueError:
+                return False
 
-        self.hs_color = color_util.color_xy_to_hs(
-            cast(float, self.color_x), cast(float, self.color_y)
-        )
+        def is_int(i):
+            try:
+                int(i)
+                return True
+            except ValueError:
+                return False
+
+        # Initialize the values
+        self.color_rgbww = None
+        self.color_rgbw = None
+        self.color_rgb = None
+        self.hs_color = None
+        self.color_temp_kelvin = None
+
+       # Override values with color mode
+        if self.color is not None and ":" in self.color:
+            color_list = self.color.split(":")
+            if len(color_list) == 5 and is_int(color_list[0]) and is_int(color_list[1]) and is_int(color_list[2]) and is_int(color_list[3]) and is_int(color_list[4]):
+                self.color_rgbww = (int(color_list[0]), int(color_list[1]), int(color_list[2]), int(color_list[3]), int(color_list[4]))
+                _LOGGER.debug("Color mode is RGBWW and is set to '%s' for profile '%s'.", self.color_rgbww, self.name)
+            elif len(color_list) == 4 and is_int(color_list[0]) and is_int(color_list[1]) and is_int(color_list[2]) and is_int(color_list[3]):
+                self.color_rgbw = (int(color_list[0]), int(color_list[1]), int(color_list[2]), int(color_list[3]))
+                _LOGGER.debug("Color mode is RGBW and is set to '%s' for profile '%s'.", self.color_rgbw, self.name)
+            elif len(color_list) == 3 and is_int(color_list[0]) and is_int(color_list[1]) and is_int(color_list[2]):
+                self.color_rgb = (int(color_list[0]), int(color_list[1]), int(color_list[2]))
+                _LOGGER.debug("Color mode is RGB and is set to '%s' for profile '%s'.", self.color_rgb, self.name)
+            elif len(color_list) == 2 and is_float(color_list[0]) and is_float(color_list[1]):
+                self.hs_color = (float(color_list[0]), float(color_list[1]))
+                _LOGGER.debug("Color mode is Hue\Sat and is set to '%s' for profile '%s'.", self.hs_color, self.name)
+            else:
+                self.color_rgb = (255, 255, 255)
+                _LOGGER.warning("Configuration file 'light_profiles.csv' contains invalid RGB(W)(W) or Hue\Sat value '%s' for profile '%s'. Falling back to white.", self.color.strip(), self.name)
+        elif self.color is not None and is_int(self.color):
+            if int(self.color) >= 2000  and int(self.color) <= 6500:
+                self.color_temp_kelvin = int(self.color)
+                _LOGGER.debug("Color mode is Kelvin and is set to '%s' for profile '%s'.", self.color_temp_kelvin, self.name)
+            else:
+                self.color_rgb = (255, 255, 255)
+                _LOGGER.warning("Configuration file 'light_profiles.csv' contains invalid Kelvin value '%s' for profile '%s'. Falling back to white.", self.color.strip(), self.name)
+        elif self.color is not None:
+            try:
+                self.color_rgb = color_util.color_name_to_rgb(self.color)
+                _LOGGER.debug("Color name is set to '%s' for profile '%s'.", self.color.strip(), self.name)
+            except ValueError:
+                self.color_rgb = (255, 255, 255)
+                _LOGGER.warning("Configuration file 'light_profiles.csv' contains unrecognized color name '%s' for profile '%s'. Falling back to white.", self.color.strip(), self.name)
+        elif None not in (self.color_x, self.color_y) and self.color_x > 0 and self.color_y > 0:
+            self.hs_color = color_util.color_xy_to_hs(
+                cast(float, self.color_x), cast(float, self.color_y)
+            )
+            _LOGGER.debug("Color mode has been converted to Hue\Sat from XY and is set to '%s' for profile '%s'.", self.hs_color, self.name)
+        else:
+            self.color_rgb = (255, 255, 255)
+            _LOGGER.warning("Unable to determine light color for profile '%s' in configuration file 'light_profiles.csv'. Falling back to white.", self.name)
+
+        # Prevent transition from running if set to 0 to avoid UI animation "jumping"
+        if self.transition == 0:
+            self.transition = None
 
     @classmethod
     def from_csv_row(cls, csv_row: list[str]) -> Self:
@@ -769,10 +841,26 @@ class Profiles:
             ATTR_WHITE,
         )
 
-        if profile.hs_color is not None and not any(
+        if profile.color_rgbww is not None and not any(
+            color_attribute in params for color_attribute in color_attributes
+        ):
+            params[ATTR_RGBWW_COLOR] = profile.color_rgbww
+        elif profile.color_rgbw is not None and not any(
+            color_attribute in params for color_attribute in color_attributes
+        ):
+            params[ATTR_RGBW_COLOR] = profile.color_rgbw
+        elif profile.color_rgb is not None and not any(
+            color_attribute in params for color_attribute in color_attributes
+        ):
+            params[ATTR_RGB_COLOR] = profile.color_rgb
+        elif profile.hs_color is not None and not any(
             color_attribute in params for color_attribute in color_attributes
         ):
             params[ATTR_HS_COLOR] = profile.hs_color
+        elif profile.color_temp_kelvin is not None and not any(
+            color_attribute in params for color_attribute in color_attributes
+        ):
+            params[ATTR_COLOR_TEMP] = color_util.color_temperature_kelvin_to_mired(profile.color_temp_kelvin)
         if profile.brightness is not None:
             params.setdefault(ATTR_BRIGHTNESS, profile.brightness)
         if profile.transition is not None:
