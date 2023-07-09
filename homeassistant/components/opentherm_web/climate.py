@@ -66,9 +66,15 @@ class OpenThermClimate(CoordinatorEntity[OpenThermWebCoordinator], ClimateEntity
             name="OpenThermWeb",
             manufacturer="Lake292",
         )
+        self.refresh()
 
     @callback
     def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self.refresh()
+        super()._handle_coordinator_update()
+
+    def refresh(self) -> None:
         """Handle updated data from the coordinator."""
         self.controller = self.coordinator.data.web_api.get_controller()
         self._attr_current_temperature = self.controller.room_temperature
@@ -83,8 +89,6 @@ class OpenThermClimate(CoordinatorEntity[OpenThermWebCoordinator], ClimateEntity
         else:
             self._attr_hvac_mode = HVACMode.OFF
             self._attr_icon = "mdi:radiator-disabled"
-        self.async_write_ha_state()
-        super()._handle_coordinator_update()
 
     def set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""

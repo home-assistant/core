@@ -74,9 +74,15 @@ class OpenThermWaterHeater(
             name="OpenThermWeb",
             manufacturer="Pohorelice",
         )
+        self.refresh()
 
     @callback
     def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self.refresh()
+        super()._handle_coordinator_update()
+
+    def refresh(self) -> None:
         """Handle updated data from the coordinator."""
         self.controller = self.coordinator.data.web_api.get_controller()
         if self.controller.away or self.controller.dhw_setpoint == 0:
@@ -87,8 +93,6 @@ class OpenThermWaterHeater(
         self._attr_current_temperature = self.controller.dhw_temperature
         self._attr_target_temperature = self.controller.dhw_setpoint
         self._attr_is_away_mode_on = self.controller.away
-        self.async_write_ha_state()
-        super()._handle_coordinator_update()
 
     def set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""

@@ -62,6 +62,6 @@ class HydrawiseEntity(CoordinatorEntity[HydrawiseDataUpdateCoordinator]):
 
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, str(self.controller_id))},
-            name=controller.name,
+            name=f"Hunter Hydrawise {controller.name}",
             manufacturer="Hunter HydraWise",
         )
