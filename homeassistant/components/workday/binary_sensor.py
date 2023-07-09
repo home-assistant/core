@@ -120,15 +120,16 @@ async def async_setup_entry(
     sensor_name: str = entry.options[CONF_NAME]
     workdays: list[str] = entry.options[CONF_WORKDAYS]
 
+    cls: HolidayBase = getattr(holidays, country)
     year: int = (dt_util.now() + timedelta(days=days_offset)).year
-    obj_holidays: HolidayBase = getattr(holidays, country)(years=year)
 
-    if province:
-        try:
-            obj_holidays = getattr(holidays, country)(subdiv=province, years=year)
-        except NotImplementedError:
-            LOGGER.error("There is no subdivision %s in country %s", province, country)
-            return
+    if province and province not in cls.subdivisions:
+        LOGGER.error("There is no subdivision %s in country %s", province, country)
+        return
+
+    obj_holidays = cls(
+        subdiv=province, years=year, language=cls.default_language
+    )  # type: ignore[operator]
 
     # Add custom holidays
     try:
