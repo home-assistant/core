@@ -41,6 +41,7 @@ class TVCamera(CoordinatorEntity[TVDataUpdateCoordinator], Camera):
     """Implement Trafikverket camera."""
 
     _attr_has_entity_name = True
+    _attr_name = None
     coordinator: TVDataUpdateCoordinator
 
     def __init__(
