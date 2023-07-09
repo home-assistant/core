@@ -56,11 +56,12 @@ class HydrawiseEntity(CoordinatorEntity[HydrawiseDataUpdateCoordinator]):
 
         zone = coordinator.api.get_zone(self.zone_id)
         if zone is None:
-            raise TypeError("Unable to initialize relay")
+            self._attr_name = f"{controller.name} {description.name}"
+        else:
+            self._attr_name = f"{zone.name} {description.name}"
 
-        self._attr_name = f"{zone.name} {description.name}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, str(self.controller_id))},
-            name=controller.name,
+            name=f"Hunter Hydrawise {controller.name}",
             manufacturer="Hunter HydraWise",
         )

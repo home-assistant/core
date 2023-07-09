@@ -26,15 +26,16 @@ class Hydrawiser:
         :rtype: boolean
         """
 
-        self.zones = []
+        new_zones = []
 
         self.controllers = await self.hydrawise.get_controllers()
         for controller in self.controllers:
             zones = await self.hydrawise.get_zones(controller)
             for zone in zones:
-                zone.controller_id = controller.id
-                self.zones.append(zone)
+                zone.controller_id = controller.id  # type: ignore[attr-defined]
+                new_zones.append(zone)
 
+        self.zones = new_zones
         return True
 
     def get_controller(self, controller_id) -> Controller | None:
