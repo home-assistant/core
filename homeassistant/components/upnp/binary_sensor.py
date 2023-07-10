@@ -28,7 +28,6 @@ class UpnpBinarySensorEntityDescription(
 SENSOR_DESCRIPTIONS: tuple[UpnpBinarySensorEntityDescription, ...] = (
     UpnpBinarySensorEntityDescription(
         key=WAN_STATUS,
-        name="wan status",
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),

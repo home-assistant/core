@@ -25,5 +25,42 @@
         }
       }
     }
+  },
+  "entity": {
+    "sensor": {
+      "bytes_received": {
+        "name": "Bytes received"
+      },
+      "bytes_sent": {
+        "name": "Bytes sent"
+      },
+      "packets_received": {
+        "name": "Packets received"
+      },
+      "packets_sent": {
+        "name": "Packets sent"
+      },
+      "external_ip": {
+        "name": "External IP"
+      },
+      "uptime": {
+        "name": "Uptime"
+      },
+      "packets_per_second_received": {
+        "name": "Packets/s received"
+      },
+      "packets_per_second_sent": {
+        "name": "Packets/s sent"
+      },
+      "kibibytes_per_second_received": {
+        "name": "KiB/s received"
+      },
+      "kibibytes_per_second_sent": {
+        "name": "KiB/s sent"
+      },
+      "wan_status": {
+        "name": "WAN status"
+      }
+    }
   }
 }
