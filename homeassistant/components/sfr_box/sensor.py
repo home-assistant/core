@@ -252,9 +252,7 @@ class SFRBoxSensor(CoordinatorEntity[SFRDataUpdateCoordinator[_T]], SensorEntity
         self._attr_unique_id = (
             f"{system_info.mac_addr}_{coordinator.name}_{description.key}"
         )
-        self._attr_device_info = {
-            "identifiers": {(DOMAIN, system_info.mac_addr)},
-        }
+        self._attr_device_info = {"identifiers": {(DOMAIN, system_info.mac_addr)}}
 
     @property
     def native_value(self) -> StateType:
