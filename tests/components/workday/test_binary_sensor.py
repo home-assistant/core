@@ -12,13 +12,18 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import UTC
 
 from . import (
+    TEST_CONFIG_ADD_REMOVE_DATE_RANGE,
     TEST_CONFIG_DAY_AFTER_TOMORROW,
     TEST_CONFIG_EXAMPLE_1,
     TEST_CONFIG_EXAMPLE_2,
     TEST_CONFIG_INCLUDE_HOLIDAY,
+    TEST_CONFIG_INCORRECT_ADD_DATE_RANGE,
+    TEST_CONFIG_INCORRECT_ADD_DATE_RANGE_LEN,
     TEST_CONFIG_INCORRECT_ADD_REMOVE,
     TEST_CONFIG_INCORRECT_COUNTRY,
     TEST_CONFIG_INCORRECT_PROVINCE,
+    TEST_CONFIG_INCORRECT_REMOVE_DATE_RANGE,
+    TEST_CONFIG_INCORRECT_REMOVE_DATE_RANGE_LEN,
     TEST_CONFIG_NO_COUNTRY,
     TEST_CONFIG_NO_COUNTRY_ADD_HOLIDAY,
     TEST_CONFIG_NO_PROVINCE,
@@ -264,3 +269,57 @@ async def test_setup_incorrect_add_remove(
         in caplog.text
     )
     assert "No holiday found matching '2023-12-32'" in caplog.text
+
+
+async def test_setup_incorrect_add_holiday_ranges(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test setup with incorrect add/remove holiday ranges."""
+    freezer.move_to(datetime(2017, 1, 6, 12, tzinfo=UTC))  # Friday
+    await init_integration(hass, TEST_CONFIG_INCORRECT_ADD_DATE_RANGE)
+    await init_integration(hass, TEST_CONFIG_INCORRECT_ADD_DATE_RANGE_LEN, "2")
+
+    hass.states.get("binary_sensor.workday_sensor")
+
+    assert "Incorrect adding dates in date range: 2023-12-30,2023-12-32" in caplog.text
+    assert (
+        "Incorrect adding dates in date range: 2023-12-29,2023-12-30,2023-12-31"
+        in caplog.text
+    )
+
+
+async def test_setup_incorrect_remove_holiday_ranges(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test setup with incorrect add/remove holiday ranges."""
+    freezer.move_to(datetime(2017, 1, 6, 12, tzinfo=UTC))  # Friday
+    await init_integration(hass, TEST_CONFIG_INCORRECT_REMOVE_DATE_RANGE)
+    await init_integration(hass, TEST_CONFIG_INCORRECT_REMOVE_DATE_RANGE_LEN, "2")
+
+    hass.states.get("binary_sensor.workday_sensor")
+
+    assert (
+        "Incorrect removing dates in date range: 2023-12-30,2023-12-32" in caplog.text
+    )
+    assert (
+        "Incorrect removing dates in date range: 2023-12-29,2023-12-30,2023-12-31"
+        in caplog.text
+    )
+
+
+async def test_setup_date_range(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test setup with date range."""
+    freezer.move_to(
+        datetime(2022, 12, 26, 12, tzinfo=UTC)
+    )  # Boxing Day should be working day
+    await init_integration(hass, TEST_CONFIG_ADD_REMOVE_DATE_RANGE)
+
+    state = hass.states.get("binary_sensor.workday_sensor")
+    assert state.state == "on"
