@@ -69,6 +69,8 @@ class PanasonicVieraTVEntity(MediaPlayerEntity):
         | MediaPlayerEntityFeature.STOP
         | MediaPlayerEntityFeature.BROWSE_MEDIA
     )
+    _attr_has_entity_name = True
+    _attr_name = None
 
     def __init__(self, remote, name, device_info):
         """Initialize the entity."""
@@ -99,11 +101,6 @@ class PanasonicVieraTVEntity(MediaPlayerEntity):
     def device_class(self):
         """Return the device class of the device."""
         return MediaPlayerDeviceClass.TV
-
-    @property
-    def name(self):
-        """Return the name of the device."""
-        return self._name
 
     @property
     def state(self):
