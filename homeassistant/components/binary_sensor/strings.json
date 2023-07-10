@@ -300,19 +300,5 @@
         "on": "[%key:common::state::open%]"
       }
     }
-  },
-  "device_class": {
-    "co": "carbon monoxide",
-    "cold": "cold",
-    "gas": "gas",
-    "heat": "heat",
-    "moisture": "moisture",
-    "motion": "motion",
-    "occupancy": "occupancy",
-    "power": "power",
-    "problem": "problem",
-    "smoke": "smoke",
-    "sound": "sound",
-    "vibration": "vibration"
   }
 }
