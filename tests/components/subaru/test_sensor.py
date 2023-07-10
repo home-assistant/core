@@ -145,7 +145,7 @@ def _assert_data(hass: HomeAssistant, expected_state: dict[str, Any]) -> None:
         entity = entity_registry.async_get_entity_id(
             SENSOR_DOMAIN, SUBARU_DOMAIN, f"{TEST_VIN_2_EV}_{item.key}"
         )
-        expected_states[entity.entity_id] = expected_state[item.key]
+        expected_states[entity] = expected_state[item.key]
 
     for sensor, value in expected_states.items():
         actual = hass.states.get(sensor)
