@@ -46,6 +46,8 @@ class AFSAPIDevice(MediaPlayerEntity):
     """Representation of a Frontier Silicon device on the network."""
 
     _attr_media_content_type: str = MediaType.CHANNEL
+    _attr_has_entity_name = True
+    _attr_name = None
 
     _attr_supported_features = (
         MediaPlayerEntityFeature.PAUSE
@@ -73,7 +75,6 @@ class AFSAPIDevice(MediaPlayerEntity):
             identifiers={(DOMAIN, afsapi.webfsapi_endpoint)},
             name=name,
         )
-        self._attr_name = name
 
         self._max_volume: int | None = None
 
