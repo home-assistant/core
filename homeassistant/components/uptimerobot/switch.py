@@ -29,7 +29,7 @@ async def async_setup_entry(
             coordinator,
             SwitchEntityDescription(
                 key=str(monitor.id),
-                name=f"{monitor.friendly_name} Active",
+                translation_key="active",
                 device_class=SwitchDeviceClass.SWITCH,
             ),
             monitor=monitor,

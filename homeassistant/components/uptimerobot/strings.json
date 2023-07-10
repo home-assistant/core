@@ -40,6 +40,11 @@
           "up": "Up"
         }
       }
+    },
+    "switch": {
+      "active": {
+        "name": "Active"
+      }
     }
   }
 }

@@ -46,7 +46,7 @@ async def async_setup_entry(
             coordinator,
             SensorEntityDescription(
                 key=str(monitor.id),
-                name=monitor.friendly_name,
+                name=None,
                 entity_category=EntityCategory.DIAGNOSTIC,
                 device_class=SensorDeviceClass.ENUM,
                 options=["down", "not_checked_yet", "pause", "seems_down", "up"],
