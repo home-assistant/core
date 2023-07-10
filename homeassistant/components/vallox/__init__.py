@@ -304,6 +304,8 @@ class ValloxServiceHandler:
 class ValloxEntity(CoordinatorEntity[ValloxDataUpdateCoordinator]):
     """Representation of a Vallox entity."""
 
+    _attr_has_entity_name = True
+
     def __init__(self, name: str, coordinator: ValloxDataUpdateCoordinator) -> None:
         """Initialize a Vallox entity."""
         super().__init__(coordinator)
