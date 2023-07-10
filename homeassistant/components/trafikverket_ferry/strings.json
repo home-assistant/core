@@ -39,5 +39,27 @@
         "sun": "Sunday"
       }
     }
+  },
+  "entity": {
+    "sensor": {
+      "departure_time": {
+        "name": "Departure time"
+      },
+      "departure_from": {
+        "name": "Departure from"
+      },
+      "departure_to": {
+        "name": "Departure to"
+      },
+      "departure_modified": {
+        "name": "Departure modified"
+      },
+      "departure_time_next": {
+        "name": "Departure time next"
+      },
+      "departure_time_next_next": {
+        "name": "Departure time next after"
+      }
+    }
   }
 }
