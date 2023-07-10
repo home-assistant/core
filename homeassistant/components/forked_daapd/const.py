@@ -82,6 +82,7 @@ SUPPORTED_FEATURES = (
     | MediaPlayerEntityFeature.TURN_OFF
     | MediaPlayerEntityFeature.PLAY_MEDIA
     | MediaPlayerEntityFeature.BROWSE_MEDIA
+    | MediaPlayerEntityFeature.MEDIA_ANNOUNCE
     | MediaPlayerEntityFeature.MEDIA_ENQUEUE
 )
 SUPPORTED_FEATURES_ZONE = (
