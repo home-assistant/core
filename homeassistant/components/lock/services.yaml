@@ -20,6 +20,8 @@ open:
   target:
     entity:
       domain: lock
+      supported_features:
+        - lock.LockEntityFeature.OPEN
   fields:
     code:
       name: Code

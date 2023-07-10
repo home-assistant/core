@@ -55,7 +55,7 @@ def async_setup_legacy(
     providers = hass.data[DATA_PROVIDERS] = {}
 
     async def async_setup_platform(p_type, p_config=None, discovery_info=None):
-        """Set up a TTS platform."""
+        """Set up an STT platform."""
         if p_config is None:
             p_config = {}
 

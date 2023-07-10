@@ -10,9 +10,8 @@ from enum import Enum
 import functools
 import logging
 from random import randint
-from types import MappingProxyType, MethodType
+from types import MappingProxyType
 from typing import TYPE_CHECKING, Any, TypeVar, cast
-import weakref
 
 from typing_extensions import Self
 
@@ -29,6 +28,7 @@ from .exceptions import (
     HomeAssistantError,
 )
 from .helpers import device_registry, entity_registry, storage
+from .helpers.debounce import Debouncer
 from .helpers.dispatcher import async_dispatcher_send
 from .helpers.event import (
     RANDOM_MICROSECOND_MAX,
@@ -87,6 +87,8 @@ STORAGE_VERSION = 1
 PATH_CONFIG = ".config_entries.json"
 
 SAVE_DELAY = 1
+
+DISCOVERY_COOLDOWN = 1
 
 _R = TypeVar("_R")
 
@@ -300,9 +302,7 @@ class ConfigEntry:
         self.supports_remove_device: bool | None = None
 
         # Listeners to call on update
-        self.update_listeners: list[
-            weakref.ReferenceType[UpdateListenerType] | weakref.WeakMethod
-        ] = []
+        self.update_listeners: list[UpdateListenerType] = []
 
         # Reason why config entry is in a failed state
         self.reason: str | None = None
@@ -650,16 +650,8 @@ class ConfigEntry:
 
         Returns function to unlisten.
         """
-        weak_listener: Any
-        # weakref.ref is not applicable to a bound method, e.g.,
-        # method of a class instance, as reference will die immediately.
-        if hasattr(listener, "__self__"):
-            weak_listener = weakref.WeakMethod(cast(MethodType, listener))
-        else:
-            weak_listener = weakref.ref(listener)
-        self.update_listeners.append(weak_listener)
-
-        return lambda: self.update_listeners.remove(weak_listener)
+        self.update_listeners.append(listener)
+        return lambda: self.update_listeners.remove(listener)
 
     def as_dict(self) -> dict[str, Any]:
         """Return dictionary version of this entry."""
@@ -808,6 +800,13 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager):
         self._hass_config = hass_config
         self._pending_import_flows: dict[str, dict[str, asyncio.Future[None]]] = {}
         self._initialize_tasks: dict[str, list[asyncio.Task]] = {}
+        self._discovery_debouncer = Debouncer(
+            hass,
+            _LOGGER,
+            cooldown=DISCOVERY_COOLDOWN,
+            immediate=True,
+            function=self._async_discovery,
+        )
 
     async def async_wait_import_flow_initialized(self, handler: str) -> None:
         """Wait till all import flows in progress are initialized."""
@@ -883,6 +882,7 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager):
         for task_list in self._initialize_tasks.values():
             for task in task_list:
                 task.cancel()
+        await self._discovery_debouncer.async_shutdown()
 
     async def async_finish_flow(
         self, flow: data_entry_flow.FlowHandler, result: data_entry_flow.FlowResult
@@ -979,16 +979,7 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager):
 
         # Create notification.
         if source in DISCOVERY_SOURCES:
-            self.hass.bus.async_fire(EVENT_FLOW_DISCOVERED)
-            persistent_notification.async_create(
-                self.hass,
-                title="New devices discovered",
-                message=(
-                    "We have discovered new devices on your network. "
-                    "[Check it out](/config/integrations)."
-                ),
-                notification_id=DISCOVERY_NOTIFICATION_ID,
-            )
+            await self._discovery_debouncer.async_call()
         elif source == SOURCE_REAUTH:
             persistent_notification.async_create(
                 self.hass,
@@ -999,6 +990,20 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager):
                 ),
                 notification_id=RECONFIGURE_NOTIFICATION_ID,
             )
+
+    @callback
+    def _async_discovery(self) -> None:
+        """Handle discovery."""
+        self.hass.bus.async_fire(EVENT_FLOW_DISCOVERED)
+        persistent_notification.async_create(
+            self.hass,
+            title="New devices discovered",
+            message=(
+                "We have discovered new devices on your network. "
+                "[Check it out](/config/integrations)."
+            ),
+            notification_id=DISCOVERY_NOTIFICATION_ID,
+        )
 
 
 class ConfigEntries:
@@ -1332,12 +1337,11 @@ class ConfigEntries:
         if not changed:
             return False
 
-        for listener_ref in entry.update_listeners:
-            if (listener := listener_ref()) is not None:
-                self.hass.async_create_task(
-                    listener(self.hass, entry),
-                    f"config entry update listener {entry.title} {entry.domain} {entry.domain}",
-                )
+        for listener in entry.update_listeners:
+            self.hass.async_create_task(
+                listener(self.hass, entry),
+                f"config entry update listener {entry.title} {entry.domain} {entry.domain}",
+            )
 
         self._async_schedule_save()
         self._async_dispatch(ConfigEntryChange.UPDATED, entry)

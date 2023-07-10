@@ -21,3 +21,9 @@ UNIT_MAP = {
     "LITERS": UnitOfVolume.LITERS,
     "GALLONS": UnitOfVolume.GALLONS,
 }
+
+SCAN_INTERVALS = {
+    "china": 300,
+    "north_america": 600,
+    "rest_of_world": 300,
+}

@@ -32,8 +32,46 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "sleeping": {
+        "name": "Sleeping"
+      },
+      "sleep_mode": {
+        "name": "Sleep mode"
+      },
+      "power_status": {
+        "name": "Power status"
+      }
+    },
+    "button": {
+      "reset_waste_drawer": {
+        "name": "Reset waste drawer"
+      },
+      "give_snack": {
+        "name": "Give snack"
+      }
+    },
     "sensor": {
+      "food_level": {
+        "name": "Food level"
+      },
+      "last_seen": {
+        "name": "Last seen"
+      },
+      "litter_level": {
+        "name": "Litter level"
+      },
+      "pet_weight": {
+        "name": "Pet weight"
+      },
+      "sleep_mode_end_time": {
+        "name": "Sleep mode end time"
+      },
+      "sleep_mode_start_time": {
+        "name": "Sleep mode start time"
+      },
       "status_code": {
+        "name": "Status code",
         "state": {
           "br": "Bonnet Removed",
           "ccc": "Clean Cycle Complete",
@@ -61,15 +99,48 @@
           "sdf": "Drawer Full At Startup",
           "spf": "Pinch Detect At Startup"
         }
+      },
+      "waste_drawer": {
+        "name": "Waste drawer"
       }
     },
     "select": {
+      "cycle_delay": {
+        "name": "Clean cycle wait time minutes"
+      },
+      "meal_insert_size": {
+        "name": "Meal insert size"
+      },
       "brightness_level": {
+        "name": "Panel brightness",
         "state": {
           "low": "Low",
           "medium": "Medium",
           "high": "High"
         }
+      }
+    },
+    "switch": {
+      "night_light_mode": {
+        "name": "Night light mode"
+      },
+      "panel_lockout": {
+        "name": "Panel lockout"
+      }
+    },
+    "time": {
+      "sleep_mode_start_time": {
+        "name": "Sleep mode start time"
+      }
+    },
+    "vacuum": {
+      "litter_box": {
+        "name": "Litter box"
+      }
+    },
+    "update": {
+      "firmware": {
+        "name": "Firmware"
       }
     }
   }
