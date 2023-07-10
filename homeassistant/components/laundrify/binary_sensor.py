@@ -42,6 +42,8 @@ class LaundrifyPowerPlug(
     _attr_device_class = BinarySensorDeviceClass.RUNNING
     _attr_icon = "mdi:washing-machine"
     _attr_unique_id: str
+    _attr_has_entity_name = True
+    _attr_name = None
 
     def __init__(
         self, coordinator: LaundrifyUpdateCoordinator, device: LaundrifyDevice
@@ -56,7 +58,7 @@ class LaundrifyPowerPlug(
         """Configure the Device of this Entity."""
         return DeviceInfo(
             identifiers={(DOMAIN, self._device["_id"])},
-            name=self.name,
+            name=self._device["name"],
             manufacturer=MANUFACTURER,
             model=MODEL,
             sw_version=self._device["firmwareVersion"],
@@ -69,11 +71,6 @@ class LaundrifyPowerPlug(
             self._attr_unique_id in self.coordinator.data
             and self.coordinator.last_update_success
         )
-
-    @property
-    def name(self) -> str:
-        """Name of the entity."""
-        return self._device["name"]
 
     @property
     def is_on(self) -> bool:
