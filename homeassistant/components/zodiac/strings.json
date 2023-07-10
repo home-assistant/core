@@ -1,4 +1,5 @@
 {
+  "title": "Zodiac",
   "config": {
     "step": {
       "user": {
@@ -27,12 +28,6 @@
           "virgo": "Virgo"
         }
       }
-    }
-  },
-  "issues": {
-    "deprecated_yaml": {
-      "title": "The Zodiac YAML configuration is being removed",
-      "description": "Configuring Zodiac using YAML is being removed.\n\nYour existing YAML configuration has been imported into the UI automatically.\n\nRemove the Zodiac YAML configuration from your configuration.yaml file and restart Home Assistant to fix this issue."
     }
   }
 }
