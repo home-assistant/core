@@ -62,6 +62,9 @@ async def async_setup_entry(
 class TwinklyLight(LightEntity):
     """Implementation of the light for the Twinkly service."""
 
+    _attr_has_entity_name = True
+    _attr_name = None
+
     def __init__(
         self,
         conf: ConfigEntry,
@@ -113,11 +116,6 @@ class TwinklyLight(LightEntity):
         return self._id
 
     @property
-    def name(self) -> str:
-        """Name of the device."""
-        return self._name if self._name else "Twinkly light"
-
-    @property
     def model(self) -> str:
         """Name of the device."""
         return self._model
@@ -134,7 +132,7 @@ class TwinklyLight(LightEntity):
             identifiers={(DOMAIN, self._id)},
             manufacturer="LEDWORKS",
             model=self.model,
-            name=self.name,
+            name=self._conf.data.get(CONF_NAME, "Twinkly light"),
             sw_version=self._software_version,
         )
 
