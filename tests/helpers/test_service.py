@@ -567,9 +567,7 @@ async def test_async_get_all_descriptions(hass: HomeAssistant) -> None:
         config_flow: bool | None = None,
     ) -> dict[str, Any]:
         """Return all backend translations."""
-        translation_key_prefix = (
-            f"components.{logger.DOMAIN}.services.set_default_level"
-        )
+        translation_key_prefix = f"component.{logger.DOMAIN}.services.set_default_level"
         return {
             f"{translation_key_prefix}.name": "Translated name",
             f"{translation_key_prefix}.description": "Translated description",

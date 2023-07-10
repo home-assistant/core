@@ -643,11 +643,11 @@ async def async_get_all_descriptions(
                 # This mimics the behavior of the frontend.
                 description = {
                     "name": translations.get(
-                        f"components.{domain}.services.{service_name}.name",
+                        f"component.{domain}.services.{service_name}.name",
                         yaml_description.get("name", ""),
                     ),
                     "description": translations.get(
-                        f"components.{domain}.services.{service_name}.description",
+                        f"component.{domain}.services.{service_name}.description",
                         yaml_description.get("description", ""),
                     ),
                     "fields": yaml_description.get("fields", {}),
@@ -656,11 +656,11 @@ async def async_get_all_descriptions(
                 # Translate fields names & descriptions as well
                 for field_name, field_schema in description.get("fields", {}).items():
                     if name := translations.get(
-                        f"components.{domain}.services.{service_name}.fields.{field_name}.name"
+                        f"component.{domain}.services.{service_name}.fields.{field_name}.name"
                     ):
                         field_schema["name"] = name
                     if desc := translations.get(
-                        f"components.{domain}.services.{service_name}.fields.{field_name}.description"
+                        f"component.{domain}.services.{service_name}.fields.{field_name}.description"
                     ):
                         field_schema["description"] = desc
 
