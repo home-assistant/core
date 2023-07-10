@@ -25,7 +25,8 @@ toggle:
     entity:
       domain: media_player
       supported_features:
-        - 384 # media_player.MediaPlayerEntityFeature.TURN_OFF | media_player.MediaPlayerEntityFeature.TURN_ON
+        - - media_player.MediaPlayerEntityFeature.TURN_OFF
+          - media_player.MediaPlayerEntityFeature.TURN_ON
 
 volume_up:
   name: Turn up volume
@@ -89,7 +90,8 @@ media_play_pause:
     entity:
       domain: media_player
       supported_features:
-        - 16385 # media_player.MediaPlayerEntityFeature.PAUSE | media_player.MediaPlayerEntityFeature.PLAY
+        - - media_player.MediaPlayerEntityFeature.PAUSE
+          - media_player.MediaPlayerEntityFeature.PLAY
 
 media_play:
   name: Play
