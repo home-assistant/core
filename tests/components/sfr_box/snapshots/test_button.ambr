@@ -54,7 +54,7 @@
       'original_name': 'Restart',
       'platform': 'sfr_box',
       'supported_features': 0,
-      'translation_key': 'reboot',
+      'translation_key': None,
       'unique_id': 'e4:5d:51:00:11:22_system_reboot',
       'unit_of_measurement': None,
     }),
