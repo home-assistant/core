@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import datetime
 import logging
 
 from homeassistant.components.calendar import CalendarEntity, CalendarEvent
@@ -18,10 +18,6 @@ from .const import DOMAIN
 from .coordinator import RainbirdScheduleUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
-
-# Polling the calendar requires a number of RPC calls to fetch the data and
-# we don't expect the calendar to change often, so use a long schedule.
-MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=30)
 
 
 async def async_setup_entry(

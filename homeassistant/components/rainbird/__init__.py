@@ -28,6 +28,8 @@ DOMAIN = "rainbird"
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up the config entry for Rain Bird."""
 
+    hass.data.setdefault(DOMAIN, {})
+
     controller = AsyncRainbirdController(
         AsyncRainbirdClient(
             async_get_clientsession(hass),
@@ -49,6 +51,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await coordinator.async_config_entry_first_refresh()
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
+
+    hass.data[DOMAIN][entry.entry_id] = data
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
