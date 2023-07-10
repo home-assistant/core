@@ -31,7 +31,7 @@ class ToloLampNextColorButton(ToloSaunaCoordinatorEntity, ButtonEntity):
 
     _attr_entity_category = EntityCategory.CONFIG
     _attr_icon = "mdi:palette"
-    _attr_name = "Next Color"
+    _attr_translation_key = "next_color"
 
     def __init__(
         self, coordinator: ToloSaunaUpdateCoordinator, entry: ConfigEntry
