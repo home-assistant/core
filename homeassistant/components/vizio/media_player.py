@@ -131,6 +131,9 @@ async def async_setup_entry(
 class VizioDevice(MediaPlayerEntity):
     """Media Player implementation which performs REST requests to device."""
 
+    _attr_has_entity_name = True
+    _attr_name = None
+
     def __init__(
         self,
         config_entry: ConfigEntry,
@@ -156,6 +159,7 @@ class VizioDevice(MediaPlayerEntity):
         )
         self._device = device
         self._max_volume = float(self._device.get_max_volume())
+        self._name = name
 
         # Entity class attributes that will change with each update (we only include
         # the ones that are initialized differently from the defaults)
@@ -163,7 +167,6 @@ class VizioDevice(MediaPlayerEntity):
         self._attr_supported_features = SUPPORTED_COMMANDS[device_class]
 
         # Entity class attributes that will not change
-        self._attr_name = name
         self._attr_icon = ICON[device_class]
         self._attr_unique_id = self._config_entry.unique_id
         self._attr_device_class = device_class
@@ -202,7 +205,7 @@ class VizioDevice(MediaPlayerEntity):
                 identifiers={(DOMAIN, self._attr_unique_id)},
                 manufacturer="VIZIO",
                 model=await self._device.get_model_name(log_api_exception=False),
-                name=self._attr_name,
+                name=self._name,
                 sw_version=await self._device.get_version(log_api_exception=False),
             )
 
