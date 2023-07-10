@@ -121,7 +121,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             breaks_in_ha_version="2023.8.0",
             is_fixable=False,
             severity=ir.IssueSeverity.WARNING,
-            translation_key="legacy_nest_deprecated",
+            translation_key="legacy_nest_removed",
             translation_placeholders={
                 "documentation_url": "https://www.home-assistant.io/integrations/nest/",
             },
