@@ -64,7 +64,7 @@
       "title": "Ezviz Detection sensitivity service is being removed",
       "description": "Ezviz Detection sensitivity service is deprecated and will be removed in Home Assistant 2023.12; Please adjust the automation or script that uses the service and select submit below to mark this issue as resolved."
     },
-    "service_depreciation_alarm_sound_level": {
+    "service_deprecation_alarm_sound_level": {
       "title": "Ezviz Alarm sound level service is being removed",
       "description": "Ezviz Alarm sound level service is deprecated and will be removed in Home Assistant 2024.2; Please adjust the automation or script that uses the service and select submit below to mark this issue as resolved."
     }

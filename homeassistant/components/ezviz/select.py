@@ -72,14 +72,13 @@ class EzvizSensor(EzvizEntity, SelectEntity):
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator, serial)
-        self._sensor_name = SELECT_TYPE.key
         self._attr_unique_id = f"{serial}_{SELECT_TYPE.key}"
         self.entity_description = SELECT_TYPE
 
     @property
     def current_option(self) -> str | None:
         """Return the selected entity option to represent the entity state."""
-        sound_mode_value = getattr(SoundMode, self.data[self._sensor_name]).value
+        sound_mode_value = getattr(SoundMode, self.data[self.entity_description.key]).value
         if sound_mode_value in [0, 1, 2]:
             return self.options[sound_mode_value]
 
@@ -94,5 +93,5 @@ class EzvizSensor(EzvizEntity, SelectEntity):
 
         except (HTTPError, PyEzvizError) as err:
             raise HomeAssistantError(
-                f"Cannot set Warning sound level for {self.name}"
+                f"Cannot set Warning sound level for {self.entity_id}"
             ) from err

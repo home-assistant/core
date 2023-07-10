@@ -293,12 +293,12 @@ class EzvizCamera(EzvizEntity, Camera):
         ir.async_create_issue(
             self.hass,
             DOMAIN,
-            "service_depreciation_alarm_sound_level",
+            "service_deprecation_alarm_sound_level",
             breaks_in_ha_version="2024.2.0",
             is_fixable=True,
             is_persistent=True,
             severity=ir.IssueSeverity.WARNING,
-            translation_key="service_depreciation_alarm_sound_level",
+            translation_key="service_deprecation_alarm_sound_level",
         )
         try:
             self.coordinator.ezviz_client.alarm_sound(self._serial, level, 1)
