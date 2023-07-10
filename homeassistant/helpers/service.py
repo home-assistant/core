@@ -50,6 +50,7 @@ from . import (
     device_registry,
     entity_registry,
     template,
+    translation,
 )
 from .selector import TargetSelector
 from .typing import ConfigType, TemplateVarsType
@@ -607,6 +608,11 @@ async def async_get_all_descriptions(
         )
         loaded = dict(zip(missing, contents))
 
+    # Load translations for all service domains
+    translations = await translation.async_get_translations(
+        hass, "en", "services", list(services)
+    )
+
     # Build response
     descriptions: dict[str, dict[str, Any]] = {}
     for domain, services_map in services.items():
@@ -630,11 +636,33 @@ async def async_get_all_descriptions(
 
                 # Don't warn for missing services, because it triggers false
                 # positives for things like scripts, that register as a service
+                #
+                # When name & description are in the translations use those;
+                # otherwise fallback to backwards compatible behavior from
+                # the time when we didn't have translations for descriptions yet.
+                # This mimics the behavior of the frontend.
                 description = {
-                    "name": yaml_description.get("name", ""),
-                    "description": yaml_description.get("description", ""),
+                    "name": translations.get(
+                        f"components.{domain}.services.{service_name}.name",
+                        yaml_description.get("name", ""),
+                    ),
+                    "description": translations.get(
+                        f"components.{domain}.services.{service_name}.description",
+                        yaml_description.get("description", ""),
+                    ),
                     "fields": yaml_description.get("fields", {}),
                 }
+
+                # Translate fields names & descriptions as well
+                for field_name, field_schema in description.get("fields", {}).items():
+                    if name := translations.get(
+                        f"components.{domain}.services.{service_name}.fields.{field_name}.name"
+                    ):
+                        field_schema["name"] = name
+                    if desc := translations.get(
+                        f"components.{domain}.services.{service_name}.fields.{field_name}.description"
+                    ):
+                        field_schema["description"] = desc
 
                 if "target" in yaml_description:
                     description["target"] = yaml_description["target"]
