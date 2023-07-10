@@ -241,8 +241,8 @@ async def test_unsupported_methods(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     assert vacuum.is_on(hass, ENTITY_VACUUM_COMPLETE)
 
-    await common.async_pause(hass, ENTITY_VACUUM_COMPLETE)
-    assert vacuum.is_on(hass, ENTITY_VACUUM_COMPLETE)
+    with pytest.raises(AttributeError):
+        await common.async_pause(hass, ENTITY_VACUUM_COMPLETE)
 
     hass.states.async_set(ENTITY_VACUUM_COMPLETE, STATE_OFF)
     await hass.async_block_till_done()
