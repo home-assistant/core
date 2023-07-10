@@ -129,13 +129,34 @@ class Interface(TypedDict):
     type: str
 
 
-class HostInfo(TypedDict):
-    """FRITZ!Box host info class."""
-
-    mac: str
-    name: str
-    ip: str
-    status: bool
+HostAttributes = TypedDict(
+    "HostAttributes",
+    {
+        "Index": int,
+        "IPAddress": str,
+        "MACAddress": str,
+        "Active": bool,
+        "HostName": str,
+        "InterfaceType": str,
+        "X_AVM-DE_Port": int,
+        "X_AVM-DE_Speed": int,
+        "X_AVM-DE_UpdateAvailable": bool,
+        "X_AVM-DE_UpdateSuccessful": str,
+        "X_AVM-DE_InfoURL": str | None,
+        "X_AVM-DE_MACAddressList": str | None,
+        "X_AVM-DE_Model": str | None,
+        "X_AVM-DE_URL": str | None,
+        "X_AVM-DE_Guest": bool,
+        "X_AVM-DE_RequestClient": str,
+        "X_AVM-DE_VPN": bool,
+        "X_AVM-DE_WANAccess": str,
+        "X_AVM-DE_Disallow": bool,
+        "X_AVM-DE_IsMeshable": str,
+        "X_AVM-DE_Priority": str,
+        "X_AVM-DE_FriendlyName": str,
+        "X_AVM-DE_FriendlyNameIsWriteable": str,
+    },
+)
 
 
 class UpdateCoordinatorDataType(TypedDict):
@@ -353,11 +374,11 @@ class FritzBoxTools(
         """Event specific per FRITZ!Box entry to signal updates in devices."""
         return f"{DOMAIN}-device-update-{self._unique_id}"
 
-    async def _async_update_hosts_info(self) -> list[HostInfo]:
+    async def _async_update_hosts_info(self) -> list[HostAttributes]:
         """Retrieve latest hosts information from the FRITZ!Box."""
         try:
             return await self.hass.async_add_executor_job(
-                self.fritz_hosts.get_hosts_info
+                self.fritz_hosts.get_hosts_attributes
             )
         except Exception as ex:  # pylint: disable=[broad-except]
             if not self.hass.is_stopping:
@@ -462,15 +483,15 @@ class FritzBoxTools(
         new_device = False
         hosts = {}
         for host in await self._async_update_hosts_info():
-            if not host.get("mac"):
+            if not host.get("MACAddress"):
                 continue
 
-            hosts[host["mac"]] = Device(
-                name=host["name"],
-                connected=host["status"],
+            hosts[host["MACAddress"]] = Device(
+                name=host["HostName"],
+                connected=host["Active"],
                 connected_to="",
                 connection_type="",
-                ip_address=host["ip"],
+                ip_address=host["IPAddress"],
                 ssid=None,
                 wan_access=None,
             )
@@ -583,7 +604,7 @@ class FritzBoxTools(
     ) -> None:
         """Trigger device trackers cleanup."""
         device_hosts_list = await self.hass.async_add_executor_job(
-            self.fritz_hosts.get_hosts_info
+            self.fritz_hosts.get_hosts_attributes
         )
         entity_reg: er.EntityRegistry = er.async_get(self.hass)
 
@@ -600,8 +621,8 @@ class FritzBoxTools(
         device_hosts_macs = set()
         device_hosts_names = set()
         for device in device_hosts_list:
-            device_hosts_macs.add(device["mac"])
-            device_hosts_names.add(device["name"])
+            device_hosts_macs.add(device["MACAddress"])
+            device_hosts_names.add(device["HostName"])
 
         for entry in ha_entity_reg_list:
             if entry.original_name is None:
