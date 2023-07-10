@@ -103,6 +103,8 @@ class EvilGeniusUpdateCoordinator(DataUpdateCoordinator[dict]):
 class EvilGeniusEntity(CoordinatorEntity[EvilGeniusUpdateCoordinator]):
     """Base entity for Evil Genius."""
 
+    _attr_has_entity_name = True
+
     @property
     def device_info(self) -> DeviceInfo:
         """Return device info."""
