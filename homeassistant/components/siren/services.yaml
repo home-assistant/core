@@ -56,4 +56,5 @@ toggle:
     entity:
       domain: siren
       supported_features:
-        - 3 # siren.SirenEntityFeature.TURN_OFF | siren.SirenEntityFeature.TURN_ON
+        - - siren.SirenEntityFeature.TURN_OFF
+          - siren.SirenEntityFeature.TURN_ON
