@@ -52,7 +52,9 @@ async def test_flow(
         assert result["result"].state == exp_result
     if exp_reason:
         assert result["reason"] == exp_reason
-    issue = registry.async_get_issue(HOMEASSISTANT_DOMAIN, "deprecated_yaml")
+    issue = registry.async_get_issue(
+        HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{dynalite.DOMAIN}"
+    )
     assert issue is not None
     assert issue.issue_domain == dynalite.DOMAIN
     assert issue.severity == IssueSeverity.WARNING
