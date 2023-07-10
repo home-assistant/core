@@ -1,0 +1,9 @@
+{
+  "entity": {
+    "button": {
+      "sync_devices": {
+        "name": "Synchronize devices"
+      }
+    }
+  }
+}
