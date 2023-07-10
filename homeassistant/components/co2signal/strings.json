@@ -6,7 +6,7 @@
           "location": "Get data for",
           "api_key": "[%key:common::config_flow::data::access_token%]"
         },
-        "description": "Visit https://co2signal.com/ to request a token."
+        "description": "Visit https://electricitymaps.com/free-tier to request a token."
       },
       "coordinates": {
         "data": {
