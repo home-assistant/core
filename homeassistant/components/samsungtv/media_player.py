@@ -73,6 +73,7 @@ class SamsungTVDevice(SamsungTVEntity, MediaPlayerEntity):
     """Representation of a Samsung TV."""
 
     _attr_source_list: list[str]
+    _attr_name = None
 
     def __init__(
         self,
