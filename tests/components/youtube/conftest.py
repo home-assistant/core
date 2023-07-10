@@ -1,4 +1,4 @@
-"""Configure tests for the Google Mail integration."""
+"""Configure tests for the YouTube integration."""
 from collections.abc import Awaitable, Callable, Coroutine
 import time
 from typing import Any
@@ -20,7 +20,6 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 
 ComponentSetup = Callable[[], Awaitable[None]]
 
-BUILD = "homeassistant.components.google_mail.api.build"
 CLIENT_ID = "1234"
 CLIENT_SECRET = "5678"
 GOOGLE_AUTH_URI = "https://accounts.google.com/o/oauth2/v2/auth"
@@ -28,7 +27,6 @@ GOOGLE_TOKEN_URI = "https://oauth2.googleapis.com/token"
 SCOPES = [
     "https://www.googleapis.com/auth/youtube.readonly",
 ]
-SENSOR = "sensor.example_gmail_com_vacation_end_date"
 TITLE = "Google for Developers"
 TOKEN = "homeassistant.components.youtube.api.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid"
 
@@ -59,7 +57,7 @@ def mock_expires_at() -> int:
 
 @pytest.fixture(name="config_entry")
 def mock_config_entry(expires_at: int, scopes: list[str]) -> MockConfigEntry:
-    """Create Google Mail entry in Home Assistant."""
+    """Create YouTube entry in Home Assistant."""
     return MockConfigEntry(
         domain=DOMAIN,
         title=TITLE,
@@ -79,7 +77,7 @@ def mock_config_entry(expires_at: int, scopes: list[str]) -> MockConfigEntry:
 
 @pytest.fixture(autouse=True)
 def mock_connection(aioclient_mock: AiohttpClientMocker) -> None:
-    """Mock Google Mail connection."""
+    """Mock YouTube connection."""
     aioclient_mock.post(
         GOOGLE_TOKEN_URI,
         json={

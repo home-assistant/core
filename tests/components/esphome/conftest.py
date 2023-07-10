@@ -19,14 +19,14 @@ import pytest
 from zeroconf import Zeroconf
 
 from homeassistant.components.esphome import (
-    CONF_DEVICE_NAME,
-    CONF_NOISE_PSK,
-    DOMAIN,
     dashboard,
 )
 from homeassistant.components.esphome.const import (
     CONF_ALLOW_SERVICE_CALLS,
+    CONF_DEVICE_NAME,
+    CONF_NOISE_PSK,
     DEFAULT_NEW_CONFIG_ALLOW_ALLOW_SERVICE_CALLS,
+    DOMAIN,
 )
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import HomeAssistant
@@ -234,7 +234,9 @@ async def _mock_generic_device_entry(
             try_connect_done.set()
             return result
 
-    with patch("homeassistant.components.esphome.ReconnectLogic", MockReconnectLogic):
+    with patch(
+        "homeassistant.components.esphome.manager.ReconnectLogic", MockReconnectLogic
+    ):
         assert await hass.config_entries.async_setup(entry.entry_id)
         await try_connect_done.wait()
 

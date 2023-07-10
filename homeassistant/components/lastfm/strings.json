@@ -35,11 +35,5 @@
       "invalid_account": "Invalid username",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     }
-  },
-  "issues": {
-    "deprecated_yaml": {
-      "title": "The LastFM YAML configuration is being removed",
-      "description": "Configuring LastFM using YAML is being removed.\n\nYour existing YAML configuration has been imported into the UI automatically.\n\nRemove the LastFM YAML configuration from your configuration.yaml file and restart Home Assistant to fix this issue."
-    }
   }
 }

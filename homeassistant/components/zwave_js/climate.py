@@ -9,6 +9,7 @@ from zwave_js_server.const.command_class.thermostat import (
     THERMOSTAT_CURRENT_TEMP_PROPERTY,
     THERMOSTAT_HUMIDITY_PROPERTY,
     THERMOSTAT_MODE_PROPERTY,
+    THERMOSTAT_MODE_SETPOINT_MAP,
     THERMOSTAT_OPERATING_STATE_PROPERTY,
     THERMOSTAT_SETPOINT_PROPERTY,
     ThermostatMode,
@@ -55,28 +56,6 @@ THERMOSTAT_MODES = [
     ThermostatMode.FAN,
     ThermostatMode.DRY,
 ]
-
-THERMOSTAT_MODE_SETPOINT_MAP: dict[int, list[ThermostatSetpointType]] = {
-    ThermostatMode.OFF: [],
-    ThermostatMode.HEAT: [ThermostatSetpointType.HEATING],
-    ThermostatMode.COOL: [ThermostatSetpointType.COOLING],
-    ThermostatMode.AUTO: [
-        ThermostatSetpointType.HEATING,
-        ThermostatSetpointType.COOLING,
-    ],
-    ThermostatMode.AUXILIARY: [ThermostatSetpointType.HEATING],
-    ThermostatMode.FURNACE: [ThermostatSetpointType.FURNACE],
-    ThermostatMode.DRY: [ThermostatSetpointType.DRY_AIR],
-    ThermostatMode.MOIST: [ThermostatSetpointType.MOIST_AIR],
-    ThermostatMode.AUTO_CHANGE_OVER: [ThermostatSetpointType.AUTO_CHANGEOVER],
-    ThermostatMode.HEATING_ECON: [ThermostatSetpointType.ENERGY_SAVE_HEATING],
-    ThermostatMode.COOLING_ECON: [ThermostatSetpointType.ENERGY_SAVE_COOLING],
-    ThermostatMode.AWAY: [
-        ThermostatSetpointType.AWAY_HEATING,
-        ThermostatSetpointType.AWAY_COOLING,
-    ],
-    ThermostatMode.FULL_POWER: [ThermostatSetpointType.FULL_POWER],
-}
 
 # Map Z-Wave HVAC Mode to Home Assistant value
 # Note: We treat "auto" as "heat_cool" as most Z-Wave devices
