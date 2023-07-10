@@ -39,6 +39,7 @@ class PhilipsTVScreenSwitch(
     """A Philips TV screen state switch."""
 
     _attr_has_entity_name = True
+    _attr_translation_key = "screen_state"
 
     def __init__(
         self,
@@ -48,7 +49,6 @@ class PhilipsTVScreenSwitch(
 
         super().__init__(coordinator)
 
-        self._attr_name = "Screen state"
         self._attr_icon = "mdi:television-shimmer"
         self._attr_unique_id = f"{coordinator.unique_id}_screenstate"
         self._attr_device_info = DeviceInfo(
@@ -85,6 +85,9 @@ class PhilipsTVAmbilightHueSwitch(
 ):
     """A Philips TV Ambi+Hue switch."""
 
+    _attr_has_entity_name = True
+    _attr_translation_key = "ambilight_hue"
+
     def __init__(
         self,
         coordinator: PhilipsTVDataUpdateCoordinator,
@@ -93,13 +96,13 @@ class PhilipsTVAmbilightHueSwitch(
 
         super().__init__(coordinator)
 
-        self._attr_name = f"{coordinator.system['name']} Ambilight+Hue"
         self._attr_icon = "mdi:television-ambient-light"
         self._attr_unique_id = f"{coordinator.unique_id}_ambi_hue"
         self._attr_device_info = DeviceInfo(
             identifiers={
                 (DOMAIN, coordinator.unique_id),
-            }
+            },
+            name=coordinator.system["name"],
         )
 
     @property

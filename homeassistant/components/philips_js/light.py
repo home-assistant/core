@@ -140,6 +140,7 @@ class PhilipsTVLightEntity(
     """Representation of a Philips TV exposing the JointSpace API."""
 
     _attr_has_entity_name = True
+    _attr_translation_key = "ambilight"
 
     def __init__(
         self,
