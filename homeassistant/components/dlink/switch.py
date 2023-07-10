@@ -4,7 +4,11 @@ from __future__ import annotations
 from datetime import timedelta
 from typing import Any
 
-from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
+from homeassistant.components.switch import (
+    SwitchDeviceClass,
+    SwitchEntity,
+    SwitchEntityDescription,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
@@ -17,7 +21,7 @@ SCAN_INTERVAL = timedelta(minutes=2)
 
 SWITCH_TYPE = SwitchEntityDescription(
     key="switch",
-    name="Switch",
+    device_class=SwitchDeviceClass.SWITCH,
 )
 
 
@@ -33,6 +37,8 @@ async def async_setup_entry(
 
 class SmartPlugSwitch(DLinkEntity, SwitchEntity):
     """Representation of a D-Link Smart Plug switch."""
+
+    _attr_name = None
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
