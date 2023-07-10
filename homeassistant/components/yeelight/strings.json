@@ -37,5 +37,20 @@
         }
       }
     }
+  },
+  "entity": {
+    "binary_sensor": {
+      "nightlight": {
+        "name": "Nightlight"
+      }
+    },
+    "light": {
+      "nightlight": {
+        "name": "Nightlight"
+      },
+      "ambilight": {
+        "name": "Ambilight"
+      }
+    }
   }
 }

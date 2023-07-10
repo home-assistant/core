@@ -12,6 +12,7 @@ class YeelightEntity(Entity):
     """Represents single Yeelight entity."""
 
     _attr_should_poll = False
+    _attr_has_entity_name = True
 
     def __init__(self, device: YeelightDevice, entry: ConfigEntry) -> None:
         """Initialize the entity."""
