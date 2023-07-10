@@ -1,5 +1,13 @@
 """Tests for the Wyoming integration."""
-from wyoming.info import AsrModel, AsrProgram, Attribution, Info, TtsProgram, TtsVoice
+from wyoming.info import (
+    AsrModel,
+    AsrProgram,
+    Attribution,
+    Info,
+    TtsProgram,
+    TtsVoice,
+    TtsVoiceSpeaker,
+)
 
 TEST_ATTR = Attribution(name="Test", url="http://www.test.com")
 STT_INFO = Info(
@@ -31,6 +39,7 @@ TTS_INFO = Info(
                     installed=True,
                     attribution=TEST_ATTR,
                     languages=["en-US"],
+                    speakers=[TtsVoiceSpeaker(name="Test Speaker")],
                 )
             ],
         )
