@@ -34,7 +34,7 @@ class YoLinkSirenEntityDescription(SirenEntityDescription):
 DEVICE_TYPES: tuple[YoLinkSirenEntityDescription, ...] = (
     YoLinkSirenEntityDescription(
         key="state",
-        name="State",
+        name=None,
         value=lambda value: value == "alert" if value is not None else None,
         exists_fn=lambda device: device.device_type in [ATTR_DEVICE_SIREN],
     ),

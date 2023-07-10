@@ -38,6 +38,8 @@ async def async_setup_entry(
 class YoLinkCoverEntity(YoLinkEntity, CoverEntity):
     """YoLink Cover Entity."""
 
+    _attr_name = None
+
     def __init__(
         self,
         config_entry: ConfigEntry,
@@ -46,7 +48,6 @@ class YoLinkCoverEntity(YoLinkEntity, CoverEntity):
         """Init YoLink garage door entity."""
         super().__init__(config_entry, coordinator)
         self._attr_unique_id = f"{coordinator.device.device_id}_door_state"
-        self._attr_name = f"{coordinator.device.device_name} (State)"
         self._attr_device_class = CoverDeviceClass.GARAGE
         self._attr_supported_features = (
             CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE

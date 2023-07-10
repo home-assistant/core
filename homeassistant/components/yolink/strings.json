@@ -33,5 +33,24 @@
       "button_4_short_press": "Button_4 (short press)",
       "button_4_long_press": "Button_4 (long press)"
     }
+  },
+  "entity": {
+    "switch": {
+      "usb_ports": {
+        "name": "USB ports"
+      },
+      "plug_1": {
+        "name": "Plug 1"
+      },
+      "plug_2": {
+        "name": "Plug 2"
+      },
+      "plug_3": {
+        "name": "Plug 3"
+      },
+      "plug_4": {
+        "name": "Plug 4"
+      }
+    }
   }
 }
