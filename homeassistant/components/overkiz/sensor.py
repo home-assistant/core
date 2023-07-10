@@ -527,6 +527,6 @@ class OverkizHomeKitSetupCodeSensor(OverkizEntity, SensorEntity):
         # By default this sensor will be listed at a virtual HomekitStack device,
         # but it makes more sense to show this at the gateway device
         # in the entity registry.
-        return {
-            "identifiers": {(DOMAIN, self.executor.get_gateway_id())},
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, self.executor.get_gateway_id())},
+        )

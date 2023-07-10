@@ -42,6 +42,7 @@ from homeassistant.const import (
     UnitOfVolume,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
 
@@ -997,7 +998,9 @@ class XiaomiGatewayIlluminanceSensor(SensorEntity):
         """Initialize the entity."""
         self._attr_name = f"{gateway_name} {description.name}"
         self._attr_unique_id = f"{gateway_device_id}-{description.key}"
-        self._attr_device_info = {"identifiers": {(DOMAIN, gateway_device_id)}}
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, gateway_device_id)},
+        )
         self._gateway = gateway_device
         self.entity_description = description
         self._available = False
