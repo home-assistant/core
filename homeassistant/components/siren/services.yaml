@@ -6,16 +6,24 @@ turn_on:
   target:
     entity:
       domain: siren
+      supported_features:
+        - siren.SirenEntityFeature.TURN_ON
   fields:
     tone:
       description: The tone to emit when turning the siren on. When `available_tones` property is a map, either the key or the value can be used. Must be supported by the integration.
       example: fire
+      filter:
+        supported_features:
+          - siren.SirenEntityFeature.TONES
       required: false
       selector:
         text:
     volume_level:
       description: The volume level of the noise to emit when turning the siren on. Must be supported by the integration.
       example: 0.5
+      filter:
+        supported_features:
+          - siren.SirenEntityFeature.VOLUME_SET
       required: false
       selector:
         number:
@@ -25,6 +33,9 @@ turn_on:
     duration:
       description: The duration in seconds of the noise to emit when turning the siren on. Must be supported by the integration.
       example: 15
+      filter:
+        supported_features:
+          - siren.SirenEntityFeature.DURATION
       required: false
       selector:
         text:
@@ -35,6 +46,8 @@ turn_off:
   target:
     entity:
       domain: siren
+      supported_features:
+        - siren.SirenEntityFeature.TURN_OFF
 
 toggle:
   name: Toggle
@@ -42,3 +55,6 @@ toggle:
   target:
     entity:
       domain: siren
+      supported_features:
+        - - siren.SirenEntityFeature.TURN_OFF
+          - siren.SirenEntityFeature.TURN_ON
