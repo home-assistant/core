@@ -279,8 +279,6 @@ class IsWorkdaySensor(BinarySensorEntity):
         # Default is no workday
         self._attr_is_on = False
 
-        LOGGER.debug("holidays: %s", self._obj_holidays)
-
         # Get ISO day of the week (1 = Monday, 7 = Sunday)
         adjusted_date = dt_util.now() + timedelta(days=self._days_offset)
         day = adjusted_date.isoweekday() - 1
