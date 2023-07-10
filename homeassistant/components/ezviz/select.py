@@ -78,7 +78,9 @@ class EzvizSensor(EzvizEntity, SelectEntity):
     @property
     def current_option(self) -> str | None:
         """Return the selected entity option to represent the entity state."""
-        sound_mode_value = getattr(SoundMode, self.data[self.entity_description.key]).value
+        sound_mode_value = getattr(
+            SoundMode, self.data[self.entity_description.key]
+        ).value
         if sound_mode_value in [0, 1, 2]:
             return self.options[sound_mode_value]
 
