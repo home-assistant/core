@@ -11,5 +11,15 @@
       "not_supported_device": "This WiLight is currently not supported",
       "not_wilight_device": "This Device is not WiLight"
     }
+  },
+  "entity": {
+    "switch": {
+      "watering": {
+        "name": "Watering"
+      },
+      "pause": {
+        "name": "Pause"
+      }
+    }
   }
 }

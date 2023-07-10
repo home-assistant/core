@@ -56,6 +56,7 @@ class WiLightDevice(Entity):
     """
 
     _attr_should_poll = False
+    _attr_has_entity_name = True
 
     def __init__(self, api_device: PyWiLightDevice, index: str, item_name: str) -> None:
         """Initialize the device."""
@@ -65,7 +66,6 @@ class WiLightDevice(Entity):
         self._index = index
         self._status: dict[str, Any] = {}
 
-        self._attr_name = item_name
         self._attr_unique_id = f"{self._device_id}_{index}"
         self._attr_device_info = DeviceInfo(
             name=item_name,
