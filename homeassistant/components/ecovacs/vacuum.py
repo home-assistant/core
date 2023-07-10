@@ -31,7 +31,7 @@ ATTR_COMPONENT_PREFIX = "component_"
 async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    add_entities: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Ecovacs vacuums."""
@@ -41,7 +41,7 @@ async def async_setup_platform(
         await hass.async_add_executor_job(device.connect_and_wait_until_ready)
         vacuums.append(EcovacsVacuum(device))
     _LOGGER.debug("Adding Ecovacs Vacuums to Home Assistant: %s", vacuums)
-    add_entities(vacuums, True)
+    async_add_entities(vacuums)
 
 
 class EcovacsVacuum(StateVacuumEntity):
