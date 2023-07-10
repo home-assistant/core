@@ -11,7 +11,7 @@ from spotipy import Spotify, SpotifyException
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.config_entry_oauth2_flow import (
@@ -58,12 +58,17 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     if DOMAIN in config:
         async_create_issue(
             hass,
-            DOMAIN,
-            "removed_yaml",
+            HOMEASSISTANT_DOMAIN,
+            f"removed_yaml_{DOMAIN}",
             breaks_in_ha_version="2022.8.0",
             is_fixable=False,
+            issue_domain=DOMAIN,
             severity=IssueSeverity.WARNING,
             translation_key="removed_yaml",
+            translation_placeholders={
+                "domain": DOMAIN,
+                "integration_title": "Spotify",
+            },
         )
 
     return True

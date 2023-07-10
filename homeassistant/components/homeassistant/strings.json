@@ -4,6 +4,17 @@
       "title": "The country has not been configured",
       "description": "No country has been configured, please update the configuration by clicking on the \"learn more\" button below."
     },
+    "deprecated_service_replacement": {
+      "title": "The {domain} {service} service is being removed",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "The {domain} {service} service is being removed",
+            "description": "The {domain} service `{domain}.{service}` is being removed and use of it has been detected. If you want to change the current value of a counter, use the new `{domain}.{new_service}` service instead.\n\nPlease remove the use of this service from your automations and scripts and select **submit** to close this issue."
+          }
+        }
+      }
+    },
     "deprecated_yaml": {
       "title": "The {integration_title} YAML configuration is being removed",
       "description": "Configuring {integration_title} using YAML is being removed.\n\nYour existing YAML configuration has been imported into the UI automatically.\n\nRemove the `{domain}` configuration from your configuration.yaml file and restart Home Assistant to fix this issue."
@@ -27,6 +38,10 @@
     "no_platform_setup": {
       "title": "Unused YAML configuration for the {platform} integration",
       "description": "It's not possible to configure {platform} {domain} by adding `{platform_key}` to the {domain} configuration. Please check the documentation for more information on how to set up this integration.\n\nTo resolve this:\n1. Remove `{platform_key}` occurences from the `{domain}:` configuration in your YAML configuration file.\n2. Restart Home Assistant.\n\nExample that should be removed:\n{yaml_example}\n"
+    },
+    "removed_yaml": {
+      "title": "The {integration_title} YAML configuration has been removed",
+      "description": "Configuring {integration_title} using YAML is no longer supported, and the configuration is not used by Home Assistant.\n\nRemove the `{domain}` configuration from your configuration.yaml file and restart Home Assistant to fix this issue."
     }
   },
   "system_health": {
