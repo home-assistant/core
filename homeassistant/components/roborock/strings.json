@@ -79,6 +79,38 @@
       },
       "total_cleaning_area": {
         "name": "Total cleaning area"
+      },
+      "vacuum_error": {
+        "name": "Vacuum error",
+        "state": {
+          "none": "None",
+          "lidar_blocked": "Lidar blocked",
+          "bumper_stuck": "Bumper stuck",
+          "wheels_suspended": "Wheels suspended",
+          "cliff_sensor_error": "Cliff sensor error",
+          "main_brush_jammed": "Main brush jammed",
+          "side_brush_jammed": "Side brush jammed",
+          "wheels_jammed": "Wheels jammed",
+          "robot_trapped": "Robot trapped",
+          "no_dustbin": "No dustbin",
+          "low_battery": "Low battery",
+          "charging_error": "Charging error",
+          "battery_error": "Battery error",
+          "wall_sensor_dirty": "Wall sensor dirty",
+          "robot_tilted": "Robot tilted",
+          "side_brush_error": "Side brush error",
+          "fan_error": "Fan error",
+          "vertical_bumper_pressed": "Vertical bumper pressed",
+          "dock_locator_error": "Dock locator error",
+          "return_to_dock_fail": "Return to dock fail",
+          "nogo_zone_detected": "No-go zone detected",
+          "vibrarise_jammed": "VibraRise jammed",
+          "robot_on_carpet": "Robot on carpet",
+          "filter_blocked": "Filter blocked",
+          "invisible_wall_detected": "Invisible wall detected",
+          "cannot_cross_carpet": "Cannot cross carpet",
+          "internal_error": "Internal error"
+        }
       }
     },
     "select": {

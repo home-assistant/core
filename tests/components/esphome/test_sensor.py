@@ -41,7 +41,7 @@ async def test_generic_numeric_sensor(
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("sensor.test_my_sensor")
+    state = hass.states.get("sensor.test_mysensor")
     assert state is not None
     assert state.state == "50"
 
@@ -70,12 +70,12 @@ async def test_generic_numeric_sensor_with_entity_category_and_icon(
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("sensor.test_my_sensor")
+    state = hass.states.get("sensor.test_mysensor")
     assert state is not None
     assert state.state == "50"
     assert state.attributes[ATTR_ICON] == "mdi:leaf"
     entity_reg = er.async_get(hass)
-    entry = entity_reg.async_get("sensor.test_my_sensor")
+    entry = entity_reg.async_get("sensor.test_mysensor")
     assert entry is not None
     assert entry.unique_id == "my_sensor"
     assert entry.entity_category is EntityCategory.CONFIG
@@ -106,12 +106,12 @@ async def test_generic_numeric_sensor_state_class_measurement(
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("sensor.test_my_sensor")
+    state = hass.states.get("sensor.test_mysensor")
     assert state is not None
     assert state.state == "50"
     assert state.attributes[ATTR_STATE_CLASS] == SensorStateClass.MEASUREMENT
     entity_reg = er.async_get(hass)
-    entry = entity_reg.async_get("sensor.test_my_sensor")
+    entry = entity_reg.async_get("sensor.test_mysensor")
     assert entry is not None
     assert entry.unique_id == "my_sensor"
     assert entry.entity_category is None
@@ -140,7 +140,7 @@ async def test_generic_numeric_sensor_device_class_timestamp(
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("sensor.test_my_sensor")
+    state = hass.states.get("sensor.test_mysensor")
     assert state is not None
     assert state.state == "2023-06-22T18:43:52+00:00"
 
@@ -169,7 +169,7 @@ async def test_generic_numeric_sensor_legacy_last_reset_convert(
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("sensor.test_my_sensor")
+    state = hass.states.get("sensor.test_mysensor")
     assert state is not None
     assert state.state == "50"
     assert state.attributes[ATTR_STATE_CLASS] == SensorStateClass.TOTAL_INCREASING
@@ -195,7 +195,7 @@ async def test_generic_numeric_sensor_no_state(
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("sensor.test_my_sensor")
+    state = hass.states.get("sensor.test_mysensor")
     assert state is not None
     assert state.state == STATE_UNKNOWN
 
@@ -220,7 +220,7 @@ async def test_generic_numeric_sensor_nan_state(
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("sensor.test_my_sensor")
+    state = hass.states.get("sensor.test_mysensor")
     assert state is not None
     assert state.state == STATE_UNKNOWN
 
@@ -245,7 +245,7 @@ async def test_generic_numeric_sensor_missing_state(
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("sensor.test_my_sensor")
+    state = hass.states.get("sensor.test_mysensor")
     assert state is not None
     assert state.state == STATE_UNKNOWN
 
@@ -272,6 +272,6 @@ async def test_generic_text_sensor(
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("sensor.test_my_sensor")
+    state = hass.states.get("sensor.test_mysensor")
     assert state is not None
     assert state.state == "i am a teapot"
