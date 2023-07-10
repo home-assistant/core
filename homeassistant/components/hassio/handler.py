@@ -46,10 +46,14 @@ def api_data(funct):
 
     async def _wrapper(*argv, **kwargs):
         """Wrap function."""
-        data = await funct(*argv, **kwargs)
-        if data["result"] == "ok":
-            return data["data"]
-        raise HassioAPIError(data["message"])
+        while True:
+            data = await funct(*argv, **kwargs)
+            if data["result"] == "ok":
+                return data["data"]
+            if data["message"] == "System is not ready with state: setup":
+                await asyncio.sleep(1)
+                continue
+            raise HassioAPIError(data["message"])
 
     return _wrapper
 
