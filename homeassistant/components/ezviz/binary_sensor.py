@@ -19,18 +19,14 @@ PARALLEL_UPDATES = 1
 BINARY_SENSOR_TYPES: dict[str, BinarySensorEntityDescription] = {
     "Motion_Trigger": BinarySensorEntityDescription(
         key="Motion_Trigger",
-        name="Motion",
-        translation_key="motion_trigger",
         device_class=BinarySensorDeviceClass.MOTION,
     ),
     "alarm_schedules_enabled": BinarySensorEntityDescription(
         key="alarm_schedules_enabled",
-        name="Alarm schedules",
         translation_key="alarm_schedules_enabled",
     ),
     "encrypted": BinarySensorEntityDescription(
         key="encrypted",
-        name="Encryption",
         translation_key="encrypted",
     ),
 }
