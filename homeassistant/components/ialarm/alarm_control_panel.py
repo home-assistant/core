@@ -30,7 +30,8 @@ class IAlarmPanel(
 ):
     """Representation of an iAlarm device."""
 
-    _attr_name = "iAlarm"
+    _attr_has_entity_name = True
+    _attr_name = None
     _attr_supported_features = (
         AlarmControlPanelEntityFeature.ARM_HOME
         | AlarmControlPanelEntityFeature.ARM_AWAY
