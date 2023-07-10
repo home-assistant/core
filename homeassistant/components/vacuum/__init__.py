@@ -429,12 +429,6 @@ class VacuumEntity(_BaseVacuum, ToggleEntity):
         """
         await self.hass.async_add_executor_job(partial(self.start_pause, **kwargs))
 
-    async def async_pause(self) -> None:
-        """Not supported."""
-
-    async def async_start(self) -> None:
-        """Not supported."""
-
 
 @dataclass
 class StateVacuumEntityDescription(EntityDescription):
@@ -482,12 +476,3 @@ class StateVacuumEntity(_BaseVacuum):
         This method must be run in the event loop.
         """
         await self.hass.async_add_executor_job(self.pause)
-
-    async def async_turn_on(self, **kwargs: Any) -> None:
-        """Not supported."""
-
-    async def async_turn_off(self, **kwargs: Any) -> None:
-        """Not supported."""
-
-    async def async_toggle(self, **kwargs: Any) -> None:
-        """Not supported."""
