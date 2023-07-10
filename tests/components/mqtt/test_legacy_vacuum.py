@@ -32,6 +32,7 @@ from homeassistant.components.vacuum import (
 )
 from homeassistant.const import CONF_NAME, STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.typing import ConfigType
 
 from .test_common import (
@@ -245,39 +246,48 @@ async def test_commands_without_supported_features(
     """Test commands which are not supported by the vacuum."""
     mqtt_mock = await mqtt_mock_entry()
 
-    await common.async_turn_on(hass, "vacuum.mqtttest")
+    with pytest.raises(HomeAssistantError):
+        await common.async_turn_on(hass, "vacuum.mqtttest")
     mqtt_mock.async_publish.assert_not_called()
     mqtt_mock.async_publish.reset_mock()
 
-    await common.async_turn_off(hass, "vacuum.mqtttest")
+    with pytest.raises(HomeAssistantError):
+        await common.async_turn_off(hass, "vacuum.mqtttest")
     mqtt_mock.async_publish.assert_not_called()
     mqtt_mock.async_publish.reset_mock()
 
-    await common.async_stop(hass, "vacuum.mqtttest")
+    with pytest.raises(HomeAssistantError):
+        await common.async_stop(hass, "vacuum.mqtttest")
     mqtt_mock.async_publish.assert_not_called()
     mqtt_mock.async_publish.reset_mock()
 
-    await common.async_clean_spot(hass, "vacuum.mqtttest")
+    with pytest.raises(HomeAssistantError):
+        await common.async_clean_spot(hass, "vacuum.mqtttest")
     mqtt_mock.async_publish.assert_not_called()
     mqtt_mock.async_publish.reset_mock()
 
-    await common.async_locate(hass, "vacuum.mqtttest")
+    with pytest.raises(HomeAssistantError):
+        await common.async_locate(hass, "vacuum.mqtttest")
     mqtt_mock.async_publish.assert_not_called()
     mqtt_mock.async_publish.reset_mock()
 
-    await common.async_start_pause(hass, "vacuum.mqtttest")
+    with pytest.raises(HomeAssistantError):
+        await common.async_start_pause(hass, "vacuum.mqtttest")
     mqtt_mock.async_publish.assert_not_called()
     mqtt_mock.async_publish.reset_mock()
 
-    await common.async_return_to_base(hass, "vacuum.mqtttest")
+    with pytest.raises(HomeAssistantError):
+        await common.async_return_to_base(hass, "vacuum.mqtttest")
     mqtt_mock.async_publish.assert_not_called()
     mqtt_mock.async_publish.reset_mock()
 
-    await common.async_set_fan_speed(hass, "high", "vacuum.mqtttest")
+    with pytest.raises(HomeAssistantError):
+        await common.async_set_fan_speed(hass, "high", "vacuum.mqtttest")
     mqtt_mock.async_publish.assert_not_called()
     mqtt_mock.async_publish.reset_mock()
 
-    await common.async_send_command(hass, "44 FE 93", entity_id="vacuum.mqtttest")
+    with pytest.raises(HomeAssistantError):
+        await common.async_send_command(hass, "44 FE 93", entity_id="vacuum.mqtttest")
     mqtt_mock.async_publish.assert_not_called()
     mqtt_mock.async_publish.reset_mock()
 
