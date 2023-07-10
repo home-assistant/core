@@ -485,6 +485,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
                 if brightness == 0:
                     _LOGGER.debug(
                         "Ignoring %s message with zero rgb brightness from '%s'",
+                        color_mode,
                         msg.topic,
                     )
                     return None
