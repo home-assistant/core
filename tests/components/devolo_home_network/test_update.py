@@ -18,7 +18,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity import EntityCategory
-from homeassistant.util import dt
+from homeassistant.util import dt as dt_util
 
 from . import configure_integration
 from .const import FIRMWARE_UPDATE_AVAILABLE
@@ -35,7 +35,7 @@ async def test_update_setup(hass: HomeAssistant) -> None:
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert hass.states.get(f"{PLATFORM}.{device_name}_firmware_update") is not None
+    assert hass.states.get(f"{PLATFORM}.{device_name}_firmware") is not None
 
     await hass.config_entries.async_unload(entry.entry_id)
 
@@ -46,7 +46,7 @@ async def test_update_firmware(
     """Test updating a device."""
     entry = configure_integration(hass)
     device_name = entry.title.replace(" ", "_").lower()
-    state_key = f"{PLATFORM}.{device_name}_firmware_update"
+    state_key = f"{PLATFORM}.{device_name}_firmware"
 
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
@@ -75,7 +75,7 @@ async def test_update_firmware(
     mock_device.device.async_check_firmware_available.return_value = (
         UpdateFirmwareCheck(result=UPDATE_NOT_AVAILABLE)
     )
-    async_fire_time_changed(hass, dt.utcnow() + LONG_UPDATE_INTERVAL)
+    async_fire_time_changed(hass, dt_util.utcnow() + LONG_UPDATE_INTERVAL)
     await hass.async_block_till_done()
 
     state = hass.states.get(state_key)
@@ -91,7 +91,7 @@ async def test_device_failure_check(
     """Test device failure during check."""
     entry = configure_integration(hass)
     device_name = entry.title.replace(" ", "_").lower()
-    state_key = f"{PLATFORM}.{device_name}_firmware_update"
+    state_key = f"{PLATFORM}.{device_name}_firmware"
 
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
@@ -100,7 +100,7 @@ async def test_device_failure_check(
     assert state is not None
 
     mock_device.device.async_check_firmware_available.side_effect = DeviceUnavailable
-    async_fire_time_changed(hass, dt.utcnow() + LONG_UPDATE_INTERVAL)
+    async_fire_time_changed(hass, dt_util.utcnow() + LONG_UPDATE_INTERVAL)
     await hass.async_block_till_done()
 
     state = hass.states.get(state_key)
@@ -115,7 +115,7 @@ async def test_device_failure_update(
     """Test device failure when starting update."""
     entry = configure_integration(hass)
     device_name = entry.title.replace(" ", "_").lower()
-    state_key = f"{PLATFORM}.{device_name}_firmware_update"
+    state_key = f"{PLATFORM}.{device_name}_firmware"
 
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
@@ -139,7 +139,7 @@ async def test_auth_failed(hass: HomeAssistant, mock_device: MockDevice) -> None
     """Test updating unautherized triggers the reauth flow."""
     entry = configure_integration(hass)
     device_name = entry.title.replace(" ", "_").lower()
-    state_key = f"{PLATFORM}.{device_name}_firmware_update"
+    state_key = f"{PLATFORM}.{device_name}_firmware"
 
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()

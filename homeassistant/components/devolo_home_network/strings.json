@@ -66,11 +66,6 @@
       "switch_leds": {
         "name": "Enable LEDs"
       }
-    },
-    "update": {
-      "regular_firmware": {
-        "name": "Firmware Update"
-      }
     }
   }
 }

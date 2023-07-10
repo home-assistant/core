@@ -41,7 +41,7 @@ class DevoloUpdateRequiredKeysMixin:
 class DevoloUpdateEntityDescription(
     UpdateEntityDescription, DevoloUpdateRequiredKeysMixin
 ):
-    """Describes devolo switch entity."""
+    """Describes devolo update entity."""
 
 
 UPDATE_TYPES: dict[str, DevoloUpdateEntityDescription] = {
@@ -64,16 +64,16 @@ async def async_setup_entry(
         entry.entry_id
     ]["coordinators"]
 
-    entities: list[DevoloUpdateEntity] = []
-    entities.append(
-        DevoloUpdateEntity(
-            entry,
-            coordinators[REGULAR_FIRMWARE],
-            UPDATE_TYPES[REGULAR_FIRMWARE],
-            device,
-        )
+    async_add_entities(
+        [
+            DevoloUpdateEntity(
+                entry,
+                coordinators[REGULAR_FIRMWARE],
+                UPDATE_TYPES[REGULAR_FIRMWARE],
+                device,
+            )
+        ]
     )
-    async_add_entities(entities)
 
 
 class DevoloUpdateEntity(DevoloCoordinatorEntity, UpdateEntity):
@@ -95,6 +95,7 @@ class DevoloUpdateEntity(DevoloCoordinatorEntity, UpdateEntity):
         """Initialize entity."""
         self.entity_description = description
         super().__init__(entry, coordinator, device)
+        self._attr_translation_key = None
         self._in_progress_old_version: str | None = None
 
     @property
