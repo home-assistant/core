@@ -34,7 +34,7 @@
         "name": "Total consumption"
       },
       "today_consumption": {
-        "name": "Today's Consumption"
+        "name": "Today's consumption"
       }
     },
     "switch": {
