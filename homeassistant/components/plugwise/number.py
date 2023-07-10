@@ -70,11 +70,12 @@ async def async_setup_entry(
     entities: list[PlugwiseNumberEntity] = []
     for device_id, device in coordinator.data.devices.items():
         for description in NUMBER_TYPES:
-            if device.get(description.key) is not None:
-                if device[description.key].get("setpoint") is not None:
-                    entities.append(
-                        PlugwiseNumberEntity(coordinator, device_id, description)
-                    )
+            if (
+                actuator := device.get(description.key) is not None
+            ) and "setpoint" in actuator:
+                entities.append(
+                    PlugwiseNumberEntity(coordinator, device_id, description)
+                )
 
     async_add_entities(entities)
 
