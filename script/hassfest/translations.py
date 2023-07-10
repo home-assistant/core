@@ -40,6 +40,7 @@ ALLOW_NAME_TRANSLATION = {
     "nmap_tracker",
     "rpi_power",
     "waze_travel_time",
+    "zodiac",
 }
 
 REMOVED_TITLE_MSG = (
