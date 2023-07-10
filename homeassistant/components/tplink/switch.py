@@ -49,6 +49,7 @@ class SmartPlugLedSwitch(CoordinatedTPLinkEntity, SwitchEntity):
 
     device: SmartPlug
 
+    _attr_translation_key = "led"
     _attr_entity_category = EntityCategory.CONFIG
 
     def __init__(
@@ -57,7 +58,6 @@ class SmartPlugLedSwitch(CoordinatedTPLinkEntity, SwitchEntity):
         """Initialize the LED switch."""
         super().__init__(device, coordinator)
 
-        self._attr_name = f"{device.alias} LED"
         self._attr_unique_id = f"{self.device.mac}_led"
 
     @property
@@ -83,6 +83,8 @@ class SmartPlugLedSwitch(CoordinatedTPLinkEntity, SwitchEntity):
 
 class SmartPlugSwitch(CoordinatedTPLinkEntity, SwitchEntity):
     """Representation of a TPLink Smart Plug switch."""
+
+    _attr_name = None
 
     def __init__(
         self,
