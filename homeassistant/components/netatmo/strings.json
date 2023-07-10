@@ -52,8 +52,8 @@
       "hg": "Frost guard"
     },
     "trigger_type": {
-      "turned_off": "{entity_name} turned off",
-      "turned_on": "{entity_name} turned on",
+      "turned_off": "[%key:common::device_automation::trigger_type::turned_off%]",
+      "turned_on": "[%key:common::device_automation::trigger_type::turned_on%]",
       "human": "{entity_name} detected a human",
       "movement": "{entity_name} detected movement",
       "person": "{entity_name} detected a person",
