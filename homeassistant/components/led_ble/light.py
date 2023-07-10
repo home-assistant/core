@@ -43,6 +43,7 @@ class LEDBLEEntity(CoordinatorEntity, LightEntity):
 
     _attr_supported_color_modes = {ColorMode.RGB, ColorMode.WHITE}
     _attr_has_entity_name = True
+    _attr_name = None
     _attr_supported_features = LightEntityFeature.EFFECT
 
     def __init__(
