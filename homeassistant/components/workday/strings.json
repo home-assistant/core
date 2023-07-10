@@ -1,4 +1,5 @@
 {
+  "title": "Workday",
   "config": {
     "abort": {
       "incorrect_province": "Incorrect subdivision from yaml import",

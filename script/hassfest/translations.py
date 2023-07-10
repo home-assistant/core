@@ -31,9 +31,11 @@ ALLOW_NAME_TRANSLATION = {
     "emulated_roku",
     "faa_delays",
     "garages_amsterdam",
+    "generic",
     "google_travel_time",
     "homekit_controller",
     "islamic_prayer_times",
+    "local_calendar",
     "local_ip",
     "nmap_tracker",
     "rpi_power",
@@ -429,14 +431,6 @@ def validate_translation_file(  # noqa: C901
         strings_schema = gen_auth_schema(config, integration)
     elif integration.domain == "onboarding":
         strings_schema = ONBOARDING_SCHEMA
-    elif integration.domain == "binary_sensor":
-        strings_schema = gen_strings_schema(config, integration).extend(
-            {
-                vol.Optional("device_class"): cv.schema_with_slug_keys(
-                    translation_value_validator, slug_validator=vol.Any("_", cv.slug)
-                )
-            }
-        )
     elif integration.domain == "homeassistant_hardware":
         strings_schema = gen_ha_hardware_schema(config, integration)
     else:

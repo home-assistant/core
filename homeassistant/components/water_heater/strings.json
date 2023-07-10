@@ -1,8 +1,8 @@
 {
   "device_automation": {
     "action_type": {
-      "turn_on": "Turn on {entity_name}",
-      "turn_off": "Turn off {entity_name}"
+      "turn_on": "[%key:common::device_automation::action_type::turn_on%]",
+      "turn_off": "[%key:common::device_automation::action_type::turn_off%]"
     }
   },
   "entity_component": {
@@ -17,12 +17,6 @@
         "heat_pump": "Heat Pump",
         "performance": "Performance"
       }
-    }
-  },
-  "issues": {
-    "platform_integration_no_support": {
-      "title": "[%key:common::issues::platform_integration_no_support_title%]",
-      "description": "[%key:common::issues::platform_integration_no_support_description%]"
     }
   }
 }

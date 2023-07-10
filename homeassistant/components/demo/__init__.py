@@ -50,7 +50,6 @@ COMPONENTS_WITH_CONFIG_ENTRY_DEMO_PLATFORM = [
 
 COMPONENTS_WITH_DEMO_PLATFORM = [
     Platform.TTS,
-    Platform.STT,
     Platform.MAILBOX,
     Platform.NOTIFY,
     Platform.IMAGE_PROCESSING,

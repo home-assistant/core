@@ -2416,9 +2416,7 @@ async def test_discovery_ignores_extra_keys(
     """Test discovery ignores extra keys that are not blocked."""
     await mqtt_mock_entry()
     # inserted `platform` key should be ignored
-    data = (
-        '{ "name": "Beer",' '  "platform": "mqtt",' '  "command_topic": "test_topic"}'
-    )
+    data = '{ "name": "Beer",  "platform": "mqtt",  "command_topic": "test_topic"}'
     async_fire_mqtt_message(hass, "homeassistant/light/bla/config", data)
     await hass.async_block_till_done()
     state = hass.states.get("light.beer")
