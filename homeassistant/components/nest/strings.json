@@ -35,27 +35,9 @@
       "reauth_confirm": {
         "title": "[%key:common::config_flow::title::reauth%]",
         "description": "The Nest integration needs to re-authenticate your account"
-      },
-      "init": {
-        "title": "Authentication Provider",
-        "description": "[%key:common::config_flow::title::oauth2_pick_implementation%]",
-        "data": {
-          "flow_impl": "Provider"
-        }
-      },
-      "link": {
-        "title": "Link Nest Account",
-        "description": "To link your Nest account, [authorize your account]({url}).\n\nAfter authorization, copy-paste the provided PIN code below.",
-        "data": {
-          "code": "[%key:common::config_flow::data::pin%]"
-        }
       }
     },
     "error": {
-      "timeout": "Timeout validating code",
-      "invalid_pin": "Invalid PIN",
-      "unknown": "[%key:common::config_flow::error::unknown%]",
-      "internal_error": "Internal error validating code",
       "bad_project_id": "Please enter a valid Cloud Project ID (check Cloud Console)",
       "wrong_project_id": "Please enter a valid Cloud Project ID (was same as Device Access Project ID)",
       "subscriber_error": "Unknown subscriber error, see logs"
