@@ -83,6 +83,8 @@ async def async_setup_platform(
 class MyStromLight(LightEntity):
     """Representation of the myStrom WiFi bulb."""
 
+    _attr_has_entity_name = True
+    _attr_name = None
     _attr_color_mode = ColorMode.HS
     _attr_supported_color_modes = {ColorMode.HS}
     _attr_supported_features = LightEntityFeature.EFFECT | LightEntityFeature.FLASH
@@ -91,7 +93,6 @@ class MyStromLight(LightEntity):
     def __init__(self, bulb, name, mac):
         """Initialize the light."""
         self._bulb = bulb
-        self._attr_name = name
         self._attr_available = False
         self._attr_unique_id = mac
         self._attr_hs_color = 0, 0
