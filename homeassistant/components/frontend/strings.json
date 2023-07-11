@@ -1,0 +1,30 @@
+{
+  "services": {
+    "set_theme": {
+      "name": "Set theme",
+      "description": "Sets a theme (unless the client selected per-device theme).",
+      "fields": {
+        "name": {
+          "name": "Theme",
+          "description": "Name of a predefined theme."
+        },
+        "mode": {
+          "name": "Mode",
+          "description": "Theme mode."
+        }
+      }
+    },
+    "reload_themes": {
+      "name": "Reload themes",
+      "description": "Reloads themes from the YAML-configuration."
+    }
+  },
+  "selector": {
+    "mode": {
+      "options": {
+        "dark": "Dark",
+        "light": "Light"
+      }
+    }
+  }
+}
