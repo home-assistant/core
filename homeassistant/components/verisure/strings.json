@@ -63,5 +63,19 @@
         "name": "Ethernet status"
       }
     }
+  },
+  "services": {
+    "capture_smartcam": {
+      "name": "Capture SmartCam image",
+      "description": "Captures a new image from a Verisure SmartCam."
+    },
+    "enable_autolock": {
+      "name": "Enable autolock",
+      "description": "Enables autolock of a Verisure Lockguard Smartlock."
+    },
+    "disable_autolock": {
+      "name": "Disable autolock",
+      "description": "Disables autolock of a Verisure Lockguard Smartlock."
+    }
   }
 }
