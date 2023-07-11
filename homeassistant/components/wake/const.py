@@ -1,0 +1,2 @@
+"""WWD constants."""
+DOMAIN = "wake"
