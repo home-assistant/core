@@ -28,11 +28,11 @@ SENSOR_TYPE_NEXT_PICKUP = "next_pickup"
 SENSOR_DESCRIPTIONS = (
     SensorEntityDescription(
         key=SENSOR_TYPE_CURRENT_PICKUP,
-        name="Current pickup",
+        translation_key=SENSOR_TYPE_CURRENT_PICKUP,
     ),
     SensorEntityDescription(
         key=SENSOR_TYPE_NEXT_PICKUP,
-        name="Next pickup",
+        translation_key=SENSOR_TYPE_NEXT_PICKUP,
     ),
 )
 

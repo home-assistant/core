@@ -23,6 +23,7 @@ from homeassistant.const import (
     EntityCategory,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
 import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.dispatcher import (
@@ -60,6 +61,7 @@ async def platform_async_setup_entry(
     entry_data: RuntimeEntryData = DomainData.get(hass).get_entry_data(entry)
     entry_data.info[info_type] = {}
     entry_data.state.setdefault(state_type, {})
+    platform = entity_platform.async_get_current_platform()
 
     @callback
     def async_list_entities(infos: list[EntityInfo]) -> None:
@@ -71,7 +73,7 @@ async def platform_async_setup_entry(
         for info in infos:
             if not current_infos.pop(info.key, None):
                 # Create new entity
-                entity = entity_type(entry_data, info, state_type)
+                entity = entity_type(entry_data, platform.domain, info, state_type)
                 add_entities.append(entity)
             new_infos[info.key] = info
 
@@ -145,10 +147,12 @@ class EsphomeEntity(Entity, Generic[_InfoT, _StateT]):
     def __init__(
         self,
         entry_data: RuntimeEntryData,
+        domain: str,
         entity_info: EntityInfo,
         state_type: type[_StateT],
     ) -> None:
         """Initialize."""
+
         self._entry_data = entry_data
         self._on_entry_data_changed()
         self._key = entity_info.key
@@ -157,6 +161,9 @@ class EsphomeEntity(Entity, Generic[_InfoT, _StateT]):
         assert entry_data.device_info is not None
         device_info = entry_data.device_info
         self._device_info = device_info
+        if object_id := entity_info.object_id:
+            # Use the object_id to suggest the entity_id
+            self.entity_id = f"{domain}.{device_info.name}_{object_id}"
         self._attr_has_entity_name = bool(device_info.friendly_name)
         self._attr_device_info = DeviceInfo(
             connections={(dr.CONNECTION_NETWORK_MAC, device_info.mac_address)}

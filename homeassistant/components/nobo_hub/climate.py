@@ -73,6 +73,8 @@ class NoboZone(ClimateEntity):
     controlled as a unity.
     """
 
+    _attr_name = None
+    _attr_has_entity_name = True
     _attr_max_temp = MAX_TEMPERATURE
     _attr_min_temp = MIN_TEMPERATURE
     _attr_precision = PRECISION_TENTHS
@@ -87,8 +89,6 @@ class NoboZone(ClimateEntity):
         self._id = zone_id
         self._nobo = hub
         self._attr_unique_id = f"{hub.hub_serial}:{zone_id}"
-        self._attr_name = None
-        self._attr_has_entity_name = True
         self._attr_hvac_mode = HVACMode.AUTO
         self._attr_hvac_modes = [HVACMode.HEAT, HVACMode.AUTO]
         self._override_type = override_type

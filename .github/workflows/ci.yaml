@@ -1019,6 +1019,7 @@ jobs:
           with: |
             fail_ci_if_error: true
             flags: full-suite
+            token: ${{ env.CODECOV_TOKEN }}
           attempt_limit: 5
           attempt_delay: 30000
       - name: Upload coverage to Codecov (partial coverage)
@@ -1028,5 +1029,6 @@ jobs:
           action: codecov/codecov-action@v3.1.3
           with: |
             fail_ci_if_error: true
+            token: ${{ env.CODECOV_TOKEN }}
           attempt_limit: 5
           attempt_delay: 30000

@@ -38,7 +38,7 @@ HATasmota==0.6.5
 # homeassistant.components.seven_segments
 # homeassistant.components.sighthound
 # homeassistant.components.tensorflow
-Pillow==9.5.0
+Pillow==10.0.0
 
 # homeassistant.components.plex
 PlexAPI==4.13.2
@@ -96,7 +96,7 @@ PyTransportNSW==0.1.1
 
 # homeassistant.components.camera
 # homeassistant.components.stream
-PyTurboJPEG==1.6.7
+PyTurboJPEG==1.7.1
 
 # homeassistant.components.vicare
 PyViCare==2.25.0
@@ -169,7 +169,7 @@ aio-georss-gdacs==0.8
 aioairq==0.2.4
 
 # homeassistant.components.airzone_cloud
-aioairzone-cloud==0.2.0
+aioairzone-cloud==0.2.1
 
 # homeassistant.components.airzone
 aioairzone==0.6.4
@@ -212,7 +212,7 @@ aioecowitt==2023.5.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==15.1.2
+aioesphomeapi==15.1.4
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -227,7 +227,7 @@ aioguardian==2022.07.0
 aioharmony==0.2.10
 
 # homeassistant.components.homekit_controller
-aiohomekit==2.6.5
+aiohomekit==2.6.7
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -377,7 +377,7 @@ anthemav==1.4.1
 apcaccess==0.0.13
 
 # homeassistant.components.apprise
-apprise==1.4.0
+apprise==1.4.5
 
 # homeassistant.components.aprs
 aprslib==0.7.0
@@ -469,7 +469,7 @@ brottsplatskartan==0.0.1
 brunt==1.2.0
 
 # homeassistant.components.bthome
-bthome-ble==2.12.0
+bthome-ble==2.12.1
 
 # homeassistant.components.buienradar
 buienradar==1.0.5
@@ -636,7 +636,7 @@ freebox-api==1.1.0
 
 # homeassistant.components.fritz
 # homeassistant.components.fritzbox_callmonitor
-fritzconnection[qr]==1.12.0
+fritzconnection[qr]==1.12.2
 
 # homeassistant.components.google_translate
 gTTS==2.2.4
@@ -677,7 +677,7 @@ gios==3.1.0
 glances-api==0.4.3
 
 # homeassistant.components.goalzero
-goalzero==0.2.1
+goalzero==0.2.2
 
 # homeassistant.components.goodwe
 goodwe==0.2.31
@@ -760,7 +760,7 @@ hlk-sw16==0.0.9
 hole==0.8.0
 
 # homeassistant.components.workday
-holidays==0.21.13
+holidays==0.28
 
 # homeassistant.components.frontend
 home-assistant-frontend==20230705.1
@@ -880,7 +880,7 @@ loqedAPI==2.1.7
 luftdaten==0.7.4
 
 # homeassistant.components.scrape
-lxml==4.9.1
+lxml==4.9.3
 
 # homeassistant.components.nmap_tracker
 mac-vendor-lookup==0.1.12
@@ -1281,7 +1281,7 @@ pyinsteon==1.4.3
 pyipma==3.0.6
 
 # homeassistant.components.ipp
-pyipp==0.14.0
+pyipp==0.14.2
 
 # homeassistant.components.iqvia
 pyiqvia==2022.04.0
@@ -1377,7 +1377,7 @@ pynuki==1.6.2
 pynut2==2.1.2
 
 # homeassistant.components.nws
-pynws==1.4.1
+pynws==1.5.0
 
 # homeassistant.components.nx584
 pynx584==0.5
@@ -1463,7 +1463,7 @@ pyrympro==0.0.7
 pysabnzbd==1.1.1
 
 # homeassistant.components.sensibo
-pysensibo==1.0.28
+pysensibo==1.0.31
 
 # homeassistant.components.serial
 # homeassistant.components.zha
@@ -1554,9 +1554,6 @@ python-miio==0.5.12
 # homeassistant.components.mystrom
 python-mystrom==2.2.0
 
-# homeassistant.components.nest
-python-nest==4.2.0
-
 # homeassistant.components.otbr
 # homeassistant.components.thread
 python-otbr-api==2.2.0
@@ -1624,7 +1621,7 @@ pyvolumio==0.1.5
 pywebpush==1.9.2
 
 # homeassistant.components.wemo
-pywemo==0.9.1
+pywemo==1.1.0
 
 # homeassistant.components.wilight
 pywilight==0.0.74
@@ -1723,7 +1720,7 @@ sensorpro-ble==0.5.3
 sensorpush-ble==1.5.5
 
 # homeassistant.components.sentry
-sentry-sdk==1.25.1
+sentry-sdk==1.27.1
 
 # homeassistant.components.sfr_box
 sfrbox-api==0.0.6
@@ -2008,7 +2005,7 @@ youless-api==1.0.1
 zamg==0.2.4
 
 # homeassistant.components.zeroconf
-zeroconf==0.70.0
+zeroconf==0.71.0
 
 # homeassistant.components.zeversolar
 zeversolar==0.3.1
