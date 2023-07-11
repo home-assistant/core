@@ -57,6 +57,31 @@ class MatterSwitch(MatterEntity, SwitchEntity):
             self._entity_info.primary_attribute
         )
 
+class MatterGenericSwitch(MatterEntity, SwitchEntity):
+    """Representation of a Matter switch."""
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn switch on."""
+        await self.matter_client.send_device_command(
+            node_id=self._endpoint.node.node_id,
+            endpoint_id=self._endpoint.endpoint_id,
+            command=clusters.OnOff.Commands.On(),
+        )
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn switch off."""
+        await self.matter_client.send_device_command(
+            node_id=self._endpoint.node.node_id,
+            endpoint_id=self._endpoint.endpoint_id,
+            command=clusters.OnOff.Commands.Off(),
+        )
+
+    @callback
+    def _update_from_device(self) -> None:
+        """Update from device."""
+        self._attr_is_on = self.get_matter_attribute_value(
+            self._entity_info.primary_attribute
+        )
 
 # Discovery schema(s) to map Matter Attributes to HA entities
 DISCOVERY_SCHEMAS = [
@@ -67,6 +92,26 @@ DISCOVERY_SCHEMAS = [
         ),
         entity_class=MatterSwitch,
         required_attributes=(clusters.OnOff.Attributes.OnOff,),
+        # restrict device type to prevent discovery by the wrong platform
+        not_device_type=(
+            device_types.ColorTemperatureLight,
+            device_types.DimmableLight,
+            device_types.ExtendedColorLight,
+            device_types.OnOffLight,
+            device_types.DoorLock,
+            device_types.ColorDimmerSwitch,
+            device_types.DimmerSwitch,
+            device_types.OnOffLightSwitch,
+            device_types.Thermostat,
+        ),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SWITCH,
+        entity_description=SwitchEntityDescription(
+            key="MatterGenericSwitch", device_class=SwitchDeviceClass.SWITCH, name=None
+        ),
+        entity_class=MatterGenericSwitch,
+        required_attributes=(clusters.Switch.Attributes.CurrentPosition,),
         # restrict device type to prevent discovery by the wrong platform
         not_device_type=(
             device_types.ColorTemperatureLight,
