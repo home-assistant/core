@@ -44,7 +44,7 @@ class ReolinkHostSensorEntityDescription(
 HOST_SENSORS = (
     ReolinkHostSensorEntityDescription(
         key="wifi_signal",
-        name="WiFi signal",
+        name="Wi-Fi signal",
         icon="mdi:wifi",
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
