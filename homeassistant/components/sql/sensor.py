@@ -132,7 +132,7 @@ async def async_setup_entry(
             value_template.hass = hass
 
     name_template = Template(name, hass)
-    trigger_entity_config = {CONF_NAME: name_template}
+    trigger_entity_config = {CONF_NAME: name_template, CONF_DEVICE_CLASS: device_class}
 
     await async_setup_sensor(
         hass,
