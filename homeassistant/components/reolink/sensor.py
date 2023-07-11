@@ -3,11 +3,12 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import date, datetime
+from decimal import Decimal
 
 from reolink_aio.api import Host
 
 from homeassistant.components.sensor import (
-    SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
 )
@@ -15,6 +16,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import StateType
 
 from . import ReolinkData
 from .const import DOMAIN
@@ -79,9 +81,7 @@ class ReolinkHostSensorEntity(ReolinkHostCoordinatorEntity, SensorEntity):
         super().__init__(reolink_data)
         self.entity_description = entity_description
 
-        self._attr_unique_id = (
-            f"{self._host.unique_id}_{entity_description.key}"
-        )
+        self._attr_unique_id = f"{self._host.unique_id}_{entity_description.key}"
 
     @property
     def native_value(self) -> StateType | date | datetime | Decimal:
