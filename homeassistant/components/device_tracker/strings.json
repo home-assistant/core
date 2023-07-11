@@ -49,31 +49,31 @@
       "fields": {
         "mac": {
           "name": "MAC address",
-          "description": "MAC address of device."
+          "description": "MAC address of the device."
         },
         "dev_id": {
           "name": "Device ID",
-          "description": "ID of device (find the ID in `known_devices.yaml`)."
+          "description": "ID of the device (find the ID in `known_devices.yaml`)."
         },
         "host_name": {
           "name": "Hostname",
-          "description": "Hostname of device."
+          "description": "Hostname of the device."
         },
         "location_name": {
           "name": "Location",
-          "description": "Name of location where device is located (not_home is away)."
+          "description": "Name of the location where the device is located. The options are: `home`, `not_home`, or the name of the zone."
         },
         "gps": {
           "name": "GPS coordinates",
-          "description": "GPS coordinates where device is located, specified by latitude and longitude."
+          "description": "GPS coordinates where the device is located, specified by latitude and longitude (for example: [51.513845, -0.100539])."
         },
         "gps_accuracy": {
           "name": "GPS accuracy",
-          "description": "Accuracy of GPS coordinates."
+          "description": "Accuracy of the GPS coordinates."
         },
         "battery": {
           "name": "Battery level",
-          "description": "Battery level of device."
+          "description": "Battery level of the device."
         }
       }
     }
