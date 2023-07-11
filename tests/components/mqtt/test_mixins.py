@@ -140,7 +140,7 @@ async def test_availability_with_shared_state_topic(
                 }
             },
             "sensor.none_humidity",
-            "None Humidity",
+            "Humidity",
             None,
             True,
         ),
