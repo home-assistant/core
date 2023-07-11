@@ -19,7 +19,7 @@ from .const import CONF_DEFAULT_TRANSITION, DOMAIN
 class LiteJetOptionsFlow(config_entries.OptionsFlow):
     """Handle LiteJet options."""
 
-    def __init__(self, config_entry):
+    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         """Initialize LiteJet options flow."""
         self.config_entry = config_entry
 
@@ -59,15 +59,12 @@ class LiteJetConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             port = user_input[CONF_PORT]
 
-            await self.async_set_unique_id(port)
-            self._abort_if_unique_id_configured()
-
             try:
-                system = pylitejet.LiteJet(port)
-                system.close()
+                system = await pylitejet.open(port)
             except SerialException:
                 errors[CONF_PORT] = "open_failed"
             else:
+                await system.close()
                 return self.async_create_entry(
                     title=port,
                     data={CONF_PORT: port},
@@ -79,12 +76,14 @@ class LiteJetConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_import(self, import_data):
+    async def async_step_import(self, import_data: dict[str, Any]) -> FlowResult:
         """Import litejet config from configuration.yaml."""
         return self.async_create_entry(title=import_data[CONF_PORT], data=import_data)
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry):
+    def async_get_options_flow(
+        config_entry: config_entries.ConfigEntry,
+    ) -> LiteJetOptionsFlow:
         """Get the options flow for this handler."""
         return LiteJetOptionsFlow(config_entry)

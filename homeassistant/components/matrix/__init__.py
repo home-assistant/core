@@ -19,10 +19,11 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.json import save_json
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.util.json import load_json, save_json
+from homeassistant.util.json import JsonObjectType, load_json_object
 
-from .const import DOMAIN, SERVICE_SEND_MESSAGE
+from .const import DOMAIN, FORMAT_HTML, FORMAT_TEXT, SERVICE_SEND_MESSAGE
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,8 +37,12 @@ CONF_EXPRESSION = "expression"
 
 DEFAULT_CONTENT_TYPE = "application/octet-stream"
 
+MESSAGE_FORMATS = [FORMAT_HTML, FORMAT_TEXT]
+DEFAULT_MESSAGE_FORMAT = FORMAT_TEXT
+
 EVENT_MATRIX_COMMAND = "matrix_command"
 
+ATTR_FORMAT = "format"  # optional message format
 ATTR_IMAGES = "images"  # optional images
 
 COMMAND_SCHEMA = vol.All(
@@ -74,7 +79,10 @@ CONFIG_SCHEMA = vol.Schema(
 SERVICE_SCHEMA_SEND_MESSAGE = vol.Schema(
     {
         vol.Required(ATTR_MESSAGE): cv.string,
-        vol.Optional(ATTR_DATA): {
+        vol.Optional(ATTR_DATA, default={}): {
+            vol.Optional(ATTR_FORMAT, default=DEFAULT_MESSAGE_FORMAT): vol.In(
+                MESSAGE_FORMATS
+            ),
             vol.Optional(ATTR_IMAGES): vol.All(cv.ensure_list, [cv.string]),
         },
         vol.Required(ATTR_TARGET): vol.All(cv.ensure_list, [cv.string]),
@@ -268,16 +276,13 @@ class MatrixBot:
             except MatrixRequestError as ex:
                 _LOGGER.error("Could not join room %s: %s", room_id, ex)
 
-    def _get_auth_tokens(self):
-        """
-        Read sorted authentication tokens from disk.
+    def _get_auth_tokens(self) -> JsonObjectType:
+        """Read sorted authentication tokens from disk.
 
         Returns the auth_tokens dictionary.
         """
         try:
-            auth_tokens = load_json(self._session_filepath)
-
-            return auth_tokens
+            return load_json_object(self._session_filepath)
         except HomeAssistantError as ex:
             _LOGGER.warning(
                 "Loading authentication tokens from file '%s' failed: %s",
@@ -377,7 +382,10 @@ class MatrixBot:
             try:
                 room = self._join_or_get_room(target_room)
                 if message is not None:
-                    _LOGGER.debug(room.send_text(message))
+                    if data.get(ATTR_FORMAT) == FORMAT_HTML:
+                        _LOGGER.debug(room.send_html(message))
+                    else:
+                        _LOGGER.debug(room.send_text(message))
             except MatrixRequestError as ex:
                 _LOGGER.error(
                     "Unable to deliver message to room '%s': %d, %s",
@@ -385,7 +393,7 @@ class MatrixBot:
                     ex.code,
                     ex.content,
                 )
-        if data is not None:
+        if ATTR_IMAGES in data:
             for img in data.get(ATTR_IMAGES, []):
                 self._send_image(img, target_rooms)
 

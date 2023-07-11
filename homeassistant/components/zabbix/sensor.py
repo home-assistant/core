@@ -5,13 +5,14 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components import zabbix
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+
+from .. import zabbix
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -66,17 +67,14 @@ def setup_platform(
             for hostid in hostids:
                 _LOGGER.debug("Creating Zabbix Sensor: %s", str(hostid))
                 sensors.append(ZabbixSingleHostTriggerCountSensor(zapi, [hostid], name))
+        elif not hostids:
+            # Single sensor that provides the total count of triggers.
+            _LOGGER.debug("Creating Zabbix Sensor")
+            sensors.append(ZabbixTriggerCountSensor(zapi, name))
         else:
-            if not hostids:
-                # Single sensor that provides the total count of triggers.
-                _LOGGER.debug("Creating Zabbix Sensor")
-                sensors.append(ZabbixTriggerCountSensor(zapi, name))
-            else:
-                # Single sensor that sums total issues for all hosts
-                _LOGGER.debug("Creating Zabbix Sensor group: %s", str(hostids))
-                sensors.append(
-                    ZabbixMultipleHostTriggerCountSensor(zapi, hostids, name)
-                )
+            # Single sensor that sums total issues for all hosts
+            _LOGGER.debug("Creating Zabbix Sensor group: %s", str(hostids))
+            sensors.append(ZabbixMultipleHostTriggerCountSensor(zapi, hostids, name))
 
     else:
         # Single sensor that provides the total count of triggers.
@@ -116,7 +114,7 @@ class ZabbixTriggerCountSensor(SensorEntity):
             output="extend", only_true=1, monitored=1, filter={"value": 1}
         )
 
-    def update(self):
+    def update(self) -> None:
         """Update the sensor."""
         _LOGGER.debug("Updating ZabbixTriggerCountSensor: %s", str(self._name))
         triggers = self._call_zabbix_api()

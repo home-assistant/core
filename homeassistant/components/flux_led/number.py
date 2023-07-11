@@ -2,8 +2,9 @@
 from __future__ import annotations
 
 from abc import abstractmethod
+from collections.abc import Coroutine
 import logging
-from typing import cast
+from typing import Any, cast
 
 from flux_led.protocol import (
     MUSIC_PIXELS_MAX,
@@ -17,11 +18,10 @@ from flux_led.protocol import (
 from homeassistant import config_entries
 from homeassistant.components.light import EFFECT_RANDOM
 from homeassistant.components.number import NumberEntity, NumberMode
-from homeassistant.const import CONF_NAME
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.debounce import Debouncer
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -50,7 +50,6 @@ async def async_setup_entry(
         | FluxMusicPixelsPerSegmentNumber
         | FluxMusicSegmentsNumber
     ] = []
-    name = entry.data.get(CONF_NAME, entry.title)
     base_unique_id = entry.unique_id or entry.entry_id
 
     if device.pixels_per_segment is not None:
@@ -58,38 +57,27 @@ async def async_setup_entry(
             FluxPixelsPerSegmentNumber(
                 coordinator,
                 base_unique_id,
-                f"{name} Pixels Per Segment",
                 "pixels_per_segment",
             )
         )
     if device.segments is not None:
-        entities.append(
-            FluxSegmentsNumber(
-                coordinator, base_unique_id, f"{name} Segments", "segments"
-            )
-        )
+        entities.append(FluxSegmentsNumber(coordinator, base_unique_id, "segments"))
     if device.music_pixels_per_segment is not None:
         entities.append(
             FluxMusicPixelsPerSegmentNumber(
                 coordinator,
                 base_unique_id,
-                f"{name} Music Pixels Per Segment",
                 "music_pixels_per_segment",
             )
         )
     if device.music_segments is not None:
         entities.append(
-            FluxMusicSegmentsNumber(
-                coordinator, base_unique_id, f"{name} Music Segments", "music_segments"
-            )
+            FluxMusicSegmentsNumber(coordinator, base_unique_id, "music_segments")
         )
     if device.effect_list and device.effect_list != [EFFECT_RANDOM]:
-        entities.append(
-            FluxSpeedNumber(coordinator, base_unique_id, f"{name} Effect Speed", None)
-        )
+        entities.append(FluxSpeedNumber(coordinator, base_unique_id, None))
 
-    if entities:
-        async_add_entities(entities)
+    async_add_entities(entities)
 
 
 class FluxSpeedNumber(
@@ -97,18 +85,19 @@ class FluxSpeedNumber(
 ):
     """Defines a flux_led speed number."""
 
-    _attr_min_value = 1
-    _attr_max_value = 100
-    _attr_step = 1
+    _attr_native_min_value = 1
+    _attr_native_max_value = 100
+    _attr_native_step = 1
     _attr_mode = NumberMode.SLIDER
     _attr_icon = "mdi:speedometer"
+    _attr_translation_key = "effect_speed"
 
     @property
-    def value(self) -> float:
+    def native_value(self) -> float:
         """Return the effect speed."""
         return cast(float, self._device.speed)
 
-    async def async_set_value(self, value: float) -> None:
+    async def async_set_native_value(self, value: float) -> None:
         """Set the flux speed value."""
         current_effect = self._device.effect
         new_speed = int(value)
@@ -130,20 +119,19 @@ class FluxConfigNumber(
     """Base class for flux config numbers."""
 
     _attr_entity_category = EntityCategory.CONFIG
-    _attr_min_value = 1
-    _attr_step = 1
+    _attr_native_min_value = 1
+    _attr_native_step = 1
     _attr_mode = NumberMode.BOX
 
     def __init__(
         self,
         coordinator: FluxLedUpdateCoordinator,
         base_unique_id: str,
-        name: str,
         key: str | None,
     ) -> None:
         """Initialize the flux number."""
-        super().__init__(coordinator, base_unique_id, name, key)
-        self._debouncer: Debouncer | None = None
+        super().__init__(coordinator, base_unique_id, key)
+        self._debouncer: Debouncer[Coroutine[Any, Any, None]] | None = None
         self._pending_value: int | None = None
 
     async def async_added_to_hass(self) -> None:
@@ -153,18 +141,18 @@ class FluxConfigNumber(
             logger=_LOGGER,
             cooldown=DEBOUNCE_TIME,
             immediate=False,
-            function=self._async_set_value,
+            function=self._async_set_native_value,
         )
         await super().async_added_to_hass()
 
-    async def async_set_value(self, value: float) -> None:
+    async def async_set_native_value(self, value: float) -> None:
         """Set the value."""
         self._pending_value = int(value)
         assert self._debouncer is not None
         await self._debouncer.async_call()
 
     @abstractmethod
-    async def _async_set_value(self) -> None:
+    async def _async_set_native_value(self) -> None:
         """Call on debounce to set the value."""
 
     def _pixels_and_segments_fit_in_music_mode(self) -> bool:
@@ -186,22 +174,23 @@ class FluxConfigNumber(
 class FluxPixelsPerSegmentNumber(FluxConfigNumber):
     """Defines a flux_led pixels per segment number."""
 
+    _attr_translation_key = "pixels_per_segment"
     _attr_icon = "mdi:dots-grid"
 
     @property
-    def max_value(self) -> int:
+    def native_max_value(self) -> int:
         """Return the max value."""
         return min(
             PIXELS_PER_SEGMENT_MAX, int(PIXELS_MAX / (self._device.segments or 1))
         )
 
     @property
-    def value(self) -> int:
+    def native_value(self) -> int:
         """Return the pixels per segment."""
         assert self._device.pixels_per_segment is not None
         return self._device.pixels_per_segment
 
-    async def _async_set_value(self) -> None:
+    async def _async_set_native_value(self) -> None:
         """Set the pixels per segment."""
         assert self._pending_value is not None
         await self._device.async_set_device_config(
@@ -212,10 +201,11 @@ class FluxPixelsPerSegmentNumber(FluxConfigNumber):
 class FluxSegmentsNumber(FluxConfigNumber):
     """Defines a flux_led segments number."""
 
+    _attr_translation_key = "segments"
     _attr_icon = "mdi:segment"
 
     @property
-    def max_value(self) -> int:
+    def native_max_value(self) -> int:
         """Return the max value."""
         assert self._device.pixels_per_segment is not None
         return min(
@@ -223,12 +213,12 @@ class FluxSegmentsNumber(FluxConfigNumber):
         )
 
     @property
-    def value(self) -> int:
+    def native_value(self) -> int:
         """Return the segments."""
         assert self._device.segments is not None
         return self._device.segments
 
-    async def _async_set_value(self) -> None:
+    async def _async_set_native_value(self) -> None:
         """Set the segments."""
         assert self._pending_value is not None
         await self._device.async_set_device_config(segments=self._pending_value)
@@ -246,10 +236,11 @@ class FluxMusicNumber(FluxConfigNumber):
 class FluxMusicPixelsPerSegmentNumber(FluxMusicNumber):
     """Defines a flux_led music pixels per segment number."""
 
+    _attr_translation_key = "music_pixels_per_segment"
     _attr_icon = "mdi:dots-grid"
 
     @property
-    def max_value(self) -> int:
+    def native_max_value(self) -> int:
         """Return the max value."""
         assert self._device.music_segments is not None
         return min(
@@ -258,12 +249,12 @@ class FluxMusicPixelsPerSegmentNumber(FluxMusicNumber):
         )
 
     @property
-    def value(self) -> int:
+    def native_value(self) -> int:
         """Return the music pixels per segment."""
         assert self._device.music_pixels_per_segment is not None
         return self._device.music_pixels_per_segment
 
-    async def _async_set_value(self) -> None:
+    async def _async_set_native_value(self) -> None:
         """Set the music pixels per segment."""
         assert self._pending_value is not None
         await self._device.async_set_device_config(
@@ -274,10 +265,11 @@ class FluxMusicPixelsPerSegmentNumber(FluxMusicNumber):
 class FluxMusicSegmentsNumber(FluxMusicNumber):
     """Defines a flux_led music segments number."""
 
+    _attr_translation_key = "music_segments"
     _attr_icon = "mdi:segment"
 
     @property
-    def max_value(self) -> int:
+    def native_max_value(self) -> int:
         """Return the max value."""
         assert self._device.pixels_per_segment is not None
         return min(
@@ -286,12 +278,12 @@ class FluxMusicSegmentsNumber(FluxMusicNumber):
         )
 
     @property
-    def value(self) -> int:
+    def native_value(self) -> int:
         """Return the music segments."""
         assert self._device.music_segments is not None
         return self._device.music_segments
 
-    async def _async_set_value(self) -> None:
+    async def _async_set_native_value(self) -> None:
         """Set the music segments."""
         assert self._pending_value is not None
         await self._device.async_set_device_config(music_segments=self._pending_value)

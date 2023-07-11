@@ -14,6 +14,9 @@ nam_data = {
     "software_version": "NAMF-2020-36",
     "uptime": "456987",
     "sensordatavalues": [
+        {"value_type": "PMS_P0", "value": "6.00"},
+        {"value_type": "PMS_P1", "value": "10.00"},
+        {"value_type": "PMS_P2", "value": "11.00"},
         {"value_type": "SDS_P1", "value": "18.65"},
         {"value_type": "SDS_P2", "value": "11.03"},
         {"value_type": "SPS30_P0", "value": "31.23"},

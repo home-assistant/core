@@ -5,12 +5,12 @@ import logging
 
 from homeassistant.components.sensor import SensorEntity, SensorStateClass
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import CoinbaseData
 from .const import (
     API_ACCOUNT_AMOUNT,
     API_ACCOUNT_BALANCE,
@@ -51,38 +51,41 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Coinbase sensor platform."""
-    instance = hass.data[DOMAIN][config_entry.entry_id]
+    instance: CoinbaseData = hass.data[DOMAIN][config_entry.entry_id]
 
     entities: list[SensorEntity] = []
 
-    provided_currencies = [
+    provided_currencies: list[str] = [
         account[API_ACCOUNT_CURRENCY]
         for account in instance.accounts
         if account[API_RESOURCE_TYPE] != API_TYPE_VAULT
     ]
 
-    desired_currencies = []
+    desired_currencies: list[str] = []
 
     if CONF_CURRENCIES in config_entry.options:
         desired_currencies = config_entry.options[CONF_CURRENCIES]
 
-    exchange_base_currency = instance.exchange_rates[API_ACCOUNT_CURRENCY]
+    exchange_base_currency: str = instance.exchange_rates[API_ACCOUNT_CURRENCY]
 
-    exchange_precision = config_entry.options.get(
+    exchange_precision: int = config_entry.options.get(
         CONF_EXCHANGE_PRECISION, CONF_EXCHANGE_PRECISION_DEFAULT
     )
 
     for currency in desired_currencies:
         if currency not in provided_currencies:
             _LOGGER.warning(
-                "The currency %s is no longer provided by your account, please check "
-                "your settings in Coinbase's developer tools",
+                (
+                    "The currency %s is no longer provided by your account, please"
+                    " check your settings in Coinbase's developer tools"
+                ),
                 currency,
             )
             continue
         entities.append(AccountSensor(instance, currency))
 
     if CONF_EXCHANGE_RATES in config_entry.options:
+        rate: str
         for rate in config_entry.options[CONF_EXCHANGE_RATES]:
             entities.append(
                 ExchangeRateSensor(
@@ -96,29 +99,36 @@ async def async_setup_entry(
 class AccountSensor(SensorEntity):
     """Representation of a Coinbase.com sensor."""
 
-    def __init__(self, coinbase_data, currency):
+    _attr_attribution = ATTRIBUTION
+
+    def __init__(self, coinbase_data: CoinbaseData, currency: str) -> None:
         """Initialize the sensor."""
         self._coinbase_data = coinbase_data
         self._currency = currency
         for account in coinbase_data.accounts:
             if (
-                account[API_ACCOUNT_CURRENCY] == currency
-                and account[API_RESOURCE_TYPE] != API_TYPE_VAULT
+                account[API_ACCOUNT_CURRENCY] != currency
+                or account[API_RESOURCE_TYPE] == API_TYPE_VAULT
             ):
-                self._name = f"Coinbase {account[API_ACCOUNT_NAME]}"
-                self._id = (
-                    f"coinbase-{account[API_ACCOUNT_ID]}-wallet-"
-                    f"{account[API_ACCOUNT_CURRENCY]}"
-                )
-                self._state = account[API_ACCOUNT_BALANCE][API_ACCOUNT_AMOUNT]
-                self._unit_of_measurement = account[API_ACCOUNT_CURRENCY]
-                self._native_balance = account[API_ACCOUNT_NATIVE_BALANCE][
-                    API_ACCOUNT_AMOUNT
-                ]
-                self._native_currency = account[API_ACCOUNT_NATIVE_BALANCE][
-                    API_ACCOUNT_CURRENCY
-                ]
-                break
+                continue
+            self._attr_name = f"Coinbase {account[API_ACCOUNT_NAME]}"
+            self._attr_unique_id = (
+                f"coinbase-{account[API_ACCOUNT_ID]}-wallet-"
+                f"{account[API_ACCOUNT_CURRENCY]}"
+            )
+            self._attr_native_value = account[API_ACCOUNT_BALANCE][API_ACCOUNT_AMOUNT]
+            self._attr_native_unit_of_measurement = account[API_ACCOUNT_CURRENCY]
+            self._attr_icon = CURRENCY_ICONS.get(
+                account[API_ACCOUNT_CURRENCY], DEFAULT_COIN_ICON
+            )
+            self._native_balance = account[API_ACCOUNT_NATIVE_BALANCE][
+                API_ACCOUNT_AMOUNT
+            ]
+            self._native_currency = account[API_ACCOUNT_NATIVE_BALANCE][
+                API_ACCOUNT_CURRENCY
+            ]
+            break
+
         self._attr_state_class = SensorStateClass.TOTAL
         self._attr_device_info = DeviceInfo(
             configuration_url="https://www.coinbase.com/settings/api",
@@ -129,71 +139,57 @@ class AccountSensor(SensorEntity):
         )
 
     @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def unique_id(self):
-        """Return the Unique ID of the sensor."""
-        return self._id
-
-    @property
-    def native_value(self):
-        """Return the state of the sensor."""
-        return self._state
-
-    @property
-    def native_unit_of_measurement(self):
-        """Return the unit of measurement this sensor expresses itself in."""
-        return self._unit_of_measurement
-
-    @property
-    def icon(self):
-        """Return the icon to use in the frontend, if any."""
-        return CURRENCY_ICONS.get(self._unit_of_measurement, DEFAULT_COIN_ICON)
-
-    @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, str]:
         """Return the state attributes of the sensor."""
         return {
-            ATTR_ATTRIBUTION: ATTRIBUTION,
             ATTR_NATIVE_BALANCE: f"{self._native_balance} {self._native_currency}",
         }
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest state of the sensor."""
         self._coinbase_data.update()
         for account in self._coinbase_data.accounts:
             if (
-                account[API_ACCOUNT_CURRENCY] == self._currency
-                and account[API_RESOURCE_TYPE] != API_TYPE_VAULT
+                account[API_ACCOUNT_CURRENCY] != self._currency
+                or account[API_RESOURCE_TYPE] == API_TYPE_VAULT
             ):
-                self._state = account[API_ACCOUNT_BALANCE][API_ACCOUNT_AMOUNT]
-                self._native_balance = account[API_ACCOUNT_NATIVE_BALANCE][
-                    API_ACCOUNT_AMOUNT
-                ]
-                self._native_currency = account[API_ACCOUNT_NATIVE_BALANCE][
-                    API_ACCOUNT_CURRENCY
-                ]
-                break
+                continue
+            self._attr_native_value = account[API_ACCOUNT_BALANCE][API_ACCOUNT_AMOUNT]
+            self._native_balance = account[API_ACCOUNT_NATIVE_BALANCE][
+                API_ACCOUNT_AMOUNT
+            ]
+            self._native_currency = account[API_ACCOUNT_NATIVE_BALANCE][
+                API_ACCOUNT_CURRENCY
+            ]
+            break
 
 
 class ExchangeRateSensor(SensorEntity):
     """Representation of a Coinbase.com sensor."""
 
-    def __init__(self, coinbase_data, exchange_currency, exchange_base, precision):
+    _attr_attribution = ATTRIBUTION
+
+    def __init__(
+        self,
+        coinbase_data: CoinbaseData,
+        exchange_currency: str,
+        exchange_base: str,
+        precision: int,
+    ) -> None:
         """Initialize the sensor."""
         self._coinbase_data = coinbase_data
-        self.currency = exchange_currency
-        self._name = f"{exchange_currency} Exchange Rate"
-        self._id = f"coinbase-{coinbase_data.user_id}-xe-{exchange_currency}"
-        self._precision = precision
-        self._state = round(
-            1 / float(self._coinbase_data.exchange_rates[API_RATES][self.currency]),
-            self._precision,
+        self._currency = exchange_currency
+        self._attr_name = f"{exchange_currency} Exchange Rate"
+        self._attr_unique_id = (
+            f"coinbase-{coinbase_data.user_id}-xe-{exchange_currency}"
         )
-        self._unit_of_measurement = exchange_base
+        self._precision = precision
+        self._attr_icon = CURRENCY_ICONS.get(exchange_currency, DEFAULT_COIN_ICON)
+        self._attr_native_value = round(
+            1 / float(coinbase_data.exchange_rates[API_RATES][exchange_currency]),
+            precision,
+        )
+        self._attr_native_unit_of_measurement = exchange_base
         self._attr_state_class = SensorStateClass.MEASUREMENT
         self._attr_device_info = DeviceInfo(
             configuration_url="https://www.coinbase.com/settings/api",
@@ -203,40 +199,10 @@ class ExchangeRateSensor(SensorEntity):
             name=f"Coinbase {self._coinbase_data.user_id[-4:]}",
         )
 
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def unique_id(self):
-        """Return the unique ID of the sensor."""
-        return self._id
-
-    @property
-    def native_value(self):
-        """Return the state of the sensor."""
-        return self._state
-
-    @property
-    def native_unit_of_measurement(self):
-        """Return the unit of measurement this sensor expresses itself in."""
-        return self._unit_of_measurement
-
-    @property
-    def icon(self):
-        """Return the icon to use in the frontend, if any."""
-        return CURRENCY_ICONS.get(self.currency, DEFAULT_COIN_ICON)
-
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes of the sensor."""
-        return {ATTR_ATTRIBUTION: ATTRIBUTION}
-
-    def update(self):
+    def update(self) -> None:
         """Get the latest state of the sensor."""
         self._coinbase_data.update()
-        self._state = round(
-            1 / float(self._coinbase_data.exchange_rates.rates[self.currency]),
+        self._attr_native_value = round(
+            1 / float(self._coinbase_data.exchange_rates.rates[self._currency]),
             self._precision,
         )

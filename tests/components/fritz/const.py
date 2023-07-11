@@ -1,4 +1,4 @@
-"""Common stuff for AVM Fritz!Box tests."""
+"""Common stuff for Fritz!Tools tests."""
 from homeassistant.components import ssdp
 from homeassistant.components.fritz.const import DOMAIN
 from homeassistant.components.ssdp import ATTR_UPNP_FRIENDLY_NAME, ATTR_UPNP_UDN
@@ -138,6 +138,7 @@ MOCK_FB_SERVICES: dict[str, dict] = {
             "NewUptime": 35307,
         },
         "GetExternalIPAddress": {"NewExternalIPAddress": "1.2.3.4"},
+        "X_AVM_DE_GetExternalIPv6Address": {"NewExternalIPv6Address": "fec0::1"},
     },
     "WANPPPConnection1": {
         "GetInfo": {

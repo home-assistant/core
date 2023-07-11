@@ -7,14 +7,9 @@ from sisyphus_control import Track
 from homeassistant.components.media_player import (
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
+    MediaPlayerState,
 )
-from homeassistant.const import (
-    CONF_HOST,
-    STATE_IDLE,
-    STATE_OFF,
-    STATE_PAUSED,
-    STATE_PLAYING,
-)
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -65,11 +60,11 @@ class SisyphusPlayer(MediaPlayerEntity):
         self._host = host
         self._table = table
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Add listeners after this object has been initialized."""
         self._table.add_listener(self.async_write_ha_state)
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Force update table state."""
         await self._table.refresh()
 
@@ -79,7 +74,7 @@ class SisyphusPlayer(MediaPlayerEntity):
         return self._table.id
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return true if the table is responding to heartbeats."""
         return self._table.is_connected
 
@@ -89,17 +84,17 @@ class SisyphusPlayer(MediaPlayerEntity):
         return self._name
 
     @property
-    def state(self):
+    def state(self) -> MediaPlayerState | None:
         """Return the current state of the table; sleeping maps to off."""
         if self._table.state in ["homing", "playing"]:
-            return STATE_PLAYING
+            return MediaPlayerState.PLAYING
         if self._table.state == "paused":
             if self._table.is_sleeping:
-                return STATE_OFF
+                return MediaPlayerState.OFF
 
-            return STATE_PAUSED
+            return MediaPlayerState.PAUSED
         if self._table.state == "waiting":
-            return STATE_IDLE
+            return MediaPlayerState.IDLE
 
         return None
 
@@ -113,7 +108,7 @@ class SisyphusPlayer(MediaPlayerEntity):
         """Return True if the current playlist is in shuffle mode."""
         return self._table.is_shuffle
 
-    async def async_set_shuffle(self, shuffle):
+    async def async_set_shuffle(self, shuffle: bool) -> None:
         """Change the shuffle mode of the current playlist."""
         await self._table.set_shuffle(shuffle)
 
@@ -164,35 +159,35 @@ class SisyphusPlayer(MediaPlayerEntity):
 
         return super().media_image_url
 
-    async def async_turn_on(self):
+    async def async_turn_on(self) -> None:
         """Wake up a sleeping table."""
         await self._table.wakeup()
 
-    async def async_turn_off(self):
+    async def async_turn_off(self) -> None:
         """Put the table to sleep."""
         await self._table.sleep()
 
-    async def async_volume_down(self):
+    async def async_volume_down(self) -> None:
         """Slow down playback."""
         await self._table.set_speed(max(0, self._table.speed - 0.1))
 
-    async def async_volume_up(self):
+    async def async_volume_up(self) -> None:
         """Speed up playback."""
         await self._table.set_speed(min(1.0, self._table.speed + 0.1))
 
-    async def async_set_volume_level(self, volume):
+    async def async_set_volume_level(self, volume: float) -> None:
         """Set playback speed (0..1)."""
         await self._table.set_speed(volume)
 
-    async def async_media_play(self):
+    async def async_media_play(self) -> None:
         """Start playing."""
         await self._table.play()
 
-    async def async_media_pause(self):
+    async def async_media_pause(self) -> None:
         """Pause."""
         await self._table.pause()
 
-    async def async_media_next_track(self):
+    async def async_media_next_track(self) -> None:
         """Skip to next track."""
         cur_track_index = self._get_current_track_index()
 
@@ -200,7 +195,7 @@ class SisyphusPlayer(MediaPlayerEntity):
             self._table.active_playlist.tracks[cur_track_index + 1]
         )
 
-    async def async_media_previous_track(self):
+    async def async_media_previous_track(self) -> None:
         """Skip to previous track."""
         cur_track_index = self._get_current_track_index()
 

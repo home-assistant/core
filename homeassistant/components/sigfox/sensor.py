@@ -149,7 +149,7 @@ class SigfoxDevice(SensorEntity):
             "time": epoch_to_datetime(epoch_time),
         }
 
-    def update(self):
+    def update(self) -> None:
         """Fetch the latest device message."""
         self._message_data = self.get_last_message()
         self._state = self._message_data["payload"]

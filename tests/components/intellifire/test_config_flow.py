@@ -6,23 +6,21 @@ from intellifire4py.exceptions import LoginException
 from homeassistant import config_entries
 from homeassistant.components import dhcp
 from homeassistant.components.intellifire.config_flow import MANUAL_ENTRY_STRING
-from homeassistant.components.intellifire.const import DOMAIN
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.components.intellifire.const import CONF_USER_ID, DOMAIN
+from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import (
-    RESULT_TYPE_ABORT,
-    RESULT_TYPE_CREATE_ENTRY,
-    RESULT_TYPE_FORM,
-)
+from homeassistant.data_entry_flow import FlowResultType
+
+from .conftest import mock_api_connection_error
 
 from tests.common import MockConfigEntry
-from tests.components.intellifire.conftest import mock_api_connection_error
 
 
 @patch.multiple(
-    "homeassistant.components.intellifire.config_flow.IntellifireControlAsync",
+    "homeassistant.components.intellifire.config_flow.IntellifireAPICloud",
     login=AsyncMock(),
-    get_username=AsyncMock(return_value="intellifire"),
+    get_user_id=MagicMock(return_value="intellifire"),
+    get_fireplace_api_key=MagicMock(return_value="key"),
 )
 async def test_no_discovery(
     hass: HomeAssistant,
@@ -37,7 +35,7 @@ async def test_no_discovery(
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["errors"] == {}
     assert result["step_id"] == "manual_device_entry"
 
@@ -49,7 +47,7 @@ async def test_no_discovery(
     )
     await hass.async_block_till_done()
 
-    assert result2["type"] == RESULT_TYPE_FORM
+    assert result2["type"] == FlowResultType.FORM
     assert result2["step_id"] == "api_config"
 
     result3 = await hass.config_entries.flow.async_configure(
@@ -58,20 +56,23 @@ async def test_no_discovery(
     )
     await hass.async_block_till_done()
 
-    assert result3["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result3["type"] == FlowResultType.CREATE_ENTRY
     assert result3["title"] == "Fireplace 12345"
     assert result3["data"] == {
         CONF_HOST: "1.1.1.1",
         CONF_USERNAME: "test",
         CONF_PASSWORD: "AROONIE",
+        CONF_API_KEY: "key",
+        CONF_USER_ID: "intellifire",
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
 
 @patch.multiple(
-    "homeassistant.components.intellifire.config_flow.IntellifireControlAsync",
+    "homeassistant.components.intellifire.config_flow.IntellifireAPICloud",
     login=AsyncMock(side_effect=mock_api_connection_error()),
-    get_username=AsyncMock(return_value="intellifire"),
+    get_user_id=MagicMock(return_value="intellifire"),
+    get_fireplace_api_key=MagicMock(return_value="key"),
 )
 async def test_single_discovery(
     hass: HomeAssistant,
@@ -96,13 +97,15 @@ async def test_single_discovery(
         {CONF_USERNAME: "test", CONF_PASSWORD: "AROONIE"},
     )
     await hass.async_block_till_done()
-    assert result3["type"] == RESULT_TYPE_FORM
+    assert result3["type"] == FlowResultType.FORM
     assert result3["errors"] == {"base": "iftapi_connect"}
 
 
 @patch.multiple(
-    "homeassistant.components.intellifire.config_flow.IntellifireControlAsync",
-    login=AsyncMock(side_effect=LoginException()),
+    "homeassistant.components.intellifire.config_flow.IntellifireAPICloud",
+    login=AsyncMock(side_effect=LoginException),
+    get_user_id=MagicMock(return_value="intellifire"),
+    get_fireplace_api_key=MagicMock(return_value="key"),
 )
 async def test_single_discovery_loign_error(
     hass: HomeAssistant,
@@ -127,7 +130,7 @@ async def test_single_discovery_loign_error(
         {CONF_USERNAME: "test", CONF_PASSWORD: "AROONIE"},
     )
     await hass.async_block_till_done()
-    assert result3["type"] == RESULT_TYPE_FORM
+    assert result3["type"] == FlowResultType.FORM
     assert result3["errors"] == {"base": "api_error"}
 
 
@@ -141,7 +144,6 @@ async def test_manual_entry(
         "homeassistant.components.intellifire.config_flow.AsyncUDPFireplaceFinder.search_fireplace",
         return_value=["192.168.1.69", "192.168.1.33", "192.168.169"],
     ):
-
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
@@ -187,20 +189,19 @@ async def test_multi_discovery_cannot_connect(
         "homeassistant.components.intellifire.config_flow.AsyncUDPFireplaceFinder.search_fireplace",
         return_value=["192.168.1.69", "192.168.1.33", "192.168.169"],
     ):
-
         mock_intellifire_config_flow.poll.side_effect = ConnectionError
 
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
-        assert result["type"] == RESULT_TYPE_FORM
+        assert result["type"] == FlowResultType.FORM
         assert result["step_id"] == "pick_device"
 
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={CONF_HOST: "192.168.1.33"}
         )
         await hass.async_block_till_done()
-        assert result2["type"] == RESULT_TYPE_FORM
+        assert result2["type"] == FlowResultType.FORM
         assert result2["errors"] == {"base": "cannot_connect"}
 
 
@@ -215,7 +216,7 @@ async def test_form_cannot_connect_manual_entry(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "manual_device_entry"
 
     result2 = await hass.config_entries.flow.async_configure(
@@ -225,7 +226,7 @@ async def test_form_cannot_connect_manual_entry(
         },
     )
 
-    assert result2["type"] == RESULT_TYPE_FORM
+    assert result2["type"] == FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
@@ -260,14 +261,15 @@ async def test_picker_already_discovered(
             CONF_HOST: "192.168.1.4",
         },
     )
-    assert result2["type"] == RESULT_TYPE_FORM
+    assert result2["type"] == FlowResultType.FORM
     assert len(mock_setup_entry.mock_calls) == 0
 
 
 @patch.multiple(
-    "homeassistant.components.intellifire.config_flow.IntellifireControlAsync",
+    "homeassistant.components.intellifire.config_flow.IntellifireAPICloud",
     login=AsyncMock(),
-    get_username=AsyncMock(return_value="intellifire"),
+    get_user_id=MagicMock(return_value="intellifire"),
+    get_fireplace_api_key=MagicMock(return_value="key"),
 )
 async def test_reauth_flow(
     hass: HomeAssistant,
@@ -296,7 +298,7 @@ async def test_reauth_flow(
         },
     )
 
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "api_config"
 
     result3 = await hass.config_entries.flow.async_configure(
@@ -304,7 +306,7 @@ async def test_reauth_flow(
         {CONF_USERNAME: "test", CONF_PASSWORD: "AROONIE"},
     )
     await hass.async_block_till_done()
-    assert result3["type"] == RESULT_TYPE_ABORT
+    assert result3["type"] == FlowResultType.ABORT
     assert entry.data[CONF_PASSWORD] == "AROONIE"
     assert entry.data[CONF_USERNAME] == "test"
 
@@ -324,10 +326,10 @@ async def test_dhcp_discovery_intellifire_device(
             hostname="zentrios-Test",
         ),
     )
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "dhcp_confirm"
     result2 = await hass.config_entries.flow.async_configure(result["flow_id"])
-    assert result2["type"] == RESULT_TYPE_FORM
+    assert result2["type"] == FlowResultType.FORM
     assert result2["step_id"] == "dhcp_confirm"
     result3 = await hass.config_entries.flow.async_configure(
         result2["flow_id"], user_input={}

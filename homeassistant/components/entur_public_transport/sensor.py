@@ -2,18 +2,18 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta
+from random import randint
 
 from enturclient import EnturPublicTransportData
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
-    ATTR_ATTRIBUTION,
     CONF_LATITUDE,
     CONF_LONGITUDE,
     CONF_NAME,
     CONF_SHOW_ON_MAP,
-    TIME_MINUTES,
+    UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -23,9 +23,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
 import homeassistant.util.dt as dt_util
 
-API_CLIENT_NAME = "homeassistant-homeassistant"
-
-ATTRIBUTION = "Data provided by entur.org under NLOD"
+API_CLIENT_NAME = "homeassistant-{}"
 
 CONF_STOP_IDS = "stop_ids"
 CONF_EXPAND_PLATFORMS = "expand_platforms"
@@ -108,7 +106,7 @@ async def async_setup_platform(
     quays = [s for s in stop_ids if "Quay" in s]
 
     data = EnturPublicTransportData(
-        API_CLIENT_NAME,
+        API_CLIENT_NAME.format(str(randint(100000, 999999))),
         stops=stops,
         quays=quays,
         line_whitelist=line_whitelist,
@@ -160,6 +158,8 @@ class EnturProxy:
 class EnturPublicTransportSensor(SensorEntity):
     """Implementation of a Entur public transport sensor."""
 
+    _attr_attribution = "Data provided by entur.org under NLOD"
+
     def __init__(
         self, api: EnturProxy, name: str, stop: str, show_on_map: bool
     ) -> None:
@@ -183,16 +183,15 @@ class EnturPublicTransportSensor(SensorEntity):
         return self._state
 
     @property
-    def extra_state_attributes(self) -> dict:
+    def extra_state_attributes(self) -> dict[str, str]:
         """Return the state attributes."""
-        self._attributes[ATTR_ATTRIBUTION] = ATTRIBUTION
         self._attributes[ATTR_STOP_ID] = self._stop
         return self._attributes
 
     @property
     def native_unit_of_measurement(self) -> str:
         """Return the unit this state is expressed in."""
-        return TIME_MINUTES
+        return UnitOfTime.MINUTES
 
     @property
     def icon(self) -> str:

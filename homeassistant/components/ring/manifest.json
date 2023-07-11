@@ -1,17 +1,17 @@
 {
   "domain": "ring",
   "name": "Ring",
-  "documentation": "https://www.home-assistant.io/integrations/ring",
-  "requirements": ["ring_doorbell==0.7.2"],
-  "dependencies": ["ffmpeg"],
-  "codeowners": ["@balloob"],
+  "codeowners": [],
   "config_flow": true,
+  "dependencies": ["ffmpeg"],
   "dhcp": [
     {
       "hostname": "ring*",
       "macaddress": "0CAE7D*"
     }
   ],
+  "documentation": "https://www.home-assistant.io/integrations/ring",
   "iot_class": "cloud_polling",
-  "loggers": ["ring_doorbell"]
+  "loggers": ["ring_doorbell"],
+  "requirements": ["ring-doorbell==0.7.2"]
 }

@@ -1,7 +1,7 @@
 """Automation manager for boards manufactured by ProgettiHWSW Italy."""
 
-from ProgettiHWSW.ProgettiHWSWAPI import ProgettiHWSWAPI
 from ProgettiHWSW.input import Input
+from ProgettiHWSW.ProgettiHWSWAPI import ProgettiHWSWAPI
 from ProgettiHWSW.relay import Relay
 
 from homeassistant.config_entries import ConfigEntry
@@ -23,7 +23,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Check board validation again to load new values to API.
     await hass.data[DOMAIN][entry.entry_id].check_board()
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 

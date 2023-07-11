@@ -1,13 +1,13 @@
 {
   "domain": "izone",
   "name": "iZone",
-  "documentation": "https://www.home-assistant.io/integrations/izone",
-  "requirements": ["python-izone==1.2.3"],
   "codeowners": ["@Swamp-Ig"],
   "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/izone",
   "homekit": {
     "models": ["iZone"]
   },
   "iot_class": "local_polling",
-  "loggers": ["pizone"]
+  "loggers": ["pizone"],
+  "requirements": ["python-izone==1.2.9"]
 }

@@ -5,13 +5,7 @@ import mimetypes
 
 from radios import FilterBy, Order, RadioBrowser, Station
 
-from homeassistant.components.media_player.const import (
-    MEDIA_CLASS_CHANNEL,
-    MEDIA_CLASS_DIRECTORY,
-    MEDIA_CLASS_MUSIC,
-    MEDIA_TYPE_MUSIC,
-)
-from homeassistant.components.media_player.errors import BrowseError
+from homeassistant.components.media_player import BrowseError, MediaClass, MediaType
 from homeassistant.components.media_source.error import Unresolvable
 from homeassistant.components.media_source.models import (
     BrowseMediaSource,
@@ -88,12 +82,12 @@ class RadioMediaSource(MediaSource):
         return BrowseMediaSource(
             domain=DOMAIN,
             identifier=None,
-            media_class=MEDIA_CLASS_CHANNEL,
-            media_content_type=MEDIA_TYPE_MUSIC,
+            media_class=MediaClass.CHANNEL,
+            media_content_type=MediaType.MUSIC,
             title=self.entry.title,
             can_play=False,
             can_expand=True,
-            children_media_class=MEDIA_CLASS_DIRECTORY,
+            children_media_class=MediaClass.DIRECTORY,
             children=[
                 *await self._async_build_popular(radios, item),
                 *await self._async_build_by_tag(radios, item),
@@ -128,7 +122,7 @@ class RadioMediaSource(MediaSource):
                 BrowseMediaSource(
                     domain=DOMAIN,
                     identifier=station.uuid,
-                    media_class=MEDIA_CLASS_MUSIC,
+                    media_class=MediaClass.MUSIC,
                     media_content_type=mime_type,
                     title=station.name,
                     can_play=True,
@@ -161,8 +155,8 @@ class RadioMediaSource(MediaSource):
                 BrowseMediaSource(
                     domain=DOMAIN,
                     identifier=f"country/{country.code}",
-                    media_class=MEDIA_CLASS_DIRECTORY,
-                    media_content_type=MEDIA_TYPE_MUSIC,
+                    media_class=MediaClass.DIRECTORY,
+                    media_content_type=MediaType.MUSIC,
                     title=country.name,
                     can_play=False,
                     can_expand=True,
@@ -194,8 +188,8 @@ class RadioMediaSource(MediaSource):
                 BrowseMediaSource(
                     domain=DOMAIN,
                     identifier=f"language/{language.code}",
-                    media_class=MEDIA_CLASS_DIRECTORY,
-                    media_content_type=MEDIA_TYPE_MUSIC,
+                    media_class=MediaClass.DIRECTORY,
+                    media_content_type=MediaType.MUSIC,
                     title=language.name,
                     can_play=False,
                     can_expand=True,
@@ -209,8 +203,8 @@ class RadioMediaSource(MediaSource):
                 BrowseMediaSource(
                     domain=DOMAIN,
                     identifier="language",
-                    media_class=MEDIA_CLASS_DIRECTORY,
-                    media_content_type=MEDIA_TYPE_MUSIC,
+                    media_class=MediaClass.DIRECTORY,
+                    media_content_type=MediaType.MUSIC,
                     title="By Language",
                     can_play=False,
                     can_expand=True,
@@ -237,8 +231,8 @@ class RadioMediaSource(MediaSource):
                 BrowseMediaSource(
                     domain=DOMAIN,
                     identifier="popular",
-                    media_class=MEDIA_CLASS_DIRECTORY,
-                    media_content_type=MEDIA_TYPE_MUSIC,
+                    media_class=MediaClass.DIRECTORY,
+                    media_content_type=MediaType.MUSIC,
                     title="Popular",
                     can_play=False,
                     can_expand=True,
@@ -277,8 +271,8 @@ class RadioMediaSource(MediaSource):
                 BrowseMediaSource(
                     domain=DOMAIN,
                     identifier=f"tag/{tag.name}",
-                    media_class=MEDIA_CLASS_DIRECTORY,
-                    media_content_type=MEDIA_TYPE_MUSIC,
+                    media_class=MediaClass.DIRECTORY,
+                    media_content_type=MediaType.MUSIC,
                     title=tag.name.title(),
                     can_play=False,
                     can_expand=True,
@@ -291,8 +285,8 @@ class RadioMediaSource(MediaSource):
                 BrowseMediaSource(
                     domain=DOMAIN,
                     identifier="tag",
-                    media_class=MEDIA_CLASS_DIRECTORY,
-                    media_content_type=MEDIA_TYPE_MUSIC,
+                    media_class=MediaClass.DIRECTORY,
+                    media_content_type=MediaType.MUSIC,
                     title="By Category",
                     can_play=False,
                     can_expand=True,

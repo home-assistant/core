@@ -1,9 +1,9 @@
 {
   "domain": "flic",
   "name": "Flic",
-  "documentation": "https://www.home-assistant.io/integrations/flic",
-  "requirements": ["pyflic==2.0.3"],
   "codeowners": [],
+  "documentation": "https://www.home-assistant.io/integrations/flic",
   "iot_class": "local_push",
-  "loggers": ["pyflic"]
+  "loggers": ["pyflic"],
+  "requirements": ["pyflic==2.0.3"]
 }

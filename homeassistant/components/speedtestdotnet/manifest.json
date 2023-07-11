@@ -1,9 +1,10 @@
 {
   "domain": "speedtestdotnet",
   "name": "Speedtest.net",
-  "config_flow": true,
-  "documentation": "https://www.home-assistant.io/integrations/speedtestdotnet",
-  "requirements": ["speedtest-cli==2.1.3"],
   "codeowners": ["@rohankapoorcom", "@engrbm87"],
-  "iot_class": "cloud_polling"
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://www.home-assistant.io/integrations/speedtestdotnet",
+  "iot_class": "cloud_polling",
+  "requirements": ["speedtest-cli==2.1.3"]
 }

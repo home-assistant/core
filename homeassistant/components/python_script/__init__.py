@@ -220,8 +220,8 @@ def execute(hass, filename, source, data=None):
 
     try:
         _LOGGER.info("Executing %s: %s", filename, data)
-        # pylint: disable=exec-used
-        exec(compiled.code, restricted_globals)
+        # pylint: disable-next=exec-used
+        exec(compiled.code, restricted_globals)  # noqa: S102
     except ScriptError as err:
         logger.error("Error executing script: %s", err)
     except Exception as err:  # pylint: disable=broad-except

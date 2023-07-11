@@ -1,5 +1,7 @@
 """Config flow for Sense integration."""
+from collections.abc import Mapping
 import logging
+from typing import Any
 
 from sense_energy import (
     ASyncSenseable,
@@ -10,6 +12,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_CODE, CONF_EMAIL, CONF_PASSWORD, CONF_TIMEOUT
+from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import ACTIVE_UPDATE_RATE, DEFAULT_TIMEOUT, DOMAIN, SENSE_CONNECT_EXCEPTIONS
@@ -57,6 +60,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Create the entry from the config data."""
         self._auth_data["access_token"] = self._gateway.sense_access_token
         self._auth_data["user_id"] = self._gateway.sense_user_id
+        self._auth_data["device_id"] = self._gateway.device_id
+        self._auth_data["refresh_token"] = self._gateway.refresh_token
         self._auth_data["monitor_id"] = self._gateway.sense_monitor_id
         existing_entry = await self.async_set_unique_id(self._auth_data[CONF_EMAIL])
         if not existing_entry:
@@ -120,10 +125,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )
 
-    async def async_step_reauth(self, data):
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Handle configuration by re-auth."""
-        self._auth_data = dict(data)
-        return await self.async_step_reauth_validate(data)
+        self._auth_data = dict(entry_data)
+        return await self.async_step_reauth_validate(entry_data)
 
     async def async_step_reauth_validate(self, user_input=None):
         """Handle reauth and validation."""

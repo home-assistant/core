@@ -13,7 +13,7 @@
         "title": "Connect to your ISY"
       },
       "reauth_confirm": {
-        "description": "The credentials for {host} is no longer valid.",
+        "description": "The credentials for {host} are no longer valid.",
         "title": "Reauthenticate your ISY",
         "data": {
           "username": "[%key:common::config_flow::data::username%]",

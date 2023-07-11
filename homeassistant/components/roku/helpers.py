@@ -3,18 +3,19 @@ from __future__ import annotations
 
 from collections.abc import Awaitable, Callable, Coroutine
 from functools import wraps
-import logging
-from typing import Any, TypeVar
+from typing import Any, Concatenate, ParamSpec, TypeVar
 
 from rokuecp import RokuConnectionError, RokuConnectionTimeoutError, RokuError
-from typing_extensions import Concatenate, ParamSpec
+
+from homeassistant.exceptions import HomeAssistantError
 
 from .entity import RokuEntity
 
-_LOGGER = logging.getLogger(__name__)
-
 _RokuEntityT = TypeVar("_RokuEntityT", bound=RokuEntity)
 _P = ParamSpec("_P")
+
+_FuncType = Callable[Concatenate[_RokuEntityT, _P], Awaitable[Any]]
+_ReturnFuncType = Callable[Concatenate[_RokuEntityT, _P], Coroutine[Any, Any, None]]
 
 
 def format_channel_name(channel_number: str, channel_name: str | None = None) -> str:
@@ -27,15 +28,12 @@ def format_channel_name(channel_number: str, channel_name: str | None = None) ->
 
 def roku_exception_handler(
     ignore_timeout: bool = False,
-) -> Callable[
-    [Callable[Concatenate[_RokuEntityT, _P], Awaitable[Any]]],
-    Callable[Concatenate[_RokuEntityT, _P], Coroutine[Any, Any, None]],
-]:
+) -> Callable[[_FuncType[_RokuEntityT, _P]], _ReturnFuncType[_RokuEntityT, _P]]:
     """Decorate Roku calls to handle Roku exceptions."""
 
     def decorator(
-        func: Callable[Concatenate[_RokuEntityT, _P], Awaitable[Any]],
-    ) -> Callable[Concatenate[_RokuEntityT, _P], Coroutine[Any, Any, None]]:
+        func: _FuncType[_RokuEntityT, _P]
+    ) -> _ReturnFuncType[_RokuEntityT, _P]:
         @wraps(func)
         async def wrapper(
             self: _RokuEntityT, *args: _P.args, **kwargs: _P.kwargs
@@ -43,14 +41,14 @@ def roku_exception_handler(
             try:
                 await func(self, *args, **kwargs)
             except RokuConnectionTimeoutError as error:
-                if not ignore_timeout and self.available:
-                    _LOGGER.error("Error communicating with API: %s", error)
+                if not ignore_timeout:
+                    raise HomeAssistantError(
+                        "Timeout communicating with Roku API"
+                    ) from error
             except RokuConnectionError as error:
-                if self.available:
-                    _LOGGER.error("Error communicating with API: %s", error)
+                raise HomeAssistantError("Error communicating with Roku API") from error
             except RokuError as error:
-                if self.available:
-                    _LOGGER.error("Invalid response from API: %s", error)
+                raise HomeAssistantError("Invalid response from Roku API") from error
 
         return wrapper
 

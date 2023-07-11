@@ -1,24 +1,37 @@
 """Test IQVIA diagnostics."""
+from homeassistant.components.diagnostics import REDACTED
+from homeassistant.core import HomeAssistant
+
 from tests.components.diagnostics import get_diagnostics_for_config_entry
+from tests.typing import ClientSessionGenerator
 
 
-async def test_entry_diagnostics(hass, config_entry, hass_client, setup_iqvia):
+async def test_entry_diagnostics(
+    hass: HomeAssistant, config_entry, hass_client: ClientSessionGenerator, setup_iqvia
+) -> None:
     """Test config entry diagnostics."""
     assert await get_diagnostics_for_config_entry(hass, hass_client, config_entry) == {
         "entry": {
-            "title": "Mock Title",
-            "data": {
-                "zip_code": "12345",
-            },
+            "entry_id": config_entry.entry_id,
+            "version": 1,
+            "domain": "iqvia",
+            "title": REDACTED,
+            "data": {"zip_code": REDACTED},
+            "options": {},
+            "pref_disable_new_entities": False,
+            "pref_disable_polling": False,
+            "source": "user",
+            "unique_id": REDACTED,
+            "disabled_by": None,
         },
         "data": {
             "allergy_average_forecasted": {
                 "Type": "pollen",
                 "ForecastDate": "2018-06-12T00:00:00-04:00",
                 "Location": {
-                    "ZIP": "12345",
-                    "City": "SCHENECTADY",
-                    "State": "NY",
+                    "ZIP": REDACTED,
+                    "City": REDACTED,
+                    "State": REDACTED,
                     "periods": [
                         {"Period": "2018-06-12T13:47:12.897", "Index": 6.6},
                         {"Period": "2018-06-13T13:47:12.897", "Index": 6.3},
@@ -26,16 +39,16 @@ async def test_entry_diagnostics(hass, config_entry, hass_client, setup_iqvia):
                         {"Period": "2018-06-15T13:47:12.897", "Index": 7.6},
                         {"Period": "2018-06-16T13:47:12.897", "Index": 7.3},
                     ],
-                    "DisplayLocation": "Schenectady, NY",
+                    "DisplayLocation": REDACTED,
                 },
             },
             "allergy_index": {
                 "Type": "pollen",
                 "ForecastDate": "2018-06-12T00:00:00-04:00",
                 "Location": {
-                    "ZIP": "12345",
-                    "City": "SCHENECTADY",
-                    "State": "NY",
+                    "ZIP": REDACTED,
+                    "City": REDACTED,
+                    "State": REDACTED,
                     "periods": [
                         {
                             "Triggers": [
@@ -113,12 +126,12 @@ async def test_entry_diagnostics(hass, config_entry, hass_client, setup_iqvia):
                             "Index": 6.3,
                         },
                     ],
-                    "DisplayLocation": "Schenectady, NY",
+                    "DisplayLocation": REDACTED,
                 },
             },
             "allergy_outlook": {
-                "Market": "SCHENECTADY, CO",
-                "ZIP": "12345",
+                "Market": REDACTED,
+                "ZIP": REDACTED,
                 "TrendID": 4,
                 "Trend": "subsiding",
                 "Outlook": "The amount of pollen in the air for Wednesday...",
@@ -128,9 +141,9 @@ async def test_entry_diagnostics(hass, config_entry, hass_client, setup_iqvia):
                 "Type": "asthma",
                 "ForecastDate": "2018-10-28T00:00:00-04:00",
                 "Location": {
-                    "ZIP": "12345",
-                    "City": "SCHENECTADY",
-                    "State": "NY",
+                    "ZIP": REDACTED,
+                    "City": REDACTED,
+                    "State": REDACTED,
                     "periods": [
                         {
                             "Period": "2018-10-28T05:45:01.45",
@@ -154,16 +167,16 @@ async def test_entry_diagnostics(hass, config_entry, hass_client, setup_iqvia):
                             "Idx": "5.5",
                         },
                     ],
-                    "DisplayLocation": "Schenectady, NY",
+                    "DisplayLocation": REDACTED,
                 },
             },
             "asthma_index": {
                 "Type": "asthma",
                 "ForecastDate": "2018-10-29T00:00:00-04:00",
                 "Location": {
-                    "ZIP": "12345",
-                    "City": "SCHENECTADY",
-                    "State": "NY",
+                    "ZIP": REDACTED,
+                    "City": REDACTED,
+                    "State": REDACTED,
                     "periods": [
                         {
                             "Triggers": [
@@ -171,7 +184,9 @@ async def test_entry_diagnostics(hass, config_entry, hass_client, setup_iqvia):
                                     "LGID": 1,
                                     "Name": "OZONE",
                                     "PPM": 42,
-                                    "Description": "Ozone (O3) is a odorless, colorless ....",
+                                    "Description": (
+                                        "Ozone (O3) is a odorless, colorless ...."
+                                    ),
                                 },
                                 {
                                     "LGID": 1,
@@ -183,7 +198,9 @@ async def test_entry_diagnostics(hass, config_entry, hass_client, setup_iqvia):
                                     "LGID": 1,
                                     "Name": "PM10",
                                     "PPM": 19,
-                                    "Description": "Coarse dust particles (PM10) are 2.5 ...",
+                                    "Description": (
+                                        "Coarse dust particles (PM10) are 2.5 ..."
+                                    ),
                                 },
                             ],
                             "Period": "0001-01-01T00:00:00",
@@ -203,13 +220,17 @@ async def test_entry_diagnostics(hass, config_entry, hass_client, setup_iqvia):
                                     "LGID": 2,
                                     "Name": "PM10",
                                     "PPM": 65,
-                                    "Description": "Coarse dust particles (PM10) are 2.5 ...",
+                                    "Description": (
+                                        "Coarse dust particles (PM10) are 2.5 ..."
+                                    ),
                                 },
                                 {
                                     "LGID": 1,
                                     "Name": "OZONE",
                                     "PPM": 42,
-                                    "Description": "Ozone (O3) is a odorless, colorless ...",
+                                    "Description": (
+                                        "Ozone (O3) is a odorless, colorless ..."
+                                    ),
                                 },
                             ],
                             "Period": "0001-01-01T00:00:00",
@@ -225,32 +246,32 @@ async def test_entry_diagnostics(hass, config_entry, hass_client, setup_iqvia):
                             "Idx": "4.6",
                         },
                     ],
-                    "DisplayLocation": "Schenectady, NY",
+                    "DisplayLocation": REDACTED,
                 },
             },
             "disease_average_forecasted": {
                 "Type": "cold",
                 "ForecastDate": "2018-06-12T00:00:00-04:00",
                 "Location": {
-                    "ZIP": "12345",
-                    "City": "SCHENECTADY",
-                    "State": "NY",
+                    "ZIP": REDACTED,
+                    "City": REDACTED,
+                    "State": REDACTED,
                     "periods": [
                         {"Period": "2018-06-12T05:13:51.817", "Index": 2.4},
                         {"Period": "2018-06-13T05:13:51.817", "Index": 2.5},
                         {"Period": "2018-06-14T05:13:51.817", "Index": 2.5},
                         {"Period": "2018-06-15T05:13:51.817", "Index": 2.5},
                     ],
-                    "DisplayLocation": "Schenectady, NY",
+                    "DisplayLocation": REDACTED,
                 },
             },
             "disease_index": {
                 "ForecastDate": "2019-04-07T00:00:00-04:00",
                 "Location": {
-                    "City": "SCHENECTADY",
-                    "DisplayLocation": "Schenectady, NY",
-                    "State": "NY",
-                    "ZIP": "12345",
+                    "City": REDACTED,
+                    "DisplayLocation": REDACTED,
+                    "State": REDACTED,
+                    "ZIP": REDACTED,
                     "periods": [
                         {
                             "Idx": "6.8",

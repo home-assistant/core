@@ -1,9 +1,13 @@
 """Component to create an interface to a Pilight daemon."""
+from __future__ import annotations
+
+from collections.abc import Callable
 from datetime import timedelta
 import functools
 import logging
 import socket
 import threading
+from typing import Any, ParamSpec
 
 from pilight import pilight
 import voluptuous as vol
@@ -21,6 +25,8 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import track_point_in_utc_time
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
+
+_P = ParamSpec("_P")
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -135,26 +141,26 @@ class CallRateDelayThrottle:
     it should not block the mainloop.
     """
 
-    def __init__(self, hass, delay_seconds: float) -> None:
+    def __init__(self, hass: HomeAssistant, delay_seconds: float) -> None:
         """Initialize the delay handler."""
         self._delay = timedelta(seconds=max(0.0, delay_seconds))
-        self._queue: list = []
+        self._queue: list[Callable[[Any], None]] = []
         self._active = False
         self._lock = threading.Lock()
         self._next_ts = dt_util.utcnow()
         self._schedule = functools.partial(track_point_in_utc_time, hass)
 
-    def limited(self, method):
+    def limited(self, method: Callable[_P, Any]) -> Callable[_P, None]:
         """Decorate to delay calls on a certain method."""
 
         @functools.wraps(method)
-        def decorated(*args, **kwargs):
+        def decorated(*args: _P.args, **kwargs: _P.kwargs) -> None:
             """Delay a call."""
             if self._delay.total_seconds() == 0.0:
                 method(*args, **kwargs)
                 return
 
-            def action(event):
+            def action(event: Any) -> None:
                 """Wrap an action that gets scheduled."""
                 method(*args, **kwargs)
 

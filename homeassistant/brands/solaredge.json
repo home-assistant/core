@@ -1,0 +1,5 @@
+{
+  "domain": "solaredge",
+  "name": "SolarEdge",
+  "integrations": ["solaredge", "solaredge_local"]
+}

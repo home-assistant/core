@@ -3,8 +3,8 @@ from __future__ import annotations
 
 from datetime import datetime
 from typing import Any
-from unittest.mock import patch
 
+from freezegun import freeze_time
 import pytest
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
@@ -20,15 +20,16 @@ from homeassistant.components.tomorrowio.const import (
     DOMAIN,
 )
 from homeassistant.components.tomorrowio.sensor import TomorrowioSensorEntityDescription
-from homeassistant.config_entries import SOURCE_USER
+from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY, SOURCE_USER
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers.entity_registry import async_get
 from homeassistant.util import dt as dt_util
+from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from .const import API_V4_ENTRY_DATA
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 CC_SENSOR_ENTITY_ID = "sensor.tomorrow_io_{}"
 
@@ -109,10 +110,9 @@ async def _setup(
     hass: HomeAssistant, sensors: list[str], config: dict[str, Any]
 ) -> State:
     """Set up entry and return entity state."""
-    with patch(
-        "homeassistant.util.dt.utcnow",
-        return_value=datetime(2021, 3, 6, 23, 59, 59, tzinfo=dt_util.UTC),
-    ):
+    with freeze_time(
+        datetime(2021, 3, 6, 23, 59, 59, tzinfo=dt_util.UTC)
+    ) as frozen_time:
         data = _get_config_schema(hass, SOURCE_USER)(config)
         data[CONF_NAME] = DEFAULT_NAME
         config_entry = MockConfigEntry(
@@ -127,6 +127,10 @@ async def _setup(
         await hass.async_block_till_done()
         for entity_name in sensors:
             _enable_entity(hass, CC_SENSOR_ENTITY_ID.format(entity_name))
+        await hass.async_block_till_done()
+        # the enabled entity state will be fired in RELOAD_AFTER_UPDATE_DELAY
+        frozen_time.tick(delta=RELOAD_AFTER_UPDATE_DELAY)
+        async_fire_time_changed(hass)
         await hass.async_block_till_done()
         assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == len(sensors)
 
@@ -166,6 +170,37 @@ async def test_v4_sensor(hass: HomeAssistant) -> None:
     check_sensor_state(hass, CLOUD_COVER, "100")
     check_sensor_state(hass, CLOUD_CEILING, "0.74")
     check_sensor_state(hass, WIND_GUST, "12.64")
+    check_sensor_state(hass, PRECIPITATION_TYPE, "rain")
+
+
+async def test_v4_sensor_imperial(hass: HomeAssistant) -> None:
+    """Test v4 sensor data."""
+    hass.config.units = US_CUSTOMARY_SYSTEM
+    await _setup(hass, V4_FIELDS, API_V4_ENTRY_DATA)
+    check_sensor_state(hass, O3, "91.35")
+    check_sensor_state(hass, CO, "0.0")
+    check_sensor_state(hass, NO2, "20.08")
+    check_sensor_state(hass, SO2, "4.32")
+    check_sensor_state(hass, PM25, "0.15")
+    check_sensor_state(hass, PM10, "0.57")
+    check_sensor_state(hass, MEP_AQI, "23")
+    check_sensor_state(hass, MEP_HEALTH_CONCERN, "good")
+    check_sensor_state(hass, MEP_PRIMARY_POLLUTANT, "pm10")
+    check_sensor_state(hass, EPA_AQI, "24")
+    check_sensor_state(hass, EPA_HEALTH_CONCERN, "good")
+    check_sensor_state(hass, EPA_PRIMARY_POLLUTANT, "pm25")
+    check_sensor_state(hass, FIRE_INDEX, "10")
+    check_sensor_state(hass, GRASS_POLLEN, "none")
+    check_sensor_state(hass, WEED_POLLEN, "none")
+    check_sensor_state(hass, TREE_POLLEN, "none")
+    check_sensor_state(hass, FEELS_LIKE, "214.3")
+    check_sensor_state(hass, DEW_POINT, "163.08")
+    check_sensor_state(hass, PRESSURE_SURFACE_LEVEL, "0.427")
+    check_sensor_state(hass, GHI, "0.0")
+    check_sensor_state(hass, CLOUD_BASE, "0.46")
+    check_sensor_state(hass, CLOUD_COVER, "100")
+    check_sensor_state(hass, CLOUD_CEILING, "0.46")
+    check_sensor_state(hass, WIND_GUST, "28.27")
     check_sensor_state(hass, PRECIPITATION_TYPE, "rain")
 
 

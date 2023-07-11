@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import timedelta
-from enum import IntEnum
+from enum import IntFlag
 from functools import partial
 import logging
 from typing import Any, final
@@ -40,8 +40,6 @@ from homeassistant.helpers.icon import icon_for_battery_level
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 
-# mypy: allow-untyped-defs, no-check-untyped-defs
-
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "vacuum"
@@ -76,22 +74,22 @@ STATES = [STATE_CLEANING, STATE_DOCKED, STATE_RETURNING, STATE_ERROR]
 DEFAULT_NAME = "Vacuum cleaner robot"
 
 
-class VacuumEntityFeature(IntEnum):
+class VacuumEntityFeature(IntFlag):
     """Supported features of the vacuum entity."""
 
-    TURN_ON = 1
-    TURN_OFF = 2
+    TURN_ON = 1  # Deprecated, not supported by StateVacuumEntity
+    TURN_OFF = 2  # Deprecated, not supported by StateVacuumEntity
     PAUSE = 4
     STOP = 8
     RETURN_HOME = 16
     FAN_SPEED = 32
     BATTERY = 64
-    STATUS = 128
+    STATUS = 128  # Deprecated, not supported by StateVacuumEntity
     SEND_COMMAND = 256
     LOCATE = 512
     CLEAN_SPOT = 1024
     MAP = 2048
-    STATE = 4096
+    STATE = 4096  # Must be set by vacuum platforms derived from StateVacuumEntity
     START = 8192
 
 
@@ -112,39 +110,90 @@ SUPPORT_MAP = 2048
 SUPPORT_STATE = 4096
 SUPPORT_START = 8192
 
+# mypy: disallow-any-generics
+
 
 @bind_hass
-def is_on(hass, entity_id):
+def is_on(hass: HomeAssistant, entity_id: str) -> bool:
     """Return if the vacuum is on based on the statemachine."""
     return hass.states.is_state(entity_id, STATE_ON)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the vacuum component."""
-    component = hass.data[DOMAIN] = EntityComponent(
+    component = hass.data[DOMAIN] = EntityComponent[_BaseVacuum](
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL
     )
 
     await component.async_setup(config)
 
-    component.async_register_entity_service(SERVICE_TURN_ON, {}, "async_turn_on")
-    component.async_register_entity_service(SERVICE_TURN_OFF, {}, "async_turn_off")
-    component.async_register_entity_service(SERVICE_TOGGLE, {}, "async_toggle")
     component.async_register_entity_service(
-        SERVICE_START_PAUSE, {}, "async_start_pause"
+        SERVICE_TURN_ON,
+        {},
+        "async_turn_on",
+        [VacuumEntityFeature.TURN_ON],
     )
-    component.async_register_entity_service(SERVICE_START, {}, "async_start")
-    component.async_register_entity_service(SERVICE_PAUSE, {}, "async_pause")
     component.async_register_entity_service(
-        SERVICE_RETURN_TO_BASE, {}, "async_return_to_base"
+        SERVICE_TURN_OFF,
+        {},
+        "async_turn_off",
+        [VacuumEntityFeature.TURN_OFF],
     )
-    component.async_register_entity_service(SERVICE_CLEAN_SPOT, {}, "async_clean_spot")
-    component.async_register_entity_service(SERVICE_LOCATE, {}, "async_locate")
-    component.async_register_entity_service(SERVICE_STOP, {}, "async_stop")
+    component.async_register_entity_service(
+        SERVICE_TOGGLE,
+        {},
+        "async_toggle",
+        [VacuumEntityFeature.TURN_OFF | VacuumEntityFeature.TURN_ON],
+    )
+    # start_pause is a legacy service, only supported by VacuumEntity, and only needs
+    # VacuumEntityFeature.PAUSE
+    component.async_register_entity_service(
+        SERVICE_START_PAUSE,
+        {},
+        "async_start_pause",
+        [VacuumEntityFeature.PAUSE],
+    )
+    component.async_register_entity_service(
+        SERVICE_START,
+        {},
+        "async_start",
+        [VacuumEntityFeature.START],
+    )
+    component.async_register_entity_service(
+        SERVICE_PAUSE,
+        {},
+        "async_pause",
+        [VacuumEntityFeature.PAUSE],
+    )
+    component.async_register_entity_service(
+        SERVICE_RETURN_TO_BASE,
+        {},
+        "async_return_to_base",
+        [VacuumEntityFeature.RETURN_HOME],
+    )
+    component.async_register_entity_service(
+        SERVICE_CLEAN_SPOT,
+        {},
+        "async_clean_spot",
+        [VacuumEntityFeature.CLEAN_SPOT],
+    )
+    component.async_register_entity_service(
+        SERVICE_LOCATE,
+        {},
+        "async_locate",
+        [VacuumEntityFeature.LOCATE],
+    )
+    component.async_register_entity_service(
+        SERVICE_STOP,
+        {},
+        "async_stop",
+        [VacuumEntityFeature.STOP],
+    )
     component.async_register_entity_service(
         SERVICE_SET_FAN_SPEED,
         {vol.Required(ATTR_FAN_SPEED): cv.string},
         "async_set_fan_speed",
+        [VacuumEntityFeature.FAN_SPEED],
     )
     component.async_register_entity_service(
         SERVICE_SEND_COMMAND,
@@ -153,6 +202,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             vol.Optional(ATTR_PARAMS): vol.Any(dict, cv.ensure_list),
         },
         "async_send_command",
+        [VacuumEntityFeature.SEND_COMMAND],
     )
 
     return True
@@ -160,13 +210,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
-    component: EntityComponent = hass.data[DOMAIN]
+    component: EntityComponent[_BaseVacuum] = hass.data[DOMAIN]
     return await component.async_setup_entry(entry)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    component: EntityComponent = hass.data[DOMAIN]
+    component: EntityComponent[_BaseVacuum] = hass.data[DOMAIN]
     return await component.async_unload_entry(entry)
 
 
@@ -180,10 +230,10 @@ class _BaseVacuum(Entity):
     _attr_battery_level: int | None = None
     _attr_fan_speed: str | None = None
     _attr_fan_speed_list: list[str]
-    _attr_supported_features: int
+    _attr_supported_features: VacuumEntityFeature = VacuumEntityFeature(0)
 
     @property
-    def supported_features(self) -> int:
+    def supported_features(self) -> VacuumEntityFeature:
         """Flag vacuum cleaner features that are supported."""
         return self._attr_supported_features
 
@@ -286,13 +336,19 @@ class _BaseVacuum(Entity):
         )
 
     def send_command(
-        self, command: str, params: dict | list | None = None, **kwargs: Any
+        self,
+        command: str,
+        params: dict[str, Any] | list[Any] | None = None,
+        **kwargs: Any,
     ) -> None:
         """Send a command to a vacuum cleaner."""
         raise NotImplementedError()
 
     async def async_send_command(
-        self, command: str, params: dict | list | None = None, **kwargs: Any
+        self,
+        command: str,
+        params: dict[str, Any] | list[Any] | None = None,
+        **kwargs: Any,
     ) -> None:
         """Send a command to a vacuum cleaner.
 
@@ -312,11 +368,12 @@ class VacuumEntity(_BaseVacuum, ToggleEntity):
     """Representation of a vacuum cleaner robot."""
 
     entity_description: VacuumEntityDescription
+    _attr_status: str | None = None
 
     @property
     def status(self) -> str | None:
         """Return the status of the vacuum cleaner."""
-        return None
+        return self._attr_status
 
     @property
     def battery_icon(self) -> str:
@@ -372,12 +429,6 @@ class VacuumEntity(_BaseVacuum, ToggleEntity):
         """
         await self.hass.async_add_executor_job(partial(self.start_pause, **kwargs))
 
-    async def async_pause(self) -> None:
-        """Not supported."""
-
-    async def async_start(self) -> None:
-        """Not supported."""
-
 
 @dataclass
 class StateVacuumEntityDescription(EntityDescription):
@@ -388,11 +439,12 @@ class StateVacuumEntity(_BaseVacuum):
     """Representation of a vacuum cleaner robot that supports states."""
 
     entity_description: StateVacuumEntityDescription
+    _attr_state: str | None = None
 
     @property
     def state(self) -> str | None:
         """Return the state of the vacuum cleaner."""
-        return None
+        return self._attr_state
 
     @property
     def battery_icon(self) -> str:
@@ -424,12 +476,3 @@ class StateVacuumEntity(_BaseVacuum):
         This method must be run in the event loop.
         """
         await self.hass.async_add_executor_job(self.pause)
-
-    async def async_turn_on(self, **kwargs: Any) -> None:
-        """Not supported."""
-
-    async def async_turn_off(self, **kwargs: Any) -> None:
-        """Not supported."""
-
-    async def async_toggle(self, **kwargs: Any) -> None:
-        """Not supported."""

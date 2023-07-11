@@ -3,16 +3,15 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta
 import logging
-from typing import Optional
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
     CONF_PORT,
-    EVENT_HOMEASSISTANT_STARTED,
     Platform,
 )
-from homeassistant.core import CoreState, HomeAssistant
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DEFAULT_PORT, DOMAIN
@@ -39,19 +38,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if entry.unique_id is None:
         hass.config_entries.async_update_entry(entry, unique_id=f"{host}:{port}")
 
-    async def async_finish_startup(_):
+    async def _async_finish_startup(_):
         await coordinator.async_refresh()
-        hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+        await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    if hass.state == CoreState.running:
-        await async_finish_startup(None)
-    else:
-        entry.async_on_unload(
-            hass.bus.async_listen_once(
-                EVENT_HOMEASSISTANT_STARTED, async_finish_startup
-            )
-        )
-
+    async_at_started(hass, _async_finish_startup)
     return True
 
 
@@ -60,7 +51,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
-class CertExpiryDataUpdateCoordinator(DataUpdateCoordinator[Optional[datetime]]):
+class CertExpiryDataUpdateCoordinator(DataUpdateCoordinator[datetime | None]):
     """Class to manage fetching Cert Expiry data from single endpoint."""
 
     def __init__(self, hass, host, port):

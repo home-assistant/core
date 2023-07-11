@@ -37,7 +37,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     atag = AtagOne(
         session=async_get_clientsession(hass), **entry.data, device=entry.unique_id
     )
-    coordinator = DataUpdateCoordinator(
+    coordinator = DataUpdateCoordinator[AtagOne](
         hass,
         _LOGGER,
         name=DOMAIN.title(),
@@ -51,7 +51,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if entry.unique_id is None:
         hass.config_entries.async_update_entry(entry, unique_id=atag.id)
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
@@ -65,10 +65,12 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-class AtagEntity(CoordinatorEntity):
+class AtagEntity(CoordinatorEntity[DataUpdateCoordinator[AtagOne]]):
     """Defines a base Atag entity."""
 
-    def __init__(self, coordinator: DataUpdateCoordinator, atag_id: str) -> None:
+    def __init__(
+        self, coordinator: DataUpdateCoordinator[AtagOne], atag_id: str
+    ) -> None:
         """Initialize the Atag entity."""
         super().__init__(coordinator)
 

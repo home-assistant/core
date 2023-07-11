@@ -10,10 +10,20 @@
       "request": "launch",
       "module": "homeassistant",
       "justMyCode": false,
-      "args": ["--debug", "-c", "config"]
+      "args": ["--debug", "-c", "config"],
+      "preLaunchTask": "Compile English translations"
     },
     {
-      // Debug by attaching to local Home Asistant server using Remote Python Debugger.
+      "name": "Home Assistant (skip pip)",
+      "type": "python",
+      "request": "launch",
+      "module": "homeassistant",
+      "justMyCode": false,
+      "args": ["--debug", "-c", "config", "--skip-pip"],
+      "preLaunchTask": "Compile English translations"
+    },
+    {
+      // Debug by attaching to local Home Assistant server using Remote Python Debugger.
       // See https://www.home-assistant.io/integrations/debugpy/
       "name": "Home Assistant: Attach Local",
       "type": "python",
@@ -28,7 +38,7 @@
       ]
     },
     {
-      // Debug by attaching to remote Home Asistant server using Remote Python Debugger.
+      // Debug by attaching to remote Home Assistant server using Remote Python Debugger.
       // See https://www.home-assistant.io/integrations/debugpy/
       "name": "Home Assistant: Attach Remote",
       "type": "python",

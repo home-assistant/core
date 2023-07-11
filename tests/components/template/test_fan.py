@@ -11,10 +11,10 @@ from homeassistant.components.fan import (
     DIRECTION_FORWARD,
     DIRECTION_REVERSE,
     DOMAIN,
-    SUPPORT_PRESET_MODE,
-    SUPPORT_SET_SPEED,
+    FanEntityFeature,
 )
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE
+from homeassistant.core import HomeAssistant
 
 from tests.common import assert_setup_component
 from tests.components.fan import common
@@ -34,7 +34,7 @@ _OSC_INPUT = "input_select.osc"
 _DIRECTION_INPUT_SELECT = "input_select.direction"
 
 
-@pytest.mark.parametrize("count,domain", [(1, DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(1, DOMAIN)])
 @pytest.mark.parametrize(
     "config",
     [
@@ -52,12 +52,12 @@ _DIRECTION_INPUT_SELECT = "input_select.direction"
         },
     ],
 )
-async def test_missing_optional_config(hass, start_ha):
+async def test_missing_optional_config(hass: HomeAssistant, start_ha) -> None:
     """Test: missing optional template is ok."""
     _verify(hass, STATE_ON, None, None, None, None)
 
 
-@pytest.mark.parametrize("count,domain", [(0, DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(0, DOMAIN)])
 @pytest.mark.parametrize(
     "config",
     [
@@ -119,12 +119,12 @@ async def test_missing_optional_config(hass, start_ha):
         },
     ],
 )
-async def test_wrong_template_config(hass, start_ha):
+async def test_wrong_template_config(hass: HomeAssistant, start_ha) -> None:
     """Test: missing 'value_template' will fail."""
     assert hass.states.async_all("fan") == []
 
 
-@pytest.mark.parametrize("count,domain", [(1, DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(1, DOMAIN)])
 @pytest.mark.parametrize(
     "config",
     [
@@ -140,8 +140,12 @@ async def test_wrong_template_config(hass, start_ha):
             {{ 'off' }}
         {% endif %}
     """,
-                        "percentage_template": "{{ states('input_number.percentage') }}",
-                        "preset_mode_template": "{{ states('input_select.preset_mode') }}",
+                        "percentage_template": (
+                            "{{ states('input_number.percentage') }}"
+                        ),
+                        "preset_mode_template": (
+                            "{{ states('input_select.preset_mode') }}"
+                        ),
                         "oscillating_template": "{{ states('input_select.osc') }}",
                         "direction_template": "{{ states('input_select.direction') }}",
                         "speed_count": "3",
@@ -157,7 +161,7 @@ async def test_wrong_template_config(hass, start_ha):
         },
     ],
 )
-async def test_templates_with_entities(hass, start_ha):
+async def test_templates_with_entities(hass: HomeAssistant, start_ha) -> None:
     """Test tempalates with values from other entities."""
     _verify(hass, STATE_OFF, 0, None, None, None)
 
@@ -181,9 +185,9 @@ async def test_templates_with_entities(hass, start_ha):
     _verify(hass, STATE_OFF, 0, True, DIRECTION_FORWARD, None)
 
 
-@pytest.mark.parametrize("count,domain", [(1, DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(1, DOMAIN)])
 @pytest.mark.parametrize(
-    "config,entity,tests",
+    ("config", "entity", "tests"),
     [
         (
             {
@@ -217,7 +221,9 @@ async def test_templates_with_entities(hass, start_ha):
                         "test_fan": {
                             "value_template": "{{ 'on' }}",
                             "preset_modes": ["auto", "smart"],
-                            "preset_mode_template": "{{ states('sensor.preset_mode') }}",
+                            "preset_mode_template": (
+                                "{{ states('sensor.preset_mode') }}"
+                            ),
                             "turn_on": {"service": "script.fan_on"},
                             "turn_off": {"service": "script.fan_off"},
                         },
@@ -235,7 +241,9 @@ async def test_templates_with_entities(hass, start_ha):
         ),
     ],
 )
-async def test_templates_with_entities2(hass, entity, tests, start_ha):
+async def test_templates_with_entities2(
+    hass: HomeAssistant, entity, tests, start_ha
+) -> None:
     """Test templates with values from other entities."""
     for set_percentage, test_percentage, test_type in tests:
         hass.states.async_set(entity, set_percentage)
@@ -243,7 +251,7 @@ async def test_templates_with_entities2(hass, entity, tests, start_ha):
         _verify(hass, STATE_ON, test_percentage, None, None, test_type)
 
 
-@pytest.mark.parametrize("count,domain", [(1, DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(1, DOMAIN)])
 @pytest.mark.parametrize(
     "config",
     [
@@ -252,7 +260,9 @@ async def test_templates_with_entities2(hass, entity, tests, start_ha):
                 "platform": "template",
                 "fans": {
                     "test_fan": {
-                        "availability_template": "{{ is_state('availability_boolean.state', 'on') }}",
+                        "availability_template": (
+                            "{{ is_state('availability_boolean.state', 'on') }}"
+                        ),
                         "value_template": "{{ 'on' }}",
                         "oscillating_template": "{{ 1 == 1 }}",
                         "direction_template": "{{ 'forward' }}",
@@ -264,7 +274,9 @@ async def test_templates_with_entities2(hass, entity, tests, start_ha):
         },
     ],
 )
-async def test_availability_template_with_entities(hass, start_ha):
+async def test_availability_template_with_entities(
+    hass: HomeAssistant, start_ha
+) -> None:
     """Test availability tempalates with values from other entities."""
     for state, test_assert in [(STATE_ON, True), (STATE_OFF, False)]:
         hass.states.async_set(_STATE_AVAILABILITY_BOOLEAN, state)
@@ -272,9 +284,9 @@ async def test_availability_template_with_entities(hass, start_ha):
         assert (hass.states.get(_TEST_FAN).state != STATE_UNAVAILABLE) == test_assert
 
 
-@pytest.mark.parametrize("count,domain", [(1, DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(1, DOMAIN)])
 @pytest.mark.parametrize(
-    "config, states",
+    ("config", "states"),
     [
         (
             {
@@ -347,12 +359,14 @@ async def test_availability_template_with_entities(hass, start_ha):
         ),
     ],
 )
-async def test_template_with_unavailable_entities(hass, states, start_ha):
+async def test_template_with_unavailable_entities(
+    hass: HomeAssistant, states, start_ha
+) -> None:
     """Test unavailability with value_template."""
     _verify(hass, states[0], states[1], states[2], states[3], None)
 
 
-@pytest.mark.parametrize("count,domain", [(1, DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(1, DOMAIN)])
 @pytest.mark.parametrize(
     "config",
     [
@@ -363,7 +377,9 @@ async def test_template_with_unavailable_entities(hass, states, start_ha):
                     "test_fan": {
                         "value_template": "{{ 'on' }}",
                         "availability_template": "{{ x - 12 }}",
-                        "preset_mode_template": "{{ states('input_select.preset_mode') }}",
+                        "preset_mode_template": (
+                            "{{ states('input_select.preset_mode') }}"
+                        ),
                         "oscillating_template": "{{ states('input_select.osc') }}",
                         "direction_template": "{{ states('input_select.direction') }}",
                         "turn_on": {"service": "script.fan_on"},
@@ -375,15 +391,15 @@ async def test_template_with_unavailable_entities(hass, states, start_ha):
     ],
 )
 async def test_invalid_availability_template_keeps_component_available(
-    hass, start_ha, caplog_setup_text
-):
+    hass: HomeAssistant, start_ha, caplog_setup_text
+) -> None:
     """Test that an invalid availability keeps the device available."""
     assert hass.states.get("fan.test_fan").state != STATE_UNAVAILABLE
     assert "TemplateError" in caplog_setup_text
     assert "x" in caplog_setup_text
 
 
-async def test_on_off(hass, calls):
+async def test_on_off(hass: HomeAssistant, calls) -> None:
     """Test turn on and turn off."""
     await _register_components(hass)
     expected_calls = 0
@@ -401,7 +417,9 @@ async def test_on_off(hass, calls):
         assert calls[-1].data["caller"] == _TEST_FAN
 
 
-async def test_set_invalid_direction_from_initial_stage(hass, calls):
+async def test_set_invalid_direction_from_initial_stage(
+    hass: HomeAssistant, calls
+) -> None:
     """Test set invalid direction when fan is in initial state."""
     await _register_components(hass)
 
@@ -412,7 +430,7 @@ async def test_set_invalid_direction_from_initial_stage(hass, calls):
     _verify(hass, STATE_ON, 0, None, None, None)
 
 
-async def test_set_osc(hass, calls):
+async def test_set_osc(hass: HomeAssistant, calls) -> None:
     """Test set oscillating."""
     await _register_components(hass)
     expected_calls = 0
@@ -430,7 +448,7 @@ async def test_set_osc(hass, calls):
         assert calls[-1].data["option"] == state
 
 
-async def test_set_direction(hass, calls):
+async def test_set_direction(hass: HomeAssistant, calls) -> None:
     """Test set valid direction."""
     await _register_components(hass)
     expected_calls = 0
@@ -448,7 +466,7 @@ async def test_set_direction(hass, calls):
         assert calls[-1].data["option"] == cmd
 
 
-async def test_set_invalid_direction(hass, calls):
+async def test_set_invalid_direction(hass: HomeAssistant, calls) -> None:
     """Test set invalid direction when fan has valid direction."""
     await _register_components(hass)
 
@@ -459,7 +477,7 @@ async def test_set_invalid_direction(hass, calls):
         _verify(hass, STATE_ON, 0, None, DIRECTION_FORWARD, None)
 
 
-async def test_preset_modes(hass, calls):
+async def test_preset_modes(hass: HomeAssistant, calls) -> None:
     """Test preset_modes."""
     await _register_components(
         hass, ["off", "low", "medium", "high", "auto", "smart"], ["auto", "smart"]
@@ -482,7 +500,7 @@ async def test_preset_modes(hass, calls):
     assert hass.states.get(_PRESET_MODE_INPUT_SELECT).state == "auto"
 
 
-async def test_set_percentage(hass, calls):
+async def test_set_percentage(hass: HomeAssistant, calls) -> None:
     """Test set valid speed percentage."""
     await _register_components(hass)
     expected_calls = 0
@@ -492,7 +510,7 @@ async def test_set_percentage(hass, calls):
     for state, value in [
         (STATE_ON, 100),
         (STATE_ON, 66),
-        (STATE_OFF, 0),
+        (STATE_ON, 0),
     ]:
         await common.async_set_percentage(hass, _TEST_FAN, value)
         assert int(float(hass.states.get(_PERCENTAGE_INPUT_NUMBER).state)) == value
@@ -508,7 +526,7 @@ async def test_set_percentage(hass, calls):
     _verify(hass, STATE_ON, 50, None, None, None)
 
 
-async def test_increase_decrease_speed(hass, calls):
+async def test_increase_decrease_speed(hass: HomeAssistant, calls) -> None:
     """Test set valid increase and decrease speed."""
     await _register_components(hass, speed_count=3)
 
@@ -517,7 +535,7 @@ async def test_increase_decrease_speed(hass, calls):
         (common.async_set_percentage, 100, STATE_ON, 100),
         (common.async_decrease_speed, None, STATE_ON, 66),
         (common.async_decrease_speed, None, STATE_ON, 33),
-        (common.async_decrease_speed, None, STATE_OFF, 0),
+        (common.async_decrease_speed, None, STATE_ON, 0),
         (common.async_increase_speed, None, STATE_ON, 33),
     ]:
         await func(hass, _TEST_FAN, extra)
@@ -525,7 +543,119 @@ async def test_increase_decrease_speed(hass, calls):
         _verify(hass, state, value, None, None, None)
 
 
-async def test_increase_decrease_speed_default_speed_count(hass, calls):
+async def test_no_value_template(hass: HomeAssistant, calls) -> None:
+    """Test a fan without a value_template."""
+    await _register_fan_sources(hass)
+
+    with assert_setup_component(1, "fan"):
+        test_fan_config = {
+            "preset_mode_template": "{{ states('input_select.preset_mode') }}",
+            "percentage_template": "{{ states('input_number.percentage') }}",
+            "oscillating_template": "{{ states('input_select.osc') }}",
+            "direction_template": "{{ states('input_select.direction') }}",
+            "turn_on": [
+                {
+                    "service": "input_boolean.turn_on",
+                    "entity_id": _STATE_INPUT_BOOLEAN,
+                },
+                {
+                    "service": "test.automation",
+                    "data_template": {
+                        "action": "turn_on",
+                        "caller": "{{ this.entity_id }}",
+                    },
+                },
+            ],
+            "turn_off": [
+                {
+                    "service": "input_boolean.turn_off",
+                    "entity_id": _STATE_INPUT_BOOLEAN,
+                },
+                {
+                    "service": "test.automation",
+                    "data_template": {
+                        "action": "turn_off",
+                        "caller": "{{ this.entity_id }}",
+                    },
+                },
+            ],
+            "set_preset_mode": [
+                {
+                    "service": "input_select.select_option",
+                    "data_template": {
+                        "entity_id": _PRESET_MODE_INPUT_SELECT,
+                        "option": "{{ preset_mode }}",
+                    },
+                },
+                {
+                    "service": "test.automation",
+                    "data_template": {
+                        "action": "set_preset_mode",
+                        "caller": "{{ this.entity_id }}",
+                        "option": "{{ preset_mode }}",
+                    },
+                },
+            ],
+            "set_percentage": [
+                {
+                    "service": "input_number.set_value",
+                    "data_template": {
+                        "entity_id": _PERCENTAGE_INPUT_NUMBER,
+                        "value": "{{ percentage }}",
+                    },
+                },
+                {
+                    "service": "test.automation",
+                    "data_template": {
+                        "action": "set_value",
+                        "caller": "{{ this.entity_id }}",
+                        "value": "{{ percentage }}",
+                    },
+                },
+            ],
+        }
+        assert await setup.async_setup_component(
+            hass,
+            "fan",
+            {"fan": {"platform": "template", "fans": {"test_fan": test_fan_config}}},
+        )
+
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    await common.async_turn_on(hass, _TEST_FAN)
+    _verify(hass, STATE_ON, 0, None, None, None)
+
+    await common.async_turn_off(hass, _TEST_FAN)
+    _verify(hass, STATE_OFF, 0, None, None, None)
+
+    percent = 100
+    await common.async_set_percentage(hass, _TEST_FAN, percent)
+    assert int(float(hass.states.get(_PERCENTAGE_INPUT_NUMBER).state)) == percent
+    _verify(hass, STATE_ON, percent, None, None, None)
+
+    await common.async_turn_off(hass, _TEST_FAN)
+    _verify(hass, STATE_OFF, percent, None, None, None)
+
+    preset = "auto"
+    await common.async_set_preset_mode(hass, _TEST_FAN, preset)
+    assert hass.states.get(_PRESET_MODE_INPUT_SELECT).state == preset
+    _verify(hass, STATE_ON, percent, None, None, preset)
+
+    await common.async_turn_off(hass, _TEST_FAN)
+    _verify(hass, STATE_OFF, percent, None, None, preset)
+
+    await common.async_set_direction(hass, _TEST_FAN, True)
+    _verify(hass, STATE_OFF, percent, None, None, preset)
+
+    await common.async_oscillate(hass, _TEST_FAN, True)
+    _verify(hass, STATE_OFF, percent, None, None, preset)
+
+
+async def test_increase_decrease_speed_default_speed_count(
+    hass: HomeAssistant, calls
+) -> None:
     """Test set valid increase and decrease speed."""
     await _register_components(hass)
 
@@ -542,7 +672,7 @@ async def test_increase_decrease_speed_default_speed_count(hass, calls):
         _verify(hass, state, value, None, None, None)
 
 
-async def test_set_invalid_osc_from_initial_state(hass, calls):
+async def test_set_invalid_osc_from_initial_state(hass: HomeAssistant, calls) -> None:
     """Test set invalid oscillating when fan is in initial state."""
     await _register_components(hass)
 
@@ -553,7 +683,7 @@ async def test_set_invalid_osc_from_initial_state(hass, calls):
     _verify(hass, STATE_ON, 0, None, None, None)
 
 
-async def test_set_invalid_osc(hass, calls):
+async def test_set_invalid_osc(hass: HomeAssistant, calls) -> None:
     """Test set invalid oscillating when fan has valid osc."""
     await _register_components(hass)
 
@@ -586,10 +716,7 @@ def _verify(
     assert attributes.get(ATTR_PRESET_MODE) == expected_preset_mode
 
 
-async def _register_components(
-    hass, speed_list=None, preset_modes=None, speed_count=None
-):
-    """Register basic components for testing."""
+async def _register_fan_sources(hass):
     with assert_setup_component(1, "input_boolean"):
         assert await setup.async_setup_component(
             hass, "input_boolean", {"input_boolean": {"state": None}}
@@ -630,6 +757,13 @@ async def _register_components(
                 }
             },
         )
+
+
+async def _register_components(
+    hass, speed_list=None, preset_modes=None, speed_count=None
+):
+    """Register basic components for testing."""
+    await _register_fan_sources(hass)
 
     with assert_setup_component(1, "fan"):
         value_template = """
@@ -766,7 +900,7 @@ async def _register_components(
     await hass.async_block_till_done()
 
 
-@pytest.mark.parametrize("count,domain", [(1, DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(1, DOMAIN)])
 @pytest.mark.parametrize(
     "config",
     [
@@ -803,15 +937,17 @@ async def _register_components(
         },
     ],
 )
-async def test_unique_id(hass, start_ha):
+async def test_unique_id(hass: HomeAssistant, start_ha) -> None:
     """Test unique_id option only creates one fan per id."""
     assert len(hass.states.async_all()) == 1
 
 
 @pytest.mark.parametrize(
-    "speed_count, percentage_step", [(0, 1), (100, 1), (3, 100 / 3)]
+    ("speed_count", "percentage_step"), [(0, 1), (100, 1), (3, 100 / 3)]
 )
-async def test_implemented_percentage(hass, speed_count, percentage_step):
+async def test_implemented_percentage(
+    hass: HomeAssistant, speed_count, percentage_step
+) -> None:
     """Test a fan that implements percentage."""
     await setup.async_setup_component(
         hass,
@@ -824,7 +960,10 @@ async def test_implemented_percentage(hass, speed_count, percentage_step):
                         "friendly_name": "Mechanische ventilatie",
                         "unique_id": "a2fd2e38-674b-4b47-b5ef-cc2362211a72",
                         "value_template": "{{ states('light.mv_snelheid') }}",
-                        "percentage_template": "{{ (state_attr('light.mv_snelheid','brightness') | int / 255 * 100) | int }}",
+                        "percentage_template": (
+                            "{{ (state_attr('light.mv_snelheid','brightness') | int /"
+                            " 255 * 100) | int }}"
+                        ),
                         "turn_on": [
                             {
                                 "service": "switch.turn_off",
@@ -879,10 +1018,10 @@ async def test_implemented_percentage(hass, speed_count, percentage_step):
     state = hass.states.get("fan.mechanical_ventilation")
     attributes = state.attributes
     assert attributes["percentage_step"] == percentage_step
-    assert attributes.get("supported_features") & SUPPORT_SET_SPEED
+    assert attributes.get("supported_features") & FanEntityFeature.SET_SPEED
 
 
-@pytest.mark.parametrize("count,domain", [(1, DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(1, DOMAIN)])
 @pytest.mark.parametrize(
     "config",
     [
@@ -940,11 +1079,11 @@ async def test_implemented_percentage(hass, speed_count, percentage_step):
         },
     ],
 )
-async def test_implemented_preset_mode(hass, start_ha):
+async def test_implemented_preset_mode(hass: HomeAssistant, start_ha) -> None:
     """Test a fan that implements preset_mode."""
     assert len(hass.states.async_all()) == 1
 
     state = hass.states.get("fan.mechanical_ventilation")
     attributes = state.attributes
     assert attributes.get("percentage") is None
-    assert attributes.get("supported_features") & SUPPORT_PRESET_MODE
+    assert attributes.get("supported_features") & FanEntityFeature.PRESET_MODE

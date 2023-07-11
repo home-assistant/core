@@ -8,23 +8,24 @@ from pytomorrowio.const import DAILY, FORECASTS, HOURLY, NOWCAST, WeatherCode
 
 from homeassistant.components.weather import (
     ATTR_FORECAST_CONDITION,
-    ATTR_FORECAST_PRECIPITATION,
+    ATTR_FORECAST_NATIVE_PRECIPITATION,
+    ATTR_FORECAST_NATIVE_TEMP,
+    ATTR_FORECAST_NATIVE_TEMP_LOW,
+    ATTR_FORECAST_NATIVE_WIND_SPEED,
     ATTR_FORECAST_PRECIPITATION_PROBABILITY,
-    ATTR_FORECAST_TEMP,
-    ATTR_FORECAST_TEMP_LOW,
     ATTR_FORECAST_TIME,
     ATTR_FORECAST_WIND_BEARING,
-    ATTR_FORECAST_WIND_SPEED,
     WeatherEntity,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    CONF_API_KEY,
     CONF_NAME,
-    LENGTH_KILOMETERS,
-    LENGTH_MILLIMETERS,
-    PRESSURE_HPA,
-    SPEED_METERS_PER_SECOND,
-    TEMP_CELSIUS,
+    UnitOfLength,
+    UnitOfPrecipitationDepth,
+    UnitOfPressure,
+    UnitOfSpeed,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -61,7 +62,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up a config entry."""
-    coordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = hass.data[DOMAIN][config_entry.data[CONF_API_KEY]]
 
     entities = [
         TomorrowioWeatherEntity(config_entry, coordinator, 4, forecast_type)
@@ -73,11 +74,11 @@ async def async_setup_entry(
 class TomorrowioWeatherEntity(TomorrowioEntity, WeatherEntity):
     """Entity that talks to Tomorrow.io v4 API to retrieve weather data."""
 
-    _attr_temperature_unit = TEMP_CELSIUS
-    _attr_pressure_unit = PRESSURE_HPA
-    _attr_wind_speed_unit = SPEED_METERS_PER_SECOND
-    _attr_visibility_unit = LENGTH_KILOMETERS
-    _attr_precipitation_unit = LENGTH_MILLIMETERS
+    _attr_native_precipitation_unit = UnitOfPrecipitationDepth.MILLIMETERS
+    _attr_native_pressure_unit = UnitOfPressure.HPA
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_visibility_unit = UnitOfLength.KILOMETERS
+    _attr_native_wind_speed_unit = UnitOfSpeed.METERS_PER_SECOND
 
     def __init__(
         self,
@@ -118,12 +119,12 @@ class TomorrowioWeatherEntity(TomorrowioEntity, WeatherEntity):
         data = {
             ATTR_FORECAST_TIME: forecast_dt.isoformat(),
             ATTR_FORECAST_CONDITION: translated_condition,
-            ATTR_FORECAST_PRECIPITATION: precipitation,
+            ATTR_FORECAST_NATIVE_PRECIPITATION: precipitation,
             ATTR_FORECAST_PRECIPITATION_PROBABILITY: precipitation_probability,
-            ATTR_FORECAST_TEMP: temp,
-            ATTR_FORECAST_TEMP_LOW: temp_low,
+            ATTR_FORECAST_NATIVE_TEMP: temp,
+            ATTR_FORECAST_NATIVE_TEMP_LOW: temp_low,
             ATTR_FORECAST_WIND_BEARING: wind_direction,
-            ATTR_FORECAST_WIND_SPEED: wind_speed,
+            ATTR_FORECAST_NATIVE_WIND_SPEED: wind_speed,
         }
 
         return {k: v for k, v in data.items() if v is not None}
@@ -144,12 +145,12 @@ class TomorrowioWeatherEntity(TomorrowioEntity, WeatherEntity):
         return CONDITIONS[condition]
 
     @property
-    def temperature(self):
+    def native_temperature(self):
         """Return the platform temperature."""
         return self._get_current_property(TMRW_ATTR_TEMPERATURE)
 
     @property
-    def pressure(self):
+    def native_pressure(self):
         """Return the raw pressure."""
         return self._get_current_property(TMRW_ATTR_PRESSURE)
 
@@ -159,7 +160,7 @@ class TomorrowioWeatherEntity(TomorrowioEntity, WeatherEntity):
         return self._get_current_property(TMRW_ATTR_HUMIDITY)
 
     @property
-    def wind_speed(self):
+    def native_wind_speed(self):
         """Return the raw wind speed."""
         return self._get_current_property(TMRW_ATTR_WIND_SPEED)
 
@@ -182,7 +183,7 @@ class TomorrowioWeatherEntity(TomorrowioEntity, WeatherEntity):
         )
 
     @property
-    def visibility(self):
+    def native_visibility(self):
         """Return the raw visibility."""
         return self._get_current_property(TMRW_ATTR_VISIBILITY)
 
@@ -190,7 +191,11 @@ class TomorrowioWeatherEntity(TomorrowioEntity, WeatherEntity):
     def forecast(self):
         """Return the forecast."""
         # Check if forecasts are available
-        raw_forecasts = self.coordinator.data.get(FORECASTS, {}).get(self.forecast_type)
+        raw_forecasts = (
+            self.coordinator.data.get(self._config_entry.entry_id, {})
+            .get(FORECASTS, {})
+            .get(self.forecast_type)
+        )
         if not raw_forecasts:
             return None
 
@@ -198,13 +203,16 @@ class TomorrowioWeatherEntity(TomorrowioEntity, WeatherEntity):
         max_forecasts = MAX_FORECASTS[self.forecast_type]
         forecast_count = 0
 
+        # Convert utcnow to local to be compatible with tests
+        today = dt_util.as_local(dt_util.utcnow()).date()
+
         # Set default values (in cases where keys don't exist), None will be
         # returned. Override properties per forecast type as needed
         for forecast in raw_forecasts:
             forecast_dt = dt_util.parse_datetime(forecast[TMRW_ATTR_TIMESTAMP])
 
             # Throw out past data
-            if forecast_dt.date() < dt_util.utcnow().date():
+            if dt_util.as_local(forecast_dt).date() < today:
                 continue
 
             values = forecast["values"]

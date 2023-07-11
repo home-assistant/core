@@ -3,13 +3,13 @@ import asyncio
 from datetime import timedelta
 from unittest.mock import patch
 
-from bond_api import BPUPSubscriptions, DeviceType
+from bond_async import BPUPSubscriptions, DeviceType
+from bond_async.bpup import BPUP_ALIVE_TIMEOUT
 
-from homeassistant import core
 from homeassistant.components import fan
 from homeassistant.components.fan import DOMAIN as FAN_DOMAIN
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, STATE_ON, STATE_UNAVAILABLE
-from homeassistant.core import CoreState
+from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.util import utcnow
 
 from .common import patch_bond_device_state, setup_platform
@@ -26,7 +26,7 @@ def ceiling_fan(name: str):
     }
 
 
-async def test_bpup_goes_offline_and_recovers_same_entity(hass: core.HomeAssistant):
+async def test_bpup_goes_offline_and_recovers_same_entity(hass: HomeAssistant) -> None:
     """Test that push updates fail and we fallback to polling and then bpup recovers.
 
     The BPUP recovery is triggered by an update for the entity and
@@ -44,8 +44,31 @@ async def test_bpup_goes_offline_and_recovers_same_entity(hass: core.HomeAssista
     bpup_subs.notify(
         {
             "s": 200,
-            "t": "bond/test-device-id/update",
+            "t": "devices/test-device-id/state",
             "b": {"power": 1, "speed": 3, "direction": 0},
+        }
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get("fan.name_1").attributes[fan.ATTR_PERCENTAGE] == 100
+
+    # Send a message for the wrong device to make sure its ignored
+    # we should never get this callback
+    bpup_subs.notify(
+        {
+            "s": 200,
+            "t": "devices/other-device-id/state",
+            "b": {"power": 1, "speed": 1, "direction": 0},
+        }
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get("fan.name_1").attributes[fan.ATTR_PERCENTAGE] == 100
+
+    # Test we ignore messages for the wrong topic
+    bpup_subs.notify(
+        {
+            "s": 200,
+            "t": "devices/test-device-id/other_topic",
+            "b": {"power": 1, "speed": 1, "direction": 0},
         }
     )
     await hass.async_block_till_done()
@@ -54,14 +77,14 @@ async def test_bpup_goes_offline_and_recovers_same_entity(hass: core.HomeAssista
     bpup_subs.notify(
         {
             "s": 200,
-            "t": "bond/test-device-id/update",
+            "t": "devices/test-device-id/state",
             "b": {"power": 1, "speed": 1, "direction": 0},
         }
     )
     await hass.async_block_till_done()
     assert hass.states.get("fan.name_1").attributes[fan.ATTR_PERCENTAGE] == 33
 
-    bpup_subs.last_message_time = 0
+    bpup_subs.last_message_time = -BPUP_ALIVE_TIMEOUT
     with patch_bond_device_state(side_effect=asyncio.TimeoutError):
         async_fire_time_changed(hass, utcnow() + timedelta(seconds=230))
         await hass.async_block_till_done()
@@ -75,7 +98,7 @@ async def test_bpup_goes_offline_and_recovers_same_entity(hass: core.HomeAssista
         bpup_subs.notify(
             {
                 "s": 200,
-                "t": "bond/test-device-id/update",
+                "t": "devices/test-device-id/state",
                 "b": {"power": 1, "speed": 2, "direction": 0},
             }
         )
@@ -87,8 +110,8 @@ async def test_bpup_goes_offline_and_recovers_same_entity(hass: core.HomeAssista
 
 
 async def test_bpup_goes_offline_and_recovers_different_entity(
-    hass: core.HomeAssistant,
-):
+    hass: HomeAssistant,
+) -> None:
     """Test that push updates fail and we fallback to polling and then bpup recovers.
 
     The BPUP recovery is triggered by an update for a different entity which
@@ -106,7 +129,7 @@ async def test_bpup_goes_offline_and_recovers_different_entity(
     bpup_subs.notify(
         {
             "s": 200,
-            "t": "bond/test-device-id/update",
+            "t": "devices/test-device-id/state",
             "b": {"power": 1, "speed": 3, "direction": 0},
         }
     )
@@ -116,14 +139,14 @@ async def test_bpup_goes_offline_and_recovers_different_entity(
     bpup_subs.notify(
         {
             "s": 200,
-            "t": "bond/test-device-id/update",
+            "t": "devices/test-device-id/state",
             "b": {"power": 1, "speed": 1, "direction": 0},
         }
     )
     await hass.async_block_till_done()
     assert hass.states.get("fan.name_1").attributes[fan.ATTR_PERCENTAGE] == 33
 
-    bpup_subs.last_message_time = 0
+    bpup_subs.last_message_time = -BPUP_ALIVE_TIMEOUT
     with patch_bond_device_state(side_effect=asyncio.TimeoutError):
         async_fire_time_changed(hass, utcnow() + timedelta(seconds=230))
         await hass.async_block_till_done()
@@ -133,7 +156,7 @@ async def test_bpup_goes_offline_and_recovers_different_entity(
     bpup_subs.notify(
         {
             "s": 200,
-            "t": "bond/not-this-device-id/update",
+            "t": "devices/not-this-device-id/state",
             "b": {"power": 1, "speed": 2, "direction": 0},
         }
     )
@@ -149,7 +172,7 @@ async def test_bpup_goes_offline_and_recovers_different_entity(
     assert state.attributes[fan.ATTR_PERCENTAGE] == 33
 
 
-async def test_polling_fails_and_recovers(hass: core.HomeAssistant):
+async def test_polling_fails_and_recovers(hass: HomeAssistant) -> None:
     """Test that polling fails and we recover."""
     await setup_platform(
         hass, FAN_DOMAIN, ceiling_fan("name-1"), bond_device_id="test-device-id"
@@ -170,7 +193,7 @@ async def test_polling_fails_and_recovers(hass: core.HomeAssistant):
     assert state.attributes[fan.ATTR_PERCENTAGE] == 33
 
 
-async def test_polling_stops_at_the_stop_event(hass: core.HomeAssistant):
+async def test_polling_stops_at_the_stop_event(hass: HomeAssistant) -> None:
     """Test that polling stops at the stop event."""
     await setup_platform(
         hass, FAN_DOMAIN, ceiling_fan("name-1"), bond_device_id="test-device-id"

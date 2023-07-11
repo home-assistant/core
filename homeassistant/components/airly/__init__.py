@@ -15,9 +15,8 @@ from homeassistant.components.air_quality import DOMAIN as AIR_QUALITY_PLATFORM
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.device_registry import async_get_registry
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
@@ -39,8 +38,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def set_update_interval(instances_count: int, requests_remaining: int) -> timedelta:
-    """
-    Return data update interval.
+    """Return data update interval.
 
     The number of requests is reset at midnight UTC so we calculate the update
     interval based on number of minutes until midnight, the number of Airly instances
@@ -82,7 +80,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # identifiers in device_info should use tuple[str, str] type, but latitude and
     # longitude are float, so we convert old device entries to use correct types
     # We used to use a str 3-tuple here sometime, convert that to a 2-tuple too.
-    device_registry = await async_get_registry(hass)
+    device_registry = dr.async_get(hass)
     old_ids = (DOMAIN, latitude, longitude)
     for old_ids in (
         (DOMAIN, latitude, longitude),
@@ -111,10 +109,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = coordinator
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     # Remove air_quality entities from registry if they exist
-    ent_reg = entity_registry.async_get(hass)
+    ent_reg = er.async_get(hass)
     unique_id = f"{coordinator.latitude}-{coordinator.longitude}"
     if entity_id := ent_reg.async_get_entity_id(
         AIR_QUALITY_PLATFORM, DOMAIN, unique_id
@@ -151,7 +149,9 @@ class AirlyDataUpdateCoordinator(DataUpdateCoordinator):
         """Initialize."""
         self.latitude = latitude
         self.longitude = longitude
-        self.airly = Airly(api_key, session)
+        # Currently, Airly only supports Polish and English
+        language = "pl" if hass.config.language == "pl" else "en"
+        self.airly = Airly(api_key, session, language=language)
         self.use_nearest = use_nearest
 
         super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=update_interval)

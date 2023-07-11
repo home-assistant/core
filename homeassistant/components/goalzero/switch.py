@@ -3,30 +3,26 @@ from __future__ import annotations
 
 from typing import Any, cast
 
-from goalzero import Yeti
-
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from . import YetiEntity
-from .const import DATA_KEY_API, DATA_KEY_COORDINATOR, DOMAIN
+from .const import DOMAIN
+from .entity import GoalZeroEntity
 
 SWITCH_TYPES: tuple[SwitchEntityDescription, ...] = (
     SwitchEntityDescription(
         key="v12PortStatus",
-        name="12V Port Status",
+        name="12V port status",
     ),
     SwitchEntityDescription(
         key="usbPortStatus",
-        name="USB Port Status",
+        name="USB port status",
     ),
     SwitchEntityDescription(
         key="acPortStatus",
-        name="AC Port Status",
+        name="AC port status",
     ),
 )
 
@@ -35,50 +31,31 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the Goal Zero Yeti switch."""
-    name = entry.data[CONF_NAME]
-    goalzero_data = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
-        YetiSwitch(
-            goalzero_data[DATA_KEY_API],
-            goalzero_data[DATA_KEY_COORDINATOR],
-            name,
+        GoalZeroSwitch(
+            hass.data[DOMAIN][entry.entry_id],
             description,
-            entry.entry_id,
         )
         for description in SWITCH_TYPES
     )
 
 
-class YetiSwitch(YetiEntity, SwitchEntity):
+class GoalZeroSwitch(GoalZeroEntity, SwitchEntity):
     """Representation of a Goal Zero Yeti switch."""
-
-    def __init__(
-        self,
-        api: Yeti,
-        coordinator: DataUpdateCoordinator,
-        name: str,
-        description: SwitchEntityDescription,
-        server_unique_id: str,
-    ) -> None:
-        """Initialize a Goal Zero Yeti switch."""
-        super().__init__(api, coordinator, name, server_unique_id)
-        self.entity_description = description
-        self._attr_name = f"{name} {description.name}"
-        self._attr_unique_id = f"{server_unique_id}/{description.key}"
 
     @property
     def is_on(self) -> bool:
         """Return state of the switch."""
-        return cast(bool, self.api.data[self.entity_description.key] == 1)
+        return cast(bool, self._api.data[self.entity_description.key] == 1)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the switch."""
         payload = {self.entity_description.key: 0}
-        await self.api.post_state(payload=payload)
-        self.coordinator.async_set_updated_data(data=payload)
+        await self._api.post_state(payload=payload)
+        self.coordinator.async_set_updated_data(None)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the switch."""
         payload = {self.entity_description.key: 1}
-        await self.api.post_state(payload=payload)
-        self.coordinator.async_set_updated_data(data=payload)
+        await self._api.post_state(payload=payload)
+        self.coordinator.async_set_updated_data(None)

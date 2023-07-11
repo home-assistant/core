@@ -17,9 +17,8 @@ from ismartgate.common import (
 
 from homeassistant.components.cover import (
     DOMAIN as COVER_DOMAIN,
-    SUPPORT_CLOSE,
-    SUPPORT_OPEN,
     CoverDeviceClass,
+    CoverEntityFeature,
 )
 from homeassistant.components.gogogate2.const import (
     DEVICE_TYPE_GOGOGATE2,
@@ -42,6 +41,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 from homeassistant.util.dt import utcnow
 
 from . import (
@@ -49,7 +49,7 @@ from . import (
     _mocked_ismartgate_closed_door_response,
 )
 
-from tests.common import MockConfigEntry, async_fire_time_changed, mock_device_registry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @patch("homeassistant.components.gogogate2.common.GogoGate2Api")
@@ -117,7 +117,7 @@ async def test_open_close_update(gogogate2api_mock, hass: HomeAssistant) -> None
         "device_class": "garage",
         "door_id": 1,
         "friendly_name": "Door1",
-        "supported_features": SUPPORT_CLOSE | SUPPORT_OPEN,
+        "supported_features": CoverEntityFeature.CLOSE | CoverEntityFeature.OPEN,
     }
 
     api = MagicMock(GogoGate2Api)
@@ -256,7 +256,7 @@ async def test_availability(ismartgateapi_mock, hass: HomeAssistant) -> None:
         "device_class": "garage",
         "door_id": 1,
         "friendly_name": "Door1",
-        "supported_features": SUPPORT_CLOSE | SUPPORT_OPEN,
+        "supported_features": CoverEntityFeature.CLOSE | CoverEntityFeature.OPEN,
     }
 
     api = MagicMock(ISmartGateApi)
@@ -307,9 +307,10 @@ async def test_availability(ismartgateapi_mock, hass: HomeAssistant) -> None:
 
 
 @patch("homeassistant.components.gogogate2.common.ISmartGateApi")
-async def test_device_info_ismartgate(ismartgateapi_mock, hass: HomeAssistant) -> None:
+async def test_device_info_ismartgate(
+    ismartgateapi_mock, hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
     """Test device info."""
-    device_registry = mock_device_registry(hass)
 
     closed_door_response = _mocked_ismartgate_closed_door_response()
 
@@ -342,10 +343,10 @@ async def test_device_info_ismartgate(ismartgateapi_mock, hass: HomeAssistant) -
 
 
 @patch("homeassistant.components.gogogate2.common.GogoGate2Api")
-async def test_device_info_gogogate2(gogogate2api_mock, hass: HomeAssistant) -> None:
+async def test_device_info_gogogate2(
+    gogogate2api_mock, hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
     """Test device info."""
-    device_registry = mock_device_registry(hass)
-
     closed_door_response = _mocked_gogogate_open_door_response()
 
     api = MagicMock(GogoGate2Api)

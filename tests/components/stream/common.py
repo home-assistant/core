@@ -8,11 +8,17 @@ import io
 import av
 import numpy as np
 
-from homeassistant.components.stream.core import Segment
+from homeassistant.components.camera import DynamicStreamSettings
+from homeassistant.components.stream.core import Orientation, Segment
+from homeassistant.components.stream.fmp4utils import (
+    TRANSFORM_MATRIX_TOP,
+    XYW_ROW,
+    find_box,
+)
 
 FAKE_TIME = datetime.utcnow()
-# Segment with defaults filled in for use in tests
 
+# Segment with defaults filled in for use in tests
 DefaultSegment = partial(
     Segment,
     init=None,
@@ -57,8 +63,7 @@ def frame_image_data(frame_i, total_frames):
 
 
 def generate_video(encoder, container_format, duration):
-    """
-    Generate a test video.
+    """Generate a test video.
 
     See: http://docs.mikeboers.com/pyav/develop/cookbook/numpy.html
     """
@@ -150,3 +155,23 @@ def remux_with_audio(source, container_format, audio_codec):
     output.seek(0)
 
     return output
+
+
+def assert_mp4_has_transform_matrix(mp4: bytes, orientation: Orientation):
+    """Assert that the mp4 (or init) has the proper transformation matrix."""
+    # Find moov
+    moov_location = next(find_box(mp4, b"moov"))
+    mvhd_location = next(find_box(mp4, b"trak", moov_location))
+    tkhd_location = next(find_box(mp4, b"tkhd", mvhd_location))
+    tkhd_length = int.from_bytes(
+        mp4[tkhd_location : tkhd_location + 4], byteorder="big"
+    )
+    assert (
+        mp4[tkhd_location + tkhd_length - 44 : tkhd_location + tkhd_length - 8]
+        == TRANSFORM_MATRIX_TOP[orientation] + XYW_ROW
+    )
+
+
+def dynamic_stream_settings():
+    """Create new dynamic stream settings."""
+    return DynamicStreamSettings()

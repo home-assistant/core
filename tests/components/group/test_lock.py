@@ -1,5 +1,8 @@
 """The tests for the Group Lock platform."""
+
 from unittest.mock import patch
+
+import pytest
 
 from homeassistant import config as hass_config
 from homeassistant.components.demo import lock as demo_lock
@@ -20,13 +23,15 @@ from homeassistant.const import (
     STATE_UNLOCKED,
     STATE_UNLOCKING,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from tests.common import get_fixture_path
 
 
-async def test_default_state(hass):
+async def test_default_state(hass: HomeAssistant) -> None:
     """Test lock group default state."""
     hass.states.async_set("lock.front", "locked")
     await async_setup_component(
@@ -56,8 +61,17 @@ async def test_default_state(hass):
     assert entry.unique_id == "unique_identifier"
 
 
-async def test_state_reporting(hass):
-    """Test the state reporting."""
+async def test_state_reporting(hass: HomeAssistant) -> None:
+    """Test the state reporting.
+
+    The group state is unavailable if all group members are unavailable.
+    Otherwise, the group state is unknown if at least one group member is unknown or unavailable.
+    Otherwise, the group state is jammed if at least one group member is jammed.
+    Otherwise, the group state is locking if at least one group member is locking.
+    Otherwise, the group state is unlocking if at least one group member is unlocking.
+    Otherwise, the group state is unlocked if at least one group member is unlocked.
+    Otherwise, the group state is locked.
+    """
     await async_setup_component(
         hass,
         LOCK_DOMAIN,
@@ -72,61 +86,105 @@ async def test_state_reporting(hass):
     await hass.async_start()
     await hass.async_block_till_done()
 
-    hass.states.async_set("lock.test1", STATE_LOCKED)
-    hass.states.async_set("lock.test2", STATE_UNAVAILABLE)
-    await hass.async_block_till_done()
-    assert hass.states.get("lock.lock_group").state == STATE_UNKNOWN
+    # Initial state with no group member in the state machine -> unavailable
+    assert hass.states.get("lock.lock_group").state == STATE_UNAVAILABLE
 
-    hass.states.async_set("lock.test1", STATE_LOCKED)
-    hass.states.async_set("lock.test2", STATE_UNLOCKED)
-    await hass.async_block_till_done()
-    assert hass.states.get("lock.lock_group").state == STATE_UNLOCKED
-
-    hass.states.async_set("lock.test1", STATE_LOCKED)
-    hass.states.async_set("lock.test2", STATE_LOCKED)
-    await hass.async_block_till_done()
-    assert hass.states.get("lock.lock_group").state == STATE_LOCKED
-
-    hass.states.async_set("lock.test1", STATE_UNLOCKED)
-    hass.states.async_set("lock.test2", STATE_UNLOCKED)
-    await hass.async_block_till_done()
-    assert hass.states.get("lock.lock_group").state == STATE_UNLOCKED
-
-    hass.states.async_set("lock.test1", STATE_UNLOCKED)
-    hass.states.async_set("lock.test2", STATE_JAMMED)
-    await hass.async_block_till_done()
-    assert hass.states.get("lock.lock_group").state == STATE_JAMMED
-
-    hass.states.async_set("lock.test1", STATE_LOCKED)
-    hass.states.async_set("lock.test2", STATE_UNLOCKING)
-    await hass.async_block_till_done()
-    assert hass.states.get("lock.lock_group").state == STATE_UNLOCKING
-
-    hass.states.async_set("lock.test1", STATE_UNLOCKED)
-    hass.states.async_set("lock.test2", STATE_LOCKING)
-    await hass.async_block_till_done()
-    assert hass.states.get("lock.lock_group").state == STATE_LOCKING
-
+    # All group members unavailable -> unavailable
     hass.states.async_set("lock.test1", STATE_UNAVAILABLE)
     hass.states.async_set("lock.test2", STATE_UNAVAILABLE)
     await hass.async_block_till_done()
     assert hass.states.get("lock.lock_group").state == STATE_UNAVAILABLE
 
+    # The group state is unknown if all group members are unknown or unavailable.
+    for state_1 in (
+        STATE_UNAVAILABLE,
+        STATE_UNKNOWN,
+    ):
+        hass.states.async_set("lock.test1", state_1)
+        hass.states.async_set("lock.test2", STATE_UNKNOWN)
+        await hass.async_block_till_done()
+        assert hass.states.get("lock.lock_group").state == STATE_UNKNOWN
 
-@patch.object(demo_lock, "LOCK_UNLOCK_DELAY", 0)
-async def test_service_calls(hass, enable_custom_integrations):
-    """Test service calls."""
+    # At least one member jammed -> group jammed
+    for state_1 in (
+        STATE_JAMMED,
+        STATE_LOCKED,
+        STATE_LOCKING,
+        STATE_UNAVAILABLE,
+        STATE_UNKNOWN,
+        STATE_UNLOCKED,
+        STATE_UNLOCKING,
+    ):
+        hass.states.async_set("lock.test1", state_1)
+        hass.states.async_set("lock.test2", STATE_JAMMED)
+        await hass.async_block_till_done()
+        assert hass.states.get("lock.lock_group").state == STATE_JAMMED
+
+    # At least one member locking -> group unlocking
+    for state_1 in (
+        STATE_LOCKED,
+        STATE_LOCKING,
+        STATE_UNAVAILABLE,
+        STATE_UNKNOWN,
+        STATE_UNLOCKED,
+        STATE_UNLOCKING,
+    ):
+        hass.states.async_set("lock.test1", state_1)
+        hass.states.async_set("lock.test2", STATE_LOCKING)
+        await hass.async_block_till_done()
+        assert hass.states.get("lock.lock_group").state == STATE_LOCKING
+
+    # At least one member unlocking -> group unlocking
+    for state_1 in (
+        STATE_LOCKED,
+        STATE_UNAVAILABLE,
+        STATE_UNKNOWN,
+        STATE_UNLOCKED,
+        STATE_UNLOCKING,
+    ):
+        hass.states.async_set("lock.test1", state_1)
+        hass.states.async_set("lock.test2", STATE_UNLOCKING)
+        await hass.async_block_till_done()
+        assert hass.states.get("lock.lock_group").state == STATE_UNLOCKING
+
+    # At least one member unlocked -> group unlocked
+    for state_1 in (
+        STATE_LOCKED,
+        STATE_UNAVAILABLE,
+        STATE_UNKNOWN,
+        STATE_UNLOCKED,
+    ):
+        hass.states.async_set("lock.test1", state_1)
+        hass.states.async_set("lock.test2", STATE_UNLOCKED)
+        await hass.async_block_till_done()
+        assert hass.states.get("lock.lock_group").state == STATE_UNLOCKED
+
+    # Otherwise -> locked
+    hass.states.async_set("lock.test1", STATE_LOCKED)
+    hass.states.async_set("lock.test2", STATE_LOCKED)
+    await hass.async_block_till_done()
+    assert hass.states.get("lock.lock_group").state == STATE_LOCKED
+
+    # All group members removed from the state machine -> unavailable
+    hass.states.async_remove("lock.test1")
+    hass.states.async_remove("lock.test2")
+    await hass.async_block_till_done()
+    assert hass.states.get("lock.lock_group").state == STATE_UNAVAILABLE
+
+
+async def test_service_calls_openable(hass: HomeAssistant) -> None:
+    """Test service calls with open support."""
     await async_setup_component(
         hass,
         LOCK_DOMAIN,
         {
             LOCK_DOMAIN: [
-                {"platform": "demo"},
+                {"platform": "kitchen_sink"},
                 {
                     "platform": DOMAIN,
                     "entities": [
-                        "lock.front_door",
-                        "lock.kitchen_door",
+                        "lock.openable_lock",
+                        "lock.another_openable_lock",
                     ],
                 },
             ]
@@ -136,8 +194,8 @@ async def test_service_calls(hass, enable_custom_integrations):
 
     group_state = hass.states.get("lock.lock_group")
     assert group_state.state == STATE_UNLOCKED
-    assert hass.states.get("lock.front_door").state == STATE_LOCKED
-    assert hass.states.get("lock.kitchen_door").state == STATE_UNLOCKED
+    assert hass.states.get("lock.openable_lock").state == STATE_LOCKED
+    assert hass.states.get("lock.another_openable_lock").state == STATE_UNLOCKED
 
     await hass.services.async_call(
         LOCK_DOMAIN,
@@ -145,8 +203,8 @@ async def test_service_calls(hass, enable_custom_integrations):
         {ATTR_ENTITY_ID: "lock.lock_group"},
         blocking=True,
     )
-    assert hass.states.get("lock.front_door").state == STATE_UNLOCKED
-    assert hass.states.get("lock.kitchen_door").state == STATE_UNLOCKED
+    assert hass.states.get("lock.openable_lock").state == STATE_UNLOCKED
+    assert hass.states.get("lock.another_openable_lock").state == STATE_UNLOCKED
 
     await hass.services.async_call(
         LOCK_DOMAIN,
@@ -154,8 +212,8 @@ async def test_service_calls(hass, enable_custom_integrations):
         {ATTR_ENTITY_ID: "lock.lock_group"},
         blocking=True,
     )
-    assert hass.states.get("lock.front_door").state == STATE_LOCKED
-    assert hass.states.get("lock.kitchen_door").state == STATE_LOCKED
+    assert hass.states.get("lock.openable_lock").state == STATE_LOCKED
+    assert hass.states.get("lock.another_openable_lock").state == STATE_LOCKED
 
     await hass.services.async_call(
         LOCK_DOMAIN,
@@ -163,11 +221,63 @@ async def test_service_calls(hass, enable_custom_integrations):
         {ATTR_ENTITY_ID: "lock.lock_group"},
         blocking=True,
     )
-    assert hass.states.get("lock.front_door").state == STATE_UNLOCKED
-    assert hass.states.get("lock.kitchen_door").state == STATE_UNLOCKED
+    assert hass.states.get("lock.openable_lock").state == STATE_UNLOCKED
+    assert hass.states.get("lock.another_openable_lock").state == STATE_UNLOCKED
 
 
-async def test_reload(hass):
+async def test_service_calls_basic(hass: HomeAssistant) -> None:
+    """Test service calls without open support."""
+    await async_setup_component(
+        hass,
+        LOCK_DOMAIN,
+        {
+            LOCK_DOMAIN: [
+                {"platform": "kitchen_sink"},
+                {
+                    "platform": DOMAIN,
+                    "entities": [
+                        "lock.basic_lock",
+                        "lock.another_basic_lock",
+                    ],
+                },
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+
+    group_state = hass.states.get("lock.lock_group")
+    assert group_state.state == STATE_UNLOCKED
+    assert hass.states.get("lock.basic_lock").state == STATE_LOCKED
+    assert hass.states.get("lock.another_basic_lock").state == STATE_UNLOCKED
+
+    await hass.services.async_call(
+        LOCK_DOMAIN,
+        SERVICE_LOCK,
+        {ATTR_ENTITY_ID: "lock.lock_group"},
+        blocking=True,
+    )
+    assert hass.states.get("lock.basic_lock").state == STATE_LOCKED
+    assert hass.states.get("lock.another_basic_lock").state == STATE_LOCKED
+
+    await hass.services.async_call(
+        LOCK_DOMAIN,
+        SERVICE_UNLOCK,
+        {ATTR_ENTITY_ID: "lock.lock_group"},
+        blocking=True,
+    )
+    assert hass.states.get("lock.basic_lock").state == STATE_UNLOCKED
+    assert hass.states.get("lock.another_basic_lock").state == STATE_UNLOCKED
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            LOCK_DOMAIN,
+            SERVICE_OPEN,
+            {ATTR_ENTITY_ID: "lock.lock_group"},
+            blocking=True,
+        )
+
+
+async def test_reload(hass: HomeAssistant) -> None:
     """Test the ability to reload locks."""
     await async_setup_component(
         hass,
@@ -208,7 +318,7 @@ async def test_reload(hass):
     assert hass.states.get("lock.outside_locks_g") is not None
 
 
-async def test_reload_with_platform_not_setup(hass):
+async def test_reload_with_platform_not_setup(hass: HomeAssistant) -> None:
     """Test the ability to reload locks."""
     hass.states.async_set("lock.something", STATE_UNLOCKED)
     await async_setup_component(
@@ -246,7 +356,9 @@ async def test_reload_with_platform_not_setup(hass):
     assert hass.states.get("lock.outside_locks_g") is not None
 
 
-async def test_reload_with_base_integration_platform_not_setup(hass):
+async def test_reload_with_base_integration_platform_not_setup(
+    hass: HomeAssistant,
+) -> None:
     """Test the ability to reload locks."""
     assert await async_setup_component(
         hass,
@@ -282,7 +394,7 @@ async def test_reload_with_base_integration_platform_not_setup(hass):
 
 
 @patch.object(demo_lock, "LOCK_UNLOCK_DELAY", 0)
-async def test_nested_group(hass):
+async def test_nested_group(hass: HomeAssistant) -> None:
     """Test nested lock group."""
     await async_setup_component(
         hass,

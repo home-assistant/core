@@ -1,6 +1,7 @@
 """Config flow to configure the FRITZ!Box Tools integration."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 import ipaddress
 import logging
 import socket
@@ -8,11 +9,11 @@ from typing import Any
 from urllib.parse import ParseResult, urlparse
 
 from fritzconnection import FritzConnection
-from fritzconnection.core.exceptions import FritzConnectionException, FritzSecurityError
+from fritzconnection.core.exceptions import FritzConnectionException
 import voluptuous as vol
 
 from homeassistant.components import ssdp
-from homeassistant.components.device_tracker.const import (
+from homeassistant.components.device_tracker import (
     CONF_CONSIDER_HOME,
     DEFAULT_CONSIDER_HOME,
 )
@@ -31,6 +32,7 @@ from .const import (
     ERROR_CANNOT_CONNECT,
     ERROR_UNKNOWN,
     ERROR_UPNP_NOT_CONFIGURED,
+    FRITZ_AUTH_EXCEPTIONS,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -69,7 +71,7 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
                 timeout=60.0,
                 pool_maxsize=30,
             )
-        except FritzSecurityError:
+        except FRITZ_AUTH_EXCEPTIONS:
             return ERROR_AUTH_INVALID
         except FritzConnectionException:
             return ERROR_CANNOT_CONNECT
@@ -89,7 +91,7 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def async_check_configured_entry(self) -> ConfigEntry | None:
         """Check if entry is configured."""
-
+        assert self._host
         current_host = await self.hass.async_add_executor_job(
             socket.gethostbyname, self._host
         )
@@ -230,13 +232,13 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self._async_create_entry()
 
-    async def async_step_reauth(self, data: dict[str, Any]) -> FlowResult:
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Handle flow upon an API authentication error."""
         self._entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
-        self._host = data[CONF_HOST]
-        self._port = data[CONF_PORT]
-        self._username = data[CONF_USERNAME]
-        self._password = data[CONF_PASSWORD]
+        self._host = entry_data[CONF_HOST]
+        self._port = entry_data[CONF_PORT]
+        self._username = entry_data[CONF_USERNAME]
+        self._password = entry_data[CONF_PASSWORD]
         return await self.async_step_reauth_confirm()
 
     def _show_setup_form_reauth_confirm(

@@ -1,12 +1,5 @@
 # Describes the format for available Litter-Robot services
 
-reset_waste_drawer:
-  name: Reset waste drawer
-  description: Reset the waste drawer level.
-  target:
-    entity:
-      integration: litterrobot
-
 set_sleep_mode:
   name: Set sleep mode
   description: Set the sleep mode and start time.
@@ -27,22 +20,3 @@ set_sleep_mode:
       example: '"22:30:00"'
       selector:
         time:
-
-set_wait_time:
-  name: Set wait time
-  description: Set the wait time, in minutes, between when your cat uses the Litter-Robot and when the unit cycles automatically.
-  target:
-    entity:
-      integration: litterrobot
-  fields:
-    minutes:
-      name: Minutes
-      description: Minutes to wait.
-      required: true
-      default: 7
-      selector:
-        select:
-          options:
-            - "3"
-            - "7"
-            - "15"

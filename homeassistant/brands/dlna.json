@@ -1,0 +1,5 @@
+{
+  "domain": "dlna",
+  "name": "DLNA",
+  "integrations": ["dlna_dmr", "dlna_dms"]
+}

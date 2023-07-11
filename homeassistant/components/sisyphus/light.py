@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 import aiohttp
 
@@ -47,16 +48,16 @@ class SisyphusLight(LightEntity):
         self._name = name
         self._table = table
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Add listeners after this object has been initialized."""
         self._table.add_listener(self.async_write_ha_state)
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Force update the table state."""
         await self._table.refresh()
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return true if the table is responding to heartbeats."""
         return self._table.is_connected
 
@@ -80,12 +81,12 @@ class SisyphusLight(LightEntity):
         """Return the current brightness of the table's ring light."""
         return self._table.brightness * 255
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Put the table to sleep."""
         await self._table.sleep()
         _LOGGER.debug("Sisyphus table %s: sleep")
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Wake up the table if necessary, optionally changes brightness."""
         if not self.is_on:
             await self._table.wakeup()

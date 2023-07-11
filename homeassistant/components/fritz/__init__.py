@@ -1,15 +1,19 @@
 """Support for AVM Fritz!Box functions."""
 import logging
 
-from fritzconnection.core.exceptions import FritzConnectionException
-
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
 from .common import AvmWrapper, FritzData
-from .const import DATA_FRITZ, DOMAIN, FRITZ_EXCEPTIONS, PLATFORMS
+from .const import (
+    DATA_FRITZ,
+    DOMAIN,
+    FRITZ_AUTH_EXCEPTIONS,
+    FRITZ_EXCEPTIONS,
+    PLATFORMS,
+)
 from .services import async_setup_services, async_unload_services
 
 _LOGGER = logging.getLogger(__name__)
@@ -28,10 +32,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     try:
         await avm_wrapper.async_setup(entry.options)
+    except FRITZ_AUTH_EXCEPTIONS as ex:
+        raise ConfigEntryAuthFailed from ex
     except FRITZ_EXCEPTIONS as ex:
         raise ConfigEntryNotReady from ex
-    except FritzConnectionException as ex:
-        raise ConfigEntryAuthFailed from ex
 
     if (
         "X_AVM-DE_UPnP1" in avm_wrapper.connection.services
@@ -50,7 +54,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await avm_wrapper.async_config_entry_first_refresh()
 
     # Load the other platforms like switch
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     await async_setup_services(hass)
 

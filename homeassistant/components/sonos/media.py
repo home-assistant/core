@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import datetime
-import logging
 from typing import Any
 
 from soco.core import (
@@ -43,14 +42,12 @@ UNAVAILABLE_VALUES = {"", "NOT_IMPLEMENTED", None}
 DURATION_SECONDS = "duration_in_s"
 POSITION_SECONDS = "position_in_s"
 
-_LOGGER = logging.getLogger(__name__)
 
-
-def _timespan_secs(timespan: str | None) -> None | float:
+def _timespan_secs(timespan: str | None) -> None | int:
     """Parse a time-span into number of seconds."""
     if timespan in UNAVAILABLE_VALUES:
         return None
-    return time_period_str(timespan).total_seconds()  # type: ignore[arg-type]
+    return int(time_period_str(timespan).total_seconds())  # type: ignore[arg-type]
 
 
 class SonosMedia:
@@ -76,7 +73,7 @@ class SonosMedia:
         self.title: str | None = None
         self.uri: str | None = None
 
-        self.position: float | None = None
+        self.position: int | None = None
         self.position_updated_at: datetime.datetime | None = None
 
     def clear(self) -> None:
@@ -105,8 +102,8 @@ class SonosMedia:
 
     @soco_error()
     def poll_track_info(self) -> dict[str, Any]:
-        """Poll the speaker for current track info, add converted position values, and return."""
-        track_info = self.soco.get_current_track_info()
+        """Poll the speaker for current track info, add converted position values."""
+        track_info: dict[str, Any] = self.soco.get_current_track_info()
         track_info[DURATION_SECONDS] = _timespan_secs(track_info.get("duration"))
         track_info[POSITION_SECONDS] = _timespan_secs(track_info.get("position"))
         return track_info
@@ -205,13 +202,15 @@ class SonosMedia:
         self, position_info: dict[str, int], force_update: bool = False
     ) -> None:
         """Update state when playing music tracks."""
-        if (duration := position_info.get(DURATION_SECONDS)) == 0:
+        duration = position_info.get(DURATION_SECONDS)
+        current_position = position_info.get(POSITION_SECONDS)
+
+        if not (duration or current_position):
             self.clear_position()
             return
 
         should_update = force_update
         self.duration = duration
-        current_position = position_info.get(POSITION_SECONDS)
 
         # player started reporting position?
         if current_position is not None and self.position is None:

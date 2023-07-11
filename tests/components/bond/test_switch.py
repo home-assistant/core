@@ -1,10 +1,9 @@
 """Tests for the Bond switch device."""
 from datetime import timedelta
 
-from bond_api import Action, DeviceType
+from bond_async import Action, DeviceType
 import pytest
 
-from homeassistant import core
 from homeassistant.components.bond.const import (
     ATTR_POWER_STATE,
     DOMAIN as BOND_DOMAIN,
@@ -12,6 +11,7 @@ from homeassistant.components.bond.const import (
 )
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_registry import EntityRegistry
@@ -33,7 +33,7 @@ def generic_device(name: str):
     return {"name": name, "type": DeviceType.GENERIC_DEVICE}
 
 
-async def test_entity_registry(hass: core.HomeAssistant):
+async def test_entity_registry(hass: HomeAssistant) -> None:
     """Tests that the devices are registered in the entity registry."""
     await setup_platform(
         hass,
@@ -48,7 +48,7 @@ async def test_entity_registry(hass: core.HomeAssistant):
     assert entity.unique_id == "test-hub-id_test-device-id"
 
 
-async def test_turn_on_switch(hass: core.HomeAssistant):
+async def test_turn_on_switch(hass: HomeAssistant) -> None:
     """Tests that turn on command delegates to API."""
     await setup_platform(
         hass, SWITCH_DOMAIN, generic_device("name-1"), bond_device_id="test-device-id"
@@ -66,7 +66,7 @@ async def test_turn_on_switch(hass: core.HomeAssistant):
     mock_turn_on.assert_called_once_with("test-device-id", Action.turn_on())
 
 
-async def test_turn_off_switch(hass: core.HomeAssistant):
+async def test_turn_off_switch(hass: HomeAssistant) -> None:
     """Tests that turn off command delegates to API."""
     await setup_platform(
         hass, SWITCH_DOMAIN, generic_device("name-1"), bond_device_id="test-device-id"
@@ -84,7 +84,7 @@ async def test_turn_off_switch(hass: core.HomeAssistant):
     mock_turn_off.assert_called_once_with("test-device-id", Action.turn_off())
 
 
-async def test_switch_set_power_belief(hass: core.HomeAssistant):
+async def test_switch_set_power_belief(hass: HomeAssistant) -> None:
     """Tests that the set power belief service delegates to API."""
     await setup_platform(
         hass, SWITCH_DOMAIN, generic_device("name-1"), bond_device_id="test-device-id"
@@ -104,7 +104,7 @@ async def test_switch_set_power_belief(hass: core.HomeAssistant):
     )
 
 
-async def test_switch_set_power_belief_api_error(hass: core.HomeAssistant):
+async def test_switch_set_power_belief_api_error(hass: HomeAssistant) -> None:
     """Tests that the set power belief service throws HomeAssistantError in the event of an api error."""
     await setup_platform(
         hass, SWITCH_DOMAIN, generic_device("name-1"), bond_device_id="test-device-id"
@@ -122,7 +122,7 @@ async def test_switch_set_power_belief_api_error(hass: core.HomeAssistant):
         await hass.async_block_till_done()
 
 
-async def test_update_reports_switch_is_on(hass: core.HomeAssistant):
+async def test_update_reports_switch_is_on(hass: HomeAssistant) -> None:
     """Tests that update command sets correct state when Bond API reports the device is on."""
     await setup_platform(hass, SWITCH_DOMAIN, generic_device("name-1"))
 
@@ -133,7 +133,7 @@ async def test_update_reports_switch_is_on(hass: core.HomeAssistant):
     assert hass.states.get("switch.name_1").state == "on"
 
 
-async def test_update_reports_switch_is_off(hass: core.HomeAssistant):
+async def test_update_reports_switch_is_off(hass: HomeAssistant) -> None:
     """Tests that update command sets correct state when Bond API reports the device is off."""
     await setup_platform(hass, SWITCH_DOMAIN, generic_device("name-1"))
 
@@ -144,7 +144,7 @@ async def test_update_reports_switch_is_off(hass: core.HomeAssistant):
     assert hass.states.get("switch.name_1").state == "off"
 
 
-async def test_switch_available(hass: core.HomeAssistant):
+async def test_switch_available(hass: HomeAssistant) -> None:
     """Tests that available state is updated based on API errors."""
     await help_test_entity_available(
         hass, SWITCH_DOMAIN, generic_device("name-1"), "switch.name_1"

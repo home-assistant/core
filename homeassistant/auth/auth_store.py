@@ -9,6 +9,8 @@ from logging import getLogger
 from typing import Any
 
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.storage import Store
 from homeassistant.util import dt as dt_util
 
 from . import models
@@ -44,8 +46,8 @@ class AuthStore:
         self._users: dict[str, models.User] | None = None
         self._groups: dict[str, models.Group] | None = None
         self._perm_lookup: PermissionLookup | None = None
-        self._store = hass.helpers.storage.Store(
-            STORAGE_VERSION, STORAGE_KEY, private=True, atomic_writes=True
+        self._store = Store[dict[str, list[dict[str, Any]]]](
+            hass, STORAGE_VERSION, STORAGE_KEY, private=True, atomic_writes=True
         )
         self._lock = asyncio.Lock()
 
@@ -303,11 +305,9 @@ class AuthStore:
 
     async def _async_load_task(self) -> None:
         """Load the users."""
-        [ent_reg, dev_reg, data] = await asyncio.gather(
-            self.hass.helpers.entity_registry.async_get_registry(),
-            self.hass.helpers.device_registry.async_get_registry(),
-            self._store.async_load(),
-        )
+        dev_reg = dr.async_get(self.hass)
+        ent_reg = er.async_get(self.hass)
+        data = await self._store.async_load()
 
         # Make sure that we're not overriding data if 2 loads happened at the
         # same time
@@ -316,7 +316,7 @@ class AuthStore:
 
         self._perm_lookup = perm_lookup = PermissionLookup(ent_reg, dev_reg)
 
-        if data is None:
+        if data is None or not isinstance(data, dict):
             self._set_defaults()
             return
 
@@ -449,8 +449,10 @@ class AuthStore:
             created_at = dt_util.parse_datetime(rt_dict["created_at"])
             if created_at is None:
                 getLogger(__name__).error(
-                    "Ignoring refresh token %(id)s with invalid created_at "
-                    "%(created_at)s for user_id %(user_id)s",
+                    (
+                        "Ignoring refresh token %(id)s with invalid created_at "
+                        "%(created_at)s for user_id %(user_id)s"
+                    ),
                     rt_dict,
                 )
                 continue
@@ -483,9 +485,10 @@ class AuthStore:
                 jwt_key=rt_dict["jwt_key"],
                 last_used_at=last_used_at,
                 last_used_ip=rt_dict.get("last_used_ip"),
-                credential=credentials.get(rt_dict.get("credential_id")),
                 version=rt_dict.get("version"),
             )
+            if "credential_id" in rt_dict:
+                token.credential = credentials.get(rt_dict["credential_id"])
             users[rt_dict["user_id"]].refresh_tokens[token.id] = token
 
         self._groups = groups
@@ -552,7 +555,9 @@ class AuthStore:
                 "client_icon": refresh_token.client_icon,
                 "token_type": refresh_token.token_type,
                 "created_at": refresh_token.created_at.isoformat(),
-                "access_token_expiration": refresh_token.access_token_expiration.total_seconds(),
+                "access_token_expiration": (
+                    refresh_token.access_token_expiration.total_seconds()
+                ),
                 "token": refresh_token.token,
                 "jwt_key": refresh_token.jwt_key,
                 "last_used_at": refresh_token.last_used_at.isoformat()

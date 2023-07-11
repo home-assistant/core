@@ -1,22 +1,28 @@
 """Alexa message handlers."""
+from __future__ import annotations
+
+from collections.abc import Callable, Coroutine
 import logging
 import math
+from typing import Any
 
 from homeassistant import core as ha
 from homeassistant.components import (
     button,
     camera,
+    climate,
     cover,
     fan,
     group,
+    humidifier,
     input_button,
     input_number,
     light,
     media_player,
+    number,
     timer,
     vacuum,
 )
-from homeassistant.components.climate import const as climate
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_ENTITY_PICTURE,
@@ -42,15 +48,14 @@ from homeassistant.const import (
     SERVICE_VOLUME_SET,
     SERVICE_VOLUME_UP,
     STATE_ALARM_DISARMED,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
+    UnitOfTemperature,
 )
 from homeassistant.helpers import network
-import homeassistant.util.color as color_util
+from homeassistant.util import color as color_util, dt as dt_util
 from homeassistant.util.decorator import Registry
-import homeassistant.util.dt as dt_util
-from homeassistant.util.temperature import convert as convert_temperature
+from homeassistant.util.unit_conversion import TemperatureConverter
 
+from .config import AbstractConfig
 from .const import (
     API_TEMP_UNITS,
     API_THERMOSTAT_MODES,
@@ -70,14 +75,27 @@ from .errors import (
     AlexaUnsupportedThermostatModeError,
     AlexaVideoActionNotPermittedForContentError,
 )
+from .messages import AlexaDirective, AlexaResponse
 from .state_report import async_enable_proactive_mode
 
 _LOGGER = logging.getLogger(__name__)
-HANDLERS = Registry()  # type: ignore[var-annotated]
+DIRECTIVE_NOT_SUPPORTED = "Entity does not support directive"
+HANDLERS: Registry[
+    tuple[str, str],
+    Callable[
+        [ha.HomeAssistant, AbstractConfig, AlexaDirective, ha.Context],
+        Coroutine[Any, Any, AlexaResponse],
+    ],
+] = Registry()
 
 
 @HANDLERS.register(("Alexa.Discovery", "Discover"))
-async def async_api_discovery(hass, config, directive, context):
+async def async_api_discovery(
+    hass: ha.HomeAssistant,
+    config: AbstractConfig,
+    directive: AlexaDirective,
+    context: ha.Context,
+) -> AlexaResponse:
     """Create a API formatted discovery response.
 
     Async friendly.
@@ -96,7 +114,12 @@ async def async_api_discovery(hass, config, directive, context):
 
 
 @HANDLERS.register(("Alexa.Authorization", "AcceptGrant"))
-async def async_api_accept_grant(hass, config, directive, context):
+async def async_api_accept_grant(
+    hass: ha.HomeAssistant,
+    config: AbstractConfig,
+    directive: AlexaDirective,
+    context: ha.Context,
+) -> AlexaResponse:
     """Create a API formatted AcceptGrant response.
 
     Async friendly.
@@ -116,7 +139,12 @@ async def async_api_accept_grant(hass, config, directive, context):
 
 
 @HANDLERS.register(("Alexa.PowerController", "TurnOn"))
-async def async_api_turn_on(hass, config, directive, context):
+async def async_api_turn_on(
+    hass: ha.HomeAssistant,
+    config: AbstractConfig,
+    directive: AlexaDirective,
+    context: ha.Context,
+) -> AlexaResponse:
     """Process a turn on request."""
     entity = directive.entity
     if (domain := entity.domain) == group.DOMAIN:
@@ -127,6 +155,8 @@ async def async_api_turn_on(hass, config, directive, context):
         service = cover.SERVICE_OPEN_COVER
     elif domain == fan.DOMAIN:
         service = fan.SERVICE_TURN_ON
+    elif domain == humidifier.DOMAIN:
+        service = humidifier.SERVICE_TURN_ON
     elif domain == vacuum.DOMAIN:
         supported = entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
         if (
@@ -157,7 +187,12 @@ async def async_api_turn_on(hass, config, directive, context):
 
 
 @HANDLERS.register(("Alexa.PowerController", "TurnOff"))
-async def async_api_turn_off(hass, config, directive, context):
+async def async_api_turn_off(
+    hass: ha.HomeAssistant,
+    config: AbstractConfig,
+    directive: AlexaDirective,
+    context: ha.Context,
+) -> AlexaResponse:
     """Process a turn off request."""
     entity = directive.entity
     domain = entity.domain
@@ -169,6 +204,8 @@ async def async_api_turn_off(hass, config, directive, context):
         service = cover.SERVICE_CLOSE_COVER
     elif domain == fan.DOMAIN:
         service = fan.SERVICE_TURN_OFF
+    elif domain == humidifier.DOMAIN:
+        service = humidifier.SERVICE_TURN_OFF
     elif domain == vacuum.DOMAIN:
         supported = entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
         if (
@@ -199,7 +236,12 @@ async def async_api_turn_off(hass, config, directive, context):
 
 
 @HANDLERS.register(("Alexa.BrightnessController", "SetBrightness"))
-async def async_api_set_brightness(hass, config, directive, context):
+async def async_api_set_brightness(
+    hass: ha.HomeAssistant,
+    config: AbstractConfig,
+    directive: AlexaDirective,
+    context: ha.Context,
+) -> AlexaResponse:
     """Process a set brightness request."""
     entity = directive.entity
     brightness = int(directive.payload["brightness"])
@@ -216,7 +258,12 @@ async def async_api_set_brightness(hass, config, directive, context):
 
 
 @HANDLERS.register(("Alexa.BrightnessController", "AdjustBrightness"))
-async def async_api_adjust_brightness(hass, config, directive, context):
+async def async_api_adjust_brightness(
+    hass: ha.HomeAssistant,
+    config: AbstractConfig,
+    directive: AlexaDirective,
+    context: ha.Context,
+) -> AlexaResponse:
     """Process an adjust brightness request."""
     entity = directive.entity
     brightness_delta = int(directive.payload["brightnessDelta"])
@@ -237,7 +284,12 @@ async def async_api_adjust_brightness(hass, config, directive, context):
 
 
 @HANDLERS.register(("Alexa.ColorController", "SetColor"))
-async def async_api_set_color(hass, config, directive, context):
+async def async_api_set_color(
+    hass: ha.HomeAssistant,
+    config: AbstractConfig,
+    directive: AlexaDirective,
+    context: ha.Context,
+) -> AlexaResponse:
     """Process a set color request."""
     entity = directive.entity
     rgb = color_util.color_hsb_to_RGB(
@@ -258,7 +310,12 @@ async def async_api_set_color(hass, config, directive, context):
 
 
 @HANDLERS.register(("Alexa.ColorTemperatureController", "SetColorTemperature"))
-async def async_api_set_color_temperature(hass, config, directive, context):
+async def async_api_set_color_temperature(
+    hass: ha.HomeAssistant,
+    config: AbstractConfig,
+    directive: AlexaDirective,
+    context: ha.Context,
+) -> AlexaResponse:
     """Process a set color temperature request."""
     entity = directive.entity
     kelvin = int(directive.payload["colorTemperatureInKelvin"])
@@ -275,7 +332,12 @@ async def async_api_set_color_temperature(hass, config, directive, context):
 
 
 @HANDLERS.register(("Alexa.ColorTemperatureController", "DecreaseColorTemperature"))
-async def async_api_decrease_color_temp(hass, config, directive, context):
+async def async_api_decrease_color_temp(
+    hass: ha.HomeAssistant,
+    config: AbstractConfig,
+    directive: AlexaDirective,
+    context: ha.Context,
+) -> AlexaResponse:
     """Process a decrease color temperature request."""
     entity = directive.entity
     current = int(entity.attributes.get(light.ATTR_COLOR_TEMP))
@@ -294,7 +356,12 @@ async def async_api_decrease_color_temp(hass, config, directive, context):
 
 
 @HANDLERS.register(("Alexa.ColorTemperatureController", "IncreaseColorTemperature"))
-async def async_api_increase_color_temp(hass, config, directive, context):
+async def async_api_increase_color_temp(
+    hass: ha.HomeAssistant,
+    config: AbstractConfig,
+    directive: AlexaDirective,
+    context: ha.Context,
+) -> AlexaResponse:
     """Process an increase color temperature request."""
     entity = directive.entity
     current = int(entity.attributes.get(light.ATTR_COLOR_TEMP))
@@ -313,7 +380,12 @@ async def async_api_increase_color_temp(hass, config, directive, context):
 
 
 @HANDLERS.register(("Alexa.SceneController", "Activate"))
-async def async_api_activate(hass, config, directive, context):
+async def async_api_activate(
+    hass: ha.HomeAssistant,
+    config: AbstractConfig,
+    directive: AlexaDirective,
+    context: ha.Context,
+) -> AlexaResponse:
     """Process an activate request."""
     entity = directive.entity
     domain = entity.domain
@@ -343,7 +415,12 @@ async def async_api_activate(hass, config, directive, context):
 
 
 @HANDLERS.register(("Alexa.SceneController", "Deactivate"))
-async def async_api_deactivate(hass, config, directive, context):
+async def async_api_deactivate(
+    hass: ha.HomeAssistant,
+    config: AbstractConfig,
+    directive: AlexaDirective,
+    context: ha.Context,
+) -> AlexaResponse:
     """Process a deactivate request."""
     entity = directive.entity
     domain = entity.domain
@@ -366,50 +443,13 @@ async def async_api_deactivate(hass, config, directive, context):
     )
 
 
-@HANDLERS.register(("Alexa.PercentageController", "SetPercentage"))
-async def async_api_set_percentage(hass, config, directive, context):
-    """Process a set percentage request."""
-    entity = directive.entity
-    service = None
-    data = {ATTR_ENTITY_ID: entity.entity_id}
-
-    if entity.domain == fan.DOMAIN:
-        service = fan.SERVICE_SET_PERCENTAGE
-        percentage = int(directive.payload["percentage"])
-        data[fan.ATTR_PERCENTAGE] = percentage
-
-    await hass.services.async_call(
-        entity.domain, service, data, blocking=False, context=context
-    )
-
-    return directive.response()
-
-
-@HANDLERS.register(("Alexa.PercentageController", "AdjustPercentage"))
-async def async_api_adjust_percentage(hass, config, directive, context):
-    """Process an adjust percentage request."""
-    entity = directive.entity
-    percentage_delta = int(directive.payload["percentageDelta"])
-    service = None
-    data = {ATTR_ENTITY_ID: entity.entity_id}
-
-    if entity.domain == fan.DOMAIN:
-        service = fan.SERVICE_SET_PERCENTAGE
-        current = entity.attributes.get(fan.ATTR_PERCENTAGE) or 0
-
-        # set percentage
-        percentage = min(100, max(0, percentage_delta + current))
-        data[fan.ATTR_PERCENTAGE] = percentage
-
-    await hass.services.async_call(
-        entity.domain, service, data, blocking=False, context=context
-    )
-
-    return directive.response()
-
-
 @HANDLERS.register(("Alexa.LockController", "Lock"))
-async def async_api_lock(hass, config, directive, context):
+async def async_api_lock(
+    hass: ha.HomeAssistant,
+    config: AbstractConfig,
+    directive: AlexaDirective,
+    context: ha.Context,
+) -> AlexaResponse:
     """Process a lock request."""
     entity = directive.entity
     await hass.services.async_call(
@@ -428,10 +468,18 @@ async def async_api_lock(hass, config, directive, context):
 
 
 @HANDLERS.register(("Alexa.LockController", "Unlock"))
-async def async_api_unlock(hass, config, directive, context):
+async def async_api_unlock(
+    hass: ha.HomeAssistant,
+    config: AbstractConfig,
+    directive: AlexaDirective,
+    context: ha.Context,
+) -> AlexaResponse:
     """Process an unlock request."""
     if config.locale not in {"de-DE", "en-US", "ja-JP"}:
-        msg = f"The unlock directive is not supported for the following locales: {config.locale}"
+        msg = (
+            "The unlock directive is not supported for the following locales:"
+            f" {config.locale}"
+        )
         raise AlexaInvalidDirectiveError(msg)
 
     entity = directive.entity
@@ -452,7 +500,12 @@ async def async_api_unlock(hass, config, directive, context):
 
 
 @HANDLERS.register(("Alexa.Speaker", "SetVolume"))
-async def async_api_set_volume(hass, config, directive, context):
+async def async_api_set_volume(
+    hass: ha.HomeAssistant,
+    config: AbstractConfig,
+    directive: AlexaDirective,
+    context: ha.Context,
+) -> AlexaResponse:
     """Process a set volume request."""
     volume = round(float(directive.payload["volume"] / 100), 2)
     entity = directive.entity
@@ -470,7 +523,12 @@ async def async_api_set_volume(hass, config, directive, context):
 
 
 @HANDLERS.register(("Alexa.InputController", "SelectInput"))
-async def async_api_select_input(hass, config, directive, context):
+async def async_api_select_input(
+    hass: ha.HomeAssistant,
+    config: AbstractConfig,
+    directive: AlexaDirective,
+    context: ha.Context,
+) -> AlexaResponse:
     """Process a set input request."""
     media_input = directive.payload["input"]
     entity = directive.entity
@@ -514,7 +572,12 @@ async def async_api_select_input(hass, config, directive, context):
 
 
 @HANDLERS.register(("Alexa.Speaker", "AdjustVolume"))
-async def async_api_adjust_volume(hass, config, directive, context):
+async def async_api_adjust_volume(
+    hass: ha.HomeAssistant,
+    config: AbstractConfig,
+    directive: AlexaDirective,
+    context: ha.Context,
+) -> AlexaResponse:
     """Process an adjust volume request."""
     volume_delta = int(directive.payload["volume"])
 
@@ -542,13 +605,19 @@ async def async_api_adjust_volume(hass, config, directive, context):
 
 
 @HANDLERS.register(("Alexa.StepSpeaker", "AdjustVolume"))
-async def async_api_adjust_volume_step(hass, config, directive, context):
+async def async_api_adjust_volume_step(
+    hass: ha.HomeAssistant,
+    config: AbstractConfig,
+    directive: AlexaDirective,
+    context: ha.Context,
+) -> AlexaResponse:
     """Process an adjust volume step request."""
     # media_player volume up/down service does not support specifying steps
     # each component handles it differently e.g. via config.
-    # This workaround will simply call the volume up/Volume down the amount of steps asked for
-    # When no steps are called in the request, Alexa sends a default of 10 steps which for most
-    # purposes is too high. The default  is set 1 in this case.
+    # This workaround will simply call the volume up/Volume down the amount of
+    # steps asked for. When no steps are called in the request, Alexa sends
+    # a default of 10 steps which for most purposes is too high. The default
+    # is set 1 in this case.
     entity = directive.entity
     volume_int = int(directive.payload["volumeSteps"])
     is_default = bool(directive.payload["volumeStepsDefault"])
@@ -575,7 +644,12 @@ async def async_api_adjust_volume_step(hass, config, directive, context):
 
 @HANDLERS.register(("Alexa.StepSpeaker", "SetMute"))
 @HANDLERS.register(("Alexa.Speaker", "SetMute"))
-async def async_api_set_mute(hass, config, directive, context):
+async def async_api_set_mute(
+    hass: ha.HomeAssistant,
+    config: AbstractConfig,
+    directive: AlexaDirective,
+    context: ha.Context,
+) -> AlexaResponse:
     """Process a set mute request."""
     mute = bool(directive.payload["mute"])
     entity = directive.entity
@@ -592,7 +666,12 @@ async def async_api_set_mute(hass, config, directive, context):
 
 
 @HANDLERS.register(("Alexa.PlaybackController", "Play"))
-async def async_api_play(hass, config, directive, context):
+async def async_api_play(
+    hass: ha.HomeAssistant,
+    config: AbstractConfig,
+    directive: AlexaDirective,
+    context: ha.Context,
+) -> AlexaResponse:
     """Process a play request."""
     entity = directive.entity
     data = {ATTR_ENTITY_ID: entity.entity_id}
@@ -605,7 +684,12 @@ async def async_api_play(hass, config, directive, context):
 
 
 @HANDLERS.register(("Alexa.PlaybackController", "Pause"))
-async def async_api_pause(hass, config, directive, context):
+async def async_api_pause(
+    hass: ha.HomeAssistant,
+    config: AbstractConfig,
+    directive: AlexaDirective,
+    context: ha.Context,
+) -> AlexaResponse:
     """Process a pause request."""
     entity = directive.entity
     data = {ATTR_ENTITY_ID: entity.entity_id}
@@ -618,7 +702,12 @@ async def async_api_pause(hass, config, directive, context):
 
 
 @HANDLERS.register(("Alexa.PlaybackController", "Stop"))
-async def async_api_stop(hass, config, directive, context):
+async def async_api_stop(
+    hass: ha.HomeAssistant,
+    config: AbstractConfig,
+    directive: AlexaDirective,
+    context: ha.Context,
+) -> AlexaResponse:
     """Process a stop request."""
     entity = directive.entity
     data = {ATTR_ENTITY_ID: entity.entity_id}
@@ -631,7 +720,12 @@ async def async_api_stop(hass, config, directive, context):
 
 
 @HANDLERS.register(("Alexa.PlaybackController", "Next"))
-async def async_api_next(hass, config, directive, context):
+async def async_api_next(
+    hass: ha.HomeAssistant,
+    config: AbstractConfig,
+    directive: AlexaDirective,
+    context: ha.Context,
+) -> AlexaResponse:
     """Process a next request."""
     entity = directive.entity
     data = {ATTR_ENTITY_ID: entity.entity_id}
@@ -644,7 +738,12 @@ async def async_api_next(hass, config, directive, context):
 
 
 @HANDLERS.register(("Alexa.PlaybackController", "Previous"))
-async def async_api_previous(hass, config, directive, context):
+async def async_api_previous(
+    hass: ha.HomeAssistant,
+    config: AbstractConfig,
+    directive: AlexaDirective,
+    context: ha.Context,
+) -> AlexaResponse:
     """Process a previous request."""
     entity = directive.entity
     data = {ATTR_ENTITY_ID: entity.entity_id}
@@ -663,20 +762,27 @@ async def async_api_previous(hass, config, directive, context):
 def temperature_from_object(hass, temp_obj, interval=False):
     """Get temperature from Temperature object in requested unit."""
     to_unit = hass.config.units.temperature_unit
-    from_unit = TEMP_CELSIUS
+    from_unit = UnitOfTemperature.CELSIUS
     temp = float(temp_obj["value"])
 
     if temp_obj["scale"] == "FAHRENHEIT":
-        from_unit = TEMP_FAHRENHEIT
+        from_unit = UnitOfTemperature.FAHRENHEIT
     elif temp_obj["scale"] == "KELVIN" and not interval:
         # convert to Celsius if absolute temperature
         temp -= 273.15
 
-    return convert_temperature(temp, from_unit, to_unit, interval)
+    if interval:
+        return TemperatureConverter.convert_interval(temp, from_unit, to_unit)
+    return TemperatureConverter.convert(temp, from_unit, to_unit)
 
 
 @HANDLERS.register(("Alexa.ThermostatController", "SetTargetTemperature"))
-async def async_api_set_target_temp(hass, config, directive, context):
+async def async_api_set_target_temp(
+    hass: ha.HomeAssistant,
+    config: AbstractConfig,
+    directive: AlexaDirective,
+    context: ha.Context,
+) -> AlexaResponse:
     """Process a set target temperature request."""
     entity = directive.entity
     min_temp = entity.attributes.get(climate.ATTR_MIN_TEMP)
@@ -736,7 +842,12 @@ async def async_api_set_target_temp(hass, config, directive, context):
 
 
 @HANDLERS.register(("Alexa.ThermostatController", "AdjustTargetTemperature"))
-async def async_api_adjust_target_temp(hass, config, directive, context):
+async def async_api_adjust_target_temp(
+    hass: ha.HomeAssistant,
+    config: AbstractConfig,
+    directive: AlexaDirective,
+    context: ha.Context,
+) -> AlexaResponse:
     """Process an adjust target temperature request."""
     entity = directive.entity
     min_temp = entity.attributes.get(climate.ATTR_MIN_TEMP)
@@ -773,7 +884,12 @@ async def async_api_adjust_target_temp(hass, config, directive, context):
 
 
 @HANDLERS.register(("Alexa.ThermostatController", "SetThermostatMode"))
-async def async_api_set_thermostat_mode(hass, config, directive, context):
+async def async_api_set_thermostat_mode(
+    hass: ha.HomeAssistant,
+    config: AbstractConfig,
+    directive: AlexaDirective,
+    context: ha.Context,
+) -> AlexaResponse:
     """Process a set thermostat mode request."""
     entity = directive.entity
     mode = directive.payload["thermostatMode"]
@@ -836,13 +952,23 @@ async def async_api_set_thermostat_mode(hass, config, directive, context):
 
 
 @HANDLERS.register(("Alexa", "ReportState"))
-async def async_api_reportstate(hass, config, directive, context):
+async def async_api_reportstate(
+    hass: ha.HomeAssistant,
+    config: AbstractConfig,
+    directive: AlexaDirective,
+    context: ha.Context,
+) -> AlexaResponse:
     """Process a ReportState request."""
     return directive.response(name="StateReport")
 
 
 @HANDLERS.register(("Alexa.SecurityPanelController", "Arm"))
-async def async_api_arm(hass, config, directive, context):
+async def async_api_arm(
+    hass: ha.HomeAssistant,
+    config: AbstractConfig,
+    directive: AlexaDirective,
+    context: ha.Context,
+) -> AlexaResponse:
     """Process a Security Panel Arm request."""
     entity = directive.entity
     service = None
@@ -859,6 +985,8 @@ async def async_api_arm(hass, config, directive, context):
         service = SERVICE_ALARM_ARM_NIGHT
     elif arm_state == "ARMED_STAY":
         service = SERVICE_ALARM_ARM_HOME
+    else:
+        raise AlexaInvalidDirectiveError(DIRECTIVE_NOT_SUPPORTED)
 
     await hass.services.async_call(
         entity.domain, service, data, blocking=False, context=context
@@ -883,14 +1011,20 @@ async def async_api_arm(hass, config, directive, context):
 
 
 @HANDLERS.register(("Alexa.SecurityPanelController", "Disarm"))
-async def async_api_disarm(hass, config, directive, context):
+async def async_api_disarm(
+    hass: ha.HomeAssistant,
+    config: AbstractConfig,
+    directive: AlexaDirective,
+    context: ha.Context,
+) -> AlexaResponse:
     """Process a Security Panel Disarm request."""
     entity = directive.entity
     data = {ATTR_ENTITY_ID: entity.entity_id}
     response = directive.response()
 
-    # Per Alexa Documentation: If you receive a Disarm directive, and the system is already disarmed,
-    # respond with a success response, not an error response.
+    # Per Alexa Documentation: If you receive a Disarm directive, and the
+    # system is already disarmed, respond with a success response,
+    # not an error response.
     if entity.state == STATE_ALARM_DISARMED:
         return response
 
@@ -916,7 +1050,12 @@ async def async_api_disarm(hass, config, directive, context):
 
 
 @HANDLERS.register(("Alexa.ModeController", "SetMode"))
-async def async_api_set_mode(hass, config, directive, context):
+async def async_api_set_mode(
+    hass: ha.HomeAssistant,
+    config: AbstractConfig,
+    directive: AlexaDirective,
+    context: ha.Context,
+) -> AlexaResponse:
     """Process a SetMode directive."""
     entity = directive.entity
     instance = directive.instance
@@ -944,6 +1083,18 @@ async def async_api_set_mode(hass, config, directive, context):
             msg = f"Entity '{entity.entity_id}' does not support Preset '{preset_mode}'"
             raise AlexaInvalidValueError(msg)
 
+    # Humidifier mode
+    elif instance == f"{humidifier.DOMAIN}.{humidifier.ATTR_MODE}":
+        mode = mode.split(".")[1]
+        if mode != PRESET_MODE_NA and mode in entity.attributes.get(
+            humidifier.ATTR_AVAILABLE_MODES
+        ):
+            service = humidifier.SERVICE_SET_MODE
+            data[humidifier.ATTR_MODE] = mode
+        else:
+            msg = f"Entity '{entity.entity_id}' does not support Mode '{mode}'"
+            raise AlexaInvalidValueError(msg)
+
     # Cover Position
     elif instance == f"{cover.DOMAIN}.{cover.ATTR_POSITION}":
         position = mode.split(".")[1]
@@ -955,9 +1106,8 @@ async def async_api_set_mode(hass, config, directive, context):
         elif position == "custom":
             service = cover.SERVICE_STOP_COVER
 
-    else:
-        msg = "Entity does not support directive"
-        raise AlexaInvalidDirectiveError(msg)
+    if not service:
+        raise AlexaInvalidDirectiveError(DIRECTIVE_NOT_SUPPORTED)
 
     await hass.services.async_call(
         domain, service, data, blocking=False, context=context
@@ -977,34 +1127,44 @@ async def async_api_set_mode(hass, config, directive, context):
 
 
 @HANDLERS.register(("Alexa.ModeController", "AdjustMode"))
-async def async_api_adjust_mode(hass, config, directive, context):
+async def async_api_adjust_mode(
+    hass: ha.HomeAssistant,
+    config: AbstractConfig,
+    directive: AlexaDirective,
+    context: ha.Context,
+) -> AlexaResponse:
     """Process a AdjustMode request.
 
     Requires capabilityResources supportedModes to be ordered.
     Only supportedModes with ordered=True support the adjustMode directive.
     """
 
-    # Currently no supportedModes are configured with ordered=True to support this request.
-    msg = "Entity does not support directive"
-    raise AlexaInvalidDirectiveError(msg)
+    # Currently no supportedModes are configured with ordered=True
+    # to support this request.
+    raise AlexaInvalidDirectiveError(DIRECTIVE_NOT_SUPPORTED)
 
 
 @HANDLERS.register(("Alexa.ToggleController", "TurnOn"))
-async def async_api_toggle_on(hass, config, directive, context):
+async def async_api_toggle_on(
+    hass: ha.HomeAssistant,
+    config: AbstractConfig,
+    directive: AlexaDirective,
+    context: ha.Context,
+) -> AlexaResponse:
     """Process a toggle on request."""
     entity = directive.entity
     instance = directive.instance
     domain = entity.domain
-    service = None
-    data = {ATTR_ENTITY_ID: entity.entity_id}
 
     # Fan Oscillating
-    if instance == f"{fan.DOMAIN}.{fan.ATTR_OSCILLATING}":
-        service = fan.SERVICE_OSCILLATE
-        data[fan.ATTR_OSCILLATING] = True
-    else:
-        msg = "Entity does not support directive"
-        raise AlexaInvalidDirectiveError(msg)
+    if instance != f"{fan.DOMAIN}.{fan.ATTR_OSCILLATING}":
+        raise AlexaInvalidDirectiveError(DIRECTIVE_NOT_SUPPORTED)
+
+    service = fan.SERVICE_OSCILLATE
+    data = {
+        ATTR_ENTITY_ID: entity.entity_id,
+        fan.ATTR_OSCILLATING: True,
+    }
 
     await hass.services.async_call(
         domain, service, data, blocking=False, context=context
@@ -1024,21 +1184,26 @@ async def async_api_toggle_on(hass, config, directive, context):
 
 
 @HANDLERS.register(("Alexa.ToggleController", "TurnOff"))
-async def async_api_toggle_off(hass, config, directive, context):
+async def async_api_toggle_off(
+    hass: ha.HomeAssistant,
+    config: AbstractConfig,
+    directive: AlexaDirective,
+    context: ha.Context,
+) -> AlexaResponse:
     """Process a toggle off request."""
     entity = directive.entity
     instance = directive.instance
     domain = entity.domain
-    service = None
-    data = {ATTR_ENTITY_ID: entity.entity_id}
 
     # Fan Oscillating
-    if instance == f"{fan.DOMAIN}.{fan.ATTR_OSCILLATING}":
-        service = fan.SERVICE_OSCILLATE
-        data[fan.ATTR_OSCILLATING] = False
-    else:
-        msg = "Entity does not support directive"
-        raise AlexaInvalidDirectiveError(msg)
+    if instance != f"{fan.DOMAIN}.{fan.ATTR_OSCILLATING}":
+        raise AlexaInvalidDirectiveError(DIRECTIVE_NOT_SUPPORTED)
+
+    service = fan.SERVICE_OSCILLATE
+    data = {
+        ATTR_ENTITY_ID: entity.entity_id,
+        fan.ATTR_OSCILLATING: False,
+    }
 
     await hass.services.async_call(
         domain, service, data, blocking=False, context=context
@@ -1058,7 +1223,12 @@ async def async_api_toggle_off(hass, config, directive, context):
 
 
 @HANDLERS.register(("Alexa.RangeController", "SetRangeValue"))
-async def async_api_set_range(hass, config, directive, context):
+async def async_api_set_range(
+    hass: ha.HomeAssistant,
+    config: AbstractConfig,
+    directive: AlexaDirective,
+    context: ha.Context,
+) -> AlexaResponse:
     """Process a next request."""
     entity = directive.entity
     instance = directive.instance
@@ -1102,6 +1272,12 @@ async def async_api_set_range(hass, config, directive, context):
             else:
                 service = fan.SERVICE_TURN_ON
 
+    # Humidifier target humidity
+    elif instance == f"{humidifier.DOMAIN}.{humidifier.ATTR_HUMIDITY}":
+        range_value = int(range_value)
+        service = humidifier.SERVICE_SET_HUMIDITY
+        data[humidifier.ATTR_HUMIDITY] = range_value
+
     # Input Number Value
     elif instance == f"{input_number.DOMAIN}.{input_number.ATTR_VALUE}":
         range_value = float(range_value)
@@ -1109,6 +1285,14 @@ async def async_api_set_range(hass, config, directive, context):
         min_value = float(entity.attributes[input_number.ATTR_MIN])
         max_value = float(entity.attributes[input_number.ATTR_MAX])
         data[input_number.ATTR_VALUE] = min(max_value, max(min_value, range_value))
+
+    # Input Number Value
+    elif instance == f"{number.DOMAIN}.{number.ATTR_VALUE}":
+        range_value = float(range_value)
+        service = number.SERVICE_SET_VALUE
+        min_value = float(entity.attributes[number.ATTR_MIN])
+        max_value = float(entity.attributes[number.ATTR_MAX])
+        data[number.ATTR_VALUE] = min(max_value, max(min_value, range_value))
 
     # Vacuum Fan Speed
     elif instance == f"{vacuum.DOMAIN}.{vacuum.ATTR_FAN_SPEED}":
@@ -1125,8 +1309,7 @@ async def async_api_set_range(hass, config, directive, context):
         data[vacuum.ATTR_FAN_SPEED] = speed
 
     else:
-        msg = "Entity does not support directive"
-        raise AlexaInvalidDirectiveError(msg)
+        raise AlexaInvalidDirectiveError(DIRECTIVE_NOT_SUPPORTED)
 
     await hass.services.async_call(
         domain, service, data, blocking=False, context=context
@@ -1146,16 +1329,21 @@ async def async_api_set_range(hass, config, directive, context):
 
 
 @HANDLERS.register(("Alexa.RangeController", "AdjustRangeValue"))
-async def async_api_adjust_range(hass, config, directive, context):
+async def async_api_adjust_range(
+    hass: ha.HomeAssistant,
+    config: AbstractConfig,
+    directive: AlexaDirective,
+    context: ha.Context,
+) -> AlexaResponse:
     """Process a next request."""
     entity = directive.entity
     instance = directive.instance
     domain = entity.domain
     service = None
-    data = {ATTR_ENTITY_ID: entity.entity_id}
+    data: dict[str, Any] = {ATTR_ENTITY_ID: entity.entity_id}
     range_delta = directive.payload["rangeValueDelta"]
     range_delta_default = bool(directive.payload["rangeValueDeltaDefault"])
-    response_value = 0
+    response_value: int | None = 0
 
     # Cover Position
     if instance == f"{cover.DOMAIN}.{cover.ATTR_POSITION}":
@@ -1206,6 +1394,26 @@ async def async_api_adjust_range(hass, config, directive, context):
         else:
             service = fan.SERVICE_TURN_OFF
 
+    # Humidifier target humidity
+    elif instance == f"{humidifier.DOMAIN}.{humidifier.ATTR_HUMIDITY}":
+        percentage_step = 5
+        range_delta = (
+            int(range_delta * percentage_step)
+            if range_delta_default
+            else int(range_delta)
+        )
+        service = humidifier.SERVICE_SET_HUMIDITY
+        if not (current := entity.attributes.get(humidifier.ATTR_HUMIDITY)):
+            msg = f"Unable to determine {entity.entity_id} current target humidity"
+            raise AlexaInvalidValueError(msg)
+        min_value = entity.attributes.get(humidifier.ATTR_MIN_HUMIDITY, 10)
+        max_value = entity.attributes.get(humidifier.ATTR_MAX_HUMIDITY, 90)
+        percentage = response_value = min(
+            max_value, max(min_value, range_delta + current)
+        )
+        if percentage:
+            data[humidifier.ATTR_HUMIDITY] = percentage
+
     # Input Number Value
     elif instance == f"{input_number.DOMAIN}.{input_number.ATTR_VALUE}":
         range_delta = float(range_delta)
@@ -1214,6 +1422,17 @@ async def async_api_adjust_range(hass, config, directive, context):
         max_value = float(entity.attributes[input_number.ATTR_MAX])
         current = float(entity.state)
         data[input_number.ATTR_VALUE] = response_value = min(
+            max_value, max(min_value, range_delta + current)
+        )
+
+    # Number Value
+    elif instance == f"{number.DOMAIN}.{number.ATTR_VALUE}":
+        range_delta = float(range_delta)
+        service = number.SERVICE_SET_VALUE
+        min_value = float(entity.attributes[number.ATTR_MIN])
+        max_value = float(entity.attributes[number.ATTR_MAX])
+        current = float(entity.state)
+        data[number.ATTR_VALUE] = response_value = min(
             max_value, max(min_value, range_delta + current)
         )
 
@@ -1232,12 +1451,10 @@ async def async_api_adjust_range(hass, config, directive, context):
         speed = next(
             (v for i, v in enumerate(speed_list) if i == new_speed_index), None
         )
-
         data[vacuum.ATTR_FAN_SPEED] = response_value = speed
 
     else:
-        msg = "Entity does not support directive"
-        raise AlexaInvalidDirectiveError(msg)
+        raise AlexaInvalidDirectiveError(DIRECTIVE_NOT_SUPPORTED)
 
     await hass.services.async_call(
         domain, service, data, blocking=False, context=context
@@ -1257,7 +1474,12 @@ async def async_api_adjust_range(hass, config, directive, context):
 
 
 @HANDLERS.register(("Alexa.ChannelController", "ChangeChannel"))
-async def async_api_changechannel(hass, config, directive, context):
+async def async_api_changechannel(
+    hass: ha.HomeAssistant,
+    config: AbstractConfig,
+    directive: AlexaDirective,
+    context: ha.Context,
+) -> AlexaResponse:
     """Process a change channel request."""
     channel = "0"
     entity = directive.entity
@@ -1284,7 +1506,9 @@ async def async_api_changechannel(hass, config, directive, context):
     data = {
         ATTR_ENTITY_ID: entity.entity_id,
         media_player.const.ATTR_MEDIA_CONTENT_ID: channel,
-        media_player.const.ATTR_MEDIA_CONTENT_TYPE: media_player.const.MEDIA_TYPE_CHANNEL,
+        media_player.const.ATTR_MEDIA_CONTENT_TYPE: (
+            media_player.const.MEDIA_TYPE_CHANNEL
+        ),
     }
 
     await hass.services.async_call(
@@ -1309,7 +1533,12 @@ async def async_api_changechannel(hass, config, directive, context):
 
 
 @HANDLERS.register(("Alexa.ChannelController", "SkipChannels"))
-async def async_api_skipchannel(hass, config, directive, context):
+async def async_api_skipchannel(
+    hass: ha.HomeAssistant,
+    config: AbstractConfig,
+    directive: AlexaDirective,
+    context: ha.Context,
+) -> AlexaResponse:
     """Process a skipchannel request."""
     channel = int(directive.payload["channelCount"])
     entity = directive.entity
@@ -1340,7 +1569,12 @@ async def async_api_skipchannel(hass, config, directive, context):
 
 
 @HANDLERS.register(("Alexa.SeekController", "AdjustSeekPosition"))
-async def async_api_seek(hass, config, directive, context):
+async def async_api_seek(
+    hass: ha.HomeAssistant,
+    config: AbstractConfig,
+    directive: AlexaDirective,
+    context: ha.Context,
+) -> AlexaResponse:
     """Process a seek request."""
     entity = directive.entity
     position_delta = int(directive.payload["deltaPositionMilliseconds"])
@@ -1379,7 +1613,12 @@ async def async_api_seek(hass, config, directive, context):
 
 
 @HANDLERS.register(("Alexa.EqualizerController", "SetMode"))
-async def async_api_set_eq_mode(hass, config, directive, context):
+async def async_api_set_eq_mode(
+    hass: ha.HomeAssistant,
+    config: AbstractConfig,
+    directive: AlexaDirective,
+    context: ha.Context,
+) -> AlexaResponse:
     """Process a SetMode request for EqualizerController."""
     mode = directive.payload["mode"]
     entity = directive.entity
@@ -1406,18 +1645,27 @@ async def async_api_set_eq_mode(hass, config, directive, context):
 @HANDLERS.register(("Alexa.EqualizerController", "AdjustBands"))
 @HANDLERS.register(("Alexa.EqualizerController", "ResetBands"))
 @HANDLERS.register(("Alexa.EqualizerController", "SetBands"))
-async def async_api_bands_directive(hass, config, directive, context):
+async def async_api_bands_directive(
+    hass: ha.HomeAssistant,
+    config: AbstractConfig,
+    directive: AlexaDirective,
+    context: ha.Context,
+) -> AlexaResponse:
     """Handle an AdjustBands, ResetBands, SetBands request.
 
     Only mode directives are currently supported for the EqualizerController.
     """
     # Currently bands directives are not supported.
-    msg = "Entity does not support directive"
-    raise AlexaInvalidDirectiveError(msg)
+    raise AlexaInvalidDirectiveError(DIRECTIVE_NOT_SUPPORTED)
 
 
 @HANDLERS.register(("Alexa.TimeHoldController", "Hold"))
-async def async_api_hold(hass, config, directive, context):
+async def async_api_hold(
+    hass: ha.HomeAssistant,
+    config: AbstractConfig,
+    directive: AlexaDirective,
+    context: ha.Context,
+) -> AlexaResponse:
     """Process a TimeHoldController Hold request."""
     entity = directive.entity
     data = {ATTR_ENTITY_ID: entity.entity_id}
@@ -1429,8 +1677,7 @@ async def async_api_hold(hass, config, directive, context):
         service = vacuum.SERVICE_START_PAUSE
 
     else:
-        msg = "Entity does not support directive"
-        raise AlexaInvalidDirectiveError(msg)
+        raise AlexaInvalidDirectiveError(DIRECTIVE_NOT_SUPPORTED)
 
     await hass.services.async_call(
         entity.domain, service, data, blocking=False, context=context
@@ -1440,7 +1687,12 @@ async def async_api_hold(hass, config, directive, context):
 
 
 @HANDLERS.register(("Alexa.TimeHoldController", "Resume"))
-async def async_api_resume(hass, config, directive, context):
+async def async_api_resume(
+    hass: ha.HomeAssistant,
+    config: AbstractConfig,
+    directive: AlexaDirective,
+    context: ha.Context,
+) -> AlexaResponse:
     """Process a TimeHoldController Resume request."""
     entity = directive.entity
     data = {ATTR_ENTITY_ID: entity.entity_id}
@@ -1452,8 +1704,7 @@ async def async_api_resume(hass, config, directive, context):
         service = vacuum.SERVICE_START_PAUSE
 
     else:
-        msg = "Entity does not support directive"
-        raise AlexaInvalidDirectiveError(msg)
+        raise AlexaInvalidDirectiveError(DIRECTIVE_NOT_SUPPORTED)
 
     await hass.services.async_call(
         entity.domain, service, data, blocking=False, context=context
@@ -1463,11 +1714,18 @@ async def async_api_resume(hass, config, directive, context):
 
 
 @HANDLERS.register(("Alexa.CameraStreamController", "InitializeCameraStreams"))
-async def async_api_initialize_camera_stream(hass, config, directive, context):
+async def async_api_initialize_camera_stream(
+    hass: ha.HomeAssistant,
+    config: AbstractConfig,
+    directive: AlexaDirective,
+    context: ha.Context,
+) -> AlexaResponse:
     """Process a InitializeCameraStreams request."""
     entity = directive.entity
     stream_source = await camera.async_request_stream(hass, entity.entity_id, fmt="hls")
-    camera_image = hass.states.get(entity.entity_id).attributes[ATTR_ENTITY_PICTURE]
+    state = hass.states.get(entity.entity_id)
+    assert state
+    camera_image = state.attributes[ATTR_ENTITY_PICTURE]
 
     try:
         external_url = network.get_url(

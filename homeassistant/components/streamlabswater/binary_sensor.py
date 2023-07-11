@@ -75,6 +75,6 @@ class StreamlabsAwayMode(BinarySensorEntity):
         """Return if away mode is on."""
         return self._streamlabs_location_data.is_away()
 
-    def update(self):
+    def update(self) -> None:
         """Retrieve the latest location data and away mode state."""
         self._streamlabs_location_data.update()

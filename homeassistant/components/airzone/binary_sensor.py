@@ -21,8 +21,8 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
@@ -118,6 +118,12 @@ class AirzoneBinarySensor(AirzoneEntity, BinarySensorEntity):
     """Define an Airzone binary sensor."""
 
     entity_description: AirzoneBinarySensorEntityDescription
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Update attributes when the coordinator updates."""
+        self._async_update_attrs()
+        super()._handle_coordinator_update()
 
     @callback
     def _async_update_attrs(self) -> None:

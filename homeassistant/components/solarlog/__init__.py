@@ -23,7 +23,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     coordinator = SolarlogData(hass, entry)
     await coordinator.async_config_entry_first_refresh()
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
 
@@ -56,7 +56,7 @@ class SolarlogData(update_coordinator.DataUpdateCoordinator):
         try:
             data = await self.hass.async_add_executor_job(SolarLog, self.host)
         except (OSError, Timeout, HTTPError) as err:
-            raise update_coordinator.UpdateFailed(err)
+            raise update_coordinator.UpdateFailed(err) from err
 
         if data.time.year == 1999:
             raise update_coordinator.UpdateFailed(
@@ -64,7 +64,10 @@ class SolarlogData(update_coordinator.DataUpdateCoordinator):
             )
 
         self.logger.debug(
-            "Connection to Solarlog successful. Retrieving latest Solarlog update of %s",
+            (
+                "Connection to Solarlog successful. Retrieving latest Solarlog update"
+                " of %s"
+            ),
             data.time,
         )
 

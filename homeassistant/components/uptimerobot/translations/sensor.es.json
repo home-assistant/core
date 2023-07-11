@@ -1,9 +1,0 @@
-{
-    "state": {
-        "uptimerobot__monitor_status": {
-            "not_checked_yet": "No comprobado",
-            "pause": "En pausa",
-            "up": "Funcionante"
-        }
-    }
-}

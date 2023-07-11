@@ -3,21 +3,23 @@ from __future__ import annotations
 
 from datetime import date, datetime, time, timedelta
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from pytrafikverket import TrafikverketTrain
+from pytrafikverket.exceptions import (
+    MultipleTrainAnnouncementFound,
+    NoTrainAnnouncementFound,
+)
 from pytrafikverket.trafikverket_train import StationInfo, TrainStop
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_API_KEY, CONF_NAME, CONF_WEEKDAY, WEEKDAYS
+from homeassistant.const import CONF_NAME, CONF_WEEKDAY, WEEKDAYS
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.util import dt
+from homeassistant.util import dt as dt_util
 
 from .const import CONF_FROM, CONF_TIME, CONF_TO, DOMAIN
 from .util import create_unique_id
@@ -42,24 +44,11 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Trafikverket sensor entry."""
 
-    httpsession = async_get_clientsession(hass)
-    train_api = TrafikverketTrain(httpsession, entry.data[CONF_API_KEY])
-
-    try:
-        to_station = await train_api.async_get_train_station(entry.data[CONF_TO])
-        from_station = await train_api.async_get_train_station(entry.data[CONF_FROM])
-    except ValueError as error:
-        if "Invalid authentication" in error.args[0]:
-            raise ConfigEntryAuthFailed from error
-        raise ConfigEntryNotReady(
-            f"Problem when trying station {entry.data[CONF_FROM]} to {entry.data[CONF_TO]}. Error: {error} "
-        ) from error
-
-    train_time = (
-        dt.parse_time(entry.data.get(CONF_TIME, ""))
-        if entry.data.get(CONF_TIME)
-        else None
-    )
+    train_api = hass.data[DOMAIN][entry.entry_id]["train_api"]
+    to_station = hass.data[DOMAIN][entry.entry_id][CONF_TO]
+    from_station = hass.data[DOMAIN][entry.entry_id][CONF_FROM]
+    get_time: str | None = entry.data.get(CONF_TIME)
+    train_time = dt_util.parse_time(get_time) if get_time else None
 
     async_add_entities(
         [
@@ -100,7 +89,7 @@ def next_departuredate(departure: list[str]) -> date:
 
 def _to_iso_format(traintime: datetime) -> str:
     """Return isoformatted utc time."""
-    return dt.as_utc(traintime).isoformat()
+    return dt_util.as_utc(traintime).isoformat()
 
 
 class TrainSensor(SensorEntity):
@@ -108,6 +97,8 @@ class TrainSensor(SensorEntity):
 
     _attr_icon = ICON
     _attr_device_class = SensorDeviceClass.TIMESTAMP
+    _attr_has_entity_name = True
+    _attr_name = None
 
     def __init__(
         self,
@@ -121,7 +112,6 @@ class TrainSensor(SensorEntity):
     ) -> None:
         """Initialize the sensor."""
         self._train_api = train_api
-        self._attr_name = name
         self._from_station = from_station
         self._to_station = to_station
         self._weekday = weekday
@@ -134,31 +124,35 @@ class TrainSensor(SensorEntity):
             name=name,
             configuration_url="https://api.trafikinfo.trafikverket.se/",
         )
+        if TYPE_CHECKING:
+            assert from_station.name and to_station.name
         self._attr_unique_id = create_unique_id(
             from_station.name, to_station.name, departuretime, weekday
         )
 
     async def async_update(self) -> None:
         """Retrieve latest state."""
-        when = dt.now()
+        when = dt_util.now()
         _state: TrainStop | None = None
         if self._time:
             departure_day = next_departuredate(self._weekday)
             when = datetime.combine(
-                departure_day, self._time, dt.get_time_zone(self.hass.config.time_zone)
+                departure_day,
+                self._time,
+                dt_util.get_time_zone(self.hass.config.time_zone),
             )
         try:
             if self._time:
+                _LOGGER.debug("%s, %s, %s", self._from_station, self._to_station, when)
                 _state = await self._train_api.async_get_train_stop(
                     self._from_station, self._to_station, when
                 )
             else:
-
                 _state = await self._train_api.async_get_next_train_stop(
                     self._from_station, self._to_station, when
                 )
-        except ValueError as output_error:
-            _LOGGER.error("Departure %s encountered a problem: %s", when, output_error)
+        except (NoTrainAnnouncementFound, MultipleTrainAnnouncementFound) as error:
+            _LOGGER.error("Departure %s encountered a problem: %s", when, error)
 
         if not _state:
             self._attr_available = False
@@ -169,11 +163,13 @@ class TrainSensor(SensorEntity):
         self._attr_available = True
 
         # The original datetime doesn't provide a timezone so therefore attaching it here.
-        self._attr_native_value = dt.as_utc(_state.advertised_time_at_location)
+        if TYPE_CHECKING:
+            assert _state.advertised_time_at_location
+        self._attr_native_value = dt_util.as_utc(_state.advertised_time_at_location)
         if _state.time_at_location:
-            self._attr_native_value = dt.as_utc(_state.time_at_location)
+            self._attr_native_value = dt_util.as_utc(_state.time_at_location)
         if _state.estimated_time_at_location:
-            self._attr_native_value = dt.as_utc(_state.estimated_time_at_location)
+            self._attr_native_value = dt_util.as_utc(_state.estimated_time_at_location)
 
         self._update_attributes(_state)
 
@@ -181,7 +177,7 @@ class TrainSensor(SensorEntity):
         """Return extra state attributes."""
 
         attributes: dict[str, Any] = {
-            ATTR_DEPARTURE_STATE: state.get_state().name,
+            ATTR_DEPARTURE_STATE: state.get_state().value,
             ATTR_CANCELED: state.canceled,
             ATTR_DELAY_TIME: None,
             ATTR_PLANNED_TIME: None,

@@ -45,7 +45,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 return await client.get_usage(service_id)
             except UnrecognisedServiceType as err:
                 raise UpdateFailed(
-                    f"Service {service_id} of type '{services[service_id]['type']}' was unrecognised"
+                    f"Service {service_id} of type '{services[service_id]['type']}' was"
+                    " unrecognised"
                 ) from err
 
         return async_update_data
@@ -66,7 +67,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         "client": client,
         "services": services,
     }
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 

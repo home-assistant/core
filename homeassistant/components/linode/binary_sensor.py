@@ -68,7 +68,7 @@ class LinodeBinarySensor(BinarySensorEntity):
         self._attr_extra_state_attributes = {}
         self._attr_name = None
 
-    def update(self):
+    def update(self) -> None:
         """Update state of sensor."""
         data = None
         self._linode.update()

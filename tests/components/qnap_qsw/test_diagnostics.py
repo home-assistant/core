@@ -1,6 +1,5 @@
 """The diagnostics tests for the QNAP QSW platform."""
 
-from aiohttp import ClientSession
 from aioqsw.const import (
     API_ANOMALY,
     API_BUILD_NUMBER,
@@ -30,7 +29,7 @@ from aioqsw.const import (
     QSD_VERSION,
 )
 
-from homeassistant.components.diagnostics.const import REDACTED
+from homeassistant.components.diagnostics import REDACTED
 from homeassistant.components.qnap_qsw.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
 from homeassistant.core import HomeAssistant
@@ -46,10 +45,11 @@ from .util import (
 )
 
 from tests.components.diagnostics import get_diagnostics_for_config_entry
+from tests.typing import ClientSessionGenerator
 
 
 async def test_config_entry_diagnostics(
-    hass: HomeAssistant, hass_client: ClientSession
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
 ) -> None:
     """Test config entry diagnostics."""
     await async_init_integration(hass)

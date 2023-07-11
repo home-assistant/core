@@ -16,6 +16,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, ServiceCall
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.discovery import load_platform
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -152,6 +153,6 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         submit_tv_request,
         schema=SUBMIT_TV_REQUEST_SERVICE_SCHEMA,
     )
-    hass.helpers.discovery.load_platform(Platform.SENSOR, DOMAIN, {}, config)
+    load_platform(hass, Platform.SENSOR, DOMAIN, {}, config)
 
     return True

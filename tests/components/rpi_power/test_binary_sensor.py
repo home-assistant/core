@@ -3,12 +3,15 @@ from datetime import timedelta
 import logging
 from unittest.mock import MagicMock
 
+import pytest
+
 from homeassistant.components.rpi_power.binary_sensor import (
     DESCRIPTION_NORMALIZED,
     DESCRIPTION_UNDER_VOLTAGE,
 )
 from homeassistant.components.rpi_power.const import DOMAIN
 from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -30,7 +33,7 @@ async def _async_setup_component(hass, detected):
     return mocked_under_voltage
 
 
-async def test_new(hass, caplog):
+async def test_new(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -> None:
     """Test new entry."""
     await _async_setup_component(hass, False)
     state = hass.states.get(ENTITY_ID)
@@ -38,7 +41,9 @@ async def test_new(hass, caplog):
     assert not any(x.levelno == logging.WARNING for x in caplog.records)
 
 
-async def test_new_detected(hass, caplog):
+async def test_new_detected(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test new entry with under voltage detected."""
     mocked_under_voltage = await _async_setup_component(hass, True)
     state = hass.states.get(ENTITY_ID)

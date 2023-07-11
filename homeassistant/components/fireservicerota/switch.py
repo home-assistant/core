@@ -27,21 +27,20 @@ async def async_setup_entry(
 class ResponseSwitch(SwitchEntity):
     """Representation of an FireServiceRota switch."""
 
+    _attr_should_poll = False
+    _attr_has_entity_name = True
+    _attr_translation_key = "incident_response"
+
     def __init__(self, coordinator, client, entry):
         """Initialize."""
         self._coordinator = coordinator
         self._client = client
-        self._unique_id = f"{entry.unique_id}_Response"
+        self._attr_unique_id = f"{entry.unique_id}_Response"
         self._entry_id = entry.entry_id
 
         self._state = None
         self._state_attributes = {}
         self._state_icon = None
-
-    @property
-    def name(self) -> str:
-        """Return the name of the switch."""
-        return "Incident Response"
 
     @property
     def icon(self) -> str:
@@ -59,17 +58,7 @@ class ResponseSwitch(SwitchEntity):
         return self._state
 
     @property
-    def unique_id(self) -> str:
-        """Return the unique ID for this switch."""
-        return self._unique_id
-
-    @property
-    def should_poll(self) -> bool:
-        """No polling needed."""
-        return False
-
-    @property
-    def available(self):
+    def available(self) -> bool:
         """Return if switch is available."""
         return self._client.on_duty
 
@@ -99,11 +88,11 @@ class ResponseSwitch(SwitchEntity):
 
         return attr
 
-    async def async_turn_on(self, **kwargs) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Send Acknowledge response status."""
         await self.async_set_response(True)
 
-    async def async_turn_off(self, **kwargs) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Send Reject response status."""
         await self.async_set_response(False)
 

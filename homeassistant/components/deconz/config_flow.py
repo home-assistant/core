@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Mapping
 from pprint import pformat
 from typing import Any, cast
 from urllib.parse import urlparse
@@ -86,8 +87,7 @@ class DeconzFlowHandler(ConfigFlow, domain=DOMAIN):
         If no bridge is found allow user to manually input configuration.
         """
         if user_input is not None:
-
-            if CONF_MANUAL_INPUT == user_input[CONF_HOST]:
+            if user_input[CONF_HOST] == CONF_MANUAL_INPUT:
                 return await self.async_step_manual_input()
 
             for bridge in self.bridges:
@@ -204,12 +204,12 @@ class DeconzFlowHandler(ConfigFlow, domain=DOMAIN):
             },
         )
 
-    async def async_step_reauth(self, config: dict[str, Any]) -> FlowResult:
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Trigger a reauthentication flow."""
-        self.context["title_placeholders"] = {CONF_HOST: config[CONF_HOST]}
+        self.context["title_placeholders"] = {CONF_HOST: entry_data[CONF_HOST]}
 
-        self.host = config[CONF_HOST]
-        self.port = config[CONF_PORT]
+        self.host = entry_data[CONF_HOST]
+        self.port = entry_data[CONF_PORT]
 
         return await self.async_step_link()
 

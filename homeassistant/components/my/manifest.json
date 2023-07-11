@@ -1,8 +1,9 @@
 {
   "domain": "my",
   "name": "My Home Assistant",
-  "documentation": "https://www.home-assistant.io/integrations/my",
-  "dependencies": ["frontend"],
   "codeowners": ["@home-assistant/core"],
+  "dependencies": ["frontend"],
+  "documentation": "https://www.home-assistant.io/integrations/my",
+  "integration_type": "system",
   "quality_scale": "internal"
 }

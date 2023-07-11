@@ -1,4 +1,6 @@
 """Config flow for DoorBird integration."""
+from __future__ import annotations
+
 from http import HTTPStatus
 from ipaddress import ip_address
 import logging
@@ -115,9 +117,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="not_doorbird_device")
 
         chop_ending = "._axis-video._tcp.local."
-        friendly_hostname = discovery_info.name
-        if friendly_hostname.endswith(chop_ending):
-            friendly_hostname = friendly_hostname[: -len(chop_ending)]
+        friendly_hostname = discovery_info.name.removesuffix(chop_ending)
 
         self.context["title_placeholders"] = {
             CONF_NAME: friendly_hostname,
@@ -144,7 +144,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry):
+    def async_get_options_flow(
+        config_entry: config_entries.ConfigEntry,
+    ) -> OptionsFlowHandler:
         """Get the options flow for this handler."""
         return OptionsFlowHandler(config_entry)
 

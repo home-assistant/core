@@ -28,5 +28,16 @@
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "no_locations": "No locations are available for this user, check TotalConnect settings"
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "TotalConnect Options",
+        "description": "Automatically bypass zones the moment they report a low battery.",
+        "data": {
+          "auto_bypass_low_battery": "Auto bypass low battery"
+        }
+      }
+    }
   }
 }

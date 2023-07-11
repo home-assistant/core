@@ -1,7 +1,8 @@
 {
   "domain": "file",
   "name": "File",
-  "documentation": "https://www.home-assistant.io/integrations/file",
   "codeowners": ["@fabaff"],
-  "iot_class": "local_polling"
+  "documentation": "https://www.home-assistant.io/integrations/file",
+  "iot_class": "local_polling",
+  "requirements": ["file-read-backwards==2.0.0"]
 }

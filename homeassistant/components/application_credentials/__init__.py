@@ -15,7 +15,14 @@ import voluptuous as vol
 
 from homeassistant.components import websocket_api
 from homeassistant.components.websocket_api.connection import ActiveConnection
-from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_DOMAIN, CONF_ID
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import (
+    CONF_CLIENT_ID,
+    CONF_CLIENT_SECRET,
+    CONF_DOMAIN,
+    CONF_ID,
+    CONF_NAME,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import collection, config_entry_oauth2_flow
@@ -39,14 +46,18 @@ STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
 DATA_STORAGE = "storage"
 CONF_AUTH_DOMAIN = "auth_domain"
+DEFAULT_IMPORT_NAME = "Import from configuration.yaml"
 
 CREATE_FIELDS = {
     vol.Required(CONF_DOMAIN): cv.string,
-    vol.Required(CONF_CLIENT_ID): cv.string,
-    vol.Required(CONF_CLIENT_SECRET): cv.string,
+    vol.Required(CONF_CLIENT_ID): vol.All(cv.string, vol.Strip),
+    vol.Required(CONF_CLIENT_SECRET): vol.All(cv.string, vol.Strip),
     vol.Optional(CONF_AUTH_DOMAIN): cv.string,
+    vol.Optional(CONF_NAME): cv.string,
 }
 UPDATE_FIELDS: dict = {}  # Not supported
+
+CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 
 @dataclass
@@ -55,6 +66,7 @@ class ClientCredential:
 
     client_id: str
     client_secret: str
+    name: str | None = None
 
 
 @dataclass
@@ -65,7 +77,7 @@ class AuthorizationServer:
     token_url: str
 
 
-class ApplicationCredentialsStorageCollection(collection.StorageCollection):
+class ApplicationCredentialsStorageCollection(collection.DictStorageCollection):
     """Application credential collection stored in storage."""
 
     CREATE_SCHEMA = vol.Schema(CREATE_FIELDS)
@@ -84,7 +96,7 @@ class ApplicationCredentialsStorageCollection(collection.StorageCollection):
         return f"{info[CONF_DOMAIN]}.{info[CONF_CLIENT_ID]}"
 
     async def _update_data(
-        self, data: dict[str, str], update_data: dict[str, str]
+        self, item: dict[str, str], update_data: dict[str, str]
     ) -> dict[str, str]:
         """Return a new updated data object."""
         raise ValueError("Updates not supported")
@@ -118,11 +130,11 @@ class ApplicationCredentialsStorageCollection(collection.StorageCollection):
         for item in self.async_items():
             if item[CONF_DOMAIN] != domain:
                 continue
-            auth_domain = (
-                item[CONF_AUTH_DOMAIN] if CONF_AUTH_DOMAIN in item else item[CONF_ID]
-            )
+            auth_domain = item.get(CONF_AUTH_DOMAIN, item[CONF_ID])
             credentials[auth_domain] = ClientCredential(
-                item[CONF_CLIENT_ID], item[CONF_CLIENT_SECRET]
+                client_id=item[CONF_CLIENT_ID],
+                client_secret=item[CONF_CLIENT_SECRET],
+                name=item.get(CONF_NAME),
             )
         return credentials
 
@@ -134,17 +146,17 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     id_manager = collection.IDManager()
     storage_collection = ApplicationCredentialsStorageCollection(
         Store(hass, STORAGE_VERSION, STORAGE_KEY),
-        logging.getLogger(f"{__name__}.storage_collection"),
         id_manager,
     )
     await storage_collection.async_load()
     hass.data[DOMAIN][DATA_STORAGE] = storage_collection
 
-    collection.StorageCollectionWebsocket(
+    collection.DictStorageCollectionWebsocket(
         storage_collection, DOMAIN, DOMAIN, CREATE_FIELDS, UPDATE_FIELDS
     ).async_setup(hass)
 
     websocket_api.async_register_command(hass, handle_integration_list)
+    websocket_api.async_register_command(hass, handle_config_entry)
 
     config_entry_oauth2_flow.async_add_implementation_provider(
         hass, DOMAIN, _async_provide_implementation
@@ -157,7 +169,7 @@ async def async_import_client_credential(
     hass: HomeAssistant,
     domain: str,
     credential: ClientCredential,
-    auth_domain: str = None,
+    auth_domain: str | None = None,
 ) -> None:
     """Import an existing credential from configuration.yaml."""
     if DOMAIN not in hass.data:
@@ -169,6 +181,7 @@ async def async_import_client_credential(
         CONF_CLIENT_SECRET: credential.client_secret,
         CONF_AUTH_DOMAIN: auth_domain if auth_domain else domain,
     }
+    item[CONF_NAME] = credential.name if credential.name else DEFAULT_IMPORT_NAME
     await storage_collection.async_import_item(item)
 
 
@@ -191,11 +204,12 @@ class AuthImplementation(config_entry_oauth2_flow.LocalOAuth2Implementation):
             authorization_server.authorize_url,
             authorization_server.token_url,
         )
+        self._name = credential.name
 
     @property
     def name(self) -> str:
         """Name of the implementation."""
-        return self.client_id
+        return self._name or self.client_id
 
 
 async def _async_provide_implementation(
@@ -221,6 +235,27 @@ async def _async_provide_implementation(
     ]
 
 
+async def _async_config_entry_app_credentials(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+) -> str | None:
+    """Return the item id of an application credential for an existing ConfigEntry."""
+    if not await _get_platform(hass, config_entry.domain) or not (
+        auth_domain := config_entry.data.get("auth_implementation")
+    ):
+        return None
+
+    storage_collection = hass.data[DOMAIN][DATA_STORAGE]
+    for item in storage_collection.async_items():
+        item_id = item[CONF_ID]
+        if (
+            item[CONF_DOMAIN] == config_entry.domain
+            and item.get(CONF_AUTH_DOMAIN, item_id) == auth_domain
+        ):
+            return item_id
+    return None
+
+
 class ApplicationCredentialsProtocol(Protocol):
     """Define the format that application_credentials platforms may have.
 
@@ -239,6 +274,11 @@ class ApplicationCredentialsProtocol(Protocol):
         self, hass: HomeAssistant, auth_domain: str, credential: ClientCredential
     ) -> config_entry_oauth2_flow.AbstractOAuth2Implementation:
         """Return a custom auth implementation."""
+
+    async def async_get_description_placeholders(
+        self, hass: HomeAssistant
+    ) -> dict[str, str]:
+        """Return description placeholders for the credentials dialog."""
 
 
 async def _get_platform(
@@ -263,10 +303,18 @@ async def _get_platform(
         platform, "async_get_auth_implementation"
     ):
         raise ValueError(
-            f"Integration '{integration_domain}' platform {DOMAIN} did not "
-            f"implement 'async_get_authorization_server' or 'async_get_auth_implementation'"
+            f"Integration '{integration_domain}' platform {DOMAIN} did not implement"
+            " 'async_get_authorization_server' or 'async_get_auth_implementation'"
         )
     return platform
+
+
+async def _async_integration_config(hass: HomeAssistant, domain: str) -> dict[str, Any]:
+    platform = await _get_platform(hass, domain)
+    if platform and hasattr(platform, "async_get_description_placeholders"):
+        placeholders = await platform.async_get_description_placeholders(hass)
+        return {"description_placeholders": placeholders}
+    return {}
 
 
 @websocket_api.websocket_command(
@@ -277,6 +325,39 @@ async def handle_integration_list(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle integrations command."""
-    connection.send_result(
-        msg["id"], {"domains": await async_get_application_credentials(hass)}
-    )
+    domains = await async_get_application_credentials(hass)
+    result = {
+        "domains": domains,
+        "integrations": {
+            domain: await _async_integration_config(hass, domain) for domain in domains
+        },
+    }
+    connection.send_result(msg["id"], result)
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "application_credentials/config_entry",
+        vol.Required("config_entry_id"): str,
+    }
+)
+@websocket_api.async_response
+async def handle_config_entry(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Return application credentials information for a config entry."""
+    entry_id = msg["config_entry_id"]
+    config_entry = hass.config_entries.async_get_entry(entry_id)
+    if not config_entry:
+        connection.send_error(
+            msg["id"],
+            "invalid_config_entry_id",
+            f"Config entry not found: {entry_id}",
+        )
+        return
+    result = {}
+    if application_credentials_id := await _async_config_entry_app_credentials(
+        hass, config_entry
+    ):
+        result["application_credentials_id"] = application_credentials_id
+    connection.send_result(msg["id"], result)

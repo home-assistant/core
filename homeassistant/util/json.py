@@ -1,36 +1,71 @@
 """JSON utility functions."""
 from __future__ import annotations
 
-from collections import deque
 from collections.abc import Callable
 import json
 import logging
+from os import PathLike
 from typing import Any
 
-from homeassistant.core import Event, State
+import orjson
+
 from homeassistant.exceptions import HomeAssistantError
 
-from .file import write_utf8_file, write_utf8_file_atomic
+from .file import WriteError  # pylint: disable=unused-import # noqa: F401
 
+_SENTINEL = object()
 _LOGGER = logging.getLogger(__name__)
+
+JsonValueType = (
+    dict[str, "JsonValueType"] | list["JsonValueType"] | str | int | float | bool | None
+)
+"""Any data that can be returned by the standard JSON deserializing process."""
+JsonArrayType = list[JsonValueType]
+"""List that can be returned by the standard JSON deserializing process."""
+JsonObjectType = dict[str, JsonValueType]
+"""Dictionary that can be returned by the standard JSON deserializing process."""
+
+JSON_ENCODE_EXCEPTIONS = (TypeError, ValueError)
+JSON_DECODE_EXCEPTIONS = (orjson.JSONDecodeError,)
 
 
 class SerializationError(HomeAssistantError):
     """Error serializing the data to JSON."""
 
 
-class WriteError(HomeAssistantError):
-    """Error writing the data."""
+json_loads: Callable[[bytes | bytearray | memoryview | str], JsonValueType]
+json_loads = orjson.loads
+"""Parse JSON data."""
 
 
-def load_json(filename: str, default: list | dict | None = None) -> list | dict:
-    """Load JSON data from a file and return as dict or list.
+def json_loads_array(__obj: bytes | bytearray | memoryview | str) -> JsonArrayType:
+    """Parse JSON data and ensure result is a list."""
+    value: JsonValueType = json_loads(__obj)
+    # Avoid isinstance overhead as we are not interested in list subclasses
+    if type(value) is list:  # pylint: disable=unidiomatic-typecheck
+        return value
+    raise ValueError(f"Expected JSON to be parsed as a list got {type(value)}")
+
+
+def json_loads_object(__obj: bytes | bytearray | memoryview | str) -> JsonObjectType:
+    """Parse JSON data and ensure result is a dictionary."""
+    value: JsonValueType = json_loads(__obj)
+    # Avoid isinstance overhead as we are not interested in dict subclasses
+    if type(value) is dict:  # pylint: disable=unidiomatic-typecheck
+        return value
+    raise ValueError(f"Expected JSON to be parsed as a dict got {type(value)}")
+
+
+def load_json(
+    filename: str | PathLike, default: JsonValueType = _SENTINEL  # type: ignore[assignment]
+) -> JsonValueType:
+    """Load JSON data from a file.
 
     Defaults to returning empty dict if file is not found.
     """
     try:
         with open(filename, encoding="utf-8") as fdesc:
-            return json.loads(fdesc.read())  # type: ignore[no-any-return]
+            return orjson.loads(fdesc.read())  # type: ignore[no-any-return]
     except FileNotFoundError:
         # This is not a fatal error
         _LOGGER.debug("JSON file not found: %s", filename)
@@ -40,7 +75,45 @@ def load_json(filename: str, default: list | dict | None = None) -> list | dict:
     except OSError as error:
         _LOGGER.exception("JSON file reading failed: %s", filename)
         raise HomeAssistantError(error) from error
-    return {} if default is None else default
+    return {} if default is _SENTINEL else default
+
+
+def load_json_array(
+    filename: str | PathLike, default: JsonArrayType = _SENTINEL  # type: ignore[assignment]
+) -> JsonArrayType:
+    """Load JSON data from a file and return as list.
+
+    Defaults to returning empty list if file is not found.
+    """
+    if default is _SENTINEL:
+        default = []
+    value: JsonValueType = load_json(filename, default=default)
+    # Avoid isinstance overhead as we are not interested in list subclasses
+    if type(value) is list:  # pylint: disable=unidiomatic-typecheck
+        return value
+    _LOGGER.exception(
+        "Expected JSON to be parsed as a list got %s in: %s", {type(value)}, filename
+    )
+    raise HomeAssistantError(f"Expected JSON to be parsed as a list got {type(value)}")
+
+
+def load_json_object(
+    filename: str | PathLike, default: JsonObjectType = _SENTINEL  # type: ignore[assignment]
+) -> JsonObjectType:
+    """Load JSON data from a file and return as dict.
+
+    Defaults to returning empty dict if file is not found.
+    """
+    if default is _SENTINEL:
+        default = {}
+    value: JsonValueType = load_json(filename, default=default)
+    # Avoid isinstance overhead as we are not interested in dict subclasses
+    if type(value) is dict:  # pylint: disable=unidiomatic-typecheck
+        return value
+    _LOGGER.exception(
+        "Expected JSON to be parsed as a dict got %s in: %s", {type(value)}, filename
+    )
+    raise HomeAssistantError(f"Expected JSON to be parsed as a dict got {type(value)}")
 
 
 def save_json(
@@ -51,21 +124,25 @@ def save_json(
     encoder: type[json.JSONEncoder] | None = None,
     atomic_writes: bool = False,
 ) -> None:
-    """Save JSON data to a file.
+    """Save JSON data to a file."""
+    # pylint: disable-next=import-outside-toplevel
+    from homeassistant.helpers.frame import report
 
-    Returns True on success.
-    """
-    try:
-        json_data = json.dumps(data, indent=4, cls=encoder)
-    except TypeError as error:
-        msg = f"Failed to serialize to JSON: {filename}. Bad data at {format_unserializable_data(find_paths_unserializable_data(data))}"
-        _LOGGER.error(msg)
-        raise SerializationError(msg) from error
+    report(
+        (
+            "uses save_json from homeassistant.util.json module."
+            " This is deprecated and will stop working in Home Assistant 2022.4, it"
+            " should be updated to use homeassistant.helpers.json module instead"
+        ),
+        error_if_core=False,
+    )
 
-    if atomic_writes:
-        write_utf8_file_atomic(filename, json_data, private)
-    else:
-        write_utf8_file(filename, json_data, private)
+    # pylint: disable-next=import-outside-toplevel
+    import homeassistant.helpers.json as json_helper
+
+    json_helper.save_json(
+        filename, data, private, encoder=encoder, atomic_writes=atomic_writes
+    )
 
 
 def format_unserializable_data(data: dict[str, Any]) -> str:
@@ -83,43 +160,19 @@ def find_paths_unserializable_data(
 
     This method is slow! Only use for error handling.
     """
-    to_process = deque([(bad_data, "$")])
-    invalid = {}
+    # pylint: disable-next=import-outside-toplevel
+    from homeassistant.helpers.frame import report
 
-    while to_process:
-        obj, obj_path = to_process.popleft()
+    report(
+        (
+            "uses find_paths_unserializable_data from homeassistant.util.json module."
+            " This is deprecated and will stop working in Home Assistant 2022.4, it"
+            " should be updated to use homeassistant.helpers.json module instead"
+        ),
+        error_if_core=False,
+    )
 
-        try:
-            dump(obj)
-            continue
-        except (ValueError, TypeError):
-            pass
+    # pylint: disable-next=import-outside-toplevel
+    import homeassistant.helpers.json as json_helper
 
-        # We convert objects with as_dict to their dict values so we can find bad data inside it
-        if hasattr(obj, "as_dict"):
-            desc = obj.__class__.__name__
-            if isinstance(obj, State):
-                desc += f": {obj.entity_id}"
-            elif isinstance(obj, Event):
-                desc += f": {obj.event_type}"
-
-            obj_path += f"({desc})"
-            obj = obj.as_dict()
-
-        if isinstance(obj, dict):
-            for key, value in obj.items():
-                try:
-                    # Is key valid?
-                    dump({key: None})
-                except TypeError:
-                    invalid[f"{obj_path}<key: {key}>"] = key
-                else:
-                    # Process value
-                    to_process.append((value, f"{obj_path}.{key}"))
-        elif isinstance(obj, list):
-            for idx, value in enumerate(obj):
-                to_process.append((value, f"{obj_path}[{idx}]"))
-        else:
-            invalid[obj_path] = obj
-
-    return invalid
+    return json_helper.find_paths_unserializable_data(bad_data, dump=dump)

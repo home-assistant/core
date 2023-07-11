@@ -7,111 +7,34 @@ from math import ceil
 
 import pytankerkoenig
 from requests.exceptions import RequestException
-import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import (
-    CONF_API_KEY,
-    CONF_LATITUDE,
-    CONF_LOCATION,
-    CONF_LONGITUDE,
-    CONF_NAME,
-    CONF_RADIUS,
-    CONF_SCAN_INTERVAL,
-    CONF_SHOW_ON_MAP,
-    Platform,
-)
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ATTR_ID, CONF_API_KEY, CONF_SHOW_ON_MAP, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.typing import ConfigType
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-
-from .const import (
-    CONF_FUEL_TYPES,
-    CONF_STATIONS,
-    DEFAULT_RADIUS,
-    DEFAULT_SCAN_INTERVAL,
-    DOMAIN,
-    FUEL_TYPES,
+from homeassistant.helpers.device_registry import DeviceEntryType
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+    UpdateFailed,
 )
+
+from .const import CONF_FUEL_TYPES, CONF_STATIONS, DEFAULT_SCAN_INTERVAL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-CONFIG_SCHEMA = vol.Schema(
-    vol.All(
-        cv.deprecated(DOMAIN),
-        {
-            DOMAIN: vol.Schema(
-                {
-                    vol.Required(CONF_API_KEY): cv.string,
-                    vol.Optional(
-                        CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
-                    ): cv.time_period,
-                    vol.Optional(CONF_FUEL_TYPES, default=FUEL_TYPES): vol.All(
-                        cv.ensure_list, [vol.In(FUEL_TYPES)]
-                    ),
-                    vol.Inclusive(
-                        CONF_LATITUDE,
-                        "coordinates",
-                        "Latitude and longitude must exist together",
-                    ): cv.latitude,
-                    vol.Inclusive(
-                        CONF_LONGITUDE,
-                        "coordinates",
-                        "Latitude and longitude must exist together",
-                    ): cv.longitude,
-                    vol.Optional(CONF_RADIUS, default=DEFAULT_RADIUS): vol.All(
-                        cv.positive_int, vol.Range(min=1)
-                    ),
-                    vol.Optional(CONF_STATIONS, default=[]): vol.All(
-                        cv.ensure_list, [cv.string]
-                    ),
-                    vol.Optional(CONF_SHOW_ON_MAP, default=True): cv.boolean,
-                }
-            )
-        },
-    ),
-    extra=vol.ALLOW_EXTRA,
-)
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
-
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set the tankerkoenig component up."""
-    if DOMAIN not in config:
-        return True
-
-    conf = config[DOMAIN]
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data={
-                CONF_NAME: "Home",
-                CONF_API_KEY: conf[CONF_API_KEY],
-                CONF_FUEL_TYPES: conf[CONF_FUEL_TYPES],
-                CONF_LOCATION: {
-                    "latitude": conf.get(CONF_LATITUDE, hass.config.latitude),
-                    "longitude": conf.get(CONF_LONGITUDE, hass.config.longitude),
-                },
-                CONF_RADIUS: conf[CONF_RADIUS],
-                CONF_STATIONS: conf[CONF_STATIONS],
-                CONF_SHOW_ON_MAP: conf[CONF_SHOW_ON_MAP],
-            },
-        )
-    )
-
-    return True
+CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set a tankerkoenig configuration entry up."""
     hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][
-        entry.unique_id
-    ] = coordinator = TankerkoenigDataUpdateCoordinator(
+    hass.data[DOMAIN][entry.entry_id] = coordinator = TankerkoenigDataUpdateCoordinator(
         hass,
         entry,
         _LOGGER,
@@ -131,7 +54,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
@@ -140,7 +63,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload Tankerkoenig config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
-        hass.data[DOMAIN].pop(entry.unique_id)
+        hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
 
@@ -172,7 +95,6 @@ class TankerkoenigDataUpdateCoordinator(DataUpdateCoordinator):
 
         self._api_key: str = entry.data[CONF_API_KEY]
         self._selected_stations: list[str] = entry.data[CONF_STATIONS]
-        self._hass = hass
         self.stations: dict[str, dict] = {}
         self.fuel_types: list[str] = entry.data[CONF_FUEL_TYPES]
         self.show_on_map: bool = entry.options[CONF_SHOW_ON_MAP]
@@ -183,6 +105,8 @@ class TankerkoenigDataUpdateCoordinator(DataUpdateCoordinator):
             try:
                 station_data = pytankerkoenig.getStationData(self._api_key, station_id)
             except pytankerkoenig.customException as err:
+                if any(x in str(err).lower() for x in ("api-key", "apikey")):
+                    raise ConfigEntryAuthFailed(err) from err
                 station_data = {
                     "ok": False,
                     "message": err,
@@ -195,7 +119,7 @@ class TankerkoenigDataUpdateCoordinator(DataUpdateCoordinator):
                     station_id,
                     station_data["message"],
                 )
-                return False
+                continue
             self.add_station(station_data["station"])
         if len(self.stations) > 10:
             _LOGGER.warning(
@@ -215,7 +139,7 @@ class TankerkoenigDataUpdateCoordinator(DataUpdateCoordinator):
         # The API seems to only return at most 10 results, so split the list in chunks of 10
         # and merge it together.
         for index in range(ceil(len(station_ids) / 10)):
-            data = await self._hass.async_add_executor_job(
+            data = await self.hass.async_add_executor_job(
                 pytankerkoenig.getPriceList,
                 self._api_key,
                 station_ids[index * 10 : (index + 1) * 10],
@@ -223,13 +147,11 @@ class TankerkoenigDataUpdateCoordinator(DataUpdateCoordinator):
 
             _LOGGER.debug("Received data: %s", data)
             if not data["ok"]:
-                _LOGGER.error(
-                    "Error fetching data from tankerkoenig.de: %s", data["message"]
-                )
                 raise UpdateFailed(data["message"])
             if "prices" not in data:
-                _LOGGER.error("Did not receive price information from tankerkoenig.de")
-                raise UpdateFailed("No prices in data")
+                raise UpdateFailed(
+                    "Did not receive price information from tankerkoenig.de"
+                )
             prices.update(data["prices"])
         return prices
 
@@ -244,3 +166,20 @@ class TankerkoenigDataUpdateCoordinator(DataUpdateCoordinator):
 
         self.stations[station_id] = station
         _LOGGER.debug("add_station called for station: %s", station)
+
+
+class TankerkoenigCoordinatorEntity(CoordinatorEntity):
+    """Tankerkoenig base entity."""
+
+    def __init__(
+        self, coordinator: TankerkoenigDataUpdateCoordinator, station: dict
+    ) -> None:
+        """Initialize the Tankerkoenig base entity."""
+        super().__init__(coordinator)
+        self._attr_device_info = DeviceInfo(
+            identifiers={(ATTR_ID, station["id"])},
+            name=f"{station['brand']} {station['street']} {station['houseNumber']}",
+            model=station["brand"],
+            configuration_url="https://www.tankerkoenig.de",
+            entry_type=DeviceEntryType.SERVICE,
+        )

@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
 from homeassistant.config_entries import ConfigEntry
@@ -45,8 +46,7 @@ async def async_setup_entry(
         light_entity = FirmataLight(api, config_entry, name, pin)
         new_entities.append(light_entity)
 
-    if new_entities:
-        async_add_entities(new_entities)
+    async_add_entities(new_entities)
 
 
 class FirmataLight(FirmataPinEntity, LightEntity):
@@ -82,14 +82,14 @@ class FirmataLight(FirmataPinEntity, LightEntity):
         """Return the brightness of the light."""
         return self._api.state
 
-    async def async_turn_on(self, **kwargs) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on light."""
         level = kwargs.get(ATTR_BRIGHTNESS, self._last_on_level)
         await self._api.set_level(level)
         self.async_write_ha_state()
         self._last_on_level = level
 
-    async def async_turn_off(self, **kwargs) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off light."""
         await self._api.set_level(0)
         self.async_write_ha_state()

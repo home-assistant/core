@@ -500,7 +500,7 @@ class LeafDataStore:
 class LeafEntity(Entity):
     """Base class for Nissan Leaf entity."""
 
-    def __init__(self, car: Leaf) -> None:
+    def __init__(self, car: LeafDataStore) -> None:
         """Store LeafDataStore upon init."""
         self.car = car
 

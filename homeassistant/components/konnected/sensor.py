@@ -14,7 +14,7 @@ from homeassistant.const import (
     CONF_TYPE,
     CONF_ZONE,
     PERCENTAGE,
-    TEMP_CELSIUS,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -27,7 +27,7 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
     "temperature": SensorEntityDescription(
         key="temperature",
         name="Temperature",
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
     ),
     "humidity": SensorEntityDescription(
@@ -102,7 +102,7 @@ class KonnectedSensor(SensorEntity):
         description: SensorEntityDescription,
         addr=None,
         initial_state=None,
-    ):
+    ) -> None:
         """Initialize the entity for a single sensor_type."""
         self.entity_description = description
         self._addr = addr
@@ -127,7 +127,7 @@ class KonnectedSensor(SensorEntity):
         """Return the state of the sensor."""
         return self._state
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Store entity_id and register state change callback."""
         entity_id_key = self._addr or self.entity_description.key
         self._data[entity_id_key] = self.entity_id

@@ -26,12 +26,13 @@ from hyperion.const import (
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.entity import DeviceInfo, EntityCategory
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import slugify
 
@@ -127,6 +128,7 @@ class HyperionComponentSwitch(SwitchEntity):
     """ComponentBinarySwitch switch class."""
 
     _attr_entity_category = EntityCategory.CONFIG
+    _attr_should_poll = False
 
     def __init__(
         self,
@@ -148,11 +150,6 @@ class HyperionComponentSwitch(SwitchEntity):
         self._client_callbacks = {
             f"{KEY_COMPONENTS}-{KEY_UPDATE}": self._update_components
         }
-
-    @property
-    def should_poll(self) -> bool:
-        """Return whether or not this entity should be polled."""
-        return False
 
     @property
     def entity_registry_enabled_default(self) -> bool:

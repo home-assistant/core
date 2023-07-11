@@ -10,6 +10,7 @@ from homeassistant.components.button import (
     ButtonEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -37,7 +38,14 @@ BUTTON_DESCRIPTIONS: tuple[FreeboxButtonEntityDescription, ...] = (
         key="reboot",
         name="Reboot Freebox",
         device_class=ButtonDeviceClass.RESTART,
+        entity_category=EntityCategory.CONFIG,
         async_press=lambda router: router.reboot(),
+    ),
+    FreeboxButtonEntityDescription(
+        key="mark_calls_as_read",
+        name="Mark calls as read",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        async_press=lambda router: router.call.mark_calls_log_as_read(),
     ),
 )
 

@@ -2,14 +2,15 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
-from homeassistant.components.climate import ClimateEntity
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     PRESET_ECO,
+    ClimateEntity,
     ClimateEntityFeature,
     HVACMode,
 )
-from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
+from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -74,6 +75,7 @@ class StiebelEltron(ClimateEntity):
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
     )
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
     def __init__(self, name, ste_data):
         """Initialize the unit."""
@@ -86,7 +88,7 @@ class StiebelEltron(ClimateEntity):
         self._force_update = False
         self._ste_data = ste_data
 
-    def update(self):
+    def update(self) -> None:
         """Update unit attributes."""
         self._ste_data.update(no_throttle=self._force_update)
         self._force_update = False
@@ -112,10 +114,6 @@ class StiebelEltron(ClimateEntity):
         return self._name
 
     # Handle ClimateEntityFeature.TARGET_TEMPERATURE
-    @property
-    def temperature_unit(self):
-        """Return the unit of measurement."""
-        return TEMP_CELSIUS
 
     @property
     def current_temperature(self):
@@ -171,7 +169,7 @@ class StiebelEltron(ClimateEntity):
         self._ste_data.api.set_operation(new_mode)
         self._force_update = True
 
-    def set_temperature(self, **kwargs):
+    def set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         target_temperature = kwargs.get(ATTR_TEMPERATURE)
         if target_temperature is not None:
@@ -179,7 +177,7 @@ class StiebelEltron(ClimateEntity):
             self._ste_data.api.set_target_temp(target_temperature)
             self._force_update = True
 
-    def set_preset_mode(self, preset_mode: str):
+    def set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
         new_mode = HA_TO_STE_PRESET.get(preset_mode)
         _LOGGER.debug("set_hvac_mode: %s -> %s", self._operation, new_mode)

@@ -7,7 +7,7 @@
         }
       },
       "discovery_confirm": {
-        "description": "Do you want to setup {name} - {model} ({host})?"
+        "description": "Do you want to set up {name} - {model} ({host})?"
       }
     },
     "error": {

@@ -1,0 +1,110 @@
+{
+  "config_entry_data": {
+    "latitude": "**REDACTED**",
+    "longitude": "**REDACTED**",
+    "station": "XX/1234567",
+    "language": "Gibberish"
+  },
+  "weather_data": {
+    "temperature": {
+      "label": "Temperature",
+      "value": 14.9,
+      "unit": "C"
+    },
+    "dewpoint": {
+      "label": "Dew Point",
+      "value": 1.4,
+      "unit": "C"
+    },
+    "wind_chill": {
+      "label": "Wind Chill",
+      "value": null
+    },
+    "humidex": {
+      "label": "Humidex",
+      "value": null
+    },
+    "pressure": {
+      "label": "Pressure",
+      "value": 102.7,
+      "unit": "kPa"
+    },
+    "tendency": {
+      "label": "Tendency",
+      "value": "falling"
+    },
+    "humidity": {
+      "label": "Humidity",
+      "value": 40,
+      "unit": "%"
+    },
+    "visibility": {
+      "label": "Visibility",
+      "value": 24.1,
+      "unit": "km"
+    },
+    "condition": {
+      "label": "Condition",
+      "value": "Mainly Sunny"
+    },
+    "wind_speed": {
+      "label": "Wind Speed",
+      "value": 1,
+      "unit": "km/h"
+    },
+    "wind_gust": {
+      "label": "Wind Gust",
+      "value": null
+    },
+    "wind_dir": {
+      "label": "Wind Direction",
+      "value": "N"
+    },
+    "wind_bearing": {
+      "label": "Wind Bearing",
+      "value": 0,
+      "unit": "degrees"
+    },
+    "high_temp": {
+      "label": "High Temperature",
+      "value": 18,
+      "unit": "C"
+    },
+    "low_temp": {
+      "label": "Low Temperature",
+      "value": -1,
+      "unit": "C"
+    },
+    "uv_index": {
+      "label": "UV Index",
+      "value": 5
+    },
+    "pop": {
+      "label": "Chance of Precip.",
+      "value": null
+    },
+    "icon_code": {
+      "label": "Icon Code",
+      "value": "01"
+    },
+    "precip_yesterday": {
+      "label": "Precipitation Yesterday",
+      "value": 0.0,
+      "unit": "mm"
+    },
+    "normal_high": {
+      "label": "Normal High Temperature",
+      "value": 15,
+      "unit": "C"
+    },
+    "normal_low": {
+      "label": "Normal Low Temperature",
+      "value": 6,
+      "unit": "C"
+    },
+    "text_summary": {
+      "label": "Forecast",
+      "value": "Tonight. Clear. Fog patches developing after midnight. Low minus 1 with frost."
+    }
+  }
+}

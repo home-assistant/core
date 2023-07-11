@@ -14,7 +14,7 @@ from homeassistant.components.version.const import (
 )
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
-from homeassistant.util import dt
+from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -47,8 +47,9 @@ async def mock_get_version_update(
         return_value=(version, data),
         side_effect=side_effect,
     ):
-
-        async_fire_time_changed(hass, dt.utcnow() + UPDATE_COORDINATOR_UPDATE_INTERVAL)
+        async_fire_time_changed(
+            hass, dt_util.utcnow() + UPDATE_COORDINATOR_UPDATE_INTERVAL
+        )
         await hass.async_block_till_done()
 
 
@@ -69,7 +70,6 @@ async def setup_version_integration(
         "pyhaversion.HaVersion.get_version",
         return_value=(MOCK_VERSION, MOCK_VERSION_DATA),
     ):
-
         assert await hass.config_entries.async_setup(mock_entry.entry_id)
         await hass.async_block_till_done()
 

@@ -26,7 +26,8 @@
         },
         "mandatorySupportedCCs": [],
         "mandatoryControlledCCs": []
-      }
+      },
+      "commandClasses": []
     }
   ],
   "values": [],
@@ -53,7 +54,6 @@
     "mandatorySupportedCCs": [],
     "mandatoryControlledCCs": []
   },
-  "commandClasses": [],
   "interviewStage": "ProtocolInfo",
   "statistics": {
     "commandsTX": 0,

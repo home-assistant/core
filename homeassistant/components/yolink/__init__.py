@@ -1,27 +1,98 @@
 """The yolink integration."""
 from __future__ import annotations
 
+import asyncio
+from dataclasses import dataclass
 from datetime import timedelta
-import logging
+from typing import Any
 
-from yolink.client import YoLinkClient
-from yolink.mqtt_client import MqttClient
+import async_timeout
+from yolink.const import ATTR_DEVICE_SMART_REMOTER
+from yolink.device import YoLinkDevice
+from yolink.exception import YoLinkAuthFailError, YoLinkClientError
+from yolink.home_manager import YoLinkHome
+from yolink.message_listener import MessageListener
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import aiohttp_client, config_entry_oauth2_flow
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.helpers import (
+    aiohttp_client,
+    config_entry_oauth2_flow,
+    device_registry as dr,
+)
 
 from . import api
-from .const import ATTR_CLIENT, ATTR_COORDINATOR, ATTR_MQTT_CLIENT, DOMAIN
+from .const import DOMAIN, YOLINK_EVENT
 from .coordinator import YoLinkCoordinator
+from .device_trigger import CONF_LONG_PRESS, CONF_SHORT_PRESS
 
 SCAN_INTERVAL = timedelta(minutes=5)
 
-_LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = [Platform.SENSOR]
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.CLIMATE,
+    Platform.COVER,
+    Platform.LIGHT,
+    Platform.LOCK,
+    Platform.SENSOR,
+    Platform.SIREN,
+    Platform.SWITCH,
+]
+
+
+class YoLinkHomeMessageListener(MessageListener):
+    """YoLink home message listener."""
+
+    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
+        """Init YoLink home message listener."""
+        self._hass = hass
+        self._entry = entry
+
+    def on_message(self, device: YoLinkDevice, msg_data: dict[str, Any]) -> None:
+        """On YoLink home message received."""
+        entry_data = self._hass.data[DOMAIN].get(self._entry.entry_id)
+        if not entry_data:
+            return
+        device_coordinators = entry_data.device_coordinators
+        if not device_coordinators:
+            return
+        device_coordinator = device_coordinators.get(device.device_id)
+        if device_coordinator is None:
+            return
+        device_coordinator.async_set_updated_data(msg_data)
+        # handling events
+        if (
+            device_coordinator.device.device_type == ATTR_DEVICE_SMART_REMOTER
+            and msg_data.get("event") is not None
+        ):
+            device_registry = dr.async_get(self._hass)
+            device_entry = device_registry.async_get_device(
+                identifiers={(DOMAIN, device_coordinator.device.device_id)}
+            )
+            if device_entry is None:
+                return
+            key_press_type = None
+            if msg_data["event"]["type"] == "Press":
+                key_press_type = CONF_SHORT_PRESS
+            else:
+                key_press_type = CONF_LONG_PRESS
+            button_idx = msg_data["event"]["keyMask"]
+            event_data = {
+                "type": f"button_{button_idx}_{key_press_type}",
+                "device_id": device_entry.id,
+            }
+            self._hass.bus.async_fire(YOLINK_EVENT, event_data)
+
+
+@dataclass
+class YoLinkHomeStore:
+    """YoLink home store."""
+
+    home_instance: YoLinkHome
+    device_coordinators: dict[str, YoLinkCoordinator]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -38,27 +109,45 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     auth_mgr = api.ConfigEntryAuth(
         hass, aiohttp_client.async_get_clientsession(hass), session
     )
-
-    yolink_http_client = YoLinkClient(auth_mgr)
-    yolink_mqtt_client = MqttClient(auth_mgr)
-    coordinator = YoLinkCoordinator(hass, yolink_http_client, yolink_mqtt_client)
-    await coordinator.init_coordinator()
+    yolink_home = YoLinkHome()
     try:
-        await coordinator.async_config_entry_first_refresh()
-    except ConfigEntryNotReady as ex:
-        _LOGGER.error("Fetching initial data failed: %s", ex)
+        async with async_timeout.timeout(10):
+            await yolink_home.async_setup(
+                auth_mgr, YoLinkHomeMessageListener(hass, entry)
+            )
+    except YoLinkAuthFailError as yl_auth_err:
+        raise ConfigEntryAuthFailed from yl_auth_err
+    except (YoLinkClientError, asyncio.TimeoutError) as err:
+        raise ConfigEntryNotReady from err
 
-    hass.data[DOMAIN][entry.entry_id] = {
-        ATTR_CLIENT: yolink_http_client,
-        ATTR_MQTT_CLIENT: yolink_mqtt_client,
-        ATTR_COORDINATOR: coordinator,
-    }
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    device_coordinators = {}
+    for device in yolink_home.get_devices():
+        device_coordinator = YoLinkCoordinator(hass, device)
+        try:
+            await device_coordinator.async_config_entry_first_refresh()
+        except ConfigEntryNotReady:
+            # Not failure by fetching device state
+            device_coordinator.data = {}
+        device_coordinators[device.device_id] = device_coordinator
+    hass.data[DOMAIN][entry.entry_id] = YoLinkHomeStore(
+        yolink_home, device_coordinators
+    )
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    async def async_yolink_unload(event) -> None:
+        """Unload yolink."""
+        await yolink_home.async_unload()
+
+    entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_yolink_unload)
+    )
+
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
+        await hass.data[DOMAIN][entry.entry_id].home_instance.async_unload()
         hass.data[DOMAIN].pop(entry.entry_id)
     return unload_ok

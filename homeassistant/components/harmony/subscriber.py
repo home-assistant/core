@@ -1,18 +1,17 @@
 """Mixin class for handling harmony callback subscriptions."""
+from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
 import logging
+from typing import Any, NamedTuple
 
-# Issue with Python 3.9.0 and 3.9.1 with collections.abc.Callable
-# https://bugs.python.org/issue42965
-from typing import Any, Callable, NamedTuple, Optional
-
-from homeassistant.core import callback
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 
 _LOGGER = logging.getLogger(__name__)
 
-NoParamCallback = Optional[Callable[[object], Any]]
-ActivityCallback = Optional[Callable[[object, tuple], Any]]
+NoParamCallback = Callable[[], Any] | None
+ActivityCallback = Callable[[tuple], Any] | None
 
 
 class HarmonyCallback(NamedTuple):
@@ -28,11 +27,11 @@ class HarmonyCallback(NamedTuple):
 class HarmonySubscriberMixin:
     """Base implementation for a subscriber."""
 
-    def __init__(self, hass):
+    def __init__(self, hass: HomeAssistant) -> None:
         """Initialize an subscriber."""
         super().__init__()
         self._hass = hass
-        self._subscriptions = []
+        self._subscriptions: list[HarmonyCallback] = []
         self._activity_lock = asyncio.Lock()
 
     async def async_lock_start_activity(self):
@@ -40,23 +39,23 @@ class HarmonySubscriberMixin:
         await self._activity_lock.acquire()
 
     @callback
-    def async_unlock_start_activity(self):
+    def async_unlock_start_activity(self) -> None:
         """Release the lock."""
         if self._activity_lock.locked():
             self._activity_lock.release()
 
     @callback
-    def async_subscribe(self, update_callbacks: HarmonyCallback) -> Callable:
+    def async_subscribe(self, update_callbacks: HarmonyCallback) -> CALLBACK_TYPE:
         """Add a callback subscriber."""
         self._subscriptions.append(update_callbacks)
 
-        def _unsubscribe():
+        def _unsubscribe() -> None:
             self.async_unsubscribe(update_callbacks)
 
         return _unsubscribe
 
     @callback
-    def async_unsubscribe(self, update_callback: HarmonyCallback):
+    def async_unsubscribe(self, update_callback: HarmonyCallback) -> None:
         """Remove a callback subscriber."""
         self._subscriptions.remove(update_callback)
 
@@ -85,7 +84,9 @@ class HarmonySubscriberMixin:
         self.async_unlock_start_activity()
         self._call_callbacks("activity_started", activity_info)
 
-    def _call_callbacks(self, callback_func_name: str, argument: tuple = None):
+    def _call_callbacks(
+        self, callback_func_name: str, argument: tuple | None = None
+    ) -> None:
         for subscription in self._subscriptions:
             current_callback = getattr(subscription, callback_func_name)
             if current_callback:

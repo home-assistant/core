@@ -3,8 +3,8 @@ from __future__ import annotations
 
 from homeassistant.components.button import ButtonDeviceClass, ButtonEntity
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
@@ -28,11 +28,11 @@ class WLEDRestartButton(WLEDEntity, ButtonEntity):
 
     _attr_device_class = ButtonDeviceClass.RESTART
     _attr_entity_category = EntityCategory.CONFIG
+    _attr_name = "Restart"
 
     def __init__(self, coordinator: WLEDDataUpdateCoordinator) -> None:
         """Initialize the button entity."""
         super().__init__(coordinator=coordinator)
-        self._attr_name = f"{coordinator.data.info.name} Restart"
         self._attr_unique_id = f"{coordinator.data.info.mac_address}_restart"
 
     @wled_exception_handler

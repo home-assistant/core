@@ -1,8 +1,0 @@
-{
-    "system_health": {
-        "info": {
-            "can_reach_server": "\u53ef\u8bbf\u95ee AccuWeather \u670d\u52a1\u5668",
-            "remaining_requests": "\u5176\u4f59\u5141\u8bb8\u7684\u8bf7\u6c42"
-        }
-    }
-}

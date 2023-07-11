@@ -1,17 +1,6 @@
 {
   "domain": "somfy",
   "name": "Somfy",
-  "config_flow": true,
-  "documentation": "https://www.home-assistant.io/integrations/somfy",
-  "dependencies": ["auth"],
-  "codeowners": ["@tetienne"],
-  "requirements": ["pymfy==0.11.0"],
-  "zeroconf": [
-    {
-      "type": "_kizbox._tcp.local.",
-      "name": "gateway*"
-    }
-  ],
-  "iot_class": "cloud_polling",
-  "loggers": ["pymfy"]
+  "integration_type": "virtual",
+  "supported_by": "overkiz"
 }

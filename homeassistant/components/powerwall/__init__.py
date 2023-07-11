@@ -18,7 +18,7 @@ from tesla_powerwall import (
 from homeassistant.components import persistent_notification
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD, Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -29,18 +29,15 @@ from .const import (
     POWERWALL_API_CHANGED,
     POWERWALL_COORDINATOR,
     POWERWALL_HTTP_SESSION,
-    POWERWALL_LOGIN_FAILED_COUNT,
     UPDATE_INTERVAL,
 )
 from .models import PowerwallBaseInfo, PowerwallData, PowerwallRuntimeData
 
 CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
-PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR, Platform.SWITCH]
 
 _LOGGER = logging.getLogger(__name__)
-
-MAX_LOGIN_FAILURES = 5
 
 API_CHANGED_ERROR_BODY = (
     "It seems like your powerwall uses an unsupported version. "
@@ -69,28 +66,14 @@ class PowerwallDataManager:
         self.power_wall = power_wall
 
     @property
-    def login_failed_count(self) -> int:
-        """Return the current number of failed logins."""
-        return self.runtime_data[POWERWALL_LOGIN_FAILED_COUNT]
-
-    @property
     def api_changed(self) -> int:
         """Return true if the api has changed out from under us."""
         return self.runtime_data[POWERWALL_API_CHANGED]
 
-    def _increment_failed_logins(self) -> None:
-        self.runtime_data[POWERWALL_LOGIN_FAILED_COUNT] += 1
-
-    def _clear_failed_logins(self) -> None:
-        self.runtime_data[POWERWALL_LOGIN_FAILED_COUNT] = 0
-
     def _recreate_powerwall_login(self) -> None:
         """Recreate the login on auth failure."""
-        http_session = self.runtime_data[POWERWALL_HTTP_SESSION]
-        http_session.close()
-        http_session = requests.Session()
-        self.runtime_data[POWERWALL_HTTP_SESSION] = http_session
-        self.power_wall = Powerwall(self.ip_address, http_session=http_session)
+        if self.power_wall.is_authenticated():
+            self.power_wall.logout()
         self.power_wall.login(self.password or "")
 
     async def async_update_data(self) -> PowerwallData:
@@ -113,7 +96,8 @@ class PowerwallDataManager:
                 raise UpdateFailed("Unable to fetch data from powerwall") from err
             except MissingAttributeError as err:
                 _LOGGER.error("The powerwall api has changed: %s", str(err))
-                # The error might include some important information about what exactly changed.
+                # The error might include some important information
+                # about what exactly changed.
                 persistent_notification.create(
                     self.hass, API_CHANGED_ERROR_BODY, API_CHANGED_TITLE
                 )
@@ -121,17 +105,16 @@ class PowerwallDataManager:
                 raise UpdateFailed("The powerwall api has changed") from err
             except AccessDeniedError as err:
                 if attempt == 1:
-                    self._increment_failed_logins()
+                    # failed to authenticate => the credentials must be wrong
                     raise ConfigEntryAuthFailed from err
                 if self.password is None:
                     raise ConfigEntryAuthFailed from err
-                raise UpdateFailed(
-                    f"Login attempt {self.login_failed_count}/{MAX_LOGIN_FAILURES} failed, will retry: {err}"
-                ) from err
+                _LOGGER.debug("Access denied, trying to reauthenticate")
+                # there is still an attempt left to authenticate,
+                # so we continue in the loop
             except APIError as err:
                 raise UpdateFailed(f"Updated failed due to {err}, will retry") from err
             else:
-                self._clear_failed_logins()
                 return data
         raise RuntimeError("unreachable")
 
@@ -174,8 +157,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         api_changed=False,
         base_info=base_info,
         http_session=http_session,
-        login_failed_count=0,
         coordinator=None,
+        api_instance=power_wall,
     )
 
     manager = PowerwallDataManager(hass, power_wall, ip_address, password, runtime_data)
@@ -194,7 +177,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = runtime_data
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
@@ -238,6 +221,17 @@ def _fetch_powerwall_data(power_wall: Powerwall) -> PowerwallData:
         grid_services_active=power_wall.is_grid_services_active(),
         grid_status=power_wall.get_grid_status(),
         backup_reserve=backup_reserve,
+    )
+
+
+@callback
+def async_last_update_was_successful(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Return True if the last update was successful."""
+    return bool(
+        (domain_data := hass.data.get(DOMAIN))
+        and (entry_data := domain_data.get(entry.entry_id))
+        and (coordinator := entry_data.get(POWERWALL_COORDINATOR))
+        and coordinator.last_update_success
     )
 
 

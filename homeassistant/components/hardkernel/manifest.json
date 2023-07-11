@@ -1,0 +1,9 @@
+{
+  "domain": "hardkernel",
+  "name": "Hardkernel",
+  "codeowners": ["@home-assistant/core"],
+  "config_flow": false,
+  "dependencies": ["hardware", "hassio"],
+  "documentation": "https://www.home-assistant.io/integrations/hardkernel",
+  "integration_type": "hardware"
+}

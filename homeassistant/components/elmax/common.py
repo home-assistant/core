@@ -11,9 +11,11 @@ from elmax_api.exceptions import (
     ElmaxBadLoginError,
     ElmaxBadPinError,
     ElmaxNetworkError,
+    ElmaxPanelBusyError,
 )
 from elmax_api.http import Elmax
 from elmax_api.model.actuator import Actuator
+from elmax_api.model.area import Area
 from elmax_api.model.endpoint import DeviceEndpoint
 from elmax_api.model.panel import PanelEntry, PanelStatus
 
@@ -62,8 +64,20 @@ class ElmaxCoordinator(DataUpdateCoordinator[PanelStatus]):
     def get_actuator_state(self, actuator_id: str) -> Actuator:
         """Return state of a specific actuator."""
         if self._state_by_endpoint is not None:
-            return self._state_by_endpoint.get(actuator_id)
+            return self._state_by_endpoint[actuator_id]
         raise HomeAssistantError("Unknown actuator")
+
+    def get_zone_state(self, zone_id: str) -> Actuator:
+        """Return state of a specific zone."""
+        if self._state_by_endpoint is not None:
+            return self._state_by_endpoint[zone_id]
+        raise HomeAssistantError("Unknown zone")
+
+    def get_area_state(self, area_id: str) -> Area:
+        """Return state of a specific area."""
+        if self._state_by_endpoint is not None and area_id:
+            return self._state_by_endpoint[area_id]
+        raise HomeAssistantError("Unknown area")
 
     @property
     def http_client(self):
@@ -83,7 +97,8 @@ class ElmaxCoordinator(DataUpdateCoordinator[PanelStatus]):
                 # reconfigure it in order to  make it work again
                 if not panel:
                     raise ConfigEntryAuthFailed(
-                        f"Panel ID {self._panel_id} is no more linked to this user account"
+                        f"Panel ID {self._panel_id} is no more linked to this user"
+                        " account"
                     )
 
                 self._panel_entry = panel
@@ -110,6 +125,10 @@ class ElmaxCoordinator(DataUpdateCoordinator[PanelStatus]):
             raise ConfigEntryAuthFailed("Refused username/password") from err
         except ElmaxApiError as err:
             raise UpdateFailed(f"Error communicating with ELMAX API: {err}") from err
+        except ElmaxPanelBusyError as err:
+            raise UpdateFailed(
+                "Communication with the panel failed, as it is currently busy"
+            ) from err
         except ElmaxNetworkError as err:
             raise UpdateFailed(
                 "A network error occurred while communicating with Elmax cloud."

@@ -8,6 +8,7 @@ from homeassistant import data_entry_flow
 from homeassistant.components.acmeda.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_HOST
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
@@ -39,7 +40,7 @@ async def async_generator(items):
         yield item
 
 
-async def test_show_form_no_hubs(hass, mock_hub_discover):
+async def test_show_form_no_hubs(hass: HomeAssistant, mock_hub_discover) -> None:
     """Test that flow aborts if no hubs are discovered."""
     mock_hub_discover.return_value = async_generator([])
 
@@ -47,14 +48,16 @@ async def test_show_form_no_hubs(hass, mock_hub_discover):
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "no_devices_found"
 
     # Check we performed the discovery
     assert len(mock_hub_discover.mock_calls) == 1
 
 
-async def test_show_form_one_hub(hass, mock_hub_discover, mock_hub_run):
+async def test_show_form_one_hub(
+    hass: HomeAssistant, mock_hub_discover, mock_hub_run
+) -> None:
     """Test that a config is created when one hub discovered."""
 
     dummy_hub_1 = aiopulse.Hub(DUMMY_HOST1)
@@ -66,7 +69,7 @@ async def test_show_form_one_hub(hass, mock_hub_discover, mock_hub_run):
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["title"] == dummy_hub_1.id
     assert result["result"].data == {
         CONF_HOST: DUMMY_HOST1,
@@ -76,7 +79,7 @@ async def test_show_form_one_hub(hass, mock_hub_discover, mock_hub_run):
     assert len(mock_hub_discover.mock_calls) == 1
 
 
-async def test_show_form_two_hubs(hass, mock_hub_discover):
+async def test_show_form_two_hubs(hass: HomeAssistant, mock_hub_discover) -> None:
     """Test that the form is served when more than one hub discovered."""
 
     dummy_hub_1 = aiopulse.Hub(DUMMY_HOST1)
@@ -91,14 +94,16 @@ async def test_show_form_two_hubs(hass, mock_hub_discover):
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
 
     # Check we performed the discovery
     assert len(mock_hub_discover.mock_calls) == 1
 
 
-async def test_create_second_entry(hass, mock_hub_run, mock_hub_discover):
+async def test_create_second_entry(
+    hass: HomeAssistant, mock_hub_run, mock_hub_discover
+) -> None:
     """Test that a config is created when a second hub is discovered."""
 
     dummy_hub_1 = aiopulse.Hub(DUMMY_HOST1)
@@ -117,14 +122,14 @@ async def test_create_second_entry(hass, mock_hub_run, mock_hub_discover):
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["title"] == dummy_hub_2.id
     assert result["result"].data == {
         CONF_HOST: DUMMY_HOST2,
     }
 
 
-async def test_already_configured(hass, mock_hub_discover):
+async def test_already_configured(hass: HomeAssistant, mock_hub_discover) -> None:
     """Test that flow aborts when all hubs are configured."""
 
     dummy_hub_1 = aiopulse.Hub(DUMMY_HOST1)

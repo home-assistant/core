@@ -2,27 +2,28 @@
 from __future__ import annotations
 
 import mimetypes
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, TypedDict
 
 from yarl import URL
 
-from homeassistant.components.media_player.const import MEDIA_CLASS_APP
-from homeassistant.components.media_player.errors import BrowseError
-from homeassistant.components.media_source.error import Unresolvable
-from homeassistant.components.media_source.models import (
+from homeassistant.components.media_player import BrowseError, MediaClass
+from homeassistant.components.media_source import (
     BrowseMediaSource,
     MediaSource,
     MediaSourceItem,
     PlayMedia,
+    Unresolvable,
+    generate_media_source_id as ms_generate_media_source_id,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.network import get_url
+from homeassistant.helpers.entity_component import EntityComponent
 
-from .const import DOMAIN
+from .const import DATA_TTS_MANAGER, DOMAIN
+from .helper import get_engine_instance
 
 if TYPE_CHECKING:
-    from . import SpeechManager
+    from . import SpeechManager, TextToSpeechEntity
 
 
 async def async_get_media_source(hass: HomeAssistant) -> TTSMediaSource:
@@ -30,10 +31,79 @@ async def async_get_media_source(hass: HomeAssistant) -> TTSMediaSource:
     return TTSMediaSource(hass)
 
 
+@callback
+def generate_media_source_id(
+    hass: HomeAssistant,
+    message: str,
+    engine: str | None = None,
+    language: str | None = None,
+    options: dict | None = None,
+    cache: bool | None = None,
+) -> str:
+    """Generate a media source ID for text-to-speech."""
+    from . import async_resolve_engine  # pylint: disable=import-outside-toplevel
+
+    manager: SpeechManager = hass.data[DATA_TTS_MANAGER]
+
+    if (engine := async_resolve_engine(hass, engine)) is None:
+        raise HomeAssistantError("Invalid TTS provider selected")
+
+    engine_instance = get_engine_instance(hass, engine)
+    # We raise above if the engine is not resolved, so engine_instance can't be None
+    assert engine_instance is not None
+
+    manager.process_options(engine_instance, language, options)
+    params = {
+        "message": message,
+    }
+    if cache is not None:
+        params["cache"] = "true" if cache else "false"
+    if language is not None:
+        params["language"] = language
+    if options is not None:
+        params.update(options)
+
+    return ms_generate_media_source_id(
+        DOMAIN,
+        str(URL.build(path=engine, query=params)),
+    )
+
+
+class MediaSourceOptions(TypedDict):
+    """Media source options."""
+
+    engine: str
+    message: str
+    language: str | None
+    options: dict | None
+    cache: bool | None
+
+
+@callback
+def media_source_id_to_kwargs(media_source_id: str) -> MediaSourceOptions:
+    """Turn a media source ID into options."""
+    parsed = URL(media_source_id)
+    if "message" not in parsed.query:
+        raise Unresolvable("No message specified.")
+
+    options = dict(parsed.query)
+    kwargs: MediaSourceOptions = {
+        "engine": parsed.name,
+        "message": options.pop("message"),
+        "language": options.pop("language", None),
+        "options": options,
+        "cache": None,
+    }
+    if "cache" in options:
+        kwargs["cache"] = options.pop("cache") == "true"
+
+    return kwargs
+
+
 class TTSMediaSource(MediaSource):
     """Provide text-to-speech providers as media sources."""
 
-    name: str = "Text to Speech"
+    name: str = "Text-to-speech"
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize TTSMediaSource."""
@@ -42,31 +112,16 @@ class TTSMediaSource(MediaSource):
 
     async def async_resolve_media(self, item: MediaSourceItem) -> PlayMedia:
         """Resolve media to a url."""
-        parsed = URL(item.identifier)
-        if "message" not in parsed.query:
-            raise Unresolvable("No message specified.")
-
-        options = dict(parsed.query)
-        kwargs: dict[str, Any] = {
-            "engine": parsed.name,
-            "message": options.pop("message"),
-            "language": options.pop("language", None),
-            "options": options,
-        }
-        if "cache" in options:
-            kwargs["cache"] = options.pop("cache") == "true"
-
-        manager: SpeechManager = self.hass.data[DOMAIN]
+        manager: SpeechManager = self.hass.data[DATA_TTS_MANAGER]
 
         try:
-            url = await manager.async_get_url_path(**kwargs)
+            url = await manager.async_get_url_path(
+                **media_source_id_to_kwargs(item.identifier)
+            )
         except HomeAssistantError as err:
             raise Unresolvable(str(err)) from err
 
         mime_type = mimetypes.guess_type(url)[0] or "audio/mpeg"
-
-        if manager.base_url and manager.base_url != get_url(self.hass):
-            url = f"{manager.base_url}{url}"
 
         return PlayMedia(url, mime_type)
 
@@ -76,32 +131,39 @@ class TTSMediaSource(MediaSource):
     ) -> BrowseMediaSource:
         """Return media."""
         if item.identifier:
-            provider, _, params = item.identifier.partition("?")
-            return self._provider_item(provider, params)
+            engine, _, params = item.identifier.partition("?")
+            return self._engine_item(engine, params)
 
         # Root. List providers.
-        manager: SpeechManager = self.hass.data[DOMAIN]
-        children = [self._provider_item(provider) for provider in manager.providers]
+        manager: SpeechManager = self.hass.data[DATA_TTS_MANAGER]
+        component: EntityComponent[TextToSpeechEntity] = self.hass.data[DOMAIN]
+        children = [self._engine_item(engine) for engine in manager.providers] + [
+            self._engine_item(entity.entity_id) for entity in component.entities
+        ]
         return BrowseMediaSource(
             domain=DOMAIN,
             identifier=None,
-            media_class=MEDIA_CLASS_APP,
+            media_class=MediaClass.APP,
             media_content_type="",
             title=self.name,
             can_play=False,
             can_expand=True,
-            children_media_class=MEDIA_CLASS_APP,
+            children_media_class=MediaClass.APP,
             children=children,
         )
 
     @callback
-    def _provider_item(
-        self, provider_domain: str, params: str | None = None
-    ) -> BrowseMediaSource:
+    def _engine_item(self, engine: str, params: str | None = None) -> BrowseMediaSource:
         """Return provider item."""
-        manager: SpeechManager = self.hass.data[DOMAIN]
-        if (provider := manager.providers.get(provider_domain)) is None:
+        from . import TextToSpeechEntity  # pylint: disable=import-outside-toplevel
+
+        if (engine_instance := get_engine_instance(self.hass, engine)) is None:
             raise BrowseError("Unknown provider")
+
+        if isinstance(engine_instance, TextToSpeechEntity):
+            engine_domain = engine_instance.platform.domain
+        else:
+            engine_domain = engine
 
         if params:
             params = f"?{params}"
@@ -110,11 +172,11 @@ class TTSMediaSource(MediaSource):
 
         return BrowseMediaSource(
             domain=DOMAIN,
-            identifier=f"{provider_domain}{params}",
-            media_class=MEDIA_CLASS_APP,
+            identifier=f"{engine}{params}",
+            media_class=MediaClass.APP,
             media_content_type="provider",
-            title=provider.name,
-            thumbnail=f"https://brands.home-assistant.io/_/{provider_domain}/logo.png",
+            title=engine_instance.name,
+            thumbnail=f"https://brands.home-assistant.io/_/{engine_domain}/logo.png",
             can_play=False,
             can_expand=True,
         )

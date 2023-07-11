@@ -7,13 +7,9 @@ from smhi.smhi_lib import SmhiForecastException
 
 from homeassistant import config_entries
 from homeassistant.components.smhi.const import DOMAIN
-from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
+from homeassistant.const import CONF_LATITUDE, CONF_LOCATION, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import (
-    RESULT_TYPE_ABORT,
-    RESULT_TYPE_CREATE_ENTRY,
-    RESULT_TYPE_FORM,
-)
+from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
@@ -27,7 +23,7 @@ async def test_form(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["errors"] == {}
 
     with patch(
@@ -40,17 +36,21 @@ async def test_form(hass: HomeAssistant) -> None:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                CONF_LATITUDE: 0.0,
-                CONF_LONGITUDE: 0.0,
+                CONF_LOCATION: {
+                    CONF_LATITUDE: 0.0,
+                    CONF_LONGITUDE: 0.0,
+                }
             },
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result2["type"] == FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Home"
     assert result2["data"] == {
-        "latitude": 0.0,
-        "longitude": 0.0,
+        "location": {
+            "latitude": 0.0,
+            "longitude": 0.0,
+        },
         "name": "Home",
     }
     assert len(mock_setup_entry.mock_calls) == 1
@@ -69,17 +69,21 @@ async def test_form(hass: HomeAssistant) -> None:
         result4 = await hass.config_entries.flow.async_configure(
             result3["flow_id"],
             {
-                CONF_LATITUDE: 1.0,
-                CONF_LONGITUDE: 1.0,
+                CONF_LOCATION: {
+                    CONF_LATITUDE: 1.0,
+                    CONF_LONGITUDE: 1.0,
+                }
             },
         )
         await hass.async_block_till_done()
 
-    assert result4["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result4["type"] == FlowResultType.CREATE_ENTRY
     assert result4["title"] == "Weather 1.0 1.0"
     assert result4["data"] == {
-        "latitude": 1.0,
-        "longitude": 1.0,
+        "location": {
+            "latitude": 1.0,
+            "longitude": 1.0,
+        },
         "name": "Weather",
     }
 
@@ -97,13 +101,15 @@ async def test_form_invalid_coordinates(hass: HomeAssistant) -> None:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                CONF_LATITUDE: 0.0,
-                CONF_LONGITUDE: 0.0,
+                CONF_LOCATION: {
+                    CONF_LATITUDE: 0.0,
+                    CONF_LONGITUDE: 0.0,
+                }
             },
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == RESULT_TYPE_FORM
+    assert result2["type"] == FlowResultType.FORM
     assert result2["errors"] == {"base": "wrong_location"}
 
     # Continue flow with new coordinates
@@ -117,17 +123,21 @@ async def test_form_invalid_coordinates(hass: HomeAssistant) -> None:
         result3 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                CONF_LATITUDE: 2.0,
-                CONF_LONGITUDE: 2.0,
+                CONF_LOCATION: {
+                    CONF_LATITUDE: 2.0,
+                    CONF_LONGITUDE: 2.0,
+                }
             },
         )
         await hass.async_block_till_done()
 
-    assert result3["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result3["type"] == FlowResultType.CREATE_ENTRY
     assert result3["title"] == "Weather 2.0 2.0"
     assert result3["data"] == {
-        "latitude": 2.0,
-        "longitude": 2.0,
+        "location": {
+            "latitude": 2.0,
+            "longitude": 2.0,
+        },
         "name": "Weather",
     }
 
@@ -138,8 +148,10 @@ async def test_form_unique_id_exist(hass: HomeAssistant) -> None:
         domain=DOMAIN,
         unique_id="1.0-1.0",
         data={
-            "latitude": 1.0,
-            "longitude": 1.0,
+            "location": {
+                "latitude": 1.0,
+                "longitude": 1.0,
+            },
             "name": "Weather",
         },
     )
@@ -155,11 +167,13 @@ async def test_form_unique_id_exist(hass: HomeAssistant) -> None:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                CONF_LATITUDE: 1.0,
-                CONF_LONGITUDE: 1.0,
+                CONF_LOCATION: {
+                    CONF_LATITUDE: 1.0,
+                    CONF_LONGITUDE: 1.0,
+                }
             },
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == RESULT_TYPE_ABORT
+    assert result2["type"] == FlowResultType.ABORT
     assert result2["reason"] == "already_configured"

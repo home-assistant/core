@@ -1,0 +1,80 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "email": "[%key:common::config_flow::data::email%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      },
+      "reauth_confirm": {
+        "description": "Please update your password for {email}",
+        "title": "[%key:common::config_flow::title::reauth%]",
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "button": {
+        "name": "Button"
+      }
+    },
+    "camera": {
+      "activity": {
+        "name": "Last activity"
+      },
+      "camera": {
+        "name": "[%key:component::camera::title%]"
+      }
+    },
+    "sensor": {
+      "chime_level": {
+        "name": "Chime level"
+      },
+      "last_button_event": {
+        "name": "Last button event"
+      },
+      "last_motion_event": {
+        "name": "Last motion event"
+      },
+      "last_check_in": {
+        "name": "Last check in"
+      },
+      "motion_threshold": {
+        "name": "Motion threshold"
+      },
+      "video_profile": {
+        "name": "Video profile"
+      },
+      "wifi_ssid": {
+        "name": "Wi-Fi SSID"
+      },
+      "wifi_status": {
+        "name": "Wi-Fi status"
+      }
+    },
+    "switch": {
+      "do_not_disturb": {
+        "name": "Do not disturb"
+      },
+      "do_not_ring": {
+        "name": "Do not ring"
+      },
+      "motion_sensor": {
+        "name": "Motion sensor"
+      }
+    }
+  }
+}

@@ -7,6 +7,7 @@ import os
 from pathlib import Path
 from typing import NamedTuple
 
+from typing_extensions import Self
 import voluptuous as vol
 
 from homeassistant import loader
@@ -54,7 +55,7 @@ class HomeAssistantConfig(OrderedDict):
         message: str,
         domain: str | None = None,
         config: ConfigType | None = None,
-    ) -> HomeAssistantConfig:
+    ) -> Self:
         """Add a single error."""
         self.errors.append(CheckConfigError(str(message), domain, config))
         return self
@@ -122,7 +123,7 @@ async def async_check_ha_config_file(  # noqa: C901
     core_config.pop(CONF_PACKAGES, None)
 
     # Filter out repeating config sections
-    components = {key.split(" ")[0] for key in config.keys()}
+    components = {key.partition(" ")[0] for key in config}
 
     # Process and validate config
     for domain in components:

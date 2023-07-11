@@ -1,7 +1,7 @@
 """Shared schema code."""
 import voluptuous as vol
 
-CONF_SCHEMA = "schema"
+from ..const import CONF_SCHEMA
 
 MQTT_LIGHT_SCHEMA_SCHEMA = vol.Schema(
     {

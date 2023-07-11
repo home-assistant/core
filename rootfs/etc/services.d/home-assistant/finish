@@ -1,24 +1,30 @@
-#!/usr/bin/execlineb -S1
+#!/usr/bin/env bashio
 # ==============================================================================
 # Take down the S6 supervision tree when Home Assistant fails
 # ==============================================================================
-define HA_RESTART_EXIT_CODE 100
-define SIGNAL_EXIT_CODE 256
-define SIGTERM 15
+declare RESTART_EXIT_CODE=100
+declare SIGNAL_EXIT_CODE=256
+declare SIGTERM=15
+declare APP_EXIT_CODE=${1}
+declare SIGNAL_NO=${2}
+declare NEW_EXIT_CODE=
 
-foreground { s6-echo "[finish] process exit code ${1}" }
+bashio::log.info "Home Assistant Core finish process exit code ${APP_EXIT_CODE}"
 
-if { s6-test ${1} -ne ${HA_RESTART_EXIT_CODE} }
-ifelse { s6-test ${1} -eq ${SIGNAL_EXIT_CODE} } {
-  # Process terminated by a signal
-  define signal ${2}
-  foreground { s6-echo "[finish] process received signal ${signal}" }
-  backtick -n new_exit_code { s6-expr 128 + ${signal} }
-  importas -ui new_exit_code new_exit_code
-  foreground { redirfd -w 1 /var/run/s6/env-stage3/S6_STAGE2_EXITED s6-echo -n -- ${new_exit_code} }
-  if { s6-test ${signal} -ne ${SIGTERM} }
-  s6-svscanctl -t /var/run/s6/services
-}
+if [[ ${APP_EXIT_CODE} -eq ${RESTART_EXIT_CODE} ]]; then
+  exit 0
+elif [[ ${APP_EXIT_CODE} -eq ${SIGNAL_EXIT_CODE} ]]; then
+  bashio::log.info "Home Assistant Core finish process received signal ${SIGNAL_NO}"
 
-foreground { redirfd -w 1 /var/run/s6/env-stage3/S6_STAGE2_EXITED s6-echo -n -- ${1} }
-s6-svscanctl -t /var/run/s6/services
+  NEW_EXIT_CODE=$((128 + SIGNAL_NO))
+  echo ${NEW_EXIT_CODE} > /run/s6-linux-init-container-results/exitcode
+
+  if [[ ${SIGNAL_NO} -eq ${SIGTERM} ]]; then
+    /run/s6/basedir/bin/halt
+  fi
+else
+  bashio::log.info "Home Assistant Core service shutdown"
+
+  echo ${APP_EXIT_CODE} > /run/s6-linux-init-container-results/exitcode
+  /run/s6/basedir/bin/halt
+fi

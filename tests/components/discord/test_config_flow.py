@@ -28,7 +28,7 @@ async def test_flow_user(hass: HomeAssistant) -> None:
             result["flow_id"],
             user_input=CONF_INPUT,
         )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["title"] == NAME
     assert result["data"] == CONF_DATA
 
@@ -45,7 +45,7 @@ async def test_flow_user_already_configured(hass: HomeAssistant) -> None:
             result["flow_id"],
             user_input=CONF_INPUT,
         )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -58,7 +58,7 @@ async def test_flow_user_invalid_auth(hass: HomeAssistant) -> None:
             context={"source": config_entries.SOURCE_USER},
             data=CONF_DATA,
         )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "invalid_auth"}
 
@@ -67,7 +67,7 @@ async def test_flow_user_invalid_auth(hass: HomeAssistant) -> None:
             result["flow_id"],
             user_input=CONF_INPUT,
         )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["title"] == NAME
     assert result["data"] == CONF_DATA
 
@@ -81,7 +81,7 @@ async def test_flow_user_cannot_connect(hass: HomeAssistant) -> None:
             context={"source": config_entries.SOURCE_USER},
             data=CONF_DATA,
         )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "cannot_connect"}
 
@@ -90,7 +90,7 @@ async def test_flow_user_cannot_connect(hass: HomeAssistant) -> None:
             result["flow_id"],
             user_input=CONF_INPUT,
         )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["title"] == NAME
     assert result["data"] == CONF_DATA
 
@@ -104,7 +104,7 @@ async def test_flow_user_unknown_error(hass: HomeAssistant) -> None:
             context={"source": config_entries.SOURCE_USER},
             data=CONF_DATA,
         )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "unknown"}
 
@@ -113,7 +113,7 @@ async def test_flow_user_unknown_error(hass: HomeAssistant) -> None:
             result["flow_id"],
             user_input=CONF_INPUT,
         )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["title"] == NAME
     assert result["data"] == CONF_DATA
 
@@ -128,15 +128,10 @@ async def test_flow_reauth(hass: HomeAssistant) -> None:
             "entry_id": entry.entry_id,
             "unique_id": entry.unique_id,
         },
+        data=entry.data,
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "reauth"
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={},
-    )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
     new_conf = {CONF_API_TOKEN: "1234567890123"}
@@ -146,7 +141,7 @@ async def test_flow_reauth(hass: HomeAssistant) -> None:
             result["flow_id"],
             user_input=new_conf,
         )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
     assert result["errors"] == {"base": "invalid_auth"}
 
@@ -155,6 +150,6 @@ async def test_flow_reauth(hass: HomeAssistant) -> None:
             result["flow_id"],
             user_input=new_conf,
         )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
     assert entry.data == CONF_DATA | new_conf

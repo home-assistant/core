@@ -10,13 +10,18 @@ from homeassistant.const import ATTR_HW_VERSION, ATTR_MODEL
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.entity import DeviceInfo, Entity, ToggleEntity
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+)
 
 from .models import WizData
 
 
-class WizEntity(CoordinatorEntity, Entity):
+class WizEntity(CoordinatorEntity[DataUpdateCoordinator[float | None]], Entity):
     """Representation of WiZ entity."""
+
+    _attr_has_entity_name = True
 
     def __init__(self, wiz_data: WizData, name: str) -> None:
         """Initialize a WiZ entity."""
@@ -24,7 +29,6 @@ class WizEntity(CoordinatorEntity, Entity):
         self._device = wiz_data.bulb
         bulb_type: BulbType = self._device.bulbtype
         self._attr_unique_id = self._device.mac
-        self._attr_name = name
         self._attr_device_info = DeviceInfo(
             connections={(CONNECTION_NETWORK_MAC, self._device.mac)},
             name=name,

@@ -9,13 +9,14 @@ from yarl import URL
 
 from homeassistant.components.update import UpdateEntity, UpdateEntityDescription
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import SynoApi
-from .const import COORDINATOR_CENTRAL, DOMAIN, SYNO_API
+from .const import DOMAIN
+from .coordinator import SynologyDSMCentralUpdateCoordinator
 from .entity import SynologyDSMBaseEntity, SynologyDSMEntityDescription
+from .models import SynologyDSMData
 
 
 @dataclass
@@ -29,7 +30,7 @@ UPDATE_ENTITIES: Final = [
     SynologyDSMUpdateEntityEntityDescription(
         api_key=SynoCoreUpgrade.API_KEY,
         key="update",
-        name="DSM Update",
+        translation_key="update",
         entity_category=EntityCategory.DIAGNOSTIC,
     )
 ]
@@ -39,21 +40,25 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up Synology DSM update entities."""
-    data = hass.data[DOMAIN][entry.unique_id]
-    api: SynoApi = data[SYNO_API]
-    coordinator = data[COORDINATOR_CENTRAL]
-
+    data: SynologyDSMData = hass.data[DOMAIN][entry.unique_id]
     async_add_entities(
-        SynoDSMUpdateEntity(api, coordinator, description)
+        SynoDSMUpdateEntity(data.api, data.coordinator_central, description)
         for description in UPDATE_ENTITIES
     )
 
 
-class SynoDSMUpdateEntity(SynologyDSMBaseEntity, UpdateEntity):
+class SynoDSMUpdateEntity(
+    SynologyDSMBaseEntity[SynologyDSMCentralUpdateCoordinator], UpdateEntity
+):
     """Mixin for update entity specific attributes."""
 
     entity_description: SynologyDSMUpdateEntityEntityDescription
     _attr_title = "Synology DSM"
+
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return bool(self._api.upgrade)
 
     @property
     def installed_version(self) -> str | None:

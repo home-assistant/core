@@ -133,7 +133,7 @@ class TankUtilitySensor(SensorEntity):
         data.update(data.pop("lastReading", {}))
         return data
 
-    def update(self):
+    def update(self) -> None:
         """Set the device state and attributes."""
         data = self.get_data()
         self._state = round(data[SENSOR_TYPE], SENSOR_ROUNDING_PRECISION)

@@ -1,10 +1,10 @@
 {
   "domain": "min_max",
-  "integration_type": "helper",
   "name": "Min/Max",
+  "codeowners": ["@gjohansson-ST"],
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/min_max",
-  "codeowners": ["@fabaff"],
-  "quality_scale": "internal",
-  "iot_class": "local_push",
-  "config_flow": true
+  "integration_type": "helper",
+  "iot_class": "calculated",
+  "quality_scale": "internal"
 }

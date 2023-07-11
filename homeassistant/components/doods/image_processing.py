@@ -255,7 +255,6 @@ class Doods(ImageProcessingEntity):
             )
 
         for label, values in matches.items():
-
             # Draw custom label regions/areas
             if label in self._label_areas and self._label_areas[label] != [0, 0, 1, 1]:
                 box_label = f"{label.capitalize()} Detection Area"
@@ -297,7 +296,10 @@ class Doods(ImageProcessingEntity):
 
         if self._aspect and abs((img_width / img_height) - self._aspect) > 0.1:
             _LOGGER.debug(
-                "The image aspect: %s and the detector aspect: %s differ by more than 0.1",
+                (
+                    "The image aspect: %s and the detector aspect: %s differ by more"
+                    " than 0.1"
+                ),
                 (img_width / img_height),
                 self._aspect,
             )
@@ -348,14 +350,13 @@ class Doods(ImageProcessingEntity):
                     or boxes[3] > self._area[3]
                 ):
                     continue
-            else:
-                if (
-                    boxes[0] > self._area[2]
-                    or boxes[1] > self._area[3]
-                    or boxes[2] < self._area[0]
-                    or boxes[3] < self._area[1]
-                ):
-                    continue
+            elif (
+                boxes[0] > self._area[2]
+                or boxes[1] > self._area[3]
+                or boxes[2] < self._area[0]
+                or boxes[3] < self._area[1]
+            ):
+                continue
 
             # Exclude matches outside label specific area definition
             if self._label_areas.get(label):
@@ -367,14 +368,13 @@ class Doods(ImageProcessingEntity):
                         or boxes[3] > self._label_areas[label][3]
                     ):
                         continue
-                else:
-                    if (
-                        boxes[0] > self._label_areas[label][2]
-                        or boxes[1] > self._label_areas[label][3]
-                        or boxes[2] < self._label_areas[label][0]
-                        or boxes[3] < self._label_areas[label][1]
-                    ):
-                        continue
+                elif (
+                    boxes[0] > self._label_areas[label][2]
+                    or boxes[1] > self._label_areas[label][3]
+                    or boxes[2] < self._label_areas[label][0]
+                    or boxes[3] < self._label_areas[label][1]
+                ):
+                    continue
 
             if label not in matches:
                 matches[label] = []

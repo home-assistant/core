@@ -1,4 +1,6 @@
 """Support for interacting with Smappee Comport Plugs, Switches and Output Modules."""
+from typing import Any
+
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -8,7 +10,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import DOMAIN
 
 SWITCH_PREFIX = "Switch"
-ICON = "mdi:toggle-switch"
 
 
 async def async_setup_entry(
@@ -52,6 +53,8 @@ async def async_setup_entry(
 
 class SmappeeActuator(SwitchEntity):
     """Representation of a Smappee Comport Plug."""
+
+    _attr_icon = "mdi:toggle-switch"
 
     def __init__(
         self,
@@ -103,12 +106,7 @@ class SmappeeActuator(SwitchEntity):
         # Switch or comfort plug
         return self._state == "ON_ON"
 
-    @property
-    def icon(self):
-        """Icon to use in the frontend."""
-        return ICON
-
-    def turn_on(self, **kwargs):
+    def turn_on(self, **kwargs: Any) -> None:
         """Turn on Comport Plug."""
         if self._actuator_type in ("SWITCH", "COMFORT_PLUG"):
             self._service_location.set_actuator_state(self._actuator_id, state="ON_ON")
@@ -117,7 +115,7 @@ class SmappeeActuator(SwitchEntity):
                 self._actuator_id, state=self._actuator_state_option
             )
 
-    def turn_off(self, **kwargs):
+    def turn_off(self, **kwargs: Any) -> None:
         """Turn off Comport Plug."""
         if self._actuator_type in ("SWITCH", "COMFORT_PLUG"):
             self._service_location.set_actuator_state(
@@ -129,7 +127,7 @@ class SmappeeActuator(SwitchEntity):
             )
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return True if entity is available. Unavailable for COMFORT_PLUGS."""
         return (
             self._connection_state == "CONNECTED"
@@ -166,7 +164,7 @@ class SmappeeActuator(SwitchEntity):
             sw_version=self._service_location.firmware_version,
         )
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Get the latest data from Smappee and update the state."""
         await self._smappee_base.async_update()
 

@@ -3,6 +3,9 @@ from __future__ import annotations
 
 import logging
 
+from zoneminder.monitor import Monitor
+from zoneminder.zm import ZoneMinder
+
 from homeassistant.components.mjpeg import MjpegCamera, filter_urllib3_logging
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -22,6 +25,7 @@ def setup_platform(
     """Set up the ZoneMinder cameras."""
     filter_urllib3_logging()
     cameras = []
+    zm_client: ZoneMinder
     for zm_client in hass.data[ZONEMINDER_DOMAIN].values():
         if not (monitors := zm_client.get_monitors()):
             _LOGGER.warning("Could not fetch monitors from ZoneMinder host: %s")
@@ -36,7 +40,9 @@ def setup_platform(
 class ZoneMinderCamera(MjpegCamera):
     """Representation of a ZoneMinder Monitor Stream."""
 
-    def __init__(self, monitor, verify_ssl):
+    _attr_should_poll = True  # Cameras default to False
+
+    def __init__(self, monitor: Monitor, verify_ssl: bool) -> None:
         """Initialize as a subclass of MjpegCamera."""
         super().__init__(
             name=monitor.name,
@@ -44,27 +50,12 @@ class ZoneMinderCamera(MjpegCamera):
             still_image_url=monitor.still_image_url,
             verify_ssl=verify_ssl,
         )
-        self._is_recording = None
-        self._is_available = None
+        self._attr_is_recording = False
+        self._attr_available = False
         self._monitor = monitor
 
-    @property
-    def should_poll(self):
-        """Update the recording state periodically."""
-        return True
-
-    def update(self):
+    def update(self) -> None:
         """Update our recording state from the ZM API."""
         _LOGGER.debug("Updating camera state for monitor %i", self._monitor.id)
-        self._is_recording = self._monitor.is_recording
-        self._is_available = self._monitor.is_available
-
-    @property
-    def is_recording(self):
-        """Return whether the monitor is in alarm mode."""
-        return self._is_recording
-
-    @property
-    def available(self):
-        """Return True if entity is available."""
-        return self._is_available
+        self._attr_is_recording = self._monitor.is_recording
+        self._attr_available = self._monitor.is_available

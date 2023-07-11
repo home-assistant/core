@@ -4,11 +4,16 @@ from __future__ import annotations
 from unittest.mock import patch
 
 import pytest
+from pytrafikverket.exceptions import (
+    InvalidAuthentication,
+    MultipleWeatherStationsFound,
+    NoWeatherStationFound,
+)
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import RESULT_TYPE_FORM
+from homeassistant.data_entry_flow import FlowResultType
 
 DOMAIN = "trafikverket_weatherstation"
 CONF_STATION = "station"
@@ -48,40 +53,40 @@ async def test_form(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "error_message,base_error",
+    ("side_effect", "base_error"),
     [
         (
-            "Source: Security, message: Invalid authentication",
+            InvalidAuthentication,
             "invalid_auth",
         ),
         (
-            "Could not find a weather station with the specified name",
+            NoWeatherStationFound,
             "invalid_station",
         ),
         (
-            "Found multiple weather stations with the specified name",
+            MultipleWeatherStationsFound,
             "more_stations",
         ),
         (
-            "Unknown",
+            Exception,
             "cannot_connect",
         ),
     ],
 )
 async def test_flow_fails(
-    hass: HomeAssistant, error_message: str, base_error: str
+    hass: HomeAssistant, side_effect: Exception, base_error: str
 ) -> None:
     """Test config flow errors."""
     result4 = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result4["type"] == RESULT_TYPE_FORM
+    assert result4["type"] == FlowResultType.FORM
     assert result4["step_id"] == config_entries.SOURCE_USER
 
     with patch(
         "homeassistant.components.trafikverket_weatherstation.config_flow.TrafikverketWeather.async_get_weather",
-        side_effect=ValueError(error_message),
+        side_effect=side_effect(),
     ):
         result4 = await hass.config_entries.flow.async_configure(
             result4["flow_id"],

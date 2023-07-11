@@ -5,7 +5,13 @@ import json
 from typing import Any
 
 from homeassistant.components import logbook
-from homeassistant.components.recorder.models import process_timestamp_to_utc_isoformat
+from homeassistant.components.logbook import processor
+from homeassistant.components.logbook.models import LogbookConfig
+from homeassistant.components.recorder.models import (
+    process_timestamp_to_utc_isoformat,
+    ulid_to_bytes_or_none,
+    uuid_hex_to_bytes_or_none,
+)
 from homeassistant.core import Context
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.json import JSONEncoder
@@ -23,16 +29,20 @@ class MockRow:
     ):
         """Init the fake row."""
         self.event_type = event_type
-        self.shared_data = json.dumps(data, cls=JSONEncoder)
+        self.event_data = json.dumps(data, cls=JSONEncoder)
         self.data = data
         self.time_fired = dt_util.utcnow()
-        self.context_parent_id = context.parent_id if context else None
-        self.context_user_id = context.user_id if context else None
-        self.context_id = context.id if context else None
+        self.time_fired_ts = dt_util.utc_to_timestamp(self.time_fired)
+        self.context_parent_id_bin = (
+            ulid_to_bytes_or_none(context.parent_id) if context else None
+        )
+        self.context_user_id_bin = (
+            uuid_hex_to_bytes_or_none(context.user_id) if context else None
+        )
+        self.context_id_bin = ulid_to_bytes_or_none(context.id) if context else None
         self.state = None
         self.entity_id = None
-        self.state_id = None
-        self.event_id = None
+        self.row_id = None
         self.shared_attrs = None
         self.attributes = None
         self.context_only = False
@@ -50,16 +60,26 @@ class MockRow:
 
 def mock_humanify(hass_, rows):
     """Wrap humanify with mocked logbook objects."""
-    entity_name_cache = logbook.EntityNameCache(hass_)
+    entity_name_cache = processor.EntityNameCache(hass_)
     ent_reg = er.async_get(hass_)
-    external_events = hass_.data.get(logbook.DOMAIN, {})
+    event_cache = processor.EventCache({})
+    context_lookup = {}
+    logbook_config = hass_.data.get(logbook.DOMAIN, LogbookConfig({}, None, None))
+    external_events = logbook_config.external_events
+    logbook_run = processor.LogbookRun(
+        context_lookup,
+        external_events,
+        event_cache,
+        entity_name_cache,
+        include_entity_name=True,
+        format_time=processor._row_time_fired_isoformat,
+    )
+    context_augmenter = processor.ContextAugmenter(logbook_run)
     return list(
-        logbook._humanify(
+        processor._humanify(
             rows,
-            None,
             ent_reg,
-            external_events,
-            entity_name_cache,
-            logbook._row_time_fired_isoformat,
+            logbook_run,
+            context_augmenter,
         ),
     )

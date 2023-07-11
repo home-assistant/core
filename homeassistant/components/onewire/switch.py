@@ -7,8 +7,8 @@ from typing import Any
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
@@ -32,8 +32,8 @@ DEVICE_SWITCHES: dict[str, tuple[OneWireEntityDescription, ...]] = {
         OneWireSwitchEntityDescription(
             key="PIO",
             entity_registry_enabled_default=False,
-            name="PIO",
             read_mode=READ_MODE_BOOL,
+            translation_key="pio",
         ),
     ),
     "12": tuple(
@@ -41,8 +41,8 @@ DEVICE_SWITCHES: dict[str, tuple[OneWireEntityDescription, ...]] = {
             OneWireSwitchEntityDescription(
                 key=f"PIO.{id}",
                 entity_registry_enabled_default=False,
-                name=f"PIO {id}",
                 read_mode=READ_MODE_BOOL,
+                translation_key=f"pio_{id.lower()}",
             )
             for id in DEVICE_KEYS_A_B
         ]
@@ -50,8 +50,8 @@ DEVICE_SWITCHES: dict[str, tuple[OneWireEntityDescription, ...]] = {
             OneWireSwitchEntityDescription(
                 key=f"latch.{id}",
                 entity_registry_enabled_default=False,
-                name=f"Latch {id}",
                 read_mode=READ_MODE_BOOL,
+                translation_key=f"latch_{id.lower()}",
             )
             for id in DEVICE_KEYS_A_B
         ]
@@ -61,8 +61,8 @@ DEVICE_SWITCHES: dict[str, tuple[OneWireEntityDescription, ...]] = {
             key="IAD",
             entity_registry_enabled_default=False,
             entity_category=EntityCategory.CONFIG,
-            name="IAD",
             read_mode=READ_MODE_BOOL,
+            translation_key="iad",
         ),
     ),
     "29": tuple(
@@ -70,8 +70,8 @@ DEVICE_SWITCHES: dict[str, tuple[OneWireEntityDescription, ...]] = {
             OneWireSwitchEntityDescription(
                 key=f"PIO.{id}",
                 entity_registry_enabled_default=False,
-                name=f"PIO {id}",
                 read_mode=READ_MODE_BOOL,
+                translation_key=f"pio_{id}",
             )
             for id in DEVICE_KEYS_0_7
         ]
@@ -79,8 +79,8 @@ DEVICE_SWITCHES: dict[str, tuple[OneWireEntityDescription, ...]] = {
             OneWireSwitchEntityDescription(
                 key=f"latch.{id}",
                 entity_registry_enabled_default=False,
-                name=f"Latch {id}",
                 read_mode=READ_MODE_BOOL,
+                translation_key=f"latch_{id}",
             )
             for id in DEVICE_KEYS_0_7
         ]
@@ -89,8 +89,8 @@ DEVICE_SWITCHES: dict[str, tuple[OneWireEntityDescription, ...]] = {
         OneWireSwitchEntityDescription(
             key=f"PIO.{id}",
             entity_registry_enabled_default=False,
-            name=f"PIO {id}",
             read_mode=READ_MODE_BOOL,
+            translation_key=f"pio_{id.lower()}",
         )
         for id in DEVICE_KEYS_A_B
     ),
@@ -104,9 +104,9 @@ HOBBYBOARD_EF: dict[str, tuple[OneWireEntityDescription, ...]] = {
         OneWireSwitchEntityDescription(
             key=f"hub/branch.{id}",
             entity_registry_enabled_default=False,
-            name=f"Hub Branch {id} Enable",
             read_mode=READ_MODE_BOOL,
             entity_category=EntityCategory.CONFIG,
+            translation_key=f"hub_branch_{id}",
         )
         for id in DEVICE_KEYS_0_3
     ),
@@ -115,9 +115,9 @@ HOBBYBOARD_EF: dict[str, tuple[OneWireEntityDescription, ...]] = {
             OneWireSwitchEntityDescription(
                 key=f"moisture/is_leaf.{id}",
                 entity_registry_enabled_default=False,
-                name=f"Leaf Sensor {id} Enable",
                 read_mode=READ_MODE_BOOL,
                 entity_category=EntityCategory.CONFIG,
+                translation_key=f"leaf_sensor_{id}",
             )
             for id in DEVICE_KEYS_0_3
         ]
@@ -125,9 +125,9 @@ HOBBYBOARD_EF: dict[str, tuple[OneWireEntityDescription, ...]] = {
             OneWireSwitchEntityDescription(
                 key=f"moisture/is_moisture.{id}",
                 entity_registry_enabled_default=False,
-                name=f"Moisture Sensor {id} Enable",
                 read_mode=READ_MODE_BOOL,
                 entity_category=EntityCategory.CONFIG,
+                translation_key=f"moisture_sensor_{id}",
             )
             for id in DEVICE_KEYS_0_3
         ]
@@ -150,20 +150,20 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up 1-Wire platform."""
-    onewirehub = hass.data[DOMAIN][config_entry.entry_id]
+    onewire_hub = hass.data[DOMAIN][config_entry.entry_id]
 
-    entities = await hass.async_add_executor_job(get_entities, onewirehub)
+    entities = await hass.async_add_executor_job(get_entities, onewire_hub)
     async_add_entities(entities, True)
 
 
-def get_entities(onewirehub: OneWireHub) -> list[OneWireSwitch]:
+def get_entities(onewire_hub: OneWireHub) -> list[OneWireSwitch]:
     """Get a list of entities."""
-    if not onewirehub.devices:
+    if not onewire_hub.devices:
         return []
 
     entities: list[OneWireSwitch] = []
 
-    for device in onewirehub.devices:
+    for device in onewire_hub.devices:
         family = device.family
         device_type = device.type
         device_id = device.id
@@ -177,15 +177,13 @@ def get_entities(onewirehub: OneWireHub) -> list[OneWireSwitch]:
             continue
         for description in get_sensor_types(device_sub_type)[family]:
             device_file = os.path.join(os.path.split(device.path)[0], description.key)
-            name = f"{device_id} {description.name}"
             entities.append(
                 OneWireSwitch(
                     description=description,
                     device_id=device_id,
                     device_file=device_file,
                     device_info=device_info,
-                    name=name,
-                    owproxy=onewirehub.owproxy,
+                    owproxy=onewire_hub.owproxy,
                 )
             )
 

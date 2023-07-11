@@ -1,4 +1,6 @@
 """Config flow for Rachio integration."""
+from __future__ import annotations
+
 from http import HTTPStatus
 import logging
 
@@ -88,11 +90,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(
             discovery_info.properties[zeroconf.ATTR_PROPERTIES_ID]
         )
+        self._abort_if_unique_id_configured()
         return await self.async_step_user()
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry):
+    def async_get_options_flow(
+        config_entry: config_entries.ConfigEntry,
+    ) -> OptionsFlowHandler:
         """Get the options flow for this handler."""
         return OptionsFlowHandler(config_entry)
 

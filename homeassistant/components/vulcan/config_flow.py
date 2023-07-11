@@ -1,5 +1,7 @@
 """Adds config flow for Vulcan."""
+from collections.abc import Mapping
 import logging
+from typing import Any
 
 from aiohttp import ClientConnectionError
 import voluptuous as vol
@@ -16,6 +18,7 @@ from vulcan import (
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_PIN, CONF_REGION, CONF_TOKEN
+from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from . import DOMAIN
@@ -35,7 +38,7 @@ class VulcanFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize config flow."""
         self.account = None
         self.keystore = None
@@ -215,7 +218,9 @@ class VulcanFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 await self.async_set_unique_id(str(new_students[0].pupil.id))
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
-                    title=f"{new_students[0].pupil.first_name} {new_students[0].pupil.last_name}",
+                    title=(
+                        f"{new_students[0].pupil.first_name} {new_students[0].pupil.last_name}"
+                    ),
                     data={
                         "student_id": str(new_students[0].pupil.id),
                         "keystore": keystore.as_dict,
@@ -236,7 +241,7 @@ class VulcanFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_reauth(self, user_input=None):
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Perform reauth upon an API authentication error."""
         return await self.async_step_reauth_confirm()
 
@@ -279,7 +284,9 @@ class VulcanFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                         if str(student.pupil.id) == str(entry.data["student_id"]):
                             self.hass.config_entries.async_update_entry(
                                 entry,
-                                title=f"{student.pupil.first_name} {student.pupil.last_name}",
+                                title=(
+                                    f"{student.pupil.first_name} {student.pupil.last_name}"
+                                ),
                                 data={
                                     "student_id": str(student.pupil.id),
                                     "keystore": keystore.as_dict,

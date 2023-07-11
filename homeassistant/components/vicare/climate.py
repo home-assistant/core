@@ -3,8 +3,10 @@ from __future__ import annotations
 
 from contextlib import suppress
 import logging
+from typing import Any
 
 from PyViCare.PyViCareUtils import (
+    PyViCareCommandError,
     PyViCareInvalidDataError,
     PyViCareNotSupportedFeatureError,
     PyViCareRateLimitError,
@@ -12,11 +14,11 @@ from PyViCare.PyViCareUtils import (
 import requests
 import voluptuous as vol
 
-from homeassistant.components.climate import ClimateEntity
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     PRESET_COMFORT,
     PRESET_ECO,
     PRESET_NONE,
+    ClimateEntity,
     ClimateEntityFeature,
     HVACAction,
     HVACMode,
@@ -26,11 +28,12 @@ from homeassistant.const import (
     ATTR_TEMPERATURE,
     PRECISION_TENTHS,
     PRECISION_WHOLE,
-    TEMP_CELSIUS,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
@@ -71,19 +74,13 @@ VICARE_TEMP_HEATING_MIN = 3
 VICARE_TEMP_HEATING_MAX = 37
 
 VICARE_TO_HA_HVAC_HEATING = {
-    VICARE_MODE_DHW: HVACMode.OFF,
-    VICARE_MODE_HEATING: HVACMode.HEAT,
-    VICARE_MODE_DHWANDHEATING: HVACMode.AUTO,
-    VICARE_MODE_DHWANDHEATINGCOOLING: HVACMode.AUTO,
     VICARE_MODE_FORCEDREDUCED: HVACMode.OFF,
-    VICARE_MODE_FORCEDNORMAL: HVACMode.HEAT,
     VICARE_MODE_OFF: HVACMode.OFF,
-}
-
-HA_TO_VICARE_HVAC_HEATING = {
-    HVACMode.HEAT: VICARE_MODE_FORCEDNORMAL,
-    HVACMode.OFF: VICARE_MODE_FORCEDREDUCED,
-    HVACMode.AUTO: VICARE_MODE_DHWANDHEATING,
+    VICARE_MODE_DHW: HVACMode.OFF,
+    VICARE_MODE_DHWANDHEATINGCOOLING: HVACMode.AUTO,
+    VICARE_MODE_DHWANDHEATING: HVACMode.AUTO,
+    VICARE_MODE_HEATING: HVACMode.AUTO,
+    VICARE_MODE_FORCEDNORMAL: HVACMode.HEAT,
 }
 
 VICARE_TO_HA_PRESET_HEATING = {
@@ -147,9 +144,11 @@ async def async_setup_entry(
 class ViCareClimate(ClimateEntity):
     """Representation of the ViCare heating climate device."""
 
+    _attr_precision = PRECISION_TENTHS
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
     )
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
     def __init__(self, name, api, circuit, device_config, heating_type):
         """Initialize the climate device."""
@@ -167,22 +166,22 @@ class ViCareClimate(ClimateEntity):
         self._current_action = None
 
     @property
-    def unique_id(self):
+    def unique_id(self) -> str:
         """Return unique ID for this device."""
         return f"{self._device_config.getConfig().serial}-{self._circuit.id}"
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return device info for this device."""
-        return {
-            "identifiers": {(DOMAIN, self._device_config.getConfig().serial)},
-            "name": self._device_config.getModel(),
-            "manufacturer": "Viessmann",
-            "model": (DOMAIN, self._device_config.getModel()),
-            "configuration_url": "https://developer.viessmann.com/",
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, self._device_config.getConfig().serial)},
+            name=self._device_config.getModel(),
+            manufacturer="Viessmann",
+            model=self._device_config.getModel(),
+            configuration_url="https://developer.viessmann.com/",
+        )
 
-    def update(self):
+    def update(self) -> None:
         """Let HA know there has been an update from the ViCare API."""
         try:
             _room_temperature = None
@@ -255,11 +254,6 @@ class ViCareClimate(ClimateEntity):
         return self._name
 
     @property
-    def temperature_unit(self):
-        """Return the unit of measurement."""
-        return TEMP_CELSIUS
-
-    @property
     def current_temperature(self):
         """Return the current temperature."""
         return self._current_temperature
@@ -276,19 +270,41 @@ class ViCareClimate(ClimateEntity):
 
     def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set a new hvac mode on the ViCare API."""
-        vicare_mode = HA_TO_VICARE_HVAC_HEATING.get(hvac_mode)
+        if "vicare_modes" not in self._attributes:
+            raise ValueError("Cannot set hvac mode when vicare_modes are not known")
+
+        vicare_mode = self.vicare_mode_from_hvac_mode(hvac_mode)
         if vicare_mode is None:
-            raise ValueError(
-                f"Cannot set invalid vicare mode: {hvac_mode} / {vicare_mode}"
-            )
+            raise ValueError(f"Cannot set invalid hvac mode: {hvac_mode}")
 
         _LOGGER.debug("Setting hvac mode to %s / %s", hvac_mode, vicare_mode)
         self._circuit.setMode(vicare_mode)
 
+    def vicare_mode_from_hvac_mode(self, hvac_mode):
+        """Return the corresponding vicare mode for an hvac_mode."""
+        if "vicare_modes" not in self._attributes:
+            return None
+
+        supported_modes = self._attributes["vicare_modes"]
+        for key, value in VICARE_TO_HA_HVAC_HEATING.items():
+            if key in supported_modes and value == hvac_mode:
+                return key
+        return None
+
     @property
     def hvac_modes(self) -> list[HVACMode]:
         """Return the list of available hvac modes."""
-        return list(HA_TO_VICARE_HVAC_HEATING)
+        if "vicare_modes" not in self._attributes:
+            return []
+
+        supported_modes = self._attributes["vicare_modes"]
+        hvac_modes = []
+        for key, value in VICARE_TO_HA_HVAC_HEATING.items():
+            if value in hvac_modes:
+                continue
+            if key in supported_modes:
+                hvac_modes.append(value)
+        return hvac_modes
 
     @property
     def hvac_action(self) -> HVACAction:
@@ -308,16 +324,11 @@ class ViCareClimate(ClimateEntity):
         return VICARE_TEMP_HEATING_MAX
 
     @property
-    def precision(self):
-        """Return the precision of the system."""
-        return PRECISION_TENTHS
-
-    @property
     def target_temperature_step(self) -> float:
         """Set target temperature step to wholes."""
         return PRECISION_WHOLE
 
-    def set_temperature(self, **kwargs):
+    def set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperatures."""
         if (temp := kwargs.get(ATTR_TEMPERATURE)) is not None:
             self._circuit.setProgramTemperature(self._current_program, temp)
@@ -333,7 +344,7 @@ class ViCareClimate(ClimateEntity):
         """Return the available preset mode."""
         return list(HA_TO_VICARE_PRESET_HEATING)
 
-    def set_preset_mode(self, preset_mode):
+    def set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode and deactivate any existing programs."""
         vicare_program = HA_TO_VICARE_PRESET_HEATING.get(preset_mode)
         if vicare_program is None:
@@ -344,7 +355,10 @@ class ViCareClimate(ClimateEntity):
         _LOGGER.debug("Setting preset to %s / %s", preset_mode, vicare_program)
         if self._current_program != VICARE_PROGRAM_NORMAL:
             # We can't deactivate "normal"
-            self._circuit.deactivateProgram(self._current_program)
+            try:
+                self._circuit.deactivateProgram(self._current_program)
+            except PyViCareCommandError:
+                _LOGGER.debug("Unable to deactivate program %s", self._current_program)
         if vicare_program != VICARE_PROGRAM_NORMAL:
             # And we can't explicitly activate normal, either
             self._circuit.activateProgram(vicare_program)

@@ -11,6 +11,8 @@ from .const import DOMAIN
 class TractiveEntity(Entity):
     """Tractive entity class."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self, user_id: str, trackable: dict[str, Any], tracker_details: dict[str, Any]
     ) -> None:
@@ -18,7 +20,7 @@ class TractiveEntity(Entity):
         self._attr_device_info = DeviceInfo(
             configuration_url="https://my.tractive.com/",
             identifiers={(DOMAIN, tracker_details["_id"])},
-            name=f"Tractive ({tracker_details['_id']})",
+            name=trackable["details"]["name"],
             manufacturer="Tractive GmbH",
             sw_version=tracker_details["fw_version"],
             model=tracker_details["model_number"],

@@ -11,7 +11,9 @@ from homeassistant.core import HomeAssistant
 from .const import SRV_RECORD_PREFIX
 
 
-async def async_check_srv_record(hass: HomeAssistant, host: str) -> dict[str, Any]:
+async def async_check_srv_record(
+    hass: HomeAssistant, host: str
+) -> dict[str, Any] | None:
     """Check if the given host is a valid Minecraft SRV record."""
     # Check if 'host' is a valid SRV record.
     return_value = None
@@ -20,7 +22,7 @@ async def async_check_srv_record(hass: HomeAssistant, host: str) -> dict[str, An
         srv_records = await aiodns.DNSResolver().query(
             host=f"{SRV_RECORD_PREFIX}.{host}", qtype="SRV"
         )
-    except (aiodns.error.DNSError):
+    except aiodns.error.DNSError:
         # 'host' is not a SRV record.
         pass
     else:

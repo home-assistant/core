@@ -1,6 +1,6 @@
 """Integrate with FreeDNS Dynamic DNS service at freedns.afraid.org."""
 import asyncio
-from datetime import timedelta
+from datetime import datetime, timedelta
 import logging
 
 import aiohttp
@@ -11,6 +11,7 @@ from homeassistant.const import CONF_ACCESS_TOKEN, CONF_SCAN_INTERVAL, CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
@@ -52,12 +53,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     if result is False:
         return False
 
-    async def update_domain_callback(now):
+    async def update_domain_callback(now: datetime) -> None:
         """Update the FreeDNS entry."""
         await _update_freedns(hass, session, url, auth_token)
 
-    hass.helpers.event.async_track_time_interval(
-        update_domain_callback, update_interval
+    async_track_time_interval(
+        hass, update_domain_callback, update_interval, cancel_on_shutdown=True
     )
 
     return True

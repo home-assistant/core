@@ -11,15 +11,18 @@ from homeassistant.components.device_tracker.const import (
     ATTR_MAC,
     ATTR_SOURCE_TYPE,
     DOMAIN,
-    SOURCE_TYPE_ROUTER,
+    SourceType,
 )
 from homeassistant.const import ATTR_BATTERY_LEVEL, STATE_HOME, STATE_NOT_HOME
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from tests.common import MockConfigEntry
 
 
-async def test_scanner_entity_device_tracker(hass, enable_custom_integrations):
+async def test_scanner_entity_device_tracker(
+    hass: HomeAssistant, enable_custom_integrations: None
+) -> None:
     """Test ScannerEntity based device tracker."""
     # Make device tied to other integration so device tracker entities get enabled
     dr.async_get(hass).async_get_or_create(
@@ -37,7 +40,7 @@ async def test_scanner_entity_device_tracker(hass, enable_custom_integrations):
     entity_id = "device_tracker.test_ad_de_ef_be_ed_fe"
     entity_state = hass.states.get(entity_id)
     assert entity_state.attributes == {
-        ATTR_SOURCE_TYPE: SOURCE_TYPE_ROUTER,
+        ATTR_SOURCE_TYPE: SourceType.ROUTER,
         ATTR_BATTERY_LEVEL: 100,
         ATTR_IP: "0.0.0.0",
         ATTR_MAC: "ad:de:ef:be:ed:fe",
@@ -53,7 +56,7 @@ async def test_scanner_entity_device_tracker(hass, enable_custom_integrations):
     assert entity_state.state == STATE_HOME
 
 
-def test_scanner_entity():
+def test_scanner_entity() -> None:
     """Test coverage for base ScannerEntity entity class."""
     entity = ScannerEntity()
     with pytest.raises(NotImplementedError):
@@ -68,7 +71,7 @@ def test_scanner_entity():
     assert entity.hostname is None
 
 
-def test_base_tracker_entity():
+def test_base_tracker_entity() -> None:
     """Test coverage for base BaseTrackerEntity entity class."""
     entity = BaseTrackerEntity()
     with pytest.raises(NotImplementedError):

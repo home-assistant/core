@@ -1,10 +1,10 @@
 {
   "domain": "huisbaasje",
   "name": "Huisbaasje",
+  "codeowners": ["@dennisschroer"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/huisbaasje",
-  "requirements": ["huisbaasje-client==0.1.0"],
-  "codeowners": ["@dennisschroer"],
   "iot_class": "cloud_polling",
-  "loggers": ["huisbaasje"]
+  "loggers": ["huisbaasje"],
+  "requirements": ["energyflip-client==0.2.2"]
 }

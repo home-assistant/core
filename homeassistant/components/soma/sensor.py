@@ -45,7 +45,7 @@ class SomaSensor(SomaEntity, SensorEntity):
         return self.battery_state
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Update the sensor with the latest data."""
         response = await self.get_battery_level_from_api()
 

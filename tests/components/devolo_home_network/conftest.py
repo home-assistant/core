@@ -1,29 +1,36 @@
 """Fixtures for tests."""
-
-from unittest.mock import AsyncMock, patch
+from itertools import cycle
+from unittest.mock import patch
 
 import pytest
 
-from . import async_connect
-from .const import CONNECTED_STATIONS, DISCOVERY_INFO, NEIGHBOR_ACCESS_POINTS, PLCNET
+from .const import DISCOVERY_INFO, IP
+from .mock import MockDevice
 
 
-@pytest.fixture()
+@pytest.fixture
 def mock_device():
     """Mock connecting to a devolo home network device."""
-    with patch("devolo_plc_api.device.Device.async_connect", async_connect), patch(
-        "devolo_plc_api.device.Device.async_disconnect"
-    ), patch(
-        "devolo_plc_api.device_api.deviceapi.DeviceApi.async_get_wifi_connected_station",
-        new=AsyncMock(return_value=CONNECTED_STATIONS),
-    ), patch(
-        "devolo_plc_api.device_api.deviceapi.DeviceApi.async_get_wifi_neighbor_access_points",
-        new=AsyncMock(return_value=NEIGHBOR_ACCESS_POINTS),
-    ), patch(
-        "devolo_plc_api.plcnet_api.plcnetapi.PlcNetApi.async_get_network_overview",
-        new=AsyncMock(return_value=PLCNET),
+    device = MockDevice(ip=IP)
+    with patch(
+        "homeassistant.components.devolo_home_network.Device",
+        side_effect=cycle([device]),
     ):
-        yield
+        yield device
+
+
+@pytest.fixture
+def mock_repeater_device(mock_device: MockDevice):
+    """Mock connecting to a devolo home network repeater device."""
+    mock_device.plcnet = None
+    return mock_device
+
+
+@pytest.fixture
+def mock_nonwifi_device(mock_device: MockDevice):
+    """Mock connecting to a devolo home network device without wifi."""
+    mock_device.device.features = ["reset", "update", "led", "intmtg"]
+    return mock_device
 
 
 @pytest.fixture(name="info")

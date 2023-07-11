@@ -121,7 +121,7 @@ class EnvisalinkAlarm(EnvisalinkDevice, AlarmControlPanelEntity):
         _LOGGER.debug("Setting up alarm: %s", alarm_name)
         super().__init__(alarm_name, info, controller)
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         self.async_on_remove(
             async_dispatcher_connect(
@@ -141,14 +141,14 @@ class EnvisalinkAlarm(EnvisalinkDevice, AlarmControlPanelEntity):
             self.async_write_ha_state()
 
     @property
-    def code_format(self):
+    def code_format(self) -> CodeFormat | None:
         """Regex for code format or None if no code is required."""
         if self._code:
             return None
         return CodeFormat.NUMBER
 
     @property
-    def state(self):
+    def state(self) -> str:
         """Return the state of the device."""
         state = STATE_UNKNOWN
 
@@ -168,7 +168,7 @@ class EnvisalinkAlarm(EnvisalinkDevice, AlarmControlPanelEntity):
             state = STATE_ALARM_DISARMED
         return state
 
-    async def async_alarm_disarm(self, code=None):
+    async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
         if code:
             self.hass.data[DATA_EVL].disarm_partition(str(code), self._partition_number)
@@ -177,7 +177,7 @@ class EnvisalinkAlarm(EnvisalinkDevice, AlarmControlPanelEntity):
                 str(self._code), self._partition_number
             )
 
-    async def async_alarm_arm_home(self, code=None):
+    async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
         if code:
             self.hass.data[DATA_EVL].arm_stay_partition(
@@ -188,7 +188,7 @@ class EnvisalinkAlarm(EnvisalinkDevice, AlarmControlPanelEntity):
                 str(self._code), self._partition_number
             )
 
-    async def async_alarm_arm_away(self, code=None):
+    async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
         if code:
             self.hass.data[DATA_EVL].arm_away_partition(
@@ -199,11 +199,11 @@ class EnvisalinkAlarm(EnvisalinkDevice, AlarmControlPanelEntity):
                 str(self._code), self._partition_number
             )
 
-    async def async_alarm_trigger(self, code=None):
+    async def async_alarm_trigger(self, code: str | None = None) -> None:
         """Alarm trigger command. Will be used to trigger a panic alarm."""
         self.hass.data[DATA_EVL].panic_alarm(self._panic_type)
 
-    async def async_alarm_arm_night(self, code=None):
+    async def async_alarm_arm_night(self, code: str | None = None) -> None:
         """Send arm night command."""
         self.hass.data[DATA_EVL].arm_night_partition(
             str(code) if code else str(self._code), self._partition_number

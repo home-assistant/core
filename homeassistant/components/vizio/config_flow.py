@@ -49,9 +49,8 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-def _get_config_schema(input_dict: dict[str, Any] = None) -> vol.Schema:
-    """
-    Return schema defaults for init step based on user input/config dict.
+def _get_config_schema(input_dict: dict[str, Any] | None = None) -> vol.Schema:
+    """Return schema defaults for init step based on user input/config dict.
 
     Retain info already provided for future form views by setting them
     as defaults in schema.
@@ -81,9 +80,8 @@ def _get_config_schema(input_dict: dict[str, Any] = None) -> vol.Schema:
     )
 
 
-def _get_pairing_schema(input_dict: dict[str, Any] = None) -> vol.Schema:
-    """
-    Return schema defaults for pairing data based on user input.
+def _get_pairing_schema(input_dict: dict[str, Any] | None = None) -> vol.Schema:
+    """Return schema defaults for pairing data based on user input.
 
     Retain info already provided for future form views by setting
     them as defaults in schema.
@@ -112,7 +110,9 @@ class VizioOptionsConfigFlow(config_entries.OptionsFlow):
         """Initialize vizio options flow."""
         self.config_entry = config_entry
 
-    async def async_step_init(self, user_input: dict[str, Any] = None) -> FlowResult:
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Manage the vizio options."""
         if user_input is not None:
             if user_input.get(CONF_APPS_TO_INCLUDE_OR_EXCLUDE):
@@ -187,11 +187,11 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize config flow."""
         self._user_schema = None
-        self._must_show_form = None
+        self._must_show_form: bool | None = None
         self._ch_type = None
         self._pairing_token = None
-        self._data = None
-        self._apps = {}
+        self._data: dict[str, Any] | None = None
+        self._apps: dict[str, list] = {}
 
     async def _create_entry(self, input_dict: dict[str, Any]) -> FlowResult:
         """Create vizio config entry."""
@@ -204,7 +204,9 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_create_entry(title=input_dict[CONF_NAME], data=input_dict)
 
-    async def async_step_user(self, user_input: dict[str, Any] = None) -> FlowResult:
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle a flow initialized by the user."""
         errors = {}
 
@@ -257,9 +259,11 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     # their configuration.yaml or to proceed with config flow pairing. We
                     # will also provide contextual message to user explaining why
                     _LOGGER.warning(
-                        "Couldn't complete configuration.yaml import: '%s' key is "
-                        "missing. Either provide '%s' key in configuration.yaml or "
-                        "finish setup by completing configuration via frontend",
+                        (
+                            "Couldn't complete configuration.yaml import: '%s' key is "
+                            "missing. Either provide '%s' key in configuration.yaml or "
+                            "finish setup by completing configuration via frontend"
+                        ),
                         CONF_ACCESS_TOKEN,
                         CONF_ACCESS_TOKEN,
                     )
@@ -381,16 +385,18 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             }
         )
 
-    async def async_step_pair_tv(self, user_input: dict[str, Any] = None) -> FlowResult:
-        """
-        Start pairing process for TV.
+    async def async_step_pair_tv(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Start pairing process for TV.
 
         Ask user for PIN to complete pairing process.
         """
-        errors = {}
+        errors: dict[str, str] = {}
 
         # Start pairing process if it hasn't already started
         if not self._ch_type and not self._pairing_token:
+            assert self._data
             dev = VizioAsync(
                 DEVICE_ID,
                 self._data[CONF_HOST],
@@ -448,6 +454,7 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def _pairing_complete(self, step_id: str) -> FlowResult:
         """Handle config flow completion."""
+        assert self._data
         if not self._must_show_form:
             return await self._create_entry(self._data)
 
@@ -458,20 +465,18 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_pairing_complete(
-        self, user_input: dict[str, Any] = None
+        self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
-        """
-        Complete non-import sourced config flow.
+        """Complete non-import sourced config flow.
 
         Display final message to user confirming pairing.
         """
         return await self._pairing_complete("pairing_complete")
 
     async def async_step_pairing_complete_import(
-        self, user_input: dict[str, Any] = None
+        self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
-        """
-        Complete import sourced config flow.
+        """Complete import sourced config flow.
 
         Display final message to user confirming pairing and displaying
         access token.

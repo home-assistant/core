@@ -5,10 +5,14 @@ from typing import Any
 
 from aiosenz import MODE_AUTO, Thermostat
 
-from homeassistant.components.climate import ClimateEntity
-from homeassistant.components.climate.const import ClimateEntityFeature, HVACMode
+from homeassistant.components.climate import (
+    ClimateEntity,
+    ClimateEntityFeature,
+    HVACAction,
+    HVACMode,
+)
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, PRECISION_TENTHS, TEMP_CELSIUS
+from homeassistant.const import ATTR_TEMPERATURE, PRECISION_TENTHS, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -33,7 +37,7 @@ async def async_setup_entry(
 class SENZClimate(CoordinatorEntity, ClimateEntity):
     """Representation of a SENZ climate entity."""
 
-    _attr_temperature_unit = TEMP_CELSIUS
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_precision = PRECISION_TENTHS
     _attr_hvac_modes = [HVACMode.HEAT, HVACMode.AUTO]
     _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
@@ -84,6 +88,11 @@ class SENZClimate(CoordinatorEntity, ClimateEntity):
         if self._thermostat.mode == MODE_AUTO:
             return HVACMode.AUTO
         return HVACMode.HEAT
+
+    @property
+    def hvac_action(self) -> HVACAction:
+        """Return current hvac action."""
+        return HVACAction.HEATING if self._thermostat.is_heating else HVACAction.IDLE
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""

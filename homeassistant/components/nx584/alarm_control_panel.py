@@ -55,9 +55,9 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the NX584 platform."""
-    name = config.get(CONF_NAME)
-    host = config.get(CONF_HOST)
-    port = config.get(CONF_PORT)
+    name: str = config[CONF_NAME]
+    host: str = config[CONF_HOST]
+    port: int = config[CONF_PORT]
 
     url = f"http://{host}:{port}"
 
@@ -92,34 +92,20 @@ async def async_setup_platform(
 class NX584Alarm(alarm.AlarmControlPanelEntity):
     """Representation of a NX584-based alarm panel."""
 
+    _attr_code_format = alarm.CodeFormat.NUMBER
+    _attr_state: str | None
     _attr_supported_features = (
         AlarmControlPanelEntityFeature.ARM_HOME
         | AlarmControlPanelEntityFeature.ARM_AWAY
     )
 
-    def __init__(self, name, alarm_client, url):
+    def __init__(self, name: str, alarm_client: client.Client, url: str) -> None:
         """Init the nx584 alarm panel."""
-        self._name = name
-        self._state = None
+        self._attr_name = name
         self._alarm = alarm_client
         self._url = url
 
-    @property
-    def name(self):
-        """Return the name of the device."""
-        return self._name
-
-    @property
-    def code_format(self):
-        """Return one or more digits/characters."""
-        return alarm.CodeFormat.NUMBER
-
-    @property
-    def state(self):
-        """Return the state of the device."""
-        return self._state
-
-    def update(self):
+    def update(self) -> None:
         """Process new events from panel."""
         try:
             part = self._alarm.list_partitions()[0]
@@ -129,11 +115,11 @@ class NX584Alarm(alarm.AlarmControlPanelEntity):
                 "Unable to connect to %(host)s: %(reason)s",
                 {"host": self._url, "reason": ex},
             )
-            self._state = None
+            self._attr_state = None
             zones = []
         except IndexError:
             _LOGGER.error("NX584 reports no partitions")
-            self._state = None
+            self._attr_state = None
             zones = []
 
         bypassed = False
@@ -147,32 +133,32 @@ class NX584Alarm(alarm.AlarmControlPanelEntity):
                 break
 
         if not part["armed"]:
-            self._state = STATE_ALARM_DISARMED
+            self._attr_state = STATE_ALARM_DISARMED
         elif bypassed:
-            self._state = STATE_ALARM_ARMED_HOME
+            self._attr_state = STATE_ALARM_ARMED_HOME
         else:
-            self._state = STATE_ALARM_ARMED_AWAY
+            self._attr_state = STATE_ALARM_ARMED_AWAY
 
         for flag in part["condition_flags"]:
             if flag == "Siren on":
-                self._state = STATE_ALARM_TRIGGERED
+                self._attr_state = STATE_ALARM_TRIGGERED
 
-    def alarm_disarm(self, code=None):
+    def alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
         self._alarm.disarm(code)
 
-    def alarm_arm_home(self, code=None):
+    def alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
         self._alarm.arm("stay")
 
-    def alarm_arm_away(self, code=None):
+    def alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
         self._alarm.arm("exit")
 
-    def alarm_bypass(self, zone):
+    def alarm_bypass(self, zone: int) -> None:
         """Send bypass command."""
         self._alarm.set_bypass(zone, True)
 
-    def alarm_unbypass(self, zone):
+    def alarm_unbypass(self, zone: int) -> None:
         """Send bypass command."""
         self._alarm.set_bypass(zone, False)

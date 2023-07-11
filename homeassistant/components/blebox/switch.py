@@ -1,11 +1,19 @@
 """BleBox switch implementation."""
-from homeassistant.components.switch import SwitchEntity
+from datetime import timedelta
+from typing import Any
+
+from blebox_uniapi.box import Box
+import blebox_uniapi.switch
+
+from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import BleBoxEntity, create_blebox_entities
-from .const import BLEBOX_TO_HASS_DEVICE_CLASSES
+from . import BleBoxEntity
+from .const import DOMAIN, PRODUCT
+
+SCAN_INTERVAL = timedelta(seconds=5)
 
 
 async def async_setup_entry(
@@ -14,28 +22,30 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up a BleBox switch entity."""
-    create_blebox_entities(
-        hass, config_entry, async_add_entities, BleBoxSwitchEntity, "switches"
-    )
+    product: Box = hass.data[DOMAIN][config_entry.entry_id][PRODUCT]
+    entities = [
+        BleBoxSwitchEntity(feature) for feature in product.features.get("switches", [])
+    ]
+    async_add_entities(entities, True)
 
 
-class BleBoxSwitchEntity(BleBoxEntity, SwitchEntity):
+class BleBoxSwitchEntity(BleBoxEntity[blebox_uniapi.switch.Switch], SwitchEntity):
     """Representation of a BleBox switch feature."""
 
-    def __init__(self, feature):
+    def __init__(self, feature: blebox_uniapi.switch.Switch) -> None:
         """Initialize a BleBox switch feature."""
         super().__init__(feature)
-        self._attr_device_class = BLEBOX_TO_HASS_DEVICE_CLASSES[feature.device_class]
+        self._attr_device_class = SwitchDeviceClass.SWITCH
 
     @property
     def is_on(self):
         """Return whether switch is on."""
         return self._feature.is_on
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the switch."""
         await self._feature.async_turn_on()
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the switch."""
         await self._feature.async_turn_off()

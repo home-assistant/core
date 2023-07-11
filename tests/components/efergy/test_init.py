@@ -12,7 +12,7 @@ from . import _patch_efergy_status, create_entry, init_integration, setup_platfo
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
-async def test_setup(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker):
+async def test_setup(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) -> None:
     """Test unload."""
     entry = await init_integration(hass, aioclient_mock)
     assert entry.state == ConfigEntryState.LOADED
@@ -24,7 +24,7 @@ async def test_setup(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker):
     assert not hass.data.get(DOMAIN)
 
 
-async def test_async_setup_entry_not_ready(hass: HomeAssistant):
+async def test_async_setup_entry_not_ready(hass: HomeAssistant) -> None:
     """Test that it throws ConfigEntryNotReady when exception occurs during setup."""
     entry = create_entry(hass)
     with _patch_efergy_status() as efergymock:
@@ -35,7 +35,7 @@ async def test_async_setup_entry_not_ready(hass: HomeAssistant):
         assert not hass.data.get(DOMAIN)
 
 
-async def test_async_setup_entry_auth_failed(hass: HomeAssistant):
+async def test_async_setup_entry_auth_failed(hass: HomeAssistant) -> None:
     """Test that it throws ConfigEntryAuthFailed when authentication fails."""
     entry = create_entry(hass)
     with _patch_efergy_status() as efergymock:
@@ -46,10 +46,12 @@ async def test_async_setup_entry_auth_failed(hass: HomeAssistant):
         assert not hass.data.get(DOMAIN)
 
 
-async def test_device_info(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker):
+async def test_device_info(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test device info."""
     entry = await setup_platform(hass, aioclient_mock, SENSOR_DOMAIN)
-    device_registry = await dr.async_get_registry(hass)
+    device_registry = dr.async_get(hass)
 
     device = device_registry.async_get_device({(DOMAIN, entry.entry_id)})
 

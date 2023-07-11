@@ -8,8 +8,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import VelbusEntity
 from .const import DOMAIN
+from .entity import VelbusEntity
 
 
 async def async_setup_entry(

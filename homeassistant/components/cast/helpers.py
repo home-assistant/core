@@ -5,7 +5,7 @@ import asyncio
 import configparser
 from dataclasses import dataclass
 import logging
-from typing import Optional
+from typing import TYPE_CHECKING
 from urllib.parse import urlparse
 
 import aiohttp
@@ -20,6 +20,10 @@ from homeassistant.helpers import aiohttp_client
 
 from .const import DOMAIN
 
+if TYPE_CHECKING:
+    from homeassistant.components import zeroconf
+
+
 _LOGGER = logging.getLogger(__name__)
 
 _PLS_SECTION_PLAYLIST = "playlist"
@@ -33,11 +37,11 @@ class ChromecastInfo:
     """
 
     cast_info: CastInfo = attr.ib()
-    is_dynamic_group = attr.ib(type=Optional[bool], default=None)
+    is_dynamic_group = attr.ib(type=bool | None, default=None)
 
     @property
     def friendly_name(self) -> str:
-        """Return the UUID."""
+        """Return the Friendly Name."""
         return self.cast_info.friendly_name
 
     @property
@@ -59,7 +63,8 @@ class ChromecastInfo:
         if self.cast_info.cast_type is None or self.cast_info.manufacturer is None:
             unknown_models = hass.data[DOMAIN]["unknown_models"]
             if self.cast_info.model_name not in unknown_models:
-                # Manufacturer and cast type is not available in mDNS data, get it over http
+                # Manufacturer and cast type is not available in mDNS data,
+                # get it over HTTP
                 cast_info = dial.get_cast_type(
                     cast_info,
                     zconf=ChromeCastZeroconf.get_zeroconf(),
@@ -76,7 +81,10 @@ class ChromecastInfo:
                 )
 
                 _LOGGER.info(
-                    "Fetched cast details for unknown model '%s' manufacturer: '%s', type: '%s'. Please %s",
+                    (
+                        "Fetched cast details for unknown model '%s' manufacturer:"
+                        " '%s', type: '%s'. Please %s"
+                    ),
                     cast_info.model_name,
                     cast_info.manufacturer,
                     cast_info.cast_type,
@@ -121,15 +129,15 @@ class ChromecastInfo:
 class ChromeCastZeroconf:
     """Class to hold a zeroconf instance."""
 
-    __zconf = None
+    __zconf: zeroconf.HaZeroconf | None = None
 
     @classmethod
-    def set_zeroconf(cls, zconf):
+    def set_zeroconf(cls, zconf: zeroconf.HaZeroconf) -> None:
         """Set zeroconf."""
         cls.__zconf = zconf
 
     @classmethod
-    def get_zeroconf(cls):
+    def get_zeroconf(cls) -> zeroconf.HaZeroconf | None:
         """Get zeroconf."""
         return cls.__zconf
 
@@ -266,10 +274,8 @@ async def parse_m3u(hass, url):
     hls_content_types = (
         # https://tools.ietf.org/html/draft-pantos-http-live-streaming-19#section-10
         "application/vnd.apple.mpegurl",
-        # Some sites serve these as the informal HLS m3u type.
-        "application/x-mpegurl",
-        "audio/mpegurl",
-        "audio/x-mpegurl",
+        # Additional informal types used by Mozilla gecko not included as they
+        # don't reliably indicate HLS streams
     )
     m3u_data = await _fetch_playlist(hass, url, hls_content_types)
     m3u_lines = m3u_data.splitlines()
@@ -290,6 +296,9 @@ async def parse_m3u(hass, url):
             length = info[0].split(" ", 1)
             title = info[1].strip()
         elif line.startswith("#EXT-X-VERSION:"):
+            # HLS stream, supported by cast devices
+            raise PlaylistSupported("HLS")
+        elif line.startswith("#EXT-X-STREAM-INF:"):
             # HLS stream, supported by cast devices
             raise PlaylistSupported("HLS")
         elif line.startswith("#"):

@@ -62,10 +62,10 @@
       "nodeId": 12,
       "index": 0,
       "installerIcon": 7680,
-      "userIcon": 7680
+      "userIcon": 7680,
+      "commandClasses": []
     }
   ],
-  "commandClasses": [],
   "values": [
     {
       "endpoint": 0,

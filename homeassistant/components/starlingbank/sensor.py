@@ -1,6 +1,7 @@
 """Support for balance data via the Starling Bank API."""
 from __future__ import annotations
 
+from datetime import timedelta
 import logging
 
 import requests
@@ -25,7 +26,8 @@ CONF_SANDBOX = "sandbox"
 DEFAULT_SANDBOX = False
 DEFAULT_ACCOUNT_NAME = "Starling"
 
-ICON = "mdi:currency-gbp"
+
+SCAN_INTERVAL = timedelta(seconds=180)
 
 ACCOUNT_SCHEMA = vol.Schema(
     {
@@ -74,6 +76,8 @@ def setup_platform(
 class StarlingBalanceSensor(SensorEntity):
     """Representation of a Starling balance sensor."""
 
+    _attr_icon = "mdi:currency-gbp"
+
     def __init__(self, starling_account, account_name, balance_data_type):
         """Initialize the sensor."""
         self._starling_account = starling_account
@@ -98,12 +102,7 @@ class StarlingBalanceSensor(SensorEntity):
         """Return the unit of measurement."""
         return self._starling_account.currency
 
-    @property
-    def icon(self):
-        """Return the entity icon."""
-        return ICON
-
-    def update(self):
+    def update(self) -> None:
         """Fetch new state data for the sensor."""
         self._starling_account.update_balance_data()
         if self._balance_data_type == "cleared_balance":

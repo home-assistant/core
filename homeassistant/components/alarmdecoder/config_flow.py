@@ -1,4 +1,6 @@
 """Config flow for AlarmDecoder."""
+from __future__ import annotations
+
 import logging
 
 from adext import AdExt
@@ -52,13 +54,15 @@ class AlarmDecoderFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize AlarmDecoder ConfigFlow."""
         self.protocol = None
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry):
+    def async_get_options_flow(
+        config_entry: config_entries.ConfigEntry,
+    ) -> AlarmDecoderOptionsFlowHandler:
         """Get the options flow for AlarmDecoder."""
         return AlarmDecoderOptionsFlowHandler(config_entry)
 

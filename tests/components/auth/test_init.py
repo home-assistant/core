@@ -8,12 +8,14 @@ import pytest
 from homeassistant.auth import InvalidAuthError
 from homeassistant.auth.models import Credentials
 from homeassistant.components import auth
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
 from . import async_setup_auth
 
 from tests.common import CLIENT_ID, CLIENT_REDIRECT_URI, MockUser
+from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 
 @pytest.fixture
@@ -46,7 +48,9 @@ async def async_setup_user_refresh_token(hass):
     )
 
 
-async def test_login_new_user_and_trying_refresh_token(hass, aiohttp_client):
+async def test_login_new_user_and_trying_refresh_token(
+    hass: HomeAssistant, aiohttp_client: ClientSessionGenerator
+) -> None:
     """Test logging in with new user and refreshing tokens."""
     client = await async_setup_auth(hass, aiohttp_client, setup_api=True)
     resp = await client.post(
@@ -62,7 +66,11 @@ async def test_login_new_user_and_trying_refresh_token(hass, aiohttp_client):
 
     resp = await client.post(
         f"/auth/login_flow/{step['flow_id']}",
-        json={"client_id": CLIENT_ID, "username": "test-user", "password": "test-pass"},
+        json={
+            "client_id": CLIENT_ID,
+            "username": "test-user",
+            "password": "test-pass",
+        },
     )
 
     assert resp.status == HTTPStatus.OK
@@ -81,6 +89,7 @@ async def test_login_new_user_and_trying_refresh_token(hass, aiohttp_client):
     assert (
         await hass.auth.async_validate_access_token(tokens["access_token"]) is not None
     )
+    assert tokens["ha_auth_provider"] == "insecure_example"
 
     # Use refresh token to get more tokens.
     resp = await client.post(
@@ -109,7 +118,9 @@ async def test_login_new_user_and_trying_refresh_token(hass, aiohttp_client):
     assert resp.status == HTTPStatus.OK
 
 
-async def test_auth_code_checks_local_only_user(hass, aiohttp_client):
+async def test_auth_code_checks_local_only_user(
+    hass: HomeAssistant, aiohttp_client: ClientSessionGenerator
+) -> None:
     """Test local only user cannot exchange auth code for refresh tokens when external."""
     client = await async_setup_auth(hass, aiohttp_client, setup_api=True)
     resp = await client.post(
@@ -125,7 +136,11 @@ async def test_auth_code_checks_local_only_user(hass, aiohttp_client):
 
     resp = await client.post(
         f"/auth/login_flow/{step['flow_id']}",
-        json={"client_id": CLIENT_ID, "username": "test-user", "password": "test-pass"},
+        json={
+            "client_id": CLIENT_ID,
+            "username": "test-user",
+            "password": "test-pass",
+        },
     )
 
     assert resp.status == HTTPStatus.OK
@@ -151,7 +166,7 @@ async def test_auth_code_checks_local_only_user(hass, aiohttp_client):
     assert error["error"] == "access_denied"
 
 
-def test_auth_code_store_expiration(mock_credential):
+def test_auth_code_store_expiration(mock_credential) -> None:
     """Test that the auth code store will not return expired tokens."""
     store, retrieve = auth._create_auth_code_store()
     client_id = "bla"
@@ -175,17 +190,19 @@ def test_auth_code_store_expiration(mock_credential):
         assert retrieve(client_id, code) == mock_credential
 
 
-def test_auth_code_store_requires_credentials(mock_credential):
+def test_auth_code_store_requires_credentials(mock_credential) -> None:
     """Test we require credentials."""
     store, _retrieve = auth._create_auth_code_store()
 
-    with pytest.raises(ValueError):
+    with pytest.raises(TypeError):
         store(None, MockUser())
 
     store(None, mock_credential)
 
 
-async def test_ws_current_user(hass, hass_ws_client, hass_access_token):
+async def test_ws_current_user(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, hass_access_token: str
+) -> None:
     """Test the current user command with Home Assistant creds."""
     assert await async_setup_component(hass, "auth", {})
 
@@ -193,7 +210,7 @@ async def test_ws_current_user(hass, hass_ws_client, hass_access_token):
     user = refresh_token.user
     client = await hass_ws_client(hass, hass_access_token)
 
-    await client.send_json({"id": 5, "type": auth.WS_TYPE_CURRENT_USER})
+    await client.send_json({"id": 5, "type": "auth/current_user"})
 
     result = await client.receive_json()
     assert result["success"], result
@@ -211,7 +228,9 @@ async def test_ws_current_user(hass, hass_ws_client, hass_access_token):
     assert "data" not in hass_cred
 
 
-async def test_cors_on_token(hass, aiohttp_client):
+async def test_cors_on_token(
+    hass: HomeAssistant, aiohttp_client: ClientSessionGenerator
+) -> None:
     """Test logging in with new user and refreshing tokens."""
     client = await async_setup_auth(hass, aiohttp_client)
 
@@ -229,7 +248,9 @@ async def test_cors_on_token(hass, aiohttp_client):
     assert resp.headers["Access-Control-Allow-Origin"] == "http://example.com"
 
 
-async def test_refresh_token_system_generated(hass, aiohttp_client):
+async def test_refresh_token_system_generated(
+    hass: HomeAssistant, aiohttp_client: ClientSessionGenerator
+) -> None:
     """Test that we can get access tokens for system generated user."""
     client = await async_setup_auth(hass, aiohttp_client)
     user = await hass.auth.async_create_system_user("Test System")
@@ -260,7 +281,9 @@ async def test_refresh_token_system_generated(hass, aiohttp_client):
     )
 
 
-async def test_refresh_token_different_client_id(hass, aiohttp_client):
+async def test_refresh_token_different_client_id(
+    hass: HomeAssistant, aiohttp_client: ClientSessionGenerator
+) -> None:
     """Test that we verify client ID."""
     client = await async_setup_auth(hass, aiohttp_client)
     refresh_token = await async_setup_user_refresh_token(hass)
@@ -306,7 +329,9 @@ async def test_refresh_token_different_client_id(hass, aiohttp_client):
     )
 
 
-async def test_refresh_token_checks_local_only_user(hass, aiohttp_client):
+async def test_refresh_token_checks_local_only_user(
+    hass: HomeAssistant, aiohttp_client: ClientSessionGenerator
+) -> None:
     """Test that we can't refresh token for a local only user when external."""
     client = await async_setup_auth(hass, aiohttp_client)
     refresh_token = await async_setup_user_refresh_token(hass)
@@ -331,8 +356,11 @@ async def test_refresh_token_checks_local_only_user(hass, aiohttp_client):
 
 
 async def test_refresh_token_provider_rejected(
-    hass, aiohttp_client, hass_admin_user, hass_admin_credential
-):
+    hass: HomeAssistant,
+    aiohttp_client: ClientSessionGenerator,
+    hass_admin_user: MockUser,
+    hass_admin_credential: Credentials,
+) -> None:
     """Test that we verify client ID."""
     client = await async_setup_auth(hass, aiohttp_client)
     refresh_token = await async_setup_user_refresh_token(hass)
@@ -357,7 +385,12 @@ async def test_refresh_token_provider_rejected(
     assert result["error_description"] == "Invalid access"
 
 
-async def test_revoking_refresh_token(hass, aiohttp_client):
+@pytest.mark.parametrize(
+    ("url", "base_data"), [("/auth/token", {"action": "revoke"}), ("/auth/revoke", {})]
+)
+async def test_revoking_refresh_token(
+    url, base_data, hass: HomeAssistant, aiohttp_client: ClientSessionGenerator
+) -> None:
     """Test that we can revoke refresh tokens."""
     client = await async_setup_auth(hass, aiohttp_client)
     refresh_token = await async_setup_user_refresh_token(hass)
@@ -379,9 +412,7 @@ async def test_revoking_refresh_token(hass, aiohttp_client):
     )
 
     # Revoke refresh token
-    resp = await client.post(
-        "/auth/token", data={"token": refresh_token.token, "action": "revoke"}
-    )
+    resp = await client.post(url, data={**base_data, "token": refresh_token.token})
     assert resp.status == HTTPStatus.OK
 
     # Old access token should be no longer valid
@@ -400,7 +431,9 @@ async def test_revoking_refresh_token(hass, aiohttp_client):
     assert resp.status == HTTPStatus.BAD_REQUEST
 
 
-async def test_ws_long_lived_access_token(hass, hass_ws_client, hass_access_token):
+async def test_ws_long_lived_access_token(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, hass_access_token: str
+) -> None:
     """Test generate long-lived access token."""
     assert await async_setup_component(hass, "auth", {"http": {}})
 
@@ -410,7 +443,7 @@ async def test_ws_long_lived_access_token(hass, hass_ws_client, hass_access_toke
     await ws_client.send_json(
         {
             "id": 5,
-            "type": auth.WS_TYPE_LONG_LIVED_ACCESS_TOKEN,
+            "type": "auth/long_lived_access_token",
             "client_name": "GPS Logger",
             "lifespan": 365,
         }
@@ -428,13 +461,15 @@ async def test_ws_long_lived_access_token(hass, hass_ws_client, hass_access_toke
     assert refresh_token.client_icon is None
 
 
-async def test_ws_refresh_tokens(hass, hass_ws_client, hass_access_token):
+async def test_ws_refresh_tokens(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, hass_access_token: str
+) -> None:
     """Test fetching refresh token metadata."""
     assert await async_setup_component(hass, "auth", {"http": {}})
 
     ws_client = await hass_ws_client(hass, hass_access_token)
 
-    await ws_client.send_json({"id": 5, "type": auth.WS_TYPE_REFRESH_TOKENS})
+    await ws_client.send_json({"id": 5, "type": "auth/refresh_tokens"})
 
     result = await ws_client.receive_json()
     assert result["success"], result
@@ -450,11 +485,16 @@ async def test_ws_refresh_tokens(hass, hass_ws_client, hass_access_token):
     assert token["is_current"] is True
     assert token["last_used_at"] == refresh_token.last_used_at.isoformat()
     assert token["last_used_ip"] == refresh_token.last_used_ip
+    assert token["auth_provider_type"] == "homeassistant"
 
 
 async def test_ws_delete_refresh_token(
-    hass, hass_admin_user, hass_admin_credential, hass_ws_client, hass_access_token
-):
+    hass: HomeAssistant,
+    hass_admin_user: MockUser,
+    hass_admin_credential: Credentials,
+    hass_ws_client: WebSocketGenerator,
+    hass_access_token: str,
+) -> None:
     """Test deleting a refresh token."""
     assert await async_setup_component(hass, "auth", {"http": {}})
 
@@ -468,7 +508,7 @@ async def test_ws_delete_refresh_token(
     await ws_client.send_json(
         {
             "id": 5,
-            "type": auth.WS_TYPE_DELETE_REFRESH_TOKEN,
+            "type": "auth/delete_refresh_token",
             "refresh_token_id": refresh_token.id,
         }
     )
@@ -479,7 +519,9 @@ async def test_ws_delete_refresh_token(
     assert refresh_token is None
 
 
-async def test_ws_sign_path(hass, hass_ws_client, hass_access_token):
+async def test_ws_sign_path(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, hass_access_token: str
+) -> None:
     """Test signing a path."""
     assert await async_setup_component(hass, "auth", {"http": {}})
     ws_client = await hass_ws_client(hass, hass_access_token)
@@ -490,7 +532,7 @@ async def test_ws_sign_path(hass, hass_ws_client, hass_access_token):
         await ws_client.send_json(
             {
                 "id": 5,
-                "type": auth.WS_TYPE_SIGN_PATH,
+                "type": "auth/sign_path",
                 "path": "/api/hello",
                 "expires": 20,
             }

@@ -10,8 +10,10 @@ from homeassistant.components.wallbox.const import (
     CHARGER_ADDED_RANGE_KEY,
     CHARGER_CHARGING_POWER_KEY,
     CHARGER_CHARGING_SPEED_KEY,
+    CHARGER_CURRENCY_KEY,
     CHARGER_CURRENT_VERSION_KEY,
     CHARGER_DATA_KEY,
+    CHARGER_ENERGY_PRICE_KEY,
     CHARGER_LOCKED_UNLOCKED_KEY,
     CHARGER_MAX_AVAILABLE_POWER_KEY,
     CHARGER_MAX_CHARGING_CURRENT_KEY,
@@ -20,13 +22,10 @@ from homeassistant.components.wallbox.const import (
     CHARGER_SERIAL_NUMBER_KEY,
     CHARGER_SOFTWARE_KEY,
     CHARGER_STATUS_ID_KEY,
-    CONF_STATION,
-    DOMAIN,
 )
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
-from .const import ERROR, JWT, STATUS, TTL, USER_ID
+from .const import ERROR, STATUS, TTL, USER_ID
 
 from tests.common import MockConfigEntry
 
@@ -42,10 +41,12 @@ test_response = json.loads(
             CHARGER_NAME_KEY: "WallboxName",
             CHARGER_DATA_KEY: {
                 CHARGER_MAX_CHARGING_CURRENT_KEY: 24,
+                CHARGER_ENERGY_PRICE_KEY: 0.4,
                 CHARGER_LOCKED_UNLOCKED_KEY: False,
                 CHARGER_SERIAL_NUMBER_KEY: "20000",
                 CHARGER_PART_NUMBER_KEY: "PLP1-0-2-4-9-002-E",
                 CHARGER_SOFTWARE_KEY: {CHARGER_CURRENT_VERSION_KEY: "5.5.10"},
+                CHARGER_CURRENCY_KEY: {"code": "EUR/kWh"},
             },
         }
     )
@@ -54,34 +55,42 @@ test_response = json.loads(
 authorisation_response = json.loads(
     json.dumps(
         {
-            JWT: "fakekeyhere",
-            USER_ID: 12345,
-            TTL: 145656758,
-            ERROR: "false",
-            STATUS: 200,
+            "data": {
+                "attributes": {
+                    "token": "fakekeyhere",
+                    USER_ID: 12345,
+                    TTL: 145656758,
+                    ERROR: "false",
+                    STATUS: 200,
+                }
+            }
         }
     )
 )
 
-entry = MockConfigEntry(
-    domain=DOMAIN,
-    data={
-        CONF_USERNAME: "test_username",
-        CONF_PASSWORD: "test_password",
-        CONF_STATION: "12345",
-    },
-    entry_id="testEntry",
+
+authorisation_response_unauthorised = json.loads(
+    json.dumps(
+        {
+            "data": {
+                "attributes": {
+                    "token": "fakekeyhere",
+                    USER_ID: 12345,
+                    TTL: 145656758,
+                    ERROR: "false",
+                    STATUS: 404,
+                }
+            }
+        }
+    )
 )
 
 
-async def setup_integration(hass: HomeAssistant) -> None:
+async def setup_integration(hass: HomeAssistant, entry: MockConfigEntry) -> None:
     """Test wallbox sensor class setup."""
-
-    entry.add_to_hass(hass)
-
     with requests_mock.Mocker() as mock_request:
         mock_request.get(
-            "https://api.wall-box.com/auth/token/user",
+            "https://user-api.wall-box.com/users/signin",
             json=authorisation_response,
             status_code=HTTPStatus.OK,
         )
@@ -96,18 +105,17 @@ async def setup_integration(hass: HomeAssistant) -> None:
             status_code=HTTPStatus.OK,
         )
 
-        entry.add_to_hass(hass)
-
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
 
-async def setup_integration_connection_error(hass: HomeAssistant) -> None:
+async def setup_integration_connection_error(
+    hass: HomeAssistant, entry: MockConfigEntry
+) -> None:
     """Test wallbox sensor class setup with a connection error."""
-
     with requests_mock.Mocker() as mock_request:
         mock_request.get(
-            "https://api.wall-box.com/auth/token/user",
+            "https://user-api.wall-box.com/users/signin",
             json=authorisation_response,
             status_code=HTTPStatus.FORBIDDEN,
         )
@@ -122,18 +130,18 @@ async def setup_integration_connection_error(hass: HomeAssistant) -> None:
             status_code=HTTPStatus.FORBIDDEN,
         )
 
-        entry.add_to_hass(hass)
-
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
 
-async def setup_integration_read_only(hass: HomeAssistant) -> None:
+async def setup_integration_read_only(
+    hass: HomeAssistant, entry: MockConfigEntry
+) -> None:
     """Test wallbox sensor class setup for read only."""
 
     with requests_mock.Mocker() as mock_request:
         mock_request.get(
-            "https://api.wall-box.com/auth/token/user",
+            "https://user-api.wall-box.com/users/signin",
             json=authorisation_response,
             status_code=HTTPStatus.OK,
         )
@@ -148,7 +156,31 @@ async def setup_integration_read_only(hass: HomeAssistant) -> None:
             status_code=HTTPStatus.FORBIDDEN,
         )
 
-        entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+
+async def setup_integration_platform_not_ready(
+    hass: HomeAssistant, entry: MockConfigEntry
+) -> None:
+    """Test wallbox sensor class setup for read only."""
+
+    with requests_mock.Mocker() as mock_request:
+        mock_request.get(
+            "https://user-api.wall-box.com/users/signin",
+            json=authorisation_response,
+            status_code=HTTPStatus.OK,
+        )
+        mock_request.get(
+            "https://api.wall-box.com/chargers/status/12345",
+            json=test_response,
+            status_code=HTTPStatus.OK,
+        )
+        mock_request.put(
+            "https://api.wall-box.com/v2/charger/12345",
+            json=test_response,
+            status_code=HTTPStatus.NOT_FOUND,
+        )
 
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()

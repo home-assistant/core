@@ -1,0 +1,5 @@
+{
+  "domain": "jasco",
+  "name": "Jasco",
+  "iot_standards": ["zwave"]
+}

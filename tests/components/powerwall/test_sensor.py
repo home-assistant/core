@@ -12,6 +12,7 @@ from homeassistant.const import (
     CONF_IP_ADDRESS,
     PERCENTAGE,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from .mocks import _mock_powerwall_with_fixtures
@@ -19,7 +20,9 @@ from .mocks import _mock_powerwall_with_fixtures
 from tests.common import MockConfigEntry
 
 
-async def test_sensors(hass, entity_registry_enabled_by_default):
+async def test_sensors(
+    hass: HomeAssistant, entity_registry_enabled_by_default: None
+) -> None:
     """Test creation of the sensors."""
 
     mock_powerwall = await _mock_powerwall_with_fixtures(hass)
@@ -116,7 +119,7 @@ async def test_sensors(hass, entity_registry_enabled_by_default):
         assert state.attributes[key] == value
 
 
-async def test_sensor_backup_reserve_unavailable(hass):
+async def test_sensor_backup_reserve_unavailable(hass: HomeAssistant) -> None:
     """Confirm that backup reserve sensor is not added if data is unavailable from the device."""
 
     mock_powerwall = await _mock_powerwall_with_fixtures(hass)

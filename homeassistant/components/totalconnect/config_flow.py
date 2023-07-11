@@ -1,12 +1,19 @@
 """Config flow for the Total Connect component."""
+from __future__ import annotations
+
+from collections.abc import Mapping
+from typing import Any
+
 from total_connect_client.client import TotalConnectClient
 from total_connect_client.exceptions import AuthenticationError
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_LOCATION, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.core import callback
+from homeassistant.data_entry_flow import FlowResult
 
-from .const import CONF_USERCODES, DOMAIN
+from .const import AUTO_BYPASS, CONF_USERCODES, DOMAIN
 
 PASSWORD_DATA_SCHEMA = vol.Schema({vol.Required(CONF_PASSWORD): str})
 
@@ -118,10 +125,10 @@ class TotalConnectConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             description_placeholders={"location_id": location_for_user},
         )
 
-    async def async_step_reauth(self, config):
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Perform reauth upon an authentication error or no usercode."""
-        self.username = config[CONF_USERNAME]
-        self.usercodes = config[CONF_USERCODES]
+        self.username = entry_data[CONF_USERNAME]
+        self.usercodes = entry_data[CONF_USERCODES]
 
         return await self.async_step_reauth_confirm()
 
@@ -162,3 +169,36 @@ class TotalConnectConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
         return self.async_abort(reason="reauth_successful")
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(
+        config_entry: config_entries.ConfigEntry,
+    ) -> TotalConnectOptionsFlowHandler:
+        """Get options flow."""
+        return TotalConnectOptionsFlowHandler(config_entry)
+
+
+class TotalConnectOptionsFlowHandler(config_entries.OptionsFlow):
+    """TotalConnect options flow handler."""
+
+    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
+        """Initialize options flow."""
+        self.config_entry = config_entry
+
+    async def async_step_init(self, user_input=None):
+        """Manage the options."""
+        if user_input is not None:
+            return self.async_create_entry(title="", data=user_input)
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        AUTO_BYPASS,
+                        default=self.config_entry.options.get(AUTO_BYPASS, False),
+                    ): bool
+                }
+            ),
+        )

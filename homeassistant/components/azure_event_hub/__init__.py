@@ -78,9 +78,10 @@ async def async_setup(hass: HomeAssistant, yaml_config: ConfigType) -> bool:
     if not yaml_config[DOMAIN]:
         return True
     _LOGGER.warning(
-        "Loading Azure Event Hub completely via yaml config is deprecated; Only the \
-        Filter can be set in yaml, the rest is done through a config flow and has \
-        been imported, all other keys but filter can be deleted from configuration.yaml"
+        "Loading Azure Event Hub completely via yaml config is deprecated; Only the"
+        " Filter can be set in yaml, the rest is done through a config flow and has"
+        " been imported, all other keys but filter can be deleted from"
+        " configuration.yaml"
     )
     hass.async_create_task(
         hass.config_entries.flow.async_init(
@@ -154,7 +155,6 @@ class AzureEventHub:
         Suppress the INFO and below logging on the underlying packages,
         they are very verbose, even at INFO.
         """
-        logging.getLogger("uamqp").setLevel(logging.WARNING)
         logging.getLogger("azure.eventhub").setLevel(logging.WARNING)
         self._listener_remover = self.hass.bus.async_listen(
             MATCH_ALL, self.async_listen

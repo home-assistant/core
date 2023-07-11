@@ -110,6 +110,7 @@
         {
           "id": "11",
           "isEnabled": false,
+          "name": null,
           "acState": {
             "on": false,
             "targetTemperature": 21,
@@ -156,7 +157,7 @@
           "time": "2022-03-12T15:24:26Z",
           "secondsAgo": 4219143
         },
-        "shouldCleanFilters": false
+        "shouldCleanFilters": true
       },
       "serviceSubscriptions": [],
       "roomIsOccupied": true,
@@ -251,7 +252,7 @@
               },
               "C": {
                 "isNative": true,
-                "values": [18, 19, 20]
+                "values": [10, 16, 17, 18, 19, 20]
               }
             },
             "fanLevels": ["quiet", "low", "medium"],
@@ -267,7 +268,7 @@
               },
               "C": {
                 "isNative": true,
-                "values": [17, 18, 19, 20]
+                "values": [10, 16, 17, 18, 19, 20]
               }
             },
             "fanLevels": ["quiet", "low", "medium"],
@@ -283,7 +284,7 @@
               },
               "C": {
                 "isNative": true,
-                "values": [18, 19, 20]
+                "values": [10, 16, 17, 18, 19, 20]
               }
             },
             "swing": ["stopped", "fixedTop", "fixedMiddleTop"],
@@ -298,7 +299,7 @@
               },
               "C": {
                 "isNative": true,
-                "values": [18, 19, 20, 21]
+                "values": [10, 16, 17, 18, 19, 20]
               }
             },
             "fanLevels": ["quiet", "low", "medium"],

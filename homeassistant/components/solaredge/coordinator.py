@@ -1,8 +1,9 @@
 """Provides the data update coordinators for SolarEdge."""
 from __future__ import annotations
 
-from abc import abstractmethod
+from abc import ABC, abstractmethod
 from datetime import date, datetime, timedelta
+from typing import Any
 
 from solaredge import Solaredge
 from stringcase import snakecase
@@ -20,19 +21,20 @@ from .const import (
 )
 
 
-class SolarEdgeDataService:
+class SolarEdgeDataService(ABC):
     """Get and update the latest data."""
+
+    coordinator: DataUpdateCoordinator[None]
 
     def __init__(self, hass: HomeAssistant, api: Solaredge, site_id: str) -> None:
         """Initialize the data object."""
         self.api = api
         self.site_id = site_id
 
-        self.data = {}
-        self.attributes = {}
+        self.data: dict[str, Any] = {}
+        self.attributes: dict[str, Any] = {}
 
         self.hass = hass
-        self.coordinator = None
 
     @callback
     def async_setup(self) -> None:
@@ -94,20 +96,16 @@ class SolarEdgeOverviewDataService(SolarEdgeDataService):
             for index, key in enumerate(energy_keys, start=1):
                 # All coming values in list should be larger than the current value.
                 if any(self.data[k] > self.data[key] for k in energy_keys[index:]):
-                    self.data = {}
-                    raise UpdateFailed("Invalid energy values, skipping update")
+                    LOGGER.info(
+                        "Ignoring invalid energy value %s for %s", self.data[key], key
+                    )
+                    self.data.pop(key)
 
         LOGGER.debug("Updated SolarEdge overview: %s", self.data)
 
 
 class SolarEdgeDetailsDataService(SolarEdgeDataService):
     """Get and update the latest details data."""
-
-    def __init__(self, hass: HomeAssistant, api: Solaredge, site_id: str) -> None:
-        """Initialize the details data service."""
-        super().__init__(hass, api, site_id)
-
-        self.data = None
 
     @property
     def update_interval(self) -> timedelta:
@@ -123,7 +121,7 @@ class SolarEdgeDetailsDataService(SolarEdgeDataService):
         except KeyError as ex:
             raise UpdateFailed("Missing details data, skipping update") from ex
 
-        self.data = None
+        self.data = {}
         self.attributes = {}
 
         for key, value in details.items():
@@ -141,9 +139,13 @@ class SolarEdgeDetailsDataService(SolarEdgeDataService):
             ]:
                 self.attributes[key] = value
             elif key == "status":
-                self.data = value
+                self.data["status"] = value
 
-        LOGGER.debug("Updated SolarEdge details: %s, %s", self.data, self.attributes)
+        LOGGER.debug(
+            "Updated SolarEdge details: %s, %s",
+            self.data.get("status"),
+            self.attributes,
+        )
 
 
 class SolarEdgeInventoryDataService(SolarEdgeDataService):
@@ -260,7 +262,8 @@ class SolarEdgePowerFlowDataService(SolarEdgeDataService):
 
         if "connections" not in power_flow:
             LOGGER.debug(
-                "Missing connections in power flow data. Assuming site does not have any"
+                "Missing connections in power flow data. Assuming site does not"
+                " have any"
             )
             return
 
@@ -274,17 +277,19 @@ class SolarEdgePowerFlowDataService(SolarEdgeDataService):
 
         for key, value in power_flow.items():
             if key in ["LOAD", "PV", "GRID", "STORAGE"]:
-                self.data[key] = value["currentPower"]
+                self.data[key] = value.get("currentPower")
                 self.attributes[key] = {"status": value["status"]}
 
             if key in ["GRID"]:
                 export = key.lower() in power_to
-                self.data[key] *= -1 if export else 1
+                if self.data[key]:
+                    self.data[key] *= -1 if export else 1
                 self.attributes[key]["flow"] = "export" if export else "import"
 
             if key in ["STORAGE"]:
                 charge = key.lower() in power_to
-                self.data[key] *= -1 if charge else 1
+                if self.data[key]:
+                    self.data[key] *= -1 if charge else 1
                 self.attributes[key]["flow"] = "charge" if charge else "discharge"
                 self.attributes[key]["soc"] = value["chargeLevel"]
 

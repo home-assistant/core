@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 from requests import RequestException
 import voluptuous as vol
@@ -9,15 +10,12 @@ import voluptuous as vol
 from homeassistant.components.climate import (
     PLATFORM_SCHEMA,
     SCAN_INTERVAL,
-    TEMP_CELSIUS,
     ClimateEntity,
-)
-from homeassistant.components.climate.const import (
     ClimateEntityFeature,
     HVACAction,
     HVACMode,
 )
-from homeassistant.const import ATTR_TEMPERATURE, CONF_SCAN_INTERVAL
+from homeassistant.const import ATTR_TEMPERATURE, CONF_SCAN_INTERVAL, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -82,6 +80,7 @@ class SchluterThermostat(CoordinatorEntity, ClimateEntity):
     _attr_hvac_mode = HVACMode.HEAT
     _attr_hvac_modes = [HVACMode.HEAT]
     _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
     def __init__(self, coordinator, serial_number, api, session_id):
         """Initialize the thermostat."""
@@ -99,11 +98,6 @@ class SchluterThermostat(CoordinatorEntity, ClimateEntity):
     def name(self):
         """Return the name of the thermostat."""
         return self.coordinator.data[self._serial_number].name
-
-    @property
-    def temperature_unit(self):
-        """Schluter API always uses celsius."""
-        return TEMP_CELSIUS
 
     @property
     def current_temperature(self):
@@ -135,7 +129,7 @@ class SchluterThermostat(CoordinatorEntity, ClimateEntity):
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Mode is always heating, so do nothing."""
 
-    def set_temperature(self, **kwargs):
+    def set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         target_temp = None
         target_temp = kwargs.get(ATTR_TEMPERATURE)

@@ -46,7 +46,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data[DOMAIN][entry.entry_id] = coordinator
 
     # Set up all platforms for this device/entry.
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
@@ -74,12 +74,12 @@ def modernforms_exception_handler(func):
     async def handler(self, *args, **kwargs):
         try:
             await func(self, *args, **kwargs)
-            self.coordinator.update_listeners()
+            self.coordinator.async_update_listeners()
 
         except ModernFormsConnectionError as error:
             _LOGGER.error("Error communicating with API: %s", error)
             self.coordinator.last_update_success = False
-            self.coordinator.update_listeners()
+            self.coordinator.async_update_listeners()
 
         except ModernFormsError as error:
             _LOGGER.error("Invalid response from API: %s", error)
@@ -107,11 +107,6 @@ class ModernFormsDataUpdateCoordinator(DataUpdateCoordinator[ModernFormsDeviceSt
             name=DOMAIN,
             update_interval=SCAN_INTERVAL,
         )
-
-    def update_listeners(self) -> None:
-        """Call update on all listeners."""
-        for update_callback in self._listeners:
-            update_callback()
 
     async def _async_update_data(self) -> ModernFormsDevice:
         """Fetch data from Modern Forms."""
@@ -150,5 +145,8 @@ class ModernFormsDeviceEntity(CoordinatorEntity[ModernFormsDataUpdateCoordinator
             name=self.coordinator.data.info.device_name,
             manufacturer="Modern Forms",
             model=self.coordinator.data.info.fan_type,
-            sw_version=f"{self.coordinator.data.info.firmware_version} / {self.coordinator.data.info.main_mcu_firmware_version}",
+            sw_version=(
+                f"{self.coordinator.data.info.firmware_version} /"
+                f" {self.coordinator.data.info.main_mcu_firmware_version}"
+            ),
         )

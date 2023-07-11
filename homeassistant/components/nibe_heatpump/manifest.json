@@ -1,0 +1,9 @@
+{
+  "domain": "nibe_heatpump",
+  "name": "Nibe Heat Pump",
+  "codeowners": ["@elupus"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/nibe_heatpump",
+  "iot_class": "local_polling",
+  "requirements": ["nibe==2.2.0"]
+}

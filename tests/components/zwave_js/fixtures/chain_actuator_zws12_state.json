@@ -44,9 +44,14 @@
   "neighbors": [1, 2],
   "interviewAttempts": 1,
   "endpoints": [
-    { "nodeId": 6, "index": 0, "installerIcon": 6656, "userIcon": 6656 }
+    {
+      "nodeId": 6,
+      "index": 0,
+      "installerIcon": 6656,
+      "userIcon": 6656,
+      "commandClasses": []
+    }
   ],
-  "commandClasses": [],
   "values": [
     {
       "commandClassName": "Multilevel Switch",

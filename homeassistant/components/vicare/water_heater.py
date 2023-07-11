@@ -1,6 +1,7 @@
 """Viessmann ViCare water_heater device."""
 from contextlib import suppress
 import logging
+from typing import Any
 
 from PyViCare.PyViCareUtils import (
     PyViCareInvalidDataError,
@@ -18,9 +19,10 @@ from homeassistant.const import (
     ATTR_TEMPERATURE,
     PRECISION_TENTHS,
     PRECISION_WHOLE,
-    TEMP_CELSIUS,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
@@ -34,7 +36,9 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 VICARE_MODE_DHW = "dhw"
+VICARE_MODE_HEATING = "heating"
 VICARE_MODE_DHWANDHEATING = "dhwAndHeating"
+VICARE_MODE_DHWANDHEATINGCOOLING = "dhwAndHeatingCooling"
 VICARE_MODE_FORCEDREDUCED = "forcedReduced"
 VICARE_MODE_FORCEDNORMAL = "forcedNormal"
 VICARE_MODE_OFF = "standby"
@@ -48,6 +52,8 @@ OPERATION_MODE_OFF = "off"
 VICARE_TO_HA_HVAC_DHW = {
     VICARE_MODE_DHW: OPERATION_MODE_ON,
     VICARE_MODE_DHWANDHEATING: OPERATION_MODE_ON,
+    VICARE_MODE_DHWANDHEATINGCOOLING: OPERATION_MODE_ON,
+    VICARE_MODE_HEATING: OPERATION_MODE_OFF,
     VICARE_MODE_FORCEDREDUCED: OPERATION_MODE_OFF,
     VICARE_MODE_FORCEDNORMAL: OPERATION_MODE_ON,
     VICARE_MODE_OFF: OPERATION_MODE_OFF,
@@ -99,6 +105,7 @@ async def async_setup_entry(
 class ViCareWater(WaterHeaterEntity):
     """Representation of the ViCare domestic hot water device."""
 
+    _attr_precision = PRECISION_TENTHS
     _attr_supported_features = WaterHeaterEntityFeature.TARGET_TEMPERATURE
 
     def __init__(self, name, api, circuit, device_config, heating_type):
@@ -114,7 +121,7 @@ class ViCareWater(WaterHeaterEntity):
         self._current_mode = None
         self._heating_type = heating_type
 
-    def update(self):
+    def update(self) -> None:
         """Let HA know there has been an update from the ViCare API."""
         try:
             with suppress(PyViCareNotSupportedFeatureError):
@@ -140,20 +147,20 @@ class ViCareWater(WaterHeaterEntity):
             _LOGGER.error("Invalid data from Vicare server: %s", invalid_data_exception)
 
     @property
-    def unique_id(self):
+    def unique_id(self) -> str:
         """Return unique ID for this device."""
         return f"{self._device_config.getConfig().serial}-{self._circuit.id}"
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return device info for this device."""
-        return {
-            "identifiers": {(DOMAIN, self._device_config.getConfig().serial)},
-            "name": self._device_config.getModel(),
-            "manufacturer": "Viessmann",
-            "model": (DOMAIN, self._device_config.getModel()),
-            "configuration_url": "https://developer.viessmann.com/",
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, self._device_config.getConfig().serial)},
+            name=self._device_config.getModel(),
+            manufacturer="Viessmann",
+            model=self._device_config.getModel(),
+            configuration_url="https://developer.viessmann.com/",
+        )
 
     @property
     def name(self):
@@ -163,7 +170,7 @@ class ViCareWater(WaterHeaterEntity):
     @property
     def temperature_unit(self):
         """Return the unit of measurement."""
-        return TEMP_CELSIUS
+        return UnitOfTemperature.CELSIUS
 
     @property
     def current_temperature(self):
@@ -175,7 +182,7 @@ class ViCareWater(WaterHeaterEntity):
         """Return the temperature we try to reach."""
         return self._target_temperature
 
-    def set_temperature(self, **kwargs):
+    def set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperatures."""
         if (temp := kwargs.get(ATTR_TEMPERATURE)) is not None:
             self._api.setDomesticHotWaterTemperature(temp)
@@ -195,11 +202,6 @@ class ViCareWater(WaterHeaterEntity):
     def target_temperature_step(self) -> float:
         """Set target temperature step to wholes."""
         return PRECISION_WHOLE
-
-    @property
-    def precision(self):
-        """Return the precision of the system."""
-        return PRECISION_TENTHS
 
     @property
     def current_operation(self):

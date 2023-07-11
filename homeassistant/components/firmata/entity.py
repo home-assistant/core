@@ -31,6 +31,8 @@ class FirmataEntity:
 class FirmataPinEntity(FirmataEntity):
     """Representation of a Firmata pin entity."""
 
+    _attr_should_poll = False
+
     def __init__(
         self,
         api: FirmataBoardPin,
@@ -49,11 +51,6 @@ class FirmataPinEntity(FirmataEntity):
     def name(self) -> str:
         """Get the name of the pin."""
         return self._name
-
-    @property
-    def should_poll(self) -> bool:
-        """No polling needed."""
-        return False
 
     @property
     def unique_id(self) -> str:

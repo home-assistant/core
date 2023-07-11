@@ -28,7 +28,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][config_entry.entry_id] = {"upb": upb}
 
-    hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
     def _element_changed(element, changeset):
         if (change := changeset.get("last_change")) is None:
@@ -68,6 +68,8 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
 class UpbEntity(Entity):
     """Base class for all UPB entities."""
 
+    _attr_should_poll = False
+
     def __init__(self, element, unique_id, upb):
         """Initialize the base of all UPB devices."""
         self._upb = upb
@@ -76,19 +78,9 @@ class UpbEntity(Entity):
         self._unique_id = f"{unique_id}_{element_type}_{element.addr}"
 
     @property
-    def name(self):
-        """Name of the element."""
-        return self._element.name
-
-    @property
     def unique_id(self):
         """Return unique id of the element."""
         return self._unique_id
-
-    @property
-    def should_poll(self) -> bool:
-        """Don't poll this device."""
-        return False
 
     @property
     def extra_state_attributes(self):

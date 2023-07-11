@@ -2,17 +2,17 @@
 from __future__ import annotations
 
 from collections import deque
+from functools import cache
 import json
 import os
 import re
 import subprocess
 import sys
+from typing import Any
 
 from awesomeversion import AwesomeVersion, AwesomeVersionStrategy
-from stdlib_list import stdlib_list
 from tqdm import tqdm
 
-from homeassistant.const import REQUIRED_NEXT_PYTHON_VER, REQUIRED_PYTHON_VER
 import homeassistant.util.package as pkg_util
 from script.gen_requirements_all import COMMENT_REQUIREMENTS, normalize_package_name
 
@@ -26,17 +26,6 @@ PACKAGE_REGEX = re.compile(
 )
 PIP_REGEX = re.compile(r"^(--.+\s)?([-_\.\w\d]+.*(?:==|>=|<=|~=|!=|<|>|===)?.*$)")
 PIP_VERSION_RANGE_SEPARATOR = re.compile(r"^(==|>=|<=|~=|!=|<|>|===)?(.*)$")
-SUPPORTED_PYTHON_TUPLES = [
-    REQUIRED_PYTHON_VER[:2],
-]
-if REQUIRED_PYTHON_VER[0] == REQUIRED_NEXT_PYTHON_VER[0]:
-    for minor in range(REQUIRED_PYTHON_VER[1] + 1, REQUIRED_NEXT_PYTHON_VER[1] + 1):
-        SUPPORTED_PYTHON_TUPLES.append((REQUIRED_PYTHON_VER[0], minor))
-SUPPORTED_PYTHON_VERSIONS = [
-    ".".join(map(str, version_tuple)) for version_tuple in SUPPORTED_PYTHON_TUPLES
-]
-STD_LIBS = {version: set(stdlib_list(version)) for version in SUPPORTED_PYTHON_VERSIONS}
-PIPDEPTREE_CACHE = None
 
 IGNORE_VIOLATIONS = {
     # Still has standard library requirements.
@@ -52,7 +41,7 @@ IGNORE_VIOLATIONS = {
 }
 
 
-def validate(integrations: dict[str, Integration], config: Config):
+def validate(integrations: dict[str, Integration], config: Config) -> None:
     """Handle requirements for integrations."""
     # Check if we are doing format-only validation.
     if not config.requirements:
@@ -60,16 +49,11 @@ def validate(integrations: dict[str, Integration], config: Config):
             validate_requirements_format(integration)
         return
 
-    ensure_cache()
-
     # check for incompatible requirements
 
-    disable_tqdm = config.specific_integrations or os.environ.get("CI", False)
+    disable_tqdm = bool(config.specific_integrations or os.environ.get("CI"))
 
     for integration in tqdm(integrations.values(), disable=disable_tqdm):
-        if not integration.manifest:
-            continue
-
         validate_requirements(integration)
 
 
@@ -88,7 +72,13 @@ def validate_requirements_format(integration: Integration) -> bool:
             )
             continue
 
-        pkg, sep, version = PACKAGE_REGEX.match(req).groups()
+        if not (match := PACKAGE_REGEX.match(req)):
+            integration.add_error(
+                "requirements",
+                f'Requirement "{req}" does not match package regex pattern',
+            )
+            continue
+        pkg, sep, version = match.groups()
 
         if integration.core and sep != "==":
             integration.add_error(
@@ -100,7 +90,7 @@ def validate_requirements_format(integration: Integration) -> bool:
         if not version:
             continue
 
-        for part in version.split(","):
+        for part in version.split(";", 1)[0].split(","):
             version_part = PIP_VERSION_RANGE_SEPARATOR.match(part)
             if (
                 version_part
@@ -116,7 +106,7 @@ def validate_requirements_format(integration: Integration) -> bool:
     return len(integration.errors) == start_errors
 
 
-def validate_requirements(integration: Integration):
+def validate_requirements(integration: Integration) -> None:
     """Validate requirements."""
     if not validate_requirements_format(integration):
         return
@@ -158,17 +148,17 @@ def validate_requirements(integration: Integration):
         return
 
     # Check for requirements incompatible with standard library.
-    for version, std_libs in STD_LIBS.items():
-        for req in all_integration_requirements:
-            if req in std_libs:
-                integration.add_error(
-                    "requirements",
-                    f"Package {req} is not compatible with Python {version} standard library",
-                )
+    for req in all_integration_requirements:
+        if req in sys.stlib_module_names:
+            integration.add_error(
+                "requirements",
+                f"Package {req} is not compatible with the Python standard library",
+            )
 
 
-def ensure_cache():
-    """Ensure we have a cache of pipdeptree.
+@cache
+def get_pipdeptree() -> dict[str, dict[str, Any]]:
+    """Get pipdeptree output. Cached on first invocation.
 
     {
         "flake8-docstring": {
@@ -179,12 +169,7 @@ def ensure_cache():
         }
     }
     """
-    global PIPDEPTREE_CACHE
-
-    if PIPDEPTREE_CACHE is not None:
-        return
-
-    cache = {}
+    deptree = {}
 
     for item in json.loads(
         subprocess.run(
@@ -194,17 +179,16 @@ def ensure_cache():
             text=True,
         ).stdout
     ):
-        cache[item["package"]["key"]] = {
+        deptree[item["package"]["key"]] = {
             **item["package"],
             "dependencies": {dep["key"] for dep in item["dependencies"]},
         }
-
-    PIPDEPTREE_CACHE = cache
+    return deptree
 
 
 def get_requirements(integration: Integration, packages: set[str]) -> set[str]:
     """Return all (recursively) requirements for an integration."""
-    ensure_cache()
+    deptree = get_pipdeptree()
 
     all_requirements = set()
 
@@ -218,7 +202,7 @@ def get_requirements(integration: Integration, packages: set[str]) -> set[str]:
 
         all_requirements.add(package)
 
-        item = PIPDEPTREE_CACHE.get(package)
+        item = deptree.get(package)
 
         if item is None:
             # Only warn if direct dependencies could not be resolved
@@ -238,9 +222,7 @@ def install_requirements(integration: Integration, requirements: set[str]) -> bo
 
     Return True if successful.
     """
-    global PIPDEPTREE_CACHE
-
-    ensure_cache()
+    deptree = get_pipdeptree()
 
     for req in requirements:
         match = PIP_REGEX.search(req)
@@ -261,8 +243,8 @@ def install_requirements(integration: Integration, requirements: set[str]) -> bo
 
         if normalized and "==" in requirement_arg:
             ver = requirement_arg.split("==")[-1]
-            item = PIPDEPTREE_CACHE.get(normalized)
-            is_installed = item and item["installed_version"] == ver
+            item = deptree.get(normalized)
+            is_installed = bool(item and item["installed_version"] == ver)
 
         if not is_installed:
             try:
@@ -287,7 +269,7 @@ def install_requirements(integration: Integration, requirements: set[str]) -> bo
         else:
             # Clear the pipdeptree cache if something got installed
             if "Successfully installed" in result.stdout:
-                PIPDEPTREE_CACHE = None
+                get_pipdeptree.cache_clear()
 
     if integration.errors:
         return False

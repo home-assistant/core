@@ -1,5 +1,4 @@
-"""
-Climate on Zigbee Home Automation networks.
+"""Climate on Zigbee Home Automation networks.
 
 For more details on this platform, please refer to the documentation
 at https://home-assistant.io/components/zha.climate/
@@ -9,11 +8,11 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 import functools
 from random import randint
+from typing import Any
 
 from zigpy.zcl.clusters.hvac import Fan as F, Thermostat as T
 
-from homeassistant.components.climate import ClimateEntity
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
@@ -24,6 +23,7 @@ from homeassistant.components.climate.const import (
     PRESET_COMFORT,
     PRESET_ECO,
     PRESET_NONE,
+    ClimateEntity,
     ClimateEntityFeature,
     HVACAction,
     HVACMode,
@@ -32,8 +32,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     PRECISION_TENTHS,
-    TEMP_CELSIUS,
     Platform,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -43,8 +43,8 @@ import homeassistant.util.dt as dt_util
 
 from .core import discovery
 from .core.const import (
-    CHANNEL_FAN,
-    CHANNEL_THERMOSTAT,
+    CLUSTER_HANDLER_FAN,
+    CLUSTER_HANDLER_THERMOSTAT,
     DATA_ZHA,
     PRESET_COMPLEX,
     PRESET_SCHEDULE,
@@ -73,16 +73,16 @@ MULTI_MATCH = functools.partial(ZHA_ENTITIES.multipass_match, Platform.CLIMATE)
 RUNNING_MODE = {0x00: HVACMode.OFF, 0x03: HVACMode.COOL, 0x04: HVACMode.HEAT}
 
 SEQ_OF_OPERATION = {
-    0x00: (HVACMode.OFF, HVACMode.COOL),  # cooling only
-    0x01: (HVACMode.OFF, HVACMode.COOL),  # cooling with reheat
-    0x02: (HVACMode.OFF, HVACMode.HEAT),  # heating only
-    0x03: (HVACMode.OFF, HVACMode.HEAT),  # heating with reheat
+    0x00: [HVACMode.OFF, HVACMode.COOL],  # cooling only
+    0x01: [HVACMode.OFF, HVACMode.COOL],  # cooling with reheat
+    0x02: [HVACMode.OFF, HVACMode.HEAT],  # heating only
+    0x03: [HVACMode.OFF, HVACMode.HEAT],  # heating with reheat
     # cooling and heating 4-pipes
-    0x04: (HVACMode.OFF, HVACMode.HEAT_COOL, HVACMode.COOL, HVACMode.HEAT),
+    0x04: [HVACMode.OFF, HVACMode.HEAT_COOL, HVACMode.COOL, HVACMode.HEAT],
     # cooling and heating 4-pipes
-    0x05: (HVACMode.OFF, HVACMode.HEAT_COOL, HVACMode.COOL, HVACMode.HEAT),
-    0x06: (HVACMode.COOL, HVACMode.HEAT, HVACMode.OFF),  # centralite specific
-    0x07: (HVACMode.HEAT_COOL, HVACMode.OFF),  # centralite specific
+    0x05: [HVACMode.OFF, HVACMode.HEAT_COOL, HVACMode.COOL, HVACMode.HEAT],
+    0x06: [HVACMode.COOL, HVACMode.HEAT, HVACMode.OFF],  # centralite specific
+    0x07: [HVACMode.HEAT_COOL, HVACMode.OFF],  # centralite specific
 }
 
 HVAC_MODE_2_SYSTEM = {
@@ -127,9 +127,9 @@ async def async_setup_entry(
 
 
 @MULTI_MATCH(
-    channel_names=CHANNEL_THERMOSTAT,
-    aux_channels=CHANNEL_FAN,
-    stop_on_match_group=CHANNEL_THERMOSTAT,
+    cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
+    aux_cluster_handlers=CLUSTER_HANDLER_FAN,
+    stop_on_match_group=CLUSTER_HANDLER_THERMOSTAT,
 )
 class Thermostat(ZhaEntity, ClimateEntity):
     """Representation of a ZHA Thermostat device."""
@@ -137,14 +137,18 @@ class Thermostat(ZhaEntity, ClimateEntity):
     DEFAULT_MAX_TEMP = 35
     DEFAULT_MIN_TEMP = 7
 
-    def __init__(self, unique_id, zha_device, channels, **kwargs):
+    _attr_precision = PRECISION_TENTHS
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_name: str = "Thermostat"
+
+    def __init__(self, unique_id, zha_device, cluster_handlers, **kwargs):
         """Initialize ZHA Thermostat instance."""
-        super().__init__(unique_id, zha_device, channels, **kwargs)
-        self._thrm = self.cluster_channels.get(CHANNEL_THERMOSTAT)
+        super().__init__(unique_id, zha_device, cluster_handlers, **kwargs)
+        self._thrm = self.cluster_handlers.get(CLUSTER_HANDLER_THERMOSTAT)
         self._preset = PRESET_NONE
         self._presets = []
         self._supported_flags = ClimateEntityFeature.TARGET_TEMPERATURE
-        self._fan = self.cluster_channels.get(CHANNEL_FAN)
+        self._fan = self.cluster_handlers.get(CLUSTER_HANDLER_FAN)
 
     @property
     def current_temperature(self):
@@ -263,12 +267,7 @@ class Thermostat(ZhaEntity, ClimateEntity):
         return SEQ_OF_OPERATION.get(self._thrm.ctrl_sequence_of_oper, [HVACMode.OFF])
 
     @property
-    def precision(self):
-        """Return the precision of the system."""
-        return PRECISION_TENTHS
-
-    @property
-    def preset_mode(self) -> str | None:
+    def preset_mode(self) -> str:
         """Return current preset mode."""
         return self._preset
 
@@ -278,7 +277,7 @@ class Thermostat(ZhaEntity, ClimateEntity):
         return self._presets
 
     @property
-    def supported_features(self):
+    def supported_features(self) -> ClimateEntityFeature:
         """Return the list of supported features."""
         features = self._supported_flags
         if HVACMode.HEAT_COOL in self.hvac_modes:
@@ -335,11 +334,6 @@ class Thermostat(ZhaEntity, ClimateEntity):
         return round(temp / ZCL_TEMP, 1)
 
     @property
-    def temperature_unit(self):
-        """Return the unit of measurement used by the platform."""
-        return TEMP_CELSIUS
-
-    @property
     def max_temp(self) -> float:
         """Return the maximum temperature."""
         temps = []
@@ -365,7 +359,7 @@ class Thermostat(ZhaEntity, ClimateEntity):
             return self.DEFAULT_MIN_TEMP
         return round(min(temps) / ZCL_TEMP, 1)
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Run when about to be added to hass."""
         await super().async_added_to_hass()
         self.async_accept_signal(
@@ -389,7 +383,7 @@ class Thermostat(ZhaEntity, ClimateEntity):
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set fan mode."""
-        if fan_mode not in self.fan_modes:
+        if not self.fan_modes or fan_mode not in self.fan_modes:
             self.warning("Unsupported '%s' fan mode", fan_mode)
             return
 
@@ -415,8 +409,8 @@ class Thermostat(ZhaEntity, ClimateEntity):
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
-        if preset_mode not in self.preset_modes:
-            self.debug("preset mode '%s' is not supported", preset_mode)
+        if not self.preset_modes or preset_mode not in self.preset_modes:
+            self.debug("Preset mode '%s' is not supported", preset_mode)
             return
 
         if self.preset_mode not in (
@@ -434,7 +428,7 @@ class Thermostat(ZhaEntity, ClimateEntity):
         self._preset = preset_mode
         self.async_write_ha_state()
 
-    async def async_set_temperature(self, **kwargs):
+    async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         low_temp = kwargs.get(ATTR_TARGET_TEMP_LOW)
         high_temp = kwargs.get(ATTR_TARGET_TEMP_HIGH)
@@ -487,9 +481,9 @@ class Thermostat(ZhaEntity, ClimateEntity):
 
 
 @MULTI_MATCH(
-    channel_names={CHANNEL_THERMOSTAT, "sinope_manufacturer_specific"},
+    cluster_handler_names={CLUSTER_HANDLER_THERMOSTAT, "sinope_manufacturer_specific"},
     manufacturers="Sinope Technologies",
-    stop_on_match_group=CHANNEL_THERMOSTAT,
+    stop_on_match_group=CLUSTER_HANDLER_THERMOSTAT,
 )
 class SinopeTechnologiesThermostat(Thermostat):
     """Sinope Technologies Thermostat."""
@@ -497,15 +491,15 @@ class SinopeTechnologiesThermostat(Thermostat):
     manufacturer = 0x119C
     update_time_interval = timedelta(minutes=randint(45, 75))
 
-    def __init__(self, unique_id, zha_device, channels, **kwargs):
+    def __init__(self, unique_id, zha_device, cluster_handlers, **kwargs):
         """Initialize ZHA Thermostat instance."""
-        super().__init__(unique_id, zha_device, channels, **kwargs)
+        super().__init__(unique_id, zha_device, cluster_handlers, **kwargs)
         self._presets = [PRESET_AWAY, PRESET_NONE]
         self._supported_flags |= ClimateEntityFeature.PRESET_MODE
-        self._manufacturer_ch = self.cluster_channels["sinope_manufacturer_specific"]
+        self._manufacturer_ch = self.cluster_handlers["sinope_manufacturer_specific"]
 
     @property
-    def _rm_rs_action(self) -> str | None:
+    def _rm_rs_action(self) -> HVACAction:
         """Return the current HVAC action based on running mode and running state."""
 
         running_mode = self._thrm.running_mode
@@ -540,11 +534,13 @@ class SinopeTechnologiesThermostat(Thermostat):
             )
         )
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Run when about to be added to Hass."""
         await super().async_added_to_hass()
-        async_track_time_interval(
-            self.hass, self._async_update_time, self.update_time_interval
+        self.async_on_remove(
+            async_track_time_interval(
+                self.hass, self._async_update_time, self.update_time_interval
+            )
         )
         self._async_update_time()
 
@@ -560,28 +556,28 @@ class SinopeTechnologiesThermostat(Thermostat):
 
 
 @MULTI_MATCH(
-    channel_names=CHANNEL_THERMOSTAT,
-    aux_channels=CHANNEL_FAN,
+    cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
+    aux_cluster_handlers=CLUSTER_HANDLER_FAN,
     manufacturers={"Zen Within", "LUX"},
-    stop_on_match_group=CHANNEL_THERMOSTAT,
+    stop_on_match_group=CLUSTER_HANDLER_THERMOSTAT,
 )
 class ZenWithinThermostat(Thermostat):
     """Zen Within Thermostat implementation."""
 
 
 @MULTI_MATCH(
-    channel_names=CHANNEL_THERMOSTAT,
-    aux_channels=CHANNEL_FAN,
+    cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
+    aux_cluster_handlers=CLUSTER_HANDLER_FAN,
     manufacturers="Centralite",
     models={"3157100", "3157100-E"},
-    stop_on_match_group=CHANNEL_THERMOSTAT,
+    stop_on_match_group=CLUSTER_HANDLER_THERMOSTAT,
 )
 class CentralitePearl(ZenWithinThermostat):
     """Centralite Pearl Thermostat implementation."""
 
 
 @STRICT_MATCH(
-    channel_names=CHANNEL_THERMOSTAT,
+    cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
     manufacturers={
         "_TZE200_ckud7u2l",
         "_TZE200_ywdxldoj",
@@ -591,6 +587,7 @@ class CentralitePearl(ZenWithinThermostat):
         "_TZE200_4eeyebrt",
         "_TZE200_cpmgn2cf",
         "_TZE200_9sfg7gm0",
+        "_TZE200_8whxpsiw",
         "_TYST11_ckud7u2l",
         "_TYST11_ywdxldoj",
         "_TYST11_cwnjrr72",
@@ -600,9 +597,9 @@ class CentralitePearl(ZenWithinThermostat):
 class MoesThermostat(Thermostat):
     """Moes Thermostat implementation."""
 
-    def __init__(self, unique_id, zha_device, channels, **kwargs):
+    def __init__(self, unique_id, zha_device, cluster_handlers, **kwargs):
         """Initialize ZHA Thermostat instance."""
-        super().__init__(unique_id, zha_device, channels, **kwargs)
+        super().__init__(unique_id, zha_device, cluster_handlers, **kwargs)
         self._presets = [
             PRESET_NONE,
             PRESET_AWAY,
@@ -674,7 +671,7 @@ class MoesThermostat(Thermostat):
 
 
 @STRICT_MATCH(
-    channel_names=CHANNEL_THERMOSTAT,
+    cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
     manufacturers={
         "_TZE200_b6wax7g0",
     },
@@ -682,9 +679,9 @@ class MoesThermostat(Thermostat):
 class BecaThermostat(Thermostat):
     """Beca Thermostat implementation."""
 
-    def __init__(self, unique_id, zha_device, channels, **kwargs):
+    def __init__(self, unique_id, zha_device, cluster_handlers, **kwargs):
         """Initialize ZHA Thermostat instance."""
-        super().__init__(unique_id, zha_device, channels, **kwargs)
+        super().__init__(unique_id, zha_device, cluster_handlers, **kwargs)
         self._presets = [
             PRESET_NONE,
             PRESET_AWAY,
@@ -749,10 +746,10 @@ class BecaThermostat(Thermostat):
 
 
 @MULTI_MATCH(
-    channel_names=CHANNEL_THERMOSTAT,
+    cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
     manufacturers="Stelpro",
     models={"SORB"},
-    stop_on_match_group=CHANNEL_THERMOSTAT,
+    stop_on_match_group=CLUSTER_HANDLER_THERMOSTAT,
 )
 class StelproFanHeater(Thermostat):
     """Stelpro Fan Heater implementation."""
@@ -764,17 +761,20 @@ class StelproFanHeater(Thermostat):
 
 
 @STRICT_MATCH(
-    channel_names=CHANNEL_THERMOSTAT,
+    cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
     manufacturers={
+        "_TZE200_7yoranx2",
         "_TZE200_e9ba97vf",  # TV01-ZG
-        "_TZE200_husqqvux",  # TSL-TRV-TV01ZG
         "_TZE200_hue3yfsn",  # TV02-ZG
+        "_TZE200_husqqvux",  # TSL-TRV-TV01ZG
+        "_TZE200_kds0pmmv",  # MOES TRV TV02
         "_TZE200_kly8gjlz",  # TV05-ZG
+        "_TZE200_lnbfnyxd",
+        "_TZE200_mudxchsu",
     },
 )
 class ZONNSMARTThermostat(Thermostat):
-    """
-    ZONNSMART Thermostat implementation.
+    """ZONNSMART Thermostat implementation.
 
     Notice that this device uses two holiday presets (2: HolidayMode,
     3: HolidayModeTemp), but only one of them can be set.
@@ -783,9 +783,9 @@ class ZONNSMARTThermostat(Thermostat):
     PRESET_HOLIDAY = "holiday"
     PRESET_FROST = "frost protect"
 
-    def __init__(self, unique_id, zha_device, channels, **kwargs):
+    def __init__(self, unique_id, zha_device, cluster_handlers, **kwargs):
         """Initialize ZHA Thermostat instance."""
-        super().__init__(unique_id, zha_device, channels, **kwargs)
+        super().__init__(unique_id, zha_device, cluster_handlers, **kwargs)
         self._presets = [
             PRESET_NONE,
             self.PRESET_HOLIDAY,

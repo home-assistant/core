@@ -7,13 +7,13 @@ from collections.abc import Callable, Container, Generator
 from contextlib import contextmanager
 from datetime import datetime, time as dt_time, timedelta
 import functools as ft
-import logging
 import re
 import sys
-from typing import Any, cast
+from typing import Any, Protocol, cast
+
+import voluptuous as vol
 
 from homeassistant.components import zone as zone_cmp
-from homeassistant.components.device_automation import condition as device_condition
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
@@ -29,6 +29,7 @@ from homeassistant.const import (
     CONF_DEVICE_ID,
     CONF_ENABLED,
     CONF_ENTITY_ID,
+    CONF_FOR,
     CONF_ID,
     CONF_MATCH,
     CONF_STATE,
@@ -52,12 +53,13 @@ from homeassistant.exceptions import (
     HomeAssistantError,
     TemplateError,
 )
+from homeassistant.loader import IntegrationNotFound, async_get_integration
 from homeassistant.util.async_ import run_callback_threadsafe
 import homeassistant.util.dt as dt_util
 
 from . import config_validation as cv, entity_registry as er
 from .sun import get_astral_event_date
-from .template import Template
+from .template import Template, attach as template_attach, render_complex
 from .trace import (
     TraceElement,
     trace_append_element,
@@ -74,13 +76,45 @@ ASYNC_FROM_CONFIG_FORMAT = "async_{}_from_config"
 FROM_CONFIG_FORMAT = "{}_from_config"
 VALIDATE_CONFIG_FORMAT = "{}_validate_config"
 
-_LOGGER = logging.getLogger(__name__)
+_PLATFORM_ALIASES = {
+    "and": None,
+    "device": "device_automation",
+    "not": None,
+    "numeric_state": None,
+    "or": None,
+    "state": None,
+    "sun": None,
+    "template": None,
+    "time": None,
+    "trigger": None,
+    "zone": None,
+}
 
 INPUT_ENTITY_ID = re.compile(
     r"^input_(?:select|text|number|boolean|datetime)\.(?!.+__)(?!_)[\da-z_]+(?<!_)$"
 )
 
-ConditionCheckerType = Callable[[HomeAssistant, TemplateVarsType], bool]
+
+class ConditionProtocol(Protocol):
+    """Define the format of device_condition modules.
+
+    Each module must define either CONDITION_SCHEMA or async_validate_condition_config.
+    """
+
+    CONDITION_SCHEMA: vol.Schema
+
+    async def async_validate_condition_config(
+        self, hass: HomeAssistant, config: ConfigType
+    ) -> ConfigType:
+        """Validate config."""
+
+    def async_condition_from_config(
+        self, hass: HomeAssistant, config: ConfigType
+    ) -> ConditionCheckerType:
+        """Evaluate state based on configuration."""
+
+
+ConditionCheckerType = Callable[[HomeAssistant, TemplateVarsType], bool | None]
 
 
 def condition_trace_append(variables: TemplateVarsType, path: str) -> TraceElement:
@@ -139,7 +173,7 @@ def trace_condition_function(condition: ConditionCheckerType) -> ConditionChecke
     """Wrap a condition function to enable basic tracing."""
 
     @ft.wraps(condition)
-    def wrapper(hass: HomeAssistant, variables: TemplateVarsType = None) -> bool:
+    def wrapper(hass: HomeAssistant, variables: TemplateVarsType = None) -> bool | None:
         """Trace condition."""
         with trace_condition(variables):
             result = condition(hass, variables)
@@ -147,6 +181,27 @@ def trace_condition_function(condition: ConditionCheckerType) -> ConditionChecke
             return result
 
     return wrapper
+
+
+async def _async_get_condition_platform(
+    hass: HomeAssistant, config: ConfigType
+) -> ConditionProtocol | None:
+    platform = config[CONF_CONDITION]
+    platform = _PLATFORM_ALIASES.get(platform, platform)
+    if platform is None:
+        return None
+    try:
+        integration = await async_get_integration(hass, platform)
+    except IntegrationNotFound:
+        raise HomeAssistantError(
+            f'Invalid condition "{platform}" specified {config}'
+        ) from None
+    try:
+        return integration.get_platform("condition")
+    except ImportError:
+        raise HomeAssistantError(
+            f"Integration '{platform}' does not provide condition support"
+        ) from None
 
 
 async def async_from_config(
@@ -157,15 +212,18 @@ async def async_from_config(
 
     Should be run on the event loop.
     """
-    condition = config.get(CONF_CONDITION)
-    for fmt in (ASYNC_FROM_CONFIG_FORMAT, FROM_CONFIG_FORMAT):
-        factory = getattr(sys.modules[__name__], fmt.format(condition), None)
+    factory: Any = None
+    platform = await _async_get_condition_platform(hass, config)
 
-        if factory:
-            break
+    if platform is None:
+        condition = config.get(CONF_CONDITION)
+        for fmt in (ASYNC_FROM_CONFIG_FORMAT, FROM_CONFIG_FORMAT):
+            factory = getattr(sys.modules[__name__], fmt.format(condition), None)
 
-    if factory is None:
-        raise HomeAssistantError(f'Invalid condition "{condition}" specified {config}')
+            if factory:
+                break
+    else:
+        factory = platform.async_condition_from_config
 
     # Check if condition is not enabled
     if not config.get(CONF_ENABLED, True):
@@ -173,9 +231,9 @@ async def async_from_config(
         @trace_condition_function
         def disabled_condition(
             hass: HomeAssistant, variables: TemplateVarsType = None
-        ) -> bool:
-            """Condition not enabled, will always pass."""
-            return True
+        ) -> bool | None:
+            """Condition not enabled, will act as if it didn't exist."""
+            return None
 
         return disabled_condition
 
@@ -204,7 +262,7 @@ async def async_and_from_config(
         for index, check in enumerate(checks):
             try:
                 with trace_path(["conditions", str(index)]):
-                    if not check(hass, variables):
+                    if check(hass, variables) is False:
                         return False
             except ConditionError as ex:
                 errors.append(
@@ -235,7 +293,7 @@ async def async_or_from_config(
         for index, check in enumerate(checks):
             try:
                 with trace_path(["conditions", str(index)]):
-                    if check(hass, variables):
+                    if check(hass, variables) is True:
                         return True
             except ConditionError as ex:
                 errors.append(
@@ -385,7 +443,10 @@ def async_numeric_state(  # noqa: C901
             except (ValueError, TypeError) as ex:
                 raise ConditionErrorMessage(
                     "numeric_state",
-                    f"the 'below' entity {below} state '{below_entity.state}' cannot be processed as a number",
+                    (
+                        f"the 'below' entity {below} state '{below_entity.state}'"
+                        " cannot be processed as a number"
+                    ),
                 ) from ex
         elif fvalue >= below:
             condition_trace_set_result(False, state=fvalue, wanted_state_below=below)
@@ -413,7 +474,10 @@ def async_numeric_state(  # noqa: C901
             except (ValueError, TypeError) as ex:
                 raise ConditionErrorMessage(
                     "numeric_state",
-                    f"the 'above' entity {above} state '{above_entity.state}' cannot be processed as a number",
+                    (
+                        f"the 'above' entity {above} state '{above_entity.state}'"
+                        " cannot be processed as a number"
+                    ),
                 ) from ex
         elif fvalue <= above:
             condition_trace_set_result(False, state=fvalue, wanted_state_above=above)
@@ -475,6 +539,7 @@ def state(
     req_state: Any,
     for_period: timedelta | None = None,
     attribute: str | None = None,
+    variables: TemplateVarsType = None,
 ) -> bool:
     """Test if state matches requirements.
 
@@ -528,7 +593,14 @@ def state(
         condition_trace_set_result(is_state, state=value, wanted_state=state_value)
         return is_state
 
-    duration = dt_util.utcnow() - for_period
+    try:
+        for_period = cv.positive_time_period(render_complex(for_period, variables))
+    except TemplateError as ex:
+        raise ConditionErrorMessage("state", f"template error: {ex}") from ex
+    except vol.Invalid as ex:
+        raise ConditionErrorMessage("state", f"schema error: {ex}") from ex
+
+    duration = dt_util.utcnow() - cast(timedelta, for_period)
     duration_ok = duration > entity.last_changed
     condition_trace_set_result(duration_ok, state=value, duration=duration)
     return duration_ok
@@ -538,7 +610,7 @@ def state_from_config(config: ConfigType) -> ConditionCheckerType:
     """Wrap action method with state based condition."""
     entity_ids = config.get(CONF_ENTITY_ID, [])
     req_states: str | list[str] = config.get(CONF_STATE, [])
-    for_period = config.get("for")
+    for_period = config.get(CONF_FOR)
     attribute = config.get(CONF_ATTRIBUTE)
     match = config.get(CONF_MATCH, ENTITY_MATCH_ALL)
 
@@ -548,12 +620,15 @@ def state_from_config(config: ConfigType) -> ConditionCheckerType:
     @trace_condition_function
     def if_state(hass: HomeAssistant, variables: TemplateVarsType = None) -> bool:
         """Test if condition."""
+        template_attach(hass, for_period)
         errors = []
         result: bool = match != ENTITY_MATCH_ANY
         for index, entity_id in enumerate(entity_ids):
             try:
                 with trace_path(["entity_id", str(index)]), trace_condition(variables):
-                    if state(hass, entity_id, req_states, for_period, attribute):
+                    if state(
+                        hass, entity_id, req_states, for_period, attribute, variables
+                    ):
                         result = True
                     elif match == ENTITY_MATCH_ALL:
                         return False
@@ -586,31 +661,46 @@ def sun(
     before_offset = before_offset or timedelta(0)
     after_offset = after_offset or timedelta(0)
 
-    sunrise_today = get_astral_event_date(hass, SUN_EVENT_SUNRISE, today)
-    sunset_today = get_astral_event_date(hass, SUN_EVENT_SUNSET, today)
+    sunrise = get_astral_event_date(hass, SUN_EVENT_SUNRISE, today)
+    sunset = get_astral_event_date(hass, SUN_EVENT_SUNSET, today)
 
-    sunrise = sunrise_today
-    sunset = sunset_today
-    if today > dt_util.as_local(
-        cast(datetime, sunrise_today)
-    ).date() and SUN_EVENT_SUNRISE in (before, after):
-        tomorrow = dt_util.as_local(utcnow + timedelta(days=1)).date()
-        sunrise_tomorrow = get_astral_event_date(hass, SUN_EVENT_SUNRISE, tomorrow)
-        sunrise = sunrise_tomorrow
+    has_sunrise_condition = SUN_EVENT_SUNRISE in (before, after)
+    has_sunset_condition = SUN_EVENT_SUNSET in (before, after)
 
-    if today > dt_util.as_local(
-        cast(datetime, sunset_today)
-    ).date() and SUN_EVENT_SUNSET in (before, after):
-        tomorrow = dt_util.as_local(utcnow + timedelta(days=1)).date()
-        sunset_tomorrow = get_astral_event_date(hass, SUN_EVENT_SUNSET, tomorrow)
-        sunset = sunset_tomorrow
+    after_sunrise = today > dt_util.as_local(cast(datetime, sunrise)).date()
+    if after_sunrise and has_sunrise_condition:
+        tomorrow = today + timedelta(days=1)
+        sunrise = get_astral_event_date(hass, SUN_EVENT_SUNRISE, tomorrow)
 
-    if sunrise is None and SUN_EVENT_SUNRISE in (before, after):
+    after_sunset = today > dt_util.as_local(cast(datetime, sunset)).date()
+    if after_sunset and has_sunset_condition:
+        tomorrow = today + timedelta(days=1)
+        sunset = get_astral_event_date(hass, SUN_EVENT_SUNSET, tomorrow)
+
+    # Special case: before sunrise OR after sunset
+    # This will handle the very rare case in the polar region when the sun rises/sets
+    # but does not set/rise.
+    # However this entire condition does not handle those full days of darkness
+    # or light, the following should be used instead:
+    #
+    #    condition:
+    #      condition: state
+    #      entity_id: sun.sun
+    #      state: 'above_horizon' (or 'below_horizon')
+    #
+    if before == SUN_EVENT_SUNRISE and after == SUN_EVENT_SUNSET:
+        wanted_time_before = cast(datetime, sunrise) + before_offset
+        condition_trace_update_result(wanted_time_before=wanted_time_before)
+        wanted_time_after = cast(datetime, sunset) + after_offset
+        condition_trace_update_result(wanted_time_after=wanted_time_after)
+        return utcnow < wanted_time_before or utcnow > wanted_time_after
+
+    if sunrise is None and has_sunrise_condition:
         # There is no sunrise today
         condition_trace_set_result(False, message="no sunrise today")
         return False
 
-    if sunset is None and SUN_EVENT_SUNSET in (before, after):
+    if sunset is None and has_sunset_condition:
         # There is no sunset today
         condition_trace_set_result(False, message="no sunset today")
         return False
@@ -829,6 +919,12 @@ def zone(
     else:
         entity_id = entity.entity_id
 
+    if entity.state in (
+        STATE_UNAVAILABLE,
+        STATE_UNKNOWN,
+    ):
+        return False
+
     latitude = entity.attributes.get(ATTR_LATITUDE)
     longitude = entity.attributes.get(ATTR_LONGITUDE)
 
@@ -868,7 +964,10 @@ def zone_from_config(config: ConfigType) -> ConditionCheckerType:
                     errors.append(
                         ConditionErrorMessage(
                             "zone",
-                            f"error matching {entity_id} with {zone_entity_id}: {ex.message}",
+                            (
+                                f"error matching {entity_id} with {zone_entity_id}:"
+                                f" {ex.message}"
+                            ),
                         )
                     )
 
@@ -882,14 +981,6 @@ def zone_from_config(config: ConfigType) -> ConditionCheckerType:
         return all_ok
 
     return if_in_zone
-
-
-async def async_device_from_config(
-    hass: HomeAssistant, config: ConfigType
-) -> ConditionCheckerType:
-    """Test a device condition."""
-    checker = await device_condition.async_condition_from_config(hass, config)
-    return trace_condition_function(checker)
 
 
 async def async_trigger_from_config(
@@ -947,10 +1038,10 @@ async def async_validate_condition_config(
         config["conditions"] = conditions
         return config
 
-    if condition == "device":
-        return await device_condition.async_validate_condition_config(hass, config)
-
-    if condition in ("numeric_state", "state"):
+    platform = await _async_get_condition_platform(hass, config)
+    if platform is not None and hasattr(platform, "async_validate_condition_config"):
+        return await platform.async_validate_condition_config(hass, config)
+    if platform is None and condition in ("numeric_state", "state"):
         validator = cast(
             Callable[[HomeAssistant, ConfigType], ConfigType],
             getattr(sys.modules[__name__], VALIDATE_CONFIG_FORMAT.format(condition)),

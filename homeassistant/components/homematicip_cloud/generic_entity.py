@@ -72,6 +72,8 @@ GROUP_ATTRIBUTES = {
 class HomematicipGenericEntity(Entity):
     """Representation of the HomematicIP generic entity."""
 
+    _attr_should_poll = False
+
     def __init__(
         self,
         hap: HomematicipHAP,
@@ -162,7 +164,7 @@ class HomematicipGenericEntity(Entity):
         else:
             # Remove from entity registry.
             # Only relevant for entities that do not belong to a device.
-            if entity_id := self.registry_entry.entity_id:
+            if entity_id := self.registry_entry.entity_id:  # noqa: PLR5501
                 entity_registry = er.async_get(self.hass)
                 if entity_id in entity_registry.entities:
                     entity_registry.async_remove(entity_id)
@@ -183,9 +185,8 @@ class HomematicipGenericEntity(Entity):
         if hasattr(self._device, "functionalChannels"):
             if self._is_multi_channel:
                 name = self._device.functionalChannels[self._channel].label
-            else:
-                if len(self._device.functionalChannels) > 1:
-                    name = self._device.functionalChannels[1].label
+            elif len(self._device.functionalChannels) > 1:
+                name = self._device.functionalChannels[1].label
 
         # Use device label, if name is not defined by channel label.
         if not name:
@@ -200,11 +201,6 @@ class HomematicipGenericEntity(Entity):
             name = f"{self._home.name} {name}"
 
         return name
-
-    @property
-    def should_poll(self) -> bool:
-        """No polling needed."""
-        return False
 
     @property
     def available(self) -> bool:

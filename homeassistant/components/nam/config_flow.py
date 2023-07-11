@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Mapping
+from dataclasses import dataclass
 import logging
 from typing import Any
 
@@ -9,8 +11,8 @@ from aiohttp.client_exceptions import ClientConnectorError
 import async_timeout
 from nettigo_air_monitor import (
     ApiError,
-    AuthFailed,
-    CannotGetMac,
+    AuthFailedError,
+    CannotGetMacError,
     ConnectionOptions,
     NettigoAirMonitor,
 )
@@ -26,6 +28,15 @@ from homeassistant.helpers.device_registry import format_mac
 
 from .const import DOMAIN
 
+
+@dataclass
+class NamConfig:
+    """NAM device configuration class."""
+
+    mac_address: str
+    auth_enabled: bool
+
+
 _LOGGER = logging.getLogger(__name__)
 
 AUTH_SCHEMA = vol.Schema(
@@ -33,15 +44,31 @@ AUTH_SCHEMA = vol.Schema(
 )
 
 
-async def async_get_mac(hass: HomeAssistant, host: str, data: dict[str, Any]) -> str:
-    """Get device MAC address."""
+async def async_get_config(hass: HomeAssistant, host: str) -> NamConfig:
+    """Get device MAC address and auth_enabled property."""
     websession = async_get_clientsession(hass)
 
-    options = ConnectionOptions(host, data.get(CONF_USERNAME), data.get(CONF_PASSWORD))
+    options = ConnectionOptions(host)
     nam = await NettigoAirMonitor.create(websession, options)
 
     async with async_timeout.timeout(10):
-        return await nam.async_get_mac_address()
+        mac = await nam.async_get_mac_address()
+
+    return NamConfig(mac, nam.auth_enabled)
+
+
+async def async_check_credentials(
+    hass: HomeAssistant, host: str, data: dict[str, Any]
+) -> None:
+    """Check if credentials are valid."""
+    websession = async_get_clientsession(hass)
+
+    options = ConnectionOptions(host, data.get(CONF_USERNAME), data.get(CONF_PASSWORD))
+
+    nam = await NettigoAirMonitor.create(websession, options)
+
+    async with async_timeout.timeout(10):
+        await nam.async_check_credentials()
 
 
 class NAMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -53,6 +80,7 @@ class NAMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize flow."""
         self.host: str
         self.entry: config_entries.ConfigEntry
+        self._config: NamConfig
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -64,19 +92,20 @@ class NAMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             self.host = user_input[CONF_HOST]
 
             try:
-                mac = await async_get_mac(self.hass, self.host, {})
-            except AuthFailed:
-                return await self.async_step_credentials()
+                config = await async_get_config(self.hass, self.host)
             except (ApiError, ClientConnectorError, asyncio.TimeoutError):
                 errors["base"] = "cannot_connect"
-            except CannotGetMac:
+            except CannotGetMacError:
                 return self.async_abort(reason="device_unsupported")
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                await self.async_set_unique_id(format_mac(mac))
+                await self.async_set_unique_id(format_mac(config.mac_address))
                 self._abort_if_unique_id_configured({CONF_HOST: self.host})
+
+                if config.auth_enabled is True:
+                    return await self.async_step_credentials()
 
                 return self.async_create_entry(
                     title=self.host,
@@ -97,20 +126,15 @@ class NAMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             try:
-                mac = await async_get_mac(self.hass, self.host, user_input)
-            except AuthFailed:
+                await async_check_credentials(self.hass, self.host, user_input)
+            except AuthFailedError:
                 errors["base"] = "invalid_auth"
             except (ApiError, ClientConnectorError, asyncio.TimeoutError):
                 errors["base"] = "cannot_connect"
-            except CannotGetMac:
-                return self.async_abort(reason="device_unsupported")
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                await self.async_set_unique_id(format_mac(mac))
-                self._abort_if_unique_id_configured({CONF_HOST: self.host})
-
                 return self.async_create_entry(
                     title=self.host,
                     data={**user_input, CONF_HOST: self.host},
@@ -131,15 +155,13 @@ class NAMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self._async_abort_entries_match({CONF_HOST: self.host})
 
         try:
-            mac = await async_get_mac(self.hass, self.host, {})
-        except AuthFailed:
-            return await self.async_step_credentials()
+            self._config = await async_get_config(self.hass, self.host)
         except (ApiError, ClientConnectorError, asyncio.TimeoutError):
             return self.async_abort(reason="cannot_connect")
-        except CannotGetMac:
+        except CannotGetMacError:
             return self.async_abort(reason="device_unsupported")
 
-        await self.async_set_unique_id(format_mac(mac))
+        await self.async_set_unique_id(format_mac(self._config.mac_address))
         self._abort_if_unique_id_configured({CONF_HOST: self.host})
 
         return await self.async_step_confirm_discovery()
@@ -156,6 +178,9 @@ class NAMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 data={CONF_HOST: self.host},
             )
 
+        if self._config.auth_enabled is True:
+            return await self.async_step_credentials()
+
         self._set_confirm_only()
 
         return self.async_show_form(
@@ -164,11 +189,11 @@ class NAMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_reauth(self, data: dict[str, Any]) -> FlowResult:
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Handle configuration by re-auth."""
         if entry := self.hass.config_entries.async_get_entry(self.context["entry_id"]):
             self.entry = entry
-        self.host = data[CONF_HOST]
+        self.host = entry_data[CONF_HOST]
         self.context["title_placeholders"] = {"host": self.host}
         return await self.async_step_reauth_confirm()
 
@@ -180,15 +205,20 @@ class NAMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             try:
-                await async_get_mac(self.hass, self.host, user_input)
-            except (ApiError, AuthFailed, ClientConnectorError, asyncio.TimeoutError):
+                await async_check_credentials(self.hass, self.host, user_input)
+            except (
+                ApiError,
+                AuthFailedError,
+                ClientConnectorError,
+                asyncio.TimeoutError,
+            ):
                 return self.async_abort(reason="reauth_unsuccessful")
-            else:
-                self.hass.config_entries.async_update_entry(
-                    self.entry, data={**user_input, CONF_HOST: self.host}
-                )
-                await self.hass.config_entries.async_reload(self.entry.entry_id)
-                return self.async_abort(reason="reauth_successful")
+
+            self.hass.config_entries.async_update_entry(
+                self.entry, data={**user_input, CONF_HOST: self.host}
+            )
+            await self.hass.config_entries.async_reload(self.entry.entry_id)
+            return self.async_abort(reason="reauth_successful")
 
         return self.async_show_form(
             step_id="reauth_confirm",

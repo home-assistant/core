@@ -5,7 +5,7 @@ from unittest.mock import MagicMock
 from kaleidescape import const as kaleidescape_const
 from kaleidescape.device import Movie
 
-from homeassistant.components.media_player.const import DOMAIN as MEDIA_PLAYER_DOMAIN
+from homeassistant.components.media_player import DOMAIN as MEDIA_PLAYER_DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_MEDIA_NEXT_TRACK,
@@ -21,6 +21,7 @@ from homeassistant.const import (
     STATE_PLAYING,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 
 from . import MOCK_SERIAL
 
@@ -173,7 +174,7 @@ async def test_device(
     mock_integration: MockConfigEntry,
 ) -> None:
     """Test device attributes."""
-    device_registry = await hass.helpers.device_registry.async_get_registry()
+    device_registry = dr.async_get(hass)
     device = device_registry.async_get_device(
         identifiers={("kaleidescape", MOCK_SERIAL)}
     )

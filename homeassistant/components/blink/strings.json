@@ -11,7 +11,7 @@
       "2fa": {
         "title": "Two-factor authentication",
         "data": { "2fa": "Two-factor code" },
-        "description": "Enter the PIN sent to your email"
+        "description": "Enter the PIN sent via email or SMS"
       }
     },
     "error": {
@@ -32,6 +32,18 @@
         },
         "title": "Blink options",
         "description": "Configure Blink integration"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "wifi_rssi": {
+        "name": "Wi-Fi RSSI"
+      }
+    },
+    "binary_sensor": {
+      "camera_armed": {
+        "name": "Camera armed"
       }
     }
   }

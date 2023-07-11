@@ -1,11 +1,10 @@
 """Support for Yale Smart Alarm button."""
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -14,7 +13,11 @@ from .coordinator import YaleDataUpdateCoordinator
 from .entity import YaleAlarmEntity
 
 BUTTON_TYPES = (
-    ButtonEntityDescription(key="panic", name="Panic Button", icon="mdi:alarm-light"),
+    ButtonEntityDescription(
+        key="panic",
+        translation_key="panic",
+        icon="mdi:alarm-light",
+    ),
 )
 
 
@@ -47,10 +50,9 @@ class YalePanicButton(YaleAlarmEntity, ButtonEntity):
         """Initialize the plug switch."""
         super().__init__(coordinator)
         self.entity_description = description
-        self._attr_name = f"{coordinator.entry.data[CONF_NAME]} {description.name}"
         self._attr_unique_id = f"yale_smart_alarm-{description.key}"
 
-    async def async_press(self, **kwargs: Any) -> None:
+    async def async_press(self) -> None:
         """Press the button."""
         if TYPE_CHECKING:
             assert self.coordinator.yale, "Connection to API is missing"

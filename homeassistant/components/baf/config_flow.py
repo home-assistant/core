@@ -7,6 +7,7 @@ from typing import Any
 
 from aiobafi6 import Device, Service
 from aiobafi6.discovery import PORT
+import async_timeout
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -26,7 +27,8 @@ async def async_try_connect(ip_address: str) -> Device:
     device = Device(Service(ip_addresses=[ip_address], port=PORT))
     run_future = device.async_run()
     try:
-        await asyncio.wait_for(device.async_wait_available(), timeout=RUN_TIMEOUT)
+        async with async_timeout.timeout(RUN_TIMEOUT):
+            await device.async_wait_available()
     except asyncio.TimeoutError as ex:
         raise CannotConnect from ex
     finally:
@@ -54,7 +56,7 @@ class BAFFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         uuid = properties["uuid"]
         model = properties["model"]
         name = properties["name"]
-        await self.async_set_unique_id(uuid, raise_on_progress=False)
+        await self.async_set_unique_id(uuid)
         self._abort_if_unique_id_configured(updates={CONF_IP_ADDRESS: ip_address})
         self.discovery = BAFDiscovery(ip_address, name, uuid, model)
         return await self.async_step_discovery_confirm()
@@ -98,7 +100,9 @@ class BAFFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 )
                 errors["base"] = "unknown"
             else:
-                await self.async_set_unique_id(device.dns_sd_uuid)
+                await self.async_set_unique_id(
+                    device.dns_sd_uuid, raise_on_progress=False
+                )
                 self._abort_if_unique_id_configured(
                     updates={CONF_IP_ADDRESS: ip_address}
                 )

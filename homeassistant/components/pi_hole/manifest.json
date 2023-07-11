@@ -1,10 +1,10 @@
 {
   "domain": "pi_hole",
   "name": "Pi-hole",
-  "documentation": "https://www.home-assistant.io/integrations/pi_hole",
-  "requirements": ["hole==0.7.0"],
   "codeowners": ["@johnluetke", "@shenxn"],
   "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/pi_hole",
   "iot_class": "local_polling",
-  "loggers": ["hole"]
+  "loggers": ["hole"],
+  "requirements": ["hole==0.8.0"]
 }

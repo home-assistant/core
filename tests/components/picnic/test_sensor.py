@@ -9,7 +9,8 @@ import requests
 
 from homeassistant import config_entries
 from homeassistant.components.picnic import const
-from homeassistant.components.picnic.const import CONF_COUNTRY_CODE, SENSOR_TYPES
+from homeassistant.components.picnic.const import CONF_COUNTRY_CODE
+from homeassistant.components.picnic.sensor import SENSOR_TYPES
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import (
     CONF_ACCESS_TOKEN,
@@ -17,8 +18,8 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.util import dt
+from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.util import dt as dt_util
 
 from tests.common import (
     MockConfigEntry,
@@ -97,9 +98,7 @@ class TestPicnicSensor(unittest.IsolatedAsyncioTestCase):
     async def asyncSetUp(self):
         """Set up things to be run when tests are started."""
         self.hass = await async_test_home_assistant(None)
-        self.entity_registry = (
-            await self.hass.helpers.entity_registry.async_get_registry()
-        )
+        self.entity_registry = er.async_get(self.hass)
 
         # Patch the api client
         self.picnic_patcher = patch("homeassistant.components.picnic.PicnicAPI")
@@ -178,7 +177,7 @@ class TestPicnicSensor(unittest.IsolatedAsyncioTestCase):
         # Trigger a reload of the data
         async_fire_time_changed(
             self.hass,
-            dt.utcnow()
+            dt_util.utcnow()
             + timedelta(seconds=config_entries.RELOAD_AFTER_UPDATE_DELAY + 1),
         )
         await self.hass.async_block_till_done()
@@ -498,13 +497,13 @@ class TestPicnicSensor(unittest.IsolatedAsyncioTestCase):
         # Setup platform and default mock responses
         await self._setup_platform(use_default_responses=True)
 
-        device_registry = await self.hass.helpers.device_registry.async_get_registry()
+        device_registry = dr.async_get(self.hass)
         picnic_service = device_registry.async_get_device(
             identifiers={(const.DOMAIN, DEFAULT_USER_RESPONSE["user_id"])}
         )
         assert picnic_service.model == DEFAULT_USER_RESPONSE["user_id"]
         assert picnic_service.name == "Picnic: Commonstreet 123a"
-        assert picnic_service.entry_type is DeviceEntryType.SERVICE
+        assert picnic_service.entry_type is dr.DeviceEntryType.SERVICE
 
     async def test_auth_token_is_saved_on_update(self):
         """Test that auth-token changes in the session object are reflected by the config entry."""

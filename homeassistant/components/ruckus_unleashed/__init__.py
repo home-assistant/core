@@ -6,8 +6,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import device_registry
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
+from homeassistant.helpers import device_registry as dr
 
 from .const import (
     API_AP,
@@ -29,8 +28,7 @@ from .coordinator import RuckusUnleashedDataUpdateCoordinator
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Ruckus Unleashed from a config entry."""
     try:
-        ruckus = await hass.async_add_executor_job(
-            Ruckus,
+        ruckus = await Ruckus.create(
             entry.data[CONF_HOST],
             entry.data[CONF_USERNAME],
             entry.data[CONF_PASSWORD],
@@ -42,15 +40,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await coordinator.async_config_entry_first_refresh()
 
-    system_info = await hass.async_add_executor_job(ruckus.system_info)
+    system_info = await ruckus.system_info()
 
-    registry = await device_registry.async_get_registry(hass)
-    ap_info = await hass.async_add_executor_job(ruckus.ap_info)
+    registry = dr.async_get(hass)
+    ap_info = await ruckus.ap_info()
     for device in ap_info[API_AP][API_ID].values():
         registry.async_get_or_create(
             config_entry_id=entry.entry_id,
-            connections={(CONNECTION_NETWORK_MAC, device[API_MAC])},
-            identifiers={(CONNECTION_NETWORK_MAC, device[API_MAC])},
+            connections={(dr.CONNECTION_NETWORK_MAC, device[API_MAC])},
+            identifiers={(dr.CONNECTION_NETWORK_MAC, device[API_MAC])},
             manufacturer=MANUFACTURER,
             name=device[API_DEVICE_NAME],
             model=device[API_MODEL],
@@ -63,7 +61,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         UNDO_UPDATE_LISTENERS: [],
     }
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 

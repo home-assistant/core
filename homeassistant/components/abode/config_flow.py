@@ -1,12 +1,16 @@
 """Config flow for the Abode Security System component."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 from http import HTTPStatus
 from typing import Any, cast
 
-from abodepy import Abode
-from abodepy.exceptions import AbodeAuthenticationException, AbodeException
-from abodepy.helpers.errors import MFA_CODE_REQUIRED
+from jaraco.abode.client import Client as Abode
+from jaraco.abode.exceptions import (
+    AuthenticationException as AbodeAuthenticationException,
+    Exception as AbodeException,
+)
+from jaraco.abode.helpers.errors import MFA_CODE_REQUIRED
 from requests.exceptions import ConnectTimeout, HTTPError
 import voluptuous as vol
 
@@ -14,7 +18,7 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.data_entry_flow import FlowResult
 
-from .const import CONF_POLLING, DEFAULT_CACHEDB, DOMAIN, LOGGER
+from .const import CONF_POLLING, DOMAIN, LOGGER
 
 CONF_MFA = "mfa_code"
 
@@ -34,7 +38,6 @@ class AbodeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             vol.Required(CONF_MFA): str,
         }
 
-        self._cache: str | None = None
         self._mfa_code: str | None = None
         self._password: str | None = None
         self._polling: bool = False
@@ -42,12 +45,11 @@ class AbodeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def _async_abode_login(self, step_id: str) -> FlowResult:
         """Handle login with Abode."""
-        self._cache = self.hass.config.path(DEFAULT_CACHEDB)
         errors = {}
 
         try:
             await self.hass.async_add_executor_job(
-                Abode, self._username, self._password, True, False, False, self._cache
+                Abode, self._username, self._password, True, False, False
             )
 
         except AbodeException as ex:
@@ -76,12 +78,7 @@ class AbodeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle multi-factor authentication (MFA) login with Abode."""
         try:
             # Create instance to access login method for passing MFA code
-            abode = Abode(
-                auto_login=False,
-                get_devices=False,
-                get_automations=False,
-                cache_path=self._cache,
-            )
+            abode = Abode(auto_login=False, get_devices=False, get_automations=False)
             await self.hass.async_add_executor_job(
                 abode.login, self._username, self._password, self._mfa_code
             )
@@ -149,9 +146,9 @@ class AbodeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         return await self._async_abode_mfa_login()
 
-    async def async_step_reauth(self, config: dict[str, Any]) -> FlowResult:
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Handle reauthorization request from Abode."""
-        self._username = config[CONF_USERNAME]
+        self._username = entry_data[CONF_USERNAME]
 
         return await self.async_step_reauth_confirm()
 

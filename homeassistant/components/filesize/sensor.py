@@ -13,10 +13,10 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_FILE_PATH, DATA_BYTES, DATA_MEGABYTES
+from homeassistant.const import CONF_FILE_PATH, EntityCategory, UnitOfInformation
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import DeviceInfo, EntityCategory
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -34,27 +34,28 @@ ICON = "mdi:file"
 SENSOR_TYPES = (
     SensorEntityDescription(
         key="file",
+        translation_key="size",
         icon=ICON,
-        name="Size",
-        native_unit_of_measurement=DATA_MEGABYTES,
+        native_unit_of_measurement=UnitOfInformation.MEGABYTES,
+        device_class=SensorDeviceClass.DATA_SIZE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="bytes",
+        translation_key="size_bytes",
         entity_registry_enabled_default=False,
         icon=ICON,
-        name="Size bytes",
-        native_unit_of_measurement=DATA_BYTES,
+        native_unit_of_measurement=UnitOfInformation.BYTES,
+        device_class=SensorDeviceClass.DATA_SIZE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key="last_updated",
+        translation_key="last_updated",
         entity_registry_enabled_default=False,
         icon=ICON,
-        name="Last Updated",
         device_class=SensorDeviceClass.TIMESTAMP,
-        state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
 )
@@ -96,7 +97,7 @@ class FileSizeCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self) -> dict[str, float | int | datetime]:
         """Fetch file information."""
         try:
-            statinfo = os.stat(self._path)
+            statinfo = await self.hass.async_add_executor_job(os.stat, self._path)
         except OSError as error:
             raise UpdateFailed(f"Can not retrieve file statistics {error}") from error
 
@@ -118,7 +119,7 @@ class FileSizeCoordinator(DataUpdateCoordinator):
 class FilesizeEntity(CoordinatorEntity[FileSizeCoordinator], SensorEntity):
     """Filesize sensor."""
 
-    entity_description: SensorEntityDescription
+    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -130,7 +131,6 @@ class FilesizeEntity(CoordinatorEntity[FileSizeCoordinator], SensorEntity):
         """Initialize the Filesize sensor."""
         super().__init__(coordinator)
         base_name = path.split("/")[-1]
-        self._attr_name = f"{base_name} {description.name}"
         self._attr_unique_id = (
             entry_id if description.key == "file" else f"{entry_id}-{description.key}"
         )

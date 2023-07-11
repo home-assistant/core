@@ -94,7 +94,7 @@ def setup_platform(
 class RedditSensor(SensorEntity):
     """Representation of a Reddit sensor."""
 
-    def __init__(self, reddit, subreddit: str, limit: int, sort_by: str):
+    def __init__(self, reddit, subreddit: str, limit: int, sort_by: str) -> None:
         """Initialize the Reddit sensor."""
         self._reddit = reddit
         self._subreddit = subreddit
@@ -127,7 +127,7 @@ class RedditSensor(SensorEntity):
         """Return the icon to use in the frontend."""
         return "mdi:reddit"
 
-    def update(self):
+    def update(self) -> None:
         """Update data from Reddit API."""
         self._subreddit_data = []
 

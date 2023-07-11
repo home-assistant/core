@@ -1,7 +1,7 @@
 """Support for Xiaomi Miio binary sensors."""
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 import logging
 
@@ -11,9 +11,8 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_MODEL
+from homeassistant.const import CONF_MODEL, EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import VacuumCoordinatorDataAttributes
@@ -57,13 +56,13 @@ class XiaomiMiioBinarySensorDescription(BinarySensorEntityDescription):
 BINARY_SENSOR_TYPES = (
     XiaomiMiioBinarySensorDescription(
         key=ATTR_NO_WATER,
-        name="Water Tank Empty",
+        name="Water tank empty",
         icon="mdi:water-off-outline",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     XiaomiMiioBinarySensorDescription(
         key=ATTR_WATER_TANK_DETACHED,
-        name="Water Tank",
+        name="Water tank",
         icon="mdi:car-coolant-level",
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
         value=lambda value: not value,
@@ -71,13 +70,13 @@ BINARY_SENSOR_TYPES = (
     ),
     XiaomiMiioBinarySensorDescription(
         key=ATTR_PTC_STATUS,
-        name="Auxiliary Heat Status",
+        name="Auxiliary heat status",
         device_class=BinarySensorDeviceClass.POWER,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     XiaomiMiioBinarySensorDescription(
         key=ATTR_POWERSUPPLY_ATTACHED,
-        name="Power Supply",
+        name="Power supply",
         device_class=BinarySensorDeviceClass.PLUG,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
@@ -89,7 +88,7 @@ FAN_ZA5_BINARY_SENSORS = (ATTR_POWERSUPPLY_ATTACHED,)
 VACUUM_SENSORS = {
     ATTR_MOP_ATTACHED: XiaomiMiioBinarySensorDescription(
         key=ATTR_WATER_BOX_ATTACHED,
-        name="Mop Attached",
+        name="Mop attached",
         icon="mdi:square-rounded",
         parent_key=VacuumCoordinatorDataAttributes.status,
         entity_registry_enabled_default=True,
@@ -98,7 +97,7 @@ VACUUM_SENSORS = {
     ),
     ATTR_WATER_BOX_ATTACHED: XiaomiMiioBinarySensorDescription(
         key=ATTR_WATER_BOX_ATTACHED,
-        name="Water Box Attached",
+        name="Water box attached",
         icon="mdi:water",
         parent_key=VacuumCoordinatorDataAttributes.status,
         entity_registry_enabled_default=True,
@@ -107,7 +106,7 @@ VACUUM_SENSORS = {
     ),
     ATTR_WATER_SHORTAGE: XiaomiMiioBinarySensorDescription(
         key=ATTR_WATER_SHORTAGE,
-        name="Water Shortage",
+        name="Water shortage",
         icon="mdi:water",
         parent_key=VacuumCoordinatorDataAttributes.status,
         entity_registry_enabled_default=True,
@@ -120,7 +119,7 @@ VACUUM_SENSORS_SEPARATE_MOP = {
     **VACUUM_SENSORS,
     ATTR_MOP_ATTACHED: XiaomiMiioBinarySensorDescription(
         key=ATTR_MOP_ATTACHED,
-        name="Mop Attached",
+        name="Mop attached",
         icon="mdi:square-rounded",
         parent_key=VacuumCoordinatorDataAttributes.status,
         entity_registry_enabled_default=True,
@@ -158,7 +157,6 @@ def _setup_vacuum_sensors(hass, config_entry, async_add_entities):
             continue
         entities.append(
             XiaomiGenericBinarySensor(
-                f"{config_entry.title} {description.name}",
                 device,
                 config_entry,
                 f"{sensor}_{config_entry.unique_id}",
@@ -180,7 +178,7 @@ async def async_setup_entry(
 
     if config_entry.data[CONF_FLOW_TYPE] == CONF_DEVICE:
         model = config_entry.data[CONF_MODEL]
-        sensors = []
+        sensors: Iterable[str] = []
         if model in MODEL_AIRFRESH_A1 or model in MODEL_AIRFRESH_T2017:
             sensors = AIRFRESH_A1_BINARY_SENSORS
         elif model in MODEL_FAN_ZA5:
@@ -199,7 +197,6 @@ async def async_setup_entry(
                 continue
             entities.append(
                 XiaomiGenericBinarySensor(
-                    f"{config_entry.title} {description.name}",
                     hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE],
                     config_entry,
                     f"{description.key}_{config_entry.unique_id}",
@@ -216,9 +213,9 @@ class XiaomiGenericBinarySensor(XiaomiCoordinatedMiioEntity, BinarySensorEntity)
 
     entity_description: XiaomiMiioBinarySensorDescription
 
-    def __init__(self, name, device, entry, unique_id, coordinator, description):
+    def __init__(self, device, entry, unique_id, coordinator, description):
         """Initialize the entity."""
-        super().__init__(name, device, entry, unique_id, coordinator)
+        super().__init__(device, entry, unique_id, coordinator)
 
         self.entity_description = description
         self._attr_entity_registry_enabled_default = (

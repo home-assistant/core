@@ -151,13 +151,13 @@ def _custom_tasks(template, info: Info) -> None:
         )
 
     elif template == "config_flow_helper":
-        info.update_manifest(config_flow=True)
+        info.update_manifest(config_flow=True, integration_type="helper")
         info.update_strings(
             config={
                 "step": {
                     "user": {
                         "description": "New NEW_NAME Sensor",
-                        "data": {"entity": "Input sensor", "name": "Name"},
+                        "data": {"entity_id": "Input sensor", "name": "Name"},
                     },
                 },
             },
@@ -165,7 +165,7 @@ def _custom_tasks(template, info: Info) -> None:
                 "step": {
                     "init": {
                         "data": {
-                            "entity": "[%key:component::NEW_DOMAIN::config::step::user::description%]"
+                            "entity_id": "[%key:component::NEW_DOMAIN::config::step::user::description%]"
                         },
                     },
                 },
@@ -188,6 +188,7 @@ def _custom_tasks(template, info: Info) -> None:
                     "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
                     "authorize_url_timeout": "[%key:common::config_flow::abort::oauth2_authorize_url_timeout%]",
                     "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]",
+                    "user_rejected_authorize": "[%key:common::config_flow::abort::oauth2_user_rejected_authorize%]",
                 },
                 "create_entry": {
                     "default": "[%key:common::config_flow::create_entry::authenticated%]"

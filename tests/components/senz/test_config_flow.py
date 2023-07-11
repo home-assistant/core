@@ -3,10 +3,18 @@ from unittest.mock import patch
 
 from aiosenz import AUTHORIZATION_ENDPOINT, TOKEN_ENDPOINT
 
-from homeassistant import config_entries, setup
+from homeassistant import config_entries
+from homeassistant.components.application_credentials import (
+    ClientCredential,
+    async_import_client_credential,
+)
 from homeassistant.components.senz.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
+from homeassistant.setup import async_setup_component
+
+from tests.test_util.aiohttp import AiohttpClientMocker
+from tests.typing import ClientSessionGenerator
 
 CLIENT_ID = "1234"
 CLIENT_SECRET = "5678"
@@ -14,18 +22,16 @@ CLIENT_SECRET = "5678"
 
 async def test_full_flow(
     hass: HomeAssistant,
-    hass_client_no_auth,
-    aioclient_mock,
-    current_request_with_host,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    current_request_with_host: None,
 ) -> None:
     """Check full flow."""
-    assert await setup.async_setup_component(
-        hass,
-        "senz",
-        {
-            "senz": {"client_id": CLIENT_ID, "client_secret": CLIENT_SECRET},
-            "http": {"base_url": "https://example.com"},
-        },
+    await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+
+    await async_import_client_credential(
+        hass, DOMAIN, ClientCredential(CLIENT_ID, CLIENT_SECRET), "cred"
     )
 
     result = await hass.config_entries.flow.async_init(

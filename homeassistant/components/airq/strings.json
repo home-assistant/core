@@ -1,0 +1,134 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Identify the device",
+        "description": "Provide the IP address or mDNS of the device and its password",
+        "data": {
+          "ip_address": "[%key:common::config_flow::data::ip%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "invalid_input": "[%key:common::config_flow::error::invalid_host%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "acetaldehyde": {
+        "name": "Acetaldehyde"
+      },
+      "ammonia": {
+        "name": "Ammonia"
+      },
+      "arsine": {
+        "name": "Arsine"
+      },
+      "bromine": {
+        "name": "Bromine"
+      },
+      "methanethiol": {
+        "name": "Methanethiol"
+      },
+      "chlorine": {
+        "name": "Chlorine"
+      },
+      "chlorine_dioxide": {
+        "name": "Chlorine dioxide"
+      },
+      "carbon_disulfide": {
+        "name": "Carbon disulfide"
+      },
+      "carbon_monoxide": {
+        "name": "[%key:component::sensor::entity_component::carbon_monoxide::name%]"
+      },
+      "dew_point": {
+        "name": "Dew point"
+      },
+      "ethanol": {
+        "name": "Ethanol"
+      },
+      "ethylene": {
+        "name": "Ethylene"
+      },
+      "formaldehyde": {
+        "name": "Formaldehyde"
+      },
+      "fluorine": {
+        "name": "Fluorine"
+      },
+      "hydrogen_sulfide": {
+        "name": "Hydrogen sulfide"
+      },
+      "hydrochloric_acid": {
+        "name": "Hydrochloric acid"
+      },
+      "hydrogen_cyanide": {
+        "name": "Hydrogen cyanide"
+      },
+      "hydrogen_fluoride": {
+        "name": "Hydrogen fluoride"
+      },
+      "health_index": {
+        "name": "Health Index"
+      },
+      "absolute_humidity": {
+        "name": "Absolute humidity"
+      },
+      "hydrogen": {
+        "name": "Hydrogen"
+      },
+      "hydrogen_peroxide": {
+        "name": "Hydrogen peroxide"
+      },
+      "methane": {
+        "name": "Methane"
+      },
+      "organic_acid": {
+        "name": "Organic acid"
+      },
+      "oxygen": {
+        "name": "Oxygen"
+      },
+      "performance_index": {
+        "name": "Performance Index"
+      },
+      "hydrogen_phosphide": {
+        "name": "Hydrogen Phosphide"
+      },
+      "relative_pressure": {
+        "name": "Relative pressure"
+      },
+      "propane": {
+        "name": "Propane"
+      },
+      "refigerant": {
+        "name": "Refrigerant"
+      },
+      "silicon_hydride": {
+        "name": "Silicon Hydride"
+      },
+      "noise": {
+        "name": "Noise"
+      },
+      "maximum_noise": {
+        "name": "Noise (Maximum)"
+      },
+      "radon": {
+        "name": "Radon"
+      },
+      "industrial_volatile_organic_compounds": {
+        "name": "VOCs (Industrial)"
+      },
+      "virus_index": {
+        "name": "Virus Index"
+      }
+    }
+  }
+}

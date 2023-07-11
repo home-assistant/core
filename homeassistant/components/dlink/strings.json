@@ -1,0 +1,28 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "password": "Password (default: PIN code on the back)",
+          "username": "[%key:common::config_flow::data::username%]",
+          "use_legacy_protocol": "Use legacy protocol"
+        }
+      },
+      "confirm_discovery": {
+        "data": {
+          "password": "[%key:component::dlink::config::step::user::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "use_legacy_protocol": "[%key:component::dlink::config::step::user::data::use_legacy_protocol%]"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect/authenticate",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  }
+}

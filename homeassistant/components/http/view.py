@@ -4,7 +4,6 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Awaitable, Callable
 from http import HTTPStatus
-import json
 import logging
 from typing import Any
 
@@ -20,10 +19,15 @@ import voluptuous as vol
 
 from homeassistant import exceptions
 from homeassistant.const import CONTENT_TYPE_JSON
-from homeassistant.core import Context, is_callback
-from homeassistant.helpers.json import JSONEncoder
+from homeassistant.core import Context, HomeAssistant, is_callback
+from homeassistant.helpers.json import (
+    find_paths_unserializable_data,
+    json_bytes,
+    json_dumps,
+)
+from homeassistant.util.json import JSON_ENCODE_EXCEPTIONS, format_unserializable_data
 
-from .const import KEY_AUTHENTICATED, KEY_HASS
+from .const import KEY_AUTHENTICATED
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -53,9 +57,14 @@ class HomeAssistantView:
     ) -> web.Response:
         """Return a JSON response."""
         try:
-            msg = json.dumps(result, cls=JSONEncoder, allow_nan=False).encode("UTF-8")
-        except (ValueError, TypeError) as err:
-            _LOGGER.error("Unable to serialize to JSON: %s\n%s", err, result)
+            msg = json_bytes(result)
+        except JSON_ENCODE_EXCEPTIONS as err:
+            _LOGGER.error(
+                "Unable to serialize to JSON. Bad data found at %s",
+                format_unserializable_data(
+                    find_paths_unserializable_data(result, dump=json_dumps)
+                ),
+            )
             raise HTTPInternalServerError from err
         response = web.Response(
             body=msg,
@@ -79,7 +88,9 @@ class HomeAssistantView:
             data["code"] = message_code
         return self.json(data, status_code, headers=headers)
 
-    def register(self, app: web.Application, router: web.UrlDispatcher) -> None:
+    def register(
+        self, hass: HomeAssistant, app: web.Application, router: web.UrlDispatcher
+    ) -> None:
         """Register the view with a router."""
         assert self.url is not None, "No url set for view"
         urls = [self.url] + self.extra_urls
@@ -89,7 +100,7 @@ class HomeAssistantView:
             if not (handler := getattr(self, method, None)):
                 continue
 
-            handler = request_handler_factory(self, handler)
+            handler = request_handler_factory(hass, self, handler)
 
             for url in urls:
                 routes.append(router.add_route(method, url, handler))
@@ -106,16 +117,17 @@ class HomeAssistantView:
 
 
 def request_handler_factory(
-    view: HomeAssistantView, handler: Callable
+    hass: HomeAssistant, view: HomeAssistantView, handler: Callable
 ) -> Callable[[web.Request], Awaitable[web.StreamResponse]]:
     """Wrap the handler classes."""
-    assert asyncio.iscoroutinefunction(handler) or is_callback(
+    is_coroutinefunction = asyncio.iscoroutinefunction(handler)
+    assert is_coroutinefunction or is_callback(
         handler
     ), "Handler should be a coroutine or a callback."
 
     async def handle(request: web.Request) -> web.StreamResponse:
         """Handle incoming request."""
-        if request.app[KEY_HASS].is_stopping:
+        if hass.is_stopping:
             return web.Response(status=HTTPStatus.SERVICE_UNAVAILABLE)
 
         authenticated = request.get(KEY_AUTHENTICATED, False)
@@ -123,18 +135,19 @@ def request_handler_factory(
         if view.requires_auth and not authenticated:
             raise HTTPUnauthorized()
 
-        _LOGGER.debug(
-            "Serving %s to %s (auth: %s)",
-            request.path,
-            request.remote,
-            authenticated,
-        )
+        if _LOGGER.isEnabledFor(logging.DEBUG):
+            _LOGGER.debug(
+                "Serving %s to %s (auth: %s)",
+                request.path,
+                request.remote,
+                authenticated,
+            )
 
         try:
-            result = handler(request, **request.match_info)
-
-            if asyncio.iscoroutine(result):
-                result = await result
+            if is_coroutinefunction:
+                result = await handler(request, **request.match_info)
+            else:
+                result = handler(request, **request.match_info)
         except vol.Invalid as err:
             raise HTTPBadRequest() from err
         except exceptions.ServiceNotFound as err:
@@ -147,21 +160,20 @@ def request_handler_factory(
             return result
 
         status_code = HTTPStatus.OK
-
         if isinstance(result, tuple):
             result, status_code = result
 
         if isinstance(result, bytes):
-            bresult = result
-        elif isinstance(result, str):
-            bresult = result.encode("utf-8")
-        elif result is None:
-            bresult = b""
-        else:
-            assert (
-                False
-            ), f"Result should be None, string, bytes or StreamResponse. Got: {result}"
+            return web.Response(body=result, status=status_code)
 
-        return web.Response(body=bresult, status=status_code)
+        if isinstance(result, str):
+            return web.Response(text=result, status=status_code)
+
+        if result is None:
+            return web.Response(body=b"", status=status_code)
+
+        raise TypeError(
+            f"Result should be None, string, bytes or StreamResponse. Got: {result}"
+        )
 
     return handle

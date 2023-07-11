@@ -20,15 +20,22 @@ from homeassistant.components.weather import (
     ATTR_CONDITION_WINDY,
     ATTR_CONDITION_WINDY_VARIANT,
     ENTITY_ID_FORMAT,
+    Forecast,
     WeatherEntity,
 )
-from homeassistant.const import CONF_NAME, CONF_UNIQUE_ID
+from homeassistant.const import CONF_NAME, CONF_TEMPERATURE_UNIT, CONF_UNIQUE_ID
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.util.unit_conversion import (
+    DistanceConverter,
+    PressureConverter,
+    SpeedConverter,
+    TemperatureConverter,
+)
 
 from .template_entity import TemplateEntity, rewrite_common_legacy_to_modern_conf
 
@@ -61,6 +68,14 @@ CONF_WIND_BEARING_TEMPLATE = "wind_bearing_template"
 CONF_OZONE_TEMPLATE = "ozone_template"
 CONF_VISIBILITY_TEMPLATE = "visibility_template"
 CONF_FORECAST_TEMPLATE = "forecast_template"
+CONF_PRESSURE_UNIT = "pressure_unit"
+CONF_WIND_SPEED_UNIT = "wind_speed_unit"
+CONF_VISIBILITY_UNIT = "visibility_unit"
+CONF_PRECIPITATION_UNIT = "precipitation_unit"
+CONF_WIND_GUST_SPEED_TEMPLATE = "wind_gust_speed_template"
+CONF_CLOUD_COVERAGE_TEMPLATE = "cloud_coverage_template"
+CONF_DEW_POINT_TEMPLATE = "dew_point_template"
+CONF_APPARENT_TEMPERATURE_TEMPLATE = "apparent_temperature_template"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -76,6 +91,15 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_VISIBILITY_TEMPLATE): cv.template,
         vol.Optional(CONF_FORECAST_TEMPLATE): cv.template,
         vol.Optional(CONF_UNIQUE_ID): cv.string,
+        vol.Optional(CONF_TEMPERATURE_UNIT): vol.In(TemperatureConverter.VALID_UNITS),
+        vol.Optional(CONF_PRESSURE_UNIT): vol.In(PressureConverter.VALID_UNITS),
+        vol.Optional(CONF_WIND_SPEED_UNIT): vol.In(SpeedConverter.VALID_UNITS),
+        vol.Optional(CONF_VISIBILITY_UNIT): vol.In(DistanceConverter.VALID_UNITS),
+        vol.Optional(CONF_PRECIPITATION_UNIT): vol.In(DistanceConverter.VALID_UNITS),
+        vol.Optional(CONF_WIND_GUST_SPEED_TEMPLATE): cv.template,
+        vol.Optional(CONF_CLOUD_COVERAGE_TEMPLATE): cv.template,
+        vol.Optional(CONF_DEW_POINT_TEMPLATE): cv.template,
+        vol.Optional(CONF_APPARENT_TEMPERATURE_TEMPLATE): cv.template,
     }
 )
 
@@ -105,12 +129,14 @@ async def async_setup_platform(
 class WeatherTemplate(TemplateEntity, WeatherEntity):
     """Representation of a weather condition."""
 
+    _attr_should_poll = False
+
     def __init__(
         self,
-        hass,
-        config,
-        unique_id,
-    ):
+        hass: HomeAssistant,
+        config: ConfigType,
+        unique_id: str | None,
+    ) -> None:
         """Initialize the Template weather."""
         super().__init__(hass, config=config, unique_id=unique_id)
 
@@ -125,6 +151,18 @@ class WeatherTemplate(TemplateEntity, WeatherEntity):
         self._ozone_template = config.get(CONF_OZONE_TEMPLATE)
         self._visibility_template = config.get(CONF_VISIBILITY_TEMPLATE)
         self._forecast_template = config.get(CONF_FORECAST_TEMPLATE)
+        self._wind_gust_speed_template = config.get(CONF_WIND_GUST_SPEED_TEMPLATE)
+        self._cloud_coverage_template = config.get(CONF_CLOUD_COVERAGE_TEMPLATE)
+        self._dew_point_template = config.get(CONF_DEW_POINT_TEMPLATE)
+        self._apparent_temperature_template = config.get(
+            CONF_APPARENT_TEMPERATURE_TEMPLATE
+        )
+
+        self._attr_native_precipitation_unit = config.get(CONF_PRECIPITATION_UNIT)
+        self._attr_native_pressure_unit = config.get(CONF_PRESSURE_UNIT)
+        self._attr_native_temperature_unit = config.get(CONF_TEMPERATURE_UNIT)
+        self._attr_native_visibility_unit = config.get(CONF_VISIBILITY_UNIT)
+        self._attr_native_wind_speed_unit = config.get(CONF_WIND_SPEED_UNIT)
 
         self.entity_id = async_generate_entity_id(ENTITY_ID_FORMAT, name, hass=hass)
 
@@ -137,66 +175,85 @@ class WeatherTemplate(TemplateEntity, WeatherEntity):
         self._wind_bearing = None
         self._ozone = None
         self._visibility = None
-        self._forecast = []
+        self._wind_gust_speed = None
+        self._cloud_coverage = None
+        self._dew_point = None
+        self._apparent_temperature = None
+        self._forecast: list[Forecast] = []
 
     @property
-    def condition(self):
+    def condition(self) -> str | None:
         """Return the current condition."""
         return self._condition
 
     @property
-    def temperature(self):
+    def native_temperature(self) -> float | None:
         """Return the temperature."""
         return self._temperature
 
     @property
-    def temperature_unit(self):
-        """Return the unit of measurement."""
-        return self.hass.config.units.temperature_unit
-
-    @property
-    def humidity(self):
+    def humidity(self) -> float | None:
         """Return the humidity."""
         return self._humidity
 
     @property
-    def wind_speed(self):
+    def native_wind_speed(self) -> float | None:
         """Return the wind speed."""
         return self._wind_speed
 
     @property
-    def wind_bearing(self):
+    def wind_bearing(self) -> float | str | None:
         """Return the wind bearing."""
         return self._wind_bearing
 
     @property
-    def ozone(self):
+    def ozone(self) -> float | None:
         """Return the ozone level."""
         return self._ozone
 
     @property
-    def visibility(self):
+    def native_visibility(self) -> float | None:
         """Return the visibility."""
         return self._visibility
 
     @property
-    def pressure(self):
+    def native_pressure(self) -> float | None:
         """Return the air pressure."""
         return self._pressure
 
     @property
-    def forecast(self):
+    def native_wind_gust_speed(self) -> float | None:
+        """Return the wind gust speed."""
+        return self._wind_gust_speed
+
+    @property
+    def cloud_coverage(self) -> float | None:
+        """Return the cloud coverage."""
+        return self._cloud_coverage
+
+    @property
+    def native_dew_point(self) -> float | None:
+        """Return the dew point."""
+        return self._dew_point
+
+    @property
+    def native_apparent_temperature(self) -> float | None:
+        """Return the apparent temperature."""
+        return self._apparent_temperature
+
+    @property
+    def forecast(self) -> list[Forecast]:
         """Return the forecast."""
         return self._forecast
 
     @property
-    def attribution(self):
+    def attribution(self) -> str | None:
         """Return the attribution."""
         if self._attribution is None:
             return "Powered by Home Assistant"
         return self._attribution
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register callbacks."""
 
         if self._condition_template:
@@ -244,6 +301,26 @@ class WeatherTemplate(TemplateEntity, WeatherEntity):
             self.add_template_attribute(
                 "_visibility",
                 self._visibility_template,
+            )
+        if self._wind_gust_speed_template:
+            self.add_template_attribute(
+                "_wind_gust_speed",
+                self._wind_gust_speed_template,
+            )
+        if self._cloud_coverage_template:
+            self.add_template_attribute(
+                "_cloud_coverage",
+                self._cloud_coverage_template,
+            )
+        if self._dew_point_template:
+            self.add_template_attribute(
+                "_dew_point",
+                self._dew_point_template,
+            )
+        if self._apparent_temperature_template:
+            self.add_template_attribute(
+                "_apparent_temperature",
+                self._apparent_temperature_template,
             )
         if self._forecast_template:
             self.add_template_attribute(

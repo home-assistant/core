@@ -1,32 +1,4 @@
 # Describes the format for available RainMachine services
-disable_program:
-  name: Disable Program
-  description: Disable a program
-  target:
-    entity:
-      integration: rainmachine
-      domain: switch
-disable_zone:
-  name: Disable Zone
-  description: Disable a zone
-  target:
-    entity:
-      integration: rainmachine
-      domain: switch
-enable_program:
-  name: Enable Program
-  description: Enable a program
-  target:
-    entity:
-      integration: rainmachine
-      domain: switch
-enable_zone:
-  name: Enable Zone
-  description: Enable a zone
-  target:
-    entity:
-      integration: rainmachine
-      domain: switch
 pause_watering:
   name: Pause All Watering
   description: Pause all watering activities for a number of seconds
@@ -125,6 +97,37 @@ unpause_watering:
       selector:
         device:
           integration: rainmachine
+push_flow_meter_data:
+  name: Push Flow Meter Data
+  description: Push Flow Meter data to the RainMachine device.
+  fields:
+    device_id:
+      name: Controller
+      description: The controller to send flow meter data to
+      required: true
+      selector:
+        device:
+          integration: rainmachine
+    value:
+      name: Value
+      description: The flow meter value to send
+      required: true
+      selector:
+        number:
+          min: 0.0
+          max: 1000000000.0
+          step: 0.1
+          mode: box
+    unit_of_measurement:
+      name: Unit of Measurement
+      description: The flow meter units to send
+      selector:
+        select:
+          options:
+            - "clicks"
+            - "gal"
+            - "litre"
+            - "m3"
 push_weather_data:
   name: Push Weather Data
   description: >-

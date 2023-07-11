@@ -4,7 +4,7 @@
   "host": "192.168.6.90",
   "connectionHost": "192.168.178.217",
   "type": "UVC G4 Instant",
-  "name": "Fufail Qqjx",
+  "name": "Test Camera",
   "upSince": 1640020678036,
   "uptime": 3203,
   "lastSeen": 1640023881036,
@@ -20,18 +20,18 @@
   "isAdoptedByOther": false,
   "isProvisioned": true,
   "isRebooting": false,
-  "isSshEnabled": true,
+  "isSshEnabled": false,
   "canAdopt": false,
   "isAttemptingToConnect": false,
   "lastMotion": 1640021213927,
-  "micVolume": 100,
+  "micVolume": 1,
   "isMicEnabled": true,
   "isRecording": false,
   "isWirelessUplinkEnabled": true,
   "isMotionDetected": false,
   "isSmartDetected": false,
   "phyRate": 72,
-  "hdrMode": true,
+  "hdrMode": false,
   "videoMode": "default",
   "isProbingForWifi": false,
   "apMac": null,
@@ -57,18 +57,18 @@
     }
   },
   "videoReconfigurationInProgress": false,
-  "voltage": null,
+  "voltage": 20.0,
   "wiredConnectionState": {
-    "phyRate": null
+    "phyRate": 1000
   },
   "channels": [
     {
       "id": 0,
       "videoId": "video1",
-      "name": "Jzi Bftu",
+      "name": "High",
       "enabled": true,
       "isRtspEnabled": true,
-      "rtspAlias": "ANOAPfoKMW7VixG1",
+      "rtspAlias": "test_high_alias",
       "width": 2688,
       "height": 1512,
       "fps": 30,
@@ -83,10 +83,10 @@
     {
       "id": 1,
       "videoId": "video2",
-      "name": "Rgcpxsf Xfwt",
+      "name": "Medium",
       "enabled": true,
-      "isRtspEnabled": true,
-      "rtspAlias": "XHXAdHVKGVEzMNTP",
+      "isRtspEnabled": false,
+      "rtspAlias": null,
       "width": 1280,
       "height": 720,
       "fps": 30,
@@ -101,7 +101,7 @@
     {
       "id": 2,
       "videoId": "video3",
-      "name": "Umefvk Fug",
+      "name": "Low",
       "enabled": true,
       "isRtspEnabled": false,
       "rtspAlias": null,
@@ -145,7 +145,7 @@
     "focusPosition": 0,
     "touchFocusX": 1001,
     "touchFocusY": 1001,
-    "zoomPosition": 0,
+    "zoomPosition": 1,
     "mountPosition": "wall"
   },
   "talkbackSettings": {
@@ -161,8 +161,8 @@
     "quality": 100
   },
   "osdSettings": {
-    "isNameEnabled": true,
-    "isDateEnabled": true,
+    "isNameEnabled": false,
+    "isDateEnabled": false,
     "isLogoEnabled": false,
     "isDebugEnabled": false
   },
@@ -181,7 +181,7 @@
     "minMotionEventTrigger": 1000,
     "endMotionEventDelay": 3000,
     "suppressIlluminationSurge": false,
-    "mode": "detections",
+    "mode": "always",
     "geofencing": "off",
     "motionAlgorithm": "enhanced",
     "enablePirTimelapse": false,
@@ -223,8 +223,8 @@
   ],
   "smartDetectLines": [],
   "stats": {
-    "rxBytes": 33684237,
-    "txBytes": 1208318620,
+    "rxBytes": 100,
+    "txBytes": 100,
     "wifi": {
       "channel": 6,
       "frequency": 2437,
@@ -248,8 +248,8 @@
       "timelapseEndLQ": 1640021765237
     },
     "storage": {
-      "used": 20401094656,
-      "rate": 693.424269097809
+      "used": 100,
+      "rate": 0.1
     },
     "wifiQuality": 100,
     "wifiStrength": -35
@@ -257,7 +257,7 @@
   "featureFlags": {
     "canAdjustIrLedLevel": false,
     "canMagicZoom": false,
-    "canOpticalZoom": false,
+    "canOpticalZoom": true,
     "canTouchFocus": false,
     "hasAccelerometer": true,
     "hasAec": true,
@@ -268,15 +268,15 @@
     "hasIcrSensitivity": true,
     "hasLdc": false,
     "hasLedIr": true,
-    "hasLedStatus": true,
+    "hasLedStatus": false,
     "hasLineIn": false,
     "hasMic": true,
-    "hasPrivacyMask": true,
+    "hasPrivacyMask": false,
     "hasRtc": false,
     "hasSdCard": false,
-    "hasSpeaker": true,
+    "hasSpeaker": false,
     "hasWifi": true,
-    "hasHdr": true,
+    "hasHdr": false,
     "hasAutoICROnly": true,
     "videoModes": ["default"],
     "videoModeMaxFps": [],
@@ -353,14 +353,14 @@
     "frequency": 2437,
     "phyRate": 72,
     "signalQuality": 100,
-    "signalStrength": -35,
+    "signalStrength": -50,
     "ssid": "Mortis Camera"
   },
   "lenses": [],
   "id": "0de062b4f6922d489d3b312d",
   "isConnected": true,
   "platform": "sav530q",
-  "hasSpeaker": true,
+  "hasSpeaker": false,
   "hasWifi": true,
   "audioBitrate": 64000,
   "canManage": false,

@@ -6,7 +6,6 @@ from dataclasses import dataclass
 from datetime import timedelta
 import logging
 
-import voluptuous as vol
 from xbox.webapi.api.client import XboxLiveClient
 from xbox.webapi.api.provider.catalog.const import SYSTEM_PFN_ID_MAP
 from xbox.webapi.api.provider.catalog.models import AlternateIdType, Product
@@ -20,16 +19,14 @@ from xbox.webapi.api.provider.smartglass.models import (
     SmartglassConsoleStatus,
 )
 
-from homeassistant.components import application_credentials
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, Platform
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import (
     aiohttp_client,
     config_entry_oauth2_flow,
     config_validation as cv,
 )
-from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import api
@@ -37,20 +34,7 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-CONFIG_SCHEMA = vol.Schema(
-    vol.All(
-        cv.deprecated(DOMAIN),
-        {
-            DOMAIN: vol.Schema(
-                {
-                    vol.Required(CONF_CLIENT_ID): cv.string,
-                    vol.Required(CONF_CLIENT_SECRET): cv.string,
-                }
-            )
-        },
-    ),
-    extra=vol.ALLOW_EXTRA,
-)
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
@@ -58,31 +42,6 @@ PLATFORMS = [
     Platform.REMOTE,
     Platform.SENSOR,
 ]
-
-
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the xbox component."""
-    hass.data[DOMAIN] = {}
-
-    if DOMAIN not in config:
-        return True
-
-    await application_credentials.async_import_client_credential(
-        hass,
-        DOMAIN,
-        application_credentials.ClientCredential(
-            config[DOMAIN][CONF_CLIENT_ID], config[DOMAIN][CONF_CLIENT_SECRET]
-        ),
-    )
-    _LOGGER.warning(
-        "Configuration of Xbox integration in YAML is deprecated and "
-        "will be removed in a future release; Your existing configuration "
-        "(including OAuth Application Credentials) has been imported into "
-        "the UI automatically and can be safely removed from your "
-        "configuration.yaml file"
-    )
-
-    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -108,13 +67,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     coordinator = XboxUpdateCoordinator(hass, client, consoles)
     await coordinator.async_config_entry_first_refresh()
 
-    hass.data[DOMAIN][entry.entry_id] = {
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
         "client": XboxLiveClient(auth),
         "consoles": consoles,
         "coordinator": coordinator,
     }
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
@@ -164,7 +123,7 @@ class XboxData:
     presence: dict[str, PresenceData]
 
 
-class XboxUpdateCoordinator(DataUpdateCoordinator):
+class XboxUpdateCoordinator(DataUpdateCoordinator[XboxData]):
     """Store Xbox Console Status."""
 
     def __init__(
@@ -180,7 +139,7 @@ class XboxUpdateCoordinator(DataUpdateCoordinator):
             name=DOMAIN,
             update_interval=timedelta(seconds=10),
         )
-        self.data: XboxData = XboxData({}, [])
+        self.data = XboxData({}, {})
         self.client: XboxLiveClient = client
         self.consoles: SmartglassConsoleList = consoles
 
@@ -230,7 +189,7 @@ class XboxUpdateCoordinator(DataUpdateCoordinator):
             )
 
         # Update user presence
-        presence_data = {}
+        presence_data: dict[str, PresenceData] = {}
         batch: PeopleResponse = await self.client.people.get_friends_own_batch(
             [self.client.xuid]
         )
@@ -262,7 +221,7 @@ def _build_presence_data(person: Person) -> PresenceData:
         online=person.presence_state == "Online",
         status=person.presence_text,
         in_party=person.multiplayer_summary.in_party > 0,
-        in_game=active_app and active_app.is_game,
+        in_game=active_app is not None and active_app.is_game,
         in_multiplayer=person.multiplayer_summary.in_multiplayer_session,
         gamer_score=person.gamer_score,
         gold_tenure=person.detail.tenure,

@@ -1,9 +1,9 @@
 """Tests for the WiZ Platform integration."""
 
+from collections.abc import Callable
 from contextlib import contextmanager
 from copy import deepcopy
 import json
-from typing import Callable
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from pywizlight import SCENES, BulbType, PilotParser, wizlight
@@ -12,7 +12,7 @@ from pywizlight.discovery import DiscoveredBulb
 
 from homeassistant.components.wiz.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_NAME
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
@@ -150,6 +150,17 @@ FAKE_SOCKET = BulbType(
     white_channels=2,
     white_to_color_ratio=80,
 )
+FAKE_SOCKET_WITH_POWER_MONITORING = BulbType(
+    bulb_type=BulbClass.SOCKET,
+    name="ESP25_SOCKET_01",
+    features=Features(
+        color=False, color_tmp=False, effect=False, brightness=False, dual_head=False
+    ),
+    kelvin_range=KelvinRange(2700, 6500),
+    fw_version="1.26.2",
+    white_channels=2,
+    white_to_color_ratio=80,
+)
 FAKE_OLD_FIRMWARE_DIMMABLE_BULB = BulbType(
     bulb_type=BulbClass.DW,
     name=None,
@@ -163,9 +174,7 @@ FAKE_OLD_FIRMWARE_DIMMABLE_BULB = BulbType(
 )
 
 
-async def setup_integration(
-    hass: HomeAssistantType,
-) -> MockConfigEntry:
+async def setup_integration(hass: HomeAssistant) -> MockConfigEntry:
     """Mock ConfigEntry in Home Assistant."""
 
     entry = MockConfigEntry(
@@ -197,7 +206,9 @@ def _mocked_wizlight(device, extended_white_range, bulb_type) -> wizlight:
     )
     bulb.getMac = AsyncMock(return_value=FAKE_MAC)
     bulb.turn_on = AsyncMock()
+    bulb.get_power = AsyncMock(return_value=None)
     bulb.turn_off = AsyncMock()
+    bulb.power_monitoring = False
     bulb.updateState = AsyncMock(return_value=FAKE_STATE)
     bulb.getSupportedScenes = AsyncMock(return_value=list(SCENES.values()))
     bulb.start_push = AsyncMock(side_effect=_save_setup_callback)

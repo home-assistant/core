@@ -8,6 +8,7 @@ from homeassistant.const import (
     STATE_ON,
     STATE_PAUSED,
     STATE_PLAYING,
+    STATE_STANDBY,
 )
 
 
@@ -79,9 +80,13 @@ class ExtendedMediaPlayer(mp.MediaPlayerEntity):
         """Turn off state."""
         self._state = STATE_OFF
 
+    def standby(self):
+        """Put device in standby."""
+        self._state = STATE_STANDBY
+
     def toggle(self):
         """Toggle the power on the media player."""
-        if self._state in [STATE_OFF, STATE_IDLE]:
+        if self._state in [STATE_OFF, STATE_IDLE, STATE_STANDBY]:
             self._state = STATE_ON
         else:
             self._state = STATE_OFF
@@ -138,6 +143,10 @@ class SimpleMediaPlayer(mp.MediaPlayerEntity):
         """Turn off state."""
         self._state = STATE_OFF
 
+    def standby(self):
+        """Put device in standby."""
+        self._state = STATE_STANDBY
+
 
 @pytest.fixture(params=[ExtendedMediaPlayer, SimpleMediaPlayer])
 def player(hass, request):
@@ -145,7 +154,7 @@ def player(hass, request):
     return request.param(hass)
 
 
-async def test_volume_up(player):
+async def test_volume_up(player) -> None:
     """Test the volume_up and set volume methods."""
     assert player.volume_level == 0
     await player.async_set_volume_level(0.5)
@@ -154,7 +163,7 @@ async def test_volume_up(player):
     assert player.volume_level == 0.6
 
 
-async def test_volume_down(player):
+async def test_volume_down(player) -> None:
     """Test the volume_down and set volume methods."""
     assert player.volume_level == 0
     await player.async_set_volume_level(0.5)
@@ -163,7 +172,7 @@ async def test_volume_down(player):
     assert player.volume_level == 0.4
 
 
-async def test_media_play_pause(player):
+async def test_media_play_pause(player) -> None:
     """Test the media_play_pause method."""
     assert player.state == STATE_OFF
     await player.async_media_play_pause()
@@ -172,7 +181,7 @@ async def test_media_play_pause(player):
     assert player.state == STATE_PAUSED
 
 
-async def test_turn_on_off(player):
+async def test_turn_on_off(player) -> None:
     """Test the turn on and turn off methods."""
     assert player.state == STATE_OFF
     await player.async_turn_on()
@@ -181,10 +190,14 @@ async def test_turn_on_off(player):
     assert player.state == STATE_OFF
 
 
-async def test_toggle(player):
+async def test_toggle(player) -> None:
     """Test the toggle method."""
     assert player.state == STATE_OFF
     await player.async_toggle()
     assert player.state == STATE_ON
     await player.async_toggle()
     assert player.state == STATE_OFF
+    player.standby()
+    assert player.state == STATE_STANDBY
+    await player.async_toggle()
+    assert player.state == STATE_ON

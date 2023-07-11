@@ -1,6 +1,7 @@
 """Config flow for VLC media player Telnet integration."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 import logging
 from typing import Any
 
@@ -104,7 +105,7 @@ class VLCTelnetConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=user_form_schema(user_input), errors=errors
         )
 
-    async def async_step_reauth(self, data: dict[str, Any]) -> FlowResult:
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Handle reauth flow."""
         self.entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
         assert self.entry
@@ -179,10 +180,8 @@ class VLCTelnetConfigFlow(ConfigFlow, domain=DOMAIN):
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected exception")
             return self.async_abort(reason="unknown")
-        else:
-            return self.async_create_entry(
-                title=info["title"], data=self.hassio_discovery
-            )
+
+        return self.async_create_entry(title=info["title"], data=self.hassio_discovery)
 
 
 class CannotConnect(exceptions.HomeAssistantError):

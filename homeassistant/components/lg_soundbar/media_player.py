@@ -6,27 +6,36 @@ import temescal
 from homeassistant.components.media_player import (
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
+    MediaPlayerState,
 )
-from homeassistant.const import STATE_ON
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 
-def setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up the LG platform."""
-    if discovery_info is not None:
-        add_entities([LGDevice(discovery_info)])
+    """Set up media_player from a config entry created in the integrations UI."""
+    async_add_entities(
+        [
+            LGDevice(
+                config_entry.data[CONF_HOST],
+                config_entry.data[CONF_PORT],
+                config_entry.unique_id or config_entry.entry_id,
+            )
+        ]
+    )
 
 
 class LGDevice(MediaPlayerEntity):
     """Representation of an LG soundbar device."""
 
+    _attr_should_poll = False
+    _attr_state = MediaPlayerState.ON
     _attr_supported_features = (
         MediaPlayerEntityFeature.VOLUME_SET
         | MediaPlayerEntityFeature.VOLUME_MUTE
@@ -34,13 +43,12 @@ class LGDevice(MediaPlayerEntity):
         | MediaPlayerEntityFeature.SELECT_SOUND_MODE
     )
 
-    def __init__(self, discovery_info):
+    def __init__(self, host, port, unique_id):
         """Initialize the LG speakers."""
-        self._host = discovery_info["host"]
-        self._port = discovery_info["port"]
-        self._hostname = discovery_info["hostname"]
+        self._host = host
+        self._port = port
+        self._attr_unique_id = unique_id
 
-        self._name = self._hostname.split(".")[0]
         self._volume = 0
         self._volume_min = 0
         self._volume_max = 0
@@ -59,20 +67,22 @@ class LGDevice(MediaPlayerEntity):
         self._treble = 0
         self._device = None
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register the callback after hass is ready for it."""
         await self.hass.async_add_executor_job(self._connect)
 
-    def _connect(self):
+    def _connect(self) -> None:
         """Perform the actual devices setup."""
         self._device = temescal.temescal(
             self._host, port=self._port, callback=self.handle_event
         )
+        self._device.get_product_info()
+        self._device.get_mac_info()
         self.update()
 
     def handle_event(self, response):
         """Handle responses from the speakers."""
-        data = response["data"]
+        data = response["data"] if "data" in response else {}
         if response["msg"] == "EQ_VIEW_INFO":
             if "i_bass" in data:
                 self._bass = data["i_bass"]
@@ -85,8 +95,6 @@ class LGDevice(MediaPlayerEntity):
         elif response["msg"] == "SPK_LIST_VIEW_INFO":
             if "i_vol" in data:
                 self._volume = data["i_vol"]
-            if "s_user_name" in data:
-                self._name = data["s_user_name"]
             if "i_vol_min" in data:
                 self._volume_min = data["i_vol_min"]
             if "i_vol_max" in data:
@@ -116,26 +124,16 @@ class LGDevice(MediaPlayerEntity):
             if "i_curr_eq" in data:
                 self._equaliser = data["i_curr_eq"]
             if "s_user_name" in data:
-                self._name = data["s_user_name"]
+                self._attr_name = data["s_user_name"]
+
         self.schedule_update_ha_state()
 
-    def update(self):
+    def update(self) -> None:
         """Trigger updates from the device."""
         self._device.get_eq()
         self._device.get_info()
         self._device.get_func()
         self._device.get_settings()
-        self._device.get_product_info()
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
-
-    @property
-    def name(self):
-        """Return the name of the device."""
-        return self._name
 
     @property
     def volume_level(self):
@@ -148,11 +146,6 @@ class LGDevice(MediaPlayerEntity):
     def is_volume_muted(self):
         """Boolean if volume is currently muted."""
         return self._mute
-
-    @property
-    def state(self):
-        """Return the state of the device."""
-        return STATE_ON
 
     @property
     def sound_mode(self):
@@ -186,19 +179,19 @@ class LGDevice(MediaPlayerEntity):
                 sources.append(temescal.functions[function])
         return sorted(sources)
 
-    def set_volume_level(self, volume):
+    def set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
         volume = volume * self._volume_max
         self._device.set_volume(int(volume))
 
-    def mute_volume(self, mute):
+    def mute_volume(self, mute: bool) -> None:
         """Mute (true) or unmute (false) media player."""
         self._device.set_mute(mute)
 
-    def select_source(self, source):
+    def select_source(self, source: str) -> None:
         """Select input source."""
         self._device.set_func(temescal.functions.index(source))
 
-    def select_sound_mode(self, sound_mode):
+    def select_sound_mode(self, sound_mode: str) -> None:
         """Set Sound Mode for Receiver.."""
         self._device.set_eq(temescal.equalisers.index(sound_mode))

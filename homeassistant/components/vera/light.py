@@ -88,7 +88,7 @@ class VeraLight(VeraDevice[veraApi.VeraDimmer], LightEntity):
         self._state = True
         self.schedule_update_ha_state(True)
 
-    def turn_off(self, **kwargs: Any):
+    def turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
         self.vera_device.switch_off()
         self._state = False

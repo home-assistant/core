@@ -27,7 +27,6 @@ from .const import (
     ATTR_INPUT_SOURCE,
     ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_CONTENT_TYPE,
-    ATTR_MEDIA_ENQUEUE,
     ATTR_MEDIA_VOLUME_LEVEL,
     ATTR_MEDIA_VOLUME_MUTED,
     ATTR_SOUND_MODE,
@@ -37,8 +36,6 @@ from .const import (
     SERVICE_SELECT_SOURCE,
     MediaPlayerEntityFeature,
 )
-
-# mypy: allow-untyped-defs
 
 
 async def _async_reproduce_states(
@@ -52,7 +49,7 @@ async def _async_reproduce_states(
     cur_state = hass.states.get(state.entity_id)
     features = cur_state.attributes[ATTR_SUPPORTED_FEATURES] if cur_state else 0
 
-    async def call_service(service: str, keys: Iterable) -> None:
+    async def call_service(service: str, keys: Iterable[str]) -> None:
         """Call service with set of attributes given."""
         data = {"entity_id": state.entity_id}
         for key in keys:
@@ -118,7 +115,7 @@ async def _async_reproduce_states(
         if features & MediaPlayerEntityFeature.PLAY_MEDIA:
             await call_service(
                 SERVICE_PLAY_MEDIA,
-                [ATTR_MEDIA_CONTENT_TYPE, ATTR_MEDIA_CONTENT_ID, ATTR_MEDIA_ENQUEUE],
+                [ATTR_MEDIA_CONTENT_TYPE, ATTR_MEDIA_CONTENT_ID],
             )
         already_playing = True
 

@@ -2,10 +2,11 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, cast
+from typing import Any
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.singleton import singleton
+from homeassistant.helpers.storage import Store
 
 from .const import (
     ATTR_CONFIGURED_ADAPTERS,
@@ -21,7 +22,6 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @singleton(DATA_NETWORK)
-@callback
 async def async_get_network(hass: HomeAssistant) -> Network:
     """Get network singleton."""
     network = Network(hass)
@@ -37,10 +37,10 @@ class Network:
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the Network class."""
-        self._store = hass.helpers.storage.Store(
-            STORAGE_VERSION, STORAGE_KEY, atomic_writes=True
+        self._store = Store[dict[str, list[str]]](
+            hass, STORAGE_VERSION, STORAGE_KEY, atomic_writes=True
         )
-        self._data: dict[str, Any] = {}
+        self._data: dict[str, list[str]] = {}
         self.adapters: list[Adapter] = []
 
     @property
@@ -68,7 +68,7 @@ class Network:
     async def async_load(self) -> None:
         """Load config."""
         if stored := await self._store.async_load():
-            self._data = cast(dict, stored)
+            self._data = stored
 
     async def _async_save(self) -> None:
         """Save preferences."""

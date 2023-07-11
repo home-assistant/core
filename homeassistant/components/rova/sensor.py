@@ -109,7 +109,7 @@ class RovaSensor(SensorEntity):
 
     def __init__(
         self, platform_name, description: SensorEntityDescription, data_service
-    ):
+    ) -> None:
         """Initialize the sensor."""
         self.entity_description = description
         self.data_service = data_service
@@ -117,7 +117,7 @@ class RovaSensor(SensorEntity):
         self._attr_name = f"{platform_name}_{description.name}"
         self._attr_device_class = SensorDeviceClass.TIMESTAMP
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest data from the sensor and update the state."""
         self.data_service.update()
         pickup_date = self.data_service.data.get(self.entity_description.key)

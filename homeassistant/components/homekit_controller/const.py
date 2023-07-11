@@ -1,6 +1,11 @@
 """Constants for the homekit_controller component."""
-from typing import Final
+import asyncio
 
+from aiohomekit.exceptions import (
+    AccessoryDisconnectedError,
+    AccessoryNotFoundError,
+    EncryptionError,
+)
 from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.services import ServicesTypes
 
@@ -88,8 +93,23 @@ CHARACTERISTIC_PLATFORMS = {
     CharacteristicsTypes.DENSITY_SO2: "sensor",
     CharacteristicsTypes.DENSITY_VOC: "sensor",
     CharacteristicsTypes.IDENTIFY: "button",
+    CharacteristicsTypes.THREAD_NODE_CAPABILITIES: "sensor",
+    CharacteristicsTypes.THREAD_CONTROL_POINT: "button",
+    CharacteristicsTypes.MUTE: "switch",
+    CharacteristicsTypes.FILTER_LIFE_LEVEL: "sensor",
+    CharacteristicsTypes.VENDOR_AIRVERSA_SLEEP_MODE: "switch",
 }
 
+STARTUP_EXCEPTIONS = (
+    asyncio.TimeoutError,
+    AccessoryNotFoundError,
+    EncryptionError,
+    AccessoryDisconnectedError,
+)
 
-# Device classes
-DEVICE_CLASS_ECOBEE_MODE: Final = "homekit_controller__ecobee_mode"
+# 10 seconds was chosen because it is soon enough
+# for most state changes to happen but not too
+# long that the BLE connection is dropped. It
+# also happens to be the same value used by
+# the update coordinator.
+DEBOUNCE_COOLDOWN = 10  # seconds

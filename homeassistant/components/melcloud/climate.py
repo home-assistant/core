@@ -14,16 +14,16 @@ from pymelcloud.atw_device import (
 )
 import voluptuous as vol
 
-from homeassistant.components.climate import ClimateEntity
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
     DEFAULT_MAX_TEMP,
     DEFAULT_MIN_TEMP,
+    ClimateEntity,
     ClimateEntityFeature,
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
+from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -66,16 +66,19 @@ async def async_setup_entry(
 ) -> None:
     """Set up MelCloud device climate based on config_entry."""
     mel_devices = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities(
+    entities: list[AtaDeviceClimate | AtwDeviceZoneClimate] = [
+        AtaDeviceClimate(mel_device, mel_device.device)
+        for mel_device in mel_devices[DEVICE_TYPE_ATA]
+    ]
+    entities.extend(
         [
-            AtaDeviceClimate(mel_device, mel_device.device)
-            for mel_device in mel_devices[DEVICE_TYPE_ATA]
-        ]
-        + [
             AtwDeviceZoneClimate(mel_device, mel_device.device, zone)
             for mel_device in mel_devices[DEVICE_TYPE_ATW]
             for zone in mel_device.device.zones
-        ],
+        ]
+    )
+    async_add_entities(
+        entities,
         True,
     )
 
@@ -95,14 +98,14 @@ async def async_setup_entry(
 class MelCloudClimate(ClimateEntity):
     """Base climate device."""
 
-    _attr_temperature_unit = TEMP_CELSIUS
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
     def __init__(self, device: MelCloudDevice) -> None:
         """Initialize the climate."""
         self.api = device
         self._base_device = self.api.device
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Update state from MELCloud."""
         await self.api.async_update()
 
@@ -157,14 +160,16 @@ class AtaDeviceClimate(MelCloudClimate):
         return attr
 
     @property
-    def hvac_mode(self) -> HVACMode:
+    def hvac_mode(self) -> HVACMode | None:
         """Return hvac operation ie. heat, cool mode."""
         mode = self._device.operation_mode
         if not self._device.power or mode is None:
             return HVACMode.OFF
         return ATA_HVAC_MODE_LOOKUP.get(mode)
 
-    def _apply_set_hvac_mode(self, hvac_mode: str, set_dict: dict[str, Any]) -> None:
+    def _apply_set_hvac_mode(
+        self, hvac_mode: HVACMode, set_dict: dict[str, Any]
+    ) -> None:
         """Apply hvac mode changes to a dict used to call _device.set."""
         if hvac_mode == HVACMode.OFF:
             set_dict["power"] = False
@@ -180,7 +185,7 @@ class AtaDeviceClimate(MelCloudClimate):
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
-        set_dict = {}
+        set_dict: dict[str, Any] = {}
         self._apply_set_hvac_mode(hvac_mode, set_dict)
         await self._device.set(set_dict)
 
@@ -188,7 +193,9 @@ class AtaDeviceClimate(MelCloudClimate):
     def hvac_modes(self) -> list[HVACMode]:
         """Return the list of available hvac operation modes."""
         return [HVACMode.OFF] + [
-            ATA_HVAC_MODE_LOOKUP.get(mode) for mode in self._device.operation_modes
+            ATA_HVAC_MODE_LOOKUP[mode]
+            for mode in self._device.operation_modes
+            if mode in ATA_HVAC_MODE_LOOKUP
         ]
 
     @property
@@ -201,9 +208,9 @@ class AtaDeviceClimate(MelCloudClimate):
         """Return the temperature we try to reach."""
         return self._device.target_temperature
 
-    async def async_set_temperature(self, **kwargs) -> None:
+    async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
-        set_dict = {}
+        set_dict: dict[str, Any] = {}
         if ATTR_HVAC_MODE in kwargs:
             self._apply_set_hvac_mode(
                 kwargs.get(ATTR_HVAC_MODE, self.hvac_mode), set_dict
@@ -233,7 +240,8 @@ class AtaDeviceClimate(MelCloudClimate):
         """Set horizontal vane position."""
         if position not in self._device.vane_horizontal_positions:
             raise ValueError(
-                f"Invalid horizontal vane position {position}. Valid positions: [{self._device.vane_horizontal_positions}]."
+                f"Invalid horizontal vane position {position}. Valid positions:"
+                f" [{self._device.vane_horizontal_positions}]."
             )
         await self._device.set({ata.PROPERTY_VANE_HORIZONTAL: position})
 
@@ -241,7 +249,8 @@ class AtaDeviceClimate(MelCloudClimate):
         """Set vertical vane position."""
         if position not in self._device.vane_vertical_positions:
             raise ValueError(
-                f"Invalid vertical vane position {position}. Valid positions: [{self._device.vane_vertical_positions}]."
+                f"Invalid vertical vane position {position}. Valid positions:"
+                f" [{self._device.vane_vertical_positions}]."
             )
         await self._device.set({ata.PROPERTY_VANE_VERTICAL: position})
 
@@ -250,12 +259,12 @@ class AtaDeviceClimate(MelCloudClimate):
         """Return vertical vane position or mode."""
         return self._device.vane_vertical
 
-    async def async_set_swing_mode(self, swing_mode) -> None:
+    async def async_set_swing_mode(self, swing_mode: str) -> None:
         """Set vertical vane position or mode."""
         await self.async_set_vane_vertical(swing_mode)
 
     @property
-    def swing_modes(self) -> str | None:
+    def swing_modes(self) -> list[str] | None:
         """Return a list of available vertical vane positions and modes."""
         return self._device.vane_vertical_positions
 
@@ -355,7 +364,7 @@ class AtwDeviceZoneClimate(MelCloudClimate):
         """Return the temperature we try to reach."""
         return self._zone.target_temperature
 
-    async def async_set_temperature(self, **kwargs) -> None:
+    async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         await self._zone.set_target_temperature(
             kwargs.get("temperature", self.target_temperature)

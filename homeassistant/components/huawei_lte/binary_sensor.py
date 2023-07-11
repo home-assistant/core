@@ -33,7 +33,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up from config entry."""
-    router = hass.data[DOMAIN].routers[config_entry.unique_id]
+    router = hass.data[DOMAIN].routers[config_entry.entry_id]
     entities: list[Entity] = []
 
     if router.data.get(KEY_MONITORING_STATUS):
@@ -105,14 +105,12 @@ CONNECTION_STATE_ATTRIBUTES = {
 class HuaweiLteMobileConnectionBinarySensor(HuaweiLteBaseBinarySensor):
     """Huawei LTE mobile connection binary sensor."""
 
+    _attr_name: str = field(default="Mobile connection", init=False)
+
     def __post_init__(self) -> None:
         """Initialize identifiers."""
         self.key = KEY_MONITORING_STATUS
         self.item = "ConnectionStatus"
-
-    @property
-    def _entity_name(self) -> str:
-        return "Mobile connection"
 
     @property
     def is_on(self) -> bool:
@@ -176,56 +174,48 @@ class HuaweiLteBaseWifiStatusBinarySensor(HuaweiLteBaseBinarySensor):
 class HuaweiLteWifiStatusBinarySensor(HuaweiLteBaseWifiStatusBinarySensor):
     """Huawei LTE WiFi status binary sensor."""
 
+    _attr_name: str = field(default="WiFi status", init=False)
+
     def __post_init__(self) -> None:
         """Initialize identifiers."""
         self.key = KEY_MONITORING_STATUS
         self.item = "WifiStatus"
-
-    @property
-    def _entity_name(self) -> str:
-        return "WiFi status"
 
 
 @dataclass
 class HuaweiLteWifi24ghzStatusBinarySensor(HuaweiLteBaseWifiStatusBinarySensor):
     """Huawei LTE 2.4GHz WiFi status binary sensor."""
 
+    _attr_name: str = field(default="2.4GHz WiFi status", init=False)
+
     def __post_init__(self) -> None:
         """Initialize identifiers."""
         self.key = KEY_WLAN_WIFI_FEATURE_SWITCH
         self.item = "wifi24g_switch_enable"
-
-    @property
-    def _entity_name(self) -> str:
-        return "2.4GHz WiFi status"
 
 
 @dataclass
 class HuaweiLteWifi5ghzStatusBinarySensor(HuaweiLteBaseWifiStatusBinarySensor):
     """Huawei LTE 5GHz WiFi status binary sensor."""
 
+    _attr_name: str = field(default="5GHz WiFi status", init=False)
+
     def __post_init__(self) -> None:
         """Initialize identifiers."""
         self.key = KEY_WLAN_WIFI_FEATURE_SWITCH
         self.item = "wifi5g_enabled"
-
-    @property
-    def _entity_name(self) -> str:
-        return "5GHz WiFi status"
 
 
 @dataclass
 class HuaweiLteSmsStorageFullBinarySensor(HuaweiLteBaseBinarySensor):
     """Huawei LTE SMS storage full binary sensor."""
 
+    _attr_name: str = field(default="SMS storage full", init=False)
+
     def __post_init__(self) -> None:
         """Initialize identifiers."""
         self.key = KEY_MONITORING_CHECK_NOTIFICATIONS
         self.item = "SmsStorageFull"
-
-    @property
-    def _entity_name(self) -> str:
-        return "SMS storage full"
 
     @property
     def is_on(self) -> bool:

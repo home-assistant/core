@@ -1,16 +1,18 @@
 """The dhcp integration."""
 from __future__ import annotations
 
-from abc import abstractmethod
+from abc import ABC, abstractmethod
 import asyncio
 from collections.abc import Callable, Iterable
 import contextlib
 from dataclasses import dataclass
 from datetime import timedelta
-import fnmatch
+from fnmatch import translate
+from functools import lru_cache
 from ipaddress import ip_address as make_ip_address
 import logging
 import os
+import re
 import threading
 from typing import TYPE_CHECKING, Any, Final, cast
 
@@ -24,14 +26,14 @@ from scapy.config import conf
 from scapy.error import Scapy_Exception
 
 from homeassistant import config_entries
-from homeassistant.components.device_tracker.const import (
+from homeassistant.components.device_tracker import (
     ATTR_HOST_NAME,
     ATTR_IP,
     ATTR_MAC,
     ATTR_SOURCE_TYPE,
     CONNECTED_DEVICE_REGISTERED,
     DOMAIN as DEVICE_TRACKER_DOMAIN,
-    SOURCE_TYPE_ROUTER,
+    SourceType,
 )
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_STARTED,
@@ -40,7 +42,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event, HomeAssistant, State, callback
 from homeassistant.data_entry_flow import BaseServiceInfo
-from homeassistant.helpers import discovery_flow
+from homeassistant.helpers import config_validation as cv, discovery_flow
 from homeassistant.helpers.device_registry import (
     CONNECTION_NETWORK_MAC,
     DeviceRegistry,
@@ -57,9 +59,13 @@ from homeassistant.loader import DHCPMatcher, async_get_dhcp
 from homeassistant.util.async_ import run_callback_threadsafe
 from homeassistant.util.network import is_invalid, is_link_local, is_loopback
 
+from .const import DOMAIN
+
 if TYPE_CHECKING:
     from scapy.packet import Packet
     from scapy.sendrecv import AsyncSniffer
+
+CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 FILTER = "udp and (port 67 or 68)"
 REQUESTED_ADDR = "requested_addr"
@@ -75,7 +81,7 @@ SCAN_INTERVAL = timedelta(minutes=60)
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
+@dataclass(slots=True)
 class DhcpServiceInfo(BaseServiceInfo):
     """Prepared info from dhcp entries."""
 
@@ -113,7 +119,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-class WatcherBase:
+class WatcherBase(ABC):
     """Base class for dhcp and device tracker watching."""
 
     def __init__(
@@ -204,12 +210,14 @@ class WatcherBase:
 
             if (
                 matcher_mac := matcher.get(MAC_ADDRESS)
-            ) is not None and not fnmatch.fnmatch(uppercase_mac, matcher_mac):
+            ) is not None and not _memorized_fnmatch(uppercase_mac, matcher_mac):
                 continue
 
             if (
                 matcher_hostname := matcher.get(HOSTNAME)
-            ) is not None and not fnmatch.fnmatch(lowercase_hostname, matcher_hostname):
+            ) is not None and not _memorized_fnmatch(
+                lowercase_hostname, matcher_hostname
+            ):
                 continue
 
             _LOGGER.debug("Matched %s against %s", data, matcher)
@@ -256,7 +264,10 @@ class NetworkWatcher(WatcherBase):
         """Start scanning for new devices on the network."""
         self._discover_hosts = DiscoverHosts()
         self._unsub = async_track_time_interval(
-            self.hass, self.async_start_discover, SCAN_INTERVAL
+            self.hass,
+            self.async_start_discover,
+            SCAN_INTERVAL,
+            name="DHCP network watcher",
         )
         self.async_start_discover()
 
@@ -318,7 +329,7 @@ class DeviceTrackerWatcher(WatcherBase):
 
         attributes = state.attributes
 
-        if attributes.get(ATTR_SOURCE_TYPE) != SOURCE_TYPE_ROUTER:
+        if attributes.get(ATTR_SOURCE_TYPE) != SourceType.ROUTER:
             return
 
         ip_address = attributes.get(ATTR_IP)
@@ -514,3 +525,24 @@ def _verify_working_pcap(cap_filter: str) -> None:
     )
 
     compile_filter(cap_filter)
+
+
+@lru_cache(maxsize=4096, typed=True)
+def _compile_fnmatch(pattern: str) -> re.Pattern:
+    """Compile a fnmatch pattern."""
+    return re.compile(translate(pattern))
+
+
+@lru_cache(maxsize=1024, typed=True)
+def _memorized_fnmatch(name: str, pattern: str) -> bool:
+    """Memorized version of fnmatch that has a larger lru_cache.
+
+    The default version of fnmatch only has a lru_cache of 256 entries.
+    With many devices we quickly reach that limit and end up compiling
+    the same pattern over and over again.
+
+    DHCP has its own memorized fnmatch with its own lru_cache
+    since the data is going to be relatively the same
+    since the devices will not change frequently
+    """
+    return bool(_compile_fnmatch(pattern).match(name))

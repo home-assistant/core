@@ -63,7 +63,105 @@
         },
         "mandatorySupportedCCs": [32, 38, 133, 89, 114, 115, 134, 94],
         "mandatoryControlledCCs": []
-      }
+      },
+      "commandClasses": [
+        {
+          "id": 38,
+          "name": "Multilevel Switch",
+          "version": 4,
+          "isSecure": false
+        },
+        {
+          "id": 43,
+          "name": "Scene Activation",
+          "version": 1,
+          "isSecure": false
+        },
+        {
+          "id": 44,
+          "name": "Scene Actuator Configuration",
+          "version": 1,
+          "isSecure": false
+        },
+        {
+          "id": 85,
+          "name": "Transport Service",
+          "version": 2,
+          "isSecure": false
+        },
+        {
+          "id": 89,
+          "name": "Association Group Information",
+          "version": 1,
+          "isSecure": false
+        },
+        {
+          "id": 90,
+          "name": "Device Reset Locally",
+          "version": 1,
+          "isSecure": false
+        },
+        {
+          "id": 91,
+          "name": "Central Scene",
+          "version": 3,
+          "isSecure": false
+        },
+        {
+          "id": 94,
+          "name": "Z-Wave Plus Info",
+          "version": 2,
+          "isSecure": false
+        },
+        {
+          "id": 108,
+          "name": "Supervision",
+          "version": 1,
+          "isSecure": false
+        },
+        {
+          "id": 112,
+          "name": "Configuration",
+          "version": 3,
+          "isSecure": false
+        },
+        {
+          "id": 114,
+          "name": "Manufacturer Specific",
+          "version": 2,
+          "isSecure": false
+        },
+        {
+          "id": 115,
+          "name": "Powerlevel",
+          "version": 1,
+          "isSecure": false
+        },
+        {
+          "id": 122,
+          "name": "Firmware Update Meta Data",
+          "version": 4,
+          "isSecure": false
+        },
+        {
+          "id": 133,
+          "name": "Association",
+          "version": 2,
+          "isSecure": false
+        },
+        {
+          "id": 134,
+          "name": "Version",
+          "version": 3,
+          "isSecure": false
+        },
+        {
+          "id": 159,
+          "name": "Security 2",
+          "version": 1,
+          "isSecure": true
+        }
+      ]
     }
   ],
   "values": [
@@ -9859,104 +9957,6 @@
     "mandatorySupportedCCs": [32, 38, 133, 89, 114, 115, 134, 94],
     "mandatoryControlledCCs": []
   },
-  "commandClasses": [
-    {
-      "id": 38,
-      "name": "Multilevel Switch",
-      "version": 4,
-      "isSecure": false
-    },
-    {
-      "id": 43,
-      "name": "Scene Activation",
-      "version": 1,
-      "isSecure": false
-    },
-    {
-      "id": 44,
-      "name": "Scene Actuator Configuration",
-      "version": 1,
-      "isSecure": false
-    },
-    {
-      "id": 85,
-      "name": "Transport Service",
-      "version": 2,
-      "isSecure": false
-    },
-    {
-      "id": 89,
-      "name": "Association Group Information",
-      "version": 1,
-      "isSecure": false
-    },
-    {
-      "id": 90,
-      "name": "Device Reset Locally",
-      "version": 1,
-      "isSecure": false
-    },
-    {
-      "id": 91,
-      "name": "Central Scene",
-      "version": 3,
-      "isSecure": false
-    },
-    {
-      "id": 94,
-      "name": "Z-Wave Plus Info",
-      "version": 2,
-      "isSecure": false
-    },
-    {
-      "id": 108,
-      "name": "Supervision",
-      "version": 1,
-      "isSecure": false
-    },
-    {
-      "id": 112,
-      "name": "Configuration",
-      "version": 3,
-      "isSecure": false
-    },
-    {
-      "id": 114,
-      "name": "Manufacturer Specific",
-      "version": 2,
-      "isSecure": false
-    },
-    {
-      "id": 115,
-      "name": "Powerlevel",
-      "version": 1,
-      "isSecure": false
-    },
-    {
-      "id": 122,
-      "name": "Firmware Update Meta Data",
-      "version": 4,
-      "isSecure": false
-    },
-    {
-      "id": 133,
-      "name": "Association",
-      "version": 2,
-      "isSecure": false
-    },
-    {
-      "id": 134,
-      "name": "Version",
-      "version": 3,
-      "isSecure": false
-    },
-    {
-      "id": 159,
-      "name": "Security 2",
-      "version": 1,
-      "isSecure": true
-    }
-  ],
   "interviewStage": "Complete",
   "deviceDatabaseUrl": "https://devices.zwave-js.io/?jumpTo=0x000c:0x0203:0x0001:50.5",
   "statistics": {

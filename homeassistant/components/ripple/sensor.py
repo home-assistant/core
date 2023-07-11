@@ -7,13 +7,11 @@ from pyripple import get_balance
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_ADDRESS, CONF_NAME
+from homeassistant.const import CONF_ADDRESS, CONF_NAME
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-
-ATTRIBUTION = "Data provided by ripple.com"
 
 DEFAULT_NAME = "Ripple Balance"
 
@@ -43,6 +41,8 @@ def setup_platform(
 class RippleSensor(SensorEntity):
     """Representation of an Ripple.com sensor."""
 
+    _attr_attribution = "Data provided by ripple.com"
+
     def __init__(self, name, address):
         """Initialize the sensor."""
         self._name = name
@@ -65,12 +65,7 @@ class RippleSensor(SensorEntity):
         """Return the unit of measurement this sensor expresses itself in."""
         return self._unit_of_measurement
 
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes of the sensor."""
-        return {ATTR_ATTRIBUTION: ATTRIBUTION}
-
-    def update(self):
+    def update(self) -> None:
         """Get the latest state of the sensor."""
         if (balance := get_balance(self.address)) is not None:
             self._state = balance

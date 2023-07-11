@@ -10,7 +10,8 @@ from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from tests.components.atag import UID, init_integration
+from . import UID, init_integration
+
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 WATER_HEATER_ID = f"{Platform.WATER_HEATER}.{DOMAIN}"

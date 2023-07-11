@@ -19,7 +19,7 @@ from homeassistant.components.amberelectric.coordinator import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
-from tests.components.amberelectric.helpers import (
+from .helpers import (
     CONTROLLED_LOAD_CHANNEL,
     FEED_IN_CHANNEL,
     GENERAL_AND_CONTROLLED_SITE_ID,

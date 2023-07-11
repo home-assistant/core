@@ -1,0 +1,19 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "description": "To identify the desired region, the warncell ID / name is required.",
+        "data": {
+          "region_identifier": "Warncell ID or name"
+        }
+      }
+    },
+    "error": {
+      "invalid_identifier": "The specified region identifier is invalid."
+    },
+    "abort": {
+      "already_configured": "Warncell ID / name is already configured.",
+      "invalid_identifier": "[%key:component::dwd_weather_warnings::config::error::invalid_identifier%]"
+    }
+  }
+}

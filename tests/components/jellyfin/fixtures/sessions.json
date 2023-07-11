@@ -1,0 +1,4551 @@
+[
+  {
+    "PlayState": {
+      "PositionTicks": 100000000,
+      "CanSeek": true,
+      "IsPaused": true,
+      "IsMuted": true,
+      "VolumeLevel": 0,
+      "AudioStreamIndex": 0,
+      "SubtitleStreamIndex": 0,
+      "MediaSourceId": "string",
+      "PlayMethod": "Transcode",
+      "RepeatMode": "RepeatNone",
+      "LiveStreamId": "string"
+    },
+    "AdditionalUsers": [
+      {
+        "UserId": "08ba1929-681e-4b24-929b-9245852f65c0",
+        "UserName": "string"
+      }
+    ],
+    "Capabilities": {
+      "PlayableMediaTypes": ["Video"],
+      "SupportedCommands": ["VolumeSet", "Mute"],
+      "SupportsMediaControl": true,
+      "SupportsContentUploading": true,
+      "MessageCallbackUrl": "string",
+      "SupportsPersistentIdentifier": true,
+      "SupportsSync": true,
+      "DeviceProfile": {
+        "Name": "string",
+        "Id": "string",
+        "Identification": {
+          "FriendlyName": "string",
+          "ModelNumber": "string",
+          "SerialNumber": "string",
+          "ModelName": "string",
+          "ModelDescription": "string",
+          "ModelUrl": "string",
+          "Manufacturer": "string",
+          "ManufacturerUrl": "string",
+          "Headers": [
+            {
+              "Name": "string",
+              "Value": "string",
+              "Match": "Equals"
+            }
+          ]
+        },
+        "FriendlyName": "string",
+        "Manufacturer": "string",
+        "ManufacturerUrl": "string",
+        "ModelName": "string",
+        "ModelDescription": "string",
+        "ModelNumber": "string",
+        "ModelUrl": "string",
+        "SerialNumber": "string",
+        "EnableAlbumArtInDidl": false,
+        "EnableSingleAlbumArtLimit": false,
+        "EnableSingleSubtitleLimit": false,
+        "SupportedMediaTypes": "string",
+        "UserId": "string",
+        "AlbumArtPn": "string",
+        "MaxAlbumArtWidth": 0,
+        "MaxAlbumArtHeight": 0,
+        "MaxIconWidth": 0,
+        "MaxIconHeight": 0,
+        "MaxStreamingBitrate": 0,
+        "MaxStaticBitrate": 0,
+        "MusicStreamingTranscodingBitrate": 0,
+        "MaxStaticMusicBitrate": 0,
+        "SonyAggregationFlags": "string",
+        "ProtocolInfo": "string",
+        "TimelineOffsetSeconds": 0,
+        "RequiresPlainVideoItems": false,
+        "RequiresPlainFolders": false,
+        "EnableMSMediaReceiverRegistrar": false,
+        "IgnoreTranscodeByteRangeRequests": false,
+        "XmlRootAttributes": [
+          {
+            "Name": "string",
+            "Value": "string"
+          }
+        ],
+        "DirectPlayProfiles": [
+          {
+            "Container": "string",
+            "AudioCodec": "string",
+            "VideoCodec": "string",
+            "Type": "Audio"
+          }
+        ],
+        "TranscodingProfiles": [
+          {
+            "Container": "string",
+            "Type": "Audio",
+            "VideoCodec": "string",
+            "AudioCodec": "string",
+            "Protocol": "string",
+            "EstimateContentLength": false,
+            "EnableMpegtsM2TsMode": false,
+            "TranscodeSeekInfo": "Auto",
+            "CopyTimestamps": false,
+            "Context": "Streaming",
+            "EnableSubtitlesInManifest": false,
+            "MaxAudioChannels": "string",
+            "MinSegments": 0,
+            "SegmentLength": 0,
+            "BreakOnNonKeyFrames": false,
+            "Conditions": [
+              {
+                "Condition": "Equals",
+                "Property": "AudioChannels",
+                "Value": "string",
+                "IsRequired": true
+              }
+            ]
+          }
+        ],
+        "ContainerProfiles": [
+          {
+            "Type": "Audio",
+            "Conditions": [
+              {
+                "Condition": "Equals",
+                "Property": "AudioChannels",
+                "Value": "string",
+                "IsRequired": true
+              }
+            ],
+            "Container": "string"
+          }
+        ],
+        "CodecProfiles": [
+          {
+            "Type": "Video",
+            "Conditions": [
+              {
+                "Condition": "Equals",
+                "Property": "AudioChannels",
+                "Value": "string",
+                "IsRequired": true
+              }
+            ],
+            "ApplyConditions": [
+              {
+                "Condition": "Equals",
+                "Property": "AudioChannels",
+                "Value": "string",
+                "IsRequired": true
+              }
+            ],
+            "Codec": "string",
+            "Container": "string"
+          }
+        ],
+        "ResponseProfiles": [
+          {
+            "Container": "string",
+            "AudioCodec": "string",
+            "VideoCodec": "string",
+            "Type": "Audio",
+            "OrgPn": "string",
+            "MimeType": "string",
+            "Conditions": [
+              {
+                "Condition": "Equals",
+                "Property": "AudioChannels",
+                "Value": "string",
+                "IsRequired": true
+              }
+            ]
+          }
+        ],
+        "SubtitleProfiles": [
+          {
+            "Format": "string",
+            "Method": "Encode",
+            "DidlMode": "string",
+            "Language": "string",
+            "Container": "string"
+          }
+        ]
+      },
+      "AppStoreUrl": "string",
+      "IconUrl": "string"
+    },
+    "RemoteEndPoint": "string",
+    "PlayableMediaTypes": ["Video"],
+    "Id": "SESSION-UUID",
+    "UserId": "08ba1929-681e-4b24-929b-9245852f65c0",
+    "UserName": "string",
+    "Client": "Jellyfin for Developers",
+    "LastActivityDate": "2019-08-24T14:15:22Z",
+    "LastPlaybackCheckIn": "2019-08-24T14:15:22Z",
+    "DeviceName": "JELLYFIN-DEVICE",
+    "DeviceType": "string",
+    "NowPlayingItem": {
+      "Name": "EPISODE",
+      "OriginalTitle": "string",
+      "ServerId": "SERVER-UUID",
+      "Id": "EPISODE-UUID",
+      "Etag": "string",
+      "SourceType": "string",
+      "PlaylistItemId": "string",
+      "DateCreated": "2019-08-24T14:15:22Z",
+      "DateLastMediaAdded": "2019-08-24T14:15:22Z",
+      "ExtraType": "string",
+      "AirsBeforeSeasonNumber": 0,
+      "AirsAfterSeasonNumber": 0,
+      "AirsBeforeEpisodeNumber": 0,
+      "CanDelete": true,
+      "CanDownload": true,
+      "HasSubtitles": true,
+      "PreferredMetadataLanguage": "string",
+      "PreferredMetadataCountryCode": "string",
+      "SupportsSync": true,
+      "Container": "string",
+      "SortName": "string",
+      "ForcedSortName": "string",
+      "Video3DFormat": "HalfSideBySide",
+      "PremiereDate": "2019-08-24T14:15:22Z",
+      "ExternalUrls": [
+        {
+          "Name": "string",
+          "Url": "string"
+        }
+      ],
+      "MediaSources": [
+        {
+          "Protocol": "File",
+          "Id": "string",
+          "Path": "string",
+          "EncoderPath": "string",
+          "EncoderProtocol": "File",
+          "Type": "Default",
+          "Container": "string",
+          "Size": 0,
+          "Name": "string",
+          "IsRemote": true,
+          "ETag": "string",
+          "RunTimeTicks": 0,
+          "ReadAtNativeFramerate": true,
+          "IgnoreDts": true,
+          "IgnoreIndex": true,
+          "GenPtsInput": true,
+          "SupportsTranscoding": true,
+          "SupportsDirectStream": true,
+          "SupportsDirectPlay": true,
+          "IsInfiniteStream": true,
+          "RequiresOpening": true,
+          "OpenToken": "string",
+          "RequiresClosing": true,
+          "LiveStreamId": "string",
+          "BufferMs": 0,
+          "RequiresLooping": true,
+          "SupportsProbing": true,
+          "VideoType": "VideoFile",
+          "IsoType": "Dvd",
+          "Video3DFormat": "HalfSideBySide",
+          "MediaStreams": [
+            {
+              "Codec": "string",
+              "CodecTag": "string",
+              "Language": "string",
+              "ColorRange": "string",
+              "ColorSpace": "string",
+              "ColorTransfer": "string",
+              "ColorPrimaries": "string",
+              "DvVersionMajor": 0,
+              "DvVersionMinor": 0,
+              "DvProfile": 0,
+              "DvLevel": 0,
+              "RpuPresentFlag": 0,
+              "ElPresentFlag": 0,
+              "BlPresentFlag": 0,
+              "DvBlSignalCompatibilityId": 0,
+              "Comment": "string",
+              "TimeBase": "string",
+              "CodecTimeBase": "string",
+              "Title": "string",
+              "VideoRange": "string",
+              "VideoRangeType": "string",
+              "VideoDoViTitle": "string",
+              "LocalizedUndefined": "string",
+              "LocalizedDefault": "string",
+              "LocalizedForced": "string",
+              "LocalizedExternal": "string",
+              "DisplayTitle": "string",
+              "NalLengthSize": "string",
+              "IsInterlaced": true,
+              "IsAVC": true,
+              "ChannelLayout": "string",
+              "BitRate": 0,
+              "BitDepth": 0,
+              "RefFrames": 0,
+              "PacketLength": 0,
+              "Channels": 0,
+              "SampleRate": 0,
+              "IsDefault": true,
+              "IsForced": true,
+              "Height": 0,
+              "Width": 0,
+              "AverageFrameRate": 0,
+              "RealFrameRate": 0,
+              "Profile": "string",
+              "Type": "Audio",
+              "AspectRatio": "string",
+              "Index": 0,
+              "Score": 0,
+              "IsExternal": true,
+              "DeliveryMethod": "Encode",
+              "DeliveryUrl": "string",
+              "IsExternalUrl": true,
+              "IsTextSubtitleStream": true,
+              "SupportsExternalStream": true,
+              "Path": "string",
+              "PixelFormat": "string",
+              "Level": 0,
+              "IsAnamorphic": true
+            }
+          ],
+          "MediaAttachments": [
+            {
+              "Codec": "string",
+              "CodecTag": "string",
+              "Comment": "string",
+              "Index": 0,
+              "FileName": "string",
+              "MimeType": "string",
+              "DeliveryUrl": "string"
+            }
+          ],
+          "Formats": ["string"],
+          "Bitrate": 0,
+          "Timestamp": "None",
+          "RequiredHttpHeaders": {
+            "property1": "string",
+            "property2": "string"
+          },
+          "TranscodingUrl": "string",
+          "TranscodingSubProtocol": "string",
+          "TranscodingContainer": "string",
+          "AnalyzeDurationMs": 0,
+          "DefaultAudioStreamIndex": 0,
+          "DefaultSubtitleStreamIndex": 0
+        }
+      ],
+      "CriticRating": 0,
+      "ProductionLocations": ["string"],
+      "Path": "string",
+      "EnableMediaSourceDisplay": true,
+      "OfficialRating": "string",
+      "CustomRating": "string",
+      "ChannelId": "04b0b2a5-93cb-474d-8ea9-3df0f84eb0ff",
+      "ChannelName": "string",
+      "Overview": "string",
+      "Taglines": ["string"],
+      "Genres": ["string"],
+      "CommunityRating": 0,
+      "CumulativeRunTimeTicks": 0,
+      "RunTimeTicks": 600000000,
+      "PlayAccess": "Full",
+      "AspectRatio": "string",
+      "ProductionYear": 0,
+      "IsPlaceHolder": true,
+      "Number": "string",
+      "ChannelNumber": "string",
+      "IndexNumber": 3,
+      "IndexNumberEnd": 0,
+      "ParentIndexNumber": 1,
+      "RemoteTrailers": [
+        {
+          "Url": "string",
+          "Name": "string"
+        }
+      ],
+      "ProviderIds": {
+        "property1": "string",
+        "property2": "string"
+      },
+      "IsHD": true,
+      "IsFolder": false,
+      "ParentId": "PARENT-UUID",
+      "Type": "Episode",
+      "People": [
+        {
+          "Name": "string",
+          "Id": "38a5a5bb-dc30-49a2-b175-1de0d1488c43",
+          "Role": "string",
+          "Type": "string",
+          "PrimaryImageTag": "string",
+          "ImageBlurHashes": {
+            "Primary": {
+              "property1": "string",
+              "property2": "string"
+            },
+            "Art": {
+              "property1": "string",
+              "property2": "string"
+            },
+            "Backdrop": {
+              "property1": "string",
+              "property2": "string"
+            },
+            "Banner": {
+              "property1": "string",
+              "property2": "string"
+            },
+            "Logo": {
+              "property1": "string",
+              "property2": "string"
+            },
+            "Thumb": {
+              "property1": "string",
+              "property2": "string"
+            },
+            "Disc": {
+              "property1": "string",
+              "property2": "string"
+            },
+            "Box": {
+              "property1": "string",
+              "property2": "string"
+            },
+            "Screenshot": {
+              "property1": "string",
+              "property2": "string"
+            },
+            "Menu": {
+              "property1": "string",
+              "property2": "string"
+            },
+            "Chapter": {
+              "property1": "string",
+              "property2": "string"
+            },
+            "BoxRear": {
+              "property1": "string",
+              "property2": "string"
+            },
+            "Profile": {
+              "property1": "string",
+              "property2": "string"
+            }
+          }
+        }
+      ],
+      "Studios": [
+        {
+          "Name": "string",
+          "Id": "38a5a5bb-dc30-49a2-b175-1de0d1488c43"
+        }
+      ],
+      "GenreItems": [
+        {
+          "Name": "string",
+          "Id": "38a5a5bb-dc30-49a2-b175-1de0d1488c43"
+        }
+      ],
+      "ParentLogoItemId": "c78d400f-de5c-421e-8714-4fb05d387233",
+      "ParentBackdropItemId": "c22fd826-17fc-44f4-9b04-1eb3e8fb9173",
+      "ParentBackdropImageTags": ["string"],
+      "LocalTrailerCount": 0,
+      "UserData": {
+        "Rating": 0,
+        "PlayedPercentage": 0,
+        "UnplayedItemCount": 0,
+        "PlaybackPositionTicks": 0,
+        "PlayCount": 0,
+        "IsFavorite": true,
+        "Likes": true,
+        "LastPlayedDate": "2019-08-24T14:15:22Z",
+        "Played": true,
+        "Key": "string",
+        "ItemId": "string"
+      },
+      "RecursiveItemCount": 0,
+      "ChildCount": 0,
+      "SeriesName": "SERIES",
+      "SeriesId": "SERIES-UUID",
+      "SeasonId": "SEASON-UUID",
+      "SpecialFeatureCount": 0,
+      "DisplayPreferencesId": "string",
+      "Status": "string",
+      "AirTime": "string",
+      "AirDays": ["Sunday"],
+      "Tags": ["string"],
+      "PrimaryImageAspectRatio": 0,
+      "Artists": ["string"],
+      "ArtistItems": [
+        {
+          "Name": "string",
+          "Id": "38a5a5bb-dc30-49a2-b175-1de0d1488c43"
+        }
+      ],
+      "Album": "string",
+      "CollectionType": "string",
+      "DisplayOrder": "string",
+      "AlbumId": "21af9851-8e39-43a9-9c47-513d3b9e99fc",
+      "AlbumPrimaryImageTag": "string",
+      "SeriesPrimaryImageTag": "string",
+      "AlbumArtist": "string",
+      "AlbumArtists": [
+        {
+          "Name": "string",
+          "Id": "38a5a5bb-dc30-49a2-b175-1de0d1488c43"
+        }
+      ],
+      "SeasonName": "SEASON",
+      "MediaStreams": [
+        {
+          "Codec": "string",
+          "CodecTag": "string",
+          "Language": "string",
+          "ColorRange": "string",
+          "ColorSpace": "string",
+          "ColorTransfer": "string",
+          "ColorPrimaries": "string",
+          "DvVersionMajor": 0,
+          "DvVersionMinor": 0,
+          "DvProfile": 0,
+          "DvLevel": 0,
+          "RpuPresentFlag": 0,
+          "ElPresentFlag": 0,
+          "BlPresentFlag": 0,
+          "DvBlSignalCompatibilityId": 0,
+          "Comment": "string",
+          "TimeBase": "string",
+          "CodecTimeBase": "string",
+          "Title": "string",
+          "VideoRange": "string",
+          "VideoRangeType": "string",
+          "VideoDoViTitle": "string",
+          "LocalizedUndefined": "string",
+          "LocalizedDefault": "string",
+          "LocalizedForced": "string",
+          "LocalizedExternal": "string",
+          "DisplayTitle": "string",
+          "NalLengthSize": "string",
+          "IsInterlaced": true,
+          "IsAVC": true,
+          "ChannelLayout": "string",
+          "BitRate": 0,
+          "BitDepth": 0,
+          "RefFrames": 0,
+          "PacketLength": 0,
+          "Channels": 0,
+          "SampleRate": 0,
+          "IsDefault": true,
+          "IsForced": true,
+          "Height": 0,
+          "Width": 0,
+          "AverageFrameRate": 0,
+          "RealFrameRate": 0,
+          "Profile": "string",
+          "Type": "Audio",
+          "AspectRatio": "string",
+          "Index": 0,
+          "Score": 0,
+          "IsExternal": true,
+          "DeliveryMethod": "Encode",
+          "DeliveryUrl": "string",
+          "IsExternalUrl": true,
+          "IsTextSubtitleStream": true,
+          "SupportsExternalStream": true,
+          "Path": "string",
+          "PixelFormat": "string",
+          "Level": 0,
+          "IsAnamorphic": true
+        }
+      ],
+      "VideoType": "VideoFile",
+      "PartCount": 0,
+      "MediaSourceCount": 0,
+      "ImageTags": {
+        "property1": "string",
+        "property2": "string"
+      },
+      "BackdropImageTags": ["string"],
+      "ScreenshotImageTags": ["string"],
+      "ParentLogoImageTag": "string",
+      "ParentArtItemId": "10c1875b-b82c-48e8-bae9-939a5e68dc2f",
+      "ParentArtImageTag": "string",
+      "SeriesThumbImageTag": "string",
+      "ImageBlurHashes": {
+        "Primary": {
+          "property1": "string",
+          "property2": "string"
+        },
+        "Art": {
+          "property1": "string",
+          "property2": "string"
+        },
+        "Backdrop": {
+          "property1": "string",
+          "property2": "string"
+        },
+        "Banner": {
+          "property1": "string",
+          "property2": "string"
+        },
+        "Logo": {
+          "property1": "string",
+          "property2": "string"
+        },
+        "Thumb": {
+          "property1": "string",
+          "property2": "string"
+        },
+        "Disc": {
+          "property1": "string",
+          "property2": "string"
+        },
+        "Box": {
+          "property1": "string",
+          "property2": "string"
+        },
+        "Screenshot": {
+          "property1": "string",
+          "property2": "string"
+        },
+        "Menu": {
+          "property1": "string",
+          "property2": "string"
+        },
+        "Chapter": {
+          "property1": "string",
+          "property2": "string"
+        },
+        "BoxRear": {
+          "property1": "string",
+          "property2": "string"
+        },
+        "Profile": {
+          "property1": "string",
+          "property2": "string"
+        }
+      },
+      "SeriesStudio": "HASS",
+      "ParentThumbItemId": "ae6ff707-333d-4994-be6d-b83ca1b35f46",
+      "ParentThumbImageTag": "string",
+      "ParentPrimaryImageItemId": "string",
+      "ParentPrimaryImageTag": "string",
+      "Chapters": [
+        {
+          "StartPositionTicks": 0,
+          "Name": "string",
+          "ImagePath": "string",
+          "ImageDateModified": "2019-08-24T14:15:22Z",
+          "ImageTag": "string"
+        }
+      ],
+      "LocationType": "FileSystem",
+      "IsoType": "Dvd",
+      "MediaType": "string",
+      "EndDate": "2019-08-24T14:15:22Z",
+      "LockedFields": ["Cast"],
+      "TrailerCount": 0,
+      "MovieCount": 0,
+      "SeriesCount": 0,
+      "ProgramCount": 0,
+      "EpisodeCount": 0,
+      "SongCount": 0,
+      "AlbumCount": 0,
+      "ArtistCount": 0,
+      "MusicVideoCount": 0,
+      "LockData": true,
+      "Width": 0,
+      "Height": 0,
+      "CameraMake": "string",
+      "CameraModel": "string",
+      "Software": "string",
+      "ExposureTime": 0,
+      "FocalLength": 0,
+      "ImageOrientation": "TopLeft",
+      "Aperture": 0,
+      "ShutterSpeed": 0,
+      "Latitude": 0,
+      "Longitude": 0,
+      "Altitude": 0,
+      "IsoSpeedRating": 0,
+      "SeriesTimerId": "string",
+      "ProgramId": "string",
+      "ChannelPrimaryImageTag": "string",
+      "StartDate": "2019-08-24T14:15:22Z",
+      "CompletionPercentage": 0,
+      "IsRepeat": true,
+      "EpisodeTitle": "string",
+      "ChannelType": "TV",
+      "Audio": "Mono",
+      "IsMovie": true,
+      "IsSports": true,
+      "IsSeries": true,
+      "IsLive": true,
+      "IsNews": true,
+      "IsKids": true,
+      "IsPremiere": true,
+      "TimerId": "string",
+      "CurrentProgram": {}
+    },
+    "FullNowPlayingItem": {
+      "Size": 0,
+      "Container": "string",
+      "IsHD": true,
+      "IsShortcut": true,
+      "ShortcutPath": "string",
+      "Width": 0,
+      "Height": 0,
+      "ExtraIds": ["497f6eca-6276-4993-bfeb-53cbbbba6f08"],
+      "DateLastSaved": "2019-08-24T14:15:22Z",
+      "RemoteTrailers": [
+        {
+          "Url": "string",
+          "Name": "string"
+        }
+      ],
+      "SupportsExternalTransfer": true
+    },
+    "NowViewingItem": {
+      "Name": "string",
+      "OriginalTitle": "string",
+      "ServerId": "string",
+      "Id": "38a5a5bb-dc30-49a2-b175-1de0d1488c43",
+      "Etag": "string",
+      "SourceType": "string",
+      "PlaylistItemId": "string",
+      "DateCreated": "2019-08-24T14:15:22Z",
+      "DateLastMediaAdded": "2019-08-24T14:15:22Z",
+      "ExtraType": "string",
+      "AirsBeforeSeasonNumber": 0,
+      "AirsAfterSeasonNumber": 0,
+      "AirsBeforeEpisodeNumber": 0,
+      "CanDelete": true,
+      "CanDownload": true,
+      "HasSubtitles": true,
+      "PreferredMetadataLanguage": "string",
+      "PreferredMetadataCountryCode": "string",
+      "SupportsSync": true,
+      "Container": "string",
+      "SortName": "string",
+      "ForcedSortName": "string",
+      "Video3DFormat": "HalfSideBySide",
+      "PremiereDate": "2019-08-24T14:15:22Z",
+      "ExternalUrls": [
+        {
+          "Name": "string",
+          "Url": "string"
+        }
+      ],
+      "MediaSources": [
+        {
+          "Protocol": "File",
+          "Id": "string",
+          "Path": "string",
+          "EncoderPath": "string",
+          "EncoderProtocol": "File",
+          "Type": "Default",
+          "Container": "string",
+          "Size": 0,
+          "Name": "string",
+          "IsRemote": true,
+          "ETag": "string",
+          "RunTimeTicks": 0,
+          "ReadAtNativeFramerate": true,
+          "IgnoreDts": true,
+          "IgnoreIndex": true,
+          "GenPtsInput": true,
+          "SupportsTranscoding": true,
+          "SupportsDirectStream": true,
+          "SupportsDirectPlay": true,
+          "IsInfiniteStream": true,
+          "RequiresOpening": true,
+          "OpenToken": "string",
+          "RequiresClosing": true,
+          "LiveStreamId": "string",
+          "BufferMs": 0,
+          "RequiresLooping": true,
+          "SupportsProbing": true,
+          "VideoType": "VideoFile",
+          "IsoType": "Dvd",
+          "Video3DFormat": "HalfSideBySide",
+          "MediaStreams": [
+            {
+              "Codec": "string",
+              "CodecTag": "string",
+              "Language": "string",
+              "ColorRange": "string",
+              "ColorSpace": "string",
+              "ColorTransfer": "string",
+              "ColorPrimaries": "string",
+              "DvVersionMajor": 0,
+              "DvVersionMinor": 0,
+              "DvProfile": 0,
+              "DvLevel": 0,
+              "RpuPresentFlag": 0,
+              "ElPresentFlag": 0,
+              "BlPresentFlag": 0,
+              "DvBlSignalCompatibilityId": 0,
+              "Comment": "string",
+              "TimeBase": "string",
+              "CodecTimeBase": "string",
+              "Title": "string",
+              "VideoRange": "string",
+              "VideoRangeType": "string",
+              "VideoDoViTitle": "string",
+              "LocalizedUndefined": "string",
+              "LocalizedDefault": "string",
+              "LocalizedForced": "string",
+              "LocalizedExternal": "string",
+              "DisplayTitle": "string",
+              "NalLengthSize": "string",
+              "IsInterlaced": true,
+              "IsAVC": true,
+              "ChannelLayout": "string",
+              "BitRate": 0,
+              "BitDepth": 0,
+              "RefFrames": 0,
+              "PacketLength": 0,
+              "Channels": 0,
+              "SampleRate": 0,
+              "IsDefault": true,
+              "IsForced": true,
+              "Height": 0,
+              "Width": 0,
+              "AverageFrameRate": 0,
+              "RealFrameRate": 0,
+              "Profile": "string",
+              "Type": "Audio",
+              "AspectRatio": "string",
+              "Index": 0,
+              "Score": 0,
+              "IsExternal": true,
+              "DeliveryMethod": "Encode",
+              "DeliveryUrl": "string",
+              "IsExternalUrl": true,
+              "IsTextSubtitleStream": true,
+              "SupportsExternalStream": true,
+              "Path": "string",
+              "PixelFormat": "string",
+              "Level": 0,
+              "IsAnamorphic": true
+            }
+          ],
+          "MediaAttachments": [
+            {
+              "Codec": "string",
+              "CodecTag": "string",
+              "Comment": "string",
+              "Index": 0,
+              "FileName": "string",
+              "MimeType": "string",
+              "DeliveryUrl": "string"
+            }
+          ],
+          "Formats": ["string"],
+          "Bitrate": 0,
+          "Timestamp": "None",
+          "RequiredHttpHeaders": {
+            "property1": "string",
+            "property2": "string"
+          },
+          "TranscodingUrl": "string",
+          "TranscodingSubProtocol": "string",
+          "TranscodingContainer": "string",
+          "AnalyzeDurationMs": 0,
+          "DefaultAudioStreamIndex": 0,
+          "DefaultSubtitleStreamIndex": 0
+        }
+      ],
+      "CriticRating": 0,
+      "ProductionLocations": ["string"],
+      "Path": "string",
+      "EnableMediaSourceDisplay": true,
+      "OfficialRating": "string",
+      "CustomRating": "string",
+      "ChannelId": "04b0b2a5-93cb-474d-8ea9-3df0f84eb0ff",
+      "ChannelName": "string",
+      "Overview": "string",
+      "Taglines": ["string"],
+      "Genres": ["string"],
+      "CommunityRating": 0,
+      "CumulativeRunTimeTicks": 0,
+      "RunTimeTicks": 0,
+      "PlayAccess": "Full",
+      "AspectRatio": "string",
+      "ProductionYear": 0,
+      "IsPlaceHolder": true,
+      "Number": "string",
+      "ChannelNumber": "string",
+      "IndexNumber": 0,
+      "IndexNumberEnd": 0,
+      "ParentIndexNumber": 0,
+      "RemoteTrailers": [
+        {
+          "Url": "string",
+          "Name": "string"
+        }
+      ],
+      "ProviderIds": {
+        "property1": "string",
+        "property2": "string"
+      },
+      "IsHD": true,
+      "IsFolder": true,
+      "ParentId": "c54e2d15-b5eb-48b7-9b04-53f376904b1e",
+      "Type": "AggregateFolder",
+      "People": [
+        {
+          "Name": "string",
+          "Id": "38a5a5bb-dc30-49a2-b175-1de0d1488c43",
+          "Role": "string",
+          "Type": "string",
+          "PrimaryImageTag": "string",
+          "ImageBlurHashes": {
+            "Primary": {
+              "property1": "string",
+              "property2": "string"
+            },
+            "Art": {
+              "property1": "string",
+              "property2": "string"
+            },
+            "Backdrop": {
+              "property1": "string",
+              "property2": "string"
+            },
+            "Banner": {
+              "property1": "string",
+              "property2": "string"
+            },
+            "Logo": {
+              "property1": "string",
+              "property2": "string"
+            },
+            "Thumb": {
+              "property1": "string",
+              "property2": "string"
+            },
+            "Disc": {
+              "property1": "string",
+              "property2": "string"
+            },
+            "Box": {
+              "property1": "string",
+              "property2": "string"
+            },
+            "Screenshot": {
+              "property1": "string",
+              "property2": "string"
+            },
+            "Menu": {
+              "property1": "string",
+              "property2": "string"
+            },
+            "Chapter": {
+              "property1": "string",
+              "property2": "string"
+            },
+            "BoxRear": {
+              "property1": "string",
+              "property2": "string"
+            },
+            "Profile": {
+              "property1": "string",
+              "property2": "string"
+            }
+          }
+        }
+      ],
+      "Studios": [
+        {
+          "Name": "string",
+          "Id": "38a5a5bb-dc30-49a2-b175-1de0d1488c43"
+        }
+      ],
+      "GenreItems": [
+        {
+          "Name": "string",
+          "Id": "38a5a5bb-dc30-49a2-b175-1de0d1488c43"
+        }
+      ],
+      "ParentLogoItemId": "c78d400f-de5c-421e-8714-4fb05d387233",
+      "ParentBackdropItemId": "c22fd826-17fc-44f4-9b04-1eb3e8fb9173",
+      "ParentBackdropImageTags": ["string"],
+      "LocalTrailerCount": 0,
+      "UserData": {
+        "Rating": 0,
+        "PlayedPercentage": 0,
+        "UnplayedItemCount": 0,
+        "PlaybackPositionTicks": 0,
+        "PlayCount": 0,
+        "IsFavorite": true,
+        "Likes": true,
+        "LastPlayedDate": "2019-08-24T14:15:22Z",
+        "Played": true,
+        "Key": "string",
+        "ItemId": "string"
+      },
+      "RecursiveItemCount": 0,
+      "ChildCount": 0,
+      "SeriesName": "string",
+      "SeriesId": "c7b70af4-4902-4a7e-95ab-28349b6c7afc",
+      "SeasonId": "badb6463-e5b7-45c5-8141-71204420ec8f",
+      "SpecialFeatureCount": 0,
+      "DisplayPreferencesId": "string",
+      "Status": "string",
+      "AirTime": "string",
+      "AirDays": ["Sunday"],
+      "Tags": ["string"],
+      "PrimaryImageAspectRatio": 0,
+      "Artists": ["string"],
+      "ArtistItems": [
+        {
+          "Name": "string",
+          "Id": "38a5a5bb-dc30-49a2-b175-1de0d1488c43"
+        }
+      ],
+      "Album": "string",
+      "CollectionType": "string",
+      "DisplayOrder": "string",
+      "AlbumId": "21af9851-8e39-43a9-9c47-513d3b9e99fc",
+      "AlbumPrimaryImageTag": "string",
+      "SeriesPrimaryImageTag": "string",
+      "AlbumArtist": "string",
+      "AlbumArtists": [
+        {
+          "Name": "string",
+          "Id": "38a5a5bb-dc30-49a2-b175-1de0d1488c43"
+        }
+      ],
+      "SeasonName": "string",
+      "MediaStreams": [
+        {
+          "Codec": "string",
+          "CodecTag": "string",
+          "Language": "string",
+          "ColorRange": "string",
+          "ColorSpace": "string",
+          "ColorTransfer": "string",
+          "ColorPrimaries": "string",
+          "DvVersionMajor": 0,
+          "DvVersionMinor": 0,
+          "DvProfile": 0,
+          "DvLevel": 0,
+          "RpuPresentFlag": 0,
+          "ElPresentFlag": 0,
+          "BlPresentFlag": 0,
+          "DvBlSignalCompatibilityId": 0,
+          "Comment": "string",
+          "TimeBase": "string",
+          "CodecTimeBase": "string",
+          "Title": "string",
+          "VideoRange": "string",
+          "VideoRangeType": "string",
+          "VideoDoViTitle": "string",
+          "LocalizedUndefined": "string",
+          "LocalizedDefault": "string",
+          "LocalizedForced": "string",
+          "LocalizedExternal": "string",
+          "DisplayTitle": "string",
+          "NalLengthSize": "string",
+          "IsInterlaced": true,
+          "IsAVC": true,
+          "ChannelLayout": "string",
+          "BitRate": 0,
+          "BitDepth": 0,
+          "RefFrames": 0,
+          "PacketLength": 0,
+          "Channels": 0,
+          "SampleRate": 0,
+          "IsDefault": true,
+          "IsForced": true,
+          "Height": 0,
+          "Width": 0,
+          "AverageFrameRate": 0,
+          "RealFrameRate": 0,
+          "Profile": "string",
+          "Type": "Audio",
+          "AspectRatio": "string",
+          "Index": 0,
+          "Score": 0,
+          "IsExternal": true,
+          "DeliveryMethod": "Encode",
+          "DeliveryUrl": "string",
+          "IsExternalUrl": true,
+          "IsTextSubtitleStream": true,
+          "SupportsExternalStream": true,
+          "Path": "string",
+          "PixelFormat": "string",
+          "Level": 0,
+          "IsAnamorphic": true
+        }
+      ],
+      "VideoType": "VideoFile",
+      "PartCount": 0,
+      "MediaSourceCount": 0,
+      "ImageTags": {
+        "property1": "string",
+        "property2": "string"
+      },
+      "BackdropImageTags": ["string"],
+      "ScreenshotImageTags": ["string"],
+      "ParentLogoImageTag": "string",
+      "ParentArtItemId": "10c1875b-b82c-48e8-bae9-939a5e68dc2f",
+      "ParentArtImageTag": "string",
+      "SeriesThumbImageTag": "string",
+      "ImageBlurHashes": {
+        "Primary": {
+          "property1": "string",
+          "property2": "string"
+        },
+        "Art": {
+          "property1": "string",
+          "property2": "string"
+        },
+        "Backdrop": {
+          "property1": "string",
+          "property2": "string"
+        },
+        "Banner": {
+          "property1": "string",
+          "property2": "string"
+        },
+        "Logo": {
+          "property1": "string",
+          "property2": "string"
+        },
+        "Thumb": {
+          "property1": "string",
+          "property2": "string"
+        },
+        "Disc": {
+          "property1": "string",
+          "property2": "string"
+        },
+        "Box": {
+          "property1": "string",
+          "property2": "string"
+        },
+        "Screenshot": {
+          "property1": "string",
+          "property2": "string"
+        },
+        "Menu": {
+          "property1": "string",
+          "property2": "string"
+        },
+        "Chapter": {
+          "property1": "string",
+          "property2": "string"
+        },
+        "BoxRear": {
+          "property1": "string",
+          "property2": "string"
+        },
+        "Profile": {
+          "property1": "string",
+          "property2": "string"
+        }
+      },
+      "SeriesStudio": "string",
+      "ParentThumbItemId": "ae6ff707-333d-4994-be6d-b83ca1b35f46",
+      "ParentThumbImageTag": "string",
+      "ParentPrimaryImageItemId": "string",
+      "ParentPrimaryImageTag": "string",
+      "Chapters": [
+        {
+          "StartPositionTicks": 0,
+          "Name": "string",
+          "ImagePath": "string",
+          "ImageDateModified": "2019-08-24T14:15:22Z",
+          "ImageTag": "string"
+        }
+      ],
+      "LocationType": "FileSystem",
+      "IsoType": "Dvd",
+      "MediaType": "string",
+      "EndDate": "2019-08-24T14:15:22Z",
+      "LockedFields": ["Cast"],
+      "TrailerCount": 0,
+      "MovieCount": 0,
+      "SeriesCount": 0,
+      "ProgramCount": 0,
+      "EpisodeCount": 0,
+      "SongCount": 0,
+      "AlbumCount": 0,
+      "ArtistCount": 0,
+      "MusicVideoCount": 0,
+      "LockData": true,
+      "Width": 0,
+      "Height": 0,
+      "CameraMake": "string",
+      "CameraModel": "string",
+      "Software": "string",
+      "ExposureTime": 0,
+      "FocalLength": 0,
+      "ImageOrientation": "TopLeft",
+      "Aperture": 0,
+      "ShutterSpeed": 0,
+      "Latitude": 0,
+      "Longitude": 0,
+      "Altitude": 0,
+      "IsoSpeedRating": 0,
+      "SeriesTimerId": "string",
+      "ProgramId": "string",
+      "ChannelPrimaryImageTag": "string",
+      "StartDate": "2019-08-24T14:15:22Z",
+      "CompletionPercentage": 0,
+      "IsRepeat": true,
+      "EpisodeTitle": "string",
+      "ChannelType": "TV",
+      "Audio": "Mono",
+      "IsMovie": true,
+      "IsSports": true,
+      "IsSeries": true,
+      "IsLive": true,
+      "IsNews": true,
+      "IsKids": true,
+      "IsPremiere": true,
+      "TimerId": "string",
+      "CurrentProgram": {}
+    },
+    "DeviceId": "DEVICE-UUID",
+    "ApplicationVersion": "1.0.0",
+    "TranscodingInfo": {
+      "AudioCodec": "string",
+      "VideoCodec": "string",
+      "Container": "string",
+      "IsVideoDirect": true,
+      "IsAudioDirect": true,
+      "Bitrate": 0,
+      "Framerate": 0,
+      "CompletionPercentage": 0,
+      "Width": 0,
+      "Height": 0,
+      "AudioChannels": 0,
+      "HardwareAccelerationType": "AMF",
+      "TranscodeReasons": "ContainerNotSupported"
+    },
+    "IsActive": true,
+    "SupportsMediaControl": true,
+    "SupportsRemoteControl": true,
+    "NowPlayingQueue": [
+      {
+        "Id": "38a5a5bb-dc30-49a2-b175-1de0d1488c43",
+        "PlaylistItemId": "string"
+      }
+    ],
+    "NowPlayingQueueFullItems": [
+      {
+        "Name": "string",
+        "OriginalTitle": "string",
+        "ServerId": "string",
+        "Id": "38a5a5bb-dc30-49a2-b175-1de0d1488c43",
+        "Etag": "string",
+        "SourceType": "string",
+        "PlaylistItemId": "string",
+        "DateCreated": "2019-08-24T14:15:22Z",
+        "DateLastMediaAdded": "2019-08-24T14:15:22Z",
+        "ExtraType": "string",
+        "AirsBeforeSeasonNumber": 0,
+        "AirsAfterSeasonNumber": 0,
+        "AirsBeforeEpisodeNumber": 0,
+        "CanDelete": true,
+        "CanDownload": true,
+        "HasSubtitles": true,
+        "PreferredMetadataLanguage": "string",
+        "PreferredMetadataCountryCode": "string",
+        "SupportsSync": true,
+        "Container": "string",
+        "SortName": "string",
+        "ForcedSortName": "string",
+        "Video3DFormat": "HalfSideBySide",
+        "PremiereDate": "2019-08-24T14:15:22Z",
+        "ExternalUrls": [
+          {
+            "Name": "string",
+            "Url": "string"
+          }
+        ],
+        "MediaSources": [
+          {
+            "Protocol": "File",
+            "Id": "string",
+            "Path": "string",
+            "EncoderPath": "string",
+            "EncoderProtocol": "File",
+            "Type": "Default",
+            "Container": "string",
+            "Size": 0,
+            "Name": "string",
+            "IsRemote": true,
+            "ETag": "string",
+            "RunTimeTicks": 0,
+            "ReadAtNativeFramerate": true,
+            "IgnoreDts": true,
+            "IgnoreIndex": true,
+            "GenPtsInput": true,
+            "SupportsTranscoding": true,
+            "SupportsDirectStream": true,
+            "SupportsDirectPlay": true,
+            "IsInfiniteStream": true,
+            "RequiresOpening": true,
+            "OpenToken": "string",
+            "RequiresClosing": true,
+            "LiveStreamId": "string",
+            "BufferMs": 0,
+            "RequiresLooping": true,
+            "SupportsProbing": true,
+            "VideoType": "VideoFile",
+            "IsoType": "Dvd",
+            "Video3DFormat": "HalfSideBySide",
+            "MediaStreams": [
+              {
+                "Codec": "string",
+                "CodecTag": "string",
+                "Language": "string",
+                "ColorRange": "string",
+                "ColorSpace": "string",
+                "ColorTransfer": "string",
+                "ColorPrimaries": "string",
+                "DvVersionMajor": 0,
+                "DvVersionMinor": 0,
+                "DvProfile": 0,
+                "DvLevel": 0,
+                "RpuPresentFlag": 0,
+                "ElPresentFlag": 0,
+                "BlPresentFlag": 0,
+                "DvBlSignalCompatibilityId": 0,
+                "Comment": "string",
+                "TimeBase": "string",
+                "CodecTimeBase": "string",
+                "Title": "string",
+                "VideoRange": "string",
+                "VideoRangeType": "string",
+                "VideoDoViTitle": "string",
+                "LocalizedUndefined": "string",
+                "LocalizedDefault": "string",
+                "LocalizedForced": "string",
+                "LocalizedExternal": "string",
+                "DisplayTitle": "string",
+                "NalLengthSize": "string",
+                "IsInterlaced": true,
+                "IsAVC": true,
+                "ChannelLayout": "string",
+                "BitRate": 0,
+                "BitDepth": 0,
+                "RefFrames": 0,
+                "PacketLength": 0,
+                "Channels": 0,
+                "SampleRate": 0,
+                "IsDefault": true,
+                "IsForced": true,
+                "Height": 0,
+                "Width": 0,
+                "AverageFrameRate": 0,
+                "RealFrameRate": 0,
+                "Profile": "string",
+                "Type": "Audio",
+                "AspectRatio": "string",
+                "Index": 0,
+                "Score": 0,
+                "IsExternal": true,
+                "DeliveryMethod": "Encode",
+                "DeliveryUrl": "string",
+                "IsExternalUrl": true,
+                "IsTextSubtitleStream": true,
+                "SupportsExternalStream": true,
+                "Path": "string",
+                "PixelFormat": "string",
+                "Level": 0,
+                "IsAnamorphic": true
+              }
+            ],
+            "MediaAttachments": [
+              {
+                "Codec": "string",
+                "CodecTag": "string",
+                "Comment": "string",
+                "Index": 0,
+                "FileName": "string",
+                "MimeType": "string",
+                "DeliveryUrl": "string"
+              }
+            ],
+            "Formats": ["string"],
+            "Bitrate": 0,
+            "Timestamp": "None",
+            "RequiredHttpHeaders": {
+              "property1": "string",
+              "property2": "string"
+            },
+            "TranscodingUrl": "string",
+            "TranscodingSubProtocol": "string",
+            "TranscodingContainer": "string",
+            "AnalyzeDurationMs": 0,
+            "DefaultAudioStreamIndex": 0,
+            "DefaultSubtitleStreamIndex": 0
+          }
+        ],
+        "CriticRating": 0,
+        "ProductionLocations": ["string"],
+        "Path": "string",
+        "EnableMediaSourceDisplay": true,
+        "OfficialRating": "string",
+        "CustomRating": "string",
+        "ChannelId": "04b0b2a5-93cb-474d-8ea9-3df0f84eb0ff",
+        "ChannelName": "string",
+        "Overview": "string",
+        "Taglines": ["string"],
+        "Genres": ["string"],
+        "CommunityRating": 0,
+        "CumulativeRunTimeTicks": 0,
+        "RunTimeTicks": 0,
+        "PlayAccess": "Full",
+        "AspectRatio": "string",
+        "ProductionYear": 0,
+        "IsPlaceHolder": true,
+        "Number": "string",
+        "ChannelNumber": "string",
+        "IndexNumber": 0,
+        "IndexNumberEnd": 0,
+        "ParentIndexNumber": 0,
+        "RemoteTrailers": [
+          {
+            "Url": "string",
+            "Name": "string"
+          }
+        ],
+        "ProviderIds": {
+          "property1": "string",
+          "property2": "string"
+        },
+        "IsHD": true,
+        "IsFolder": true,
+        "ParentId": "c54e2d15-b5eb-48b7-9b04-53f376904b1e",
+        "Type": "AggregateFolder",
+        "People": [
+          {
+            "Name": "string",
+            "Id": "38a5a5bb-dc30-49a2-b175-1de0d1488c43",
+            "Role": "string",
+            "Type": "string",
+            "PrimaryImageTag": "string",
+            "ImageBlurHashes": {
+              "Primary": {
+                "property1": "string",
+                "property2": "string"
+              },
+              "Art": {
+                "property1": "string",
+                "property2": "string"
+              },
+              "Backdrop": {
+                "property1": "string",
+                "property2": "string"
+              },
+              "Banner": {
+                "property1": "string",
+                "property2": "string"
+              },
+              "Logo": {
+                "property1": "string",
+                "property2": "string"
+              },
+              "Thumb": {
+                "property1": "string",
+                "property2": "string"
+              },
+              "Disc": {
+                "property1": "string",
+                "property2": "string"
+              },
+              "Box": {
+                "property1": "string",
+                "property2": "string"
+              },
+              "Screenshot": {
+                "property1": "string",
+                "property2": "string"
+              },
+              "Menu": {
+                "property1": "string",
+                "property2": "string"
+              },
+              "Chapter": {
+                "property1": "string",
+                "property2": "string"
+              },
+              "BoxRear": {
+                "property1": "string",
+                "property2": "string"
+              },
+              "Profile": {
+                "property1": "string",
+                "property2": "string"
+              }
+            }
+          }
+        ],
+        "Studios": [
+          {
+            "Name": "string",
+            "Id": "38a5a5bb-dc30-49a2-b175-1de0d1488c43"
+          }
+        ],
+        "GenreItems": [
+          {
+            "Name": "string",
+            "Id": "38a5a5bb-dc30-49a2-b175-1de0d1488c43"
+          }
+        ],
+        "ParentLogoItemId": "c78d400f-de5c-421e-8714-4fb05d387233",
+        "ParentBackdropItemId": "c22fd826-17fc-44f4-9b04-1eb3e8fb9173",
+        "ParentBackdropImageTags": ["string"],
+        "LocalTrailerCount": 0,
+        "UserData": {
+          "Rating": 0,
+          "PlayedPercentage": 0,
+          "UnplayedItemCount": 0,
+          "PlaybackPositionTicks": 0,
+          "PlayCount": 0,
+          "IsFavorite": true,
+          "Likes": true,
+          "LastPlayedDate": "2019-08-24T14:15:22Z",
+          "Played": true,
+          "Key": "string",
+          "ItemId": "string"
+        },
+        "RecursiveItemCount": 0,
+        "ChildCount": 0,
+        "SeriesName": "string",
+        "SeriesId": "c7b70af4-4902-4a7e-95ab-28349b6c7afc",
+        "SeasonId": "badb6463-e5b7-45c5-8141-71204420ec8f",
+        "SpecialFeatureCount": 0,
+        "DisplayPreferencesId": "string",
+        "Status": "string",
+        "AirTime": "string",
+        "AirDays": ["Sunday"],
+        "Tags": ["string"],
+        "PrimaryImageAspectRatio": 0,
+        "Artists": ["string"],
+        "ArtistItems": [
+          {
+            "Name": "string",
+            "Id": "38a5a5bb-dc30-49a2-b175-1de0d1488c43"
+          }
+        ],
+        "Album": "string",
+        "CollectionType": "string",
+        "DisplayOrder": "string",
+        "AlbumId": "21af9851-8e39-43a9-9c47-513d3b9e99fc",
+        "AlbumPrimaryImageTag": "string",
+        "SeriesPrimaryImageTag": "string",
+        "AlbumArtist": "string",
+        "AlbumArtists": [
+          {
+            "Name": "string",
+            "Id": "38a5a5bb-dc30-49a2-b175-1de0d1488c43"
+          }
+        ],
+        "SeasonName": "string",
+        "MediaStreams": [
+          {
+            "Codec": "string",
+            "CodecTag": "string",
+            "Language": "string",
+            "ColorRange": "string",
+            "ColorSpace": "string",
+            "ColorTransfer": "string",
+            "ColorPrimaries": "string",
+            "DvVersionMajor": 0,
+            "DvVersionMinor": 0,
+            "DvProfile": 0,
+            "DvLevel": 0,
+            "RpuPresentFlag": 0,
+            "ElPresentFlag": 0,
+            "BlPresentFlag": 0,
+            "DvBlSignalCompatibilityId": 0,
+            "Comment": "string",
+            "TimeBase": "string",
+            "CodecTimeBase": "string",
+            "Title": "string",
+            "VideoRange": "string",
+            "VideoRangeType": "string",
+            "VideoDoViTitle": "string",
+            "LocalizedUndefined": "string",
+            "LocalizedDefault": "string",
+            "LocalizedForced": "string",
+            "LocalizedExternal": "string",
+            "DisplayTitle": "string",
+            "NalLengthSize": "string",
+            "IsInterlaced": true,
+            "IsAVC": true,
+            "ChannelLayout": "string",
+            "BitRate": 0,
+            "BitDepth": 0,
+            "RefFrames": 0,
+            "PacketLength": 0,
+            "Channels": 0,
+            "SampleRate": 0,
+            "IsDefault": true,
+            "IsForced": true,
+            "Height": 0,
+            "Width": 0,
+            "AverageFrameRate": 0,
+            "RealFrameRate": 0,
+            "Profile": "string",
+            "Type": "Audio",
+            "AspectRatio": "string",
+            "Index": 0,
+            "Score": 0,
+            "IsExternal": true,
+            "DeliveryMethod": "Encode",
+            "DeliveryUrl": "string",
+            "IsExternalUrl": true,
+            "IsTextSubtitleStream": true,
+            "SupportsExternalStream": true,
+            "Path": "string",
+            "PixelFormat": "string",
+            "Level": 0,
+            "IsAnamorphic": true
+          }
+        ],
+        "VideoType": "VideoFile",
+        "PartCount": 0,
+        "MediaSourceCount": 0,
+        "ImageTags": {
+          "property1": "string",
+          "property2": "string"
+        },
+        "BackdropImageTags": ["string"],
+        "ScreenshotImageTags": ["string"],
+        "ParentLogoImageTag": "string",
+        "ParentArtItemId": "10c1875b-b82c-48e8-bae9-939a5e68dc2f",
+        "ParentArtImageTag": "string",
+        "SeriesThumbImageTag": "string",
+        "ImageBlurHashes": {
+          "Primary": {
+            "property1": "string",
+            "property2": "string"
+          },
+          "Art": {
+            "property1": "string",
+            "property2": "string"
+          },
+          "Backdrop": {
+            "property1": "string",
+            "property2": "string"
+          },
+          "Banner": {
+            "property1": "string",
+            "property2": "string"
+          },
+          "Logo": {
+            "property1": "string",
+            "property2": "string"
+          },
+          "Thumb": {
+            "property1": "string",
+            "property2": "string"
+          },
+          "Disc": {
+            "property1": "string",
+            "property2": "string"
+          },
+          "Box": {
+            "property1": "string",
+            "property2": "string"
+          },
+          "Screenshot": {
+            "property1": "string",
+            "property2": "string"
+          },
+          "Menu": {
+            "property1": "string",
+            "property2": "string"
+          },
+          "Chapter": {
+            "property1": "string",
+            "property2": "string"
+          },
+          "BoxRear": {
+            "property1": "string",
+            "property2": "string"
+          },
+          "Profile": {
+            "property1": "string",
+            "property2": "string"
+          }
+        },
+        "SeriesStudio": "string",
+        "ParentThumbItemId": "ae6ff707-333d-4994-be6d-b83ca1b35f46",
+        "ParentThumbImageTag": "string",
+        "ParentPrimaryImageItemId": "string",
+        "ParentPrimaryImageTag": "string",
+        "Chapters": [
+          {
+            "StartPositionTicks": 0,
+            "Name": "string",
+            "ImagePath": "string",
+            "ImageDateModified": "2019-08-24T14:15:22Z",
+            "ImageTag": "string"
+          }
+        ],
+        "LocationType": "FileSystem",
+        "IsoType": "Dvd",
+        "MediaType": "string",
+        "EndDate": "2019-08-24T14:15:22Z",
+        "LockedFields": ["Cast"],
+        "TrailerCount": 0,
+        "MovieCount": 0,
+        "SeriesCount": 0,
+        "ProgramCount": 0,
+        "EpisodeCount": 0,
+        "SongCount": 0,
+        "AlbumCount": 0,
+        "ArtistCount": 0,
+        "MusicVideoCount": 0,
+        "LockData": true,
+        "Width": 0,
+        "Height": 0,
+        "CameraMake": "string",
+        "CameraModel": "string",
+        "Software": "string",
+        "ExposureTime": 0,
+        "FocalLength": 0,
+        "ImageOrientation": "TopLeft",
+        "Aperture": 0,
+        "ShutterSpeed": 0,
+        "Latitude": 0,
+        "Longitude": 0,
+        "Altitude": 0,
+        "IsoSpeedRating": 0,
+        "SeriesTimerId": "string",
+        "ProgramId": "string",
+        "ChannelPrimaryImageTag": "string",
+        "StartDate": "2019-08-24T14:15:22Z",
+        "CompletionPercentage": 0,
+        "IsRepeat": true,
+        "EpisodeTitle": "string",
+        "ChannelType": "TV",
+        "Audio": "Mono",
+        "IsMovie": true,
+        "IsSports": true,
+        "IsSeries": true,
+        "IsLive": true,
+        "IsNews": true,
+        "IsKids": true,
+        "IsPremiere": true,
+        "TimerId": "string",
+        "CurrentProgram": {}
+      }
+    ],
+    "HasCustomDeviceName": true,
+    "PlaylistItemId": "string",
+    "ServerId": "SERVER-UUID",
+    "UserPrimaryImageTag": "string",
+    "SupportedCommands": ["MoveUp"]
+  },
+  {
+    "PlayState": {
+      "PositionTicks": 230000000,
+      "CanSeek": true,
+      "IsPaused": false,
+      "IsMuted": false,
+      "VolumeLevel": 55,
+      "AudioStreamIndex": 0,
+      "SubtitleStreamIndex": 0,
+      "MediaSourceId": "string",
+      "PlayMethod": "Transcode",
+      "RepeatMode": "RepeatNone",
+      "LiveStreamId": "string"
+    },
+    "AdditionalUsers": [
+      {
+        "UserId": "08ba1929-681e-4b24-929b-9245852f65c0",
+        "UserName": "string"
+      }
+    ],
+    "Capabilities": {
+      "PlayableMediaTypes": ["Video"],
+      "SupportedCommands": ["VolumeSet", "Mute"],
+      "SupportsMediaControl": true,
+      "SupportsContentUploading": true,
+      "MessageCallbackUrl": "string",
+      "SupportsPersistentIdentifier": true,
+      "SupportsSync": true,
+      "DeviceProfile": {
+        "Name": "string",
+        "Id": "string",
+        "Identification": {
+          "FriendlyName": "string",
+          "ModelNumber": "string",
+          "SerialNumber": "string",
+          "ModelName": "string",
+          "ModelDescription": "string",
+          "ModelUrl": "string",
+          "Manufacturer": "string",
+          "ManufacturerUrl": "string",
+          "Headers": [
+            {
+              "Name": "string",
+              "Value": "string",
+              "Match": "Equals"
+            }
+          ]
+        },
+        "FriendlyName": "string",
+        "Manufacturer": "string",
+        "ManufacturerUrl": "string",
+        "ModelName": "string",
+        "ModelDescription": "string",
+        "ModelNumber": "string",
+        "ModelUrl": "string",
+        "SerialNumber": "string",
+        "EnableAlbumArtInDidl": false,
+        "EnableSingleAlbumArtLimit": false,
+        "EnableSingleSubtitleLimit": false,
+        "SupportedMediaTypes": "string",
+        "UserId": "string",
+        "AlbumArtPn": "string",
+        "MaxAlbumArtWidth": 0,
+        "MaxAlbumArtHeight": 0,
+        "MaxIconWidth": 0,
+        "MaxIconHeight": 0,
+        "MaxStreamingBitrate": 0,
+        "MaxStaticBitrate": 0,
+        "MusicStreamingTranscodingBitrate": 0,
+        "MaxStaticMusicBitrate": 0,
+        "SonyAggregationFlags": "string",
+        "ProtocolInfo": "string",
+        "TimelineOffsetSeconds": 0,
+        "RequiresPlainVideoItems": false,
+        "RequiresPlainFolders": false,
+        "EnableMSMediaReceiverRegistrar": false,
+        "IgnoreTranscodeByteRangeRequests": false,
+        "XmlRootAttributes": [
+          {
+            "Name": "string",
+            "Value": "string"
+          }
+        ],
+        "DirectPlayProfiles": [
+          {
+            "Container": "string",
+            "AudioCodec": "string",
+            "VideoCodec": "string",
+            "Type": "Audio"
+          }
+        ],
+        "TranscodingProfiles": [
+          {
+            "Container": "string",
+            "Type": "Audio",
+            "VideoCodec": "string",
+            "AudioCodec": "string",
+            "Protocol": "string",
+            "EstimateContentLength": false,
+            "EnableMpegtsM2TsMode": false,
+            "TranscodeSeekInfo": "Auto",
+            "CopyTimestamps": false,
+            "Context": "Streaming",
+            "EnableSubtitlesInManifest": false,
+            "MaxAudioChannels": "string",
+            "MinSegments": 0,
+            "SegmentLength": 0,
+            "BreakOnNonKeyFrames": false,
+            "Conditions": [
+              {
+                "Condition": "Equals",
+                "Property": "AudioChannels",
+                "Value": "string",
+                "IsRequired": true
+              }
+            ]
+          }
+        ],
+        "ContainerProfiles": [
+          {
+            "Type": "Audio",
+            "Conditions": [
+              {
+                "Condition": "Equals",
+                "Property": "AudioChannels",
+                "Value": "string",
+                "IsRequired": true
+              }
+            ],
+            "Container": "string"
+          }
+        ],
+        "CodecProfiles": [
+          {
+            "Type": "Video",
+            "Conditions": [
+              {
+                "Condition": "Equals",
+                "Property": "AudioChannels",
+                "Value": "string",
+                "IsRequired": true
+              }
+            ],
+            "ApplyConditions": [
+              {
+                "Condition": "Equals",
+                "Property": "AudioChannels",
+                "Value": "string",
+                "IsRequired": true
+              }
+            ],
+            "Codec": "string",
+            "Container": "string"
+          }
+        ],
+        "ResponseProfiles": [
+          {
+            "Container": "string",
+            "AudioCodec": "string",
+            "VideoCodec": "string",
+            "Type": "Audio",
+            "OrgPn": "string",
+            "MimeType": "string",
+            "Conditions": [
+              {
+                "Condition": "Equals",
+                "Property": "AudioChannels",
+                "Value": "string",
+                "IsRequired": true
+              }
+            ]
+          }
+        ],
+        "SubtitleProfiles": [
+          {
+            "Format": "string",
+            "Method": "Encode",
+            "DidlMode": "string",
+            "Language": "string",
+            "Container": "string"
+          }
+        ]
+      },
+      "AppStoreUrl": "string",
+      "IconUrl": "string"
+    },
+    "RemoteEndPoint": "string",
+    "PlayableMediaTypes": ["Video"],
+    "Id": "SESSION-UUID-TWO",
+    "UserId": "USER-UUID-TWO",
+    "UserName": "string",
+    "Client": "Jellyfin for Developers",
+    "LastActivityDate": "2019-08-24T14:15:22Z",
+    "LastPlaybackCheckIn": "2019-08-24T14:15:22Z",
+    "DeviceName": "JELLYFIN-DEVICE-TWO",
+    "DeviceType": "string",
+    "NowPlayingItem": {
+      "Name": "MOVIE",
+      "OriginalTitle": "string",
+      "ServerId": "SERVER-UUID",
+      "Id": "EPISODE-UUID",
+      "Etag": "string",
+      "SourceType": "string",
+      "PlaylistItemId": "string",
+      "DateCreated": "2019-08-24T14:15:22Z",
+      "DateLastMediaAdded": "2019-08-24T14:15:22Z",
+      "ExtraType": "string",
+      "AirsBeforeSeasonNumber": 0,
+      "AirsAfterSeasonNumber": 0,
+      "AirsBeforeEpisodeNumber": 0,
+      "CanDelete": true,
+      "CanDownload": true,
+      "HasSubtitles": true,
+      "PreferredMetadataLanguage": "string",
+      "PreferredMetadataCountryCode": "string",
+      "SupportsSync": true,
+      "Container": "string",
+      "SortName": "string",
+      "ForcedSortName": "string",
+      "Video3DFormat": "HalfSideBySide",
+      "PremiereDate": "2019-08-24T14:15:22Z",
+      "ExternalUrls": [
+        {
+          "Name": "string",
+          "Url": "string"
+        }
+      ],
+      "MediaSources": [
+        {
+          "Protocol": "File",
+          "Id": "string",
+          "Path": "string",
+          "EncoderPath": "string",
+          "EncoderProtocol": "File",
+          "Type": "Default",
+          "Container": "string",
+          "Size": 0,
+          "Name": "string",
+          "IsRemote": true,
+          "ETag": "string",
+          "RunTimeTicks": 0,
+          "ReadAtNativeFramerate": true,
+          "IgnoreDts": true,
+          "IgnoreIndex": true,
+          "GenPtsInput": true,
+          "SupportsTranscoding": true,
+          "SupportsDirectStream": true,
+          "SupportsDirectPlay": true,
+          "IsInfiniteStream": true,
+          "RequiresOpening": true,
+          "OpenToken": "string",
+          "RequiresClosing": true,
+          "LiveStreamId": "string",
+          "BufferMs": 0,
+          "RequiresLooping": true,
+          "SupportsProbing": true,
+          "VideoType": "VideoFile",
+          "IsoType": "Dvd",
+          "Video3DFormat": "HalfSideBySide",
+          "MediaStreams": [
+            {
+              "Codec": "string",
+              "CodecTag": "string",
+              "Language": "string",
+              "ColorRange": "string",
+              "ColorSpace": "string",
+              "ColorTransfer": "string",
+              "ColorPrimaries": "string",
+              "DvVersionMajor": 0,
+              "DvVersionMinor": 0,
+              "DvProfile": 0,
+              "DvLevel": 0,
+              "RpuPresentFlag": 0,
+              "ElPresentFlag": 0,
+              "BlPresentFlag": 0,
+              "DvBlSignalCompatibilityId": 0,
+              "Comment": "string",
+              "TimeBase": "string",
+              "CodecTimeBase": "string",
+              "Title": "string",
+              "VideoRange": "string",
+              "VideoRangeType": "string",
+              "VideoDoViTitle": "string",
+              "LocalizedUndefined": "string",
+              "LocalizedDefault": "string",
+              "LocalizedForced": "string",
+              "LocalizedExternal": "string",
+              "DisplayTitle": "string",
+              "NalLengthSize": "string",
+              "IsInterlaced": true,
+              "IsAVC": true,
+              "ChannelLayout": "string",
+              "BitRate": 0,
+              "BitDepth": 0,
+              "RefFrames": 0,
+              "PacketLength": 0,
+              "Channels": 0,
+              "SampleRate": 0,
+              "IsDefault": true,
+              "IsForced": true,
+              "Height": 0,
+              "Width": 0,
+              "AverageFrameRate": 0,
+              "RealFrameRate": 0,
+              "Profile": "string",
+              "Type": "Audio",
+              "AspectRatio": "string",
+              "Index": 0,
+              "Score": 0,
+              "IsExternal": true,
+              "DeliveryMethod": "Encode",
+              "DeliveryUrl": "string",
+              "IsExternalUrl": true,
+              "IsTextSubtitleStream": true,
+              "SupportsExternalStream": true,
+              "Path": "string",
+              "PixelFormat": "string",
+              "Level": 0,
+              "IsAnamorphic": true
+            }
+          ],
+          "MediaAttachments": [
+            {
+              "Codec": "string",
+              "CodecTag": "string",
+              "Comment": "string",
+              "Index": 0,
+              "FileName": "string",
+              "MimeType": "string",
+              "DeliveryUrl": "string"
+            }
+          ],
+          "Formats": ["string"],
+          "Bitrate": 0,
+          "Timestamp": "None",
+          "RequiredHttpHeaders": {
+            "property1": "string",
+            "property2": "string"
+          },
+          "TranscodingUrl": "string",
+          "TranscodingSubProtocol": "string",
+          "TranscodingContainer": "string",
+          "AnalyzeDurationMs": 0,
+          "DefaultAudioStreamIndex": 0,
+          "DefaultSubtitleStreamIndex": 0
+        }
+      ],
+      "CriticRating": 0,
+      "ProductionLocations": ["string"],
+      "Path": "string",
+      "EnableMediaSourceDisplay": true,
+      "OfficialRating": "string",
+      "CustomRating": "string",
+      "ChannelId": "04b0b2a5-93cb-474d-8ea9-3df0f84eb0ff",
+      "ChannelName": "string",
+      "Overview": "string",
+      "Taglines": ["string"],
+      "Genres": ["string"],
+      "CommunityRating": 0,
+      "CumulativeRunTimeTicks": 0,
+      "RunTimeTicks": 2000000000,
+      "PlayAccess": "Full",
+      "AspectRatio": "string",
+      "ProductionYear": 0,
+      "IsPlaceHolder": true,
+      "Number": "string",
+      "ChannelNumber": "string",
+      "IndexNumber": 0,
+      "IndexNumberEnd": 0,
+      "ParentIndexNumber": 0,
+      "RemoteTrailers": [
+        {
+          "Url": "string",
+          "Name": "string"
+        }
+      ],
+      "ProviderIds": {
+        "property1": "string",
+        "property2": "string"
+      },
+      "IsHD": true,
+      "IsFolder": false,
+      "ParentId": "",
+      "Type": "Movie",
+      "People": [
+        {
+          "Name": "string",
+          "Id": "38a5a5bb-dc30-49a2-b175-1de0d1488c43",
+          "Role": "string",
+          "Type": "string",
+          "PrimaryImageTag": "string",
+          "ImageBlurHashes": {
+            "Primary": {
+              "property1": "string",
+              "property2": "string"
+            },
+            "Art": {
+              "property1": "string",
+              "property2": "string"
+            },
+            "Backdrop": {
+              "property1": "string",
+              "property2": "string"
+            },
+            "Banner": {
+              "property1": "string",
+              "property2": "string"
+            },
+            "Logo": {
+              "property1": "string",
+              "property2": "string"
+            },
+            "Thumb": {
+              "property1": "string",
+              "property2": "string"
+            },
+            "Disc": {
+              "property1": "string",
+              "property2": "string"
+            },
+            "Box": {
+              "property1": "string",
+              "property2": "string"
+            },
+            "Screenshot": {
+              "property1": "string",
+              "property2": "string"
+            },
+            "Menu": {
+              "property1": "string",
+              "property2": "string"
+            },
+            "Chapter": {
+              "property1": "string",
+              "property2": "string"
+            },
+            "BoxRear": {
+              "property1": "string",
+              "property2": "string"
+            },
+            "Profile": {
+              "property1": "string",
+              "property2": "string"
+            }
+          }
+        }
+      ],
+      "Studios": [
+        {
+          "Name": "string",
+          "Id": "38a5a5bb-dc30-49a2-b175-1de0d1488c43"
+        }
+      ],
+      "GenreItems": [
+        {
+          "Name": "string",
+          "Id": "38a5a5bb-dc30-49a2-b175-1de0d1488c43"
+        }
+      ],
+      "ParentLogoItemId": "c78d400f-de5c-421e-8714-4fb05d387233",
+      "ParentBackdropItemId": "",
+      "ParentBackdropImageTags": ["string"],
+      "LocalTrailerCount": 0,
+      "UserData": {
+        "Rating": 0,
+        "PlayedPercentage": 0,
+        "UnplayedItemCount": 0,
+        "PlaybackPositionTicks": 0,
+        "PlayCount": 0,
+        "IsFavorite": true,
+        "Likes": true,
+        "LastPlayedDate": "2019-08-24T14:15:22Z",
+        "Played": true,
+        "Key": "string",
+        "ItemId": "string"
+      },
+      "RecursiveItemCount": 0,
+      "ChildCount": 0,
+      "SeriesName": "SERIES",
+      "SeriesId": "SERIES-UUID",
+      "SeasonId": "SEASON-UUID",
+      "SpecialFeatureCount": 0,
+      "DisplayPreferencesId": "string",
+      "Status": "string",
+      "AirTime": "string",
+      "AirDays": ["Sunday"],
+      "Tags": ["string"],
+      "PrimaryImageAspectRatio": 0,
+      "Artists": ["string"],
+      "ArtistItems": [
+        {
+          "Name": "string",
+          "Id": "38a5a5bb-dc30-49a2-b175-1de0d1488c43"
+        }
+      ],
+      "Album": "string",
+      "CollectionType": "string",
+      "DisplayOrder": "string",
+      "AlbumId": "21af9851-8e39-43a9-9c47-513d3b9e99fc",
+      "AlbumPrimaryImageTag": "string",
+      "SeriesPrimaryImageTag": "string",
+      "AlbumArtist": "string",
+      "AlbumArtists": [
+        {
+          "Name": "string",
+          "Id": "38a5a5bb-dc30-49a2-b175-1de0d1488c43"
+        }
+      ],
+      "SeasonName": "SEASON",
+      "MediaStreams": [
+        {
+          "Codec": "string",
+          "CodecTag": "string",
+          "Language": "string",
+          "ColorRange": "string",
+          "ColorSpace": "string",
+          "ColorTransfer": "string",
+          "ColorPrimaries": "string",
+          "DvVersionMajor": 0,
+          "DvVersionMinor": 0,
+          "DvProfile": 0,
+          "DvLevel": 0,
+          "RpuPresentFlag": 0,
+          "ElPresentFlag": 0,
+          "BlPresentFlag": 0,
+          "DvBlSignalCompatibilityId": 0,
+          "Comment": "string",
+          "TimeBase": "string",
+          "CodecTimeBase": "string",
+          "Title": "string",
+          "VideoRange": "string",
+          "VideoRangeType": "string",
+          "VideoDoViTitle": "string",
+          "LocalizedUndefined": "string",
+          "LocalizedDefault": "string",
+          "LocalizedForced": "string",
+          "LocalizedExternal": "string",
+          "DisplayTitle": "string",
+          "NalLengthSize": "string",
+          "IsInterlaced": true,
+          "IsAVC": true,
+          "ChannelLayout": "string",
+          "BitRate": 0,
+          "BitDepth": 0,
+          "RefFrames": 0,
+          "PacketLength": 0,
+          "Channels": 0,
+          "SampleRate": 0,
+          "IsDefault": true,
+          "IsForced": true,
+          "Height": 0,
+          "Width": 0,
+          "AverageFrameRate": 0,
+          "RealFrameRate": 0,
+          "Profile": "string",
+          "Type": "Audio",
+          "AspectRatio": "string",
+          "Index": 0,
+          "Score": 0,
+          "IsExternal": true,
+          "DeliveryMethod": "Encode",
+          "DeliveryUrl": "string",
+          "IsExternalUrl": true,
+          "IsTextSubtitleStream": true,
+          "SupportsExternalStream": true,
+          "Path": "string",
+          "PixelFormat": "string",
+          "Level": 0,
+          "IsAnamorphic": true
+        }
+      ],
+      "VideoType": "VideoFile",
+      "PartCount": 0,
+      "MediaSourceCount": 0,
+      "ImageTags": {
+        "Backdrop": "string",
+        "property2": "string"
+      },
+      "BackdropImageTags": ["string"],
+      "ScreenshotImageTags": ["string"],
+      "ParentLogoImageTag": "string",
+      "ParentArtItemId": "10c1875b-b82c-48e8-bae9-939a5e68dc2f",
+      "ParentArtImageTag": "string",
+      "SeriesThumbImageTag": "string",
+      "ImageBlurHashes": {
+        "Primary": {
+          "property1": "string",
+          "property2": "string"
+        },
+        "Art": {
+          "property1": "string",
+          "property2": "string"
+        },
+        "Backdrop": {
+          "property1": "string",
+          "property2": "string"
+        },
+        "Banner": {
+          "property1": "string",
+          "property2": "string"
+        },
+        "Logo": {
+          "property1": "string",
+          "property2": "string"
+        },
+        "Thumb": {
+          "property1": "string",
+          "property2": "string"
+        },
+        "Disc": {
+          "property1": "string",
+          "property2": "string"
+        },
+        "Box": {
+          "property1": "string",
+          "property2": "string"
+        },
+        "Screenshot": {
+          "property1": "string",
+          "property2": "string"
+        },
+        "Menu": {
+          "property1": "string",
+          "property2": "string"
+        },
+        "Chapter": {
+          "property1": "string",
+          "property2": "string"
+        },
+        "BoxRear": {
+          "property1": "string",
+          "property2": "string"
+        },
+        "Profile": {
+          "property1": "string",
+          "property2": "string"
+        }
+      },
+      "SeriesStudio": "HASS",
+      "ParentThumbItemId": "ae6ff707-333d-4994-be6d-b83ca1b35f46",
+      "ParentThumbImageTag": "string",
+      "ParentPrimaryImageItemId": "string",
+      "ParentPrimaryImageTag": "string",
+      "Chapters": [
+        {
+          "StartPositionTicks": 0,
+          "Name": "string",
+          "ImagePath": "string",
+          "ImageDateModified": "2019-08-24T14:15:22Z",
+          "ImageTag": "string"
+        }
+      ],
+      "LocationType": "FileSystem",
+      "IsoType": "Dvd",
+      "MediaType": "string",
+      "EndDate": "2019-08-24T14:15:22Z",
+      "LockedFields": ["Cast"],
+      "TrailerCount": 0,
+      "MovieCount": 0,
+      "SeriesCount": 0,
+      "ProgramCount": 0,
+      "EpisodeCount": 0,
+      "SongCount": 0,
+      "AlbumCount": 0,
+      "ArtistCount": 0,
+      "MusicVideoCount": 0,
+      "LockData": true,
+      "Width": 0,
+      "Height": 0,
+      "CameraMake": "string",
+      "CameraModel": "string",
+      "Software": "string",
+      "ExposureTime": 0,
+      "FocalLength": 0,
+      "ImageOrientation": "TopLeft",
+      "Aperture": 0,
+      "ShutterSpeed": 0,
+      "Latitude": 0,
+      "Longitude": 0,
+      "Altitude": 0,
+      "IsoSpeedRating": 0,
+      "SeriesTimerId": "string",
+      "ProgramId": "string",
+      "ChannelPrimaryImageTag": "string",
+      "StartDate": "2019-08-24T14:15:22Z",
+      "CompletionPercentage": 0,
+      "IsRepeat": true,
+      "EpisodeTitle": "string",
+      "ChannelType": "TV",
+      "Audio": "Mono",
+      "IsMovie": true,
+      "IsSports": true,
+      "IsSeries": true,
+      "IsLive": true,
+      "IsNews": true,
+      "IsKids": true,
+      "IsPremiere": true,
+      "TimerId": "string",
+      "CurrentProgram": {}
+    },
+    "FullNowPlayingItem": {
+      "Size": 0,
+      "Container": "string",
+      "IsHD": true,
+      "IsShortcut": true,
+      "ShortcutPath": "string",
+      "Width": 0,
+      "Height": 0,
+      "ExtraIds": ["497f6eca-6276-4993-bfeb-53cbbbba6f08"],
+      "DateLastSaved": "2019-08-24T14:15:22Z",
+      "RemoteTrailers": [
+        {
+          "Url": "string",
+          "Name": "string"
+        }
+      ],
+      "SupportsExternalTransfer": true
+    },
+    "NowViewingItem": {
+      "Name": "string",
+      "OriginalTitle": "string",
+      "ServerId": "string",
+      "Id": "38a5a5bb-dc30-49a2-b175-1de0d1488c43",
+      "Etag": "string",
+      "SourceType": "string",
+      "PlaylistItemId": "string",
+      "DateCreated": "2019-08-24T14:15:22Z",
+      "DateLastMediaAdded": "2019-08-24T14:15:22Z",
+      "ExtraType": "string",
+      "AirsBeforeSeasonNumber": 0,
+      "AirsAfterSeasonNumber": 0,
+      "AirsBeforeEpisodeNumber": 0,
+      "CanDelete": true,
+      "CanDownload": true,
+      "HasSubtitles": true,
+      "PreferredMetadataLanguage": "string",
+      "PreferredMetadataCountryCode": "string",
+      "SupportsSync": true,
+      "Container": "string",
+      "SortName": "string",
+      "ForcedSortName": "string",
+      "Video3DFormat": "HalfSideBySide",
+      "PremiereDate": "2019-08-24T14:15:22Z",
+      "ExternalUrls": [
+        {
+          "Name": "string",
+          "Url": "string"
+        }
+      ],
+      "MediaSources": [
+        {
+          "Protocol": "File",
+          "Id": "string",
+          "Path": "string",
+          "EncoderPath": "string",
+          "EncoderProtocol": "File",
+          "Type": "Default",
+          "Container": "string",
+          "Size": 0,
+          "Name": "string",
+          "IsRemote": true,
+          "ETag": "string",
+          "RunTimeTicks": 0,
+          "ReadAtNativeFramerate": true,
+          "IgnoreDts": true,
+          "IgnoreIndex": true,
+          "GenPtsInput": true,
+          "SupportsTranscoding": true,
+          "SupportsDirectStream": true,
+          "SupportsDirectPlay": true,
+          "IsInfiniteStream": true,
+          "RequiresOpening": true,
+          "OpenToken": "string",
+          "RequiresClosing": true,
+          "LiveStreamId": "string",
+          "BufferMs": 0,
+          "RequiresLooping": true,
+          "SupportsProbing": true,
+          "VideoType": "VideoFile",
+          "IsoType": "Dvd",
+          "Video3DFormat": "HalfSideBySide",
+          "MediaStreams": [
+            {
+              "Codec": "string",
+              "CodecTag": "string",
+              "Language": "string",
+              "ColorRange": "string",
+              "ColorSpace": "string",
+              "ColorTransfer": "string",
+              "ColorPrimaries": "string",
+              "DvVersionMajor": 0,
+              "DvVersionMinor": 0,
+              "DvProfile": 0,
+              "DvLevel": 0,
+              "RpuPresentFlag": 0,
+              "ElPresentFlag": 0,
+              "BlPresentFlag": 0,
+              "DvBlSignalCompatibilityId": 0,
+              "Comment": "string",
+              "TimeBase": "string",
+              "CodecTimeBase": "string",
+              "Title": "string",
+              "VideoRange": "string",
+              "VideoRangeType": "string",
+              "VideoDoViTitle": "string",
+              "LocalizedUndefined": "string",
+              "LocalizedDefault": "string",
+              "LocalizedForced": "string",
+              "LocalizedExternal": "string",
+              "DisplayTitle": "string",
+              "NalLengthSize": "string",
+              "IsInterlaced": true,
+              "IsAVC": true,
+              "ChannelLayout": "string",
+              "BitRate": 0,
+              "BitDepth": 0,
+              "RefFrames": 0,
+              "PacketLength": 0,
+              "Channels": 0,
+              "SampleRate": 0,
+              "IsDefault": true,
+              "IsForced": true,
+              "Height": 0,
+              "Width": 0,
+              "AverageFrameRate": 0,
+              "RealFrameRate": 0,
+              "Profile": "string",
+              "Type": "Audio",
+              "AspectRatio": "string",
+              "Index": 0,
+              "Score": 0,
+              "IsExternal": true,
+              "DeliveryMethod": "Encode",
+              "DeliveryUrl": "string",
+              "IsExternalUrl": true,
+              "IsTextSubtitleStream": true,
+              "SupportsExternalStream": true,
+              "Path": "string",
+              "PixelFormat": "string",
+              "Level": 0,
+              "IsAnamorphic": true
+            }
+          ],
+          "MediaAttachments": [
+            {
+              "Codec": "string",
+              "CodecTag": "string",
+              "Comment": "string",
+              "Index": 0,
+              "FileName": "string",
+              "MimeType": "string",
+              "DeliveryUrl": "string"
+            }
+          ],
+          "Formats": ["string"],
+          "Bitrate": 0,
+          "Timestamp": "None",
+          "RequiredHttpHeaders": {
+            "property1": "string",
+            "property2": "string"
+          },
+          "TranscodingUrl": "string",
+          "TranscodingSubProtocol": "string",
+          "TranscodingContainer": "string",
+          "AnalyzeDurationMs": 0,
+          "DefaultAudioStreamIndex": 0,
+          "DefaultSubtitleStreamIndex": 0
+        }
+      ],
+      "CriticRating": 0,
+      "ProductionLocations": ["string"],
+      "Path": "string",
+      "EnableMediaSourceDisplay": true,
+      "OfficialRating": "string",
+      "CustomRating": "string",
+      "ChannelId": "04b0b2a5-93cb-474d-8ea9-3df0f84eb0ff",
+      "ChannelName": "string",
+      "Overview": "string",
+      "Taglines": ["string"],
+      "Genres": ["string"],
+      "CommunityRating": 0,
+      "CumulativeRunTimeTicks": 0,
+      "RunTimeTicks": 0,
+      "PlayAccess": "Full",
+      "AspectRatio": "string",
+      "ProductionYear": 0,
+      "IsPlaceHolder": true,
+      "Number": "string",
+      "ChannelNumber": "string",
+      "IndexNumber": 0,
+      "IndexNumberEnd": 0,
+      "ParentIndexNumber": 0,
+      "RemoteTrailers": [
+        {
+          "Url": "string",
+          "Name": "string"
+        }
+      ],
+      "ProviderIds": {
+        "property1": "string",
+        "property2": "string"
+      },
+      "IsHD": true,
+      "IsFolder": true,
+      "ParentId": "c54e2d15-b5eb-48b7-9b04-53f376904b1e",
+      "Type": "AggregateFolder",
+      "People": [
+        {
+          "Name": "string",
+          "Id": "38a5a5bb-dc30-49a2-b175-1de0d1488c43",
+          "Role": "string",
+          "Type": "string",
+          "PrimaryImageTag": "string",
+          "ImageBlurHashes": {
+            "Primary": {
+              "property1": "string",
+              "property2": "string"
+            },
+            "Art": {
+              "property1": "string",
+              "property2": "string"
+            },
+            "Backdrop": {
+              "property1": "string",
+              "property2": "string"
+            },
+            "Banner": {
+              "property1": "string",
+              "property2": "string"
+            },
+            "Logo": {
+              "property1": "string",
+              "property2": "string"
+            },
+            "Thumb": {
+              "property1": "string",
+              "property2": "string"
+            },
+            "Disc": {
+              "property1": "string",
+              "property2": "string"
+            },
+            "Box": {
+              "property1": "string",
+              "property2": "string"
+            },
+            "Screenshot": {
+              "property1": "string",
+              "property2": "string"
+            },
+            "Menu": {
+              "property1": "string",
+              "property2": "string"
+            },
+            "Chapter": {
+              "property1": "string",
+              "property2": "string"
+            },
+            "BoxRear": {
+              "property1": "string",
+              "property2": "string"
+            },
+            "Profile": {
+              "property1": "string",
+              "property2": "string"
+            }
+          }
+        }
+      ],
+      "Studios": [
+        {
+          "Name": "string",
+          "Id": "38a5a5bb-dc30-49a2-b175-1de0d1488c43"
+        }
+      ],
+      "GenreItems": [
+        {
+          "Name": "string",
+          "Id": "38a5a5bb-dc30-49a2-b175-1de0d1488c43"
+        }
+      ],
+      "ParentLogoItemId": "c78d400f-de5c-421e-8714-4fb05d387233",
+      "ParentBackdropItemId": "c22fd826-17fc-44f4-9b04-1eb3e8fb9173",
+      "ParentBackdropImageTags": ["string"],
+      "LocalTrailerCount": 0,
+      "UserData": {
+        "Rating": 0,
+        "PlayedPercentage": 0,
+        "UnplayedItemCount": 0,
+        "PlaybackPositionTicks": 0,
+        "PlayCount": 0,
+        "IsFavorite": true,
+        "Likes": true,
+        "LastPlayedDate": "2019-08-24T14:15:22Z",
+        "Played": true,
+        "Key": "string",
+        "ItemId": "string"
+      },
+      "RecursiveItemCount": 0,
+      "ChildCount": 0,
+      "SeriesName": "string",
+      "SeriesId": "c7b70af4-4902-4a7e-95ab-28349b6c7afc",
+      "SeasonId": "badb6463-e5b7-45c5-8141-71204420ec8f",
+      "SpecialFeatureCount": 0,
+      "DisplayPreferencesId": "string",
+      "Status": "string",
+      "AirTime": "string",
+      "AirDays": ["Sunday"],
+      "Tags": ["string"],
+      "PrimaryImageAspectRatio": 0,
+      "Artists": ["string"],
+      "ArtistItems": [
+        {
+          "Name": "string",
+          "Id": "38a5a5bb-dc30-49a2-b175-1de0d1488c43"
+        }
+      ],
+      "Album": "string",
+      "CollectionType": "string",
+      "DisplayOrder": "string",
+      "AlbumId": "21af9851-8e39-43a9-9c47-513d3b9e99fc",
+      "AlbumPrimaryImageTag": "string",
+      "SeriesPrimaryImageTag": "string",
+      "AlbumArtist": "string",
+      "AlbumArtists": [
+        {
+          "Name": "string",
+          "Id": "38a5a5bb-dc30-49a2-b175-1de0d1488c43"
+        }
+      ],
+      "SeasonName": "string",
+      "MediaStreams": [
+        {
+          "Codec": "string",
+          "CodecTag": "string",
+          "Language": "string",
+          "ColorRange": "string",
+          "ColorSpace": "string",
+          "ColorTransfer": "string",
+          "ColorPrimaries": "string",
+          "DvVersionMajor": 0,
+          "DvVersionMinor": 0,
+          "DvProfile": 0,
+          "DvLevel": 0,
+          "RpuPresentFlag": 0,
+          "ElPresentFlag": 0,
+          "BlPresentFlag": 0,
+          "DvBlSignalCompatibilityId": 0,
+          "Comment": "string",
+          "TimeBase": "string",
+          "CodecTimeBase": "string",
+          "Title": "string",
+          "VideoRange": "string",
+          "VideoRangeType": "string",
+          "VideoDoViTitle": "string",
+          "LocalizedUndefined": "string",
+          "LocalizedDefault": "string",
+          "LocalizedForced": "string",
+          "LocalizedExternal": "string",
+          "DisplayTitle": "string",
+          "NalLengthSize": "string",
+          "IsInterlaced": true,
+          "IsAVC": true,
+          "ChannelLayout": "string",
+          "BitRate": 0,
+          "BitDepth": 0,
+          "RefFrames": 0,
+          "PacketLength": 0,
+          "Channels": 0,
+          "SampleRate": 0,
+          "IsDefault": true,
+          "IsForced": true,
+          "Height": 0,
+          "Width": 0,
+          "AverageFrameRate": 0,
+          "RealFrameRate": 0,
+          "Profile": "string",
+          "Type": "Audio",
+          "AspectRatio": "string",
+          "Index": 0,
+          "Score": 0,
+          "IsExternal": true,
+          "DeliveryMethod": "Encode",
+          "DeliveryUrl": "string",
+          "IsExternalUrl": true,
+          "IsTextSubtitleStream": true,
+          "SupportsExternalStream": true,
+          "Path": "string",
+          "PixelFormat": "string",
+          "Level": 0,
+          "IsAnamorphic": true
+        }
+      ],
+      "VideoType": "VideoFile",
+      "PartCount": 0,
+      "MediaSourceCount": 0,
+      "ImageTags": {
+        "property1": "string",
+        "property2": "string"
+      },
+      "BackdropImageTags": ["string"],
+      "ScreenshotImageTags": ["string"],
+      "ParentLogoImageTag": "string",
+      "ParentArtItemId": "10c1875b-b82c-48e8-bae9-939a5e68dc2f",
+      "ParentArtImageTag": "string",
+      "SeriesThumbImageTag": "string",
+      "ImageBlurHashes": {
+        "Primary": {
+          "property1": "string",
+          "property2": "string"
+        },
+        "Art": {
+          "property1": "string",
+          "property2": "string"
+        },
+        "Backdrop": {
+          "property1": "string",
+          "property2": "string"
+        },
+        "Banner": {
+          "property1": "string",
+          "property2": "string"
+        },
+        "Logo": {
+          "property1": "string",
+          "property2": "string"
+        },
+        "Thumb": {
+          "property1": "string",
+          "property2": "string"
+        },
+        "Disc": {
+          "property1": "string",
+          "property2": "string"
+        },
+        "Box": {
+          "property1": "string",
+          "property2": "string"
+        },
+        "Screenshot": {
+          "property1": "string",
+          "property2": "string"
+        },
+        "Menu": {
+          "property1": "string",
+          "property2": "string"
+        },
+        "Chapter": {
+          "property1": "string",
+          "property2": "string"
+        },
+        "BoxRear": {
+          "property1": "string",
+          "property2": "string"
+        },
+        "Profile": {
+          "property1": "string",
+          "property2": "string"
+        }
+      },
+      "SeriesStudio": "string",
+      "ParentThumbItemId": "ae6ff707-333d-4994-be6d-b83ca1b35f46",
+      "ParentThumbImageTag": "string",
+      "ParentPrimaryImageItemId": "string",
+      "ParentPrimaryImageTag": "string",
+      "Chapters": [
+        {
+          "StartPositionTicks": 0,
+          "Name": "string",
+          "ImagePath": "string",
+          "ImageDateModified": "2019-08-24T14:15:22Z",
+          "ImageTag": "string"
+        }
+      ],
+      "LocationType": "FileSystem",
+      "IsoType": "Dvd",
+      "MediaType": "string",
+      "EndDate": "2019-08-24T14:15:22Z",
+      "LockedFields": ["Cast"],
+      "TrailerCount": 0,
+      "MovieCount": 0,
+      "SeriesCount": 0,
+      "ProgramCount": 0,
+      "EpisodeCount": 0,
+      "SongCount": 0,
+      "AlbumCount": 0,
+      "ArtistCount": 0,
+      "MusicVideoCount": 0,
+      "LockData": true,
+      "Width": 0,
+      "Height": 0,
+      "CameraMake": "string",
+      "CameraModel": "string",
+      "Software": "string",
+      "ExposureTime": 0,
+      "FocalLength": 0,
+      "ImageOrientation": "TopLeft",
+      "Aperture": 0,
+      "ShutterSpeed": 0,
+      "Latitude": 0,
+      "Longitude": 0,
+      "Altitude": 0,
+      "IsoSpeedRating": 0,
+      "SeriesTimerId": "string",
+      "ProgramId": "string",
+      "ChannelPrimaryImageTag": "string",
+      "StartDate": "2019-08-24T14:15:22Z",
+      "CompletionPercentage": 0,
+      "IsRepeat": true,
+      "EpisodeTitle": "string",
+      "ChannelType": "TV",
+      "Audio": "Mono",
+      "IsMovie": true,
+      "IsSports": true,
+      "IsSeries": true,
+      "IsLive": true,
+      "IsNews": true,
+      "IsKids": true,
+      "IsPremiere": true,
+      "TimerId": "string",
+      "CurrentProgram": {}
+    },
+    "DeviceId": "DEVICE-UUID-TWO",
+    "ApplicationVersion": "1.0.0",
+    "TranscodingInfo": {
+      "AudioCodec": "string",
+      "VideoCodec": "string",
+      "Container": "string",
+      "IsVideoDirect": true,
+      "IsAudioDirect": true,
+      "Bitrate": 0,
+      "Framerate": 0,
+      "CompletionPercentage": 0,
+      "Width": 0,
+      "Height": 0,
+      "AudioChannels": 0,
+      "HardwareAccelerationType": "AMF",
+      "TranscodeReasons": "ContainerNotSupported"
+    },
+    "IsActive": true,
+    "SupportsMediaControl": true,
+    "SupportsRemoteControl": true,
+    "NowPlayingQueue": [
+      {
+        "Id": "38a5a5bb-dc30-49a2-b175-1de0d1488c43",
+        "PlaylistItemId": "string"
+      }
+    ],
+    "NowPlayingQueueFullItems": [
+      {
+        "Name": "string",
+        "OriginalTitle": "string",
+        "ServerId": "string",
+        "Id": "38a5a5bb-dc30-49a2-b175-1de0d1488c43",
+        "Etag": "string",
+        "SourceType": "string",
+        "PlaylistItemId": "string",
+        "DateCreated": "2019-08-24T14:15:22Z",
+        "DateLastMediaAdded": "2019-08-24T14:15:22Z",
+        "ExtraType": "string",
+        "AirsBeforeSeasonNumber": 0,
+        "AirsAfterSeasonNumber": 0,
+        "AirsBeforeEpisodeNumber": 0,
+        "CanDelete": true,
+        "CanDownload": true,
+        "HasSubtitles": true,
+        "PreferredMetadataLanguage": "string",
+        "PreferredMetadataCountryCode": "string",
+        "SupportsSync": true,
+        "Container": "string",
+        "SortName": "string",
+        "ForcedSortName": "string",
+        "Video3DFormat": "HalfSideBySide",
+        "PremiereDate": "2019-08-24T14:15:22Z",
+        "ExternalUrls": [
+          {
+            "Name": "string",
+            "Url": "string"
+          }
+        ],
+        "MediaSources": [
+          {
+            "Protocol": "File",
+            "Id": "string",
+            "Path": "string",
+            "EncoderPath": "string",
+            "EncoderProtocol": "File",
+            "Type": "Default",
+            "Container": "string",
+            "Size": 0,
+            "Name": "string",
+            "IsRemote": true,
+            "ETag": "string",
+            "RunTimeTicks": 0,
+            "ReadAtNativeFramerate": true,
+            "IgnoreDts": true,
+            "IgnoreIndex": true,
+            "GenPtsInput": true,
+            "SupportsTranscoding": true,
+            "SupportsDirectStream": true,
+            "SupportsDirectPlay": true,
+            "IsInfiniteStream": true,
+            "RequiresOpening": true,
+            "OpenToken": "string",
+            "RequiresClosing": true,
+            "LiveStreamId": "string",
+            "BufferMs": 0,
+            "RequiresLooping": true,
+            "SupportsProbing": true,
+            "VideoType": "VideoFile",
+            "IsoType": "Dvd",
+            "Video3DFormat": "HalfSideBySide",
+            "MediaStreams": [
+              {
+                "Codec": "string",
+                "CodecTag": "string",
+                "Language": "string",
+                "ColorRange": "string",
+                "ColorSpace": "string",
+                "ColorTransfer": "string",
+                "ColorPrimaries": "string",
+                "DvVersionMajor": 0,
+                "DvVersionMinor": 0,
+                "DvProfile": 0,
+                "DvLevel": 0,
+                "RpuPresentFlag": 0,
+                "ElPresentFlag": 0,
+                "BlPresentFlag": 0,
+                "DvBlSignalCompatibilityId": 0,
+                "Comment": "string",
+                "TimeBase": "string",
+                "CodecTimeBase": "string",
+                "Title": "string",
+                "VideoRange": "string",
+                "VideoRangeType": "string",
+                "VideoDoViTitle": "string",
+                "LocalizedUndefined": "string",
+                "LocalizedDefault": "string",
+                "LocalizedForced": "string",
+                "LocalizedExternal": "string",
+                "DisplayTitle": "string",
+                "NalLengthSize": "string",
+                "IsInterlaced": true,
+                "IsAVC": true,
+                "ChannelLayout": "string",
+                "BitRate": 0,
+                "BitDepth": 0,
+                "RefFrames": 0,
+                "PacketLength": 0,
+                "Channels": 0,
+                "SampleRate": 0,
+                "IsDefault": true,
+                "IsForced": true,
+                "Height": 0,
+                "Width": 0,
+                "AverageFrameRate": 0,
+                "RealFrameRate": 0,
+                "Profile": "string",
+                "Type": "Audio",
+                "AspectRatio": "string",
+                "Index": 0,
+                "Score": 0,
+                "IsExternal": true,
+                "DeliveryMethod": "Encode",
+                "DeliveryUrl": "string",
+                "IsExternalUrl": true,
+                "IsTextSubtitleStream": true,
+                "SupportsExternalStream": true,
+                "Path": "string",
+                "PixelFormat": "string",
+                "Level": 0,
+                "IsAnamorphic": true
+              }
+            ],
+            "MediaAttachments": [
+              {
+                "Codec": "string",
+                "CodecTag": "string",
+                "Comment": "string",
+                "Index": 0,
+                "FileName": "string",
+                "MimeType": "string",
+                "DeliveryUrl": "string"
+              }
+            ],
+            "Formats": ["string"],
+            "Bitrate": 0,
+            "Timestamp": "None",
+            "RequiredHttpHeaders": {
+              "property1": "string",
+              "property2": "string"
+            },
+            "TranscodingUrl": "string",
+            "TranscodingSubProtocol": "string",
+            "TranscodingContainer": "string",
+            "AnalyzeDurationMs": 0,
+            "DefaultAudioStreamIndex": 0,
+            "DefaultSubtitleStreamIndex": 0
+          }
+        ],
+        "CriticRating": 0,
+        "ProductionLocations": ["string"],
+        "Path": "string",
+        "EnableMediaSourceDisplay": true,
+        "OfficialRating": "string",
+        "CustomRating": "string",
+        "ChannelId": "04b0b2a5-93cb-474d-8ea9-3df0f84eb0ff",
+        "ChannelName": "string",
+        "Overview": "string",
+        "Taglines": ["string"],
+        "Genres": ["string"],
+        "CommunityRating": 0,
+        "CumulativeRunTimeTicks": 0,
+        "RunTimeTicks": 0,
+        "PlayAccess": "Full",
+        "AspectRatio": "string",
+        "ProductionYear": 0,
+        "IsPlaceHolder": true,
+        "Number": "string",
+        "ChannelNumber": "string",
+        "IndexNumber": 0,
+        "IndexNumberEnd": 0,
+        "ParentIndexNumber": 0,
+        "RemoteTrailers": [
+          {
+            "Url": "string",
+            "Name": "string"
+          }
+        ],
+        "ProviderIds": {
+          "property1": "string",
+          "property2": "string"
+        },
+        "IsHD": true,
+        "IsFolder": true,
+        "ParentId": "c54e2d15-b5eb-48b7-9b04-53f376904b1e",
+        "Type": "AggregateFolder",
+        "People": [
+          {
+            "Name": "string",
+            "Id": "38a5a5bb-dc30-49a2-b175-1de0d1488c43",
+            "Role": "string",
+            "Type": "string",
+            "PrimaryImageTag": "string",
+            "ImageBlurHashes": {
+              "Primary": {
+                "property1": "string",
+                "property2": "string"
+              },
+              "Art": {
+                "property1": "string",
+                "property2": "string"
+              },
+              "Backdrop": {
+                "property1": "string",
+                "property2": "string"
+              },
+              "Banner": {
+                "property1": "string",
+                "property2": "string"
+              },
+              "Logo": {
+                "property1": "string",
+                "property2": "string"
+              },
+              "Thumb": {
+                "property1": "string",
+                "property2": "string"
+              },
+              "Disc": {
+                "property1": "string",
+                "property2": "string"
+              },
+              "Box": {
+                "property1": "string",
+                "property2": "string"
+              },
+              "Screenshot": {
+                "property1": "string",
+                "property2": "string"
+              },
+              "Menu": {
+                "property1": "string",
+                "property2": "string"
+              },
+              "Chapter": {
+                "property1": "string",
+                "property2": "string"
+              },
+              "BoxRear": {
+                "property1": "string",
+                "property2": "string"
+              },
+              "Profile": {
+                "property1": "string",
+                "property2": "string"
+              }
+            }
+          }
+        ],
+        "Studios": [
+          {
+            "Name": "string",
+            "Id": "38a5a5bb-dc30-49a2-b175-1de0d1488c43"
+          }
+        ],
+        "GenreItems": [
+          {
+            "Name": "string",
+            "Id": "38a5a5bb-dc30-49a2-b175-1de0d1488c43"
+          }
+        ],
+        "ParentLogoItemId": "c78d400f-de5c-421e-8714-4fb05d387233",
+        "ParentBackdropItemId": "c22fd826-17fc-44f4-9b04-1eb3e8fb9173",
+        "ParentBackdropImageTags": ["string"],
+        "LocalTrailerCount": 0,
+        "UserData": {
+          "Rating": 0,
+          "PlayedPercentage": 0,
+          "UnplayedItemCount": 0,
+          "PlaybackPositionTicks": 0,
+          "PlayCount": 0,
+          "IsFavorite": true,
+          "Likes": true,
+          "LastPlayedDate": "2019-08-24T14:15:22Z",
+          "Played": true,
+          "Key": "string",
+          "ItemId": "string"
+        },
+        "RecursiveItemCount": 0,
+        "ChildCount": 0,
+        "SeriesName": "string",
+        "SeriesId": "c7b70af4-4902-4a7e-95ab-28349b6c7afc",
+        "SeasonId": "badb6463-e5b7-45c5-8141-71204420ec8f",
+        "SpecialFeatureCount": 0,
+        "DisplayPreferencesId": "string",
+        "Status": "string",
+        "AirTime": "string",
+        "AirDays": ["Sunday"],
+        "Tags": ["string"],
+        "PrimaryImageAspectRatio": 0,
+        "Artists": ["string"],
+        "ArtistItems": [
+          {
+            "Name": "string",
+            "Id": "38a5a5bb-dc30-49a2-b175-1de0d1488c43"
+          }
+        ],
+        "Album": "string",
+        "CollectionType": "string",
+        "DisplayOrder": "string",
+        "AlbumId": "21af9851-8e39-43a9-9c47-513d3b9e99fc",
+        "AlbumPrimaryImageTag": "string",
+        "SeriesPrimaryImageTag": "string",
+        "AlbumArtist": "string",
+        "AlbumArtists": [
+          {
+            "Name": "string",
+            "Id": "38a5a5bb-dc30-49a2-b175-1de0d1488c43"
+          }
+        ],
+        "SeasonName": "string",
+        "MediaStreams": [
+          {
+            "Codec": "string",
+            "CodecTag": "string",
+            "Language": "string",
+            "ColorRange": "string",
+            "ColorSpace": "string",
+            "ColorTransfer": "string",
+            "ColorPrimaries": "string",
+            "DvVersionMajor": 0,
+            "DvVersionMinor": 0,
+            "DvProfile": 0,
+            "DvLevel": 0,
+            "RpuPresentFlag": 0,
+            "ElPresentFlag": 0,
+            "BlPresentFlag": 0,
+            "DvBlSignalCompatibilityId": 0,
+            "Comment": "string",
+            "TimeBase": "string",
+            "CodecTimeBase": "string",
+            "Title": "string",
+            "VideoRange": "string",
+            "VideoRangeType": "string",
+            "VideoDoViTitle": "string",
+            "LocalizedUndefined": "string",
+            "LocalizedDefault": "string",
+            "LocalizedForced": "string",
+            "LocalizedExternal": "string",
+            "DisplayTitle": "string",
+            "NalLengthSize": "string",
+            "IsInterlaced": true,
+            "IsAVC": true,
+            "ChannelLayout": "string",
+            "BitRate": 0,
+            "BitDepth": 0,
+            "RefFrames": 0,
+            "PacketLength": 0,
+            "Channels": 0,
+            "SampleRate": 0,
+            "IsDefault": true,
+            "IsForced": true,
+            "Height": 0,
+            "Width": 0,
+            "AverageFrameRate": 0,
+            "RealFrameRate": 0,
+            "Profile": "string",
+            "Type": "Audio",
+            "AspectRatio": "string",
+            "Index": 0,
+            "Score": 0,
+            "IsExternal": true,
+            "DeliveryMethod": "Encode",
+            "DeliveryUrl": "string",
+            "IsExternalUrl": true,
+            "IsTextSubtitleStream": true,
+            "SupportsExternalStream": true,
+            "Path": "string",
+            "PixelFormat": "string",
+            "Level": 0,
+            "IsAnamorphic": true
+          }
+        ],
+        "VideoType": "VideoFile",
+        "PartCount": 0,
+        "MediaSourceCount": 0,
+        "ImageTags": {
+          "property1": "string",
+          "property2": "string"
+        },
+        "BackdropImageTags": ["string"],
+        "ScreenshotImageTags": ["string"],
+        "ParentLogoImageTag": "string",
+        "ParentArtItemId": "10c1875b-b82c-48e8-bae9-939a5e68dc2f",
+        "ParentArtImageTag": "string",
+        "SeriesThumbImageTag": "string",
+        "ImageBlurHashes": {
+          "Primary": {
+            "property1": "string",
+            "property2": "string"
+          },
+          "Art": {
+            "property1": "string",
+            "property2": "string"
+          },
+          "Backdrop": {
+            "property1": "string",
+            "property2": "string"
+          },
+          "Banner": {
+            "property1": "string",
+            "property2": "string"
+          },
+          "Logo": {
+            "property1": "string",
+            "property2": "string"
+          },
+          "Thumb": {
+            "property1": "string",
+            "property2": "string"
+          },
+          "Disc": {
+            "property1": "string",
+            "property2": "string"
+          },
+          "Box": {
+            "property1": "string",
+            "property2": "string"
+          },
+          "Screenshot": {
+            "property1": "string",
+            "property2": "string"
+          },
+          "Menu": {
+            "property1": "string",
+            "property2": "string"
+          },
+          "Chapter": {
+            "property1": "string",
+            "property2": "string"
+          },
+          "BoxRear": {
+            "property1": "string",
+            "property2": "string"
+          },
+          "Profile": {
+            "property1": "string",
+            "property2": "string"
+          }
+        },
+        "SeriesStudio": "string",
+        "ParentThumbItemId": "ae6ff707-333d-4994-be6d-b83ca1b35f46",
+        "ParentThumbImageTag": "string",
+        "ParentPrimaryImageItemId": "string",
+        "ParentPrimaryImageTag": "string",
+        "Chapters": [
+          {
+            "StartPositionTicks": 0,
+            "Name": "string",
+            "ImagePath": "string",
+            "ImageDateModified": "2019-08-24T14:15:22Z",
+            "ImageTag": "string"
+          }
+        ],
+        "LocationType": "FileSystem",
+        "IsoType": "Dvd",
+        "MediaType": "string",
+        "EndDate": "2019-08-24T14:15:22Z",
+        "LockedFields": ["Cast"],
+        "TrailerCount": 0,
+        "MovieCount": 0,
+        "SeriesCount": 0,
+        "ProgramCount": 0,
+        "EpisodeCount": 0,
+        "SongCount": 0,
+        "AlbumCount": 0,
+        "ArtistCount": 0,
+        "MusicVideoCount": 0,
+        "LockData": true,
+        "Width": 0,
+        "Height": 0,
+        "CameraMake": "string",
+        "CameraModel": "string",
+        "Software": "string",
+        "ExposureTime": 0,
+        "FocalLength": 0,
+        "ImageOrientation": "TopLeft",
+        "Aperture": 0,
+        "ShutterSpeed": 0,
+        "Latitude": 0,
+        "Longitude": 0,
+        "Altitude": 0,
+        "IsoSpeedRating": 0,
+        "SeriesTimerId": "string",
+        "ProgramId": "string",
+        "ChannelPrimaryImageTag": "string",
+        "StartDate": "2019-08-24T14:15:22Z",
+        "CompletionPercentage": 0,
+        "IsRepeat": true,
+        "EpisodeTitle": "string",
+        "ChannelType": "TV",
+        "Audio": "Mono",
+        "IsMovie": true,
+        "IsSports": true,
+        "IsSeries": true,
+        "IsLive": true,
+        "IsNews": true,
+        "IsKids": true,
+        "IsPremiere": true,
+        "TimerId": "string",
+        "CurrentProgram": {}
+      }
+    ],
+    "HasCustomDeviceName": true,
+    "PlaylistItemId": "string",
+    "ServerId": "SERVER-UUID",
+    "UserPrimaryImageTag": "string",
+    "SupportedCommands": ["MoveUp"]
+  },
+  {
+    "PlayState": {
+      "PositionTicks": 0,
+      "CanSeek": true,
+      "IsPaused": false,
+      "IsMuted": true,
+      "VolumeLevel": 0,
+      "AudioStreamIndex": 0,
+      "SubtitleStreamIndex": 0,
+      "MediaSourceId": "string",
+      "PlayMethod": "Transcode",
+      "RepeatMode": "RepeatNone",
+      "LiveStreamId": "string"
+    },
+    "AdditionalUsers": [
+      {
+        "UserId": "08ba1929-681e-4b24-929b-9245852f65c0",
+        "UserName": "string"
+      }
+    ],
+    "Capabilities": {
+      "PlayableMediaTypes": ["Video"],
+      "SupportedCommands": ["MoveUp"],
+      "SupportsMediaControl": false,
+      "SupportsContentUploading": false,
+      "MessageCallbackUrl": "string",
+      "SupportsPersistentIdentifier": false,
+      "SupportsSync": true,
+      "DeviceProfile": {
+        "Name": "string",
+        "Id": "string",
+        "Identification": {
+          "FriendlyName": "string",
+          "ModelNumber": "string",
+          "SerialNumber": "string",
+          "ModelName": "string",
+          "ModelDescription": "string",
+          "ModelUrl": "string",
+          "Manufacturer": "string",
+          "ManufacturerUrl": "string",
+          "Headers": [
+            {
+              "Name": "string",
+              "Value": "string",
+              "Match": "Equals"
+            }
+          ]
+        },
+        "FriendlyName": "string",
+        "Manufacturer": "string",
+        "ManufacturerUrl": "string",
+        "ModelName": "string",
+        "ModelDescription": "string",
+        "ModelNumber": "string",
+        "ModelUrl": "string",
+        "SerialNumber": "string",
+        "EnableAlbumArtInDidl": false,
+        "EnableSingleAlbumArtLimit": false,
+        "EnableSingleSubtitleLimit": false,
+        "SupportedMediaTypes": "string",
+        "UserId": "string",
+        "AlbumArtPn": "string",
+        "MaxAlbumArtWidth": 0,
+        "MaxAlbumArtHeight": 0,
+        "MaxIconWidth": 0,
+        "MaxIconHeight": 0,
+        "MaxStreamingBitrate": 0,
+        "MaxStaticBitrate": 0,
+        "MusicStreamingTranscodingBitrate": 0,
+        "MaxStaticMusicBitrate": 0,
+        "SonyAggregationFlags": "string",
+        "ProtocolInfo": "string",
+        "TimelineOffsetSeconds": 0,
+        "RequiresPlainVideoItems": false,
+        "RequiresPlainFolders": false,
+        "EnableMSMediaReceiverRegistrar": false,
+        "IgnoreTranscodeByteRangeRequests": false,
+        "XmlRootAttributes": [
+          {
+            "Name": "string",
+            "Value": "string"
+          }
+        ],
+        "DirectPlayProfiles": [
+          {
+            "Container": "string",
+            "AudioCodec": "string",
+            "VideoCodec": "string",
+            "Type": "Audio"
+          }
+        ],
+        "TranscodingProfiles": [
+          {
+            "Container": "string",
+            "Type": "Audio",
+            "VideoCodec": "string",
+            "AudioCodec": "string",
+            "Protocol": "string",
+            "EstimateContentLength": false,
+            "EnableMpegtsM2TsMode": false,
+            "TranscodeSeekInfo": "Auto",
+            "CopyTimestamps": false,
+            "Context": "Streaming",
+            "EnableSubtitlesInManifest": false,
+            "MaxAudioChannels": "string",
+            "MinSegments": 0,
+            "SegmentLength": 0,
+            "BreakOnNonKeyFrames": false,
+            "Conditions": [
+              {
+                "Condition": "Equals",
+                "Property": "AudioChannels",
+                "Value": "string",
+                "IsRequired": true
+              }
+            ]
+          }
+        ],
+        "ContainerProfiles": [
+          {
+            "Type": "Audio",
+            "Conditions": [
+              {
+                "Condition": "Equals",
+                "Property": "AudioChannels",
+                "Value": "string",
+                "IsRequired": true
+              }
+            ],
+            "Container": "string"
+          }
+        ],
+        "CodecProfiles": [
+          {
+            "Type": "Video",
+            "Conditions": [
+              {
+                "Condition": "Equals",
+                "Property": "AudioChannels",
+                "Value": "string",
+                "IsRequired": true
+              }
+            ],
+            "ApplyConditions": [
+              {
+                "Condition": "Equals",
+                "Property": "AudioChannels",
+                "Value": "string",
+                "IsRequired": true
+              }
+            ],
+            "Codec": "string",
+            "Container": "string"
+          }
+        ],
+        "ResponseProfiles": [
+          {
+            "Container": "string",
+            "AudioCodec": "string",
+            "VideoCodec": "string",
+            "Type": "Audio",
+            "OrgPn": "string",
+            "MimeType": "string",
+            "Conditions": [
+              {
+                "Condition": "Equals",
+                "Property": "AudioChannels",
+                "Value": "string",
+                "IsRequired": true
+              }
+            ]
+          }
+        ],
+        "SubtitleProfiles": [
+          {
+            "Format": "string",
+            "Method": "Encode",
+            "DidlMode": "string",
+            "Language": "string",
+            "Container": "string"
+          }
+        ]
+      },
+      "AppStoreUrl": "string",
+      "IconUrl": "string"
+    },
+    "RemoteEndPoint": "string",
+    "PlayableMediaTypes": ["Video"],
+    "Id": "SESSION-UUID-THREE",
+    "UserId": "USER-UUID",
+    "UserName": "string",
+    "Client": "Jellyfin for Developers",
+    "LastActivityDate": "2019-08-24T14:15:22Z",
+    "LastPlaybackCheckIn": "2019-08-24T14:15:22Z",
+    "DeviceName": "JELLYFIN-DEVICE-THREE",
+    "DeviceType": "string",
+    "DeviceId": "DEVICE-UUID-THREE",
+    "ApplicationVersion": "2.0.0",
+    "TranscodingInfo": {
+      "AudioCodec": "string",
+      "VideoCodec": "string",
+      "Container": "string",
+      "IsVideoDirect": true,
+      "IsAudioDirect": true,
+      "Bitrate": 0,
+      "Framerate": 0,
+      "CompletionPercentage": 0,
+      "Width": 0,
+      "Height": 0,
+      "AudioChannels": 0,
+      "HardwareAccelerationType": "AMF",
+      "TranscodeReasons": "ContainerNotSupported"
+    },
+    "IsActive": true,
+    "SupportsMediaControl": false,
+    "SupportsRemoteControl": false,
+    "NowPlayingQueue": [
+      {
+        "Id": "38a5a5bb-dc30-49a2-b175-1de0d1488c43",
+        "PlaylistItemId": "string"
+      }
+    ],
+    "NowPlayingQueueFullItems": [
+      {
+        "Name": "string",
+        "OriginalTitle": "string",
+        "ServerId": "SERVER-UUID",
+        "Id": "38a5a5bb-dc30-49a2-b175-1de0d1488c43",
+        "Etag": "string",
+        "SourceType": "string",
+        "PlaylistItemId": "string",
+        "DateCreated": "2019-08-24T14:15:22Z",
+        "DateLastMediaAdded": "2019-08-24T14:15:22Z",
+        "ExtraType": "string",
+        "AirsBeforeSeasonNumber": 0,
+        "AirsAfterSeasonNumber": 0,
+        "AirsBeforeEpisodeNumber": 0,
+        "CanDelete": true,
+        "CanDownload": true,
+        "HasSubtitles": true,
+        "PreferredMetadataLanguage": "string",
+        "PreferredMetadataCountryCode": "string",
+        "SupportsSync": true,
+        "Container": "string",
+        "SortName": "string",
+        "ForcedSortName": "string",
+        "Video3DFormat": "HalfSideBySide",
+        "PremiereDate": "2019-08-24T14:15:22Z",
+        "ExternalUrls": [
+          {
+            "Name": "string",
+            "Url": "string"
+          }
+        ],
+        "MediaSources": [
+          {
+            "Protocol": "File",
+            "Id": "string",
+            "Path": "string",
+            "EncoderPath": "string",
+            "EncoderProtocol": "File",
+            "Type": "Default",
+            "Container": "string",
+            "Size": 0,
+            "Name": "string",
+            "IsRemote": true,
+            "ETag": "string",
+            "RunTimeTicks": 0,
+            "ReadAtNativeFramerate": true,
+            "IgnoreDts": true,
+            "IgnoreIndex": true,
+            "GenPtsInput": true,
+            "SupportsTranscoding": true,
+            "SupportsDirectStream": true,
+            "SupportsDirectPlay": true,
+            "IsInfiniteStream": true,
+            "RequiresOpening": true,
+            "OpenToken": "string",
+            "RequiresClosing": true,
+            "LiveStreamId": "string",
+            "BufferMs": 0,
+            "RequiresLooping": true,
+            "SupportsProbing": true,
+            "VideoType": "VideoFile",
+            "IsoType": "Dvd",
+            "Video3DFormat": "HalfSideBySide",
+            "MediaStreams": [
+              {
+                "Codec": "string",
+                "CodecTag": "string",
+                "Language": "string",
+                "ColorRange": "string",
+                "ColorSpace": "string",
+                "ColorTransfer": "string",
+                "ColorPrimaries": "string",
+                "DvVersionMajor": 0,
+                "DvVersionMinor": 0,
+                "DvProfile": 0,
+                "DvLevel": 0,
+                "RpuPresentFlag": 0,
+                "ElPresentFlag": 0,
+                "BlPresentFlag": 0,
+                "DvBlSignalCompatibilityId": 0,
+                "Comment": "string",
+                "TimeBase": "string",
+                "CodecTimeBase": "string",
+                "Title": "string",
+                "VideoRange": "string",
+                "VideoRangeType": "string",
+                "VideoDoViTitle": "string",
+                "LocalizedUndefined": "string",
+                "LocalizedDefault": "string",
+                "LocalizedForced": "string",
+                "LocalizedExternal": "string",
+                "DisplayTitle": "string",
+                "NalLengthSize": "string",
+                "IsInterlaced": true,
+                "IsAVC": true,
+                "ChannelLayout": "string",
+                "BitRate": 0,
+                "BitDepth": 0,
+                "RefFrames": 0,
+                "PacketLength": 0,
+                "Channels": 0,
+                "SampleRate": 0,
+                "IsDefault": true,
+                "IsForced": true,
+                "Height": 0,
+                "Width": 0,
+                "AverageFrameRate": 0,
+                "RealFrameRate": 0,
+                "Profile": "string",
+                "Type": "Audio",
+                "AspectRatio": "string",
+                "Index": 0,
+                "Score": 0,
+                "IsExternal": true,
+                "DeliveryMethod": "Encode",
+                "DeliveryUrl": "string",
+                "IsExternalUrl": true,
+                "IsTextSubtitleStream": true,
+                "SupportsExternalStream": true,
+                "Path": "string",
+                "PixelFormat": "string",
+                "Level": 0,
+                "IsAnamorphic": true
+              }
+            ],
+            "MediaAttachments": [
+              {
+                "Codec": "string",
+                "CodecTag": "string",
+                "Comment": "string",
+                "Index": 0,
+                "FileName": "string",
+                "MimeType": "string",
+                "DeliveryUrl": "string"
+              }
+            ],
+            "Formats": ["string"],
+            "Bitrate": 0,
+            "Timestamp": "None",
+            "RequiredHttpHeaders": {
+              "property1": "string",
+              "property2": "string"
+            },
+            "TranscodingUrl": "string",
+            "TranscodingSubProtocol": "string",
+            "TranscodingContainer": "string",
+            "AnalyzeDurationMs": 0,
+            "DefaultAudioStreamIndex": 0,
+            "DefaultSubtitleStreamIndex": 0
+          }
+        ],
+        "CriticRating": 0,
+        "ProductionLocations": ["string"],
+        "Path": "string",
+        "EnableMediaSourceDisplay": true,
+        "OfficialRating": "string",
+        "CustomRating": "string",
+        "ChannelId": "04b0b2a5-93cb-474d-8ea9-3df0f84eb0ff",
+        "ChannelName": "string",
+        "Overview": "string",
+        "Taglines": ["string"],
+        "Genres": ["string"],
+        "CommunityRating": 0,
+        "CumulativeRunTimeTicks": 0,
+        "RunTimeTicks": 0,
+        "PlayAccess": "Full",
+        "AspectRatio": "string",
+        "ProductionYear": 0,
+        "IsPlaceHolder": true,
+        "Number": "string",
+        "ChannelNumber": "string",
+        "IndexNumber": 0,
+        "IndexNumberEnd": 0,
+        "ParentIndexNumber": 0,
+        "RemoteTrailers": [
+          {
+            "Url": "string",
+            "Name": "string"
+          }
+        ],
+        "ProviderIds": {
+          "property1": "string",
+          "property2": "string"
+        },
+        "IsHD": true,
+        "IsFolder": true,
+        "ParentId": "c54e2d15-b5eb-48b7-9b04-53f376904b1e",
+        "Type": "AggregateFolder",
+        "People": [
+          {
+            "Name": "string",
+            "Id": "38a5a5bb-dc30-49a2-b175-1de0d1488c43",
+            "Role": "string",
+            "Type": "string",
+            "PrimaryImageTag": "string",
+            "ImageBlurHashes": {
+              "Primary": {
+                "property1": "string",
+                "property2": "string"
+              },
+              "Art": {
+                "property1": "string",
+                "property2": "string"
+              },
+              "Backdrop": {
+                "property1": "string",
+                "property2": "string"
+              },
+              "Banner": {
+                "property1": "string",
+                "property2": "string"
+              },
+              "Logo": {
+                "property1": "string",
+                "property2": "string"
+              },
+              "Thumb": {
+                "property1": "string",
+                "property2": "string"
+              },
+              "Disc": {
+                "property1": "string",
+                "property2": "string"
+              },
+              "Box": {
+                "property1": "string",
+                "property2": "string"
+              },
+              "Screenshot": {
+                "property1": "string",
+                "property2": "string"
+              },
+              "Menu": {
+                "property1": "string",
+                "property2": "string"
+              },
+              "Chapter": {
+                "property1": "string",
+                "property2": "string"
+              },
+              "BoxRear": {
+                "property1": "string",
+                "property2": "string"
+              },
+              "Profile": {
+                "property1": "string",
+                "property2": "string"
+              }
+            }
+          }
+        ],
+        "Studios": [
+          {
+            "Name": "string",
+            "Id": "38a5a5bb-dc30-49a2-b175-1de0d1488c43"
+          }
+        ],
+        "GenreItems": [
+          {
+            "Name": "string",
+            "Id": "38a5a5bb-dc30-49a2-b175-1de0d1488c43"
+          }
+        ],
+        "ParentLogoItemId": "c78d400f-de5c-421e-8714-4fb05d387233",
+        "ParentBackdropItemId": "c22fd826-17fc-44f4-9b04-1eb3e8fb9173",
+        "ParentBackdropImageTags": ["string"],
+        "LocalTrailerCount": 0,
+        "UserData": {
+          "Rating": 0,
+          "PlayedPercentage": 0,
+          "UnplayedItemCount": 0,
+          "PlaybackPositionTicks": 0,
+          "PlayCount": 0,
+          "IsFavorite": true,
+          "Likes": true,
+          "LastPlayedDate": "2019-08-24T14:15:22Z",
+          "Played": true,
+          "Key": "string",
+          "ItemId": "string"
+        },
+        "RecursiveItemCount": 0,
+        "ChildCount": 0,
+        "SeriesName": "string",
+        "SeriesId": "c7b70af4-4902-4a7e-95ab-28349b6c7afc",
+        "SeasonId": "badb6463-e5b7-45c5-8141-71204420ec8f",
+        "SpecialFeatureCount": 0,
+        "DisplayPreferencesId": "string",
+        "Status": "string",
+        "AirTime": "string",
+        "AirDays": ["Sunday"],
+        "Tags": ["string"],
+        "PrimaryImageAspectRatio": 0,
+        "Artists": ["string"],
+        "ArtistItems": [
+          {
+            "Name": "string",
+            "Id": "38a5a5bb-dc30-49a2-b175-1de0d1488c43"
+          }
+        ],
+        "Album": "string",
+        "CollectionType": "string",
+        "DisplayOrder": "string",
+        "AlbumId": "21af9851-8e39-43a9-9c47-513d3b9e99fc",
+        "AlbumPrimaryImageTag": "string",
+        "SeriesPrimaryImageTag": "string",
+        "AlbumArtist": "string",
+        "AlbumArtists": [
+          {
+            "Name": "string",
+            "Id": "38a5a5bb-dc30-49a2-b175-1de0d1488c43"
+          }
+        ],
+        "SeasonName": "string",
+        "MediaStreams": [
+          {
+            "Codec": "string",
+            "CodecTag": "string",
+            "Language": "string",
+            "ColorRange": "string",
+            "ColorSpace": "string",
+            "ColorTransfer": "string",
+            "ColorPrimaries": "string",
+            "DvVersionMajor": 0,
+            "DvVersionMinor": 0,
+            "DvProfile": 0,
+            "DvLevel": 0,
+            "RpuPresentFlag": 0,
+            "ElPresentFlag": 0,
+            "BlPresentFlag": 0,
+            "DvBlSignalCompatibilityId": 0,
+            "Comment": "string",
+            "TimeBase": "string",
+            "CodecTimeBase": "string",
+            "Title": "string",
+            "VideoRange": "string",
+            "VideoRangeType": "string",
+            "VideoDoViTitle": "string",
+            "LocalizedUndefined": "string",
+            "LocalizedDefault": "string",
+            "LocalizedForced": "string",
+            "LocalizedExternal": "string",
+            "DisplayTitle": "string",
+            "NalLengthSize": "string",
+            "IsInterlaced": true,
+            "IsAVC": true,
+            "ChannelLayout": "string",
+            "BitRate": 0,
+            "BitDepth": 0,
+            "RefFrames": 0,
+            "PacketLength": 0,
+            "Channels": 0,
+            "SampleRate": 0,
+            "IsDefault": true,
+            "IsForced": true,
+            "Height": 0,
+            "Width": 0,
+            "AverageFrameRate": 0,
+            "RealFrameRate": 0,
+            "Profile": "string",
+            "Type": "Audio",
+            "AspectRatio": "string",
+            "Index": 0,
+            "Score": 0,
+            "IsExternal": true,
+            "DeliveryMethod": "Encode",
+            "DeliveryUrl": "string",
+            "IsExternalUrl": true,
+            "IsTextSubtitleStream": true,
+            "SupportsExternalStream": true,
+            "Path": "string",
+            "PixelFormat": "string",
+            "Level": 0,
+            "IsAnamorphic": true
+          }
+        ],
+        "VideoType": "VideoFile",
+        "PartCount": 0,
+        "MediaSourceCount": 0,
+        "ImageTags": {
+          "property1": "string",
+          "property2": "string"
+        },
+        "BackdropImageTags": ["string"],
+        "ScreenshotImageTags": ["string"],
+        "ParentLogoImageTag": "string",
+        "ParentArtItemId": "10c1875b-b82c-48e8-bae9-939a5e68dc2f",
+        "ParentArtImageTag": "string",
+        "SeriesThumbImageTag": "string",
+        "ImageBlurHashes": {
+          "Primary": {
+            "property1": "string",
+            "property2": "string"
+          },
+          "Art": {
+            "property1": "string",
+            "property2": "string"
+          },
+          "Backdrop": {
+            "property1": "string",
+            "property2": "string"
+          },
+          "Banner": {
+            "property1": "string",
+            "property2": "string"
+          },
+          "Logo": {
+            "property1": "string",
+            "property2": "string"
+          },
+          "Thumb": {
+            "property1": "string",
+            "property2": "string"
+          },
+          "Disc": {
+            "property1": "string",
+            "property2": "string"
+          },
+          "Box": {
+            "property1": "string",
+            "property2": "string"
+          },
+          "Screenshot": {
+            "property1": "string",
+            "property2": "string"
+          },
+          "Menu": {
+            "property1": "string",
+            "property2": "string"
+          },
+          "Chapter": {
+            "property1": "string",
+            "property2": "string"
+          },
+          "BoxRear": {
+            "property1": "string",
+            "property2": "string"
+          },
+          "Profile": {
+            "property1": "string",
+            "property2": "string"
+          }
+        },
+        "SeriesStudio": "string",
+        "ParentThumbItemId": "ae6ff707-333d-4994-be6d-b83ca1b35f46",
+        "ParentThumbImageTag": "string",
+        "ParentPrimaryImageItemId": "string",
+        "ParentPrimaryImageTag": "string",
+        "Chapters": [
+          {
+            "StartPositionTicks": 0,
+            "Name": "string",
+            "ImagePath": "string",
+            "ImageDateModified": "2019-08-24T14:15:22Z",
+            "ImageTag": "string"
+          }
+        ],
+        "LocationType": "FileSystem",
+        "IsoType": "Dvd",
+        "MediaType": "string",
+        "EndDate": "2019-08-24T14:15:22Z",
+        "LockedFields": ["Cast"],
+        "TrailerCount": 0,
+        "MovieCount": 0,
+        "SeriesCount": 0,
+        "ProgramCount": 0,
+        "EpisodeCount": 0,
+        "SongCount": 0,
+        "AlbumCount": 0,
+        "ArtistCount": 0,
+        "MusicVideoCount": 0,
+        "LockData": true,
+        "Width": 0,
+        "Height": 0,
+        "CameraMake": "string",
+        "CameraModel": "string",
+        "Software": "string",
+        "ExposureTime": 0,
+        "FocalLength": 0,
+        "ImageOrientation": "TopLeft",
+        "Aperture": 0,
+        "ShutterSpeed": 0,
+        "Latitude": 0,
+        "Longitude": 0,
+        "Altitude": 0,
+        "IsoSpeedRating": 0,
+        "SeriesTimerId": "string",
+        "ProgramId": "string",
+        "ChannelPrimaryImageTag": "string",
+        "StartDate": "2019-08-24T14:15:22Z",
+        "CompletionPercentage": 0,
+        "IsRepeat": true,
+        "EpisodeTitle": "string",
+        "ChannelType": "TV",
+        "Audio": "Mono",
+        "IsMovie": true,
+        "IsSports": true,
+        "IsSeries": true,
+        "IsLive": true,
+        "IsNews": true,
+        "IsKids": true,
+        "IsPremiere": true,
+        "TimerId": "string",
+        "CurrentProgram": {}
+      }
+    ],
+    "HasCustomDeviceName": true,
+    "PlaylistItemId": "string",
+    "ServerId": "SERVER-UUID",
+    "UserPrimaryImageTag": "string",
+    "SupportedCommands": ["MoveUp"]
+  },
+  {
+    "PlayState": {
+      "PositionTicks": 220246970,
+      "CanSeek": true,
+      "IsPaused": false,
+      "IsMuted": false,
+      "VolumeLevel": 100,
+      "MediaSourceId": "a744119f757f88858f95aab1628708c4",
+      "PlayMethod": "DirectPlay",
+      "RepeatMode": "RepeatNone"
+    },
+    "AdditionalUsers": [],
+    "Capabilities": {
+      "PlayableMediaTypes": ["Audio", "Video"],
+      "SupportedCommands": [
+        "MoveUp",
+        "MoveDown",
+        "MoveLeft",
+        "MoveRight",
+        "PageUp",
+        "PageDown",
+        "PreviousLetter",
+        "NextLetter",
+        "ToggleOsd",
+        "ToggleContextMenu",
+        "Select",
+        "Back",
+        "SendKey",
+        "SendString",
+        "GoHome",
+        "GoToSettings",
+        "VolumeUp",
+        "VolumeDown",
+        "Mute",
+        "Unmute",
+        "ToggleMute",
+        "SetVolume",
+        "SetAudioStreamIndex",
+        "SetSubtitleStreamIndex",
+        "DisplayContent",
+        "GoToSearch",
+        "DisplayMessage",
+        "SetRepeatMode",
+        "SetShuffleQueue",
+        "ChannelUp",
+        "ChannelDown",
+        "PlayMediaSource",
+        "PlayTrailers"
+      ],
+      "SupportsMediaControl": true,
+      "SupportsContentUploading": false,
+      "SupportsPersistentIdentifier": false,
+      "SupportsSync": false
+    },
+    "RemoteEndPoint": "192.168.1.254",
+    "PlayableMediaTypes": ["Audio", "Video"],
+    "Id": "SESSION-UUID-FOUR",
+    "UserId": "USER-UUID-TWO",
+    "UserName": "USER",
+    "Client": "Jellyfin Android",
+    "LastActivityDate": "2022-10-19T03:20:20.1214274Z",
+    "LastPlaybackCheckIn": "2022-10-19T03:20:18.0973168Z",
+    "DeviceName": "JELLYFIN DEVICE FOUR",
+    "NowPlayingItem": {
+      "Name": "MUSIC FILE",
+      "ServerId": "SERVER-UUID",
+      "Id": "MUSIC-UUID",
+      "DateCreated": "2022-10-19T03:09:11.392057Z",
+      "ExternalUrls": [],
+      "Path": "string",
+      "EnableMediaSourceDisplay": true,
+      "ChannelId": null,
+      "Taglines": [],
+      "Genres": [],
+      "RunTimeTicks": 736391552,
+      "IndexNumber": 1,
+      "ProviderIds": {},
+      "IsFolder": false,
+      "ParentId": "4c0343ed1bbcda094178076230051b7e",
+      "Type": "Audio",
+      "Studios": [],
+      "GenreItems": [],
+      "LocalTrailerCount": 0,
+      "SpecialFeatureCount": 0,
+      "Artists": ["Contributing Artist"],
+      "ArtistItems": [
+        {
+          "Name": "Contributing Artist",
+          "Id": "1d864900526d9a9513b489f1cc28f8ca"
+        }
+      ],
+      "Album": "ALBUM",
+      "AlbumId": "ALBUM-UUID",
+      "AlbumArtist": "Album Artist",
+      "AlbumArtists": [
+        { "Name": "Album Artist", "Id": "9a65b2c222ddb34e51f5cae360fad3a1" }
+      ],
+      "MediaStreams": [
+        {
+          "Codec": "mp3",
+          "TimeBase": "1/14112000",
+          "DisplayTitle": "MP3 - Stereo",
+          "IsInterlaced": false,
+          "ChannelLayout": "stereo",
+          "BitRate": 256000,
+          "Channels": 2,
+          "SampleRate": 44100,
+          "IsDefault": false,
+          "IsForced": false,
+          "Type": "Audio",
+          "Index": 0,
+          "IsExternal": false,
+          "IsTextSubtitleStream": false,
+          "SupportsExternalStream": false,
+          "Level": 0
+        }
+      ],
+      "ImageTags": {},
+      "BackdropImageTags": [],
+      "ImageBlurHashes": {},
+      "LocationType": "FileSystem",
+      "MediaType": "Audio"
+    },
+    "FullNowPlayingItem": {
+      "Size": 2356453,
+      "IsHD": false,
+      "IsShortcut": false,
+      "Width": 0,
+      "Height": 0,
+      "ExtraIds": [],
+      "DateLastSaved": "2022-10-19T03:10:11.9765475Z",
+      "RemoteTrailers": [],
+      "SupportsExternalTransfer": false
+    },
+    "DeviceId": "DEVICE-UUID-FOUR",
+    "ApplicationVersion": "2.4.4",
+    "IsActive": true,
+    "SupportsMediaControl": true,
+    "SupportsRemoteControl": true,
+    "NowPlayingQueue": [
+      {
+        "Id": "a744119f757f88858f95aab1628708c4",
+        "PlaylistItemId": "playlistItem2"
+      }
+    ],
+    "NowPlayingQueueFullItems": [
+      {
+        "Name": "string",
+        "ServerId": "e1012aa74e1b40c8ac50f3af79e9e83f",
+        "Id": "a744119f757f88858f95aab1628708c4",
+        "Etag": "64ed7b4ce1127c5d41e685de30090383",
+        "DateCreated": "2022-10-19T03:09:11.392057Z",
+        "CanDelete": true,
+        "CanDownload": true,
+        "SortName": "string",
+        "ExternalUrls": [],
+        "MediaSources": [
+          {
+            "Protocol": "File",
+            "Id": "a744119f757f88858f95aab1628708c4",
+            "Path": "string",
+            "Type": "Default",
+            "Container": "mp3",
+            "Size": 2356453,
+            "Name": "string",
+            "IsRemote": false,
+            "ETag": "83b0e0ece75386b479a2c3a09f71d695",
+            "RunTimeTicks": 736391552,
+            "ReadAtNativeFramerate": false,
+            "IgnoreDts": false,
+            "IgnoreIndex": false,
+            "GenPtsInput": false,
+            "SupportsTranscoding": true,
+            "SupportsDirectStream": true,
+            "SupportsDirectPlay": true,
+            "IsInfiniteStream": false,
+            "RequiresOpening": false,
+            "RequiresClosing": false,
+            "RequiresLooping": false,
+            "SupportsProbing": true,
+            "MediaStreams": [
+              {
+                "Codec": "mp3",
+                "TimeBase": "1/14112000",
+                "DisplayTitle": "MP3 - Stereo",
+                "IsInterlaced": false,
+                "ChannelLayout": "stereo",
+                "BitRate": 256000,
+                "Channels": 2,
+                "SampleRate": 44100,
+                "IsDefault": false,
+                "IsForced": false,
+                "Type": "Audio",
+                "Index": 0,
+                "IsExternal": false,
+                "IsTextSubtitleStream": false,
+                "SupportsExternalStream": false,
+                "Level": 0
+              }
+            ],
+            "MediaAttachments": [],
+            "Formats": [],
+            "Bitrate": 256000,
+            "RequiredHttpHeaders": {}
+          }
+        ],
+        "Path": "string",
+        "EnableMediaSourceDisplay": true,
+        "ChannelId": null,
+        "Taglines": [],
+        "Genres": [],
+        "RunTimeTicks": 736391552,
+        "RemoteTrailers": [],
+        "ProviderIds": {},
+        "IsFolder": false,
+        "ParentId": "4c0343ed1bbcda094178076230051b7e",
+        "Type": "Audio",
+        "People": [],
+        "Studios": [],
+        "GenreItems": [],
+        "LocalTrailerCount": 0,
+        "SpecialFeatureCount": 0,
+        "DisplayPreferencesId": "61bba315f137702baa296a1c417faada",
+        "Tags": [],
+        "Artists": [],
+        "ArtistItems": [],
+        "AlbumArtists": [],
+        "MediaStreams": [
+          {
+            "Codec": "mp3",
+            "TimeBase": "1/14112000",
+            "DisplayTitle": "MP3 - Stereo",
+            "IsInterlaced": false,
+            "ChannelLayout": "stereo",
+            "BitRate": 256000,
+            "Channels": 2,
+            "SampleRate": 44100,
+            "IsDefault": false,
+            "IsForced": false,
+            "Type": "Audio",
+            "Index": 0,
+            "IsExternal": false,
+            "IsTextSubtitleStream": false,
+            "SupportsExternalStream": false,
+            "Level": 0
+          }
+        ],
+        "ImageTags": {},
+        "BackdropImageTags": [],
+        "ImageBlurHashes": {},
+        "LocationType": "FileSystem",
+        "MediaType": "Audio",
+        "LockedFields": [],
+        "LockData": false
+      }
+    ],
+    "HasCustomDeviceName": false,
+    "PlaylistItemId": "playlistItem2",
+    "ServerId": "SERVER-UUID",
+    "SupportedCommands": [
+      "MoveUp",
+      "MoveDown",
+      "MoveLeft",
+      "MoveRight",
+      "PageUp",
+      "PageDown",
+      "PreviousLetter",
+      "NextLetter",
+      "ToggleOsd",
+      "ToggleContextMenu",
+      "Select",
+      "Back",
+      "SendKey",
+      "SendString",
+      "GoHome",
+      "GoToSettings",
+      "VolumeUp",
+      "VolumeDown",
+      "Mute",
+      "Unmute",
+      "ToggleMute",
+      "SetVolume",
+      "SetAudioStreamIndex",
+      "SetSubtitleStreamIndex",
+      "DisplayContent",
+      "GoToSearch",
+      "DisplayMessage",
+      "SetRepeatMode",
+      "SetShuffleQueue",
+      "ChannelUp",
+      "ChannelDown",
+      "PlayMediaSource",
+      "PlayTrailers"
+    ]
+  }
+]

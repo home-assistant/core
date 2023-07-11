@@ -1,13 +1,13 @@
 """The binary sensor tests for the Mazda Connected Services integration."""
-
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.const import ATTR_DEVICE_CLASS, ATTR_FRIENDLY_NAME, ATTR_ICON
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import init_integration
 
 
-async def test_binary_sensors(hass):
+async def test_binary_sensors(hass: HomeAssistant) -> None:
     """Test creation of the binary sensors."""
     await init_integration(hass)
 
@@ -16,7 +16,7 @@ async def test_binary_sensors(hass):
     # Driver Door
     state = hass.states.get("binary_sensor.my_mazda3_driver_door")
     assert state
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "My Mazda3 Driver Door"
+    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "My Mazda3 Driver door"
     assert state.attributes.get(ATTR_ICON) == "mdi:car-door"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == BinarySensorDeviceClass.DOOR
     assert state.state == "off"
@@ -27,7 +27,7 @@ async def test_binary_sensors(hass):
     # Passenger Door
     state = hass.states.get("binary_sensor.my_mazda3_passenger_door")
     assert state
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "My Mazda3 Passenger Door"
+    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "My Mazda3 Passenger door"
     assert state.attributes.get(ATTR_ICON) == "mdi:car-door"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == BinarySensorDeviceClass.DOOR
     assert state.state == "on"
@@ -38,7 +38,7 @@ async def test_binary_sensors(hass):
     # Rear Left Door
     state = hass.states.get("binary_sensor.my_mazda3_rear_left_door")
     assert state
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "My Mazda3 Rear Left Door"
+    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "My Mazda3 Rear left door"
     assert state.attributes.get(ATTR_ICON) == "mdi:car-door"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == BinarySensorDeviceClass.DOOR
     assert state.state == "off"
@@ -49,7 +49,7 @@ async def test_binary_sensors(hass):
     # Rear Right Door
     state = hass.states.get("binary_sensor.my_mazda3_rear_right_door")
     assert state
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "My Mazda3 Rear Right Door"
+    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "My Mazda3 Rear right door"
     assert state.attributes.get(ATTR_ICON) == "mdi:car-door"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == BinarySensorDeviceClass.DOOR
     assert state.state == "off"
@@ -80,7 +80,7 @@ async def test_binary_sensors(hass):
     assert entry.unique_id == "JM000000000000000_hood"
 
 
-async def test_electric_vehicle_binary_sensors(hass):
+async def test_electric_vehicle_binary_sensors(hass: HomeAssistant) -> None:
     """Test sensors which are specific to electric vehicles."""
 
     await init_integration(hass, electric_vehicle=True)
@@ -90,7 +90,7 @@ async def test_electric_vehicle_binary_sensors(hass):
     # Plugged In
     state = hass.states.get("binary_sensor.my_mazda3_plugged_in")
     assert state
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "My Mazda3 Plugged In"
+    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "My Mazda3 Plugged in"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == BinarySensorDeviceClass.PLUG
     assert state.state == "on"
     entry = entity_registry.async_get("binary_sensor.my_mazda3_plugged_in")

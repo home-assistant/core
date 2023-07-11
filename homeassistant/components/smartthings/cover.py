@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
+from typing import Any
 
 from pysmartthings import Attribute, Capability
 
@@ -81,7 +82,7 @@ class SmartThingsCover(SmartThingsEntity, CoverEntity):
         if Capability.switch_level in device.capabilities:
             self._attr_supported_features |= CoverEntityFeature.SET_POSITION
 
-    async def async_close_cover(self, **kwargs):
+    async def async_close_cover(self, **kwargs: Any) -> None:
         """Close cover."""
         # Same command for all 3 supported capabilities
         await self._device.close(set_status=True)
@@ -89,7 +90,7 @@ class SmartThingsCover(SmartThingsEntity, CoverEntity):
         # the entity state ahead of receiving the confirming push updates
         self.async_schedule_update_ha_state(True)
 
-    async def async_open_cover(self, **kwargs):
+    async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
         # Same for all capability types
         await self._device.open(set_status=True)
@@ -97,27 +98,24 @@ class SmartThingsCover(SmartThingsEntity, CoverEntity):
         # the entity state ahead of receiving the confirming push updates
         self.async_schedule_update_ha_state(True)
 
-    async def async_set_cover_position(self, **kwargs):
+    async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
-        if not self._attr_supported_features & CoverEntityFeature.SET_POSITION:
+        if not self.supported_features & CoverEntityFeature.SET_POSITION:
             return
         # Do not set_status=True as device will report progress.
         await self._device.set_level(kwargs[ATTR_POSITION], 0)
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Update the attrs of the cover."""
-        value = None
         if Capability.door_control in self._device.capabilities:
             self._device_class = CoverDeviceClass.DOOR
-            value = self._device.status.door
+            self._state = VALUE_TO_STATE.get(self._device.status.door)
         elif Capability.window_shade in self._device.capabilities:
             self._device_class = CoverDeviceClass.SHADE
-            value = self._device.status.window_shade
+            self._state = VALUE_TO_STATE.get(self._device.status.window_shade)
         elif Capability.garage_door_control in self._device.capabilities:
             self._device_class = CoverDeviceClass.GARAGE
-            value = self._device.status.door
-
-        self._state = VALUE_TO_STATE.get(value)
+            self._state = VALUE_TO_STATE.get(self._device.status.door)
 
         self._state_attrs = {}
         battery = self._device.status.attributes[Attribute.battery].value
@@ -125,35 +123,35 @@ class SmartThingsCover(SmartThingsEntity, CoverEntity):
             self._state_attrs[ATTR_BATTERY_LEVEL] = battery
 
     @property
-    def is_opening(self):
+    def is_opening(self) -> bool:
         """Return if the cover is opening or not."""
         return self._state == STATE_OPENING
 
     @property
-    def is_closing(self):
+    def is_closing(self) -> bool:
         """Return if the cover is closing or not."""
         return self._state == STATE_CLOSING
 
     @property
-    def is_closed(self):
+    def is_closed(self) -> bool | None:
         """Return if the cover is closed or not."""
         if self._state == STATE_CLOSED:
             return True
         return None if self._state is None else False
 
     @property
-    def current_cover_position(self):
+    def current_cover_position(self) -> int | None:
         """Return current position of cover."""
-        if not self._attr_supported_features & CoverEntityFeature.SET_POSITION:
+        if not self.supported_features & CoverEntityFeature.SET_POSITION:
             return None
         return self._device.status.level
 
     @property
-    def device_class(self):
+    def device_class(self) -> CoverDeviceClass | None:
         """Define this cover as a garage door."""
         return self._device_class
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Get additional state attributes."""
         return self._state_attrs

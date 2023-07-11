@@ -12,8 +12,9 @@ from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import DOMAIN as CASETA_DOMAIN, LutronCasetaDevice, _area_and_name_from_name
-from .const import BRIDGE_DEVICE, BRIDGE_LEAP, CONFIG_URL, MANUFACTURER, UNASSIGNED_AREA
+from . import DOMAIN as CASETA_DOMAIN, LutronCasetaDevice, _area_name_from_id
+from .const import CONFIG_URL, MANUFACTURER, UNASSIGNED_AREA
+from .models import LutronCasetaData
 
 
 async def async_setup_entry(
@@ -26,26 +27,27 @@ async def async_setup_entry(
     Adds occupancy groups from the Caseta bridge associated with the
     config_entry as binary_sensor entities.
     """
-    entities = []
-    data = hass.data[CASETA_DOMAIN][config_entry.entry_id]
-    bridge = data[BRIDGE_LEAP]
-    bridge_device = data[BRIDGE_DEVICE]
+    data: LutronCasetaData = hass.data[CASETA_DOMAIN][config_entry.entry_id]
+    bridge = data.bridge
     occupancy_groups = bridge.occupancy_groups
-
-    for occupancy_group in occupancy_groups.values():
-        entity = LutronOccupancySensor(occupancy_group, bridge, bridge_device)
-        entities.append(entity)
-
-    async_add_entities(entities, True)
+    async_add_entities(
+        LutronOccupancySensor(occupancy_group, data)
+        for occupancy_group in occupancy_groups.values()
+    )
 
 
 class LutronOccupancySensor(LutronCasetaDevice, BinarySensorEntity):
     """Representation of a Lutron occupancy group."""
 
-    def __init__(self, device, bridge, bridge_device):
+    _attr_device_class = BinarySensorDeviceClass.OCCUPANCY
+
+    def __init__(self, device, data):
         """Init an occupancy sensor."""
-        super().__init__(device, bridge, bridge_device)
-        info = DeviceInfo(
+        super().__init__(device, data)
+        area = _area_name_from_id(self._smartbridge.areas, device["area"])
+        name = f"{area} {device['device_name']}"
+        self._attr_name = name
+        self._attr_device_info = DeviceInfo(
             identifiers={(CASETA_DOMAIN, self.unique_id)},
             manufacturer=MANUFACTURER,
             model="Lutron Occupancy",
@@ -54,22 +56,15 @@ class LutronOccupancySensor(LutronCasetaDevice, BinarySensorEntity):
             configuration_url=CONFIG_URL,
             entry_type=DeviceEntryType.SERVICE,
         )
-        area, _ = _area_and_name_from_name(device["name"])
         if area != UNASSIGNED_AREA:
-            info[ATTR_SUGGESTED_AREA] = area
-        self._attr_device_info = info
-
-    @property
-    def device_class(self):
-        """Flag supported features."""
-        return BinarySensorDeviceClass.OCCUPANCY
+            self._attr_device_info[ATTR_SUGGESTED_AREA] = area
 
     @property
     def is_on(self):
         """Return the brightness of the light."""
         return self._device["status"] == OCCUPANCY_GROUP_OCCUPIED
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         self._smartbridge.add_occupancy_subscriber(
             self.device_id, self.async_write_ha_state
@@ -83,7 +78,7 @@ class LutronOccupancySensor(LutronCasetaDevice, BinarySensorEntity):
     @property
     def unique_id(self):
         """Return a unique identifier."""
-        return f"occupancygroup_{self.device_id}"
+        return f"occupancygroup_{self._bridge_unique_id}_{self.device_id}"
 
     @property
     def extra_state_attributes(self):

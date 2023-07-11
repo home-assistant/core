@@ -1,0 +1,342 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        }
+      },
+      "profiles": {
+        "data": {
+          "profile": "Profile"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_api_key": "[%key:common::config_flow::error::invalid_api_key%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "This NextDNS profile is already configured."
+    }
+  },
+  "system_health": {
+    "info": {
+      "can_reach_server": "Reach server"
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "device_connection_status": {
+        "name": "Device connection status"
+      },
+      "device_profile_connection_status": {
+        "name": "Device profile connection status"
+      }
+    },
+    "button": {
+      "clear_logs": {
+        "name": "Clear logs"
+      }
+    },
+    "sensor": {
+      "all_queries": {
+        "name": "DNS queries"
+      },
+      "blocked_queries": {
+        "name": "DNS queries blocked"
+      },
+      "blocked_queries_ratio": {
+        "name": "DNS queries blocked ratio"
+      },
+      "doh3_queries": {
+        "name": "DNS-over-HTTP/3 queries"
+      },
+      "doh3_queries_ratio": {
+        "name": "DNS-over-HTTP/3 queries ratio"
+      },
+      "doh_queries": {
+        "name": "DNS-over-HTTPS queries"
+      },
+      "doh_queries_ratio": {
+        "name": "DNS-over-HTTPS queries ratio"
+      },
+      "doq_queries": {
+        "name": "DNS-over-QUIC queries"
+      },
+      "doq_queries_ratio": {
+        "name": "DNS-over-QUIC queries ratio"
+      },
+      "dot_queries": {
+        "name": "DNS-over-TLS queries"
+      },
+      "dot_queries_ratio": {
+        "name": "DNS-over-TLS queries ratio"
+      },
+      "encrypted_queries": {
+        "name": "Encrypted queries"
+      },
+      "encrypted_queries_ratio": {
+        "name": "Encrypted queries ratio"
+      },
+      "ipv4_queries": {
+        "name": "IPv4 queries"
+      },
+      "ipv6_queries": {
+        "name": "IPv6 queries"
+      },
+      "ipv6_queries_ratio": {
+        "name": "IPv6 queries ratio"
+      },
+      "not_validated_queries": {
+        "name": "DNSSEC not validated queries"
+      },
+      "relayed_queries": {
+        "name": "DNS queries relayed"
+      },
+      "tcp_queries": {
+        "name": "TCP queries"
+      },
+      "tcp_queries_ratio": {
+        "name": "TCP queries ratio"
+      },
+      "udp_queries": {
+        "name": "UDP queries"
+      },
+      "udp_queries_ratio": {
+        "name": "UDP queries ratio"
+      },
+      "unencrypted_queries": {
+        "name": "Unencrypted queries"
+      },
+      "validated_queries": {
+        "name": "DNSSEC validated queries"
+      },
+      "validated_queries_ratio": {
+        "name": "DNSSEC validated queries ratio"
+      }
+    },
+    "switch": {
+      "ai_threat_detection": {
+        "name": "AI-Driven threat detection"
+      },
+      "allow_affiliate": {
+        "name": "Allow affiliate & tracking links"
+      },
+      "anonymized_ecs": {
+        "name": "Anonymized EDNS client subnet"
+      },
+      "block_9gag": {
+        "name": "Block 9GAG"
+      },
+      "block_amazon": {
+        "name": "Block Amazon"
+      },
+      "block_bereal": {
+        "name": "Block BeReal"
+      },
+      "block_blizzard": {
+        "name": "Block Blizzard"
+      },
+      "block_bypass_methods": {
+        "name": "Block bypass methods"
+      },
+      "block_chatgpt": {
+        "name": "Block ChatGPT"
+      },
+      "block_csam": {
+        "name": "Block child sexual abuse material"
+      },
+      "block_dailymotion": {
+        "name": "Block Dailymotion"
+      },
+      "block_dating": {
+        "name": "Block dating"
+      },
+      "block_ddns": {
+        "name": "Block dynamic DNS hostnames"
+      },
+      "block_discord": {
+        "name": "Block Discord"
+      },
+      "block_disguised_trackers": {
+        "name": "Block disguised third-party trackers"
+      },
+      "block_disneyplus": {
+        "name": "Block Disney Plus"
+      },
+      "block_ebay": {
+        "name": "Block eBay"
+      },
+      "block_facebook": {
+        "name": "Block Facebook"
+      },
+      "block_fortnite": {
+        "name": "Block Fortnite"
+      },
+      "block_gambling": {
+        "name": "Block gambling"
+      },
+      "block_google_chat": {
+        "name": "Block Google Chat"
+      },
+      "block_hbomax": {
+        "name": "Block HBO Max"
+      },
+      "block_hulu": {
+        "name": "Block Hulu"
+      },
+      "block_imgur": {
+        "name": "Block Imgur"
+      },
+      "block_instagram": {
+        "name": "Block Instagram"
+      },
+      "block_leagueoflegends": {
+        "name": "Block League of Legends"
+      },
+      "block_mastodon": {
+        "name": "Block Mastodon"
+      },
+      "block_messenger": {
+        "name": "Block Messenger"
+      },
+      "block_minecraft": {
+        "name": "Block Minecraft"
+      },
+      "block_netflix": {
+        "name": "Block Netflix"
+      },
+      "block_nrd": {
+        "name": "Block newly registered domains"
+      },
+      "block_online_gaming": {
+        "name": "Block online gaming"
+      },
+      "block_page": {
+        "name": "Block page"
+      },
+      "block_parked_domains": {
+        "name": "Block parked domains"
+      },
+      "block_pinterest": {
+        "name": "Block Pinterest"
+      },
+      "block_piracy": {
+        "name": "Block piracy"
+      },
+      "block_playstation_network": {
+        "name": "Block PlayStation Network"
+      },
+      "block_porn": {
+        "name": "Block porn"
+      },
+      "block_primevideo": {
+        "name": "Block Prime Video"
+      },
+      "block_reddit": {
+        "name": "Block Reddit"
+      },
+      "block_roblox": {
+        "name": "Block Roblox"
+      },
+      "block_signal": {
+        "name": "Block Signal"
+      },
+      "block_skype": {
+        "name": "Block Skype"
+      },
+      "block_snapchat": {
+        "name": "Block Snapchat"
+      },
+      "block_social_networks": {
+        "name": "Block social networks"
+      },
+      "block_spotify": {
+        "name": "Block Spotify"
+      },
+      "block_steam": {
+        "name": "Block Steam"
+      },
+      "block_telegram": {
+        "name": "Block Telegram"
+      },
+      "block_tiktok": {
+        "name": "Block TikTok"
+      },
+      "block_tinder": {
+        "name": "Block Tinder"
+      },
+      "block_tumblr": {
+        "name": "Block Tumblr"
+      },
+      "block_twitch": {
+        "name": "Block Twitch"
+      },
+      "block_twitter": {
+        "name": "Block Twitter"
+      },
+      "block_video_streaming": {
+        "name": "Block video streaming"
+      },
+      "block_vimeo": {
+        "name": "Block Vimeo"
+      },
+      "block_vk": {
+        "name": "Block VK"
+      },
+      "block_whatsapp": {
+        "name": "Block WhatsApp"
+      },
+      "block_xboxlive": {
+        "name": "Block Xbox Live"
+      },
+      "block_youtube": {
+        "name": "Block YouTube"
+      },
+      "block_zoom": {
+        "name": "Block Zoom"
+      },
+      "cache_boost": {
+        "name": "Cache boost"
+      },
+      "cname_flattening": {
+        "name": "CNAME flattening"
+      },
+      "cryptojacking_protection": {
+        "name": "Cryptojacking protection"
+      },
+      "dga_protection": {
+        "name": "Domain generation algorithms protection"
+      },
+      "dns_rebinding_protection": {
+        "name": "DNS rebinding protection"
+      },
+      "google_safe_browsing": {
+        "name": "Google safe browsing"
+      },
+      "idn_homograph_attacks_protection": {
+        "name": "IDN homograph attacks protection"
+      },
+      "logs": {
+        "name": "Logs"
+      },
+      "safesearch": {
+        "name": "Force SafeSearch"
+      },
+      "threat_intelligence_feeds": {
+        "name": "Threat intelligence feeds"
+      },
+      "typosquatting_protection": {
+        "name": "Typosquatting protection"
+      },
+      "web3": {
+        "name": "Web3"
+      },
+      "youtube_restricted_mode": {
+        "name": "Force YouTube restricted mode"
+      }
+    }
+  }
+}

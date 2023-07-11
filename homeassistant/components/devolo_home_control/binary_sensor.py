@@ -9,8 +9,8 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
@@ -81,13 +81,14 @@ class DevoloBinaryDeviceEntity(DevoloDeviceEntity, BinarySensorEntity):
             or self._binary_sensor_property.sensor_type
         )
 
-        if self._attr_device_class is None:
-            if device_instance.binary_sensor_property[element_uid].sub_type != "":
-                self._attr_name += (
-                    f" {device_instance.binary_sensor_property[element_uid].sub_type}"
-                )
-            else:
-                self._attr_name += f" {device_instance.binary_sensor_property[element_uid].sensor_type}"
+        if device_instance.binary_sensor_property[element_uid].sub_type != "":
+            self._attr_name = device_instance.binary_sensor_property[
+                element_uid
+            ].sub_type.capitalize()
+        else:
+            self._attr_name = device_instance.binary_sensor_property[
+                element_uid
+            ].sensor_type.capitalize()
 
         self._value = self._binary_sensor_property.state
 
@@ -128,6 +129,7 @@ class DevoloRemoteControl(DevoloDeviceEntity, BinarySensorEntity):
 
         self._key = key
         self._attr_is_on = False
+        self._attr_name = f"Button {key}"
 
     def _sync(self, message: tuple) -> None:
         """Update the binary sensor state."""

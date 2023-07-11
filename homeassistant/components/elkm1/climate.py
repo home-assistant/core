@@ -8,12 +8,12 @@ from elkm1_lib.elements import Element
 from elkm1_lib.elk import Elk
 from elkm1_lib.thermostats import Thermostat
 
-from homeassistant.components.climate import ClimateEntity
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
     FAN_AUTO,
     FAN_ON,
+    ClimateEntity,
     ClimateEntityFeature,
     HVACMode,
 )
@@ -68,12 +68,13 @@ async def async_setup_entry(
     create_elk_entities(
         elk_data, elk.thermostats, "thermostat", ElkThermostat, entities
     )
-    async_add_entities(entities, True)
+    async_add_entities(entities)
 
 
 class ElkThermostat(ElkEntity, ClimateEntity):
     """Representation of an Elk-M1 Thermostat."""
 
+    _attr_precision = PRECISION_WHOLE
     _attr_supported_features = (
         ClimateEntityFeature.FAN_MODE
         | ClimateEntityFeature.AUX_HEAT
@@ -84,7 +85,7 @@ class ElkThermostat(ElkEntity, ClimateEntity):
     def __init__(self, element: Element, elk: Elk, elk_data: dict[str, Any]) -> None:
         """Initialize climate entity."""
         super().__init__(element, elk, elk_data)
-        self._state: str | None = None
+        self._state: HVACMode | None = None
 
     @property
     def temperature_unit(self) -> str:
@@ -129,7 +130,7 @@ class ElkThermostat(ElkEntity, ClimateEntity):
         return self._element.humidity
 
     @property
-    def hvac_mode(self) -> str | None:
+    def hvac_mode(self) -> HVACMode | None:
         """Return current operation ie. heat, cool, idle."""
         return self._state
 
@@ -137,11 +138,6 @@ class ElkThermostat(ElkEntity, ClimateEntity):
     def hvac_modes(self) -> list[HVACMode]:
         """Return the list of available operation modes."""
         return SUPPORT_HVAC
-
-    @property
-    def precision(self) -> int:
-        """Return the precision of the system."""
-        return PRECISION_WHOLE
 
     @property
     def is_aux_heat(self) -> bool:

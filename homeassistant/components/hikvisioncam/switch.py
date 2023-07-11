@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 import hikvision.api
 from hikvision.error import HikvisionError, MissingParamError
@@ -88,17 +89,17 @@ class HikvisionMotionSwitch(SwitchEntity):
         """Return true if device is on."""
         return self._state == STATE_ON
 
-    def turn_on(self, **kwargs):
+    def turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         _LOGGING.info("Turning on Motion Detection ")
         self._hikvision_cam.enable_motion_detection()
 
-    def turn_off(self, **kwargs):
+    def turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         _LOGGING.info("Turning off Motion Detection ")
         self._hikvision_cam.disable_motion_detection()
 
-    def update(self):
+    def update(self) -> None:
         """Update Motion Detection state."""
         enabled = self._hikvision_cam.is_motion_detection_enabled()
         _LOGGING.info("enabled: %s", enabled)

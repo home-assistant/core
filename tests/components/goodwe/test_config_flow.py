@@ -11,11 +11,7 @@ from homeassistant.components.goodwe.const import (
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import (
-    RESULT_TYPE_ABORT,
-    RESULT_TYPE_CREATE_ENTRY,
-    RESULT_TYPE_FORM,
-)
+from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
@@ -30,12 +26,12 @@ def mock_inverter():
     return goodwe_inverter
 
 
-async def test_manual_setup(hass: HomeAssistant):
+async def test_manual_setup(hass: HomeAssistant) -> None:
     """Test manually setting up."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user"
     assert not result["errors"]
 
@@ -50,7 +46,7 @@ async def test_manual_setup(hass: HomeAssistant):
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == DEFAULT_NAME
     assert result["data"] == {
         CONF_HOST: TEST_HOST,
@@ -59,7 +55,7 @@ async def test_manual_setup(hass: HomeAssistant):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_manual_setup_already_exists(hass: HomeAssistant):
+async def test_manual_setup_already_exists(hass: HomeAssistant) -> None:
     """Test manually setting up and the device already exists."""
     entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_HOST: TEST_HOST}, unique_id=TEST_SERIAL
@@ -68,7 +64,7 @@ async def test_manual_setup_already_exists(hass: HomeAssistant):
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user"
     assert not result["errors"]
 
@@ -81,16 +77,16 @@ async def test_manual_setup_already_exists(hass: HomeAssistant):
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
-async def test_manual_setup_device_offline(hass: HomeAssistant):
+async def test_manual_setup_device_offline(hass: HomeAssistant) -> None:
     """Test manually setting up, device offline."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user"
     assert not result["errors"]
 
@@ -103,5 +99,5 @@ async def test_manual_setup_device_offline(hass: HomeAssistant):
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["errors"] == {CONF_HOST: "connection_error"}

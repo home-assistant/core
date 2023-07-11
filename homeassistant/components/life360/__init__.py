@@ -1,11 +1,14 @@
 """Life360 integration."""
+
+from __future__ import annotations
+
+from collections.abc import Callable
+from dataclasses import dataclass, field
+from typing import Any
+
 import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.components.device_tracker import CONF_SCAN_INTERVAL
-from homeassistant.components.device_tracker.const import (
-    SCAN_INTERVAL as DEFAULT_SCAN_INTERVAL,
-)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_EXCLUDE,
@@ -16,12 +19,10 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
-    CONF_AUTHORIZATION,
     CONF_CIRCLES,
     CONF_DRIVING_SPEED,
     CONF_ERROR_THRESHOLD,
@@ -30,182 +31,157 @@ from .const import (
     CONF_MEMBERS,
     CONF_SHOW_AS_STATE,
     CONF_WARNING_THRESHOLD,
+    DEFAULT_OPTIONS,
     DOMAIN,
+    LOGGER,
     SHOW_DRIVING,
     SHOW_MOVING,
 )
-from .helpers import get_api
+from .coordinator import Life360DataUpdateCoordinator, MissingLocReason
 
-DEFAULT_PREFIX = DOMAIN
+PLATFORMS = [Platform.DEVICE_TRACKER]
 
 CONF_ACCOUNTS = "accounts"
 
 SHOW_AS_STATE_OPTS = [SHOW_DRIVING, SHOW_MOVING]
 
 
-def _excl_incl_list_to_filter_dict(value):
-    return {
-        "include": CONF_INCLUDE in value,
-        "list": value.get(CONF_EXCLUDE) or value.get(CONF_INCLUDE),
-    }
-
-
-def _prefix(value):
-    if not value:
-        return ""
-    if not value.endswith("_"):
-        return f"{value}_"
-    return value
-
-
-def _thresholds(config):
-    error_threshold = config.get(CONF_ERROR_THRESHOLD)
-    warning_threshold = config.get(CONF_WARNING_THRESHOLD)
-    if error_threshold and warning_threshold:
-        if error_threshold <= warning_threshold:
-            raise vol.Invalid(
-                f"{CONF_ERROR_THRESHOLD} must be larger than {CONF_WARNING_THRESHOLD}"
+def _show_as_state(config: dict) -> dict:
+    if opts := config.pop(CONF_SHOW_AS_STATE):
+        if SHOW_DRIVING in opts:
+            config[SHOW_DRIVING] = True
+        if SHOW_MOVING in opts:
+            LOGGER.warning(
+                "%s is no longer supported as an option for %s",
+                SHOW_MOVING,
+                CONF_SHOW_AS_STATE,
             )
-    elif not error_threshold and warning_threshold:
-        config[CONF_ERROR_THRESHOLD] = warning_threshold + 1
-    elif error_threshold and not warning_threshold:
-        # Make them the same which effectively prevents warnings.
-        config[CONF_WARNING_THRESHOLD] = error_threshold
-    else:
-        # Log all errors as errors.
-        config[CONF_ERROR_THRESHOLD] = 1
-        config[CONF_WARNING_THRESHOLD] = 1
     return config
 
 
-ACCOUNT_SCHEMA = vol.Schema(
-    {vol.Required(CONF_USERNAME): cv.string, vol.Required(CONF_PASSWORD): cv.string}
-)
+def _unsupported(unsupported: set[str]) -> Callable[[dict], dict]:
+    """Warn about unsupported options and remove from config."""
 
-_SLUG_LIST = vol.All(
-    cv.ensure_list, [cv.slugify], vol.Length(min=1, msg="List cannot be empty")
-)
+    def validator(config: dict) -> dict:
+        if unsupported_keys := unsupported & set(config):
+            LOGGER.warning(
+                "The following options are no longer supported: %s",
+                ", ".join(sorted(unsupported_keys)),
+            )
+        return {k: v for k, v in config.items() if k not in unsupported}
 
-_LOWER_STRING_LIST = vol.All(
-    cv.ensure_list,
-    [vol.All(cv.string, vol.Lower)],
-    vol.Length(min=1, msg="List cannot be empty"),
-)
+    return validator
 
-_EXCL_INCL_SLUG_LIST = vol.All(
-    vol.Schema(
-        {
-            vol.Exclusive(CONF_EXCLUDE, "incl_excl"): _SLUG_LIST,
-            vol.Exclusive(CONF_INCLUDE, "incl_excl"): _SLUG_LIST,
-        }
-    ),
-    cv.has_at_least_one_key(CONF_EXCLUDE, CONF_INCLUDE),
-    _excl_incl_list_to_filter_dict,
-)
 
-_EXCL_INCL_LOWER_STRING_LIST = vol.All(
-    vol.Schema(
-        {
-            vol.Exclusive(CONF_EXCLUDE, "incl_excl"): _LOWER_STRING_LIST,
-            vol.Exclusive(CONF_INCLUDE, "incl_excl"): _LOWER_STRING_LIST,
-        }
-    ),
-    cv.has_at_least_one_key(CONF_EXCLUDE, CONF_INCLUDE),
-    _excl_incl_list_to_filter_dict,
-)
-
-_THRESHOLD = vol.All(vol.Coerce(int), vol.Range(min=1))
-
+ACCOUNT_SCHEMA = {
+    vol.Required(CONF_USERNAME): cv.string,
+    vol.Required(CONF_PASSWORD): cv.string,
+}
+CIRCLES_MEMBERS = {
+    vol.Optional(CONF_EXCLUDE): vol.All(cv.ensure_list, [cv.string]),
+    vol.Optional(CONF_INCLUDE): vol.All(cv.ensure_list, [cv.string]),
+}
 LIFE360_SCHEMA = vol.All(
     vol.Schema(
         {
-            vol.Optional(CONF_ACCOUNTS): vol.All(
-                cv.ensure_list, [ACCOUNT_SCHEMA], vol.Length(min=1)
-            ),
-            vol.Optional(CONF_CIRCLES): _EXCL_INCL_LOWER_STRING_LIST,
+            vol.Optional(CONF_ACCOUNTS): vol.All(cv.ensure_list, [ACCOUNT_SCHEMA]),
+            vol.Optional(CONF_CIRCLES): CIRCLES_MEMBERS,
             vol.Optional(CONF_DRIVING_SPEED): vol.Coerce(float),
-            vol.Optional(CONF_ERROR_THRESHOLD): _THRESHOLD,
+            vol.Optional(CONF_ERROR_THRESHOLD): vol.Coerce(int),
             vol.Optional(CONF_MAX_GPS_ACCURACY): vol.Coerce(float),
-            vol.Optional(CONF_MAX_UPDATE_WAIT): vol.All(
-                cv.time_period, cv.positive_timedelta
-            ),
-            vol.Optional(CONF_MEMBERS): _EXCL_INCL_SLUG_LIST,
-            vol.Optional(CONF_PREFIX, default=DEFAULT_PREFIX): vol.All(
-                vol.Any(None, cv.string), _prefix
-            ),
-            vol.Optional(
-                CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
-            ): cv.time_period,
+            vol.Optional(CONF_MAX_UPDATE_WAIT): cv.time_period,
+            vol.Optional(CONF_MEMBERS): CIRCLES_MEMBERS,
+            vol.Optional(CONF_PREFIX): vol.Any(None, cv.string),
+            vol.Optional(CONF_SCAN_INTERVAL): cv.time_period,
             vol.Optional(CONF_SHOW_AS_STATE, default=[]): vol.All(
                 cv.ensure_list, [vol.In(SHOW_AS_STATE_OPTS)]
             ),
-            vol.Optional(CONF_WARNING_THRESHOLD): _THRESHOLD,
+            vol.Optional(CONF_WARNING_THRESHOLD): vol.Coerce(int),
         }
     ),
-    _thresholds,
+    _unsupported(
+        {
+            CONF_ACCOUNTS,
+            CONF_CIRCLES,
+            CONF_ERROR_THRESHOLD,
+            CONF_MAX_UPDATE_WAIT,
+            CONF_MEMBERS,
+            CONF_PREFIX,
+            CONF_SCAN_INTERVAL,
+            CONF_WARNING_THRESHOLD,
+        }
+    ),
+    _show_as_state,
+)
+CONFIG_SCHEMA = vol.Schema(
+    vol.All({DOMAIN: LIFE360_SCHEMA}, cv.removed(DOMAIN, raise_if_present=False)),
+    extra=vol.ALLOW_EXTRA,
 )
 
-CONFIG_SCHEMA = vol.Schema({DOMAIN: LIFE360_SCHEMA}, extra=vol.ALLOW_EXTRA)
+
+@dataclass
+class IntegData:
+    """Integration data."""
+
+    cfg_options: dict[str, Any] | None = None
+    # ConfigEntry.entry_id: Life360DataUpdateCoordinator
+    coordinators: dict[str, Life360DataUpdateCoordinator] = field(
+        init=False, default_factory=dict
+    )
+    # member_id: missing location reason
+    missing_loc_reason: dict[str, MissingLocReason] = field(
+        init=False, default_factory=dict
+    )
+    # member_id: ConfigEntry.entry_id
+    tracked_members: dict[str, str] = field(init=False, default_factory=dict)
+    logged_circles: list[str] = field(init=False, default_factory=list)
+    logged_places: list[str] = field(init=False, default_factory=list)
+
+    def __post_init__(self):
+        """Finish initialization of cfg_options."""
+        self.cfg_options = self.cfg_options or {}
 
 
-def setup(hass: HomeAssistant, config: ConfigType) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up integration."""
-    conf = config.get(DOMAIN, LIFE360_SCHEMA({}))
-    hass.data[DOMAIN] = {"config": conf, "apis": {}}
-    discovery.load_platform(hass, Platform.DEVICE_TRACKER, DOMAIN, None, config)
-
-    if CONF_ACCOUNTS not in conf:
-        return True
-
-    # Check existing config entries. For any that correspond to an entry in
-    # configuration.yaml, and whose password has not changed, nothing needs to
-    # be done with that config entry or that account from configuration.yaml.
-    # But if the config entry was created by import and the account no longer
-    # exists in configuration.yaml, or if the password has changed, then delete
-    # that out-of-date config entry.
-    already_configured = []
-    for entry in hass.config_entries.async_entries(DOMAIN):
-        # Find corresponding configuration.yaml entry and its password.
-        password = None
-        for account in conf[CONF_ACCOUNTS]:
-            if account[CONF_USERNAME] == entry.data[CONF_USERNAME]:
-                password = account[CONF_PASSWORD]
-        if password == entry.data[CONF_PASSWORD]:
-            already_configured.append(entry.data[CONF_USERNAME])
-            continue
-        if (
-            not password
-            and entry.source == config_entries.SOURCE_IMPORT
-            or password
-            and password != entry.data[CONF_PASSWORD]
-        ):
-            hass.async_create_task(hass.config_entries.async_remove(entry.entry_id))
-
-    # Create config entries for accounts listed in configuration.
-    for account in conf[CONF_ACCOUNTS]:
-        if account[CONF_USERNAME] not in already_configured:
-            hass.async_create_task(
-                hass.config_entries.flow.async_init(
-                    DOMAIN,
-                    context={"source": config_entries.SOURCE_IMPORT},
-                    data=account,
-                )
-            )
+    hass.data.setdefault(DOMAIN, IntegData(config.get(DOMAIN)))
     return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up config entry."""
-    hass.data[DOMAIN]["apis"][entry.data[CONF_USERNAME]] = get_api(
-        entry.data[CONF_AUTHORIZATION]
-    )
+    hass.data.setdefault(DOMAIN, IntegData())
+
+    # Check if this entry was created when this was a "legacy" tracker. If it was,
+    # update with missing data.
+    if not entry.unique_id:
+        hass.config_entries.async_update_entry(
+            entry,
+            unique_id=entry.data[CONF_USERNAME].lower(),
+            options=DEFAULT_OPTIONS | hass.data[DOMAIN].cfg_options,
+        )
+
+    coordinator = Life360DataUpdateCoordinator(hass, entry)
+
+    await coordinator.async_config_entry_first_refresh()
+
+    hass.data[DOMAIN].coordinators[entry.entry_id] = coordinator
+
+    # Set up components for our platforms.
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload config entry."""
-    try:
-        hass.data[DOMAIN]["apis"].pop(entry.data[CONF_USERNAME])
-        return True
-    except KeyError:
-        return False
+
+    # Unload components for our platforms.
+    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
+        del hass.data[DOMAIN].coordinators[entry.entry_id]
+        # Remove any members that were tracked by this entry.
+        for member_id, entry_id in hass.data[DOMAIN].tracked_members.copy().items():
+            if entry_id == entry.entry_id:
+                del hass.data[DOMAIN].tracked_members[member_id]
+
+    return unload_ok

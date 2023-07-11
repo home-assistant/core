@@ -1,0 +1,15 @@
+{
+  "domain": "fully_kiosk",
+  "name": "Fully Kiosk Browser",
+  "codeowners": ["@cgarwood"],
+  "config_flow": true,
+  "dhcp": [
+    {
+      "registered_devices": true
+    }
+  ],
+  "documentation": "https://www.home-assistant.io/integrations/fullykiosk",
+  "iot_class": "local_polling",
+  "mqtt": ["fully/deviceInfo/+"],
+  "requirements": ["python-fullykiosk==0.0.12"]
+}

@@ -1,6 +1,9 @@
 """Config flow for Subaru integration."""
+from __future__ import annotations
+
 from datetime import datetime
 import logging
+from typing import Any
 
 from subarulink import (
     Controller as SubaruAPI,
@@ -14,6 +17,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import CONF_DEVICE_ID, CONF_PASSWORD, CONF_PIN, CONF_USERNAME
 from homeassistant.core import callback
+from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 
 from .const import CONF_COUNTRY, CONF_UPDATE_ENABLED, DOMAIN
@@ -34,7 +38,9 @@ class SubaruConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.config_data = {CONF_PIN: None}
         self.controller = None
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle the start of the config flow."""
         error = None
 
@@ -83,7 +89,9 @@ class SubaruConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry):
+    def async_get_options_flow(
+        config_entry: config_entries.ConfigEntry,
+    ) -> OptionsFlowHandler:
         """Get the options flow for this handler."""
         return OptionsFlowHandler(config_entry)
 
@@ -113,7 +121,9 @@ class SubaruConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.debug("Successfully authenticated with Subaru API")
             self.config_data.update(data)
 
-    async def async_step_two_factor(self, user_input=None):
+    async def async_step_two_factor(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Select contact method and request 2FA code from Subaru."""
         error = None
         if user_input:
@@ -139,7 +149,9 @@ class SubaruConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="two_factor", data_schema=data_schema, errors=error
         )
 
-    async def async_step_two_factor_validate(self, user_input=None):
+    async def async_step_two_factor_validate(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Validate received 2FA code with Subaru."""
         error = None
         if user_input:
@@ -162,7 +174,9 @@ class SubaruConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="two_factor_validate", data_schema=data_schema, errors=error
         )
 
-    async def async_step_pin(self, user_input=None):
+    async def async_step_pin(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle second part of config flow, if required."""
         error = None
         if user_input and self.controller.update_saved_pin(user_input[CONF_PIN]):
@@ -189,7 +203,9 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         """Initialize options flow."""
         self.config_entry = config_entry
 
-    async def async_step_init(self, user_input=None):
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle options flow."""
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)

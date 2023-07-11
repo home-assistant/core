@@ -12,7 +12,7 @@ from .const import LOGGER, SENSIBO_ERRORS, TIMEOUT
 
 
 async def async_validate_api(hass: HomeAssistant, api_key: str) -> str:
-    """Get data from API."""
+    """Validate the api and return username."""
     client = SensiboClient(
         api_key,
         session=async_get_clientsession(hass),
@@ -31,7 +31,7 @@ async def async_validate_api(hass: HomeAssistant, api_key: str) -> str:
         raise ConnectionError from err
 
     devices = device_query["result"]
-    user = user_query["result"].get("username")
+    user: str = user_query["result"].get("username")
     if not devices:
         LOGGER.error("Could not retrieve any devices from Sensibo servers")
         raise NoDevicesError

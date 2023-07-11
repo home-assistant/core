@@ -1,9 +1,9 @@
 {
   "domain": "delijn",
   "name": "De Lijn",
-  "documentation": "https://www.home-assistant.io/integrations/delijn",
   "codeowners": ["@bollewolle", "@Emilv2"],
-  "requirements": ["pydelijn==1.0.0"],
+  "documentation": "https://www.home-assistant.io/integrations/delijn",
   "iot_class": "cloud_polling",
-  "loggers": ["pydelijn"]
+  "loggers": ["pydelijn"],
+  "requirements": ["pydelijn==1.1.0"]
 }

@@ -47,7 +47,12 @@ async def async_setup_entry(
 
 
 class UpbLink(UpbEntity, Scene):
-    """Representation of an UPB Link."""
+    """Representation of a UPB Link."""
+
+    def __init__(self, element, unique_id, upb):
+        """Initialize the base of all UPB devices."""
+        super().__init__(element, unique_id, upb)
+        self._attr_name = element.name
 
     async def async_activate(self, **kwargs: Any) -> None:
         """Activate the task."""

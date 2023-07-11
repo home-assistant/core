@@ -1,9 +1,10 @@
 {
   "domain": "http",
   "name": "HTTP",
-  "documentation": "https://www.home-assistant.io/integrations/http",
-  "requirements": ["aiohttp_cors==0.7.0"],
   "codeowners": ["@home-assistant/core"],
+  "documentation": "https://www.home-assistant.io/integrations/http",
+  "integration_type": "system",
+  "iot_class": "local_push",
   "quality_scale": "internal",
-  "iot_class": "local_push"
+  "requirements": ["aiohttp-cors==0.7.0"]
 }

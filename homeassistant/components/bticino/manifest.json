@@ -1,0 +1,6 @@
+{
+  "domain": "bticino",
+  "name": "BTicino",
+  "integration_type": "virtual",
+  "supported_by": "netatmo"
+}

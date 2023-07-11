@@ -7,8 +7,6 @@ from pyws66i import WS66i
 
 from .coordinator import Ws66iDataUpdateCoordinator
 
-# A dataclass is basically a struct in C/C++
-
 
 @dataclass
 class SourceRep:

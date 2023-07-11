@@ -1,7 +1,9 @@
 """Config flow for Discord integration."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 import logging
+from typing import Any
 
 from aiohttp.client_exceptions import ClientConnectorError
 import nextcord
@@ -21,13 +23,9 @@ CONFIG_SCHEMA = vol.Schema({vol.Required(CONF_API_TOKEN): str})
 class DiscordFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Discord."""
 
-    async def async_step_reauth(self, user_input: dict | None = None) -> FlowResult:
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Handle a reauthorization flow request."""
-        if user_input is not None:
-            return await self.async_step_reauth_confirm()
-
-        self._set_confirm_only()
-        return self.async_show_form(step_id="reauth")
+        return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
         self, user_input: dict[str, str] | None = None

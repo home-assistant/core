@@ -1,10 +1,13 @@
 """Config flow for Aladdin Connect cover integration."""
 from __future__ import annotations
 
-import logging
+import asyncio
+from collections.abc import Mapping
 from typing import Any
 
-from aladdin_connect import AladdinConnectClient
+from AIOAladdinConnect import AladdinConnectClient
+import AIOAladdinConnect.session_manager as Aladdin
+from aiohttp.client_exceptions import ClientError
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -12,10 +15,9 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
+from .const import CLIENT_ID, DOMAIN
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
@@ -32,14 +34,19 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
-    acc = AladdinConnectClient(data[CONF_USERNAME], data[CONF_PASSWORD])
+    acc = AladdinConnectClient(
+        data[CONF_USERNAME],
+        data[CONF_PASSWORD],
+        async_get_clientsession(hass),
+        CLIENT_ID,
+    )
     try:
-        login = await hass.async_add_executor_job(acc.login)
-    except (TypeError, KeyError, NameError, ValueError) as ex:
-        raise ConnectionError from ex
-    else:
-        if not login:
-            raise InvalidAuth
+        await acc.login()
+    except (ClientError, asyncio.TimeoutError, Aladdin.ConnectionError) as ex:
+        raise ex
+
+    except Aladdin.InvalidPasswordError as ex:
+        raise InvalidAuth from ex
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -48,9 +55,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
     entry: config_entries.ConfigEntry | None
 
-    async def async_step_reauth(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Handle re-authentication with Aladdin Connect."""
 
         self.entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
@@ -72,12 +77,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             try:
                 await validate_input(self.hass, data)
-            except ConnectionError:
-                errors["base"] = "cannot_connect"
+
             except InvalidAuth:
                 errors["base"] = "invalid_auth"
-            else:
 
+            except (ClientError, asyncio.TimeoutError, Aladdin.ConnectionError):
+                errors["base"] = "cannot_connect"
+
+            else:
                 self.hass.config_entries.async_update_entry(
                     self.entry,
                     data={
@@ -107,10 +114,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         try:
             await validate_input(self.hass, user_input)
-        except ConnectionError:
-            errors["base"] = "cannot_connect"
         except InvalidAuth:
             errors["base"] = "invalid_auth"
+
+        except (ClientError, asyncio.TimeoutError, Aladdin.ConnectionError):
+            errors["base"] = "cannot_connect"
 
         else:
             await self.async_set_unique_id(
@@ -122,12 +130,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
-
-    async def async_step_import(
-        self, import_data: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """Import Aladin Connect config from configuration.yaml."""
-        return await self.async_step_user(import_data)
 
 
 class InvalidAuth(HomeAssistantError):

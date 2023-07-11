@@ -4,9 +4,9 @@ from homeassistant.components.device_tracker import (
     ATTR_GPS,
     ATTR_GPS_ACCURACY,
     ATTR_LOCATION_NAME,
+    SourceType,
+    TrackerEntity,
 )
-from homeassistant.components.device_tracker.config_entry import TrackerEntity
-from homeassistant.components.device_tracker.const import SOURCE_TYPE_GPS
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
@@ -103,16 +103,16 @@ class MobileAppEntity(TrackerEntity, RestoreEntity):
         return self._entry.data[ATTR_DEVICE_NAME]
 
     @property
-    def source_type(self):
+    def source_type(self) -> SourceType:
         """Return the source type, eg gps or router, of the device."""
-        return SOURCE_TYPE_GPS
+        return SourceType.GPS
 
     @property
     def device_info(self):
         """Return the device info."""
         return device_info(self._entry.data)
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Call when entity about to be added to Home Assistant."""
         await super().async_added_to_hass()
         self._dispatch_unsub = async_dispatcher_connect(
@@ -138,7 +138,7 @@ class MobileAppEntity(TrackerEntity, RestoreEntity):
         data.update({key: attr[key] for key in attr if key in ATTR_KEYS})
         self._data = data
 
-    async def async_will_remove_from_hass(self):
+    async def async_will_remove_from_hass(self) -> None:
         """Call when entity is being removed from hass."""
         await super().async_will_remove_from_hass()
 

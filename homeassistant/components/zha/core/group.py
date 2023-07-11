@@ -65,7 +65,7 @@ class ZHAGroupMember(LogMixin):
 
     @property
     def device(self) -> ZHADevice:
-        """Return the zha device for this group member."""
+        """Return the ZHA device for this group member."""
         return self._zha_device
 
     @property
@@ -78,7 +78,7 @@ class ZHAGroupMember(LogMixin):
         return member_info
 
     @property
-    def associated_entities(self) -> list[GroupEntityReference]:
+    def associated_entities(self) -> list[dict[str, Any]]:
         """Return the list of entities that were derived from this endpoint."""
         ha_entity_registry = self.device.gateway.ha_entity_registry
         zha_device_registry = self.device.gateway.device_registry
@@ -89,7 +89,7 @@ class ZHAGroupMember(LogMixin):
                 entity_ref.reference_id,
             )._asdict()
             for entity_ref in zha_device_registry.get(self.device.ieee)
-            if list(entity_ref.cluster_channels.values())[
+            if list(entity_ref.cluster_handlers.values())[
                 0
             ].cluster.endpoint.endpoint_id
             == self.endpoint_id
@@ -103,7 +103,10 @@ class ZHAGroupMember(LogMixin):
             ].remove_from_group(self._zha_group.group_id)
         except (zigpy.exceptions.ZigbeeException, asyncio.TimeoutError) as ex:
             self.debug(
-                "Failed to remove endpoint: %s for device '%s' from group: 0x%04x ex: %s",
+                (
+                    "Failed to remove endpoint: %s for device '%s' from group: 0x%04x"
+                    " ex: %s"
+                ),
                 self._endpoint_id,
                 self._zha_device.ieee,
                 self._zha_group.group_id,
@@ -150,10 +153,8 @@ class ZHAGroup(LogMixin):
     def members(self) -> list[ZHAGroupMember]:
         """Return the ZHA devices that are members of this group."""
         return [
-            ZHAGroupMember(
-                self, self._zha_gateway.devices.get(member_ieee), endpoint_id
-            )
-            for (member_ieee, endpoint_id) in self._zigpy_group.members.keys()
+            ZHAGroupMember(self, self._zha_gateway.devices[member_ieee], endpoint_id)
+            for (member_ieee, endpoint_id) in self._zigpy_group.members
             if member_ieee in self._zha_gateway.devices
         ]
 

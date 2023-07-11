@@ -21,6 +21,7 @@ from homeassistant.const import CONF_HOST
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import AbortFlow, FlowResult
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.typing import DiscoveryInfoType
 
 from . import async_wifi_bulb_for_host
@@ -31,6 +32,7 @@ from .const import (
     DEFAULT_EFFECT_SPEED,
     DISCOVER_SCAN_TIMEOUT,
     DOMAIN,
+    FLUX_LED_DISCOVERY_SIGNAL,
     FLUX_LED_EXCEPTIONS,
     TRANSITION_GRADUAL,
     TRANSITION_JUMP,
@@ -103,19 +105,37 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         assert mac_address is not None
         mac = dr.format_mac(mac_address)
         await self.async_set_unique_id(mac)
-        for entry in self._async_current_entries(include_ignore=False):
-            if entry.data[CONF_HOST] == device[ATTR_IPADDR] or (
-                entry.unique_id
-                and ":" in entry.unique_id
-                and mac_matches_by_one(entry.unique_id, mac)
+        for entry in self._async_current_entries(include_ignore=True):
+            if not (
+                entry.data.get(CONF_HOST) == device[ATTR_IPADDR]
+                or (
+                    entry.unique_id
+                    and ":" in entry.unique_id
+                    and mac_matches_by_one(entry.unique_id, mac)
+                )
             ):
-                if async_update_entry_from_discovery(
-                    self.hass, entry, device, None, allow_update_mac
-                ):
-                    self.hass.async_create_task(
-                        self.hass.config_entries.async_reload(entry.entry_id)
-                    )
+                continue
+            if entry.source == config_entries.SOURCE_IGNORE:
                 raise AbortFlow("already_configured")
+            if (
+                async_update_entry_from_discovery(
+                    self.hass, entry, device, None, allow_update_mac
+                )
+                and entry.state
+                not in (
+                    config_entries.ConfigEntryState.SETUP_IN_PROGRESS,
+                    config_entries.ConfigEntryState.NOT_LOADED,
+                )
+            ) or entry.state == config_entries.ConfigEntryState.SETUP_RETRY:
+                self.hass.async_create_task(
+                    self.hass.config_entries.async_reload(entry.entry_id)
+                )
+            else:
+                async_dispatcher_send(
+                    self.hass,
+                    FLUX_LED_DISCOVERY_SIGNAL.format(entry_id=entry.entry_id),
+                )
+            raise AbortFlow("already_configured")
 
     async def _async_handle_discovery(self) -> FlowResult:
         """Handle any discovery."""
@@ -135,16 +155,16 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 device = await self._async_try_connect(host, device)
             except FLUX_LED_EXCEPTIONS:
                 return self.async_abort(reason="cannot_connect")
-            else:
-                discovered_mac = device[ATTR_ID]
-                if device[ATTR_MODEL_DESCRIPTION] or (
-                    discovered_mac is not None
-                    and (formatted_discovered_mac := dr.format_mac(discovered_mac))
-                    and formatted_discovered_mac != mac
-                    and mac_matches_by_one(discovered_mac, mac)
-                ):
-                    self._discovered_device = device
-                    await self._async_set_discovered_mac(device, True)
+
+            discovered_mac = device[ATTR_ID]
+            if device[ATTR_MODEL_DESCRIPTION] or (
+                discovered_mac is not None
+                and (formatted_discovered_mac := dr.format_mac(discovered_mac))
+                and formatted_discovered_mac != mac
+                and mac_matches_by_one(discovered_mac, mac)
+            ):
+                self._discovered_device = device
+                await self._async_set_discovered_mac(device, True)
         return await self.async_step_discovery_confirm()
 
     async def async_step_discovery_confirm(

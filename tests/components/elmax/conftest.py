@@ -11,8 +11,9 @@ from httpx import Response
 import pytest
 import respx
 
+from . import MOCK_PANEL_ID, MOCK_PANEL_PIN
+
 from tests.common import load_fixture
-from tests.components.elmax import MOCK_PANEL_ID, MOCK_PANEL_PIN
 
 
 @pytest.fixture(autouse=True)

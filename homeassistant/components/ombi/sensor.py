@@ -38,14 +38,14 @@ def setup_platform(
 class OmbiSensor(SensorEntity):
     """Representation of an Ombi sensor."""
 
-    def __init__(self, ombi, description: SensorEntityDescription):
+    def __init__(self, ombi, description: SensorEntityDescription) -> None:
         """Initialize the sensor."""
         self.entity_description = description
         self._ombi = ombi
 
         self._attr_name = f"Ombi {description.name}"
 
-    def update(self):
+    def update(self) -> None:
         """Update the sensor."""
         try:
             sensor_type = self.entity_description.key

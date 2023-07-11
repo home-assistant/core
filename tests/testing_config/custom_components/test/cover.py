@@ -1,5 +1,4 @@
-"""
-Provide a mock cover platform.
+"""Provide a mock cover platform.
 
 Call init before using it in your tests to ensure clean test data.
 """
@@ -18,7 +17,7 @@ from homeassistant.const import STATE_CLOSED, STATE_CLOSING, STATE_OPEN, STATE_O
 
 from tests.common import MockEntity
 
-ENTITIES = {}
+ENTITIES = []
 
 
 def init(empty=False):

@@ -1,6 +1,5 @@
 """Tests for homekit_controller config flow."""
 import asyncio
-from unittest import mock
 import unittest.mock
 from unittest.mock import AsyncMock, patch
 
@@ -9,16 +8,20 @@ from aiohomekit.exceptions import AuthenticationError
 from aiohomekit.model import Accessories, Accessory
 from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.services import ServicesTypes
+from bleak.exc import BleakError
 import pytest
 
 from homeassistant import config_entries
 from homeassistant.components import zeroconf
 from homeassistant.components.homekit_controller import config_flow
 from homeassistant.components.homekit_controller.const import KNOWN_DEVICES
-from homeassistant.data_entry_flow import RESULT_TYPE_ABORT, RESULT_TYPE_CREATE_ENTRY
-from homeassistant.helpers import device_registry
+from homeassistant.components.homekit_controller.storage import async_get_entity_storage
+from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
 
-from tests.common import MockConfigEntry, mock_device_registry
+from tests.common import MockConfigEntry
 
 PAIRING_START_FORM_ERRORS = [
     (KeyError, "pairing_failed"),
@@ -78,34 +81,66 @@ VALID_PAIRING_CODES = [
     "   98765432  ",
 ]
 
+NOT_HK_BLUETOOTH_SERVICE_INFO = BluetoothServiceInfo(
+    name="FakeAccessory",
+    address="AA:BB:CC:DD:EE:FF",
+    rssi=-81,
+    manufacturer_data={12: b"\x06\x12\x34"},
+    service_data={},
+    service_uuids=[],
+    source="local",
+)
 
-def _setup_flow_handler(hass, pairing=None):
-    flow = config_flow.HomekitControllerFlowHandler()
-    flow.hass = hass
-    flow.context = {}
+HK_BLUETOOTH_SERVICE_INFO_NOT_DISCOVERED = BluetoothServiceInfo(
+    name="Eve Energy Not Found",
+    address="AA:BB:CC:DD:EE:FF",
+    rssi=-81,
+    # ID is '9b:86:af:01:af:db'
+    manufacturer_data={
+        76: b"\x061\x01\x9b\x86\xaf\x01\xaf\xdb\x07\x00\x06\x00\x02\x02X\x19\xb1Q"
+    },
+    service_data={},
+    service_uuids=[],
+    source="local",
+)
 
-    finish_pairing = unittest.mock.AsyncMock(return_value=pairing)
+HK_BLUETOOTH_SERVICE_INFO_DISCOVERED_UNPAIRED = BluetoothServiceInfo(
+    name="Eve Energy Found Unpaired",
+    address="AA:BB:CC:DD:EE:FF",
+    rssi=-81,
+    # ID is '00:00:00:00:00:00', pairing flag is byte 3
+    manufacturer_data={
+        76: b"\x061\x01\x00\x00\x00\x00\x00\x00\x07\x00\x06\x00\x02\x02X\x19\xb1Q"
+    },
+    service_data={},
+    service_uuids=[],
+    source="local",
+)
 
-    discovery = mock.Mock()
-    discovery.description.id = "00:00:00:00:00:00"
-    discovery.async_start_pairing = unittest.mock.AsyncMock(return_value=finish_pairing)
 
-    flow.controller = mock.Mock()
-    flow.controller.pairings = {}
-    flow.controller.async_find = unittest.mock.AsyncMock(return_value=discovery)
-
-    return flow
+HK_BLUETOOTH_SERVICE_INFO_DISCOVERED_PAIRED = BluetoothServiceInfo(
+    name="Eve Energy Found Paired",
+    address="AA:BB:CC:DD:EE:FF",
+    rssi=-81,
+    # ID is '00:00:00:00:00:00', pairing flag is byte 3
+    manufacturer_data={
+        76: b"\x061\x00\x00\x00\x00\x00\x00\x00\x07\x00\x06\x00\x02\x02X\x19\xb1Q"
+    },
+    service_data={},
+    service_uuids=[],
+    source="local",
+)
 
 
 @pytest.mark.parametrize("pairing_code", INVALID_PAIRING_CODES)
-def test_invalid_pairing_codes(pairing_code):
+def test_invalid_pairing_codes(pairing_code) -> None:
     """Test ensure_pin_format raises for an invalid pin code."""
     with pytest.raises(aiohomekit.exceptions.MalformedPinError):
         config_flow.ensure_pin_format(pairing_code)
 
 
 @pytest.mark.parametrize("pairing_code", INSECURE_PAIRING_CODES)
-def test_insecure_pairing_codes(pairing_code):
+def test_insecure_pairing_codes(pairing_code) -> None:
     """Test ensure_pin_format raises for an invalid setup code."""
     with pytest.raises(config_flow.InsecureSetupCode):
         config_flow.ensure_pin_format(pairing_code)
@@ -114,7 +149,7 @@ def test_insecure_pairing_codes(pairing_code):
 
 
 @pytest.mark.parametrize("pairing_code", VALID_PAIRING_CODES)
-def test_valid_pairing_codes(pairing_code):
+def test_valid_pairing_codes(pairing_code) -> None:
     """Test ensure_pin_format corrects format for a valid pin in an alternative format."""
     valid_pin = config_flow.ensure_pin_format(pairing_code).split("-")
     assert len(valid_pin) == 3
@@ -141,7 +176,7 @@ def get_device_discovery_info(
     result = zeroconf.ZeroconfServiceInfo(
         host="127.0.0.1",
         hostname=device.description.name,
-        name=device.description.name,
+        name=device.description.name + "._hap._tcp.local.",
         addresses=["127.0.0.1"],
         port=8080,
         properties={
@@ -151,7 +186,7 @@ def get_device_discovery_info(
             "c#": device.description.config_num,
             "s#": device.description.state_num,
             "ff": "0",
-            "ci": "0",
+            "ci": "7",
             "sf": "0" if paired else "1",
             "sh": "",
         },
@@ -193,7 +228,9 @@ def setup_mock_accessory(controller):
 
 @pytest.mark.parametrize("upper_case_props", [True, False])
 @pytest.mark.parametrize("missing_csharp", [True, False])
-async def test_discovery_works(hass, controller, upper_case_props, missing_csharp):
+async def test_discovery_works(
+    hass: HomeAssistant, controller, upper_case_props, missing_csharp
+) -> None:
     """Test a device being discovered."""
     device = setup_mock_accessory(controller)
     discovery_info = get_device_discovery_info(device, upper_case_props, missing_csharp)
@@ -208,7 +245,7 @@ async def test_discovery_works(hass, controller, upper_case_props, missing_cshar
     assert result["step_id"] == "pair"
     assert get_flow_context(hass, result) == {
         "source": config_entries.SOURCE_ZEROCONF,
-        "title_placeholders": {"name": "TestDevice"},
+        "title_placeholders": {"name": "TestDevice", "category": "Outlet"},
         "unique_id": "00:00:00:00:00:00",
     }
 
@@ -226,7 +263,7 @@ async def test_discovery_works(hass, controller, upper_case_props, missing_cshar
     assert result["data"] == {}
 
 
-async def test_abort_duplicate_flow(hass, controller):
+async def test_abort_duplicate_flow(hass: HomeAssistant, controller) -> None:
     """Already paired."""
     device = setup_mock_accessory(controller)
     discovery_info = get_device_discovery_info(device)
@@ -249,7 +286,7 @@ async def test_abort_duplicate_flow(hass, controller):
     assert result["reason"] == "already_in_progress"
 
 
-async def test_pair_already_paired_1(hass, controller):
+async def test_pair_already_paired_1(hass: HomeAssistant, controller) -> None:
     """Already paired."""
     device = setup_mock_accessory(controller)
     # Flag device as already paired
@@ -265,7 +302,24 @@ async def test_pair_already_paired_1(hass, controller):
     assert result["reason"] == "already_paired"
 
 
-async def test_id_missing(hass, controller):
+async def test_unknown_domain_type(hass: HomeAssistant, controller) -> None:
+    """Test that aiohomekit can reject discoveries it doesn't support."""
+    device = setup_mock_accessory(controller)
+    # Flag device as already paired
+    discovery_info = get_device_discovery_info(device)
+    discovery_info.name = "TestDevice._music._tap.local."
+
+    # Device is discovered
+    result = await hass.config_entries.flow.async_init(
+        "homekit_controller",
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=discovery_info,
+    )
+    assert result["type"] == "abort"
+    assert result["reason"] == "ignored_model"
+
+
+async def test_id_missing(hass: HomeAssistant, controller) -> None:
     """Test id is missing."""
     device = setup_mock_accessory(controller)
     discovery_info = get_device_discovery_info(device)
@@ -283,7 +337,7 @@ async def test_id_missing(hass, controller):
     assert result["reason"] == "invalid_properties"
 
 
-async def test_discovery_ignored_model(hass, controller):
+async def test_discovery_ignored_model(hass: HomeAssistant, controller) -> None:
     """Already paired."""
     device = setup_mock_accessory(controller)
     discovery_info = get_device_discovery_info(device)
@@ -300,19 +354,20 @@ async def test_discovery_ignored_model(hass, controller):
     assert result["reason"] == "ignored_model"
 
 
-async def test_discovery_ignored_hk_bridge(hass, controller):
+async def test_discovery_ignored_hk_bridge(
+    hass: HomeAssistant, controller, device_registry: dr.DeviceRegistry
+) -> None:
     """Ensure we ignore homekit bridges and accessories created by the homekit integration."""
     device = setup_mock_accessory(controller)
     discovery_info = get_device_discovery_info(device)
 
     config_entry = MockConfigEntry(domain=config_flow.HOMEKIT_BRIDGE_DOMAIN, data={})
     config_entry.add_to_hass(hass)
-    formatted_mac = device_registry.format_mac("AA:BB:CC:DD:EE:FF")
+    formatted_mac = dr.format_mac("AA:BB:CC:DD:EE:FF")
 
-    dev_reg = mock_device_registry(hass)
-    dev_reg.async_get_or_create(
+    device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        connections={(device_registry.CONNECTION_NETWORK_MAC, formatted_mac)},
+        connections={(dr.CONNECTION_NETWORK_MAC, formatted_mac)},
     )
 
     discovery_info.properties[zeroconf.ATTR_PROPERTIES_ID] = "AA:BB:CC:DD:EE:FF"
@@ -327,19 +382,20 @@ async def test_discovery_ignored_hk_bridge(hass, controller):
     assert result["reason"] == "ignored_model"
 
 
-async def test_discovery_does_not_ignore_non_homekit(hass, controller):
+async def test_discovery_does_not_ignore_non_homekit(
+    hass: HomeAssistant, controller, device_registry: dr.DeviceRegistry
+) -> None:
     """Do not ignore devices that are not from the homekit integration."""
     device = setup_mock_accessory(controller)
     discovery_info = get_device_discovery_info(device)
 
     config_entry = MockConfigEntry(domain="not_homekit", data={})
     config_entry.add_to_hass(hass)
-    formatted_mac = device_registry.format_mac("AA:BB:CC:DD:EE:FF")
+    formatted_mac = dr.format_mac("AA:BB:CC:DD:EE:FF")
 
-    dev_reg = mock_device_registry(hass)
-    dev_reg.async_get_or_create(
+    device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        connections={(device_registry.CONNECTION_NETWORK_MAC, formatted_mac)},
+        connections={(dr.CONNECTION_NETWORK_MAC, formatted_mac)},
     )
 
     discovery_info.properties[zeroconf.ATTR_PROPERTIES_ID] = "AA:BB:CC:DD:EE:FF"
@@ -353,9 +409,8 @@ async def test_discovery_does_not_ignore_non_homekit(hass, controller):
     assert result["type"] == "form"
 
 
-async def test_discovery_broken_pairing_flag(hass, controller):
-    """
-    There is already a config entry for the pairing and its pairing flag is wrong in zeroconf.
+async def test_discovery_broken_pairing_flag(hass: HomeAssistant, controller) -> None:
+    """There is already a config entry for the pairing and its pairing flag is wrong in zeroconf.
 
     We have seen this particular implementation error in 2 different devices.
     """
@@ -391,7 +446,7 @@ async def test_discovery_broken_pairing_flag(hass, controller):
     assert result["reason"] == "already_paired"
 
 
-async def test_discovery_invalid_config_entry(hass, controller):
+async def test_discovery_invalid_config_entry(hass: HomeAssistant, controller) -> None:
     """There is already a config entry for the pairing id but it's invalid."""
     pairing = await controller.add_paired_device(Accessories(), "00:00:00:00:00:00")
 
@@ -429,7 +484,7 @@ async def test_discovery_invalid_config_entry(hass, controller):
     assert result["type"] == "form"
 
 
-async def test_discovery_already_configured(hass, controller):
+async def test_discovery_already_configured(hass: HomeAssistant, controller) -> None:
     """Already configured."""
     entry = MockConfigEntry(
         domain="homekit_controller",
@@ -460,7 +515,9 @@ async def test_discovery_already_configured(hass, controller):
     assert entry.data["AccessoryPort"] == discovery_info.port
 
 
-async def test_discovery_already_configured_update_csharp(hass, controller):
+async def test_discovery_already_configured_update_csharp(
+    hass: HomeAssistant, controller
+) -> None:
     """Already configured and csharp changes."""
     entry = MockConfigEntry(
         domain="homekit_controller",
@@ -474,8 +531,6 @@ async def test_discovery_already_configured_update_csharp(hass, controller):
     entry.add_to_hass(hass)
 
     connection_mock = AsyncMock()
-    connection_mock.pairing.connect.reconnect_soon = AsyncMock()
-    connection_mock.async_refresh_entity_map = AsyncMock()
     hass.data[KNOWN_DEVICES] = {"AA:BB:CC:DD:EE:FF": connection_mock}
 
     device = setup_mock_accessory(controller)
@@ -498,11 +553,12 @@ async def test_discovery_already_configured_update_csharp(hass, controller):
 
     assert entry.data["AccessoryIP"] == discovery_info.host
     assert entry.data["AccessoryPort"] == discovery_info.port
-    assert connection_mock.async_refresh_entity_map.await_count == 1
 
 
-@pytest.mark.parametrize("exception,expected", PAIRING_START_ABORT_ERRORS)
-async def test_pair_abort_errors_on_start(hass, controller, exception, expected):
+@pytest.mark.parametrize(("exception", "expected"), PAIRING_START_ABORT_ERRORS)
+async def test_pair_abort_errors_on_start(
+    hass: HomeAssistant, controller, exception, expected
+) -> None:
     """Test various pairing errors."""
 
     device = setup_mock_accessory(controller)
@@ -523,8 +579,10 @@ async def test_pair_abort_errors_on_start(hass, controller, exception, expected)
     assert result["reason"] == expected
 
 
-@pytest.mark.parametrize("exception,expected", PAIRING_TRY_LATER_ERRORS)
-async def test_pair_try_later_errors_on_start(hass, controller, exception, expected):
+@pytest.mark.parametrize(("exception", "expected"), PAIRING_TRY_LATER_ERRORS)
+async def test_pair_try_later_errors_on_start(
+    hass: HomeAssistant, controller, exception, expected
+) -> None:
     """Test various pairing errors."""
 
     device = setup_mock_accessory(controller)
@@ -560,8 +618,10 @@ async def test_pair_try_later_errors_on_start(hass, controller, exception, expec
     assert result4["title"] == "Koogeek-LS1-20833F"
 
 
-@pytest.mark.parametrize("exception,expected", PAIRING_START_FORM_ERRORS)
-async def test_pair_form_errors_on_start(hass, controller, exception, expected):
+@pytest.mark.parametrize(("exception", "expected"), PAIRING_START_FORM_ERRORS)
+async def test_pair_form_errors_on_start(
+    hass: HomeAssistant, controller, exception, expected
+) -> None:
     """Test various pairing errors."""
 
     device = setup_mock_accessory(controller)
@@ -575,7 +635,7 @@ async def test_pair_form_errors_on_start(hass, controller, exception, expected):
     )
 
     assert get_flow_context(hass, result) == {
-        "title_placeholders": {"name": "TestDevice"},
+        "title_placeholders": {"name": "TestDevice", "category": "Outlet"},
         "unique_id": "00:00:00:00:00:00",
         "source": config_entries.SOURCE_ZEROCONF,
     }
@@ -590,7 +650,7 @@ async def test_pair_form_errors_on_start(hass, controller, exception, expected):
     assert result["errors"]["pairing_code"] == expected
 
     assert get_flow_context(hass, result) == {
-        "title_placeholders": {"name": "TestDevice"},
+        "title_placeholders": {"name": "TestDevice", "category": "Outlet"},
         "unique_id": "00:00:00:00:00:00",
         "source": config_entries.SOURCE_ZEROCONF,
     }
@@ -609,8 +669,10 @@ async def test_pair_form_errors_on_start(hass, controller, exception, expected):
     assert result["title"] == "Koogeek-LS1-20833F"
 
 
-@pytest.mark.parametrize("exception,expected", PAIRING_FINISH_ABORT_ERRORS)
-async def test_pair_abort_errors_on_finish(hass, controller, exception, expected):
+@pytest.mark.parametrize(("exception", "expected"), PAIRING_FINISH_ABORT_ERRORS)
+async def test_pair_abort_errors_on_finish(
+    hass: HomeAssistant, controller, exception, expected
+) -> None:
     """Test various pairing errors."""
     device = setup_mock_accessory(controller)
     discovery_info = get_device_discovery_info(device)
@@ -623,7 +685,7 @@ async def test_pair_abort_errors_on_finish(hass, controller, exception, expected
     )
 
     assert get_flow_context(hass, result) == {
-        "title_placeholders": {"name": "TestDevice"},
+        "title_placeholders": {"name": "TestDevice", "category": "Outlet"},
         "unique_id": "00:00:00:00:00:00",
         "source": config_entries.SOURCE_ZEROCONF,
     }
@@ -636,7 +698,7 @@ async def test_pair_abort_errors_on_finish(hass, controller, exception, expected
 
     assert result["type"] == "form"
     assert get_flow_context(hass, result) == {
-        "title_placeholders": {"name": "TestDevice"},
+        "title_placeholders": {"name": "TestDevice", "category": "Outlet"},
         "unique_id": "00:00:00:00:00:00",
         "source": config_entries.SOURCE_ZEROCONF,
     }
@@ -649,8 +711,10 @@ async def test_pair_abort_errors_on_finish(hass, controller, exception, expected
     assert result["reason"] == expected
 
 
-@pytest.mark.parametrize("exception,expected", PAIRING_FINISH_FORM_ERRORS)
-async def test_pair_form_errors_on_finish(hass, controller, exception, expected):
+@pytest.mark.parametrize(("exception", "expected"), PAIRING_FINISH_FORM_ERRORS)
+async def test_pair_form_errors_on_finish(
+    hass: HomeAssistant, controller, exception, expected
+) -> None:
     """Test various pairing errors."""
     device = setup_mock_accessory(controller)
     discovery_info = get_device_discovery_info(device)
@@ -663,7 +727,7 @@ async def test_pair_form_errors_on_finish(hass, controller, exception, expected)
     )
 
     assert get_flow_context(hass, result) == {
-        "title_placeholders": {"name": "TestDevice"},
+        "title_placeholders": {"name": "TestDevice", "category": "Outlet"},
         "unique_id": "00:00:00:00:00:00",
         "source": config_entries.SOURCE_ZEROCONF,
     }
@@ -676,7 +740,7 @@ async def test_pair_form_errors_on_finish(hass, controller, exception, expected)
 
     assert result["type"] == "form"
     assert get_flow_context(hass, result) == {
-        "title_placeholders": {"name": "TestDevice"},
+        "title_placeholders": {"name": "TestDevice", "category": "Outlet"},
         "unique_id": "00:00:00:00:00:00",
         "source": config_entries.SOURCE_ZEROCONF,
     }
@@ -689,14 +753,65 @@ async def test_pair_form_errors_on_finish(hass, controller, exception, expected)
     assert result["errors"]["pairing_code"] == expected
 
     assert get_flow_context(hass, result) == {
-        "title_placeholders": {"name": "TestDevice"},
+        "title_placeholders": {"name": "TestDevice", "category": "Outlet"},
         "unique_id": "00:00:00:00:00:00",
         "source": config_entries.SOURCE_ZEROCONF,
         "pairing": True,
     }
 
 
-async def test_user_works(hass, controller):
+async def test_pair_unknown_errors(hass: HomeAssistant, controller) -> None:
+    """Test describing unknown errors."""
+    device = setup_mock_accessory(controller)
+    discovery_info = get_device_discovery_info(device)
+
+    # Device is discovered
+    result = await hass.config_entries.flow.async_init(
+        "homekit_controller",
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=discovery_info,
+    )
+
+    assert get_flow_context(hass, result) == {
+        "title_placeholders": {"name": "TestDevice", "category": "Outlet"},
+        "unique_id": "00:00:00:00:00:00",
+        "source": config_entries.SOURCE_ZEROCONF,
+    }
+
+    # User initiates pairing - this triggers the device to show a pairing code
+    # and then HA to show a pairing form
+    finish_pairing = unittest.mock.AsyncMock(
+        side_effect=BleakError("The bluetooth connection failed")
+    )
+    with patch.object(device, "async_start_pairing", return_value=finish_pairing):
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] == "form"
+    assert get_flow_context(hass, result) == {
+        "title_placeholders": {"name": "TestDevice", "category": "Outlet"},
+        "unique_id": "00:00:00:00:00:00",
+        "source": config_entries.SOURCE_ZEROCONF,
+    }
+
+    # User enters pairing code
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={"pairing_code": "111-22-333"}
+    )
+    assert result["type"] == "form"
+    assert result["errors"]["pairing_code"] == "pairing_failed"
+    assert (
+        result["description_placeholders"]["error"] == "The bluetooth connection failed"
+    )
+
+    assert get_flow_context(hass, result) == {
+        "title_placeholders": {"name": "TestDevice", "category": "Outlet"},
+        "unique_id": "00:00:00:00:00:00",
+        "source": config_entries.SOURCE_ZEROCONF,
+        "pairing": True,
+    }
+
+
+async def test_user_works(hass: HomeAssistant, controller) -> None:
     """Test user initiated disovers devices."""
     setup_mock_accessory(controller)
 
@@ -720,7 +835,7 @@ async def test_user_works(hass, controller):
     assert get_flow_context(hass, result) == {
         "source": config_entries.SOURCE_USER,
         "unique_id": "00:00:00:00:00:00",
-        "title_placeholders": {"name": "TestDevice"},
+        "title_placeholders": {"name": "TestDevice", "category": "Other"},
     }
 
     result = await hass.config_entries.flow.async_configure(
@@ -730,7 +845,9 @@ async def test_user_works(hass, controller):
     assert result["title"] == "Koogeek-LS1-20833F"
 
 
-async def test_user_pairing_with_insecure_setup_code(hass, controller):
+async def test_user_pairing_with_insecure_setup_code(
+    hass: HomeAssistant, controller
+) -> None:
     """Test user initiated disovers devices."""
     device = setup_mock_accessory(controller)
     device.pairing_code = "123-45-678"
@@ -755,7 +872,7 @@ async def test_user_pairing_with_insecure_setup_code(hass, controller):
     assert get_flow_context(hass, result) == {
         "source": config_entries.SOURCE_USER,
         "unique_id": "00:00:00:00:00:00",
-        "title_placeholders": {"name": "TestDevice"},
+        "title_placeholders": {"name": "TestDevice", "category": "Other"},
     }
 
     result = await hass.config_entries.flow.async_configure(
@@ -773,7 +890,7 @@ async def test_user_pairing_with_insecure_setup_code(hass, controller):
     assert result["title"] == "Koogeek-LS1-20833F"
 
 
-async def test_user_no_devices(hass, controller):
+async def test_user_no_devices(hass: HomeAssistant, controller) -> None:
     """Test user initiated pairing where no devices discovered."""
     result = await hass.config_entries.flow.async_init(
         "homekit_controller", context={"source": config_entries.SOURCE_USER}
@@ -782,7 +899,7 @@ async def test_user_no_devices(hass, controller):
     assert result["reason"] == "no_devices"
 
 
-async def test_user_no_unpaired_devices(hass, controller):
+async def test_user_no_unpaired_devices(hass: HomeAssistant, controller) -> None:
     """Test user initiated pairing where no unpaired devices discovered."""
     device = setup_mock_accessory(controller)
 
@@ -799,7 +916,7 @@ async def test_user_no_unpaired_devices(hass, controller):
     assert result["reason"] == "no_devices"
 
 
-async def test_unignore_works(hass, controller):
+async def test_unignore_works(hass: HomeAssistant, controller) -> None:
     """Test rediscovery triggered disovers work."""
     device = setup_mock_accessory(controller)
 
@@ -812,7 +929,7 @@ async def test_unignore_works(hass, controller):
     assert result["type"] == "form"
     assert result["step_id"] == "pair"
     assert get_flow_context(hass, result) == {
-        "title_placeholders": {"name": "TestDevice"},
+        "title_placeholders": {"name": "TestDevice", "category": "Other"},
         "unique_id": "00:00:00:00:00:00",
         "source": config_entries.SOURCE_UNIGNORE,
     }
@@ -830,7 +947,9 @@ async def test_unignore_works(hass, controller):
     assert result["title"] == "Koogeek-LS1-20833F"
 
 
-async def test_unignore_ignores_missing_devices(hass, controller):
+async def test_unignore_ignores_missing_devices(
+    hass: HomeAssistant, controller
+) -> None:
     """Test rediscovery triggered disovers handle devices that have gone away."""
     setup_mock_accessory(controller)
 
@@ -845,7 +964,9 @@ async def test_unignore_ignores_missing_devices(hass, controller):
     assert result["reason"] == "accessory_not_found_error"
 
 
-async def test_discovery_dismiss_existing_flow_on_paired(hass, controller):
+async def test_discovery_dismiss_existing_flow_on_paired(
+    hass: HomeAssistant, controller
+) -> None:
     """Test that existing flows get dismissed once paired to something else."""
     device = setup_mock_accessory(controller)
     discovery_info = get_device_discovery_info(device)
@@ -886,7 +1007,9 @@ async def test_discovery_dismiss_existing_flow_on_paired(hass, controller):
     )
 
 
-async def test_mdns_update_to_paired_during_pairing(hass, controller):
+async def test_mdns_update_to_paired_during_pairing(
+    hass: HomeAssistant, controller
+) -> None:
     """Test we do not abort pairing if mdns is updated to reflect paired during pairing."""
     device = setup_mock_accessory(controller)
     discovery_info = get_device_discovery_info(device)
@@ -900,7 +1023,7 @@ async def test_mdns_update_to_paired_during_pairing(hass, controller):
     )
 
     assert get_flow_context(hass, result) == {
-        "title_placeholders": {"name": "TestDevice"},
+        "title_placeholders": {"name": "TestDevice", "category": "Outlet"},
         "unique_id": "00:00:00:00:00:00",
         "source": config_entries.SOURCE_ZEROCONF,
     }
@@ -925,7 +1048,7 @@ async def test_mdns_update_to_paired_during_pairing(hass, controller):
 
     assert result["type"] == "form"
     assert get_flow_context(hass, result) == {
-        "title_placeholders": {"name": "TestDevice"},
+        "title_placeholders": {"name": "TestDevice", "category": "Outlet"},
         "unique_id": "00:00:00:00:00:00",
         "source": config_entries.SOURCE_ZEROCONF,
     }
@@ -943,10 +1066,116 @@ async def test_mdns_update_to_paired_during_pairing(hass, controller):
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=discovery_info_paired,
     )
-    assert result2["type"] == RESULT_TYPE_ABORT
+    assert result2["type"] == FlowResultType.ABORT
     assert result2["reason"] == "already_paired"
     mdns_update_to_paired.set()
     result = await task
-    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == "Koogeek-LS1-20833F"
     assert result["data"] == {}
+
+
+async def test_discovery_no_bluetooth_support(hass: HomeAssistant, controller) -> None:
+    """Test discovery with bluetooth support not available."""
+    with patch(
+        "homeassistant.components.homekit_controller.config_flow.aiohomekit_const.BLE_TRANSPORT_SUPPORTED",
+        False,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            "homekit_controller",
+            context={"source": config_entries.SOURCE_BLUETOOTH},
+            data=HK_BLUETOOTH_SERVICE_INFO_NOT_DISCOVERED,
+        )
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "ignored_model"
+
+
+async def test_bluetooth_not_homekit(hass: HomeAssistant, controller) -> None:
+    """Test bluetooth discovery with a non-homekit device."""
+    with patch(
+        "homeassistant.components.homekit_controller.config_flow.aiohomekit_const.BLE_TRANSPORT_SUPPORTED",
+        True,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            "homekit_controller",
+            context={"source": config_entries.SOURCE_BLUETOOTH},
+            data=NOT_HK_BLUETOOTH_SERVICE_INFO,
+        )
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "ignored_model"
+
+
+async def test_bluetooth_valid_device_no_discovery(
+    hass: HomeAssistant, controller
+) -> None:
+    """Test bluetooth discovery  with a homekit device and discovery fails."""
+    with patch(
+        "homeassistant.components.homekit_controller.config_flow.aiohomekit_const.BLE_TRANSPORT_SUPPORTED",
+        True,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            "homekit_controller",
+            context={"source": config_entries.SOURCE_BLUETOOTH},
+            data=HK_BLUETOOTH_SERVICE_INFO_NOT_DISCOVERED,
+        )
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "accessory_not_found_error"
+
+
+async def test_bluetooth_valid_device_discovery_paired(
+    hass: HomeAssistant, controller
+) -> None:
+    """Test bluetooth discovery  with a homekit device and discovery works."""
+    setup_mock_accessory(controller)
+
+    with patch(
+        "homeassistant.components.homekit_controller.config_flow.aiohomekit_const.BLE_TRANSPORT_SUPPORTED",
+        True,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            "homekit_controller",
+            context={"source": config_entries.SOURCE_BLUETOOTH},
+            data=HK_BLUETOOTH_SERVICE_INFO_DISCOVERED_PAIRED,
+        )
+
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "already_paired"
+
+
+async def test_bluetooth_valid_device_discovery_unpaired(
+    hass: HomeAssistant, controller
+) -> None:
+    """Test bluetooth discovery with a homekit device and discovery works."""
+    setup_mock_accessory(controller)
+    storage = await async_get_entity_storage(hass)
+
+    with patch(
+        "homeassistant.components.homekit_controller.config_flow.aiohomekit_const.BLE_TRANSPORT_SUPPORTED",
+        True,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            "homekit_controller",
+            context={"source": config_entries.SOURCE_BLUETOOTH},
+            data=HK_BLUETOOTH_SERVICE_INFO_DISCOVERED_UNPAIRED,
+        )
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "pair"
+    assert storage.get_map("00:00:00:00:00:00") is None
+
+    assert get_flow_context(hass, result) == {
+        "source": config_entries.SOURCE_BLUETOOTH,
+        "unique_id": "00:00:00:00:00:00",
+        "title_placeholders": {"name": "TestDevice", "category": "Other"},
+    }
+
+    result2 = await hass.config_entries.flow.async_configure(result["flow_id"])
+    assert result2["type"] == FlowResultType.FORM
+    result3 = await hass.config_entries.flow.async_configure(
+        result2["flow_id"], user_input={"pairing_code": "111-22-333"}
+    )
+    assert result3["type"] == FlowResultType.CREATE_ENTRY
+    assert result3["title"] == "Koogeek-LS1-20833F"
+    assert result3["data"] == {}
+
+    assert storage.get_map("00:00:00:00:00:00") is not None

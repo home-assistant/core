@@ -2,10 +2,11 @@
 from __future__ import annotations
 
 from datetime import timedelta
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
+from homeassistant import config_entries
 from homeassistant.components import flux_led
 from homeassistant.components.flux_led.const import (
     CONF_REMOTE_ACCESS_ENABLED,
@@ -19,6 +20,8 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
     EVENT_HOMEASSISTANT_STARTED,
+    STATE_ON,
+    STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -27,6 +30,7 @@ from homeassistant.util.dt import utcnow
 
 from . import (
     DEFAULT_ENTRY_TITLE,
+    DHCP_DISCOVERY,
     FLUX_DISCOVERY,
     FLUX_DISCOVERY_PARTIAL,
     IP_ADDRESS,
@@ -113,8 +117,72 @@ async def test_config_entry_retry(hass: HomeAssistant) -> None:
         assert config_entry.state == ConfigEntryState.SETUP_RETRY
 
 
+async def test_config_entry_retry_right_away_on_discovery(hass: HomeAssistant) -> None:
+    """Test discovery makes the config entry reload if its in a retry state."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_HOST: IP_ADDRESS}, unique_id=MAC_ADDRESS
+    )
+    config_entry.add_to_hass(hass)
+    with _patch_discovery(no_device=True), _patch_wifibulb(no_device=True):
+        await async_setup_component(hass, flux_led.DOMAIN, {flux_led.DOMAIN: {}})
+        await hass.async_block_till_done()
+        assert config_entry.state == ConfigEntryState.SETUP_RETRY
+
+    with _patch_discovery(), _patch_wifibulb():
+        await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_DHCP},
+            data=DHCP_DISCOVERY,
+        )
+        await hass.async_block_till_done()
+        assert config_entry.state == ConfigEntryState.LOADED
+
+
+async def test_coordinator_retry_right_away_on_discovery_already_setup(
+    hass: HomeAssistant,
+) -> None:
+    """Test discovery makes the coordinator force poll if its already setup."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: IP_ADDRESS, CONF_NAME: DEFAULT_ENTRY_TITLE},
+        unique_id=MAC_ADDRESS,
+    )
+    config_entry.add_to_hass(hass)
+    bulb = _mocked_bulb()
+    with _patch_discovery(), _patch_wifibulb(device=bulb):
+        await async_setup_component(hass, flux_led.DOMAIN, {flux_led.DOMAIN: {}})
+        await hass.async_block_till_done()
+
+    assert config_entry.state == ConfigEntryState.LOADED
+
+    entity_id = "light.bulb_rgbcw_ddeeff"
+    entity_registry = er.async_get(hass)
+    assert entity_registry.async_get(entity_id).unique_id == MAC_ADDRESS
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_ON
+
+    now = utcnow()
+    bulb.async_update = AsyncMock(side_effect=RuntimeError)
+    async_fire_time_changed(hass, now + timedelta(seconds=50))
+    await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_UNAVAILABLE
+    bulb.async_update = AsyncMock()
+
+    with _patch_discovery(), _patch_wifibulb():
+        await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_DHCP},
+            data=DHCP_DISCOVERY,
+        )
+        await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_ON
+
+
 @pytest.mark.parametrize(
-    "discovery,title",
+    ("discovery", "title"),
     [
         (FLUX_DISCOVERY, DEFAULT_ENTRY_TITLE),
         (FLUX_DISCOVERY_PARTIAL, DEFAULT_ENTRY_TITLE),
