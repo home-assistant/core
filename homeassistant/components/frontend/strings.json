@@ -2,7 +2,7 @@
   "services": {
     "set_theme": {
       "name": "Set theme",
-      "description": "Sets a theme (unless the client selected per-device theme).",
+      "description": "Sets a theme (unless the client selected a per-device theme).",
       "fields": {
         "name": {
           "name": "Theme",
