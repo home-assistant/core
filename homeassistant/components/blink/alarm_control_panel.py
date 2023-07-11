@@ -42,6 +42,7 @@ class BlinkSyncModule(AlarmControlPanelEntity):
     _attr_icon = ICON
     _attr_supported_features = AlarmControlPanelEntityFeature.ARM_AWAY
     _attr_name = None
+    _attr_has_entity_name = True
 
     def __init__(self, data, name, sync):
         """Initialize the alarm control panel."""
