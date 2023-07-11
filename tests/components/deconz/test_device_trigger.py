@@ -24,9 +24,10 @@ from homeassistant.const import (
     CONF_DOMAIN,
     CONF_PLATFORM,
     CONF_TYPE,
+    STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.trigger import async_initialize_triggers
 from homeassistant.setup import async_setup_component
 
@@ -84,6 +85,10 @@ async def test_get_triggers(
     device = device_registry.async_get_device(
         identifiers={(DECONZ_DOMAIN, "d0:cf:5e:ff:fe:71:a4:3a")}
     )
+    entity_registry = er.async_get(hass)
+    battery_sensor_entry = entity_registry.async_get(
+        "sensor.tradfri_on_off_switch_battery"
+    )
 
     triggers = await async_get_device_automations(
         hass, DeviceAutomationType.TRIGGER, device.id
@@ -141,7 +146,7 @@ async def test_get_triggers(
         {
             CONF_DEVICE_ID: device.id,
             CONF_DOMAIN: SENSOR_DOMAIN,
-            ATTR_ENTITY_ID: "sensor.tradfri_on_off_switch_battery",
+            ATTR_ENTITY_ID: battery_sensor_entry.id,
             CONF_PLATFORM: "device",
             CONF_TYPE: ATTR_BATTERY_LEVEL,
             "metadata": {"secondary": True},
@@ -192,6 +197,10 @@ async def test_get_triggers_for_alarm_event(
     device = device_registry.async_get_device(
         identifiers={(DECONZ_DOMAIN, "00:00:00:00:00:00:00:00")}
     )
+    entity_registry = er.async_get(hass)
+    bat_entity = entity_registry.async_get("sensor.keypad_battery")
+    low_bat_entity = entity_registry.async_get("binary_sensor.keypad_low_battery")
+    tamper_entity = entity_registry.async_get("binary_sensor.keypad_tampered")
 
     triggers = await async_get_device_automations(
         hass, DeviceAutomationType.TRIGGER, device.id
@@ -201,7 +210,7 @@ async def test_get_triggers_for_alarm_event(
         {
             CONF_DEVICE_ID: device.id,
             CONF_DOMAIN: BINARY_SENSOR_DOMAIN,
-            ATTR_ENTITY_ID: "binary_sensor.keypad_low_battery",
+            ATTR_ENTITY_ID: low_bat_entity.id,
             CONF_PLATFORM: "device",
             CONF_TYPE: CONF_BAT_LOW,
             "metadata": {"secondary": True},
@@ -209,7 +218,7 @@ async def test_get_triggers_for_alarm_event(
         {
             CONF_DEVICE_ID: device.id,
             CONF_DOMAIN: BINARY_SENSOR_DOMAIN,
-            ATTR_ENTITY_ID: "binary_sensor.keypad_low_battery",
+            ATTR_ENTITY_ID: low_bat_entity.id,
             CONF_PLATFORM: "device",
             CONF_TYPE: CONF_NOT_BAT_LOW,
             "metadata": {"secondary": True},
@@ -217,7 +226,7 @@ async def test_get_triggers_for_alarm_event(
         {
             CONF_DEVICE_ID: device.id,
             CONF_DOMAIN: BINARY_SENSOR_DOMAIN,
-            ATTR_ENTITY_ID: "binary_sensor.keypad_tampered",
+            ATTR_ENTITY_ID: tamper_entity.id,
             CONF_PLATFORM: "device",
             CONF_TYPE: CONF_TAMPERED,
             "metadata": {"secondary": True},
@@ -225,7 +234,7 @@ async def test_get_triggers_for_alarm_event(
         {
             CONF_DEVICE_ID: device.id,
             CONF_DOMAIN: BINARY_SENSOR_DOMAIN,
-            ATTR_ENTITY_ID: "binary_sensor.keypad_tampered",
+            ATTR_ENTITY_ID: tamper_entity.id,
             CONF_PLATFORM: "device",
             CONF_TYPE: CONF_NOT_TAMPERED,
             "metadata": {"secondary": True},
@@ -233,7 +242,7 @@ async def test_get_triggers_for_alarm_event(
         {
             CONF_DEVICE_ID: device.id,
             CONF_DOMAIN: SENSOR_DOMAIN,
-            ATTR_ENTITY_ID: "sensor.keypad_battery",
+            ATTR_ENTITY_ID: bat_entity.id,
             CONF_PLATFORM: "device",
             CONF_TYPE: ATTR_BATTERY_LEVEL,
             "metadata": {"secondary": True},
@@ -432,7 +441,9 @@ async def test_validate_trigger_unsupported_device(
     )
     await hass.async_block_till_done()
 
-    assert len(hass.states.async_entity_ids(AUTOMATION_DOMAIN)) == 0
+    automations = hass.states.async_entity_ids(AUTOMATION_DOMAIN)
+    assert len(automations) == 1
+    assert hass.states.get(automations[0]).state == STATE_UNAVAILABLE
 
 
 async def test_validate_trigger_unsupported_trigger(
@@ -473,7 +484,9 @@ async def test_validate_trigger_unsupported_trigger(
     )
     await hass.async_block_till_done()
 
-    assert len(hass.states.async_entity_ids(AUTOMATION_DOMAIN)) == 0
+    automations = hass.states.async_entity_ids(AUTOMATION_DOMAIN)
+    assert len(automations) == 1
+    assert hass.states.get(automations[0]).state == STATE_UNAVAILABLE
 
 
 async def test_attach_trigger_no_matching_event(

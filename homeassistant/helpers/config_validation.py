@@ -93,7 +93,7 @@ from homeassistant.core import (
     split_entity_id,
     valid_entity_id,
 )
-from homeassistant.exceptions import TemplateError
+from homeassistant.exceptions import HomeAssistantError, TemplateError
 from homeassistant.generated import currencies
 from homeassistant.generated.countries import COUNTRIES
 from homeassistant.generated.languages import LANGUAGES
@@ -609,7 +609,7 @@ def template(value: Any | None) -> template_helper.Template:
         raise vol.Invalid("template value should be a string")
 
     hass: HomeAssistant | None = None
-    with contextlib.suppress(LookupError):
+    with contextlib.suppress(HomeAssistantError):
         hass = async_get_hass()
 
     template_value = template_helper.Template(str(value), hass)
@@ -631,7 +631,7 @@ def dynamic_template(value: Any | None) -> template_helper.Template:
         raise vol.Invalid("template value does not contain a dynamic template")
 
     hass: HomeAssistant | None = None
-    with contextlib.suppress(LookupError):
+    with contextlib.suppress(HomeAssistantError):
         hass = async_get_hass()
 
     template_value = template_helper.Template(str(value), hass)
@@ -724,7 +724,7 @@ def socket_timeout(value: Any | None) -> object:
             return float_value
         raise vol.Invalid("Invalid socket timeout value. float > 0.0 required.")
     except Exception as err:
-        raise vol.Invalid(f"Invalid socket timeout: {err}")
+        raise vol.Invalid(f"Invalid socket timeout: {err}") from err
 
 
 # pylint: disable=no-value-for-parameter
@@ -761,7 +761,7 @@ def uuid4_hex(value: Any) -> str:
     try:
         result = UUID(value, version=4)
     except (ValueError, AttributeError, TypeError) as error:
-        raise vol.Invalid("Invalid Version4 UUID", error_message=str(error))
+        raise vol.Invalid("Invalid Version4 UUID", error_message=str(error)) from error
 
     if result.hex != value.lower():
         # UUID() will create a uuid4 if input is invalid
@@ -1098,7 +1098,7 @@ def _no_yaml_config_schema(
         # pylint: disable-next=import-outside-toplevel
         from .issue_registry import IssueSeverity, async_create_issue
 
-        with contextlib.suppress(LookupError):
+        with contextlib.suppress(HomeAssistantError):
             hass = async_get_hass()
             async_create_issue(
                 hass,
@@ -1127,7 +1127,11 @@ def _no_yaml_config_schema(
 
 
 def config_entry_only_config_schema(domain: str) -> Callable[[dict], dict]:
-    """Return a config schema which logs if attempted to setup from YAML."""
+    """Return a config schema which logs if attempted to setup from YAML.
+
+    Use this when an integration's __init__.py defines setup or async_setup
+    but setup from yaml is not supported.
+    """
 
     return _no_yaml_config_schema(
         domain,
@@ -1138,7 +1142,11 @@ def config_entry_only_config_schema(domain: str) -> Callable[[dict], dict]:
 
 
 def platform_only_config_schema(domain: str) -> Callable[[dict], dict]:
-    """Return a config schema which logs if attempted to setup from YAML."""
+    """Return a config schema which logs if attempted to setup from YAML.
+
+    Use this when an integration's __init__.py defines setup or async_setup
+    but setup from the integration key is not supported.
+    """
 
     return _no_yaml_config_schema(
         domain,
@@ -1226,7 +1234,7 @@ def script_action(value: Any) -> dict:
     try:
         action = determine_script_action(value)
     except ValueError as err:
-        raise vol.Invalid(str(err))
+        raise vol.Invalid(str(err)) from err
 
     return ACTION_TYPE_SCHEMAS[action](value)
 
@@ -1527,6 +1535,7 @@ CONDITION_SCHEMA: vol.Schema = vol.Schema(
     )
 )
 
+CONDITIONS_SCHEMA = vol.All(ensure_list, [CONDITION_SCHEMA])
 
 dynamic_template_condition_action = vol.All(
     # Wrap a shorthand template condition action in a template condition
@@ -1689,7 +1698,12 @@ _SCRIPT_STOP_SCHEMA = vol.Schema(
     {
         **SCRIPT_ACTION_BASE_SCHEMA,
         vol.Required(CONF_STOP): vol.Any(None, string),
-        vol.Optional(CONF_ERROR, default=False): boolean,
+        vol.Exclusive(CONF_ERROR, "error_or_response"): boolean,
+        vol.Exclusive(
+            CONF_RESPONSE_VARIABLE,
+            "error_or_response",
+            msg="not allowed to add a response to an error stop action",
+        ): str,
     }
 )
 

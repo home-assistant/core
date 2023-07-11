@@ -1,4 +1,14 @@
 {
+  "issues": {
+    "deprecation_mqtt_legacy_vacuum_yaml": {
+      "title": "MQTT vacuum entities with legacy schema found in your configuration.yaml",
+      "description": "MQTT vacuum entities that use the legacy schema are deprecated, please adjust your configuration.yaml and restart Home Assistant to fix this issue."
+    },
+    "deprecation_mqtt_legacy_vacuum_discovery": {
+      "title": "MQTT vacuum entities with legacy schema added through MQTT discovery",
+      "description": "MQTT vacuum entities that use the legacy schema are deprecated, please adjust your devices to use the correct schema and restart Home Assistant to fix this issue."
+    }
+  },
   "config": {
     "step": {
       "broker": {
@@ -130,7 +140,7 @@
   "selector": {
     "set_ca_cert": {
       "options": {
-        "off": "Off",
+        "off": "[%key:common::state::off%]",
         "auto": "Auto",
         "custom": "Custom"
       }

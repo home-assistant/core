@@ -30,8 +30,6 @@ TRACKERS_WITH_BUILTIN_BATTERY = ("TRNJA4", "TRAXL1")
 class TractiveBinarySensor(TractiveEntity, BinarySensorEntity):
     """Tractive sensor."""
 
-    _attr_has_entity_name = True
-
     def __init__(
         self, user_id: str, item: Trackables, description: BinarySensorEntityDescription
     ) -> None:

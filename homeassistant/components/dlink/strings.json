@@ -24,11 +24,5 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
-  },
-  "issues": {
-    "deprecated_yaml": {
-      "title": "The D-Link Smart Plug YAML configuration is being removed",
-      "description": "Configuring D-Link Smart Plug using YAML is being removed.\n\nYour existing YAML configuration has been imported into the UI automatically.\n\nRemove the D-Link Power Plug YAML configuration from your configuration.yaml file and restart Home Assistant to fix this issue."
-    }
   }
 }
