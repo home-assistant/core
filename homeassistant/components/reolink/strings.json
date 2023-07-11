@@ -94,7 +94,7 @@
     },
     "sensor": {
       "event_connection": {
-        "name": "Event connection"
+        "name": "Event connection",
         "state": {
           "onvifpush": "ONVIF push",
           "onviflongpoll": "ONVIF long poll",
