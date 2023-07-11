@@ -279,7 +279,7 @@
           "description": "Color temperature for the light in mireds."
         },
         "kelvin": {
-          "name": "Color temperature (Kelvin)",
+          "name": "Color temperature",
           "description": "Color temperature for the light in Kelvin."
         },
         "brightness": {
