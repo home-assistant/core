@@ -72,7 +72,7 @@ async def async_setup_entry(
         for description in NUMBER_TYPES:
             if (
                 actuator := device.get(description.key) is not None
-            ) and "setpoint" in actuator:
+            ) and "setpoint" in actuator:  # type: ignore[operator]
                 entities.append(
                     PlugwiseNumberEntity(coordinator, device_id, description)
                 )
@@ -93,7 +93,7 @@ class PlugwiseNumberEntity(PlugwiseEntity, NumberEntity):
     ) -> None:
         """Initiate Plugwise Number."""
         super().__init__(coordinator, device_id)
-        self.actuator = self.device[description.key]
+        self.actuator = self.device[description.key]  # type: ignore[literal-required]
         self.entity_description = description
         self._attr_unique_id = f"{device_id}-{description.key}"
         self._attr_mode = NumberMode.BOX
