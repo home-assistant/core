@@ -240,16 +240,18 @@ async def test_updating_to_often(
         )
         await hass.async_block_till_done()
 
-    assert len(called) == 1
+    assert called
     assert (
         "Updating Command Line Binary Sensor Test took longer than the scheduled update interval"
         not in caplog.text
     )
+    called.clear()
+    caplog.clear()
 
     async_fire_time_changed(hass, dt_util.now() + timedelta(seconds=1))
     await hass.async_block_till_done()
 
-    assert len(called) == 2
+    assert called
     assert (
         "Updating Command Line Binary Sensor Test took longer than the scheduled update interval"
         in caplog.text
