@@ -6,10 +6,6 @@ import logging
 from typing import Any
 
 from qnapstats import QNAPStats
-from requests.exceptions import (
-    ConnectionError as ConnectError,
-    ConnectTimeout,
-)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
