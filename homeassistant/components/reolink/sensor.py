@@ -11,6 +11,7 @@ from reolink_aio.api import Host
 from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
@@ -44,6 +45,7 @@ HOST_SENSORS = (
         key="wifi_signal",
         name="WiFi signal",
         icon="mdi:wifi",
+        state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         value=lambda api: api.wifi_signal,
