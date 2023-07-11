@@ -110,7 +110,7 @@
         "name": "Seconds since last trigger"
       },
       "last_alarm_pic": {
-        "name": "Last alarm picture url"
+        "name": "Last alarm picture URL"
       },
       "supported_channels": {
         "name": "Supported channels"
