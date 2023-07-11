@@ -103,7 +103,7 @@
       },
       "wifi_signal": {
         "name": "Wi-Fi signal"
-      },
+      }
     }
   }
 }
