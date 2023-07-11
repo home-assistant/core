@@ -36,7 +36,7 @@
   "services": {
     "create_event": {
       "name": "Create event",
-      "description": "Add a new calendar event.",
+      "description": "Adds a new calendar event.",
       "fields": {
         "summary": {
           "name": "Summary",
@@ -44,7 +44,7 @@
         },
         "description": {
           "name": "Description",
-          "description": "A more complete description of the event than that provided by the summary."
+          "description": "A more complete description of the event than the one provided by the summary."
         },
         "start_date_time": {
           "name": "Start time",
@@ -74,19 +74,19 @@
     },
     "list_events": {
       "name": "List event",
-      "description": "List events on a calendar within a time range.",
+      "description": "Lists events on a calendar within a time range.",
       "fields": {
         "start_date_time": {
           "name": "Start time",
-          "description": "Return active events after this time (exclusive). When not set, defaults to now."
+          "description": "Returns active events after this time (exclusive). When not set, defaults to now."
         },
         "end_date_time": {
           "name": "End time",
-          "description": "Return active events before this time (exclusive). Cannot be used with 'duration'."
+          "description": "Returns active events before this time (exclusive). Cannot be used with 'duration'."
         },
         "duration": {
           "name": "Duration",
-          "description": "Return active events from start_date_time until the specified duration."
+          "description": "Returns active events from start_date_time until the specified duration."
         }
       }
     }
