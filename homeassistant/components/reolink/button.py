@@ -7,7 +7,7 @@ from typing import Any
 
 from reolink_aio.api import GuardEnum, Host, PtzEnum
 
-from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
+from homeassistant.components.button import ButtonDeviceClass, ButtonEntity, ButtonEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
@@ -114,8 +114,7 @@ BUTTON_ENTITIES = (
 HOST_BUTTON_ENTITIES = (
     ReolinkHostButtonEntityDescription(
         key="reboot",
-        name="Reboot",
-        icon="mdi:restart",
+        device_class=ButtonDeviceClass.RESTART,
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
         supported=lambda api: api.supported(None, "reboot"),
