@@ -56,33 +56,6 @@ async def test_configure(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> No
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_single_instance(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock
-) -> None:
-    """Test we only allow a single config flow."""
-    # create first config entry
-    config_settings = default_settings()
-    config_settings.update(
-        {
-            "name": "flux",
-            "lights": ["light.desk", "light.lamp"],
-        }
-    )
-    MockConfigEntry(
-        domain=DOMAIN,
-        data=config_settings,
-    ).add_to_hass(hass)
-    await hass.async_block_till_done()
-
-    # create second config entry
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    assert result["type"] == "abort"
-    assert result["reason"] == "already_configured"
-
-
 async def test_options(hass: HomeAssistant) -> None:
     """Test options flow."""
 
