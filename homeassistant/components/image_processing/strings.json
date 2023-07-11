@@ -16,7 +16,7 @@
   "services": {
     "scan": {
       "name": "Scan",
-      "description": "Process an image immediately."
+      "description": "Processes an image immediately."
     }
   }
 }
