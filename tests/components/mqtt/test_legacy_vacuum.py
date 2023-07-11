@@ -1,4 +1,8 @@
 """The tests for the Legacy Mqtt vacuum platform."""
+
+# The legacy schema for MQTT vacuum was deprecated with HA Core 2023.8.0
+# and will be removed with HA Core 2024.2.0
+
 from copy import deepcopy
 import json
 from typing import Any
@@ -122,6 +126,31 @@ def vacuum_platform_only():
     """Only setup the vacuum platform to speed up tests."""
     with patch("homeassistant.components.mqtt.PLATFORMS", [Platform.VACUUM]):
         yield
+
+
+@pytest.mark.parametrize(
+    ("hass_config", "deprecated"),
+    [
+        ({mqtt.DOMAIN: {vacuum.DOMAIN: {"name": "test", "schema": "legacy"}}}, True),
+        ({mqtt.DOMAIN: {vacuum.DOMAIN: {"name": "test"}}}, True),
+        ({mqtt.DOMAIN: {vacuum.DOMAIN: {"name": "test", "schema": "state"}}}, False),
+    ],
+)
+async def test_deprecation(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+    deprecated: bool,
+) -> None:
+    """Test that the depration warning for the legacy schema works."""
+    assert await mqtt_mock_entry()
+    entity = hass.states.get("vacuum.test")
+    assert entity is not None
+
+    if deprecated:
+        assert "Deprecated `legacy` schema detected for MQTT vacuum" in caplog.text
+    else:
+        assert "Deprecated `legacy` schema detected for MQTT vacuum" not in caplog.text
 
 
 @pytest.mark.parametrize("hass_config", [DEFAULT_CONFIG])
