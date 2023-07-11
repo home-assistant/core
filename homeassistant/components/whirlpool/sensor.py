@@ -70,6 +70,7 @@ ICON_D = "mdi:tumble-dryer"
 ICON_W = "mdi:washing-machine"
 
 _LOGGER = logging.getLogger(__name__)
+SCAN_INTERVAL = timedelta(minutes=5)
 
 
 def washer_state(washer: WasherDryer) -> str | None:
