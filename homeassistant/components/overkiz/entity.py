@@ -60,9 +60,9 @@ class OverkizEntity(CoordinatorEntity[OverkizDataUpdateCoordinator]):
         if self.is_sub_device:
             # Only return the url of the base device, to inherit device name
             # and model from parent device.
-            return {
-                "identifiers": {(DOMAIN, self.executor.base_device_url)},
-            }
+            return DeviceInfo(
+                identifiers={(DOMAIN, self.executor.base_device_url)},
+            )
 
         manufacturer = (
             self.executor.select_attribute(OverkizAttribute.CORE_MANUFACTURER)
