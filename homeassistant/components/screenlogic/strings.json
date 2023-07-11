@@ -35,5 +35,17 @@
         }
       }
     }
+  },
+  "services": {
+    "set_color_mode": {
+      "name": "Set Color Mode",
+      "description": "Sets the color mode for all color-capable lights attached to this ScreenLogic gateway.",
+      "fields": {
+        "color_mode": {
+          "name": "Color Mode",
+          "description": "The ScreenLogic color mode to set."
+        }
+      }
+    }
   }
 }
