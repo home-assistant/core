@@ -71,7 +71,7 @@ async def async_setup_entry(
     for device_id, device in coordinator.data.devices.items():
         for description in NUMBER_TYPES:
             if (
-                actuator := device.get(description.key) is not None
+                actuator := device.get(description.key)
             ) and "setpoint" in actuator:  # type: ignore[operator]
                 entities.append(
                     PlugwiseNumberEntity(coordinator, device_id, description)
