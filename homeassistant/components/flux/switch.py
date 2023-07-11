@@ -73,7 +73,6 @@ PLATFORM_SCHEMA = vol.Schema(
         vol.Required(CONF_LIGHTS): cv.entity_ids,
         vol.Optional(CONF_NAME, default="Flux"): cv.string,
         vol.Optional(CONF_START_TIME): cv.time,
-        vol.Optional(CONF_SUNSET_TIME): cv.time,
         vol.Optional(CONF_STOP_TIME): cv.time,
         vol.Optional(CONF_START_CT, default=4000): vol.All(
             vol.Coerce(int), vol.Range(min=1000, max=40000)
@@ -151,7 +150,6 @@ async def async_setup_platform(
     name = config.get(CONF_NAME)
     lights = config.get(CONF_LIGHTS)
     start_time = config.get(CONF_START_TIME)
-    sunset_time = config.get(CONF_SUNSET_TIME)
     stop_time = config.get(CONF_STOP_TIME)
     start_colortemp = config.get(CONF_START_CT)
     sunset_colortemp = config.get(CONF_SUNSET_CT)
@@ -167,7 +165,7 @@ async def async_setup_platform(
         hass,
         lights,
         start_time,
-        sunset_time,
+        None,
         stop_time,
         start_colortemp,
         sunset_colortemp,
