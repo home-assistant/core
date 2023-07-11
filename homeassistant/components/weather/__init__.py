@@ -1,12 +1,13 @@
 """Weather component that handles meteorological data for your location."""
 from __future__ import annotations
 
+from collections.abc import Callable
 from contextlib import suppress
 from dataclasses import dataclass
 from datetime import timedelta
 import inspect
 import logging
-from typing import Any, Final, TypedDict, final
+from typing import Any, Final, Literal, TypedDict, final
 
 from typing_extensions import Required
 
@@ -19,7 +20,7 @@ from homeassistant.const import (
     UnitOfSpeed,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
@@ -50,6 +51,7 @@ from .const import (
     DOMAIN,
     UNIT_CONVERSIONS,
     VALID_UNITS,
+    WeatherEntityFeature,
 )
 from .websocket_api import async_setup as async_setup_ws_api
 
@@ -72,9 +74,6 @@ ATTR_CONDITION_SUNNY = "sunny"
 ATTR_CONDITION_WINDY = "windy"
 ATTR_CONDITION_WINDY_VARIANT = "windy-variant"
 ATTR_FORECAST = "forecast"
-ATTR_FORECAST_DAILY = "forecast_daily"
-ATTR_FORECAST_HOURLY = "forecast_hourly"
-ATTR_FORECAST_TWICE_DAILY = "forecast_twice_daily"
 ATTR_FORECAST_IS_DAYTIME: Final = "is_daytime"
 ATTR_FORECAST_CONDITION: Final = "condition"
 ATTR_FORECAST_HUMIDITY: Final = "humidity"
@@ -188,12 +187,9 @@ class WeatherEntity(Entity):
 
     entity_description: WeatherEntityDescription
     _attr_condition: str | None
-    _attr_forecast: list[
-        Forecast
-    ] | None = None  # Provide backwards compatibility. Use _attr_forecast_daily/twice_daily/hourly as needed
-    _attr_forecast_daily: list[Forecast] | None = None
-    _attr_forecast_hourly: list[Forecast] | None = None
-    _attr_forecast_twice_daily: list[Forecast] | None = None
+    # _attr_forecast is deprecated, implement async_forecast_daily,
+    # async_forecast_hourly or async_forecast_twice daily instead
+    _attr_forecast: list[Forecast] | None = None
     _attr_humidity: float | None = None
     _attr_ozone: float | None = None
     _attr_cloud_coverage: int | None = None
@@ -241,6 +237,11 @@ class WeatherEntity(Entity):
     _attr_native_wind_speed: float | None = None
     _attr_native_wind_speed_unit: str | None = None
     _attr_native_dew_point: float | None = None
+
+    _forecast_listeners: dict[
+        Literal["daily", "hourly", "twice_daily"],
+        list[Callable[[list[dict[str, Any]] | None], None]],
+    ]
 
     _weather_option_temperature_unit: str | None = None
     _weather_option_pressure_unit: str | None = None
@@ -303,8 +304,9 @@ class WeatherEntity(Entity):
                 )
 
     async def async_internal_added_to_hass(self) -> None:
-        """Call when the sensor entity is added to hass."""
+        """Call when the weather entity is added to hass."""
         await super().async_internal_added_to_hass()
+        self._forecast_listeners = {"daily": [], "hourly": [], "twice_daily": []}
         if not self.registry_entry:
             return
         self.async_registry_entry_updated()
@@ -585,24 +587,21 @@ class WeatherEntity(Entity):
     def forecast(self) -> list[Forecast] | None:
         """Return the forecast in native units.
 
-        Should not be set by integrations. Kept for backward compatibility.
+        Should not be overridden by integrations. Kept for backwards compatibility.
         """
         return self._attr_forecast
 
-    @property
-    def forecast_daily(self) -> list[Forecast] | None:
+    async def async_forecast_daily(self) -> list[Forecast] | None:
         """Return the daily forecast in native units."""
-        return self._attr_forecast_daily
+        return None
 
-    @property
-    def forecast_twice_daily(self) -> list[Forecast] | None:
+    async def async_forecast_twice_daily(self) -> list[Forecast] | None:
         """Return the daily forecast in native units."""
-        return self._attr_forecast_twice_daily
+        return None
 
-    @property
-    def forecast_hourly(self) -> list[Forecast] | None:
+    async def async_forecast_hourly(self) -> list[Forecast] | None:
         """Return the hourly forecast in native units."""
-        return self._attr_forecast_hourly
+        return None
 
     @property
     def native_precipitation_unit(self) -> str | None:
@@ -786,211 +785,204 @@ class WeatherEntity(Entity):
         data[ATTR_WEATHER_VISIBILITY_UNIT] = self._visibility_unit
         data[ATTR_WEATHER_PRECIPITATION_UNIT] = self._precipitation_unit
 
-        forecasts: dict[str, Any] = {}
         if self.forecast:
-            forecasts[ATTR_FORECAST] = self.forecast
-        if self.forecast_daily:
-            forecasts[ATTR_FORECAST_DAILY] = self.forecast_daily
-        if self.forecast_twice_daily:
-            for fc_twice_daily in self.forecast_twice_daily:
-                if fc_twice_daily.get(ATTR_FORECAST_IS_DAYTIME) is None:
-                    raise ValueError(
-                        "is_daytime mandatory attribute for forecast_twice_daily is missing"
-                    )
-            forecasts[ATTR_FORECAST_TWICE_DAILY] = self.forecast_twice_daily
-        if self.forecast_hourly:
-            forecasts[ATTR_FORECAST_HOURLY] = self.forecast_hourly
-
-        for attr, forecast_list in forecasts.items():
-            forecast: list[dict[str, Any]] = []
-            for forecast_entry in forecast_list:
-                forecast_entry = dict(forecast_entry)
-
-                temperature = forecast_entry.pop(
-                    ATTR_FORECAST_NATIVE_TEMP, forecast_entry.get(ATTR_FORECAST_TEMP)
-                )
-
-                from_temp_unit = (
-                    self.native_temperature_unit or self._default_temperature_unit
-                )
-                to_temp_unit = self._temperature_unit
-
-                if temperature is None:
-                    forecast_entry[ATTR_FORECAST_TEMP] = None
-                else:
-                    with suppress(TypeError, ValueError):
-                        temperature_f = float(temperature)
-                        value_temp = UNIT_CONVERSIONS[ATTR_WEATHER_TEMPERATURE_UNIT](
-                            temperature_f,
-                            from_temp_unit,
-                            to_temp_unit,
-                        )
-                        forecast_entry[ATTR_FORECAST_TEMP] = round_temperature(
-                            value_temp, precision
-                        )
-
-                if (
-                    forecast_apparent_temp := forecast_entry.pop(
-                        ATTR_FORECAST_NATIVE_APPARENT_TEMP,
-                        forecast_entry.get(ATTR_FORECAST_NATIVE_APPARENT_TEMP),
-                    )
-                ) is not None:
-                    with suppress(TypeError, ValueError):
-                        forecast_apparent_temp = float(forecast_apparent_temp)
-                        value_apparent_temp = UNIT_CONVERSIONS[
-                            ATTR_WEATHER_TEMPERATURE_UNIT
-                        ](
-                            forecast_apparent_temp,
-                            from_temp_unit,
-                            to_temp_unit,
-                        )
-
-                        forecast_entry[ATTR_FORECAST_APPARENT_TEMP] = round_temperature(
-                            value_apparent_temp, precision
-                        )
-
-                if (
-                    forecast_temp_low := forecast_entry.pop(
-                        ATTR_FORECAST_NATIVE_TEMP_LOW,
-                        forecast_entry.get(ATTR_FORECAST_TEMP_LOW),
-                    )
-                ) is not None:
-                    with suppress(TypeError, ValueError):
-                        forecast_temp_low_f = float(forecast_temp_low)
-                        value_temp_low = UNIT_CONVERSIONS[
-                            ATTR_WEATHER_TEMPERATURE_UNIT
-                        ](
-                            forecast_temp_low_f,
-                            from_temp_unit,
-                            to_temp_unit,
-                        )
-
-                        forecast_entry[ATTR_FORECAST_TEMP_LOW] = round_temperature(
-                            value_temp_low, precision
-                        )
-
-                if (
-                    forecast_dew_point := forecast_entry.pop(
-                        ATTR_FORECAST_NATIVE_DEW_POINT,
-                        None,
-                    )
-                ) is not None:
-                    with suppress(TypeError, ValueError):
-                        forecast_dew_point_f = float(forecast_dew_point)
-                        value_dew_point = UNIT_CONVERSIONS[
-                            ATTR_WEATHER_TEMPERATURE_UNIT
-                        ](
-                            forecast_dew_point_f,
-                            from_temp_unit,
-                            to_temp_unit,
-                        )
-
-                        forecast_entry[ATTR_FORECAST_DEW_POINT] = round_temperature(
-                            value_dew_point, precision
-                        )
-
-                if (
-                    forecast_pressure := forecast_entry.pop(
-                        ATTR_FORECAST_NATIVE_PRESSURE,
-                        forecast_entry.get(ATTR_FORECAST_PRESSURE),
-                    )
-                ) is not None:
-                    from_pressure_unit = (
-                        self.native_pressure_unit or self._default_pressure_unit
-                    )
-                    to_pressure_unit = self._pressure_unit
-                    with suppress(TypeError, ValueError):
-                        forecast_pressure_f = float(forecast_pressure)
-                        forecast_entry[ATTR_FORECAST_PRESSURE] = round(
-                            UNIT_CONVERSIONS[ATTR_WEATHER_PRESSURE_UNIT](
-                                forecast_pressure_f,
-                                from_pressure_unit,
-                                to_pressure_unit,
-                            ),
-                            ROUNDING_PRECISION,
-                        )
-
-                if (
-                    forecast_wind_gust_speed := forecast_entry.pop(
-                        ATTR_FORECAST_NATIVE_WIND_GUST_SPEED,
-                        None,
-                    )
-                ) is not None:
-                    from_wind_speed_unit = (
-                        self.native_wind_speed_unit or self._default_wind_speed_unit
-                    )
-                    to_wind_speed_unit = self._wind_speed_unit
-                    with suppress(TypeError, ValueError):
-                        forecast_wind_gust_speed_f = float(forecast_wind_gust_speed)
-                        forecast_entry[ATTR_FORECAST_WIND_GUST_SPEED] = round(
-                            UNIT_CONVERSIONS[ATTR_WEATHER_WIND_SPEED_UNIT](
-                                forecast_wind_gust_speed_f,
-                                from_wind_speed_unit,
-                                to_wind_speed_unit,
-                            ),
-                            ROUNDING_PRECISION,
-                        )
-
-                if (
-                    forecast_wind_speed := forecast_entry.pop(
-                        ATTR_FORECAST_NATIVE_WIND_SPEED,
-                        forecast_entry.get(ATTR_FORECAST_WIND_SPEED),
-                    )
-                ) is not None:
-                    from_wind_speed_unit = (
-                        self.native_wind_speed_unit or self._default_wind_speed_unit
-                    )
-                    to_wind_speed_unit = self._wind_speed_unit
-                    with suppress(TypeError, ValueError):
-                        forecast_wind_speed_f = float(forecast_wind_speed)
-                        forecast_entry[ATTR_FORECAST_WIND_SPEED] = round(
-                            UNIT_CONVERSIONS[ATTR_WEATHER_WIND_SPEED_UNIT](
-                                forecast_wind_speed_f,
-                                from_wind_speed_unit,
-                                to_wind_speed_unit,
-                            ),
-                            ROUNDING_PRECISION,
-                        )
-
-                if (
-                    forecast_precipitation := forecast_entry.pop(
-                        ATTR_FORECAST_NATIVE_PRECIPITATION,
-                        forecast_entry.get(ATTR_FORECAST_PRECIPITATION),
-                    )
-                ) is not None:
-                    from_precipitation_unit = (
-                        self.native_precipitation_unit
-                        or self._default_precipitation_unit
-                    )
-                    to_precipitation_unit = self._precipitation_unit
-                    with suppress(TypeError, ValueError):
-                        forecast_precipitation_f = float(forecast_precipitation)
-                        forecast_entry[ATTR_FORECAST_PRECIPITATION] = round(
-                            UNIT_CONVERSIONS[ATTR_WEATHER_PRECIPITATION_UNIT](
-                                forecast_precipitation_f,
-                                from_precipitation_unit,
-                                to_precipitation_unit,
-                            ),
-                            ROUNDING_PRECISION,
-                        )
-
-                if (
-                    forecast_humidity := forecast_entry.pop(
-                        ATTR_FORECAST_HUMIDITY,
-                        None,
-                    )
-                ) is not None:
-                    with suppress(TypeError, ValueError):
-                        forecast_humidity_f = float(forecast_humidity)
-                        forecast_entry[ATTR_FORECAST_HUMIDITY] = round(
-                            forecast_humidity_f
-                        )
-
-                forecast.append(forecast_entry)
-
-            data[attr] = forecast
+            data[ATTR_FORECAST] = self._convert_forecast(self.forecast)
 
         return data
+
+    @final
+    def _convert_forecast(
+        self, native_forecast_list: list[Forecast]
+    ) -> list[dict[str, Any]]:
+        """Convert a forecast in native units to the unit configured by the user."""
+        converted_forecast_list: list[dict[str, Any]] = []
+        precision = self.precision
+
+        from_temp_unit = (
+            self.native_temperature_unit or self._default_temperature_unit
+        )
+        to_temp_unit = self._temperature_unit
+
+        for _forecast_entry in native_forecast_list:
+            forecast_entry: dict[str, Any] = dict(_forecast_entry)
+
+            temperature = forecast_entry.pop(
+                ATTR_FORECAST_NATIVE_TEMP, forecast_entry.get(ATTR_FORECAST_TEMP)
+            )
+
+            if temperature is None:
+                forecast_entry[ATTR_FORECAST_TEMP] = None
+            else:
+                with suppress(TypeError, ValueError):
+                    temperature_f = float(temperature)
+                    value_temp = UNIT_CONVERSIONS[ATTR_WEATHER_TEMPERATURE_UNIT](
+                        temperature_f,
+                        from_temp_unit,
+                        to_temp_unit,
+                    )
+                    forecast_entry[ATTR_FORECAST_TEMP] = round_temperature(
+                        value_temp, precision
+                    )
+
+            if (
+                forecast_apparent_temp := forecast_entry.pop(
+                    ATTR_FORECAST_NATIVE_APPARENT_TEMP,
+                    forecast_entry.get(ATTR_FORECAST_NATIVE_APPARENT_TEMP),
+                )
+            ) is not None:
+                with suppress(TypeError, ValueError):
+                    forecast_apparent_temp = float(forecast_apparent_temp)
+                    value_apparent_temp = UNIT_CONVERSIONS[
+                        ATTR_WEATHER_TEMPERATURE_UNIT
+                    ](
+                        forecast_apparent_temp,
+                        from_temp_unit,
+                        to_temp_unit,
+                    )
+
+                    forecast_entry[ATTR_FORECAST_APPARENT_TEMP] = round_temperature(
+                        value_apparent_temp, precision
+                    )
+
+            if (
+                forecast_temp_low := forecast_entry.pop(
+                    ATTR_FORECAST_NATIVE_TEMP_LOW,
+                    forecast_entry.get(ATTR_FORECAST_TEMP_LOW),
+                )
+            ) is not None:
+                with suppress(TypeError, ValueError):
+                    forecast_temp_low_f = float(forecast_temp_low)
+                    value_temp_low = UNIT_CONVERSIONS[
+                        ATTR_WEATHER_TEMPERATURE_UNIT
+                    ](
+                        forecast_temp_low_f,
+                        from_temp_unit,
+                        to_temp_unit,
+                    )
+
+                    forecast_entry[ATTR_FORECAST_TEMP_LOW] = round_temperature(
+                        value_temp_low, precision
+                    )
+
+            if (
+                forecast_dew_point := forecast_entry.pop(
+                    ATTR_FORECAST_NATIVE_DEW_POINT,
+                    None,
+                )
+            ) is not None:
+                with suppress(TypeError, ValueError):
+                    forecast_dew_point_f = float(forecast_dew_point)
+                    value_dew_point = UNIT_CONVERSIONS[
+                        ATTR_WEATHER_TEMPERATURE_UNIT
+                    ](
+                        forecast_dew_point_f,
+                        from_temp_unit,
+                        to_temp_unit,
+                    )
+
+                    forecast_entry[ATTR_FORECAST_DEW_POINT] = round_temperature(
+                        value_dew_point, precision
+                    )
+
+            if (
+                forecast_pressure := forecast_entry.pop(
+                    ATTR_FORECAST_NATIVE_PRESSURE,
+                    forecast_entry.get(ATTR_FORECAST_PRESSURE),
+                )
+            ) is not None:
+                from_pressure_unit = (
+                    self.native_pressure_unit or self._default_pressure_unit
+                )
+                to_pressure_unit = self._pressure_unit
+                with suppress(TypeError, ValueError):
+                    forecast_pressure_f = float(forecast_pressure)
+                    forecast_entry[ATTR_FORECAST_PRESSURE] = round(
+                        UNIT_CONVERSIONS[ATTR_WEATHER_PRESSURE_UNIT](
+                            forecast_pressure_f,
+                            from_pressure_unit,
+                            to_pressure_unit,
+                        ),
+                        ROUNDING_PRECISION,
+                    )
+
+            if (
+                forecast_wind_gust_speed := forecast_entry.pop(
+                    ATTR_FORECAST_NATIVE_WIND_GUST_SPEED,
+                    None,
+                )
+            ) is not None:
+                from_wind_speed_unit = (
+                    self.native_wind_speed_unit or self._default_wind_speed_unit
+                )
+                to_wind_speed_unit = self._wind_speed_unit
+                with suppress(TypeError, ValueError):
+                    forecast_wind_gust_speed_f = float(forecast_wind_gust_speed)
+                    forecast_entry[ATTR_FORECAST_WIND_GUST_SPEED] = round(
+                        UNIT_CONVERSIONS[ATTR_WEATHER_WIND_SPEED_UNIT](
+                            forecast_wind_gust_speed_f,
+                            from_wind_speed_unit,
+                            to_wind_speed_unit,
+                        ),
+                        ROUNDING_PRECISION,
+                    )
+
+            if (
+                forecast_wind_speed := forecast_entry.pop(
+                    ATTR_FORECAST_NATIVE_WIND_SPEED,
+                    forecast_entry.get(ATTR_FORECAST_WIND_SPEED),
+                )
+            ) is not None:
+                from_wind_speed_unit = (
+                    self.native_wind_speed_unit or self._default_wind_speed_unit
+                )
+                to_wind_speed_unit = self._wind_speed_unit
+                with suppress(TypeError, ValueError):
+                    forecast_wind_speed_f = float(forecast_wind_speed)
+                    forecast_entry[ATTR_FORECAST_WIND_SPEED] = round(
+                        UNIT_CONVERSIONS[ATTR_WEATHER_WIND_SPEED_UNIT](
+                            forecast_wind_speed_f,
+                            from_wind_speed_unit,
+                            to_wind_speed_unit,
+                        ),
+                        ROUNDING_PRECISION,
+                    )
+
+            if (
+                forecast_precipitation := forecast_entry.pop(
+                    ATTR_FORECAST_NATIVE_PRECIPITATION,
+                    forecast_entry.get(ATTR_FORECAST_PRECIPITATION),
+                )
+            ) is not None:
+                from_precipitation_unit = (
+                    self.native_precipitation_unit or self._default_precipitation_unit
+                )
+                to_precipitation_unit = self._precipitation_unit
+                with suppress(TypeError, ValueError):
+                    forecast_precipitation_f = float(forecast_precipitation)
+                    forecast_entry[ATTR_FORECAST_PRECIPITATION] = round(
+                        UNIT_CONVERSIONS[ATTR_WEATHER_PRECIPITATION_UNIT](
+                            forecast_precipitation_f,
+                            from_precipitation_unit,
+                            to_precipitation_unit,
+                        ),
+                        ROUNDING_PRECISION,
+                    )
+
+            if (
+                forecast_humidity := forecast_entry.pop(
+                    ATTR_FORECAST_HUMIDITY,
+                    None,
+                )
+            ) is not None:
+                with suppress(TypeError, ValueError):
+                    forecast_humidity_f = float(forecast_humidity)
+                    forecast_entry[ATTR_FORECAST_HUMIDITY] = round(
+                        forecast_humidity_f
+                    )
+
+            converted_forecast_list.append(forecast_entry)
+
+        return converted_forecast_list
 
     @property
     @final
@@ -1043,3 +1035,50 @@ class WeatherEntity(Entity):
                 )
             ) and custom_unit_visibility in VALID_UNITS[ATTR_WEATHER_VISIBILITY_UNIT]:
                 self._weather_option_visibility_unit = custom_unit_visibility
+
+    @final
+    @callback
+    def async_subscribe_forecast(
+        self,
+        forecast_type: Literal["daily", "hourly", "twice_daily"],
+        forecast_listener: Callable[[list[dict[str, Any]] | None], None],
+    ) -> CALLBACK_TYPE:
+        """Subscribe to forecast updates."""
+        self._forecast_listeners[forecast_type].append(forecast_listener)
+
+        @callback
+        def unsubscribe() -> None:
+            self._forecast_listeners[forecast_type].remove(forecast_listener)
+
+        return unsubscribe
+
+    @final
+    async def async_update_forecast(
+        self, forecast_types: set[Literal["daily", "hourly", "twice_daily"]] | None
+    ) -> None:
+        """Push updated forecast to all listeners."""
+        if forecast_types is None:
+            forecast_types = {"daily", "hourly", "twice_daily"}
+        for forecast_type in forecast_types:
+            if not self._forecast_listeners[forecast_type]:
+                continue
+
+            native_forecast_list: list[Forecast] | None = await getattr(
+                self, f"async_forecast_{forecast_type}"
+            )()
+
+            if native_forecast_list is None:
+                for listener in self._forecast_listeners[forecast_type]:
+                    listener(None)
+                continue
+
+            if forecast_type == "twice_daily":
+                for fc_twice_daily in native_forecast_list:
+                    if fc_twice_daily.get(ATTR_FORECAST_IS_DAYTIME) is None:
+                        raise ValueError(
+                            "is_daytime mandatory attribute for forecast_twice_daily is missing"
+                        )
+
+            converted_forecast_list = self._convert_forecast(native_forecast_list)
+            for listener in self._forecast_listeners[forecast_type]:
+                listener(converted_forecast_list)

@@ -20,6 +20,7 @@ from homeassistant.components.weather import (
     ATTR_CONDITION_WINDY_VARIANT,
     Forecast,
     WeatherEntity,
+    WeatherEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfPressure, UnitOfSpeed, UnitOfTemperature
@@ -163,6 +164,13 @@ class DemoWeather(WeatherEntity):
         self._forecast_daily = forecast_daily
         self._forecast_hourly = forecast_hourly
         self._forecast_twice_daily = forecast_twice_daily
+        self._attr_supported_features = 0
+        if self._forecast_daily:
+            self._attr_supported_features |= WeatherEntityFeature.FORECAST_DAILY
+        if self._forecast_hourly:
+            self._attr_supported_features |= WeatherEntityFeature.FORECAST_HOURLY
+        if self._forecast_twice_daily:
+            self._attr_supported_features |= WeatherEntityFeature.FORECAST_TWICE_DAILY
 
     @property
     def native_temperature(self) -> float:
@@ -206,8 +214,7 @@ class DemoWeather(WeatherEntity):
             k for k, v in CONDITION_CLASSES.items() if self._condition.lower() in v
         ][0]
 
-    @property
-    def forecast_daily(self) -> list[Forecast]:
+    async def async_forecast_daily(self) -> list[Forecast]:
         """Return the daily forecast."""
         if self._forecast_daily is None:
             return []
@@ -228,8 +235,7 @@ class DemoWeather(WeatherEntity):
 
         return forecast_data
 
-    @property
-    def forecast_hourly(self) -> list[Forecast]:
+    async def async_forecast_hourly(self) -> list[Forecast]:
         """Return the hourly forecast."""
         if self._forecast_hourly is None:
             return []
@@ -250,8 +256,7 @@ class DemoWeather(WeatherEntity):
 
         return forecast_data
 
-    @property
-    def forecast_twice_daily(self) -> list[Forecast]:
+    async def async_forecast_twice_daily(self) -> list[Forecast]:
         """Return the twice daily forecast."""
         if self._forecast_twice_daily is None:
             return []
