@@ -66,11 +66,11 @@
   "services": {
     "alarm_disarm": {
       "name": "Disarm",
-      "description": "Send the alarm the command for disarm.",
+      "description": "Disarms the alarm.",
       "fields": {
         "code": {
           "name": "Code",
-          "description": "An optional code to disarm the alarm control panel with."
+          "description": "Code to disarm the alarm."
         }
       }
     },
@@ -79,8 +79,8 @@
       "description": "Send arm custom bypass command.",
       "fields": {
         "code": {
-          "name": "Code",
-          "description": "An optional code to arm custom bypass the alarm control panel with."
+          "name": "[%key:component::alarm_control_panel::services::alarm_disarm::fields::code::name%]",
+          "description": "Code to arm the alarm."
         }
       }
     },
@@ -89,8 +89,8 @@
       "description": "Send the alarm the command for arm home.",
       "fields": {
         "code": {
-          "name": "Code",
-          "description": "An optional code to arm home the alarm control panel with."
+          "name": "[%key:component::alarm_control_panel::services::alarm_disarm::fields::code::name%]",
+          "description": "[%key:component::alarm_control_panel::services::alarm_arm_custom_bypass::fields::code::description%]"
         }
       }
     },
@@ -99,8 +99,8 @@
       "description": "Send the alarm the command for arm away.",
       "fields": {
         "code": {
-          "name": "Code",
-          "description": "An optional code to arm away the alarm control panel with."
+          "name": "[%key:component::alarm_control_panel::services::alarm_disarm::fields::code::name%]",
+          "description": "[%key:component::alarm_control_panel::services::alarm_arm_custom_bypass::fields::code::description%]"
         }
       }
     },
@@ -109,8 +109,8 @@
       "description": "Send the alarm the command for arm night.",
       "fields": {
         "code": {
-          "name": "Code",
-          "description": "An optional code to arm night the alarm control panel with."
+          "name": "[%key:component::alarm_control_panel::services::alarm_disarm::fields::code::name%]",
+          "description": "[%key:component::alarm_control_panel::services::alarm_arm_custom_bypass::fields::code::description%]"
         }
       }
     },
@@ -119,8 +119,8 @@
       "description": "Send the alarm the command for arm vacation.",
       "fields": {
         "code": {
-          "name": "Code",
-          "description": "An optional code to arm vacation the alarm control panel with."
+          "name": "[%key:component::alarm_control_panel::services::alarm_disarm::fields::code::name%]",
+          "description": "[%key:component::alarm_control_panel::services::alarm_arm_custom_bypass::fields::code::description%]"
         }
       }
     },
@@ -129,8 +129,8 @@
       "description": "Send the alarm the command for trigger.",
       "fields": {
         "code": {
-          "name": "Code",
-          "description": "An optional code to trigger the alarm control panel with."
+          "name": "[%key:component::alarm_control_panel::services::alarm_disarm::fields::code::name%]",
+          "description": "[%key:component::alarm_control_panel::services::alarm_arm_custom_bypass::fields::code::description%]"
         }
       }
     }
