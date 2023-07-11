@@ -64,7 +64,7 @@
     },
     "play_stream": {
       "name": "Play stream",
-      "description": "Plays camera stream on a supported media player.",
+      "description": "Plays the camera stream on a supported media player.",
       "fields": {
         "media_player": {
           "name": "Media player",
@@ -72,13 +72,13 @@
         },
         "format": {
           "name": "Format",
-          "description": "Stream format supported by media player."
+          "description": "Stream format supported by the media player."
         }
       }
     },
     "record": {
       "name": "Record",
-      "description": "Record live camera feed.",
+      "description": "Creates a recording of a live camera feed.",
       "fields": {
         "filename": {
           "name": "[%key:component::camera::services::snapshot::fields::filename::name%]",
@@ -90,7 +90,7 @@
         },
         "lookback": {
           "name": "Lookback",
-          "description": "Targeted lookback period to include in addition to duration. Only available if there is currently an active HLS stream."
+          "description": "Planned lookback period to include in the recording (in addition to the duration). Only available if there is currently an active HLS stream. The actual length of the lookback period may vary."
         }
       }
     }
