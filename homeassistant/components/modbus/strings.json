@@ -1,0 +1,72 @@
+{
+  "services": {
+    "reload": {
+      "name": "Reload",
+      "description": "Reloads all modbus entities."
+    },
+    "write_coil": {
+      "name": "Write coil",
+      "description": "Writes to a modbus coil.",
+      "fields": {
+        "address": {
+          "name": "Address",
+          "description": "Address of the register to write to."
+        },
+        "state": {
+          "name": "State",
+          "description": "State to write."
+        },
+        "slave": {
+          "name": "Slave",
+          "description": "Address of the modbus unit/slave."
+        },
+        "hub": {
+          "name": "Hub",
+          "description": "Modbus hub name."
+        }
+      }
+    },
+    "write_register": {
+      "name": "Write register",
+      "description": "Writes to a modbus holding register.",
+      "fields": {
+        "address": {
+          "name": "Address",
+          "description": "Address of the holding register to write to."
+        },
+        "slave": {
+          "name": "Slave",
+          "description": "Address of the modbus unit/slave."
+        },
+        "value": {
+          "name": "Value",
+          "description": "Value (single value or array) to write."
+        },
+        "hub": {
+          "name": "Hub",
+          "description": "Modbus hub name."
+        }
+      }
+    },
+    "stop": {
+      "name": "Stop",
+      "description": "Stops modbus hub.",
+      "fields": {
+        "hub": {
+          "name": "Hub",
+          "description": "Modbus hub name."
+        }
+      }
+    },
+    "restart": {
+      "name": "Restart",
+      "description": "Restarts modbus hub (if running stop then start).",
+      "fields": {
+        "hub": {
+          "name": "Hub",
+          "description": "Modbus hub name."
+        }
+      }
+    }
+  }
+}
