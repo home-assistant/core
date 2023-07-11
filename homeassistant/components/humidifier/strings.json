@@ -87,7 +87,7 @@
     },
     "set_humidity": {
       "name": "Set humidity",
-      "description": "Sets target humidity.",
+      "description": "Sets the target humidity.",
       "fields": {
         "humidity": {
           "name": "Humidity",
@@ -97,11 +97,11 @@
     },
     "turn_on": {
       "name": "Turn on",
-      "description": "Turns humidifier on."
+      "description": "Turns the humidifier on."
     },
     "turn_off": {
       "name": "Turn off",
-      "description": "Turns humidifier off."
+      "description": "Turns the humidifier off."
     },
     "toggle": {
       "name": "Toggle",
