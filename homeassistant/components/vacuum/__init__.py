@@ -96,7 +96,7 @@ class VacuumEntityFeature(IntFlag):
 
 
 # These SUPPORT_* constants are deprecated as of Home Assistant 2022.5.
-# Will be removed with # VacuumEntity in Home Assistant Core 2024.2
+# Will be removed with VacuumEntity in Home Assistant Core 2024.2
 # Please use the VacuumEntityFeature enum instead.
 SUPPORT_TURN_ON = 1
 SUPPORT_TURN_OFF = 2
