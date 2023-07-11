@@ -63,53 +63,24 @@ async def test_setup(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) -
     assert aioclient_mock.call_count == 4
 
 
-async def test_setup_fails_if_update_fails(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
-) -> None:
-    """Test setup fails if first update fails."""
-    aioclient_mock.get(UPDATE_URL, params={"hostname": DOMAIN}, text="nohost")
-
-    result = await async_setup_component(
-        hass,
-        no_ip.const.DOMAIN,
-        {
-            no_ip.const.DOMAIN: {
-                "domain": DOMAIN,
-                "username": USERNAME,
-                "password": PASSWORD,
-            }
-        },
-    )
-    assert not result
-    assert aioclient_mock.call_count == 1
-
-
-async def test_setup_fails_if_wrong_badagent(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
-) -> None:
-    """Test setup fails if user-agent does not match format."""
-    aioclient_mock.get(UPDATE_URL, params={"hostname": DOMAIN}, text="badagent")
-
-    result = await async_setup_component(
-        hass,
-        no_ip.const.DOMAIN,
-        {
-            no_ip.const.DOMAIN: {
-                "domain": DOMAIN,
-                "username": USERNAME,
-                "password": PASSWORD,
-            }
-        },
-    )
-    assert not result
-    assert aioclient_mock.call_count == 1
-
-
-async def test_setup_fails_if_wrong_auth(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+@pytest.mark.parametrize(
+    ("result_text", "counter"),
+    [
+        ("good 192.168.1.1", 3),
+        ("nochg 192.168.1.1", 3),
+        ("badauth", 1),
+        ("badagent", 1),
+        ("nohost", 1),
+    ],
+)
+async def test_setup_fails(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    result_text: str,
+    counter: int,
 ) -> None:
     """Test setup fails if first update fails through wrong authentication."""
-    aioclient_mock.get(UPDATE_URL, params={"hostname": DOMAIN}, text="badauth")
+    aioclient_mock.get(UPDATE_URL, params={"hostname": DOMAIN}, text=result_text)
 
     result = await async_setup_component(
         hass,
@@ -122,5 +93,5 @@ async def test_setup_fails_if_wrong_auth(
             }
         },
     )
-    assert not result
-    assert aioclient_mock.call_count == 1
+    assert result
+    assert aioclient_mock.call_count == counter

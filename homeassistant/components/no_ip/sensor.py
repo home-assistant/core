@@ -58,10 +58,11 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up the NoIP sensors from config entry."""
+    """Set up the No-IP.com sensors from config entry."""
     coordinator: NoIPDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
     entities: list[NoIPSensor] = []
-    entities.append(NoIPSensor(coordinator))
+    if CONF_DOMAIN in coordinator.data:
+        entities.append(NoIPSensor(coordinator))
     async_add_entities(entities)
 
 

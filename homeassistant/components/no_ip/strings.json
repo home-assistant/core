@@ -18,7 +18,7 @@
       "911": "A fatal error on No-IP's side such as a database outage"
     },
     "abort": {
-      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
   },
   "issues": {

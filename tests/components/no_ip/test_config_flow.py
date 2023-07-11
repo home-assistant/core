@@ -1,4 +1,5 @@
 """Test the No-IP.com config flow."""
+
 import pytest
 
 from homeassistant import config_entries, data_entry_flow
@@ -79,3 +80,4 @@ async def test_form_user(
         },
     )
     assert result["type"] == result_type2
+    assert not hasattr(result, "exception")

@@ -1,4 +1,4 @@
-"""Integrate with NO-IP Dynamic DNS service."""
+"""Integrate with No-IP.com Dynamic DNS service."""
 from __future__ import annotations
 
 import voluptuous as vol
@@ -8,10 +8,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DOMAIN, CONF_PASSWORD, CONF_TIMEOUT, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType
 
-from .config_flow import async_validate_no_ip
 from .const import DATA_HASS_CONFIG, DEFAULT_TIMEOUT, DOMAIN, PLATFORMS
 from .coordinator import NoIPDataUpdateCoordinator
 
@@ -32,29 +30,17 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass: HomeAssistant, hass_config: ConfigType) -> bool:
     """Set up the No-IP.com component."""
-    async_create_issue(
-        hass,
-        DOMAIN,
-        "deprecated_yaml",
-        breaks_in_ha_version="2024.6.0",
-        is_fixable=False,
-        severity=IssueSeverity.WARNING,
-        translation_key="deprecated_yaml",
-    )
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][DATA_HASS_CONFIG] = hass_config
+
     if DOMAIN in hass_config:
-        try:
-            await async_validate_no_ip(hass, hass_config[DOMAIN])
-            hass.async_create_task(
-                hass.config_entries.flow.async_init(
-                    DOMAIN,
-                    context={"source": config_entries.SOURCE_IMPORT},
-                    data=hass_config[DOMAIN],
-                )
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={"source": config_entries.SOURCE_IMPORT},
+                data=hass_config[DOMAIN],
             )
-        except Exception:  # pylint: disable=broad-except
-            return False
+        )
     return True
 
 

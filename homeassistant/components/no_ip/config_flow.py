@@ -20,8 +20,12 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import aiohttp_client
+from homeassistant.helpers.issue_registry import (
+    IssueSeverity,
+    async_create_issue,
+    async_delete_issue,
+)
 from homeassistant.helpers.selector import (
     TextSelector,
     TextSelectorConfig,
@@ -52,10 +56,6 @@ DATA_SCHEMA = {
 }
 
 
-class UpdateError(HomeAssistantError):
-    """Base class for UpdateError HomeAssistantError."""
-
-
 async def async_validate_no_ip(
     hass: HomeAssistant, user_input: dict[str, Any]
 ) -> dict[str, str]:
@@ -77,12 +77,20 @@ async def async_validate_no_ip(
     try:
         async with async_timeout.timeout(DEFAULT_TIMEOUT):
             resp = await session.get(UPDATE_URL, params=params, headers=headers)
-            body = await resp.text()
-            if body.startswith("good") or body.startswith("nochg"):
+            body = (await resp.text()).strip()
+            if (
+                resp.status == 200
+                and body.startswith("good")
+                or body.startswith("nochg")
+            ):
                 ipAddress = body.split(" ")[1]
                 return {"title": MANUFACTURER, CONF_IP_ADDRESS: ipAddress}
-
-            raise UpdateError(NO_IP_ERRORS[body.strip()])
+            if resp.status != 200:
+                no_ip_error = "cannot_connect"
+                _LOGGER.debug(body)
+            else:
+                no_ip_error = NO_IP_ERRORS[body]
+            return {"title": MANUFACTURER, "exception": no_ip_error}
     except aiohttp.ClientError as error:
         _LOGGER.warning("Can't connect to No-IP.com API")
         raise aiohttp.ClientError from error
@@ -101,30 +109,27 @@ class NoIPConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle the initial step."""
-        if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
         errors = {}
 
         result = None
 
-        if user_input:
+        if user_input is not None:
             try:
                 result = await async_validate_no_ip(self.hass, user_input)
-            except UpdateError as error:
-                errors["base"] = error.args[0]
+                if "exception" not in result:
+                    return self.async_create_entry(
+                        title=result["title"],
+                        data={
+                            CONF_DOMAIN: user_input[CONF_DOMAIN],
+                            CONF_USERNAME: user_input[CONF_USERNAME],
+                            CONF_PASSWORD: user_input[CONF_PASSWORD],
+                        },
+                    )
+                errors["base"] = result["exception"]
             except aiohttp.ClientError:
                 errors["base"] = "cannot_connect"
             except Exception:  # pylint: disable=broad-except
                 errors["base"] = "unknown"
-            if result:
-                return self.async_create_entry(
-                    title=result["title"],
-                    data={
-                        CONF_DOMAIN: user_input[CONF_DOMAIN],
-                        CONF_USERNAME: user_input[CONF_USERNAME],
-                        CONF_PASSWORD: user_input[CONF_PASSWORD],
-                    },
-                )
 
         return self.async_show_form(
             step_id="user", data_schema=vol.Schema(DATA_SCHEMA), errors=errors
@@ -134,18 +139,39 @@ class NoIPConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, import_data: dict[str, Any] | None = None
     ) -> FlowResult:
         """Import No-IP.com config from configuration.yaml."""
-        if import_data:
-            self._async_abort_entries_match(
-                {
-                    CONF_DOMAIN: import_data[CONF_DOMAIN],
-                    CONF_USERNAME: import_data[CONF_USERNAME],
-                }
-            )
-
+        # Check if imported data is available
+        if not import_data:
+            async_delete_issue(self.hass, DOMAIN, "deprecated_yaml")
+            return await self.async_step_user()
+        # Create an issue for the deprecated YAML configuration and display a warning
+        async_create_issue(
+            self.hass,
+            DOMAIN,
+            "deprecated_yaml",
+            breaks_in_ha_version="2024.6.0",
+            is_fixable=False,
+            severity=IssueSeverity.WARNING,
+            translation_key="deprecated_yaml",
+        )
+        # Check if there is already a configuration entry with the same domain and username
+        self._async_abort_entries_match(
+            {
+                CONF_DOMAIN: import_data[CONF_DOMAIN],
+                CONF_USERNAME: import_data[CONF_USERNAME],
+            }
+        )
+        # Validate the imported data using async_validate_no_ip
+        result = await async_validate_no_ip(self.hass, import_data)
+        # Check if there is no exception
+        if "exception" not in result:
             _LOGGER.debug(
-                "Starting import of sensor from configuration.yaml - %s", import_data
+                "Starting import of sensor from configuration.yaml (deprecated) - %s",
+                import_data,
             )
             # Process the imported configuration data further
             return await self.async_step_user(import_data)
-
+        # Display a warning that no configuration can be imported
+        _LOGGER.debug(
+            "No configuration (%s) to import. %s", import_data, result["exception"]
+        )
         return self.async_abort(reason="No configuration to import.")
