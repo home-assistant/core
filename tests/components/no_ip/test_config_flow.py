@@ -58,7 +58,7 @@ async def test_form_user(
 ) -> None:
     """Test the user step of the No-IP.com config flow."""
     aioclient_mock.get(
-        no_ip.config_flow.UPDATE_URL,
+        no_ip.const.UPDATE_URL,
         params={"hostname": "test.example.com"},
         status=200,
         text=response_text,
