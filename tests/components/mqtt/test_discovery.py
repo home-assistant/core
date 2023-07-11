@@ -7,7 +7,6 @@ import re
 from unittest.mock import AsyncMock, call, patch
 
 import pytest
-from voluptuous import MultipleInvalid
 
 from homeassistant import config_entries
 from homeassistant.components import mqtt
@@ -1643,7 +1642,6 @@ async def test_unique_id_collission_has_priority(
     assert entity_registry.async_get("sensor.sbfspot_12345_2") is None
 
 
-@pytest.mark.xfail(raises=MultipleInvalid)
 @patch("homeassistant.components.mqtt.PLATFORMS", [Platform.SENSOR])
 async def test_update_with_bad_config_not_breaks_discovery(
     hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
