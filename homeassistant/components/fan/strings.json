@@ -122,17 +122,17 @@
       "fields": {
         "percentage_step": {
           "name": "Increment",
-          "description": "Increase speed by a percentage step."
+          "description": "Increases the speed by a percentage step."
         }
       }
     },
     "decrease_speed": {
       "name": "Decrease speed",
-      "description": "Decrease the speed of the fan.",
+      "description": "Decreases the speed of the fan.",
       "fields": {
         "percentage_step": {
           "name": "Decrement",
-          "description": "Decrease speed by a percentage step."
+          "description": "Decreases the speed by a percentage step."
         }
       }
     }
