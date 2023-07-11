@@ -633,8 +633,8 @@ async def async_get_all_descriptions(
             # service.async_set_service_schema for the dynamic
             # service
 
-            yaml_description = domain_yaml.get(  # type: ignore[union-attr]
-                service_name, {}
+            yaml_description = (
+                domain_yaml.get(service_name) or {}  # type: ignore[union-attr]
             )
 
             # Don't warn for missing services, because it triggers false
