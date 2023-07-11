@@ -44,7 +44,7 @@ class ReolinkHostSensorEntityDescription(
 HOST_SENSORS = (
     ReolinkHostSensorEntityDescription(
         key="wifi_signal",
-        name="Wi-Fi signal",
+        translation_key="wifi_signal",
         icon="mdi:wifi",
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -105,12 +105,12 @@ class EventConnectionSensorEntity(ReolinkHostCoordinatorEntity, SensorEntity):
         super().__init__(reolink_data)
         self.entity_description = SensorEntityDescription(
             key="event_connection",
-            name="Event connection",
+            translation_key="event_connection",
             icon="mdi:swap-horizontal",
             device_class=SensorDeviceClass.ENUM,
             entity_category=EntityCategory.DIAGNOSTIC,
             entity_registry_enabled_default=False,
-            options=["ONVIF push", "ONVIF long poll", "Fast poll"],
+            options=["onvifpush", "onviflongpoll", "fastpoll"],
         )
 
         self._attr_unique_id = f"{self._host.unique_id}_{self.entity_description.key}"

@@ -92,5 +92,18 @@
         }
       }
     }
+    "sensor": {
+      "event_connection": {
+        "name": "Event connection"
+        "state": {
+          "onvifpush": "ONVIF push",
+          "onviflongpoll": "ONVIF long poll",
+          "fastpoll": "Fast poll"
+        }
+      },
+      "wifi_signal": {
+        "name": "Wi-Fi signal"
+      },
+    }
   }
 }
