@@ -48,35 +48,35 @@
   "services": {
     "turn_on": {
       "name": "Turn on",
-      "description": "Enable an automation."
+      "description": "Enables an automation."
     },
     "turn_off": {
       "name": "Turn off",
-      "description": "Disable an automation.",
+      "description": "Disables an automation.",
       "fields": {
         "stop_actions": {
           "name": "Stop actions",
-          "description": "Stop currently running actions."
+          "description": "Stops currently running actions."
         }
       }
     },
     "toggle": {
       "name": "Toggle",
-      "description": "Toggle (enable / disable) an automation."
+      "description": "Toggles (enable / disable) an automation."
     },
     "trigger": {
       "name": "Trigger",
-      "description": "Trigger the actions of an automation.",
+      "description": "Triggers the actions of an automation.",
       "fields": {
         "skip_condition": {
           "name": "Skip conditions",
-          "description": "Whether or not the conditions will be skipped."
+          "description": "Defines whether or not the conditions will be skipped."
         }
       }
     },
     "reload": {
       "name": "Reload",
-      "description": "Reload the automation configuration."
+      "description": "Reloads the automation configuration."
     }
   }
 }
