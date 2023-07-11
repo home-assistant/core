@@ -26,6 +26,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfPressure, UnitOfSpeed, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.event import async_track_time_interval
 import homeassistant.util.dt as dt_util
 
 CONDITION_CLASSES: dict[str, list[str]] = {
@@ -288,6 +289,30 @@ class DemoWeather(WeatherEntity):
             self._attr_supported_features |= WeatherEntityFeature.FORECAST_HOURLY
         if self._forecast_twice_daily:
             self._attr_supported_features |= WeatherEntityFeature.FORECAST_TWICE_DAILY
+
+    async def async_added_to_hass(self) -> None:
+        """Set up a timer updating the forecasts."""
+
+        async def update_forecasts(_) -> None:
+            if self._forecast_daily:
+                self._forecast_daily = (
+                    self._forecast_daily[1:] + self._forecast_daily[:1]
+                )
+            if self._forecast_hourly:
+                self._forecast_hourly = (
+                    self._forecast_hourly[1:] + self._forecast_hourly[:1]
+                )
+            if self._forecast_twice_daily:
+                self._forecast_twice_daily = (
+                    self._forecast_twice_daily[1:] + self._forecast_twice_daily[:1]
+                )
+            await self.async_update_forecast(None)
+
+        self.async_on_remove(
+            async_track_time_interval(
+                self.hass, update_forecasts, timedelta(seconds=30)
+            )
+        )
 
     @property
     def native_temperature(self) -> float:
